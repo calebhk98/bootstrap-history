@@ -1,0 +1,459 @@
+"""Reading and writing a save file, and validating one before it is trusted."""
+
+import collections, hashlib, json, math, os, random, re
+from collections import defaultdict
+
+from ..data import *          # the shared tables and loaders
+from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
+                   critical_path, downstream_count, is_downstream, load, money_word,
+                   topo_order, trade_family)
+from ..fog import strip_self_play_advice
+
+from ..core import Sim
+
+
+
+
+SAVE_FIELDS = (
+    # THE LOG, which the `log` command exists to read back and which was not
+    # saved. The opening screen promises "progress is written to this file
+    # after every command, so you can stop any time - close the terminal,
+    # anything - and come back to exactly where you left off", and a break
+    # tester did exactly that and found `log` answering "nothing has happened
+    # yet" while money, reputation and technologies were all intact. A history
+    # that does not survive the thing the game tells you to do is not a history.
+    "log",
+    "year", "capital", "done", "granted", "active", "done_year", "training",
+    "scholars", "artisans", "directors_extra", "reputation",
+    "scandal", "eminence", "protection", "familiarity", "forest_ha",
+    "nitre_bed_m2", "mine_pending", "mine_ready",
+    # WORKINGS, PLURAL: mine_capacity used to be the saved field, one float
+    # per material; it is now a computed property (economy.py), so what
+    # gets saved is the list it is computed FROM - each working with its
+    # own material, capacity, commissioning year, capex and depletion
+    # clock. Missing entirely, as in every save from before workings
+    # existed, reads back as no workings at all - see load_state's own
+    # migration of a genuinely old "mine_capacity" blob into this shape,
+    # which does not happen here but right after this loop, because it has
+    # to know whether "mines" was actually present in the file first.
+    "mines",
+    "mine_tranches", "market_pressure", "slaves", "freedmen",
+    "manumitted_total", "goal_year", "dead_reason", "insolvent_years",
+    "bribes_ytd", "living_cost_paid", "mine_cost_paid", "spend_last_year",
+    "output_factor", "economy", "throttle", "binding", "bountied",
+    "stalled", "life_left", "founder_alive", "revealed", "last_settlement",
+    "employees", "trades_created", "policy", "mothballed", "operating",
+    "forgotten", "opened_year", "last_taught", "paid_towards",
+    "contract_hours",
+    # "ALLOCATE" IS A STANDING INSTRUCTION, NOT A ONE-TURN COMMAND - see
+    # core.py's own comment on hour_allocations. Like `policy`, it has to
+    # survive a save or a player who set it once would see it quietly
+    # revert to "let the allocator decide" on every resume, which is the
+    # exact silent-reset fault `policy` itself was fixed for.
+    "hour_allocations", "work_trade",
+    "commissioned", "teaching_hours_this_year", "wages_paid",
+    "bondage_years_left", "bondage_debt", "money_real", "credit_frozen_until",
+    # Counters and within-year tallies that were being silently reset on every
+    # single command, because with --session every command is a save and a load.
+    # wage_hours_this_year is the dangerous one: it is the tally that stops you
+    # selling the same year's hours twice, so dropping it handed the exploit
+    # straight back to anyone playing the ordinary way, across sittings.
+    "interest_paid", "wage_hours_this_year", "teaching_hours_this_year",
+    "trade_hours_used", "total_spend", "director_hours_spent_founder",
+    "bounties_paid", "atrocity", "gov", "wages_earned",
+    "last_patron_death", "_said_debasement", "_said_autoopen", "_said_output",
+    "_said_scandal", "_said_parallelism",
+    "_said_command_index",
+    "_said_deputies",
+    "_said_near_limit",
+    "shut_for_staff",
+    # THE COUNTRY'S OWN ADOPTION OF WHAT YOU BUILT. See
+    # SocietyMixin._advance_food_diffusion_population (society.py): a
+    # ratchet that only ever grows, so a save missing it entirely (every
+    # save from before this mechanism existed) reads back as "nothing has
+    # diffused into the population yet", which is exactly true of those
+    # saves. _food_diffusion_said is the matching log throttle, same
+    # reasoning as the pre-existing _literacy_said never needing a save
+    # entry of its own - losing one generation's worth of throttling on an
+    # old save is not a fact about the game, only about when it next
+    # prints a line it would have printed anyway.
+    "_food_pop_bonus_applied",
+    # TONNES ON HAND. Own production a year did not use banks here instead of
+    # evaporating, which is what lets a twenty-gram gold demand be met by
+    # buying twenty grams rather than by commissioning a mine. It has to
+    # survive a save: without it a resumed game silently starts at zero stock
+    # and plays differently from the one that was saved, which is the same
+    # class of fault as the fog that could be rewound by reloading. Counter
+    # round-trips through JSON as a plain object and comes back a dict, which
+    # the accessor treats alike.
+    "_material_stock_ledger",
+    "last_withdrawal",
+    "wages_prepaid",
+    # WHAT AN INSTITUTION GAVE YOU OUTRIGHT (see _grant_staff, labour.py).
+    # scholars/artisans are saved as their current totals two lines up, but
+    # _resync_pools() recomputes both from `employees` on every step and adds
+    # this back in - so a save missing it would read correctly right up until
+    # the next step, then silently lose the school's +4 scholars the same way
+    # the bug this field fixes did.
+    "granted_staff",
+    # hours_this_year: last year's founder-hours accounting (see step(), just
+    # before the within-year tallies above reset). Without it, `state` right
+    # after a `--session` reload would report nothing for a figure the player
+    # just saw.
+    "hours_this_year",
+    # THE FOUNDER'S AGE AT DEATH, so it survives a --session reload. `log`
+    # is not a saved field, so without these two the one place the age had
+    # ever been written would go empty on resume and `state` would silently
+    # stop being able to say it - see _founder_death_info.
+    "_founder_death_aged", "_founder_death_year",
+    # HOW MANY UNITS OF EACH SCALABLE INSTITUTION ARE ACTUALLY FOUNDED. See
+    # ProjectsMixin.institution_units (projects.py): a save missing this
+    # entirely - every save from before institutions were quantities - is
+    # read as every open one being exactly 1.0 unit, which is exactly what it
+    # always was, so an old save resumes unchanged.
+    "inst_units",
+    # WHEN a taught trade was first taught, and which taught trades this
+    # society has since naturalised on its own - see
+    # SocietyMixin.advance_society (society.py). Missing entirely, as in
+    # every save from before this existed, reads back as "no trade has been
+    # taught long enough yet to naturalise", which is exactly true of a save
+    # from before the mechanism could ever have fired.
+    "trade_introduced_year", "trades_endemic",
+    # ONE SNAPSHOT A YEAR, for `changes` and `economy`'s "what moved most" -
+    # see _dashboard_snapshot. Missing entirely, as in every save from
+    # before this existed, reads back as no history at all, which `changes`
+    # already handles by name ("nothing has been recorded yet"); it is not
+    # backfilled, because there is nothing honest to backfill it from.
+    "_dashboard_history",
+    # RETRY LEARNING, WHICH WAS BEING ERASED BY THE VERY ACT OF SAVING.
+    # failed_attempts is what _retry_risk_multiplier and
+    # _retry_calendar_retain are computed from (projects.py), so a node the
+    # household has failed three times faces 0.53 of its bare risk and banks
+    # 56.9% of the elapsed clock toward the next attempt. None of that was
+    # in this tuple, so it all reset to "nothing has ever been tried" on
+    # every resume: three failures on zone_refining went from a 23.8% next
+    # attempt back to the full 45%, and `why`'s own attempts_already_failed
+    # told the player 0 about a node they had failed six times. The player
+    # who won this game complained that repeated 45% failures had "no
+    # strategic mitigation visible" - the mitigation existed and the save
+    # round-trip was deleting it. A defaultdict comes back from JSON as a
+    # plain dict, which is promoted in load_state before anything adds to it.
+    #
+    # `shortages` is the same omission with far lower stakes: a diagnostic
+    # tally of which material bound in which year, read by `run`/`compare`'s
+    # cross-seed summary (cli.py) and by nothing that decides anything. It
+    # is here so that a resumed game's own record of what it has been short
+    # of is continuous, not because any mechanic reads it.
+    "failed_attempts", "shortages",
+)
+
+
+def save_state(s, path):
+    """Write the whole game to a file.
+
+    There was no save, which is why every playtester ended up writing a driver
+    script to hold one long session across many calls. That is a thing a tester
+    can do and a player should never have to, so the fix is not a better script,
+    it is a save file.
+    """
+    blob = {}
+    for f in SAVE_FIELDS:
+        v = getattr(s, f, None)
+        if isinstance(v, set):
+            v = {"__set__": sorted(v)}
+        blob[f] = v
+    blob["_civ"] = s.civ.get("id")
+    # THE GOAL YOU CHOSE, same reasoning as _fog/_immortal just below: it is
+    # a choice the menu asked about when this game began, not a flag that
+    # should silently reset to the transistor because a resume happened to
+    # omit --goal. See load_state.
+    blob["_goal"] = getattr(s, "goal", None)
+    blob["_civ_live"] = {k: s.civ.get(k) for k in
+                         ("literacy_general", "literacy_elite", "state_capacity")}
+    blob["_weights"] = dict(s.w)
+    blob["_fog"] = getattr(s, "fog", False)
+    # WHETHER THE FOUNDER AGES, saved for the same reason fog is: they are
+    # choices the menu asks you to make about what game this is, and resuming
+    # into the other one is resuming into a different game. _fog was already
+    # written here and never read back, so every resumed game silently had the
+    # whole tree in view; see load_state.
+    blob["_immortal"] = bool(s.cfg.get("immortal", True))
+    # THE DICE, TOO. Nothing saved the random state, so every resume restarted
+    # it from the seed and re-rolled everything the world does. A break tester
+    # found the sharp edge of that: a project sitting at its completion
+    # threshold re-rolls its failure check on each resume, so
+    # `start fin_bimetallism` then one `step` per process oscillated
+    # 100%/60%/100%/60% for ever, burning hours and money and never finishing.
+    # They reproduced it 5 times out of 5. It also meant hazards, sackings and
+    # events were silently re-drawn every time a player came back to a save,
+    # which is a different game from the one they left.
+    try:
+        st = s.rng.getstate()
+        blob["_rng"] = [st[0], list(st[1]), st[2]]
+    except Exception:
+        blob["_rng"] = None
+    blob["_version"] = 1
+    tmp = path + ".tmp"
+    # A save into a directory that is not there killed the process outright on
+    # a FileNotFoundError, which is the one thing a save must never do.
+    parent = os.path.dirname(os.path.abspath(path))
+    if parent and not os.path.isdir(parent):
+        os.makedirs(parent, exist_ok=True)
+    with open(tmp, "w") as fh:
+        json.dump(blob, fh, indent=1, sort_keys=True, default=str)
+    os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
+    return path
+
+
+# Required to even consider a file a save from this game. Not all of
+# SAVE_FIELDS: most of it is optional (fields that did not exist yet when an
+# older save was written are just skipped, same as always), but a file
+# missing any of these is not a save, it is some other JSON document.
+REQUIRED_SAVE_FIELDS = ("year", "capital", "done", "active", "_civ", "_version")
+
+# Fields that hold a SET of node ids (see save_state's {"__set__": [...]}
+# encoding). Anything named here is checked against the currently loaded
+# tree, because the tree is data and does get edited: a node can be renamed
+# or removed between when a save was written and when it is read back.
+# NOT trades_created. That holds TRADE names - "optician", "chemist" - and it
+# was in this list, so `train optician 1` wrote a perfectly valid trade into
+# the save and the next load refused the whole file for referring to a
+# technology called optician that the tree does not have and never did. A
+# normal-play tester lost two runs to it, and it is worse than losing a save:
+# the five trades that have to be taught are the ones gating chemistry,
+# precision and electricity, so the one action that opens the second half of
+# the game was the one action that destroyed the game.
+_SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
+                           "bountied",
+                           "revealed")
+# Checked against the wage table instead, which is what they actually are.
+# trades_endemic holds trade names for the same reason trades_created does
+# (see the comment just above) and needs exactly the same protection: it is
+# a set of TRADE names, not node ids, so it belongs here and not in
+# _SET_FIELDS_OF_NODE_IDS.
+_SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
+
+
+def _validate_save(blob, s):
+    """None if `blob` looks like a save this game could have produced and can
+    be loaded into `s` as it stands right now; otherwise a short, plain
+    sentence saying why not.
+
+    `load` used to accept any JSON object at all: a typo'd filename, an
+    unrelated file, a save from a different civilisation, or a save that
+    refers to a node a later edit to the tech tree renamed or removed. Every
+    one of those went straight into setattr() - which either corrupted the
+    running game half-applied (fields earlier in SAVE_FIELDS take, the rest
+    do not, because the loop does not stop for a bad value) or surfaced as a
+    bare Python exception. This runs to completion BEFORE a single attribute
+    of `s` is touched, so a bad file costs exactly one clear sentence and
+    nothing else about the running game changes.
+    """
+    if not isinstance(blob, dict):
+        return ("this is not a save from this game: expected a JSON object, "
+                "got %s" % type(blob).__name__)
+    missing = [f for f in REQUIRED_SAVE_FIELDS if f not in blob]
+    if missing:
+        return ("this is not a save from this game: missing %s. A save this "
+                "game writes always has all of: %s"
+                % (", ".join(missing), ", ".join(REQUIRED_SAVE_FIELDS)))
+    if not isinstance(blob.get("_version"), int):
+        return "this save is corrupt: '_version' should be a whole number"
+    for f in ("year", "capital"):
+        v = blob.get(f)
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            return "this save is corrupt: '%s' should be a number, got %r" % (f, v)
+
+    civ_id = blob.get("_civ")
+    have_civ = s.civ.get("id")
+    if civ_id != have_civ:
+        return ("this save is from a different civilisation (%r); this game "
+                "is running %r. Start the agent with --civ %s to load it."
+                % (civ_id, have_civ, civ_id))
+
+    active = blob.get("active")
+    if not isinstance(active, dict):
+        return "this save is corrupt: 'active' should be an object of id -> progress"
+    for k, v in active.items():
+        if not isinstance(k, str) or not isinstance(v, dict):
+            return "this save is corrupt: active[%r] is not a valid entry" % (k,)
+        for f in ("ph_left", "spent"):
+            if f not in v or isinstance(v[f], bool) or not isinstance(v[f], (int, float)):
+                return ("this save is corrupt: active[%r] is missing a numeric "
+                         "'%s'" % (k, f))
+
+    done = blob.get("done")
+    if not (isinstance(done, dict) and isinstance(done.get("__set__"), list)):
+        return "this save is corrupt: 'done' should be a set of ids"
+
+    # Every node id the save refers to must still exist in the tree we have
+    # loaded right now.
+    unknown = set()
+    for f in _SET_FIELDS_OF_NODE_IDS:
+        v = blob.get(f)
+        if v is None:
+            continue
+        ids = v.get("__set__") if isinstance(v, dict) else None
+        if ids is None or not all(isinstance(x, str) for x in ids):
+            return "this save is corrupt: '%s' should be a set of id strings" % f
+        unknown |= {x for x in ids if x not in s.nodes}
+    unknown |= {k for k in active if k not in s.nodes}
+    for f in _SET_FIELDS_OF_TRADE_NAMES:
+        v = blob.get(f)
+        if v is None:
+            continue
+        ids = v.get("__set__") if isinstance(v, dict) else None
+        if ids is None or not all(isinstance(x, str) for x in ids):
+            return "this save is corrupt: '%s' should be a set of trade names" % f
+        strange = [x for x in ids if x not in WAGES]
+        if strange:
+            return ("this save refers to trade(s) this game does not have: %s"
+                    % ", ".join(sorted(strange)[:6]))
+    if unknown:
+        sample = ", ".join(sorted(unknown)[:6])
+        more = "" if len(unknown) <= 6 else " and %d more" % (len(unknown) - 6)
+        return ("this save refers to node(s) the current tech tree does not "
+                "have: %s%s. The tree has changed since this was saved; it "
+                "cannot be loaded against this version of the game."
+                % (sample, more))
+    return None
+
+
+def civ_of_save(path):
+    """Which civilisation a save file is from, or None if it will not say.
+
+    A save records the game it is; a command line resuming it should not have
+    to be told again. A playtester was handed `play --session england_1300.json`
+    by the game itself, ran exactly that, and was refused with "this save is
+    from a different civilisation" - because the flag defaulted to Rome. The
+    file knew the answer the whole time.
+    """
+    try:
+        with open(path) as fh:
+            return (json.load(fh) or {}).get("_civ")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def goal_of_save(path):
+    """Which goal a save file was playing toward, or None if it will not
+    say (an older save, or one the file on disk does not match). Same
+    reasoning as civ_of_save just above, and used the same way: a resumed
+    session should not need --goal repeated any more than it needs --civ
+    repeated, and a strategy order picked before the save is even read
+    would be picked for the wrong goal.
+    """
+    try:
+        with open(path) as fh:
+            return (json.load(fh) or {}).get("_goal")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def load_state(s, path):
+    """Read a save from `path` and apply it to `s`, or raise ValueError with
+    a clear reason and leave `s` completely untouched.
+
+    Validation (see _validate_save) always runs to completion first; nothing
+    below it can execute against a file that failed. A half-loaded game is
+    worse than a refused one.
+    """
+    blob = json.load(open(path))
+    bad = _validate_save(blob, s)
+    if bad:
+        raise ValueError(bad)
+    # FOG IS A PROPERTY OF THE GAME YOU CHOSE, NOT A FIELD IN A FILE, and this
+    # has to be checked BEFORE anything is applied - the fog flag is restored
+    # further down, so a check placed after it is checking the value it was
+    # about to reject. `load` validated the filename carefully and the contents
+    # barely at all, so a hand-edited save with "_fog": false turned the fog
+    # off in a running fogged game and `path` began answering, in a game whose
+    # own help says there is no way to view the whole tree. A break tester did
+    # exactly that. A save may resume the fog it was played with; it may not
+    # switch the fog off underneath you.
+    if getattr(s, "fog", False) and blob.get("_fog") is False:
+        raise ValueError("that save was played without fog of war and this "
+                         "game is being played with it. A save cannot turn the "
+                         "fog off; start a new game without it if that is what "
+                         "you want.")
+    for f in SAVE_FIELDS:
+        if f not in blob:
+            continue
+        v = blob[f]
+        # NEVER restore a null over a live default. A field that had not been
+        # initialised yet when the game was saved, spend_last_year and
+        # insolvent_years among them, was written as null and then loaded back
+        # OVER the number the constructor had just set, so the next `state`
+        # died on round(None). A naive tester hit this on the very first
+        # save-and-restart, which is the exact workflow the welcome text tells
+        # players is safe, and went back to holding a process open through a
+        # FIFO instead. My own round-trip tests missed it because I happened to
+        # step the clock first, which initialises those fields.
+        if v is None:
+            continue
+        if isinstance(v, dict) and "__set__" in v:
+            v = set(v["__set__"])
+        setattr(s, f, v)
+    # PROMOTE THE ACCUMULATORS BACK, before anything adds to one. JSON has no
+    # defaultdict and no Counter, so the loop above has just put plain dicts
+    # where projects.py does `self.failed_attempts[k] += 1` and economy.py
+    # does `self.shortages[who] += 1`, both of which raise KeyError on a new
+    # key in a plain dict. Same shape as economy.py's own _material_stock
+    # promotion, done here rather than lazily because these two are written
+    # to directly rather than through an accessor.
+    s.failed_attempts = collections.defaultdict(
+        int, {k: int(v) for k, v in (getattr(s, "failed_attempts", None) or {}).items()})
+    s.shortages = collections.Counter(getattr(s, "shortages", None) or {})
+    # A SAVE FROM BEFORE WORKINGS EXISTED still names real capacity, under
+    # the old field name "mine_capacity" (one float per material - see
+    # SAVE_FIELDS's own comment on "mines"). "mines" is not in SAVE_FIELDS
+    # any more, so the loop above never touches it, and a file that
+    # predates this change has no "mines" key at all to have skipped. Carry
+    # that capacity forward as one working per material rather than losing
+    # it outright - but do NOT invent the year it was commissioned, which
+    # this file never recorded and a dashboard agent was right to refuse to
+    # fabricate: "opened_year": None, shown as "unknown" rather than a
+    # guess (see _agent_mines/render_mines).
+    if "mines" not in blob and isinstance(blob.get("mine_capacity"), dict):
+        s.mines = [{"material": m, "capacity": float(amt),
+                    "opened_year": None, "capex_paid": None,
+                    "intensity_yrs": 0.0}
+                   for m, amt in sorted(blob["mine_capacity"].items())
+                   if isinstance(amt, (int, float)) and amt > 0]
+    # `operating` JUST WENT BACK TO BEING A PLAIN SET. The generic setattr
+    # above has no idea self.operating is normally an _InvalidatingSet (see
+    # economy.py) and replaced it with whatever plain `set(...)` came out of
+    # the save - correct in content, but silently unable to invalidate
+    # capability_factor()'s cache on any future .add/.discard. That is a
+    # real gap, not a theoretical one: `load` reached through the agent/play
+    # JSON protocol runs this against the SAME long-lived Sim a session goes
+    # on playing in, not a fresh one, and every open/close/mothball after
+    # this point mutates .operating directly. Re-wrap it, once, here.
+    s._reset_operating()
+    # The game this save IS, not whatever the command line happened to say.
+    if "_fog" in blob:
+        s.fog = bool(blob["_fog"])
+        if s.fog and not hasattr(s, "revealed"):
+            s.revealed = set()
+    if "_immortal" in blob:
+        s.cfg["immortal"] = bool(blob["_immortal"])
+    # A save from before goal selection existed has no "_goal" at all, and
+    # one whose goal node a later tree edit removed should not crash a
+    # resume - either way, fall back to whatever the command line/default
+    # already set on `s` before this was called, rather than raise.
+    if blob.get("_goal") in s.nodes:
+        s.goal = blob["_goal"]
+    if blob.get("_rng"):
+        try:
+            _v, _keys, _g = blob["_rng"]
+            s.rng.setstate((_v, tuple(int(x) for x in _keys), _g))
+        except Exception:
+            pass          # an old save without dice is still a loadable save
+
+    for k, v in (blob.get("_civ_live") or {}).items():
+        if v is not None:
+            s.civ[k] = v
+    s.w.update(blob.get("_weights") or {})
+    s.state_capacity = float(s.civ.get("state_capacity", s.state_capacity))
+    s.fog = bool(blob.get("_fog", False))
+    return s
