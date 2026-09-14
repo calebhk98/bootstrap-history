@@ -1,0 +1,115 @@
+# Python bytecode / caches
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables / secrets
+
+.env
+.env.*
+!.env.example
+
+# Python tooling / test caches
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Build / packaging output
+
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# IDE / editor files
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# OS junk
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# Logs and temporary files
+
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Compressed/generated run output
+
+*.gz
+
+# -------------------------------------------------------------------
+
+# Game / simulation-generated artifacts
+
+# -------------------------------------------------------------------
+
+# Generated saves and transcripts from automated playtests.
+
+# Keep hand-written fixtures and documentation elsewhere in playtest/.
+
+playtest/**/games/
+playtest/**/transcript.txt
+
+# Generic local save/output directories if added later
+
+saves/
+savegames/
+runs/
+output/
+outputs/
+tmp/
+temp/
+
+# Common generated save naming
+
+**save.json
+**save**.json
+save**.json
+autosave*.json
+
+# -------------------------------------------------------------------
+
+# Local AI/tooling scratch files
+
+# -------------------------------------------------------------------
+
+.claude/
+.cursor/
+.aider*
+.codex/
+*.prompt.tmp
+
+# Local scratch directories
+
+scratch/
+.local/
+working/
+work/
