@@ -1,0 +1,1772 @@
+[
+  {
+    "id": "fud_three_field_rotation",
+    "name": "Three-field crop rotation with fallowing",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "scribe": 80
+    },
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 1.0,
+    "risk": 0.05,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Grain, legume, fallow rotation sustains soil nitrogen and allows continuous cultivation on two-thirds of land; fallow fields provide grazing for animals, multiplying manure. Requires written record-keeping and community coordination."
+  },
+  {
+    "id": "fud_selective_breeding_pedigree",
+    "name": "Selective breeding with written pedigrees",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "scribe": 200,
+      "labourer": 100
+    },
+    "mat": {
+      "parchment_sheet": 50
+    },
+    "cap": 100,
+    "up": 20,
+    "yrs": 5.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 1,
+    "conf": "A",
+    "note": "Record traits of seed plants and breeding animals over generations; select for yield, disease resistance, or size. Pedigree tracking allows avoiding inbreeding and accumulating improvements. Requires literacy and 5-7 year commitment before visible yield gains."
+  },
+  {
+    "id": "fud_controlled_pollination",
+    "name": "Controlled pollination of crop plants",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "fud_selective_breeding_pedigree"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "artisan": 200
+    },
+    "mat": {},
+    "cap": 50,
+    "up": 10,
+    "yrs": 2.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Hand-pollinate selected plants using brushes to cross desired traits: large seeds with disease resistance, for instance. Works on grains and legumes. Requires understanding flower anatomy and patience; gains compound with pedigree records."
+  },
+  {
+    "id": "fud_nitrogen_fixing_understanding",
+    "name": "Recognition of nitrogen-fixing legume crops",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "scholar": 100
+    },
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Understand that legumes (peas, beans, clover, alfalfa) restore soil fertility where grain depletes it; systemize the rotation. Not chemistry, but empirical observation that legume-rich fields grow better grain. Foundation for three-field rotation success."
+  },
+  {
+    "id": "fud_liming_acid_soils",
+    "name": "Liming of acidic soils",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 300,
+      "furnaceman": 50
+    },
+    "mat": {
+      "lime_kg": 2000
+    },
+    "cap": 50,
+    "up": 200,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Spread quicklime or slaked lime on clay and peat soils to neutralize acidity and improve drainage. Enables cultivation of marginal northern lands. Effects last 5-10 years; must be repeated. Transform intractable soil into productive land."
+  },
+  {
+    "id": "fud_bone_meal_fertilizer",
+    "name": "Bone meal as phosphate fertilizer",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 200,
+      "artisan": 50
+    },
+    "mat": {
+      "manure_kg": 5000
+    },
+    "cap": 80,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.05,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Collect bones from butchers and boil with manure to break them down and create a phosphate-rich mulch. Slower than guano but reliably produced locally. Improves root development and seed formation."
+  },
+  {
+    "id": "fud_alfalfa",
+    "name": "Alfalfa (lucerne) cultivation",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "fud_nitrogen_fixing_understanding"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 150
+    },
+    "mat": {},
+    "cap": 100,
+    "up": 50,
+    "yrs": 2.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Perennial legume for permanent meadows; fixes nitrogen, produces 4-6 cuts per season for fodder. Survives winter in warmer regions. Imported from Central Asia; needs good drainage and lime on acid soils. Transforms winter feeding."
+  },
+  {
+    "id": "fud_turnips_winter_fodder",
+    "name": "Turnips as storable winter animal feed",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 200
+    },
+    "mat": {},
+    "cap": 50,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "High-yield root crop stores in cool cellars through winter, feeding oxen and sheep when pasture dies. Single biggest gain in animal husbandry: overwintered animals produce manure year-round and retain strength for spring ploughing and hauling. Revolutionary."
+  },
+  {
+    "id": "fud_clover_winter_fodder",
+    "name": "Clover as winter grazing and fodder",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "fud_nitrogen_fixing_understanding"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "labourer": 100
+    },
+    "mat": {},
+    "cap": 50,
+    "up": 30,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Nitrogen-fixing legume sown in fallows or as early spring feed; survives winter in milder regions, providing grazing and supplementary hay. Combines nitrogen restoration with animal fodder. Seed production is key constraint."
+  },
+  {
+    "id": "fud_hay_making_storage",
+    "name": "Hay making and dry storage",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 300
+    },
+    "mat": {
+      "timber_m3": 5
+    },
+    "cap": 200,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Cut grass at peak nutrition, dry thoroughly in sun and wind, store in dry barn or haybarn. Timing and weather are critical - rain-soaked hay rots or molts. Enables winter feeding of draft animals when pasture is gone."
+  },
+  {
+    "id": "fud_silage_fermentation",
+    "name": "Silage production and fermented fodder storage",
+    "tier": 2,
+    "cat": "agriculture",
+    "pre": [
+      "fud_hay_making_storage"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "labourer": 400,
+      "artisan": 100
+    },
+    "mat": {
+      "timber_m3": 8,
+      "salt_kg": 50
+    },
+    "cap": 300,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.25,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Pack fresh grass tightly in pits or wooden silos with salt, exclude air, and let anaerobic bacteria ferment it. Preserves nutrition without sun-drying and works in wet climates. Requires understanding of fermentation and airtight storage design."
+  },
+  {
+    "id": "fud_root_cellar_storage",
+    "name": "Root cellar and cool storage construction",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "labourer": 400,
+      "carpenter": 200
+    },
+    "mat": {
+      "timber_m3": 15,
+      "brick_1000": 2
+    },
+    "cap": 400,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Dig cool underground chamber below frost line with air vents; temperature stays 4-10 C year-round. Stores turnips, apples, onions, potatoes for months. Requires only soil, timber, and patience; enables winter feeding and food security."
+  },
+  {
+    "id": "fud_heavy_mouldboard_plough_coulter",
+    "name": "Heavy mouldboard plough with coulter (regional)",
+    "tier": 2,
+    "cat": "agriculture",
+    "pre": [
+      "horse_collar",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "carpenter": 150,
+      "smith": 200
+    },
+    "mat": {
+      "timber_m3": 3,
+      "iron_bar_kg": 30
+    },
+    "cap": 400,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 1,
+    "conf": "A",
+    "note": "Heavy plough with iron coulter, share, and mould board on two wheels, drawn by team of oxen. Turns thick clay sods on cold northern soils where the Mediterranean ard is useless. Expensive and slow but enables fertile northern lands. Do not use on light Mediterranean soils."
+  },
+  {
+    "id": "fud_seed_drill",
+    "name": "Mechanical seed drill",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "carpenter": 150,
+      "smith": 100
+    },
+    "mat": {
+      "timber_m3": 2,
+      "iron_bar_kg": 15
+    },
+    "cap": 250,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Hopper with rotating cams or gears deposits seed at regular intervals in furrow. Spacing is controllable. Saves 40-60% of broadcast seed waste and improves germination by consistent burial depth. Requires precision woodwork."
+  },
+  {
+    "id": "fud_horse_hoe",
+    "name": "Horse-drawn hoe for weeding between rows",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "fud_seed_drill",
+      "horse_collar"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "carpenter": 80,
+      "smith": 50
+    },
+    "mat": {
+      "timber_m3": 1,
+      "iron_bar_kg": 8
+    },
+    "cap": 150,
+    "up": 30,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Simple cultivator or hoe frame pulled by horse along seed drill rows to cut weeds between plants. Requires plants spaced precisely by the drill. Eliminates hand-hoeing drudgery and allows larger plantings."
+  },
+  {
+    "id": "fud_threshing_machine",
+    "name": "Mechanical threshing machine",
+    "tier": 2,
+    "cat": "agriculture",
+    "pre": [
+      "cap_power_muscle",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 250,
+    "lab": {
+      "carpenter": 200,
+      "smith": 150
+    },
+    "mat": {
+      "timber_m3": 10,
+      "iron_bar_kg": 50
+    },
+    "cap": 600,
+    "up": 150,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 2,
+    "rev": 500,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Flailed drum rotating against fixed comb beats grain from heads mechanically, replacing hand flailing. Powered by horses treading or pulled by oxen. Three to five fold increase in threshing speed. Multiplies bottleneck from threshing to grinding."
+  },
+  {
+    "id": "fud_winnowing_machine",
+    "name": "Mechanical winnowing fan",
+    "tier": 2,
+    "cat": "agriculture",
+    "pre": [
+      "fud_threshing_machine",
+      "cap_power_muscle"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "carpenter": 100,
+      "smith": 80
+    },
+    "mat": {
+      "timber_m3": 5,
+      "iron_bar_kg": 25
+    },
+    "cap": 350,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 1,
+    "rev": 200,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Rotating fan or hand-cranked blower separates grain from chaff with controlled airstream. Manual winnowing baskets remain for small quantities, but the machine handles output from mechanical threshing. Driven by hand crank or powered by oxen."
+  },
+  {
+    "id": "fud_mechanical_reaper",
+    "name": "Mechanical grain reaper",
+    "tier": 2,
+    "cat": "agriculture",
+    "pre": [
+      "horse_collar",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 300,
+    "lab": {
+      "carpenter": 200,
+      "smith": 150
+    },
+    "mat": {
+      "timber_m3": 8,
+      "iron_bar_kg": 60
+    },
+    "cap": 800,
+    "up": 200,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Horse-drawn frame with reciprocating knife blade and conveyor tray delivers cut grain to platform or wagon. Reaps four to six acres per day versus one acre for hand scythe. Requires training and maintenance. Leaves stubble taller than scythe."
+  },
+  {
+    "id": "fud_combine_harvester",
+    "name": "Combine harvester (reaper, thresher, winnower integrated)",
+    "tier": 4,
+    "cat": "agriculture",
+    "pre": [
+      "fud_mechanical_reaper",
+      "fud_threshing_machine",
+      "fud_winnowing_machine",
+      "cap_power_steam"
+    ],
+    "kb": "",
+    "ph": 400,
+    "lab": {
+      "carpenter": 250,
+      "smith": 200,
+      "machinist": 150
+    },
+    "mat": {
+      "timber_m3": 20,
+      "steel_noric_kg": 100,
+      "iron_bar_kg": 150
+    },
+    "cap": 2000,
+    "up": 400,
+    "yrs": 1.0,
+    "risk": 0.3,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Reaper feeds cut grain into threshing drum and winnowing mechanism; discharges bagged grain and straw bales. Steam- or petrol-powered. Requires flat or gentle ground, good visibility, and skilled operators. 20-30 acres per day vs 1 acre hand harvest."
+  },
+  {
+    "id": "fud_guano_import_trade",
+    "name": "Guano import and application as fertilizer",
+    "tier": 1,
+    "cat": "agriculture",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "labourer": 200
+    },
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0.5,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "note": "Import bird guano from coastal cliffs or islands (Peru, North Africa) via merchants. Rich in nitrogen and phosphorus; application can double grain yields locally. Expensive, but supply is predictable. Builds dependency on trade and distant supply chains."
+  },
+  {
+    "id": "fud_superphosphate_fertilizer",
+    "name": "Superphosphate from bones and sulfuric acid",
+    "tier": 3,
+    "cat": "agriculture",
+    "pre": [
+      "fud_bone_meal_fertilizer",
+      "sulfuric_retort",
+      "cap_heat_1100"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "chemist": 200,
+      "furnaceman": 100
+    },
+    "mat": {
+      "manure_kg": 5000,
+      "sulfuric_acid_kg": 500,
+      "lead_kg": 50
+    },
+    "cap": 300,
+    "up": 150,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "C",
+    "note": "React bone meal with sulfuric acid to convert insoluble phosphates into soluble form. More effective than guano but requires acid production and handling. Arrives in late agricultural revolution when industrialized."
+  },
+  {
+    "id": "fud_haber_process_synthetic_nitrogen",
+    "name": "Haber process for synthetic ammonia and nitrate",
+    "tier": 5,
+    "cat": "agriculture",
+    "pre": [
+      "industrial_gases",
+      "cap_power_electric",
+      "cap_heat_1600",
+      "cap_pure_2N"
+    ],
+    "kb": "",
+    "ph": 600,
+    "lab": {
+      "chemist": 400,
+      "machinist": 300
+    },
+    "mat": {
+      "hydrogen_m3": 5000,
+      "iron_ore_kg": 500
+    },
+    "cap": 10000,
+    "up": 2000,
+    "yrs": 1.0,
+    "risk": 0.3,
+    "sus": 0,
+    "gov": 3,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Compress hydrogen and nitrogen at 200 atmospheres over iron catalyst at 400-500 C to synthesize ammonia; oxidize ammonia to nitric acid. Requires high-pressure steel vessels, control systems, and electric power. Enables synthetic fertilizer production at scale but only late in the tree."
+  },
+  {
+    "id": "fud_roller_mill",
+    "name": "Roller mill for grain (replacing millstone)",
+    "tier": 2,
+    "cat": "milling",
+    "pre": [
+      "water_power_scale",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 250,
+    "lab": {
+      "carpenter": 200,
+      "smith": 150,
+      "millwright": 150
+    },
+    "mat": {
+      "steel_noric_kg": 50,
+      "timber_m3": 15,
+      "iron_bar_kg": 100
+    },
+    "cap": 1000,
+    "up": 200,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 1,
+    "rev": 800,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Pairs of hardened steel rollers crush grain more uniformly than stones. Multiple roller pairs reduce grain progressively, producing finer flour with less grit. Can produce white flour by separating bran. Requires precision machining and hardened steel."
+  },
+  {
+    "id": "fud_roller_milled_white_flour",
+    "name": "White flour from roller milling and bran separation",
+    "tier": 2,
+    "cat": "milling",
+    "pre": [
+      "fud_roller_mill"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Run milled flour through bolters (cylindrical silk screens) to separate white endosperm from brown bran. Produces elegant white bread prized in cities. Bran removal discards B vitamins and niacin; prolonged white-flour diet causes pellagra and beriberi. Major population health risk."
+  },
+  {
+    "id": "fud_yeast_pure_culture",
+    "name": "Pure yeast culture isolation and maintenance",
+    "tier": 2,
+    "cat": "fermentation",
+    "pre": [
+      "distillation_alcohol"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "chemist": 200,
+      "scribe": 100
+    },
+    "mat": {
+      "glass_raw_kg": 50
+    },
+    "cap": 300,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 1,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation."
+  },
+  {
+    "id": "fud_brewing_with_hops",
+    "name": "Brewing with hops for flavor and preservation",
+    "tier": 1,
+    "cat": "fermentation",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "artisan": 200
+    },
+    "mat": {},
+    "cap": 100,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 1,
+    "rev": 300,
+    "sch": 0,
+    "art": 1,
+    "conf": "A",
+    "note": "Add dried hop flowers to boiling wort; the alpha acids bitter and preserve the beer, preventing spoilage. Replaces gruit (herb mixtures). Grew in southern Germany in the 9th century; spread north over centuries. Enables longer storage and transport of beer."
+  },
+  {
+    "id": "fud_distillation_spirits",
+    "name": "Distillation of spirits and liqueurs",
+    "tier": 1,
+    "cat": "fermentation",
+    "pre": [
+      "distillation_alcohol"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "artisan": 200,
+      "chemist": 80
+    },
+    "mat": {
+      "copper_kg": 30
+    },
+    "cap": 250,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 1,
+    "gov": 1,
+    "rev": 600,
+    "sch": 0,
+    "art": 1,
+    "conf": "A",
+    "note": "Heat fermented beer or wine in copper alembic with condenser; collect vapors as high-proof spirit. Required copper work and heat control. Spirits store longer than wine and command high prices. Banned in some jurisdictions as luxury and fire hazard."
+  },
+  {
+    "id": "fud_vinegar_production",
+    "name": "Vinegar production via acetification",
+    "tier": 1,
+    "cat": "fermentation",
+    "pre": [
+      "distillation_alcohol"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {
+      "wood_ash_kg": 50
+    },
+    "cap": 100,
+    "up": 30,
+    "yrs": 0.5,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 100,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Pass fermented wine or weak ale through wood shavings and let acetic bacteria oxidize alcohol to acetic acid. Slower than heating but requires no energy. Preserves excess wine as vinegar for cooking and cleaning. Used medicinally as well."
+  },
+  {
+    "id": "fud_rice_cultivation",
+    "name": "Rice cultivation in paddies",
+    "tier": 1,
+    "cat": "crops",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "labourer": 300
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "note": "Cultivate rice in water-filled paddies in warm regions with reliable summer irrigation. Requires leveled fields, water control, and careful timing. High yield per acre but demands labor-intensive transplanting. Imported seed and knowledge from Asia."
+  },
+  {
+    "id": "fud_sugar_cane_cultivation",
+    "name": "Sugar cane cultivation and juice extraction",
+    "tier": 1,
+    "cat": "crops",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 200
+    },
+    "mat": {},
+    "cap": 100,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "note": "Grow sugar cane in warm coastal regions, crush stalks with ox-powered mill to extract juice. Simmer juice to crystallize sugar. Imported from Mediterranean and later from tropical colonies. Labor-intensive but high value product."
+  },
+  {
+    "id": "fud_beet_sugar_processing",
+    "name": "Sugar beet cultivation and crystallization",
+    "tier": 2,
+    "cat": "crops",
+    "pre": [
+      "fud_sugar_cane_cultivation"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "labourer": 300,
+      "chemist": 100
+    },
+    "mat": {
+      "sulfuric_acid_kg": 200,
+      "lime_kg": 100
+    },
+    "cap": 500,
+    "up": 200,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 400,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade."
+  },
+  {
+    "id": "fud_tea_trade_import",
+    "name": "Tea import and trade channels",
+    "tier": 1,
+    "cat": "crops",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 60,
+    "lab": {
+      "merchant": 100
+    },
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0.5,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Establish merchant contacts for tea via trade routes (by late Roman era via Parthia from China). Expensive, luxury item, consumed hot. Requires trade infrastructure and wealth. Demand creates mercantile networks."
+  },
+  {
+    "id": "fud_coffee_trade_import",
+    "name": "Coffee import from Near East and Ethiopia",
+    "tier": 1,
+    "cat": "crops",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 60,
+    "lab": {
+      "merchant": 100
+    },
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0.5,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "note": "Import coffee beans from Arabian and Ethiopian merchants. Roast, grind, and brew with hot water. Later becomes urban necessity in coffeehouses. Currently rare and expensive in the Mediterranean."
+  },
+  {
+    "id": "fud_potato_tier9",
+    "name": "Potato cultivation (New World, unobtainable)",
+    "tier": 9,
+    "cat": "crops",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 1.0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Potato is a New World crop, unobtainable. Note: if somehow acquired (which cannot happen), it has extraordinary yield and stores for months, making it transformative for population growth and army feeding. Cannot be pursued in this scenario."
+  },
+  {
+    "id": "fud_maize_tier9",
+    "name": "Maize cultivation (New World, unobtainable)",
+    "tier": 9,
+    "cat": "crops",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 1.0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Maize is a New World crop, unobtainable. Incomparably high yield per hectare and stores well, transforming food security. Cannot be pursued in this scenario."
+  },
+  {
+    "id": "fud_chocolate_tier9",
+    "name": "Chocolate from cacao (New World, unobtainable)",
+    "tier": 9,
+    "cat": "crops",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 1.0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Chocolate is made from cacao, a New World crop, unobtainable. Ground, fermented cacao nibs mixed with sugar and spices produce luxurious chocolate. Cannot be pursued in this scenario."
+  },
+  {
+    "id": "fud_canning_appert_method",
+    "name": "Canning by Appert's method (heating in sealed glass)",
+    "tier": 2,
+    "cat": "preservation",
+    "pre": [
+      "fud_bottling_sealed_cork",
+      "cap_heat_1100"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "chemist": 150,
+      "artisan": 150
+    },
+    "mat": {
+      "glass_raw_kg": 500
+    },
+    "cap": 400,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.25,
+    "sus": 0,
+    "gov": 2,
+    "rev": 300,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Pack food in strong glass jar, seal with cork and wire, heat in water bath to 95-100 C for 30-60 minutes depending on acid content. Low-acid foods (meats, vegetables) are risky without understanding of clostridium botulinum and its toxin. Works for high-acid foods (pickles, jams) without germ theory. Revolutionary for food security if done carefully."
+  },
+  {
+    "id": "fud_tin_plate_cans",
+    "name": "Tin plate cans for food preservation",
+    "tier": 3,
+    "cat": "preservation",
+    "pre": [
+      "fud_canning_appert_method",
+      "fud_roller_mill"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "smith": 150,
+      "artisan": 100
+    },
+    "mat": {
+      "iron_sheet_kg": 200,
+      "tin_kg": 50
+    },
+    "cap": 600,
+    "up": 150,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 2,
+    "rev": 400,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Roll thin iron sheet and coat with tin to prevent rust and corrosion from acidic food. Seal with solder or lead. Can be sealed hot for sterilization without glass fragility. Requires rolling mill, tin coating process, and soldering skill. Cans are reusable if handled carefully."
+  },
+  {
+    "id": "fud_can_opener",
+    "name": "Can opener device for tin cans",
+    "tier": 3,
+    "cat": "preservation",
+    "pre": [
+      "fud_tin_plate_cans"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "smith": 80,
+      "machinist": 50
+    },
+    "mat": {
+      "steel_noric_kg": 5
+    },
+    "cap": 50,
+    "up": 10,
+    "yrs": 1.0,
+    "risk": 0.05,
+    "sus": 0,
+    "gov": 0,
+    "rev": 50,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Cutting tool with rotating wheel or wedge to pierce and cut can edge, or butterfly handle lever that turns a cutting wheel around the rim. Arrives decades after cans become common. Without it, consumers use knives and hammers."
+  },
+  {
+    "id": "fud_pasteurisation",
+    "name": "Pasteurisation of milk and beverages",
+    "tier": 2,
+    "cat": "preservation",
+    "pre": [
+      "thermometer",
+      "cap_heat_1100"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "chemist": 150,
+      "artisan": 100
+    },
+    "mat": {
+      "copper_kg": 30
+    },
+    "cap": 300,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 1,
+    "rev": 150,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Heat milk to 63-65 C for 30 minutes or 72 C for 15 seconds, then cool rapidly. Kills spoilage bacteria and pathogens without destroying nutritional value or flavor of fresh milk. Works without germ theory; empirically known to prevent souring and spoilage."
+  },
+  {
+    "id": "fud_bottling_sealed_cork",
+    "name": "Bottling with cork closure and sealed glass",
+    "tier": 1,
+    "cat": "preservation",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {},
+    "cap": 100,
+    "up": 30,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 100,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Store liquids in strong glass bottles, insert cork and secure with wire or cage. Anaerobic storage preserves wine, beer, vinegar. Glass is Roman technology; cork sealing enables long-term aging and transport. Enables wine trade and aging in cellars."
+  },
+  {
+    "id": "fud_ice_house_construction",
+    "name": "Ice house construction and storage",
+    "tier": 1,
+    "cat": "refrigeration",
+    "pre": [
+      "fud_root_cellar_storage"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "labourer": 400,
+      "carpenter": 200
+    },
+    "mat": {
+      "timber_m3": 20,
+      "brick_1000": 3
+    },
+    "cap": 600,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Build underground or half-underground stone or brick chamber with thick insulation (sawdust, straw, or hay). Roof with thatch and timber. Store blocks of winter ice with straw layers. Temperature stays below freezing even in summer if well-insulated. Enables ice cream and chilled foods."
+  },
+  {
+    "id": "fud_ice_harvesting_and_cutting",
+    "name": "Ice harvesting from frozen lakes and rivers",
+    "tier": 1,
+    "cat": "refrigeration",
+    "pre": [
+      "fud_ice_house_construction"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "labourer": 300
+    },
+    "mat": {
+      "timber_m3": 5
+    },
+    "cap": 200,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Cut blocks of ice from frozen water with saw and chisel during winter thaw, transport quickly to ice house, layer with sawdust or hay. Most ice melts in transport and storage, requiring multiple harvests per winter. Requires cold climate and labor."
+  },
+  {
+    "id": "fud_ice_trade_logistics",
+    "name": "Trade and logistics of ice transport",
+    "tier": 2,
+    "cat": "refrigeration",
+    "pre": [
+      "fud_ice_harvesting_and_cutting"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "merchant": 150,
+      "labourer": 200
+    },
+    "mat": {},
+    "cap": 300,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.25,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Transport harvested ice via wagon or ship to towns 50-100 miles away, insulated with sawdust and straw. Arrive with 30-50% loss. Sells to affluent households and restaurants for drinks and food preservation. High loss but profitable if demand is strong."
+  },
+  {
+    "id": "fud_mechanical_refrigeration",
+    "name": "Mechanical refrigeration using compression and evaporation",
+    "tier": 3,
+    "cat": "refrigeration",
+    "pre": [
+      "fud_ice_trade_logistics",
+      "cap_power_steam",
+      "thermometer"
+    ],
+    "kb": "",
+    "ph": 300,
+    "lab": {
+      "machinist": 250,
+      "smith": 150,
+      "engineer": 100
+    },
+    "mat": {
+      "copper_kg": 80,
+      "mercury_kg": 30,
+      "iron_bar_kg": 100
+    },
+    "cap": 1500,
+    "up": 300,
+    "yrs": 1.0,
+    "risk": 0.3,
+    "sus": 0,
+    "gov": 1,
+    "rev": 400,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Compress ether or ammonia vapor, cool it with water, then expand through throttle valve to evaporate. Evaporation absorbs heat from a chamber, cooling it to 5-10 C. Requires high-precision pump, copper tubing, and steam power. Toxic if ammonia leaks."
+  },
+  {
+    "id": "fud_cold_chain_refrigerated_shipping",
+    "name": "Cold chain and refrigerated railway shipping",
+    "tier": 4,
+    "cat": "refrigeration",
+    "pre": [
+      "fud_mechanical_refrigeration",
+      "railway"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "engineer": 200,
+      "machinist": 150
+    },
+    "mat": {
+      "steel_plate_kg": 500,
+      "copper_kg": 100
+    },
+    "cap": 3000,
+    "up": 500,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 2,
+    "rev": 800,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Insulated railway cars with mechanical refrigeration carry fresh meat, dairy, and vegetables hundreds of miles to distant markets. Requires coordination with meatpacking plants, railways, and distribution. Breaks ancient food supply constraints; enables urban growth and meat consumption."
+  },
+  {
+    "id": "fud_freezing_with_mechanical_cold",
+    "name": "Freezing food with mechanical refrigeration",
+    "tier": 4,
+    "cat": "preservation",
+    "pre": [
+      "fud_mechanical_refrigeration",
+      "fud_ice_house_construction"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 300,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Use mechanical refrigeration to freeze meat, fish, and vegetables at -18 C. Frozen foods preserve for months. Thaw and cook before use. Requires reliable electricity or steam power and insulated freezer chambers."
+  },
+  {
+    "id": "fud_drying_evaporated_milk",
+    "name": "Drying and concentration of evaporated milk",
+    "tier": 2,
+    "cat": "preservation",
+    "pre": [
+      "fud_pasteurisation",
+      "cap_heat_1100"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "chemist": 100,
+      "artisan": 80
+    },
+    "mat": {
+      "copper_kg": 20
+    },
+    "cap": 300,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 150,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Heat milk gently in copper pan under partial vacuum (reduces boiling point) or in open pan to evaporate water until thick. Can milk solids are concentrated 2-3 fold. Stores several months in sealed tin. Reconstitutes with water or used directly in cooking."
+  },
+  {
+    "id": "fud_fish_curing_and_smoking",
+    "name": "Large-scale fish curing and smoking",
+    "tier": 1,
+    "cat": "preservation",
+    "pre": [],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "artisan": 200
+    },
+    "mat": {
+      "salt_kg": 500,
+      "firewood_kg": 1000
+    },
+    "cap": 300,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 400,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Salt-dry fish over winter, then hang and smoke over oak or beech. Produces shelf-stable protein that survives transport. Atlantic cod and herring can be processed at scale by coastal villages. Cheap protein for armies and urban poor."
+  },
+  {
+    "id": "fud_whaling_industry",
+    "name": "Organized whaling industry for oil and meat",
+    "tier": 2,
+    "cat": "fishing",
+    "pre": [],
+    "kb": "",
+    "ph": 300,
+    "lab": {
+      "sailor": 400,
+      "artisan": 200
+    },
+    "mat": {},
+    "cap": 2000,
+    "up": 500,
+    "yrs": 1.0,
+    "risk": 0.3,
+    "sus": 0,
+    "gov": 1,
+    "rev": 1200,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination."
+  },
+  {
+    "id": "fud_vegetable_oil_extraction",
+    "name": "Oil extraction from seeds and olives",
+    "tier": 1,
+    "cat": "oils",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "artisan": 150
+    },
+    "mat": {
+      "timber_m3": 3
+    },
+    "cap": 200,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 1,
+    "conf": "A",
+    "note": "Press rapeseed, walnut, or sesame with mechanical screw press to extract oil for cooking and lamps. Olive oil already exists (tier 0). New seed crops provide additional supply. Oil keeps several months in sealed vessels."
+  },
+  {
+    "id": "fud_margarine_synthesis",
+    "name": "Margarine from refined and hardened vegetable oils",
+    "tier": 3,
+    "cat": "oils",
+    "pre": [
+      "fud_vegetable_oil_extraction",
+      "industrial_gases"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "chemist": 200
+    },
+    "mat": {
+      "hydrogen_m3": 100
+    },
+    "cap": 400,
+    "up": 150,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 0,
+    "rev": 300,
+    "sch": 1,
+    "art": 0,
+    "conf": "C",
+    "note": "Bubble hydrogen through liquid vegetable oil over nickel catalyst to saturate double bonds and raise melting point. Result resembles butter in texture. Cheaper than dairy butter. Requires understanding of hydrogenation chemistry and high-purity hydrogen."
+  },
+  {
+    "id": "fud_enclosure_of_common_land",
+    "name": "Enclosure of common land and private farming",
+    "tier": 1,
+    "cat": "economic",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "scribe": 100
+    },
+    "mat": {},
+    "cap": 500,
+    "up": 0,
+    "yrs": 1.0,
+    "risk": 0.3,
+    "sus": -1,
+    "gov": -1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Fence and claim private ownership of formerly communal pasture and fields. Allows strategic crop rotation without community approval. Displaces peasants and common folk; generates social resistance. Enables capital-intensive farming but concentrates wealth and land ownership."
+  },
+  {
+    "id": "fud_farm_as_capital_enterprise",
+    "name": "Farm as capital enterprise with investment and profit",
+    "tier": 1,
+    "cat": "economic",
+    "pre": [
+      "fud_enclosure_of_common_land"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "cap": 1000,
+    "up": 0,
+    "yrs": 1.0,
+    "risk": 0.2,
+    "sus": -1,
+    "gov": 0,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "C",
+    "note": "Treat farming as a business venture: invest capital in land, buildings, machinery, and labor; track costs and revenue; aim for profit rather than subsistence. Requires accounting, written records, and credit access. Transforms peasant farming into an industrial enterprise."
+  },
+  {
+    "id": "fud_agricultural_treatises",
+    "name": "Written agricultural treatises and knowledge codification",
+    "tier": 1,
+    "cat": "knowledge",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 300,
+    "lab": {
+      "scholar": 200,
+      "scribe": 300
+    },
+    "mat": {
+      "parchment_sheet": 200
+    },
+    "cap": 200,
+    "up": 50,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 2,
+    "art": 0,
+    "conf": "B",
+    "note": "Codify agricultural knowledge in written treatises: crop rotation schedules, soil types, fertilizer rates, machinery designs, preservation methods. Spreads best practices beyond oral tradition. Requires literacy and sustained scholarship."
+  },
+  {
+    "id": "fud_soil_composition_analysis",
+    "name": "Understanding and testing soil composition",
+    "tier": 2,
+    "cat": "knowledge",
+    "pre": [
+      "fud_agricultural_treatises"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "scholar": 200,
+      "chemist": 150
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 2,
+    "art": 0,
+    "conf": "C",
+    "note": "Test soil pH, organic matter, and nutrient content via chemical analysis or simple tests. Informs liming, fertilizer, and crop choices. Precision farming based on data rather than guess."
+  },
+  {
+    "id": "fud_malt_production",
+    "name": "Malt production from barley and other grains",
+    "tier": 1,
+    "cat": "fermentation",
+    "pre": [
+      "crop_rotation"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "artisan": 150
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 1,
+    "conf": "A",
+    "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold."
+  },
+  {
+    "id": "fud_grain_storage_silos",
+    "name": "Cylindrical silos for bulk grain storage",
+    "tier": 2,
+    "cat": "storage",
+    "pre": [],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "mason": 300,
+      "carpenter": 150
+    },
+    "mat": {
+      "brick_1000": 10,
+      "timber_m3": 10
+    },
+    "cap": 800,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 2,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Build tall cylindrical brick or wooden towers for grain storage. Pressure from grain weight above excludes insects and rodents. Chutes at bottom for withdrawal. More efficient than rectangular granaries. Enables large centralized storage for grain dole."
+  },
+  {
+    "id": "fud_livestock_selective_cattle",
+    "name": "Selective breeding of draft and dairy cattle",
+    "tier": 1,
+    "cat": "livestock",
+    "pre": [
+      "fud_selective_breeding_pedigree"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "labourer": 300
+    },
+    "mat": {},
+    "cap": 500,
+    "up": 200,
+    "yrs": 5.0,
+    "risk": 0.2,
+    "sus": 0,
+    "gov": 1,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Breed cattle for strength (draft animals) or milk production (dairy cattle) over many generations. Selective breeding can double milk yield or hauling power. Requires pedigree tracking and patience; gains compound over 5-10 years."
+  },
+  {
+    "id": "fud_livestock_selective_sheep",
+    "name": "Selective breeding of sheep for wool and meat",
+    "tier": 1,
+    "cat": "livestock",
+    "pre": [
+      "fud_selective_breeding_pedigree"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "labourer": 250
+    },
+    "mat": {},
+    "cap": 300,
+    "up": 150,
+    "yrs": 4.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Breed sheep for fine fleece and lean meat. Selective breeding improves wool fineness and meat quality over generations. Wool becomes higher value product. Requires pedigree tracking."
+  },
+  {
+    "id": "fud_dairy_butter_production",
+    "name": "Butter production at scale from dairy cattle",
+    "tier": 1,
+    "cat": "dairy",
+    "pre": [
+      "fud_livestock_selective_cattle"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "artisan": 200
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 80,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Churn milk in barrel or wooden churn to separate butterfat from buttermilk. Butter stores for months salted in wooden vessels. Higher value than milk for trade. Requires cool cellar and daily production."
+  },
+  {
+    "id": "fud_dairy_cheese_aging",
+    "name": "Controlled cheese aging and storage",
+    "tier": 1,
+    "cat": "dairy",
+    "pre": [
+      "fud_livestock_selective_cattle"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "artisan": 150
+    },
+    "mat": {},
+    "cap": 200,
+    "up": 100,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 300,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Store cheese wheels in cool caves or cellars; maintain humidity and temperature for months or years. Aged hard cheeses develop flavor and keep indefinitely. Requires careful cave management to prevent mold and rot."
+  },
+  {
+    "id": "fud_sourdough_starter",
+    "name": "Sourdough starter culture maintenance",
+    "tier": 1,
+    "cat": "fermentation",
+    "pre": [
+      "fud_yeast_pure_culture"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {
+      "wheat_kg": 50
+    },
+    "cap": 100,
+    "up": 30,
+    "yrs": 1.0,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Maintain a living culture of wild yeast and lactic acid bacteria in flour and water. Feed it regularly and use it to leaven bread. Improves flavor and digestibility compared to unleavened bread. Requires discipline but produces superior bread."
+  }
+]

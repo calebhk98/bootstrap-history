@@ -1,0 +1,1788 @@
+[
+ {
+  "id": "lnd_paved_road_network",
+  "name": "Paved trunk road network",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 500,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. The via system of stone-laid trunk roads is the network substrate for everything below. Permits high-speed carriage travel and reliable supply movement."
+ },
+ {
+  "id": "lnd_cursus_publicus",
+  "name": "Cursus publicus courier service",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [
+   "lnd_paved_road_network",
+   "lnd_horse_saddle_basic"
+  ],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 200,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 3,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Imperial dispatch relay using stations and fresh horses. Shows that Rome recognizes speed of information matters; this logic applies to freight."
+ },
+ {
+  "id": "lnd_four_wheel_cart",
+  "name": "Four-wheeled cart",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked",
+   "lnd_axle_pivot_front"
+  ],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 20,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Four-wheel design allows steering the front axle independently, a fundamental shift from two-wheel carts. Capacity and maneuverability."
+ },
+ {
+  "id": "lnd_two_wheel_cart",
+  "name": "Two-wheeled cart",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked"
+  ],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 10,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Simple two-point suspension, lighter than four-wheel for local work, used everywhere by farmers and traders."
+ },
+ {
+  "id": "lnd_wheel_spoked",
+  "name": "Spoked wheel",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 5,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Radial spokes in tension carry load far better than solid wood. This invention alone made fast carriages possible."
+ },
+ {
+  "id": "lnd_axle_pivot_front",
+  "name": "Pivoting front axle",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 5,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "C",
+  "note": "ROME POSSIBLY HAS THIS but is disputed. Turning is impossible without it; evidence in Roman relief carvings is ambiguous. Assume present but mark confidence low."
+ },
+ {
+  "id": "lnd_tyre_iron",
+  "name": "Iron tyre (tire)",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked",
+   "mat_wrought_iron"
+  ],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 10,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Iron band shrunk hot onto the rim protects the wooden wheel and spreads road impact. Vastly extends wheel life over bare wood."
+ },
+ {
+  "id": "lnd_harness_throat_girth",
+  "name": "Harness of throat and girth type",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 5,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Rope and leather harness distributes pull across the shoulders and chest. Impedes breathing but enables pulling; the rigid collar is later and better."
+ },
+ {
+  "id": "lnd_mule_transport",
+  "name": "Mule transport",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 50,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Mules are preferred for mountain work because they are surefooted and eat less than horses. The pack mule is the backbone of supply in rough terrain."
+ },
+ {
+  "id": "lnd_ox_transport",
+  "name": "Ox transport",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 40,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Oxen pull heavier loads than horses at slower speed and cost less to feed. Used for slow supply and field work; horses for speed."
+ },
+ {
+  "id": "lnd_horse_saddle_basic",
+  "name": "Horse saddle (basic)",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 5,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Basic saddle with cloth and leather distributes rider weight. Allows long-distance mounted travel. Stirrups come later."
+ },
+ {
+  "id": "lnd_litter",
+  "name": "Litter",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 10,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Pole-carried passenger carriage used by the wealthy. Humans as motive power but avoids the discomfort of horseback for dignitaries."
+ },
+ {
+  "id": "lnd_bridge",
+  "name": "Bridge",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 50,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Stone arch bridges, magnificent examples, part of road network. This is why Roman roads are faster than mountain paths."
+ },
+ {
+  "id": "lnd_milestone",
+  "name": "Milestone",
+  "tier": 0,
+  "cat": "transport",
+  "pre": [],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 2,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "ROME ALREADY HAS THIS. Stone pillars marking distance along roads. Enables speed prediction, time scheduling, loss prediction. Information infrastructure."
+ },
+ {
+  "id": "lnd_horseshoe_nailed",
+  "name": "Nailed horseshoe",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "horse_collar",
+   "mat_wrought_iron"
+  ],
+  "kb": "",
+  "ph": 40,
+  "lab": {
+   "smith": 100
+  },
+  "mat": {
+   "iron_bar_kg": 5
+  },
+  "cap": 200,
+  "up": 50,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 100,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Iron shoes nailed to hoof allow horses to work on stone roads for weeks without going lame. This is not efficiency; this is making the horse usable on paved ground instead of destroying it."
+ },
+ {
+  "id": "lnd_stirrup",
+  "name": "Stirrup",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "horse_collar",
+   "mat_wrought_iron"
+  ],
+  "kb": "",
+  "ph": 60,
+  "lab": {
+   "smith": 150,
+   "artisan": 50
+  },
+  "mat": {
+   "iron_bar_kg": 3,
+   "leather_kg": 2
+  },
+  "cap": 250,
+  "up": 30,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 2,
+  "rev": 200,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Metal foot-loops hanging from saddle revolutionise horseback riding. Rider can brace legs, rise from seat, and deliver force in combat or work. This is as much a military technology as a transport one."
+ },
+ {
+  "id": "lnd_whippletree",
+  "name": "Whippletree",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "horse_collar"
+  ],
+  "kb": "",
+  "ph": 50,
+  "lab": {
+   "carpenter": 120,
+   "smith": 40
+  },
+  "mat": {
+   "timber_m3": 0.5,
+   "iron_bar_kg": 3
+  },
+  "cap": 150,
+  "up": 20,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 80,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "The whippletree, or evener, is a pivoting bar that distributes pull evenly between two horses, preventing one from shirking. Without it, tandem teams do not work."
+ },
+ {
+  "id": "lnd_coach",
+  "name": "Coach",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "lnd_four_wheel_cart",
+   "lnd_harness_throat_girth",
+   "mat_wrought_iron"
+  ],
+  "kb": "",
+  "ph": 200,
+  "lab": {
+   "carpenter": 400,
+   "smith": 200,
+   "artisan": 150
+  },
+  "mat": {
+   "timber_m3": 4,
+   "iron_bar_kg": 20,
+   "leather_kg": 15
+  },
+  "cap": 800,
+  "up": 100,
+  "yrs": 2.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 0,
+  "rev": 500,
+  "sch": 0,
+  "art": 1,
+  "conf": "A",
+  "note": "Enclosed four-wheel carriage with seating inside, drawn by horses. No suspension yet, so routes must be smooth roads. This is personal transport for the wealthy."
+ },
+ {
+  "id": "lnd_stagecoach",
+  "name": "Stagecoach",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_coach",
+   "lnd_spring_leaf"
+  ],
+  "kb": "",
+  "ph": 250,
+  "lab": {
+   "carpenter": 500,
+   "smith": 250,
+   "artisan": 200
+  },
+  "mat": {
+   "timber_m3": 5,
+   "iron_bar_kg": 25,
+   "leather_kg": 20
+  },
+  "cap": 1200,
+  "up": 150,
+  "yrs": 2.5,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev": 800,
+  "sch": 0,
+  "art": 1,
+  "conf": "A",
+  "note": "Coach with leaf-spring suspension and scheduled stops; a business model for passenger transport. The springs change everything: bumpy roads become tolerable for long hours."
+ },
+ {
+  "id": "lnd_wheelbarrow",
+  "name": "Wheelbarrow",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked"
+  ],
+  "kb": "",
+  "ph": 30,
+  "lab": {
+   "carpenter": 80,
+   "smith": 30
+  },
+  "mat": {
+   "timber_m3": 1,
+   "iron_bar_kg": 4
+  },
+  "cap": 80,
+  "up": 10,
+  "yrs": 0.5,
+  "risk": 0.05,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "One-wheel handcart, invented in China, allows manual labour to move bulk goods. Rome does not have this; it is surprisingly absent. An enormous productivity gain once adopted."
+ },
+ {
+  "id": "lnd_spring_leaf",
+  "name": "Leaf spring",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "cementation_steel",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "smith": 200,
+   "artisan": 80
+  },
+  "mat": {
+   "mat_blister_steel": 10
+  },
+  "cap": 400,
+  "up": 30,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 0,
+  "rev": 200,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Flexing steel leaf under a carriage absorbs shocks and bumps. This single innovation makes long-distance travel on rough roads bearable. Suspension is what makes the journey tolerable, not the speed."
+ },
+ {
+  "id": "lnd_macadam",
+  "name": "Macadam road surface",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_paved_road_network",
+   "cap_measure_len"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "labourer": 2000,
+   "master": 100
+  },
+  "mat": {
+   "stone_broken_tons": 50,
+   "lime_kg": 500
+  },
+  "cap": 2000,
+  "up": 300,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Broken stone, graded by size, compacted without binding agent. Much cheaper to build and maintain than Roman dressed-stone roads but degrades faster in wet. An economic trade-off, not an improvement."
+ },
+ {
+  "id": "lnd_tarmacadam",
+  "name": "Tarmacadam road surface",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_macadam",
+   "mat_bitumen",
+   "destructive_distillation"
+  ],
+  "kb": "",
+  "ph": 100,
+  "lab": {
+   "labourer": 1500,
+   "master": 120
+  },
+  "mat": {
+   "stone_broken_tons": 40,
+   "bitumen_kg": 300,
+   "coal_tar_kg": 200
+  },
+  "cap": 2500,
+  "up": 250,
+  "yrs": 1.5,
+  "risk": 0.18,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Macadam with tar binding is cheaper to build than Roman stone but still degrades. The advantage is speed of repair, not quality. Honest assessment: it is an economic choice for volume, not engineering superiority."
+ },
+ {
+  "id": "lnd_turnpike",
+  "name": "Turnpike",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_macadam"
+  ],
+  "kb": "",
+  "ph": 50,
+  "lab": {
+   "labourer": 500
+  },
+  "mat": {},
+  "cap": 800,
+  "up": 200,
+  "yrs": 0.5,
+  "risk": 0.08,
+  "sus": -1,
+  "gov": 1,
+  "rev": 300,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Private or chartered toll road maintained by toll gate revenue. Creates incentive to maintain roads better than government roads. Improves speed and reliability. Some hostility from smugglers and bandits."
+ },
+ {
+  "id": "lnd_iron_edge_rail",
+  "name": "Iron edge rail",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "mat_cast_iron",
+   "cap_tol_1mm"
+  ],
+  "kb": "",
+  "ph": 60,
+  "lab": {
+   "smith": 200,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_cast_iron": 50
+  },
+  "cap": 1500,
+  "up": 100,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Cast iron rails with one edge raised to guide flanged wheels. First used in mines. The innovation is the raised edge, not the metal; it prevents derailment and reduces friction."
+ },
+ {
+  "id": "lnd_flanged_wheel",
+  "name": "Flanged wheel",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked",
+   "mat_cast_iron"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "smith": 200,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_cast_iron": 30
+  },
+  "cap": 1000,
+  "up": 50,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "The flange is on the WHEEL, not the rail. Inward-facing rim keeps the wheel on track. This is the counterintuitive choice that makes all railway systems work."
+ },
+ {
+  "id": "lnd_fishplate",
+  "name": "Fishplate rail jointer",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_iron_edge_rail",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 50,
+  "lab": {
+   "smith": 150,
+   "artisan": 80
+  },
+  "mat": {
+   "mat_cast_iron": 15
+  },
+  "cap": 600,
+  "up": 30,
+  "yrs": 1.0,
+  "risk": 0.08,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Iron plates bolted across a rail joint prevent gaps and shearing. Eliminates the bump and clatter of wheels crossing joints. Maintenance of alignment becomes predictable."
+ },
+ {
+  "id": "lnd_point_switch",
+  "name": "Point and switch",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_iron_edge_rail",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 120,
+  "lab": {
+   "smith": 250,
+   "carpenter": 200,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_cast_iron": 40,
+   "timber_m3": 2
+  },
+  "cap": 1200,
+  "up": 80,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Movable rails allow a train to switch between two tracks. The mechanism must be sturdy enough to guide a moving train cleanly. Enables sidings and branch lines."
+ },
+ {
+  "id": "lnd_signal_railway",
+  "name": "Railway signal",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_point_switch"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "smith": 120,
+   "carpenter": 150,
+   "artisan": 80
+  },
+  "mat": {
+   "timber_m3": 3,
+   "iron_bar_kg": 40
+  },
+  "cap": 800,
+  "up": 50,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Semaphore arms and flag signals allow operators to communicate over distance. Necessary before trains run on tight schedules; without them, collisions are inevitable."
+ },
+ {
+  "id": "lnd_block_system",
+  "name": "Block system (railway safety)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_signal_railway",
+   "telegraph_electric"
+  ],
+  "kb": "",
+  "ph": 150,
+  "lab": {
+   "scribe": 200,
+   "master": 150,
+   "artisan": 100
+  },
+  "mat": {},
+  "cap": 1000,
+  "up": 200,
+  "yrs": 2.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 2,
+  "rev": 0,
+  "sch": 1,
+  "art": 0,
+  "conf": "B",
+  "note": "Divide the line into blocks with signals; only one train per block. This is not a mechanical invention; it is an information system. Railway safety is fundamentally a communication problem."
+ },
+ {
+  "id": "lnd_standard_gauge",
+  "name": "Standard gauge (railway)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_iron_edge_rail",
+   "cap_measure_len"
+  ],
+  "kb": "",
+  "ph": 200,
+  "lab": {
+   "master": 300,
+   "scribe": 200
+  },
+  "mat": {},
+  "cap": 2000,
+  "up": 100,
+  "yrs": 3.0,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 2,
+  "rev": 0,
+  "sch": 1,
+  "art": 0,
+  "conf": "B",
+  "note": "All railways must use the same track spacing for freight transfer between lines. Without standardisation, each line is an island. The cost of standardisation is high; the cost of not doing so is higher."
+ },
+ {
+  "id": "lnd_steam_locomotive",
+  "name": "Steam locomotive",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "steam_high_pressure",
+   "lnd_flanged_wheel",
+   "mat_bulk_steel",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 400,
+  "lab": {
+   "smith": 600,
+   "machinist": 400,
+   "artisan": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 100,
+   "iron_bar_kg": 200,
+   "copper_kg": 50
+  },
+  "cap": 8000,
+  "up": 500,
+  "yrs": 3.0,
+  "risk": 0.25,
+  "sus": 1,
+  "gov": 2,
+  "rev": 0,
+  "sch": 1,
+  "art": 0,
+  "conf": "A",
+  "note": "Steam engine mounted on rails propels itself and train. Requires constant water and fuel stops. The locomotive does not pull faster than horses until distances exceed 30 miles; then volume and fuel logistics matter."
+ },
+ {
+  "id": "lnd_tender",
+  "name": "Tender (coal and water car)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_steam_locomotive",
+   "lnd_flanged_wheel"
+  ],
+  "kb": "",
+  "ph": 120,
+  "lab": {
+   "carpenter": 250,
+   "smith": 200,
+   "artisan": 100
+  },
+  "mat": {
+   "timber_m3": 6,
+   "iron_bar_kg": 80,
+   "mat_cast_iron": 30
+  },
+  "cap": 2000,
+  "up": 150,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Water and coal are consumed continuously; a dedicated car attached to the engine carries supplies. Without the tender, the engine range is measured in tens of miles."
+ },
+ {
+  "id": "lnd_superheater",
+  "name": "Superheater (steam locomotive)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_steam_locomotive",
+   "cap_heat_1300",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 200,
+  "lab": {
+   "smith": 300,
+   "machinist": 200,
+   "artisan": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 40,
+   "copper_kg": 30
+  },
+  "cap": 3000,
+  "up": 250,
+  "yrs": 2.0,
+  "risk": 0.18,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Heat the steam further after leaving the boiler to expand it more in the cylinder, improving efficiency 20 percent. Complexity and maintenance cost are high; only justified on long-distance engines."
+ },
+ {
+  "id": "lnd_air_brake",
+  "name": "Air brake (locomotive and train)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_steam_locomotive",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 250,
+  "lab": {
+   "machinist": 350,
+   "smith": 250,
+   "artisan": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 50,
+   "iron_bar_kg": 100,
+   "copper_kg": 20
+  },
+  "cap": 4000,
+  "up": 300,
+  "yrs": 2.5,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 1,
+  "art": 0,
+  "conf": "A",
+  "note": "Compressed air from the engine applies brake pressure to all wheels simultaneously through pipes. Without it, trains over ten cars cannot stop reliably. This is the prerequisite for modern freight."
+ },
+ {
+  "id": "lnd_hobby_horse",
+  "name": "Hobby horse (pedal-less bicycle)",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   "lnd_wheel_spoked"
+  ],
+  "kb": "",
+  "ph": 40,
+  "lab": {
+   "carpenter": 100,
+   "smith": 60
+  },
+  "mat": {
+   "timber_m3": 1.5,
+   "iron_bar_kg": 8
+  },
+  "cap": 200,
+  "up": 20,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 50,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Rider straddles a frame with two wheels and propels by pushing feet on the ground. Faster than walking, no pedals. Proof of concept for the bicycle, then abandoned as impractical."
+ },
+ {
+  "id": "lnd_boneshaker",
+  "name": "Boneshaker (pedal bicycle)",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_hobby_horse",
+   "crank_conrod"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "carpenter": 150,
+   "smith": 120,
+   "artisan": 80
+  },
+  "mat": {
+   "timber_m3": 1.5,
+   "iron_bar_kg": 15,
+   "mat_cast_iron": 8
+  },
+  "cap": 400,
+  "up": 30,
+  "yrs": 1.0,
+  "risk": 0.12,
+  "sus": 0,
+  "gov": 0,
+  "rev": 80,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Pedals drive the front wheel directly via crank. Frame and wheels are wood and cast iron, hence the name. Rider feels every rock; suspension comes later. Speed gain over walking is 2x."
+ },
+ {
+  "id": "lnd_penny_farthing",
+  "name": "Penny farthing (high-wheel bicycle)",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_boneshaker",
+   "mat_wrought_iron"
+  ],
+  "kb": "",
+  "ph": 100,
+  "lab": {
+   "smith": 200,
+   "carpenter": 150,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 20,
+   "timber_m3": 1,
+   "mat_cast_iron": 5
+  },
+  "cap": 600,
+  "up": 40,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 0,
+  "rev": 150,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most."
+ },
+ {
+  "id": "lnd_safety_bicycle",
+  "name": "Safety bicycle (chain drive)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_ball_bearing",
+   "lnd_chain_drive_bicycle"
+  ],
+  "kb": "",
+  "ph": 120,
+  "lab": {
+   "smith": 250,
+   "machinist": 150,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 15,
+   "timber_m3": 1,
+   "mat_cast_iron": 8,
+   "rubber_kg": 2
+  },
+  "cap": 800,
+  "up": 50,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "sus": 0,
+  "gov": 0,
+  "rev": 200,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry."
+ },
+ {
+  "id": "lnd_chain_drive_bicycle",
+  "name": "Chain drive (for bicycle)",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "crank_conrod",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 100,
+  "lab": {
+   "smith": 200,
+   "machinist": 150,
+   "artisan": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 8,
+   "timber_m3": 0.5
+  },
+  "cap": 500,
+  "up": 40,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Roller chain connecting pedal sprocket to rear wheel. Allows gearing: the rear wheel turns multiple times per pedal stroke. Reduces effort and enables comfortable cruising speed."
+ },
+ {
+  "id": "lnd_ball_bearing",
+  "name": "Ball bearing",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "machinist": 200,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 5
+  },
+  "cap": 600,
+  "up": 30,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 100,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides."
+ },
+ {
+  "id": "lnd_pneumatic_tyre",
+  "name": "Pneumatic tyre (rubber tyre)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_ball_bearing",
+   "mat_natural_rubber"
+  ],
+  "kb": "",
+  "ph": 120,
+  "lab": {
+   "artisan": 200,
+   "chemist": 100
+  },
+  "mat": {
+   "mat_natural_rubber": 3,
+   "cotton_fabric_kg": 2
+  },
+  "cap": 1000,
+  "up": 80,
+  "yrs": 2.0,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 0,
+  "rev": 300,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "REQUIRES NATURAL RUBBER (tier 9 unobtainable in Rome). Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation."
+ },
+ {
+  "id": "lnd_gas_engine_atmospheric",
+  "name": "Atmospheric gas engine (Lenoir)",
+  "tier": 2,
+  "cat": "transport",
+  "pre": [
+   "lnd_coal_tar_gas",
+   "cap_tol_100um",
+   "cap_heat_1300"
+  ],
+  "kb": "",
+  "ph": 250,
+  "lab": {
+   "smith": 300,
+   "machinist": 250,
+   "artisan": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 60,
+   "iron_bar_kg": 100,
+   "copper_kg": 20
+  },
+  "cap": 3500,
+  "up": 250,
+  "yrs": 2.0,
+  "risk": 0.2,
+  "sus": 1,
+  "gov": 0,
+  "rev": 500,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Mix illuminating gas with air, ignite, expansion drives piston, atmospheric pressure returns it. Inefficient but quieter than steam. Industrial benchmark before petrol engines."
+ },
+ {
+  "id": "lnd_coal_tar_gas",
+  "name": "Coal tar gas (coal gas)",
+  "tier": 2,
+  "cat": "materials",
+  "pre": [
+   "coal_coke",
+   "destructive_distillation"
+  ],
+  "kb": "",
+  "ph": 80,
+  "lab": {
+   "chemist": 150,
+   "furnaceman": 200
+  },
+  "mat": {
+   "coal_kg": 100
+  },
+  "cap": 1200,
+  "up": 100,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "sus": 1,
+  "gov": 0,
+  "rev": 200,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles."
+ },
+ {
+  "id": "lnd_otto_cycle_four_stroke",
+  "name": "Otto cycle four-stroke engine",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_gas_engine_atmospheric",
+   "mat_bulk_steel",
+   "cap_tol_100um",
+   "cap_heat_1300"
+  ],
+  "kb": "",
+  "ph": 350,
+  "lab": {
+   "machinist": 400,
+   "smith": 300,
+   "artisan": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 80,
+   "iron_bar_kg": 120,
+   "copper_kg": 30,
+   "nickel_kg": 5
+  },
+  "cap": 5000,
+  "up": 400,
+  "yrs": 2.5,
+  "risk": 0.22,
+  "sus": 0,
+  "gov": 1,
+  "rev": 800,
+  "sch": 1,
+  "art": 0,
+  "conf": "A",
+  "note": "Intake, compression, power, exhaust in four strokes per cycle. More efficient than atmospheric engines. Forms the foundation of all automotive engines."
+ },
+ {
+  "id": "lnd_carburettor",
+  "name": "Carburettor",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 120,
+  "lab": {
+   "machinist": 200,
+   "smith": 120,
+   "artisan": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 10,
+   "brass_kg": 8,
+   "copper_kg": 5
+  },
+  "cap": 800,
+  "up": 50,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Fuel nozzle sprays petrol into an air stream at variable rates. Mixture must be tuned to engine speed. Precise ratio is critical; too rich or too lean and the engine stalls."
+ },
+ {
+  "id": "lnd_spark_plug",
+  "name": "Spark plug (spark ignition)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "cap_tol_10um",
+   "electromagnet"
+  ],
+  "kb": "",
+  "ph": 100,
+  "lab": {
+   "machinist": 180,
+   "smith": 100,
+   "artisan": 70
+  },
+  "mat": {
+   "platinum_g": 2,
+   "ceramic_kg": 1,
+   "copper_kg": 3
+  },
+  "cap": 600,
+  "up": 40,
+  "yrs": 0.8,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Electric spark across a gap ignites fuel mix at the exact moment of compression. Timing is everything; even small errors cause misfires and loss of power."
+ },
+ {
+  "id": "lnd_magneto",
+  "name": "Magneto (ignition system)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_spark_plug",
+   "electromagnet",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 150,
+  "lab": {
+   "machinist": 250,
+   "smith": 150,
+   "artisan": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 15,
+   "copper_wire_kg": 10,
+   "mat_ceramic": 2
+  },
+  "cap": 1200,
+  "up": 100,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Rotating magnet in coil generates high-voltage spark without needing a battery. Works on any engine speed. This simple approach powered all early cars."
+ },
+ {
+  "id": "lnd_diesel_cycle",
+  "name": "Diesel cycle (compression ignition)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "mat_bulk_steel",
+   "cap_tol_10um",
+   "cap_heat_1600"
+  ],
+  "kb": "",
+  "ph": 400,
+  "lab": {
+   "machinist": 450,
+   "smith": 350,
+   "chemist": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 100,
+   "iron_bar_kg": 150,
+   "copper_kg": 40,
+   "nickel_kg": 10
+  },
+  "cap": 7000,
+  "up": 600,
+  "yrs": 3.0,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 1,
+  "rev": 1500,
+  "sch": 1,
+  "art": 0,
+  "conf": "B",
+  "note": "Compress air to 500 psi, inject fuel which ignites by heat alone. No spark plugs needed. More efficient than Otto cycle but requires massive precision in boring. Heavier and more expensive."
+ },
+ {
+  "id": "lnd_automobile",
+  "name": "Automobile (self-propelled carriage)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "lnd_gearbox_clutch",
+   "lnd_differential",
+   "lnd_steering_geometry",
+   "mat_bulk_steel"
+  ],
+  "kb": "",
+  "ph": 500,
+  "lab": {
+   "machinist": 600,
+   "smith": 400,
+   "carpenter": 300,
+   "artisan": 300
+  },
+  "mat": {
+   "mat_bulk_steel": 150,
+   "iron_bar_kg": 200,
+   "brass_kg": 30,
+   "copper_kg": 50
+  },
+  "cap": 10000,
+  "up": 800,
+  "yrs": 3.0,
+  "risk": 0.3,
+  "sus": 2,
+  "gov": 1,
+  "rev": 2000,
+  "sch": 1,
+  "art": 1,
+  "conf": "A",
+  "note": "Engine drives wheels through gearbox. Steering wheel controls front wheels. Four-wheel suspension. Replaces horse-drawn carriages. Major social disruption from independence and speed."
+ },
+ {
+  "id": "lnd_gearbox_clutch",
+  "name": "Gearbox and clutch",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 200,
+  "lab": {
+   "machinist": 350,
+   "smith": 200,
+   "artisan": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 60,
+   "iron_bar_kg": 100,
+   "brass_kg": 15
+  },
+  "cap": 3500,
+  "up": 300,
+  "yrs": 2.0,
+  "risk": 0.18,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Friction clutch allows engine to spin freely when disengaged. Gear trains multiply torque at low speed and allow high speed at high RPM. Without gearing, a small engine cannot move a heavy car."
+ },
+ {
+  "id": "lnd_differential",
+  "name": "Differential (rear axle)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 150,
+  "lab": {
+   "machinist": 300,
+   "smith": 200,
+   "artisan": 120
+  },
+  "mat": {
+   "mat_bulk_steel": 40,
+   "iron_bar_kg": 80,
+   "brass_kg": 10
+  },
+  "cap": 2500,
+  "up": 200,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Bevel gear system that allows both rear wheels to turn at different speeds during cornering. Without it, inside wheel scrapes and car is hard to steer."
+ },
+ {
+  "id": "lnd_steering_geometry",
+  "name": "Steering geometry (Ackermann)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_automobile"
+  ],
+  "kb": "",
+  "ph": 100,
+  "lab": {
+   "artisan": 200,
+   "master": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 20
+  },
+  "cap": 1500,
+  "up": 100,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "B",
+  "note": "Front wheels must turn at different angles during a turn so both follow the same curved path. This geometry is counterintuitive but essential for stable handling."
+ },
+ {
+  "id": "lnd_assembly_line",
+  "name": "Assembly line and mass production",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "interchangeable_parts",
+   "lnd_automobile"
+  ],
+  "kb": "",
+  "ph": 600,
+  "lab": {
+   "master": 400,
+   "machinist": 400,
+   "artisan": 300
+  },
+  "mat": {},
+  "cap": 15000,
+  "up": 2000,
+  "yrs": 3.5,
+  "risk": 0.2,
+  "sus": -2,
+  "gov": 2,
+  "rev": 5000,
+  "sch": 2,
+  "art": 0,
+  "conf": "A",
+  "note": "Workers do one task repeatedly as car moves on conveyor. Each worker becomes highly skilled at one assembly step. Huge overhead but makes cars affordable for ordinary people."
+ },
+ {
+  "id": "lnd_truck",
+  "name": "Truck (motor freight vehicle)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_automobile",
+   "lnd_diesel_cycle"
+  ],
+  "kb": "",
+  "ph": 300,
+  "lab": {
+   "machinist": 400,
+   "smith": 300,
+   "carpenter": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 200,
+   "iron_bar_kg": 300,
+   "brass_kg": 30
+  },
+  "cap": 12000,
+  "up": 1200,
+  "yrs": 2.5,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 1,
+  "rev": 3000,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Heavy-duty chassis with open cargo bed. Diesel engine for economy and torque. Replaces the mule and the railway for regional freight. Speed and flexibility change logistics entirely."
+ },
+ {
+  "id": "lnd_omnibus",
+  "name": "Omnibus (motor bus)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_automobile",
+   "lnd_air_brake"
+  ],
+  "kb": "",
+  "ph": 250,
+  "lab": {
+   "machinist": 350,
+   "smith": 250,
+   "carpenter": 300
+  },
+  "mat": {
+   "mat_bulk_steel": 150,
+   "iron_bar_kg": 200,
+   "brass_kg": 25
+  },
+  "cap": 8000,
+  "up": 1000,
+  "yrs": 2.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev": 2000,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Large motor carriage for 20-50 passengers. Replaces horse-drawn omnibus. Speed, capacity, and lack of animal waste transform urban public transport."
+ },
+ {
+  "id": "lnd_tractor",
+  "name": "Tractor (motor field vehicle)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "lnd_diesel_cycle",
+   "lnd_caterpillar_track"
+  ],
+  "kb": "",
+  "ph": 350,
+  "lab": {
+   "machinist": 400,
+   "smith": 350,
+   "artisan": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 180,
+   "iron_bar_kg": 250,
+   "rubber_kg": 50
+  },
+  "cap": 10000,
+  "up": 1500,
+  "yrs": 2.5,
+  "risk": 0.22,
+  "sus": 0,
+  "gov": 1,
+  "rev": 2500,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Powerful engine mounted on crawler tracks for traction in mud. Can pull multiple ploughs or work in woods. Changes farmwork from oxen to machines; entire labour class displaced."
+ },
+ {
+  "id": "lnd_caterpillar_track",
+  "name": "Caterpillar track (crawler)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   "lnd_otto_cycle_four_stroke",
+   "cap_tol_100um"
+  ],
+  "kb": "",
+  "ph": 200,
+  "lab": {
+   "smith": 300,
+   "machinist": 250,
+   "artisan": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 100,
+   "iron_bar_kg": 150,
+   "rubber_kg": 30
+  },
+  "cap": 6000,
+  "up": 400,
+  "yrs": 2.0,
+  "risk": 0.18,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Steel shoes on chains loop around drive sprockets. Distributes weight over ground to reduce sinking in mud. Allows cross-country movement on otherwise impassable terrain."
+ },
+ {
+  "id": "lnd_diesel_supply",
+  "name": "Diesel supply chain",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   "mat_petroleum_refined",
+   "lnd_truck"
+  ],
+  "kb": "",
+  "ph": 180,
+  "lab": {
+   "master": 250,
+   "chemist": 200
+  },
+  "mat": {
+   "mat_petroleum_refined": 800
+  },
+  "cap": 4000,
+  "up": 600,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 2,
+  "rev": 1500,
+  "sch": 1,
+  "art": 0,
+  "conf": "A",
+  "note": "Heavy-oil fraction from crude, more energy-dense than petrol, flows at cold temperatures. Essential for trucks and industry. Distribution network similar to petrol but slightly different specifications."
+ },
+ {
+  "id": "lnd_motor_road_network",
+  "name": "Road network for motor vehicles",
+  "tier": 5,
+  "cat": "transport",
+  "pre": [
+   "lnd_automobile",
+   "lnd_tarmacadam"
+  ],
+  "kb": "",
+  "ph": 250,
+  "lab": {
+   "master": 400,
+   "labourer": 2000
+  },
+  "mat": {
+   "stone_tons": 100,
+   "bitumen_kg": 500,
+   "coal_tar_kg": 300
+  },
+  "cap": 10000,
+  "up": 1500,
+  "yrs": 3.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 3,
+  "rev": 0,
+  "sch": 1,
+  "art": 0,
+  "conf": "A",
+  "note": "Smooth, level roads with safety markings, regular maintenance, and drainage. Cars need better surface than macadam; tarmac wears out faster under car weight but is faster to repair."
+ }
+]

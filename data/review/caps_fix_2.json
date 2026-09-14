@@ -1,0 +1,258 @@
+{
+  "air_cayley_forces": {
+    "add": [],
+    "reason": "theoretical framework for understanding flight mechanics, no capability rung needed"
+  },
+  "air_jet_engine_concept": {
+    "add": ["cap_heat_1600"],
+    "reason": "combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat"
+  },
+  "arc_light_lamp": {
+    "add": ["cap_vac_1e3"],
+    "reason": "incandescent carbon filaments require high vacuum bulb to prevent oxidation"
+  },
+  "blast_furnace": {
+    "add": ["cap_heat_1300"],
+    "reason": "produces liquid cast iron requiring water-blown continuous blast furnace heat"
+  },
+  "chm_alizarin": {
+    "add": [],
+    "reason": "room-temperature oxidation with air and catalysts, no furnace needed"
+  },
+  "chm_caustic_soda": {
+    "add": ["cap_vac_1torr"],
+    "reason": "vacuum evaporation at low temperature to avoid decomposition of caustic soda"
+  },
+  "chm_formaldehyde_synthesis": {
+    "add": ["cap_heat_0700"],
+    "reason": "methanol oxidation over silver at 600 C, within pottery kiln range"
+  },
+  "chm_industrial_hygiene": {
+    "add": [],
+    "reason": "medical and occupational theory, no capability rung required"
+  },
+  "chm_photography": {
+    "add": ["cap_measure_temp"],
+    "reason": "strict control of temperature required for consistent photographic emulsion behavior"
+  },
+  "chm_superphosphate": {
+    "add": [],
+    "reason": "room-temperature acid-base reaction followed by filtration and drying"
+  },
+  "civ_bridge_cast_iron": {
+    "add": [],
+    "reason": "gates on blast furnace technology which supplies the material"
+  },
+  "civ_dam_earth_fill": {
+    "add": [],
+    "reason": "civil engineering project based on soil mechanics understanding"
+  },
+  "civ_iron_wrought": {
+    "add": ["cap_heat_0700"],
+    "reason": "riveting and forging require heating wrought iron to cherry red approximately 750 C"
+  },
+  "civ_street_lighting": {
+    "add": [],
+    "reason": "depends on arc_light_lamp which carries the vacuum requirement"
+  },
+  "com_accumulator": {
+    "add": [],
+    "reason": "electronic circuit concept, no physical capability rung required"
+  },
+  "com_boolean_algebra": {
+    "add": [],
+    "reason": "pure mathematical theory, no capability rung required"
+  },
+  "com_cryptography_substitution": {
+    "add": [],
+    "reason": "linguistic and mathematical theory, no capability rung required"
+  },
+  "com_frequency_modulation": {
+    "add": [],
+    "reason": "depends on underlying triode and RF capability already captured elsewhere"
+  },
+  "com_loading_coil": {
+    "add": ["cap_tol_100um"],
+    "reason": "coil winding requires file and gauge precision to achieve specified inductance"
+  },
+  "com_morse_code": {
+    "add": [],
+    "reason": "encoding and linguistic system, no capability rung required"
+  },
+  "com_one_time_pad": {
+    "add": [],
+    "reason": "cryptographic theory, no capability rung required"
+  },
+  "com_register_computing": {
+    "add": [],
+    "reason": "depends on flip-flops which carry electronic requirements"
+  },
+  "com_semiconductor_diode": {
+    "add": ["cap_pure_6N"],
+    "reason": "reliable germanium and silicon diodes require high-purity semiconductor material"
+  },
+  "com_submarine_cable": {
+    "add": [],
+    "reason": "engineering and materials project, no capability rung required"
+  },
+  "com_telephone_manual_exchange": {
+    "add": [],
+    "reason": "electromechanical system, no additional capability rung required"
+  },
+  "com_tv_electronic_camera": {
+    "add": ["cap_vac_1e6"],
+    "reason": "iconoscope tube requires very high vacuum to achieve usable photoemission"
+  },
+  "com_vacuum_tube_tetrode": {
+    "add": [],
+    "reason": "depends on vacuum_tube which carries the vacuum requirement"
+  },
+  "crucible_steel": {
+    "add": [],
+    "reason": "already has cap_heat_1600 in prerequisites"
+  },
+  "dynamo": {
+    "add": ["cap_measure_elec"],
+    "reason": "self-excited generator requires electrical measurement to understand and regulate output"
+  },
+  "finery_puddling": {
+    "add": ["cap_heat_1300"],
+    "reason": "decarburizing cast iron in puddling furnace at 1300 C requires water-blown blast furnace heat"
+  },
+  "fud_ice_trade_logistics": {
+    "add": [],
+    "reason": "trade and logistics system, no capability rung required"
+  },
+  "fud_yeast_pure_culture": {
+    "add": ["cap_measure_temp"],
+    "reason": "sterile culture isolation and maintenance requires temperature control of growth medium"
+  },
+  "gecl4_purification": {
+    "add": ["cap_pure_6N"],
+    "reason": "fractional distillation of volatile germanium tetrachloride requires high-purity refining technique"
+  },
+  "high_temp_furnace": {
+    "add": [],
+    "reason": "this is the furnace technology itself, capabilities come from use of this device"
+  },
+  "hom_dishwasher": {
+    "add": [],
+    "reason": "depends on steam_high_pressure and motor_transformer_ac which carry requirements"
+  },
+  "hom_printed_books": {
+    "add": [],
+    "reason": "depends on printing_press and rag_paper, no additional capability needed"
+  },
+  "hydrochloric_acid": {
+    "add": [],
+    "reason": "room-temperature acid-base reaction with salt and sulfuric acid"
+  },
+  "lab_apparatus": {
+    "add": [],
+    "reason": "equipment assembly and fume management, no capability rung required"
+  },
+  "master_screw": {
+    "add": ["cap_tol_100um"],
+    "reason": "lapping master screw with a long nut requires file and gauge precision to average errors"
+  },
+  "mat_crucible_steel": {
+    "add": [],
+    "reason": "already has cap_heat_1600 in prerequisites"
+  },
+  "mat_glass_lead": {
+    "add": [],
+    "reason": "materials combination project, no additional capability rung required"
+  },
+  "med_asepsis_antisepsis": {
+    "add": ["cap_measure_temp"],
+    "reason": "steam sterilization and high-pressure steam processing require temperature monitoring"
+  },
+  "med_gram_stain_culture": {
+    "add": ["cap_measure_temp"],
+    "reason": "bacterial culture growth requires precise temperature control of incubation medium"
+  },
+  "med_sterile_technique": {
+    "add": [],
+    "reason": "procedural and training system, no capability rung required"
+  },
+  "met_basic_lining_phosphorus": {
+    "add": [],
+    "reason": "depends on analytical_chemistry which carries measurement requirements"
+  },
+  "met_hydraulic_press": {
+    "add": ["cap_tol_100um"],
+    "reason": "pressure seal quality and pipe strength require file and gauge precision machining"
+  },
+  "met_steam_hammer": {
+    "add": [],
+    "reason": "depends on steam_high_pressure and case_hardening which carry requirements"
+  },
+  "microscope_compound": {
+    "add": [],
+    "reason": "optical system assembly, no capability rung required"
+  },
+  "opt_calorimeter": {
+    "add": [],
+    "reason": "already has thermometer and balance_analytical which carry measurement requirements"
+  },
+  "plague_preparedness": {
+    "add": [],
+    "reason": "policy, sanitation program, and medical response planning, no capability rung required"
+  },
+  "prn_electrotype_plate": {
+    "add": [],
+    "reason": "electroplating process, depends on electroplating which carries requirements"
+  },
+  "prn_radio_broadcasting": {
+    "add": [],
+    "reason": "communication medium, depends on radio technology which carries requirements"
+  },
+  "pwr_boiler_wagon": {
+    "add": [],
+    "reason": "steam power equipment, no additional capability rung required"
+  },
+  "pwr_petroleum_seeps": {
+    "add": [],
+    "reason": "collection of surface oil seeps, no technical capability rung required"
+  },
+  "pwr_three_phase_ac": {
+    "add": [],
+    "reason": "electrical theory and design, depends on dynamo and motor technology"
+  },
+  "refractory_fireclay": {
+    "add": [],
+    "reason": "materials testing and characterization, no capability rung required"
+  },
+  "sea_charts_navigation": {
+    "add": [],
+    "reason": "cartography and record-keeping system, no capability rung required"
+  },
+  "sea_electromagnetic_wave_theory": {
+    "add": [],
+    "reason": "Maxwell's physics theory, no capability rung required"
+  },
+  "sea_submarine": {
+    "add": ["cap_tol_10um"],
+    "reason": "pressure hull requires slide rest and micrometer precision for structural integrity at depth"
+  },
+  "single_crystal": {
+    "add": ["cap_measure_temp_hi", "cap_tol_10um"],
+    "reason": "Czochralski pulling requires high-temperature pyrometry at melting point and slide rest precision for seed control"
+  },
+  "sulfuric_retort": {
+    "add": ["cap_heat_0700"],
+    "reason": "green vitriol dehydration at approximately 480 C requires pottery kiln scale heat"
+  },
+  "tex_nylon": {
+    "add": ["cap_vac_1torr"],
+    "reason": "polyamide polymerization requires rough vacuum to remove water and ammonia byproducts"
+  },
+  "vacuum_tube": {
+    "add": ["cap_vac_1e6"],
+    "reason": "triode and amplifier require very high vacuum to prevent arcing and ensure long tube life"
+  },
+  "zone_refining": {
+    "add": ["cap_measure_temp_hi", "cap_tol_10um"],
+    "reason": "dragging molten zone requires high-temperature pyrometry at melting point and slide rest precision for heater control"
+  }
+}

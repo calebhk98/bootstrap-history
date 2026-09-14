@@ -1,0 +1,693 @@
+[
+ {
+  "id": "air_cayley_forces",
+  "name": "Separation of forces: lift, drag, thrust, control",
+  "tier": 2,
+  "cat": "aviation",
+  "current_pre": [
+   "air_aerofoil_section",
+   "newtonian_mechanics"
+  ],
+  "note": "Cayley's single most important insight: lift and drag are separate. To fly, you need lift enough to equal weight, drag small enough that power can overcome it, thrust strong enough to overcome drag and accelerate, and control to direct the craft. These four are independent problems. Before Cayley, people treated flying as one vague problem. After him, it became engineering. [AU"
+ },
+ {
+  "id": "air_jet_engine_concept",
+  "name": "Jet engine principle",
+  "tier": 4,
+  "cat": "aviation",
+  "current_pre": [
+   "thermodynamics_theory",
+   "newtonian_mechanics",
+   "mat_tool_steel_hss"
+  ],
+  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure. [AUDIT: this node does not declare the capability run"
+ },
+ {
+  "id": "arc_light_lamp",
+  "name": "Arc lighting and incandescent lamps",
+  "tier": 4,
+  "cat": "electrical",
+  "current_pre": [
+   "dynamo",
+   "vacuum_pumps"
+  ],
+  "note": "Light without fire, in a city terrified of fire, is one of the great political gifts you can make. Rome's insulae burn constantly and the fear is real. Carbon filaments first; tungsten needs a metallurgy you will not have for a long time. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EV"
+ },
+ {
+  "id": "blast_furnace",
+  "name": "Tall shaft blast furnace and cast iron",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "bellows_water_blown",
+   "charcoal_industrial"
+  ],
+  "note": "The biggest single technology gap between Rome and contemporary Han China, which has had cast iron for 500 years. Height, continuous blast and a limestone flux turn a bloomery into a foundry. High risk: the first two or three furnaces will chill, scaffold or burn through. This becomes the financial engine of the middle game. CALENDAR FLOOR is set by diffusion, not by constructi"
+ },
+ {
+  "id": "chm_alizarin",
+  "name": "Alizarin synthesis: oxidation of anthraquinone",
+  "tier": 4,
+  "cat": "organic_chemistry",
+  "current_pre": [
+   "chm_coal_tar_distillation",
+   "electrolysis_industrial"
+  ],
+  "note": "Anthraquinone is easily extracted from coal tar. Oxidation with air and catalysts yields alizarin. Before synthesis, alizarin dye came from madder root cultivation in fields, so synthetic alizarin crashed the price by 99%, destroying the madder industry. This is the first wholly synthetic industrial organic dye and set the pattern for the twentieth century."
+ },
+ {
+  "id": "chm_caustic_soda",
+  "name": "Caustic soda: concentration and purification",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "chm_chlor_alkali_mercury",
+   "potash_soda",
+   "cap_heat_1100"
+  ],
+  "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an indepe"
+ },
+ {
+  "id": "chm_formaldehyde_synthesis",
+  "name": "Formaldehyde oxidation of methanol",
+  "tier": 3,
+  "cat": "organic_chemistry",
+  "current_pre": [
+   "distillation_alcohol",
+   "chm_catalyst_concept"
+  ],
+  "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins."
+ },
+ {
+  "id": "chm_industrial_hygiene",
+  "name": "Industrial hygiene and occupational chemical poisoning",
+  "tier": 3,
+  "cat": "occupational_health",
+  "current_pre": [
+   "germ_theory"
+  ],
+  "note": "Phosphorus necrosis (phossy jaw) comes from white phosphorus dust eroding jaw bone. Mercury causes tremor and neurological damage. Lead accumulates in bone and poisons the nervous system. Benzene vapour causes aplastic anaemia. Chlorine gas causes pulmonary oedema. No safe level exists; only elimination of exposure through ventilation and process redesign stops the poisoning. ["
+ },
+ {
+  "id": "chm_photography",
+  "name": "Silver halide photographic chemistry",
+  "tier": 3,
+  "cat": "photochemistry",
+  "current_pre": [
+   "photography",
+   "analytical_chemistry"
+  ],
+  "note": "Silver halide crystals are formed by mixing silver nitrate and sodium halide. Gelatin is added as a binder. Development is performed with reducing agents like hydroquinone or metol in alkaline conditions. Each step requires strict control of temperature, pH and oxidising impurities. Photographic film is the foundation of cinema and still photography."
+ },
+ {
+  "id": "chm_superphosphate",
+  "name": "Superphosphate: acidulation of rock phosphate",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "sulfuric_retort",
+   "lead_chamber"
+  ],
+  "note": "Rock phosphate is insoluble calcium phosphate. Sulfuric acid converts it to a mixture of soluble monocalcium phosphate and gypsum. The product is simply filtered and dried. This produces tens of tonnes of agricultural fertiliser from a tonne of sulfuric acid. The phosphate is now bioavailable to plants. [AUDIT: this node does not declare the capability rung it needs. An automat"
+ },
+ {
+  "id": "civ_bridge_cast_iron",
+  "name": "Cast iron bridge",
+  "tier": 2,
+  "cat": "transport",
+  "current_pre": [
+   "blast_furnace",
+   "civ_arch_roman"
+  ],
+  "note": "Cast iron is brittle and strong in compression, weak in tension. Arched cast iron bridges (like the 1779 Ironbridge in Shropshire) mimic the arch form to keep the material in compression. Cast iron does not corrode like wrought iron but is prone to sudden brittle fracture."
+ },
+ {
+  "id": "civ_dam_earth_fill",
+  "name": "Earth fill dam with compacted layers",
+  "tier": 2,
+  "cat": "water",
+  "current_pre": [
+   "civ_soil_mechanics"
+  ],
+  "note": "Layered soil compacted by repeated passes. Far cheaper than masonry. Needs an impermeable core (clay) and stable slopes. Piping (internal erosion along a path of sand) is the enemy. Earth dams can be very large; Aswan High Dam is earth fill."
+ },
+ {
+  "id": "civ_iron_wrought",
+  "name": "Wrought iron working and riveting",
+  "tier": 0,
+  "cat": "materials",
+  "current_pre": [
+   "mat_wrought_iron"
+  ],
+  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an in"
+ },
+ {
+  "id": "civ_street_lighting",
+  "name": "Street lighting with electricity",
+  "tier": 4,
+  "cat": "urban",
+  "current_pre": [
+   "arc_light_lamp",
+   "power_grid"
+  ],
+  "note": "Gas lamps (post-1800) were bright but hot. Arc lamps (post-1850) were bright and stable. Incandescent bulbs (post-1880) were safer. Electric grid power (post-1900) made street lighting universal. Crime dropped; nightlife boomed. The cost was perpetual maintenance of wiring and poles. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferre"
+ },
+ {
+  "id": "com_accumulator",
+  "name": "Accumulator - arithmetic work register",
+  "tier": 4,
+  "cat": "computing",
+  "current_pre": [
+   "com_register_computing"
+  ],
+  "note": "A register connected to an adder circuit (carries propagate left through carry-look-ahead or similar). A number can be added to the accumulator in one clock cycle. Repeated additions multiply (accumulate a number N times), division by repeated subtraction. The accumulator is the primary work register in early computers, used for nearly all arithmetic. Later CPUs generalize this"
+ },
+ {
+  "id": "com_boolean_algebra",
+  "name": "Boolean algebra - logic and switching equivalence",
+  "tier": 4,
+  "cat": "computing",
+  "current_pre": [],
+  "note": "Boolean algebra: true/false, AND, OR, NOT. Claude Shannon's insight (1938): switching circuits are Boolean algebras. A series switch is AND (both must be closed), parallel is OR. This is the single most important conceptual link in computing: abstract logic is isomorphic to physical electronics. Once realized, designing computers becomes designing logic circuits, which become r"
+ },
+ {
+  "id": "com_cryptography_substitution",
+  "name": "Substitution and polyalphabetic ciphers",
+  "tier": 3,
+  "cat": "cryptography",
+  "current_pre": [],
+  "note": "Caesar cipher (shift alphabet by N) was known to Rome. Vigenere cipher (shift depends on a repeating key) was stronger (1553 onward). Both are vulnerable to frequency analysis (common letters are obvious). The Vigenere cipher remained unbroken until the 19th century (Kasiski examination), making it militarily useful for 300 years. Encryption was the luxury of armies and empires"
+ },
+ {
+  "id": "com_frequency_modulation",
+  "name": "Frequency modulation (FM) - superior radio broadcast",
+  "tier": 4,
+  "cat": "radio",
+  "current_pre": [
+   "com_continuous_wave",
+   "com_triode_oscillator"
+  ],
+  "note": "Audio signal varies the frequency of the RF carrier instead of the amplitude. A 100 MHz carrier modulated with 1 kHz audio swings \u00b175 kHz. FM is immune to amplitude noise (static, ignition noise), so reception is much quieter. Bandwidth is about 10x wider than AM (200 kHz for 15 kHz audio), requiring wider channel spacing. Requires sophisticated receivers (discriminators, limit"
+ },
+ {
+  "id": "com_loading_coil",
+  "name": "Loading coil - range extension for telegraph lines",
+  "tier": 3,
+  "cat": "signalling",
+  "current_pre": [
+   "com_submarine_cable"
+  ],
+  "note": "A coil of wire inserted periodically into a long telegraph or telephone line. Wire acts as a capacitor that stores charge; the coil inductance smooths it out. This compensates for cable distortion and allows signals to travel further before attenuation kills them. A loading coil every 2 km extends range from 50 km to 500 km on a submarine cable. The physics is: inductance and c"
+ },
+ {
+  "id": "com_morse_code",
+  "name": "Morse code - dot, dash, space encoding",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric"
+  ],
+  "note": "Morse code is not a hardware innovation; it is a language for the telegraph. Dots and dashes match the sounder's 'click' and 'hold', encoded by hand at the key. The genius is that it is rhythmic and acoustic: a skilled operator hears the message, not reading visual symbols. Fast hands can send 30 words per minute."
+ },
+ {
+  "id": "com_one_time_pad",
+  "name": "One-time pad - information-theoretically secure cipher",
+  "tier": 4,
+  "cat": "cryptography",
+  "current_pre": [
+   "com_cryptography_substitution",
+   "com_information_theory"
+  ],
+  "note": "A random key, used once, added to plaintext bit-by-bit (XOR). No amount of codebreaking can recover the plaintext without the key (Shannon's proof, 1945). The catch: you must generate, securely transmit, and store a key as long as the message. For millions of messages, this is impractical (key logistics). Used for highest-security traffic (Red Phone, diplomatic cables). The OTP"
+ },
+ {
+  "id": "com_register_computing",
+  "name": "Register - multi-bit storage and transfer",
+  "tier": 4,
+  "cat": "computing",
+  "current_pre": [
+   "com_flip_flop"
+  ],
+  "note": "Multiple flip-flops (one per bit) cascaded: an 8-bit register holds 8 bits. A control pulse transfers data into the register (latch), or shifts the data left/right (shift register). Registers are the basic building blocks of CPU architecture: accumulator (for arithmetic), memory buffer (for I/O), instruction register (for control). Every arithmetic operation reads from register"
+ },
+ {
+  "id": "com_semiconductor_diode",
+  "name": "Semiconductor diode - p-n junction rectifier",
+  "tier": 5,
+  "cat": "electronics",
+  "current_pre": [
+   "junction_transistor"
+  ],
+  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the dio"
+ },
+ {
+  "id": "com_submarine_cable",
+  "name": "Submarine telegraph cable",
+  "tier": 3,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric",
+   "com_relay"
+  ],
+  "note": "A copper core (signal), wrapped in gutta percha (insulator), wrapped in steel armour, laid on the ocean floor. PROBLEM: Gutta percha is unobtainable (tropical tree). SUBSTITUTE: Use rubber-impregnated cloth (expensive) or pitch-soaked jute, accepting higher leakage. The cable capacitance is enormous; signals attenuate and blur over 3000 km. Needs a relay every 500 km, but subme"
+ },
+ {
+  "id": "com_telephone_manual_exchange",
+  "name": "Manual switchboard exchange",
+  "tier": 3,
+  "cat": "telephone",
+  "current_pre": [
+   "com_telephone_carbon_mic",
+   "com_telephone_diaphragm"
+  ],
+  "note": "A grid of copper jacks (one per subscriber line), with plug cords and a central battery supplying current to all lines. An operator plugs a caller's line into the called party's line, completing a circuit. The breakthrough: no longer does each person need a separate wire to every other person. A central office with 100 operator positions can switch 10,000 customers with 100 lin"
+ },
+ {
+  "id": "com_tv_electronic_camera",
+  "name": "Electronic camera tube (iconoscope) - real-time image capture",
+  "tier": 4,
+  "cat": "television",
+  "current_pre": [
+   "com_cathode_ray_tube"
+  ],
+  "note": "A vacuum tube where an electron beam scans a photosensitive mosaic (thousands of tiny silver-mica capacitors). Light on each capacitor charges it; the beam discharges each spot sequentially, producing a current proportional to light. This is a camera: it converts an optical image to an electrical signal suitable for transmission. The iconoscope was unreliable (mosaic damage, bu"
+ },
+ {
+  "id": "com_vacuum_tube_tetrode",
+  "name": "Tetrode vacuum tube - screen grid amplifier",
+  "tier": 4,
+  "cat": "electronics",
+  "current_pre": [
+   "vacuum_tube"
+  ],
+  "note": "A triode with an added fourth electrode (screen grid), held at a positive but lower voltage than the anode. The screen shields the anode from the control grid, preventing feedback and allowing higher gain without oscillation. A tetrode is more stable and more powerful than a triode, better for RF amplifiers. The voltage between screen and cathode must be regulated, adding circu"
+ },
+ {
+  "id": "crucible_steel",
+  "name": "Crucible steel",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "cementation_steel",
+   "coal_coke"
+  ],
+  "note": "Melt blister steel in a closed crucible so the composition homogenises and the slag separates. The crucible surviving 1600 C is the hard part and is why this waits on good refractories. Gate on every cutting tool, every lead screw, and therefore on all precision. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades,"
+ },
+ {
+  "id": "dynamo",
+  "name": "Dynamo with self-excitation",
+  "tier": 4,
+  "cat": "electrical",
+  "current_pre": [
+   "electromagnet",
+   "water_power_scale",
+   "interchangeable_parts",
+   "copper_refining"
+  ],
+  "note": "The chicken-and-egg looks fatal: you need a field to make current and an electromagnet needs current. Residual magnetism in the iron core is enough to start it and the output builds itself up. Nobody guesses this and everybody wastes years on permanent magnets. Put it on the millpond shaft you already built. CALENDAR FLOOR is set by diffusion, not by construction: the economy n"
+ },
+ {
+  "id": "finery_puddling",
+  "name": "Finery forge and the puddling furnace",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "blast_furnace"
+  ],
+  "note": "Cast iron is brittle and useless for anything that must bend. Decarburise it back to wrought iron in a finery, then in a reverberatory puddling furnace where the fuel never touches the metal. Now you have cheap bar iron in quantity, which is the input to everything mechanical."
+ },
+ {
+  "id": "fud_ice_trade_logistics",
+  "name": "Trade and logistics of ice transport",
+  "tier": 2,
+  "cat": "refrigeration",
+  "current_pre": [
+   "fud_ice_harvesting_and_cutting"
+  ],
+  "note": "Transport harvested ice via wagon or ship to towns 50-100 miles away, insulated with sawdust and straw. Arrive with 30-50% loss. Sells to affluent households and restaurants for drinks and food preservation. High loss but profitable if demand is strong. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent revie"
+ },
+ {
+  "id": "fud_yeast_pure_culture",
+  "name": "Pure yeast culture isolation and maintenance",
+  "tier": 2,
+  "cat": "fermentation",
+  "current_pre": [
+   "distillation_alcohol"
+  ],
+  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, an"
+ },
+ {
+  "id": "gecl4_purification",
+  "name": "Germanium tetrachloride fractional distillation",
+  "tier": 5,
+  "cat": "semiconductor",
+  "current_pre": [
+   "germanium_extraction",
+   "glass_borosilicate",
+   "fused_quartz"
+  ],
+  "note": "The door. Germanium is a nightmare to purify as metal or oxide and easy as a volatile chloride boiling at about 86 C, which you can fractionate like brandy. Distil repeatedly in a tall packed column, hydrolyse back to the dioxide with ultrapure water, and you are already at parts per million before you have done anything clever. [AUDIT: this node does not declare the capability"
+ },
+ {
+  "id": "high_temp_furnace",
+  "name": "Regenerative and forced-draught furnaces to 1600 C+",
+  "tier": 3,
+  "cat": "metallurgy",
+  "current_pre": [
+   "crucible_steel",
+   "thermodynamics_theory"
+  ],
+  "note": "Siemens regenerative preheat recycles flue heat into the incoming air and is the cheapest route past what charcoal and a bellows can do. Gate on fused quartz, on high-grade steel, and on most of Module 50. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot bu"
+ },
+ {
+  "id": "hom_dishwasher",
+  "name": "Dishwasher, mechanical and electric",
+  "tier": 4,
+  "cat": "cleaning",
+  "current_pre": [
+   "steam_high_pressure",
+   "motor_transformer_ac",
+   "soap_hard"
+  ],
+  "note": "Cochran's 1886 machine uses pressurised water spray, hot water, and soap. Requires a pressurised water supply (pump), a heat source (steam or electric), and a motor. Hot water and soap do most of the work; the machine's innovation is automation and pressure. Kitchen staff is displaced."
+ },
+ {
+  "id": "hom_printed_books",
+  "name": "Printed books for home",
+  "tier": 2,
+  "cat": "leisure",
+  "current_pre": [
+   "printing_press",
+   "rag_paper"
+  ],
+  "note": "Printed volumes replace hand-copied manuscripts. Early books are expensive; gradually price falls as standardisation and competition reduce costs. Literacy spreads; libraries become personal, not institutional."
+ },
+ {
+  "id": "hydrochloric_acid",
+  "name": "Hydrochloric acid and aqua regia",
+  "tier": 3,
+  "cat": "chemistry",
+  "current_pre": [
+   "sulfuric_retort"
+  ],
+  "note": "Salt plus oil of vitriol. The salt-cake residue is the feedstock for the Leblanc soda process, so nothing is wasted. Aqua regia dissolves gold, which is a demonstration that will terrify the mint and delight your patron; use it carefully."
+ },
+ {
+  "id": "lab_apparatus",
+  "name": "A working laboratory: retorts, baths, lutes, crucibles, fume management",
+  "tier": 2,
+  "cat": "chemistry",
+  "current_pre": [
+   "glass_labware",
+   "refractory_fireclay"
+  ],
+  "note": "Alexandrian alchemy already looks like this, so it is culturally normal, which is your cover. Fume management is not optional; the classic way a bootstrapper dies is chlorine or nitrogen dioxide in a closed room."
+ },
+ {
+  "id": "master_screw",
+  "name": "The first accurate screw, and thread standards",
+  "tier": 2,
+  "cat": "precision",
+  "current_pre": [
+   "precision_three_plate",
+   "cementation_steel"
+  ],
+  "note": "The bootstrap problem: to cut an accurate screw you need an accurate screw. Escape it by wrapping a strip round a cylinder to generate a first rough helix, then correcting a master by lapping with a long nut, which averages out the errors. Slow, fiddly, and it is the gate on all measurement."
+ },
+ {
+  "id": "mat_crucible_steel",
+  "name": "Crucible steel",
+  "tier": 3,
+  "cat": "material",
+  "current_pre": [
+   "crucible_steel",
+   "cap_heat_1600"
+  ],
+  "note": "Homogeneous, slag-free, and the gate on every cutting tool and every lead screw."
+ },
+ {
+  "id": "mat_glass_lead",
+  "name": "Lead crystal (flint glass)",
+  "tier": 3,
+  "cat": "material",
+  "current_pre": [
+   "glass_clear",
+   "mat_lead"
+  ],
+  "note": "High dispersion. Pair it with crown glass and you get the achromatic doublet, which is what makes a compound microscope beat a single bead."
+ },
+ {
+  "id": "med_asepsis_antisepsis",
+  "name": "Asepsis, antisepsis, and steam sterilization",
+  "tier": 2,
+  "cat": "surgery",
+  "current_pre": [
+   "germ_theory",
+   "sanitation_antisepsis",
+   "steam_high_pressure"
+  ],
+  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs."
+ },
+ {
+  "id": "med_gram_stain_culture",
+  "name": "Bacterial culture and Gram staining",
+  "tier": 2,
+  "cat": "diagnostics",
+  "current_pre": [
+   "germ_theory",
+   "glass_labware",
+   "mat_dyes_synthetic"
+  ],
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice."
+ },
+ {
+  "id": "med_sterile_technique",
+  "name": "Sterile technique",
+  "tier": 2,
+  "cat": "surgery",
+  "current_pre": [
+   "med_asepsis_antisepsis",
+   "med_autoclave"
+  ],
+  "note": "A complete ritual: sterile drapes, fields, gowns. No cross-contamination. Requires training and discipline. One careless move ruins everything."
+ },
+ {
+  "id": "met_basic_lining_phosphorus",
+  "name": "Basic lining and the phosphorus problem",
+  "tier": 2,
+  "cat": "materials",
+  "current_pre": [
+   "bessemer_openhearth",
+   "analytical_chemistry"
+  ],
+  "note": "Bessemer's acid lining cannot remove phosphorus because both are acidic. Most European ores carry phosphorus which makes the steel cold-short (brittle when cold). Thomas and Gilchrist discovered that a basic (limestone) lining does remove phosphorus as slag, but it eats lining fast and requires obsessive maintenance. This one fact cost Bessemer years and made British iron obsol"
+ },
+ {
+  "id": "met_hydraulic_press",
+  "name": "Hydraulic press and accumulator",
+  "tier": 3,
+  "cat": "forming",
+  "current_pre": [
+   "steam_high_pressure",
+   "cap_power_steam",
+   "screw_lathe"
+  ],
+  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly."
+ },
+ {
+  "id": "met_steam_hammer",
+  "name": "Steam hammer for precision forging",
+  "tier": 3,
+  "cat": "forming",
+  "current_pre": [
+   "steam_high_pressure",
+   "cap_power_steam",
+   "case_hardening"
+  ],
+  "note": "Steam cylinder pushes the hammer down instead of dropping it. You control force and speed with the steam valve, not gravity, so you can forge delicate shapes without cracking. Far more work per hour than a drop hammer. The hazard is that steam can fail suddenly and the hammer drops uncontrolled; strong dies and guides are essential."
+ },
+ {
+  "id": "microscope_compound",
+  "name": "Compound microscope with achromatic objective",
+  "tier": 3,
+  "cat": "glass_optics",
+  "current_pre": [
+   "telescope",
+   "glass_bead_microscope",
+   "precision_three_plate"
+  ],
+  "note": "Do not build this before the bead microscope. A bad compound instrument is worse than a good single lens, which is exactly why van Leeuwenhoek won for fifty years. Needs lead flint glass for the achromatic doublet."
+ },
+ {
+  "id": "opt_calorimeter",
+  "name": "Calorimeter (heat capacity apparatus)",
+  "tier": 2,
+  "cat": "measurement",
+  "current_pre": [
+   "thermometer",
+   "balance_analytical"
+  ],
+  "note": "Insulated container of water. Add fuel or material, measure temperature rise. Specific heat calculated from mass and T change. Precision limited by insulation imperfection."
+ },
+ {
+  "id": "plague_preparedness",
+  "name": "Quarantine, clean water, sanitation and variolation programme",
+  "tier": 2,
+  "cat": "medicine",
+  "current_pre": [
+   "germ_theory",
+   "school_founded"
+  ],
+  "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independen"
+ },
+ {
+  "id": "prn_electrotype_plate",
+  "name": "Electrotype plate",
+  "tier": 3,
+  "cat": "reproduction",
+  "current_pre": [
+   "prn_stereotype_plate",
+   "electroplating"
+  ],
+  "note": "Electroplated copper shell on lead backing. Sharper impression. More durable. Expensive. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "prn_radio_broadcasting",
+  "name": "Radio broadcasting as medium",
+  "tier": 3,
+  "cat": "sound",
+  "current_pre": [
+   "radio"
+  ],
+  "note": "Sound broadcast live to distant unseen audiences. Electrical medium dissolves geography. State interest high."
+ },
+ {
+  "id": "pwr_boiler_wagon",
+  "name": "Wagon boiler",
+  "tier": 2,
+  "cat": "power",
+  "current_pre": [
+   "steam_atmospheric"
+  ],
+  "note": "Cylindrical shell, internal fire tubes passing through water. More surface area than haystack; faster steam generation. Mobile, used on early locomotives and threshing machines. Prone to scale and tube fouling. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "pwr_petroleum_seeps",
+  "name": "Petroleum seeps and collection",
+  "tier": 2,
+  "cat": "power",
+  "current_pre": [],
+  "note": "Oil seeps from rock faces and pools in low ground. Early collection by bucket and pit. No pressure, no depth, just ambient flow. Pitch, naphtha, light oil; use depends on locality. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them wer"
+ },
+ {
+  "id": "pwr_three_phase_ac",
+  "name": "Three-phase AC and polyphase",
+  "tier": 3,
+  "cat": "power",
+  "current_pre": [
+   "dynamo",
+   "motor_transformer_ac"
+  ],
+  "note": "Three AC waves 120 degrees apart, on three wires. Power delivery is constant instead of pulsing; motors start without a starter and run balanced. Tesla's innovation; it enabled power distribution at scale."
+ },
+ {
+  "id": "refractory_fireclay",
+  "name": "Fireclay, grog and silica refractories",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "workshop_first"
+  ],
+  "note": "Nothing hot happens without a vessel that survives it. Rome has excellent ceramics but no systematic refractory grading. Test candidate clays by firing to failure and record the results; this is your first real experimental programme."
+ },
+ {
+  "id": "sea_charts_navigation",
+  "name": "Navigation charts",
+  "tier": 2,
+  "cat": "navigation",
+  "current_pre": [
+   "sea_magnetic_compass"
+  ],
+  "note": "Systematically plot known coastlines, harbours, and hazards; use magnetic compass rose; accumulate centuries of observation; early charts are crude but better than guesswork. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reve"
+ },
+ {
+  "id": "sea_electromagnetic_wave_theory",
+  "name": "Electromagnetic wave theory",
+  "tier": 4,
+  "cat": "navigation",
+  "current_pre": [
+   "em_theory"
+  ],
+  "note": "Maxwell showed that light is an electromagnetic wave; this understanding underpins sonar, radar, and radio; converts acoustic and optical problems into a unified framework. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were revert"
+ },
+ {
+  "id": "sea_submarine",
+  "name": "Submarine",
+  "tier": 4,
+  "cat": "warships",
+  "current_pre": [
+   "sea_iron_hull",
+   "sea_compartmented_hull"
+  ],
+  "note": "A small strong hull that submerges; propelled by electric motors on batteries or a diesel on the surface; requires precise depth control, air supply, and crew training; first military use in WWI. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so "
+ },
+ {
+  "id": "single_crystal",
+  "name": "Czochralski single crystal growth and controlled doping",
+  "tier": 5,
+  "cat": "semiconductor",
+  "current_pre": [
+   "zone_refining",
+   "semiconductor_metrology"
+  ],
+  "note": "Dip a seed into the melt and pull slowly while rotating. Grain boundaries destroy carrier lifetime, so polycrystalline germanium will never make a working transistor no matter how pure it is. Add the dopant to the melt in weighed traces; this is where the analytical balance earns its keep two centuries later."
+ },
+ {
+  "id": "sulfuric_retort",
+  "name": "Oil of vitriol by dry distillation of green vitriol",
+  "tier": 2,
+  "cat": "chemistry",
+  "current_pre": [
+   "lab_apparatus",
+   "glass_labware"
+  ],
+  "note": "The master key to all chemistry. Green vitriol lies in heaps at every pyrite mine as a weathering product and Rome has no idea what it is for. High risk because the retorts fail constantly at the temperature required. Small scale, expensive acid, but it bootstraps the chamber process."
+ },
+ {
+  "id": "tex_nylon",
+  "name": "Nylon fiber",
+  "tier": 5,
+  "cat": "textiles",
+  "current_pre": [
+   "mat_ammonia",
+   "industrial_gases",
+   "cap_tol_100um"
+  ],
+  "note": "Polyamide fiber synthesized from coal tar via complex organic chemistry (Carothers, 1935). Requires high-temperature reactors, vacuum conditions, precise monomer synthesis, and polymerization control. Strongest fiber yet, endless customization. Fully replaces some natural uses. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one,"
+ },
+ {
+  "id": "vacuum_tube",
+  "name": "Diode, triode, and the first amplifier",
+  "tier": 5,
+  "cat": "electrical",
+  "current_pre": [
+   "diffusion_pump",
+   "discharge_xray",
+   "copper_refining"
+  ],
+  "note": "Glass-to-metal seals need matched thermal expansion (Dumet wire) or they crack; getters finish the vacuum after sealing. A working amplifier transforms every instrument you own and is the practical precondition for doing sensitive semiconductor measurements at all. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trade"
+ },
+ {
+  "id": "zone_refining",
+  "name": "Zone refining to one part in 1e9",
+  "tier": 5,
+  "cat": "semiconductor",
+  "current_pre": [
+   "ge_reduction",
+   "motor_transformer_ac",
+   "semiconductor_metrology",
+   "arc_furnace_ferroalloys"
+  ],
+  "note": "The specific trick that makes semiconductors possible at all. Most impurities prefer the liquid, so a narrow molten zone dragged along an ingot sweeps them to one end; repeat and the purity compounds. Nothing else reaches these levels. It needs a tube furnace, a quartz or graphite boat, a hydrogen or inert atmosphere, and a way to move a heater slowly and repeatably, which is w"
+ }
+]

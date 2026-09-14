@@ -1,0 +1,72 @@
+{
+  "_doc": {
+    "purpose": "Until now the model assumed that if a material existed anywhere, you had as much of it as you wanted. That is the single largest remaining falsehood in the simulation. This file gives each bulk material an ANNUAL PRODUCTION CEILING and the thing that actually constrains it, so that scaling up iron means scaling up charcoal, which means owning forest.",
+    "confidence": "Roman-era output figures are [C] estimates from modern scholarship, mostly derived from Greenland ice-core pollution records (Hong et al. and successors) and from slag-heap volumes. They are order-of-magnitude, and the RATIOS between them matter far more than the absolute numbers.",
+    "units": "tonnes per year unless stated"
+  },
+
+  "empire_output_100ad": {
+    "_note": "What the whole Roman economy produces annually at its peak. Your programme is a rounding error against these until it is not, and the moment it stops being one is the moment you start bidding up prices against the army and the mints.",
+    "iron":     {"t_per_yr": 82500, "conf": "C", "source": "commonly cited estimate for total imperial output, from slag volumes"},
+    "lead":     {"t_per_yr": 80000, "conf": "C", "source": "ice-core lead deposition peaks in the Roman period at levels not matched again until the industrial revolution"},
+    "copper":   {"t_per_yr": 15000, "conf": "C"},
+    "tin":      {"t_per_yr": 2000,  "conf": "C", "note": "Cornwall and Iberia. The scarcest of the common metals and the reason bronze is expensive."},
+    "silver":   {"t_per_yr": 200,   "conf": "C", "note": "Rio Tinto and Laurion. This number IS the money supply, which is why debasement follows mine exhaustion."},
+    "gold":     {"t_per_yr": 9,     "conf": "C", "note": "Las Medulas and, from 106 AD, Dacia."},
+    "mercury":  {"t_per_yr": 40,    "conf": "C", "note": "Almaden. An imperial monopoly, so the constraint is political."},
+    "salt":     {"t_per_yr": 300000,"conf": "C"},
+    "charcoal": {"t_per_yr": 500000,"conf": "C", "note": "Not a mine. See the forest constraint below: this is the number that actually caps pre-coke metallurgy."},
+    "coal":     {"t_per_yr": 5000,  "conf": "C", "note": "Britain only, and barely used. Rome does not coke it."},
+    "saltpetre":{"t_per_yr": 0,     "conf": "A", "note": "ZERO. There is no potassium nitrate production anywhere in the Roman economy. You either farm it in nitre beds or you buy Bengal saltpetre by sea."}
+  },
+
+  "constraints": {
+    "_note": "The physical ratios. These are what make a plan fail even when the money is there.",
+
+    "charcoal_from_forest": {
+      "coppice_yield_t_dry_wood_per_ha_yr": 3.0,
+      "charcoal_yield_fraction_by_mass": 0.25,
+      "charcoal_t_per_ha_yr": 0.75,
+      "rotation_years": 18,
+      "conf": "C",
+      "note": "A hectare of managed coppice yields roughly 3 tonnes of dry wood a year, and charring gives about a quarter of that by mass. So ONE HECTARE OF FOREST SUPPORTS ABOUT 0.75 TONNES OF CHARCOAL A YEAR, sustainably. Everything below follows from that single number, and it is why pre-coke iron industries deforest their regions and then move."
+    },
+    "iron_bloomery": {
+      "charcoal_kg_per_kg_iron": 6.0, "conf": "C",
+      "note": "Bloomery smelting plus forging. Six kilos of charcoal per kilo of bar iron means ONE TONNE OF IRON NEEDS EIGHT HECTARES OF COPPICE WORKING FOR A YEAR."
+    },
+    "iron_blast_furnace_charcoal": {
+      "charcoal_kg_per_kg_iron": 3.0, "conf": "C",
+      "note": "The blast furnace roughly halves the fuel per unit of iron, which is a large part of why it wins. It still eats forest."
+    },
+    "iron_blast_furnace_coke": {
+      "coke_kg_per_kg_iron": 1.6, "coal_kg_per_kg_coke": 1.6, "conf": "C",
+      "note": "THIS IS THE NODE THAT BREAKS THE FOREST CEILING PERMANENTLY. Coke decouples iron output from forest area, and that decoupling, not any furnace design, is what makes an iron age into an industrial one."
+    },
+    "copper_smelting":  {"charcoal_kg_per_kg_metal": 8.0, "conf": "C"},
+    "lead_smelting":    {"charcoal_kg_per_kg_metal": 1.5, "conf": "C", "note": "Lead is cheap partly because it smelts at a low temperature and eats little fuel."},
+    "zinc_retort":      {"charcoal_kg_per_kg_metal": 12.0, "conf": "C", "note": "Expensive in fuel because the retort must be held hot and sealed, and most of the charge is lost."},
+    "glass_melting":    {"charcoal_kg_per_kg_glass": 2.5, "conf": "C"},
+    "lime_burning":     {"fuel_kg_per_kg_lime": 0.5, "conf": "C"},
+    "nitre_bed": {
+      "kg_saltpetre_per_m2_per_yr": 0.8, "maturation_months": 18, "conf": "C",
+      "note": "After the first maturation a bed yields on the order of a kilogramme of refined saltpetre per square metre per year. A tonne a year therefore needs about 1,250 square metres of bed, plus the manure, urine, ash and lime to feed it, plus somebody to turn it. Gunpowder at military scale needs hectares."
+    },
+    "gunpowder_composition": {"saltpetre":0.75, "charcoal":0.15, "sulfur":0.10, "conf":"A"},
+    "steel_cementation": {"charcoal_kg_per_kg_steel": 2.0, "days_at_temperature": 7, "conf": "C"},
+    "water_power": {
+      "kw_per_wheel_typical": 4.0, "kw_per_wheel_best": 8.0, "conf": "C",
+      "note": "A good Roman overshot wheel is a few kilowatts. Barbegal's sixteen wheels are on the order of 30 to 60 kW TOTAL, which is one small modern engine. Any plan that assumes abundant mechanical power before steam is wrong by a factor of a hundred."
+    },
+    "human_power": {"w_sustained": 75, "conf": "B"},
+    "ox_power": {"w_sustained": 400, "conf": "B"}
+  },
+
+  "worked_examples": {
+    "_note": "The arithmetic that kills plans. All [C].",
+    "one_blast_furnace": "A furnace making 300 t of pig iron a year on charcoal at 3 kg/kg needs 900 t of charcoal a year, which needs 1,200 hectares of coppice under permanent management, which is about 12 square kilometres of forest owned or leased in perpetuity. Buy the woodland before you build the furnace.",
+    "a_tonne_of_zinc": "12 tonnes of charcoal, so 16 hectares of coppice for a year, to make one tonne of zinc. Zinc is not expensive because the ore is rare. It is expensive because the process wastes fuel.",
+    "gunpowder_for_an_army": "100 tonnes of powder a year needs 75 t of saltpetre, so roughly 9.4 hectares of mature nitre bed turned and leached continuously, or one standing order with a Bengal merchant.",
+    "electrifying_a_city": "A single 1 MW generating station is about 250 Barbegal complexes worth of shaft power. Before you have steam or a large hydro head, an electrical grid is arithmetic that does not close."
+  }
+}

@@ -1,0 +1,329 @@
+[
+ {
+  "id": "exp_provisioning_scurvy",
+  "name": "Provisioning a long voyage against scurvy",
+  "tier": 1,
+  "cat": "expedition",
+  "pre": [
+   "fud_food_preservation",
+   "sanitation_antisepsis"
+  ],
+  "kb": "95_expeditions.md#provisioning_scurvy",
+  "ph": 200,
+  "lab": {
+   "artisan": 600,
+   "scholar": 400
+  },
+  "mat": {
+   "wine_common_kg": 2000
+  },
+  "cap": 600,
+  "up": 150,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "B",
+  "note": "THE gate on every voyage over about ten weeks, and it is the cheapest thing in this branch. Scurvy killed more sailors than storms and battle combined for four centuries. You know the answer: fresh or preserved citrus, or any source of ascorbic acid, and sauerkraut works. Rome has lemons and citrons, and cabbage. Solve this and the Atlantic becomes a logistics problem instead of a death sentence."
+ },
+ {
+  "id": "exp_openocean_navigation",
+  "name": "Open ocean navigation out of sight of land",
+  "tier": 2,
+  "cat": "expedition",
+  "pre": [
+   "sea_magnetic_compass",
+   "opt_sextant",
+   "clock_pendulum",
+   "world_map"
+  ],
+  "kb": "95_expeditions.md#openocean_navigation",
+  "ph": 300,
+  "lab": {
+   "scholar": 1200,
+   "artisan": 800
+  },
+  "mat": {},
+  "cap": 1200,
+  "up": 300,
+  "yrs": 2.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 2,
+  "rev": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "B",
+  "note": "Latitude by sun or pole star is straightforward. LONGITUDE IS A CLOCK PROBLEM and until you have a sea-going timekeeper you navigate by latitude sailing: run to the target latitude, then run east or west along it. Columbus did exactly that. It is inefficient and it works."
+ },
+ {
+  "id": "exp_oceangoing_hull",
+  "name": "An ocean-going hull",
+  "tier": 2,
+  "cat": "expedition",
+  "pre": [
+   "sea_skeleton_first_hull",
+   "sea_sternpost_rudder",
+   "sea_lateen_rig"
+  ],
+  "kb": "95_expeditions.md#oceangoing_hull",
+  "ph": 250,
+  "lab": {
+   "carpenter": 6000,
+   "labourer": 8000
+  },
+  "mat": {
+   "timber_m3": 300,
+   "iron_bar_kg": 2000,
+   "canvas_kg": 900
+  },
+  "cap": 9000,
+  "up": 2500,
+  "yrs": 3.0,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 2,
+  "rev": 0,
+  "sch": 1,
+  "art": 6,
+  "conf": "B",
+  "note": "Roman merchantmen are already large: the Alexandrian grain ships carried on the order of a thousand tonnes. What they are built for is the Mediterranean, not the North Atlantic in winter. Skeleton-first framing, a sternpost rudder and a rig that will beat to windward turn a coaster into an ocean ship."
+ },
+ {
+  "id": "exp_trade_route_extend",
+  "name": "Extend the existing eastern trade routes",
+  "tier": 1,
+  "cat": "expedition",
+  "pre": [
+   "patron_local"
+  ],
+  "kb": "95_expeditions.md#trade_route_extend",
+  "ph": 250,
+  "lab": {
+   "merchant": 2000,
+   "sailor": 3000
+  },
+  "mat": {},
+  "cap": 4000,
+  "up": 1800,
+  "yrs": 2.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev": 3500,
+  "sch": 0,
+  "art": 1,
+  "conf": "A",
+  "note": "Rome ALREADY trades to India annually on the monsoon and to China by relay. You do not need to discover anything: you need agents, capital and a standing order. This is the cheapest way to obtain saltpetre, shellac, cotton, wootz, camphor and pepper, and it should be one of your first commercial acts."
+ },
+ {
+  "id": "exp_coastal_africa",
+  "name": "Coastal voyage down West Africa",
+  "tier": 2,
+  "cat": "expedition",
+  "pre": [
+   "exp_oceangoing_hull",
+   "exp_provisioning_scurvy",
+   "exp_trade_route_extend"
+  ],
+  "kb": "95_expeditions.md#coastal_africa",
+  "ph": 350,
+  "lab": {
+   "sailor": 9000,
+   "merchant": 2000,
+   "carpenter": 2000
+  },
+  "mat": {},
+  "cap": 14000,
+  "up": 5000,
+  "yrs": 3.0,
+  "risk": 0.35,
+  "sus": 0,
+  "gov": 2,
+  "rev": 9000,
+  "sch": 1,
+  "art": 4,
+  "conf": "B",
+  "note": "Hanno the Carthaginian sailed this coast around 500 BC and the account survives. It is coastal sailing, not an ocean crossing. It gets you West African gold directly instead of through Saharan middlemen, and it gets you LANDOLPHIA RUBBER, which is the answer to the supposedly unobtainable rubber problem."
+ },
+ {
+  "id": "exp_africa_circumnavigation",
+  "name": "Round the Cape",
+  "tier": 3,
+  "cat": "expedition",
+  "pre": [
+   "exp_coastal_africa",
+   "exp_openocean_navigation"
+  ],
+  "kb": "95_expeditions.md#africa_circumnavigation",
+  "ph": 400,
+  "lab": {
+   "sailor": 18000,
+   "merchant": 3000
+  },
+  "mat": {},
+  "cap": 30000,
+  "up": 9000,
+  "yrs": 4.0,
+  "risk": 0.45,
+  "sus": 0,
+  "gov": 3,
+  "rev": 22000,
+  "sch": 2,
+  "art": 6,
+  "conf": "B",
+  "note": "Herodotus reports Phoenicians doing this under Necho II, sailing south down the Red Sea and returning through the Pillars three years later. Contested, and physically possible. It joins your Mediterranean and Indian Ocean shipping into one system you own end to end."
+ },
+ {
+  "id": "exp_atlantic_crossing",
+  "name": "Cross the Atlantic",
+  "tier": 3,
+  "cat": "expedition",
+  "pre": [
+   "exp_oceangoing_hull",
+   "exp_openocean_navigation",
+   "exp_provisioning_scurvy"
+  ],
+  "kb": "95_expeditions.md#atlantic_crossing",
+  "ph": 400,
+  "lab": {
+   "sailor": 15000,
+   "carpenter": 3000
+  },
+  "mat": {},
+  "cap": 26000,
+  "up": 8000,
+  "yrs": 4.0,
+  "risk": 0.5,
+  "sus": 6,
+  "gov": 2,
+  "rev": 0,
+  "sch": 2,
+  "art": 6,
+  "conf": "B",
+  "note": "About 5,600 km from the Canaries to the Caribbean on the trade winds, roughly five weeks. The Canaries are already known to Rome; Pliny describes them. The voyage is well within a good Roman hull. What kills you is water, food and scurvy, which is why the provisioning node comes first."
+ },
+ {
+  "id": "exp_americas_factory",
+  "name": "A permanent post in the Americas",
+  "tier": 4,
+  "cat": "expedition",
+  "pre": [
+   "exp_atlantic_crossing",
+   "exp_colony_administration"
+  ],
+  "kb": "95_expeditions.md#americas_factory",
+  "ph": 500,
+  "lab": {
+   "labourer": 25000,
+   "artisan": 8000,
+   "merchant": 4000
+  },
+  "mat": {
+   "timber_m3": 900
+  },
+  "cap": 60000,
+  "up": 25000,
+  "yrs": 8.0,
+  "risk": 0.45,
+  "sus": 8,
+  "gov": 2,
+  "rev": 45000,
+  "sch": 3,
+  "art": 15,
+  "conf": "C",
+  "note": "Seed stock of potato, maize, tomato, cassava, chilli and cacao; cinchona bark for malaria; Hevea rubber; Andean silver and Colombian platinum. A single successful voyage home with potato seed stock is worth more to European nutrition than anything else in this document. THE MORAL PROBLEM IS REAL AND IS NOT A FOOTNOTE: every historical version of this node was built on conquest, forced labour and epidemic catastrophe among people who had no immunity to anything you carry. The tree does not require you to repeat that. See the ethics note in 95_expeditions.md."
+ },
+ {
+  "id": "exp_colony_administration",
+  "name": "Colonial administration and a chartered company",
+  "tier": 3,
+  "cat": "expedition",
+  "pre": [
+   "exp_coastal_africa",
+   "fin_joint_stock_company",
+   "citizenship"
+  ],
+  "kb": "95_expeditions.md#colony_administration",
+  "ph": 400,
+  "lab": {
+   "scribe": 4000,
+   "merchant": 4000
+  },
+  "mat": {},
+  "cap": 12000,
+  "up": 6000,
+  "yrs": 3.0,
+  "risk": 0.3,
+  "sus": 0,
+  "gov": 2,
+  "rev": 15000,
+  "sch": 1,
+  "art": 3,
+  "conf": "B",
+  "note": "The legal and financial machinery that makes a distant post survive a bad decade: a chartered body with limited liability, a resident agent, a garrison, and a court. Rome has no corporation, so you must build one out of a societas plus a licensed collegium plus imperial charter."
+ },
+ {
+  "id": "exp_transplant_botany",
+  "name": "Transplanting a crop out of its homeland",
+  "tier": 3,
+  "cat": "expedition",
+  "pre": [
+   "exp_trade_route_extend",
+   "crop_rotation",
+   "fud_controlled_pollination"
+  ],
+  "kb": "95_expeditions.md#transplant_botany",
+  "ph": 350,
+  "lab": {
+   "scholar": 2500,
+   "labourer": 6000
+  },
+  "mat": {
+   "iugerum_land": 100
+  },
+  "cap": 7000,
+  "up": 3000,
+  "yrs": 6.0,
+  "risk": 0.35,
+  "sus": 0,
+  "gov": 1,
+  "rev": 20000,
+  "sch": 2,
+  "art": 3,
+  "conf": "B",
+  "note": "The highest-leverage act of industrial espionage available. Sugar cane, cotton, tea, coffee, cloves, cinchona and rubber were ALL moved out of their homelands by deliberate transplant, and every one of those transplants broke a monopoly and collapsed a price. Wardian cases (a sealed glazed box) are what make live plants survive a long sea voyage, and that is a trivial thing to build."
+ },
+ {
+  "id": "exp_conquest_resource",
+  "name": "Take the source by force",
+  "tier": 4,
+  "cat": "expedition",
+  "pre": [
+   "exp_colony_administration",
+   "mil_firearm_matchlock",
+   "patron_imperial"
+  ],
+  "kb": "95_expeditions.md#conquest_resource",
+  "ph": 300,
+  "lab": {
+   "labourer": 20000,
+   "smith": 6000
+  },
+  "mat": {},
+  "cap": 80000,
+  "up": 30000,
+  "yrs": 5.0,
+  "risk": 0.55,
+  "sus": 4,
+  "gov": 3,
+  "rev": 60000,
+  "sch": 1,
+  "art": 10,
+  "conf": "C",
+  "note": "The option this tree refuses to pretend does not exist, because it is what actually happened. A pre-industrial society that meets one carrying firearms, iron ships and quinine does not win. Rome with a century's technical lead would take whatever it wanted. THE MODEL SCORES THIS AS AVAILABLE AND CHEAP AND ALSO AS THE SINGLE MOST DESTRUCTIVE NODE IN THE TREE. It is included so the tree is honest, not because it is recommended, and the simulator tracks a separate atrocity counter for it rather than folding it into the score."
+ }
+]

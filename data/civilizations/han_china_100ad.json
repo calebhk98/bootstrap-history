@@ -1,0 +1,289 @@
+{
+ "_note_cost_multipliers": "Han China already has the blast furnace and cast iron, which the Roman west does not, and paper, which nobody else has. It arrives at the tree several rungs up in exactly the places Rome is weakest. Its handicap is a state that distrusts private commerce and a literati class that ranks merchants near the bottom.",
+ "_note_debt_bondage": "Debt servitude was common and legally recognised in the Han, and it was ordinarily WORKED OFF rather than permanent: the sale of self or family into service for a term, redeemable.",
+ "base_reach": 2,
+ "blurb": "Rome's exact contemporary and ahead of it in metallurgy, agriculture and bureaucracy. Cast iron for five centuries already, the seed drill, the moldboard plough, paper in the year 105, water-powered blast bellows in 31 AD.",
+ "bondage_years": 12,
+ "cost_multipliers": {
+  "agriculture": 0.8,
+  "alloys": 0.75,
+  "casting": 0.65,
+  "commerce": 1.15,
+  "field_machinery": 0.8,
+  "finance": 1.2,
+  "information": 0.6,
+  "metallurgy": 0.7,
+  "paper": 0.5,
+  "printing": 0.6
+ },
+ "currency": "wu zhu cash",
+ "debt_bondage": true,
+ "fire_quarter": "timber wards of the capital",
+ "handicap_remedies": {
+  "_doc": "The Han handicap is the status of merchants, not any lack of capability. Imperial sanction removes it.",
+  "commerce": {
+   "node": "patron_imperial",
+   "residual": 1.0
+  },
+  "finance": {
+   "node": "patron_imperial",
+   "residual": 1.0
+  }
+ },
+ "hazards": [
+  {
+   "name": "The regency cycle and the Partisan Prohibitions",
+   "note": "Emperor He died in 105 leaving an infant heir, and for most of the second century the throne passes to boy emperors under a regency of their mother's clan, who are then removed by the palace eunuchs when the boy comes of age and wants his own men in - four times over, by the reigns of Shang, Chong and Zhi alone. Under Emperor Huan this hardens into open persecution: the Partisan Prohibitions of 166 and 169 barred the reformist scholar-officials who had denounced the eunuchs' faction from office for life, hollowing out exactly the class of administrator this civilization's whole advantage rests on. This is what a break tester meant by nothing happening for eighty years: the fall of the Han did not begin with the Yellow Turbans, it began here.",
+   "output_factor": 0.94,
+   "values": {
+    "patronage_weight": 0.06,
+    "w_novelty": -0.04
+   },
+   "years": [
+    125,
+    169
+   ]
+  },
+  {
+   "name": "Yellow Turban rebellion",
+   "note": "Not a bandit revolt: the Way of Supreme Peace was a millenarian Daoist religious movement, and it very nearly took the dynasty down. The court's lasting reaction, applied gradually below as shifts in what this society values, is to stop treating unlicensed religious movements as a nuisance and start treating them as a standing threat to the state, a genuine tightening relative to the easy tolerance of alchemy and technical craft this civilization's baseline shifts in what this society values describes.",
+   "sack_chance": 0.2,
+   "values": {
+    "w_religious_rigidity": 0.15
+   },
+   "years": [
+    184,
+    205
+   ]
+  },
+  {
+   "name": "Three Kingdoms fragmentation",
+   "note": "The examined bureaucracy that makes Han China the easiest place in this game to organise anything depends on there being one court to examine for; once Wei, Shu and Wu each run their own court, a distant and increasingly fictional emperor buys you far less than a warlord's own favour does, applied gradually below as shifts in what this society values. The unified currency and the state's coordination of long-distance trade fragment with the court, which is the shifts in what this society values-side counterpart to the the fall in trade and output loss.",
+   "output_factor": 0.6,
+   "values": {
+    "patronage_weight": 0.15,
+    "w_commerce": -0.15
+   },
+   "years": [
+    220,
+    280
+   ]
+  },
+  {
+   "name": "Jin reunification and the Taikang peace",
+   "note": "Sima Yan's Jin took Wu in 280 and China had one court again for the first time since 220. The Taikang years (280-289) are remembered as a decade in which registered households climbed back, the canals were dredged and the roads were safe; the occupation-field and tax-field settlement of 280 put people back on land they were allowed to keep. This partly undoes the Three Kingdoms shift above and is modelled exactly that way, as a partial reversal rather than a return to the Han baseline. It does not last: the dynasty that made it spends the next fifteen years killing itself.",
+   "values": {
+    "patronage_weight": -0.08,
+    "w_commerce": 0.1
+   },
+   "years": [
+    280,
+    290
+   ]
+  },
+  {
+   "name": "War of the Eight Princes",
+   "note": "Sixteen years of civil war inside the imperial clan, beginning with the coup against Empress Jia Nanfeng in 291 and grinding on until Sima Yue was left standing in 306. It consumed the Jin field armies, and - decisively - it taught the Xiongnu, Xianbei and Jie horsemen the princes hired against each other that the dynasty could be beaten by people who were already inside it. Nothing else in this file does so much damage with so little to show for it.",
+   "output_factor": 0.65,
+   "sack_chance": 0.05,
+   "years": [
+    291,
+    306
+   ]
+  },
+  {
+   "name": "The Yongjia disaster and the fall of Luoyang",
+   "note": "Liu Yuan declared his own Han dynasty in 304. In 311 his son Liu Cong's army took Luoyang, burned the palaces and the imperial library and carried the emperor off as a prisoner - the Yongjia catastrophe, which Chinese historiography treats as the end of the ancient world in the way the west treats 410. Chang'an fell in 316 and the Western Jin was finished. The court and a large part of the northern elite fled south of the Yangtze - the yiguan nandu, the crossing south of caps and gowns - and proclaimed the Eastern Jin at Jiankang in 317. If your workshop is anywhere north of the Huai river, it is in the path of this.",
+   "output_factor": 0.5,
+   "sack_chance": 0.2,
+   "staff_loss": 0.3,
+   "years": [
+    307,
+    317
+   ]
+  },
+  {
+   "name": "The Sixteen Kingdoms",
+   "note": "A hundred and twenty years in which northern China was ruled by a rapid succession of short-lived states founded by Xiongnu, Jie, Xianbei, Di and Qiang rulers - conventionally sixteen, in fact rather more. Fu Jian's Former Qin came within one battle of reunifying everything and lost it in an afternoon at the Fei river in 383. Registered population in the north over this period is a small fraction of the Later Han totals; how much of that gap is death and how much is flight south and households that simply stopped being counted is disputed, which is why this is modelled as long sustained lost output and a low standing sack risk rather than as mass mortality. What is not disputed is that the thing that made Han China the easiest place in this game to organise anything - one court, one coinage, one set of examinations - is gone, and what replaces it is a warlord whose favour you either have or do not.",
+   "output_factor": 0.62,
+   "sack_chance": 0.025,
+   "values": {
+    "patronage_weight": 0.1,
+    "w_military": 0.1
+   },
+   "years": [
+    318,
+    439
+   ]
+  },
+  {
+   "name": "Northern Wei, the equal-field system, and the monasteries",
+   "note": "The Tuoba Wei finished off the last of the northern states in 439 and held the north for a century. The equal-field allotment of 485 and the three-elders village registration of 486 rebuilt a taxable peasantry out of the wreckage, and Emperor Xiaowen moved the capital to Luoyang in 494 and required Xianbei families to take Chinese dress, language and surnames. The part that matters for a workshop is the Buddhist establishment: Yungang from 460 and Longmen from 493 are the visible end of it, but the monasteries were also very large landholders that ran water-powered grain mills and oil presses on their estates and litigated to keep the water rights. That is an institutional home for machinery, with capital and a reason to want it, that Han China did not have. The cost side is that the state notices: Emperor Taiwu suppressed Buddhism in 446 and the Northern Zhou did it again from 574 to 577, forcibly returning something like three million monks and nuns and their land to the tax rolls, which is a state deciding what may be believed in a way the Later Han rarely did.",
+   "values": {
+    "w_labour_saving": 0.12,
+    "w_religious_rigidity": 0.1
+   },
+   "years": [
+    439,
+    534
+   ]
+  },
+  {
+   "name": "The Hou Jing rebellion and the sack of Jiankang",
+   "note": "Hou Jing, a general who defected from the Eastern Wei and was taken in by the Liang, turned on his hosts and besieged Jiankang for five months across 548 and 549; Emperor Wu, who had reigned for forty-seven years, starved to death in his own palace. The richest city in the Chinese world, and the refuge the northern elite had been building since 317, was destroyed, and the Liang state with it. Six years later, when Jiangling fell to the Western Wei in the winter of 554-555, Emperor Yuan burned the imperial library - some hundred and forty thousand scrolls by the traditional count - rather than hand it over, which is the single largest deliberate destruction of books in this file. The south never recovered its weight against the north after this, which is why reunification, when it came thirty-four years later, came from the north.",
+   "output_factor": 0.6,
+   "sack_chance": 0.18,
+   "staff_loss": 0.25,
+   "years": [
+    548,
+    555
+   ]
+  },
+  {
+   "name": "Sui reunification",
+   "note": "Yang Jian took the Northern Zhou throne in 581 and in 589 his armies crossed the Yangtze, took Jiankang and ended two hundred and seventy years of division. For anyone trying to build something, this is the most important favourable event in the whole file and it deserves to be said plainly. The Sui restored one five-zhu coinage for the whole country and closed the private mints; standardised weights, measures and the foot; issued the Kaihuang code of 581, which cut the number of capital offences sharply; and abolished the nine-rank system in 587 in favour of provincial candidates sent up to be examined, which is the root the imperial examination grows from - the jinshi degree itself is a few years later, under Yang - and which makes an unconnected clever man employable again. Canal-building starts immediately - the Guangtong canal from Chang'an to the Yellow River was cut in 584 - and the great works joining the Yangtze to the Yellow River and on to the northern frontier follow in 605-610, just past this simulation's horizon. The corvee that dug them was murderous and destroyed the dynasty within two generations; inside this window, it is the reunification that counts. how much trade is honoured rises because there is one currency and one market again, and how much a patron's protection is worth falls back because there is one court to be examined by instead of a warlord to be favoured by.",
+   "values": {
+    "patronage_weight": -0.1,
+    "w_commerce": 0.15,
+    "w_novelty": 0.05
+   },
+   "years": [
+    581,
+    600
+   ]
+  },
+  {
+   "name": "Tang founding and the Zhenguan peace",
+   "note": "Li Yuan took the throne in 618 as Sui authority collapsed under the weight of the canal corvee; his son Li Shimin, Emperor Taizong, is the one who matters, and the Zhenguan era (626-649) of his reign is the single period later Chinese historiography holds up as the model of good government - a legal code completed in 637, the examination system widened rather than narrowed, the Eastern Turkic Khaganate broken in 630 so the Silk Road reopens under a single protector again, and Taizong's own recorded habit of accepting correction from his ministers, most famously Wei Zheng, without having them executed for it. One court, one currency, one examination, and it lasts.",
+   "values": {
+    "w_commerce": 0.1,
+    "patronage_weight": -0.05,
+    "w_novelty": 0.05
+   },
+   "years": [
+    618,
+    660
+   ]
+  },
+  {
+   "name": "Empress Wu's Zhou interregnum",
+   "note": "Wu Zetian rose from concubine to empress to, in 690, emperor in her own name, the only woman ever to hold the title in Chinese history, ruling as the Zhou dynasty until she was forced to abdicate in 705. She expanded the examinations and drew administrators from outside the established aristocratic clans to build a base independent of them, and patronised Buddhism heavily - the Longmen grottoes' largest carvings date from her reign - in a court that had previously ranked the imperial ancestral cult above it. It is a genuine anomaly inside an otherwise unbroken line of male emperors, and the succeeding Tang restoration treated her as one, which is why her own effect on how rigid orthodoxy is runs the opposite way from the Buddhist patronage under Northern Wei above: a woman emperor and a favoured foreign religion together read, to the literati who wrote the history, as exactly what a rigid order is supposed to prevent.",
+   "values": {
+    "w_religious_rigidity": -0.05,
+    "w_novelty": 0.05
+   },
+   "years": [
+    690,
+    705
+   ]
+  },
+  {
+   "name": "The An Lushan rebellion",
+   "note": "An Lushan, a frontier general of Sogdian and Turkic descent who had risen high in Xuanzong's favour, declared his own dynasty and took both capitals, Luoyang in 755 and Chang'an in 756, sending the court fleeing west; the emperor's own guard mutinied at Mawei and forced him to have his favourite consort Yang Guifei put to death before they would go on. The rebellion was put down by 763 only with the help of Uighur cavalry the Tang had to pay for in loot and tribute, and the census after it records something like two-thirds of the registered population of 755 simply gone from the rolls - the true death toll is disputed and was certainly inflated by flight and lost registration rather than killing alone, but by any reading this is the worst single demographic event in the file and the one the Tang never fully recovers its old reach from.",
+   "output_factor": 0.55,
+   "sack_chance": 0.12,
+   "staff_loss": 0.25,
+   "years": [
+    755,
+    763
+   ]
+  }
+ ],
+ "home_regions": [
+  "china"
+ ],
+ "id": "han_china_100ad",
+ "institutions": {
+  "bank": "early credit notes",
+  "charter": "imperial",
+  "corporation": false,
+  "guild": "hang, state-supervised",
+  "note": "An examined civil service and state monopolies on salt and iron. The state is a far more capable customer than Rome's, and a far more capable competitor.",
+  "partnership": true,
+  "patent": false,
+  "testament": true
+ },
+ "literacy_elite": 0.95,
+ "literacy_general": 0.06,
+ "name": "The Later Han Empire",
+ "notes": [
+  "You start with cast iron, paper, the horse collar, the seed drill and water-powered bellows already in hand. That is roughly a thousand years of head start over Rome on the metallurgy and agriculture branches.",
+  "The bureaucracy is the customer, the funder and the competition. Impress the examiners, not a patron."
+ ],
+ "opening": {
+  "arrival": "You arrive in Luoyang under the Emperor He, in a capital of timber and tile laid out on a grid, in the richest and most populous state on earth. There is a civil service recruited by examination, a standing bureaucracy that keeps records you can consult, and an imperial workshop system that already does things Rome cannot.",
+  "what_is_coming": "Eighty years, then the Yellow Turbans, then the warlords, then three centuries of division. The bureaucracy that makes this the easiest place on earth to organise anything is about to be the thing that breaks.",
+  "what_is_missing": "Glass. The Han have almost none, and will not develop it: the whole optical branch that Rome could reach in a generation is, here, a thing you must start from sand and a furnace and an argument.",
+  "what_you_can_see": "Cast iron, five hundred years before the West. The blast furnace. Paper, this very decade, credited to Cai Lun. The seed drill, the moldboard plough, the horse collar, the crossbow lock made to interchangeable tolerances, the seismoscope. A society that already believes in the trained specialist.",
+  "what_this_models": "You are one household, not the Han bureaucracy. Fifty-eight million people live under this administration and roughly one in ten of them in a town at all - about 5,800,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually reaches: the order of 46,000 people, not the empire. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the empire's true numbers."
+ },
+ "population": 58000000,
+ "price_index": 0.75,
+ "starting_techs": [
+  "blast_furnace",
+  "mat_cast_iron",
+  "cap_heat_1300",
+  "rag_paper",
+  "mat_paper",
+  "crank_conrod",
+  "bellows_water_blown",
+  "horse_collar",
+  "fud_seed_drill",
+  "fud_heavy_mouldboard_plough_coulter",
+  "sea_sternpost_rudder",
+  "sea_magnetic_compass"
+ ],
+ "state_capacity": 0.9,
+ "state_pressure": {
+  "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
+  "requisition_name": "the salt and iron monopolies",
+  "requisition_note": "Salt and iron were state monopolies since Emperor Wu's reign - the Discourses on Salt and Iron (81 BC) record the court debate over exactly this policy - and the corvee could be called on a household's own hands as readily as on its goods. An ironworks or a saltern good enough to notice is, in Han law, a business the state already claims a right to run.",
+  "requisition_base_share": 0.20,
+  "office_name": "a commandery post",
+  "office_note": "An examined man of property could be named to a commandery office he had not sought, answerable afterward for the district's own tax quota out of his own estate if the harvest or the rolls came up short - a liability the examination system handed out along with the prestige.",
+  "office_base_share": 0.05,
+  "military_name": "the imperial workshops",
+  "military_note": "The Han already ran imperial armouries turning out crossbow locks to interchangeable tolerance; a household that can do the same is a supplier the state expects to hear from, not a curiosity it leaves alone.",
+  "confiscation_name": "clan and property seizure",
+  "confiscation_note": "Han law could extend punishment to a condemned man's whole clan and estate, and the Partisan Prohibitions barred entire families from office for life. A fortune the court cannot go on taxing is a fortune the court can simply take, clan and all."
+ },
+ "urban_fraction": 0.1,
+ "values": {
+  "_note": "Merchants rank BELOW farmers and artisans in Confucian order, so w_commerce is negative: getting rich is not a route to status here, passing the examinations is. But alchemy and technical craft are far less likely to be called sorcery than in Rome.",
+  "_note_eminence": "Court factions and eunuch politics make eminence dangerous in much the same way, and the examination-literati class resents an outsider.",
+  "adaptation_rate": 0.1,
+  "bribability": 0.6,
+  "patronage_weight": 0.7,
+  "w_commerce": -0.2,
+  "w_eminence_danger": 0.8,
+  "w_information": 0.2,
+  "w_labour_saving": -0.2,
+  "w_magic_fear": 0.35,
+  "w_military": 0.8,
+  "w_novelty": -0.2,
+  "w_religious_rigidity": 0.15
+ },
+ "wage_index": 0.7,
+ "year": 100,
+ "local_words": {
+  "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
+  "pairs": [
+   [
+    "in plain quantitative Greek and Latin",
+    "in plain quantitative classical Chinese"
+   ],
+   [
+    "Senatorial patronage",
+    "Patronage of a commandery Grand Administrator"
+   ],
+   [
+    "Imperial patronage",
+    "Patronage at the Han court"
+   ],
+   [
+    "Licensed collegium of physicians and teachers",
+    "A registered guild of physicians and teachers"
+   ]
+  ]
+ }
+}

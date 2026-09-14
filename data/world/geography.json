@@ -1,0 +1,695 @@
+{
+ "_doc": {
+  "purpose": "There is no such thing as an unobtainable material. There are materials that are SOMEWHERE ELSE, and the question is only what it costs to go and get them. This file says where each thing is, how hard the place is to reach, and what you need in order to reach it. It replaces the 'tier 9 unobtainable' concept entirely.",
+  "three_ways_to_get_a_distant_material": [
+   "TRADE: pay a chain of middlemen. Cheapest to start, most expensive per unit, and you never control supply.",
+   "EXPEDITION and FACTORY: send your own ships, establish a trading post. Large capital, large risk, controls supply.",
+   "CONQUEST or COLONY: take the source. Largest capital, largest risk, largest moral cost, and it is what actually happened historically for rubber, saltpetre, spices and silver."
+  ],
+  "note_on_ubiquity": "Materials with ubiquity 'everywhere' are not modelled as located: wood, clay, sand, stone, water, common earths. They only matter if a SPECIFIC variety is local, which is flagged per material.",
+  "note_on_reach_from_italia_and_geometry": "THIS FILE USED TO BE ROME-CENTRIC AND THAT WAS A BUG. Every region carried one hard-coded 'reach' number measured from Italy, and the simulator's `civs` command printed it and did nothing else: `reach` was never read anywhere that computed a cost. Play Han China and the model still treated Chinese silk as 'reach 3, far away' and Malaya, which Chinese and Malay traders already sail to routinely, as an exotic reach-3 frontier, while it treated ITALY as reach 0 for a civilization that has never seen Italy. That is backwards for any civilization but Rome. The fix: every region now carries a `lat`/`lon` centroid, a `coastal` flag and a `route_difficulty` multiplier, so sim/simulator.py can compute a great-circle distance from ANY civilization's own home centroid and derive a reach band for THAT civilization, modified by how far it already routinely travels (`base_reach` in the civilization file) and by whether the destination is reachable by sea. The old per-region `reach` field is kept, renamed to `reach_from_italia`, purely as the historical Roman special case: it is what a Roman-centric build of this file used to call 'reach', it is no longer read as if it applied to every civilization, and it also serves as the calibration anchor for material cost multipliers below (see `located_materials._note`)."
+ },
+ "regions": {
+  "_note": "lat/lon are coarse centroids in degrees (negative = south / west), good enough for great-circle banding, not for navigation. coastal marks whether the region is reachable and workable by sea rather than only overland; a landlocked region can still be reached, just more slowly and without the sea-going discount a coastal society gets. route_difficulty multiplies the raw great-circle distance to approximate a real voyage's difficulty where straight-line distance badly understates it (ice, blue-water crossings with no coastal stepping-stones, hostile mountain and desert relay routes) or slightly overstates it (a fast, reliable, wind-assisted route like the monsoon crossing to India). minerals gives each region's rough share of a material's total output AT THIS TECHNOLOGICAL LEVEL, normalised so Rome's own home regions sum to about 1.0 per metal -- this reproduces data/world/resources.json's Roman totals for a Roman-home-region civilization exactly, and gives every other civilization the same yardstick for ITS OWN ground instead of the population-scaled guess the simulator used to make.",
+  "italia": {
+   "name": "Italy",
+   "reach_from_italia": 0,
+   "lat": 42.5,
+   "lon": 12.5,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.1,
+    "coal": 0.0,
+    "copper": 0.02,
+    "tin": 0.0,
+    "lead": 0.02,
+    "silver": 0.02,
+    "saltpetre": 0.0
+   },
+   "note": "Home, if you are Rome. Nobody else's home."
+  },
+  "gaul_germania": {
+   "name": "Gaul and the Germanies",
+   "reach_from_italia": 1,
+   "lat": 48.5,
+   "lon": 8.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.3,
+    "coal": 0.55,
+    "copper": 0.1,
+    "tin": 0.1,
+    "lead": 0.15,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   },
+   "note": "Noricum steel is famous; this is also the Rhineland and Ruhr coal country long before anyone calls it that, which is why it matters so much to whoever holds it in 1300."
+  },
+  "britannia": {
+   "name": "Britain",
+   "reach_from_italia": 1,
+   "lat": 53.0,
+   "lon": -1.5,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.15,
+    "coal": 0.45,
+    "copper": 0.05,
+    "tin": 0.55,
+    "lead": 0.3,
+    "silver": 0.05,
+    "saltpetre": 0.0
+   },
+   "note": "Cornish tin, Mendip and Pennine lead, Wealden iron, and coalfields the Romans barely touch. THIS is where the coal actually is; a civilization that HOLDS Britain should not be treated as coal-poor just because it has few people."
+  },
+  "hispania": {
+   "name": "Iberia",
+   "reach_from_italia": 1,
+   "lat": 40.0,
+   "lon": -4.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.2,
+    "coal": 0.0,
+    "copper": 0.45,
+    "tin": 0.35,
+    "lead": 0.45,
+    "silver": 0.65,
+    "saltpetre": 0.0
+   },
+   "note": "Rio Tinto and Cartagena. The single richest metal ground in the Roman world and the reason the denarius exists."
+  },
+  "north_africa": {
+   "name": "North Africa and Egypt",
+   "reach_from_italia": 1,
+   "lat": 28.0,
+   "lon": 20.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.1,
+    "coal": 0.0,
+    "copper": 0.05,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   }
+  },
+  "greece_anatolia": {
+   "name": "Greece and Anatolia",
+   "reach_from_italia": 1,
+   "lat": 38.5,
+   "lon": 29.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.1,
+    "coal": 0.0,
+    "copper": 0.15,
+    "tin": 0.0,
+    "lead": 0.1,
+    "silver": 0.3,
+    "saltpetre": 0.0
+   },
+   "note": "Laurion silver funded the Athenian navy long before Rome got here."
+  },
+  "levant_mesopotamia": {
+   "name": "Syria and Mesopotamia",
+   "reach_from_italia": 1,
+   "lat": 33.5,
+   "lon": 42.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.2,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   },
+   "note": "Cyprus copper (the metal is named after the island) sits at this end of the Mediterranean."
+  },
+  "scandinavia": {
+   "name": "Scandinavia and the Baltic",
+   "reach_from_italia": 2,
+   "lat": 60.0,
+   "lon": 15.0,
+   "coastal": true,
+   "route_difficulty": 1.1,
+   "minerals": {
+    "iron": 0.25,
+    "coal": 0.02,
+    "copper": 0.05,
+    "tin": 0.0,
+    "lead": 0.03,
+    "silver": 0.05,
+    "saltpetre": 0.0
+   },
+   "note": "Outside the Empire but reachable by trade. Amber road is ancient. Bog iron, smelted from ore raked out of lakebeds, is real and is what the Norse actually work with (met_bloomery_bog_iron); it is decent for tools and blades and no substitute for a coalfield."
+  },
+  "arabia_horn": {
+   "name": "Arabia and the Horn of Africa",
+   "reach_from_italia": 2,
+   "lat": 15.0,
+   "lon": 45.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.02,
+    "coal": 0.0,
+    "copper": 0.05,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.02,
+    "saltpetre": 0.0
+   }
+  },
+  "india": {
+   "name": "India and Ceylon",
+   "reach_from_italia": 2,
+   "lat": 20.0,
+   "lon": 78.0,
+   "coastal": true,
+   "route_difficulty": 0.85,
+   "minerals": {
+    "iron": 0.15,
+    "coal": 0.0,
+    "copper": 0.1,
+    "tin": 0.05,
+    "lead": 0.05,
+    "silver": 0.05,
+    "saltpetre": 1.0
+   },
+   "note": "ALREADY REACHABLE IN 100 AD by the monsoon route, Berenice to Muziris. Rome runs this trade annually and Pliny complains about the bullion drain. route_difficulty is BELOW 1 here on purpose: the monsoon is a scheduled, reliable wind system, not an obstacle, and treating it as ordinary distance understates how easy this crossing actually is once you know the timing. Also the world's dominant saltpetre source (Bengal), see located_materials."
+  },
+  "persia_centralasia": {
+   "name": "Persia and Central Asia",
+   "reach_from_italia": 2,
+   "lat": 35.0,
+   "lon": 55.0,
+   "coastal": false,
+   "route_difficulty": 1.2,
+   "minerals": {
+    "iron": 0.1,
+    "coal": 0.0,
+    "copper": 0.1,
+    "tin": 0.05,
+    "lead": 0.05,
+    "silver": 0.1,
+    "saltpetre": 0.05
+   },
+   "note": "Silk Road via Palmyra. Parthia is hostile but trade passes. Not coastal in this model: the Persian Gulf littoral exists but the bulk of the region, and the route through it, is overland relay across mountains and desert, which is why route_difficulty is above 1."
+  },
+  "china": {
+   "name": "China",
+   "reach_from_italia": 3,
+   "lat": 34.5,
+   "lon": 108.0,
+   "coastal": true,
+   "route_difficulty": 1.1,
+   "minerals": {
+    "iron": 0.9,
+    "coal": 1.2,
+    "copper": 0.3,
+    "tin": 0.15,
+    "lead": 0.2,
+    "silver": 0.15,
+    "saltpetre": 0.1
+   },
+   "note": "Reachable by Silk Road relay and by sea via India. Roman embassy recorded at the Han court in 166 AD. Shanxi coal and iron are enormous by any pre-modern standard, which is exactly why Han China starts this simulator already holding the blast furnace and cast iron: the ground supports it."
+  },
+  "west_africa": {
+   "name": "West and Central Africa",
+   "reach_from_italia": 3,
+   "lat": 8.0,
+   "lon": 0.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.05,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   },
+   "note": "Coastal. Hanno the Carthaginian sailed down this coast c. 500 BC. Not hard, merely not done. West African iron-working (the Nok tradition and its successors) is real and older than most people assume; it is not a large exportable surplus by Roman-scale demand, hence the modest share."
+  },
+  "southeast_asia": {
+   "name": "Malaya, Indonesia, the Spice Islands",
+   "reach_from_italia": 3,
+   "lat": 2.0,
+   "lon": 105.0,
+   "coastal": true,
+   "route_difficulty": 1.0,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.05,
+    "tin": 0.3,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   },
+   "note": "Malayan tin is real and additional to the Cornwall/Iberia figures above, not a slice of them."
+  },
+  "east_africa_south": {
+   "name": "East Africa and the Cape",
+   "reach_from_italia": 4,
+   "lat": -18.0,
+   "lon": 30.0,
+   "coastal": true,
+   "route_difficulty": 1.3,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.05,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.02,
+    "saltpetre": 0.0
+   },
+   "note": "Herodotus reports a Phoenician circumnavigation of Africa under Necho II. Contested, but the voyage is physically possible with era-appropriate ships; route_difficulty reflects a long, mostly unprecedented coastal haul, not an ocean crossing."
+  },
+  "siberia_urals": {
+   "name": "The Urals and Siberia",
+   "reach_from_italia": 4,
+   "lat": 58.0,
+   "lon": 65.0,
+   "coastal": false,
+   "route_difficulty": 1.4,
+   "minerals": {
+    "iron": 0.15,
+    "coal": 0.05,
+    "copper": 0.15,
+    "tin": 0.0,
+    "lead": 0.05,
+    "silver": 0.05,
+    "saltpetre": 0.0
+   },
+   "note": "Overland-reachable through Scythian and Sarmatian trade (see platinum in located_materials). Genuinely mineral-rich ground; genuinely hard to get a wagon to."
+  },
+  "americas_carib": {
+   "name": "The Caribbean and Mesoamerica",
+   "reach_from_italia": 5,
+   "lat": 17.0,
+   "lon": -85.0,
+   "coastal": true,
+   "route_difficulty": 1.5,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.35,
+    "tin": 0.02,
+    "lead": 0.05,
+    "silver": 0.15,
+    "saltpetre": 0.0
+   },
+   "note": "No draught animals and no iron-working tradition here, but the ore exists in the ground; copper and gold are what the Mexica actually work, which is why iron is a small share and copper a large one."
+  },
+  "americas_south": {
+   "name": "South America, Amazonia and the Andes",
+   "reach_from_italia": 5,
+   "lat": -15.0,
+   "lon": -60.0,
+   "coastal": true,
+   "route_difficulty": 1.5,
+   "minerals": {
+    "iron": 0.05,
+    "coal": 0.0,
+    "copper": 0.2,
+    "tin": 0.05,
+    "lead": 0.02,
+    "silver": 0.4,
+    "saltpetre": 0.0
+   },
+   "note": "Andean silver (Potosi and its neighbours) is one of the largest silver endowments on Earth; the share here is deliberately generous rather than conservative."
+  },
+  "americas_north": {
+   "name": "North America",
+   "reach_from_italia": 5,
+   "lat": 40.0,
+   "lon": -100.0,
+   "coastal": true,
+   "route_difficulty": 1.5,
+   "minerals": {
+    "iron": 0.1,
+    "coal": 0.1,
+    "copper": 0.15,
+    "tin": 0.0,
+    "lead": 0.05,
+    "silver": 0.05,
+    "saltpetre": 0.0
+   }
+  },
+  "australia_pacific": {
+   "name": "Australia and the Pacific",
+   "reach_from_italia": 6,
+   "lat": -25.0,
+   "lon": 135.0,
+   "coastal": true,
+   "route_difficulty": 1.8,
+   "minerals": {
+    "iron": 0.02,
+    "coal": 0.02,
+    "copper": 0.02,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   }
+  },
+  "greenland_arctic": {
+   "name": "Greenland and the Arctic",
+   "reach_from_italia": 6,
+   "lat": 70.0,
+   "lon": -42.0,
+   "coastal": true,
+   "route_difficulty": 2.2,
+   "minerals": {
+    "iron": 0.01,
+    "coal": 0.0,
+    "copper": 0.0,
+    "tin": 0.0,
+    "lead": 0.0,
+    "silver": 0.0,
+    "saltpetre": 0.0
+   },
+   "note": "route_difficulty is the highest in the file on purpose: raw distance from most of Eurasia is not actually that large (Greenland is closer to Rome in a straight line than India is), but the ice-bound approach is what makes it hard, and only ships built for exactly this (Norse clinker hulls, base_reach 4) shrug it off. Distance alone would badly under-price this region."
+  }
+ },
+ "reach_levels": {
+  "0": {
+   "desc": "at home",
+   "expedition": null
+  },
+  "1": {
+   "desc": "close to home ground, inside the same cultural and trading sphere",
+   "expedition": null
+  },
+  "2": {
+   "desc": "established trade routes exist and this civilization already uses them",
+   "expedition": "exp_trade_route_extend"
+  },
+  "3": {
+   "desc": "known to exist, no regular traffic yet, coastal sailing sufficient",
+   "expedition": "exp_coastal_africa"
+  },
+  "4": {
+   "desc": "long open-water or deep-continental voyage, needs provisioning against scurvy and a real hull",
+   "expedition": "exp_africa_circumnavigation"
+  },
+  "5": {
+   "desc": "ocean crossing, needs open-ocean navigation and a ship that survives it",
+   "expedition": "exp_atlantic_crossing"
+  },
+  "6": {
+   "desc": "the far ocean or the ice",
+   "expedition": "exp_pacific_arctic"
+  }
+ },
+ "located_materials": {
+  "_note": "cost_multiplier is what a kilogramme costs delivered to Italy relative to producing it locally, by TRADE, at the start, FOR ROME SPECIFICALLY (that is the civilization this number was originally written for, and reach_from_italia above is its calibration point). sim/simulator.py's Sim.material_reach() turns this into a cost multiplier for WHATEVER civilization you are actually playing, by comparing that civilization's own geometric reach to the region against reach_from_italia: at civ_reach 0 (you live there) the multiplier is 1, at civ_reach == reach_from_italia it reproduces this number exactly (which is why Rome's own numbers barely move), and at civ_reach below reach_from_italia -- the whole point of this fix -- it comes out CHEAPER, because the material genuinely is closer for that civilization. An expedition or a colony then cuts it further, which is the whole economic argument for both.",
+  "rubber_latex": {
+   "regions": [
+    "americas_south",
+    "west_africa"
+   ],
+   "primary": "americas_south",
+   "cost_multiplier": 40,
+   "note": "THE CLASSIC 'UNOBTAINABLE' AND IT IS NOT. Hevea brasiliensis is Amazonian, but Landolphia and Funtumia vines in West and Central Africa also yield real rubber and were the basis of a huge industry in the 1890s. West Africa is coastal sailing from the Pillars of Hercules, which Hanno did around 500 BC. You do not need to cross an ocean for rubber. You need to sail down a coast and know which vine to tap.",
+   "unlocks": [
+    "mat_natural_rubber"
+   ]
+  },
+  "gutta_percha": {
+   "regions": [
+    "southeast_asia"
+   ],
+   "cost_multiplier": 60,
+   "note": "Palaquium latex, Malaya. Reachable by extending the existing India route east, which Indian and Malay traders already do. Traders based IN China or India are already doing most of this journey as a matter of routine; the old Rome-only reach model could not say that.",
+   "unlocks": [
+    "mat_gutta_percha"
+   ]
+  },
+  "cinchona_bark": {
+   "regions": [
+    "americas_south"
+   ],
+   "primary": "americas_south",
+   "cost_multiplier": 80,
+   "note": "Andean, and genuinely only Andean until the 19th-century transplants to Java and India. Malaria is endemic around Rome, so this is worth an ocean crossing on its own. Once you have it, transplant it: the Dutch and British both did.",
+   "unlocks": [
+    "mat_quinine"
+   ]
+  },
+  "sodium_nitrate": {
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 50,
+   "note": "Atacama caliche. Enormous, but you do not need it: Indian saltpetre from Bengal was the world's supply for centuries and is reachable on a route Rome already sails, and nitre beds work anywhere.",
+   "unlocks": [
+    "mat_chile_nitrate"
+   ]
+  },
+  "potassium_nitrate_natural": {
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 6,
+   "note": "BENGAL SALTPETRE. This is the important one and almost every bootstrap plan misses it. Natural nitre efflorescence on the Gangetic plain supplied the world's gunpowder for centuries. It is on a route Rome already sails annually. You can buy saltpetre instead of farming it, which removes the 24-month nitre-bed delay from the critical path entirely.",
+   "unlocks": [
+    "nitre_beds_bypass"
+   ]
+  },
+  "cryolite": {
+   "regions": [
+    "greenland_arctic"
+   ],
+   "cost_multiplier": 200,
+   "note": "Ivigtut, Greenland, essentially the only workable deposit. But synthetic fluoride baths from your own hydrofluoric acid work, which is what industry moved to anyway. Genuinely close to home for the Norse (base_reach 4, ships built for ice-bound coasts) and genuinely remote for everyone else, which is exactly the asymmetry this file exists to capture.",
+   "unlocks": [
+    "mat_cryolite"
+   ]
+  },
+  "platinum": {
+   "regions": [
+    "americas_south",
+    "siberia_urals"
+   ],
+   "cost_multiplier": 120,
+   "note": "Colombian placers and Ural placers. The Urals are overland-reachable through Scythian and Sarmatian trade.",
+   "unlocks": [
+    "mat_platinum_bulk"
+   ]
+  },
+  "potato": {
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "note": "A crop, not a commodity. You need SEED STOCK once, then you grow it. One successful voyage changes the caloric ceiling of European agriculture permanently. Potatoes yield 2 to 4 times the calories per hectare of wheat on poor ground.",
+   "unlocks": [
+    "fud_potato_tier9"
+   ]
+  },
+  "maize": {
+   "regions": [
+    "americas_carib"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "fud_maize_tier9"
+   ]
+  },
+  "cacao": {
+   "regions": [
+    "americas_carib"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "fud_chocolate_tier9"
+   ]
+  },
+  "tomato_chilli_tobacco_cassava": {
+   "regions": [
+    "americas_carib",
+    "americas_south"
+   ],
+   "cost_multiplier": 1,
+   "one_time": true,
+   "unlocks": [
+    "mat_newworld_crops"
+   ]
+  },
+  "coca_leaf": {
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 90,
+   "unlocks": [
+    "med_cocaine_unobtainable"
+   ]
+  },
+  "silk_raw": {
+   "regions": [
+    "china"
+   ],
+   "cost_multiplier": 30,
+   "note": "Rome already buys it. The sericulture SECRET is the valuable thing; two monks smuggled silkworm eggs to Byzantium in 552 AD, so it is stealable."
+  },
+  "shellac": {
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 12
+  },
+  "camphor": {
+   "regions": [
+    "southeast_asia",
+    "china"
+   ],
+   "cost_multiplier": 25
+  },
+  "cloves_nutmeg": {
+   "regions": [
+    "southeast_asia"
+   ],
+   "cost_multiplier": 70,
+   "note": "Maluku only, until transplanted. The single highest value-per-weight cargo in the pre-modern world."
+  },
+  "pepper": {
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 8,
+   "note": "Rome buys this by the shipload already."
+  },
+  "cotton": {
+   "regions": [
+    "india",
+    "north_africa"
+   ],
+   "cost_multiplier": 4
+  },
+  "wootz_ingot": {
+   "regions": [
+    "india"
+   ],
+   "cost_multiplier": 15,
+   "note": "Crucible steel ingots. Rome imports these. Buying the product is not the same as knowing the process, but it lets you reverse-engineer it."
+  },
+  "tin": {
+   "regions": [
+    "britannia",
+    "hispania",
+    "southeast_asia"
+   ],
+   "cost_multiplier": 1
+  },
+  "amber": {
+   "regions": [
+    "scandinavia"
+   ],
+   "cost_multiplier": 20,
+   "note": "Also the best natural electrical insulator available to you, and the origin of the word electricity."
+  },
+  "mercury": {
+   "regions": [
+    "hispania"
+   ],
+   "cost_multiplier": 1,
+   "note": "Almaden, an imperial monopoly, so this is a political cost not a distance cost."
+  },
+  "bitumen_naphtha": {
+   "regions": [
+    "levant_mesopotamia"
+   ],
+   "cost_multiplier": 2,
+   "note": "Surface seeps. Your entire petroleum industry starts here and needs no drilling."
+  },
+  "coal": {
+   "regions": [
+    "britannia",
+    "gaul_germania",
+    "china"
+   ],
+   "cost_multiplier": 1
+  },
+  "boric_acid": {
+   "regions": [
+    "italia"
+   ],
+   "cost_multiplier": 1,
+   "note": "Larderello fumaroles, Tuscany. Verify on arrival."
+  },
+  "fluorspar": {
+   "regions": [
+    "gaul_germania",
+    "britannia"
+   ],
+   "cost_multiplier": 2
+  },
+  "argyrodite_germanium": {
+   "regions": [
+    "gaul_germania"
+   ],
+   "cost_multiplier": 10,
+   "note": "Freiberg, Saxony, outside the Empire in free Germania. Zinc smelter flue dust is the better route anyway."
+  },
+  "guano": {
+   "regions": [
+    "americas_south"
+   ],
+   "cost_multiplier": 30,
+   "note": "Peruvian islands. Enormous nitrogen and phosphate resource, and it is why the guano trade mattered so much in the 19th century."
+  },
+  "sugar_cane": {
+   "regions": [
+    "india",
+    "southeast_asia"
+   ],
+   "cost_multiplier": 5,
+   "one_time_transplant": true
+  },
+  "tea": {
+   "regions": [
+    "china"
+   ],
+   "cost_multiplier": 25,
+   "one_time_transplant": true
+  },
+  "coffee": {
+   "regions": [
+    "arabia_horn"
+   ],
+   "cost_multiplier": 15,
+   "one_time_transplant": true
+  },
+  "kola_palm_oil": {
+   "regions": [
+    "west_africa"
+   ],
+   "cost_multiplier": 20
+  },
+  "ivory_gold_west_africa": {
+   "regions": [
+    "west_africa"
+   ],
+   "cost_multiplier": 6,
+   "note": "The West African gold trade is why the trans-Saharan routes existed. Reachable by sea, which is exactly what the Portuguese did to cut out the Saharan middlemen."
+  }
+ }
+}

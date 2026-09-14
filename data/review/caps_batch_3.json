@@ -1,0 +1,684 @@
+[
+ {
+  "id": "air_coal_gas_generation",
+  "name": "Coal gas for ballooning",
+  "tier": 3,
+  "cat": "aviation",
+  "current_pre": [
+   "coal_coke",
+   "destructive_distillation"
+  ],
+  "note": "Destructive distillation of coal produces a mixture rich in hydrogen and methane: coal gas. Vastly cheaper than chemical hydrogen. A coal-gas plant can fill balloons continuously. Requires establishing a permanent retort house and managing by-products. The lift is slightly less than pure hydrogen but the cost difference is transformative. [AUDIT: this node does not declare the "
+ },
+ {
+  "id": "air_parachute",
+  "name": "Parachute",
+  "tier": 2,
+  "cat": "aviation",
+  "current_pre": [
+   "air_observation_balloon_tethered",
+   "mat_linen"
+  ],
+  "note": "A cone of stiff linen attached to a harness. When opened in free fall, it spreads and catches air, slowing descent to survivable speeds. Requires both invention and extraordinary nerve to test. A man who falls from the sky with a cloth and lives appears either blessed or damned. The key insight is that air resistance, not upward force, saves you. [AUDIT: this node does not decl"
+ },
+ {
+  "id": "balance_analytical",
+  "name": "Analytical balance reading to 1 milligram",
+  "tier": 2,
+  "cat": "instruments",
+  "current_pre": [
+   "cementation_steel",
+   "precision_three_plate",
+   "units_standards"
+  ],
+  "note": "Agate or hardened steel knife edges, a beam stiff enough not to sag, damping, a draught shield, and a master weight set. This is the instrument that converts alchemy into chemistry. Nothing downstream is reproducible without it. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferr"
+ },
+ {
+  "id": "boring_mill",
+  "name": "Cylinder boring mill",
+  "tier": 3,
+  "cat": "precision",
+  "current_pre": [
+   "screw_lathe",
+   "blast_furnace"
+  ],
+  "note": "Wilkinson's machine, and the actual reason there was no useful steam engine before 1775. The bar must be supported at both ends so it cannot follow the existing crooked hole. Without this there is no piston that seals, and without that there is no engine."
+ },
+ {
+  "id": "chm_alkali_waste",
+  "name": "Leblanc process waste: calcium carbide and the alkali waste problem",
+  "tier": 2,
+  "cat": "environmental_chemistry",
+  "current_pre": [
+   "soda_leblanc"
+  ],
+  "note": "One tonne of soda ash from Leblanc produces three tonnes of toxic sulfide waste. Dumping it into rivers creates hydrogen sulfide gas and kills fisheries. Britain's Alkali Act of 1863 was the first environmental regulation in history, requiring soda makers to absorb 95% of the acid mist. This made Leblanc uneconomical where Solvay could operate."
+ },
+ {
+  "id": "chm_celluloid",
+  "name": "Celluloid: nitrocellulose plastics",
+  "tier": 4,
+  "cat": "plastics",
+  "current_pre": [
+   "chm_guncotton"
+  ],
+  "note": "Nitrocellulose becomes plastic when mixed with camphor. Sheet is then made by rolling between heated cylinders. Celluloid revolutionises photography by replacing glass plates, enables flexible film stock, and is used for combs, buttons, piano keys. The material is flammable and degrades over time to become increasingly brittle. [AUDIT: this node does not declare the capability "
+ },
+ {
+  "id": "chm_fulminate",
+  "name": "Mercury fulminate preparation",
+  "tier": 3,
+  "cat": "explosives",
+  "current_pre": [
+   "mercury_supply",
+   "nitric_acid"
+  ],
+  "note": "Mercury is dissolved in dilute nitric acid and ethanol added. After a few hours, white crystals of mercury fulminate form. These are highly shock-sensitive and explode from any mechanical disturbance. Synthesis must be done in tiny batches and handled with extreme caution. Lead fulminate is safer but less reliable. [AUDIT: this node does not declare the capability rung it needs"
+ },
+ {
+  "id": "chm_ion_exchange",
+  "name": "Ion exchange resins for water softening and purification",
+  "tier": 4,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "mat_bulk_steel"
+  ],
+  "note": "Phenolic or acrylic polymer beads are cross-linked with divinylbenzene and charged with either H+ cations or OH- anions. Water percolated through the column exchanges Ca2+ for H+, softening and acidifying simultaneously. The resin is regenerated with acid or base. Ion exchange is essential for producing ultrapure process water and boiler feedwater. [AUDIT: this node does not de"
+ },
+ {
+  "id": "chm_potash_mining",
+  "name": "Potash mining and refining",
+  "tier": 2,
+  "cat": "mineral_extraction",
+  "current_pre": [
+   "mining_concession"
+  ],
+  "note": "Potash salts like sylvinite are mined like any mineral ore. The mined rock is then dissolved in water, filtered to remove insoluble matter, and crystallised. Potassium is essential to agriculture: wheat and potatoes are heavy exporters of K2O, depleting soils rapidly without replenishment. [AUDIT: this node does not declare the capability rung it needs. An automated pass once i"
+ },
+ {
+  "id": "chm_tnt",
+  "name": "TNT: trinitrotoluene synthesis",
+  "tier": 3,
+  "cat": "explosives",
+  "current_pre": [
+   "chm_toluene"
+  ],
+  "note": "Toluene is nitrated to mononitrotoluene, then dinitrotoluene, then trinitrotoluene. Each stage requires strong acid and careful temperature control. TNT is relatively stable compared to nitroglycerin and can be melted to pour into shells. Its insensitivity to shock makes it ideal for military use."
+ },
+ {
+  "id": "civ_building_code",
+  "name": "Building code and regulatory standards",
+  "tier": 3,
+  "cat": "institutional",
+  "current_pre": [
+   "civ_factor_safety"
+  ],
+  "note": "Written rules for minimum structural capacity, fire safety, exits, materials. Enforced by inspection. The first comprehensive code was New York (1901). Codification stops guesswork and protects the public. Elite builders resist rules; lives saved prove the value. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an indepen"
+ },
+ {
+  "id": "civ_dam_gravity",
+  "name": "Gravity dam in masonry or concrete",
+  "tier": 2,
+  "cat": "water",
+  "current_pre": [
+   "civ_arch_roman",
+   "civ_statics"
+  ],
+  "note": "A thick wall holding back water by its own weight. Water pressure increases with depth (proportional to depth squared). The base must resist both the vertical load and the horizontal thrust. Most dam failures are not structural (cracking) but hydraulic (seepage, overtopping). [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, a"
+ },
+ {
+  "id": "civ_lightning_conductor",
+  "name": "Lightning conductor and grounding",
+  "tier": 2,
+  "cat": "safety",
+  "current_pre": [
+   "mat_wrought_iron"
+  ],
+  "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and "
+ },
+ {
+  "id": "civ_town_planning",
+  "name": "Town planning and street layout",
+  "tier": 2,
+  "cat": "institutional",
+  "current_pre": [
+   "civ_surveying_groma"
+  ],
+  "note": "Systematic design of streets, squares, and districts rather than organic growth. Rome's colonial towns used a grid (the orthogonal plan). Haussmann (Paris, 1850s) imposed radial avenues and parks. Planning is contentious (disrupts existing patterns), but saves lives (fire lanes, flood avoidance, sanitation) and improves efficiency. [AUDIT: this node does not declare the capabil"
+ },
+ {
+  "id": "com_amplitude_modulation",
+  "name": "Amplitude modulation (AM) - encoding audio on radio",
+  "tier": 4,
+  "cat": "radio",
+  "current_pre": [
+   "com_continuous_wave",
+   "com_triode_oscillator"
+  ],
+  "note": "A microphone signal (audio, 0-10 kHz) is added to the RF oscillator output, varying its amplitude. The modulated wave is transmitted; a receiver detects the envelope (the modulation) using a rectifier, recovering audio. The trick: a 1 MHz carrier modulated with 1 kHz audio produces sidebands at 999 kHz and 1001 kHz. Radio stations are spaced 10 kHz apart (AM broadcast). The ban"
+ },
+ {
+  "id": "com_broadcasting_institution",
+  "name": "Broadcasting as an institution - scheduled transmission and profit model",
+  "tier": 4,
+  "cat": "radio",
+  "current_pre": [
+   "com_superheterodyne_receiver",
+   "com_amplitude_modulation"
+  ],
+  "note": "Not a technical innovation but an economic and political one. Broadcast stations transmit on fixed schedules so listeners know when to tune in. Content (music, news, drama) is produced by local staff. Revenue comes from advertising (selling commercial time). This is a radical model: entertainment and information are free to the listener, paid for by advertisers. By 1930, broadc"
+ },
+ {
+  "id": "com_crystal_set",
+  "name": "Crystal set receiver - galena rectifier radio",
+  "tier": 4,
+  "cat": "radio",
+  "current_pre": [
+   "galena_detector",
+   "com_antenna_ground"
+  ],
+  "note": "A tuned coil and capacitor select one radio station, a galena rectifier converts the RF signal to audio (crystal detects, headphones reproduce). No power source needed (rectified signal drives headphones directly). Range is short (5 km), quality is poor (strong local station only), but the cost is near zero. Crystal sets were toys in 1910, but mass-produced for every youth by 1"
+ },
+ {
+  "id": "com_heliograph",
+  "name": "Heliograph - sun mirror telegraph",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "com_optical_codebook"
+  ],
+  "note": "A polished mirror reflects sunlight to encode Morse dots and dashes. Works in daylight at range up to 50 km. Lighter and cheaper than optical towers. Cannot work at night or in cloud. The constraint is weather: an overcast day stops all communication, but the apparatus itself is simpler and more portable. [AUDIT: this node does not declare the capability rung it needs. An autom"
+ },
+ {
+  "id": "com_magnetic_core_memory",
+  "name": "Magnetic core memory - fast addressable RAM",
+  "tier": 4,
+  "cat": "storage",
+  "current_pre": [
+   "electromagnet",
+   "com_register_computing"
+  ],
+  "note": "Toroidal ferrite cores (0.5 mm) arranged in a 2D grid (64x64 cores = 4096 bits). Each core stores 1 bit (magnetized clockwise or counter-clockwise). Access time is 1 microsecond (1000x faster than tape). Each core is addressed by X and Y wires (select row and column), read and write wires complete the circuit. Core memory was the standard for mainframe computers (1960s-1970s) u"
+ },
+ {
+  "id": "com_morse_register",
+  "name": "Morse register - recording apparatus",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric"
+  ],
+  "note": "An electromagnetic solenoid pulls a stylus down onto a paper tape moving past it. When current flows, the dot or dash is recorded as a mark. The register was the original telegraph receiver: it married mechanical motion to electrical signal. A human operator then reads the tape and transcribes the message. The key limitation: without a sounder (sound output), it was slow to rea"
+ },
+ {
+  "id": "com_optical_tower",
+  "name": "Optical semaphore tower",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "com_optical_codebook"
+  ],
+  "note": "Tall wooden or brick tower with rotating wooden arms on three axes (shutter positions: open, half, closed). Operator turns cranks to set position, next tower sees it through telescope, relays instantly. No power needed. Can send 20 words per minute across 100 km chain. The killer innovation: a message travels the length of France in hours instead of weeks. [AUDIT: this node doe"
+ },
+ {
+  "id": "com_relay",
+  "name": "Relay - current amplification for long lines",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric",
+   "electromagnet"
+  ],
+  "note": "A weak current (from the distant telegraph key) flows through a solenoid, pulling a switch that closes a local circuit with a strong battery. This solves the fundamental problem: telegraph wire has resistance; after 100 km, the signal is too weak to operate the sounder. A relay at each station regenerates the signal at full strength. Without relays, the telegraph network stops "
+ },
+ {
+  "id": "com_slide_rule",
+  "name": "Slide rule - mechanical multiplier",
+  "tier": 3,
+  "cat": "calculation",
+  "current_pre": [
+   "logarithms"
+  ],
+  "note": "Two wooden rules with logarithmic scales, aligned by hand and compared visually. To multiply 5*7, you find 5 on one scale and 7 on the other, align them, and read 35 off the fixed scale. Uses the log identity: log(a*b)=log(a)+log(b). Accuracy is 3 digits, good enough for engineering work. Ubiquitous by 1900, slide rules were the dominant calculation tool until electronic calcul"
+ },
+ {
+  "id": "com_superheterodyne_receiver",
+  "name": "Superheterodyne receiver - fixed intermediate frequency design",
+  "tier": 4,
+  "cat": "radio",
+  "current_pre": [
+   "com_continuous_wave",
+   "com_triode_oscillator",
+   "com_amplitude_modulation"
+  ],
+  "note": "Instead of amplifying the RF signal directly (hard at high frequencies), a mixer combines the received signal with a local oscillator, producing a difference frequency (intermediate frequency, typically 455 kHz or 10.7 MHz). Tuning changes only the local oscillator; the intermediate frequency is fixed and easy to amplify. This is the most important radio innovation after AM: it"
+ },
+ {
+  "id": "com_teleprinter",
+  "name": "Teleprinter - automated telegraph typing",
+  "tier": 3,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric",
+   "electromagnet"
+  ],
+  "note": "Operator types on a keyboard (like a typewriter). Solenoids pull levers that position type wheels for each character, a hammer fires on command, the character prints on paper, and the whole sequence is transmitted as electrical pulses down the telegraph line. The receiving teleprinter receives the same pulses and reproduces each character. No skilled Morse operator needed; anyo"
+ },
+ {
+  "id": "com_tv_mechanical_scanning",
+  "name": "Mechanical television scanning - early image transmission",
+  "tier": 3,
+  "cat": "television",
+  "current_pre": [
+   "com_antenna_ground"
+  ],
+  "note": "A spinning disc with holes arranged in a spiral (Nipkow disc) scans an image line by line. Light from the scene passes through a hole onto a selenium photocell, which modulates current proportional to brightness. This signal is transmitted by radio; a receiver feeds it to a similar spinning disc, with light shining behind it, reconstructing the image on a screen. The whole syst"
+ },
+ {
+  "id": "com_waveguide",
+  "name": "Waveguide - pipe for microwaves",
+  "tier": 4,
+  "cat": "radar",
+  "current_pre": [
+   "com_radar_magnetron"
+  ],
+  "note": "At microwave frequencies (GHz), conventional wires radiate their signal into space (useless). A rectangular copper tube confines the microwave to propagate only in the TM01 mode (specific to the tube dimensions). Loss is low, and the signal is contained. Waveguide is like a plumbing system for microwaves: you assemble it with flanges and bolts, couple to a magnetron at one end "
+ },
+ {
+  "id": "daniell_cell",
+  "name": "Daniell cell and reliable current sources",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "voltaic_pile",
+   "sulfuric_retort"
+  ],
+  "note": "The two-solution design stops polarisation, so the cell holds its voltage for hours instead of minutes. Around 1.1 volts and dependable, which is what makes telegraphy and electroplating practical rather than theatrical. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung "
+ },
+ {
+  "id": "electrolysis_industrial",
+  "name": "Chlor-alkali, aluminium and industrial electrochemistry",
+  "tier": 5,
+  "cat": "chemistry",
+  "current_pre": [
+   "power_grid",
+   "electroplating"
+  ],
+  "note": "Aluminium needs cryolite (Greenland) or a synthetic fluoride bath from your own hydrofluoric acid, which is the realistic route for you. Chlorine gives bleach and disinfectant, which loops back into public health. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money c"
+ },
+ {
+  "id": "fud_beet_sugar_processing",
+  "name": "Sugar beet cultivation and crystallization",
+  "tier": 2,
+  "cat": "crops",
+  "current_pre": [
+   "fud_sugar_cane_cultivation"
+  ],
+  "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and "
+ },
+ {
+  "id": "fud_malt_production",
+  "name": "Malt production from barley and other grains",
+  "tier": 1,
+  "cat": "fermentation",
+  "current_pre": [
+   "crop_rotation"
+  ],
+  "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY infe"
+ },
+ {
+  "id": "fused_quartz",
+  "name": "Fused silica working",
+  "tier": 4,
+  "cat": "glass_optics",
+  "current_pre": [
+   "high_temp_furnace",
+   "industrial_gases"
+  ],
+  "note": "Needs an oxy-hydrogen flame at roughly 1700-2000 C. Indispensable for the semiconductor endgame: you cannot zone-refine germanium in anything that contaminates it, and quartz is the only affordable material that does not."
+ },
+ {
+  "id": "glass_borosilicate",
+  "name": "Borosilicate glass",
+  "tier": 3,
+  "cat": "glass_optics",
+  "current_pre": [
+   "glass_labware",
+   "sulfuric_retort"
+  ],
+  "note": "Needs boron. The Larderello fumaroles in Tuscany emit boric acid and are inside the Empire, which is a genuinely lucky break if it holds; verify on arrival before planning around it. Low thermal expansion is the difference between a laboratory and a pile of broken retorts. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and "
+ },
+ {
+  "id": "hom_attar_roses",
+  "name": "Attar of roses",
+  "tier": 3,
+  "cat": "personal",
+  "current_pre": [
+   "distillation_alcohol",
+   "hom_perfume_distilled"
+  ],
+  "note": "Distilled rose oil (4 kg of petals for 1 g of oil). Extremely expensive and high-margin. Attar is one of the best early revenue products: small weight, non-perishable, high demand from the wealthy. Bulgarian and Persian atar dominate the market."
+ },
+ {
+  "id": "hom_electric_lighting",
+  "name": "Electric lighting in home",
+  "tier": 4,
+  "cat": "lighting",
+  "current_pre": [
+   "arc_light_lamp",
+   "power_grid",
+   "cap_power_electric"
+  ],
+  "note": "Incandescent bulbs (Edison carbon, then tungsten filament) or arc lamps. Grid electricity required. Replaces gas lamps and kerosene. Cost per lumen falls; brightness increases. Urban electrification spreads from 1880s onward."
+ },
+ {
+  "id": "hom_sewer_stormwater_separation",
+  "name": "Sewer separated from stormwater drain",
+  "tier": 3,
+  "cat": "sanitation",
+  "current_pre": [
+   "hom_latrine_water_trap"
+  ],
+  "note": "Sewage and rain runoff follow separate pipes to prevent sewage backup during storms. Public health innovation; requires city-scale investment. Many 19th-century cities combine sewers (causing problems); separation is a later upgrade. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY i"
+ },
+ {
+  "id": "hydrofluoric_acid",
+  "name": "Hydrofluoric acid",
+  "tier": 4,
+  "cat": "chemistry",
+  "current_pre": [
+   "hydrochloric_acid",
+   "lead_metallurgy"
+  ],
+  "note": "Lead or wax vessels only; it eats glass, which is also what makes it useful. Extreme and insidious toxicity: it penetrates skin painlessly, seeks calcium in bone, and kills hours later. You have no calcium gluconate. Treat it as the most dangerous substance in your laboratory."
+ },
+ {
+  "id": "lead_chamber",
+  "name": "Lead chamber sulfuric acid at industrial scale",
+  "tier": 3,
+  "cat": "chemistry",
+  "current_pre": [
+   "sulfuric_retort",
+   "nitre_beds",
+   "lead_metallurgy"
+  ],
+  "note": "Burn sulfur with saltpetre in a lead-lined chamber; the nitrogen oxides shuttle oxygen catalytically. Lead is the only Roman-available material that survives the conditions, and Rome has a great deal of cheap lead. This is the node that turns chemistry from a laboratory curiosity into an industry. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughl"
+ },
+ {
+  "id": "mat_aluminium",
+  "name": "Aluminium",
+  "tier": 5,
+  "cat": "material",
+  "current_pre": [
+   "electrolysis_industrial",
+   "cap_power_grid"
+  ],
+  "note": "Hall-Heroult in a molten fluoride bath. Cryolite is Greenlandic and unobtainable, so you must synthesise the bath from your own hydrofluoric acid. Before electricity aluminium is a precious metal; after it, it is roofing."
+ },
+ {
+  "id": "mat_dyes_synthetic",
+  "name": "Synthetic dyes (aniline)",
+  "tier": 4,
+  "cat": "material",
+  "current_pre": [
+   "destructive_distillation",
+   "nitric_acid",
+   "analytical_chemistry"
+  ],
+  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless."
+ },
+ {
+  "id": "mat_graphite_pure",
+  "name": "High purity graphite",
+  "tier": 5,
+  "cat": "material",
+  "current_pre": [
+   "cap_heat_3000"
+  ],
+  "note": "Acheson process: heat carbon to about 2500 C. Crucibles and boats that do not contaminate what is melted in them, which is exactly what zone refining needs. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is l"
+ },
+ {
+  "id": "med_aspirin",
+  "name": "Aspirin (acetylsalicylic acid)",
+  "tier": 2,
+  "cat": "pharmacology",
+  "current_pre": [
+   "destructive_distillation"
+  ],
+  "note": "Acetylation of salicylic acid (from willow bark). Safer than salicylate because absorbed slowly. Reduces fever, pain, inflammation. Bayer trademark. [FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]"
+ },
+ {
+  "id": "med_insulin",
+  "name": "Insulin extraction and purification",
+  "tier": 4,
+  "cat": "pharmacology",
+  "current_pre": [
+   "analytical_chemistry"
+  ],
+  "note": "Extract from porcine pancreas, crystallize, purify. Banting and Best 1921. Before insulin, diabetes is death. Now: life and productivity."
+ },
+ {
+  "id": "med_sulfonamides",
+  "name": "Sulfonamides (sulfanilamide)",
+  "tier": 3,
+  "cat": "pharmacology",
+  "current_pre": [
+   "mat_dyes_synthetic",
+   "analytical_chemistry"
+  ],
+  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections."
+ },
+ {
+  "id": "met_black_powder_blasting",
+  "name": "Blasting with black powder and dynamite",
+  "tier": 2,
+  "cat": "mining",
+  "current_pre": [
+   "gunpowder",
+   "nitre_beds"
+  ],
+  "note": "Drill a hole, tamp black powder down with sand, light a fuse. The explosion fractures the rock around it. Later, dynamite (nitroglycerin absorbed in kieselguhr) replaced powder: more powerful, more stable, but far more hazardous. The critical skill is calculating the powder quantity and hole depth to maximize fragmentation without wasting powder or causing a flyrock accident. ["
+ },
+ {
+  "id": "met_investment_casting",
+  "name": "Investment casting and lost wax",
+  "tier": 0,
+  "cat": "casting",
+  "current_pre": [],
+  "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Rome has this for jewelry. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment. [AUDIT: t"
+ },
+ {
+  "id": "met_tempering_color",
+  "name": "Tempering and temper color chart",
+  "tier": 1,
+  "cat": "heat_treatment",
+  "current_pre": [
+   "case_hardening",
+   "cap_measure_temp"
+  ],
+  "note": "Heat hardened steel to a lower temperature to relieve quench stress and reduce brittleness. The temperature is judged by the surface oxide color: pale straw, brown, dark blue. Too low a temper leaves it brittle, too high softens it too much. Color tempering is a visual art that has been refined over centuries. The temper color chart is portable and teachable knowledge."
+ },
+ {
+  "id": "motor_transformer_ac",
+  "name": "Motors, transformers, alternating current",
+  "tier": 4,
+  "cat": "electrical",
+  "current_pre": [
+   "dynamo",
+   "em_theory"
+  ],
+  "note": "Laminate the cores or eddy currents will eat your efficiency and cook the iron. Three-phase and transformers make distribution possible, which is what turns a workshop generator into a grid. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down."
+ },
+ {
+  "id": "opt_oscilloscope",
+  "name": "Oscilloscope (CRT time-display)",
+  "tier": 4,
+  "cat": "measurement",
+  "current_pre": [
+   "cap_power_electric",
+   "discharge_xray",
+   "vacuum_tube"
+  ],
+  "note": "Cathode ray tube, beam deflected by time-base and signal voltages. Traces waveform directly on screen. Requires 1000+ volt HT supply and precise synchronization."
+ },
+ {
+  "id": "power_grid",
+  "name": "Central generation and distribution",
+  "tier": 5,
+  "cat": "electrical",
+  "current_pre": [
+   "motor_transformer_ac",
+   "steam_high_pressure",
+   "railway"
+  ],
+  "note": "The precondition for every energy-intensive process that follows: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a semiconductor programme consumes. This is a civilisational-scale project, not a workshop one. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build "
+ },
+ {
+  "id": "prn_gelatin_dry_plate",
+  "name": "Gelatin dry plate",
+  "tier": 2,
+  "cat": "photography",
+  "current_pre": [
+   "prn_wet_collodion_plate"
+  ],
+  "note": "Silver halide in gelatin. Sensitive when dry. Long shelf life. Easy storage and transport. Portable photography practical."
+ },
+ {
+  "id": "prn_silver_halide_chemistry",
+  "name": "Silver halide chemistry",
+  "tier": 2,
+  "cat": "chemistry",
+  "current_pre": [
+   "analytical_chemistry",
+   "mat_silver"
+  ],
+  "note": "Silver nitrate and sodium chloride form photosensitive silver chloride crystals. Darkens on exposure. Foundation of photography. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "pwr_condenser",
+  "name": "Condenser and vacuum",
+  "tier": 2,
+  "cat": "power",
+  "current_pre": [
+   "steam_watt",
+   "barometer"
+  ],
+  "note": "A chamber cooled by circulating water, condensing exhaust steam into liquid. This creates a vacuum, pulling the piston back harder, doubling engine power. The cooling water must be copious and clean; copper tubing survives longer than iron. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "pwr_pumped_storage",
+  "name": "Pumped storage hydroelectric",
+  "tier": 3,
+  "cat": "power",
+  "current_pre": [
+   "water_power_scale",
+   "dynamo",
+   "motor_transformer_ac",
+   "power_grid"
+  ],
+  "note": "Two reservoirs at different elevations: pump water up when power is cheap, run it down to generate when demand is high. Stores energy as gravitational potential; no battery needed. Requires two dams and good geology."
+ },
+ {
+  "id": "pwr_transformer",
+  "name": "Transformer (step-up/step-down)",
+  "tier": 3,
+  "cat": "power",
+  "current_pre": [
+   "motor_transformer_ac",
+   "cap_tol_100um"
+  ],
+  "note": "Two coils on an iron core; AC in one induces AC in the other at a different voltage. No moving parts, highly efficient. Allows voltage conversion without rotating machinery, the key to AC distribution."
+ },
+ {
+  "id": "screw_lathe",
+  "name": "Screw-cutting lathe with lead screw and slide rest",
+  "tier": 3,
+  "cat": "precision",
+  "current_pre": [
+   "master_screw",
+   "crucible_steel",
+   "water_power_scale"
+  ],
+  "note": "The machine that makes machines. Everything after this gets easier, and each generation of lathe builds a better one. Maudslay's insight is the slide rest: take the tool out of the operator's hand and the accuracy stops depending on his wrist."
+ },
+ {
+  "id": "sea_copper_sheathing",
+  "name": "Copper-sheathed hull",
+  "tier": 3,
+  "cat": "ships",
+  "current_pre": [
+   "sea_lead_sheathing",
+   "mat_copper"
+  ],
+  "note": "Thin copper sheet nailed over the hull below the waterline; resists shipworm better than lead and does not pit; very expensive but saves years of ship life. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is l"
+ },
+ {
+  "id": "sea_lead_line_hydro",
+  "name": "Lead-line and hydrographic survey",
+  "tier": 2,
+  "cat": "navigation",
+  "current_pre": [
+   "sea_sounding_lines",
+   "sea_charts_navigation"
+  ],
+  "note": "Systematically map harbour depths and holding ground; use a marked line with lead weight and hollow underside (carries samples of sand, shells, mud); plot on charts."
+ },
+ {
+  "id": "sea_submarine_cable",
+  "name": "Submarine telegraph cable",
+  "tier": 4,
+  "cat": "communication",
+  "current_pre": [
+   "telegraph_electric",
+   "mat_gutta_percha"
+  ],
+  "note": "Copper conductor insulated with gutta percha (unobtainable), wrapped in iron armor; gutta percha fails, so use bitumen and later synthetic rubber instead, accepting higher loss."
+ },
+ {
+  "id": "soda_leblanc",
+  "name": "Leblanc and later Solvay soda",
+  "tier": 3,
+  "cat": "chemistry",
+  "current_pre": [
+   "hydrochloric_acid",
+   "lead_chamber",
+   "charcoal_industrial"
+  ],
+  "note": "Frees you from the Egyptian natron supply and gives alkali in industrial quantity for glass, soap, paper and textiles. Leblanc is filthy: the hydrogen chloride and sulfide waste caused genuine environmental disasters in Britain. Condense the acid gas from the start; you will want the hydrochloric acid anyway. CALENDAR FLOOR is set by diffusion, not by construction: the economy "
+ },
+ {
+  "id": "telegraph_electric",
+  "name": "Electric telegraph",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "electromagnet",
+   "daniell_cell",
+   "semaphore_telegraph"
+  ],
+  "note": "The killer application for an empire and the thing that makes your programme permanently indispensable to the State. Glass or ceramic insulators on poles, relays every few tens of kilometres, Daniell cells at each station. Once the Rhine frontier can answer Rome in an hour, no emperor will ever let your institute be closed. CALENDAR FLOOR is set by diffusion, not by constructio"
+ },
+ {
+  "id": "tex_synthetic_dyes",
+  "name": "Synthetic aniline dyes",
+  "tier": 4,
+  "cat": "textiles",
+  "current_pre": [
+   "mat_dyes_synthetic",
+   "tex_mordanting"
+  ],
+  "note": "Aniline dyes (Mauveine and successors) from coal tar offer brilliant colors, lower cost, and consistency vs natural dyes. No mordanting required for most. Destroys market for madder, indigo, cochineal. By-product of coal industry. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "voltaic_pile",
+  "name": "Voltaic pile",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "zinc_metal",
+   "copper_fire_refined",
+   "crude_cell"
+  ],
+  "note": "Trivially cheap once zinc metal exists, and utterly impossible before it. This is why zinc is on the critical path and why almost every plan misses it. Continuous current for the first time in history, and everything electrical follows. It needs copper DISCS, not fine insulated wire, so it does not wait on the wire-insulation node."
+ }
+]

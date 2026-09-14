@@ -1,0 +1,689 @@
+[
+ {
+  "id": "air_aerofoil_section",
+  "name": "Cambered aerofoil section",
+  "tier": 2,
+  "cat": "aviation",
+  "current_pre": [
+   "scientific_method"
+  ],
+  "note": "Cayley's central discovery: a curved (cambered) plate lifts far better than a flat plate at the same angle of attack. The reason is non-obvious and requires experiment: curved surfaces create lower pressure on the back side. A wing with a cambered section can generate substantial lift at shallow angles. This is not merely a geometry trick; it is the foundation of mechanical fli"
+ },
+ {
+  "id": "air_hydrogen_danger",
+  "name": "Hydrogen safety limits",
+  "tier": 3,
+  "cat": "aviation",
+  "current_pre": [
+   "air_coal_gas_generation"
+  ],
+  "note": "Hydrogen is extraordinarily buoyant but ignites violently with air. A spark, a flame, static electricity, or friction will ignite any mixture between 4 percent and 75 percent hydrogen in air. This is not anecdotal: it is absolute chemistry. You cannot escape it by procedure; you mitigate by isolation (no open flames, grounding, no sparking equipment) and by accept that the risk"
+ },
+ {
+  "id": "analytical_chemistry",
+  "name": "Gravimetric and volumetric analysis",
+  "tier": 3,
+  "cat": "chemistry",
+  "current_pre": [
+   "balance_analytical",
+   "atomic_theory",
+   "nitric_acid",
+   "hydrochloric_acid"
+  ],
+  "note": "Not optional and not glamorous. Without quantitative analysis every process in your programme is a folk recipe that degrades with each retelling. This node is what makes the corpus reproducible by people you never met. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it"
+ },
+ {
+  "id": "bellows_water_blown",
+  "name": "Water-driven double-acting bellows",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "water_power_scale",
+   "refractory_fireclay"
+  ],
+  "note": "The single highest-leverage mechanical change available to Roman metallurgy. Continuous high-volume blast is what separates a bloomery from a blast furnace. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is l"
+ },
+ {
+  "id": "cementation_steel",
+  "name": "Blister steel by cementation",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "case_hardening",
+   "refractory_fireclay"
+  ],
+  "note": "Bar iron packed in charcoal in a sealed chest, held at roughly 1000 C for days. Carbon diffuses in slowly, on the order of millimetres per day, so use thin bars. Consistent steel in quantity for the first time."
+ },
+ {
+  "id": "chm_casein",
+  "name": "Casein plastics from milk protein",
+  "tier": 4,
+  "cat": "plastics",
+  "current_pre": [
+   "analytical_chemistry"
+  ],
+  "note": "Milk is acidified to precipitate casein protein. The wet casein is dried and mixed with formaldehyde, then heated and moulded. The product is hard, waterproof, and can be dyed. Casein plastic was used for buttons, fountain pens, and jewellery until phenolic plastics displaced it."
+ },
+ {
+  "id": "chm_dynamite",
+  "name": "Dynamite: nitroglycerin in diatomaceous earth",
+  "tier": 3,
+  "cat": "explosives",
+  "current_pre": [
+   "chm_nitroglycerin"
+  ],
+  "note": "Nitroglycerin soaks into diatomaceous earth, rendering it safe from accidental detonation during handling but equally detonatable by blasting cap. This makes large-scale mining and construction possible. The name dynamite became synonymous with Nobel's wealth and the peace prize. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred on"
+ },
+ {
+  "id": "chm_glycerol",
+  "name": "Glycerol production and purification",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "chm_soap_hard"
+  ],
+  "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an i"
+ },
+ {
+  "id": "chm_naphthalene",
+  "name": "Naphthalene extraction and purification",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "chm_coal_tar_distillation"
+  ],
+  "note": "Naphthalene boils at 218 C and crystallises easily. Multiple crystallisation cycles yield pure white needles. Naphthalene is used as a mothball, as a precursor to phthalic anhydride for plasticisers, and in dye synthesis. Its toxicity is low but volatility is significant in enclosed spaces. [AUDIT: State interest and suspicion were unset and have been defaulted from the categor"
+ },
+ {
+  "id": "chm_soap_hard",
+  "name": "Hard soap from oil and caustic soda",
+  "tier": 2,
+  "cat": "chemical_engineering",
+  "current_pre": [
+   "soap_hard",
+   "potash_soda"
+  ],
+  "note": "Rome does not have soap as a cleanser. This is already in the vocabulary; do not redefine it. It is included here to prevent anachronism. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purp"
+ },
+ {
+  "id": "chm_water_coagulation",
+  "name": "Water treatment by coagulation and settling",
+  "tier": 2,
+  "cat": "water_chemistry",
+  "current_pre": [
+   "analytical_chemistry"
+  ],
+  "note": "Fine clay and organic particles remain suspended in water as colloids. Alum or ferric sulfate ions hydrolyse to form hydroxide gelatine that neutralises colloid charges. Particles flocculate and settle quickly. This is the first step in modern water purification."
+ },
+ {
+  "id": "civ_canal_pound_lock",
+  "name": "Canal pound lock for level changes",
+  "tier": 2,
+  "cat": "transport",
+  "current_pre": [
+   "civ_gate_sluice"
+  ],
+  "note": "A chamber with gates at each end. A barge enters the lock, the gates close, water is let in or out (changing the barge's level), then the exit gates open. Brilliant: it allows a canal to climb hills without continuous flow. The canal network (1750-1850) moved goods and coal. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, an"
+ },
+ {
+  "id": "civ_glass_plate",
+  "name": "Plate glass for windows and storefronts",
+  "tier": 3,
+  "cat": "materials",
+  "current_pre": [
+   "mat_glass_soda",
+   "precision_three_plate"
+  ],
+  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "civ_sewage_treatment",
+  "name": "Sewage treatment works and activated sludge",
+  "tier": 4,
+  "cat": "water",
+  "current_pre": [
+   "civ_sewer_separate",
+   "germ_theory"
+  ],
+  "note": "Sewage (biological waste) requires aerobic decomposition. Activated sludge is bacteria and protozoa that eat organic matter when aerated. Germ theory explains why pathogens die in treatment; without it, the mechanism is invisible. Treated effluent is safe to discharge. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an i"
+ },
+ {
+  "id": "clock_pendulum",
+  "name": "Pendulum clock and later the balance spring",
+  "tier": 2,
+  "cat": "precision",
+  "current_pre": [
+   "master_screw",
+   "case_hardening"
+  ],
+  "note": "The Antikythera mechanism proves Roman-era gear-cutting is already good enough; what is missing is the escapement and the pendulum's isochronism. Accurate time gives navigation, longitude, physics, and later electrical measurement. Also a superb luxury product."
+ },
+ {
+  "id": "com_baudot_code",
+  "name": "Baudot code - 5-bit telegraph encoding",
+  "tier": 3,
+  "cat": "signalling",
+  "current_pre": [
+   "com_teleprinter"
+  ],
+  "note": "Each character is encoded as 5 binary digits (bits): mark (current) or space (no current). Letters, numbers, and symbols each have a 5-bit code. A teleprinter has 5 solenoids, one per bit. All 5 are energized simultaneously on reception, positioning the 5 levers correctly, and a mechanical stroke fires the type. This is the first digital telegraph code and the ancestor of moder"
+ },
+ {
+  "id": "com_coherer",
+  "name": "Coherer - primitive radio detector",
+  "tier": 3,
+  "cat": "radio",
+  "current_pre": [
+   "com_antenna_ground"
+  ],
+  "note": "A tube of glass filled with iron filings between two metal plugs. When RF current (from a radio signal) passes through, the filings cohere (stick together), dropping resistance from 1 megohm to 1000 ohms. A relay responds to this current change, signalling the received dot or dash. After each signal, a tapper mechanically shakes the tube to decohere the filings. Unreliable and "
+ },
+ {
+  "id": "com_error_detecting_code",
+  "name": "Error detecting and correcting codes",
+  "tier": 5,
+  "cat": "computing",
+  "current_pre": [
+   "com_binary_arithmetic"
+  ],
+  "note": "Parity bit (odd/even) detects single-bit errors. Hamming codes detect and correct single-bit errors. More powerful codes (Reed-Solomon, convolutional) can correct multiple errors. Used in memory (cosmic ray bit flips), transmission (noise corruption), and storage (magnetic media decay). The principle: add redundancy (extra bits) that encodes a checksum. On reception, recompute "
+ },
+ {
+  "id": "com_information_theory",
+  "name": "Information theory - entropy and the bit",
+  "tier": 5,
+  "cat": "computing",
+  "current_pre": [
+   "com_binary_arithmetic"
+  ],
+  "note": "Shannon's theory (1948): information is measured in bits (binary digits). Entropy quantifies the average number of bits needed to encode a message. A channel's capacity (bits per second) sets the maximum transmission rate. Compression algorithms reduce redundancy (entropy coding). This theory unified communication, storage, and computation under one mathematical framework. Ever"
+ },
+ {
+  "id": "com_magnetic_tape_storage",
+  "name": "Magnetic tape storage - bulk archival memory",
+  "tier": 4,
+  "cat": "storage",
+  "current_pre": [
+   "com_magnetic_wire_storage"
+  ],
+  "note": "Paper or plastic tape coated with iron oxide, wound on reels. Data is stored sequentially (cannot directly access the middle). Cheap storage for large datasets (gigabytes on a compact reel). Speed is slow (minutes to locate a record). Used for daily backups, program storage, and archival data. IBM's System/360 (1965) relied on tape for I/O. Magnetic tape remained standard until"
+ },
+ {
+  "id": "com_multiplexing",
+  "name": "Multiplexing - combining multiple signals on one line",
+  "tier": 3,
+  "cat": "telephone",
+  "current_pre": [
+   "com_trunk_lines"
+  ],
+  "note": "Time-division multiplexing: 4 calls take turns using the same trunk line, each getting 1/4 of the time (switching at 1000 Hz, fast enough that voice sounds continuous). Frequency-division: use different frequency bands on the same line. Both require precision filters and were impractical until vacuum tube amplifiers. The principle: more calls per cable = more revenue per infras"
+ },
+ {
+  "id": "com_radar_magnetron",
+  "name": "Magnetron - compact high-power microwave generator",
+  "tier": 4,
+  "cat": "radar",
+  "current_pre": [
+   "vacuum_tube",
+   "electromagnet"
+  ],
+  "note": "A thermionic tube with a hot cathode that emits electrons, a strong axial magnetic field that curves them into a circular path, and resonant cavities around the periphery. Electrons oscillate between cavities, exchanging energy with the RF field. The result: very high power (kilowatts) at very high frequency (microwave, 9 GHz). Compact because the wavelength is tiny. Invented i"
+ },
+ {
+  "id": "com_ring_counter",
+  "name": "Ring counter - timing and sequencing circuit",
+  "tier": 4,
+  "cat": "computing",
+  "current_pre": [
+   "com_register_computing"
+  ],
+  "note": "A shift register with the output of the last stage fed back to the input. A single 1-bit propagates around the ring. On each clock pulse, the 1 moves to the next position. This generates a sequence of pulses on N different output lines, one line active at a time. Used for timing and sequencing in computers: generating control signals for memory access, ALU operations, etc. Simp"
+ },
+ {
+  "id": "com_stock_ticker",
+  "name": "Stock ticker - financial telegraph terminal",
+  "tier": 2,
+  "cat": "signalling",
+  "current_pre": [
+   "telegraph_electric",
+   "com_morse_sounder"
+  ],
+  "note": "A telegraph receiver modified to print stock prices and ticker symbols on a paper tape instead of requiring manual transcription. A ticker in each brokerage receives the same broadcast telegraph signal from the exchange, all printing simultaneously. The innovation is not technical but economic: it creates a new product (real-time pricing data) and a new business model (subscrip"
+ },
+ {
+  "id": "com_telephone_carbon_mic",
+  "name": "Carbon microphone - pressure-to-resistance transducer",
+  "tier": 3,
+  "cat": "telephone",
+  "current_pre": [
+   "telegraph_electric",
+   "com_relay"
+  ],
+  "note": "Sound waves move a diaphragm that presses down on loose carbon granules. Pressure changes resistance. A steady current through the carbon, modulated by this resistance change, creates a modulated signal that can be sent down a telegraph wire. The key: carbon is cheap, robust, and changes resistance reliably from 100 to 1000 ohms with pressure. Early telephone transmitters were "
+ },
+ {
+  "id": "com_trunk_lines",
+  "name": "Trunk lines - long-distance telephone routes",
+  "tier": 3,
+  "cat": "telephone",
+  "current_pre": [
+   "com_telephone_manual_exchange",
+   "com_loading_coil"
+  ],
+  "note": "Heavy-gauge copper wire strung on poles between cities, with loading coils every 2 km. A trunk line connects two exchanges, not individual subscribers. Calls are routed: local exchange A -> trunk to distant exchange B -> local delivery. The killer problem: telephone signals attenuate badly over distance. A 50 km trunk line needs repeater amplifiers every 15 km, which requires v"
+ },
+ {
+  "id": "com_vacuum_tube_computer",
+  "name": "Vacuum tube computer - high-speed electronic switching",
+  "tier": 4,
+  "cat": "computing",
+  "current_pre": [
+   "vacuum_tube",
+   "com_relay_computer"
+  ],
+  "note": "ENIAC (1945): 18,000 vacuum tubes, 150 kilowatts, does 5,000 additions per second (instead of 1 per second with relays). The tube acts as an electronic switch: no moving parts, microsecond speed. The killer limitation: reliability. Tubes fail constantly (one failure every 30 minutes). Maintenance requires replacing tubes and debugging. This drove the search for a smaller, more "
+ },
+ {
+  "id": "copper_refining",
+  "name": "High-purity copper and insulated wire",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "drawplate_wire",
+   "copper_fire_refined"
+  ],
+  "note": "You have no rubber and no gutta percha and will not have either. Silk wrapping, oiled linen, shellac varnish from the Indian trade, and bitumen for cables. Impurities in copper cost you conductivity badly, so fire-refine now and electro-refine as soon as you have current to spare."
+ },
+ {
+  "id": "diffusion_pump",
+  "name": "Rotary and mercury diffusion pumps",
+  "tier": 5,
+  "cat": "instruments",
+  "current_pre": [
+   "vacuum_pumps",
+   "interchangeable_parts",
+   "motor_transformer_ac"
+  ],
+  "note": "Gets you from roughly 1e-4 to 1e-6 torr and below, which is what vacuum tubes and later semiconductor processing require. Needs a motor for the backing pump, so it waits on the electrical programme."
+ },
+ {
+  "id": "electroplating",
+  "name": "Electroplating and electro-refining",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "daniell_cell",
+   "analytical_chemistry"
+  ],
+  "note": "Immediately and enormously profitable: silvered and gilded ware for the rich. It also gives you electrolytically pure copper, which you need for conductors, and it teaches your staff quantitative electrochemistry as a side effect."
+ },
+ {
+  "id": "fud_drying_evaporated_milk",
+  "name": "Drying and concentration of evaporated milk",
+  "tier": 2,
+  "cat": "preservation",
+  "current_pre": [
+   "fud_pasteurisation",
+   "cap_heat_1100"
+  ],
+  "note": "Heat milk gently in copper pan under partial vacuum (reduces boiling point) or in open pan to evaporate water until thick. Can milk solids are concentrated 2-3 fold. Stores several months in sealed tin. Reconstitutes with water or used directly in cooking. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent re"
+ },
+ {
+  "id": "fud_silage_fermentation",
+  "name": "Silage production and fermented fodder storage",
+  "tier": 2,
+  "cat": "agriculture",
+  "current_pre": [
+   "fud_hay_making_storage"
+  ],
+  "note": "Pack fresh grass tightly in pits or wooden silos with salt, exclude air, and let anaerobic bacteria ferment it. Preserves nutrition without sun-drying and works in wet climates. Requires understanding of fermentation and airtight storage design. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found "
+ },
+ {
+  "id": "galvanometer",
+  "name": "Tangent galvanometer and electrical metrology",
+  "tier": 3,
+  "cat": "electrical",
+  "current_pre": [
+   "daniell_cell",
+   "copper_refining",
+   "geometry_analytic"
+  ],
+  "note": "A coil of known radius and turn count, a compass needle, and the Earth's field give absolute current from pure geometry, with no calibrated instrument to start from. This solves the electrical metrology bootstrap that otherwise looks circular."
+ },
+ {
+  "id": "glass_labware",
+  "name": "Retorts, flasks, condensers, tubing, graduated vessels",
+  "tier": 2,
+  "cat": "glass_optics",
+  "current_pre": [
+   "glass_clear"
+  ],
+  "note": "The single item that most limits early chemistry. You will break a great deal of it. Until borosilicate, thermal shock is your main enemy: heat on a sand bath, never on a flame."
+ },
+ {
+  "id": "hom_cosmetics_modern_warning",
+  "name": "Cosmetics with safety warnings",
+  "tier": 4,
+  "cat": "personal",
+  "current_pre": [
+   "germ_theory",
+   "hom_cosmetics_roman"
+  ],
+  "note": "Once germ theory and toxicology establish that white lead causes chronic poisoning, cosmetics reformulate. Lead face paint is phased out; zinc oxide and iron oxides replace it. Labels warn of hazards. Modern cosmetics prioritise safety and truthful marketing. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent"
+ },
+ {
+  "id": "hom_hypocaust",
+  "name": "Hypocaust underfloor heating",
+  "tier": 0,
+  "cat": "heating",
+  "current_pre": [],
+  "note": "Hot air from a furnace flows through hollow spaces beneath the floor. Expensive; only wealthy houses and public baths use it. Rome never develops the chimney, so room heating otherwise requires a brazier and open flame. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung i"
+ },
+ {
+  "id": "hom_vacuum_cleaner",
+  "name": "Vacuum cleaner",
+  "tier": 4,
+  "cat": "cleaning",
+  "current_pre": [
+   "motor_transformer_ac",
+   "cap_power_electric",
+   "cap_heat_1100"
+  ],
+  "note": "Electric motor drives a suction fan that pulls dirt through a cloth bag filter. Replaces carpet sweepers and hand-brushing entirely. Servants become redundant. Cord length and motor noise are early limitations; wireless and quiet models come later. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review fou"
+ },
+ {
+  "id": "interchangeable_parts",
+  "name": "Tolerances, jigs, fixtures and interchangeable manufacture",
+  "tier": 3,
+  "cat": "precision",
+  "current_pre": [
+   "micrometer_gauges",
+   "screw_lathe",
+   "statistics_basic"
+  ],
+  "note": "A management and measurement innovation more than a mechanical one, and it is what turns a workshop into an industry. The army will want it for weapons before anyone else does, which is your funding argument. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot"
+ },
+ {
+  "id": "lnd_coal_tar_gas",
+  "name": "Coal tar gas (coal gas)",
+  "tier": 2,
+  "cat": "materials",
+  "current_pre": [
+   "coal_coke",
+   "destructive_distillation"
+  ],
+  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles."
+ },
+ {
+  "id": "mat_calamine",
+  "name": "Calamine (zinc carbonate/silicate ore)",
+  "tier": 0,
+  "cat": "material",
+  "current_pre": [],
+  "note": "ROME HAS THIS and already smelts it into brass. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
+ },
+ {
+  "id": "mat_fused_quartz",
+  "name": "Fused quartz",
+  "tier": 4,
+  "cat": "material",
+  "current_pre": [
+   "fused_quartz",
+   "cap_heat_2000"
+  ],
+  "note": "Pure silica worked at 1700 to 2000 C with an oxy-hydrogen flame. Indispensable later: you cannot zone refine germanium in anything that contaminates it. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left "
+ },
+ {
+  "id": "mat_olive_oil",
+  "name": "Olive oil",
+  "tier": 0,
+  "cat": "material",
+  "current_pre": [],
+  "note": "ROME HAS THIS in industrial quantity. Soap, lighting, quenching, varnish base. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one y"
+ },
+ {
+  "id": "med_clinical_trials",
+  "name": "Case control and randomised controlled trials",
+  "tier": 2,
+  "cat": "public_health",
+  "current_pre": [
+   "med_epidemiology_statistics",
+   "scientific_method"
+  ],
+  "note": "Case control: backward look at exposure. Fast and cheap. Randomised controlled trial: random assignment to treatment or placebo, prospective, blind. Eliminates bias but takes years. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them we"
+ },
+ {
+  "id": "med_ophthalmoscope",
+  "name": "Ophthalmoscope",
+  "tier": 2,
+  "cat": "diagnostics",
+  "current_pre": [
+   "lens_grinding",
+   "mirror_amalgam"
+  ],
+  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly."
+ },
+ {
+  "id": "mercury_supply",
+  "name": "Secure mercury supply",
+  "tier": 2,
+  "cat": "metallurgy",
+  "current_pre": [
+   "lead_metallurgy",
+   "lab_apparatus"
+  ],
+  "note": "Almaden is an imperial monopoly, so this is a political node before it is a technical one. Mercury gives you barometers, the Sprengel pump, mirrors and the first hard vacuum humans have ever had. Quantity sized for programme needs, not for trade: 400 kg of cinnabar yields roughly 300 kg of mercury, which is ample for barometers, thermometers, Sprengel pumps and a mirror works. "
+ },
+ {
+  "id": "met_drawn_tube",
+  "name": "Drawn tube production",
+  "tier": 2,
+  "cat": "forming",
+  "current_pre": [
+   "drawplate_wire",
+   "cap_power_water"
+  ],
+  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die."
+ },
+ {
+  "id": "met_pneumatic_drill",
+  "name": "Pneumatic rock drill",
+  "tier": 3,
+  "cat": "mining",
+  "current_pre": [
+   "steam_high_pressure",
+   "cap_power_steam"
+  ],
+  "note": "A small piston driven by compressed air strikes a hardened bit repeatedly against rock, advancing into the hole while the operator rotates it slightly between blows. Drills much faster than hand drilling with hammer and chisel. The air compressor must be driven by steam and the hose is heavy and expensive. Enables deep blast holes that hand drilling never could achieve, transfo"
+ },
+ {
+  "id": "met_trip_hammer",
+  "name": "Trip hammer and water-driven forge hammer",
+  "tier": 0,
+  "cat": "forming",
+  "current_pre": [
+   "cap_power_water",
+   "crank_conrod"
+  ],
+  "note": "A cam on a water wheel shaft lifts a heavy hammer, then the cam releases it and gravity and the impact do the forging work. Much faster than hand hammering and the work is uniform. The key is that the head must be hard iron or the repeated impact will deform it; case-hardening is necessary to survive. Rome has this; it is the foundation of heavy forge work."
+ },
+ {
+  "id": "nitric_acid",
+  "name": "Nitric acid",
+  "tier": 3,
+  "cat": "chemistry",
+  "current_pre": [
+   "sulfuric_retort",
+   "nitre_beds"
+  ],
+  "note": "Saltpetre plus oil of vitriol, distilled. Unlocks aqua regia, silver nitrate (hence photography and silvered mirrors), etching, nitrates and, if you choose it, high explosives. The brown fumes will kill anyone who breathes them and the damage is delayed by hours."
+ },
+ {
+  "id": "opt_seismograph",
+  "name": "Seismograph (earthquake measurement)",
+  "tier": 3,
+  "cat": "measurement",
+  "current_pre": [
+   "galvanometer",
+   "clock_pendulum"
+  ],
+  "note": "Heavy mass damped by springs or pendulum. Frame sits on ground. Relative motion drives pen against rotating drum. Natural period of 10-20 seconds maximizes sensitivity to distant earthquakes."
+ },
+ {
+  "id": "prn_calotype_process",
+  "name": "Calotype negative-positive",
+  "tier": 2,
+  "cat": "photography",
+  "current_pre": [
+   "prn_silver_halide_chemistry",
+   "camera_obscura"
+  ],
+  "note": "The negative is the invention. Paper negative allows unlimited prints from one exposure. Cheaper than daguerreotype."
+ },
+ {
+  "id": "prn_newspaper_institution",
+  "name": "Newspaper institution",
+  "tier": 2,
+  "cat": "publishing",
+  "current_pre": [
+   "printing_press",
+   "corpus_dispersed"
+  ],
+  "note": "Daily publication breaks state monopoly on information. Political instrument. Cheap accurate copying enables rapid idea spread."
+ },
+ {
+  "id": "prn_wet_collodion_plate",
+  "name": "Wet collodion plate",
+  "tier": 2,
+  "cat": "photography",
+  "current_pre": [
+   "prn_calotype_process",
+   "mat_nitrocellulose"
+  ],
+  "note": "Glass plate coated with collodion. Exposed wet. Huge leap in sensitivity and speed. Must develop within minutes."
+ },
+ {
+  "id": "pwr_high_voltage_transmission",
+  "name": "High voltage transmission",
+  "tier": 3,
+  "cat": "power",
+  "current_pre": [
+   "motor_transformer_ac",
+   "cap_tol_100um"
+  ],
+  "note": "Power loss in a wire is proportional to I squared; raising voltage and lowering current for the same power reduces losses dramatically. Remote hydro becomes economic only with high voltage. Requires transformers, insulators, and careful design."
+ },
+ {
+  "id": "pwr_substation",
+  "name": "Substation and distribution",
+  "tier": 3,
+  "cat": "power",
+  "current_pre": [
+   "pwr_high_voltage_transmission",
+   "pwr_transformer",
+   "cap_tol_1mm"
+  ],
+  "note": "Receives high-voltage transmission lines, steps them down via transformers to local distribution voltage, distributes to neighborhoods and industries. A hub between generation and use; switching and protection equipment required."
+ },
+ {
+  "id": "radio",
+  "name": "Radio: spark, crystal set, then valve transmitters",
+  "tier": 5,
+  "cat": "electrical",
+  "current_pre": [
+   "vacuum_tube",
+   "galena_detector"
+  ],
+  "note": "Wireless communication over the whole Mediterranean, including to ships, which no empire has ever had. Strategically this is worth more than the electric telegraph and it is the second great gift to the State. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money canno"
+ },
+ {
+  "id": "sea_buoy",
+  "name": "Buoy",
+  "tier": 2,
+  "cat": "navigation",
+  "current_pre": [
+   "sea_harbours_pozzolana"
+  ],
+  "note": "A floating marker anchored to a rock or sandbar; guides ships around hazards; a coded system of colors and shapes lets pilots recognize them at distance. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left"
+ },
+ {
+  "id": "sea_dredging",
+  "name": "Dredging",
+  "tier": 3,
+  "cat": "harbours",
+  "current_pre": [
+   "water_power_scale",
+   "steam_atmospheric"
+  ],
+  "note": "Mechanically scoop mud and sediment from a harbour or river bottom; deepens channels and prevents silting; essential for maintaining harbours over decades."
+ },
+ {
+  "id": "sea_mercator_projection",
+  "name": "Mercator projection",
+  "tier": 2,
+  "cat": "navigation",
+  "current_pre": [
+   "sea_charts_navigation",
+   "geometry_analytic"
+  ],
+  "note": "Project the globe onto a cylinder; latitude and longitude become straight lines; a rhumb line (constant compass heading) becomes straight; game-changing for charts."
+ },
+ {
+  "id": "semiconductor_metrology",
+  "name": "Four-point probe, Hall effect, carrier measurement",
+  "tier": 5,
+  "cat": "semiconductor",
+  "current_pre": [
+   "vacuum_tube",
+   "galvanometer",
+   "quantum_solidstate_theory"
+  ],
+  "note": "You cannot purify what you cannot measure. Resistivity to four significant figures and a Hall measurement for carrier type and density are the feedback loop that makes the entire purification programme convergent instead of blind."
+ },
+ {
+  "id": "steam_high_pressure",
+  "name": "High pressure steam and adequate boilers",
+  "tier": 4,
+  "cat": "power",
+  "current_pre": [
+   "steam_watt",
+   "bessemer_openhearth"
+  ],
+  "note": "Power density enough for locomotives and ships. Be honest with your students about how many people early boilers killed, and build a hydraulic test and a relief valve into the very first one. A boiler explosion in Rome will be read as divine judgment on the whole programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train "
+ },
+ {
+  "id": "tex_field_bleaching",
+  "name": "Field bleaching with sun",
+  "tier": 2,
+  "cat": "textiles",
+  "current_pre": [
+   "tex_linen",
+   "tex_sailcloth"
+  ],
+  "note": "Spreading wet cloth on grass, rewetting daily, exposed to sunlight for weeks. Oxidizes and bleaches fibers white. Bottleneck of textile production: chlorine bleaching is 100x faster. Weather dependent. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wron"
+ },
+ {
+  "id": "thermometer",
+  "name": "Sealed liquid-in-glass thermometer with fixed points",
+  "tier": 2,
+  "cat": "instruments",
+  "current_pre": [
+   "glass_labware",
+   "mercury_supply",
+   "units_standards"
+  ],
+  "note": "Melting ice and boiling water as fixed points. Without a repeatable temperature scale not one recipe in this guide can be transmitted to anyone who is not standing beside you. Prerequisite for thermodynamics being real rather than rhetorical."
+ },
+ {
+  "id": "zinc_industry_scale",
+  "name": "Zinc smelting at industrial scale, with flue dust collection",
+  "tier": 5,
+  "cat": "metallurgy",
+  "current_pre": [
+   "zinc_metal",
+   "high_temp_furnace",
+   "power_grid"
+  ],
+  "note": "Zinc earns its own way as brass, galvanising and batteries. Its second and hidden purpose is that germanium concentrates in the flue dust of zinc smelters, at the parts-per-thousand level in the dust against 1.6 ppm in the crust. Design the flues for dust collection from the first furnace or you will rebuild them later. CALENDAR FLOOR is set by diffusion, not by construction: t"
+ }
+]

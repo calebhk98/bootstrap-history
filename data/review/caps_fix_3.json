@@ -1,0 +1,254 @@
+{
+  "air_coal_gas_generation": {
+    "add": [],
+    "reason": "gas generation is covered by destructive distillation prerequisite"
+  },
+  "air_parachute": {
+    "add": [],
+    "reason": "basic linen textile work requiring no special capability"
+  },
+  "balance_analytical": {
+    "add": ["cap_tol_100um"],
+    "reason": "precise knife edges and beam require fine manufacturing tolerance"
+  },
+  "boring_mill": {
+    "add": ["cap_tol_100um"],
+    "reason": "steam engine cylinders need tight tolerance for piston sealing"
+  },
+  "chm_alkali_waste": {
+    "add": [],
+    "reason": "environmental regulatory issue, not technical production"
+  },
+  "chm_celluloid": {
+    "add": ["cap_measure_temp"],
+    "reason": "sheet rolling requires temperature control for viscosity management"
+  },
+  "chm_fulminate": {
+    "add": [],
+    "reason": "room temperature acid-ethanol reaction needs no furnace"
+  },
+  "chm_ion_exchange": {
+    "add": [],
+    "reason": "polymer chemistry adequately covered by existing prerequisites"
+  },
+  "chm_potash_mining": {
+    "add": [],
+    "reason": "dissolution and crystallization are simple water-based processes"
+  },
+  "chm_tnt": {
+    "add": ["cap_measure_temp"],
+    "reason": "exothermic nitration reactions require careful temperature measurement and control"
+  },
+  "civ_building_code": {
+    "add": [],
+    "reason": "institutional regulatory framework, not physical manufacturing"
+  },
+  "civ_dam_gravity": {
+    "add": [],
+    "reason": "masonry and concrete engineering covered by existing civil technologies"
+  },
+  "civ_lightning_conductor": {
+    "add": [],
+    "reason": "basic copper rod installation needs no special capability"
+  },
+  "civ_town_planning": {
+    "add": [],
+    "reason": "design and planning exercise, not physical production"
+  },
+  "com_amplitude_modulation": {
+    "add": [],
+    "reason": "signal modulation adequately covered by RF circuit prerequisites"
+  },
+  "com_broadcasting_institution": {
+    "add": [],
+    "reason": "economic and institutional model, not technical innovation"
+  },
+  "com_crystal_set": {
+    "add": [],
+    "reason": "simple LC tuning and galena rectification need no capability rung"
+  },
+  "com_heliograph": {
+    "add": ["cap_tol_100um"],
+    "reason": "polished mirror surface requires fine finishing quality"
+  },
+  "com_magnetic_core_memory": {
+    "add": ["cap_tol_100um"],
+    "reason": "0.5 mm ferrite cores need precise size consistency"
+  },
+  "com_morse_register": {
+    "add": [],
+    "reason": "electromagnetic mechanism achievable with existing electromagnet technology"
+  },
+  "com_optical_tower": {
+    "add": [],
+    "reason": "wooden tower construction is basic carpentry"
+  },
+  "com_relay": {
+    "add": [],
+    "reason": "electromagnetic switch mechanism covered by electromagnet and telegraph prerequisites"
+  },
+  "com_slide_rule": {
+    "add": ["cap_tol_100um"],
+    "reason": "logarithmic scale marking needs precise layout for readable accuracy"
+  },
+  "com_superheterodyne_receiver": {
+    "add": [],
+    "reason": "frequency mixing and filtering well covered by oscillator and circuit design prerequisites"
+  },
+  "com_teleprinter": {
+    "add": ["cap_tol_100um"],
+    "reason": "character wheel indexing mechanism needs mechanical precision"
+  },
+  "com_tv_mechanical_scanning": {
+    "add": ["cap_tol_100um"],
+    "reason": "Nipkow disc hole pattern must be precise for image resolution"
+  },
+  "com_waveguide": {
+    "add": ["cap_tol_100um"],
+    "reason": "dimensional accuracy critical for microwave mode propagation"
+  },
+  "daniell_cell": {
+    "add": [],
+    "reason": "two-container electrochemical device achievable with basic glassware"
+  },
+  "electrolysis_industrial": {
+    "add": [],
+    "reason": "electrical power provides heating via cell resistance; chlor-alkali is room temperature plus electricity"
+  },
+  "fud_beet_sugar_processing": {
+    "add": ["cap_vac_1torr"],
+    "reason": "vacuum pan evaporation essential for consistent sugar crystallization"
+  },
+  "fud_malt_production": {
+    "add": [],
+    "reason": "low-temperature kiln drying well below Rome's available furnace capability"
+  },
+  "fused_quartz": {
+    "add": ["cap_heat_2000"],
+    "reason": "oxy-hydrogen flame at 1700-2000 C needed for silica working"
+  },
+  "glass_borosilicate": {
+    "add": ["cap_heat_1600"],
+    "reason": "borosilicate melting requires sustained 1600 C furnace heat"
+  },
+  "hom_attar_roses": {
+    "add": [],
+    "reason": "fractional distillation process covered by distillation prerequisite"
+  },
+  "hom_electric_lighting": {
+    "add": ["cap_vac_1e3"],
+    "reason": "incandescent filament requires vacuum to prevent oxidation"
+  },
+  "hom_sewer_stormwater_separation": {
+    "add": [],
+    "reason": "infrastructure design and urban planning exercise"
+  },
+  "hydrofluoric_acid": {
+    "add": [],
+    "reason": "room-temperature acid synthesis needs no furnace"
+  },
+  "lead_chamber": {
+    "add": [],
+    "reason": "sulfuric acid production at 200-300 C well below Rome's free furnace capability"
+  },
+  "mat_aluminium": {
+    "add": ["cap_heat_1100"],
+    "reason": "Hall-Heroult bath must be maintained at 950-1000 C"
+  },
+  "mat_dyes_synthetic": {
+    "add": ["cap_measure_temp"],
+    "reason": "coal tar to aniline synthesis involves exothermic reactions needing temperature control"
+  },
+  "mat_graphite_pure": {
+    "add": [],
+    "reason": "prerequisites already declare cap_heat_3000 for Acheson process"
+  },
+  "med_aspirin": {
+    "add": [],
+    "reason": "acetylation at 80-120 C is low-temperature organic synthesis"
+  },
+  "med_insulin": {
+    "add": [],
+    "reason": "protein extraction and crystallization adequately covered by analytical chemistry"
+  },
+  "med_sulfonamides": {
+    "add": ["cap_measure_temp"],
+    "reason": "sulfonation with concentrated acid is exothermic and requires careful temperature management"
+  },
+  "met_black_powder_blasting": {
+    "add": [],
+    "reason": "drilling and powder tamping are traditional mining skills"
+  },
+  "met_investment_casting": {
+    "add": [],
+    "reason": "wax melting and metal casting use temperatures Rome already has for free"
+  },
+  "met_tempering_color": {
+    "add": [],
+    "reason": "prerequisites already list cap_measure_temp"
+  },
+  "motor_transformer_ac": {
+    "add": ["cap_tol_100um"],
+    "reason": "laminated cores require thin consistent sheets for efficiency"
+  },
+  "opt_oscilloscope": {
+    "add": ["cap_vac_1e3"],
+    "reason": "cathode ray tube requires vacuum for electron beam propagation"
+  },
+  "power_grid": {
+    "add": [],
+    "reason": "large-scale infrastructure adequately covered by prerequisites"
+  },
+  "prn_gelatin_dry_plate": {
+    "add": [],
+    "reason": "gelatin emulsion coating achievable with existing photography skills"
+  },
+  "prn_silver_halide_chemistry": {
+    "add": [],
+    "reason": "simple crystallization chemistry needs no special capability"
+  },
+  "pwr_condenser": {
+    "add": [],
+    "reason": "vacuum is self-generated by steam condensation"
+  },
+  "pwr_pumped_storage": {
+    "add": [],
+    "reason": "pumped hydro system uses existing power and water technologies"
+  },
+  "pwr_transformer": {
+    "add": [],
+    "reason": "prerequisites already list cap_tol_100um"
+  },
+  "screw_lathe": {
+    "add": [],
+    "reason": "foundational machine tool; lead screw precision is prerequisite"
+  },
+  "sea_copper_sheathing": {
+    "add": ["cap_tol_100um"],
+    "reason": "sheet thickness uniformity important for corrosion resistance"
+  },
+  "sea_lead_line_hydro": {
+    "add": [],
+    "reason": "marked line depth survey is traditional navigation skill"
+  },
+  "sea_submarine_cable": {
+    "add": ["cap_tol_100um"],
+    "reason": "insulation uniformity critical for underwater telegraph signal quality"
+  },
+  "soda_leblanc": {
+    "add": [],
+    "reason": "chemical conversion of salt to alkali at moderate temperatures"
+  },
+  "telegraph_electric": {
+    "add": [],
+    "reason": "long-distance signaling adequately covered by electromagnet and cell prerequisites"
+  },
+  "tex_synthetic_dyes": {
+    "add": [],
+    "reason": "dyeing at 60-90 C is moderate temperature chemical process"
+  },
+  "voltaic_pile": {
+    "add": [],
+    "reason": "simple disc-based battery fully achievable with existing metalworking"
+  }
+}

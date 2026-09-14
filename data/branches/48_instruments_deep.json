@@ -1,0 +1,3757 @@
+[
+ {
+  "id": "in2_simple_lens",
+  "name": "Simple plano-convex lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "lens_grinding"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Ground and polished spherical single surface",
+  "ph": 60,
+  "lab": {
+   "optician": 200
+  },
+  "mat": {
+   "mat_glass_soda": 2
+  },
+  "cap": 300,
+  "up": 30,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 2,
+  "risk": 0.1,
+  "rev": 200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "The kernel is that a single spherical surface converges parallel light to a point. Aberrations are severe; useful only for low magnification."
+ },
+ {
+  "id": "in2_doublet_lens",
+  "name": "Doublet achromatic lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens",
+   "glass_lead"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Crown and flint glass cemented together to correct chromatic aberration",
+  "ph": 120,
+  "lab": {
+   "optician": 400,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_glass_lead": 2,
+   "mat_glass_soda": 2
+  },
+  "cap": 800,
+  "up": 60,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 500,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Red and blue light have different refractive indices; flint glass bends them oppositely. A concave flint inside a convex crown cancels the dispersion while keeping convergence. Cemented joint must be optically contacted."
+ },
+ {
+  "id": "in2_triplet_lens",
+  "name": "Triplet apochromatic lens",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "in2_doublet_lens",
+   "glass_boro"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Three-glass combination corrects to secondary spectrum",
+  "ph": 180,
+  "lab": {
+   "optician": 600,
+   "master_screw": 60
+  },
+  "mat": {
+   "mat_glass_soda": 1.5,
+   "mat_glass_lead": 2,
+   "mat_glass_boro": 1.5
+  },
+  "cap": 2000,
+  "up": 120,
+  "build_yrs": 1,
+  "adopt_yrs": 0,
+  "dev_years": 15,
+  "dev_people": 4,
+  "risk": 0.18,
+  "rev": 1200,
+  "sch": 0,
+  "art": 5,
+  "conf": "C",
+  "note": "Flint-crown-flint sandwich with carefully chosen thicknesses eliminates both primary and secondary chromatic aberration. Air gaps between elements are essential; spacing is critical."
+ },
+ {
+  "id": "in2_petzval_portrait_lens",
+  "name": "Petzval portrait lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_doublet_lens"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Rear convergent group and front achromat for high aperture",
+  "ph": 90,
+  "lab": {
+   "optician": 300,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_glass_lead": 1.5
+  },
+  "cap": 1200,
+  "up": 80,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.2,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 600,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "The kernel is that a convergent group behind the aperture stop naturally focuses field curvature to a curved surface, which is acceptable for portrait work where central sharpness matters. f/3.5 was revolutionary for 1840s photography."
+ },
+ {
+  "id": "in2_cooke_triplet_photography",
+  "name": "Cooke triplet photographic lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_triplet_lens"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Symmetrical three-element design for uniform field correction",
+  "ph": 100,
+  "lab": {
+   "optician": 350
+  },
+  "mat": {
+   "mat_glass_soda": 1.5,
+   "mat_glass_lead": 1.5,
+   "mat_glass_boro": 1
+  },
+  "cap": 1500,
+  "up": 90,
+  "build_yrs": 0.9,
+  "adopt_yrs": 0.3,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 800,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Symmetry means left and right aberrations cancel; the central meniscus acts as field flattener. Astigmatism and coma are small across a wide field. This design persisted unchanged into the 1970s."
+ },
+ {
+  "id": "in2_tessar_lens",
+  "name": "Tessar compound photographic lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_cooke_triplet_photography"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Four-element design with cemented doublet",
+  "ph": 110,
+  "lab": {
+   "optician": 380,
+   "master_screw": 35
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_glass_lead": 2
+  },
+  "cap": 1800,
+  "up": 100,
+  "build_yrs": 1,
+  "adopt_yrs": 0.2,
+  "dev_years": 8,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 900,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "The rear doublet is cemented; front elements air-spaced. Tessar corrects all primary aberrations (spherical, coma, astigmatism, field curvature) and controls distortion. f/4.5 was standard for hand cameras 1902-1950."
+ },
+ {
+  "id": "in2_telephoto_design",
+  "name": "Telephoto lens principle",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_doublet_lens"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Converging front, diverging rear, makes focal length exceed physical length",
+  "ph": 85,
+  "lab": {
+   "optician": 250
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_glass_lead": 1.5
+  },
+  "cap": 1000,
+  "up": 70,
+  "build_yrs": 0.7,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 400,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "The interval between front and rear elements is shorter than focal length; magnification and physical compactness are the point. Rear element separation tunes back working distance."
+ },
+ {
+  "id": "in2_wide_angle_lens",
+  "name": "Wide angle photographic lens",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "in2_cooke_triplet_photography"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Reversed Petzval or symmetrical design, focal length shorter than image diagonal",
+  "ph": 130,
+  "lab": {
+   "optician": 400,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_glass_soda": 2.5,
+   "mat_glass_lead": 2
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 1,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 700,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Large field angle means massive distortion if not corrected. Symmetrical designs minimize distortion at the cost of vignetting. Focal length/image diagonal ratio defines angle of view."
+ },
+ {
+  "id": "in2_primary_mirror",
+  "name": "Telescope primary mirror parabolic",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "mirror_amalgam",
+   "master_screw"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Parabolic surface focuses parallel light to point; thin speculum metal or silvered glass",
+  "ph": 140,
+  "lab": {
+   "optician": 600,
+   "artisan": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 20,
+   "mat_mercury": 2,
+   "tin": 1.5
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.22,
+  "rev": 1500,
+  "sch": 0,
+  "art": 5,
+  "conf": "B",
+  "note": "The parabola corrects spherical aberration; a sphere would have offaxis focus. Speculums corrode; silvered glass requires maintenance every few years. Precision to 0.1 wavelength required for good focus."
+ },
+ {
+  "id": "in2_cassegrain_reflector",
+  "name": "Cassegrain reflector telescope",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_primary_mirror"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Secondary convex mirror bounces light back through hole in primary",
+  "ph": 100,
+  "lab": {
+   "optician": 350
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "mat_mercury": 0.5
+  },
+  "cap": 2500,
+  "up": 180,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.18,
+  "rev": 800,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Effective focal length can be very large; physical tube is short and stiff. Secondary blockage costs light; useful for high magnification and spectroscopy. Cassegrain and Gregorian differ in secondary curvature (convex vs concave)."
+ },
+ {
+  "id": "in2_newtonian_reflector",
+  "name": "Newtonian reflector telescope",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_primary_mirror"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Flat mirror at 45 degrees directs focal point to side of tube",
+  "ph": 80,
+  "lab": {
+   "optician": 280
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "mat_mercury": 0.3
+  },
+  "cap": 1500,
+  "up": 120,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.15,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Simple and cheap; no secondary mirror obstruction. Off-axis aberrations manageable up to f/4. The flat (Newtonian diagonal) must be very small (5-15% blockage) and precisely angled."
+ },
+ {
+  "id": "in2_schmidt_corrector_plate",
+  "name": "Schmidt corrector plate",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "mirror_amalgam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Aspheric glass plate corrects spherical mirror aberrations; wide field possible",
+  "ph": 120,
+  "lab": {
+   "optician": 450,
+   "master_screw": 50
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_mercury": 0.5
+  },
+  "cap": 3000,
+  "up": 200,
+  "build_yrs": 1.8,
+  "adopt_yrs": 0,
+  "dev_years": 20,
+  "dev_people": 4,
+  "risk": 0.2,
+  "rev": 1800,
+  "sch": 0,
+  "art": 5,
+  "conf": "C",
+  "note": "A spherical mirror has severe offaxis aberrations. A thin aspheric plate near the center of curvature corrects all of them. Requires precision figuring to waves; small deviations ruin image."
+ },
+ {
+  "id": "in2_prism_amici",
+  "name": "Prism: Amici roof prism",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Roof-shaped prism erects image and folds light path for compact binoculars",
+  "ph": 80,
+  "lab": {
+   "optician": 280,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_glass_soda": 2
+  },
+  "cap": 1200,
+  "up": 80,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 400,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "The roof angle must be precisely 90 degrees; any error causes the two roof faces to produce a split image. Coating the roof faces was later improvement."
+ },
+ {
+  "id": "in2_prism_porro",
+  "name": "Prism: Porro prism binocular",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Two 45-90-45 prisms erect image and separate exit pupils for eye relief",
+  "ph": 75,
+  "lab": {
+   "optician": 260,
+   "master_screw": 25
+  },
+  "mat": {
+   "mat_glass_soda": 2
+  },
+  "cap": 1000,
+  "up": 70,
+  "build_yrs": 0.5,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.1,
+  "rev": 300,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Porro gives longer eyepiece separation than roof; better for binoculars where one prism arm doubles as the barrel. Internal reflections must not degrade contrast."
+ },
+ {
+  "id": "in2_beam_splitter",
+  "name": "Beam splitter dichroic mirror",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "mirror_amalgam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Partial reflector divides light into two paths; angle selects wavelength with coatings",
+  "ph": 70,
+  "lab": {
+   "optician": 200,
+   "master_screw": 20
+  },
+  "mat": {
+   "mat_glass_soda": 1.5,
+   "mat_mercury": 0.3
+  },
+  "cap": 800,
+  "up": 50,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 350,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Evaporated metal films or dielectric coatings create partial reflectors. Dichroic effect (color-dependent reflection) requires interference; multilayer coatings achieve sharp wavelength separation."
+ },
+ {
+  "id": "in2_polariser_crystal",
+  "name": "Polariser: Nicol prism calcite",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Birefringent calcite transmits one polarisation state, rejects other",
+  "ph": 85,
+  "lab": {
+   "optician": 300,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_glass_soda": 0.1,
+   "calcite": 2
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.16,
+  "rev": 500,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Natural birefringence of calcite; extraordinary ray and ordinary ray have different refractive indices. Carving and cementing a prism at the Brewster angle transmits one, reflects the other internally."
+ },
+ {
+  "id": "in2_waveplate_mica",
+  "name": "Wave plate phase retarder",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_polariser_crystal"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Anisotropic crystal retards one polarisation by fraction of wavelength",
+  "ph": 70,
+  "lab": {
+   "optician": 200,
+   "master_screw": 15
+  },
+  "mat": {
+   "mica": 0.05
+  },
+  "cap": 600,
+  "up": 40,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.08,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Quarter wave plate shifts phase by 90 degrees; half wave by 180. Thickness controls retardation. Mica easily cleaves to controlled thickness; later crystals like quartz are more stable."
+ },
+ {
+  "id": "in2_interference_filter",
+  "name": "Interference filter coated",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "in2_beam_splitter"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Multilayer dielectric coatings create bandpass filter by coherent reflection",
+  "ph": 110,
+  "lab": {
+   "optician": 350,
+   "master_screw": 35
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "magnesium_fluoride": 0.1,
+   "zinc_sulfide": 0.1
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 4,
+  "risk": 0.18,
+  "rev": 800,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Alternating high and low index layers create destructive interference outside the pass band. Extremely narrow passbands possible; sharp edges. Requires vacuum evaporation and strict thickness control."
+ },
+ {
+  "id": "in2_antireflection_coating",
+  "name": "Antireflection coating single wavelength",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_beam_splitter"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Quarter-wave coating reduces reflection from 4% to <0.1% at one wavelength",
+  "ph": 90,
+  "lab": {
+   "optician": 280,
+   "master_screw": 25
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "magnesium_fluoride": 0.05
+  },
+  "cap": 1800,
+  "up": 120,
+  "build_yrs": 0.7,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "A single quarter-wave layer of the right index nearly halves losses at design wavelength; this doubled the effective aperture of telescopes and microscopes. Multicoatings extend bandwidth."
+ },
+ {
+  "id": "in2_reticle_crosshair",
+  "name": "Reticle: crosshair or graticule",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "glass_clear"
+  ],
+  "traits": [],
+  "kb": "Fine lines or dots etched or photographed onto glass plate",
+  "ph": 30,
+  "lab": {
+   "optician": 80
+  },
+  "mat": {
+   "mat_glass_soda": 0.2
+  },
+  "cap": 300,
+  "up": 20,
+  "build_yrs": 0.1,
+  "adopt_yrs": 0,
+  "dev_years": 3,
+  "dev_people": 1,
+  "risk": 0.05,
+  "rev": 100,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Etching with diamond point or photographic reduction defines the graticule. Registration of crosshairs to optical axis is the precision step."
+ },
+ {
+  "id": "in2_eyepiece_huygens",
+  "name": "Eyepiece: Huygens",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [],
+  "kb": "Two plano-convex lenses separated by their focal lengths",
+  "ph": 40,
+  "lab": {
+   "optician": 120
+  },
+  "mat": {
+   "mat_glass_soda": 0.5
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 5,
+  "dev_people": 1,
+  "risk": 0.06,
+  "rev": 150,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Lens separation equals the sum of focal lengths; real image forms between elements. Long eye relief and wide field for low powers; chromatic aberration high."
+ },
+ {
+  "id": "in2_eyepiece_kellner",
+  "name": "Eyepiece: Kellner",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "in2_doublet_lens"
+  ],
+  "traits": [],
+  "kb": "Plano-convex field lens and achromatic eyelens",
+  "ph": 50,
+  "lab": {
+   "optician": 160
+  },
+  "mat": {
+   "mat_glass_soda": 0.5,
+   "mat_glass_lead": 0.2
+  },
+  "cap": 600,
+  "up": 40,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Achromatic eyelens corrects the Huygens problem; large field of view; good eye relief. Became standard for 19th-century microscopes."
+ },
+ {
+  "id": "in2_eyepiece_ramsden",
+  "name": "Eyepiece: Ramsden",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [],
+  "kb": "Two identical plano-convex lenses cemented or close-spaced",
+  "ph": 40,
+  "lab": {
+   "optician": 120
+  },
+  "mat": {
+   "mat_glass_soda": 0.5
+  },
+  "cap": 350,
+  "up": 25,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.06,
+  "rev": 120,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Real image forms between lenses; reticle can be placed there. Simpler than Kellner and Huygens. Used for surveying instruments where a graticule is essential."
+ },
+ {
+  "id": "in2_eyepiece_orthoscopic",
+  "name": "Eyepiece: Orthoscopic",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_triplet_lens"
+  ],
+  "traits": [],
+  "kb": "Triplet eyelens with wide flat field and high magnification",
+  "ph": 70,
+  "lab": {
+   "optician": 240
+  },
+  "mat": {
+   "mat_glass_soda": 0.8,
+   "mat_glass_lead": 0.4
+  },
+  "cap": 1000,
+  "up": 60,
+  "build_yrs": 0.5,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.1,
+  "rev": 300,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "All aberrations well corrected; distortion nearly absent. Best planetary observation eyepiece until the Erfle; good for telescopes of any focal ratio."
+ },
+ {
+  "id": "in2_eyepiece_erfle",
+  "name": "Eyepiece: Erfle wide field",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_triplet_lens"
+  ],
+  "traits": [],
+  "kb": "Five-element wide field eyepiece with 60-68 degree angle of view",
+  "ph": 90,
+  "lab": {
+   "optician": 320
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "mat_glass_lead": 0.6
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.12,
+  "rev": 500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "The kernel: five elements can be tuned to flatten field and correct all aberrations across a wide angle. Previous 3-4 element designs limited to 50 degrees."
+ },
+ {
+  "id": "in2_condenser_substage",
+  "name": "Condenser: sub-stage aperture control",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [],
+  "kb": "Converging lens below the sample focuses illumination and houses iris diaphragm",
+  "ph": 45,
+  "lab": {
+   "optician": 140
+  },
+  "mat": {
+   "mat_glass_soda": 1
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 5,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 150,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Iris diaphragm controls numerical aperture of illumination; matching it to objective NA maximizes contrast and depth of field. Substage height adjustment focuses the light."
+ },
+ {
+  "id": "in2_immersion_objective_oil",
+  "name": "Immersion objective: oil lens",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_condenser_substage"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Objective designed to work through oil between lens and coverslip; refractive index matched",
+  "ph": 80,
+  "lab": {
+   "optician": 280
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_fused_quartz": 1,
+   "olive_oil": 0.1
+  },
+  "cap": 1200,
+  "up": 80,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 400,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Oil (n=1.52) matches glass closely; light bent less at air-glass interface, allowing higher NA. Allows numerical apertures above 1.0, finer resolution. Standard for 1000x magnification."
+ },
+ {
+  "id": "in2_phase_contrast_objective",
+  "name": "Phase contrast objective and annuli",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "in2_immersion_objective_oil"
+  ],
+  "traits": [
+   "medical"
+  ],
+  "kb": "Annular source and phase plate convert amplitude variations to visible contrast",
+  "ph": 120,
+  "lab": {
+   "optician": 400,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_fused_quartz": 1
+  },
+  "cap": 2500,
+  "up": 200,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.3,
+  "dev_years": 25,
+  "dev_people": 3,
+  "risk": 0.18,
+  "rev": 800,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Transparent samples have tiny amplitude differences that the eye cannot detect; phase differences are huge but invisible. Phase plate retards diffracted light; interference makes phases visible. Revolutionary for biology."
+ },
+ {
+  "id": "in2_dark_field_condenser",
+  "name": "Dark field condenser: oblique illumination",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_condenser_substage"
+  ],
+  "traits": [],
+  "kb": "Light cone with large angle misses objective; only scattered light enters",
+  "ph": 70,
+  "lab": {
+   "optician": 220
+  },
+  "mat": {
+   "mat_glass_soda": 1.5
+  },
+  "cap": 1000,
+  "up": 70,
+  "build_yrs": 0.5,
+  "adopt_yrs": 0.1,
+  "dev_years": 8,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 300,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Unstained samples are nearly invisible in brightfield because they scatter little and absorb little. Dark field cuts direct light; scattered light from particles appears bright on black background."
+ },
+ {
+  "id": "in2_ultramicroscope",
+  "name": "Ultramicroscope: dark field with slit lamp",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "in2_dark_field_condenser"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Intense line source illuminates specimen at high angle; Tyndall scattering visible",
+  "ph": 85,
+  "lab": {
+   "optician": 300
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_wrought_iron": 5
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Colloid particles smaller than visible wavelength scatter light; ultramicroscope can detect particles 10-100 nm, below direct visibility limit. Used to verify kinetic theory of matter."
+ },
+ {
+  "id": "in2_microtome_sliding",
+  "name": "Microtome: sliding blade",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   "master_screw"
+  ],
+  "traits": [],
+  "kb": "Blade slides past specimen; spring controls thickness; produces thin sections",
+  "ph": 60,
+  "lab": {
+   "machinist": 200
+  },
+  "mat": {
+   "mat_steel": 2,
+   "mat_glass_soda": 0.5
+  },
+  "cap": 600,
+  "up": 50,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.1,
+  "rev": 250,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Tissue freezes on stage; blade slides at angle; spring deflection determines slice thickness. 50-200 micron sections for hand microscopy."
+ },
+ {
+  "id": "in2_microtome_rotary",
+  "name": "Microtome: rotary feed",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   "master_screw"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "Rotating handle advances specimen by screw; produces ribbons of thin serial sections",
+  "ph": 80,
+  "lab": {
+   "machinist": 280
+  },
+  "mat": {
+   "mat_steel": 2.5,
+   "mat_cast_iron": 10
+  },
+  "cap": 1200,
+  "up": 100,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0.2,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 400,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Screw advance per rotation is fixed and precise; blade remains stationary; hundreds of consecutive micron-thick sections from one specimen. Required for neuroanatomy."
+ },
+ {
+  "id": "in2_electron_microscope_column",
+  "name": "Electron microscope: column and lens assembly",
+  "tier": 4,
+  "cat": "optics",
+  "pre": [
+   "discharge_xray",
+   "cap_vac_1e3"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "Vacuum tube with high voltage, electromagnetic lenses focus electron beam",
+  "ph": 200,
+  "lab": {
+   "engineer": 800,
+   "electrician": 600
+  },
+  "mat": {
+   "mat_cast_iron": 100,
+   "mat_copper": 20,
+   "mat_wrought_iron": 50
+  },
+  "cap": 10000,
+  "up": 1000,
+  "build_yrs": 3,
+  "adopt_yrs": 0.5,
+  "dev_years": 30,
+  "dev_people": 8,
+  "risk": 0.25,
+  "rev": 15000,
+  "sch": 0,
+  "art": 3,
+  "conf": "B",
+  "note": "Electrons have wavelength 1000x smaller than visible light; 2000x higher resolution. Requires high vacuum, high voltage (50-100 kV), and magnetic lenses. Sample preparation and observation technique are complex."
+ },
+ {
+  "id": "in2_electron_source_cathode",
+  "name": "Electron source: heated cathode",
+  "tier": 3,
+  "cat": "optics",
+  "pre": [
+   "discharge_xray"
+  ],
+  "traits": [],
+  "kb": "Tungsten filament heated to 2700K; thermionic emission produces electron beam",
+  "ph": 100,
+  "lab": {
+   "electrician": 350
+  },
+  "mat": {
+   "tungsten": 0.05
+  },
+  "cap": 2000,
+  "up": 200,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Filament life determined by evaporation rate; higher temperature gives more current but shorter life. Wehnelt cap focuses emission. Tungsten chosen for high melting point and low evaporation."
+ },
+ {
+  "id": "in2_spectrograph_prism",
+  "name": "Spectrograph: prism camera",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "spectroscope",
+   "photography"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Prism disperses light; objective focuses spectrum onto photographic plate",
+  "ph": 85,
+  "lab": {
+   "optician": 300,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_glass_lead": 1
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 700,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Photography captures the spectrum without eye; much fainter lines visible. Comparison spectra on same plate enable precise wavelength measurement."
+ },
+ {
+  "id": "in2_spectrograph_grating",
+  "name": "Spectrograph: grating camera",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "spectroscope",
+   "in2_diffraction_grating"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Diffraction grating disperses light; objective focuses higher orders onto plate",
+  "ph": 110,
+  "lab": {
+   "optician": 350,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_silver": 0.5
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1000,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Grating gives linear wavelength scale and multiple orders; more light concentrated. Requires grating of very high quality; defects are invisible to eye but ruin spectrum."
+ },
+ {
+  "id": "in2_diffraction_grating",
+  "name": "Diffraction grating: ruled reflective",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "in2_ruling_engine"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Thousands of parallel grooves per mm, ruled with precision screw and diamond",
+  "ph": 150,
+  "lab": {
+   "machinist": 500
+  },
+  "mat": {
+   "mat_wrought_iron": 20,
+   "mat_glass_soda": 5,
+   "diamond": 0.001
+  },
+  "cap": 4000,
+  "up": 300,
+  "build_yrs": 2,
+  "adopt_yrs": 0,
+  "dev_years": 25,
+  "dev_people": 4,
+  "risk": 0.2,
+  "rev": 1500,
+  "sch": 0,
+  "art": 5,
+  "conf": "B",
+  "note": "The kernel: fine pitch (20,000-50,000 lines/inch) requires a master screw with error < 0.1 micron over its full length. Groove uniformity is critical; defects scatter light."
+ },
+ {
+  "id": "in2_ruling_engine",
+  "name": "Ruling engine: precision screw diamond",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "master_screw",
+   "cap_tol_1um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Master screw with diamond point advances across glass or metal; grooves separated by wavelength precision",
+  "ph": 250,
+  "lab": {
+   "machinist": 800
+  },
+  "mat": {
+   "mat_wrought_iron": 50,
+   "mat_cast_iron": 200,
+   "diamond": 0.002
+  },
+  "cap": 8000,
+  "up": 500,
+  "build_yrs": 3,
+  "adopt_yrs": 0.1,
+  "dev_years": 40,
+  "dev_people": 6,
+  "risk": 0.25,
+  "rev": 2000,
+  "sch": 0,
+  "art": 5,
+  "conf": "B",
+  "note": "The most demanding instrument before 1950. Screw must advance uniformly against spring loading; spindle runout < 0.5 micron over 200 mm stroke. Most sophisticated mechanical device of its era."
+ },
+ {
+  "id": "in2_interferometer_michelson",
+  "name": "Interferometer: Michelson",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "mirror_amalgam",
+   "in2_polariser_crystal"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Beam splitter divides light; mirrors reflect; recombined beams interfere",
+  "ph": 120,
+  "lab": {
+   "optician": 400,
+   "master_screw": 50
+  },
+  "mat": {
+   "mat_glass_soda": 4,
+   "mat_mercury": 1
+  },
+  "cap": 2500,
+  "up": 200,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 1000,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Adjustment is finicky; mirror angle must be within microradians. Fringe visibility depends on path difference being small. Used to measure length by counting fringes as mirror moves."
+ },
+ {
+  "id": "in2_interferometer_fabry_perot",
+  "name": "Interferometer: Fabry-P\u00e9rot etalon",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "mirror_amalgam"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Two parallel silvered surfaces; light bounces many times; sharp resonance peaks",
+  "ph": 130,
+  "lab": {
+   "optician": 420,
+   "master_screw": 60
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_silver": 2
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 1.8,
+  "adopt_yrs": 0.2,
+  "dev_years": 22,
+  "dev_people": 3,
+  "risk": 0.17,
+  "rev": 1200,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Multiple reflections enhance sharpness; useful for spectral lines separated by nanometers. Parallelism and surface flatness required to better than 0.1 wavelength."
+ },
+ {
+  "id": "in2_mass_spectrograph",
+  "name": "Mass spectrograph: deflection",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "electromagnet",
+   "discharge_xray"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Ions accelerated and deflected by magnetic field; detection plate measures trajectories",
+  "ph": 180,
+  "lab": {
+   "engineer": 600,
+   "electrician": 400
+  },
+  "mat": {
+   "mat_cast_iron": 80,
+   "mat_copper": 15,
+   "mat_wrought_iron": 30
+  },
+  "cap": 6000,
+  "up": 400,
+  "build_yrs": 2.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 30,
+  "dev_people": 5,
+  "risk": 0.22,
+  "rev": 2000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Radius of curvature proportional to mass; spot positions give isotope masses and abundances. Requires high vacuum, stable voltage, and precise ion source."
+ },
+ {
+  "id": "in2_cyclotron",
+  "name": "Cyclotron accelerator: magnet and RF coil",
+  "tier": 5,
+  "cat": "laboratory",
+  "pre": [
+   "electromagnet",
+   "cap_heat_1300"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Magnetic field bends particles in spiral; RF accelerates between gaps",
+  "ph": 250,
+  "lab": {
+   "engineer": 1000,
+   "electrician": 500
+  },
+  "mat": {
+   "mat_cast_iron": 5000,
+   "mat_copper": 100,
+   "mat_wrought_iron": 200
+  },
+  "cap": 50000,
+  "up": 3000,
+  "build_yrs": 4,
+  "adopt_yrs": 0.3,
+  "dev_years": 40,
+  "dev_people": 8,
+  "risk": 0.3,
+  "rev": 20000,
+  "sch": 0,
+  "art": 3,
+  "conf": "B",
+  "note": "Synchronism between particle orbit period and RF frequency is automatic; frequency stays constant as particle spirals outward and gains energy. Enables 10-20 MeV beam, impossible with accelerators."
+ },
+ {
+  "id": "in2_van_de_graaff_generator",
+  "name": "Van de Graaff static generator",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "electromagnet",
+   "electrostatics"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Moving belt transfers charge to dome; voltage accumulates; sparks at high voltage",
+  "ph": 200,
+  "lab": {
+   "engineer": 700,
+   "electrician": 400
+  },
+  "mat": {
+   "mat_cast_iron": 200,
+   "mat_copper": 50,
+   "mat_leather": 20
+  },
+  "cap": 8000,
+  "up": 500,
+  "build_yrs": 3,
+  "adopt_yrs": 0.2,
+  "dev_years": 35,
+  "dev_people": 5,
+  "risk": 0.25,
+  "rev": 3000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Belt isolation makes voltage independent of corona losses; millions of volts achievable. Originally thought impractical; elegant principle that charges accumulate without external energy beyond motor to drive belt."
+ },
+ {
+  "id": "in2_cloud_chamber_wilson",
+  "name": "Cloud chamber: Wilson expansion chamber",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "pump_pneumatic"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Sudden expansion cools air to supersaturation; charged particles trigger condensation trails",
+  "ph": 140,
+  "lab": {
+   "engineer": 450,
+   "chemist": 250
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_wrought_iron": 20,
+   "mat_lead": 10
+  },
+  "cap": 3000,
+  "up": 200,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.18,
+  "rev": 1200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "The kernel: ions seed condensation; alcohol vapor becomes cloud along particle tracks. Photographs record tracks: alpha particles thick and straight, beta particles thin and curved, gamma rays occasional electron recoils."
+ },
+ {
+  "id": "in2_photographic_emulsion",
+  "name": "Photographic emulsion detector",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "photography"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Silver halide grains record particle tracks at nanometer resolution",
+  "ph": 70,
+  "lab": {
+   "chemist": 200
+  },
+  "mat": {
+   "silver_nitrate": 0.05,
+   "gelatin": 5
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.5,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 600,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Emulsion provides permanent record and extreme position resolution (< 1 micron). Quantitative analysis requires careful grain counting and calibration against known energies."
+ },
+ {
+  "id": "in2_xray_diffraction_camera",
+  "name": "X-ray diffraction camera: Bragg geometry",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "discharge_xray",
+   "mirror_amalgam"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "X-rays diffract from crystal planes; angles and intensities reveal atomic structure",
+  "ph": 130,
+  "lab": {
+   "optician": 400,
+   "engineer": 200
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_wrought_iron": 15
+  },
+  "cap": 3500,
+  "up": 250,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 18,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1300,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Bragg angle = arcsin(wavelength / 2d); both angle and intensity must be measured. Requires collimated X-rays and precision rotation stage."
+ },
+ {
+  "id": "in2_electron_diffraction_camera",
+  "name": "Electron diffraction camera: LEED",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "discharge_xray",
+   "cap_vac_1e3"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Electrons diffract from crystal planes; low energy gives surface sensitivity",
+  "ph": 140,
+  "lab": {
+   "engineer": 450,
+   "electrician": 300
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_wrought_iron": 20
+  },
+  "cap": 4000,
+  "up": 300,
+  "build_yrs": 2,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.17,
+  "rev": 1500,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Electron wavelength < 1 Angstrom; very small diffraction angles. Phosphor screen detects diffraction pattern. Low-energy electrons (50-500 eV) scatter strongly from top layers."
+ },
+ {
+  "id": "in2_ultracentrifuge",
+  "name": "Ultracentrifuge: high-speed rotor",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "motor_transformer_ac",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "Rotor spins at 100,000 rpm; centrifugal field separates molecules by size",
+  "ph": 180,
+  "lab": {
+   "engineer": 600,
+   "machinist": 400
+  },
+  "mat": {
+   "mat_wrought_iron": 50,
+   "mat_steel": 30
+  },
+  "cap": 8000,
+  "up": 600,
+  "build_yrs": 2.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 25,
+  "dev_people": 4,
+  "risk": 0.2,
+  "rev": 2000,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Rotor imbalance is catastrophic; dynamic balancing to < 1 gram-cm required. Vacuum jacket reduces drag and heating."
+ },
+ {
+  "id": "in2_ph_meter_potentiometer",
+  "name": "pH meter: glass electrode potentiometer",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "daniell_cell",
+   "vacuum_tube"
+  ],
+  "traits": [
+   "medical"
+  ],
+  "kb": "Glass electrode voltage responds to hydrogen ion concentration; amplifier measures millivolts",
+  "ph": 120,
+  "lab": {
+   "electrician": 350,
+   "engineer": 200
+  },
+  "mat": {
+   "mat_glass_soda": 1,
+   "mat_glass_lead": 1,
+   "mat_copper": 3
+  },
+  "cap": 2500,
+  "up": 200,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.3,
+  "dev_years": 18,
+  "dev_people": 3,
+  "risk": 0.14,
+  "rev": 1000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Glass electrode potential is logarithmic in [H+]; high impedance requires vacuum tube amplifier. Slope and zero-point calibration against known buffers essential."
+ },
+ {
+  "id": "in2_oscilloscope_crt",
+  "name": "Oscilloscope: cathode ray tube display",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "discharge_xray",
+   "electromagnet"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Electron beam deflected by electric or magnetic fields; strikes phosphor screen",
+  "ph": 160,
+  "lab": {
+   "engineer": 550,
+   "electrician": 350,
+   "glassblower": 200
+  },
+  "mat": {
+   "mat_glass_soda": 8,
+   "mat_copper": 15,
+   "phosphor": 1
+  },
+  "cap": 5000,
+  "up": 400,
+  "build_yrs": 2,
+  "adopt_yrs": 0.4,
+  "dev_years": 30,
+  "dev_people": 5,
+  "risk": 0.2,
+  "rev": 3000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Deflection sensitivity and time-base linearity are critical. Phosphor persistence determines trace brightness and flicker. High voltage supply must be stable."
+ },
+ {
+  "id": "in2_strain_gauge_electric",
+  "name": "Strain gauge: bonded resistance wire",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "micrometer_gauges",
+   "copper_refining"
+  ],
+  "traits": [],
+  "kb": "Wire resistance changes with strain; stretched wire has higher resistance",
+  "ph": 80,
+  "lab": {
+   "machinist": 250
+  },
+  "mat": {
+   "constantan_wire_kg": 0.05,
+   "mat_silk": 0.5
+  },
+  "cap": 1000,
+  "up": 70,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0.2,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 400,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Temperature compensation via dummy gauge. Bridge circuit nulls initial resistance; strain produces bridge imbalance. Gauge factor (delta-R/R per unit strain) is material-dependent and reproducible."
+ },
+ {
+  "id": "in2_strain_gauge_bridge",
+  "name": "Strain gauge bridge amplifier",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "in2_strain_gauge_electric",
+   "vacuum_tube"
+  ],
+  "traits": [],
+  "kb": "Wheatstone bridge with strain gauge and vacuum tube amplifier measures tiny resistance changes",
+  "ph": 120,
+  "lab": {
+   "electrician": 400,
+   "engineer": 250
+  },
+  "mat": {
+   "mat_copper": 5,
+   "vacuum_tube": 2
+  },
+  "cap": 2500,
+  "up": 200,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Bridge balance point shifts with strain; amplified output is linear over useful range. Temperature drift in gauges and electronics is a constant problem."
+ },
+ {
+  "id": "in2_wind_tunnel_subsonic",
+  "name": "Wind tunnel: subsonic test section",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "cap_power_steam",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Contoured duct delivers uniform flow; model attached; forces measured by balance",
+  "ph": 150,
+  "lab": {
+   "engineer": 500,
+   "machinist": 350
+  },
+  "mat": {
+   "mat_cast_iron": 200,
+   "mat_wrought_iron": 100
+  },
+  "cap": 8000,
+  "up": 600,
+  "build_yrs": 2.5,
+  "adopt_yrs": 0.3,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.18,
+  "rev": 2000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Boundary layer thickness and pressure gradient are critical to realistic results. Model blockage ratio must be < 5 percent. Inlet contraction and honeycomb reduce turbulence."
+ },
+ {
+  "id": "in2_shock_tube",
+  "name": "Shock tube: driven and dump sections",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "cap_heat_1600"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Rupture diaphragm between high and low pressure gas; shock wave propagates",
+  "ph": 180,
+  "lab": {
+   "engineer": 600
+  },
+  "mat": {
+   "mat_wrought_iron": 100,
+   "mat_steel": 50
+  },
+  "cap": 6000,
+  "up": 400,
+  "build_yrs": 2,
+  "adopt_yrs": 0.1,
+  "dev_years": 25,
+  "dev_people": 3,
+  "risk": 0.2,
+  "rev": 2000,
+  "sch": 0,
+  "art": 3,
+  "conf": "B",
+  "note": "Temperature behind shock is predictable from gas properties and compression ratio; brief duration allows measurement at extreme conditions. Diaphragm timing is precise."
+ },
+ {
+  "id": "in2_towing_tank",
+  "name": "Towing tank: model boat resistance measurement",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "cap_power_water"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Long water channel; model on carriage; drag measured against water balance",
+  "ph": 140,
+  "lab": {
+   "engineer": 450
+  },
+  "mat": {
+   "mat_concrete_reinforced": 500,
+   "mat_wrought_iron": 200
+  },
+  "cap": 12000,
+  "up": 800,
+  "build_yrs": 3,
+  "adopt_yrs": 0.2,
+  "dev_years": 25,
+  "dev_people": 3,
+  "risk": 0.17,
+  "rev": 1500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Model-to-full-scale scaling requires Reynolds number matching; separate friction and pressure drag requires careful measurement of local pressure."
+ },
+ {
+  "id": "in2_vibration_table",
+  "name": "Vibration table: shaker with electromagnet",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "electromagnet",
+   "cap_power_electric"
+  ],
+  "traits": [],
+  "kb": "Armature driven by AC field; table oscillates at mains frequency; amplitude controlled",
+  "ph": 110,
+  "lab": {
+   "engineer": 350
+  },
+  "mat": {
+   "mat_cast_iron": 100,
+   "mat_copper": 20,
+   "mat_wrought_iron": 50
+  },
+  "cap": 4000,
+  "up": 300,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 1200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Mechanical resonances of specimen must be understood; forced excitation can produce nonlinear effects. Force and displacement must both be measured."
+ },
+ {
+  "id": "in2_fatigue_machine",
+  "name": "Fatigue test machine: rotating bending",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "motor_transformer_ac"
+  ],
+  "traits": [],
+  "kb": "Sample in rotating fixture; stress oscillates sinusoidally; failure recorded vs cycle count",
+  "ph": 100,
+  "lab": {
+   "engineer": 300
+  },
+  "mat": {
+   "mat_cast_iron": 80,
+   "mat_wrought_iron": 40
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 800,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Specimen rotates through constant bending moment; every point sees same stress cycle. Failure always begins at stress concentration; S-N curve (stress vs cycle count) defines fatigue limit."
+ },
+ {
+  "id": "in2_creep_furnace",
+  "name": "Creep furnace: constant load at high temperature",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "cap_heat_1600"
+  ],
+  "traits": [],
+  "kb": "Specimen held at fixed stress and temperature; elongation measured vs time",
+  "ph": 130,
+  "lab": {
+   "furnaceman": 400,
+   "engineer": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 30,
+   "mat_refractories": 100
+  },
+  "cap": 3500,
+  "up": 350,
+  "build_yrs": 1.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 18,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Creep rate accelerates with time; elongation logarithmic or power-law in time. Material structure changes under stress; microstructure analysis explains rate."
+ },
+ {
+  "id": "in2_high_pressure_cell",
+  "name": "High pressure cell: diamond anvil or autoclave",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "cap_tol_10um",
+   "cap_heat_1600"
+  ],
+  "traits": [],
+  "kb": "Hydraulic or screw press confines sample; pressure measured by pressure gauge",
+  "ph": 150,
+  "lab": {
+   "machinist": 450
+  },
+  "mat": {
+   "mat_tool_steel_hss": 20
+  },
+  "cap": 5000,
+  "up": 400,
+  "build_yrs": 2,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.18,
+  "rev": 1500,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Diamond anvil for optics; hardened steel for liquids. Seal design and pressure measurement calibration are critical."
+ },
+ {
+  "id": "in2_cryostat_dewar_flask",
+  "name": "Cryostat: dewar flask double-walled",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "fused_quartz"
+  ],
+  "traits": [],
+  "kb": "Vacuum between walls; liquid nitrogen or helium maintains cryogenic temperature",
+  "ph": 90,
+  "lab": {
+   "glassblower": 300,
+   "optician": 100
+  },
+  "mat": {
+   "mat_glass_soda": 5,
+   "mat_mercury": 0.5
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Vacuum insulation much better than solid foam (which didn't exist); radiation baffle reduces heat transfer. Silver coating reflects infrared."
+ },
+ {
+  "id": "in2_joule_thomson_valve",
+  "name": "Joule-Thomson expansion valve",
+  "tier": 2,
+  "cat": "laboratory",
+  "pre": [
+   "cap_heat_1300"
+  ],
+  "traits": [],
+  "kb": "Gas expands through throttle; cooling is proportional to enthalpy drop",
+  "ph": 80,
+  "lab": {
+   "mechanic": 250
+  },
+  "mat": {
+   "mat_wrought_iron": 10,
+   "mat_steel": 5
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 600,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Cooling power depends on entering pressure and temperature; for most gases, Joule-Thomson coefficient is positive (cooling). Throttle design (capillary or sintered restriction) controls expansion."
+ },
+ {
+  "id": "in2_linde_cycle_expansion_engine",
+  "name": "Linde cycle: expansion engine and recuperator",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "in2_joule_thomson_valve"
+  ],
+  "traits": [],
+  "kb": "Compressed gas cools against expanding outflow; cascade stages liquefy air",
+  "ph": 120,
+  "lab": {
+   "engineer": 400
+  },
+  "mat": {
+   "mat_wrought_iron": 50,
+   "mat_copper": 20
+  },
+  "cap": 4500,
+  "up": 300,
+  "build_yrs": 2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 1500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Each stage drops temperature; tail gas cools incoming gas. Requires pure, dry air (CO2 and water freeze out). Liquefaction rate 1-10 liters/hour."
+ },
+ {
+  "id": "in2_claude_cycle_air_liquefaction",
+  "name": "Claude cycle: air liquefaction with work extraction",
+  "tier": 3,
+  "cat": "laboratory",
+  "pre": [
+   "in2_linde_cycle_expansion_engine"
+  ],
+  "traits": [],
+  "kb": "Expander cools more efficiently than Joule-Thomson; some gas expands to do work",
+  "ph": 130,
+  "lab": {
+   "engineer": 420
+  },
+  "mat": {
+   "mat_wrought_iron": 60,
+   "mat_copper": 25
+  },
+  "cap": 5000,
+  "up": 350,
+  "build_yrs": 2.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 22,
+  "dev_people": 3,
+  "risk": 0.17,
+  "rev": 1800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Expander is efficiency gain: gas does external work while cooling. Allows higher input temperature before liquefaction. Industrial version dominates after 1920."
+ },
+ {
+  "id": "in2_adiabatic_demagnetization",
+  "name": "Adiabatic demagnetization apparatus",
+  "tier": 4,
+  "cat": "laboratory",
+  "pre": [
+   "electromagnet",
+   "in2_cryostat_dewar_flask"
+  ],
+  "traits": [],
+  "kb": "Magnetic field aligns spins; adiabatic removal of field allows spins to disorder, cooling",
+  "ph": 150,
+  "lab": {
+   "engineer": 500
+  },
+  "mat": {
+   "mat_wrought_iron": 50,
+   "electromagnet": 1
+  },
+  "cap": 8000,
+  "up": 600,
+  "build_yrs": 2.5,
+  "adopt_yrs": 0.1,
+  "dev_years": 25,
+  "dev_people": 3,
+  "risk": 0.19,
+  "rev": 2000,
+  "sch": 0,
+  "art": 3,
+  "conf": "B",
+  "note": "Cooling power limited by entropy of spin system; achieves 0.01 K from starting 1 K. Requires precision heat switches and careful thermometry."
+ },
+ {
+  "id": "in2_chain_surveyor",
+  "name": "Measuring chain: steel links",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "cap_measure_len"
+  ],
+  "traits": [],
+  "kb": "66 feet (20 m) of steel links; handles at ends; numbered every 10 links",
+  "ph": 30,
+  "lab": {
+   "smith": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 10
+  },
+  "cap": 200,
+  "up": 20,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 3,
+  "dev_people": 1,
+  "risk": 0.05,
+  "rev": 100,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Standardization of link length was critical; earlier chains varied between regions. Stretch under tension; calibration against standard required."
+ },
+ {
+  "id": "in2_tape_measure_steel",
+  "name": "Steel measuring tape: wound on reel",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "cap_measure_len"
+  ],
+  "traits": [],
+  "kb": "100-300 feet steel tape; tension handle and brake; gradient mark for slope distance",
+  "ph": 40,
+  "lab": {
+   "smith": 130,
+   "mechanician": 50
+  },
+  "mat": {
+   "mat_steel": 15
+  },
+  "cap": 300,
+  "up": 25,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 5,
+  "dev_people": 1,
+  "risk": 0.06,
+  "rev": 150,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Tape sags under its own weight; standard tension (100 lbs) specified in manuals. Thermal expansion significant for steel; correction tables provided."
+ },
+ {
+  "id": "in2_spirit_level",
+  "name": "Spirit level: bubble in tube",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [],
+  "kb": "Curved tube 90% filled with alcohol; bubble indicates deviation from horizontal",
+  "ph": 50,
+  "lab": {
+   "glassblower": 150
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_brass": 3
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 150,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Curvature of tube determines sensitivity; tighter curve = smaller bubble movement for given tilt. Sensitivity 1 minute of arc typical."
+ },
+ {
+  "id": "in2_theodolite",
+  "name": "Theodolite: angle measurement",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "in2_spirit_level",
+   "micrometer_gauges"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Telescope with two perpendicular rotating circles; horizontal and vertical angles",
+  "ph": 100,
+  "lab": {
+   "optician": 350,
+   "master_screw": 50
+  },
+  "mat": {
+   "mat_brass": 15,
+   "mat_glass_soda": 5,
+   "mat_wrought_iron": 30
+  },
+  "cap": 2500,
+  "up": 150,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 900,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Circles divided 360 degrees with minute precision; verniers read to 10 seconds. Optics give magnification; telescope focuses on distant point."
+ },
+ {
+  "id": "in2_tacheometer",
+  "name": "Tacheometer: distance and elevation measurement",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "in2_theodolite"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "Theodolite with special stadia reticle; staff reading gives distance directly",
+  "ph": 80,
+  "lab": {
+   "optician": 280,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_brass": 12,
+   "mat_glass_soda": 4
+  },
+  "cap": 2000,
+  "up": 120,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 700,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Stadia interval subtends known angle; staff distance = staff reading / tangent of angle. Avoids chain for rough work; less accurate but much faster."
+ },
+ {
+  "id": "in2_plane_table",
+  "name": "Plane table: graphical surveying",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "in2_spirit_level"
+  ],
+  "traits": [],
+  "kb": "Board on tripod; graphite paper and straightedge; draw map directly in field",
+  "ph": 60,
+  "lab": {
+   "carpenter": 200
+  },
+  "mat": {
+   "mat_wood": 10,
+   "mat_brass": 3
+  },
+  "cap": 500,
+  "up": 40,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 7,
+  "dev_people": 1,
+  "risk": 0.08,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Immediate feedback on map; errors caught in field. Slope corrections and magnetic declination must be handled separately. Useful for small-area mapping."
+ },
+ {
+  "id": "in2_alidade_ruler",
+  "name": "Alidade: sight ruler for plane table",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "in2_plane_table"
+  ],
+  "traits": [],
+  "kb": "Ruler with telescopic sights; sets direction on map from observation point",
+  "ph": 45,
+  "lab": {
+   "optician": 150
+  },
+  "mat": {
+   "mat_brass": 5,
+   "mat_glass_soda": 1
+  },
+  "cap": 600,
+  "up": 40,
+  "build_yrs": 0.5,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Telescope provides magnification and collimation; eyepiece must be designed to give clear view of distant point while keeping edge of ruler in sight."
+ },
+ {
+  "id": "in2_triangulation_tripod_station",
+  "name": "Triangulation: station marker",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "in2_theodolite"
+  ],
+  "traits": [],
+  "kb": "Stable tripod with fixed marks for theodolite centering",
+  "ph": 40,
+  "lab": {
+   "carpenter": 120
+  },
+  "mat": {
+   "mat_wood": 20,
+   "mat_brass": 2
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 4,
+  "dev_people": 1,
+  "risk": 0.05,
+  "rev": 100,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Centering error contributes to position error; forced centering (rotating theodolite over fixed point) necessary for high precision."
+ },
+ {
+  "id": "in2_baseline_measurement_apparatus",
+  "name": "Baseline measurement: apparatus and calibration",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "in2_tape_measure_steel",
+   "cap_measure_len"
+  ],
+  "traits": [],
+  "kb": "Known length baseline; correction for slope, temperature, tension; used as reference for triangulation",
+  "ph": 90,
+  "lab": {
+   "surveyor": 400
+  },
+  "mat": {
+   "mat_steel": 50,
+   "mat_stone": 5000
+  },
+  "cap": 2000,
+  "up": 200,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Baseline length accuracy sets precision of entire survey; errors in baseline are magnified by triangulation. Careful temperature and tension control during measurement."
+ },
+ {
+  "id": "in2_geodetic_apparatus",
+  "name": "Geodetic survey apparatus complete",
+  "tier": 3,
+  "cat": "surveying",
+  "pre": [
+   "in2_baseline_measurement_apparatus",
+   "in2_theodolite"
+  ],
+  "traits": [],
+  "kb": "Network of triangulation points; height determined by precise levelling",
+  "ph": 130,
+  "lab": {
+   "surveyor": 500,
+   "optician": 300
+  },
+  "mat": {
+   "mat_brass": 20,
+   "mat_glass_soda": 8
+  },
+  "cap": 5000,
+  "up": 400,
+  "build_yrs": 2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "National survey requires coordination of many teams over years. Control points must be stable; pillar stability checked periodically."
+ },
+ {
+  "id": "in2_precise_levelling_rod",
+  "name": "Precise levelling: rod and staff",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "in2_spirit_level",
+   "micrometer_gauges"
+  ],
+  "traits": [],
+  "kb": "Calibrated rod with mm graduations; telescope focuses on graticule; difference of sights gives height difference",
+  "ph": 80,
+  "lab": {
+   "optician": 280,
+   "master_screw": 30
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_brass": 10,
+   "mat_wood": 15
+  },
+  "cap": 2000,
+  "up": 120,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Backsight and foresight must balance to third decimal place; systematic errors (refraction, curvature) cancel only if distances equal. Levelling bench marks established every km."
+ },
+ {
+  "id": "in2_gravimeter_spring_balance",
+  "name": "Gravimeter: spring balance portable",
+  "tier": 3,
+  "cat": "surveying",
+  "pre": [
+   "micrometer_gauges"
+  ],
+  "traits": [],
+  "kb": "Mass hangs on calibrated spring; period or deflection indicates local gravity",
+  "ph": 100,
+  "lab": {
+   "machinist": 300
+  },
+  "mat": {
+   "mat_spring_steel": 5,
+   "mat_wrought_iron": 10
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.1,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 700,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Gravity variation 0.3 percent across Earth; instrument detects 0.01 percent. Thermal compensation by bimetallic strips essential."
+ },
+ {
+  "id": "in2_magnetometer_compass",
+  "name": "Magnetometer: sensitive compass",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "magnet_permanent"
+  ],
+  "traits": [],
+  "kb": "Magnetic needle suspended by fine quartz fiber; deflection angle measures field",
+  "ph": 75,
+  "lab": {
+   "optician": 220
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "quartz_fiber": 0.001,
+   "magnet": 1
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Temperature and vibration affect needle; declination charts required for navigation. Magnetic latitude determines angle of dip."
+ },
+ {
+  "id": "in2_sextant_navigation",
+  "name": "Sextant: arc and optical system",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "mirror_amalgam",
+   "telescope"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Moving mirror superimposes sun or star images; arc angle gives latitude or distance",
+  "ph": 110,
+  "lab": {
+   "optician": 350,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_brass": 20,
+   "mat_glass_soda": 4,
+   "mat_mercury": 1
+  },
+  "cap": 2500,
+  "up": 150,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 1000,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Optical path via fixed and moving mirrors allows 60 degree field in 120 degree arc. Reading to 0.1 arcminute requires careful eyepiece and vernier."
+ },
+ {
+  "id": "in2_artificial_horizon_bubble",
+  "name": "Artificial horizon: bubble level",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "in2_spirit_level"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Small spirit level defines horizontal reference when sea horizon is not visible",
+  "ph": 40,
+  "lab": {
+   "glassblower": 120
+  },
+  "mat": {
+   "mat_glass_soda": 1
+  },
+  "cap": 300,
+  "up": 20,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 4,
+  "dev_people": 1,
+  "risk": 0.05,
+  "rev": 100,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Bubble much more visible than faint horizon at twilight; altitude star not twice-the-bubble correction because half the motion needed."
+ },
+ {
+  "id": "in2_marine_chronometer",
+  "name": "Marine chronometer: spring balance compensation",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "clock_pendulum",
+   "master_screw"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Balance spring oscillator; bimetallic compensation maintains frequency at sea temperature variation",
+  "ph": 140,
+  "lab": {
+   "machinist": 450,
+   "master_screw": 80
+  },
+  "mat": {
+   "mat_steel": 5,
+   "mat_brass": 8
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 2,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 1200,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Chronometer rate (gain/loss per day) must be < 1 second; observed rate used to correct while at sea. Ship's motion and temperature gradients are constant challenges."
+ },
+ {
+  "id": "in2_chronometer_rate_check",
+  "name": "Chronometer rate observation",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "in2_marine_chronometer"
+  ],
+  "traits": [],
+  "kb": "Lunar distance or lunar occultation gives time; chronometer rate determined",
+  "ph": 60,
+  "lab": {
+   "surveyor": 200
+  },
+  "mat": {
+   "mat_paper": 0.5,
+   "mat_brass": 1
+  },
+  "cap": 500,
+  "up": 30,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.08,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Greenwich time determined independently; comparison over several days averages out daily variations."
+ },
+ {
+  "id": "in2_sounding_machine_lead_line",
+  "name": "Sounding machine: lead line and marks",
+  "tier": 1,
+  "cat": "surveying",
+  "pre": [
+   "cap_measure_len"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Weighted rope marked every fathom; bottom sample in cavity of lead",
+  "ph": 35,
+  "lab": {
+   "sailor": 100
+  },
+  "mat": {
+   "mat_lead": 30,
+   "mat_rope": 100
+  },
+  "cap": 200,
+  "up": 15,
+  "build_yrs": 0.15,
+  "adopt_yrs": 0,
+  "dev_years": 3,
+  "dev_people": 1,
+  "risk": 0.04,
+  "rev": 80,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Sample of bottom (sand, mud, shells) helps identify location when fog prevents sight navigation. Deep sea (> 300 fathoms) requires stronger line."
+ },
+ {
+  "id": "in2_echo_sounder_acoustic",
+  "name": "Echo sounder: acoustic depth finder",
+  "tier": 4,
+  "cat": "surveying",
+  "pre": [
+   "cap_power_electric",
+   "discharge_xray"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Spark or transducer emits sound pulse; reflected echo arrives after time proportional to depth",
+  "ph": 140,
+  "lab": {
+   "electrician": 400
+  },
+  "mat": {
+   "mat_wrought_iron": 30,
+   "vacuum_tube": 2
+  },
+  "cap": 4000,
+  "up": 300,
+  "build_yrs": 2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Sound speed in water 1500 m/s; modern instruments use frequency sweep. Early spark sounders were intermittent; later continuous recordings possible."
+ },
+ {
+  "id": "in2_gyrocompass",
+  "name": "Gyrocompass: spinning rotor",
+  "tier": 4,
+  "cat": "surveying",
+  "pre": [
+   "motor_transformer_ac"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Rotor spins at high speed; gravity precession aligns axis with meridian",
+  "ph": 160,
+  "lab": {
+   "engineer": 500,
+   "electrician": 350
+  },
+  "mat": {
+   "mat_cast_iron": 200,
+   "mat_copper": 40
+  },
+  "cap": 6000,
+  "up": 400,
+  "build_yrs": 2.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 25,
+  "dev_people": 4,
+  "risk": 0.17,
+  "rev": 2000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "North-seeking property is automatic once spinning; no magnetic compass needed. Gyroscopic inertia suppresses ship's motion effects."
+ },
+ {
+  "id": "in2_gyro_horizon_artificial",
+  "name": "Gyro horizon: attitude indicator",
+  "tier": 3,
+  "cat": "surveying",
+  "pre": [
+   "in2_gyrocompass"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Gyroscope spin axis maintains reference; precession from aircraft maneuvers indicated on dial",
+  "ph": 120,
+  "lab": {
+   "engineer": 400
+  },
+  "mat": {
+   "mat_cast_iron": 100,
+   "mat_copper": 20
+  },
+  "cap": 4000,
+  "up": 300,
+  "build_yrs": 2,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 1500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Gyroscopic inertia holds attitude; erection mechanism cancels slow drift. Precession rate ~ mass imbalance * gravity."
+ },
+ {
+  "id": "in2_radio_direction_finder",
+  "name": "Radio direction finder: loop antenna",
+  "tier": 3,
+  "cat": "surveying",
+  "pre": [
+   "radio",
+   "electromagnet"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "Loop antenna orientation for minimum signal indicates bearing to transmitter",
+  "ph": 110,
+  "lab": {
+   "electrician": 350
+  },
+  "mat": {
+   "mat_copper": 10,
+   "mat_wood": 20
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Dipole pattern of loop gives sharp null; bearing is direction of null. 180-degree ambiguity resolved by sense antenna or manual observation."
+ },
+ {
+  "id": "in2_aerial_camera_mount",
+  "name": "Aerial camera: gyro-stabilized mount",
+  "tier": 3,
+  "cat": "surveying",
+  "pre": [
+   "photography",
+   "in2_gyrocompass"
+  ],
+  "traits": [],
+  "kb": "Camera mounted on gyroscopic platform; vibration isolation allows sharp photos from aircraft",
+  "ph": 130,
+  "lab": {
+   "engineer": 420
+  },
+  "mat": {
+   "mat_cast_iron": 80,
+   "mat_copper": 25,
+   "mat_aluminum": 15
+  },
+  "cap": 5000,
+  "up": 350,
+  "build_yrs": 2.2,
+  "adopt_yrs": 0.3,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.17,
+  "rev": 1500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Focal length and shutter speed set by altitude and aircraft speed; sidelap and endlap of frames ensures stereoscopic overlap."
+ },
+ {
+  "id": "in2_photogrammetry_stereoscope",
+  "name": "Photogrammetry: stereoscope and comparator",
+  "tier": 2,
+  "cat": "surveying",
+  "pre": [
+   "in2_aerial_camera_mount"
+  ],
+  "traits": [],
+  "kb": "Pair of aerial photos viewed stereoscopically; parallax gives elevation; comparator measures precise positions",
+  "ph": 100,
+  "lab": {
+   "optician": 300
+  },
+  "mat": {
+   "mat_glass_soda": 4,
+   "mat_brass": 15
+  },
+  "cap": 3000,
+  "up": 200,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 900,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Optical axis separation and focal length known from calibration; parallax difference = height difference. Systematic errors from camera tilt must be corrected."
+ },
+ {
+  "id": "in2_photometer_visual_comparison",
+  "name": "Photometer: visual brightness comparison",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "in2_simple_lens"
+  ],
+  "traits": [],
+  "kb": "Light source compared to standard candle; intensity by distance inverse-square law",
+  "ph": 50,
+  "lab": {
+   "optician": 160
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_brass": 3
+  },
+  "cap": 600,
+  "up": 40,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Standard candle defined (1 candela); distance squared from unknown source matched to known distance from standard."
+ },
+ {
+  "id": "in2_bolometer_thermal_detector",
+  "name": "Bolometer: blackened platinum resistance",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "micrometer_gauges"
+  ],
+  "traits": [],
+  "kb": "Blackened metal foil heated by infrared; resistance change measured",
+  "ph": 80,
+  "lab": {
+   "electrician": 250
+  },
+  "mat": {
+   "mat_platinum": 0.2,
+   "mat_paper": 1
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 500,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Time constant must be < 0.1 second to follow modulated light; thermal mass vs sensitivity tradeoff."
+ },
+ {
+  "id": "in2_photocell_vacuum_photoelectric",
+  "name": "Photocell: vacuum photoelectric",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "discharge_xray"
+  ],
+  "traits": [],
+  "kb": "Photon ejects electron from cathode; current proportional to light intensity",
+  "ph": 90,
+  "lab": {
+   "electrician": 300
+  },
+  "mat": {
+   "vacuum_tube": 1,
+   "mat_cesium": 0.01
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Quantum efficiency 5-10 percent; spectral response depends on cathode material. Cathode sensitivity to residual gas vapor is problem."
+ },
+ {
+  "id": "in2_photomultiplier_cascade_amplifier",
+  "name": "Photomultiplier: secondary emission cascade",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "in2_photocell_vacuum_photoelectric"
+  ],
+  "traits": [],
+  "kb": "Initial photocurrent amplified by secondary emission from dynode chain",
+  "ph": 120,
+  "lab": {
+   "electrician": 400
+  },
+  "mat": {
+   "vacuum_tube": 1,
+   "mat_copper_beryllium": 0.1
+  },
+  "cap": 2500,
+  "up": 200,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.15,
+  "rev": 1000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Gain 10^6 typical; enables detection of single photons. Dark current (thermioni emission) limits low-light sensitivity; cooling essential."
+ },
+ {
+  "id": "in2_spectral_radiometer",
+  "name": "Spectral radiometer: grating and photocells",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "in2_spectrograph_grating",
+   "in2_photomultiplier_cascade_amplifier"
+  ],
+  "traits": [],
+  "kb": "Spectrum dispersed by grating; many photocells measure intensity at different wavelengths",
+  "ph": 130,
+  "lab": {
+   "electrician": 420
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "vacuum_tube": 10
+  },
+  "cap": 5000,
+  "up": 400,
+  "build_yrs": 2,
+  "adopt_yrs": 0.2,
+  "dev_years": 20,
+  "dev_people": 3,
+  "risk": 0.16,
+  "rev": 1500,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Array of detectors measures entire spectrum; much faster than scanning monochromator. Calibration against blackbody standard essential."
+ },
+ {
+  "id": "in2_electroscope_gold_leaf",
+  "name": "Electroscope: gold leaf detector",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "electrostatics"
+  ],
+  "traits": [],
+  "kb": "Gold leaf suspended from high-potential conductor; repulsion angle indicates charge",
+  "ph": 45,
+  "lab": {
+   "optician": 140
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_gold": 0.001
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.3,
+  "adopt_yrs": 0,
+  "dev_years": 5,
+  "dev_people": 1,
+  "risk": 0.06,
+  "rev": 120,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Leaf must be thin and light; damped oscillation with critical damping optimal. Used to detect radioactivity by ionisation of air."
+ },
+ {
+  "id": "in2_ionisation_chamber",
+  "name": "Ionisation chamber: gas filled detector",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "in2_electroscope_gold_leaf"
+  ],
+  "traits": [],
+  "kb": "Gas ionised by radiation; ions collected by electric field; current measured",
+  "ph": 85,
+  "lab": {
+   "electrician": 280
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_brass": 5
+  },
+  "cap": 1000,
+  "up": 80,
+  "build_yrs": 0.7,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.1,
+  "rev": 400,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Signal proportional to energy; used to measure radiation intensity. Electrode spacing and voltage fixed; gas filling critical."
+ },
+ {
+  "id": "in2_geiger_counter",
+  "name": "Geiger-M\u00fcller counter: proportional region",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "in2_ionisation_chamber"
+  ],
+  "traits": [],
+  "kb": "Gas avalanche multiplication in cylindrical electrode; each ion produces 10^6 electrons",
+  "ph": 110,
+  "lab": {
+   "electrician": 350
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_brass": 8
+  },
+  "cap": 1500,
+  "up": 120,
+  "build_yrs": 1,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Pulse output independent of input energy (above threshold); excellent counting efficiency. Dead time 100-300 microseconds limits count rate."
+ },
+ {
+  "id": "in2_scintillation_detector",
+  "name": "Scintillation detector: crystal and photomultiplier",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "in2_photomultiplier_cascade_amplifier"
+  ],
+  "traits": [],
+  "kb": "Radiation hits crystal; fluorescence photons counted by photomultiplier",
+  "ph": 120,
+  "lab": {
+   "electrician": 400
+  },
+  "mat": {
+   "zinc_sulfide": 5
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.2,
+  "dev_years": 18,
+  "dev_people": 3,
+  "risk": 0.14,
+  "rev": 1200,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Energy resolution better than Geiger counter; pulse height gives particle energy. Decay time of scintillation limits count rate (1000 cps typical)."
+ },
+ {
+  "id": "in2_travelling_microscope",
+  "name": "Travelling microscope for length measurement",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "microscope_compound",
+   "micrometer_gauges"
+  ],
+  "traits": [],
+  "kb": "Microscope mounted on precision screw; stage position read to 0.01 mm",
+  "ph": 80,
+  "lab": {
+   "optician": 280,
+   "master_screw": 40
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_wrought_iron": 20
+  },
+  "cap": 1800,
+  "up": 120,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Magnification gives visual precision on micrometer screw. Kernel is matching optical resolution to mechanical precision of the screw."
+ },
+ {
+  "id": "in2_optical_comparator",
+  "name": "Optical comparator: magnified shadow projection",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "simple_lens",
+   "cap_tol_10um"
+  ],
+  "traits": [],
+  "kb": "Light source projects magnified shadow of part onto screen with graticule",
+  "ph": 70,
+  "lab": {
+   "optician": 220
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_wrought_iron": 30
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 700,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Magnification 10x-100x; edge sharpness depends on light source coherence. Faster than microscope for many parts; no contact with surface."
+ },
+ {
+  "id": "in2_analytical_balance",
+  "name": "Analytical balance: equal arm",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "cap_measure_mass_mg"
+  ],
+  "traits": [],
+  "kb": "Knife-edge pivot; pans on either side; rider weight determines mass",
+  "ph": 50,
+  "lab": {
+   "mechanician": 160
+  },
+  "mat": {
+   "mat_wrought_iron": 10,
+   "mat_brass": 5
+  },
+  "cap": 600,
+  "up": 50,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.08,
+  "rev": 250,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Sensitivity depends on balance arm length and pivot sharpness. Rider on beam allows fractional weights."
+ },
+ {
+  "id": "in2_torsion_balance",
+  "name": "Torsion balance: vertical fiber suspension",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "analytical_balance"
+  ],
+  "traits": [],
+  "kb": "Mass suspended on quartz fiber; torsion angle measured by mirror deflection",
+  "ph": 85,
+  "lab": {
+   "optician": 280
+  },
+  "mat": {
+   "quartz_fiber": 0.001,
+   "mat_glass_soda": 2
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "No knife edge; fiber can twist billions of times. Used to measure gravitational constant and test inverseness of gravitational law."
+ },
+ {
+  "id": "in2_microbalance_quartz",
+  "name": "Microbalance: quartz oscillator frequency shift",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "quartz_resonator"
+  ],
+  "traits": [],
+  "kb": "Thin quartz disk vibrates at natural frequency; mass deposited on surface shifts frequency",
+  "ph": 100,
+  "lab": {
+   "electrician": 350
+  },
+  "mat": {
+   "quartz_crystal": 1
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Sensitivity nanogram range; frequency stable to 0.01 Hz. Used for film thickness measurement and chemical detection."
+ },
+ {
+  "id": "in2_thermocouple",
+  "name": "Thermocouple: junction EMF measurement",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "daniell_cell"
+  ],
+  "traits": [],
+  "kb": "Two dissimilar metals joined; temperature difference produces EMF proportional to delta-T",
+  "ph": 45,
+  "lab": {
+   "electrician": 140
+  },
+  "mat": {
+   "mat_wrought_iron": 1,
+   "mat_copper": 1,
+   "mat_constantan": 1
+  },
+  "cap": 400,
+  "up": 25,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 150,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Seebeck coefficient and reference junction temperature define sensitivity. High-temperature range extends to 1600 C with platinum-platinum/rhodium."
+ },
+ {
+  "id": "in2_resistance_thermometer_RTD",
+  "name": "Resistance thermometer: platinum RTD",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "copper_refining"
+  ],
+  "traits": [],
+  "kb": "Platinum wire resistance increases linearly with temperature; measured by bridge circuit",
+  "ph": 80,
+  "lab": {
+   "electrician": 260
+  },
+  "mat": {
+   "mat_platinum": 0.5
+  },
+  "cap": 1200,
+  "up": 80,
+  "build_yrs": 0.6,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 500,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Accuracy better than thermocouple; slow response. Industrial platinum RTDs have 0.1 C accuracy. Insulation resistance can limit precision."
+ },
+ {
+  "id": "in2_gas_thermometry_absolute",
+  "name": "Gas thermometry: absolute temperature scale",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "thermometer",
+   "cap_measure_len"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "Constant-volume or constant-pressure gas thermometer; defines absolute zero and Kelvin scale",
+  "ph": 140,
+  "lab": {
+   "experimentalist": 400
+  },
+  "mat": {
+   "mat_glass_soda": 5,
+   "mat_mercury": 2
+  },
+  "cap": 3000,
+  "up": 250,
+  "build_yrs": 1.5,
+  "adopt_yrs": 0.1,
+  "dev_years": 20,
+  "dev_people": 2,
+  "risk": 0.16,
+  "rev": 1000,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Kernel is that gas pressure or volume change is linear with absolute temperature. Primary standard used to calibrate mercury and resistance thermometers. Requires careful control of gas amount."
+ },
+ {
+  "id": "in2_mercury_barometer",
+  "name": "Mercury barometer: column height",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "thermometer"
+  ],
+  "traits": [],
+  "kb": "Mercury column in evacuated tube; height indicates atmospheric pressure",
+  "ph": 45,
+  "lab": {
+   "glassblower": 150
+  },
+  "mat": {
+   "mat_glass_soda": 2,
+   "mat_mercury": 5
+  },
+  "cap": 600,
+  "up": 40,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.08,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Standard atmosphere = 760 mm Hg at 0 C and 45 degrees latitude. Correction for latitude, temperature, and mercury density variation required for precision."
+ },
+ {
+  "id": "in2_aneroid_capsule",
+  "name": "Aneroid pressure gauge: evacuated bellows",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "cap_tol_100um"
+  ],
+  "traits": [],
+  "kb": "Evacuated metal capsule flexes with pressure; linkage amplifies motion to pointer",
+  "ph": 70,
+  "lab": {
+   "machinist": 240
+  },
+  "mat": {
+   "mat_brass": 10,
+   "mat_steel": 5
+  },
+  "cap": 1000,
+  "up": 70,
+  "build_yrs": 0.7,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.12,
+  "rev": 400,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "No liquid; portable and rugged. Accuracy 2-3 percent typical for barometers. Frequency response for recording dynamic pressure is much better than mercury column."
+ },
+ {
+  "id": "in2_bourdon_pressure_gauge",
+  "name": "Bourdon tube pressure gauge",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "cap_tol_100um"
+  ],
+  "traits": [],
+  "kb": "Flattened curved tube straightens under pressure; deflection indicates gauge pressure",
+  "ph": 75,
+  "lab": {
+   "machinist": 250
+  },
+  "mat": {
+   "mat_brass": 15,
+   "mat_steel": 8
+  },
+  "cap": 1200,
+  "up": 80,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.13,
+  "rev": 500,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Works up to 1000 bar with steel tubes. Nonlinearity and hysteresis are issues; C-tube, spiral, and helical forms trade span for linearity."
+ },
+ {
+  "id": "in2_mcleod_vacuum_gauge",
+  "name": "McLeod gauge: compression manometer",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "mercury_barometer"
+  ],
+  "traits": [],
+  "kb": "Gas trapped in graduated tube and compressed against mercury column; pressure from height drop",
+  "ph": 85,
+  "lab": {
+   "glassblower": 300
+  },
+  "mat": {
+   "mat_glass_soda": 3,
+   "mat_mercury": 2
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 1,
+  "adopt_yrs": 0.1,
+  "dev_years": 12,
+  "dev_people": 2,
+  "risk": 0.14,
+  "rev": 600,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Measures 1 to 1e-4 torr. Requires careful construction and leveling. Provides absolute calibration for other gauges."
+ },
+ {
+  "id": "in2_quartz_resonator_frequency",
+  "name": "Quartz resonator: piezoelectric oscillator",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   "fused_quartz"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "Quartz crystal cut and polished; piezoelectric effect creates oscillation at resonant frequency",
+  "ph": 110,
+  "lab": {
+   "optician": 350,
+   "electrician": 200
+  },
+  "mat": {
+   "quartz_crystal": 2
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0.2,
+  "dev_years": 15,
+  "dev_people": 2,
+  "risk": 0.15,
+  "rev": 800,
+  "sch": 0,
+  "art": 3,
+  "conf": "C",
+  "note": "Frequency stability better than 1 part per million per year. Replaced tuning forks for precise timekeeping. Frequency depends on crystal cut and temperature."
+ },
+ {
+  "id": "in2_orifice_flow_meter",
+  "name": "Orifice plate: differential pressure flow measurement",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "mercury_barometer"
+  ],
+  "traits": [],
+  "kb": "Restricted opening in pipe; pressure drop upstream and downstream is proportional to flow rate squared",
+  "ph": 50,
+  "lab": {
+   "mechanician": 160
+  },
+  "mat": {
+   "mat_brass": 5,
+   "mat_wrought_iron": 10
+  },
+  "cap": 800,
+  "up": 50,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 6,
+  "dev_people": 1,
+  "risk": 0.09,
+  "rev": 250,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Cheap and simple; but discharge coefficient depends on Reynolds number and geometry. Pressure recovery poor."
+ },
+ {
+  "id": "in2_venturi_flow_meter",
+  "name": "Venturi tube: smooth convergent-divergent flow",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "orifice_flow_meter"
+  ],
+  "traits": [],
+  "kb": "Smooth contraction and expansion; pressure drop in throat measures flow rate",
+  "ph": 70,
+  "lab": {
+   "machinist": 220
+  },
+  "mat": {
+   "mat_bronze": 20,
+   "mat_brass": 10
+  },
+  "cap": 1500,
+  "up": 100,
+  "build_yrs": 0.8,
+  "adopt_yrs": 0.1,
+  "dev_years": 10,
+  "dev_people": 2,
+  "risk": 0.11,
+  "rev": 500,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Better pressure recovery than orifice; more stable discharge coefficient. Smooth internal surface essential for accuracy."
+ },
+ {
+  "id": "in2_pitot_tube",
+  "name": "Pitot tube: total and static pressure difference",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "mercury_barometer"
+  ],
+  "traits": [],
+  "kb": "Stagnation pressure at nose minus static pressure gives dynamic pressure = 0.5 rho v^2",
+  "ph": 45,
+  "lab": {
+   "craftsman": 120
+  },
+  "mat": {
+   "mat_brass": 3
+  },
+  "cap": 400,
+  "up": 30,
+  "build_yrs": 0.2,
+  "adopt_yrs": 0,
+  "dev_years": 5,
+  "dev_people": 1,
+  "risk": 0.07,
+  "rev": 150,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "Yields velocity directly from pressure difference. Sensitive to flow angularity; probe design critical for accuracy in turbulent flow."
+ },
+ {
+  "id": "in2_balance_spring_watch",
+  "name": "Balance spring: spiral hairspring",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   "master_screw"
+  ],
+  "traits": [],
+  "kb": "Thin spiral steel spring driving balance wheel; frequency defines watch rate",
+  "ph": 100,
+  "lab": {
+   "machinist": 350,
+   "master_screw": 60
+  },
+  "mat": {
+   "mat_steel": 0.5
+  },
+  "cap": 2000,
+  "up": 150,
+  "build_yrs": 1.2,
+  "adopt_yrs": 0,
+  "dev_years": 15,
+  "dev_people": 3,
+  "risk": 0.14,
+  "rev": 900,
+  "sch": 0,
+  "art": 4,
+  "conf": "C",
+  "note": "Isochronism (period independent of amplitude) requires specific curve shape. Compensation for thermal expansion uses bimetallic rim. Precision chronometer rates to seconds per week."
+ },
+ {
+  "id": "in2_tuning_fork_oscillator",
+  "name": "Tuning fork: acoustic resonator",
+  "tier": 1,
+  "cat": "measurement",
+  "pre": [
+   "cap_heat_1100"
+  ],
+  "traits": [],
+  "kb": "Two prongs vibrate in opposition; frequency determined by mass and stiffness",
+  "ph": 60,
+  "lab": {
+   "smith": 200
+  },
+  "mat": {
+   "mat_steel": 0.5
+  },
+  "cap": 500,
+  "up": 40,
+  "build_yrs": 0.4,
+  "adopt_yrs": 0,
+  "dev_years": 8,
+  "dev_people": 1,
+  "risk": 0.09,
+  "rev": 200,
+  "sch": 0,
+  "art": 2,
+  "conf": "C",
+  "note": "Frequency stable to 0.1 percent; frequencies 100 Hz to 1000 Hz common. Used as timekeeping standard before quartz."
+ }
+]

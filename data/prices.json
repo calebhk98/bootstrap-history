@@ -1,0 +1,946 @@
+{
+ "meta": {
+  "base_year": 100,
+  "confidence_key": {
+   "A": "well attested",
+   "B": "probable, scholarly consensus, contested in detail",
+   "C": "author's estimate or inference"
+  },
+  "currency": "denarius",
+  "note": "1 aureus = 25 denarii = 100 sestertii (HS) = 400 asses. Denarius under Trajan is c. 3.4 g at c. 85-90% fine, so c. 3.0 g fine silver. Prices marked [C] are the author's derived estimates and are the weakest numbers in this project. Bulk metal prices are anchored to silver using ratios implied by the Edict of Diocletian (301 AD), used for RATIOS ONLY because the Edict's own unit is a collapsed currency 200 years later."
+ },
+ "purchase_prices_denarii": {
+  "_unit_note": "per kg unless stated",
+  "acetic_acid_kg": {
+   "conf": "C",
+   "p": 2.0
+  },
+  "acetylene_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "agar_kg": {
+   "conf": "C",
+   "p": 25.0
+  },
+  "agar_or_gelatin_kg": {
+   "conf": "C",
+   "note": "Solid culture medium. Gelatin melts at body temperature and is digested by many bacteria; agar, from seaweed, does neither, which is why it won.",
+   "p": 8.0
+  },
+  "agate_kg": {
+   "conf": "C",
+   "p": 30.0
+  },
+  "alum_kg": {
+   "conf": "C",
+   "p": 1.2
+  },
+  "aluminium_kg": {
+   "conf": "C",
+   "note": "Post-electrolysis price. BEFORE the electrical age aluminium is a precious metal worth roughly 2,000 den/kg, dearer than silver, and Napoleon III served guests on it. The price collapse when Hall-Heroult arrives is one of the largest in the history of materials.",
+   "p": 6.0
+  },
+  "aluminum_oxide_kg": {
+   "conf": "C",
+   "p": 2.0
+  },
+  "ammonia_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "ammonium_nitrate_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "aniline_kg": {
+   "conf": "C",
+   "p": 12.0
+  },
+  "antimony_kg": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "argon_or_h2_m3": {
+   "conf": "C",
+   "note": "argon is not separable for you; use purified hydrogen or nitrogen",
+   "p": 0.4
+  },
+  "asbestos_kg": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "barium_kg": {
+   "conf": "C",
+   "p": 60.0
+  },
+  "bauxite_kg": {
+   "conf": "C",
+   "note": "not a Roman commodity; you will identify and open the deposit yourself",
+   "p": 0.08
+  },
+  "beeswax_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "bismuth_kg": {
+   "conf": "C",
+   "p": 30.0
+  },
+  "bitumen_kg": {
+   "conf": "C",
+   "p": 0.3
+  },
+  "bleach_kg": {
+   "conf": "C",
+   "p": 1.0
+  },
+  "blue_vitriol_kg": {
+   "conf": "C",
+   "p": 0.9
+  },
+  "bone_ash_kg": {
+   "conf": "C",
+   "p": 0.4
+  },
+  "bone_kg": {
+   "conf": "C",
+   "p": 0.05
+  },
+  "boric_acid_kg": {
+   "conf": "C",
+   "note": "Larderello, speculative",
+   "p": 2.5
+  },
+  "brass_kg": {
+   "conf": "C",
+   "p": 5.0
+  },
+  "brick_1000": {
+   "conf": "C",
+   "p": 8.0
+  },
+  "bristles_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "bronze_kg": {
+   "conf": "C",
+   "p": 4.5
+  },
+  "caesium_g": {
+   "conf": "C",
+   "note": "Alkali metal for a photoemissive surface. Not isolable until you have electrolysis and spectroscopy.",
+   "p": 120.0
+  },
+  "calamine_kg": {
+   "conf": "C",
+   "note": "ore at the mine, not contained metal; previously overpriced at 0.50",
+   "p": 0.15
+  },
+  "calcite_kg": {
+   "conf": "C",
+   "note": "Iceland spar, optically clear calcite. The Nicol prism needs a large clear rhomb and there is no glass substitute: the whole point is calcite's birefringence.",
+   "p": 8.0
+  },
+  "calcium_carbide_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "canvas_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "carbon_kg": {
+   "conf": "C",
+   "p": 0.1
+  },
+  "cast_iron_kg": {
+   "conf": "C",
+   "note": "Cheaper per kilogramme than wrought bar because it comes straight from the furnace without the finery. Brittle: useless in tension.",
+   "p": 0.45
+  },
+  "celluloid_kg": {
+   "conf": "C",
+   "p": 20.0
+  },
+  "ceramic_kg": {
+   "conf": "C",
+   "p": 0.3
+  },
+  "chalk_kg": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "charcoal_kg": {
+   "conf": "C",
+   "p": 0.03
+  },
+  "chrome_salts_kg": {
+   "conf": "C",
+   "p": 45.0
+  },
+  "chromium_kg": {
+   "conf": "C",
+   "p": 60.0
+  },
+  "cinnabar_kg": {
+   "conf": "B",
+   "note": "Pliny NH 33.118: minium price-fixed at 70 HS per Roman pound.",
+   "p": 54.0
+  },
+  "clay_kg": {
+   "conf": "C",
+   "p": 0.004
+  },
+  "cloth_bag_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "cloth_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "coal_kg": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "coal_tar_kg": {
+   "conf": "C",
+   "p": 0.15
+  },
+  "concrete_reinforced_kg": {
+   "conf": "C",
+   "p": 0.15
+  },
+  "copper_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "copper_ore_kg": {
+   "conf": "C",
+   "note": "ore at the mine at c. 3-8% Cu",
+   "p": 0.15
+  },
+  "copper_wire_kg": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "cordage_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "cork_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "cotton_fabric_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "cotton_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "cryolite_kg": {
+   "conf": "C",
+   "note": "Greenland is unreachable; assume a synthetic fluoride bath from your own HF",
+   "p": 25.0
+  },
+  "diamond_g": {
+   "conf": "C",
+   "p": 40.0
+  },
+  "dolomite_kg": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "dye_kg": {
+   "conf": "C",
+   "p": 25.0
+  },
+  "emery_kg": {
+   "conf": "C",
+   "p": 1.0
+  },
+  "essential_oil_kg": {
+   "conf": "C",
+   "note": "Blended average. Attar of roses is worth many times this and is one of the highest-margin products available to you in year two.",
+   "p": 120.0
+  },
+  "ethanol_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "fabric_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "fat_kg": {
+   "conf": "C",
+   "p": 0.25
+  },
+  "felt_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "firewood_kg": {
+   "conf": "C",
+   "p": 0.008
+  },
+  "flue_dust_kg": {
+   "conf": "C",
+   "note": "a waste stream from your own zinc smelter; cost is handling only",
+   "p": 0.01
+  },
+  "fluorspar_kg": {
+   "conf": "C",
+   "note": "not a traded commodity; you will have to source it yourself",
+   "p": 0.6
+  },
+  "flux_kg": {
+   "conf": "C",
+   "p": 0.5
+  },
+  "formaldehyde_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "galena_kg": {
+   "conf": "C",
+   "p": 0.25
+  },
+  "gelatin_kg": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "germanium_g": {
+   "conf": "C",
+   "note": "INTERNAL TRANSFER PRICE ONLY, to keep downstream nodes from looking free. The real cost of germanium is the extraction and purification plant, which is already costed in germanium_extraction, gecl4_purification and ge_reduction. Do not add these together and call it the cost of germanium.",
+   "p": 40.0
+  },
+  "glass_raw_kg": {
+   "conf": "C",
+   "p": 2.0
+  },
+  "glue_kg": {
+   "conf": "C",
+   "p": 2.0
+  },
+  "gold_g": {
+   "conf": "A",
+   "p": 3.44
+  },
+  "gold_kg": {
+   "conf": "A",
+   "note": "From the aureus at c. 7.27 g = 25 den. Implied gold:silver c. 11:1.",
+   "p": 3440.0
+  },
+  "graphite_kg": {
+   "conf": "C",
+   "note": "high purity; you will make it, not buy it",
+   "p": 8.0
+  },
+  "gravel_kg": {
+   "conf": "C",
+   "p": 0.004
+  },
+  "green_vitriol_kg": {
+   "conf": "C",
+   "p": 0.4
+  },
+  "hemp_fiber_kg": {
+   "conf": "C",
+   "p": 1.2
+  },
+  "horsehair_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "hydrochloric_acid_kg": {
+   "conf": "C",
+   "note": "internal transfer price",
+   "p": 1.0
+  },
+  "hydrogen_m3": {
+   "conf": "C",
+   "p": 0.35
+  },
+  "indium_g": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "ink_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "iron_bar_kg": {
+   "conf": "C",
+   "p": 1.0
+  },
+  "iron_bloom_kg": {
+   "conf": "C",
+   "p": 0.45
+  },
+  "iron_ore_kg": {
+   "conf": "C",
+   "p": 0.05
+  },
+  "iron_sheet_kg": {
+   "conf": "C",
+   "p": 1.6
+  },
+  "iugerum_land": {
+   "conf": "B",
+   "note": "0.25 hectare",
+   "p": 250.0
+  },
+  "kieselguhr_kg": {
+   "conf": "C",
+   "p": 0.6
+  },
+  "lead_kg": {
+   "conf": "C",
+   "p": 0.6
+  },
+  "leather_kg": {
+   "conf": "C",
+   "p": 2.2
+  },
+  "lime_kg": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "limestone_kg": {
+   "conf": "C",
+   "p": 0.01
+  },
+  "linen_kg": {
+   "conf": "C",
+   "p": 1.8
+  },
+  "linen_rag_kg": {
+   "conf": "C",
+   "p": 0.4
+  },
+  "lodestone_kg": {
+   "conf": "C",
+   "p": 5.0
+  },
+  "manganese_kg": {
+   "conf": "C",
+   "p": 1.2
+  },
+  "manure_kg": {
+   "conf": "C",
+   "note": "effectively free, but cartage is not",
+   "p": 0.002
+  },
+  "mercury_kg": {
+   "conf": "B",
+   "note": "Anchored to Pliny NH 33.118, which reports the price of minium (cinnabar pigment) fixed by law at 70 sesterces per Roman pound of 324 g, i.e. c. 54 den/kg. Metallic mercury should be comparable or dearer. Almaden is an imperial monopoly, so access is a political problem before it is a price problem.",
+   "p": 60.0
+  },
+  "milk_kg": {
+   "conf": "C",
+   "p": 0.08
+  },
+  "mineral_pigment_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "molybdenum_kg": {
+   "conf": "C",
+   "p": 150.0
+  },
+  "monochromatic_light_kg": {
+   "conf": "C",
+   "note": "Not a material. A sodium flame costs nothing; priced at zero so recipes can name it honestly.",
+   "p": 0.0
+  },
+  "mortar_kg": {
+   "conf": "C",
+   "p": 0.03
+  },
+  "mule": {
+   "conf": "C",
+   "p": 190.0
+  },
+  "natron_kg": {
+   "conf": "C",
+   "p": 0.35
+  },
+  "nickel_kg": {
+   "conf": "C",
+   "note": "not isolated in antiquity; a late-programme item",
+   "p": 40.0
+  },
+  "nitre_kg": {
+   "conf": "C",
+   "note": "your own nitre beds; there is no market for this in Rome",
+   "p": 2.2
+  },
+  "nitric_acid_kg": {
+   "conf": "C",
+   "note": "internal transfer price",
+   "p": 3.5
+  },
+  "nitrocellulose_kg": {
+   "conf": "C",
+   "p": 8.0
+  },
+  "nitroglycerin_kg": {
+   "conf": "C",
+   "p": 15.0
+  },
+  "oak_bark_kg": {
+   "conf": "C",
+   "p": 0.06
+  },
+  "oil_mineral_kg": {
+   "conf": "C",
+   "p": 1.2
+  },
+  "olive_oil_kg": {
+   "conf": "C",
+   "p": 0.3
+  },
+  "ox": {
+   "conf": "B",
+   "p": 350.0
+  },
+  "oxygen_m3": {
+   "conf": "C",
+   "p": 0.5
+  },
+  "paint_kg": {
+   "conf": "C",
+   "p": 2.0
+  },
+  "paper_kg": {
+   "conf": "C",
+   "note": "Your own production cost once the mill runs. Compare papyrus at roughly 10x per unit area and parchment at far more.",
+   "p": 1.2
+  },
+  "papyrus_sheet": {
+   "conf": "C",
+   "p": 0.1
+  },
+  "parchment_sheet": {
+   "conf": "C",
+   "p": 0.6
+  },
+  "peat_kg": {
+   "conf": "C",
+   "note": "ESTIMATED: dug fuel, cheaper per kg than firewood and much lower energy density. Not a Mediterranean fuel; relevant for northern civilizations.",
+   "p": 0.006
+  },
+  "petroleum_refined_kg": {
+   "conf": "C",
+   "p": 1.0
+  },
+  "phosphor_bronze_g": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "phosphorus_red_kg": {
+   "conf": "C",
+   "note": "Red allotrope. The white form is what caused phosphorus necrosis of the jaw in match workers, a genuine industrial atrocity you know how to avoid.",
+   "p": 50.0
+  },
+  "pine_oil_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "plaster_kg": {
+   "conf": "C",
+   "p": 0.05
+  },
+  "platinum_g": {
+   "conf": "C",
+   "note": "South American platinum is unreachable; Ural and alluvial sources only, effectively unobtainable in quantity",
+   "p": 2.5
+  },
+  "porcelain_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "potassium_iodide_kg": {
+   "conf": "C",
+   "p": 40.0
+  },
+  "pyrolusite_kg": {
+   "conf": "C",
+   "p": 0.8
+  },
+  "quartz_tube_kg": {
+   "conf": "C",
+   "note": "self-produced, see fused_quartz",
+   "p": 45.0
+  },
+  "rose_petals_kg": {
+   "conf": "C",
+   "note": "About 3,000 kg of petals yields roughly 1 kg of attar, which is why attar is worth more than silver by weight and is one of the best products you can make in year two.",
+   "p": 0.6
+  },
+  "rosin_kg": {
+   "conf": "C",
+   "p": 1.2
+  },
+  "rubber_kg": {
+   "conf": "C",
+   "p": 120.0,
+   "note": "Landolphia and Funtumia vine latex, tapped in west and central Africa and carried up the coast: real, and reachable behind exp_coastal_africa, but with no established trade to buy into, which is what the 95% failure risk on mat_natural_rubber is for. Priced between shellac (40, an existing Indian Ocean trade) and silk (300). It used to sit at 99,999 as a sentinel for the abolished 'unobtainable' tier - a play tester worked out that one kilo was four hundred artisan-years and that a breadcrumb eraser cost 5 denarii against three million for a rubber one. Nothing is unobtainable; it is only elsewhere. This price is not a market price: nobody sells you rubber_kg. It is what tapping and coagulating a kilogram of it yourself costs once you have mat_rubber_coagulated (and, for anything that must not melt in summer or crack in winter - a tyre, a belt, a sole - tl_vulcanized_rubber as well). [AUDIT: see JOB 2 rubber audit, rome/data/tech_tree.json.]"
+  },
+  "rubber_tubing_kg": {
+   "conf": "C",
+   "p": 180.0,
+   "note": "Rubber, plus the making of it into tube. See rubber_kg."
+  },
+  "sailcloth_kg": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "salicylic_acid_kg": {
+   "conf": "C",
+   "p": 18.0
+  },
+  "salt_kg": {
+   "conf": "B",
+   "note": "cheap and taxed; Ostia salt pans",
+   "p": 0.05
+  },
+  "sand_kg": {
+   "conf": "C",
+   "p": 0.005
+  },
+  "sand_quartz_kg": {
+   "conf": "C",
+   "p": 0.005
+  },
+  "selenium_kg": {
+   "conf": "C",
+   "p": 90.0
+  },
+  "shellac_kg": {
+   "conf": "C",
+   "note": "Indian Ocean trade via Berenice-Muziris; 1-3 year lead time",
+   "p": 40.0
+  },
+  "silk_kg": {
+   "conf": "C",
+   "note": "Silk Road; Pliny complains of the bullion drain east",
+   "p": 300.0
+  },
+  "silver_kg": {
+   "conf": "A",
+   "note": "Definitional: 1 den = c. 3.15 g fine silver at 100 AD.",
+   "p": 317.0
+  },
+  "slave_skilled": {
+   "conf": "B",
+   "p": 1000.0
+  },
+  "slave_unskilled": {
+   "conf": "B",
+   "p": 300.0
+  },
+  "soap_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "sodium_citrate_kg": {
+   "conf": "C",
+   "p": 10.0
+  },
+  "steam_kg": {
+   "conf": "C",
+   "p": 0.002
+  },
+  "steel_noric_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "steel_plate_kg": {
+   "conf": "C",
+   "p": 3.2
+  },
+  "stone_blocks": {
+   "conf": "C",
+   "p": 5.0
+  },
+  "stone_broken_tons": {
+   "conf": "C",
+   "p": 8.0
+  },
+  "stone_kg": {
+   "conf": "C",
+   "p": 0.008
+  },
+  "stone_tons": {
+   "conf": "C",
+   "p": 8.0
+  },
+  "sulfur_kg": {
+   "conf": "C",
+   "p": 0.5
+  },
+  "sulfuric_acid_kg": {
+   "conf": "C",
+   "note": "internal transfer price; retort route is ~5x this, chamber route ~0.4x",
+   "p": 1.2
+  },
+  "tallow_kg": {
+   "conf": "C",
+   "p": 0.2
+  },
+  "thread_kg": {
+   "conf": "C",
+   "p": 3.0
+  },
+  "timber_m3": {
+   "conf": "C",
+   "p": 2.5
+  },
+  "tin_kg": {
+   "conf": "C",
+   "p": 10.0
+  },
+  "tool_steel_kg": {
+   "conf": "C",
+   "p": 12.0
+  },
+  "tungsten_kg": {
+   "conf": "C",
+   "note": "needs the arc furnace; do not plan around it early",
+   "p": 120.0
+  },
+  "twine_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "varnish_kg": {
+   "conf": "C",
+   "p": 4.0
+  },
+  "vellum_kg": {
+   "conf": "C",
+   "p": 8.0
+  },
+  "water_kg": {
+   "conf": "C",
+   "note": "Free at the aqueduct, which is a genuine Roman advantage. Priced at zero so that recipes can state their water honestly without distorting cost.",
+   "p": 0.0
+  },
+  "wax_kg": {
+   "conf": "C",
+   "p": 1.5
+  },
+  "wheat_kg": {
+   "conf": "B",
+   "p": 0.13
+  },
+  "wick_cotton_m": {
+   "conf": "C",
+   "p": 0.02
+  },
+  "wine_common_kg": {
+   "conf": "C",
+   "p": 0.15
+  },
+  "wire_drawn_kg": {
+   "conf": "C",
+   "p": 6.0
+  },
+  "wood_ash_kg": {
+   "conf": "C",
+   "p": 0.006
+  },
+  "wood_kg": {
+   "conf": "C",
+   "p": 0.008
+  },
+  "wood_pulp_kg": {
+   "conf": "C",
+   "p": 0.35
+  },
+  "wool_kg": {
+   "conf": "C",
+   "note": "Greasy fleece to scoured. Rome's largest textile input by far.",
+   "p": 2.0
+  },
+  "zinc_kg": {
+   "conf": "C",
+   "note": "does not exist until you make it; price is your own cost",
+   "p": 9.0
+  }
+ },
+ "starting_kit_options": {
+  "_note": "What you carry back. Chosen to be sellable without being visibly anachronistic. Value in denarii at 100 AD prices.",
+  "merchant_rich": {
+   "conf": "C",
+   "gold_bullion_kg": 12.0,
+   "note": "Enough to buy an estate and a workshop immediately, but a stranger arriving with an equestrian fortune in unminted gold attracts the fiscus. Higher start, higher suspicion.",
+   "value_denarii": 41280
+  },
+  "scholar_modest": {
+   "conf": "C",
+   "gold_bullion_kg": 3.0,
+   "items": [
+    "unmarked gold in rough ingot and dust form",
+    "a bound codex of notes in Greek (this guide)",
+    "a small steel knife and files (explain as Noric or Indian work)",
+    "a hand lens",
+    "a compass needle and lodestone",
+    "seeds: none from the Americas; do not attempt",
+    "a small quantity of high-purity chemical reagents as 'Egyptian samples'"
+   ],
+   "value_denarii": 10320
+  }
+ },
+ "status_thresholds_denarii": {
+  "decurion": 25000,
+  "equestrian": 100000,
+  "senator": 250000
+ },
+ "transport_multipliers": {
+  "_note": "Multiply delivered cost. The single most important economic fact in the Empire: put every facility on navigable water.",
+  "river_per_1000km": {
+   "conf": "C",
+   "m": 1.15
+  },
+  "road_per_100km": {
+   "conf": "B",
+   "m": 1.2,
+   "note": "grain roughly doubles in price over c. 500 km of road haulage"
+  },
+  "sea_per_1000km": {
+   "conf": "B",
+   "m": 1.02
+  }
+ },
+ "wage_rates_denarii_per_hour": {
+  "_note": "Assumes a 10-hour working day and c. 250 working days per year, so 2500 worker-hours per person-year. Roman festival days are numerous; 250 is already generous.",
+  "artisan": {
+   "conf": "B",
+   "day_hs": 4.0,
+   "rate": 0.15
+  },
+  "carpenter": {
+   "conf": "B",
+   "day_hs": 4.0,
+   "rate": 0.16
+  },
+  "chemist": {
+   "conf": "C",
+   "day_hs": 10.0,
+   "note": "does not exist yet; you must create this trade",
+   "rate": 0.4
+  },
+  "electrician": {
+   "conf": "C",
+   "day_hs": 10.0,
+   "note": "DOES NOT EXIST. Cannot exist until Module 50 does.",
+   "rate": 0.4
+  },
+  "engineer": {
+   "conf": "C",
+   "day_hs": 12.5,
+   "note": "DOES NOT EXIST as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention.",
+   "rate": 0.5
+  },
+  "engraver": {
+   "conf": "C",
+   "day_hs": 7.5,
+   "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters.",
+   "rate": 0.3
+  },
+  "furnaceman": {
+   "conf": "C",
+   "day_hs": 3.0,
+   "rate": 0.12
+  },
+  "glassblower": {
+   "conf": "C",
+   "day_hs": 8.0,
+   "rate": 0.32
+  },
+  "labourer": {
+   "conf": "B",
+   "day_hs": 2.0,
+   "rate": 0.075
+  },
+  "machinist": {
+   "conf": "C",
+   "day_hs": 11.0,
+   "note": "does not exist yet; you must create this trade",
+   "rate": 0.45
+  },
+  "mason": {
+   "conf": "C",
+   "day_hs": 4.0,
+   "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood.",
+   "rate": 0.16
+  },
+  "master": {
+   "conf": "B",
+   "day_hs": 8.0,
+   "rate": 0.32
+  },
+  "merchant": {
+   "conf": "C",
+   "day_hs": 6.3,
+   "note": "Agent and factor, paid on commission in practice.",
+   "rate": 0.25
+  },
+  "millwright": {
+   "conf": "C",
+   "day_hs": 6.3,
+   "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire.",
+   "rate": 0.25
+  },
+  "miner": {
+   "conf": "C",
+   "day_hs": 2.3,
+   "rate": 0.09
+  },
+  "optician": {
+   "conf": "C",
+   "day_hs": 8.8,
+   "note": "DOES NOT EXIST YET. You must create this trade from glassworkers.",
+   "rate": 0.35
+  },
+  "plumber": {
+   "conf": "C",
+   "day_hs": 4.5,
+   "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere.",
+   "rate": 0.18
+  },
+  "potter": {
+   "conf": "C",
+   "day_hs": 3.5,
+   "rate": 0.14
+  },
+  "sailor": {
+   "conf": "C",
+   "day_hs": 2.5,
+   "note": "Cheap and abundant.",
+   "rate": 0.1
+  },
+  "scholar": {
+   "conf": "C",
+   "day_hs": 10.0,
+   "rate": 0.4
+  },
+  "scribe": {
+   "conf": "C",
+   "day_hs": 5.0,
+   "rate": 0.2
+  },
+  "smith": {
+   "conf": "C",
+   "day_hs": 4.5,
+   "rate": 0.18
+  }
+ }
+}

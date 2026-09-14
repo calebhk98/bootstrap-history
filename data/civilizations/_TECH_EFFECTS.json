@@ -1,0 +1,181 @@
+{
+ "_doc": "Technologies change the society that builds them. Until this file existed a civilization was a fixed set of numbers: you could print a million books in a society whose literacy stayed exactly where it started, and whose elite went on despising manual work no matter how rich the machines made them. That is backwards. The causation runs both ways, and the whole argument for printing, schooling and cheap paper is that they change what people are like.\n\nEach entry names a technology and what holding it does to the civilization, applied once, when the node completes. Values are ADDED to the civ's field, then clamped to a sane range by the simulator. Keep them small: a single technology nudges a society, it does not replace it.",
+ "_fields": {
+  "literacy_general": "fraction of the whole population that can read",
+  "literacy_elite": "fraction of the propertied class that can read",
+  "state_capacity": "how much the state can actually organise and compel",
+  "w_labour_saving": "how a labour-saving device is received. Negative means resented.",
+  "w_magic_fear": "how readily the inexplicable is read as sorcery",
+  "w_novelty": "appetite for the new",
+  "w_information": "how a society reacts to information moving freely",
+  "adaptation_rate": "how fast people habituate to a marvel",
+  "bribability": "how far money moves a verdict",
+  "population": "eventual fraction of this civilization's baseline population added by this technology, as a one-off total rather than an annual rate. NOT applied the year the node completes: apply_tech_effects (society.py) queues it and _demographic_recovery (core.py) spreads it over POP_TECH_RAMP_YEARS (40) years, because a lower death rate shows up in the headcount a generation later. Keep these flat and small (0.01-0.02) and resist the temptation to rank them by true historical magnitude - New World crops probably did more for Old World population than any single sanitation node, but scoring it that way turns one node into this file's best investment and the rest into noise."
+ },
+ "rag_paper": {
+  "literacy_general": 0.02,
+  "literacy_elite": 0.05,
+  "_why": "Papyrus is the binding constraint on how much gets written down, and it only grows in Egypt. Paper can be made anywhere from rags, which is why it, and not the press, is the first move."
+ },
+ "printing_press": {
+  "literacy_general": 0.1,
+  "literacy_elite": 0.2,
+  "w_information": 0.15,
+  "w_novelty": 0.1,
+  "_why": "The largest single change any technology in this tree makes to a society. It is also the one most likely to get you killed, because a scribal elite correctly understands what it does to them."
+ },
+ "if_movable_type": {
+  "literacy_general": 0.05,
+  "literacy_elite": 0.1,
+  "w_information": 0.08
+ },
+ "school_founded": {
+  "literacy_elite": 0.06,
+  "w_novelty": 0.06,
+  "adaptation_rate": 0.01,
+  "_why": "A school does not only produce trained people, it produces a constituency that expects new things to be explicable."
+ },
+ "academy_network": {
+  "literacy_elite": 0.08,
+  "literacy_general": 0.02,
+  "w_novelty": 0.08,
+  "state_capacity": 0.03,
+  "adaptation_rate": 0.015
+ },
+ "scientific_method": {
+  "w_magic_fear": -0.1,
+  "w_novelty": 0.08,
+  "_why": "The direct antidote to being tried for sorcery is a culture that expects a mechanism. This is why the method is worth teaching before it is worth using."
+ },
+ "corpus_written": {
+  "literacy_elite": 0.04,
+  "w_magic_fear": -0.03
+ },
+ "fin_lending_library": {
+  "literacy_general": 0.03,
+  "literacy_elite": 0.04
+ },
+ "fin_newspaper_business": {
+  "literacy_general": 0.06,
+  "w_information": 0.1,
+  "w_novelty": 0.05
+ },
+ "semaphore_telegraph": {
+  "state_capacity": 0.05,
+  "_why": "An empire that can hear from its frontier in days rather than weeks is a materially more capable state, which is exactly the argument that buys imperial patronage."
+ },
+ "telegraph_electric": {
+  "state_capacity": 0.06,
+  "w_information": 0.06
+ },
+ "railway": {
+  "state_capacity": 0.07,
+  "w_labour_saving": 0.05,
+  "_why": "Moving grain and soldiers cheaply is state capacity in the most literal sense."
+ },
+ "power_grid": {
+  "state_capacity": 0.05,
+  "w_labour_saving": 0.08,
+  "adaptation_rate": 0.02
+ },
+ "interchangeable_parts": {
+  "w_labour_saving": 0.06,
+  "_why": "Once a society has seen identical parts it stops experiencing machine production as a threat to craft and starts experiencing it as normal."
+ },
+ "steam_watt": {
+  "w_labour_saving": 0.05,
+  "w_novelty": 0.04
+ },
+ "germ_theory": {
+  "w_magic_fear": -0.08,
+  "population": 0.01,
+  "_why": "Disease explained is the single largest withdrawal from the account that magical thinking draws on. It is also, on its own, only an idea - it raises the population less than any of the PRACTICES below it in the tree, which is why this entry is half their size."
+ },
+ "sanitation_antisepsis": {
+  "w_magic_fear": -0.04,
+  "state_capacity": 0.03,
+  "population": 0.02,
+  "_why": "Boiled water and handwashing cut exactly the childhood diarrhoeal and puerperal mortality that kept pre-modern populations flat for centuries."
+ },
+ "med_aqueducts_latrines": {
+  "population": 0.02,
+  "_why": "Clean water in and sewage out is the oldest public-health intervention in the tree, and the one Rome already had: the Roman water supply is the textbook case of infrastructure holding down urban mortality, which was otherwise always higher than the rural rate it depended on for replacement."
+ },
+ "med_quarantine_sanitation": {
+  "population": 0.02,
+  "_why": "Separating the sick kept outbreaks from becoming famines-of-labour as well as famines-of-food; this is the same mechanism _shocks' staff_loss hedges reward, seen from the demographic side instead of the plague side."
+ },
+ "med_vector_control": {
+  "population": 0.02,
+  "_why": "Draining the standing water a mosquito breeds in is the pre-germ-theory answer to malaria, which was endemic across most of the warm Old World and a steady drag on population wherever it was."
+ },
+ "med_obstetric_antisepsis": {
+  "population": 0.02,
+  "_why": "Semmelweis's handwashing rule cut Viennese maternity-ward mortality by most of an order of magnitude within the year he imposed it. Childbirth killed a meaningful share of adult women in every pre-modern society; this is the node that stops it."
+ },
+ "med_asepsis_antisepsis": {
+  "population": 0.02,
+  "_why": "Lister's carbolic spray turned a compound fracture or an abdominal operation from a likely death sentence into a survivable event, at exactly the historical moment surgery was starting to attempt more of both."
+ },
+ "med_vaccination_progression": {
+  "population": 0.02,
+  "_why": "Variolation and then vaccination are the textbook case of a single technology visibly changing a population curve: smallpox alone is estimated to have killed 10% or more of every generation that had not had it."
+ },
+ "crop_rotation": {
+  "population": 0.02,
+  "_why": "Marling, the heavy plough and selective breeding are the package historians call the medieval agricultural revolution, and it is credited with the population growth that filled Europe's villages before the Black Death emptied them again."
+ },
+ "fud_three_field_rotation": {
+  "population": 0.02,
+  "_why": "Letting only a third of the land lie fallow each year instead of half is a flat one-sixth more land in production every year, for the same soil, forever - this is the single most-cited driver of the High Medieval population rise."
+ },
+ "fud_seed_drill": {
+  "population": 0.015,
+  "_why": "Jethro Tull's drill sows in rows at a measured depth instead of scattering by hand, and the yield gain it and the tools that followed it made possible is one of the standard explanations for Britain feeding a population that tripled across the 18th and 19th centuries without a matching rise in farmed acreage."
+ },
+ "mat_newworld_crops": {
+  "population": 0.02,
+  "_why": "The potato and maize are the most-studied case of a crop transfer raising a whole continent's population; Nunn and Qian (2011) attribute a substantial share of Old World population growth after 1700 to the potato alone. Scored no higher than the others here on purpose - see the _fields note on this column - because this file is not trying to be a faithful demographic model, only a modest and bounded one."
+ },
+ "ag2_canning": {
+  "population": 0.015,
+  "_why": "Preserving a harvest past the season it grew in turns a local crop failure into a supply problem instead of a famine, which is exactly the kind of shock that used to show up as a population collapse in the hazard file above."
+ },
+ "arithmetic_positional": {
+  "literacy_elite": 0.03,
+  "state_capacity": 0.02,
+  "_why": "You cannot administer at scale with numerals you cannot calculate in."
+ },
+ "fin_central_bank": {
+  "state_capacity": 0.05
+ },
+ "citizenship": {},
+ "exp_import_draught_animals": {
+  "w_labour_saving": 0.05,
+  "_why": "A society that has always carried loads on human backs and now has oxen revalues muscle-saving overnight."
+ },
+ "fin_double_entry": {
+  "state_capacity": 0.03,
+  "bribability": -0.05,
+  "_why": "Books that must balance make theft visible. This is the one technology in the file that makes a society LESS corruptible, and it does it by accounting rather than by virtue."
+ },
+ "md2_vaccine_cholera": {
+  "w_magic_fear": -0.06,
+  "w_novelty": 0.05
+ },
+ "mil_general_staff": {
+  "state_capacity": 0.03,
+  "_why": "A standing body that plans war as a profession rather than an amateur's occasional business is exactly the kind of organisational capacity railway (0.07) and semaphore_telegraph (0.05) are already scored for, at a smaller weight because a staff without the railway or the wire to move on is still mostly paperwork."
+ },
+ "mil_conscription_reserve": {
+  "state_capacity": 0.04,
+  "_why": "Registering, calling up and accounting for a fraction of the whole adult population, on a schedule, is a bureaucratic reach no earlier institution in this tree needed - the same reach a census or a land survey needs, applied to people instead of fields."
+ },
+ "mil_logistics_discipline": {
+  "state_capacity": 0.02
+ },
+ "mil_arsenal_manufacturing": {
+  "state_capacity": 0.02,
+  "_why": "A state that manufactures its own arms to a standard, rather than buying them piecemeal from smiths, is administering an industry - the same category of capacity fin_double_entry and arithmetic_positional are scored for, applied to gunmaking instead of the treasury."
+ }
+}

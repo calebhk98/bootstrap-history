@@ -1,0 +1,2675 @@
+[
+  {
+    "id": "sc2_notation_positional",
+    "name": "Positional notation and place value",
+    "tier": 0,
+    "cat": "notation",
+    "pre": [],
+    "traits": [
+      "information"
+    ],
+    "kb": "Digits hold different values by position; ten is one and zero",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "build_yrs": 0,
+    "adopt_yrs": 0,
+    "dev_years": 500,
+    "dev_people": 0,
+    "note": "Babylonians and Indians used this. Rome has it for decimals and whole numbers already. Not universal yet in all trades."
+  },
+  {
+    "id": "sc2_notation_zero",
+    "name": "Zero as a number",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "arithmetic_positional"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Zero is a digit, not absence",
+    "ph": 40,
+    "lab": {
+      "scribe": 80
+    },
+    "mat": {},
+    "build_yrs": 0.05,
+    "adopt_yrs": 5,
+    "dev_years": 3,
+    "dev_people": 1,
+    "note": "The Hindus and Arabs have this. Europe thinks zero is dangerous or meaningless. Teaching means replacing 'no tens' with 'zero tens': algebra becomes possible. Adoption slow because it threatens calculators' livelihoods."
+  },
+  {
+    "id": "sc2_notation_negative",
+    "name": "Negative numbers",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "arithmetic_positional"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Numbers less than zero; rules for addition and multiplication",
+    "ph": 50,
+    "lab": {
+      "scribe": 100
+    },
+    "mat": {},
+    "build_yrs": 0.05,
+    "adopt_yrs": 8,
+    "dev_years": 4,
+    "dev_people": 1,
+    "note": "Chinese and Hindu texts have them. Europe resists: 'I cannot have negative sheep.' Teaching requires understanding debt as negative property, temperature below a reference point, or mathematical convenience. Adoption requires replacing intuition with rule-following."
+  },
+  {
+    "id": "sc2_notation_decimal_fraction",
+    "name": "Decimal fractions",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "arithmetic_positional"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Tenths, hundredths, thousandths as a continuation of positional notation past zero",
+    "ph": 45,
+    "lab": {
+      "scribe": 90
+    },
+    "mat": {},
+    "build_yrs": 0.05,
+    "adopt_yrs": 6,
+    "dev_years": 3,
+    "dev_people": 1,
+    "note": "Al-Kashi described this in the 15th century; Simon Stevin formalized it. The point or comma is merely convention. Teaching: counting by tens extends below unity. Adoption slow because it competes with fractions."
+  },
+  {
+    "id": "sc2_notation_decimal_point",
+    "name": "The decimal point convention",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "decimal_fraction"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Standardizing a marker between whole and fractional parts",
+    "ph": 20,
+    "lab": {
+      "scribe": 40
+    },
+    "mat": {},
+    "build_yrs": 0.01,
+    "adopt_yrs": 2,
+    "dev_years": 2,
+    "dev_people": 1,
+    "note": "Napier used a period; Stevin used a circle. The point won. Adoption is fast once stakes are printing. Different countries use comma still."
+  },
+  {
+    "id": "sc2_notation_equals_sign",
+    "name": "The equals sign",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "arithmetic_positional"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Symbol = means both sides have the same value",
+    "ph": 30,
+    "lab": {
+      "scribe": 60
+    },
+    "mat": {},
+    "build_yrs": 0.02,
+    "adopt_yrs": 3,
+    "dev_years": 2,
+    "dev_people": 1,
+    "note": "Recorde introduced = around 1557; it replaced 'is equal to'. Before this, sentences: 'x plus 5 is the same as 12.' Afterward: x + 5 = 12. This tiny change enables algebra as a visual system."
+  },
+  {
+    "id": "sc2_notation_operator_symbols",
+    "name": "Operator symbols: +, -, *, /",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "arithmetic_positional"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Standardized marks for operations instead of words",
+    "ph": 35,
+    "lab": {
+      "scribe": 70
+    },
+    "mat": {},
+    "build_yrs": 0.03,
+    "adopt_yrs": 2,
+    "dev_years": 2,
+    "dev_people": 1,
+    "note": "Germany adopted + and - in 15th c. for accounting. Multiplication: earlier \u00d7 (Oughtred) and \u00b7 (Leibniz) both persist. Division: \u00f7 (Obelus) is late 17th c. Adoption is printing-driven."
+  },
+  {
+    "id": "sc2_notation_exponents",
+    "name": "Exponent notation",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "brackets"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Small superscript numbers for powers; x squared is x\u00b2",
+    "ph": 45,
+    "lab": {
+      "scribe": 90
+    },
+    "mat": {},
+    "build_yrs": 0.05,
+    "adopt_yrs": 2,
+    "dev_years": 2,
+    "dev_people": 1,
+    "note": "Vieta used q for quadratum (square), c for cubus. Descartes switched to superscripts. Typesetting superscripts is hard; printing adoption is slow."
+  },
+  {
+    "id": "sc2_notation_roots",
+    "name": "Root symbols and radical notation",
+    "tier": 1,
+    "cat": "notation",
+    "pre": [
+      "exponents"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Radical sign \u221a for square, cube, and nth roots",
+    "ph": 40,
+    "lab": {
+      "scribe": 80
+    },
+    "mat": {},
+    "build_yrs": 0.05,
+    "adopt_yrs": 3,
+    "dev_years": 2,
+    "dev_people": 1,
+    "note": "Medieval \u221a is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing."
+  },
+  {
+    "id": "sc2_notation_scientific",
+    "name": "Scientific notation and powers of ten",
+    "tier": 2,
+    "cat": "notation",
+    "pre": [
+      "exponents",
+      "decimal_fraction"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Writing 0.0000314 as 3.14 \u00d7 10\u207b\u2075 or 3.14 E-5",
+    "ph": 60,
+    "lab": {
+      "scribe": 120
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 4,
+    "dev_years": 3,
+    "dev_people": 1,
+    "note": "Saves writing and makes comparison of magnitudes visual. Adoption requires slides rules and tables to persist; hand calculators will make it standard."
+  },
+  {
+    "id": "sc2_notation_metric_unit",
+    "name": "Metric system: standard meters, kilograms, seconds",
+    "tier": 2,
+    "cat": "notation",
+    "pre": [
+      "cap_measure_len",
+      "cap_measure_mass_mg",
+      "cap_measure_time_s"
+    ],
+    "traits": [
+      "infrastructure"
+    ],
+    "kb": "Decimal prefixes; base 10 throughout; no accidents like 12 inches to a foot",
+    "ph": 80,
+    "lab": {
+      "engineer": 200,
+      "scribe": 100
+    },
+    "mat": {
+      "paper": 50
+    },
+    "build_yrs": 0.2,
+    "adopt_yrs": 15,
+    "dev_years": 8,
+    "dev_people": 4,
+    "note": "French Revolution, 1790s. Requires redefining all trade measures simultaneously; no gradual adoption. Professions that stake identity on old systems resist hardest: British inch, American pound. Teaching: why base 10? Because fingers. Adoption: must be enforced by law and remaking every measuring tool."
+  },
+  {
+    "id": "sc2_notation_dimension",
+    "name": "Dimensional analysis and unit checking",
+    "tier": 2,
+    "cat": "notation",
+    "pre": [
+      "metric_unit",
+      "algebra_symbolic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Treating dimensions as algebraic quantities; force = mass times acceleration means newtons = kg\u22c5m/s\u00b2",
+    "ph": 70,
+    "lab": {
+      "engineer": 150
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 6,
+    "dev_years": 4,
+    "dev_people": 2,
+    "note": "Fourier first formalized this. Benefits: catch algebra errors (multiplying meters and kilograms is wrong), derive relationships from dimensional guess. Teaching requires algebra first."
+  },
+  {
+    "id": "sc2_notation_significant_figures",
+    "name": "Significant figures and precision rules",
+    "tier": 2,
+    "cat": "notation",
+    "pre": [
+      "cap_measure_mass_mg",
+      "cap_measure_temp"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Recording measurement uncertainty by digit count; multiplication and division rules for combining measurements",
+    "ph": 90,
+    "lab": {
+      "chemist": 200,
+      "engineer": 150
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 4,
+    "dev_years": 5,
+    "dev_people": 2,
+    "note": "Requires actually knowing your apparatus uncertainty first. Teaching: students must measure things badly and see the rule explain results. Adoption in labs is slow because it exposes poor work."
+  },
+  {
+    "id": "sc2_notation_error_propagation",
+    "name": "Error propagation and uncertainty arithmetic",
+    "tier": 3,
+    "cat": "notation",
+    "pre": [
+      "significant_figures",
+      "calculus"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "If x has uncertainty \u0394x and y = f(x), then \u0394y = |df/dx| \u0394x; rules for multiple variables",
+    "ph": 120,
+    "lab": {
+      "engineer": 250
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 6,
+    "dev_people": 2,
+    "note": "Requires calculus and statistics both. Teaching is graduate-level. Adoption is by research groups first, later by engineering. Key insight: combine uncertainties as root-sum-square when independent, linearly when correlated."
+  },
+  {
+    "id": "sc2_algebra_symbolic",
+    "name": "Symbolic algebra and letter variables",
+    "tier": 1,
+    "cat": "algebra",
+    "pre": [
+      "algebra_symbolic",
+      "equals_sign"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Using letters for unknown quantities; rules for manipulating equations",
+    "ph": 60,
+    "lab": {
+      "scribe": 120
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 5,
+    "dev_years": 4,
+    "dev_people": 2,
+    "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you add 5 and triple it you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere."
+  },
+  {
+    "id": "sc2_algebra_quadratic",
+    "name": "The quadratic equation and solution formula",
+    "tier": 1,
+    "cat": "algebra",
+    "pre": [
+      "algebra_symbolic",
+      "exponents",
+      "roots"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "ax\u00b2 + bx + c = 0 has solution x = (-b \u00b1 \u221a(b\u00b2 - 4ac)) / 2a",
+    "ph": 80,
+    "lab": {
+      "scribe": 150
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 3,
+    "dev_years": 5,
+    "dev_people": 2,
+    "note": "Babylonians completed the square geometrically. Al-Khwarizmi had the method. Descartes proved it algebraically. Teaching: deriving the formula from completing the square takes an hour and feels like discovery. The \u00b1 notation is key."
+  },
+  {
+    "id": "sc2_algebra_polynomial",
+    "name": "Polynomial equations and factoring",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "quadratic",
+      "algebra_symbolic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Expressions like x\u00b3 - 6x\u00b2 + 11x - 6 = (x-1)(x-2)(x-3); finding roots",
+    "ph": 100,
+    "lab": {
+      "scribe": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 6,
+    "dev_people": 2,
+    "note": "Cubics and quartics have closed formulas (Cardano, Ferrari), but they are ugly. Quintics do not have formulas (Galois, Abel). Teaching: show a cubic solved by substitution and depression. Adoption: essential for engineering, slow elsewhere."
+  },
+  {
+    "id": "sc2_algebra_binomial",
+    "name": "Binomial theorem and binomial expansion",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "polynomial",
+      "exponents"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "(x + y)\u207f expands to a sum of terms with binomial coefficients C(n,k)",
+    "ph": 90,
+    "lab": {
+      "scribe": 170
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 3,
+    "dev_years": 6,
+    "dev_people": 2,
+    "note": "Newton discovered this; Pascal's triangle gives coefficients. Teaching: why does (x+y)\u00b2 = x\u00b2 + 2xy + y\u00b2? Draw a square divided into four. Why does (x+y)\u00b3 work the same way? Induction proof follows. Adoption: fast, because it saves multiplication."
+  },
+  {
+    "id": "sc2_algebra_logarithm",
+    "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
+    "tier": 1,
+    "cat": "algebra",
+    "pre": [
+      "exponents",
+      "logarithms"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "If b^x = a, then log_b(a) = x; rules: log(xy) = log(x) + log(y)",
+    "ph": 70,
+    "lab": {
+      "scribe": 140
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 2,
+    "dev_years": 4,
+    "dev_people": 1,
+    "note": "Napier invented this to replace multiplication with addition: multiply by looking up logs, adding, looking up antilog. Teaching: understand exponent rules first. Then log is just naming the exponent. The product rule is obvious once you see it."
+  },
+  {
+    "id": "sc2_algebra_infinite_series",
+    "name": "Infinite series and convergence",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "calculus",
+      "limit"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Sum of infinitely many terms: 1 + 1/2 + 1/4 + ... = 2; when does it converge?",
+    "ph": 110,
+    "lab": {
+      "scribe": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 7,
+    "dev_people": 2,
+    "note": "Zeno's paradox and medieval scholars debated infinities. Newton and Leibniz used series for trig and exp. Teaching requires the limit concept first. Convergence tests (ratio, integral, comparison) come later."
+  },
+  {
+    "id": "sc2_calculus_limit",
+    "name": "The limit and convergence to a value",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "algebra_symbolic",
+      "infinite_series"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "As x \u2192 a, f(x) \u2192 L means values cluster arbitrarily close to L; formal: for any \u03b5 > 0, choose \u03b4 > 0 such that |x - a| < \u03b4 implies |f(x) - L| < \u03b5",
+    "ph": 120,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 6,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "The foundation of modern calculus, formalized by Cauchy and Weierstrass. Medieval debates about infinitesimals; Newton and Leibniz avoided the rigour. Teaching: intuitive first ('get as close as you want'), then epsilon-delta proof for one simple case. Adoption is graduate-level."
+  },
+  {
+    "id": "sc2_calculus_derivative",
+    "name": "The derivative as instantaneous rate of change",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "calculus",
+      "limit"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "f'(x) = lim[h\u21920] (f(x+h) - f(x)) / h; rules: product, chain, quotient",
+    "ph": 140,
+    "lab": {
+      "scribe": 240
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 4,
+    "dev_years": 10,
+    "dev_people": 3,
+    "note": "Newton's fluxions, Leibniz's differential notation (df/dx) is cleaner. Teaching: slope of a curve at a point, velocity as change of position, acceleration as change of velocity. First application to physics and engineering. Adoption: essential for all quantitative science."
+  },
+  {
+    "id": "sc2_calculus_integral",
+    "name": "The integral as area under a curve",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "derivative",
+      "limit"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "\u222bf(x)dx is the area under f; fundamental theorem: antiderivative of f has derivative f",
+    "ph": 150,
+    "lab": {
+      "scribe": 250
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 4,
+    "dev_years": 10,
+    "dev_people": 3,
+    "note": "Riemann formalized it; Lebesgue generalized later. Teaching: Archimedes estimated area with inscribed and circumscribed rectangles. Calculus makes it algebraic. Adoption: once differentiation exists, integrals follow for work, volume, mass."
+  },
+  {
+    "id": "sc2_calculus_fundamental_theorem",
+    "name": "Fundamental theorem: differentiation and integration are inverses",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "integral",
+      "derivative"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "d/dx \u222bf = f and \u222bdf/dx = f; connects rate of change to total change",
+    "ph": 100,
+    "lab": {
+      "scribe": 150
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 2,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Proven by Newton and Leibniz independently. Teaching is the eureka moment: derivative and integral undo each other. Adoption is fast because it makes calculations feasible."
+  },
+  {
+    "id": "sc2_calculus_ode",
+    "name": "Ordinary differential equations and solution methods",
+    "tier": 3,
+    "cat": "algebra",
+    "pre": [
+      "calculus",
+      "fundamental_theorem"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Equations like y' = -ky describe decay or growth; separation of variables, integrating factors",
+    "ph": 150,
+    "lab": {
+      "scribe": 250
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 5,
+    "dev_years": 12,
+    "dev_people": 3,
+    "note": "Newton's laws are ODEs. Teaching: simple cases first (y' = 2y has solution e^(2x)). Adoption: essential for physics and engineering."
+  },
+  {
+    "id": "sc2_calculus_pde",
+    "name": "Partial differential equations",
+    "tier": 3,
+    "cat": "algebra",
+    "pre": [
+      "ode",
+      "limit"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Equations with derivatives with respect to multiple variables; heat, wave, Laplace equations",
+    "ph": 200,
+    "lab": {
+      "scribe": 300
+    },
+    "mat": {},
+    "build_yrs": 0.5,
+    "adopt_yrs": 8,
+    "dev_years": 15,
+    "dev_people": 4,
+    "note": "d\u00b2u/dt\u00b2 = c\u00b2 d\u00b2u/dx\u00b2 (wave equation); solutions require boundary conditions. Teaching is hard; Fourier series helps. Adoption is by mathematical physicists first."
+  },
+  {
+    "id": "sc2_calculus_fourier_series",
+    "name": "Fourier series: decomposing periodic functions",
+    "tier": 3,
+    "cat": "algebra",
+    "pre": [
+      "infinite_series",
+      "pde"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Any periodic function is a sum of sines and cosines with the right amplitudes and phases",
+    "ph": 160,
+    "lab": {
+      "scribe": 280
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 3,
+    "note": "Fourier solved heat equation using this. Teaching: mechanical analogy using tuning forks and resonance. Adoption: electrical engineering relies on it for AC power."
+  },
+  {
+    "id": "sc2_calculus_fourier_transform",
+    "name": "Fourier transform and continuous frequency spectrum",
+    "tier": 3,
+    "cat": "algebra",
+    "pre": [
+      "fourier_series"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Generalizing Fourier series to non-periodic signals; converting between time and frequency domains",
+    "ph": 170,
+    "lab": {
+      "scribe": 290
+    },
+    "mat": {},
+    "build_yrs": 0.35,
+    "adopt_yrs": 7,
+    "dev_years": 14,
+    "dev_people": 3,
+    "note": "Integral form goes to infinity. Teaching requires confidence with Fourier series first. Adoption is late 20th century for digital signal processing."
+  },
+  {
+    "id": "sc2_algebra_complex_numbers",
+    "name": "Complex numbers: a + bi where i\u00b2 = -1",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "algebra_symbolic",
+      "roots"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Quadratics always have solutions in complex numbers; polar form re^(i\u03b8); Euler's e^(i\u03b8) = cos \u03b8 + i sin \u03b8",
+    "ph": 110,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Cardano's cubic formula forced complex intermediate steps. Teaching: geometry (rotation and scaling in the plane) makes it tangible. Adoption: fast in AC electricity and physics."
+  },
+  {
+    "id": "sc2_algebra_vector",
+    "name": "Vectors and vector algebra",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "complex_numbers",
+      "geometry_analytic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Directed quantities; dot product a\u00b7b = |a||b|cos(angle); cross product a\u00d7b perpendicular to both",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Gibbs and Heaviside developed notation independently in the 1880s. Teaching: forces, velocities, displacements. Adoption: essential for 3D mechanics."
+  },
+  {
+    "id": "sc2_algebra_matrix",
+    "name": "Matrices and matrix multiplication",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "vector",
+      "algebra_symbolic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Rectangular arrays of numbers; AB is not the same as BA; determinant measures invertibility",
+    "ph": 130,
+    "lab": {
+      "scribe": 240
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Cayley formalized (1858). Teaching: transforms (rotation, scaling); systems of equations as Ax = b. Adoption: slow until computers make it practical."
+  },
+  {
+    "id": "sc2_algebra_determinant",
+    "name": "Determinants and matrix inversion",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "matrix"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "det(A) = 0 means A is singular (non-invertible); A\u207b\u00b9 exists if det(A) \u2260 0",
+    "ph": 110,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Ancient roots in solving simultaneous equations. Teaching: area and volume interpretation. Adoption by applied mathematicians first."
+  },
+  {
+    "id": "sc2_algebra_tensor",
+    "name": "Tensors and tensor notation",
+    "tier": 3,
+    "cat": "algebra",
+    "pre": [
+      "matrix",
+      "vector"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Generalizing scalars, vectors, matrices; stress is a tensor (force per unit area in each direction)",
+    "ph": 180,
+    "lab": {
+      "scribe": 300
+    },
+    "mat": {},
+    "build_yrs": 0.4,
+    "adopt_yrs": 8,
+    "dev_years": 14,
+    "dev_people": 3,
+    "note": "Einstein summation convention hides indices. Teaching requires patience. Adoption: essential for solid mechanics and general relativity."
+  },
+  {
+    "id": "sc2_algebra_numerical_methods",
+    "name": "Numerical methods: Newton-Raphson, bisection, iteration",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "calculus",
+      "limit"
+    ],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "Algorithms to find roots or solve equations when closed forms do not exist; choosing method depends on smoothness and number of solutions",
+    "ph": 120,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Requires testing convergence by hand before computers. Teaching: graph on paper, subdivide, iterate. Adoption: essential for any real design calculation."
+  },
+  {
+    "id": "sc2_algebra_interpolation",
+    "name": "Polynomial interpolation and finite differences",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "polynomial",
+      "numerical_methods"
+    ],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "Given n points, unique polynomial of degree n-1 passes through them; Newton forward differences for tables",
+    "ph": 100,
+    "lab": {
+      "mathematician": 180
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 3,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Computing machines depend on difference tables. Teaching: Lagrange vs. Newton forms. Adoption: essential for any function tabulation."
+  },
+  {
+    "id": "sc2_algebra_least_squares",
+    "name": "Least squares method and curve fitting",
+    "tier": 2,
+    "cat": "algebra",
+    "pre": [
+      "calculus",
+      "statistics_basic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Minimize sum of squared errors between data points and model; normal equations from setting derivatives to zero",
+    "ph": 110,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 7,
+    "dev_people": 2,
+    "note": "Gauss and Legendre derived independently (1805-1812). Teaching: why squares? They weight large errors heavily and math is neat. Adoption: fast in geodesy and later in all experimental science."
+  },
+  {
+    "id": "sc2_geometry_coordinate",
+    "name": "Coordinate geometry and the Cartesian plane",
+    "tier": 1,
+    "cat": "geometry",
+    "pre": [
+      "geometry_analytic",
+      "algebra_symbolic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Representing curves as equations: circle is x\u00b2 + y\u00b2 = r\u00b2; line is ax + by + c = 0",
+    "ph": 80,
+    "lab": {
+      "scribe": 150
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 3,
+    "dev_years": 6,
+    "dev_people": 2,
+    "note": "Descartes and Fermat, early 1600s. Teaching: each point is a pair (x,y); equations become curves. Adoption: fast in university, slow in practical surveying."
+  },
+  {
+    "id": "sc2_geometry_conics",
+    "name": "Conic sections: circles, ellipses, parabolas, hyperbolas",
+    "tier": 2,
+    "cat": "geometry",
+    "pre": [
+      "coordinate",
+      "polynomial"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "All are second-degree equations ax\u00b2 + bxy + cy\u00b2 + dx + ey + f = 0; eccentricity e determines shape",
+    "ph": 100,
+    "lab": {
+      "scribe": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Apollonius knew them geometrically. Descartes wrote them algebraically. Teaching: derive from plane cutting a cone, or as locus of points. Adoption: essential for understanding planetary orbits."
+  },
+  {
+    "id": "sc2_geometry_trigonometry",
+    "name": "Trigonometric functions and tables",
+    "tier": 1,
+    "cat": "geometry",
+    "pre": [
+      "geometry_analytic",
+      "exponents"
+    ],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "sin, cos, tan; inverse functions; tables for every degree or tenth of degree; identities like sin\u00b2 + cos\u00b2 = 1",
+    "ph": 100,
+    "lab": {
+      "mathematician": 200,
+      "scribe": 80
+    },
+    "mat": {
+      "paper": 200
+    },
+    "build_yrs": 0.3,
+    "adopt_yrs": 2,
+    "dev_years": 8,
+    "dev_people": 3,
+    "note": "Hipparchus computed chord tables; Indians used sines. Modern tables (7-decimal, 15-decimal) require thousands of hours to compute and check. Manufacturing tables is expensive; printing enables adoption."
+  },
+  {
+    "id": "sc2_geometry_spherical_trig",
+    "name": "Spherical trigonometry and navigation formulas",
+    "tier": 2,
+    "cat": "geometry",
+    "pre": [
+      "trigonometry"
+    ],
+    "traits": [
+      "military",
+      "commerce"
+    ],
+    "kb": "Solving triangles on a sphere; great circles; spherical excess; rhumb line vs. geodesic",
+    "ph": 120,
+    "lab": {
+      "mathematician": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 3,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Essential for celestial navigation and map-making. Teaching requires globe and accurate diagrams. Adoption: fast among navigators and cartographers."
+  },
+  {
+    "id": "sc2_geometry_descriptive",
+    "name": "Descriptive geometry and engineering drawing",
+    "tier": 2,
+    "cat": "geometry",
+    "pre": [
+      "spherical_trig",
+      "orthographic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Three orthographic views (top, front, side) fully describe a 3D object; sections; auxiliary views",
+    "ph": 130,
+    "lab": {
+      "engineer": 220,
+      "scribe": 100
+    },
+    "mat": {
+      "paper": 80
+    },
+    "build_yrs": 0.3,
+    "adopt_yrs": 2,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Monge formalized it for military engineering (1780s). Teaching: start with wooden blocks, draw them, build from the drawing. Adoption: universal by 1850 in all engineering."
+  },
+  {
+    "id": "sc2_geometry_non_euclidean",
+    "name": "Non-Euclidean geometry: hyperbolic and elliptic",
+    "tier": 3,
+    "cat": "geometry",
+    "pre": [
+      "conics",
+      "spherical_trig"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Gauss, Lobachevsky, Riemann: parallel postulate is independent; curved spaces have their own geometry",
+    "ph": 150,
+    "lab": {
+      "mathematician": 260
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 10,
+    "dev_years": 20,
+    "dev_people": 3,
+    "note": "Shocking because Euclidean seemed necessary. Teaching requires intrinsic vs. extrinsic curvature. Adoption: slow until Einstein (1915) makes gravity a curved spacetime."
+  },
+  {
+    "id": "sc2_geometry_differential",
+    "name": "Differential geometry: curves and surfaces",
+    "tier": 3,
+    "cat": "geometry",
+    "pre": [
+      "non_euclidean",
+      "pde"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Curvature, torsion, geodesics, Gaussian curvature, first and second fundamental forms",
+    "ph": 170,
+    "lab": {
+      "mathematician": 300
+    },
+    "mat": {},
+    "build_yrs": 0.35,
+    "adopt_yrs": 8,
+    "dev_years": 16,
+    "dev_people": 3,
+    "note": "Gauss and Riemann. Teaching requires calculus and linear algebra. Adoption by theoretical physics and later differential geometry becomes essential."
+  },
+  {
+    "id": "sc2_probability_combinatorics",
+    "name": "Permutations and combinations",
+    "tier": 1,
+    "cat": "probability",
+    "pre": [
+      "algebra_symbolic",
+      "binomial"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "nPr = n!/(n-r)!, nCr = n!/(r!(n-r)!); binomial coefficients C(n,k)",
+    "ph": 80,
+    "lab": {
+      "mathematician": 150
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 2,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Ancient roots; Pascal systematized. Teaching: counting in two ways (order matters or not). Adoption: fast in gambling and later in all statistics."
+  },
+  {
+    "id": "sc2_probability_axioms",
+    "name": "Probability axioms and conditional probability",
+    "tier": 1,
+    "cat": "probability",
+    "pre": [
+      "combinatorics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "P(A or B) = P(A) + P(B) - P(A and B); P(A|B) = P(A and B)/P(B); Bayes' theorem",
+    "ph": 100,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Formalized by Kolmogorov (1933). Teaching starts with dice and urn problems. Adoption: essential for statistics once this century opens."
+  },
+  {
+    "id": "sc2_probability_normal_distribution",
+    "name": "Normal (Gaussian) distribution and the bell curve",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "probability_axioms",
+      "limit"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "f(x) = (1/(\u03c3\u221a(2\u03c0))) exp(-(x-\u03bc)\u00b2/(2\u03c3\u00b2)); most natural distribution for sums of independent errors",
+    "ph": 110,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Gauss, Laplace, de Moivre. Teaching: derive from sums of dice or measurements. Adoption: universal in any quantitative field."
+  },
+  {
+    "id": "sc2_probability_central_limit",
+    "name": "Central limit theorem",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "normal_distribution",
+      "infinite_series"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Sum of many independent random variables is approximately normal, regardless of their individual distributions",
+    "ph": 120,
+    "lab": {
+      "mathematician": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Explains why normal distribution is universal. Teaching requires multiple simulations to convince. Adoption: theoretical foundation for all inferential statistics."
+  },
+  {
+    "id": "sc2_statistics_mean_variance",
+    "name": "Mean, variance, and standard deviation",
+    "tier": 1,
+    "cat": "probability",
+    "pre": [
+      "statistics_basic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Mean \u03bc = sum/n; variance \u03c3\u00b2 = average squared deviation; standard deviation \u03c3 = \u221a(variance)",
+    "ph": 60,
+    "lab": {
+      "mathematician": 120
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 2,
+    "dev_years": 4,
+    "dev_people": 1,
+    "note": "Quetelet popularized mean and variance (1830s). Teaching: compute by hand for small datasets. Adoption: fast in any measurement discipline."
+  },
+  {
+    "id": "sc2_statistics_correlation",
+    "name": "Correlation and covariance",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "mean_variance"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Pearson r = \u03a3(x-\u03bcx)(y-\u03bcy) / (n \u03c3x \u03c3y); r ranges from -1 to +1; r\u00b2 is fraction of variance explained",
+    "ph": 100,
+    "lab": {
+      "mathematician": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Galton and Pearson (1880s). Teaching: scatter plot with best-fit line. Adoption: essential for social science and medicine."
+  },
+  {
+    "id": "sc2_statistics_regression",
+    "name": "Linear regression and the line of best fit",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "correlation",
+      "least_squares"
+    ],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "y = a + bx where b = r(\u03c3y/\u03c3x); minimizes squared vertical distances",
+    "ph": 110,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Legendre and Gauss (1805-1812); refined by Pearson. Teaching: fit to data, predict new y from new x. Adoption: universal in experiments."
+  },
+  {
+    "id": "sc2_statistics_t_test",
+    "name": "Student's t-test for mean differences",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "chi_squared",
+      "normal_distribution"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "t = (mean1 - mean2) / (SE of difference); compares two small samples",
+    "ph": 120,
+    "lab": {
+      "mathematician": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Gosset (pseudonym 'Student', 1908) working in brewing. Teaching requires Student's t distribution tables. Adoption: universal in comparing experiments."
+  },
+  {
+    "id": "sc2_statistics_anova",
+    "name": "Analysis of variance (ANOVA)",
+    "tier": 3,
+    "cat": "probability",
+    "pre": [
+      "t_test",
+      "regression"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Partitions variance into groups and residuals; F-test whether group means differ",
+    "ph": 140,
+    "lab": {
+      "mathematician": 250
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Fisher (1920s). Teaching: one-way then multi-way. Adoption by agricultural and later all experimental science."
+  },
+  {
+    "id": "sc2_statistics_sampling_theory",
+    "name": "Sampling theory and the standard error",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "central_limit",
+      "normal_distribution"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "SE = \u03c3/\u221an; determines precision of sample mean estimate; confidence interval is mean \u00b1 t*SE",
+    "ph": 110,
+    "lab": {
+      "mathematician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Practical foundation for all surveys. Teaching: simulate draws from a population. Adoption: fast in quality control."
+  },
+  {
+    "id": "sc2_statistics_confidence_interval",
+    "name": "Confidence interval and margin of error",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "sampling_theory",
+      "t_test"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "95% CI is estimate \u00b1 1.96 SE; if we repeat the survey 100 times, about 95 contain the true value",
+    "ph": 100,
+    "lab": {
+      "mathematician": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Common misunderstanding: the interval is random, not the parameter. Teaching requires clarification. Adoption: standard in polls and clinical trials."
+  },
+  {
+    "id": "sc2_statistics_significance_test",
+    "name": "Significance test and p-value",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "chi_squared",
+      "confidence_interval"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "p is probability of data if null hypothesis is true; p < 0.05 usually means reject null",
+    "ph": 120,
+    "lab": {
+      "mathematician": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 6,
+    "dev_years": 11,
+    "dev_people": 2,
+    "note": "Fisher popularized p-value; Neyman-Pearson developed hypothesis testing framework. Teaching: both ideas matter but are often confused. Adoption: dominant but controversial by end of 20th century."
+  },
+  {
+    "id": "sc2_statistics_randomisation",
+    "name": "Randomisation and random assignment",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "probability_axioms"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Assigning subjects to treatment or control by random mechanism ensures balance on unknown confounders",
+    "ph": 80,
+    "lab": {
+      "researcher": 160
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 8,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Fisher advocated it for agricultural trials. Teaching: why matters (controls bias), how to do it (draw lots, random number table). Adoption is slow because it requires surrendering control."
+  },
+  {
+    "id": "sc2_statistics_blocking",
+    "name": "Blocking and stratification in experiments",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "randomisation"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Divide subjects into homogeneous blocks, randomise within block, to reduce variance from known confounders",
+    "ph": 100,
+    "lab": {
+      "researcher": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 6,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Fisher (1925). Teaching: you know some subjects are different (male/female, old/young); use this. Adoption: standard in agricultural and medical experiments."
+  },
+  {
+    "id": "sc2_statistics_control_group",
+    "name": "Control group and negative control",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "blocking"
+    ],
+    "traits": [
+      "medical"
+    ],
+    "kb": "Run the same experiment without treatment to measure placebo effect and natural variation",
+    "ph": 70,
+    "lab": {
+      "researcher": 140
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 8,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Medical tradition going back centuries (though not formalized). Teaching: without it, cannot distinguish treatment from natural history. Adoption is slow in medicine because 'denying' treatment feels unethical."
+  },
+  {
+    "id": "sc2_statistics_blinding",
+    "name": "Blinding and double-blind experiments",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "control_group"
+    ],
+    "traits": [
+      "medical"
+    ],
+    "kb": "Neither subject nor experimenter knows who got treatment; reveals biases in observation and reporting",
+    "ph": 90,
+    "lab": {
+      "researcher": 170
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 10,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Placebo effect is real and unconscious bias is universal. Teaching: show a color-changing experiment (nothing actually changed) then 'explain' it to subjects, whose reports change. Adoption is slow because it requires admitting fallibility."
+  },
+  {
+    "id": "sc2_statistics_mortality_table",
+    "name": "Mortality table and actuarial science",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "statistics_basic"
+    ],
+    "traits": [
+      "commerce"
+    ],
+    "kb": "Probability of death at each age; lx survivors at age x; ex life expectancy",
+    "ph": 100,
+    "lab": {
+      "actuary": 200,
+      "mathematician": 100
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 3,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Graunt (1662) from London bills of mortality. Teaching: data is public; computation is rote. Adoption: fast in insurance once mathematics spreads."
+  },
+  {
+    "id": "sc2_statistics_control_chart",
+    "name": "Control chart and statistical process control",
+    "tier": 2,
+    "cat": "probability",
+    "pre": [
+      "mean_variance",
+      "significance_test"
+    ],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "Plot process output over time with control limits (\u03bc \u00b1 3\u03c3); trends or excursions signal problems",
+    "ph": 110,
+    "lab": {
+      "engineer": 200
+    },
+    "mat": {
+      "paper": 10
+    },
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Shewhart (1920s) at Western Electric. Teaching: time series is as important as variation. Adoption: transforms quality control from inspection to prediction."
+  },
+  {
+    "id": "sc2_physics_statics",
+    "name": "Statics and forces in equilibrium",
+    "tier": 0,
+    "cat": "physics",
+    "pre": [],
+    "traits": [
+      "labour_saving"
+    ],
+    "kb": "Leverage, moments, center of gravity; force balance and moment balance",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "build_yrs": 0,
+    "adopt_yrs": 0,
+    "dev_years": 2000,
+    "dev_people": 0,
+    "note": "Archimedes knew this. Rome has it thoroughly. Teaching is engineering curriculum baseline."
+  },
+  {
+    "id": "sc2_physics_kinematics",
+    "name": "Kinematics: position, velocity, acceleration",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "derivative"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "v = dx/dt; a = dv/dt; for constant acceleration, x = x0 + v0*t + (1/2)*a*t\u00b2",
+    "ph": 90,
+    "lab": {
+      "scribe": 170
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 2,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Ancient scholars attempted this without calculus. Teaching is trivial after derivatives exist. Adoption: immediate in physics and engineering."
+  },
+  {
+    "id": "sc2_physics_newtons_laws",
+    "name": "Newton's three laws of motion",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "kinematics"
+    ],
+    "traits": [
+      "military",
+      "labour_saving"
+    ],
+    "kb": "1) No force, no change. 2) F = ma. 3) Action equals reaction",
+    "ph": 100,
+    "lab": {
+      "scribe": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Principia (1687). Teaching: Galileo and Descartes prepared the ground. Adoption: transforms all engineering from qualitative to quantitative."
+  },
+  {
+    "id": "sc2_physics_gravitation",
+    "name": "Newton's law of universal gravitation",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "newtons_laws"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "F = G m1 m2 / r\u00b2; same law governs apples and planets",
+    "ph": 100,
+    "lab": {
+      "scribe": 180
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Explains Kepler's laws. Teaching: derives planetary orbits. Adoption: transforms astronomy and physics into unified science."
+  },
+  {
+    "id": "sc2_physics_momentum",
+    "name": "Momentum and impulse",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "newtons_laws"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "p = mv; dp/dt = F; momentum is conserved when external forces are zero",
+    "ph": 80,
+    "lab": {
+      "scribe": 150
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 3,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Descartes understood conservation; Newton formalized. Teaching: collisions and explosions. Adoption: immediate."
+  },
+  {
+    "id": "sc2_physics_energy",
+    "name": "Kinetic energy and potential energy",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "calculus",
+      "newtons_laws"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "KE = (1/2) m v\u00b2; PE = mgh; energy is conserved when forces are conservative",
+    "ph": 110,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Leibniz introduced vis viva (living force). Teaching: energy is useful even when forces are complex. Adoption: fast in engineering."
+  },
+  {
+    "id": "sc2_physics_work_power",
+    "name": "Work, power, and efficiency",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "energy"
+    ],
+    "traits": [
+      "labour_saving",
+      "information"
+    ],
+    "kb": "Work W = F \u00b7 d (force dot displacement); power P = dW/dt; efficiency = output/input",
+    "ph": 100,
+    "lab": {
+      "engineer": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 3,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Defining work and power makes engine efficiency measurable. Teaching: mechanical advantage vs. power (pulleys help force, not power). Adoption: immediate and universal."
+  },
+  {
+    "id": "sc2_physics_elasticity",
+    "name": "Elasticity and Hooke's law",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "newtons_laws"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Stress \u03c3 = F/A (force per area); strain \u03b5 = \u0394L/L (fractional change); E = \u03c3/\u03b5 (Young's modulus)",
+    "ph": 110,
+    "lab": {
+      "engineer": 210
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Hooke (1678) discovered spring law; generalized to materials by Thomas Young (1807). Teaching: why materials behave differently. Adoption: foundation for structural engineering."
+  },
+  {
+    "id": "sc2_physics_fluid_statics",
+    "name": "Fluid statics and buoyancy",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "statics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Pressure P = \u03c1 g h (density times gravity times depth); Archimedes' principle",
+    "ph": 80,
+    "lab": {
+      "engineer": 160
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 2,
+    "dev_years": 5,
+    "dev_people": 1,
+    "note": "Archimedes and Hero knew it. Teaching: submerged objects. Adoption: immediate in navigation and dam engineering."
+  },
+  {
+    "id": "sc2_physics_hydrodynamics",
+    "name": "Hydrodynamics and Bernoulli's equation",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "calculus",
+      "fluid_statics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "P + (1/2) \u03c1 v\u00b2 + \u03c1 g h = constant along streamline; relates pressure, velocity, height",
+    "ph": 130,
+    "lab": {
+      "engineer": 240
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 5,
+    "dev_years": 11,
+    "dev_people": 2,
+    "note": "Bernoulli (1738). Teaching: high velocity means low pressure (why wind lifts roofs). Adoption: essential for pumps, pipes, and aerodynamics."
+  },
+  {
+    "id": "sc2_physics_viscosity",
+    "name": "Viscosity and Newton's law of friction",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "hydrodynamics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Shear stress \u03c4 = \u03b7 (dv/dy); viscosity \u03b7 depends on fluid and temperature; Stokes drag",
+    "ph": 120,
+    "lab": {
+      "engineer": 220
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 6,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Newton described it qualitatively; Stokes derived drag force on spheres (1851). Teaching: oiliness is measurable. Adoption: essential for lubrication and later fluid mechanics."
+  },
+  {
+    "id": "sc2_physics_reynolds_number",
+    "name": "Reynolds number and flow regime",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "viscosity",
+      "hydrodynamics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Re = (\u03c1 v L) / \u03b7; low Re is viscous (creeping) flow, high Re is turbulent",
+    "ph": 110,
+    "lab": {
+      "engineer": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 7,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Reynolds (1883). Teaching: same flow pattern works at all scales if Re is same. Adoption: essential for aerodynamics and pipeline design."
+  },
+  {
+    "id": "sc2_physics_aerodynamic_lift",
+    "name": "Aerodynamic lift and wing design",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "hydrodynamics",
+      "bernoulli"
+    ],
+    "traits": [
+      "military",
+      "labour_saving"
+    ],
+    "kb": "Pressure difference between upper and lower surfaces due to velocity difference; L = (1/2) \u03c1 v\u00b2 A CL",
+    "ph": 130,
+    "lab": {
+      "engineer": 240
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Kutta-Joukowski theorem (1902-1906). Teaching requires wind tunnel or theoretical derivation. Adoption: transforms aviation from dream to engineering."
+  },
+  {
+    "id": "sc2_physics_acoustics",
+    "name": "Acoustics and sound propagation",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "hydrodynamics",
+      "wave_motion"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Sound speed v = \u221a(K/\u03c1) where K is bulk modulus; intensity I = (1/2) \u03c1 v (p0)\u00b2",
+    "ph": 120,
+    "lab": {
+      "engineer": 220
+    },
+    "mat": {
+      "mat_mercury": 1
+    },
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Newton and Laplace debated whether sound is isothermal or adiabatic. Teaching: waves, not particles. Adoption: slow until mechanical reproduction creates demand."
+  },
+  {
+    "id": "sc2_physics_wave_motion",
+    "name": "Wave motion and the wave equation",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "calculus",
+      "kinematics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "\u2202\u00b2u/\u2202t\u00b2 = v\u00b2 \u2202\u00b2u/\u2202x\u00b2; solutions are traveling and standing waves",
+    "ph": 130,
+    "lab": {
+      "scribe": 240
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 5,
+    "dev_years": 11,
+    "dev_years_people": 2,
+    "note": "d'Alembert (1746). Teaching: mechanical analogy (vibrating string) then abstract. Adoption: essential for understanding vibration, sound, and later light and matter waves."
+  },
+  {
+    "id": "sc2_physics_geometric_optics",
+    "name": "Geometric optics and ray tracing",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "telescope",
+      "lens_grinding"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Light travels in straight rays; reflects at angle of incidence; refracts by Snell's law n1 sin \u03b81 = n2 sin \u03b82",
+    "ph": 100,
+    "lab": {
+      "optician": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 3,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Fermat's principle (light takes fastest path) explains both laws. Teaching: mirrors and lenses. Adoption: immediate in designing instruments."
+  },
+  {
+    "id": "sc2_physics_diffraction",
+    "name": "Diffraction and Fraunhofer patterns",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "physical_optics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Light bends around edges and slits; diffraction grating has many slits for high resolution",
+    "ph": 120,
+    "lab": {
+      "optician": 240
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 6,
+    "dev_years": 11,
+    "dev_people": 2,
+    "note": "Fraunhofer (1819-1823). Teaching: how gratings work (parallel slits). Adoption: transforms spectroscopy."
+  },
+  {
+    "id": "sc2_physics_spectrum",
+    "name": "Electromagnetic spectrum",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "em_theory"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Radio waves, microwaves, infrared, visible, ultraviolet, X-rays, gamma rays; all c/\u03bb = f",
+    "ph": 100,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 5,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Visible is tiny fraction (400-700 nm). Teaching: infrared feels like heat, UV causes sunburn, X-rays penetrate flesh. Adoption: telescopes and later radio."
+  },
+  {
+    "id": "sc2_physics_electrostatics",
+    "name": "Electrostatics and Coulomb's law",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "newtons_laws",
+      "electrostatics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "F = k q1 q2 / r\u00b2; like gravity but for electric charge; field E = F/q",
+    "ph": 100,
+    "lab": {
+      "scribe": 190
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Coulomb (1785). Teaching: electric field is the concept; force follows. Adoption: foundation for all electric phenomena."
+  },
+  {
+    "id": "sc2_physics_magnetostatics",
+    "name": "Magnetostatics and magnetic field",
+    "tier": 1,
+    "cat": "physics",
+    "pre": [
+      "electrostatics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Magnetic field B; dipole moment m; torque \u03c4 = m \u00d7 B; force on current F = I L \u00d7 B",
+    "ph": 100,
+    "lab": {
+      "scribe": 190
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 4,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Ampere and Gauss. Teaching: bar magnet, compass, current loop. Adoption: immediate in motors and generators."
+  },
+  {
+    "id": "sc2_physics_maxwell_equations",
+    "name": "Maxwell's equations and electromagnetic theory",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "magnetostatics",
+      "electrostatics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Four equations unify electricity, magnetism, and light; predict electromagnetic waves",
+    "ph": 140,
+    "lab": {
+      "scribe": 260
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 8,
+    "dev_years": 15,
+    "dev_people": 3,
+    "note": "Maxwell (1861-1862). Teaching: each equation is comprehensible; together they are profound. Adoption is slow because it requires accepting light is electromagnetic."
+  },
+  {
+    "id": "sc2_physics_em_wave",
+    "name": "Electromagnetic wave and radiation",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "maxwell_equations"
+    ],
+    "traits": [
+      "military",
+      "information"
+    ],
+    "kb": "Oscillating E and B fields perpendicular to each other and direction of travel; speed c = 1/\u221a(\u03b50 \u03bc0)",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Light IS an electromagnetic wave. Teaching: Hertz demonstrated (1887-1888). Adoption: transforms radio and later all wireless communication."
+  },
+  {
+    "id": "sc2_physics_speed_of_light",
+    "name": "Speed of light as fundamental constant",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "em_wave"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "c \u2248 3 \u00d7 10^8 m/s; same in all inertial reference frames; appears in E = mc\u00b2",
+    "ph": 100,
+    "lab": {
+      "scribe": 190
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Galileo, Roemer, Foucault, Bradley all attempted measurement. Teaching: why is it special? Adoption: slow until Einstein."
+  },
+  {
+    "id": "sc2_physics_kinetic_theory",
+    "name": "Kinetic theory of gases",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "newtons_laws",
+      "statistics_basic"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Gas pressure is momentum transfer from colliding molecules; P = (1/3) \u03c1 <v\u00b2>; explains ideal gas law",
+    "ph": 130,
+    "lab": {
+      "scribe": 240
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 6,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Clausius, Maxwell, Boltzmann (1860s-1870s). Teaching: one molecule has no pressure; billions do. Adoption: transforms thermodynamics from empirical to theoretical."
+  },
+  {
+    "id": "sc2_physics_statistical_mechanics",
+    "name": "Statistical mechanics and ensemble theory",
+    "tier": 3,
+    "cat": "physics",
+    "pre": [
+      "kinetic_theory",
+      "thermodynamics_theory"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Macroscopic properties from microstate probabilities; Boltzmann distribution P(E) ~ exp(-E/kT)",
+    "ph": 160,
+    "lab": {
+      "scribe": 280
+    },
+    "mat": {},
+    "build_yrs": 0.35,
+    "adopt_yrs": 12,
+    "dev_years": 18,
+    "dev_people": 3,
+    "note": "Boltzmann, Gibbs (1870s-1890s). Teaching requires probability and quantum mechanics for full understanding. Adoption by theoretical physicists first."
+  },
+  {
+    "id": "sc2_physics_boltzmann_distribution",
+    "name": "Boltzmann distribution and thermal equilibrium",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "statistical_mechanics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Probability of state with energy E is proportional to exp(-E/kT); explains chemical equilibrium",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 8,
+    "dev_years": 14,
+    "dev_people": 2,
+    "note": "Everything is exponential: molecular speeds, electron energy levels, reaction rates. Teaching: why ln(k) vs 1/T is linear (Arrhenius equation). Adoption: universal in chemistry and physics."
+  },
+  {
+    "id": "sc2_physics_blackbody_radiation",
+    "name": "Blackbody radiation and Planck's law",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "boltzmann_distribution",
+      "spectrum"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Energy density u(\u03bd,T) = (8\u03c0h\u03bd\u00b3/c\u00b3) / (exp(h\u03bd/kT) - 1); Rayleigh-Jeans fails at high \u03bd",
+    "ph": 140,
+    "lab": {
+      "scribe": 250
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 8,
+    "dev_years": 13,
+    "dev_people": 2,
+    "note": "Ultraviolet catastrophe and Planck's quantum fix (1900). Teaching: experiment shows curve; classical theory predicts infinite intensity at high frequency. Teaching point: sometimes you must invent new physics."
+  },
+  {
+    "id": "sc2_physics_quantum_photon",
+    "name": "The quantum and photon concept",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "blackbody_radiation"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Light is quantised in packets of energy E = h\u03bd; Planck constant h = 6.626 \u00d7 10^-34 J\u22c5s",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 10,
+    "dev_years": 14,
+    "dev_people": 2,
+    "note": "Planck (1900) solved blackbody; Einstein (1905) applied to photoelectric effect. Teaching: why is h so small? Why can't we see energy packets in everyday light (because intensity is huge). Adoption: slow, even Einstein was reluctant."
+  },
+  {
+    "id": "sc2_physics_photoelectric_effect",
+    "name": "Photoelectric effect and stopping potential",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "quantum_photon"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Light knocks electrons from metal; E = h\u03bd - \u03c6 (work function); proves photon hypothesis",
+    "ph": 110,
+    "lab": {
+      "physicist": 210,
+      "optician": 100
+    },
+    "mat": {
+      "mat_zinc": 0.1
+    },
+    "build_yrs": 0.2,
+    "adopt_yrs": 8,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Millikan measured stopping potential (1916). Teaching: light intensity does not matter, only frequency. This seemed absurd to everyone. Adoption took Einstein's Nobel Prize (1921) as proof."
+  },
+  {
+    "id": "sc2_physics_wave_mechanics",
+    "name": "Wave mechanics and Schr\u00f6dinger equation",
+    "tier": 3,
+    "cat": "physics",
+    "pre": [
+      "bohr_atom",
+      "pde"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "\u03a8(x,t) is wave function; |\u03a8|\u00b2 is probability density; i\u210f \u2202\u03a8/\u2202t = -\u210f\u00b2/2m \u2207\u00b2\u03a8 + V \u03a8",
+    "ph": 180,
+    "lab": {
+      "scribe": 320
+    },
+    "mat": {},
+    "build_yrs": 0.4,
+    "adopt_yrs": 15,
+    "dev_years": 20,
+    "dev_people": 3,
+    "note": "Schr\u00f6dinger (1926). Teaching is technically hard and philosophically confusing (wave vs particle). Adoption: slow but now universal in quantum chemistry."
+  },
+  {
+    "id": "sc2_physics_uncertainty_principle",
+    "name": "Heisenberg uncertainty principle",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "wave_mechanics"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "\u0394x \u00b7 \u0394p \u2265 \u210f/2; cannot know position and momentum simultaneously with arbitrary precision",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 15,
+    "dev_years": 16,
+    "dev_people": 2,
+    "note": "Heisenberg (1927). Teaching: not instrument limitation, but fundamental. Adoption: slow because it contradicts intuition."
+  },
+  {
+    "id": "sc2_physics_nucleus_discovery",
+    "name": "The nucleus and radioactivity",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "photoelectric_effect"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Rutherford showed atoms have tiny dense nuclei; three types of radiation (alpha, beta, gamma)",
+    "ph": 120,
+    "lab": {
+      "scribe": 220
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 10,
+    "dev_years": 14,
+    "dev_people": 2,
+    "note": "Rutherford (1911); radioactivity discovered by Becquerel, explained by Rutherford and Soddy. Teaching: gold foil experiment shows nuclear structure. Adoption: opens nuclear physics."
+  },
+  {
+    "id": "sc2_physics_neutron_discovery",
+    "name": "The neutron",
+    "tier": 2,
+    "cat": "physics",
+    "pre": [
+      "isotopes"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Neutral nuclear particle; mass nearly equals proton; Chadwick proved (1932) from alpha bombardment",
+    "ph": 110,
+    "lab": {
+      "scribe": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 10,
+    "dev_years": 13,
+    "dev_people": 2,
+    "note": "Completes the picture: nucleus is protons and neutrons. Teaching: beta decay produces electron and antineutrino (not just released from nucleus). Adoption: opens path to fission."
+  },
+  {
+    "id": "sc2_physics_nuclear_fission",
+    "name": "Nuclear fission and chain reaction",
+    "tier": 3,
+    "cat": "physics",
+    "pre": [
+      "neutron_discovery"
+    ],
+    "traits": [
+      "military",
+      "energy"
+    ],
+    "kb": "Heavy nucleus splits into fragments; releases neutrons and 200 MeV; self-sustaining chain if k > 1",
+    "ph": 140,
+    "lab": {
+      "scribe": 260
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 2,
+    "dev_years": 14,
+    "dev_people": 3,
+    "note": "Meitner and Frisch (1938-1939); Manhattan Project (1942-1945). Teaching: Einstein's E = mc\u00b2, mass defect, reaction rates. Adoption: immediate military application (bomb and reactor)."
+  },
+  {
+    "id": "sc2_method_controlled_experiment",
+    "name": "Controlled experiment and causality",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "scientific_method"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Manipulate one variable (treatment), hold others constant, measure outcome; compare to control",
+    "ph": 100,
+    "lab": {
+      "researcher": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 10,
+    "dev_years": 12,
+    "dev_people": 2,
+    "note": "Foundation of empirical science. Teaching: why matters (isolates cause from correlation). Adoption is slow because it requires surrendering real-world complexity."
+  },
+  {
+    "id": "sc2_method_hypothesis",
+    "name": "Hypothesis and prediction",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "controlled_experiment"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Propose specific prediction from theory; design experiment to test it; null hypothesis is baseline",
+    "ph": 90,
+    "lab": {
+      "researcher": 180
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 8,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Explicit prediction, not 'let's see what happens.' Teaching: why falsifiable matters. Adoption: becomes standard in quantitative science."
+  },
+  {
+    "id": "sc2_method_replication",
+    "name": "Replication and repeatability",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "controlled_experiment"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Another researcher, different time and place, obtains same results with same methods",
+    "ph": 80,
+    "lab": {
+      "researcher": 160
+    },
+    "mat": {},
+    "build_yrs": 0.1,
+    "adopt_yrs": 10,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Validates findings and catches fraud. Teaching: why peer skepticism matters. Adoption: slow because replication is unglamorous and often unrewarding."
+  },
+  {
+    "id": "sc2_method_lab_notebook",
+    "name": "Laboratory notebook and data recording",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "scientific_method"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Daily record of observations, conditions, calculations, false starts; dated, sequential, no erasure",
+    "ph": 70,
+    "lab": {
+      "researcher": 140
+    },
+    "mat": {
+      "mat_parchment": 50,
+      "mat_ink": 5
+    },
+    "build_yrs": 0.1,
+    "adopt_yrs": 5,
+    "dev_years": 5,
+    "dev_people": 1,
+    "note": "Legal requirement for patent disputes. Teaching: why matters (reproducibility, chain of custody). Adoption: fast in experimental labs."
+  },
+  {
+    "id": "sc2_method_negative_result",
+    "name": "Negative result and null finding",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "hypothesis",
+      "replication"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Experiment where predicted effect did not occur; equally valid as positive, often more informative",
+    "ph": 90,
+    "lab": {
+      "researcher": 180
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 20,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Publication bias: journals reject negatives. Teaching: why matters (saves others' time). Adoption: slow because negatives disappoint."
+  },
+  {
+    "id": "sc2_method_peer_criticism",
+    "name": "Peer criticism and expert review",
+    "tier": 1,
+    "cat": "method",
+    "pre": [
+      "scientific_method"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Colleagues check logic, methods, calculations; public critique in meetings or correspondence",
+    "ph": 100,
+    "lab": {
+      "researcher": 200
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 8,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "Royal Society tradition. Teaching: why defensiveness fails. Adoption: fast in university but slow in industry and government."
+  },
+  {
+    "id": "sc2_institution_learned_society",
+    "name": "Learned society and academy",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "academy_network"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Membership of scientists; regular meetings; publications; elect fellows; set standards",
+    "ph": 100,
+    "lab": {
+      "administrator": 200
+    },
+    "mat": {
+      "mat_paper": 100
+    },
+    "build_yrs": 0.3,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Royal Society (1660), Academie des Sciences (1666). Teaching: creates community and authority. Adoption: fast among elite, slow elsewhere."
+  },
+  {
+    "id": "sc2_institution_journal",
+    "name": "Scientific journal and periodical",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "learned_society",
+      "corpus_dispersed"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Monthly or quarterly publication of peer-reviewed articles with title, methods, results, discussion",
+    "ph": 110,
+    "lab": {
+      "editor": 200,
+      "scribe": 150
+    },
+    "mat": {
+      "mat_paper": 500
+    },
+    "build_yrs": 0.3,
+    "adopt_yrs": 6,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Philosophical Transactions (1665) first. Teaching: establishes priority and enables distant researchers. Adoption: fast once printing enables it."
+  },
+  {
+    "id": "sc2_institution_referee",
+    "name": "Referee and peer review",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "journal",
+      "peer_criticism"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Editor sends manuscript to expert referees anonymously; accepts or rejects based on review",
+    "ph": 100,
+    "lab": {
+      "editor": 200,
+      "researcher": 150
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 8,
+    "dev_years": 9,
+    "dev_people": 2,
+    "note": "Formalised in 20th century (Nature and Science). Teaching: why anonymous matters (prevents conflicts). Adoption: slow because refereeing is unpaid."
+  },
+  {
+    "id": "sc2_institution_citation",
+    "name": "Citation and bibliographic reference",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "journal"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Footnote naming source of idea or fact; enables tracking influence and crediting prior work",
+    "ph": 80,
+    "lab": {
+      "scribe": 160
+    },
+    "mat": {},
+    "build_yrs": 0.15,
+    "adopt_yrs": 5,
+    "dev_years": 6,
+    "dev_people": 1,
+    "note": "Standard notation evolved over centuries (now many styles). Teaching: plagiarism vs. citation. Adoption: fast once journals exist."
+  },
+  {
+    "id": "sc2_institution_textbook",
+    "name": "Textbook and codified knowledge",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "journal",
+      "curriculum"
+    ],
+    "traits": [
+      "information",
+      "labour_saving"
+    ],
+    "kb": "Book that teaches subject from first principles; worked examples; exercises with answers",
+    "ph": 200,
+    "lab": {
+      "scholar": 400,
+      "scribe": 200
+    },
+    "mat": {
+      "mat_paper": 500
+    },
+    "build_yrs": 1,
+    "adopt_yrs": 8,
+    "dev_years": 20,
+    "dev_people": 3,
+    "note": "Euclid's Elements (300 BC) set standard. Teaching: distill knowledge into digestible form. Adoption: slow because good textbooks take years to write and refine."
+  },
+  {
+    "id": "sc2_institution_curriculum",
+    "name": "Curriculum and course sequence",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "textbook"
+    ],
+    "traits": [
+      "information",
+      "labour_saving"
+    ],
+    "kb": "Planned sequence of courses building toward degree; prerequisites ensure logical progression",
+    "ph": 120,
+    "lab": {
+      "educator": 220
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 5,
+    "dev_years": 12,
+    "dev_people": 3,
+    "note": "Universities formalized in medieval period. Teaching: what order? Arithmetic before algebra, geometry before calculus. Adoption: slow because schools resist change."
+  },
+  {
+    "id": "sc2_institution_examination",
+    "name": "Examination and credentialing",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "curriculum"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Written or oral test to verify mastery; degree or certificate signals to employers",
+    "ph": 80,
+    "lab": {
+      "educator": 160
+    },
+    "mat": {
+      "mat_paper": 100
+    },
+    "build_yrs": 0.2,
+    "adopt_yrs": 8,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Universities began written exams in 19th century. Teaching: standardises quality. Adoption: slow because it threatens existing credentials."
+  },
+  {
+    "id": "sc2_institution_doctorate",
+    "name": "Doctorate and research degree",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "examination",
+      "thesis"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "PhD requires original research contribution; defended before experts; credential for independent researcher",
+    "ph": 150,
+    "lab": {
+      "advisor": 300
+    },
+    "mat": {},
+    "build_yrs": 0.5,
+    "adopt_yrs": 8,
+    "dev_years": 12,
+    "dev_people": 3,
+    "note": "German universities formalised (1800s). Teaching: what counts as original? How evaluate quality? Adoption: now universal marker of research qualification."
+  },
+  {
+    "id": "sc2_institution_research_group",
+    "name": "Research group and principal investigator",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "doctorate",
+      "funded_programme"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Senior scientist leads team of postdocs and students; collective work; shared credit",
+    "ph": 100,
+    "lab": {
+      "administrator": 200
+    },
+    "mat": {},
+    "build_yrs": 0.25,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "Liebig's group (1830s) was model. Teaching: how supervise and credit work. Adoption: fast in universities, slow in industry."
+  },
+  {
+    "id": "sc2_institution_funded_programme",
+    "name": "Funded research programme",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "research_group",
+      "government_support"
+    ],
+    "traits": [
+      "information"
+    ],
+    "kb": "Government or foundation grants money for specific research goals; researcher proposes, peer review decides",
+    "ph": 120,
+    "lab": {
+      "administrator": 220
+    },
+    "mat": {},
+    "build_yrs": 0.3,
+    "adopt_yrs": 5,
+    "dev_years": 10,
+    "dev_people": 2,
+    "note": "NIH, NSF, DFIR modern examples. Teaching: how write proposal. Adoption: became essential by 1950s as research became expensive."
+  },
+  {
+    "id": "sc2_institution_patent_disclosure",
+    "name": "Patent as disclosure and property right",
+    "tier": 1,
+    "cat": "institution",
+    "pre": [
+      "scientific_method",
+      "lab_notebook"
+    ],
+    "traits": [
+      "commerce"
+    ],
+    "kb": "Technical description filed with government; grants monopoly for term; requires disclosure of how it works",
+    "ph": 100,
+    "lab": {
+      "scribe": 200,
+      "lawyer": 100
+    },
+    "mat": {},
+    "build_yrs": 0.2,
+    "adopt_yrs": 10,
+    "dev_years": 8,
+    "dev_people": 2,
+    "note": "English statute 1624. Teaching: why disclose? Fear of copying drives secrecy. Patent law forces choice: publish or abandon claim. Adoption is slow and contested."
+  }
+]

@@ -1,0 +1,2241 @@
+[
+ {
+  "id": "air_aerodrome",
+  "name": "Aerodrome (landing field)",
+  "tier": 2,
+  "cat": "aviation",
+  "pre": [
+   {
+    "id": "air_powered_aeroplane",
+    "name": "Powered aeroplane"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "labourer": 500
+  },
+  "mat": {
+   "brick_1000": 5
+  },
+  "cap": 300,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "gov": 2,
+  "sus": 0,
+  "conf": "B",
+  "note": "An open field of level ground, grass or gravel, at least 500 meters long and 100 meters wide. Aircraft need room to take off into wind and to land without hitting obstacles. A brick or gravel surface prevents mud. Early aerodromes were called flying grounds. They must be maintained and guarded."
+ },
+ {
+  "id": "air_dirigible_engine_mount",
+  "name": "Mounted engine under balloon",
+  "tier": 3,
+  "cat": "aviation",
+  "pre": [
+   {
+    "id": "air_elongated_envelope",
+    "name": "Elongated balloon envelope"
+   },
+   {
+    "id": "air_light_petrol_engine",
+    "name": "Light petrol engine"
+   }
+  ],
+  "ph": 200,
+  "lab": {
+   "carpenter": 200,
+   "smith": 150
+  },
+  "mat": {
+   "timber_m3": 1,
+   "iron_bar_kg": 20
+  },
+  "cap": 150,
+  "yrs": 0.6,
+  "risk": 0.18,
+  "gov": 2,
+  "sus": 1,
+  "conf": "C",
+  "note": "Suspend a small petrol engine and propeller in a wooden framework below an elongated envelope. The propeller drives air backward, creating thrust. The envelope provides lift. Requires a very light engine relative to power output and extreme care in weight balance. This is a dirigible, controllable by the pilot."
+ },
+ {
+  "id": "air_pitot_tube",
+  "name": "Pitot tube",
+  "tier": 1,
+  "cat": "aviation",
+  "pre": [
+   {
+    "id": "barometer",
+    "name": "Mercury barometer, and the first hard vacuum"
+   }
+  ],
+  "ph": 50,
+  "lab": {
+   "artisan": 80
+  },
+  "mat": {
+   "brass_kg": 1
+  },
+  "cap": 40,
+  "yrs": 0.1,
+  "risk": 0.05,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "A simple tube with an opening into the airstream and a side port. Dynamic pressure at the front is higher than static pressure at the side. The difference is proportional to velocity squared. This is purely fluid statics, not magic."
+ },
+ {
+  "id": "air_rotary_engine",
+  "name": "Rotary engine",
+  "tier": 3,
+  "cat": "aviation",
+  "pre": [
+   {
+    "id": "air_light_petrol_engine",
+    "name": "Light petrol engine"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 220,
+  "lab": {
+   "machinist": 280,
+   "smith": 160
+  },
+  "mat": {
+   "steel_plate_kg": 7,
+   "iron_bar_kg": 4,
+   "aluminium_kg": 4
+  },
+  "cap": 200,
+  "yrs": 1.1,
+  "risk": 0.2,
+  "gov": 3,
+  "sus": 10,
+  "conf": "B",
+  "note": "The entire engine block rotates with the propeller while the crankshaft stays fixed. The piston heads are cooled by rotation. High power at low weight. Much more complex than radial but delivers slightly better power. Used extensively in WWI aircraft. Requires very careful design to handle gyroscopic forces. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "air_wing_warping",
+  "name": "Wing warping",
+  "tier": 2,
+  "cat": "aviation",
+  "pre": [
+   {
+    "id": "air_three_axis_control",
+    "name": "Three-axis control: roll, pitch, yaw"
+   }
+  ],
+  "ph": 120,
+  "lab": {
+   "carpenter": 150
+  },
+  "mat": {
+   "timber_m3": 0.3,
+   "linen_kg": 1.5
+  },
+  "cap": 60,
+  "yrs": 0.3,
+  "risk": 0.15,
+  "gov": 3,
+  "sus": 10,
+  "conf": "B",
+  "note": "Twist the entire wing by pulling cables to alter the angle of attack at wing tips. This causes differential lift and forces the aircraft to roll. No moving surfaces are needed; the wing itself twists. This is elegant and strong, but requires great care in cable routing and tensioning. The Wright brothers used this. It works. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "chm_aniline",
+  "name": "Aniline from benzene via nitrobenzene",
+  "tier": 4,
+  "cat": "organic_chemistry",
+  "pre": [
+   {
+    "id": "chm_benzene",
+    "name": "Benzene extraction from coal tar"
+   },
+   {
+    "id": "industrial_gases",
+    "name": "Oxygen and hydrogen in quantity"
+   }
+  ],
+  "ph": 180,
+  "lab": {
+   "chemist": 250
+  },
+  "mat": {
+   "coal_kg": 150,
+   "iron_bar_kg": 50
+  },
+  "cap": 3000,
+  "yrs": 1.0,
+  "risk": 0.2,
+  "gov": 1,
+  "sus": 3,
+  "conf": "B",
+  "note": "Oleum nitrates benzene to nitrobenzene in minutes. Reduction with iron powder in dilute acid yields aniline. Aniline is a colourless liquid, bp 184 C, that polymerises in air to a black tar unless kept dry. It is the keystone of synthetic dyes and must be kept under nitrogen or mineral oil."
+ },
+ {
+  "id": "chm_bakelite",
+  "name": "Bakelite: phenol-formaldehyde plastic",
+  "tier": 4,
+  "cat": "plastics",
+  "pre": [
+   {
+    "id": "chm_phenol",
+    "name": "Phenol extraction from coal tar and synthesis"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "chemist": 200,
+   "scholar": 100
+  },
+  "mat": {
+   "coal_kg": 100
+  },
+  "cap": 3000,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "gov": 0,
+  "sus": 1,
+  "conf": "B",
+  "note": "Phenol and formaldehyde condense at 150-180 C in the presence of acid catalyst. The resin is thermoset: once cured, it cannot be remelted. Bakelite is hard, brittle, and heat-resistant. It is used for electrical insulation, radio bodies, and industrial equipment. It was the first fully synthetic plastic and dominated the 1920s."
+ },
+ {
+  "id": "chm_cyanamide_fixation",
+  "name": "Cyanamide process: nitrogen fixation by carbide",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "pre": [
+   {
+    "id": "coal_coke",
+    "name": "Coal, and coking it"
+   },
+   {
+    "id": "cap_heat_3000",
+    "name": "3000 C+ (electric arc / resistance)"
+   }
+  ],
+  "ph": 200,
+  "lab": {
+   "furnaceman": 250,
+   "chemist": 150
+  },
+  "mat": {
+   "coal_kg": 300,
+   "limestone_kg": 200
+  },
+  "cap": 5000,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "gov": 2,
+  "sus": 2,
+  "conf": "B",
+  "note": "Calcium carbide is made by arc furnace: limestone and coke to 3000 C in one step. The carbide then reacts with nitrogen gas at 1000 C to yield calcium cyanamide, which hydrolyses to ammonia. This route predates Haber-Bosch and requires less pressure, but yields fewer tonnes per unit energy. Arc furnace demands kilowatts of electric power."
+ },
+ {
+  "id": "chm_detergent_synthetic",
+  "name": "Synthetic detergent from petroleum sulfonic acid",
+  "tier": 4,
+  "cat": "chemical_engineering",
+  "pre": [
+   {
+    "id": "mat_petroleum_refined",
+    "name": "Refined petroleum fractions"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "chemist": 200
+  },
+  "mat": {
+   "coal_kg": 100
+  },
+  "cap": 2000,
+  "yrs": 1.0,
+  "risk": 0.05,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Synthetic detergents are made by sulfonation of alkenes from cracking petroleum fractions. The sulfonic acid is neutralised with soda ash. Detergent molecules have a long nonpolar hydrocarbon tail that dissolves in grease and a polar sulfonate head that dissolves in water. Synthetic detergents work better in cold water than soap and do not leave scum."
+ },
+ {
+  "id": "chm_filter_press",
+  "name": "Filter press: plate-and-frame filtration",
+  "tier": 3,
+  "cat": "chemical_engineering",
+  "pre": [
+   {
+    "id": "cap_tol_1mm",
+    "name": "Tolerance 1 mm (skilled hand craft)"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "machinist": 200,
+   "smith": 150
+  },
+  "mat": {
+   "iron_bar_kg": 100,
+   "linen_kg": 20
+  },
+  "cap": 2000,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "gov": 0,
+  "sus": 6,
+  "conf": "B",
+  "note": "Slurry is pumped into the space between cloth-lined plates, then pressure forces liquid through cloth while solids accumulate. When blocked, plates are separated and solids are knocked out. This is tedious but effective at achieving 1-2 micron clarity. Continuous filter designs exist but are slower. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "chm_gelignite",
+  "name": "Gelignite: nitroglycerin in colloidal cellulose",
+  "tier": 3,
+  "cat": "explosives",
+  "pre": [
+   {
+    "id": "chm_nitroglycerin",
+    "name": "Nitroglycerin synthesis and stabilisation"
+   },
+   {
+    "id": "chm_guncotton",
+    "name": "Guncotton: nitration of cellulose"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "chemist": 150
+  },
+  "mat": {
+   "coal_kg": 80
+  },
+  "cap": 2000,
+  "yrs": 0.5,
+  "risk": 0.15,
+  "gov": 3,
+  "sus": 1,
+  "conf": "B",
+  "note": "When nitroglycerin is mixed with nitrocellulose dissolved in acetone or diethyl phthalate, the cellulose swells and gelatinises, creating a putty. Gelignite is more powerful than dynamite and handles more safely. It is the standard explosive for controlled demolition. [AUDIT: capability prerequisite(s) cap_heat_1300 were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.]"
+ },
+ {
+  "id": "civ_dam_arch",
+  "name": "Arch dam in concrete",
+  "tier": 3,
+  "cat": "water",
+  "pre": [
+   {
+    "id": "civ_dam_gravity",
+    "name": "Gravity dam in masonry or concrete"
+   },
+   {
+    "id": "civ_arch_roman",
+    "name": "Roman masonry arch"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 250,
+  "lab": {
+   "engineer": 400,
+   "mason": 600
+  },
+  "mat": {
+   "lime_kg": 80
+  },
+  "cap": 400,
+  "yrs": 2,
+  "risk": 0.2,
+  "gov": 3,
+  "sus": 0,
+  "conf": "B",
+  "note": "A curved dam transfers water pressure sideways to the canyon walls, not to the base. Thinner and lighter than a gravity dam. Requires rock walls on both sides and calculation of the arch stress. The Hoover Dam (1936) is an arch; it can hold a lake with less concrete than gravity. [AUDIT: capability prerequisite(s) cap_heat_1300 were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.]"
+ },
+ {
+  "id": "civ_method_joints",
+  "name": "Method of joints for truss analysis",
+  "tier": 2,
+  "cat": "theory",
+  "pre": [
+   {
+    "id": "civ_statics",
+    "name": "Statics and equilibrium of forces"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "scholar": 300
+  },
+  "mat": {},
+  "cap": 0,
+  "yrs": 0.8,
+  "risk": 0.05,
+  "gov": 0,
+  "sus": 0,
+  "conf": "B",
+  "note": "At each joint of a truss, forces are in equilibrium. By solving joint by joint (starting from known loads), the tension or compression in each member can be calculated. This displaced rule-of-thumb proportioning; calculation is faster and correct."
+ },
+ {
+  "id": "com_amplitude_modulation",
+  "name": "Amplitude modulation (AM) - encoding audio on radio",
+  "tier": 4,
+  "cat": "radio",
+  "pre": [
+   {
+    "id": "com_continuous_wave",
+    "name": "Continuous wave (CW) generation with triode"
+   },
+   {
+    "id": "com_triode_oscillator",
+    "name": "Triode oscillator - audio and RF frequency synthesis"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "scholar": 200,
+   "machinist": 150
+  },
+  "mat": {
+   "brass_kg": 4,
+   "copper_kg": 5,
+   "iron_bar_kg": 3
+  },
+  "cap": 800,
+  "yrs": 2.0,
+  "risk": 0.1,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "A microphone signal (audio, 0-10 kHz) is added to the RF oscillator output, varying its amplitude. The modulated wave is transmitted; a receiver detects the envelope (the modulation) using a rectifier, recovering audio. The trick: a 1 MHz carrier modulated with 1 kHz audio produces sidebands at 999 kHz and 1001 kHz. Radio stations are spaced 10 kHz apart (AM broadcast). The bandwidth is about 2x the audio frequency. Simple and robust."
+ },
+ {
+  "id": "com_analytical_engine",
+  "name": "Analytical engine - programmable mechanical computer",
+  "tier": 3,
+  "cat": "calculation",
+  "pre": [
+   {
+    "id": "com_difference_engine",
+    "name": "Difference engine - mechanical polynomial solver"
+   }
+  ],
+  "ph": 250,
+  "lab": {
+   "master": 500,
+   "machinist": 400,
+   "scholar": 200
+  },
+  "mat": {
+   "brass_kg": 120,
+   "iron_bar_kg": 60,
+   "timber_m3": 3,
+   "steel_noric_kg": 15
+  },
+  "cap": 15000,
+  "yrs": 4.0,
+  "risk": 0.3,
+  "gov": 0,
+  "sus": 2,
+  "conf": "C",
+  "note": "Babbage's design for a universal mechanical computer: a large mill (arithmetic unit) and store (memory), programmed by punched cards like Jacquard looms. It could perform any sequence of arithmetic operations, conditional on intermediate results. The killer insight: a general-purpose machine can solve many problems if programmed differently. Ada Lovelace sketched an algorithm for it (1843). It was never built (same tolerance problems as the Difference Engine), but it was the conceptual foundation of the stored-program computer."
+ },
+ {
+  "id": "com_binary_arithmetic",
+  "name": "Binary arithmetic - base-2 number system",
+  "tier": 4,
+  "cat": "computing",
+  "pre": [
+   {
+    "id": "arithmetic_positional",
+    "name": "Decimal positional notation, zero, negative numbers, decimal fractions"
+   },
+   {
+    "id": "com_boolean_algebra",
+    "name": "Boolean algebra - logic and switching equivalence"
+   },
+   {
+    "id": "cap_heat_1600",
+    "name": "Sustained 1600 C (regenerative preheat)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "scholar": 250
+  },
+  "mat": {
+   "parchment_sheet": 40
+  },
+  "cap": 0,
+  "yrs": 2.0,
+  "risk": 0.05,
+  "gov": 0,
+  "sus": 4,
+  "conf": "B",
+  "note": "Binary: digits 0 and 1 only. Addition, multiplication, and logic are all simpler in binary than decimal. A two-state device (relay on/off, transistor on/off) represents 0 or 1 directly. Decimal requires devices with 10 states (complex and error-prone). All electronic computers use binary for this reason. The conceptual link: binary numbers are data, Boolean logic is control, they use the same substrates (switches). [AUDIT: capability prerequisite(s) cap_heat_1600 were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "com_comptometer",
+  "name": "Comptometer - key-driven calculator",
+  "tier": 3,
+  "cat": "calculation",
+  "pre": [
+   {
+    "id": "com_mechanical_calculator",
+    "name": "Mechanical calculator - Pascal and Leibniz designs"
+   },
+   {
+    "id": "interchangeable_parts",
+    "name": "Tolerances, jigs, fixtures and interchangeable manufacture"
+   }
+  ],
+  "ph": 140,
+  "lab": {
+   "machinist": 280
+  },
+  "mat": {
+   "brass_kg": 22,
+   "iron_bar_kg": 12,
+   "timber_m3": 0.6,
+   "steel_noric_kg": 2
+  },
+  "cap": 1800,
+  "yrs": 1.15,
+  "risk": 0.12,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Instead of a crank (one operation per second), the Comptometer (1887 onward) uses keys (one per digit). Pressing a key lever multiple times increments that digit, accumulating the sum. Touch typists could use Comptometers almost as fast as they thought of numbers. Faster than Arithmometer. The innovation is that the operator interface is ergonomic and intuitive (press 5 five times to add 5), not just mechanical optimization."
+ },
+ {
+  "id": "com_semiconductor_diode",
+  "name": "Semiconductor diode - p-n junction rectifier",
+  "tier": 5,
+  "cat": "electronics",
+  "pre": [
+   {
+    "id": "junction_transistor",
+    "name": "Grown and alloy junction transistors"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "chemist": 200,
+   "scholar": 150
+  },
+  "mat": {
+   "germanium_g": 10,
+   "indium_g": 2,
+   "gold_g": 1
+  },
+  "cap": 800,
+  "yrs": 2.0,
+  "risk": 0.1,
+  "gov": 1,
+  "sus": 8,
+  "conf": "A",
+  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the diode's threshold voltage sets the logic swing (0-5V typical). [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "com_superheterodyne_receiver",
+  "name": "Superheterodyne receiver - fixed intermediate frequency design",
+  "tier": 4,
+  "cat": "radio",
+  "pre": [
+   {
+    "id": "com_continuous_wave",
+    "name": "Continuous wave (CW) generation with triode"
+   },
+   {
+    "id": "com_triode_oscillator",
+    "name": "Triode oscillator - audio and RF frequency synthesis"
+   },
+   {
+    "id": "com_amplitude_modulation",
+    "name": "Amplitude modulation (AM) - encoding audio on radio"
+   }
+  ],
+  "ph": 160,
+  "lab": {
+   "scholar": 300,
+   "machinist": 250
+  },
+  "mat": {
+   "brass_kg": 12,
+   "copper_kg": 15,
+   "iron_bar_kg": 8,
+   "timber_m3": 0.4
+  },
+  "cap": 2500,
+  "yrs": 1.25,
+  "risk": 0.15,
+  "gov": 0,
+  "sus": 0,
+  "conf": "B",
+  "note": "Instead of amplifying the RF signal directly (hard at high frequencies), a mixer combines the received signal with a local oscillator, producing a difference frequency (intermediate frequency, typically 455 kHz or 10.7 MHz). Tuning changes only the local oscillator; the intermediate frequency is fixed and easy to amplify. This is the most important radio innovation after AM: it made high-gain, selective receivers practical. Nearly all radio since 1920 is superheterodyne."
+ },
+ {
+  "id": "freedman_staff",
+  "name": "Buy, train and manumit a technical staff",
+  "tier": 1,
+  "cat": "institution",
+  "pre": [
+   {
+    "id": "workshop_first",
+    "name": "First workshop and laboratory"
+   }
+  ],
+  "ph": 900,
+  "lab": {},
+  "mat": {
+   "slave_skilled": 8
+  },
+  "cap": 2000,
+  "yrs": 2,
+  "risk": 0.1,
+  "gov": 0,
+  "sus": 0,
+  "conf": "C",
+  "note": "Buy skilled slaves, teach them, free them, pay them, keep them. Freedmen retain obligation to their patron, can hold property, and ran much of Roman commerce. A paid literate freedman transmits knowledge; a coerced labourer does not. This is both the ethical and the efficient answer. Grants +8 artisans."
+ },
+ {
+  "id": "fud_distillation_spirits",
+  "name": "Distillation of spirits and liqueurs",
+  "tier": 1,
+  "cat": "fermentation",
+  "pre": [
+   {
+    "id": "distillation_alcohol",
+    "name": "Worm condenser, distilled spirits, essential oils"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "artisan": 200,
+   "chemist": 80
+  },
+  "mat": {
+   "copper_kg": 30
+  },
+  "cap": 250,
+  "yrs": 1.0,
+  "risk": 0.2,
+  "gov": 1,
+  "sus": 1,
+  "conf": "A",
+  "note": "Heat fermented beer or wine in copper alembic with condenser; collect vapors as high-proof spirit. Required copper work and heat control. Spirits store longer than wine and command high prices. Banned in some jurisdictions as luxury and fire hazard."
+ },
+ {
+  "id": "fud_hay_making_storage",
+  "name": "Hay making and dry storage",
+  "tier": 1,
+  "cat": "agriculture",
+  "pre": [
+   {
+    "id": "crop_rotation",
+    "name": "Legume rotation, heavy plough, marling, selective breeding"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "labourer": 300
+  },
+  "mat": {
+   "timber_m3": 5
+  },
+  "cap": 200,
+  "yrs": 1.0,
+  "risk": 0.2,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Cut grass at peak nutrition, dry thoroughly in sun and wind, store in dry barn or haybarn. Timing and weather are critical - rain-soaked hay rots or molts. Enables winter feeding of draft animals when pasture is gone."
+ },
+ {
+  "id": "fud_soil_composition_analysis",
+  "name": "Understanding and testing soil composition",
+  "tier": 2,
+  "cat": "knowledge",
+  "pre": [
+   {
+    "id": "fud_agricultural_treatises",
+    "name": "Written agricultural treatises and knowledge codification"
+   }
+  ],
+  "ph": 200,
+  "lab": {
+   "scholar": 200,
+   "chemist": 150
+  },
+  "mat": {},
+  "cap": 200,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "gov": 0,
+  "sus": 0,
+  "conf": "C",
+  "note": "Test soil pH, organic matter, and nutrient content via chemical analysis or simple tests. Informs liming, fertilizer, and crop choices. Precision farming based on data rather than guess."
+ },
+ {
+  "id": "hom_stove_enclosed",
+  "name": "Enclosed stove",
+  "tier": 1,
+  "cat": "heating",
+  "pre": [
+   {
+    "id": "hom_fireplace_chimney",
+    "name": "Fireplace and chimney"
+   },
+   {
+    "id": "cap_heat_1100",
+    "name": "Sustained 1100 C (hand-blown charcoal)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "mason": 150,
+   "smith": 80
+  },
+  "mat": {
+   "brick_1000": 2,
+   "cast_iron_kg": 40,
+   "clay_kg": 30
+  },
+  "cap": 150,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "A metal or ceramic box with fire inside, heating room air by radiation and conduction. More efficient than open fireplace because less heat escapes up the chimney. Requires cast iron or tile manufacture."
+ },
+ {
+  "id": "hot_air_balloon",
+  "name": "Hot air balloon for observation",
+  "tier": 2,
+  "cat": "military",
+  "pre": [
+   {
+    "id": "rag_paper",
+    "name": "Rag paper from linen"
+   },
+   {
+    "id": "distillation_alcohol",
+    "name": "Worm condenser, distilled spirits, essential oils"
+   }
+  ],
+  "ph": 400,
+  "lab": {
+   "artisan": 2500,
+   "labourer": 1500
+  },
+  "mat": {
+   "linen_kg": 400,
+   "olive_oil_kg": 300,
+   "firewood_kg": 8000
+  },
+  "cap": 3000,
+  "yrs": 2,
+  "risk": 0.4,
+  "gov": 3,
+  "sus": 14,
+  "conf": "B",
+  "note": "Low technology, moderate cost, high spectacle, and the State wants it for siege observation and signalling. Also one of the fastest ways to be accused of sorcery, so fly it first for the army with the governor watching, never privately at night. Linen sized with oil is the envelope; Rome has excellent sailcloth."
+ },
+ {
+  "id": "lnd_otto_cycle_four_stroke",
+  "name": "Otto cycle four-stroke engine",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   {
+    "id": "lnd_gas_engine_atmospheric",
+    "name": "Atmospheric gas engine (Lenoir)"
+   },
+   {
+    "id": "mat_bulk_steel",
+    "name": "Bulk steel (converter and open hearth)"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 350,
+  "lab": {
+   "machinist": 400,
+   "smith": 300,
+   "artisan": 200
+  },
+  "mat": {
+   "steel_plate_kg": 80,
+   "iron_bar_kg": 120,
+   "copper_kg": 30,
+   "nickel_kg": 5
+  },
+  "cap": 5000,
+  "yrs": 2.5,
+  "risk": 0.22,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Intake, compression, power, exhaust in four strokes per cycle. More efficient than atmospheric engines. Forms the foundation of all automotive engines."
+ },
+ {
+  "id": "lnd_spark_plug",
+  "name": "Spark plug (spark ignition)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   {
+    "id": "lnd_otto_cycle_four_stroke",
+    "name": "Otto cycle four-stroke engine"
+   },
+   {
+    "id": "cap_tol_10um",
+    "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)"
+   },
+   {
+    "id": "electromagnet",
+    "name": "Electromagnet, relay, and the Wheatstone bridge"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "machinist": 180,
+   "smith": 100,
+   "artisan": 70
+  },
+  "mat": {
+   "platinum_g": 2,
+   "ceramic_kg": 1,
+   "copper_kg": 3
+  },
+  "cap": 600,
+  "yrs": 0.8,
+  "risk": 0.1,
+  "gov": 2,
+  "sus": 1,
+  "conf": "A",
+  "note": "Electric spark across a gap ignites fuel mix at the exact moment of compression. Timing is everything; even small errors cause misfires and loss of power. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "lnd_steering_geometry",
+  "name": "Steering geometry (Ackermann)",
+  "tier": 3,
+  "cat": "transport",
+  "pre": [
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "artisan": 200,
+   "master": 150
+  },
+  "mat": {
+   "steel_plate_kg": 20
+  },
+  "cap": 1500,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "gov": 2,
+  "sus": 1,
+  "conf": "B",
+  "note": "Front wheels must turn at different angles during a turn so both follow the same curved path. This geometry is counterintuitive but essential for stable handling. [AUDIT: capability prerequisite(s) cap_heat_1300 were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "lnd_stirrup",
+  "name": "Stirrup",
+  "tier": 1,
+  "cat": "transport",
+  "pre": [
+   {
+    "id": "horse_collar",
+    "name": "Rigid padded horse collar, whippletree, nailed horseshoe"
+   },
+   {
+    "id": "mat_wrought_iron",
+    "name": "Wrought iron (bloomery)"
+   }
+  ],
+  "ph": 60,
+  "lab": {
+   "smith": 150,
+   "artisan": 50
+  },
+  "mat": {
+   "iron_bar_kg": 3,
+   "leather_kg": 2
+  },
+  "cap": 250,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "gov": 2,
+  "sus": 0,
+  "conf": "A",
+  "note": "Metal foot-loops hanging from saddle revolutionise horseback riding. Rider can brace legs, rise from seat, and deliver force in combat or work. This is as much a military technology as a transport one."
+ },
+ {
+  "id": "lnd_truck",
+  "name": "Truck (motor freight vehicle)",
+  "tier": 4,
+  "cat": "transport",
+  "pre": [
+   {
+    "id": "lnd_automobile",
+    "name": "Automobile (self-propelled carriage)"
+   },
+   {
+    "id": "lnd_diesel_cycle",
+    "name": "Diesel cycle (compression ignition)"
+   }
+  ],
+  "ph": 300,
+  "lab": {
+   "machinist": 400,
+   "smith": 300,
+   "carpenter": 250
+  },
+  "mat": {
+   "steel_plate_kg": 200,
+   "iron_bar_kg": 300,
+   "brass_kg": 30
+  },
+  "cap": 12000,
+  "yrs": 2.5,
+  "risk": 0.25,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Heavy-duty chassis with open cargo bed. Diesel engine for economy and torque. Replaces the mule and the railway for regional freight. Speed and flexibility change logistics entirely."
+ },
+ {
+  "id": "med_aspirin",
+  "name": "Aspirin (acetylsalicylic acid)",
+  "tier": 2,
+  "cat": "pharmacology",
+  "pre": [
+   {
+    "id": "nitric_acid",
+    "name": "Nitric acid"
+   }
+  ],
+  "ph": 80,
+  "lab": {
+   "chemist": 120
+  },
+  "mat": {
+   "charcoal_kg": 1
+  },
+  "cap": 600,
+  "yrs": 0.5,
+  "risk": 0,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Acetylation of salicylic acid (from willow bark). Safer than salicylate because absorbed slowly. Reduces fever, pain, inflammation. Bayer trademark."
+ },
+ {
+  "id": "med_autoclave",
+  "name": "Autoclave for steam sterilization",
+  "tier": 2,
+  "cat": "instruments",
+  "pre": [
+   {
+    "id": "steam_high_pressure",
+    "name": "High pressure steam and adequate boilers"
+   },
+   {
+    "id": "glass_labware",
+    "name": "Retorts, flasks, condensers, tubing, graduated vessels"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "smith": 200,
+   "machinist": 150
+  },
+  "mat": {
+   "steel_noric_kg": 50,
+   "glass_raw_kg": 5
+  },
+  "cap": 2000,
+  "yrs": 0.5,
+  "risk": 0.05,
+  "gov": 2,
+  "sus": 0,
+  "conf": "B",
+  "note": "Sealed vessel with high-pressure steam at 120 C for 15 minutes sterilizes instruments. Requires precision engineering; leaks render it useless."
+ },
+ {
+  "id": "med_gram_stain_culture",
+  "name": "Bacterial culture and Gram staining",
+  "tier": 2,
+  "cat": "diagnostics",
+  "pre": [
+   {
+    "id": "germ_theory",
+    "name": "Germ theory of disease"
+   },
+   {
+    "id": "glass_labware",
+    "name": "Retorts, flasks, condensers, tubing, graduated vessels"
+   },
+   {
+    "id": "mat_dyes_synthetic",
+    "name": "Synthetic dyes (aniline)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "scholar": 120
+  },
+  "mat": {
+   "glass_raw_kg": 2,
+   "dye_kg": 0.2
+  },
+  "cap": 600,
+  "yrs": 0.5,
+  "risk": 0.05,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice."
+ },
+ {
+  "id": "mercury_supply",
+  "name": "Secure mercury supply",
+  "tier": 2,
+  "cat": "metallurgy",
+  "pre": [
+   {
+    "id": "lead_metallurgy",
+    "name": "Lead sheet, pipe, litharge and cupellation control"
+   },
+   {
+    "id": "lab_apparatus",
+    "name": "A working laboratory: retorts, baths, lutes, crucibles, fume management"
+   },
+   {
+    "id": "cap_vac_1torr",
+    "name": "Rough vacuum, about 1 torr (piston pump)"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "miner": 2000,
+   "furnaceman": 1200
+  },
+  "mat": {
+   "cinnabar_kg": 400
+  },
+  "cap": 2500,
+  "yrs": 1,
+  "risk": 0.15,
+  "gov": 1,
+  "sus": 1,
+  "conf": "B",
+  "note": "Almaden is an imperial monopoly, so this is a political node before it is a technical one. Mercury gives you barometers, the Sprengel pump, mirrors and the first hard vacuum humans have ever had. Quantity sized for programme needs, not for trade: 400 kg of cinnabar yields roughly 300 kg of mercury, which is ample for barometers, thermometers, Sprengel pumps and a mirror works. Cinnabar is priced from Pliny NH 33.118. CORRECTION: this no longer requires the imperial mining concession. Cinnabar is traded across the Empire as the pigment minium and you can simply buy it and retort it yourself. The concession buys you BULK mercury cheaply, which matters later for mirrors and pumps, and it is a separate problem from getting your first kilogramme. [AUDIT: capability prerequisite(s) cap_vac_1torr were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.]"
+ },
+ {
+  "id": "met_cupola_furnace",
+  "name": "Cupola furnace for iron casting",
+  "tier": 1,
+  "cat": "smelting",
+  "pre": [
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   },
+   {
+    "id": "refractory_fireclay",
+    "name": "Fireclay, grog and silica refractories"
+   },
+   {
+    "id": "blast_furnace",
+    "name": "Tall shaft blast furnace and cast iron"
+   }
+  ],
+  "ph": 150,
+  "lab": {
+   "furnaceman": 200,
+   "mason": 120,
+   "smith": 80
+  },
+  "mat": {
+   "clay_kg": 300,
+   "charcoal_kg": 80,
+   "iron_bar_kg": 30,
+   "timber_m3": 3
+  },
+  "cap": 800,
+  "yrs": 1.8,
+  "risk": 0.12,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "A small tall furnace that melts scrap and pig iron for casting into sand moulds. Much hotter than an open hearth because the stack draft is strong. The problem is contamination from coke ash unless you use charcoal and then your fuel bill is punishing. Solves small-batch casting need cheaply."
+ },
+ {
+  "id": "met_drawn_tube",
+  "name": "Drawn tube production",
+  "tier": 2,
+  "cat": "forming",
+  "pre": [
+   {
+    "id": "drawplate_wire",
+    "name": "The drawplate and drawn wire"
+   },
+   {
+    "id": "cap_power_water",
+    "name": "Water power, tens of kW on one shaft"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "smith": 140,
+   "labourer": 80
+  },
+  "mat": {
+   "steel_plate_kg": 50,
+   "coal_kg": 80,
+   "soap_kg": 2
+  },
+  "cap": 800,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die."
+ },
+ {
+  "id": "met_galvanizing",
+  "name": "Galvanizing with zinc coating",
+  "tier": 2,
+  "cat": "surface_treatment",
+  "pre": [
+   {
+    "id": "mat_zinc",
+    "name": "Zinc metal"
+   },
+   {
+    "id": "zinc_metal",
+    "name": "Zinc metal by downward distillation"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 120,
+  "lab": {
+   "smith": 140,
+   "chemist": 80
+  },
+  "mat": {
+   "iron_bar_kg": 100,
+   "zinc_kg": 20,
+   "sulfuric_acid_kg": 5
+  },
+  "cap": 800,
+  "yrs": 1.5,
+  "risk": 0.12,
+  "gov": 0,
+  "sus": 0,
+  "conf": "B",
+  "note": "Dip clean iron into molten zinc. Zinc bonds metallurgically to iron and protects it from rust. The zinc-iron interface layer is hard and brittle; if you bend the bar sharply right after galvanizing it spalls and exposes the iron. Needs a pickling step with acid to remove rust and oxide before the dip, and flux (powdered chloride) to prevent oxidation of the zinc."
+ },
+ {
+  "id": "met_open_hearth_furnace",
+  "name": "Open hearth furnace and scrap recycling",
+  "tier": 2,
+  "cat": "smelting",
+  "pre": [
+   {
+    "id": "high_temp_furnace",
+    "name": "Regenerative and forced-draught furnaces to 1600 C+"
+   },
+   {
+    "id": "refractory_fireclay",
+    "name": "Fireclay, grog and silica refractories"
+   }
+  ],
+  "ph": 220,
+  "lab": {
+   "furnaceman": 300,
+   "mason": 150,
+   "smith": 100
+  },
+  "mat": {
+   "charcoal_kg": 150,
+   "clay_kg": 400,
+   "limestone_kg": 30,
+   "iron_bar_kg": 50
+  },
+  "cap": 2500,
+  "yrs": 3,
+  "risk": 0.15,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "A large reverberatory basin where you can melt pig iron, scrap, and iron ore together at controlled temperatures. Much slower than a converter but gives you time to remove impurities chemically. The furnace can recycle scrap and burnt parts that a converter wastes. Fuel cost is higher but flexibility is the gain."
+ },
+ {
+  "id": "met_roasting_calcining",
+  "name": "Roasting and calcining ore",
+  "tier": 1,
+  "cat": "smelting",
+  "pre": [
+   {
+    "id": "cap_heat_1100",
+    "name": "Sustained 1100 C (hand-blown charcoal)"
+   },
+   {
+    "id": "charcoal_industrial",
+    "name": "Coppiced charcoal at industrial scale"
+   }
+  ],
+  "ph": 60,
+  "lab": {
+   "furnaceman": 150,
+   "labourer": 100
+  },
+  "mat": {
+   "charcoal_kg": 50,
+   "iron_ore_kg": 100
+  },
+  "cap": 150,
+  "yrs": 0.6,
+  "risk": 0.12,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Heat ore in an open pile to drive off volatile sulfur and water, and to crack the rock for easier reduction. Many sulfide ores cannot be smelted without roasting first; the roast fumes are toxic. Needs a scholar to understand stoichiometry or roasters waste half their ore."
+ },
+ {
+  "id": "met_wire_rod_rolling",
+  "name": "Wire rod rolling mill",
+  "tier": 2,
+  "cat": "forming",
+  "pre": [
+   {
+    "id": "met_two_high_mill",
+    "name": "Two-high rolling mill"
+   },
+   {
+    "id": "cap_power_steam",
+    "name": "Steam power, portable, hundreds of kW"
+   }
+  ],
+  "ph": 160,
+  "lab": {
+   "machinist": 180,
+   "smith": 120
+  },
+  "mat": {
+   "iron_bar_kg": 80,
+   "coal_kg": 100,
+   "timber_m3": 4
+  },
+  "cap": 2200,
+  "yrs": 2.2,
+  "risk": 0.14,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "A series of small oval and round rolls progressively thins a bar into coiled wire rod, which is then drawn to final size. The wire emerges hot and coils as it cools. The speed is high\u2014modern mills run at meters per second\u2014so you need strong power and excellent roll material or the rolls will crack and scatter pieces. A single roll failure at speed can cause line shutdown for a day."
+ },
+ {
+  "id": "opt_abbe_resolution_theory",
+  "name": "Abbe's resolution limit (diffraction theory)",
+  "tier": 2,
+  "cat": "measurement",
+  "pre": [
+   {
+    "id": "microscope_compound",
+    "name": "Compound microscope with achromatic objective"
+   },
+   {
+    "id": "cap_measure_light",
+    "name": "Interferometric length (wavelengths of light)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "scholar": 150
+  },
+  "mat": {
+   "papyrus_sheet": 30,
+   "ink_kg": 0.2
+  },
+  "cap": 200,
+  "yrs": 0.4,
+  "risk": 0.05,
+  "gov": 1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Minimum distance between points is lambda/(2*NA), where NA is numerical aperture. Cannot be overcome by improving lens quality alone. Oil immersion raises NA from 1.0 to 1.4."
+ },
+ {
+  "id": "opt_nicol_prism",
+  "name": "Nicol prism for polarized light",
+  "tier": 2,
+  "cat": "optics",
+  "pre": [
+   {
+    "id": "lens_grinding",
+    "name": "Ground and polished spherical lenses"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "artisan": 150,
+   "master": 60
+  },
+  "mat": {
+   "glass_raw_kg": 0.8
+  },
+  "cap": 350,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Calcite (Iceland spar) crystal cut and cemented at Brewster angle passes one polarization. Extraordinary ray refracted 90 degrees, separated by cement into wasted beam. Alignment precise to 1 degree."
+ },
+ {
+  "id": "opt_photocell",
+  "name": "Photocell (photoelectric detector)",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   {
+    "id": "discharge_xray",
+    "name": "Discharge tubes, cathode rays, X-rays, the electron"
+   },
+   {
+    "id": "vacuum_tube",
+    "name": "Diode, triode, and the first amplifier"
+   }
+  ],
+  "ph": 180,
+  "lab": {
+   "master": 160,
+   "artisan": 120
+  },
+  "mat": {
+   "copper_kg": 0.5
+  },
+  "cap": 1200,
+  "yrs": 1.2,
+  "risk": 0.18,
+  "gov": 2,
+  "sus": 0,
+  "conf": "C",
+  "note": "Cesium or other photoemissive surface in vacuum emits electrons when light strikes. Current amplified by dynamo or triode. Single photon detectable in dark conditions."
+ },
+ {
+  "id": "opt_plano_convex_lens",
+  "name": "Plano-convex reading lens",
+  "tier": 1,
+  "cat": "optics",
+  "pre": [
+   {
+    "id": "lens_grinding",
+    "name": "Ground and polished spherical lenses"
+   }
+  ],
+  "ph": 40,
+  "lab": {
+   "glassblower": 60,
+   "artisan": 80
+  },
+  "mat": {
+   "glass_raw_kg": 0.5
+  },
+  "cap": 200,
+  "yrs": 0.5,
+  "risk": 0.1,
+  "gov": 0,
+  "sus": 0,
+  "conf": "B",
+  "note": "A flat surface facing text, one curved. Magnification roughly equals curvature radius divided by focal length. The blower must hold perfect sphere while cooling."
+ },
+ {
+  "id": "opt_pyrometer_radiation",
+  "name": "Pyrometer by radiation (Stefan-Boltzmann)",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   {
+    "id": "cap_measure_elec",
+    "name": "Absolute electrical units"
+   },
+   {
+    "id": "thermodynamics_theory",
+    "name": "Heat, energy, entropy, the gas laws"
+   }
+  ],
+  "ph": 180,
+  "lab": {
+   "master": 150,
+   "scholar": 100
+  },
+  "mat": {
+   "brass_kg": 2.0,
+   "glass_raw_kg": 1.2,
+   "timber_m3": 0.2
+  },
+  "cap": 900,
+  "yrs": 0.8,
+  "risk": 0.15,
+  "gov": 2,
+  "sus": 0,
+  "conf": "C",
+  "note": "Lens focuses radiation from hot object onto bolometer or photocell. Power proportional to T^4. Non-contact measurement but requires emissivity correction and accurate focus."
+ },
+ {
+  "id": "opt_standards_laboratory",
+  "name": "Standards laboratory as institution",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   {
+    "id": "balance_analytical",
+    "name": "Analytical balance reading to 1 milligram"
+   },
+   {
+    "id": "thermometer",
+    "name": "Sealed liquid-in-glass thermometer with fixed points"
+   },
+   {
+    "id": "cap_measure_len",
+    "name": "Reproducible length standard"
+   }
+  ],
+  "ph": 500,
+  "lab": {
+   "master": 400,
+   "scholar": 300,
+   "artisan": 200
+  },
+  "mat": {
+   "timber_m3": 2.0,
+   "brick_1000": 2
+  },
+  "cap": 5000,
+  "yrs": 3.0,
+  "risk": 0.2,
+  "gov": 3,
+  "sus": 0,
+  "conf": "C",
+  "note": "Building, personnel, standards, and equipment to maintain national measures. Meter bar, kilogram weight, temperature scale, density standards. Traceability requires stability and isolation from vibration."
+ },
+ {
+  "id": "opt_stroboscope",
+  "name": "Stroboscope (periodic light)",
+  "tier": 3,
+  "cat": "measurement",
+  "pre": [
+   {
+    "id": "photography",
+    "name": "Silver halide photography on glass"
+   },
+   {
+    "id": "cap_power_electric",
+    "name": "Local electric power, kW scale"
+   }
+  ],
+  "ph": 140,
+  "lab": {
+   "artisan": 130,
+   "master": 80
+  },
+  "mat": {
+   "brass_kg": 1.5,
+   "glass_raw_kg": 1.0,
+   "timber_m3": 0.15
+  },
+  "cap": 800,
+  "yrs": 0.6,
+  "risk": 0.1,
+  "gov": 1,
+  "sus": 0,
+  "conf": "C",
+  "note": "Rotating disk or electric lamp flash synchronized to object rotation freezes motion. Variable frequency allows measuring RPM directly. Spectator error (aliasing) common."
+ },
+ {
+  "id": "plague_preparedness",
+  "name": "Quarantine, clean water, sanitation and variolation programme",
+  "tier": 2,
+  "cat": "medicine",
+  "pre": [
+   {
+    "id": "germ_theory",
+    "name": "Germ theory of disease"
+   },
+   {
+    "id": "school_founded",
+    "name": "Found the school (the Museum)"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 700,
+  "lab": {
+   "scholar": 2500,
+   "labourer": 6000
+  },
+  "mat": {},
+  "cap": 6000,
+  "yrs": 4,
+  "risk": 0.2,
+  "gov": 3,
+  "sus": 8,
+  "conf": "C",
+  "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public. [AUDIT: capability prerequisite(s) cap_tol_100um were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.]"
+ },
+ {
+  "id": "prc_autocollimator",
+  "name": "Autocollimator for angle and parallelism measurement",
+  "tier": 3,
+  "cat": "metrology",
+  "pre": [
+   {
+    "id": "cap_tol_10um",
+    "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)"
+   },
+   {
+    "id": "lens_grinding",
+    "name": "Ground and polished spherical lenses"
+   },
+   {
+    "id": "arc_light_lamp",
+    "name": "Arc lighting and incandescent lamps"
+   },
+   {
+    "id": "telescope",
+    "name": "Refracting telescope"
+   }
+  ],
+  "ph": 110,
+  "lab": {
+   "artisan": 180,
+   "machinist": 100,
+   "scholar": 80
+  },
+  "mat": {
+   "glass_raw_kg": 3,
+   "brass_kg": 2
+  },
+  "cap": 350,
+  "yrs": 0.8,
+  "risk": 0.14,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Telescope with reticule and light source reflects light off target mirror. Tilt changes reflected spot on reticule. Each 1mm spot shift = 3 arc-seconds tilt. Enables checking machine tool bed parallelism and spindle axis alignment to 1 arc-second."
+ },
+ {
+  "id": "prc_broach_machine",
+  "name": "Broach tool and broaching machine",
+  "tier": 3,
+  "cat": "machine_tools",
+  "pre": [
+   {
+    "id": "prc_slotter_machine",
+    "name": "Slotter machine for keyways and slots"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   },
+   {
+    "id": "prc_drill_press",
+    "name": "Drill press with feed screw and depth stop"
+   }
+  ],
+  "ph": 110,
+  "lab": {
+   "artisan": 220,
+   "smith": 100
+  },
+  "mat": {
+   "steel_noric_kg": 8,
+   "cast_iron_kg": 100
+  },
+  "cap": 400,
+  "yrs": 0.7,
+  "risk": 0.13,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Long bar with progressive teeth (each 0.1mm taller) pulled or pushed through hole or across surface. Removes complex profile in one stroke. Requires 0.05mm tooth accuracy and strong machine frame. Enables keyways, splines, and precision slots."
+ },
+ {
+  "id": "prc_cylindrical_grinder",
+  "name": "Cylindrical grinder for external and internal",
+  "tier": 3,
+  "cat": "machine_tools",
+  "pre": [
+   {
+    "id": "prc_surface_grinder",
+    "name": "Surface grinder with reciprocating electromagnet"
+   },
+   {
+    "id": "cap_tol_10um",
+    "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)"
+   },
+   {
+    "id": "cap_power_electric",
+    "name": "Local electric power, kW scale"
+   }
+  ],
+  "ph": 130,
+  "lab": {
+   "artisan": 280,
+   "machinist": 120
+  },
+  "mat": {
+   "cast_iron_kg": 180,
+   "iron_bar_kg": 70,
+   "steel_plate_kg": 30
+  },
+  "cap": 850,
+  "yrs": 1.2,
+  "risk": 0.14,
+  "gov": 2,
+  "sus": 0,
+  "conf": "B",
+  "note": "Work spindle rotates; abrasive wheel feeds radially. Wheel can work OD, ID, or both. Requires cap_tol_10um spindle bearings and table feed. Enables bearing journals and piston fit bores to 10 microns."
+ },
+ {
+  "id": "prc_honing_machine",
+  "name": "Honing machine for cylinder bores",
+  "tier": 3,
+  "cat": "machine_tools",
+  "pre": [
+   {
+    "id": "cap_tol_10um",
+    "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)"
+   },
+   {
+    "id": "cap_power_electric",
+    "name": "Local electric power, kW scale"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "artisan": 200,
+   "machinist": 100
+  },
+  "mat": {
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 40
+  },
+  "cap": 600,
+  "yrs": 1.0,
+  "risk": 0.12,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Multiple small honing stones in rotating mandrel cut on expansion, removing 0.002 to 0.005 inch (50-125 micron) from bore. Produces 0.5 micron finish and 0.01mm roundness. Critical for engine cylinders and hydraulic actuators."
+ },
+ {
+  "id": "prc_lathe_faceplate",
+  "name": "Lathe faceplate and driving plates",
+  "tier": 1,
+  "cat": "machine_tools",
+  "pre": [
+   {
+    "id": "cap_tol_1mm",
+    "name": "Tolerance 1 mm (skilled hand craft)"
+   },
+   {
+    "id": "crank_conrod",
+    "name": "Crank, connecting rod, flywheel, cam and trip hammer"
+   }
+  ],
+  "ph": 40,
+  "lab": {
+   "smith": 80,
+   "artisan": 50
+  },
+  "mat": {
+   "cast_iron_kg": 30
+  },
+  "cap": 80,
+  "yrs": 0.2,
+  "risk": 0.08,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Cast-iron plate bolts to spindle nose; work bolts to plate. Hand-scraped face ensures coplanarity to 1mm. Without it, work runout is uncontrolled. Enables chucking of large irregular work."
+ },
+ {
+  "id": "prc_lead_screw_error_cam",
+  "name": "Lead screw error correction cam and follower",
+  "tier": 2,
+  "cat": "machine_tools",
+  "pre": [
+   {
+    "id": "master_screw",
+    "name": "The first accurate screw, and thread standards"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   },
+   {
+    "id": "prc_profile_projector",
+    "name": "Profile projector for large-scale part checking"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "artisan": 180,
+   "machinist": 120
+  },
+  "mat": {
+   "cast_iron_kg": 30,
+   "steel_noric_kg": 4
+  },
+  "cap": 300,
+  "yrs": 0.8,
+  "risk": 0.12,
+  "gov": 1,
+  "sus": 0,
+  "conf": "C",
+  "note": "Grinding a lead screw leaves periodic runout (0.05mm). Measuring runout and grinding a cam follower that compensates enables 0.01mm lead accuracy. Follower attached to tool post cancels runout. Expensive, rarely done. Enables perfect pitch on long lead screws."
+ },
+ {
+  "id": "prc_profile_projector",
+  "name": "Profile projector for large-scale part checking",
+  "tier": 3,
+  "cat": "metrology",
+  "pre": [
+   {
+    "id": "cap_tol_10um",
+    "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)"
+   },
+   {
+    "id": "lens_grinding",
+    "name": "Ground and polished spherical lenses"
+   },
+   {
+    "id": "arc_light_lamp",
+    "name": "Arc lighting and incandescent lamps"
+   }
+  ],
+  "ph": 110,
+  "lab": {
+   "artisan": 200,
+   "machinist": 100
+  },
+  "mat": {
+   "glass_raw_kg": 8,
+   "brass_kg": 4,
+   "cast_iron_kg": 80
+  },
+  "cap": 500,
+  "yrs": 1.0,
+  "risk": 0.14,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Lens projects magnified shadow (50x to 200x) onto screen. Part mounted on XY stage accurate to 0.01mm. Operator aligns part against master profile drawn on screen. Faster than toolmaker's microscope for large parts, less accurate."
+ },
+ {
+  "id": "prn_composing_stick",
+  "name": "Composing stick and galley",
+  "tier": 2,
+  "cat": "type",
+  "pre": [
+   {
+    "id": "prn_type_metal_alloy",
+    "name": "Type metal alloy"
+   }
+  ],
+  "ph": 40,
+  "lab": {
+   "artisan": 80
+  },
+  "mat": {
+   "iron_bar_kg": 2,
+   "brass_kg": 1
+  },
+  "cap": 50,
+  "yrs": 0.5,
+  "risk": 0.05,
+  "gov": 0,
+  "sus": 0,
+  "conf": "A",
+  "note": "Compositors set metal sorts in stick, proof, transfer to galley. Allows rearrangement before lock-up."
+ },
+ {
+  "id": "prn_woodblock_carving",
+  "name": "Woodblock carving",
+  "tier": 1,
+  "cat": "relief",
+  "pre": [],
+  "ph": 120,
+  "lab": {
+   "artisan": 200
+  },
+  "mat": {
+   "timber_m3": 0.1,
+   "iron_bar_kg": 2
+  },
+  "cap": 40,
+  "yrs": 1.0,
+  "risk": 0.1,
+  "gov": -1,
+  "sus": 0,
+  "conf": "A",
+  "note": "Hand-carved relief block prints many copies. First cheap reproducible image. Breaks scribe monopoly."
+ },
+ {
+  "id": "pwr_rotary_drilling",
+  "name": "Rotary drilling",
+  "tier": 3,
+  "cat": "power",
+  "pre": [
+   {
+    "id": "pwr_cable_tool_drilling",
+    "name": "Cable tool drilling (percussion drilling)"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 350,
+  "lab": {
+   "machinist": 400,
+   "engineer": 200
+  },
+  "mat": {
+   "steel_plate_kg": 80,
+   "iron_bar_kg": 100
+  },
+  "cap": 1200,
+  "yrs": 2.0,
+  "risk": 0.25,
+  "gov": 2,
+  "sus": 3,
+  "conf": "B",
+  "note": "A spinning drill bit on a hollow rotating rod; drilling mud circulates down the pipe, cooling and carrying cuttings up. Faster, deeper, better for hard rock. Needs precise engineering and circulation pumps. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "pwr_selenium_metal",
+  "name": "Selenium metal extraction",
+  "tier": 3,
+  "cat": "power",
+  "pre": [
+   {
+    "id": "copper_refining",
+    "name": "High-purity copper and insulated wire"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 200,
+  "lab": {
+   "chemist": 200,
+   "artisan": 150
+  },
+  "mat": {
+   "copper_ore_kg": 100,
+   "sulfuric_acid_kg": 50
+  },
+  "cap": 500,
+  "yrs": 1.5,
+  "risk": 0.15,
+  "gov": 2,
+  "sus": 3,
+  "conf": "B",
+  "note": "Selenium is a trace element in copper ores. Roasting and selective reduction yields grey metallic selenium. The metal is brittle and toxic; handling requires care. Essential for photovoltaic effects. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "pwr_trompe",
+  "name": "Trompe (water-driven air blast)",
+  "tier": 2,
+  "cat": "power",
+  "pre": [
+   {
+    "id": "water_power_scale",
+    "name": "Overshot wheels, millponds, leats, line shafting"
+   }
+  ],
+  "ph": 180,
+  "lab": {
+   "carpenter": 250,
+   "artisan": 150
+  },
+  "mat": {
+   "timber_m3": 4,
+   "iron_bar_kg": 15
+  },
+  "cap": 200,
+  "yrs": 1.0,
+  "risk": 0.15,
+  "gov": 2,
+  "sus": 3,
+  "conf": "B",
+  "note": "Falling water entrains air in a angled tube, compressing it as the water drops. The compressed air separates from the water at the bottom, no valves, no moving parts. Ingenious; useful for furnace blast in a mine or forge where you cannot afford bellows labour. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "sea_backstaff",
+  "name": "Backstaff for latitude",
+  "tier": 2,
+  "cat": "navigation",
+  "pre": [
+   {
+    "id": "sea_cross_staff",
+    "name": "Cross-staff for latitude"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "artisan": 200,
+   "scholar": 120
+  },
+  "mat": {
+   "wood_ash_kg": 0.2,
+   "brass_kg": 1
+  },
+  "cap": 400,
+  "yrs": 0.3,
+  "risk": 0.15,
+  "gov": 0,
+  "sus": 0,
+  "conf": "B",
+  "note": "Observe the sun's shadow rather than looking at it; more accurate than the cross-staff; still limited by eye and wind movement; typically accurate to 0.3 degrees."
+ },
+ {
+  "id": "sea_charts_navigation",
+  "name": "Navigation charts",
+  "tier": 2,
+  "cat": "navigation",
+  "pre": [
+   {
+    "id": "sea_magnetic_compass",
+    "name": "Magnetic compass"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   }
+  ],
+  "ph": 200,
+  "lab": {
+   "scholar": 400,
+   "scribe": 300
+  },
+  "mat": {
+   "parchment_sheet": 200
+  },
+  "cap": 500,
+  "yrs": 0.5,
+  "risk": 0.2,
+  "gov": 1,
+  "sus": 1,
+  "conf": "C",
+  "note": "Systematically plot known coastlines, harbours, and hazards; use magnetic compass rose; accumulate centuries of observation; early charts are crude but better than guesswork. [AUDIT: capability prerequisite(s) cap_tol_100um were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.]"
+ },
+ {
+  "id": "sea_log_line",
+  "name": "Log line for speed",
+  "tier": 1,
+  "cat": "navigation",
+  "pre": [],
+  "ph": 30,
+  "lab": {
+   "artisan": 50
+  },
+  "mat": {
+   "linen_kg": 0.5
+  },
+  "cap": 50,
+  "yrs": 0.1,
+  "risk": 0.05,
+  "gov": 0,
+  "sus": 0,
+  "conf": "C",
+  "note": "A light wooden board (the log) on a long knotted line; thrown overboard, it stays in place while the ship moves; count the knots paid out in a sand-glass interval to find speed."
+ },
+ {
+  "id": "sea_skeleton_first",
+  "name": "Skeleton-first hull construction",
+  "tier": 1,
+  "cat": "ships",
+  "pre": [
+   {
+    "id": "sea_mortise_tenon",
+    "name": "Mortise-and-tenon hull construction"
+   },
+   {
+    "id": "cap_tol_1mm",
+    "name": "Tolerance 1 mm (skilled hand craft)"
+   }
+  ],
+  "ph": 250,
+  "lab": {
+   "carpenter": 600,
+   "artisan": 200
+  },
+  "mat": {
+   "timber_m3": 5
+  },
+  "cap": 1000,
+  "yrs": 1,
+  "risk": 0.22,
+  "gov": 1,
+  "sus": 0,
+  "conf": "C",
+  "note": "Build the frame (ribs) first, then plank over it, not vice versa; cheaper and faster, scales to much larger ships, and uses timber more efficiently; requires a fundamental rethinking of carpentry."
+ },
+ {
+  "id": "sea_steam_turbine",
+  "name": "Steam turbine at sea",
+  "tier": 4,
+  "cat": "ships",
+  "pre": [
+   {
+    "id": "steam_high_pressure",
+    "name": "High pressure steam and adequate boilers"
+   },
+   {
+    "id": "cap_tol_100um",
+    "name": "Tolerance 0.1 mm (file, scraper, gauge)"
+   },
+   {
+    "id": "interchangeable_parts",
+    "name": "Tolerances, jigs, fixtures and interchangeable manufacture"
+   }
+  ],
+  "ph": 280,
+  "lab": {
+   "machinist": 600,
+   "smith": 400
+  },
+  "mat": {
+   "steel_noric_kg": 150,
+   "brass_kg": 50
+  },
+  "cap": 4500,
+  "yrs": 1.2,
+  "risk": 0.22,
+  "gov": 1,
+  "sus": 0,
+  "conf": "B",
+  "note": "Steam jets hit curved blades on a fast-spinning rotor; much smaller, lighter, and cheaper than reciprocating engines for the same power; direct drive to a propeller."
+ },
+ {
+  "id": "spectroscope",
+  "name": "Prism and grating spectroscope",
+  "tier": 3,
+  "cat": "instruments",
+  "pre": [
+   {
+    "id": "telescope",
+    "name": "Refracting telescope"
+   },
+   {
+    "id": "balance_analytical",
+    "name": "Analytical balance reading to 1 milligram"
+   },
+   {
+    "id": "atomic_theory",
+    "name": "Atoms, elements, atomic weights, stoichiometry, the periodic table"
+   }
+  ],
+  "ph": 500,
+  "lab": {
+   "machinist": 1800,
+   "artisan": 1500
+  },
+  "mat": {
+   "glass_raw_kg": 20,
+   "brass_kg": 40
+  },
+  "cap": 1800,
+  "yrs": 2,
+  "risk": 0.25,
+  "gov": 0,
+  "sus": 3,
+  "conf": "B",
+  "note": "Highest information yield per denarius of any instrument you can build. Emission lines identify elements you have no other way to detect, and much later it is how you verify that your germanium is actually germanium."
+ },
+ {
+  "id": "steam_high_pressure",
+  "name": "High pressure steam and adequate boilers",
+  "tier": 4,
+  "cat": "power",
+  "pre": [
+   {
+    "id": "steam_watt",
+    "name": "Separate condenser and rotative engines"
+   },
+   {
+    "id": "bessemer_openhearth",
+    "name": "Bulk steel: converter and open hearth"
+   }
+  ],
+  "ph": 700,
+  "lab": {
+   "machinist": 9000,
+   "smith": 9000
+  },
+  "mat": {
+   "steel_plate_kg": 25000,
+   "iron_bar_kg": 9000
+  },
+  "cap": 26000,
+  "yrs": 12,
+  "risk": 0.4,
+  "gov": 3,
+  "sus": 3,
+  "conf": "B",
+  "note": "Power density enough for locomotives and ships. Be honest with your students about how many people early boilers killed, and build a hydraulic test and a relief valve into the very first one. A boiler explosion in Rome will be read as divine judgment on the whole programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down."
+ },
+ {
+  "id": "tex_chlorine_bleaching",
+  "name": "Chlorine bleaching of cloth",
+  "tier": 4,
+  "cat": "textiles",
+  "pre": [
+   {
+    "id": "tex_field_bleaching",
+    "name": "Field bleaching with sun"
+   },
+   {
+    "id": "mat_chlorine",
+    "name": "Chlorine and bleach"
+   },
+   {
+    "id": "cap_tol_1mm",
+    "name": "Tolerance 1 mm (skilled hand craft)"
+   }
+  ],
+  "ph": 120,
+  "lab": {
+   "chemist": 250,
+   "artisan": 150
+  },
+  "mat": {
+   "charcoal_kg": 100,
+   "lime_kg": 150,
+   "salt_kg": 300,
+   "sulfuric_acid_kg": 50
+  },
+  "cap": 2500,
+  "yrs": 1.0,
+  "risk": 0.14,
+  "gov": -1,
+  "sus": 1,
+  "conf": "B",
+  "note": "Cl2 gas or hypochlorite solution bleaches cloth in hours instead of weeks. 100x speedup ends field bleaching bottleneck. Risks fabric damage if concentration not controlled. Requires chlorine production (electrolytic or chemical) from heavy industry. [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "tex_mercerisation",
+  "name": "Mercerisation of cotton",
+  "tier": 3,
+  "cat": "textiles",
+  "pre": [
+   {
+    "id": "tex_cotton_trade",
+    "name": "Cotton by trade"
+   },
+   {
+    "id": "potash_soda",
+    "name": "Potash, caustic potash, soda and caustic soda"
+   },
+   {
+    "id": "cap_heat_1300",
+    "name": "Sustained 1300 C (water-blown continuous blast)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "chemist": 200,
+   "artisan": 150
+  },
+  "mat": {
+   "water_kg": 1000,
+   "natron_kg": 100
+  },
+  "cap": 1200,
+  "yrs": 0.5,
+  "risk": 0.12,
+  "gov": -1,
+  "sus": 1,
+  "conf": "B",
+  "note": "Treating cotton yarn or cloth with sodium hydroxide under tension causes fibers to swell and straighten, increasing luster and dye uptake. Mercerized cotton resembles silk. Requires caustic soda production and careful process control. [AUDIT: capability prerequisite(s) cap_heat_1300 were inferred by rome/sim/treetool.py repair, not stated by the author. Treat them as a floor, not a specification.] [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
+ },
+ {
+  "id": "tex_spinning_jenny",
+  "name": "Spinning jenny",
+  "tier": 2,
+  "cat": "textiles",
+  "pre": [
+   {
+    "id": "tex_spinning_wheel",
+    "name": "Spinning wheel with flyer"
+   },
+   {
+    "id": "crank_conrod",
+    "name": "Crank, connecting rod, flywheel, cam and trip hammer"
+   },
+   {
+    "id": "cap_tol_1mm",
+    "name": "Tolerance 1 mm (skilled hand craft)"
+   }
+  ],
+  "ph": 100,
+  "lab": {
+   "carpenter": 180,
+   "artisan": 140,
+   "smith": 100
+  },
+  "mat": {
+   "timber_m3": 1.5,
+   "iron_bar_kg": 16
+  },
+  "cap": 280,
+  "yrs": 0.6,
+  "risk": 0.14,
+  "gov": -2,
+  "sus": 0,
+  "conf": "A",
+  "note": "Hand-cranked machine with 8-16 spindles on one rail, all driven by single crank. One operator spins multiple threads simultaneously. Hargreaves 1764. Enables 8-16x labor displacement. Massive unemployment among spinners."
+ }
+]

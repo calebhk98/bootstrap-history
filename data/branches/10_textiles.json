@@ -1,0 +1,1546 @@
+[
+  {
+    "id": "tex_wool",
+    "name": "Wool fiber",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Wool fiber from sheep, available in Roman households. No processing required beyond shearing and basic cleaning."
+  },
+  {
+    "id": "tex_linen",
+    "name": "Linen fiber from flax",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Linen from flax after retting and breaking. Rome produces linen cloth routinely."
+  },
+  {
+    "id": "tex_cotton_trade",
+    "name": "Cotton by trade",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Cotton imported from India and traded in Roman markets. Small quantities, expensive."
+  },
+  {
+    "id": "tex_silk_trade",
+    "name": "Silk by trade",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Silk traded via Silk Road, closely guarded by Persia. Rare, luxury good."
+  },
+  {
+    "id": "tex_drop_spindle",
+    "name": "Drop spindle",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Simple weighted spindle suspended by thread. Skill-dependent, slow. Standard Roman spinning method."
+  },
+  {
+    "id": "tex_fulling",
+    "name": "Fulling cloth",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Hand fulling: beating woven cloth in lye-filled tub to felt and shrink fibers. Labor-intensive, done by fullers."
+  },
+  {
+    "id": "tex_felting",
+    "name": "Felting",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Matting wool fibers with moisture and heat to create felt. Ancient technique for hats, cloaks, armor padding."
+  },
+  {
+    "id": "tex_warp_weighted_loom",
+    "name": "Warp-weighted loom",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Vertical loom with weights hanging on warp threads. Slow but reliable for narrow textiles and tapestries."
+  },
+  {
+    "id": "tex_two_beam_loom",
+    "name": "Two-beam loom",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Horizontal loom with warp tensioned between two beams. Faster than warp-weighted, standard for linen and wool in Roman period."
+  },
+  {
+    "id": "tex_sailcloth",
+    "name": "Sailcloth",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Heavy linen or hemp cloth used for sails. Rome produces for naval fleet. Requires tight weave and strong yarn."
+  },
+  {
+    "id": "tex_dye_madder",
+    "name": "Dyeing with madder root",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Madder root (Rubia tinctorum) produces reds and oranges. Requires mordanting to set dye. Standard Roman dye."
+  },
+  {
+    "id": "tex_dye_woad",
+    "name": "Dyeing with woad",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Woad (Isatis tinctoria) produces blues. Leaves fermented then oxidized. Common and relatively cheap blue dye."
+  },
+  {
+    "id": "tex_dye_murex",
+    "name": "Murex purple dyeing",
+    "tier": 0,
+    "cat": "textiles",
+    "pre": [],
+    "kb": "",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "yrs": 0,
+    "risk": 0,
+    "sus": 0,
+    "gov": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Purple dye from murex snail gland secretion. Tyrian purple, supremely expensive, only for imperial and elite garments."
+  },
+  {
+    "id": "tex_carding",
+    "name": "Carding fibers",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_wool",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 60,
+    "lab": {
+      "artisan": 150
+    },
+    "mat": {
+      "timber_m3": 0.5,
+      "iron_bar_kg": 3
+    },
+    "cap": 80,
+    "up": 10,
+    "yrs": 0.3,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Wooden carding combs with wire teeth card wool into parallel fibers ready for spinning. Increases fineness of yarn but slower than combing."
+  },
+  {
+    "id": "tex_combing",
+    "name": "Combing fibers",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_wool",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 50,
+    "lab": {
+      "artisan": 120
+    },
+    "mat": {
+      "timber_m3": 0.3,
+      "iron_bar_kg": 2
+    },
+    "cap": 60,
+    "up": 8,
+    "yrs": 0.3,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 180,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Iron-toothed combs arrange long fibers in parallel. Faster and cleaner output than carding, produces stronger yarn. Older technique than carding."
+  },
+  {
+    "id": "tex_spinning_wheel",
+    "name": "Spinning wheel with flyer",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_drop_spindle",
+      "crank_conrod",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "carpenter": 200,
+      "artisan": 120
+    },
+    "mat": {
+      "timber_m3": 1.2,
+      "iron_bar_kg": 6
+    },
+    "cap": 120,
+    "up": 20,
+    "yrs": 0.5,
+    "risk": 0.12,
+    "sus": 0,
+    "gov": -1,
+    "rev": 600,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "The flyer is the invention, not the wheel. The flyer twists and winds yarn simultaneously rather than alternately, roughly tripling output per spinner. Hand or foot powered. Displaces many spinners."
+  },
+  {
+    "id": "tex_horizontal_loom",
+    "name": "Horizontal loom",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_two_beam_loom",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "carpenter": 200,
+      "artisan": 100
+    },
+    "mat": {
+      "timber_m3": 2,
+      "iron_bar_kg": 8
+    },
+    "cap": 150,
+    "up": 30,
+    "yrs": 0.5,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 400,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Refined horizontal loom with better shaft control and cloth beam tension. Slightly faster than two-beam. Intermediate step toward mechanized looms."
+  },
+  {
+    "id": "tex_treadle_loom",
+    "name": "Treadle loom",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_horizontal_loom",
+      "crank_conrod",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 90,
+    "lab": {
+      "carpenter": 250,
+      "artisan": 150
+    },
+    "mat": {
+      "timber_m3": 2.5,
+      "iron_bar_kg": 12
+    },
+    "cap": 200,
+    "up": 40,
+    "yrs": 0.6,
+    "risk": 0.12,
+    "sus": 0,
+    "gov": 0,
+    "rev": 500,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Foot pedals control loom shafts via connecting rods and cams, freeing hands to throw shuttle. Speeds weaving noticeably. Weaver must still operate shuttle by hand."
+  },
+  {
+    "id": "tex_mordanting",
+    "name": "Mordanting dyes with alum",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_dye_madder",
+      "mat_alum"
+    ],
+    "kb": "",
+    "ph": 40,
+    "lab": {
+      "artisan": 100
+    },
+    "mat": {
+      "alum_kg": 20,
+      "wheat_kg": 10
+    },
+    "cap": 80,
+    "up": 15,
+    "yrs": 0.3,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 150,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Alum mordant fixes dyes to fiber. Cloth treated with alum before dyeing absorbs color much more effectively and resists fading. Standard practice for madder and other dyes."
+  },
+  {
+    "id": "tex_indigo",
+    "name": "Indigo dyeing",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_dye_woad",
+      "mat_natron"
+    ],
+    "kb": "",
+    "ph": 60,
+    "lab": {
+      "artisan": 140
+    },
+    "mat": {
+      "salt_kg": 50,
+      "lime_kg": 30,
+      "charcoal_kg": 20
+    },
+    "cap": 150,
+    "up": 40,
+    "yrs": 0.4,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 300,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Indigo vat requires reduction (removal of oxygen) with lime and charcoal. Color sets by oxidation in air after dipping. Produces brilliant fast blue superior to woad. Imported indigo becomes available medieval period onward."
+  },
+  {
+    "id": "tex_rope_walk",
+    "name": "Rope walk and cordage",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_linen",
+      "cap_measure_len"
+    ],
+    "kb": "",
+    "ph": 70,
+    "lab": {
+      "artisan": 200,
+      "labourer": 300
+    },
+    "mat": {
+      "timber_m3": 2,
+      "iron_bar_kg": 10
+    },
+    "cap": 400,
+    "up": 60,
+    "yrs": 0.6,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 800,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Long building (300-400 ft) where fiber strands are twisted together while walking backward. Produces rope and cordage at scale. Standard for ship rigging and maritime use."
+  },
+  {
+    "id": "tex_canvas",
+    "name": "Canvas cloth",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_linen",
+      "tex_horizontal_loom"
+    ],
+    "kb": "",
+    "ph": 40,
+    "lab": {
+      "artisan": 80
+    },
+    "mat": {
+      "linen_kg": 30
+    },
+    "cap": 60,
+    "up": 10,
+    "yrs": 0.25,
+    "risk": 0.06,
+    "sus": 0,
+    "gov": 0,
+    "rev": 400,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Heavy, tightly-woven linen cloth for sails, tents, and durable goods. Weave density and thread weight matter more than fiber fineness."
+  },
+  {
+    "id": "tex_fitted_garment",
+    "name": "Fitted garment tailoring",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_linen",
+      "cap_measure_len"
+    ],
+    "kb": "",
+    "ph": 50,
+    "lab": {
+      "artisan": 150
+    },
+    "mat": {
+      "linen_kg": 5,
+      "thread_kg": 0.1
+    },
+    "cap": 80,
+    "up": 0,
+    "yrs": 0.2,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 600,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Cutting and sewing cloth to body shape instead of wrapping rectangles. Requires pattern pieces scaled to measurements. Enables close-fitting tunics and garments."
+  },
+  {
+    "id": "tex_shoddy",
+    "name": "Shoddy and recycled wool",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_wool",
+      "tex_carding"
+    ],
+    "kb": "",
+    "ph": 40,
+    "lab": {
+      "labourer": 150
+    },
+    "mat": {
+      "timber_m3": 0.5
+    },
+    "cap": 100,
+    "up": 20,
+    "yrs": 0.3,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Shredding old wool cloth into fibers, then re-carding and re-spinning into new yarn. Produces weaker yarn but enables reuse of scrap wool for cheaper cloth."
+  },
+  {
+    "id": "tex_hand_ginning",
+    "name": "Hand ginning cotton",
+    "tier": 1,
+    "cat": "textiles",
+    "pre": [
+      "tex_cotton_trade"
+    ],
+    "kb": "",
+    "ph": 30,
+    "lab": {
+      "labourer": 200
+    },
+    "mat": {},
+    "cap": 50,
+    "up": 5,
+    "yrs": 0.2,
+    "risk": 0.06,
+    "sus": 0,
+    "gov": 0,
+    "rev": 150,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Removing seeds from cotton by hand using a stick or roller. Slow: produces about 1 lb clean cotton per day. Mechanical ginning is revolutionary leap."
+  },
+  {
+    "id": "tex_flying_shuttle",
+    "name": "Flying shuttle",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_treadle_loom",
+      "crank_conrod",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "carpenter": 250,
+      "artisan": 150,
+      "smith": 120
+    },
+    "mat": {
+      "timber_m3": 1.5,
+      "iron_bar_kg": 15
+    },
+    "cap": 300,
+    "up": 50,
+    "yrs": 0.8,
+    "risk": 0.13,
+    "sus": 0,
+    "gov": -1,
+    "rev": 800,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Mechanical shuttle box throws shuttle left-right via spring or lever, eliminating need to reach across loom. One weaver now handles wide looms. Kay 1733. Triples weaving speed. Labor displacement sparks Luddite unrest."
+  },
+  {
+    "id": "tex_spinning_jenny",
+    "name": "Spinning jenny",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_spinning_wheel",
+      "crank_conrod",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "carpenter": 180,
+      "artisan": 140,
+      "smith": 100
+    },
+    "mat": {
+      "timber_m3": 1.5,
+      "iron_bar_kg": 16
+    },
+    "cap": 280,
+    "up": 45,
+    "yrs": 0.6,
+    "risk": 0.14,
+    "sus": 0,
+    "gov": -2,
+    "rev": 1200,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Hand-cranked machine with 8-16 spindles on one rail, all driven by single crank. One operator spins multiple threads simultaneously. Hargreaves 1764. Enables 8-16x labor displacement. Massive unemployment among spinners."
+  },
+  {
+    "id": "tex_water_frame",
+    "name": "Water frame spinner",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_spinning_wheel",
+      "cap_power_water",
+      "crank_conrod",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 280,
+    "lab": {
+      "carpenter": 400,
+      "smith": 350,
+      "artisan": 200,
+      "millwright": 250
+    },
+    "mat": {
+      "timber_m3": 4,
+      "iron_bar_kg": 70,
+      "iron_sheet_kg": 25
+    },
+    "cap": 4500,
+    "up": 350,
+    "yrs": 1.8,
+    "risk": 0.18,
+    "sus": 0,
+    "gov": -2,
+    "rev": 5000,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Water-powered spinning: spindle shaft driven continuously by water wheel via gearing. Produces tightly twisted warp yarn suitable for looms. Arkwright 1769. Requires factory-scale capital. Transforms spinning from cottage to factory."
+  },
+  {
+    "id": "tex_power_loom",
+    "name": "Power loom",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_treadle_loom",
+      "cap_power_water",
+      "crank_conrod",
+      "cap_tol_1mm",
+      "cap_measure_len"
+    ],
+    "kb": "",
+    "ph": 250,
+    "lab": {
+      "carpenter": 400,
+      "smith": 350,
+      "artisan": 200,
+      "millwright": 300
+    },
+    "mat": {
+      "timber_m3": 3.5,
+      "iron_bar_kg": 60,
+      "iron_sheet_kg": 28
+    },
+    "cap": 3500,
+    "up": 280,
+    "yrs": 1.5,
+    "risk": 0.19,
+    "sus": 0,
+    "gov": -2,
+    "rev": 3200,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Water-driven loom with automatic shuttle throw and shaft control via cams. Weaving speed increases 4-5x. Cloth quality variable until tension control perfected. Enormous labor displacement."
+  },
+  {
+    "id": "tex_knitting_frame",
+    "name": "Knitting frame",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "cap_tol_1mm",
+      "crank_conrod",
+      "mat_wrought_iron"
+    ],
+    "kb": "",
+    "ph": 150,
+    "lab": {
+      "carpenter": 200,
+      "smith": 220,
+      "artisan": 120
+    },
+    "mat": {
+      "timber_m3": 1.5,
+      "iron_bar_kg": 28,
+      "steel_plate_kg": 12
+    },
+    "cap": 900,
+    "up": 90,
+    "yrs": 1.0,
+    "risk": 0.16,
+    "sus": 0,
+    "gov": -1,
+    "rev": 1100,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Stocking frame (William Lee, 1589). Reciprocating needles with closing latches, hand or foot powered. Produces stockings mechanically. Displaces hand knitters, enables mass hosiery. Complex precision mechanism."
+  },
+  {
+    "id": "tex_sewing_machine",
+    "name": "Sewing machine with lockstitch",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "cap_tol_1mm",
+      "crank_conrod",
+      "mat_wrought_iron"
+    ],
+    "kb": "",
+    "ph": 160,
+    "lab": {
+      "artisan": 280,
+      "smith": 200
+    },
+    "mat": {
+      "iron_bar_kg": 10,
+      "steel_plate_kg": 6,
+      "timber_m3": 0.6
+    },
+    "cap": 650,
+    "up": 70,
+    "yrs": 1.0,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": -1,
+    "rev": 1400,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Two non-obvious inventions: lockstitch (needle passes through cloth-held loop made by shuttle beneath, creating loop for next pass) and eye-pointed needle (eye at tip, not butt). Hand or treadle powered. Serrated presser foot holds fabric. Replaces hand sewers, mostly women."
+  },
+  {
+    "id": "tex_buttons_buttonholes",
+    "name": "Buttons and buttonholes",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_fitted_garment",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 50,
+    "lab": {
+      "artisan": 120
+    },
+    "mat": {
+      "timber_m3": 0.2,
+      "brass_kg": 5
+    },
+    "cap": 120,
+    "up": 15,
+    "yrs": 0.3,
+    "risk": 0.08,
+    "sus": 0,
+    "gov": 0,
+    "rev": 250,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Buttonholes cut and sewn by hand initially, later machine-cut. Buttons turned from bone, wood, or cast metals. Enables fitted garments that open and close easily, replacing laces and ties."
+  },
+  {
+    "id": "tex_hosiery",
+    "name": "Hosiery production",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_knitting_frame",
+      "tex_wool",
+      "tex_cotton_trade"
+    ],
+    "kb": "",
+    "ph": 70,
+    "lab": {
+      "artisan": 180
+    },
+    "mat": {
+      "wool_kg": 30,
+      "cotton_kg": 20
+    },
+    "cap": 200,
+    "up": 50,
+    "yrs": 0.4,
+    "risk": 0.1,
+    "sus": 0,
+    "gov": 0,
+    "rev": 900,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Production of stockings and socks via knitting frame. Enables mass market for close-fitting legwear. Comfort and fit improve dramatically over hand-knit."
+  },
+  {
+    "id": "tex_cotton_gin",
+    "name": "Cotton gin with saw",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "cap_tol_1mm",
+      "crank_conrod",
+      "tex_hand_ginning"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "carpenter": 160,
+      "smith": 160,
+      "artisan": 100
+    },
+    "mat": {
+      "timber_m3": 2,
+      "iron_bar_kg": 22,
+      "iron_sheet_kg": 12
+    },
+    "cap": 450,
+    "up": 100,
+    "yrs": 0.5,
+    "risk": 0.13,
+    "sus": 0,
+    "gov": 1,
+    "rev": 1200,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Rotating saw cylinder draws lint through spacing slots while stationary brush removes lint. Whitney saw gin (1793) produces 50 lbs/day vs 1 lb/day by hand. Game-changing for cotton profitability, tragically driving slavery expansion."
+  },
+  {
+    "id": "tex_vegetable_tanning",
+    "name": "Vegetable tanning of leather",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "mat_leather"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "artisan": 250,
+      "labourer": 200
+    },
+    "mat": {
+      "oak_bark_kg": 100,
+      "lime_kg": 50,
+      "wheat_kg": 30
+    },
+    "cap": 800,
+    "up": 150,
+    "yrs": 1.2,
+    "risk": 0.14,
+    "sus": 0,
+    "gov": 0,
+    "rev": 600,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Tanning hides with oak or chestnut bark tannins in vats over weeks. Produces flexible, durable leather resistant to rot. Process is standardized by medieval period but knowledge of bark selection and timing matters."
+  },
+  {
+    "id": "tex_fulling_water",
+    "name": "Water-powered fulling mill",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_fulling",
+      "cap_power_water",
+      "crank_conrod"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "carpenter": 280,
+      "smith": 220,
+      "artisan": 120,
+      "millwright": 200
+    },
+    "mat": {
+      "timber_m3": 3.5,
+      "iron_bar_kg": 45,
+      "iron_sheet_kg": 18
+    },
+    "cap": 1800,
+    "up": 160,
+    "yrs": 1.2,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": -1,
+    "rev": 900,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Water-driven heavy mallets or rollers beat cloth in lye to felt and shrink. Replaces hand fullers working for hours in tubs. Enables fuller scale production. Requires water power site and capital infrastructure."
+  },
+  {
+    "id": "tex_field_bleaching",
+    "name": "Field bleaching with sun",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_linen",
+      "tex_sailcloth"
+    ],
+    "kb": "",
+    "ph": 50,
+    "lab": {
+      "labourer": 300
+    },
+    "mat": {
+      "water_access": 1
+    },
+    "cap": 200,
+    "up": 30,
+    "yrs": 2.0,
+    "risk": 0.12,
+    "sus": 0,
+    "gov": 0,
+    "rev": 400,
+    "sch": 0,
+    "art": 0,
+    "conf": "A",
+    "note": "Spreading wet cloth on grass, rewetting daily, exposed to sunlight for weeks. Oxidizes and bleaches fibers white. Bottleneck of textile production: chlorine bleaching is 100x faster. Weather dependent."
+  },
+  {
+    "id": "tex_calico_printing",
+    "name": "Calico printing with blocks",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_cotton_trade",
+      "tex_canvas",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 140,
+    "lab": {
+      "artisan": 250,
+      "master": 150
+    },
+    "mat": {
+      "timber_m3": 1.5,
+      "iron_bar_kg": 10,
+      "dye_kg": 50
+    },
+    "cap": 600,
+    "up": 100,
+    "yrs": 0.6,
+    "risk": 0.15,
+    "sus": 0,
+    "gov": 0,
+    "rev": 800,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Hand-carved wooden blocks print colors onto cloth by pressing into dye paste then cloth. Each color requires separate block and pass. Produces decorative cotton fabrics. Hand skill and artistic eye essential."
+  },
+  {
+    "id": "tex_pattern_cutting",
+    "name": "Standard pattern cutting and sizing",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_fitted_garment",
+      "cap_measure_len",
+      "mat_paper"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "master": 150,
+      "artisan": 100
+    },
+    "mat": {
+      "paper": 100,
+      "charcoal_kg": 5
+    },
+    "cap": 200,
+    "up": 20,
+    "yrs": 0.4,
+    "risk": 0.09,
+    "sus": 0,
+    "gov": 0,
+    "rev": 300,
+    "sch": 0,
+    "art": 1,
+    "conf": "B",
+    "note": "Standardized paper patterns for garment pieces scaled to common sizes (small/medium/large). Enables fast cutting and consistent fit without measuring individuals. Speeds production and reduces skilled labor in cutting."
+  },
+  {
+    "id": "tex_tape_measure",
+    "name": "Tape measure standardization",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "cap_measure_len"
+    ],
+    "kb": "",
+    "ph": 40,
+    "lab": {
+      "artisan": 80
+    },
+    "mat": {
+      "linen_kg": 20,
+      "brass_kg": 5
+    },
+    "cap": 150,
+    "up": 10,
+    "yrs": 0.2,
+    "risk": 0.06,
+    "sus": 0,
+    "gov": 0,
+    "rev": 200,
+    "sch": 0,
+    "art": 0,
+    "conf": "B",
+    "note": "Flexible calibrated tape in inches or centimeters with brass end caps. Enables rapid precise body measurements for fitting. Standardization of units also enables pattern size labeling."
+  },
+  {
+    "id": "tex_wool_combing_machinery",
+    "name": "Wool combing machinery",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_combing",
+      "cap_power_water",
+      "crank_conrod",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "carpenter": 300,
+      "smith": 280,
+      "artisan": 150,
+      "millwright": 200
+    },
+    "mat": {
+      "timber_m3": 3,
+      "iron_bar_kg": 55,
+      "steel_plate_kg": 15
+    },
+    "cap": 2200,
+    "up": 200,
+    "yrs": 1.3,
+    "risk": 0.17,
+    "sus": 0,
+    "gov": -1,
+    "rev": 1500,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Water-powered rollers with metal pins comb wool fibers to parallelism. Produces cleaner, stronger yarn than hand combing. One machine replaces many combers. Requires substantial capital and water power."
+  },
+  {
+    "id": "tex_textile_factory",
+    "name": "Textile mill and factory system",
+    "tier": 2,
+    "cat": "textiles",
+    "pre": [
+      "tex_water_frame",
+      "tex_power_loom",
+      "cap_power_water",
+      "interchangeable_parts"
+    ],
+    "kb": "",
+    "ph": 300,
+    "lab": {
+      "carpenter": 500,
+      "smith": 400,
+      "master": 200,
+      "labourer": 1000
+    },
+    "mat": {
+      "timber_m3": 100,
+      "iron_bar_kg": 500,
+      "iron_sheet_kg": 200,
+      "brick_1000": 50
+    },
+    "cap": 50000,
+    "up": 5000,
+    "yrs": 3.0,
+    "risk": 0.25,
+    "sus": 0,
+    "gov": -1,
+    "rev": 30000,
+    "sch": 2,
+    "art": 0,
+    "conf": "B",
+    "note": "Multi-story water-powered mill integrating spinning, weaving, finishing under one roof. Centralized production, child and female labor prevalent. Requires water power, capital, organization, and transportation. Birth of industrial production system."
+  },
+  {
+    "id": "tex_spinning_mule",
+    "name": "Spinning mule (jenny plus frame)",
+    "tier": 3,
+    "cat": "textiles",
+    "pre": [
+      "tex_spinning_jenny",
+      "tex_water_frame",
+      "cap_power_steam",
+      "crank_conrod",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "machinist": 350,
+      "carpenter": 280,
+      "smith": 250
+    },
+    "mat": {
+      "timber_m3": 4,
+      "iron_sheet_kg": 50,
+      "steel_plate_kg": 25
+    },
+    "cap": 3500,
+    "up": 280,
+    "yrs": 1.5,
+    "risk": 0.19,
+    "sus": 0,
+    "gov": -2,
+    "rev": 4200,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Hand-cranked carriage on rails moves in-out while spindles rotate. Moving carriage stretches roving as spindles twist, producing finer, stronger thread than jenny or frame alone. Can produce very fine yarn. Later steam-powered. Skilled operation essential."
+  },
+  {
+    "id": "tex_jacquard_loom",
+    "name": "Jacquard loom with punched cards",
+    "tier": 3,
+    "cat": "textiles",
+    "pre": [
+      "tex_power_loom",
+      "cap_tol_1mm",
+      "mat_paper"
+    ],
+    "kb": "",
+    "ph": 250,
+    "lab": {
+      "carpenter": 350,
+      "smith": 280,
+      "artisan": 180,
+      "machinist": 200
+    },
+    "mat": {
+      "timber_m3": 4,
+      "iron_bar_kg": 70,
+      "iron_sheet_kg": 35,
+      "paper": 1000
+    },
+    "cap": 2800,
+    "up": 220,
+    "yrs": 1.6,
+    "risk": 0.18,
+    "sus": 0,
+    "gov": 0,
+    "rev": 3200,
+    "sch": 1,
+    "art": 1,
+    "conf": "A",
+    "note": "Punched cards control which warp threads rise per pick. Each card has holes engaging or disengaging hooks. Complex patterns woven without hand shaft control. Cards must be hand-prepared; later inspires computer punch-card era. Transforms pattern-weaving from artisanal to systematic."
+  },
+  {
+    "id": "tex_roller_printing",
+    "name": "Roller printing of cloth",
+    "tier": 3,
+    "cat": "textiles",
+    "pre": [
+      "tex_calico_printing",
+      "cap_tol_100um",
+      "cap_power_water"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "machinist": 300,
+      "artisan": 200,
+      "engraver": 250
+    },
+    "mat": {
+      "timber_m3": 3,
+      "iron_bar_kg": 80,
+      "steel_plate_kg": 40,
+      "copper_kg": 30
+    },
+    "cap": 4000,
+    "up": 350,
+    "yrs": 1.4,
+    "risk": 0.17,
+    "sus": 0,
+    "gov": -1,
+    "rev": 2500,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Engraved copper or steel rollers rotate through dye paste then press pattern onto cloth continuously. Replaces block printing entirely: 100x faster, consistent patterns, multiple colors per pass via multiple rollers. Requires precision engraving and gear coordination."
+  },
+  {
+    "id": "tex_mercerisation",
+    "name": "Mercerisation of cotton",
+    "tier": 3,
+    "cat": "textiles",
+    "pre": [
+      "tex_cotton_trade",
+      "potash_soda"
+    ],
+    "kb": "",
+    "ph": 100,
+    "lab": {
+      "chemist": 200,
+      "artisan": 150
+    },
+    "mat": {
+      "water_kg": 1000,
+      "natron_kg": 100
+    },
+    "cap": 1200,
+    "up": 200,
+    "yrs": 0.5,
+    "risk": 0.12,
+    "sus": 0,
+    "gov": 0,
+    "rev": 500,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Treating cotton yarn or cloth with sodium hydroxide under tension causes fibers to swell and straighten, increasing luster and dye uptake. Mercerized cotton resembles silk. Requires caustic soda production and careful process control."
+  },
+  {
+    "id": "tex_chlorine_bleaching",
+    "name": "Chlorine bleaching of cloth",
+    "tier": 4,
+    "cat": "textiles",
+    "pre": [
+      "tex_field_bleaching",
+      "mat_chlorine",
+      "cap_tol_1mm"
+    ],
+    "kb": "",
+    "ph": 120,
+    "lab": {
+      "chemist": 250,
+      "artisan": 150
+    },
+    "mat": {
+      "charcoal_kg": 100,
+      "lime_kg": 150,
+      "salt_kg": 300,
+      "sulfuric_acid_kg": 50
+    },
+    "cap": 2500,
+    "up": 400,
+    "yrs": 1.0,
+    "risk": 0.14,
+    "sus": 0,
+    "gov": 0,
+    "rev": 800,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Cl2 gas or hypochlorite solution bleaches cloth in hours instead of weeks. 100x speedup ends field bleaching bottleneck. Risks fabric damage if concentration not controlled. Requires chlorine production (electrolytic or chemical) from heavy industry."
+  },
+  {
+    "id": "tex_synthetic_dyes",
+    "name": "Synthetic aniline dyes",
+    "tier": 4,
+    "cat": "textiles",
+    "pre": [
+      "mat_dyes_synthetic",
+      "tex_mordanting"
+    ],
+    "kb": "",
+    "ph": 80,
+    "lab": {
+      "chemist": 200
+    },
+    "mat": {
+      "dye_kg": 100,
+      "acetic_acid_kg": 50
+    },
+    "cap": 1500,
+    "up": 300,
+    "yrs": 0.6,
+    "risk": 0.11,
+    "sus": 0,
+    "gov": 0,
+    "rev": 1200,
+    "sch": 1,
+    "art": 0,
+    "conf": "A",
+    "note": "Aniline dyes (Mauveine and successors) from coal tar offer brilliant colors, lower cost, and consistency vs natural dyes. No mordanting required for most. Destroys market for madder, indigo, cochineal. By-product of coal industry."
+  },
+  {
+    "id": "tex_rayon_nitro",
+    "name": "Rayon from nitrocellulose",
+    "tier": 4,
+    "cat": "textiles",
+    "pre": [
+      "mat_nitrocellulose",
+      "mat_chlorine",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 180,
+    "lab": {
+      "chemist": 300,
+      "artisan": 200
+    },
+    "mat": {
+      "nitrocellulose_kg": 100,
+      "alcohol_kg": 200,
+      "copper_sulfate_kg": 50
+    },
+    "cap": 3000,
+    "up": 500,
+    "yrs": 1.2,
+    "risk": 0.18,
+    "sus": 2,
+    "gov": 0,
+    "rev": 1800,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Dissolving nitrocellulose in ether-alcohol, forcing through spinnerets into acid coagulant, regenerating cellulose. First synthetic fiber, 1889 (Chardonnet). Requires precise chemistry, temperature, and concentration control. Somewhat fragile in wet state."
+  },
+  {
+    "id": "tex_rayon_viscose",
+    "name": "Rayon from viscose",
+    "tier": 4,
+    "cat": "textiles",
+    "pre": [
+      "mat_natron",
+      "potash_soda",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 200,
+    "lab": {
+      "chemist": 350,
+      "artisan": 250
+    },
+    "mat": {
+      "wood_pulp_kg": 200,
+      "natron_kg": 300,
+      "sulfur_kg": 150,
+      "acids": 100
+    },
+    "cap": 4500,
+    "up": 800,
+    "yrs": 1.5,
+    "risk": 0.16,
+    "sus": 1,
+    "gov": 0,
+    "rev": 2200,
+    "sch": 2,
+    "art": 0,
+    "conf": "B",
+    "note": "Dissolving wood pulp in alkaline sulfide creating viscose paste, aging, forcing through spinnerets into acid bath regenerating cellulose fiber. By 1900 displaces much nitrocellulose. More robust than nitro-rayon. Requires wood pulp supply and chemical process control."
+  },
+  {
+    "id": "tex_chrome_tanning",
+    "name": "Chrome tanning of leather",
+    "tier": 4,
+    "cat": "textiles",
+    "pre": [
+      "mat_chromium",
+      "mat_leather"
+    ],
+    "kb": "",
+    "ph": 140,
+    "lab": {
+      "chemist": 250,
+      "artisan": 200
+    },
+    "mat": {
+      "chrome_salts_kg": 50,
+      "lime_kg": 100,
+      "water_kg": 1000
+    },
+    "cap": 2000,
+    "up": 400,
+    "yrs": 0.8,
+    "risk": 0.14,
+    "sus": 0,
+    "gov": 0,
+    "rev": 1000,
+    "sch": 1,
+    "art": 0,
+    "conf": "B",
+    "note": "Chromium salts cross-link collagen in hides in days instead of weeks (vegetable tanning). Produces soft, supple leather resistant to heat. Requires chromium compound production and process control. Overtakes vegetable tanning by early 1900s."
+  },
+  {
+    "id": "tex_nylon",
+    "name": "Nylon fiber",
+    "tier": 5,
+    "cat": "textiles",
+    "pre": [
+      "mat_ammonia",
+      "industrial_gases",
+      "cap_tol_100um"
+    ],
+    "kb": "",
+    "ph": 250,
+    "lab": {
+      "chemist": 400,
+      "machinist": 200
+    },
+    "mat": {
+      "coal_tar_kg": 300,
+      "oxygen_m3": 500,
+      "hydrogen_m3": 500
+    },
+    "cap": 8000,
+    "up": 1500,
+    "yrs": 2.0,
+    "risk": 0.22,
+    "sus": 0,
+    "gov": 1,
+    "rev": 4000,
+    "sch": 2,
+    "art": 0,
+    "conf": "B",
+    "note": "Polyamide fiber synthesized from coal tar via complex organic chemistry (Carothers, 1935). Requires high-temperature reactors, vacuum conditions, precise monomer synthesis, and polymerization control. Strongest fiber yet, endless customization. Fully replaces some natural uses."
+  }
+]
