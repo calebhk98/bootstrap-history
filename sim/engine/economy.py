@@ -1362,7 +1362,37 @@ class EconomyMixin:
         ratios = [self.goods_category_price_ratio(c)
                   for c in sorted(self.ESSENTIAL_CATEGORIES)]
         ratios = [r for r in ratios if r is not None]
-        return sum(ratios) / len(ratios) if ratios else 1.0
+        market_ratio = sum(ratios) / len(ratios) if ratios else 1.0
+        # Household-backed farms supply staples even before a processing
+        # concern exists. Diminishing returns reach the same 0.55 floor as the
+        # established food market rather than making subsistence free.
+        farm_ha = max(0.0, getattr(self, "farm_hectares", 0.0))
+        farm_ratio = max(0.55, 1.0 / (1.0 + farm_ha / 120.0))
+        return min(market_ratio, farm_ratio)
+
+    FARM_COST_PER_HA = 75.0
+    HOUSING_COST_PER_PLACE = 600.0
+    TRADE_SCHOOL_COST_PER_SEAT = 1200.0
+
+    def invest_farm(self, hectares):
+        """Buy productive farmland that lowers the household staple price."""
+        hectares = float(hectares)
+        cost = hectares * self.FARM_COST_PER_HA * self.price_index
+        if hectares <= 0 or cost > self.capital:
+            return 0.0
+        self.capital -= cost
+        self.farm_hectares = getattr(self, "farm_hectares", 0.0) + hectares
+        return hectares
+
+    def build_worker_housing(self, places):
+        """Add durable worker housing and relieve household crowding."""
+        places = float(places)
+        cost = places * self.HOUSING_COST_PER_PLACE * self.price_index
+        if places <= 0 or cost > self.capital:
+            return 0.0
+        self.capital -= cost
+        self.worker_housing_places = getattr(self, "worker_housing_places", 0.0) + places
+        return places
 
     # How much a fully-saturated essential's cheapness (price_ratio at its
     # own floor) can move discretionary spending. 1.0 means "as much extra
@@ -2631,12 +2661,9 @@ class EconomyMixin:
         previous years - the stock half of stock vs flow. Lazily created on
         first use and then kept for the life of the Sim: EconomyMixin is a
         mixin, not __init__, and a fresh Counter is exactly what a household
-        that has banked nothing yet should read as having. NOT part of
-        save_state()'s SAVE_FIELDS (protocol.py, not this file's to edit);
-        a resumed save starts its stock over at zero rather than carrying
-        last session's balance, which undersells a banked surplus but never
-        invents material that is not there - the safe direction to be wrong
-        in.
+        that has banked nothing yet should read as having. It is included in
+        save_state()'s SAVE_FIELDS, so a resumed household retains the tonnes
+        it actually produced or purchased.
 
         Deliberately a plain Counter, not commodities.py's own `Ledger`
         (also "a stock, not a flow," by its own docstring): Ledger works in
@@ -2666,16 +2693,70 @@ class EconomyMixin:
     def material_stock_t(self, emp_key):
         """Tonnes of `emp_key` currently banked - the STOCK half of stock vs
         flow, which is the thing a player asking "how much iron do I actually
-        own" wants and which no command yet shows them.
-
-        NOT DEAD, UNFINISHED. This was swept as unreferenced once and put back:
-        nothing calls it because the display it was written for was never
-        built, not because the display is unwanted. A player asked for exactly
-        this again. Whoever wires up a `stock` command in protocol.py should
-        call this; until then it is the useful half of a feature waiting for
-        its other half.
+        own" wants. The `materials` command, trading actions, and resource
+        throttle all read this same ledger.
         """
         return self._material_stock().get(emp_key, 0.0)
+
+    def material_trade_quote(self, material):
+        """Current buy/sell quote for one tonne of a material commodity."""
+        material = str(material or "").strip().lower()
+        per_kg = self._book_price_per_kg(material)
+        if per_kg is None:
+            return None
+        buy = per_kg * 1000.0 * self.price_index * self.material_price_factor(material)
+        return {"material": material, "buy_per_tonne": buy,
+                "sell_per_tonne": buy * 0.80,
+                "market_available_tonnes_per_year": self._material_market_tonnes(material)}
+
+    def buy_material_stock(self, material, tonnes):
+        quote = self.material_trade_quote(material)
+        tonnes = float(tonnes)
+        if not quote or tonnes <= 0:
+            return 0.0
+        # The market figure is an annual flow ceiling, not an infinite shop.
+        tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
+        cost = tonnes * quote["buy_per_tonne"]
+        if tonnes <= 0 or cost > self.capital:
+            return 0.0
+        self.capital -= cost
+        self._material_stock()[quote["material"]] += tonnes
+        self._stock_throttle_sig = None
+        return tonnes
+
+    def sell_material_stock(self, material, tonnes):
+        quote = self.material_trade_quote(material)
+        tonnes = float(tonnes)
+        if not quote or tonnes <= 0:
+            return 0.0
+        sold = min(tonnes, self.material_stock_t(quote["material"]))
+        if sold <= 0:
+            return 0.0
+        self._material_stock()[quote["material"]] -= sold
+        self.capital += sold * quote["sell_per_tonne"]
+        self._stock_throttle_sig = None
+        return sold
+
+    def materials_report(self):
+        """Stocks, annual flows, demand, and current trade values."""
+        demand = self._demand_by_emp_key()
+        materials = set(self._material_stock()) | {p[0] for p in self.MATERIAL_CHECKS.values()}
+        materials |= {m for m in self.mine_capacity}
+        rows = []
+        for material in sorted(materials):
+            quote = self.material_trade_quote(material)
+            if not quote:
+                continue
+            annual_demand = sum(v for _tag, v in demand.get(material, ()))
+            own = sum(self._own_material_supply(tag) for emp, tag in self._own_production_tags()
+                      if emp == material)
+            rows.append({**quote, "stock_on_hand_tonnes": self.material_stock_t(material),
+                         "own_production_tonnes_per_year": own,
+                         "current_demand_tonnes_per_year": annual_demand,
+                         "stock_covers_years_at_current_demand": (
+                             self.material_stock_t(material) / annual_demand
+                             if annual_demand > 1e-9 else None)})
+        return rows
 
     def _throttle_demand_split(self, demand):
         """`demand` (annual_material_demand()'s raw material-key Counter)
@@ -3096,7 +3177,9 @@ class EconomyMixin:
         # function draws down must be spent once per genuine recomputation,
         # not once per CALL, or a query asked twice double-depletes it and
         # answers its own two calls with two different numbers. Keyed on the
-        # CONTENT that feeds the computation below (not self.year: a test,
+        # CONTENT that feeds the computation below, including the year. A new
+        # year is a new production flow and must bank another year's unused
+        # mine output; repeated queries within that year must not. A test,
         # or a player, building a mine or a nitre bed mid-year and asking
         # again in the SAME year must see the new answer immediately, not a
         # stale replay - see test_regressions.py's own
@@ -3114,7 +3197,7 @@ class EconomyMixin:
         # otherwise silently replay a now-stale (worst, who) for.
         elec_need = self._electricity_demand_kw()
         elec_have = self.generation_capacity_kw()
-        sig = (tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
+        sig = (self.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
                tuple(sorted(self.mine_capacity.items())), self.forest_ha,
                self.nitre_bed_m2, tuple(sorted(stock.items())),
                elec_need, elec_have)
@@ -3169,11 +3252,41 @@ class EconomyMixin:
         # it - so an immediate repeat call's sig (computed from that same,
         # now-settled stock) matches and replays rather than spending again.
         self._stock_throttle_sig = (sig[0], sig[1], sig[2], sig[3], sig[4],
-                                     tuple(sorted(stock.items())), sig[6], sig[7])
+                                     sig[5], tuple(sorted(stock.items())),
+                                     sig[7], sig[8])
         self._stock_throttle_cache = (worst, who)
         if who:
             self.shortages[who] += 1
         return worst
+
+    def project_resource_throttle(self, k):
+        """Material throttle applicable to one active project.
+
+        ``resource_throttle`` still performs the portfolio-level supply and
+        stock accounting and identifies the binding pool.  The resulting
+        scarcity must only slow work that draws from that pool, however; paper
+        research does not become short of saltpetre because a gunpowder project
+        is.  Consumers of the scarce pool share its aggregate factor, while
+        projects with no matching input retain their full labour pace.
+        """
+        factor = self.resource_throttle()
+        binding = self.binding
+        if factor >= 0.999 or not binding:
+            return 1.0
+        if binding == "electricity":
+            return factor if k in self._electricity_load_node_ids() else 1.0
+        n = self.nodes.get(k) or {}
+        coke = self.chosen_fuel(k) == "coke"
+        for mat in (n.get("mat") or {}):
+            effective_mat = ("coal_kg" if coke
+                             and mat in ("charcoal_kg", "firewood_kg") else mat)
+            # Gram-scale purchases never participate in the flow throttle.
+            if effective_mat.endswith(self.LAB_SCALE_SUFFIX) \
+                    and not effective_mat.endswith("_kg"):
+                continue
+            if self._material_tag(effective_mat)[0] == binding:
+                return factor
+        return 1.0
 
     def _cached_material_demand(self):
         """annual_material_demand(), reusing resource_throttle()'s cache when
@@ -4117,12 +4230,23 @@ class EconomyMixin:
                        "{:,.0f}".format(ha * self.FOREST_COST_PER_HA * self.price_index),
                        ha))
         if binding == "saltpetre":
-            return ("Saltpetre is made in nitre beds, not mined: 'buy nitre "
-                    "20000' lays twenty thousand square metres. A bed yields "
-                    "%.4f tonnes a square metre a year, so it takes a large "
-                    "one, and it is cheap: %s denarii the square metre."
-                    % (self.NITRE_YIELD_T_PER_M2,
-                       "{:,.2f}".format(self.NITRE_COST_PER_M2 * self.price_index)))
+            demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / 1000.0
+            available = (self.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+                         + self._material_market_tonnes("saltpetre")
+                         + self._material_stock().get("saltpetre", 0.0))
+            deficit = max(0.0, demand - available)
+            # Twenty per cent headroom prevents a tiny change in the portfolio
+            # putting the player straight back into shortage, without turning a
+            # one-tonne deficit into the old fixed sixteen-tonne recommendation.
+            m2 = max(100, int(math.ceil(
+                deficit * 1.20 / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
+            return ("Saltpetre is made in nitre beds, not mined: you are about "
+                    "%.2f tonnes/year short. With a 20%% safety buffer, 'buy "
+                    "nitre %d' lays enough bed at %.4f tonnes per square metre "
+                    "per year (about %s denarii)."
+                    % (deficit, m2, self.NITRE_YIELD_T_PER_M2,
+                       "{:,.0f}".format(m2 * self.NITRE_COST_PER_M2
+                                       * self.price_index)))
         if binding in self.MINE_CAPEX_PER_T_YR:
             dem = self.annual_material_demand()
             # SAME GROUPING resource_throttle() uses (_demand_by_supply_tag):

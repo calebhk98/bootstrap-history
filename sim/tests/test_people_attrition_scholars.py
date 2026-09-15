@@ -401,7 +401,8 @@ _cr_out = S._agent_dispatch(_cr, NODES, {"cmd": "start", "id": "identity_cover"}
 check("starting a project you cannot cover in cash says you would be "
       "borrowing, what it costs a year, and how much room is left",
       _cr_out.get("ok") and _cr_out.get("on_credit", {}).get("you_would_borrow", 0) > 0
-      and _cr_out["on_credit"].get("interest_per_year_on_it", 0) > 0
+      and _cr_out["on_credit"].get("interest_rate_percent", 0) > 0
+      and _cr_out["on_credit"].get("estimated_annual_interest", 0) > 0
       and _cr_out["on_credit"].get("no_one_advances_past", 0) > 0,
       _cr_out.get("on_credit"))
 check("...and names what the creditors do there, which is take things you "

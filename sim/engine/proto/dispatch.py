@@ -33,7 +33,7 @@ KNOWN_COMMANDS = (
     "hire", "fire", "train", "commission", "work", "allocate",
     "buy", "quote", "close", "bounty", "mothball", "restore", "bribe",
     "open", "ventures", "withdraw", "mines", "stuck",
-    "capacity", "economy", "changes", "score", "portfolio",
+    "capacity", "materials", "sell", "economy", "changes", "score", "portfolio",
     "save", "load", "quit",
 )
 
@@ -317,7 +317,8 @@ def _cmd_start(s, nodes, cmd, ended):
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None
     out = {"ok": True, "started": k, "name": n["name"], "founder_hours_needed": n["ph"],
-           "calendar_floor_years": n["yrs"],
+           "calendar_floor_years": round(s.calendar_floor(k), 2),
+           "nominal_calendar_floor_before_reputation": n["yrs"],
            # SAID AT THE MOMENT OF COMMITMENT, not only on `why` beforehand
            # or `available` in passing - this is the screen the player is
            # actually looking at when the risk becomes theirs. See
@@ -427,7 +428,9 @@ def _cmd_start(s, nodes, cmd, ended):
                 "this year's share. These figures are what happens if it "
                 "does, on today's numbers."),
             "you_would_borrow": round(_gap, 1),
-            "interest_per_year_on_it": round(s.debt_interest_rate() * 100, 1),
+            "interest_rate_percent": round(s.debt_interest_rate() * 100, 1),
+            "estimated_annual_interest": round(
+                _gap * s.debt_interest_rate(), 1),
             "you_would_then_owe": round(_after, 1),
             "no_one_advances_past": round(_lim, 1),
             "what_happens_there":
@@ -562,6 +565,17 @@ def _cmd_rush(s, nodes, cmd, ended):
     # decide what to show you. Ranking by it here leaks nothing, because
     # the ranking itself is never printed, only which ids got started.
     _ok.sort(key=lambda k: (-downstream_count(nodes, k), s.project_cost(k)))
+    # Discovery must not mutate dozens of portfolio entries. A numeric limit
+    # is an explicit bounded instruction; an unbounded run needs confirmation.
+    if limit is None and not cmd.get("force"):
+        return {"ok": True, "preview": True,
+                "count_would_start": len(_ok),
+                "would_start": [{"id": k, "name": nodes[k]["name"],
+                                  "cost": round(s.project_cost(k), 1)}
+                                 for k in _ok],
+                "nothing_changed": True,
+                "how_to_confirm": ("Use 'rush force' to begin this unbounded "
+                                   "set, or 'rush limit:N' to begin at most N.")}
     # AND STOP WHEN THE YEAR IS FULL. `rush limit:1000` on turn one started
     # 209 things at once - a plantation, a whaling industry, a theatre, a
     # gambling house, nitre beds and lens grinding, all in the same year -
@@ -720,6 +734,38 @@ def _cmd_buy(s, nodes, cmd, ended):
                 "saltpetre_it_yields_per_year_tonnes":
                     round(s.nitre_bed_m2 * s.NITRE_YIELD_T_PER_M2, 3),
                 "capital": round(s.capital, 1)}
+    if what in ("farm", "food"):
+        got = s.invest_farm(n)
+        if got <= 0:
+            return {"ok": False, "error": "cannot afford that farmland"}
+        return {"ok": True, "bought_farm_hectares": got,
+                "farm_hectares": round(s.farm_hectares, 1),
+                "food_cost_factor": round(s.essential_price_ratio(), 3),
+                "capital": round(s.capital, 1)}
+    if what in ("housing", "houses"):
+        got = s.build_worker_housing(n)
+        if got <= 0:
+            return {"ok": False, "error": "cannot afford that worker housing"}
+        return {"ok": True, "built_worker_housing_places": got,
+                "worker_housing_places": round(s.worker_housing_places, 1),
+                "capital": round(s.capital, 1)}
+    if what in ("school", "trade_school", "trade school"):
+        trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
+        ok, why = s.found_trade_school(trade, n)
+        if not ok:
+            return {"ok": False, "error": why}
+        return {"ok": True, "trade": trade, "new_training_seats": n,
+                "trade_school_seats": s.trade_schools[trade],
+                "market_supply_hours_per_year": round(s.market_supply(trade), 1),
+                "capital": round(s.capital, 1)}
+    if what in ("material", "stock"):
+        material = cmd.get("material")
+        got = s.buy_material_stock(material, n)
+        if got <= 0:
+            return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
+        return {"ok": True, "material": material, "bought_tonnes": got,
+                "stock_on_hand_tonnes": s.material_stock_t(material),
+                "capital": round(s.capital, 1)}
     if what == "mine":
         mat = cmd.get("material")
         # GENERALISED beyond the seven hand-named metals (see
@@ -793,7 +839,26 @@ def _cmd_buy(s, nodes, cmd, ended):
         if got <= 0:
             return {"ok": False, "error": "you have no slaves to free"}
         return {"ok": True, "manumitted": got, "freedmen": s.freedmen, "slaves": s.slaves}
-    return {"ok": False, "error": "what must be one of: forest, mine, slaves, manumit"}
+    return {"ok": False, "error": "what must be one of: forest, farm, housing, school, material, mine, slaves, manumit"}
+
+
+def _cmd_materials(s, nodes, cmd, ended):
+    return {"ok": True, "materials": s.materials_report(),
+            "units": "stocks are tonnes; production and demand are tonnes/year",
+            "how_to_trade": "buy material <name> <tonnes>; sell <name> <tonnes>"}
+
+
+def _cmd_sell(s, nodes, cmd, ended):
+    material = str(cmd.get("material") or cmd.get("what") or "").lower()
+    n, err = _qty(cmd, "n", 0)
+    if err or n <= 0:
+        return {"ok": False, "error": err or "n must be greater than zero"}
+    sold = s.sell_material_stock(material, n)
+    if sold <= 0:
+        return {"ok": False, "error": "you have none of that material stock to sell"}
+    return {"ok": True, "material": material, "sold_tonnes": sold,
+            "stock_on_hand_tonnes": s.material_stock_t(material),
+            "capital": round(s.capital, 1)}
 
 
 
@@ -1290,9 +1355,16 @@ def _cmd_labour(s, nodes, cmd, ended):
         # the premium appeared in the bill and nowhere else.
         _lpf = s.labour_price_factor(t)
         r = {"trade": t,
-             "a_year_of_one": round(ANNUAL_WAGE.get(t, 375.0) * s.wage_index
-                                    * s.price_index * _lpf, 0),
+             "a_year_of_one": round(s.annual_wage(t), 0),
              "you_employ": round(s.employees.get(t, 0.0), 2)}
+        if long:
+            r["wage_foundation"] = {
+                "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
+                **{k: round(v, 3) for k, v in s.wage_cost_factors(t).items()},
+                "demographic_scarcity": round(s.wage_index, 3),
+                "local_trade_scarcity": round(_lpf, 3),
+                "society_price_level": round(s.price_index, 3),
+            }
         # SAME EXPLANATION AS THE FULL LIST'S, for whoever asks about
         # one trade without ever asking for all of them - see
         # _staff_fraction_note. Checked on this one trade alone, not
@@ -1377,8 +1449,8 @@ def _cmd_labour(s, nodes, cmd, ended):
             # one screen a player actually reads before committing.
             if s.trade_available(t):
                 _lpf_after = s.labour_price_factor_after_hiring(t, 1.0)
-                _rate_after = round(ANNUAL_WAGE.get(t, 375.0) * s.wage_index
-                                    * s.price_index * _lpf_after, 0)
+                _rate_after = round(
+                    s.annual_wage(t, include_local_scarcity=False) * _lpf_after, 0)
                 # ALWAYS SHOWN, QUIETLY: this is the number the task is
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
@@ -1800,6 +1872,7 @@ def _cmd_ventures(s, nodes, cmd, ended):
         # and never the number the refusal quotes.
         _scale = (s.economy ** 0.75) * s.output_factor * s.price_index
         _sup_s, _sup_a = s.venture_hands(k)
+        _foreman_trade, _foreman_fte = s.venture_foreman(k)
         # AT THE SAME MARKET PRICE `money` credits, for a goods-producing
         # concern: goods_market_factor() is 1.0 for anything not in
         # GOODS_CATEGORIES and for anything not yet open, so this changes
@@ -1811,7 +1884,10 @@ def _cmd_ventures(s, nodes, cmd, ended):
                                          else 1.0) * _mkt, 1),
                 "costs_a_year": round(n["up"] * s.price_index, 1),
                 "needs": {"scholars": round(_sup_s, 2),
-                          "craftsmen": round(_sup_a, 2)}}
+                          "craftsmen": round(_sup_a, 2)},
+                "specialist_foreman": (
+                    {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
+                    if _foreman_trade else None)}
         _note = s.goods_market_note(k)
         if _note:
             row["market"] = _note
@@ -1859,6 +1935,11 @@ def _cmd_ventures(s, nodes, cmd, ended):
            "held_in_all": {
                "scholars": round(s.venture_staff_used()[0], 2),
                "craftsmen": round(s.venture_staff_used()[1], 2)},
+           "staffing_rule": (
+               "Needs and held totals are full-time-equivalents. Free is "
+               "clamped at zero, so a small deficit never appears negative. "
+               "Concerns remain open until held staff exceeds effective "
+               "capacity by more than the 0.50-FTE anti-churn margin."),
            "you_have_in_all": {
                "scholars": round(s.effective_scholars(), 2),
                "craftsmen": round(s.artisans
@@ -1999,6 +2080,9 @@ def _cmd_policy(s, nodes, cmd, ended):
                                    "will not need next year, and it leaves "
                                    "no standing obligation either way",
                 "auto_bribe": "pay your way out of a scandal before it kills you",
+                "auto_court_heir": "spend 800 denarii (price-adjusted) when a "
+                                   "patron dies to court the successor. Off by "
+                                   "default in manual play; on unattended",
                 "auto_shed": "let go of WORKS that cost more than they return "
                              "(this is about buildings and practices, not people)",
                 # SAY WHAT IT WILL NOT DO - AND SAY THE EXCEPTION, which
@@ -2309,6 +2393,8 @@ _AGENT_DISPATCH_TABLE = {
     'mines': _cmd_mines,
     'workings': _cmd_mines,
     'capacity': _cmd_capacity,
+    'materials': _cmd_materials,
+    'sell': _cmd_sell,
     'industry': _cmd_capacity,
     'dashboard': _cmd_capacity,
     'portfolio': _cmd_portfolio,

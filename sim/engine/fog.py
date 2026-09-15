@@ -338,6 +338,8 @@ class FogMixin:
                    "sacks_a_site": bool(h.get("sack_chance")),
                    "sack_chance_per_year": h.get("sack_chance"),
                    "staff_loss": h.get("staff_loss"),
+                   "staff_loss_wave_chance_per_year": (0.32 if h.get("staff_loss")
+                                                        is not None else None),
                    "note": h.get("note")}
             # WHAT YOU CAN DO ABOUT IT. Every hazard here is fightable, and
             # until now nothing said so: testers watched the plague arrive on
@@ -352,6 +354,14 @@ class FogMixin:
             if "staff_loss" in h:
                 row["staff_loss_after_what_you_have_built"] = round(
                     h["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
+                remaining = max(y0, self.year)
+                waves = max(1, y1 - remaining + 1)
+                per_wave = row["staff_loss_after_what_you_have_built"]
+                row["remaining_annual_wave_checks"] = waves
+                row["chance_of_at_least_one_staff_loss_wave"] = round(
+                    1.0 - (1.0 - 0.32) ** waves, 4)
+                row["expected_cumulative_staff_loss"] = round(
+                    1.0 - (1.0 - 0.32 * per_wave) ** waves, 4)
             upcoming.append(row)
         # WHAT IS ACTUALLY NEAR, in full, and the rest by name. Every dated
         # hazard now carries a real historical note and England has fifteen of

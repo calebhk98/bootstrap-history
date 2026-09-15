@@ -133,13 +133,15 @@ def _waiting_on(s, nodes, k, st, bill):
     # it, below - can tell them apart.
     staffing_short = []
     booked_short = []
+    portfolio_demand = s.trade_demand_vs_supply()
     for t, want in (n["lab"] or {}).items():
         need = min(want / max(1.0, n["yrs"]), lab_left.get(t, want))
         if need <= 0:
             continue
         supply = s.hours_you_can_call_on(t)
-        have = supply - s.trade_hours_used.get(t, 0.0)
-        if have < need:
+        total_demand = portfolio_demand.get(t, {}).get(
+            "demand_hours_this_year", need)
+        if supply < need or total_demand > supply + 1e-6:
             # The society's CAPACITY is the durable fact and the one a player
             # can act on; what is left after this year's bookings is noise that
             # changes every step. Say the first, and only mention the second
@@ -148,7 +150,7 @@ def _waiting_on(s, nodes, k, st, bill):
                 staffing_short.append(
                     "%s (wants %.0f hours a year; this society can "
                     "field %.0f at most)" % (t, need, max(0.0, supply)))
-            else:
+            elif total_demand > supply + 1e-6:
                 booked_short.append(
                     "%s (wants %.0f hours a year; the %ss here can "
                     "supply %.0f but your other work has them booked)"
@@ -191,23 +193,23 @@ def _waiting_on(s, nodes, k, st, bill):
                     % ("{:,.0f}".format(per_year), "{:,.0f}".format(bill),
                        math.ceil(bill / per_year),
                        "" if math.ceil(bill / per_year) == 1 else "s"))
-        return ("money: %s still owed and this year's instalment of %s is more "
-                "than you can raise" % ("{:,.0f}".format(bill),
-                                        "{:,.0f}".format(per_year)))
+        return ("unfunded now; will fund opportunistically as revenue arrives "
+                "this year: %s still owed and the next instalment of %s is "
+                "more than you can raise at this moment"
+                % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
     if st["ph_left"] <= 0:
         return "the calendar"
-    # MATERIALS. One economy-wide shortage (charcoal, iron ore, saltpetre...)
-    # scales EVERY active project's offered hours down by the same factor -
-    # see core.py step() 5, "per = ... * self.throttle" - so a project with
+    # MATERIALS. A shortage scales only projects consuming its supply pool -
+    # see core.py step() 5 - so a project with
     # founder-hours still to spend and nobody short on trade or money can
     # still be making less of them than the pool alone would suggest, for a
     # reason that is neither staffing, money nor the calendar. Only said when
     # it is genuinely biting (2% is noise); resource_throttle() itself is the
     # one place that number is computed, read here rather than re-derived.
-    _thr = s.resource_throttle()
+    _thr = s.project_resource_throttle(k)
     if _thr < 0.98 and s.binding:
-        return ("materials: a shortage of %s has every project (this one "
-                "included) running at %d%% of the pace its hours alone "
+        return ("materials: this project consumes %s, whose shortage has it "
+                "running at %d%% of the pace its hours alone "
                 "would allow; 'capacity' shows the shortfall"
                 % (s.binding, round(_thr * 100)))
     # FOUNDER HOURS - AND WHY THIS MUCH OF THEM. Before this, a project

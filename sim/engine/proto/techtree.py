@@ -238,7 +238,9 @@ def _brief(s, nodes, k, fog):
     return {"id": k, "name": n["name"], "tier": n["tier"], "cat": n["cat"],
             **_staff_fields(s, n),
             "cost": round(s.project_cost(k), 1), "founder_hours": n["ph"],
-            "calendar_floor_years": n["yrs"], "risk": s.effective_risk(k),
+            "calendar_floor_years": round(s.calendar_floor(k), 2),
+            "nominal_calendar_floor_before_reputation": n["yrs"],
+            "risk": s.effective_risk(k),
             "earns_per_year": round(n["rev"], 1),
             "costs_per_year_after": round(n["up"], 1),
             # _downstream_of, NOT downstream_count. The cached bitmask index
@@ -382,9 +384,19 @@ def _agent_available(s, nodes, cmd=None):
     _sort_fn = _SORT_KEYS.get(sort_by)
     reverse = bool(cmd.get("reverse"))
 
+    def matches_find(k):
+        """Match every query word across ids, names, anchors, and aliases."""
+        aliases = nodes[k].get("aliases") or []
+        if isinstance(aliases, str):
+            aliases = [aliases]
+        haystack = " ".join([k, nodes[k].get("name", ""),
+                             nodes[k].get("kb", "")] + aliases).lower()
+        terms = [term for term in find.replace("_", " ").split() if term]
+        return bool(terms) and all(term in haystack for term in terms)
+
     sel, why_these = ok, None
     if find:
-        sel = [k for k in ok if find in k.lower() or find in nodes[k]["name"].lower()]
+        sel = [k for k in ok if matches_find(k)]
         why_these = "matching %r" % find
     elif want_subject:
         sel = [k for k in ok if want_subject in _subject_of(nodes[k]).lower()]
@@ -439,8 +451,7 @@ def _agent_available(s, nodes, cmd=None):
         # heard-of-but-not-yet-startable is exactly the case this list exists
         # to answer, so the fix is to search it rather than hide it outright.
         if find:
-            _heard_all = [k for k in _heard_all
-                          if find in k.lower() or find in nodes[k]["name"].lower()]
+            _heard_all = [k for k in _heard_all if matches_find(k)]
         elif want_subject:
             _heard_all = [k for k in _heard_all
                           if want_subject in _subject_of(nodes[k]).lower()]
@@ -687,6 +698,8 @@ def _node_explain(s, nodes, k):
     _is_venture = s.is_venture(k)
     _sup_sch, _sup_art = s.venture_hands(k) if _is_venture else (0.0, 0.0)
     _free_sch, _free_art = s.venture_staff_free() if _is_venture else (0.0, 0.0)
+    _foreman_trade, _foreman_fte = (s.venture_foreman(k) if _is_venture
+                                     else (None, 0.0))
     out = {
         "id": k, "name": n["name"], "tier": n["tier"], "cat": n["cat"], "confidence": n["conf"],
         # See strip_self_play_advice (fog.py): drops any sentence that ranks
@@ -804,6 +817,12 @@ def _node_explain(s, nodes, k):
         "revenue": (n["rev"] if (not getattr(s, "fog", False)
                                  or _revenue_known_exactly(s, k))
                    else (_fog_revenue_estimate(s, k) or 0.0)),
+        "revenue_forecast_scope": (
+            "Direct concern revenue only. Institutions may also increase "
+            "household capacity, reachable staff, practice output, or other "
+            "indirect income; those variable effects are not included here. "
+            "Compare 'money' before and after opening."
+            if k in s.CAPABILITY_INSTITUTIONS else None),
         # WHAT IT PAYS YOU, which for something in your own practice is a third
         # of the figure above. A break tester read "REVENUE: 500 den/yr" beside
         # a ledger crediting 166.7 for the same node and called it `why`
@@ -817,7 +836,9 @@ def _node_explain(s, nodes, k):
                     "third of what the tree quotes for the trade, and selling "
                     "your hours for wages takes another bite"
                     if k in s._practice_set() and n["rev"] else None),
-        "calendar_floor_years": n["yrs"], "risk": s.effective_risk(k),
+        "calendar_floor_years": round(s.calendar_floor(k), 2),
+        "nominal_calendar_floor_before_reputation": n["yrs"],
+        "risk": s.effective_risk(k),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
@@ -895,6 +916,10 @@ def _node_explain(s, nodes, k):
         "staff_to_keep_it_open": (
             {"scholars": round(_sup_sch, 2), "artisans": round(_sup_art, 2)}
             if _is_venture else None),
+        "specialist_foreman_to_keep_it_open": (
+            {"trade": _foreman_trade, "fte": round(_foreman_fte, 2),
+             "free_now": round(s.venture_foreman_free(_foreman_trade), 2)}
+            if _foreman_trade else None),
         "staff_to_keep_it_open_means": (
             "a SEPARATE requirement from staff_needed above, and the one "
             "'open' actually enforces once this is built: a continuous "
@@ -952,6 +977,16 @@ def _node_explain(s, nodes, k):
             "it, the same as its revenue and upkeep. Closing it for the "
             "capital back gives up all of that, not only the money."
             if k in s.CAPABILITY_INSTITUTIONS else None),
+        "permanent_on_completion": (
+            "Knowledge and completion-based prerequisite credit remain even "
+            "while this institution is closed." if _is_venture else
+            "Knowledge and prerequisite credit remain permanently."),
+        "only_while_open": (
+            "Revenue, upkeep, supported staff, household places, credit, "
+            "standing, capacity, and running-only prerequisites stop when it "
+            "closes." if k in s.CAPABILITY_INSTITUTIONS else
+            ("Revenue and upkeep apply only while open."
+             if _is_venture else None)),
         # ONLY WHAT YOU HAVE HEARD OF. These are read for a visible node, where
         # every prerequisite is either done or itself heard of - except on the
         # goal, which `why` answers under fog because the status line names it

@@ -668,7 +668,8 @@ class LabourMixin:
         this is the honest version of the same headroom. You hire them, you pay
         them every year, and you can only supervise so many.
         """
-        room = 6.0 + 14.0 * self.directors_extra
+        room = (6.0 + 14.0 * self.directors_extra
+                + max(0.0, getattr(self, "worker_housing_places", 0.0)))
         if self.running("workshop_first"):
             room += 6.0 * self.institution_units("workshop_first")
         if self.running("school_founded"):
@@ -897,8 +898,8 @@ class LabourMixin:
         # work as a scholar for 1,416 a year and hire one for 625. The docstring
         # claimed "there is no arbitrage in either direction" while the arithmetic
         # ran a 2.3x spread.
-        rate = ANNUAL_WAGE.get(trade, 375.0) / self.HOURS_PER_PERSON_YEAR
-        pay = (hours * rate * self.price_index * self.wage_index
+        rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
+        pay = (hours * rate
                * (1.0 + min(0.5, self.reputation / 200.0)))
         before_practice = self.revenue()
         self.capital += pay
@@ -978,8 +979,59 @@ class LabourMixin:
         """
         total = 0.0
         for t, n in self.employees.items():
-            total += n * ANNUAL_WAGE.get(t, 375.0) * self.wage_index * self.labour_price_factor(t)
-        return total * self.price_index
+            total += n * self.annual_wage(t)
+        return total
+
+    # Materials a worker must replace to remain in their trade. These are not
+    # the inputs of the employer's current project (project_cost already pays
+    # those); they are the ordinary tools, fuel and consumables borne by a
+    # self-equipped pre-industrial worker. Missing entries have no distinct
+    # tool basket rather than inheriting an unrelated material. [C]
+    TRADE_TOOL_BASKETS = {
+        "artisan": ("timber", "iron"), "carpenter": ("timber", "iron"),
+        "chemist": ("glass", "charcoal"), "electrician": ("copper",),
+        "engineer": ("iron", "paper"), "engraver": ("iron",),
+        "furnaceman": ("charcoal",), "glassblower": ("glass", "charcoal"),
+        "machinist": ("iron",), "mason": ("stone", "timber"),
+        "millwright": ("timber", "iron"), "miner": ("iron", "timber"),
+        "optician": ("glass",), "plumber": ("lead",), "potter": ("clay", "charcoal"),
+        "scribe": ("paper",), "smith": ("iron", "charcoal"),
+    }
+
+    def wage_cost_factors(self, trade):
+        """Endogenous food, housing and trade-tool multipliers for a wage.
+
+        The historical wage table remains the neutral benchmark and therefore
+        retains skill, training, hazard and bargaining differences between
+        jobs. Forty-five percent is subsistence food, twenty percent housing,
+        ten percent tools/consumables, and twenty-five percent that fixed
+        skill/difficulty premium. At neutral prices the weighted factor is
+        exactly 1.0, preserving the calibrated starting economy.
+        """
+        food = self.essential_price_ratio()
+        # Use structural places, not household_room(): that method includes
+        # staff_capacity, whose affordability calculation includes wage_bill,
+        # and would make wages recursively depend on themselves.
+        capacity = max(1.0, self.supervision_room())
+        occupancy = self.headcount() / capacity
+        # Housing pressure begins only when three quarters of the household's
+        # real places are occupied; adding housing/capacity lowers it again.
+        housing = 1.0 + 0.4 * max(0.0, min(1.0, (occupancy - 0.75) / 0.25))
+        basket = self.TRADE_TOOL_BASKETS.get(trade, ())
+        tools = (sum(self.material_price_factor(m) for m in basket) / len(basket)
+                 if basket else 1.0)
+        return {"food": food, "housing": housing, "tools": tools,
+                "skill_and_difficulty": 1.0,
+                "weighted": 0.45 * food + 0.20 * housing
+                            + 0.10 * tools + 0.25}
+
+    def annual_wage(self, trade, include_local_scarcity=True):
+        """Current annual wage, derived from living costs and labour scarcity."""
+        base = ANNUAL_WAGE.get(trade, 375.0)
+        factors = self.wage_cost_factors(trade)
+        local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
+        return (base * factors["weighted"] * self.price_index
+                * self.wage_index * local)
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
@@ -994,7 +1046,25 @@ class LabourMixin:
         """
         if t not in TRADES_ABSENT:
             return True
-        return t in self.trades_created
+        return (t in self.trades_created
+                or getattr(self, "trade_schools", {}).get(t, 0.0) > 0)
+
+    def found_trade_school(self, trade, seats):
+        """Create durable local training capacity for one named trade."""
+        if trade not in WAGES or not self.trade_available(trade):
+            return False, ("the trade must exist before a school can reproduce "
+                           "it; teach or discover %s first" % trade)
+        seats = float(seats)
+        cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
+        if seats <= 0 or cost > self.capital:
+            return False, "cannot afford that trade school"
+        self.capital -= cost
+        schools = getattr(self, "trade_schools", None)
+        if schools is None:
+            schools = self.trade_schools = {}
+        schools[trade] = schools.get(trade, 0.0) + seats
+        self.trades_created.add(trade)
+        return True, None
 
     def _trade_market_class(self, t):
         """Which reachable-labour-pool class a trade falls in - read ONCE,
@@ -1126,9 +1196,12 @@ class LabourMixin:
         if not self.trade_available(t):
             return 0.0
         base = self.cfg["hired_hours_cap_base"] * (0.25 + 0.75 * min(1.0, self.pop_scale))
+        school_hours = (getattr(self, "trade_schools", {}).get(t, 0.0)
+                        * self.HOURS_PER_PERSON_YEAR)
         if t in TRADES_ABSENT:
             # Only the people you taught, plus the ones they have taught since.
-            return self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR * 1.5
+            return (self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR * 1.5
+                    + school_hours)
         cls = self._trade_market_class(t)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
@@ -1157,7 +1230,8 @@ class LabourMixin:
         # train().
         if t in self.LITERATE_TRADES:
             cap *= self.literacy_factor(t)
-        return cap + self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        return (cap + self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+                + school_hours)
 
     def reachable_trade_population(self, t):
         """What this household's own labour market actually holds of this
@@ -1199,7 +1273,13 @@ class LabourMixin:
         """
         if not self.trade_available(t):
             return 0.0
-        pop = float(self.civ.get("population", 0.0))
+        reference_pop = float(self.civ.get("population", 0.0))
+        # pop_scale is expressed relative to Rome's 65m reference, while this
+        # civilisation's configured population is its own unshocked baseline.
+        # The ratio therefore exposes both mortality and subsequent growth.
+        scale_from_baseline = (self.pop_scale / self._pop_scale_base
+                               if self._pop_scale_base else 1.0)
+        pop = reference_pop * scale_from_baseline
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if t == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
@@ -1243,7 +1323,10 @@ class LabourMixin:
         about whether that is most of the trade or a rounding error
         against it. This says both, next to each other, once.
         """
-        pop = float(self.civ.get("population", 0.0))
+        reference_pop = float(self.civ.get("population", 0.0))
+        scale_from_baseline = (self.pop_scale / self._pop_scale_base
+                               if self._pop_scale_base else 1.0)
+        pop = reference_pop * scale_from_baseline
         urban_frac = float(self.civ.get("urban_fraction", 0.0))
         trades = []
         for t in sorted(WAGES):
@@ -1262,6 +1345,8 @@ class LabourMixin:
         return {
             "civilisation": self.civ.get("name", self.civ.get("id", "")),
             "population": round(pop),
+            "reference_population_before_simulated_changes": round(reference_pop),
+            "population_change_from_reference": round(scale_from_baseline - 1.0, 4),
             "urban_fraction": round(urban_frac, 3),
             "urban_population_estimate": round(pop * urban_frac),
             "the_town_you_actually_operate_in": {
@@ -1516,8 +1601,8 @@ class LabourMixin:
         # or hiring your way to a bigger supply of the trade brings the price
         # back down).
         _lpf_now = self.labour_price_factor(trade)
-        fee = (n * ANNUAL_WAGE.get(trade, 375.0) * self.wage_index * self.price_index
-              * _lpf_now)
+        fee = (n * self.annual_wage(trade, include_local_scarcity=False)
+               * _lpf_now)
         if fee > self.spending_power("buy"):
             _msg = self._cash_in_hand_refusal(
                 "hiring %g %s%s" % (n, trade, "" if n == 1 else "s"), fee)
@@ -1695,8 +1780,7 @@ class LabourMixin:
         # slaves and labour_price_factor now prices for hiring: the more of
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
-        fee = (n * ANNUAL_WAGE.get(frm, 375.0) * 1.2 * self.wage_index * self.price_index
-              * self.labour_price_factor(frm))
+        fee = n * self.annual_wage(frm) * 1.2
         if fee > self.spending_power("buy"):
             return False, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
@@ -1721,8 +1805,9 @@ class LabourMixin:
         # a day of the work before that year, and core.py adds them to
         # self.employees itself the moment they do, automatically - no
         # 'hire' needed to put THESE apprentices to work.
-        return True, ("%g %s%s will be ready in %d, and join your staff "
-                      "automatically that year - no 'hire' needed for them. "
+        return True, ("%g %s%s finish training during %d's annual resolution "
+                      "and join your staff automatically immediately afterward "
+                      "- no 'hire' needed for them. "
                       "Until then they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "denarii to keep them while they learn"

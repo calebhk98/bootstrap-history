@@ -88,7 +88,7 @@ check("the founder's age at death survives a save and a fresh process "
 
 # --- JOB 3f: a bulk start for the late game, so it is not pure typing.
 s_ru = sim()
-_ru = S._agent_dispatch(s_ru, NODES, {"cmd": "rush"})
+_ru = S._agent_dispatch(s_ru, NODES, {"cmd": "rush", "force": True})
 # --- BREAK, round 12: two testers independently made this their worst finding.
 # One wrote that a dead founder's run was "permanently unwinnable from that
 # point" with the game never saying so; the other watched a corpse be offered
@@ -278,7 +278,7 @@ s_ruf = sim()
 s_ruf.fog = True
 s_ruf.revealed = set()
 _avf = {r["id"] for r in S._agent_available(s_ruf, NODES, {"all": True})["available"]}
-_ruf = S._agent_dispatch(s_ruf, NODES, {"cmd": "rush"})
+_ruf = S._agent_dispatch(s_ruf, NODES, {"cmd": "rush", "force": True})
 check("under fog, everything `rush` starts was already on the visible "
       "`available` list",
       all(r["id"] in _avf for r in _ruf["started"]),
@@ -358,4 +358,3 @@ _venture_ct = sum(1 for k in NODES if _venture_s.is_venture(k))
 check("the count of nodes offered to `open` as a concern is down from the "
       "break's 1,493, and not collapsed toward zero",
       1300 <= _venture_ct <= 1450, _venture_ct)
-

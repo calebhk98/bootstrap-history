@@ -448,6 +448,7 @@ for _cf in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json"
 # society.py) is the fix: the hazard now also costs the whole labour market
 # people, and a smaller labour market pays more to hire from.
 s = sim(civ="england_1300")
+_normal_wage = s.wage_index
 s.year = 1348
 s._shocks(1348)
 check("the Black Death costs the whole society people, not only your own "
@@ -467,14 +468,16 @@ check("a hedge against plague shields your own staff, not the whole "
       "population's labour market",
       abs(s2.pop_deficit - 0.45) < 1e-6, s2.pop_deficit)
 
-# --- scarcer labour is dearer labour, and it shows up the very next time the
-# year turns over, not only once the deficit has fully resolved.
-_base_wage = s.wage_index
+# --- scarcer labour is dearer labour immediately: the event and the economy
+# screen must not disagree for the remainder of the year in which it fires.
+_shock_wage = s.wage_index
+check("wages rise immediately after a mortality shock, because the labour "
+      "market just got smaller",
+      _shock_wage > _normal_wage * 1.2, (_normal_wage, _shock_wage))
 s.year = 1349
 s._demographic_recovery(1349)
-check("wages rise the year after a mortality shock, because the labour "
-      "market just got smaller",
-      s.wage_index > _base_wage * 1.2, (_base_wage, s.wage_index))
+check("wages remain elevated the year after a mortality shock",
+      s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
       any("running" in m and "above normal" in m for _y, m in s.log),
@@ -488,10 +491,10 @@ s4.year = 1348
 s4._shocks(1348)
 for _yr in range(1349, 1349 + 50):
     s4._demographic_recovery(_yr)
-_mid_premium = s4.wage_index / _base_wage - 1.0
+_mid_premium = s4.wage_index / _normal_wage - 1.0
 for _yr in range(1349 + 50, 1349 + 150):
     s4._demographic_recovery(_yr)
-_end_premium = s4.wage_index / _base_wage - 1.0
+_end_premium = s4.wage_index / _normal_wage - 1.0
 check("fifty years on, the wage premium from the Black Death is still "
       "substantial, not gone in a handful of years",
       _mid_premium > 0.10, _mid_premium)
@@ -584,4 +587,3 @@ check("the empire-wide toll is still told, in every case, as a separate "
       all("Empire-wide, population -28%" in _l and "either way" in _l
           for _l in (_line_none, _line_heavy, _line_some)),
       (_line_none, _line_heavy, _line_some))
-

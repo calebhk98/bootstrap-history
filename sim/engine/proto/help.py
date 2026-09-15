@@ -196,8 +196,12 @@ def _agent_help(s, topic=None):
                           "household actually reaches, and - per trade - how "
                           "many exist in the country, how many are within "
                           "your reach, and how many you employ",
+            "materials": "stocks on hand, annual production and demand, and "
+                         "current buy/sell values for every tracked material",
+            "sell <material> <tonnes>": "sell material you actually have in stock",
             "hire / fire / train / commission": "see the labour topic",
-            "buy": "forest, nitre, mine, slaves, or manumit; see the economy topic",
+            "buy": "farmland, worker housing, a named trade school, material "
+                   "stock, forest, nitre, mine, slaves, or manumit; see economy",
             "work <trade> <hours>": "do an ordinary job for ordinary pay",
             "allocate <id> <hours>": "a STANDING order: give this active "
                 "project this many of your own hours every year from now "
@@ -305,7 +309,16 @@ def _agent_help(s, topic=None):
                               "goes out, including where the income comes from",
                 "buy forest": '{"cmd":"buy","what":"forest","n":100} hectares of '
                               "coppice, which is where charcoal comes from",
-                "buy nitre": '{"cmd":"buy","what":"nitre","n":20000} square metres of nitre bed. Saltpetre is made, not mined, and nothing else supplies it.',
+                "buy nitre": ('{"cmd":"buy","what":"nitre","n":2000} lays the '
+                              "requested square metres of nitre bed. Saltpetre "
+                              "is made, not mined; a shortage warning calculates "
+                              "a purchase from the live deficit plus 20% headroom."),
+                "buy farm": "buy farm 120 lowers staple costs through productive land",
+                "buy housing": "buy housing 5 adds five durable worker places",
+                "buy trade school": "buy school smith 2 makes two more smiths' worth "
+                                    "of annual labour locally available",
+                "materials": "materials shows durable stock and flow; buy material "
+                             "iron 10 or sell iron 5 trades tonnes at current prices",
                 "buy mine": '{"cmd":"buy","what":"mine","material":"coal","n":500} '
                             "tonnes a year of your own workings; it takes years "
                             "to sink, and it costs to keep standing whether or "

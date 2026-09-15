@@ -675,9 +675,12 @@ def _agent_economy(s, cmd=None):
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": t, "a_year_of_one": round(
-                ANNUAL_WAGE.get(t, 375.0) * s.wage_index * s.price_index
-                * s.labour_price_factor(t), 0)}
+            {"trade": t, "a_year_of_one": round(s.annual_wage(t), 0),
+             "wage_foundation": {
+                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
+                 **{k: round(v, 3) for k, v in s.wage_cost_factors(t).items()},
+                 "demographic_scarcity": round(s.wage_index, 3),
+                 "local_trade_scarcity": round(s.labour_price_factor(t), 3)}}
             for t in sorted(WAGES) if s.trade_available(t)]
     return out
 

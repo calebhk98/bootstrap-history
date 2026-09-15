@@ -162,8 +162,13 @@ def parse_typed(line):
     words = [w for w in rest if _typed_number(w) is None]
     nums = [_typed_number(w) for w in rest if _typed_number(w) is not None]
 
-    if op in ("money", "values", "quit", "score"):
+    if op in ("money", "values", "materials", "quit", "score"):
         return {"cmd": op}, None
+
+    if op == "sell":
+        if not words or not nums:
+            return None, "sell needs a material and tonnes, e.g. 'sell iron 50'."
+        return {"cmd": "sell", "material": words[0].lower(), "n": nums[0]}, None
 
     if op == "risk":
         # 'risk json' prints the raw reply - see 'portfolio json' and
@@ -186,6 +191,8 @@ def parse_typed(line):
         # game was the one that removed the safety, silently. Same key:value
         # spelling `state full:true` already takes.
         out = {"cmd": "rush"}
+        if any(str(w).lower() in ("force", "confirm", "yes") for w in rest):
+            out["force"] = True
         _lim = None
         for w in rest:
             t = str(w)
@@ -495,7 +502,9 @@ def parse_typed(line):
         # protocol wants it spelled out as a mine in a mineral.
         if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
             out["what"] = "nitre"
-        elif out["what"] not in ("forest", "slaves", "mine", "mines", "people",
+        elif out["what"] not in ("forest", "farm", "food", "housing", "houses",
+                                 "school", "trade_school", "material", "stock",
+                                 "slaves", "mine", "mines", "people",
                                  "manumit", "manumission", "free"):
             out["material"], out["what"] = out["what"], "mine"
         if out["what"] == "mines":
