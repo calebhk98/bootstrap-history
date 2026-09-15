@@ -550,13 +550,6 @@ def _cmd_rush(s, nodes, cmd, ended):
         return {"ok": False, "error": "limit must be at least 1"}
     _memo = {}
     _ok = [k for k in s.order if s.can_start(k, _memo=_memo)]
-    # THE SAME EXCLUSION `available` USES: a node with no cost, no hours
-    # and nothing else standing in its way is not a decision, it is
-    # about to be handed to you for free whatever you type.
-    _ok = [k for k in _ok
-           if not (nodes[k]["tier"] == 0 and nodes[k]["ph"] == 0
-                   and nodes[k]["_total_cost"] <= 1
-                   and not s._is_foreign_institution(k))]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
     # a downstream_count - that is a fog spoiler, see _node_explain's own
     # comment on it - it only uses the number to decide which of several

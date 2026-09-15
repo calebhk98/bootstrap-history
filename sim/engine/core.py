@@ -344,7 +344,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # flatters the player and, worse, exposed a society's own ancestral
         # crafts to being "forgotten" in a sacking. Han China does not forget how
         # to cast iron because your workshop burned down.
-        self.grant_ambient()          # see below: before turn one, not after it
         missing = []
         for k in self.civ.get("starting_techs", []):
             if k in self.nodes:
@@ -360,15 +359,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             sys.stderr.write("WARNING: %s lists starting technologies that do not "
                              "exist in the tree and have been ignored: %s\n"
                              % (self.civ.get("id", "?"), ", ".join(missing)))
-        # AGAIN, NOW THAT starting_techs ARE IN. grant_ambient walks the tree
-        # crediting free tier-0 work whose prerequisites are already done, and
-        # it ran BEFORE this loop - so anything a civ's named starting
-        # technology unlocks was still ungranted when turn one began, and
-        # arrived on the player's first `step` as "COMPLETED 100: Amphitheatre
-        # with tiered seating". A play tester reported those, correctly, as
-        # completions for things they had never started. Rome's amphitheatre
-        # and barrel vault are not the founder's work and are not news.
-        self.grant_ambient()
+        # Starting ownership is deliberately exhausted by starting_techs.
+        # Tier and zero cost describe a node's position in the universal graph;
+        # they do not mean every society on Earth already owns it.  In
+        # particular, never infer Roman materials or institutions for another
+        # civilization from those fields.
 
     def _demographic_recovery(self, yr):
         """Mortality shocks fade and population-raising technologies build in.
@@ -1023,58 +1018,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self._shocks(yr)
             if self.dead_reason:
                 return
-
-        # 4a. Anything THIS SOCIETY already has costs nothing and takes nobody's
-        #     attention. Grant it the moment its prerequisites are met instead of
-        #     making it queue behind real work.
-        #
-        #     It used to say "anything ROME already has", and meant it: a Han
-        #     playtester was handed civ_aqueduct_roman, civ_sewer_roman,
-        #     civ_insula, fin_annona and fin_societas for free in year one. The
-        #     annona is the Roman grain dole. Han China does not have one, and a
-        #     model that gives every society Rome's institutions is not modelling
-        #     societies at all.
-        # ONLY THE NODES THAT COULD EVER BE GRANTED THIS WAY, not the whole
-        # tree. tier, ph, _total_cost and foreign-institution status are all
-        # fixed tree/civ data that cannot change after construction (see
-        # _is_foreign_institution), so the set of nodes this loop will ever
-        # look twice at is fixed too - computed once and reused, in the same
-        # relative order as `self.order`, which is what makes this provably
-        # identical to walking the full list every year: every node this
-        # skips was going to fail the same tier/ph/cost/foreign test again
-        # anyway. A Rome run walked all 2,831 nodes here every year for 500+
-        # years to find the same 130 candidates; most of those had also
-        # already been granted and were only ever going to hit `k not in
-        # self.done` and nothing else.
-        cand = getattr(self, "_auto_grant_candidates", None)
-        if cand is None:
-            cand = self._auto_grant_candidates = [
-                k for k in self.order
-                if not self._is_foreign_institution(k)
-                and self.nodes[k]["tier"] == 0 and self.nodes[k]["ph"] == 0
-                and self.nodes[k]["_total_cost"] <= 1]
-        for k in cand:
-            if k in self.done or k in self.active:
-                continue
-            # INSIDE THE LOOP, not in the cached candidate list above, because
-            # needs_first reads self.done and its answer therefore changes as a
-            # run goes on: a society that could not be handed an ocean-going
-            # sail in year one can be handed it the year after it builds the
-            # hull that makes one mean anything.
-            if self.needs_first(k)[0]:
-                continue
-            n = self.nodes[k]
-            if all(p in self.done for p in n["pre"]):
-                self.done.add(k)
-                self._done_changed()
-                self.done_year[k] = self.year
-                # This node is granted because THE SOCIETY already has it, not
-                # because you built it. Rome having large merchant ships means
-                # the ships exist, not that you own the fleet, so you do not
-                # collect their revenue. Left unmarked, the 148 auto-granted
-                # nodes paid the founder 11,650 den a year for existing, 8,000
-                # of it from a merchant fleet belonging to other people.
-                self.granted.add(k)
 
         # 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to
         #      do this for itself or half the tree is unreachable; a player does
