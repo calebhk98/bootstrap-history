@@ -87,6 +87,9 @@ SAVE_FIELDS = (
     # round-trips through JSON as a plain object and comes back a dict, which
     # the accessor treats alike.
     "_material_stock_ledger",
+    "farm_hectares",
+    "worker_housing_places",
+    "trade_schools",
     "last_withdrawal",
     "wages_prepaid",
     # WHAT AN INSTITUTION GAVE YOU OUTRIGHT (see _grant_staff, labour.py).

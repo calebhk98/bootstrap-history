@@ -369,6 +369,47 @@ class ProjectsMixin:
         by_size = max(0.0, n["rev"]) / self.VENTURE_HANDS_PER_REVENUE
         return n["sch"] * f, max(n["art"] * f, by_size)
 
+    VENTURE_FOREMAN_SHARE = 0.25
+
+    def venture_foreman(self, k):
+        """Return the skilled trade and FTE needed to supervise a concern.
+
+        A concern whose build crew mixes generic artisans with a skilled trade
+        cannot be supervised by interchangeable generic hands alone.  Retain
+        the largest non-generic skilled contribution as its operating foreman;
+        one specialist can oversee at most four ordinary concerns.  Purely
+        generic concerns and knowledge/capability institutions keep the older
+        scholar/craftsman rule.
+        """
+        n = self.nodes[k]
+        lab = n.get("lab") or {}
+        if (k in self.CAPABILITY_INSTITUTIONS or n.get("rev", 0) <= 0
+                or lab.get("artisan", 0) <= 0):
+            return None, 0.0
+        skilled = [(hours, trade) for trade, hours in lab.items()
+                   if trade not in ("artisan", "labourer", "slave")
+                   and hours > 0]
+        if not skilled:
+            return None, 0.0
+        _hours, trade = max(skilled, key=lambda row: (row[0], row[1]))
+        return trade, self.VENTURE_FOREMAN_SHARE
+
+    def venture_foremen_used(self, excluding=None):
+        """Skilled-foreman FTE held by operating concerns, by trade."""
+        used = collections.defaultdict(float)
+        for node_id in sorted(self.operating):
+            if node_id == excluding or node_id not in self.nodes:
+                continue
+            trade, fte = self.venture_foreman(node_id)
+            if trade:
+                used[trade] += fte * self.institution_units(node_id)
+        return dict(used)
+
+    def venture_foreman_free(self, trade, excluding=None):
+        """Employed specialists still free to supervise another concern."""
+        return max(0.0, self.employees.get(trade, 0.0)
+                   - self.venture_foremen_used(excluding).get(trade, 0.0))
+
     def venture_staff_who_is_watching_what(self):
         """Which concerns are holding your people, and how many each holds.
 
@@ -486,6 +527,8 @@ class ProjectsMixin:
         sch_free, art_free = self.venture_staff_free()
         need_sch, need_art = self.venture_hands(k)
         need_sch, need_art = need_sch * u, need_art * u
+        foreman_trade, foreman_fte = self.venture_foreman(k)
+        foreman_fte *= u
         # A HUNDREDTH OF A PERSON IS NOBODY. The comparison was exact and the
         # message rounded to one decimal, so a break tester read "it needs 0.0
         # craftsmen to supervise, and you have 0.0" - a refusal that
@@ -498,6 +541,16 @@ class ProjectsMixin:
                            "have %.2f and %.2f not already watching something "
                            "else. Hire, teach, or close something."
                            % (need_sch, need_art, sch_free, art_free))
+        if (foreman_trade and foreman_fte
+                > self.venture_foreman_free(foreman_trade) + 0.01):
+            return False, ("no qualified foreman is free: this concern needs "
+                           "%.2f %s FTE to supervise its specialist work, and "
+                           "you have %.2f free. Hire a %s or close another "
+                           "concern using one. Generic artisans cannot "
+                           "substitute for this trade."
+                           % (foreman_fte, foreman_trade,
+                              self.venture_foreman_free(foreman_trade),
+                              foreman_trade))
         fee = self.venture_capex(k) * (u if scalable else 1.0)
         # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN.
         # Staff attrition runs at 3.5% a year, so a household sitting near the
@@ -664,9 +717,14 @@ class ProjectsMixin:
         closed = []
         while self.operating:
             sch_used, art_used = self.venture_staff_used()
+            foremen_used = self.venture_foremen_used()
             own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
+            foremen_ok = all(
+                used <= self.employees.get(trade, 0.0) + 0.01
+                for trade, used in foremen_used.items())
             if (sch_used <= self.effective_scholars() + SLACK
-                    and art_used <= self.artisans + own + SLACK):
+                    and art_used <= self.artisans + own + SLACK
+                    and foremen_ok):
                 break
             # THE LEAST WORTH KEEPING, not the largest. This picked whichever
             # concern needed the most hands, which is very nearly the same as
@@ -687,12 +745,14 @@ class ProjectsMixin:
             # of craftsmen by closing something no craftsman was watching.
             _holders = [k for k in sorted(self.operating)
                         if self.venture_hands(k)[1] > 0.005
-                        or self.venture_hands(k)[0] > 0.005]
+                        or self.venture_hands(k)[0] > 0.005
+                        or self.venture_foreman(k)[1] > 0.005]
             if not _holders:
                 break
             worst = min(_holders,
                         key=lambda k: ((self.nodes[k]["rev"] - self.nodes[k]["up"])
-                                       / max(0.01, self.venture_hands(k)[1]),
+                                       / max(0.01, self.venture_hands(k)[1]
+                                             + self.venture_foreman(k)[1]),
                                        -self.venture_hands(k)[1]))
             self.operating.discard(worst)
             self.mothballed.add(worst)
@@ -1908,6 +1968,15 @@ class ProjectsMixin:
         self.active[k] = dict(ph_left=float(n["ph"]), yrs=0.0,
                               spent=_already, cost_left=price,
                               lab_left=dict(n["lab"]))
+        # A genuinely instantaneous capability should not need an otherwise
+        # empty annual turn merely to trip the completion check in step().
+        # Keep anything with money, labour, risk, or a calendar floor on the
+        # normal path: those are projects even when founder-hours happen to be
+        # zero.
+        if (n["ph"] <= 0 and self.calendar_floor(k) <= 0 and price <= 0.5
+                and not n["lab"] and self.effective_risk(k) <= 0):
+            self._complete(k)
+            return True, None
         if _already > 0.5:
             self.log.append((self.year, "%s begun again; the %s denarii already "
                                         "paid on it before comes off the bill"

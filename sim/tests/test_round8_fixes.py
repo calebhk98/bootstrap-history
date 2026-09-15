@@ -1159,6 +1159,10 @@ check("the training confirmation says what is STILL needed: nothing, for "
       "these apprentices - they join staff on their own, no 'hire' required",
       _ok_tr and "join your staff automatically" in _msg_tr
       and "no 'hire' needed" in _msg_tr, _msg_tr)
+check("the completion year is described as an annual-resolution boundary, "
+      "not ambiguously as 'ready in' that year",
+      "finish training during" in _msg_tr and "annual resolution" in _msg_tr
+      and "ready in" not in _msg_tr, _msg_tr)
 check("...and says what they cannot do yet: a day of the work, before the "
       "year named",
       _ok_tr and "cannot do a day of the work" in _msg_tr, _msg_tr)
@@ -1269,5 +1273,4 @@ s_el = sim(capital=2000000.0)
 _ok_el, _why_el = s_el.train("electrician", 20)
 check("...so twenty electricians cannot be taught into a society of twelve",
       not _ok_el and "literacy" in str(_why_el), _why_el)
-
 

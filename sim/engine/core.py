@@ -201,6 +201,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # that does run what it builds, and off for a player, for whom
             # deciding what to actually operate is the point.
             "auto_open":     not manual,
+            "auto_court_heir": not manual,  # court a dead patron's successor
             # Buy a job from an outside shop when a few pairs of hands are the
             # only thing standing between you and something you need.
             "auto_commission": not manual,
@@ -408,6 +409,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if years_left > 1:
                     still.append((per_year, years_left - 1))
             self._pop_tech_pending = still
+        self._refresh_demographic_indexes(yr)
+
+    def _refresh_demographic_indexes(self, yr):
+        """Apply the current demographic shortfall to population and wages.
+
+        Kept separate from recovery so a shock can make its announced effects
+        visible immediately, without also granting a free year of recovery.
+        """
         self.pop_scale = max(0.05, self._pop_scale_base * (1.0 - self.pop_deficit))
         # LABOUR SCARCER, SO DEARER. Elasticity 0.9 means a population still a
         # third below trend (deficit 0.33) carries about a 30% wage premium;
@@ -632,10 +641,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             short = payroll - can_pay
             gone = 0.0
             # shed, dearest first, until the wages you are left with fit
-            for t in sorted(self.employees, key=lambda t: -ANNUAL_WAGE.get(t, 375.0)):
+            for t in sorted(self.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
                     break
-                wage = ANNUAL_WAGE.get(t, 375.0) * self.wage_index * self.price_index
+                wage = self.annual_wage(t)
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
@@ -773,9 +782,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 have = self.employees.get(t, 0.0)
                 want = max(have, 2.0 if t in self.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.capital > ANNUAL_WAGE.get(t, 375.0) * 6:
+                if short > 0.02 and self.capital > self.annual_wage(t) * 6:
                     self.employees[t] = have + short
-                    self.capital -= short * ANNUAL_WAGE.get(t, 375.0) * self.price_index
+                    self.capital -= short * self.annual_wage(t)
             self._resync_pools()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY.
         # Letting contracted craftsmen count toward a project's staff
@@ -1199,7 +1208,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # what you are actually clearing.
             _spare_tr = self.revenue() - self.upkeep() - self.living_cost()
             for t, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * ANNUAL_WAGE.get(t, 375.0) * self.price_index * self.wage_index
+                _wages = 2.0 * self.annual_wage(t)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
@@ -1681,10 +1690,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # for it to have.
                 _dir_hours = self.hour_allocations.get(k)
                 _pace_cap = self.project_hour_pace(k)
+                _project_throttle = self.project_resource_throttle(k)
                 if _dir_hours and _dir_hours > 0:
-                    per = min(remaining, _pace_cap, _dir_hours) * self.throttle
+                    per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
                 else:
-                    per = min(remaining, _pace_cap) * self.throttle
+                    per = min(remaining, _pace_cap) * _project_throttle
                 remaining -= per
                 # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
                 # offered: `per` is allowed to exceed ph_left (the max() above
@@ -1726,18 +1736,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # that many hours even with the whole pool behind it. Either
                 # is a real, nameable reason; "it disappeared" is not.
                 if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-                    if self.throttle < 0.98 and self.binding and _pace_cap >= _dir_hours - 0.5:
+                    if (_project_throttle < 0.98 and self.binding
+                            and _pace_cap >= _dir_hours - 0.5):
                         _directed_hours_unused.append((k, round(_dir_hours - per, 0),
                             "a shortage of %s has every project (this one "
                             "included) running at %d%% of the pace its "
                             "hours alone would allow"
-                            % (self.binding, round(self.throttle * 100))))
-                    elif _pace_cap * self.throttle < _dir_hours - 0.5:
+                            % (self.binding, round(_project_throttle * 100))))
+                    elif _pace_cap * _project_throttle < _dir_hours - 0.5:
                         _directed_hours_unused.append((k, round(_dir_hours - per, 0),
                             "its own pace this year - at most %s hours, set "
                             "by how much of it is left to do or its "
                             "calendar floor, not by your hours - could not "
-                            "use the rest" % "{:,.0f}".format(_pace_cap * self.throttle)))
+                            "use the rest" % "{:,.0f}".format(
+                                _pace_cap * _project_throttle)))
                     else:
                         _directed_hours_unused.append((k, round(_dir_hours - per, 0),
                             "your other standing allocations and active "
@@ -2039,8 +2051,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             year_hours = max(1.0, self.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (ANNUAL_WAGE.get(trade, 375.0) / self.HOURS_PER_PERSON_YEAR
-                    * self.price_index * self.wage_index
+            rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(0.5, self.reputation / 200.0)))
             if hours * rate > practice_lost:
                 _, err = self.work_for_wages(trade, hours)

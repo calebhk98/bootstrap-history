@@ -167,7 +167,14 @@ _orig_market_supply = _s_multi.market_supply
 def _fake_supply(t, _orig=_orig_market_supply, _absent=_t_absent):
     return 0.0 if t == _absent else _orig(t)
 _s_multi.market_supply = _fake_supply
-_s_multi.trade_hours_used = {_t_booked: 10.0 ** 9}
+# Model a real portfolio-wide booking conflict.  _waiting_on deliberately uses
+# this same aggregate as `portfolio`, rather than a stale consumed-hours tally.
+_orig_trade_demand = _s_multi.trade_demand_vs_supply
+def _fake_trade_demand(_orig=_orig_trade_demand, _booked=_t_booked):
+    rows = _orig()
+    rows.setdefault(_booked, {})["demand_hours_this_year"] = 10.0 ** 9
+    return rows
+_s_multi.trade_demand_vs_supply = _fake_trade_demand
 _multi_wo = _WO(_s_multi, NODES, _multi_id, _multi_st, 100.0)
 check("a project short on two different trades at once names both, not "
       "just the first one found",
@@ -212,5 +219,4 @@ check("...and the two orderings really do differ where it matters, so that "
 # folding the brake in, and the composed expression is a single line in
 # core.py's step(). A check that cannot fail is worse than no check, because
 # it reads like cover.
-
 

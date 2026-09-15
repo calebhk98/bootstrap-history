@@ -1105,13 +1105,26 @@ check("an ABSOLUTE staffing shortage (this society can field none of the "
 
 _s_book = sim(civ="rome_100ad", capital=1e9)
 _s_book.trades_created.add("chemist")
-_s_book.employees["chemist"] = 20.0
+_s_book.employees["chemist"] = 0.8
 _s_book._resync_pools()
 _n_book = NODES[_staff_k]
 _s_book.active[_staff_k] = dict(ph_left=float(_n_book["ph"]), yrs=0.0,
                                 spent=0.0, cost_left=_s_book.project_cost(_staff_k),
                                 lab_left=dict(_n_book["lab"]))
-_s_book.trade_hours_used["chemist"] = _s_book.hours_you_can_call_on("chemist") - 1.0
+# A real competing project, so the portfolio view and the per-project reason
+# are testing the same allocation data rather than an invented used-hours
+# counter that could equally have been this project's own successful draw.
+_other_book = next(k for k in NODES
+                   if k != _staff_k and (NODES[k].get("lab") or {}).get("chemist")
+                   and (NODES[k]["lab"]["chemist"] / max(1.0, NODES[k]["yrs"])
+                        + NODES[_staff_k]["lab"]["chemist"]
+                        / max(1.0, NODES[_staff_k]["yrs"])
+                        > _s_book.hours_you_can_call_on("chemist")))
+_n_other_book = NODES[_other_book]
+_s_book.active[_other_book] = dict(
+    ph_left=float(_n_other_book["ph"]), yrs=0.0, spent=0.0,
+    cost_left=_s_book.project_cost(_other_book),
+    lab_left=dict(_n_other_book["lab"]))
 _w_book = _WO(_s_book, NODES, _staff_k, _s_book.active[_staff_k],
              _s_book.active[_staff_k]["cost_left"])
 check("a trade your OWN other active work has already booked - the society "
@@ -1783,4 +1796,3 @@ check("...and with events on, the same always-fires rng DOES produce the "
       "confiscation tail event this time",
       any("the state takes what it judges" in m for _y, m in _det_on.log),
       [m for _y, m in _det_on.log[-5:]])
-

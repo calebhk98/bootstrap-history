@@ -34656,9 +34656,13 @@
    "note": "Single rotating shaft with compressor, combustor, and turbine. Combustor outlet 900+ C demands nickel alloys. Compressor needs 10+ stages. Efficiency only 25 percent unle...",
    "ph": 250.0,
    "pre": [
+    "air_jet_engine_concept",
     "boring_mill",
     "cap_heat_1600",
-    "cap_tol_10um"
+    "cap_tol_10um",
+    "mat_nickel",
+    "mat_tool_steel_hss",
+    "thermodynamics_theory"
    ],
    "req_any": [],
    "rev": 2800.0,
@@ -34738,7 +34742,10 @@
    "pre": [
     "boring_mill",
     "cap_heat_1300",
-    "cap_tol_10um"
+    "cap_tol_10um",
+    "steam_high_pressure",
+    "thermodynamics_theory",
+    "mat_bulk_steel"
    ],
    "req_any": [
     {
@@ -100277,7 +100284,7 @@
    },
    "mat": {},
    "name": "Found the school (the Museum)",
-   "note": "The pivot of the entire game. Converts your hours into other people's hours permanently. Every year of delay here costs more than any single technology. Grants +4 scholars and +2 scholars/yr thereafter. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. OPTIONAL. Nothing in the technical tree requires it. It is simply the highest-leverage thing you can spend money on, because it converts your hours into other people's hours permanently. You may decline to found it and hire craftsmen forever instead; the simulator will let you, and will show you the cost.",
+   "note": "The pivot of the entire game. Converts your hours into other people's hours permanently. Every year of delay here costs more than any single technology. Grants +4 scholars immediately and adds capacity for +2 scholars per year to the household training pipeline thereafter; this raises the reachable staff pool and deputy capacity, not the school headline count. Graduates become usable as hiring and training fill that capacity. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. OPTIONAL. Nothing in the technical tree requires it. It is simply the highest-leverage thing you can spend money on, because it converts your hours into other people's hours permanently. You may decline to found it and hire craftsmen forever instead; the simulator will let you, and will show you the cost.",
    "ph": 2000.0,
    "pre": [
     "arithmetic_positional",

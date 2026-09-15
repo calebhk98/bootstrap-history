@@ -2275,6 +2275,10 @@ class SocietyMixin:
                 self.pop_deficit = 1.0 - (1.0 - self.pop_deficit) * (1.0 - raw)
                 self._pop_recovery_years = max(self._pop_recovery_years,
                                                 150.0 * (raw / 0.45))
+                # The event has happened NOW.  Do not leave the population
+                # and wage screens at their pre-plague values until the next
+                # annual resolution; refresh without advancing recovery.
+                self._refresh_demographic_indexes(yr)
                 # SEVERITY HONESTY: the words have to match `loss`, the
                 # number the mechanic just applied above, not `raw`, the
                 # historical hazard's own unmitigated figure - a tester
@@ -2610,19 +2614,27 @@ class SocietyMixin:
             was = self.protection
             self.protection *= 0.6
             gift = 800.0 * self.price_index
-            self.capital -= gift
+            courted = self.policy.get("auto_court_heir", not self.manual)
+            if courted:
+                self.capital -= gift
             # SAY WHAT IT COST. A play tester read "your patron dies; his heir
             # must be courted afresh", found nothing in `state` that had
             # changed by an amount they could point at, and asked whether the
             # line was decorative. It was not: it takes money, standing and
             # most of your cover, and it should say so, because the answer to
             # it - court somebody, spend on standing - is a decision.
-            self.log.append((yr, "your patron dies; his heir must be courted "
-                                 "afresh. The courting cost %s denarii, your "
-                                 "protection falls from %d%% to %d%%, and you "
-                                 "are talked about (scandal +4)"
-                             % ("{:,.0f}".format(gift), was * 100,
-                                self.protection * 100)))
+            if courted:
+                msg = ("your patron dies; auto_court_heir courts his heir "
+                       "afresh for %s denarii. Protection falls from %d%% to "
+                       "%d%% and scandal rises by 4"
+                       % ("{:,.0f}".format(gift), was * 100,
+                          self.protection * 100))
+            else:
+                msg = ("your patron dies. No money was spent because "
+                       "auto_court_heir is off; protection falls from %d%% "
+                       "to %d%% and scandal rises by 4"
+                       % (was * 100, self.protection * 100))
+            self.log.append((yr, msg))
         if r.random() < 0.03:
             had = max(0.0, self.capital)
             self.lose_capital(0.18)

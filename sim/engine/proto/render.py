@@ -129,6 +129,20 @@ def render_capacity(out):
     return "\n".join(L)
 
 
+def render_materials(out):
+    L = ["MATERIAL STOCKS  (tonnes on hand; flows per year)",
+         "  %-14s %10s %10s %10s %10s" %
+         ("MATERIAL", "ON HAND", "YOUR FLOW", "DEMAND", "BUY/T")]
+    for r in out.get("materials") or []:
+        L.append("  %-14s %10s %10s %10s %10s" %
+                 (r.get("material"), _fmt_num(r.get("stock_on_hand_tonnes")),
+                  _fmt_num(r.get("own_production_tonnes_per_year")),
+                  _fmt_num(r.get("current_demand_tonnes_per_year")),
+                  _fmt_num(r.get("buy_per_tonne"))))
+    L.append("  " + out.get("how_to_trade", ""))
+    return "\n".join(L)
+
+
 def render_portfolio(out):
     L = ["PROJECT PORTFOLIO"]
     rows = out.get("projects") or []
@@ -1264,6 +1278,10 @@ def render_ventures(out):
                         _fmt_num(r.get("costs_a_year")),
                         _fmt_num(nd.get("scholars")), _fmt_num(nd.get("craftsmen")),
                         "   [CAPABILITY - see below]" if r.get("capability") else ""))
+            foreman = r.get("specialist_foreman") or {}
+            if foreman:
+                L.append("      specialist foreman: %s %s FTE"
+                         % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
     else:
         L.append("  nothing")
     idle = out.get("you_know_how_but_have_not_opened")
@@ -1275,6 +1293,10 @@ def render_ventures(out):
             L.append("  %-34s %10s %10s %10s"
                      % (r.get("id"), _fmt_num(r.get("earns_a_year")),
                         _fmt_num(r.get("costs_a_year")), _fmt_num(r.get("to_open_it"))))
+            foreman = r.get("specialist_foreman") or {}
+            if foreman:
+                L.append("      needs specialist foreman: %s %s FTE"
+                         % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
     else:
         L.append("  nothing")
     if out.get("and_more_you_could_open"):
@@ -1357,6 +1379,15 @@ def render_risk(out):
             after = h.get("%s_after_what_you_have_built" % kind)
             if after is not None:
                 L.append("  %s after what you have built: %s" % (kind.replace("_", " "), _pct(after)))
+        if h.get("staff_loss") is not None:
+            L.append("  staff loss is a separate %s chance EVERY year, not a "
+                     "total for the epidemic: %d checks remain; that is about "
+                     "%s chance of at least one wave and %s expected cumulative "
+                     "staff loss at your current protection"
+                     % (_pct(h.get("staff_loss_wave_chance_per_year", 0.32)),
+                        h.get("remaining_annual_wave_checks", 1),
+                        _pct(h.get("chance_of_at_least_one_staff_loss_wave", 0)),
+                        _pct(h.get("expected_cumulative_staff_loss", 0))))
     return "\n".join(L)
 
 
@@ -1595,6 +1626,7 @@ _RENDERERS = {
     "stuck": render_stuck, "log": render_log, "history": render_log,
     "values": render_values, "rush": render_rush,
     "capacity": render_capacity, "industry": render_capacity,
+    "materials": render_materials,
     "dashboard": render_capacity, "portfolio": render_portfolio,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,

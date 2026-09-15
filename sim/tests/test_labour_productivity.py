@@ -19,7 +19,9 @@ from .harness import *  # noqa: F401,F403
 # to the household-capacity gate hire() also enforces; nothing else in this
 # file, and no other check, depends on the patch.
 _orig_room = S.Sim.household_room
+_orig_supervision_room = S.Sim.supervision_room
 S.Sim.household_room = lambda self: 10_000.0
+S.Sim.supervision_room = lambda self: 10_000.0
 try:
     small = sim(capital=1e9)
     small.hire("smith", 5)
@@ -71,6 +73,7 @@ try:
           % (per_head_thin, per_head_thick))
 finally:
     S.Sim.household_room = _orig_room
+    S.Sim.supervision_room = _orig_supervision_room
 
 # --- Q2: technology that raises output per worker without replacing them.
 s = sim(capital=1e9)
@@ -644,4 +647,3 @@ check("stall_diagnosis computes its net from revenue_capacity(), the same "
       "call net_per_year now makes, not a second copy of the old bug",
       "revenue_capacity()" in _insp2.getsource(S.Sim.stall_diagnosis),
       "checked stall_diagnosis's own source")
-
