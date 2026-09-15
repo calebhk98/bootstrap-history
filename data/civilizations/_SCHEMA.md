@@ -25,7 +25,7 @@ python3 rome/sim/simulator.py civs            # list what is available
 | `population`, `urban_fraction`, `literacy_elite`, `literacy_general` | demography |
 | `currency`, `price_index`, `wage_index` | economy scaling. 1.0 is Rome 100 AD, which is the calibration baseline for `prices.json`. |
 | `state_capacity` | 0 to 1. Can the state fund and compel a large project? Rome 0.85, Norse 0.15. |
-| `starting_techs` | node ids the civilization ALREADY HAS. This replaces the hardcoded "tier 0 means Rome has it". A different civ has a different free list. |
+| `starting_techs` | **Exhaustive** node ids the civilization already has. The engine never infers ownership from tier, cost, or another civilization's prerequisites: a zero-cost/tier-0 node absent from this list remains unknown. A different civ has a different free list. |
 | `home_regions` | which geography regions it controls or trades in cheaply |
 | `base_reach` | how far its ships and caravans already go, on the geography reach scale |
 | `institutions` | which legal vehicles exist: partnership, corporation, guild, testament, charter, bank, patent |

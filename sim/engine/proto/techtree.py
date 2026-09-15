@@ -358,12 +358,6 @@ def _agent_available(s, nodes, cmd=None):
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}
     ok = [k for k in s.order if s.can_start(k, _memo=_memo)]
-    # Anything the society is about to be handed for nothing is not a decision.
-    ok = [k for k in ok
-          if not (nodes[k]["tier"] == 0 and nodes[k]["ph"] == 0
-                  and nodes[k]["_total_cost"] <= 1
-                  and not s._is_foreign_institution(k))]
-
     # QUOTES ARE THE NATURAL INSTINCT for a subject with a space in it, and
     # `available "power and precision"` silently matched nothing while the
     # unquoted form worked. Strip them rather than failing quietly.

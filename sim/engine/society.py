@@ -1660,48 +1660,6 @@ class SocietyMixin:
             f *= mult(t)
         return f
 
-    def grant_ambient(self):
-        """Credit this society's existing technology immediately.
-
-        It used to happen on the first `step`, which meant turn-one `available`
-        listed a hundred and thirty things the player was about to be handed for
-        nothing, and `done_count` then jumped from 12 to 140 for free. Every
-        naive tester remarked on it, one called it "a 128-technology free dump",
-        and the reviewer's instruction is the obviously right one: these are
-        COMPLETED before the game starts, not available to research.
-        """
-        changed = True
-        while changed:
-            changed = False
-            for k in self.order:
-                n = self.nodes[k]
-                if k in self.done or k in self.active:
-                    continue
-                if self._is_foreign_institution(k):
-                    continue
-                # AND NOTHING THIS SOCIETY CANNOT HAVE. needs_first already
-                # says a Mexica household cannot start a horse collar in the
-                # Valley of Mexico, and this loop was handing the same
-                # household square sails, a spritsail, a mortise-and-tenon
-                # Mediterranean hull, large merchant sailing ships and the
-                # monsoon route to India, free, before turn one - because
-                # each is tier 0 and costs nothing, which is the test this
-                # loop was applying. Free and weightless is not the same as
-                # universally available.
-                if self.needs_first(k)[0]:
-                    continue
-                if (n["tier"] == 0 and n["ph"] == 0 and n["_total_cost"] <= 1
-                        and all(p in self.done for p in n["pre"])):
-                    self.done.add(k)
-                    self._done_changed()
-                    self.granted.add(k)
-                    # done_year is set by the callers after construction, so do
-                    # not assume it exists yet at grant time.
-                    if not hasattr(self, "done_year"):
-                        self.done_year = {}
-                    self.done_year[k] = self.cfg["start_year"]
-                    changed = True
-
     def hazard_relief(self, kind):
         """How much of one kind of harm the things you have built take off.
 
