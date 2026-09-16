@@ -28,17 +28,23 @@ TITLES = {
  "99_AUDIT.md":             "Adversarial audit of the technical modules",
 }
 
-# Keep the generated-index migration in reviewable pieces.  These are the five
-# largest modules, so removing their obsolete Tier column accounts for roughly
-# a third of the index without rewriting the entire generated file at once.
-# Add the remaining modules in the next migration slice, then remove this set
-# and the conditional once every section uses the tierless layout.
+# Keep the generated-index migration in reviewable pieces.  This set includes
+# the modules migrated in the first index slice and seven more sections. Add
+# more modules in later slices, then remove this set and the
+# conditional once every section uses the tierless layout.
 TIERLESS_MODULES = {
+    "10_metallurgy.md",
+    "20_chemistry.md",
+    "30_glass_optics.md",
     "40_power_precision.md",
     "50_electricity.md",
+    "55_semiconductors.md",
+    "70_medicine_biology.md",
+    "85_transport_civil.md",
     "86_transport_deep.md",
     "89_remaining_arts.md",
     "90_textiles.md",
+    "98_power_plants.md",
 }
 
 
