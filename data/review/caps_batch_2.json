@@ -2,7 +2,6 @@
  {
   "id": "air_cayley_forces",
   "name": "Separation of forces: lift, drag, thrust, control",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "air_aerofoil_section",
@@ -13,7 +12,6 @@
  {
   "id": "air_jet_engine_concept",
   "name": "Jet engine principle",
-  "tier": 4,
   "cat": "aviation",
   "current_pre": [
    "thermodynamics_theory",
@@ -25,7 +23,6 @@
  {
   "id": "arc_light_lamp",
   "name": "Arc lighting and incandescent lamps",
-  "tier": 4,
   "cat": "electrical",
   "current_pre": [
    "dynamo",
@@ -36,7 +33,6 @@
  {
   "id": "blast_furnace",
   "name": "Tall shaft blast furnace and cast iron",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "bellows_water_blown",
@@ -47,7 +43,6 @@
  {
   "id": "chm_alizarin",
   "name": "Alizarin synthesis: oxidation of anthraquinone",
-  "tier": 4,
   "cat": "organic_chemistry",
   "current_pre": [
    "chm_coal_tar_distillation",
@@ -58,7 +53,6 @@
  {
   "id": "chm_caustic_soda",
   "name": "Caustic soda: concentration and purification",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "chm_chlor_alkali_mercury",
@@ -70,7 +64,6 @@
  {
   "id": "chm_formaldehyde_synthesis",
   "name": "Formaldehyde oxidation of methanol",
-  "tier": 3,
   "cat": "organic_chemistry",
   "current_pre": [
    "distillation_alcohol",
@@ -81,7 +74,6 @@
  {
   "id": "chm_industrial_hygiene",
   "name": "Industrial hygiene and occupational chemical poisoning",
-  "tier": 3,
   "cat": "occupational_health",
   "current_pre": [
    "germ_theory"
@@ -91,7 +83,6 @@
  {
   "id": "chm_photography",
   "name": "Silver halide photographic chemistry",
-  "tier": 3,
   "cat": "photochemistry",
   "current_pre": [
    "photography",
@@ -102,7 +93,6 @@
  {
   "id": "chm_superphosphate",
   "name": "Superphosphate: acidulation of rock phosphate",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "sulfuric_retort",
@@ -113,7 +103,6 @@
  {
   "id": "civ_bridge_cast_iron",
   "name": "Cast iron bridge",
-  "tier": 2,
   "cat": "transport",
   "current_pre": [
    "blast_furnace",
@@ -124,7 +113,6 @@
  {
   "id": "civ_dam_earth_fill",
   "name": "Earth fill dam with compacted layers",
-  "tier": 2,
   "cat": "water",
   "current_pre": [
    "civ_soil_mechanics"
@@ -134,7 +122,6 @@
  {
   "id": "civ_iron_wrought",
   "name": "Wrought iron working and riveting",
-  "tier": 0,
   "cat": "materials",
   "current_pre": [
    "mat_wrought_iron"
@@ -144,7 +131,6 @@
  {
   "id": "civ_street_lighting",
   "name": "Street lighting with electricity",
-  "tier": 4,
   "cat": "urban",
   "current_pre": [
    "arc_light_lamp",
@@ -155,7 +141,6 @@
  {
   "id": "com_accumulator",
   "name": "Accumulator - arithmetic work register",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "com_register_computing"
@@ -165,7 +150,6 @@
  {
   "id": "com_boolean_algebra",
   "name": "Boolean algebra - logic and switching equivalence",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [],
   "note": "Boolean algebra: true/false, AND, OR, NOT. Claude Shannon's insight (1938): switching circuits are Boolean algebras. A series switch is AND (both must be closed), parallel is OR. This is the single most important conceptual link in computing: abstract logic is isomorphic to physical electronics. Once realized, designing computers becomes designing logic circuits, which become r"
@@ -173,7 +157,6 @@
  {
   "id": "com_cryptography_substitution",
   "name": "Substitution and polyalphabetic ciphers",
-  "tier": 3,
   "cat": "cryptography",
   "current_pre": [],
   "note": "Caesar cipher (shift alphabet by N) was known to Rome. Vigenere cipher (shift depends on a repeating key) was stronger (1553 onward). Both are vulnerable to frequency analysis (common letters are obvious). The Vigenere cipher remained unbroken until the 19th century (Kasiski examination), making it militarily useful for 300 years. Encryption was the luxury of armies and empires"
@@ -181,7 +164,6 @@
  {
   "id": "com_frequency_modulation",
   "name": "Frequency modulation (FM) - superior radio broadcast",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "com_continuous_wave",
@@ -192,7 +174,6 @@
  {
   "id": "com_loading_coil",
   "name": "Loading coil - range extension for telegraph lines",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "com_submarine_cable"
@@ -202,7 +183,6 @@
  {
   "id": "com_morse_code",
   "name": "Morse code - dot, dash, space encoding",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric"
@@ -212,7 +192,6 @@
  {
   "id": "com_one_time_pad",
   "name": "One-time pad - information-theoretically secure cipher",
-  "tier": 4,
   "cat": "cryptography",
   "current_pre": [
    "com_cryptography_substitution",
@@ -223,7 +202,6 @@
  {
   "id": "com_register_computing",
   "name": "Register - multi-bit storage and transfer",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "com_flip_flop"
@@ -233,7 +211,6 @@
  {
   "id": "com_semiconductor_diode",
   "name": "Semiconductor diode - p-n junction rectifier",
-  "tier": 5,
   "cat": "electronics",
   "current_pre": [
    "junction_transistor"
@@ -243,7 +220,6 @@
  {
   "id": "com_submarine_cable",
   "name": "Submarine telegraph cable",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -254,7 +230,6 @@
  {
   "id": "com_telephone_manual_exchange",
   "name": "Manual switchboard exchange",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "com_telephone_carbon_mic",
@@ -265,7 +240,6 @@
  {
   "id": "com_tv_electronic_camera",
   "name": "Electronic camera tube (iconoscope) - real-time image capture",
-  "tier": 4,
   "cat": "television",
   "current_pre": [
    "com_cathode_ray_tube"
@@ -275,7 +249,6 @@
  {
   "id": "com_vacuum_tube_tetrode",
   "name": "Tetrode vacuum tube - screen grid amplifier",
-  "tier": 4,
   "cat": "electronics",
   "current_pre": [
    "vacuum_tube"
@@ -285,7 +258,6 @@
  {
   "id": "crucible_steel",
   "name": "Crucible steel",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "cementation_steel",
@@ -296,7 +268,6 @@
  {
   "id": "dynamo",
   "name": "Dynamo with self-excitation",
-  "tier": 4,
   "cat": "electrical",
   "current_pre": [
    "electromagnet",
@@ -309,7 +280,6 @@
  {
   "id": "finery_puddling",
   "name": "Finery forge and the puddling furnace",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "blast_furnace"
@@ -319,7 +289,6 @@
  {
   "id": "fud_ice_trade_logistics",
   "name": "Trade and logistics of ice transport",
-  "tier": 2,
   "cat": "refrigeration",
   "current_pre": [
    "fud_ice_harvesting_and_cutting"
@@ -329,7 +298,6 @@
  {
   "id": "fud_yeast_pure_culture",
   "name": "Pure yeast culture isolation and maintenance",
-  "tier": 2,
   "cat": "fermentation",
   "current_pre": [
    "distillation_alcohol"
@@ -339,7 +307,6 @@
  {
   "id": "gecl4_purification",
   "name": "Germanium tetrachloride fractional distillation",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "germanium_extraction",
@@ -351,7 +318,6 @@
  {
   "id": "high_temp_furnace",
   "name": "Regenerative and forced-draught furnaces to 1600 C+",
-  "tier": 3,
   "cat": "metallurgy",
   "current_pre": [
    "crucible_steel",
@@ -362,7 +328,6 @@
  {
   "id": "hom_dishwasher",
   "name": "Dishwasher, mechanical and electric",
-  "tier": 4,
   "cat": "cleaning",
   "current_pre": [
    "steam_high_pressure",
@@ -374,7 +339,6 @@
  {
   "id": "hom_printed_books",
   "name": "Printed books for home",
-  "tier": 2,
   "cat": "leisure",
   "current_pre": [
    "printing_press",
@@ -385,7 +349,6 @@
  {
   "id": "hydrochloric_acid",
   "name": "Hydrochloric acid and aqua regia",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "sulfuric_retort"
@@ -395,7 +358,6 @@
  {
   "id": "lab_apparatus",
   "name": "A working laboratory: retorts, baths, lutes, crucibles, fume management",
-  "tier": 2,
   "cat": "chemistry",
   "current_pre": [
    "glass_labware",
@@ -406,7 +368,6 @@
  {
   "id": "master_screw",
   "name": "The first accurate screw, and thread standards",
-  "tier": 2,
   "cat": "precision",
   "current_pre": [
    "precision_three_plate",
@@ -417,7 +378,6 @@
  {
   "id": "mat_crucible_steel",
   "name": "Crucible steel",
-  "tier": 3,
   "cat": "material",
   "current_pre": [
    "crucible_steel",
@@ -428,7 +388,6 @@
  {
   "id": "mat_glass_lead",
   "name": "Lead crystal (flint glass)",
-  "tier": 3,
   "cat": "material",
   "current_pre": [
    "glass_clear",
@@ -439,7 +398,6 @@
  {
   "id": "med_asepsis_antisepsis",
   "name": "Asepsis, antisepsis, and steam sterilization",
-  "tier": 2,
   "cat": "surgery",
   "current_pre": [
    "germ_theory",
@@ -451,7 +409,6 @@
  {
   "id": "med_gram_stain_culture",
   "name": "Bacterial culture and Gram staining",
-  "tier": 2,
   "cat": "diagnostics",
   "current_pre": [
    "germ_theory",
@@ -463,7 +420,6 @@
  {
   "id": "med_sterile_technique",
   "name": "Sterile technique",
-  "tier": 2,
   "cat": "surgery",
   "current_pre": [
    "med_asepsis_antisepsis",
@@ -474,7 +430,6 @@
  {
   "id": "met_basic_lining_phosphorus",
   "name": "Basic lining and the phosphorus problem",
-  "tier": 2,
   "cat": "materials",
   "current_pre": [
    "bessemer_openhearth",
@@ -485,7 +440,6 @@
  {
   "id": "met_hydraulic_press",
   "name": "Hydraulic press and accumulator",
-  "tier": 3,
   "cat": "forming",
   "current_pre": [
    "steam_high_pressure",
@@ -497,7 +451,6 @@
  {
   "id": "met_steam_hammer",
   "name": "Steam hammer for precision forging",
-  "tier": 3,
   "cat": "forming",
   "current_pre": [
    "steam_high_pressure",
@@ -509,7 +462,6 @@
  {
   "id": "microscope_compound",
   "name": "Compound microscope with achromatic objective",
-  "tier": 3,
   "cat": "glass_optics",
   "current_pre": [
    "telescope",
@@ -521,7 +473,6 @@
  {
   "id": "opt_calorimeter",
   "name": "Calorimeter (heat capacity apparatus)",
-  "tier": 2,
   "cat": "measurement",
   "current_pre": [
    "thermometer",
@@ -532,7 +483,6 @@
  {
   "id": "plague_preparedness",
   "name": "Quarantine, clean water, sanitation and variolation programme",
-  "tier": 2,
   "cat": "medicine",
   "current_pre": [
    "germ_theory",
@@ -543,7 +493,6 @@
  {
   "id": "prn_electrotype_plate",
   "name": "Electrotype plate",
-  "tier": 3,
   "cat": "reproduction",
   "current_pre": [
    "prn_stereotype_plate",
@@ -554,7 +503,6 @@
  {
   "id": "prn_radio_broadcasting",
   "name": "Radio broadcasting as medium",
-  "tier": 3,
   "cat": "sound",
   "current_pre": [
    "radio"
@@ -564,7 +512,6 @@
  {
   "id": "pwr_boiler_wagon",
   "name": "Wagon boiler",
-  "tier": 2,
   "cat": "power",
   "current_pre": [
    "steam_atmospheric"
@@ -574,7 +521,6 @@
  {
   "id": "pwr_petroleum_seeps",
   "name": "Petroleum seeps and collection",
-  "tier": 2,
   "cat": "power",
   "current_pre": [],
   "note": "Oil seeps from rock faces and pools in low ground. Early collection by bucket and pit. No pressure, no depth, just ambient flow. Pitch, naphtha, light oil; use depends on locality. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them wer"
@@ -582,7 +528,6 @@
  {
   "id": "pwr_three_phase_ac",
   "name": "Three-phase AC and polyphase",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "dynamo",
@@ -593,7 +538,6 @@
  {
   "id": "refractory_fireclay",
   "name": "Fireclay, grog and silica refractories",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "workshop_first"
@@ -603,7 +547,6 @@
  {
   "id": "sea_charts_navigation",
   "name": "Navigation charts",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "sea_magnetic_compass"
@@ -613,7 +556,6 @@
  {
   "id": "sea_electromagnetic_wave_theory",
   "name": "Electromagnetic wave theory",
-  "tier": 4,
   "cat": "navigation",
   "current_pre": [
    "em_theory"
@@ -623,7 +565,6 @@
  {
   "id": "sea_submarine",
   "name": "Submarine",
-  "tier": 4,
   "cat": "warships",
   "current_pre": [
    "sea_iron_hull",
@@ -634,7 +575,6 @@
  {
   "id": "single_crystal",
   "name": "Czochralski single crystal growth and controlled doping",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "zone_refining",
@@ -645,7 +585,6 @@
  {
   "id": "sulfuric_retort",
   "name": "Oil of vitriol by dry distillation of green vitriol",
-  "tier": 2,
   "cat": "chemistry",
   "current_pre": [
    "lab_apparatus",
@@ -656,7 +595,6 @@
  {
   "id": "tex_nylon",
   "name": "Nylon fiber",
-  "tier": 5,
   "cat": "textiles",
   "current_pre": [
    "mat_ammonia",
@@ -668,7 +606,6 @@
  {
   "id": "vacuum_tube",
   "name": "Diode, triode, and the first amplifier",
-  "tier": 5,
   "cat": "electrical",
   "current_pre": [
    "diffusion_pump",
@@ -680,7 +617,6 @@
  {
   "id": "zone_refining",
   "name": "Zone refining to one part in 1e9",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "ge_reduction",

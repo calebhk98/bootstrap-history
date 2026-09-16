@@ -2,7 +2,6 @@
  {
   "id": "air_elongated_envelope",
   "name": "Elongated balloon envelope",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "air_varnished_silk_envelope"
@@ -12,7 +11,6 @@
  {
   "id": "air_pitot_tube",
   "name": "Pitot tube",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "barometer"
@@ -22,7 +20,6 @@
  {
   "id": "barometer",
   "name": "Mercury barometer, and the first hard vacuum",
-  "tier": 2,
   "cat": "instruments",
   "current_pre": [
    "glass_labware",
@@ -33,7 +30,6 @@
  {
   "id": "case_hardening",
   "name": "Systematic case hardening, quenching and tempering",
-  "tier": 1,
   "cat": "metallurgy",
   "current_pre": [
    "workshop_first",
@@ -44,7 +40,6 @@
  {
   "id": "chm_anthracene",
   "name": "Anthracene extraction and oxidation",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "chm_coal_tar_distillation"
@@ -54,7 +49,6 @@
  {
   "id": "chm_coal_tar_distillation",
   "name": "Coal tar fractionation and distillation",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "destructive_distillation"
@@ -64,7 +58,6 @@
  {
   "id": "chm_gelignite",
   "name": "Gelignite: nitroglycerin in colloidal cellulose",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "chm_nitroglycerin",
@@ -75,7 +68,6 @@
  {
   "id": "chm_matches",
   "name": "Friction matches: red phosphorus safety match",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [],
   "note": "Match heads are formed by dipping wooden sticks into a paste of red phosphorus, antimony sulfide, potassium dichromate, glue and ground glass. The glass provides friction. Friction heats the phosphorus enough to ignite the sulfide and then the wood. Early white phosphorus matches were poisonous and workers developed phossy jaw; red phosphorus matches solved this. [AUDIT: this n"
@@ -83,7 +75,6 @@
  {
   "id": "chm_pvc_synthesis",
   "name": "Polyvinyl chloride (PVC) synthesis",
-  "tier": 4,
   "cat": "plastics",
   "current_pre": [
    "electrolysis_industrial"
@@ -93,7 +84,6 @@
  {
   "id": "chm_toluene",
   "name": "Toluene extraction from coal tar",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "chm_coal_tar_distillation"
@@ -103,7 +93,6 @@
  {
   "id": "civ_caisson",
   "name": "Caisson and underwater excavation",
-  "tier": 2,
   "cat": "foundations",
   "current_pre": [
    "civ_cofferdam"
@@ -113,7 +102,6 @@
  {
   "id": "civ_dredging",
   "name": "Dredging for channel maintenance",
-  "tier": 2,
   "cat": "excavation",
   "current_pre": [
    "civ_pumping_station"
@@ -123,7 +111,6 @@
  {
   "id": "civ_pumping_station",
   "name": "Pumping station and mechanical lift",
-  "tier": 2,
   "cat": "water",
   "current_pre": [
    "bellows_water_blown",
@@ -134,7 +121,6 @@
  {
   "id": "civ_water_treatment",
   "name": "Water treatment works and coagulation",
-  "tier": 3,
   "cat": "water",
   "current_pre": [
    "civ_aqueduct_roman",
@@ -145,7 +131,6 @@
  {
   "id": "com_antenna_ground",
   "name": "Antenna and ground system for radio",
-  "tier": 3,
   "cat": "radio",
   "current_pre": [],
   "note": "An antenna is just a wire at a height or length that couples to the air (transmitting) or the air couples to it (receiving). A ground is a connection to earth (literally a copper plate or rod buried 2 metres). Radio waves need an antenna and a return path (ground) to form a closed loop. The antenna length determines efficiency at a given frequency. This was not obvious: early r"
@@ -153,7 +138,6 @@
  {
   "id": "com_cathode_ray_tube",
   "name": "Cathode ray tube (CRT) - electron beam display",
-  "tier": 4,
   "cat": "television",
   "current_pre": [
    "vacuum_tube",
@@ -164,7 +148,6 @@
  {
   "id": "com_duplex_telegraph",
   "name": "Duplex telegraphy - simultaneous two-way transmission",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "com_relay",
@@ -175,7 +158,6 @@
  {
   "id": "com_hollerith_tabulation",
   "name": "Hollerith tabulation - punched card data processing",
-  "tier": 4,
   "cat": "calculation",
   "current_pre": [
    "com_jacquard_loom"
@@ -185,7 +167,6 @@
  {
   "id": "com_magnetic_drum_storage",
   "name": "Magnetic drum storage - early rotating memory",
-  "tier": 4,
   "cat": "storage",
   "current_pre": [
    "com_magnetic_wire_storage"
@@ -195,7 +176,6 @@
  {
   "id": "com_morse_sounder",
   "name": "Morse sounder - audio telegraph receiver",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -206,7 +186,6 @@
  {
   "id": "com_quadruplex_telegraph",
   "name": "Quadruplex telegraphy - four signals on one wire",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "com_duplex_telegraph"
@@ -216,7 +195,6 @@
  {
   "id": "com_relay_computer",
   "name": "Relay computer - automated logic and arithmetic",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "com_accumulator",
@@ -228,7 +206,6 @@
  {
   "id": "com_stepped_drum",
   "name": "Stepped drum - mechanical counter and incrementor",
-  "tier": 2,
   "cat": "calculation",
   "current_pre": [
    "crank_conrod"
@@ -238,7 +215,6 @@
  {
   "id": "com_telegraph_battery",
   "name": "Telegraph power supply - voltaic cells in series",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -249,7 +225,6 @@
  {
   "id": "com_triode_oscillator",
   "name": "Triode oscillator - audio and RF frequency synthesis",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "vacuum_tube"
@@ -259,7 +234,6 @@
  {
   "id": "com_tv_raster_sync",
   "name": "Raster scan and synchronisation",
-  "tier": 4,
   "cat": "television",
   "current_pre": [
    "com_cathode_ray_tube",
@@ -270,7 +244,6 @@
  {
   "id": "copper_fire_refined",
   "name": "Fire-refined copper stock",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "blast_furnace"
@@ -280,7 +253,6 @@
  {
   "id": "destructive_distillation",
   "name": "Destructive distillation of wood and coal",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "coal_coke",
@@ -291,7 +263,6 @@
  {
   "id": "electromagnet",
   "name": "Electromagnet, relay, and the Wheatstone bridge",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "galvanometer"
@@ -301,7 +272,6 @@
  {
   "id": "fud_coffee_trade_import",
   "name": "Coffee import from Near East and Ethiopia",
-  "tier": 1,
   "cat": "crops",
   "current_pre": [
    "crop_rotation"
@@ -311,7 +281,6 @@
  {
   "id": "fud_margarine_synthesis",
   "name": "Margarine from refined and hardened vegetable oils",
-  "tier": 3,
   "cat": "oils",
   "current_pre": [
    "fud_vegetable_oil_extraction",
@@ -322,7 +291,6 @@
  {
   "id": "galena_detector",
   "name": "Galena cat's whisker point-contact rectifier",
-  "tier": 2,
   "cat": "semiconductor",
   "current_pre": [
    "drawplate_wire",
@@ -334,7 +302,6 @@
  {
   "id": "glass_clear",
   "name": "Deliberately water-clear soda-lime glass to specification",
-  "tier": 1,
   "cat": "glass_optics",
   "current_pre": [
    "workshop_first",
@@ -345,7 +312,6 @@
  {
   "id": "hom_carpet_sweeper",
   "name": "Carpet sweeper",
-  "tier": 3,
   "cat": "cleaning",
   "current_pre": [
    "cap_tol_1mm",
@@ -356,7 +322,6 @@
  {
   "id": "hom_heating_hot_water_radiator",
   "name": "Central heating by hot water radiator",
-  "tier": 4,
   "cat": "heating",
   "current_pre": [
    "steam_high_pressure",
@@ -367,7 +332,6 @@
  {
   "id": "hom_shampoo_soap_based",
   "name": "Shampoo, soap-based",
-  "tier": 3,
   "cat": "personal",
   "current_pre": [
    "soap_hard",
@@ -378,7 +342,6 @@
  {
   "id": "industrial_gases",
   "name": "Oxygen and hydrogen in quantity",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "analytical_chemistry",
@@ -389,7 +352,6 @@
  {
   "id": "lnd_boneshaker",
   "name": "Boneshaker (pedal bicycle)",
-  "tier": 2,
   "cat": "transport",
   "current_pre": [
    "lnd_hobby_horse",
@@ -400,7 +362,6 @@
  {
   "id": "mat_ammonia",
   "name": "Ammonia",
-  "tier": 4,
   "cat": "material",
   "current_pre": [
    "destructive_distillation"
@@ -410,7 +371,6 @@
  {
   "id": "mat_emery",
   "name": "Emery (Naxos)",
-  "tier": 0,
   "cat": "material",
   "current_pre": [],
   "note": "ROME HAS THIS. Your abrasive for every ground surface in this document. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cann"
@@ -418,7 +378,6 @@
  {
   "id": "mat_nitrocellulose",
   "name": "Nitrocellulose",
-  "tier": 4,
   "cat": "material",
   "current_pre": [
    "nitric_acid",
@@ -429,7 +388,6 @@
  {
   "id": "med_autoclave",
   "name": "Autoclave for steam sterilization",
-  "tier": 2,
   "cat": "instruments",
   "current_pre": [
    "steam_high_pressure",
@@ -440,7 +398,6 @@
  {
   "id": "med_microscopy_pathology",
   "name": "Microscopy in pathology with histology",
-  "tier": 2,
   "cat": "diagnostics",
   "current_pre": [
    "microscope_compound",
@@ -452,7 +409,6 @@
  {
   "id": "med_vaccination_progression",
   "name": "Vaccination: variolation to attenuated vaccines",
-  "tier": 2,
   "cat": "serology",
   "current_pre": [
    "germ_theory"
@@ -462,7 +418,6 @@
  {
   "id": "met_converter_furnace",
   "name": "Converter furnace for steel",
-  "tier": 2,
   "cat": "smelting",
   "current_pre": [
    "bessemer_openhearth",
@@ -473,7 +428,6 @@
  {
   "id": "met_oxyacetylene_welding",
   "name": "Oxy-acetylene welding and brazing",
-  "tier": 3,
   "cat": "joining",
   "current_pre": [
    "cap_heat_2000",
@@ -485,7 +439,6 @@
  {
   "id": "met_tin_plate",
   "name": "Tin plate production",
-  "tier": 2,
   "cat": "surface_treatment",
   "current_pre": [
    "electroplating",
@@ -496,7 +449,6 @@
  {
   "id": "nitre_beds",
   "name": "Nitre beds and potassium nitrate",
-  "tier": 2,
   "cat": "chemistry",
   "current_pre": [
    "workshop_first"
@@ -506,7 +458,6 @@
  {
   "id": "opt_photocell",
   "name": "Photocell (photoelectric detector)",
-  "tier": 3,
   "cat": "measurement",
   "current_pre": [
    "discharge_xray",
@@ -517,7 +468,6 @@
  {
   "id": "precision_three_plate",
   "name": "True plane surfaces by the three-plate method",
-  "tier": 2,
   "cat": "precision",
   "current_pre": [
    "case_hardening",
@@ -528,7 +478,6 @@
  {
   "id": "prn_loudspeaker",
   "name": "Loudspeaker",
-  "tier": 2,
   "cat": "sound",
   "current_pre": [
    "electromagnet"
@@ -538,7 +487,6 @@
  {
   "id": "prn_stereotype_plate",
   "name": "Stereotype plate",
-  "tier": 2,
   "cat": "reproduction",
   "current_pre": [
    "prn_composing_stick"
@@ -548,7 +496,6 @@
  {
   "id": "pwr_electric_motor_industry",
   "name": "Electric motor and end of line shafting",
-  "tier": 4,
   "cat": "power",
   "current_pre": [
    "motor_transformer_ac",
@@ -559,7 +506,6 @@
  {
   "id": "pwr_stirling_engine",
   "name": "Stirling engine",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "cap_heat_1300",
@@ -570,7 +516,6 @@
  {
   "id": "pwr_trompe",
   "name": "Trompe (water-driven air blast)",
-  "tier": 2,
   "cat": "power",
   "current_pre": [
    "water_power_scale"
@@ -580,7 +525,6 @@
  {
   "id": "sea_astronomical_tables",
   "name": "Astronomical tables",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "newtonian_mechanics"
@@ -590,7 +534,6 @@
  {
   "id": "sea_diving_bell",
   "name": "Diving bell",
-  "tier": 2,
   "cat": "undersea",
   "current_pre": [
    "sea_anchor"
@@ -600,7 +543,6 @@
  {
   "id": "sea_magnetic_compass",
   "name": "Magnetic compass",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "sea_dry_compass_card"
@@ -610,7 +552,6 @@
  {
   "id": "sea_torpedo",
   "name": "Torpedo",
-  "tier": 4,
   "cat": "warships",
   "current_pre": [
    "nitre_beds",
@@ -622,7 +563,6 @@
  {
   "id": "steam_atmospheric",
   "name": "Newcomen atmospheric engine",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "boring_mill",
@@ -635,7 +575,6 @@
  {
   "id": "telescope",
   "name": "Refracting telescope",
-  "tier": 2,
   "cat": "glass_optics",
   "current_pre": [
    "lens_grinding",
@@ -646,7 +585,6 @@
  {
   "id": "tex_vegetable_tanning",
   "name": "Vegetable tanning of leather",
-  "tier": 2,
   "cat": "textiles",
   "current_pre": [
    "mat_leather"
@@ -656,7 +594,6 @@
  {
   "id": "water_power_scale",
   "name": "Overshot wheels, millponds, leats, line shafting",
-  "tier": 1,
   "cat": "power",
   "current_pre": [
    "crank_conrod"

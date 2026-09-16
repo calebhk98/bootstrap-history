@@ -2,7 +2,6 @@
  {
   "id": "air_airspeed_indicator",
   "name": "Airspeed indicator",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "air_pitot_tube",
@@ -13,7 +12,6 @@
  {
   "id": "air_hydrogen_generation_charcoal",
   "name": "Hydrogen from iron and acid",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "mat_wrought_iron",
@@ -26,7 +24,6 @@
  {
   "id": "arc_furnace_ferroalloys",
   "name": "Electric arc furnace, carbides and ferroalloys",
-  "tier": 5,
   "cat": "metallurgy",
   "current_pre": [
    "power_grid",
@@ -37,7 +34,6 @@
  {
   "id": "bessemer_openhearth",
   "name": "Bulk steel: converter and open hearth",
-  "tier": 4,
   "cat": "metallurgy",
   "current_pre": [
    "high_temp_furnace",
@@ -49,7 +45,6 @@
  {
   "id": "charcoal_industrial",
   "name": "Coppiced charcoal at industrial scale",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "workshop_first"
@@ -59,7 +54,6 @@
  {
   "id": "chm_catalyst_concept",
   "name": "Catalysis and catalyst theory",
-  "tier": 2,
   "cat": "chemical_engineering",
   "current_pre": [
    "analytical_chemistry",
@@ -71,7 +65,6 @@
  {
   "id": "chm_electroplating",
   "name": "Electroplating: deposition of nickel, chromium and precious metals",
-  "tier": 3,
   "cat": "electrochemistry",
   "current_pre": [
    "electroplating",
@@ -82,7 +75,6 @@
  {
   "id": "chm_guncotton",
   "name": "Guncotton: nitration of cellulose",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "nitric_acid"
@@ -92,7 +84,6 @@
  {
   "id": "chm_nitroglycerin",
   "name": "Nitroglycerin synthesis and stabilisation",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "chm_glycerol",
@@ -103,7 +94,6 @@
  {
   "id": "chm_solvay_process",
   "name": "Solvay process: ammonia-soda manufacturing",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "potash_soda",
@@ -117,7 +107,6 @@
  {
   "id": "chm_water_filtration",
   "name": "Sand filtration and multimedia filter beds",
-  "tier": 2,
   "cat": "water_chemistry",
   "current_pre": [
    "chm_water_coagulation"
@@ -127,7 +116,6 @@
  {
   "id": "civ_dam_arch",
   "name": "Arch dam in concrete",
-  "tier": 3,
   "cat": "water",
   "current_pre": [
    "civ_dam_gravity",
@@ -138,7 +126,6 @@
  {
   "id": "civ_harbour_dock",
   "name": "Harbour and dock with breakwaters",
-  "tier": 2,
   "cat": "water",
   "current_pre": [
    "civ_cofferdam",
@@ -149,7 +136,6 @@
  {
   "id": "civ_sewer_separate",
   "name": "Separate foul and storm sewers",
-  "tier": 2,
   "cat": "water",
   "current_pre": [
    "civ_sewer_roman"
@@ -159,7 +145,6 @@
  {
   "id": "coal_coke",
   "name": "Coal, and coking it",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "charcoal_industrial"
@@ -169,7 +154,6 @@
  {
   "id": "com_binary_arithmetic",
   "name": "Binary arithmetic - base-2 number system",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "arithmetic_positional",
@@ -180,7 +164,6 @@
  {
   "id": "com_continuous_wave",
   "name": "Continuous wave (CW) generation with triode",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "vacuum_tube",
@@ -191,7 +174,6 @@
  {
   "id": "com_flip_flop",
   "name": "Flip-flop circuit - one-bit memory",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "com_relay"
@@ -201,7 +183,6 @@
  {
   "id": "com_jacquard_loom",
   "name": "Jacquard loom - punched card control",
-  "tier": 2,
   "cat": "calculation",
   "current_pre": [
    "crank_conrod"
@@ -211,7 +192,6 @@
  {
   "id": "com_magnetic_wire_storage",
   "name": "Magnetic wire storage - first practical memory",
-  "tier": 4,
   "cat": "storage",
   "current_pre": [
    "com_vacuum_tube_computer"
@@ -221,7 +201,6 @@
  {
   "id": "com_napiers_bones",
   "name": "Napier's bones - calculating rods",
-  "tier": 2,
   "cat": "calculation",
   "current_pre": [
    "arithmetic_positional"
@@ -231,7 +210,6 @@
  {
   "id": "com_radio_spark_transmitter",
   "name": "Spark transmitter - radio broadcast generator",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "vacuum_tube",
@@ -242,7 +220,6 @@
  {
   "id": "com_rotor_machine",
   "name": "Rotor cipher machine - Enigma and successors",
-  "tier": 4,
   "cat": "cryptography",
   "current_pre": [
    "com_cryptography_substitution"
@@ -252,7 +229,6 @@
  {
   "id": "com_strowger_exchange",
   "name": "Strowger automatic exchange - mechanical switching",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "com_telephone_manual_exchange",
@@ -263,7 +239,6 @@
  {
   "id": "com_telephone_diaphragm",
   "name": "Diaphragm receiver - electromagnet hearing aid",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "telegraph_electric",
@@ -274,7 +249,6 @@
  {
   "id": "com_tuned_circuit",
   "name": "Tuned LC circuit and resonance",
-  "tier": 3,
   "cat": "radio",
   "current_pre": [
    "electromagnet"
@@ -284,7 +258,6 @@
  {
   "id": "com_vacuum_tube_pentode",
   "name": "Pentode vacuum tube - suppressor grid output stage",
-  "tier": 4,
   "cat": "electronics",
   "current_pre": [
    "com_vacuum_tube_tetrode"
@@ -294,7 +267,6 @@
  {
   "id": "crank_conrod",
   "name": "Crank, connecting rod, flywheel, cam and trip hammer",
-  "tier": 1,
   "cat": "power",
   "current_pre": [
    "workshop_first"
@@ -304,7 +276,6 @@
  {
   "id": "drawplate_wire",
   "name": "The drawplate and drawn wire",
-  "tier": 1,
   "cat": "metallurgy",
   "current_pre": [
    "workshop_first",
@@ -315,7 +286,6 @@
  {
   "id": "electrostatics",
   "name": "Friction machine, Leyden jar, electroscope",
-  "tier": 2,
   "cat": "electrical",
   "current_pre": [
    "glass_labware",
@@ -326,7 +296,6 @@
  {
   "id": "fud_grain_storage_silos",
   "name": "Cylindrical silos for bulk grain storage",
-  "tier": 2,
   "cat": "storage",
   "current_pre": [],
   "note": "Build tall cylindrical brick or wooden towers for grain storage. Pressure from grain weight above excludes insects and rodents. Chutes at bottom for withdrawal. More efficient than rectangular granaries. Enables large centralized storage for grain dole. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent revie"
@@ -334,7 +303,6 @@
  {
   "id": "fud_whaling_industry",
   "name": "Organized whaling industry for oil and meat",
-  "tier": 2,
   "cat": "fishing",
   "current_pre": [],
   "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an"
@@ -342,7 +310,6 @@
  {
   "id": "ge_reduction",
   "name": "Reduction of germanium dioxide to metal under hydrogen",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "gecl4_purification",
@@ -354,7 +321,6 @@
  {
   "id": "gunpowder",
   "name": "Corned gunpowder",
-  "tier": 2,
   "cat": "military",
   "current_pre": [
    "nitre_beds",
@@ -365,7 +331,6 @@
  {
   "id": "hom_deodorant",
   "name": "Deodorant",
-  "tier": 3,
   "cat": "personal",
   "current_pre": [
    "soap_hard",
@@ -376,7 +341,6 @@
  {
   "id": "hom_perfume_distilled",
   "name": "Perfume, distilled alcohol base",
-  "tier": 2,
   "cat": "personal",
   "current_pre": [
    "distillation_alcohol",
@@ -387,7 +351,6 @@
  {
   "id": "hot_air_balloon",
   "name": "Hot air balloon for observation",
-  "tier": 2,
   "cat": "military",
   "current_pre": [],
   "note": "Low technology, moderate cost, high spectacle, and the State wants it for siege observation and signalling. Also one of the fastest ways to be accused of sorcery, so fly it first for the army with the governor watching, never privately at night. Linen sized with oil is the envelope; Rome has excellent sailcloth. [FIXED after independent audit: paper and distilled spirits were l"
@@ -395,7 +358,6 @@
  {
   "id": "junction_transistor",
   "name": "Grown and alloy junction transistors",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "point_contact_transistor"
@@ -405,7 +367,6 @@
  {
   "id": "lnd_penny_farthing",
   "name": "Penny farthing (high-wheel bicycle)",
-  "tier": 2,
   "cat": "transport",
   "current_pre": [
    "lnd_boneshaker",
@@ -416,7 +377,6 @@
  {
   "id": "mat_chlorine",
   "name": "Chlorine and bleach",
-  "tier": 4,
   "cat": "material",
   "current_pre": [
    "electrolysis_industrial"
@@ -426,7 +386,6 @@
  {
   "id": "mat_glass_boro",
   "name": "Borosilicate glass",
-  "tier": 3,
   "cat": "material",
   "current_pre": [
    "glass_borosilicate"
@@ -436,7 +395,6 @@
  {
   "id": "mat_stainless",
   "name": "Stainless steel",
-  "tier": 5,
   "cat": "material",
   "current_pre": [
    "mat_tool_steel_hss",
@@ -448,7 +406,6 @@
  {
   "id": "med_forensic_medicine",
   "name": "Forensic medicine and autopsy",
-  "tier": 2,
   "cat": "institutions",
   "current_pre": [
    "med_medical_education",
@@ -459,7 +416,6 @@
  {
   "id": "med_penicillin",
   "name": "Penicillin extraction and purification",
-  "tier": 4,
   "cat": "pharmacology",
   "current_pre": [
    "med_gram_stain_culture",
@@ -470,7 +426,6 @@
  {
   "id": "met_acetylene_supply",
   "name": "Acetylene from calcium carbide",
-  "tier": 3,
   "cat": "materials",
   "current_pre": [
    "cap_heat_1600",
@@ -481,7 +436,6 @@
  {
   "id": "met_drop_hammer",
   "name": "Drop hammer for heavy forging",
-  "tier": 1,
   "cat": "forming",
   "current_pre": [
    "cap_power_water",
@@ -492,7 +446,6 @@
  {
   "id": "met_quenching_media",
   "name": "Quenching media and quench crack prevention",
-  "tier": 2,
   "cat": "heat_treatment",
   "current_pre": [
    "case_hardening",
@@ -504,7 +457,6 @@
  {
   "id": "micrometer_gauges",
   "name": "Micrometer, verniers, gauge blocks, go/no-go gauges",
-  "tier": 3,
   "cat": "precision",
   "current_pre": [
    "master_screw",
@@ -515,7 +467,6 @@
  {
   "id": "opt_aneroid_barometer",
   "name": "Aneroid barometer",
-  "tier": 2,
   "cat": "measurement",
   "current_pre": [
    "cap_tol_100um",
@@ -526,7 +477,6 @@
  {
   "id": "photography",
   "name": "Silver halide photography on glass",
-  "tier": 3,
   "cat": "instruments",
   "current_pre": [
    "camera_obscura",
@@ -538,7 +488,6 @@
  {
   "id": "prn_daguerreotype",
   "name": "Daguerreotype plate",
-  "tier": 2,
   "cat": "photography",
   "current_pre": [
    "prn_silver_halide_chemistry",
@@ -549,7 +498,6 @@
  {
   "id": "prn_nitrate_film_safety",
   "name": "Nitrate film storage safety",
-  "tier": 2,
   "cat": "cinema",
   "current_pre": [
    "mat_nitrocellulose"
@@ -559,7 +507,6 @@
  {
   "id": "pwr_boiler_haystack",
   "name": "Haystack boiler",
-  "tier": 2,
   "cat": "power",
   "current_pre": [
    "steam_atmospheric"
@@ -569,7 +516,6 @@
  {
   "id": "pwr_load_factor_economics",
   "name": "Load factor and grid economics",
-  "tier": 4,
   "cat": "power",
   "current_pre": [
    "pwr_substation",
@@ -580,7 +526,6 @@
  {
   "id": "pwr_thermopile",
   "name": "Thermopile as a current source",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "pwr_thermoelectric_couple",
@@ -591,7 +536,6 @@
  {
   "id": "railway",
   "name": "Iron rail, locomotive and permanent way",
-  "tier": 4,
   "cat": "transport",
   "current_pre": [
    "steam_high_pressure",
@@ -602,7 +546,6 @@
  {
   "id": "sea_canal_lock",
   "name": "Canal lock",
-  "tier": 3,
   "cat": "harbours",
   "current_pre": [
    "mat_pozzolana",
@@ -613,7 +556,6 @@
  {
   "id": "sea_drydock",
   "name": "Drydock",
-  "tier": 2,
   "cat": "harbours",
   "current_pre": [
    "mat_pozzolana",
@@ -624,7 +566,6 @@
  {
   "id": "sea_sonar",
   "name": "Sonar and echo sounding",
-  "tier": 5,
   "cat": "navigation",
   "current_pre": [
    "vacuum_tube"
@@ -634,7 +575,6 @@
  {
   "id": "silicon_path",
   "name": "Silicon: trichlorosilane purification and high-temperature crystal growth",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "junction_transistor",
@@ -646,7 +586,6 @@
  {
   "id": "steam_watt",
   "name": "Separate condenser and rotative engines",
-  "tier": 4,
   "cat": "power",
   "current_pre": [
    "steam_atmospheric",
@@ -657,7 +596,6 @@
  {
   "id": "tex_mercerisation",
   "name": "Mercerisation of cotton",
-  "tier": 3,
   "cat": "textiles",
   "current_pre": [
    "tex_cotton_trade",
@@ -668,7 +606,6 @@
  {
   "id": "vacuum_pumps",
   "name": "Sprengel mercury pump and high vacuum",
-  "tier": 4,
   "cat": "instruments",
   "current_pre": [
    "barometer",
@@ -680,7 +617,6 @@
  {
   "id": "zinc_metal",
   "name": "Zinc metal by downward distillation",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "refractory_fireclay",

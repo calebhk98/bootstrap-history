@@ -2,7 +2,6 @@
  {
   "id": "air_aerodrome",
   "name": "Aerodrome (landing field)",
-  "tier": 2,
   "cat": "aviation",
   "pre": [
    {
@@ -28,7 +27,6 @@
  {
   "id": "air_dirigible_engine_mount",
   "name": "Mounted engine under balloon",
-  "tier": 3,
   "cat": "aviation",
   "pre": [
    {
@@ -60,7 +58,6 @@
  {
   "id": "air_pitot_tube",
   "name": "Pitot tube",
-  "tier": 1,
   "cat": "aviation",
   "pre": [
    {
@@ -86,7 +83,6 @@
  {
   "id": "air_rotary_engine",
   "name": "Rotary engine",
-  "tier": 3,
   "cat": "aviation",
   "pre": [
    {
@@ -119,7 +115,6 @@
  {
   "id": "air_wing_warping",
   "name": "Wing warping",
-  "tier": 2,
   "cat": "aviation",
   "pre": [
    {
@@ -146,7 +141,6 @@
  {
   "id": "chm_aniline",
   "name": "Aniline from benzene via nitrobenzene",
-  "tier": 4,
   "cat": "organic_chemistry",
   "pre": [
    {
@@ -177,7 +171,6 @@
  {
   "id": "chm_bakelite",
   "name": "Bakelite: phenol-formaldehyde plastic",
-  "tier": 4,
   "cat": "plastics",
   "pre": [
    {
@@ -204,7 +197,6 @@
  {
   "id": "chm_cyanamide_fixation",
   "name": "Cyanamide process: nitrogen fixation by carbide",
-  "tier": 3,
   "cat": "chemical_engineering",
   "pre": [
    {
@@ -236,7 +228,6 @@
  {
   "id": "chm_detergent_synthetic",
   "name": "Synthetic detergent from petroleum sulfonic acid",
-  "tier": 4,
   "cat": "chemical_engineering",
   "pre": [
    {
@@ -262,7 +253,6 @@
  {
   "id": "chm_filter_press",
   "name": "Filter press: plate-and-frame filtration",
-  "tier": 3,
   "cat": "chemical_engineering",
   "pre": [
    {
@@ -290,7 +280,6 @@
  {
   "id": "chm_gelignite",
   "name": "Gelignite: nitroglycerin in colloidal cellulose",
-  "tier": 3,
   "cat": "explosives",
   "pre": [
    {
@@ -324,7 +313,6 @@
  {
   "id": "civ_dam_arch",
   "name": "Arch dam in concrete",
-  "tier": 3,
   "cat": "water",
   "pre": [
    {
@@ -359,7 +347,6 @@
  {
   "id": "civ_method_joints",
   "name": "Method of joints for truss analysis",
-  "tier": 2,
   "cat": "theory",
   "pre": [
    {
@@ -383,7 +370,6 @@
  {
   "id": "com_amplitude_modulation",
   "name": "Amplitude modulation (AM) - encoding audio on radio",
-  "tier": 4,
   "cat": "radio",
   "pre": [
    {
@@ -416,7 +402,6 @@
  {
   "id": "com_analytical_engine",
   "name": "Analytical engine - programmable mechanical computer",
-  "tier": 3,
   "cat": "calculation",
   "pre": [
    {
@@ -447,7 +432,6 @@
  {
   "id": "com_binary_arithmetic",
   "name": "Binary arithmetic - base-2 number system",
-  "tier": 4,
   "cat": "computing",
   "pre": [
    {
@@ -481,7 +465,6 @@
  {
   "id": "com_comptometer",
   "name": "Comptometer - key-driven calculator",
-  "tier": 3,
   "cat": "calculation",
   "pre": [
    {
@@ -514,7 +497,6 @@
  {
   "id": "com_semiconductor_diode",
   "name": "Semiconductor diode - p-n junction rectifier",
-  "tier": 5,
   "cat": "electronics",
   "pre": [
    {
@@ -543,7 +525,6 @@
  {
   "id": "com_superheterodyne_receiver",
   "name": "Superheterodyne receiver - fixed intermediate frequency design",
-  "tier": 4,
   "cat": "radio",
   "pre": [
    {
@@ -581,7 +562,6 @@
  {
   "id": "freedman_staff",
   "name": "Buy, train and manumit a technical staff",
-  "tier": 1,
   "cat": "institution",
   "pre": [
    {
@@ -605,7 +585,6 @@
  {
   "id": "fud_distillation_spirits",
   "name": "Distillation of spirits and liqueurs",
-  "tier": 1,
   "cat": "fermentation",
   "pre": [
    {
@@ -632,7 +611,6 @@
  {
   "id": "fud_hay_making_storage",
   "name": "Hay making and dry storage",
-  "tier": 1,
   "cat": "agriculture",
   "pre": [
    {
@@ -658,7 +636,6 @@
  {
   "id": "fud_soil_composition_analysis",
   "name": "Understanding and testing soil composition",
-  "tier": 2,
   "cat": "knowledge",
   "pre": [
    {
@@ -683,7 +660,6 @@
  {
   "id": "hom_stove_enclosed",
   "name": "Enclosed stove",
-  "tier": 1,
   "cat": "heating",
   "pre": [
    {
@@ -716,7 +692,6 @@
  {
   "id": "hot_air_balloon",
   "name": "Hot air balloon for observation",
-  "tier": 2,
   "cat": "military",
   "pre": [
    {
@@ -749,7 +724,6 @@
  {
   "id": "lnd_otto_cycle_four_stroke",
   "name": "Otto cycle four-stroke engine",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    {
@@ -792,7 +766,6 @@
  {
   "id": "lnd_spark_plug",
   "name": "Spark plug (spark ignition)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    {
@@ -830,7 +803,6 @@
  {
   "id": "lnd_steering_geometry",
   "name": "Steering geometry (Ackermann)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    {
@@ -857,7 +829,6 @@
  {
   "id": "lnd_stirrup",
   "name": "Stirrup",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    {
@@ -889,7 +860,6 @@
  {
   "id": "lnd_truck",
   "name": "Truck (motor freight vehicle)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    {
@@ -923,7 +893,6 @@
  {
   "id": "med_aspirin",
   "name": "Aspirin (acetylsalicylic acid)",
-  "tier": 2,
   "cat": "pharmacology",
   "pre": [
    {
@@ -949,7 +918,6 @@
  {
   "id": "med_autoclave",
   "name": "Autoclave for steam sterilization",
-  "tier": 2,
   "cat": "instruments",
   "pre": [
    {
@@ -985,7 +953,6 @@
  {
   "id": "med_gram_stain_culture",
   "name": "Bacterial culture and Gram staining",
-  "tier": 2,
   "cat": "diagnostics",
   "pre": [
    {
@@ -1020,7 +987,6 @@
  {
   "id": "mercury_supply",
   "name": "Secure mercury supply",
-  "tier": 2,
   "cat": "metallurgy",
   "pre": [
    {
@@ -1055,7 +1021,6 @@
  {
   "id": "met_cupola_furnace",
   "name": "Cupola furnace for iron casting",
-  "tier": 1,
   "cat": "smelting",
   "pre": [
    {
@@ -1094,7 +1059,6 @@
  {
   "id": "met_drawn_tube",
   "name": "Drawn tube production",
-  "tier": 2,
   "cat": "forming",
   "pre": [
    {
@@ -1127,7 +1091,6 @@
  {
   "id": "met_galvanizing",
   "name": "Galvanizing with zinc coating",
-  "tier": 2,
   "cat": "surface_treatment",
   "pre": [
    {
@@ -1164,7 +1127,6 @@
  {
   "id": "met_open_hearth_furnace",
   "name": "Open hearth furnace and scrap recycling",
-  "tier": 2,
   "cat": "smelting",
   "pre": [
    {
@@ -1199,7 +1161,6 @@
  {
   "id": "met_roasting_calcining",
   "name": "Roasting and calcining ore",
-  "tier": 1,
   "cat": "smelting",
   "pre": [
    {
@@ -1231,7 +1192,6 @@
  {
   "id": "met_wire_rod_rolling",
   "name": "Wire rod rolling mill",
-  "tier": 2,
   "cat": "forming",
   "pre": [
    {
@@ -1264,7 +1224,6 @@
  {
   "id": "opt_abbe_resolution_theory",
   "name": "Abbe's resolution limit (diffraction theory)",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    {
@@ -1295,7 +1254,6 @@
  {
   "id": "opt_nicol_prism",
   "name": "Nicol prism for polarized light",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    {
@@ -1326,7 +1284,6 @@
  {
   "id": "opt_photocell",
   "name": "Photocell (photoelectric detector)",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    {
@@ -1357,7 +1314,6 @@
  {
   "id": "opt_plano_convex_lens",
   "name": "Plano-convex reading lens",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    {
@@ -1384,7 +1340,6 @@
  {
   "id": "opt_pyrometer_radiation",
   "name": "Pyrometer by radiation (Stefan-Boltzmann)",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    {
@@ -1417,7 +1372,6 @@
  {
   "id": "opt_standards_laboratory",
   "name": "Standards laboratory as institution",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    {
@@ -1454,7 +1408,6 @@
  {
   "id": "opt_stroboscope",
   "name": "Stroboscope (periodic light)",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    {
@@ -1487,7 +1440,6 @@
  {
   "id": "plague_preparedness",
   "name": "Quarantine, clean water, sanitation and variolation programme",
-  "tier": 2,
   "cat": "medicine",
   "pre": [
    {
@@ -1520,7 +1472,6 @@
  {
   "id": "prc_autocollimator",
   "name": "Autocollimator for angle and parallelism measurement",
-  "tier": 3,
   "cat": "metrology",
   "pre": [
    {
@@ -1561,7 +1512,6 @@
  {
   "id": "prc_broach_machine",
   "name": "Broach tool and broaching machine",
-  "tier": 3,
   "cat": "machine_tools",
   "pre": [
    {
@@ -1597,7 +1547,6 @@
  {
   "id": "prc_cylindrical_grinder",
   "name": "Cylindrical grinder for external and internal",
-  "tier": 3,
   "cat": "machine_tools",
   "pre": [
    {
@@ -1634,7 +1583,6 @@
  {
   "id": "prc_honing_machine",
   "name": "Honing machine for cylinder bores",
-  "tier": 3,
   "cat": "machine_tools",
   "pre": [
    {
@@ -1666,7 +1614,6 @@
  {
   "id": "prc_lathe_faceplate",
   "name": "Lathe faceplate and driving plates",
-  "tier": 1,
   "cat": "machine_tools",
   "pre": [
    {
@@ -1697,7 +1644,6 @@
  {
   "id": "prc_lead_screw_error_cam",
   "name": "Lead screw error correction cam and follower",
-  "tier": 2,
   "cat": "machine_tools",
   "pre": [
    {
@@ -1733,7 +1679,6 @@
  {
   "id": "prc_profile_projector",
   "name": "Profile projector for large-scale part checking",
-  "tier": 3,
   "cat": "metrology",
   "pre": [
    {
@@ -1770,7 +1715,6 @@
  {
   "id": "prn_composing_stick",
   "name": "Composing stick and galley",
-  "tier": 2,
   "cat": "type",
   "pre": [
    {
@@ -1797,7 +1741,6 @@
  {
   "id": "prn_woodblock_carving",
   "name": "Woodblock carving",
-  "tier": 1,
   "cat": "relief",
   "pre": [],
   "ph": 120,
@@ -1819,7 +1762,6 @@
  {
   "id": "pwr_rotary_drilling",
   "name": "Rotary drilling",
-  "tier": 3,
   "cat": "power",
   "pre": [
    {
@@ -1851,7 +1793,6 @@
  {
   "id": "pwr_selenium_metal",
   "name": "Selenium metal extraction",
-  "tier": 3,
   "cat": "power",
   "pre": [
    {
@@ -1883,7 +1824,6 @@
  {
   "id": "pwr_trompe",
   "name": "Trompe (water-driven air blast)",
-  "tier": 2,
   "cat": "power",
   "pre": [
    {
@@ -1911,7 +1851,6 @@
  {
   "id": "sea_backstaff",
   "name": "Backstaff for latitude",
-  "tier": 2,
   "cat": "navigation",
   "pre": [
    {
@@ -1943,7 +1882,6 @@
  {
   "id": "sea_charts_navigation",
   "name": "Navigation charts",
-  "tier": 2,
   "cat": "navigation",
   "pre": [
    {
@@ -1974,7 +1912,6 @@
  {
   "id": "sea_log_line",
   "name": "Log line for speed",
-  "tier": 1,
   "cat": "navigation",
   "pre": [],
   "ph": 30,
@@ -1995,7 +1932,6 @@
  {
   "id": "sea_skeleton_first",
   "name": "Skeleton-first hull construction",
-  "tier": 1,
   "cat": "ships",
   "pre": [
    {
@@ -2026,7 +1962,6 @@
  {
   "id": "sea_steam_turbine",
   "name": "Steam turbine at sea",
-  "tier": 4,
   "cat": "ships",
   "pre": [
    {
@@ -2062,7 +1997,6 @@
  {
   "id": "spectroscope",
   "name": "Prism and grating spectroscope",
-  "tier": 3,
   "cat": "instruments",
   "pre": [
    {
@@ -2098,7 +2032,6 @@
  {
   "id": "steam_high_pressure",
   "name": "High pressure steam and adequate boilers",
-  "tier": 4,
   "cat": "power",
   "pre": [
    {
@@ -2130,7 +2063,6 @@
  {
   "id": "tex_chlorine_bleaching",
   "name": "Chlorine bleaching of cloth",
-  "tier": 4,
   "cat": "textiles",
   "pre": [
    {
@@ -2168,7 +2100,6 @@
  {
   "id": "tex_mercerisation",
   "name": "Mercerisation of cotton",
-  "tier": 3,
   "cat": "textiles",
   "pre": [
    {
@@ -2204,7 +2135,6 @@
  {
   "id": "tex_spinning_jenny",
   "name": "Spinning jenny",
-  "tier": 2,
   "cat": "textiles",
   "pre": [
    {
