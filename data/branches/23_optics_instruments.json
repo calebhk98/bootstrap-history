@@ -2,7 +2,6 @@
   {
     "id": "opt_burning_glass",
     "name": "Burning glass",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "opt_water_globe_magnifier",
     "name": "Water-filled globe as magnifier",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "opt_metal_mirror_polished",
     "name": "Polished metal mirror",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "opt_sundial",
     "name": "Sundial",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "opt_water_clock",
     "name": "Water clock (clepsydra)",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "opt_groma",
     "name": "Groma (surveying cross)",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "opt_dioptra",
     "name": "Dioptra (sighting tube)",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "opt_steelyards",
     "name": "Steelyard balance",
-    "tier": 0,
     "cat": "measurement",
     "pre": [],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "opt_geared_mechanisms",
     "name": "Geared mechanical transmission",
-    "tier": 0,
     "cat": "optics",
     "pre": [],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "opt_plano_convex_lens",
     "name": "Plano-convex reading lens",
-    "tier": 1,
     "cat": "optics",
     "pre": ["lens_grinding"],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "opt_spectacles",
     "name": "Spectacles (eyeglasses)",
-    "tier": 1,
     "cat": "optics",
     "pre": ["lens_grinding", "opt_plano_convex_lens"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "opt_spherometer",
     "name": "Spherometer for curvature measurement",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["cap_tol_100um", "lens_grinding"],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "opt_focal_length_measurement",
     "name": "Focal length measurement",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["lens_grinding", "opt_plano_convex_lens"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "opt_achromatic_doublet",
     "name": "Achromatic doublet lens",
-    "tier": 2,
     "cat": "optics",
     "pre": ["lens_grinding", "cap_tol_10um", "mat_glass_lead"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "opt_apochromat",
     "name": "Apochromatic lens (three-glass)",
-    "tier": 3,
     "cat": "optics",
     "pre": ["opt_achromatic_doublet", "cap_tol_1um"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "opt_speculum_metal",
     "name": "Speculum metal for telescope mirror",
-    "tier": 2,
     "cat": "materials",
     "pre": ["cap_heat_1300"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "opt_reflecting_telescope",
     "name": "Reflecting telescope (Newtonian)",
-    "tier": 2,
     "cat": "optics",
     "pre": ["telescope", "opt_speculum_metal", "cap_tol_100um"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "opt_silvered_glass_mirror",
     "name": "Silvered glass mirror for telescope",
-    "tier": 2,
     "cat": "optics",
     "pre": ["photography", "mirror_amalgam", "cap_tol_1um"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "opt_equatorial_mount",
     "name": "Equatorial telescope mount",
-    "tier": 2,
     "cat": "optics",
     "pre": ["clock_pendulum", "cap_tol_1mm", "geometry_analytic"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "opt_clock_drive",
     "name": "Clock drive for telescope tracking",
-    "tier": 2,
     "cat": "optics",
     "pre": ["clock_pendulum", "crank_conrod", "cap_tol_100um"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "opt_transit_instrument",
     "name": "Transit instrument (meridian telescope)",
-    "tier": 2,
     "cat": "optics",
     "pre": ["telescope", "cap_tol_100um", "cap_measure_time_s"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "opt_stellar_parallax",
     "name": "Stellar parallax and arcsecond precision",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["telescope", "cap_tol_100um", "cap_measure_time_s", "newtonian_mechanics"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "opt_diffraction_grating",
     "name": "Diffraction grating",
-    "tier": 2,
     "cat": "optics",
     "pre": ["cap_tol_1um"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "opt_ruling_engine",
     "name": "Ruling engine for grating production",
-    "tier": 3,
     "cat": "optics",
     "pre": ["cap_tol_1um", "master_screw", "cap_heat_1600", "cap_measure_len"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "opt_spectroscopy_emission",
     "name": "Spectroscopy: emission line method",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["spectroscope", "cap_heat_1600"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "opt_spectroscopy_absorption",
     "name": "Spectroscopy: absorption line method",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["spectroscope", "cap_heat_1600"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "opt_fraunhofer_lines",
     "name": "Fraunhofer lines catalog",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["spectroscope", "opt_spectroscopy_absorption"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "opt_flame_spark_spectra",
     "name": "Flame and spark spectra for element assay",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["spectroscope", "opt_spectroscopy_emission"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "opt_spectroheliograph",
     "name": "Spectroheliograph (solar spectrograph)",
-    "tier": 3,
     "cat": "optics",
     "pre": ["telescope", "spectroscope", "opt_diffraction_grating", "camera_obscura"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "opt_photometry",
     "name": "Photometry and light measurement",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_measure_light", "lens_grinding"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "opt_newton_rings",
     "name": "Newton's rings interference pattern",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["opt_diffraction_grating", "cap_tol_1um"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "opt_michelson_interferometer",
     "name": "Michelson interferometer",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_tol_1um", "cap_measure_light", "mirror_amalgam"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "opt_nicol_prism",
     "name": "Nicol prism for polarized light",
-    "tier": 2,
     "cat": "optics",
     "pre": ["lens_grinding", "cap_tol_100um"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "opt_polarimeter",
     "name": "Polarimeter for optical rotation",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["opt_nicol_prism", "opt_photometry"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "opt_refractometer",
     "name": "Refractometer (Abbe design)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_tol_100um", "opt_diffraction_grating"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "opt_abbe_condenser",
     "name": "Abbe condenser (microscope illuminator)",
-    "tier": 2,
     "cat": "optics",
     "pre": ["microscope_compound", "cap_tol_100um", "lens_grinding"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "opt_oil_immersion_objective",
     "name": "Oil immersion microscope objective",
-    "tier": 2,
     "cat": "optics",
     "pre": ["microscope_compound", "cap_tol_100um", "mat_glass_lead"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "opt_phase_contrast",
     "name": "Phase contrast microscopy",
-    "tier": 3,
     "cat": "optics",
     "pre": ["microscope_compound", "opt_abbe_condenser", "opt_nicol_prism"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "opt_ultramicroscope",
     "name": "Ultramicroscope (dark field)",
-    "tier": 3,
     "cat": "optics",
     "pre": ["microscope_compound", "cap_heat_1600"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "opt_electron_microscope",
     "name": "Electron microscope",
-    "tier": 4,
     "cat": "optics",
     "pre": ["cap_vac_1e3", "cap_heat_3000", "discharge_xray", "electromagnet"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "opt_sextant",
     "name": "Sextant for angle measurement",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["telescope", "cap_tol_100um"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "opt_artificial_horizon",
     "name": "Artificial horizon for navigation",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "opt_theodolite",
     "name": "Theodolite (transit and altitude)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["telescope", "cap_tol_100um", "transit_instrument"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "opt_level",
     "name": "Optical level (surveying)",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["telescope", "cap_tol_1mm"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "opt_plane_table",
     "name": "Plane table surveying",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["telescope", "cap_tol_1mm"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "opt_aneroid_barometer",
     "name": "Aneroid barometer",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_tol_100um", "mat_cast_iron"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "opt_hygrometer",
     "name": "Hygrometer (humidity measurement)",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["cap_measure_temp"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "opt_anemometer",
     "name": "Anemometer (wind speed)",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "opt_pitot_tube",
     "name": "Pitot tube (fluid velocity)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_tol_100um", "opt_manometer"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "opt_manometer",
     "name": "Manometer (pressure measurement)",
-    "tier": 1,
     "cat": "measurement",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "opt_bourdon_gauge",
     "name": "Bourdon pressure gauge",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_tol_100um", "mat_cast_iron"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "opt_pyrometer_contraction",
     "name": "Pyrometer by rod contraction",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["cap_measure_temp_hi", "cap_tol_1mm"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "opt_pyrometer_thermoelectric",
     "name": "Pyrometer by thermocouple",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_measure_elec", "galvanometer"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "opt_pyrometer_optical",
     "name": "Pyrometer by color (optical)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["spectroscope", "cap_measure_temp_hi"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "opt_pyrometer_radiation",
     "name": "Pyrometer by radiation (Stefan-Boltzmann)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_measure_elec", "thermodynamics_theory"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "opt_calorimeter",
     "name": "Calorimeter (heat capacity apparatus)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["thermometer", "balance_analytical"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "opt_bolometer",
     "name": "Bolometer (radiation detector)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_measure_elec", "cap_tol_10um"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "opt_photocell",
     "name": "Photocell (photoelectric detector)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["discharge_xray", "vacuum_tube"],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "opt_seismograph",
     "name": "Seismograph (earthquake measurement)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["galvanometer", "clock_pendulum"],
     "kb": "",
@@ -1300,7 +1241,6 @@
   {
     "id": "opt_gravimeter",
     "name": "Gravimeter (gravity field measurement)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["clock_pendulum", "cap_measure_time_s"],
     "kb": "",
@@ -1322,7 +1262,6 @@
   {
     "id": "opt_magnetometer",
     "name": "Magnetometer (magnetic field measurement)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["galvanometer", "cap_tol_100um"],
     "kb": "",
@@ -1344,7 +1283,6 @@
   {
     "id": "opt_electrometer",
     "name": "Electrometer (charge measurement)",
-    "tier": 2,
     "cat": "measurement",
     "pre": ["galvanometer", "cap_measure_elec"],
     "kb": "",
@@ -1366,7 +1304,6 @@
   {
     "id": "opt_potentiometer",
     "name": "Potentiometer (precision voltage measurement)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_measure_elec", "master_screw"],
     "kb": "",
@@ -1388,7 +1325,6 @@
   {
     "id": "opt_ballistic_galvanometer",
     "name": "Ballistic galvanometer (charge measurement)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["galvanometer", "cap_measure_time_s"],
     "kb": "",
@@ -1410,7 +1346,6 @@
   {
     "id": "opt_oscilloscope",
     "name": "Oscilloscope (CRT time-display)",
-    "tier": 4,
     "cat": "measurement",
     "pre": ["cap_power_electric", "discharge_xray", "vacuum_tube"],
     "kb": "",
@@ -1432,7 +1367,6 @@
   {
     "id": "opt_chronograph",
     "name": "Chronograph (time marker)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["cap_measure_time_ms", "photography"],
     "kb": "",
@@ -1454,7 +1388,6 @@
   {
     "id": "opt_stroboscope",
     "name": "Stroboscope (periodic light)",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["photography", "cap_power_electric"],
     "kb": "",
@@ -1476,7 +1409,6 @@
   {
     "id": "opt_high_speed_camera",
     "name": "High speed camera",
-    "tier": 4,
     "cat": "measurement",
     "pre": ["photography", "cap_power_electric"],
     "kb": "",
@@ -1498,7 +1430,6 @@
   {
     "id": "opt_standards_laboratory",
     "name": "Standards laboratory as institution",
-    "tier": 3,
     "cat": "measurement",
     "pre": ["balance_analytical", "thermometer", "cap_measure_len", "units_standards"],
     "kb": "",

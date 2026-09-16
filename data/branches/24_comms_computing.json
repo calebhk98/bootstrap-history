@@ -2,7 +2,6 @@
   {
     "id": "com_signal_flags",
     "name": "Signal flags for maritime communication",
-    "tier": 1,
     "cat": "signalling",
     "pre": [],
     "kb": "",
@@ -29,7 +28,6 @@
   {
     "id": "com_optical_codebook",
     "name": "Codebook for optical signal tower",
-    "tier": 1,
     "cat": "signalling",
     "pre": [],
     "kb": "",
@@ -55,7 +53,6 @@
   {
     "id": "com_optical_tower",
     "name": "Optical semaphore tower",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "com_optical_codebook"
@@ -86,7 +83,6 @@
   {
     "id": "com_heliograph",
     "name": "Heliograph - sun mirror telegraph",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "com_optical_codebook"
@@ -116,7 +112,6 @@
   {
     "id": "com_morse_code",
     "name": "Morse code - dot, dash, space encoding",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric"
@@ -144,7 +139,6 @@
   {
     "id": "com_morse_register",
     "name": "Morse register - recording apparatus",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric"
@@ -175,7 +169,6 @@
   {
     "id": "com_morse_sounder",
     "name": "Morse sounder - audio telegraph receiver",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -206,7 +199,6 @@
   {
     "id": "com_relay",
     "name": "Relay - current amplification for long lines",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -237,7 +229,6 @@
   {
     "id": "com_telegraph_battery",
     "name": "Telegraph power supply - voltaic cells in series",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -269,7 +260,6 @@
   {
     "id": "com_duplex_telegraph",
     "name": "Duplex telegraphy - simultaneous two-way transmission",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "com_relay",
@@ -301,7 +291,6 @@
   {
     "id": "com_quadruplex_telegraph",
     "name": "Quadruplex telegraphy - four signals on one wire",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "com_duplex_telegraph"
@@ -332,7 +321,6 @@
   {
     "id": "com_submarine_cable",
     "name": "Submarine telegraph cable",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -365,7 +353,6 @@
   {
     "id": "com_loading_coil",
     "name": "Loading coil - range extension for telegraph lines",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "com_submarine_cable"
@@ -395,7 +382,6 @@
   {
     "id": "com_telephone_carbon_mic",
     "name": "Carbon microphone - pressure-to-resistance transducer",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "telegraph_electric",
@@ -428,7 +414,6 @@
   {
     "id": "com_telephone_diaphragm",
     "name": "Diaphragm receiver - electromagnet hearing aid",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "telegraph_electric",
@@ -460,7 +445,6 @@
   {
     "id": "com_telephone_manual_exchange",
     "name": "Manual switchboard exchange",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "com_telephone_carbon_mic",
@@ -493,7 +477,6 @@
   {
     "id": "com_trunk_lines",
     "name": "Trunk lines - long-distance telephone routes",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "com_telephone_manual_exchange",
@@ -526,7 +509,6 @@
   {
     "id": "com_multiplexing",
     "name": "Multiplexing - combining multiple signals on one line",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "com_trunk_lines"
@@ -557,7 +539,6 @@
   {
     "id": "com_strowger_exchange",
     "name": "Strowger automatic exchange - mechanical switching",
-    "tier": 3,
     "cat": "telephone",
     "pre": [
       "com_telephone_manual_exchange",
@@ -590,7 +571,6 @@
   {
     "id": "com_stock_ticker",
     "name": "Stock ticker - financial telegraph terminal",
-    "tier": 2,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -623,7 +603,6 @@
   {
     "id": "com_radio_spark_transmitter",
     "name": "Spark transmitter - radio broadcast generator",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "vacuum_tube",
@@ -656,7 +635,6 @@
   {
     "id": "com_crystal_set",
     "name": "Crystal set receiver - galena rectifier radio",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "galena_detector",
@@ -688,7 +666,6 @@
   {
     "id": "com_antenna_ground",
     "name": "Antenna and ground system for radio",
-    "tier": 3,
     "cat": "radio",
     "pre": [],
     "kb": "",
@@ -717,7 +694,6 @@
   {
     "id": "com_tuned_circuit",
     "name": "Tuned LC circuit and resonance",
-    "tier": 3,
     "cat": "radio",
     "pre": [
       "electromagnet"
@@ -748,7 +724,6 @@
   {
     "id": "com_continuous_wave",
     "name": "Continuous wave (CW) generation with triode",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "vacuum_tube",
@@ -780,7 +755,6 @@
   {
     "id": "com_triode_oscillator",
     "name": "Triode oscillator - audio and RF frequency synthesis",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "vacuum_tube"
@@ -811,7 +785,6 @@
   {
     "id": "com_amplitude_modulation",
     "name": "Amplitude modulation (AM) - encoding audio on radio",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "com_continuous_wave",
@@ -843,7 +816,6 @@
   {
     "id": "com_superheterodyne_receiver",
     "name": "Superheterodyne receiver - fixed intermediate frequency design",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "com_continuous_wave",
@@ -877,7 +849,6 @@
   {
     "id": "com_frequency_modulation",
     "name": "Frequency modulation (FM) - superior radio broadcast",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "com_continuous_wave",
@@ -909,7 +880,6 @@
   {
     "id": "com_broadcasting_institution",
     "name": "Broadcasting as an institution - scheduled transmission and profit model",
-    "tier": 4,
     "cat": "radio",
     "pre": [
       "com_superheterodyne_receiver",
@@ -937,7 +907,6 @@
   {
     "id": "com_cathode_ray_tube",
     "name": "Cathode ray tube (CRT) - electron beam display",
-    "tier": 4,
     "cat": "television",
     "pre": [
       "vacuum_tube",
@@ -970,7 +939,6 @@
   {
     "id": "com_tv_mechanical_scanning",
     "name": "Mechanical television scanning - early image transmission",
-    "tier": 3,
     "cat": "television",
     "pre": [
       "com_antenna_ground"
@@ -1002,7 +970,6 @@
   {
     "id": "com_tv_electronic_camera",
     "name": "Electronic camera tube (iconoscope) - real-time image capture",
-    "tier": 4,
     "cat": "television",
     "pre": [
       "com_cathode_ray_tube"
@@ -1034,7 +1001,6 @@
   {
     "id": "com_tv_raster_sync",
     "name": "Raster scan and synchronisation",
-    "tier": 4,
     "cat": "television",
     "pre": [
       "com_cathode_ray_tube",
@@ -1066,7 +1032,6 @@
   {
     "id": "com_radar_magnetron",
     "name": "Magnetron - compact high-power microwave generator",
-    "tier": 4,
     "cat": "radar",
     "pre": [
       "vacuum_tube",
@@ -1100,7 +1065,6 @@
   {
     "id": "com_waveguide",
     "name": "Waveguide - pipe for microwaves",
-    "tier": 4,
     "cat": "radar",
     "pre": [
       "com_radar_magnetron"
@@ -1129,7 +1093,6 @@
   {
     "id": "com_vacuum_tube_tetrode",
     "name": "Tetrode vacuum tube - screen grid amplifier",
-    "tier": 4,
     "cat": "electronics",
     "pre": [
       "vacuum_tube"
@@ -1161,7 +1124,6 @@
   {
     "id": "com_vacuum_tube_pentode",
     "name": "Pentode vacuum tube - suppressor grid output stage",
-    "tier": 4,
     "cat": "electronics",
     "pre": [
       "com_vacuum_tube_tetrode"
@@ -1193,7 +1155,6 @@
   {
     "id": "com_coherer",
     "name": "Coherer - primitive radio detector",
-    "tier": 3,
     "cat": "radio",
     "pre": [
       "com_antenna_ground"
@@ -1223,7 +1184,6 @@
   {
     "id": "com_slide_rule",
     "name": "Slide rule - mechanical multiplier",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "logarithms"
@@ -1254,7 +1214,6 @@
   {
     "id": "com_napiers_bones",
     "name": "Napier's bones - calculating rods",
-    "tier": 2,
     "cat": "calculation",
     "pre": [
       "arithmetic_positional"
@@ -1283,7 +1242,6 @@
   {
     "id": "com_stepped_drum",
     "name": "Stepped drum - mechanical counter and incrementor",
-    "tier": 2,
     "cat": "calculation",
     "pre": [
       "crank_conrod"
@@ -1313,7 +1271,6 @@
   {
     "id": "com_mechanical_calculator",
     "name": "Mechanical calculator - Pascal and Leibniz designs",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "com_stepped_drum",
@@ -1346,7 +1303,6 @@
   {
     "id": "com_arithmometer",
     "name": "Arithmometer - mass-produced mechanical calculator",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "com_mechanical_calculator",
@@ -1378,7 +1334,6 @@
   {
     "id": "com_comptometer",
     "name": "Comptometer - key-driven calculator",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "com_mechanical_calculator",
@@ -1410,7 +1365,6 @@
   {
     "id": "com_difference_engine",
     "name": "Difference engine - mechanical polynomial solver",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "com_mechanical_calculator",
@@ -1443,7 +1397,6 @@
   {
     "id": "com_analytical_engine",
     "name": "Analytical engine - programmable mechanical computer",
-    "tier": 3,
     "cat": "calculation",
     "pre": [
       "com_difference_engine"
@@ -1476,7 +1429,6 @@
   {
     "id": "com_jacquard_loom",
     "name": "Jacquard loom - punched card control",
-    "tier": 2,
     "cat": "calculation",
     "pre": [
       "crank_conrod"
@@ -1508,7 +1460,6 @@
   {
     "id": "com_hollerith_tabulation",
     "name": "Hollerith tabulation - punched card data processing",
-    "tier": 4,
     "cat": "calculation",
     "pre": [
       "com_jacquard_loom"
@@ -1540,7 +1491,6 @@
   {
     "id": "com_teleprinter",
     "name": "Teleprinter - automated telegraph typing",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "telegraph_electric",
@@ -1573,7 +1523,6 @@
   {
     "id": "com_baudot_code",
     "name": "Baudot code - 5-bit telegraph encoding",
-    "tier": 3,
     "cat": "signalling",
     "pre": [
       "com_teleprinter"
@@ -1601,7 +1550,6 @@
   {
     "id": "com_boolean_algebra",
     "name": "Boolean algebra - logic and switching equivalence",
-    "tier": 4,
     "cat": "computing",
     "pre": [],
     "kb": "",
@@ -1627,7 +1575,6 @@
   {
     "id": "com_binary_arithmetic",
     "name": "Binary arithmetic - base-2 number system",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "arithmetic_positional",
@@ -1656,7 +1603,6 @@
   {
     "id": "com_flip_flop",
     "name": "Flip-flop circuit - one-bit memory",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_relay"
@@ -1687,7 +1633,6 @@
   {
     "id": "com_register_computing",
     "name": "Register - multi-bit storage and transfer",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_flip_flop"
@@ -1718,7 +1663,6 @@
   {
     "id": "com_ring_counter",
     "name": "Ring counter - timing and sequencing circuit",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_register_computing"
@@ -1749,7 +1693,6 @@
   {
     "id": "com_accumulator",
     "name": "Accumulator - arithmetic work register",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_register_computing"
@@ -1780,7 +1723,6 @@
   {
     "id": "com_relay_computer",
     "name": "Relay computer - automated logic and arithmetic",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_accumulator",
@@ -1815,7 +1757,6 @@
   {
     "id": "com_vacuum_tube_computer",
     "name": "Vacuum tube computer - high-speed electronic switching",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "vacuum_tube",
@@ -1851,7 +1792,6 @@
   {
     "id": "com_magnetic_wire_storage",
     "name": "Magnetic wire storage - first practical memory",
-    "tier": 4,
     "cat": "storage",
     "pre": [
       "com_vacuum_tube_computer"
@@ -1882,7 +1822,6 @@
   {
     "id": "com_magnetic_tape_storage",
     "name": "Magnetic tape storage - bulk archival memory",
-    "tier": 4,
     "cat": "storage",
     "pre": [
       "com_magnetic_wire_storage"
@@ -1914,7 +1853,6 @@
   {
     "id": "com_magnetic_core_memory",
     "name": "Magnetic core memory - fast addressable RAM",
-    "tier": 4,
     "cat": "storage",
     "pre": [
       "electromagnet",
@@ -1947,7 +1885,6 @@
   {
     "id": "com_magnetic_drum_storage",
     "name": "Magnetic drum storage - early rotating memory",
-    "tier": 4,
     "cat": "storage",
     "pre": [
       "com_magnetic_wire_storage"
@@ -1978,7 +1915,6 @@
   {
     "id": "com_semiconductor_diode",
     "name": "Semiconductor diode - p-n junction rectifier",
-    "tier": 5,
     "cat": "electronics",
     "pre": [
       "junction_transistor"
@@ -2009,7 +1945,6 @@
   {
     "id": "com_led",
     "name": "Light-emitting diode",
-    "tier": 5,
     "cat": "electronics",
     "pre": [
       "com_semiconductor_diode"
@@ -2041,7 +1976,6 @@
   {
     "id": "com_logic_gate",
     "name": "Logic gate - elementary switching circuit",
-    "tier": 4,
     "cat": "computing",
     "pre": [
       "com_semiconductor_diode"
@@ -2073,7 +2007,6 @@
   {
     "id": "com_photolithography",
     "name": "Photolithography - precision pattern transfer",
-    "tier": 5,
     "cat": "electronics",
     "pre": [
       "cap_tol_1um",
@@ -2109,7 +2042,6 @@
   {
     "id": "com_integrated_circuit",
     "name": "Integrated circuit - many transistors on one chip",
-    "tier": 5,
     "cat": "electronics",
     "pre": [
       "com_photolithography",
@@ -2144,7 +2076,6 @@
   {
     "id": "com_stored_program_concept",
     "name": "Stored program computer - code as data in memory",
-    "tier": 5,
     "cat": "computing",
     "pre": [
       "com_analytical_engine",
@@ -2172,7 +2103,6 @@
   {
     "id": "com_compiler_and_language",
     "name": "Compiler and high-level programming language",
-    "tier": 5,
     "cat": "computing",
     "pre": [
       "com_stored_program_concept"
@@ -2201,7 +2131,6 @@
   {
     "id": "com_error_detecting_code",
     "name": "Error detecting and correcting codes",
-    "tier": 5,
     "cat": "computing",
     "pre": [
       "com_binary_arithmetic"
@@ -2229,7 +2158,6 @@
   {
     "id": "com_information_theory",
     "name": "Information theory - entropy and the bit",
-    "tier": 5,
     "cat": "computing",
     "pre": [
       "com_binary_arithmetic"
@@ -2257,7 +2185,6 @@
   {
     "id": "com_cryptography_substitution",
     "name": "Substitution and polyalphabetic ciphers",
-    "tier": 3,
     "cat": "cryptography",
     "pre": [],
     "kb": "",
@@ -2283,7 +2210,6 @@
   {
     "id": "com_rotor_machine",
     "name": "Rotor cipher machine - Enigma and successors",
-    "tier": 4,
     "cat": "cryptography",
     "pre": [
       "com_cryptography_substitution"
@@ -2315,7 +2241,6 @@
   {
     "id": "com_one_time_pad",
     "name": "One-time pad - information-theoretically secure cipher",
-    "tier": 4,
     "cat": "cryptography",
     "pre": [
       "com_cryptography_substitution",
@@ -2346,7 +2271,6 @@
   {
     "id": "com_public_key_cryptography",
     "name": "Public-key cryptography - RSA and successors",
-    "tier": 5,
     "cat": "cryptography",
     "pre": [
       "com_information_theory",

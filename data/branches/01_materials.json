@@ -2,7 +2,6 @@
  {
   "id": "mat_wrought_iron",
   "name": "Wrought iron (bloomery)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -24,7 +23,6 @@
  {
   "id": "mat_bronze",
   "name": "Bronze",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -46,7 +44,6 @@
  {
   "id": "mat_brass",
   "name": "Brass (by cementation)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -68,7 +65,6 @@
  {
   "id": "mat_lead",
   "name": "Lead",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -90,7 +86,6 @@
  {
   "id": "mat_tin",
   "name": "Tin",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -112,7 +107,6 @@
  {
   "id": "mat_copper",
   "name": "Copper (fire refined)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -134,7 +128,6 @@
  {
   "id": "mat_silver",
   "name": "Silver",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -156,7 +149,6 @@
  {
   "id": "mat_gold",
   "name": "Gold",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -178,7 +170,6 @@
  {
   "id": "mat_mercury",
   "name": "Mercury",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -200,7 +191,6 @@
  {
   "id": "mat_sulfur",
   "name": "Sulfur",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -222,7 +212,6 @@
  {
   "id": "mat_natron",
   "name": "Natron (sodium carbonate)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -244,7 +233,6 @@
  {
   "id": "mat_lime",
   "name": "Quicklime and slaked lime",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -266,7 +254,6 @@
  {
   "id": "mat_gypsum",
   "name": "Gypsum plaster",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -288,7 +275,6 @@
  {
   "id": "mat_alum",
   "name": "Alum",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -310,7 +296,6 @@
  {
   "id": "mat_vitriols",
   "name": "Vitriols (iron and copper sulfates)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -332,7 +317,6 @@
  {
   "id": "mat_pyrolusite",
   "name": "Pyrolusite (manganese dioxide)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -354,7 +338,6 @@
  {
   "id": "mat_galena",
   "name": "Galena (lead sulfide)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -376,7 +359,6 @@
  {
   "id": "mat_calamine",
   "name": "Calamine (zinc carbonate/silicate ore)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -398,7 +380,6 @@
  {
   "id": "mat_asbestos",
   "name": "Asbestos",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -420,7 +401,6 @@
  {
   "id": "mat_emery",
   "name": "Emery (Naxos)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -442,7 +422,6 @@
  {
   "id": "mat_pozzolana",
   "name": "Pozzolana and hydraulic concrete",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -464,7 +443,6 @@
  {
   "id": "mat_papyrus",
   "name": "Papyrus",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -486,7 +464,6 @@
  {
   "id": "mat_parchment",
   "name": "Parchment",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -508,7 +485,6 @@
  {
   "id": "mat_linen",
   "name": "Linen",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -530,7 +506,6 @@
  {
   "id": "mat_wool",
   "name": "Wool",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -552,7 +527,6 @@
  {
   "id": "mat_leather",
   "name": "Leather",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -574,7 +548,6 @@
  {
   "id": "mat_beeswax",
   "name": "Beeswax",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -596,7 +569,6 @@
  {
   "id": "mat_tallow",
   "name": "Tallow",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -618,7 +590,6 @@
  {
   "id": "mat_olive_oil",
   "name": "Olive oil",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -640,7 +611,6 @@
  {
   "id": "mat_bitumen",
   "name": "Bitumen and naphtha seeps",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -662,7 +632,6 @@
  {
   "id": "mat_salt",
   "name": "Salt",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -684,7 +653,6 @@
  {
   "id": "mat_glass_soda",
   "name": "Soda-lime glass",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -706,7 +674,6 @@
  {
   "id": "mat_charcoal",
   "name": "Charcoal",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -728,7 +695,6 @@
  {
   "id": "mat_silk",
   "name": "Silk (traded)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -750,7 +716,6 @@
  {
   "id": "mat_shellac",
   "name": "Shellac (traded)",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -772,7 +737,6 @@
  {
   "id": "mat_natural_rubber",
   "name": "Natural rubber (Hevea)",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -794,7 +758,6 @@
  {
   "id": "mat_gutta_percha",
   "name": "Gutta percha",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -816,7 +779,6 @@
  {
   "id": "mat_quinine",
   "name": "Quinine (cinchona)",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -838,7 +800,6 @@
  {
   "id": "mat_chile_nitrate",
   "name": "Chile saltpetre",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -860,7 +821,6 @@
  {
   "id": "mat_newworld_crops",
   "name": "Potato, maize, tomato, cassava, chilli, cocoa, tobacco, vanilla",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -882,7 +842,6 @@
  {
   "id": "mat_cryolite",
   "name": "Cryolite",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -904,7 +863,6 @@
  {
   "id": "mat_platinum_bulk",
   "name": "Platinum in quantity",
-  "tier": 9,
   "cat": "unobtainable",
   "pre": [],
   "kb": "",
@@ -926,7 +884,6 @@
  {
   "id": "mat_cast_iron",
   "name": "Cast iron",
-  "tier": 2,
   "cat": "material",
   "pre": [
    "cap_heat_1300",
@@ -951,7 +908,6 @@
  {
   "id": "mat_blister_steel",
   "name": "Blister steel",
-  "tier": 2,
   "cat": "material",
   "pre": [
    "cementation_steel",
@@ -976,7 +932,6 @@
  {
   "id": "mat_crucible_steel",
   "name": "Crucible steel",
-  "tier": 3,
   "cat": "material",
   "pre": [
    "crucible_steel",
@@ -1001,7 +956,6 @@
  {
   "id": "mat_bulk_steel",
   "name": "Bulk steel (converter and open hearth)",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "bessemer_openhearth",
@@ -1026,7 +980,6 @@
  {
   "id": "mat_tool_steel_hss",
   "name": "High speed and alloy tool steel",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "cap_heat_3000",
@@ -1052,7 +1005,6 @@
  {
   "id": "mat_stainless",
   "name": "Stainless steel",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "mat_tool_steel_hss",
@@ -1078,7 +1030,6 @@
  {
   "id": "mat_zinc",
   "name": "Zinc metal",
-  "tier": 2,
   "cat": "material",
   "pre": [
    "zinc_metal",
@@ -1103,7 +1054,6 @@
  {
   "id": "mat_nickel",
   "name": "Nickel",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "cap_pure_4N",
@@ -1129,7 +1079,6 @@
  {
   "id": "mat_chromium",
   "name": "Chromium",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "cap_heat_3000",
@@ -1154,7 +1103,6 @@
  {
   "id": "mat_manganese",
   "name": "Manganese and ferromanganese",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "cap_heat_1600",
@@ -1179,7 +1127,6 @@
  {
   "id": "mat_tungsten",
   "name": "Tungsten",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "cap_heat_3000",
@@ -1204,7 +1151,6 @@
  {
   "id": "mat_aluminium",
   "name": "Aluminium",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "electrolysis_industrial",
@@ -1229,7 +1175,6 @@
  {
   "id": "mat_magnesium",
   "name": "Magnesium",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "electrolysis_industrial",
@@ -1254,7 +1199,6 @@
  {
   "id": "mat_graphite_pure",
   "name": "High purity graphite",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "cap_heat_3000"
@@ -1278,7 +1222,6 @@
  {
   "id": "mat_carbon_black",
   "name": "Carbon black and lampblack",
-  "tier": 0,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -1300,7 +1243,6 @@
  {
   "id": "mat_glass_lead",
   "name": "Lead crystal (flint glass)",
-  "tier": 3,
   "cat": "material",
   "pre": [
    "glass_clear",
@@ -1325,7 +1267,6 @@
  {
   "id": "mat_glass_boro",
   "name": "Borosilicate glass",
-  "tier": 3,
   "cat": "material",
   "pre": [
    "glass_borosilicate"
@@ -1349,7 +1290,6 @@
  {
   "id": "mat_fused_quartz",
   "name": "Fused quartz",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "fused_quartz",
@@ -1374,7 +1314,6 @@
  {
   "id": "mat_porcelain",
   "name": "Porcelain and high-fired stoneware",
-  "tier": 2,
   "cat": "material",
   "pre": [
    "cap_heat_1300",
@@ -1399,7 +1338,6 @@
  {
   "id": "mat_cement_portland",
   "name": "Portland cement",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "cap_heat_1600",
@@ -1424,7 +1362,6 @@
  {
   "id": "mat_concrete_reinforced",
   "name": "Reinforced concrete",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "mat_cement_portland",
@@ -1449,7 +1386,6 @@
  {
   "id": "mat_paper",
   "name": "Rag paper",
-  "tier": 1,
   "cat": "material",
   "pre": [
    "rag_paper"
@@ -1473,7 +1409,6 @@
  {
   "id": "mat_celluloid",
   "name": "Celluloid (nitrocellulose plastic)",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "nitric_acid",
@@ -1499,7 +1434,6 @@
  {
   "id": "mat_camphor",
   "name": "Camphor (traded)",
-  "tier": 1,
   "cat": "material",
   "pre": [],
   "kb": "",
@@ -1521,7 +1455,6 @@
  {
   "id": "mat_bakelite",
   "name": "Bakelite (phenol formaldehyde)",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "destructive_distillation",
@@ -1547,7 +1480,6 @@
  {
   "id": "mat_formaldehyde",
   "name": "Formaldehyde",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "destructive_distillation",
@@ -1572,7 +1504,6 @@
  {
   "id": "mat_synthetic_rubber",
   "name": "Synthetic rubber",
-  "tier": 5,
   "cat": "material",
   "pre": [
    "mat_petroleum_refined",
@@ -1598,7 +1529,6 @@
  {
   "id": "mat_petroleum_refined",
   "name": "Refined petroleum fractions",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "mat_bitumen",
@@ -1624,7 +1554,6 @@
  {
   "id": "mat_ammonia",
   "name": "Ammonia",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "destructive_distillation"
@@ -1648,7 +1577,6 @@
  {
   "id": "mat_chlorine",
   "name": "Chlorine and bleach",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "electrolysis_industrial"
@@ -1672,7 +1600,6 @@
  {
   "id": "mat_dyes_synthetic",
   "name": "Synthetic dyes (aniline)",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "destructive_distillation",
@@ -1698,7 +1625,6 @@
  {
   "id": "mat_nitrocellulose",
   "name": "Nitrocellulose",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "nitric_acid",
@@ -1723,7 +1649,6 @@
  {
   "id": "mat_nitroglycerin",
   "name": "Nitroglycerin and dynamite",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "nitric_acid",
@@ -1748,7 +1673,6 @@
  {
   "id": "mat_glycerol",
   "name": "Glycerol",
-  "tier": 3,
   "cat": "material",
   "pre": [
    "soap_hard",
@@ -1773,7 +1697,6 @@
  {
   "id": "mat_ice_artificial",
   "name": "Artificial ice and mechanical refrigeration",
-  "tier": 4,
   "cat": "material",
   "pre": [
    "mat_ammonia",

@@ -2,7 +2,6 @@
   {
     "id": "pwr_undershot_wheel",
     "name": "Undershot waterwheel",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_water"],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "pwr_overshot_wheel",
     "name": "Overshot waterwheel",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_water"],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "pwr_treadwheel_crane",
     "name": "Treadwheel crane",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_muscle"],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "pwr_animal_treadmill",
     "name": "Animal-driven treadmill",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_muscle"],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "pwr_ship_sail",
     "name": "Sails on ships",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_water"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "pwr_force_pump",
     "name": "Force pump",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_muscle"],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "pwr_screw_press_power",
     "name": "Screw press",
-    "tier": 0,
     "cat": "power",
     "pre": ["cap_power_muscle"],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "pwr_norse_waterwheel",
     "name": "Horizontal waterwheel (Norse)",
-    "tier": 1,
     "cat": "power",
     "pre": ["water_power_scale"],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "pwr_breastshot_wheel",
     "name": "Breastshot waterwheel",
-    "tier": 1,
     "cat": "power",
     "pre": ["water_power_scale", "cap_tol_1mm"],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "pwr_smeaton_efficiency",
     "name": "Efficiency measurement of waterwheels",
-    "tier": 1,
     "cat": "power",
     "pre": ["water_power_scale", "cap_measure_len", "cap_measure_mass_mg", "cap_measure_time_s"],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "pwr_millpond",
     "name": "Millpond and storage",
-    "tier": 1,
     "cat": "power",
     "pre": ["water_power_scale"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "pwr_leat_and_weir",
     "name": "Leat and weir",
-    "tier": 1,
     "cat": "power",
     "pre": ["water_power_scale"],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "pwr_peat",
     "name": "Peat extraction and burning",
-    "tier": 1,
     "cat": "power",
     "pre": [],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "pwr_oil_shale",
     "name": "Oil shale and bitumen deposits",
-    "tier": 1,
     "cat": "power",
     "pre": [],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "pwr_water_turbine_fourneyron",
     "name": "Water turbine (Fourneyron)",
-    "tier": 2,
     "cat": "power",
     "pre": ["water_power_scale", "cap_tol_100um", "mat_cast_iron"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "pwr_pelton_wheel",
     "name": "Pelton wheel",
-    "tier": 2,
     "cat": "power",
     "pre": ["water_power_scale", "cap_tol_100um", "mat_cast_iron", "cap_heat_1300"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "pwr_hydroelectric_generation",
     "name": "Hydroelectric power station",
-    "tier": 2,
     "cat": "power",
     "pre": ["water_power_scale", "pwr_water_turbine_fourneyron", "dynamo", "power_grid"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "pwr_post_mill",
     "name": "Post mill",
-    "tier": 2,
     "cat": "power",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "pwr_tower_mill",
     "name": "Tower mill",
-    "tier": 2,
     "cat": "power",
     "pre": ["cap_tol_1mm", "mat_cast_iron"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "pwr_windmill_fantail",
     "name": "Windmill fantail and automatic furling",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_tower_mill"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "pwr_trompe",
     "name": "Trompe (water-driven air blast)",
-    "tier": 2,
     "cat": "power",
     "pre": ["water_power_scale"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "pwr_tide_mill",
     "name": "Tide mill",
-    "tier": 2,
     "cat": "power",
     "pre": ["water_power_scale", "pwr_breastshot_wheel"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "pwr_coal_seam",
     "name": "Coal seam and mining",
-    "tier": 2,
     "cat": "power",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "pwr_coking",
     "name": "Coking: coal to coke",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_coal_seam", "cap_heat_1100"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "pwr_coal_gas",
     "name": "Coal gas and gasworks",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_coking", "cap_heat_1100", "pot_ash_soda"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "pwr_gas_main",
     "name": "Gas main and gas network",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_coal_gas", "cap_tol_1mm"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "pwr_gas_meter",
     "name": "Gas meter",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_gas_main", "cap_tol_100um"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "pwr_petroleum_seeps",
     "name": "Petroleum seeps and collection",
-    "tier": 2,
     "cat": "power",
     "pre": [],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "pwr_cable_tool_drilling",
     "name": "Cable tool drilling (percussion drilling)",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_petroleum_seeps", "cap_power_steam", "mat_steel_plate_kg", "cap_tol_1mm"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "pwr_rotary_drilling",
     "name": "Rotary drilling",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_cable_tool_drilling", "cap_tol_100um", "mat_steel_plate_kg"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "pwr_oil_refinery",
     "name": "Oil refinery and distillation",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_cable_tool_drilling", "distillation_alcohol", "cap_heat_1100"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "pwr_kerosene",
     "name": "Kerosene (paraffin) lamps",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_oil_refinery"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "pwr_fuel_oil",
     "name": "Fuel oil (heavy fraction)",
-    "tier": 2,
     "cat": "power",
     "pre": ["pwr_oil_refinery"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "pwr_pipeline",
     "name": "Oil pipeline",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_fuel_oil", "cap_tol_100um", "mat_steel_plate_kg"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "pwr_steam_turbine_parsons",
     "name": "Steam turbine (Parsons)",
-    "tier": 3,
     "cat": "power",
     "pre": ["steam_high_pressure", "cap_tol_10um", "mat_tool_steel_hss", "cap_heat_1600"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "pwr_condenser",
     "name": "Condenser and vacuum",
-    "tier": 2,
     "cat": "power",
     "pre": ["steam_watt", "barometer"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "pwr_boiler_haystack",
     "name": "Haystack boiler",
-    "tier": 2,
     "cat": "power",
     "pre": ["steam_atmospheric"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "pwr_boiler_wagon",
     "name": "Wagon boiler",
-    "tier": 2,
     "cat": "power",
     "pre": ["steam_atmospheric"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "pwr_boiler_cornish",
     "name": "Cornish boiler",
-    "tier": 3,
     "cat": "power",
     "pre": ["steam_high_pressure", "cap_tol_100um"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "pwr_boiler_lancashire",
     "name": "Lancashire boiler",
-    "tier": 3,
     "cat": "power",
     "pre": ["steam_high_pressure", "cap_tol_100um"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "pwr_boiler_water_tube",
     "name": "Water-tube boiler",
-    "tier": 3,
     "cat": "power",
     "pre": ["steam_high_pressure", "cap_tol_100um", "mat_bulk_steel"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "pwr_superheater",
     "name": "Superheating and steam drying",
-    "tier": 3,
     "cat": "power",
     "pre": ["steam_high_pressure", "cap_heat_1300"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "pwr_feedwater_heating",
     "name": "Feedwater heater and economiser",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_condenser", "cap_tol_1mm"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "pwr_safety_valve",
     "name": "Safety valve and pressure gauge",
-    "tier": 2,
     "cat": "power",
     "pre": ["steam_atmospheric", "cap_tol_1mm"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "pwr_indicator_diagram",
     "name": "Indicator diagram (Watt's instrument)",
-    "tier": 2,
     "cat": "power",
     "pre": ["steam_watt", "cap_measure_pressure", "cap_measure_len"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "pwr_flywheel_governor",
     "name": "Flywheel and governor",
-    "tier": 1,
     "cat": "power",
     "pre": ["cap_power_steam"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "pwr_stirling_engine",
     "name": "Stirling engine",
-    "tier": 3,
     "cat": "power",
     "pre": ["cap_heat_1300", "cap_tol_100um"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "pwr_gas_engine",
     "name": "Gas engine and internal combustion",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_coal_gas", "cap_tol_10um", "crank_conrod"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "pwr_thermoelectric_couple",
     "name": "Thermoelectric couple (Seebeck effect)",
-    "tier": 3,
     "cat": "power",
     "pre": ["copper_refining", "mat_zinc", "cap_heat_1100"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "pwr_thermopile",
     "name": "Thermopile as a current source",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_thermoelectric_couple", "cap_heat_1100"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "pwr_selenium_photovoltaic",
     "name": "Selenium photovoltaic effect",
-    "tier": 4,
     "cat": "power",
     "pre": ["selenium_metal", "cap_heat_1300"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "pwr_selenium_cell",
     "name": "Selenium photovoltaic cell",
-    "tier": 4,
     "cat": "power",
     "pre": ["pwr_selenium_photovoltaic", "cap_tol_100um"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "pwr_lead_acid_battery",
     "name": "Lead-acid storage battery",
-    "tier": 3,
     "cat": "power",
     "pre": ["lead_chamber", "sulfuric_acid", "cap_tol_1mm"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "pwr_nickel_iron_battery",
     "name": "Nickel-iron battery",
-    "tier": 4,
     "cat": "power",
     "pre": ["nickel_metal", "potash_soda", "cap_tol_100um"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "pwr_flywheel_storage",
     "name": "Flywheel energy storage",
-    "tier": 2,
     "cat": "power",
     "pre": ["cap_power_steam"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "pwr_pumped_storage",
     "name": "Pumped storage hydroelectric",
-    "tier": 3,
     "cat": "power",
     "pre": ["water_power_scale", "dynamo", "motor_transformer_ac", "power_grid"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "pwr_high_voltage_transmission",
     "name": "High voltage transmission",
-    "tier": 3,
     "cat": "power",
     "pre": ["motor_transformer_ac", "cap_tol_100um"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "pwr_transformer",
     "name": "Transformer (step-up/step-down)",
-    "tier": 3,
     "cat": "power",
     "pre": ["motor_transformer_ac", "cap_tol_100um"],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "pwr_three_phase_ac",
     "name": "Three-phase AC and polyphase",
-    "tier": 3,
     "cat": "power",
     "pre": ["dynamo", "motor_transformer_ac"],
     "kb": "",
@@ -1300,7 +1241,6 @@
   {
     "id": "pwr_substation",
     "name": "Substation and distribution",
-    "tier": 3,
     "cat": "power",
     "pre": ["pwr_high_voltage_transmission", "pwr_transformer", "cap_tol_1mm"],
     "kb": "",
@@ -1322,7 +1262,6 @@
   {
     "id": "pwr_load_factor_economics",
     "name": "Load factor and grid economics",
-    "tier": 4,
     "cat": "power",
     "pre": ["pwr_substation", "statistics_basic"],
     "kb": "",
@@ -1344,7 +1283,6 @@
   {
     "id": "pwr_electric_motor_industry",
     "name": "Electric motor and end of line shafting",
-    "tier": 4,
     "cat": "power",
     "pre": ["motor_transformer_ac", "pwr_substation"],
     "kb": "",
@@ -1366,7 +1304,6 @@
   {
     "id": "pwr_fuel_cell",
     "name": "Fuel cell (hydrogen-oxygen)",
-    "tier": 4,
     "cat": "power",
     "pre": ["industrial_gases", "cap_measure_elec"],
     "kb": "",
@@ -1388,7 +1325,6 @@
   {
     "id": "pwr_selenium_metal",
     "name": "Selenium metal extraction",
-    "tier": 3,
     "cat": "power",
     "pre": ["copper_refining", "cap_heat_1300", "sulfuric_acid"],
     "kb": "",
@@ -1410,7 +1346,6 @@
   {
     "id": "pwr_nuclear_fission",
     "name": "Nuclear fission and power",
-    "tier": 5,
     "cat": "power",
     "pre": ["atomic_theory", "cap_measure_temp_hi", "mat_uranium", "cap_pure_9N"],
     "kb": "",

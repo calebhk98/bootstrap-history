@@ -2,7 +2,6 @@
   {
     "id": "hom_oil_lamp_simple",
     "name": "Oil lamp, simple",
-    "tier": 0,
     "cat": "lighting",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "hom_candle_tallow",
     "name": "Tallow candle",
-    "tier": 0,
     "cat": "lighting",
     "pre": [],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "hom_candle_beeswax",
     "name": "Beeswax candle",
-    "tier": 0,
     "cat": "lighting",
     "pre": [],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "hom_flush_latrine_simple",
     "name": "Flush latrine with running water",
-    "tier": 0,
     "cat": "sanitation",
     "pre": [],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "hom_lead_plumbing",
     "name": "Lead and ceramic plumbing",
-    "tier": 0,
     "cat": "sanitation",
     "pre": [],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "hom_hypocaust",
     "name": "Hypocaust underfloor heating",
-    "tier": 0,
     "cat": "heating",
     "pre": [],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "hom_public_bath",
     "name": "Public bath (thermae)",
-    "tier": 0,
     "cat": "sanitation",
     "pre": [],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "hom_mirror_bronze_polished",
     "name": "Mirror, polished bronze",
-    "tier": 0,
     "cat": "personal",
     "pre": [],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "hom_glass_windows",
     "name": "Glass windows, wealthy houses",
-    "tier": 0,
     "cat": "comfort",
     "pre": [],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "hom_furniture_wooden",
     "name": "Wooden furniture",
-    "tier": 0,
     "cat": "comfort",
     "pre": [],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "hom_board_games",
     "name": "Board games, dice games, and pieces",
-    "tier": 0,
     "cat": "leisure",
     "pre": [],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "hom_musical_instruments",
     "name": "Musical instruments",
-    "tier": 0,
     "cat": "leisure",
     "pre": [],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "hom_perfume_enfleurage",
     "name": "Perfume by enfleurage",
-    "tier": 0,
     "cat": "personal",
     "pre": [],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "hom_cosmetics_roman",
     "name": "Roman cosmetics",
-    "tier": 0,
     "cat": "personal",
     "pre": [],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "hom_locks_keys",
     "name": "Locks and keys",
-    "tier": 0,
     "cat": "security",
     "pre": [],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "hom_soap_hard",
     "name": "Hard soap, sapo",
-    "tier": 1,
     "cat": "sanitation",
     "pre": ["soap_hard"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "hom_fireplace_chimney",
     "name": "Fireplace and chimney",
-    "tier": 1,
     "cat": "heating",
     "pre": ["cap_heat_0700"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "hom_stove_enclosed",
     "name": "Enclosed stove",
-    "tier": 1,
     "cat": "heating",
     "pre": ["hom_fireplace_chimney", "cap_heat_1100"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "hom_latrine_water_trap",
     "name": "Latrine water trap (S-bend)",
-    "tier": 1,
     "cat": "sanitation",
     "pre": ["hom_flush_latrine_simple"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "hom_spectacles",
     "name": "Spectacles, corrective lenses",
-    "tier": 1,
     "cat": "personal",
     "pre": ["lens_grinding"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "hom_button",
     "name": "Button with eyelet",
-    "tier": 1,
     "cat": "personal",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "hom_pencil",
     "name": "Pencil, graphite in wood",
-    "tier": 1,
     "cat": "writing",
     "pre": ["mat_paper"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "hom_toothbrush",
     "name": "Toothbrush",
-    "tier": 1,
     "cat": "personal",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "hom_matches_friction",
     "name": "Friction matches",
-    "tier": 1,
     "cat": "lighting",
     "pre": ["sulfur_kg"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "hom_umbrella",
     "name": "Umbrella",
-    "tier": 1,
     "cat": "personal",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "hom_mirror_silvered_glass",
     "name": "Mirror, silvered glass",
-    "tier": 1,
     "cat": "personal",
     "pre": ["mat_mercury", "glass_clear", "cap_heat_1100"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "hom_safety_pin",
     "name": "Safety pin",
-    "tier": 1,
     "cat": "personal",
     "pre": ["cap_tol_1mm", "mat_wrought_iron"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "hom_eraser_breadcrumb",
     "name": "Eraser, breadcrumb substitute",
-    "tier": 1,
     "cat": "writing",
     "pre": ["wheat_kg"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "hom_playing_cards_printed",
     "name": "Playing cards, printed",
-    "tier": 1,
     "cat": "leisure",
     "pre": ["rag_paper", "printing_press"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "hom_jigsaw_puzzle",
     "name": "Jigsaw puzzle",
-    "tier": 1,
     "cat": "leisure",
     "pre": ["printing_press", "mat_blister_steel"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "hom_lamp_argand",
     "name": "Argand oil lamp",
-    "tier": 2,
     "cat": "lighting",
     "pre": ["hom_oil_lamp_simple", "glass_clear", "cap_tol_1mm"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "hom_pocket_watch",
     "name": "Pocket watch",
-    "tier": 2,
     "cat": "timekeeping",
     "pre": ["clock_pendulum", "cap_tol_100um", "master_screw"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "hom_mechanical_clock_home",
     "name": "Mechanical clock for home",
-    "tier": 2,
     "cat": "timekeeping",
     "pre": ["crank_conrod", "cap_tol_1mm", "water_power_scale"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "hom_kitchen_range",
     "name": "Kitchen range (cast iron)",
-    "tier": 2,
     "cat": "heating",
     "pre": ["hom_fireplace_chimney", "blast_furnace"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "hom_pressure_cooker",
     "name": "Pressure cooker (Papin's digester)",
-    "tier": 2,
     "cat": "cooking",
     "pre": ["steam_high_pressure", "blast_furnace", "cap_heat_1300"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "hom_metronome",
     "name": "Metronome",
-    "tier": 2,
     "cat": "leisure",
     "pre": ["clock_pendulum", "cap_tol_1mm"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "hom_lamp_kerosene",
     "name": "Kerosene lamp",
-    "tier": 2,
     "cat": "lighting",
     "pre": ["hom_lamp_argand", "mat_petroleum_refined"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "hom_piano",
     "name": "Piano with hammer action",
-    "tier": 2,
     "cat": "leisure",
     "pre": ["crank_conrod", "cap_tol_1mm", "mat_blister_steel", "mat_brass"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "hom_sprung_mattress",
     "name": "Sprung mattress",
-    "tier": 2,
     "cat": "comfort",
     "pre": ["cap_tol_1mm", "drawn_wire", "mat_wrought_iron"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "hom_sewing_machine_hand",
     "name": "Sewing machine, hand-crank",
-    "tier": 2,
     "cat": "textiles",
     "pre": ["crank_conrod", "cap_tol_1mm"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "hom_perfume_distilled",
     "name": "Perfume, distilled alcohol base",
-    "tier": 2,
     "cat": "personal",
     "pre": ["distillation_alcohol", "hom_perfume_enfleurage"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "hom_printed_books",
     "name": "Printed books for home",
-    "tier": 2,
     "cat": "leisure",
     "pre": ["printing_press", "rag_paper"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "hom_washing_machine_hand",
     "name": "Washing machine, hand-powered",
-    "tier": 2,
     "cat": "textiles",
     "pre": ["cap_tol_1mm", "water_power_scale"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "hom_mangle_wringer",
     "name": "Mangle and wringer",
-    "tier": 2,
     "cat": "textiles",
     "pre": ["cap_tol_1mm", "mat_wrought_iron"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "hom_toys_dolls",
     "name": "Toys and dolls",
-    "tier": 2,
     "cat": "leisure",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "hom_gas_lamp",
     "name": "Gas lamp and gasolier",
-    "tier": 3,
     "cat": "lighting",
     "pre": ["coal_coke", "destructive_distillation", "cap_tol_1mm"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "hom_safety_razor",
     "name": "Safety razor",
-    "tier": 3,
     "cat": "personal",
     "pre": ["cap_tol_100um", "mat_blister_steel"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "hom_zip_fastener",
     "name": "Zip fastener",
-    "tier": 3,
     "cat": "personal",
     "pre": ["cap_tol_100um", "mat_brass"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "hom_fountain_pen",
     "name": "Fountain pen",
-    "tier": 3,
     "cat": "writing",
     "pre": ["cap_tol_100um", "ebonite_or_celluloid"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "hom_carpet_sweeper",
     "name": "Carpet sweeper",
-    "tier": 3,
     "cat": "cleaning",
     "pre": ["cap_tol_1mm", "mat_wrought_iron"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "hom_attar_roses",
     "name": "Attar of roses",
-    "tier": 3,
     "cat": "personal",
     "pre": ["distillation_alcohol", "hom_perfume_distilled"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "hom_shampoo_soap_based",
     "name": "Shampoo, soap-based",
-    "tier": 3,
     "cat": "personal",
     "pre": ["soap_hard", "hom_perfume_distilled"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "hom_deodorant",
     "name": "Deodorant",
-    "tier": 3,
     "cat": "personal",
     "pre": ["soap_hard", "hom_perfume_distilled", "alum_kg"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "hom_double_glazing",
     "name": "Double glazing (two panes)",
-    "tier": 3,
     "cat": "comfort",
     "pre": ["glass_clear", "cap_tol_1mm"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "hom_refrigeration_mechanical",
     "name": "Refrigeration, mechanical ice machine",
-    "tier": 3,
     "cat": "cooling",
     "pre": ["steam_high_pressure", "mat_ammonia", "cap_power_steam"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "hom_electric_lighting",
     "name": "Electric lighting in home",
-    "tier": 4,
     "cat": "lighting",
     "pre": ["arc_light_lamp", "power_grid", "cap_power_electric"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "hom_electric_fan",
     "name": "Electric fan for air circulation",
-    "tier": 4,
     "cat": "comfort",
     "pre": ["motor_transformer_ac", "cap_power_electric", "cap_tol_100um"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "hom_punkah_ceiling",
     "name": "Ceiling punkah, servant-pulled",
-    "tier": 1,
     "cat": "comfort",
     "pre": [],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "hom_vacuum_cleaner",
     "name": "Vacuum cleaner",
-    "tier": 4,
     "cat": "cleaning",
     "pre": ["motor_transformer_ac", "cap_power_electric", "cap_heat_1100"],
     "kb": "",
@@ -1300,7 +1241,6 @@
   {
     "id": "hom_dishwasher",
     "name": "Dishwasher, mechanical and electric",
-    "tier": 4,
     "cat": "cleaning",
     "pre": ["steam_high_pressure", "motor_transformer_ac", "soap_hard"],
     "kb": "",
@@ -1322,7 +1262,6 @@
   {
     "id": "hom_flush_toilet_trap",
     "name": "Flush toilet with S-bend water trap",
-    "tier": 1,
     "cat": "sanitation",
     "pre": ["hom_flush_latrine_simple"],
     "kb": "",
@@ -1344,7 +1283,6 @@
   {
     "id": "hom_sewer_stormwater_separation",
     "name": "Sewer separated from stormwater drain",
-    "tier": 3,
     "cat": "sanitation",
     "pre": ["hom_latrine_water_trap"],
     "kb": "",
@@ -1366,7 +1304,6 @@
   {
     "id": "hom_bath_piped_hot_water",
     "name": "Bath with piped hot water",
-    "tier": 3,
     "cat": "sanitation",
     "pre": ["steam_high_pressure", "lead_plumbing", "cap_power_steam"],
     "kb": "",
@@ -1388,7 +1325,6 @@
   {
     "id": "hom_heating_hot_water_radiator",
     "name": "Central heating by hot water radiator",
-    "tier": 4,
     "cat": "heating",
     "pre": ["steam_high_pressure", "cap_power_steam"],
     "kb": "",
@@ -1410,7 +1346,6 @@
   {
     "id": "hom_washing_machine_electric",
     "name": "Washing machine, electric-powered",
-    "tier": 4,
     "cat": "textiles",
     "pre": ["hom_washing_machine_hand", "motor_transformer_ac", "cap_power_electric"],
     "kb": "",
@@ -1432,7 +1367,6 @@
   {
     "id": "hom_refrigerator_home_electric",
     "name": "Home refrigerator, electric",
-    "tier": 4,
     "cat": "cooling",
     "pre": ["hom_refrigeration_mechanical", "motor_transformer_ac", "cap_power_electric"],
     "kb": "",
@@ -1454,7 +1388,6 @@
   {
     "id": "hom_clothes_dryer_electric",
     "name": "Clothes dryer, electric tumble",
-    "tier": 4,
     "cat": "textiles",
     "pre": ["hom_washing_machine_electric", "motor_transformer_ac", "cap_power_electric"],
     "kb": "",
@@ -1476,7 +1409,6 @@
   {
     "id": "hom_freezer_domestic",
     "name": "Domestic deep freezer",
-    "tier": 4,
     "cat": "cooling",
     "pre": ["hom_refrigerator_home_electric"],
     "kb": "",
@@ -1498,7 +1430,6 @@
   {
     "id": "hom_cosmetics_modern_warning",
     "name": "Cosmetics with safety warnings",
-    "tier": 4,
     "cat": "personal",
     "pre": ["germ_theory", "hom_cosmetics_roman"],
     "kb": "",
@@ -1520,7 +1451,6 @@
   {
     "id": "hom_toothpaste_commercial",
     "name": "Toothpaste, commercial formulation",
-    "tier": 3,
     "cat": "personal",
     "pre": ["soap_hard", "chalk_powder", "hom_toothbrush"],
     "kb": "",
@@ -1542,7 +1472,6 @@
   {
     "id": "hom_doll_fashion",
     "name": "Fashion doll with clothing sets",
-    "tier": 3,
     "cat": "leisure",
     "pre": ["hom_toys_dolls", "mat_paper"],
     "kb": "",
@@ -1564,7 +1493,6 @@
   {
     "id": "hom_vacuum_flask",
     "name": "Vacuum flask, thermos",
-    "tier": 3,
     "cat": "comfort",
     "pre": ["glass_clear", "cap_vac_1torr", "cap_tol_1mm"],
     "kb": "",

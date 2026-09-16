@@ -2,7 +2,6 @@
  {
   "id": "lnd_paved_road_network",
   "name": "Paved trunk road network",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -24,7 +23,6 @@
  {
   "id": "lnd_cursus_publicus",
   "name": "Cursus publicus courier service",
-  "tier": 0,
   "cat": "transport",
   "pre": [
    "lnd_paved_road_network",
@@ -49,7 +47,6 @@
  {
   "id": "lnd_four_wheel_cart",
   "name": "Four-wheeled cart",
-  "tier": 0,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked",
@@ -74,7 +71,6 @@
  {
   "id": "lnd_two_wheel_cart",
   "name": "Two-wheeled cart",
-  "tier": 0,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked"
@@ -98,7 +94,6 @@
  {
   "id": "lnd_wheel_spoked",
   "name": "Spoked wheel",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -120,7 +115,6 @@
  {
   "id": "lnd_axle_pivot_front",
   "name": "Pivoting front axle",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -142,7 +136,6 @@
  {
   "id": "lnd_tyre_iron",
   "name": "Iron tyre (tire)",
-  "tier": 0,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked",
@@ -167,7 +160,6 @@
  {
   "id": "lnd_harness_throat_girth",
   "name": "Harness of throat and girth type",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -189,7 +181,6 @@
  {
   "id": "lnd_mule_transport",
   "name": "Mule transport",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -211,7 +202,6 @@
  {
   "id": "lnd_ox_transport",
   "name": "Ox transport",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -233,7 +223,6 @@
  {
   "id": "lnd_horse_saddle_basic",
   "name": "Horse saddle (basic)",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -255,7 +244,6 @@
  {
   "id": "lnd_litter",
   "name": "Litter",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -277,7 +265,6 @@
  {
   "id": "lnd_bridge",
   "name": "Bridge",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -299,7 +286,6 @@
  {
   "id": "lnd_milestone",
   "name": "Milestone",
-  "tier": 0,
   "cat": "transport",
   "pre": [],
   "kb": "",
@@ -321,7 +307,6 @@
  {
   "id": "lnd_horseshoe_nailed",
   "name": "Nailed horseshoe",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "horse_collar",
@@ -350,7 +335,6 @@
  {
   "id": "lnd_stirrup",
   "name": "Stirrup",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "horse_collar",
@@ -381,7 +365,6 @@
  {
   "id": "lnd_whippletree",
   "name": "Whippletree",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "horse_collar"
@@ -411,7 +394,6 @@
  {
   "id": "lnd_coach",
   "name": "Coach",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "lnd_four_wheel_cart",
@@ -445,7 +427,6 @@
  {
   "id": "lnd_stagecoach",
   "name": "Stagecoach",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_coach",
@@ -478,7 +459,6 @@
  {
   "id": "lnd_wheelbarrow",
   "name": "Wheelbarrow",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked"
@@ -508,7 +488,6 @@
  {
   "id": "lnd_spring_leaf",
   "name": "Leaf spring",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "cementation_steel",
@@ -538,7 +517,6 @@
  {
   "id": "lnd_macadam",
   "name": "Macadam road surface",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_paved_road_network",
@@ -569,7 +547,6 @@
  {
   "id": "lnd_tarmacadam",
   "name": "Tarmacadam road surface",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_macadam",
@@ -602,7 +579,6 @@
  {
   "id": "lnd_turnpike",
   "name": "Turnpike",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_macadam"
@@ -628,7 +604,6 @@
  {
   "id": "lnd_iron_edge_rail",
   "name": "Iron edge rail",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "mat_cast_iron",
@@ -658,7 +633,6 @@
  {
   "id": "lnd_flanged_wheel",
   "name": "Flanged wheel",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked",
@@ -688,7 +662,6 @@
  {
   "id": "lnd_fishplate",
   "name": "Fishplate rail jointer",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_iron_edge_rail",
@@ -718,7 +691,6 @@
  {
   "id": "lnd_point_switch",
   "name": "Point and switch",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_iron_edge_rail",
@@ -750,7 +722,6 @@
  {
   "id": "lnd_signal_railway",
   "name": "Railway signal",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_point_switch"
@@ -781,7 +752,6 @@
  {
   "id": "lnd_block_system",
   "name": "Block system (railway safety)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_signal_railway",
@@ -810,7 +780,6 @@
  {
   "id": "lnd_standard_gauge",
   "name": "Standard gauge (railway)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_iron_edge_rail",
@@ -838,7 +807,6 @@
  {
   "id": "lnd_steam_locomotive",
   "name": "Steam locomotive",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "steam_high_pressure",
@@ -873,7 +841,6 @@
  {
   "id": "lnd_tender",
   "name": "Tender (coal and water car)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_steam_locomotive",
@@ -906,7 +873,6 @@
  {
   "id": "lnd_superheater",
   "name": "Superheater (steam locomotive)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_steam_locomotive",
@@ -939,7 +905,6 @@
  {
   "id": "lnd_air_brake",
   "name": "Air brake (locomotive and train)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_steam_locomotive",
@@ -972,7 +937,6 @@
  {
   "id": "lnd_hobby_horse",
   "name": "Hobby horse (pedal-less bicycle)",
-  "tier": 1,
   "cat": "transport",
   "pre": [
    "lnd_wheel_spoked"
@@ -1002,7 +966,6 @@
  {
   "id": "lnd_boneshaker",
   "name": "Boneshaker (pedal bicycle)",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_hobby_horse",
@@ -1035,7 +998,6 @@
  {
   "id": "lnd_penny_farthing",
   "name": "Penny farthing (high-wheel bicycle)",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_boneshaker",
@@ -1068,7 +1030,6 @@
  {
   "id": "lnd_safety_bicycle",
   "name": "Safety bicycle (chain drive)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_ball_bearing",
@@ -1102,7 +1063,6 @@
  {
   "id": "lnd_chain_drive_bicycle",
   "name": "Chain drive (for bicycle)",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "crank_conrod",
@@ -1134,7 +1094,6 @@
  {
   "id": "lnd_ball_bearing",
   "name": "Ball bearing",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "cap_tol_100um",
@@ -1164,7 +1123,6 @@
  {
   "id": "lnd_pneumatic_tyre",
   "name": "Pneumatic tyre (rubber tyre)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_ball_bearing",
@@ -1195,7 +1153,6 @@
  {
   "id": "lnd_gas_engine_atmospheric",
   "name": "Atmospheric gas engine (Lenoir)",
-  "tier": 2,
   "cat": "transport",
   "pre": [
    "lnd_coal_tar_gas",
@@ -1229,7 +1186,6 @@
  {
   "id": "lnd_coal_tar_gas",
   "name": "Coal tar gas (coal gas)",
-  "tier": 2,
   "cat": "materials",
   "pre": [
    "coal_coke",
@@ -1259,7 +1215,6 @@
  {
   "id": "lnd_otto_cycle_four_stroke",
   "name": "Otto cycle four-stroke engine",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_gas_engine_atmospheric",
@@ -1295,7 +1250,6 @@
  {
   "id": "lnd_carburettor",
   "name": "Carburettor",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1328,7 +1282,6 @@
  {
   "id": "lnd_spark_plug",
   "name": "Spark plug (spark ignition)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1362,7 +1315,6 @@
  {
   "id": "lnd_magneto",
   "name": "Magneto (ignition system)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_spark_plug",
@@ -1396,7 +1348,6 @@
  {
   "id": "lnd_diesel_cycle",
   "name": "Diesel cycle (compression ignition)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1432,7 +1383,6 @@
  {
   "id": "lnd_automobile",
   "name": "Automobile (self-propelled carriage)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1470,7 +1420,6 @@
  {
   "id": "lnd_gearbox_clutch",
   "name": "Gearbox and clutch",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1503,7 +1452,6 @@
  {
   "id": "lnd_differential",
   "name": "Differential (rear axle)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1536,7 +1484,6 @@
  {
   "id": "lnd_steering_geometry",
   "name": "Steering geometry (Ackermann)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_automobile"
@@ -1565,7 +1512,6 @@
  {
   "id": "lnd_assembly_line",
   "name": "Assembly line and mass production",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "interchangeable_parts",
@@ -1594,7 +1540,6 @@
  {
   "id": "lnd_truck",
   "name": "Truck (motor freight vehicle)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_automobile",
@@ -1627,7 +1572,6 @@
  {
   "id": "lnd_omnibus",
   "name": "Omnibus (motor bus)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_automobile",
@@ -1660,7 +1604,6 @@
  {
   "id": "lnd_tractor",
   "name": "Tractor (motor field vehicle)",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "lnd_diesel_cycle",
@@ -1693,7 +1636,6 @@
  {
   "id": "lnd_caterpillar_track",
   "name": "Caterpillar track (crawler)",
-  "tier": 3,
   "cat": "transport",
   "pre": [
    "lnd_otto_cycle_four_stroke",
@@ -1726,7 +1668,6 @@
  {
   "id": "lnd_diesel_supply",
   "name": "Diesel supply chain",
-  "tier": 4,
   "cat": "transport",
   "pre": [
    "mat_petroleum_refined",
@@ -1756,7 +1697,6 @@
  {
   "id": "lnd_motor_road_network",
   "name": "Road network for motor vehicles",
-  "tier": 5,
   "cat": "transport",
   "pre": [
    "lnd_automobile",

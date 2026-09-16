@@ -2,7 +2,6 @@
   {
     "id": "sea_merchant_ships_large",
     "name": "Large merchant sailing ships",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "sea_mortise_tenon",
     "name": "Mortise-and-tenon hull construction",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "sea_square_sail",
     "name": "Square sail with brails",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "sea_spritsail",
     "name": "Spritsail",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "sea_lead_sheathing",
     "name": "Lead sheathing against shipworm",
-    "tier": 0,
     "cat": "ships",
     "pre": ["mat_lead"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "sea_steering_oars",
     "name": "Steering oars",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "sea_anchor",
     "name": "Anchor",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "sea_sounding_lines",
     "name": "Sounding lines",
-    "tier": 0,
     "cat": "ships",
     "pre": [],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "sea_coastal_pilotage",
     "name": "Coastal pilotage",
-    "tier": 0,
     "cat": "navigation",
     "pre": [],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "sea_pharos_lighthouse",
     "name": "Pharos lighthouse",
-    "tier": 0,
     "cat": "navigation",
     "pre": [],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "sea_harbours_pozzolana",
     "name": "Artificial harbours in hydraulic concrete",
-    "tier": 0,
     "cat": "harbours",
     "pre": ["mat_pozzolana"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "sea_monsoon_route",
     "name": "Monsoon route to India",
-    "tier": 0,
     "cat": "navigation",
     "pre": [],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "sea_sternpost_rudder",
     "name": "Sternpost rudder",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_steering_oars", "cap_tol_1mm"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "sea_lateen_sail",
     "name": "Lateen sail",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_square_sail"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "sea_fore_aft_rig",
     "name": "Fore-and-aft rig",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_lateen_sail"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "sea_bowsprit",
     "name": "Bowsprit",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_fore_aft_rig", "cap_tol_1mm"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "sea_jib",
     "name": "Jib sail",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_bowsprit"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "sea_multiple_masts",
     "name": "Multiple masts",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_fore_aft_rig", "cap_tol_1mm"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "sea_carvel_planking",
     "name": "Carvel planking",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_mortise_tenon", "cap_tol_1mm"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "sea_clinker_planking",
     "name": "Clinker planking",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_mortise_tenon"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "sea_skeleton_first",
     "name": "Skeleton-first hull construction",
-    "tier": 1,
     "cat": "ships",
     "pre": ["sea_mortise_tenon", "cap_tol_1mm"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "sea_lodestone",
     "name": "Lodestone knowledge",
-    "tier": 1,
     "cat": "navigation",
     "pre": [],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "sea_dry_compass_card",
     "name": "Dry compass card",
-    "tier": 1,
     "cat": "navigation",
     "pre": ["sea_lodestone"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "sea_log_line",
     "name": "Log line for speed",
-    "tier": 1,
     "cat": "navigation",
     "pre": [],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "sea_traverse_board",
     "name": "Traverse board",
-    "tier": 1,
     "cat": "navigation",
     "pre": ["sea_magnetic_compass"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "sea_cross_staff",
     "name": "Cross-staff for latitude",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["cap_tol_1mm"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "sea_backstaff",
     "name": "Backstaff for latitude",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_cross_staff", "cap_tol_100um"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "sea_sextant",
     "name": "Sextant for latitude and more",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_backstaff", "cap_tol_100um", "lens_grinding"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "sea_magnetic_compass",
     "name": "Magnetic compass",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_dry_compass_card"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "sea_charts_navigation",
     "name": "Navigation charts",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_magnetic_compass"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "sea_mercator_projection",
     "name": "Mercator projection",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_charts_navigation", "geometry_analytic"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "sea_lead_line_hydro",
     "name": "Lead-line and hydrographic survey",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_sounding_lines", "sea_charts_navigation"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "sea_drydock",
     "name": "Drydock",
-    "tier": 2,
     "cat": "harbours",
     "pre": ["mat_pozzolana", "water_power_scale"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "sea_marine_chronometer",
     "name": "Marine chronometer",
-    "tier": 3,
     "cat": "navigation",
     "pre": ["cap_tol_10um", "cap_measure_time_ms", "case_hardening"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "sea_lunar_distances",
     "name": "Lunar distance method for longitude",
-    "tier": 3,
     "cat": "navigation",
     "pre": ["sea_sextant", "astronomical_tables", "master_screw"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "sea_copper_sheathing",
     "name": "Copper-sheathed hull",
-    "tier": 3,
     "cat": "ships",
     "pre": ["sea_lead_sheathing", "mat_copper"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "sea_paddle_wheel",
     "name": "Paddle wheel",
-    "tier": 3,
     "cat": "ships",
     "pre": ["steam_atmospheric", "cap_power_steam"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "sea_screw_propeller",
     "name": "Screw propeller",
-    "tier": 3,
     "cat": "ships",
     "pre": ["steam_atmospheric", "cap_power_steam", "interchangeable_parts"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "sea_iron_hull",
     "name": "Iron hull",
-    "tier": 3,
     "cat": "ships",
     "pre": ["blast_furnace", "mat_cast_iron", "cap_tol_1mm"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "sea_compartmented_hull",
     "name": "Compartmented hull",
-    "tier": 3,
     "cat": "ships",
     "pre": ["sea_iron_hull"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "sea_steel_hull",
     "name": "Steel hull",
-    "tier": 4,
     "cat": "ships",
     "pre": ["mat_bulk_steel", "bessemer_openhearth"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "sea_compound_expansion",
     "name": "Compound and triple expansion engine",
-    "tier": 4,
     "cat": "ships",
     "pre": ["steam_high_pressure", "cap_heat_1600", "boiler_water_tube"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "sea_steam_turbine",
     "name": "Steam turbine at sea",
-    "tier": 4,
     "cat": "ships",
     "pre": ["steam_high_pressure", "cap_tol_100um", "interchangeable_parts"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "sea_diesel_engine",
     "name": "Diesel engine ship",
-    "tier": 4,
     "cat": "ships",
     "pre": ["mat_petroleum_refined", "cap_tol_10um", "fuel_oil_burner"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "sea_torpedo",
     "name": "Torpedo",
-    "tier": 4,
     "cat": "warships",
     "pre": ["nitre_beds", "gunpowder", "steam_atmospheric"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "sea_submarine",
     "name": "Submarine",
-    "tier": 4,
     "cat": "warships",
     "pre": ["sea_iron_hull", "sea_compartmented_hull", "diving_suit"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "sea_submarine_cable",
     "name": "Submarine telegraph cable",
-    "tier": 4,
     "cat": "communication",
     "pre": ["telegraph_electric", "mat_gutta_percha"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "sea_sonar",
     "name": "Sonar and echo sounding",
-    "tier": 5,
     "cat": "navigation",
     "pre": ["vacuum_tube", "electromagnetic_wave_theory"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "sea_lifeboat",
     "name": "Lifeboat",
-    "tier": 3,
     "cat": "safety",
     "pre": ["sea_iron_hull"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "sea_fresnel_lens",
     "name": "Lighthouse with Fresnel lens",
-    "tier": 4,
     "cat": "navigation",
     "pre": ["sea_pharos_lighthouse", "lens_grinding", "cap_measure_light"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "sea_buoy",
     "name": "Buoy",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["sea_harbours_pozzolana"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "sea_canal_lock",
     "name": "Canal lock",
-    "tier": 3,
     "cat": "harbours",
     "pre": ["mat_pozzolana", "water_power_scale"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "sea_dredging",
     "name": "Dredging",
-    "tier": 3,
     "cat": "harbours",
     "pre": ["water_power_scale", "steam_atmospheric"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "sea_diving_bell",
     "name": "Diving bell",
-    "tier": 2,
     "cat": "undersea",
     "pre": ["sea_anchor"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "sea_diving_suit",
     "name": "Diving suit and air pump",
-    "tier": 3,
     "cat": "undersea",
     "pre": ["sea_diving_bell", "cap_power_steam"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "sea_astronomical_tables",
     "name": "Astronomical tables",
-    "tier": 2,
     "cat": "navigation",
     "pre": ["newtonian_mechanics"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "sea_boiler_water_tube",
     "name": "Water-tube boiler",
-    "tier": 4,
     "cat": "ships",
     "pre": ["steam_high_pressure", "cap_heat_1600", "cap_tol_1mm"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "sea_fuel_oil_burner",
     "name": "Fuel oil burner",
-    "tier": 4,
     "cat": "ships",
     "pre": ["mat_petroleum_refined", "cap_heat_1600"],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "sea_electromagnetic_wave_theory",
     "name": "Electromagnetic wave theory",
-    "tier": 4,
     "cat": "navigation",
     "pre": ["em_theory"],
     "kb": "",
