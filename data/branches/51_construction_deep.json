@@ -2,7 +2,6 @@
  {
   "id": "cn_quarrying_wedge",
   "name": "Stone quarrying with wedge",
-  "tier": 0,
   "cat": "stone",
   "pre": ["cap_tol_1mm"],
   "traits": ["labour_saving"],
@@ -26,7 +25,6 @@
  {
   "id": "cn_stone_saw",
   "name": "Stone saw with abrasive",
-  "tier": 0,
   "cat": "stone",
   "pre": ["cap_tol_1mm"],
   "traits": ["labour_saving"],
@@ -50,7 +48,6 @@
  {
   "id": "cn_gang_saw",
   "name": "Gang saw for stone",
-  "tier": 1,
   "cat": "stone",
   "pre": ["cn_stone_saw", "cap_power_water"],
   "traits": ["labour_saving"],
@@ -74,7 +71,6 @@
  {
   "id": "cn_stone_polish",
   "name": "Stone polishing and smoothing",
-  "tier": 0,
   "cat": "stone",
   "pre": ["cap_tol_1mm"],
   "traits": [],
@@ -98,7 +94,6 @@
  {
   "id": "cn_mortar",
   "name": "Lime mortar",
-  "tier": 0,
   "cat": "binders",
   "pre": ["mat_lime"],
   "traits": [],
@@ -122,7 +117,6 @@
  {
   "id": "cn_gypsum_plaster",
   "name": "Gypsum plaster finish",
-  "tier": 0,
   "cat": "binders",
   "pre": ["mat_gypsum"],
   "traits": [],
@@ -146,7 +140,6 @@
  {
   "id": "cn_pozzolana_concrete",
   "name": "Pozzolana hydraulic concrete",
-  "tier": 0,
   "cat": "binders",
   "pre": ["mat_pozzolana", "mat_lime"],
   "traits": [],
@@ -170,7 +163,6 @@
  {
   "id": "cn_terrazzo",
   "name": "Terrazzo floor finish",
-  "tier": 1,
   "cat": "finishes",
   "pre": ["cn_mortar", "cn_stone_polish"],
   "traits": [],
@@ -194,7 +186,6 @@
  {
   "id": "cn_artificial_stone",
   "name": "Artificial cast stone",
-  "tier": 1,
   "cat": "binders",
   "pre": ["cn_mortar", "cap_tol_1mm"],
   "traits": ["labour_saving"],
@@ -218,7 +209,6 @@
  {
   "id": "cn_post_lintel",
   "name": "Post and lintel structure",
-  "tier": 0,
   "cat": "structural",
   "pre": ["cap_tol_1mm"],
   "traits": [],
@@ -242,7 +232,6 @@
  {
   "id": "cn_true_arch",
   "name": "True arch in stone",
-  "tier": 0,
   "cat": "structural",
   "pre": ["cap_tol_1mm"],
   "traits": [],
@@ -266,7 +255,6 @@
  {
   "id": "cn_groin_vault",
   "name": "Groin vault in stone",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_true_arch"],
   "traits": [],
@@ -290,7 +278,6 @@
  {
   "id": "cn_ribbed_vault",
   "name": "Ribbed vault in stone",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_groin_vault"],
   "traits": [],
@@ -314,7 +301,6 @@
  {
   "id": "cn_flying_buttress",
   "name": "Flying buttress in stone",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_true_arch"],
   "traits": [],
@@ -338,7 +324,6 @@
  {
   "id": "cn_timber_truss",
   "name": "Timber roof truss",
-  "tier": 0,
   "cat": "structural",
   "pre": ["cap_tol_1mm"],
   "traits": [],
@@ -362,7 +347,6 @@
  {
   "id": "cn_king_post",
   "name": "King post roof truss",
-  "tier": 0,
   "cat": "structural",
   "pre": ["cn_timber_truss"],
   "traits": [],
@@ -386,7 +370,6 @@
  {
   "id": "cn_queen_post",
   "name": "Queen post roof truss",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_timber_truss"],
   "traits": [],
@@ -410,7 +393,6 @@
  {
   "id": "cn_lattice_truss",
   "name": "Lattice truss for beams",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_timber_truss"],
   "traits": ["labour_saving"],
@@ -434,7 +416,6 @@
  {
   "id": "cn_warren_truss",
   "name": "Warren truss",
-  "tier": 2,
   "cat": "structural",
   "pre": ["cn_lattice_truss", "cap_tol_100um"],
   "traits": [],
@@ -458,7 +439,6 @@
  {
   "id": "cn_pratt_truss",
   "name": "Pratt truss",
-  "tier": 2,
   "cat": "structural",
   "pre": ["cn_warren_truss"],
   "traits": [],
@@ -482,7 +462,6 @@
  {
   "id": "cn_trussed_arch",
   "name": "Trussed arch",
-  "tier": 1,
   "cat": "structural",
   "pre": ["cn_true_arch", "cn_timber_truss"],
   "traits": [],
@@ -506,7 +485,6 @@
  {
   "id": "cn_space_frame",
   "name": "Space frame three-dimensional truss",
-  "tier": 3,
   "cat": "structural",
   "pre": ["cn_warren_truss", "cap_tol_10um"],
   "traits": ["labour_saving"],
@@ -530,7 +508,6 @@
  {
   "id": "cn_iron_column",
   "name": "Cast iron column",
-  "tier": 1,
   "cat": "structural",
   "pre": ["blast_furnace"],
   "traits": [],
@@ -554,7 +531,6 @@
  {
   "id": "cn_cast_iron_beam",
   "name": "Cast iron beam",
-  "tier": 2,
   "cat": "structural",
   "pre": ["cn_iron_column"],
   "traits": [],
@@ -578,7 +554,6 @@
  {
   "id": "cn_wrought_iron_girder",
   "name": "Wrought iron plate girder",
-  "tier": 1,
   "cat": "structural",
   "pre": ["mat_wrought_iron"],
   "traits": [],
@@ -602,7 +577,6 @@
  {
   "id": "cn_rolled_I_beam",
   "name": "Rolled iron or steel I beam",
-  "tier": 2,
   "cat": "structural",
   "pre": ["bessemer_openhearth"],
   "traits": ["labour_saving"],
@@ -626,7 +600,6 @@
  {
   "id": "cn_plate_girder",
   "name": "Steel plate girder assembly",
-  "tier": 2,
   "cat": "structural",
   "pre": ["mat_bulk_steel"],
   "traits": [],
@@ -650,7 +623,6 @@
  {
   "id": "cn_riveted_connection",
   "name": "Riveted bolted connection",
-  "tier": 1,
   "cat": "connections",
   "pre": ["mat_wrought_iron"],
   "traits": [],
@@ -674,7 +646,6 @@
  {
   "id": "cn_bolted_connection",
   "name": "Bolted connection with nut",
-  "tier": 2,
   "cat": "connections",
   "pre": ["master_screw"],
   "traits": ["labour_saving"],
@@ -698,7 +669,6 @@
  {
   "id": "cn_welded_connection",
   "name": "Electric arc welded joint",
-  "tier": 3,
   "cat": "connections",
   "pre": ["arc_furnace_ferroalloys", "cap_power_electric"],
   "traits": ["labour_saving"],
@@ -722,7 +692,6 @@
  {
   "id": "cn_gusset_plate",
   "name": "Gusset plate reinforcement",
-  "tier": 1,
   "cat": "connections",
   "pre": ["cn_riveted_connection"],
   "traits": [],
@@ -746,7 +715,6 @@
  {
   "id": "cn_steel_frame_skeleton",
   "name": "Steel frame skeleton building",
-  "tier": 3,
   "cat": "structural",
   "pre": ["cn_rolled_I_beam", "cn_welded_connection"],
   "traits": ["labour_saving"],
@@ -770,7 +738,6 @@
  {
   "id": "cn_curtain_wall",
   "name": "Curtain wall non-structural facade",
-  "tier": 3,
   "cat": "envelope",
   "pre": ["cn_steel_frame_skeleton"],
   "traits": ["labour_saving"],
@@ -794,7 +761,6 @@
  {
   "id": "cn_cantilever",
   "name": "Cantilever beam or slab",
-  "tier": 2,
   "cat": "structural",
   "pre": ["cn_rolled_I_beam", "cap_tol_100um"],
   "traits": [],
@@ -818,7 +784,6 @@
  {
   "id": "cn_suspension_bridge",
   "name": "Suspension bridge system",
-  "tier": 3,
   "cat": "bridges",
   "pre": ["cn_wire_cable_spinning"],
   "traits": ["infrastructure"],
@@ -842,7 +807,6 @@
  {
   "id": "cn_wire_cable_spinning",
   "name": "Steel wire rope and spinning",
-  "tier": 2,
   "cat": "materials",
   "pre": ["mat_bulk_steel"],
   "traits": [],
@@ -866,7 +830,6 @@
  {
   "id": "cn_cable_anchorage",
   "name": "Cable anchorage block",
-  "tier": 2,
   "cat": "bridges",
   "pre": ["cn_wire_cable_spinning"],
   "traits": [],
@@ -890,7 +853,6 @@
  {
   "id": "cn_stiffening_truss",
   "name": "Stiffening truss for deck",
-  "tier": 2,
   "cat": "bridges",
   "pre": ["cn_warren_truss"],
   "traits": [],
@@ -914,7 +876,6 @@
  {
   "id": "cn_box_girder",
   "name": "Box girder or tubular section",
-  "tier": 2,
   "cat": "structural",
   "pre": ["cn_plate_girder"],
   "traits": [],
@@ -938,7 +899,6 @@
  {
   "id": "cn_arch_bridge_steel",
   "name": "Steel arch bridge",
-  "tier": 2,
   "cat": "bridges",
   "pre": ["cn_rolled_I_beam"],
   "traits": [],
@@ -962,7 +922,6 @@
  {
   "id": "cn_bascule_bridge",
   "name": "Bascule drawbridge",
-  "tier": 2,
   "cat": "bridges",
   "pre": ["cn_rolled_I_beam", "cap_power_electric"],
   "traits": ["infrastructure"],
@@ -986,7 +945,6 @@
  {
   "id": "cn_swing_bridge",
   "name": "Swing bridge on central pivot",
-  "tier": 1,
   "cat": "bridges",
   "pre": ["cn_wrought_iron_girder"],
   "traits": ["infrastructure"],
@@ -1010,7 +968,6 @@
  {
   "id": "cn_pontoon_bridge",
   "name": "Pontoon floating bridge",
-  "tier": 1,
   "cat": "bridges",
   "pre": ["cap_tol_1mm"],
   "traits": ["infrastructure"],
@@ -1034,7 +991,6 @@
  {
   "id": "cn_aqueduct",
   "name": "Masonry aqueduct arch bridge",
-  "tier": 0,
   "cat": "infrastructure",
   "pre": ["cn_true_arch"],
   "traits": ["infrastructure"],
@@ -1058,7 +1014,6 @@
  {
   "id": "cn_siphon",
   "name": "Inverted siphon pipe",
-  "tier": 1,
   "cat": "infrastructure",
   "pre": ["cn_aqueduct", "mat_lead"],
   "traits": ["infrastructure"],
@@ -1082,7 +1037,6 @@
  {
   "id": "cn_pile_driving",
   "name": "Pile driving by drop hammer",
-  "tier": 0,
   "cat": "foundations",
   "pre": ["cap_power_muscle"],
   "traits": ["infrastructure"],
@@ -1106,7 +1060,6 @@
  {
   "id": "cn_screw_pile",
   "name": "Screw pile with helical blade",
-  "tier": 2,
   "cat": "foundations",
   "pre": ["master_screw"],
   "traits": ["labour_saving"],
@@ -1130,7 +1083,6 @@
  {
   "id": "cn_sheet_piling",
   "name": "Sheet piling wall",
-  "tier": 1,
   "cat": "foundations",
   "pre": ["cn_pile_driving"],
   "traits": ["infrastructure"],
@@ -1154,7 +1106,6 @@
  {
   "id": "cn_caisson",
   "name": "Caisson cofferdam box",
-  "tier": 1,
   "cat": "foundations",
   "pre": ["cn_sheet_piling"],
   "traits": ["infrastructure"],
@@ -1178,7 +1129,6 @@
  {
   "id": "cn_pneumatic_caisson",
   "name": "Pneumatic caisson with air pressure",
-  "tier": 2,
   "cat": "foundations",
   "pre": ["cn_caisson", "cap_power_steam"],
   "traits": ["infrastructure"],
@@ -1202,7 +1152,6 @@
  {
   "id": "cn_cofferdam",
   "name": "Cofferdam temporary barrier",
-  "tier": 0,
   "cat": "foundations",
   "pre": ["cap_power_muscle"],
   "traits": ["infrastructure"],
@@ -1226,7 +1175,6 @@
  {
   "id": "cn_diaphragm_wall",
   "name": "Diaphragm wall with slurry",
-  "tier": 3,
   "cat": "foundations",
   "pre": ["cn_sheet_piling", "cap_measure_len"],
   "traits": ["labour_saving"],
@@ -1250,7 +1198,6 @@
  {
   "id": "cn_underpinning",
   "name": "Underpinning of existing structure",
-  "tier": 2,
   "cat": "foundations",
   "pre": ["cn_caisson"],
   "traits": [],
@@ -1274,7 +1221,6 @@
  {
   "id": "cn_dewatering",
   "name": "Dewatering system with pumps",
-  "tier": 1,
   "cat": "foundations",
   "pre": ["cap_power_steam"],
   "traits": ["infrastructure"],
@@ -1298,7 +1244,6 @@
  {
   "id": "cn_soil_compaction",
   "name": "Soil compaction by roller",
-  "tier": 1,
   "cat": "foundations",
   "pre": ["cap_power_muscle"],
   "traits": ["labour_saving"],
@@ -1322,7 +1267,6 @@
  {
   "id": "cn_retaining_wall",
   "name": "Retaining wall gravity structure",
-  "tier": 0,
   "cat": "structures",
   "pre": ["cn_true_arch"],
   "traits": ["infrastructure"],
@@ -1346,7 +1290,6 @@
  {
   "id": "cn_gravity_dam",
   "name": "Gravity dam masonry structure",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_retaining_wall"],
   "traits": ["infrastructure"],
@@ -1370,7 +1313,6 @@
  {
   "id": "cn_arch_dam",
   "name": "Arch dam curved structure",
-  "tier": 2,
   "cat": "structures",
   "pre": ["cn_true_arch", "cn_gravity_dam"],
   "traits": ["infrastructure"],
@@ -1394,7 +1336,6 @@
  {
   "id": "cn_earth_dam",
   "name": "Earth dam with clay core",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_soil_compaction"],
   "traits": ["infrastructure"],
@@ -1418,7 +1359,6 @@
  {
   "id": "cn_spillway",
   "name": "Spillway overflow structure",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_true_arch", "cn_gravity_dam"],
   "traits": ["infrastructure"],
@@ -1442,7 +1382,6 @@
  {
   "id": "cn_tunnel_cut_cover",
   "name": "Tunnel by cut and cover",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_cofferdam"],
   "traits": ["infrastructure"],
@@ -1466,7 +1405,6 @@
  {
   "id": "cn_tunnel_shield",
   "name": "Tunnel shield method",
-  "tier": 2,
   "cat": "structures",
   "pre": ["cn_pneumatic_caisson"],
   "traits": ["infrastructure"],
@@ -1490,7 +1428,6 @@
  {
   "id": "cn_drill_blast",
   "name": "Drill and blast tunnel",
-  "tier": 2,
   "cat": "structures",
   "pre": ["cn_tunnel_cut_cover", "mat_nitroglycerin"],
   "traits": ["labour_saving"],
@@ -1514,7 +1451,6 @@
  {
   "id": "cn_tunnel_lining",
   "name": "Tunnel permanent lining",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_tunnel_shield"],
   "traits": ["infrastructure"],
@@ -1538,7 +1474,6 @@
  {
   "id": "cn_ventilation_shaft",
   "name": "Ventilation shaft and duct",
-  "tier": 1,
   "cat": "structures",
   "pre": ["cn_tunnel_lining"],
   "traits": ["infrastructure"],
@@ -1562,7 +1497,6 @@
  {
   "id": "cn_crane_treadwheel",
   "name": "Treadwheel crane",
-  "tier": 0,
   "cat": "equipment",
   "pre": ["cap_power_muscle"],
   "traits": ["labour_saving"],
@@ -1586,7 +1520,6 @@
  {
   "id": "cn_crane_derrick",
   "name": "Derrick crane with guy lines",
-  "tier": 1,
   "cat": "equipment",
   "pre": ["cn_timber_truss"],
   "traits": ["labour_saving"],
@@ -1610,7 +1543,6 @@
  {
   "id": "cn_crane_tower",
   "name": "Tower crane on fixed base",
-  "tier": 2,
   "cat": "equipment",
   "pre": ["cn_rolled_I_beam", "cap_power_electric"],
   "traits": ["labour_saving"],
@@ -1634,7 +1566,6 @@
  {
   "id": "cn_block_tackle_hoist",
   "name": "Block and tackle with rope",
-  "tier": 0,
   "cat": "equipment",
   "pre": ["cap_power_muscle"],
   "traits": ["labour_saving"],
@@ -1658,7 +1589,6 @@
  {
   "id": "cn_scaffolding",
   "name": "Timber scaffolding system",
-  "tier": 0,
   "cat": "equipment",
   "pre": ["cap_tol_1mm"],
   "traits": ["labour_saving"],
@@ -1682,7 +1612,6 @@
  {
   "id": "cn_elevator_safety_brake",
   "name": "Elevator with safety brake",
-  "tier": 2,
   "cat": "equipment",
   "pre": ["cn_crane_treadwheel", "cap_tol_100um"],
   "traits": ["labour_saving"],
@@ -1706,7 +1635,6 @@
  {
   "id": "cn_plumbing_stack",
   "name": "Plumbing vertical stack system",
-  "tier": 1,
   "cat": "building_systems",
   "pre": ["mat_lead"],
   "traits": ["infrastructure"],
@@ -1730,7 +1658,6 @@
  {
   "id": "cn_trapped_drain",
   "name": "Trap with water seal",
-  "tier": 1,
   "cat": "building_systems",
   "pre": ["cn_plumbing_stack"],
   "traits": ["medical"],
@@ -1754,7 +1681,6 @@
  {
   "id": "cn_sewer_system",
   "name": "Sewer gravity drainage network",
-  "tier": 1,
   "cat": "infrastructure",
   "pre": ["cn_trapped_drain"],
   "traits": ["infrastructure", "medical"],
@@ -1778,7 +1704,6 @@
  {
   "id": "cn_water_main",
   "name": "Water main distribution pipe",
-  "tier": 1,
   "cat": "infrastructure",
   "pre": ["cn_plumbing_stack"],
   "traits": ["infrastructure"],
@@ -1802,7 +1727,6 @@
  {
   "id": "cn_damp_proof_course",
   "name": "Damp proof course barrier layer",
-  "tier": 0,
   "cat": "building_systems",
   "pre": ["mat_bitumen"],
   "traits": [],
@@ -1826,7 +1750,6 @@
  {
   "id": "cn_cavity_wall",
   "name": "Cavity wall with air space",
-  "tier": 1,
   "cat": "building_systems",
   "pre": ["cn_damp_proof_course"],
   "traits": ["labour_saving"],
@@ -1850,7 +1773,6 @@
  {
   "id": "cn_central_heating",
   "name": "Central heating hot water system",
-  "tier": 2,
   "cat": "building_systems",
   "pre": ["cn_plumbing_stack", "cap_heat_1300"],
   "traits": ["infrastructure"],
@@ -1874,7 +1796,6 @@
  {
   "id": "cn_radiator",
   "name": "Cast iron radiator",
-  "tier": 1,
   "cat": "building_systems",
   "pre": ["mat_cast_iron"],
   "traits": [],
@@ -1898,7 +1819,6 @@
  {
   "id": "cn_forced_ventilation",
   "name": "Forced ventilation mechanical system",
-  "tier": 2,
   "cat": "building_systems",
   "pre": ["cap_power_steam"],
   "traits": ["infrastructure"],
@@ -1922,7 +1842,6 @@
  {
   "id": "cn_fire_escape",
   "name": "Fire escape stairs and landings",
-  "tier": 1,
   "cat": "building_systems",
   "pre": ["cn_rolled_I_beam"],
   "traits": ["infrastructure"],
@@ -1946,7 +1865,6 @@
  {
   "id": "cn_sprinkler",
   "name": "Automatic fire sprinkler",
-  "tier": 2,
   "cat": "building_systems",
   "pre": ["cn_water_main", "cap_measure_temp"],
   "traits": ["infrastructure"],
@@ -1970,7 +1888,6 @@
  {
   "id": "cn_plate_glass_window",
   "name": "Plate glass large pane",
-  "tier": 2,
   "cat": "envelope",
   "pre": ["glass_lead", "cap_heat_1600"],
   "traits": [],
@@ -1994,7 +1911,6 @@
  {
   "id": "cn_sash_window",
   "name": "Sash window with cord and weight",
-  "tier": 1,
   "cat": "envelope",
   "pre": ["cn_plate_glass_window"],
   "traits": [],
@@ -2018,7 +1934,6 @@
  {
   "id": "cn_roof_truss_corrugated",
   "name": "Roof truss with corrugated iron",
-  "tier": 2,
   "cat": "envelope",
   "pre": ["cn_timber_truss", "bessemer_openhearth"],
   "traits": ["labour_saving"],
@@ -2042,7 +1957,6 @@
  {
   "id": "cn_asphalt_roofing",
   "name": "Asphalt roll roofing and shingles",
-  "tier": 2,
   "cat": "envelope",
   "pre": ["mat_bitumen"],
   "traits": [],
@@ -2066,7 +1980,6 @@
  {
   "id": "cn_insulation",
   "name": "Building insulation materials",
-  "tier": 2,
   "cat": "building_systems",
   "pre": ["cap_measure_temp"],
   "traits": [],
@@ -2090,7 +2003,6 @@
  {
   "id": "cn_concrete_mixer",
   "name": "Rotary concrete mixer drum",
-  "tier": 2,
   "cat": "equipment",
   "pre": ["cap_power_steam"],
   "traits": ["labour_saving"],
@@ -2114,7 +2026,6 @@
  {
   "id": "cn_vibratory_compaction",
   "name": "Vibratory compaction of concrete",
-  "tier": 2,
   "cat": "techniques",
   "pre": ["cap_power_electric"],
   "traits": ["labour_saving"],
@@ -2138,7 +2049,6 @@
  {
   "id": "cn_formwork_shuttering",
   "name": "Formwork and shuttering system",
-  "tier": 1,
   "cat": "techniques",
   "pre": ["cn_timber_truss"],
   "traits": ["labour_saving"],
@@ -2162,7 +2072,6 @@
  {
   "id": "cn_slipform",
   "name": "Slipform creeping formwork",
-  "tier": 3,
   "cat": "techniques",
   "pre": ["cn_formwork_shuttering", "cap_power_electric"],
   "traits": ["labour_saving"],
@@ -2186,7 +2095,6 @@
  {
   "id": "cn_shotcrete",
   "name": "Sprayed concrete shotcrete",
-  "tier": 2,
   "cat": "techniques",
   "pre": ["cn_concrete_mixer", "cap_power_steam"],
   "traits": ["labour_saving"],
@@ -2210,7 +2118,6 @@
  {
   "id": "cn_expansion_joint",
   "name": "Expansion joint control system",
-  "tier": 1,
   "cat": "techniques",
   "pre": ["cap_measure_temp"],
   "traits": [],
@@ -2234,7 +2141,6 @@
  {
   "id": "cn_reinforced_concrete",
   "name": "Reinforced concrete slab and beam",
-  "tier": 2,
   "cat": "materials",
   "pre": ["mat_bulk_steel", "mat_cement_portland"],
   "traits": [],
@@ -2258,7 +2164,6 @@
  {
   "id": "cn_deformed_rebar",
   "name": "Deformed reinforcing bar",
-  "tier": 2,
   "cat": "materials",
   "pre": ["mat_bulk_steel"],
   "traits": [],
@@ -2282,7 +2187,6 @@
  {
   "id": "cn_prestressed_concrete",
   "name": "Prestressed concrete element",
-  "tier": 3,
   "cat": "materials",
   "pre": ["cn_reinforced_concrete"],
   "traits": ["labour_saving"],
@@ -2306,7 +2210,6 @@
  {
   "id": "cn_post_tensioning",
   "name": "Post tensioning with stressing jacks",
-  "tier": 3,
   "cat": "techniques",
   "pre": ["cn_prestressed_concrete"],
   "traits": [],
@@ -2330,7 +2233,6 @@
  {
   "id": "cn_precast_panel",
   "name": "Precast concrete panel",
-  "tier": 2,
   "cat": "materials",
   "pre": ["cn_reinforced_concrete"],
   "traits": ["labour_saving"],
@@ -2354,7 +2256,6 @@
  {
   "id": "cn_portland_cement",
   "name": "Portland cement powder",
-  "tier": 2,
   "cat": "binders",
   "pre": ["cap_heat_1600"],
   "traits": [],
@@ -2378,7 +2279,6 @@
  {
   "id": "cn_rotary_cement_kiln",
   "name": "Rotary cement kiln",
-  "tier": 3,
   "cat": "equipment",
   "pre": ["cn_portland_cement", "cap_power_steam"],
   "traits": ["labour_saving"],
@@ -2402,7 +2302,6 @@
  {
   "id": "cn_cement_clinker_grinding",
   "name": "Cement clinker mill grinding",
-  "tier": 2,
   "cat": "equipment",
   "pre": ["cn_portland_cement"],
   "traits": ["labour_saving"],

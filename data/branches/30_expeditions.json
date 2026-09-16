@@ -2,7 +2,6 @@
  {
   "id": "exp_provisioning_scurvy",
   "name": "Provisioning a long voyage against scurvy",
-  "tier": 1,
   "cat": "expedition",
   "pre": [
    "fud_food_preservation",
@@ -32,7 +31,6 @@
  {
   "id": "exp_openocean_navigation",
   "name": "Open ocean navigation out of sight of land",
-  "tier": 2,
   "cat": "expedition",
   "pre": [
    "sea_magnetic_compass",
@@ -62,7 +60,6 @@
  {
   "id": "exp_oceangoing_hull",
   "name": "An ocean-going hull",
-  "tier": 2,
   "cat": "expedition",
   "pre": [
    "sea_skeleton_first_hull",
@@ -95,7 +92,6 @@
  {
   "id": "exp_trade_route_extend",
   "name": "Extend the existing eastern trade routes",
-  "tier": 1,
   "cat": "expedition",
   "pre": [
    "patron_local"
@@ -122,7 +118,6 @@
  {
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
-  "tier": 2,
   "cat": "expedition",
   "pre": [
    "exp_oceangoing_hull",
@@ -152,7 +147,6 @@
  {
   "id": "exp_africa_circumnavigation",
   "name": "Round the Cape",
-  "tier": 3,
   "cat": "expedition",
   "pre": [
    "exp_coastal_africa",
@@ -180,7 +174,6 @@
  {
   "id": "exp_atlantic_crossing",
   "name": "Cross the Atlantic",
-  "tier": 3,
   "cat": "expedition",
   "pre": [
    "exp_oceangoing_hull",
@@ -209,7 +202,6 @@
  {
   "id": "exp_americas_factory",
   "name": "A permanent post in the Americas",
-  "tier": 4,
   "cat": "expedition",
   "pre": [
    "exp_atlantic_crossing",
@@ -240,7 +232,6 @@
  {
   "id": "exp_colony_administration",
   "name": "Colonial administration and a chartered company",
-  "tier": 3,
   "cat": "expedition",
   "pre": [
    "exp_coastal_africa",
@@ -269,7 +260,6 @@
  {
   "id": "exp_transplant_botany",
   "name": "Transplanting a crop out of its homeland",
-  "tier": 3,
   "cat": "expedition",
   "pre": [
    "exp_trade_route_extend",
@@ -300,7 +290,6 @@
  {
   "id": "exp_conquest_resource",
   "name": "Take the source by force",
-  "tier": 4,
   "cat": "expedition",
   "pre": [
    "exp_colony_administration",

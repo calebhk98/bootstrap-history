@@ -2,7 +2,6 @@
   {
     "id": "tx2_retting",
     "name": "Retting of flax and hemp fibres",
-    "tier": 0,
     "cat": "textile_production",
     "pre": [],
     "traits": [],
@@ -18,7 +17,6 @@
   {
     "id": "tx2_scutching",
     "name": "Scutching: breaking fibres from woody core",
-    "tier": 0,
     "cat": "textile_production",
     "pre": ["tx2_retting"],
     "traits": ["labour_saving"],
@@ -34,7 +32,6 @@
   {
     "id": "tx2_hackling",
     "name": "Hackling: combing and grading fibres",
-    "tier": 0,
     "cat": "textile_production",
     "pre": ["tx2_scutching"],
     "traits": [],
@@ -50,7 +47,6 @@
   {
     "id": "tx2_cotton_ginning",
     "name": "Cotton gin: separation of seed from fibre",
-    "tier": 1,
     "cat": "textile_production",
     "pre": [],
     "traits": ["labour_saving"],
@@ -66,7 +62,6 @@
   {
     "id": "tx2_carding",
     "name": "Carding: opening and aligning fibres",
-    "tier": 1,
     "cat": "textile_production",
     "pre": [],
     "traits": [],
@@ -82,7 +77,6 @@
   {
     "id": "tx2_combing",
     "name": "Combing: alignment of long fibres",
-    "tier": 1,
     "cat": "textile_production",
     "pre": ["tx2_hackling"],
     "traits": [],
@@ -98,7 +92,6 @@
   {
     "id": "tx2_gilling",
     "name": "Gilling: parallel alignment after combing",
-    "tier": 1,
     "cat": "textile_production",
     "pre": ["tx2_combing"],
     "traits": [],
@@ -114,7 +107,6 @@
   {
     "id": "tx2_drawing",
     "name": "Drawing: fibre blending and extension",
-    "tier": 1,
     "cat": "textile_production",
     "pre": ["tx2_carding"],
     "traits": [],
@@ -130,7 +122,6 @@
   {
     "id": "tx2_roving_frame",
     "name": "Roving frame: fibre attenuation and twist",
-    "tier": 1,
     "cat": "textile_production",
     "pre": ["tx2_drawing"],
     "traits": [],
@@ -146,7 +137,6 @@
   {
     "id": "tx2_sliver_preparation",
     "name": "Sliver: card output and sliver can",
-    "tier": 1,
     "cat": "textile_production",
     "pre": ["tx2_carding"],
     "traits": [],
@@ -162,7 +152,6 @@
   {
     "id": "tx2_flyer",
     "name": "Flyer: the earliest spinning frame component",
-    "tier": 1,
     "cat": "spinning",
     "pre": [],
     "traits": [],
@@ -178,7 +167,6 @@
   {
     "id": "tx2_bobbin_and_flyer",
     "name": "Bobbin and flyer assembly: early spinning",
-    "tier": 1,
     "cat": "spinning",
     "pre": ["tx2_flyer"],
     "traits": [],
@@ -194,7 +182,6 @@
   {
     "id": "tx2_cap_frame",
     "name": "Cap frame spinning",
-    "tier": 1,
     "cat": "spinning",
     "pre": ["tx2_bobbin_and_flyer"],
     "traits": [],
@@ -210,7 +197,6 @@
   {
     "id": "tx2_ring_frame",
     "name": "Ring frame: the dominant spinning geometry",
-    "tier": 2,
     "cat": "spinning",
     "pre": ["tx2_bobbin_and_flyer", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -226,7 +212,6 @@
   {
     "id": "tx2_mule_jenny",
     "name": "Spinning mule: draw-twist-wind",
-    "tier": 2,
     "cat": "spinning",
     "pre": ["cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -242,7 +227,6 @@
   {
     "id": "tx2_throstle_frame",
     "name": "Throstle: continuous drawing and twist",
-    "tier": 2,
     "cat": "spinning",
     "pre": ["tx2_ring_frame"],
     "traits": ["labour_saving"],
@@ -258,7 +242,6 @@
   {
     "id": "tx2_doubling_frame",
     "name": "Doubling frame: twisting multiple yarns",
-    "tier": 1,
     "cat": "spinning",
     "pre": ["tx2_bobbin_and_flyer"],
     "traits": [],
@@ -274,7 +257,6 @@
   {
     "id": "tx2_count_standard",
     "name": "Yarn count standardisation",
-    "tier": 1,
     "cat": "spinning",
     "pre": [],
     "traits": [],
@@ -290,7 +272,6 @@
   {
     "id": "tx2_twist_insertion",
     "name": "Twist insertion control",
-    "tier": 1,
     "cat": "spinning",
     "pre": [],
     "traits": [],
@@ -306,7 +287,6 @@
   {
     "id": "tx2_shed",
     "name": "Shed: warp separation for pick insertion",
-    "tier": 0,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -322,7 +302,6 @@
   {
     "id": "tx2_heddle",
     "name": "Heddle: warp thread carrier and riser",
-    "tier": 0,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -338,7 +317,6 @@
   {
     "id": "tx2_shaft",
     "name": "Shaft: harness frame assembly",
-    "tier": 0,
     "cat": "weaving",
     "pre": ["tx2_heddle"],
     "traits": [],
@@ -354,7 +332,6 @@
   {
     "id": "tx2_dobby",
     "name": "Dobby head: mechanical shed control",
-    "tier": 2,
     "cat": "weaving",
     "pre": ["tx2_shaft", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -370,7 +347,6 @@
   {
     "id": "tx2_jacquard_head",
     "name": "Jacquard head: automatic pattern control",
-    "tier": 2,
     "cat": "weaving",
     "pre": ["tx2_dobby", "cap_tol_100um"],
     "traits": [],
@@ -386,7 +362,6 @@
   {
     "id": "tx2_jacquard_cards",
     "name": "Jacquard cards: pattern storage and control",
-    "tier": 2,
     "cat": "weaving",
     "pre": ["tx2_jacquard_head"],
     "traits": [],
@@ -402,7 +377,6 @@
   {
     "id": "tx2_shuttle",
     "name": "Shuttle: weft carrier and timing",
-    "tier": 1,
     "cat": "weaving",
     "pre": ["tx2_shed"],
     "traits": [],
@@ -418,7 +392,6 @@
   {
     "id": "tx2_picking_mechanism",
     "name": "Picking: mechanical shuttle propulsion",
-    "tier": 2,
     "cat": "weaving",
     "pre": ["tx2_shuttle", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -434,7 +407,6 @@
   {
     "id": "tx2_take_up_motion",
     "name": "Take-up: woven cloth winding",
-    "tier": 1,
     "cat": "weaving",
     "pre": ["tx2_picking_mechanism"],
     "traits": [],
@@ -450,7 +422,6 @@
   {
     "id": "tx2_let_off_motion",
     "name": "Let-off: warp feed control",
-    "tier": 1,
     "cat": "weaving",
     "pre": ["tx2_picking_mechanism"],
     "traits": [],
@@ -466,7 +437,6 @@
   {
     "id": "tx2_temple",
     "name": "Temple: cloth width maintenance",
-    "tier": 1,
     "cat": "weaving",
     "pre": ["tx2_picking_mechanism"],
     "traits": [],
@@ -482,7 +452,6 @@
   {
     "id": "tx2_warp_sizing",
     "name": "Warp sizing: fibre stiffening",
-    "tier": 1,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -498,7 +467,6 @@
   {
     "id": "tx2_warping_mill",
     "name": "Warping mill: warp thread length setting",
-    "tier": 1,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -514,7 +482,6 @@
   {
     "id": "tx2_beam",
     "name": "Beam: warp holder and tension",
-    "tier": 1,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -530,7 +497,6 @@
   {
     "id": "tx2_selvedge",
     "name": "Selvedge: woven cloth edge",
-    "tier": 1,
     "cat": "weaving",
     "pre": [],
     "traits": [],
@@ -546,7 +512,6 @@
   {
     "id": "tx2_automatic_loom",
     "name": "Automatic loom: self-threading shuttle",
-    "tier": 3,
     "cat": "weaving",
     "pre": ["tx2_dobby", "tx2_picking_mechanism", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -562,7 +527,6 @@
   {
     "id": "tx2_automatic_bobbin_changer",
     "name": "Automatic bobbin changer: weft supply",
-    "tier": 3,
     "cat": "weaving",
     "pre": ["tx2_automatic_loom"],
     "traits": ["labour_saving"],
@@ -578,7 +542,6 @@
   {
     "id": "tx2_stocking_frame",
     "name": "Stocking frame: hosiery machine",
-    "tier": 2,
     "cat": "knitting",
     "pre": ["cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -594,7 +557,6 @@
   {
     "id": "tx2_circular_knitting",
     "name": "Circular knitting machine: tubular production",
-    "tier": 2,
     "cat": "knitting",
     "pre": ["tx2_stocking_frame", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -610,7 +572,6 @@
   {
     "id": "tx2_warp_knitting",
     "name": "Warp knitting: sheet production",
-    "tier": 2,
     "cat": "knitting",
     "pre": ["tx2_stocking_frame", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -626,7 +587,6 @@
   {
     "id": "tx2_latch_needle",
     "name": "Latch needle: self-contained knit mechanism",
-    "tier": 2,
     "cat": "knitting",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -642,7 +602,6 @@
   {
     "id": "tx2_scouring",
     "name": "Scouring: removal of grease and soil",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -658,7 +617,6 @@
   {
     "id": "tx2_fulling",
     "name": "Fulling: cloth densification",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": ["labour_saving"],
@@ -674,7 +632,6 @@
   {
     "id": "tx2_milling",
     "name": "Milling: extended fulling",
-    "tier": 1,
     "cat": "finishing",
     "pre": ["tx2_fulling"],
     "traits": [],
@@ -690,7 +647,6 @@
   {
     "id": "tx2_raising",
     "name": "Raising: fibre napping",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["tx2_fulling"],
     "traits": ["labour_saving"],
@@ -706,7 +662,6 @@
   {
     "id": "tx2_cropping",
     "name": "Cropping: nap trimming",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["tx2_raising"],
     "traits": ["labour_saving"],
@@ -722,7 +677,6 @@
   {
     "id": "tx2_shearing",
     "name": "Shearing: precision cutting",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["tx2_cropping"],
     "traits": [],
@@ -738,7 +692,6 @@
   {
     "id": "tx2_calendering",
     "name": "Calendering: surface pressing",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -754,7 +707,6 @@
   {
     "id": "tx2_mercerising",
     "name": "Mercerising: caustic treatment",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -770,7 +722,6 @@
   {
     "id": "tx2_singeing",
     "name": "Singeing: flame removal of nap",
-    "tier": 2,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -786,7 +737,6 @@
   {
     "id": "tx2_desizing",
     "name": "Desizing: size removal",
-    "tier": 1,
     "cat": "finishing",
     "pre": ["tx2_scouring"],
     "traits": [],
@@ -802,7 +752,6 @@
   {
     "id": "tx2_bleaching_sun",
     "name": "Bleaching by sunlight: oxidative whitening",
-    "tier": 0,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -818,7 +767,6 @@
   {
     "id": "tx2_bleaching_chlorine",
     "name": "Bleaching by chlorine: rapid whitening",
-    "tier": 3,
     "cat": "finishing",
     "pre": ["mat_chlorine"],
     "traits": [],
@@ -834,7 +782,6 @@
   {
     "id": "tx2_bleaching_peroxide",
     "name": "Bleaching by hydrogen peroxide: mild oxidation",
-    "tier": 3,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -850,7 +797,6 @@
   {
     "id": "tx2_dyeing_fibre",
     "name": "Dyeing in fibre: pre-spin colouration",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -866,7 +812,6 @@
   {
     "id": "tx2_dyeing_yarn",
     "name": "Dyeing in yarn: skein colouration",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -882,7 +827,6 @@
   {
     "id": "tx2_dyeing_piece",
     "name": "Dyeing in piece: woven cloth colouration",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -898,7 +842,6 @@
   {
     "id": "tx2_dyeing_garment",
     "name": "Dyeing in garment: finished good colouration",
-    "tier": 2,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -914,7 +857,6 @@
   {
     "id": "tx2_printing_block",
     "name": "Block printing: carved design application",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -930,7 +872,6 @@
   {
     "id": "tx2_printing_roller",
     "name": "Roller printing: engraved cylinder application",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -946,7 +887,6 @@
   {
     "id": "tx2_printing_screen",
     "name": "Screen printing: mesh stencil application",
-    "tier": 3,
     "cat": "finishing",
     "pre": [],
     "traits": ["labour_saving"],
@@ -962,7 +902,6 @@
   {
     "id": "tx2_resist_dyeing",
     "name": "Resist dyeing: pattern preservation",
-    "tier": 1,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -978,7 +917,6 @@
   {
     "id": "tx2_discharge_printing",
     "name": "Discharge printing: dye removal",
-    "tier": 2,
     "cat": "finishing",
     "pre": ["tx2_printing_block"],
     "traits": [],
@@ -994,7 +932,6 @@
   {
     "id": "tx2_waterproofing",
     "name": "Waterproofing: moisture resistance",
-    "tier": 2,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -1010,7 +947,6 @@
   {
     "id": "tx2_flameproofing",
     "name": "Flameproofing: combustion resistance",
-    "tier": 3,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -1026,7 +962,6 @@
   {
     "id": "tx2_mothproofing",
     "name": "Mothproofing: insect resistance",
-    "tier": 3,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -1042,7 +977,6 @@
   {
     "id": "tx2_permanent_press",
     "name": "Permanent press: wrinkle resistance",
-    "tier": 4,
     "cat": "finishing",
     "pre": [],
     "traits": [],
@@ -1058,7 +992,6 @@
   {
     "id": "tx2_flax_fibre",
     "name": "Flax cultivation and fibre",
-    "tier": 0,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1074,7 +1007,6 @@
   {
     "id": "tx2_hemp_fibre",
     "name": "Hemp cultivation and fibre",
-    "tier": 0,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1090,7 +1022,6 @@
   {
     "id": "tx2_jute_fibre",
     "name": "Jute cultivation and fibre",
-    "tier": 1,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1106,7 +1037,6 @@
   {
     "id": "tx2_ramie_fibre",
     "name": "Ramie cultivation and fibre",
-    "tier": 1,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1122,7 +1052,6 @@
   {
     "id": "tx2_wool_fibre",
     "name": "Wool: sheep fibre",
-    "tier": 0,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1138,7 +1067,6 @@
   {
     "id": "tx2_worsted",
     "name": "Worsted: combed wool yarn",
-    "tier": 1,
     "cat": "fibres",
     "pre": ["tx2_wool_fibre", "tx2_combing"],
     "traits": [],
@@ -1154,7 +1082,6 @@
   {
     "id": "tx2_mohair",
     "name": "Mohair: angora goat fibre",
-    "tier": 1,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1170,7 +1097,6 @@
   {
     "id": "tx2_cashmere",
     "name": "Cashmere: goat undercoat fibre",
-    "tier": 1,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1186,7 +1112,6 @@
   {
     "id": "tx2_silk_fibre",
     "name": "Silk: cultivated fibre",
-    "tier": 0,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1202,7 +1127,6 @@
   {
     "id": "tx2_sericulture",
     "name": "Sericulture: silk production",
-    "tier": 1,
     "cat": "fibres",
     "pre": ["tx2_silk_fibre"],
     "traits": [],
@@ -1218,7 +1142,6 @@
   {
     "id": "tx2_wild_silk",
     "name": "Wild silk: non-cultivated production",
-    "tier": 1,
     "cat": "fibres",
     "pre": ["tx2_sericulture"],
     "traits": [],
@@ -1234,7 +1157,6 @@
   {
     "id": "tx2_rayon_nitro",
     "name": "Rayon by nitration: cellulose nitrate",
-    "tier": 3,
     "cat": "fibres",
     "pre": ["mat_nitrocellulose"],
     "traits": [],
@@ -1250,7 +1172,6 @@
   {
     "id": "tx2_rayon_cupro",
     "name": "Rayon by cupro: copper-ammonia process",
-    "tier": 3,
     "cat": "fibres",
     "pre": ["mat_copper", "mat_ammonia"],
     "traits": [],
@@ -1266,7 +1187,6 @@
   {
     "id": "tx2_rayon_viscose",
     "name": "Rayon by viscose: alkali-carbon disulfide process",
-    "tier": 3,
     "cat": "fibres",
     "pre": ["mat_charcoal"],
     "traits": [],
@@ -1282,7 +1202,6 @@
   {
     "id": "tx2_rayon_acetate",
     "name": "Rayon by acetate: cellulose acetate",
-    "tier": 4,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1298,7 +1217,6 @@
   {
     "id": "tx2_nylon_6_6",
     "name": "Nylon 6,6: polyamide synthesis",
-    "tier": 4,
     "cat": "fibres",
     "pre": ["mat_ammonia"],
     "traits": [],
@@ -1314,7 +1232,6 @@
   {
     "id": "tx2_polyester",
     "name": "Polyester: terylene synthesis",
-    "tier": 4,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1330,7 +1247,6 @@
   {
     "id": "tx2_acrylic",
     "name": "Acrylic: polyacrylonitrile fibres",
-    "tier": 4,
     "cat": "fibres",
     "pre": [],
     "traits": [],
@@ -1346,7 +1262,6 @@
   {
     "id": "tx2_glass_fibre",
     "name": "Glass fibre: silica filament",
-    "tier": 3,
     "cat": "fibres",
     "pre": ["cap_heat_1600"],
     "traits": [],
@@ -1362,7 +1277,6 @@
   {
     "id": "tx2_asbestos_cloth",
     "name": "Asbestos cloth: fire-resistant fabric",
-    "tier": 2,
     "cat": "fibres",
     "pre": ["mat_asbestos"],
     "traits": [],
@@ -1378,7 +1292,6 @@
   {
     "id": "tx2_eye_pointed_needle",
     "name": "Eye-pointed needle: self-threading sewing",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1394,7 +1307,6 @@
   {
     "id": "tx2_lockstitch",
     "name": "Lockstitch: two-thread interlocking",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_eye_pointed_needle"],
     "traits": [],
@@ -1410,7 +1322,6 @@
   {
     "id": "tx2_chain_stitch",
     "name": "Chain stitch: thread-only interlocking",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_eye_pointed_needle"],
     "traits": [],
@@ -1426,7 +1337,6 @@
   {
     "id": "tx2_overlock_stitch",
     "name": "Overlock: edge-covering stitch",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_chain_stitch"],
     "traits": [],
@@ -1442,7 +1352,6 @@
   {
     "id": "tx2_buttonhole_machine",
     "name": "Buttonhole machine: eyelet cutting and binding",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_eye_pointed_needle"],
     "traits": ["labour_saving"],
@@ -1458,7 +1367,6 @@
   {
     "id": "tx2_cutting_table",
     "name": "Cutting table: stacked cloth cutting",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1474,7 +1382,6 @@
   {
     "id": "tx2_band_knife",
     "name": "Band knife: reciprocating cloth cutter",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_cutting_table", "cap_power_motor"],
     "traits": ["labour_saving"],
@@ -1490,7 +1397,6 @@
   {
     "id": "tx2_pattern_grading",
     "name": "Pattern grading: multi-size scaling",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1506,7 +1412,6 @@
   {
     "id": "tx2_sizing_systems",
     "name": "Sizing systems: body measurement standardisation",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1522,7 +1427,6 @@
   {
     "id": "tx2_paper_pattern",
     "name": "Paper pattern: home sewing pattern",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_pattern_grading"],
     "traits": ["commerce"],
@@ -1538,7 +1442,6 @@
   {
     "id": "tx2_zip_fastener",
     "name": "Zip fastener: metal hook closure",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -1554,7 +1457,6 @@
   {
     "id": "tx2_press_stud",
     "name": "Press stud: snap fastener",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["mat_brass"],
     "traits": [],
@@ -1570,7 +1472,6 @@
   {
     "id": "tx2_hook_and_eye",
     "name": "Hook and eye: wire fastener",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1586,7 +1487,6 @@
   {
     "id": "tx2_elastic",
     "name": "Elastic: rubber thread",
-    "tier": 3,
     "cat": "sewing",
     "pre": ["mat_natural_rubber"],
     "traits": [],
@@ -1602,7 +1502,6 @@
   {
     "id": "tx2_corset",
     "name": "Corset: rigid body support garment",
-    "tier": 1,
     "cat": "sewing",
     "pre": [],
     "traits": [],
@@ -1618,7 +1517,6 @@
   {
     "id": "tx2_brassiere",
     "name": "Brassiere: supportive undergarment",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_elastic"],
     "traits": [],
@@ -1634,7 +1532,6 @@
   {
     "id": "tx2_ready_to_wear",
     "name": "Ready-to-wear: mass-produced garments",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_sizing_systems", "tx2_sewing_machine_industrial"],
     "traits": ["commerce"],
@@ -1650,7 +1547,6 @@
   {
     "id": "tx2_sewing_machine_domestic",
     "name": "Sewing machine: domestic version",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_lockstitch", "tx2_eye_pointed_needle"],
     "traits": ["labour_saving"],
@@ -1666,7 +1562,6 @@
   {
     "id": "tx2_sewing_machine_industrial",
     "name": "Sewing machine: industrial version",
-    "tier": 2,
     "cat": "sewing",
     "pre": ["tx2_lockstitch", "cap_power_steam"],
     "traits": ["labour_saving"],
@@ -1682,7 +1577,6 @@
   {
     "id": "tx2_rope_lay",
     "name": "Rope laying: strand twisting",
-    "tier": 0,
     "cat": "rope_cordage",
     "pre": [],
     "traits": [],
@@ -1698,7 +1592,6 @@
   {
     "id": "tx2_ropemaking_machine",
     "name": "Ropemaking machine: mechanised twisting",
-    "tier": 2,
     "cat": "rope_cordage",
     "pre": ["tx2_rope_lay", "cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -1714,7 +1607,6 @@
   {
     "id": "tx2_cordage_paperboard",
     "name": "Cordage for paperboard production",
-    "tier": 1,
     "cat": "rope_cordage",
     "pre": ["tx2_rope_lay"],
     "traits": [],
@@ -1730,7 +1622,6 @@
   {
     "id": "tx2_vegetable_tanning",
     "name": "Vegetable tanning: oak bark curing",
-    "tier": 0,
     "cat": "leather",
     "pre": [],
     "traits": [],
@@ -1746,7 +1637,6 @@
   {
     "id": "tx2_chrome_tanning",
     "name": "Chrome tanning: chromium salt curing",
-    "tier": 3,
     "cat": "leather",
     "pre": [],
     "traits": [],
@@ -1762,7 +1652,6 @@
   {
     "id": "tx2_alum_tanning",
     "name": "Alum tanning: mineral salt curing",
-    "tier": 1,
     "cat": "leather",
     "pre": ["mat_alum"],
     "traits": [],
@@ -1778,7 +1667,6 @@
   {
     "id": "tx2_currying",
     "name": "Currying: leather finish dressing",
-    "tier": 1,
     "cat": "leather",
     "pre": [],
     "traits": [],
@@ -1794,7 +1682,6 @@
   {
     "id": "tx2_splitting",
     "name": "Splitting: leather layering",
-    "tier": 1,
     "cat": "leather",
     "pre": [],
     "traits": [],
@@ -1810,7 +1697,6 @@
   {
     "id": "tx2_embossing",
     "name": "Embossing: surface pattern pressing",
-    "tier": 2,
     "cat": "leather",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -1826,7 +1712,6 @@
   {
     "id": "tx2_lasting_machine",
     "name": "Lasting machine: shoe fitting",
-    "tier": 2,
     "cat": "leather",
     "pre": ["cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -1842,7 +1727,6 @@
   {
     "id": "tx2_shoemaking_mechanised",
     "name": "Mechanised shoemaking: factory production",
-    "tier": 2,
     "cat": "leather",
     "pre": ["tx2_lasting_machine"],
     "traits": ["labour_saving"],
@@ -1858,7 +1742,6 @@
   {
     "id": "tx2_rubber_soles",
     "name": "Rubber soles: vulcanised footwear",
-    "tier": 3,
     "cat": "leather",
     "pre": ["mat_natural_rubber"],
     "traits": [],
@@ -1874,7 +1757,6 @@
   {
     "id": "tx2_safety_match",
     "name": "Safety match: controlled ignition",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -1890,7 +1772,6 @@
   {
     "id": "tx2_friction_match",
     "name": "Friction match: white phosphorus tip",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -1906,7 +1787,6 @@
   {
     "id": "tx2_safety_razor",
     "name": "Safety razor: guarded blade shaving",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -1922,7 +1802,6 @@
   {
     "id": "tx2_razor_blade",
     "name": "Razor blade: replaceable steel cutting",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": ["commerce"],
@@ -1938,7 +1817,6 @@
   {
     "id": "tx2_toothbrush",
     "name": "Toothbrush: hair bristle cleaning",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -1954,7 +1832,6 @@
   {
     "id": "tx2_mass_soap",
     "name": "Mass-produced soap: standardised bars",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["soap_hard"],
     "traits": [],
@@ -1970,7 +1847,6 @@
   {
     "id": "tx2_shampoo",
     "name": "Shampoo: hair cleansing liquid",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["soap_hard"],
     "traits": [],
@@ -1986,7 +1862,6 @@
   {
     "id": "tx2_comb",
     "name": "Comb: hair grooming tool",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2002,7 +1877,6 @@
   {
     "id": "tx2_mirror",
     "name": "Mirror: reflective glass surface",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_glass_soda"],
     "traits": [],
@@ -2018,7 +1892,6 @@
   {
     "id": "tx2_button_horn",
     "name": "Button: horn material",
-    "tier": 0,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2034,7 +1907,6 @@
   {
     "id": "tx2_button_bone",
     "name": "Button: bone material",
-    "tier": 0,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2050,7 +1922,6 @@
   {
     "id": "tx2_button_shell",
     "name": "Button: shell material",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2066,7 +1937,6 @@
   {
     "id": "tx2_button_plastic",
     "name": "Button: celluloid plastic material",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["mat_celluloid"],
     "traits": [],
@@ -2082,7 +1952,6 @@
   {
     "id": "tx2_pin",
     "name": "Pin: sewing fastener",
-    "tier": 0,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2098,7 +1967,6 @@
   {
     "id": "tx2_needle",
     "name": "Needle: sewing implement",
-    "tier": 0,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2114,7 +1982,6 @@
   {
     "id": "tx2_spectacle_frame",
     "name": "Spectacle frame: eye support structure",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2130,7 +1997,6 @@
   {
     "id": "tx2_watch_case",
     "name": "Watch case: portable timepiece housing",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2146,7 +2012,6 @@
   {
     "id": "tx2_fountain_pen",
     "name": "Fountain pen: reservoir writing",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2162,7 +2027,6 @@
   {
     "id": "tx2_ballpoint_pen",
     "name": "Ballpoint pen: ball-point writing",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2178,7 +2042,6 @@
   {
     "id": "tx2_pencil",
     "name": "Pencil: graphite and clay mixture",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_graphite_pure"],
     "traits": [],
@@ -2194,7 +2057,6 @@
   {
     "id": "tx2_eraser",
     "name": "Eraser: rubber pencil mark removal",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["mat_natural_rubber"],
     "traits": [],
@@ -2210,7 +2072,6 @@
   {
     "id": "tx2_paperclip",
     "name": "Paperclip: bent wire fastener",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2226,7 +2087,6 @@
   {
     "id": "tx2_stapler",
     "name": "Stapler: metal wire fastener machine",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": ["labour_saving"],
@@ -2242,7 +2102,6 @@
   {
     "id": "tx2_drawing_pin",
     "name": "Drawing pin: short fastening point",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2258,7 +2117,6 @@
   {
     "id": "tx2_envelope_gummed",
     "name": "Envelope: paper folded container",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": [],
@@ -2274,7 +2132,6 @@
   {
     "id": "tx2_envelope_flap",
     "name": "Gummed envelope flap: adhesive sealing",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": [],
@@ -2290,7 +2147,6 @@
   {
     "id": "tx2_postcard",
     "name": "Postcard: prepaid correspondence",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": ["commerce"],
@@ -2306,7 +2162,6 @@
   {
     "id": "tx2_playing_card",
     "name": "Printed playing card: mass-produced game",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["printing_press"],
     "traits": [],
@@ -2322,7 +2177,6 @@
   {
     "id": "tx2_board_game",
     "name": "Board game: printed game on board",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["tx2_playing_card"],
     "traits": [],
@@ -2338,7 +2192,6 @@
   {
     "id": "tx2_jigsaw_puzzle",
     "name": "Jigsaw puzzle: dissectable picture",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["printing_press"],
     "traits": [],
@@ -2354,7 +2207,6 @@
   {
     "id": "tx2_doll",
     "name": "Doll: articulated child plaything",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2370,7 +2222,6 @@
   {
     "id": "tx2_tin_toy",
     "name": "Tin toy: stamped metal plaything",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2386,7 +2237,6 @@
   {
     "id": "tx2_clockwork_toy",
     "name": "Clockwork toy: spring-driven mechanism",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2402,7 +2252,6 @@
   {
     "id": "tx2_bicycle_consumer",
     "name": "Bicycle: mass-produced consumer good",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2418,7 +2267,6 @@
   {
     "id": "tx2_camera_consumer",
     "name": "Camera: mass-produced photographic device",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2434,7 +2282,6 @@
   {
     "id": "tx2_gramophone",
     "name": "Gramophone: sound recording reproduction",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2450,7 +2297,6 @@
   {
     "id": "tx2_radio_set",
     "name": "Radio set: wireless receiver entertainment",
-    "tier": 4,
     "cat": "consumer_goods",
     "pre": ["radio"],
     "traits": [],
@@ -2466,7 +2312,6 @@
   {
     "id": "tx2_vacuum_flask",
     "name": "Vacuum flask: thermal insulation",
-    "tier": 3,
     "cat": "consumer_goods",
     "pre": ["cap_vac_1torr"],
     "traits": [],
@@ -2482,7 +2327,6 @@
   {
     "id": "tx2_tin_can",
     "name": "Tin can: sealed metal container",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2498,7 +2342,6 @@
   {
     "id": "tx2_paper_bag",
     "name": "Paper bag: folded container",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": [],
@@ -2514,7 +2357,6 @@
   {
     "id": "tx2_cardboard_box",
     "name": "Cardboard box: folded laminate container",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": [],
@@ -2530,7 +2372,6 @@
   {
     "id": "tx2_corrugated_box",
     "name": "Corrugated box: fluted paper structure",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["mat_paper"],
     "traits": [],
@@ -2546,7 +2387,6 @@
   {
     "id": "tx2_bottle",
     "name": "Bottle: glass container",
-    "tier": 0,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2562,7 +2402,6 @@
   {
     "id": "tx2_crown_cork",
     "name": "Crown cork: crimped bottle seal",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2578,7 +2417,6 @@
   {
     "id": "tx2_screw_cap",
     "name": "Screw cap: threaded closure",
-    "tier": 1,
     "cat": "consumer_goods",
     "pre": [],
     "traits": [],
@@ -2594,7 +2432,6 @@
   {
     "id": "tx2_toothpaste_tube",
     "name": "Tube for toothpaste: extrudable container",
-    "tier": 2,
     "cat": "consumer_goods",
     "pre": ["cap_tol_100um"],
     "traits": [],
@@ -2610,7 +2447,6 @@
   {
     "id": "tx2_cap_power_motor",
     "name": "Capability: reliable electric motor",
-    "tier": 3,
     "cat": "capability",
     "pre": ["cap_power_electric"],
     "traits": [],

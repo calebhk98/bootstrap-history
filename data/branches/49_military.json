@@ -2,7 +2,6 @@
   {
     "id": "mil_gunpowder_base",
     "name": "Gunpowder foundation",
-    "tier": 0,
     "cat": "weapons",
     "pre": [],
     "traits": ["military"],
@@ -24,7 +23,6 @@
   {
     "id": "mil_serpentine_powder",
     "name": "Serpentine powder",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_gunpowder_base"],
     "traits": ["military"],
@@ -46,7 +44,6 @@
   {
     "id": "mil_corned_powder",
     "name": "Corned gunpowder",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_serpentine_powder"],
     "traits": ["military"],
@@ -68,7 +65,6 @@
   {
     "id": "mil_powder_mill",
     "name": "Powder mill",
-    "tier": 1,
     "cat": "manufacturing",
     "pre": ["corned_powder"],
     "traits": ["military", "infrastructure"],
@@ -90,7 +86,6 @@
   {
     "id": "mil_incorporating_mill",
     "name": "Incorporating mill",
-    "tier": 1,
     "cat": "manufacturing",
     "pre": ["mil_powder_mill"],
     "traits": ["military", "infrastructure"],
@@ -112,7 +107,6 @@
   {
     "id": "mil_fuse_slow_match",
     "name": "Slow match",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_corned_powder"],
     "traits": ["military", "weapon_democratising"],
@@ -134,7 +128,6 @@
   {
     "id": "mil_fuse_quick_match",
     "name": "Quick match",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_fuse_slow_match", "mat_sulfur"],
     "traits": ["military"],
@@ -156,7 +149,6 @@
   {
     "id": "mil_wheel_lock",
     "name": "Wheel lock mechanism",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_corned_powder", "cap_tol_1mm"],
     "traits": ["military", "weapon_democratising"],
@@ -178,7 +170,6 @@
   {
     "id": "mil_matchlock",
     "name": "Matchlock mechanism",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_fuse_slow_match", "cap_tol_1mm"],
     "traits": ["military", "weapon_democratising"],
@@ -200,7 +191,6 @@
   {
     "id": "mil_flintlock",
     "name": "Flintlock mechanism",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_wheel_lock", "cap_tol_100um"],
     "traits": ["military", "weapon_democratising"],
@@ -222,7 +212,6 @@
   {
     "id": "mil_percussion_cap",
     "name": "Percussion cap",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["atomic_theory", "mat_mercury"],
     "traits": ["military"],
@@ -244,7 +233,6 @@
   {
     "id": "mil_cartridge_paper",
     "name": "Paper cartridge",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_corned_powder", "mat_paper"],
     "traits": ["military"],
@@ -266,7 +254,6 @@
   {
     "id": "mil_cartridge_metallic",
     "name": "Metallic cartridge",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_percussion_cap", "metal_drawing", "interchangeable_parts"],
     "traits": ["military"],
@@ -288,7 +275,6 @@
   {
     "id": "mil_centrefire_primer",
     "name": "Centrefire primer",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_metallic_cartridge", "cap_tol_10um"],
     "traits": ["military"],
@@ -310,7 +296,6 @@
   {
     "id": "mil_rifling",
     "name": "Rifling",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["cap_tol_100um", "barrel_boring"],
     "traits": ["military"],
@@ -332,7 +317,6 @@
   {
     "id": "mil_minie_ball",
     "name": "Minie ball",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_rifling", "cap_tol_1mm"],
     "traits": ["military"],
@@ -354,7 +338,6 @@
   {
     "id": "mil_breech_loader",
     "name": "Breech-loading rifle",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_cartridge_paper", "mil_percussion_cap", "cap_tol_100um"],
     "traits": ["military", "weapon_democratising"],
@@ -376,7 +359,6 @@
   {
     "id": "mil_bolt_action",
     "name": "Bolt-action rifle",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_metallic_cartridge", "mil_centrefire_primer", "cap_tol_10um"],
     "traits": ["military", "weapon_democratising"],
@@ -398,7 +380,6 @@
   {
     "id": "mil_magazine",
     "name": "Magazine",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_cartridge_paper", "interchangeable_parts"],
     "traits": ["military"],
@@ -420,7 +401,6 @@
   {
     "id": "mil_lever_action",
     "name": "Lever-action rifle",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_magazine", "mil_metallic_cartridge"],
     "traits": ["military", "weapon_democratising"],
@@ -442,7 +422,6 @@
   {
     "id": "mil_revolver",
     "name": "Revolver",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_metallic_cartridge", "mil_centrefire_primer", "cap_tol_10um"],
     "traits": ["military", "weapon_democratising"],
@@ -464,7 +443,6 @@
   {
     "id": "mil_self_loading_pistol",
     "name": "Self-loading pistol",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_centrefire_primer", "mil_magazine", "cap_tol_10um", "recoil_operated_mechanism"],
     "traits": ["military", "weapon_democratising"],
@@ -486,7 +464,6 @@
   {
     "id": "mil_machine_gun_recoil",
     "name": "Machine gun, recoil-operated",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_centrefire_primer", "mil_magazine", "cap_tol_10um"],
     "traits": ["military"],
@@ -508,7 +485,6 @@
   {
     "id": "mil_machine_gun_gas",
     "name": "Machine gun, gas-operated",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_centrefire_primer", "mil_magazine", "cap_tol_10um"],
     "traits": ["military"],
@@ -530,7 +506,6 @@
   {
     "id": "mil_water_jacket",
     "name": "Water jacket",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_machine_gun_recoil"],
     "traits": ["military"],
@@ -552,7 +527,6 @@
   {
     "id": "mil_belt_feed",
     "name": "Belt feed system",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_magazine", "interchangeable_parts"],
     "traits": ["military"],
@@ -574,7 +548,6 @@
   {
     "id": "mil_smokeless_powder",
     "name": "Smokeless powder",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mat_nitrocellulose", "nitric_acid", "atomic_theory"],
     "traits": ["military"],
@@ -596,7 +569,6 @@
   {
     "id": "mil_cordite",
     "name": "Cordite",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_smokeless_powder", "mat_nitrocellulose"],
     "traits": ["military"],
@@ -618,7 +590,6 @@
   {
     "id": "mil_artillery_piece",
     "name": "Artillery piece",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["cap_heat_1300", "mat_bronze"],
     "traits": ["military"],
@@ -640,7 +611,6 @@
   {
     "id": "mil_trunnion",
     "name": "Trunnion",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_artillery_piece"],
     "traits": ["military"],
@@ -662,7 +632,6 @@
   {
     "id": "mil_artillery_carriage",
     "name": "Artillery carriage",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_trunnion", "mat_wrought_iron"],
     "traits": ["military", "infrastructure"],
@@ -684,7 +653,6 @@
   {
     "id": "mil_recoil_mechanism",
     "name": "Recoil mechanism",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_artillery_carriage", "cap_tol_10um"],
     "traits": ["military"],
@@ -706,7 +674,6 @@
   {
     "id": "mil_breech_block",
     "name": "Breech block",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_artillery_piece", "cap_tol_100um"],
     "traits": ["military"],
@@ -728,7 +695,6 @@
   {
     "id": "mil_artillery_shell",
     "name": "Artillery shell",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_artillery_piece"],
     "traits": ["military"],
@@ -750,7 +716,6 @@
   {
     "id": "mil_shrapnel_shell",
     "name": "Shrapnel shell",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_artillery_shell", "mil_fuse_quick_match"],
     "traits": ["military"],
@@ -772,7 +737,6 @@
   {
     "id": "mil_high_explosive_shell",
     "name": "High explosive shell",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_artillery_shell", "mat_nitroglycerin"],
     "traits": ["military"],
@@ -794,7 +758,6 @@
   {
     "id": "mil_fuse_types",
     "name": "Artillery fuse designs",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_fuse_quick_match"],
     "traits": ["military"],
@@ -816,7 +779,6 @@
   {
     "id": "mil_mortar",
     "name": "Mortar",
-    "tier": 1,
     "cat": "weapons",
     "pre": ["mil_artillery_piece"],
     "traits": ["military"],
@@ -838,7 +800,6 @@
   {
     "id": "mil_howitzer",
     "name": "Howitzer",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mil_artillery_piece", "mil_breech_block"],
     "traits": ["military"],
@@ -860,7 +821,6 @@
   {
     "id": "mil_indirect_fire",
     "name": "Indirect fire",
-    "tier": 3,
     "cat": "tactics",
     "pre": ["mil_howitzer", "algebra_symbolic"],
     "traits": ["military"],
@@ -882,7 +842,6 @@
   {
     "id": "mil_forward_observer",
     "name": "Forward observer",
-    "tier": 3,
     "cat": "tactics",
     "pre": ["mil_indirect_fire", "telegraph_electric"],
     "traits": ["military"],
@@ -904,7 +863,6 @@
   {
     "id": "mil_range_table",
     "name": "Range table",
-    "tier": 3,
     "cat": "tactics",
     "pre": ["mil_howitzer", "newtonian_mechanics"],
     "traits": ["military", "information"],
@@ -926,7 +884,6 @@
   {
     "id": "mil_rangefinder",
     "name": "Rangefinder",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["lens_grinding", "cap_tol_10um"],
     "traits": ["military"],
@@ -948,7 +905,6 @@
   {
     "id": "mil_fire_control_director",
     "name": "Fire control director",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_rangefinder", "mil_range_table", "cap_tol_10um"],
     "traits": ["military"],
@@ -970,7 +926,6 @@
   {
     "id": "mil_fire_control_computing",
     "name": "Fire control computing",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_fire_control_director", "calculus"],
     "traits": ["military", "information"],
@@ -992,7 +947,6 @@
   {
     "id": "mil_anti_aircraft_gun",
     "name": "Anti-aircraft gun",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["mil_howitzer", "mil_rangefinder"],
     "traits": ["military"],
@@ -1014,7 +968,6 @@
   {
     "id": "mil_proximity_fuse",
     "name": "Proximity fuse",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_high_explosive_shell", "vacuum_tube", "discharge_xray"],
     "traits": ["military"],
@@ -1036,7 +989,6 @@
   {
     "id": "mil_trace_italienne",
     "name": "Trace italienne",
-    "tier": 1,
     "cat": "fortification",
     "pre": [],
     "traits": ["military", "infrastructure"],
@@ -1058,7 +1010,6 @@
   {
     "id": "mil_bastion",
     "name": "Bastion",
-    "tier": 1,
     "cat": "fortification",
     "pre": ["mil_trace_italienne"],
     "traits": ["military", "infrastructure"],
@@ -1080,7 +1031,6 @@
   {
     "id": "mil_glacis",
     "name": "Glacis",
-    "tier": 1,
     "cat": "fortification",
     "pre": ["mil_trace_italienne"],
     "traits": ["military", "infrastructure"],
@@ -1102,7 +1052,6 @@
   {
     "id": "mil_ravelin",
     "name": "Ravelin",
-    "tier": 1,
     "cat": "fortification",
     "pre": ["mil_bastion"],
     "traits": ["military", "infrastructure"],
@@ -1124,7 +1073,6 @@
   {
     "id": "mil_casemate",
     "name": "Casemate",
-    "tier": 2,
     "cat": "fortification",
     "pre": ["mil_bastion"],
     "traits": ["military", "infrastructure"],
@@ -1146,7 +1094,6 @@
   {
     "id": "mil_armoured_cupola",
     "name": "Armoured cupola",
-    "tier": 3,
     "cat": "fortification",
     "pre": ["mil_casemate", "mat_bulk_steel"],
     "traits": ["military", "infrastructure"],
@@ -1168,7 +1115,6 @@
   {
     "id": "mil_concrete_fortification",
     "name": "Concrete fortification",
-    "tier": 2,
     "cat": "fortification",
     "pre": ["mat_cement_portland", "mil_trace_italienne"],
     "traits": ["military", "infrastructure"],
@@ -1190,7 +1136,6 @@
   {
     "id": "mil_trench",
     "name": "Trench",
-    "tier": 2,
     "cat": "fortification",
     "pre": [],
     "traits": ["military", "infrastructure"],
@@ -1212,7 +1157,6 @@
   {
     "id": "mil_barbed_wire",
     "name": "Barbed wire",
-    "tier": 2,
     "cat": "fortification",
     "pre": ["mat_bulk_steel"],
     "traits": ["military", "infrastructure"],
@@ -1234,7 +1178,6 @@
   {
     "id": "mil_machine_gun_nest",
     "name": "Machine gun nest",
-    "tier": 3,
     "cat": "fortification",
     "pre": ["mil_trench", "mil_machine_gun_recoil"],
     "traits": ["military", "infrastructure"],
@@ -1256,7 +1199,6 @@
   {
     "id": "mil_pillbox",
     "name": "Pillbox",
-    "tier": 2,
     "cat": "fortification",
     "pre": ["mil_machine_gun_nest", "mat_concrete_reinforced"],
     "traits": ["military", "infrastructure"],
@@ -1278,7 +1220,6 @@
   {
     "id": "mil_anti_tank_ditch",
     "name": "Anti-tank ditch",
-    "tier": 2,
     "cat": "fortification",
     "pre": ["mil_tank"],
     "traits": ["military", "infrastructure"],
@@ -1300,7 +1241,6 @@
   {
     "id": "mil_plate_armour_firearms",
     "name": "Plate armour against firearms",
-    "tier": 1,
     "cat": "armour",
     "pre": [],
     "traits": ["military"],
@@ -1322,7 +1262,6 @@
   {
     "id": "mil_ironclad",
     "name": "Ironclad",
-    "tier": 2,
     "cat": "naval",
     "pre": ["steam_watt", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1344,7 +1283,6 @@
   {
     "id": "mil_armoured_cruiser",
     "name": "Armoured cruiser",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_ironclad", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1366,7 +1304,6 @@
   {
     "id": "mil_dreadnought",
     "name": "Dreadnought",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_ironclad", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1388,7 +1325,6 @@
   {
     "id": "mil_battlecruiser",
     "name": "Battlecruiser",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_dreadnought"],
     "traits": ["military"],
@@ -1410,7 +1346,6 @@
   {
     "id": "mil_face_hardened_armour",
     "name": "Face-hardened armour",
-    "tier": 3,
     "cat": "armour",
     "pre": ["case_hardening", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1432,7 +1367,6 @@
   {
     "id": "mil_torpedo",
     "name": "Torpedo",
-    "tier": 2,
     "cat": "naval",
     "pre": ["mat_nitroglycerin", "steam_watt"],
     "traits": ["military"],
@@ -1454,7 +1388,6 @@
   {
     "id": "mil_torpedo_boat",
     "name": "Torpedo boat",
-    "tier": 2,
     "cat": "naval",
     "pre": ["mil_torpedo", "steam_watt"],
     "traits": ["military"],
@@ -1476,7 +1409,6 @@
   {
     "id": "mil_destroyer",
     "name": "Destroyer",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_torpedo_boat"],
     "traits": ["military"],
@@ -1498,7 +1430,6 @@
   {
     "id": "mil_submarine",
     "name": "Submarine",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_torpedo", "steam_watt"],
     "traits": ["military"],
@@ -1520,7 +1451,6 @@
   {
     "id": "mil_periscope",
     "name": "Periscope",
-    "tier": 3,
     "cat": "weapons",
     "pre": ["lens_grinding", "mat_glass_lead"],
     "traits": ["military"],
@@ -1542,7 +1472,6 @@
   {
     "id": "mil_torpedo_tube",
     "name": "Torpedo tube",
-    "tier": 2,
     "cat": "naval",
     "pre": ["mil_torpedo"],
     "traits": ["military"],
@@ -1564,7 +1493,6 @@
   {
     "id": "mil_depth_charge",
     "name": "Depth charge",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_high_explosive_shell"],
     "traits": ["military"],
@@ -1586,7 +1514,6 @@
   {
     "id": "mil_asdic",
     "name": "ASDIC",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["vacuum_tube", "ultrasonic_transducer"],
     "traits": ["military"],
@@ -1608,7 +1535,6 @@
   {
     "id": "mil_naval_mine",
     "name": "Naval mine",
-    "tier": 2,
     "cat": "naval",
     "pre": ["mat_cast_iron"],
     "traits": ["military"],
@@ -1630,7 +1556,6 @@
   {
     "id": "mil_minesweeper",
     "name": "Minesweeper",
-    "tier": 3,
     "cat": "naval",
     "pre": ["mil_naval_mine"],
     "traits": ["military"],
@@ -1652,7 +1577,6 @@
   {
     "id": "mil_tank",
     "name": "Tank",
-    "tier": 4,
     "cat": "vehicles",
     "pre": ["internal_combustion_engine", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1674,7 +1598,6 @@
   {
     "id": "mil_track",
     "name": "Track system",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["internal_combustion_engine"],
     "traits": ["military"],
@@ -1696,7 +1619,6 @@
   {
     "id": "mil_sponson",
     "name": "Sponson",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["mil_tank"],
     "traits": ["military"],
@@ -1718,7 +1640,6 @@
   {
     "id": "mil_tank_turret",
     "name": "Tank turret",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["mil_tank"],
     "traits": ["military"],
@@ -1740,7 +1661,6 @@
   {
     "id": "mil_turret_traverse",
     "name": "Turret traverse mechanism",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["mil_tank_turret"],
     "traits": ["military"],
@@ -1762,7 +1682,6 @@
   {
     "id": "mil_sloped_armour",
     "name": "Sloped armour",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["mil_tank"],
     "traits": ["military"],
@@ -1784,7 +1703,6 @@
   {
     "id": "mil_armoured_car",
     "name": "Armoured car",
-    "tier": 3,
     "cat": "vehicles",
     "pre": ["internal_combustion_engine", "mat_bulk_steel"],
     "traits": ["military"],
@@ -1806,7 +1724,6 @@
   {
     "id": "mil_half_track",
     "name": "Half-track vehicle",
-    "tier": 4,
     "cat": "vehicles",
     "pre": ["mil_track", "internal_combustion_engine"],
     "traits": ["military"],
@@ -1828,7 +1745,6 @@
   {
     "id": "mil_self_propelled_gun",
     "name": "Self-propelled gun",
-    "tier": 4,
     "cat": "vehicles",
     "pre": ["mil_tank", "mil_howitzer"],
     "traits": ["military"],
@@ -1850,7 +1766,6 @@
   {
     "id": "mil_observation_balloon",
     "name": "Observation balloon",
-    "tier": 2,
     "cat": "air",
     "pre": ["hot_air_balloon"],
     "traits": ["military"],
@@ -1872,7 +1787,6 @@
   {
     "id": "mil_aerial_reconnaissance",
     "name": "Aerial reconnaissance",
-    "tier": 3,
     "cat": "air",
     "pre": ["mil_observation_balloon", "telegraph_electric"],
     "traits": ["military"],
@@ -1894,7 +1808,6 @@
   {
     "id": "mil_aerial_camera",
     "name": "Aerial camera",
-    "tier": 3,
     "cat": "air",
     "pre": ["photography", "mil_observation_balloon"],
     "traits": ["military"],
@@ -1916,7 +1829,6 @@
   {
     "id": "mil_bomb_general_purpose",
     "name": "Bomb, general purpose",
-    "tier": 2,
     "cat": "air",
     "pre": ["mat_cast_iron"],
     "traits": ["military"],
@@ -1938,7 +1850,6 @@
   {
     "id": "mil_bomb_sight",
     "name": "Bomb sight",
-    "tier": 3,
     "cat": "air",
     "pre": ["mil_bomb_general_purpose", "lens_grinding"],
     "traits": ["military"],
@@ -1960,7 +1871,6 @@
   {
     "id": "mil_gun_synchroniser",
     "name": "Machine gun synchroniser",
-    "tier": 3,
     "cat": "air",
     "pre": ["mil_machine_gun_recoil"],
     "traits": ["military"],
@@ -1982,7 +1892,6 @@
   {
     "id": "mil_fighter_aircraft",
     "name": "Fighter aircraft",
-    "tier": 4,
     "cat": "air",
     "pre": ["aircraft_engine", "mil_machine_gun_recoil"],
     "traits": ["military"],
@@ -2004,7 +1913,6 @@
   {
     "id": "mil_bomber_aircraft",
     "name": "Bomber aircraft",
-    "tier": 4,
     "cat": "air",
     "pre": ["aircraft_engine", "mil_bomb_sight"],
     "traits": ["military"],
@@ -2026,7 +1934,6 @@
   {
     "id": "mil_dive_bomber",
     "name": "Dive bomber",
-    "tier": 4,
     "cat": "air",
     "pre": ["aircraft_engine", "mil_bomb_sight"],
     "traits": ["military"],
@@ -2048,7 +1955,6 @@
   {
     "id": "mil_aircraft_carrier",
     "name": "Aircraft carrier",
-    "tier": 4,
     "cat": "naval",
     "pre": ["mil_ironclad", "mil_fighter_aircraft"],
     "traits": ["military"],
@@ -2070,7 +1976,6 @@
   {
     "id": "mil_arrester_wire",
     "name": "Arrester wire",
-    "tier": 3,
     "cat": "air",
     "pre": ["mil_aircraft_carrier"],
     "traits": ["military"],
@@ -2092,7 +1997,6 @@
   {
     "id": "mil_aircraft_catapult",
     "name": "Aircraft catapult",
-    "tier": 3,
     "cat": "air",
     "pre": ["mil_aircraft_carrier", "steam_watt"],
     "traits": ["military"],
@@ -2114,7 +2018,6 @@
   {
     "id": "mil_radar",
     "name": "Radar",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["vacuum_tube", "electromagnetism_theory"],
     "traits": ["military"],
@@ -2136,7 +2039,6 @@
   {
     "id": "mil_chain_home",
     "name": "Chain Home radar network",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_radar", "telegraph_electric"],
     "traits": ["military", "infrastructure"],
@@ -2158,7 +2060,6 @@
   {
     "id": "mil_iff_system",
     "name": "IFF system",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["mil_radar"],
     "traits": ["military"],
@@ -2180,7 +2081,6 @@
   {
     "id": "mil_guided_bomb",
     "name": "Guided bomb",
-    "tier": 4,
     "cat": "air",
     "pre": ["mil_bomb_general_purpose", "vacuum_tube"],
     "traits": ["military"],
@@ -2202,7 +2102,6 @@
   {
     "id": "mil_ballistic_rocket",
     "name": "Ballistic rocket",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["rocket_engine"],
     "traits": ["military"],
@@ -2224,7 +2123,6 @@
   {
     "id": "mil_jet_fighter",
     "name": "Jet fighter aircraft",
-    "tier": 4,
     "cat": "air",
     "pre": ["jet_engine", "mil_fighter_aircraft"],
     "traits": ["military"],
@@ -2246,7 +2144,6 @@
   {
     "id": "mil_chemical_chlorine",
     "name": "Chlorine gas weapon",
-    "tier": 2,
     "cat": "chemical",
     "pre": ["mat_chlorine"],
     "traits": ["military"],
@@ -2268,7 +2165,6 @@
   {
     "id": "mil_chemical_phosgene",
     "name": "Phosgene gas",
-    "tier": 3,
     "cat": "chemical",
     "pre": ["mat_chlorine", "mat_carbon"],
     "traits": ["military"],
@@ -2290,7 +2186,6 @@
   {
     "id": "mil_chemical_mustard",
     "name": "Mustard gas",
-    "tier": 3,
     "cat": "chemical",
     "pre": ["ethylene_glycol", "mat_sulfur"],
     "traits": ["military"],
@@ -2312,7 +2207,6 @@
   {
     "id": "mil_gas_mask",
     "name": "Gas mask",
-    "tier": 2,
     "cat": "chemical",
     "pre": [],
     "traits": ["military"],
@@ -2334,7 +2228,6 @@
   {
     "id": "mil_flamethrower",
     "name": "Flamethrower",
-    "tier": 2,
     "cat": "weapons",
     "pre": ["mat_petroleum_refined"],
     "traits": ["military", "weapon_democratising"],
@@ -2356,7 +2249,6 @@
   {
     "id": "mil_incendiary_bomb",
     "name": "Incendiary bomb",
-    "tier": 2,
     "cat": "air",
     "pre": ["mat_petroleum_refined"],
     "traits": ["military"],
@@ -2378,7 +2270,6 @@
   {
     "id": "mil_napalm",
     "name": "Napalm",
-    "tier": 4,
     "cat": "chemical",
     "pre": ["mil_incendiary_bomb", "mat_bulk_steel"],
     "traits": ["military"],
@@ -2400,7 +2291,6 @@
   {
     "id": "mil_atomic_bomb",
     "name": "Atomic bomb",
-    "tier": 4,
     "cat": "weapons",
     "pre": ["uranium_enrichment", "plutonium_production"],
     "traits": ["military"],
@@ -2422,7 +2312,6 @@
   {
     "id": "mil_general_staff",
     "name": "General staff",
-    "tier": 2,
     "cat": "organisation",
     "pre": [],
     "traits": ["military"],
@@ -2444,7 +2333,6 @@
   {
     "id": "mil_war_college",
     "name": "War college",
-    "tier": 2,
     "cat": "organisation",
     "pre": ["mil_general_staff"],
     "traits": ["military"],
@@ -2466,7 +2354,6 @@
   {
     "id": "mil_logistics_discipline",
     "name": "Logistics as discipline",
-    "tier": 2,
     "cat": "organisation",
     "pre": ["mil_general_staff", "statistics_basic"],
     "traits": ["military"],
@@ -2488,7 +2375,6 @@
   {
     "id": "mil_railway_mobilisation",
     "name": "Railway timetable mobilisation",
-    "tier": 2,
     "cat": "organisation",
     "pre": ["railway", "mil_general_staff"],
     "traits": ["military"],
@@ -2510,7 +2396,6 @@
   {
     "id": "mil_field_telephone",
     "name": "Field telephone",
-    "tier": 3,
     "cat": "communications",
     "pre": ["telegraph_electric"],
     "traits": ["military"],
@@ -2532,7 +2417,6 @@
   {
     "id": "mil_wireless_set",
     "name": "Wireless set",
-    "tier": 3,
     "cat": "communications",
     "pre": ["radio"],
     "traits": ["military"],
@@ -2554,7 +2438,6 @@
   {
     "id": "mil_signals_intelligence",
     "name": "Signals intelligence",
-    "tier": 3,
     "cat": "organisation",
     "pre": ["mil_wireless_set"],
     "traits": ["military", "information"],
@@ -2576,7 +2459,6 @@
   {
     "id": "mil_cryptanalysis",
     "name": "Cryptanalysis",
-    "tier": 3,
     "cat": "organisation",
     "pre": ["mil_signals_intelligence", "algebra_symbolic"],
     "traits": ["military", "information"],
@@ -2598,7 +2480,6 @@
   {
     "id": "mil_operational_research",
     "name": "Operational research",
-    "tier": 4,
     "cat": "organisation",
     "pre": ["statistics_basic", "calculus"],
     "traits": ["military"],
@@ -2620,7 +2501,6 @@
   {
     "id": "mil_ammunition_standardisation",
     "name": "Ammunition standardisation",
-    "tier": 2,
     "cat": "organisation",
     "pre": ["interchangeable_parts"],
     "traits": ["military"],
@@ -2642,7 +2522,6 @@
   {
     "id": "mil_arsenal_manufacturing",
     "name": "Arsenal and interchangeable manufacture",
-    "tier": 2,
     "cat": "organisation",
     "pre": ["interchangeable_parts"],
     "traits": ["military"],
@@ -2664,7 +2543,6 @@
   {
     "id": "mil_conscription_reserve",
     "name": "Conscription and reserve",
-    "tier": 2,
     "cat": "organisation",
     "pre": [],
     "traits": ["military"],
