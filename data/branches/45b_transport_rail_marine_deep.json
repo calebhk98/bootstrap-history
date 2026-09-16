@@ -2,7 +2,6 @@
  {
   "id":"tr_wooden_waggonway",
   "name":"Wooden waggonway",
-  "tier":0,
   "cat":"rail",
   "pre":[
    "cap_power_muscle"
@@ -33,7 +32,6 @@
  {
   "id":"tr_flanged_wheel",
   "name":"Flanged cast iron wheel",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "blast_furnace",
@@ -66,7 +64,6 @@
  {
   "id":"tr_edge_rail",
   "name":"Edge rail in wrought iron",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -100,7 +97,6 @@
  {
   "id":"tr_rail_rolling",
   "name":"Rail rolling in mill",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "bessemer_openhearth",
@@ -134,7 +130,6 @@
  {
   "id":"tr_bullhead_rail",
   "name":"Bullhead rail",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_rail_rolling",
@@ -166,7 +161,6 @@
  {
   "id":"tr_flatbottom_rail",
   "name":"Flat bottom rail",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "tr_rail_rolling",
@@ -198,7 +192,6 @@
  {
   "id":"tr_rail_welding",
   "name":"Rail welding",
-  "tier":4,
   "cat":"rail",
   "pre":[
    "tr_rail_rolling",
@@ -232,7 +225,6 @@
  {
   "id":"tr_fishplate",
   "name":"Fishplate for rail joining",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -264,7 +256,6 @@
  {
   "id":"tr_sleeper_ballast",
   "name":"Sleeper and ballast foundation",
-  "tier":1,
   "cat":"rail",
   "pre":[],
   "traits":[
@@ -295,7 +286,6 @@
  {
   "id":"tr_chair_key",
   "name":"Chair and key for bullhead rail",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "blast_furnace",
@@ -327,7 +317,6 @@
  {
   "id":"tr_points_frog",
   "name":"Points and frog",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_edge_rail",
@@ -362,7 +351,6 @@
  {
   "id":"tr_turntable",
   "name":"Locomotive turntable",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -396,7 +384,6 @@
  {
   "id":"tr_sprung_buffer",
   "name":"Sprung coupling buffer",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -430,7 +417,6 @@
  {
   "id":"tr_screw_coupling",
   "name":"Screw coupling",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -462,7 +448,6 @@
  {
   "id":"tr_knuckle_coupler",
   "name":"Automatic knuckle coupler",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "tr_sprung_buffer",
@@ -497,7 +482,6 @@
  {
   "id":"tr_vacuum_brake",
   "name":"Vacuum brake",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "cap_heat_1100",
@@ -532,7 +516,6 @@
  {
   "id":"tr_westinghouse_brake",
   "name":"Westinghouse air brake",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "cap_power_steam",
@@ -567,7 +550,6 @@
  {
   "id":"tr_bogie_truck",
   "name":"Bogie truck with leading wheels",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "cap_tol_100um",
@@ -602,7 +584,6 @@
  {
   "id":"tr_leading_truck",
   "name":"Leading truck for guiding",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "cap_tol_1mm",
@@ -636,7 +617,6 @@
  {
   "id":"tr_locomotive_boiler",
   "name":"Locomotive boiler with multitubular flues",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "cap_heat_1300",
@@ -680,7 +660,6 @@
  {
   "id":"tr_blastpipe",
   "name":"Blastpipe for draught",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "tr_locomotive_boiler"
@@ -711,7 +690,6 @@
  {
   "id":"tr_superheater",
   "name":"Superheater",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_locomotive_boiler",
@@ -744,7 +722,6 @@
  {
   "id":"tr_injector_feedwater",
   "name":"Injector feedwater pump",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_locomotive_boiler",
@@ -778,7 +755,6 @@
  {
   "id":"tr_slide_valve",
   "name":"Slide valve for steam distribution",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -811,7 +787,6 @@
  {
   "id":"tr_piston_valve",
   "name":"Piston valve",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_slide_valve",
@@ -845,7 +820,6 @@
  {
   "id":"tr_stephenson_linkmotion",
   "name":"Stephenson link motion",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "crank_conrod",
@@ -879,7 +853,6 @@
  {
   "id":"tr_walschaerts_valve",
   "name":"Walschaerts valve gear",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "crank_conrod",
@@ -913,7 +886,6 @@
  {
   "id":"tr_compound_expansion",
   "name":"Compound expansion engine",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_locomotiv_boiler",
@@ -947,7 +919,6 @@
  {
   "id":"tr_articulated_locomotive",
   "name":"Articulated locomotive",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "tr_compound_expansion",
@@ -983,7 +954,6 @@
  {
   "id":"tr_electric_locomotive",
   "name":"Electric locomotive with trolley pole",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "motor_transformer_ac",
@@ -1018,7 +988,6 @@
  {
   "id":"tr_third_rail",
   "name":"Third rail power conductor",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "copper_refining",
@@ -1049,7 +1018,6 @@
  {
   "id":"tr_catenary_overhead",
   "name":"Overhead catenary for power",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "copper_refining",
@@ -1082,7 +1050,6 @@
  {
   "id":"tr_pantograph",
   "name":"Pantograph current collector",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_catenary_overhead",
@@ -1116,7 +1083,6 @@
  {
   "id":"tr_diesel_electric",
   "name":"Diesel electric transmission",
-  "tier":4,
   "cat":"rail",
   "pre":[
    "motor_transformer_ac",
@@ -1153,7 +1119,6 @@
  {
   "id":"tr_semaphore_signal",
   "name":"Semaphore signal",
-  "tier":1,
   "cat":"rail",
   "pre":[],
   "traits":[
@@ -1185,7 +1150,6 @@
  {
   "id":"tr_block_signalling",
   "name":"Block signalling system",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_semaphore_signal"
@@ -1215,7 +1179,6 @@
  {
   "id":"tr_track_circuit",
   "name":"Track circuit for detection",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "electromagnet",
@@ -1250,7 +1213,6 @@
  {
   "id":"tr_interlocking_signal",
   "name":"Interlocking for signal control",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_track_circuit",
@@ -1285,7 +1247,6 @@
  {
   "id":"tr_automatic_train_stop",
   "name":"Automatic train stop",
-  "tier":3,
   "cat":"rail",
   "pre":[
    "tr_track_circuit",
@@ -1319,7 +1280,6 @@
  {
   "id":"tr_sleeping_car",
   "name":"Sleeping car for passengers",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "wood_construction"
@@ -1352,7 +1312,6 @@
  {
   "id":"tr_refrigerated_wagon",
   "name":"Refrigerated wagon",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "mat_ice_artificial",
@@ -1386,7 +1345,6 @@
  {
   "id":"tr_hopper_wagon",
   "name":"Hopper wagon for bulk minerals",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "wood_construction",
@@ -1420,7 +1378,6 @@
  {
   "id":"tr_tank_wagon",
   "name":"Tank wagon for liquids",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "riveted_plating",
@@ -1453,7 +1410,6 @@
  {
   "id":"tr_marshalling_hump",
   "name":"Marshalling hump yard",
-  "tier":2,
   "cat":"rail",
   "pre":[
    "tr_knuckle_coupler",
@@ -1485,7 +1441,6 @@
  {
   "id":"tr_clinker_planking",
   "name":"Clinker planking hull construction",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1514,7 +1469,6 @@
  {
   "id":"tr_carvel_planking",
   "name":"Carvel planking hull construction",
-  "tier":1,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1543,7 +1497,6 @@
  {
   "id":"tr_frame_first_construction",
   "name":"Frame-first hull construction",
-  "tier":1,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1571,7 +1524,6 @@
  {
   "id":"tr_sternpost_rudder",
   "name":"Sternpost rudder",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1601,7 +1553,6 @@
  {
   "id":"tr_lateen_sail",
   "name":"Lateen sail",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1629,7 +1580,6 @@
  {
   "id":"tr_square_rig",
   "name":"Square rig sails",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1657,7 +1607,6 @@
  {
   "id":"tr_fore_aft_rig",
   "name":"Fore-and-aft rig",
-  "tier":0,
   "cat":"marine",
   "pre":[
    "tr_lateen_sail"
@@ -1689,7 +1638,6 @@
  {
   "id":"tr_jib",
   "name":"Jib triangular foresail",
-  "tier":0,
   "cat":"marine",
   "pre":[
    "tr_fore_aft_rig"
@@ -1719,7 +1667,6 @@
  {
   "id":"tr_staysail",
   "name":"Staysail",
-  "tier":0,
   "cat":"marine",
   "pre":[
    "tr_fore_aft_rig"
@@ -1749,7 +1696,6 @@
  {
   "id":"tr_reefing",
   "name":"Reefing sails",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1778,7 +1724,6 @@
  {
   "id":"tr_capstan",
   "name":"Capstan for hauling",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -1812,7 +1757,6 @@
  {
   "id":"tr_windlass",
   "name":"Windlass for anchor hauling",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -1846,7 +1790,6 @@
  {
   "id":"tr_block_tackle",
   "name":"Block and tackle pulley",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -1877,7 +1820,6 @@
  {
   "id":"tr_chain_cable",
   "name":"Chain cable",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -1908,7 +1850,6 @@
  {
   "id":"tr_stockless_anchor",
   "name":"Stockless anchor",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "cap_heat_1300",
@@ -1940,7 +1881,6 @@
  {
   "id":"tr_copper_sheathing",
   "name":"Copper sheathing for wooden hulls",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "copper_refining",
@@ -1973,7 +1913,6 @@
  {
   "id":"tr_caulking_oakum",
   "name":"Caulking with oakum",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -2004,7 +1943,6 @@
  {
   "id":"tr_bilge_pump",
   "name":"Bilge pump",
-  "tier":0,
   "cat":"marine",
   "pre":[
    "cap_power_muscle"
@@ -2037,7 +1975,6 @@
  {
   "id":"tr_watertight_bulkhead",
   "name":"Watertight bulkhead",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "wood_construction"
@@ -2067,7 +2004,6 @@
  {
   "id":"tr_double_bottom",
   "name":"Double bottom hull structure",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "riveted_plating",
@@ -2099,7 +2035,6 @@
  {
   "id":"tr_iron_hull",
   "name":"Iron hull construction",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -2132,7 +2067,6 @@
  {
   "id":"tr_steel_hull",
   "name":"Steel hull construction",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "bessemer_openhearth",
@@ -2165,7 +2099,6 @@
  {
   "id":"tr_riveted_plating",
   "name":"Riveted hull plating",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -2198,7 +2131,6 @@
  {
   "id":"tr_welded_hull",
   "name":"Welded hull seams",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "riveted_plating",
@@ -2232,7 +2164,6 @@
  {
   "id":"tr_screw_propeller",
   "name":"Screw propeller",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "boring_mill",
@@ -2267,7 +2198,6 @@
  {
   "id":"tr_paddle_wheel",
   "name":"Paddle wheel for propulsion",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "finery_puddling",
@@ -2301,7 +2231,6 @@
  {
   "id":"tr_variable_pitch_propeller",
   "name":"Variable pitch propeller",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "screw_propeller",
@@ -2335,7 +2264,6 @@
  {
   "id":"tr_stern_tube",
   "name":"Stern tube and stuffing box",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "boring_mill",
@@ -2368,7 +2296,6 @@
  {
   "id":"tr_marine_engine",
   "name":"Marine steam engine",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "steam_high_pressure",
@@ -2403,7 +2330,6 @@
  {
   "id":"tr_triple_expansion",
   "name":"Triple expansion marine engine",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "marine_engine",
@@ -2437,7 +2363,6 @@
  {
   "id":"tr_water_tube_boiler",
   "name":"Water tube boiler",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "cap_heat_1300",
@@ -2470,7 +2395,6 @@
  {
   "id":"tr_marine_turbine",
   "name":"Marine steam turbine",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "steam_watt",
@@ -2504,7 +2428,6 @@
  {
   "id":"tr_reduction_gearing",
   "name":"Reduction gearing for propeller",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "screw_propeller",
@@ -2537,7 +2460,6 @@
  {
   "id":"tr_marine_diesel",
   "name":"Marine diesel engine",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "internal_combustion_engine",
@@ -2572,7 +2494,6 @@
  {
   "id":"tr_ballast_tank",
   "name":"Ballast tank system",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "riveted_plating",
@@ -2603,7 +2524,6 @@
  {
   "id":"tr_submarine_hull",
   "name":"Submarine pressure hull",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "bessemer_openhearth",
@@ -2636,7 +2556,6 @@
  {
   "id":"tr_periscope",
   "name":"Periscope",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "lens_grinding",
@@ -2670,7 +2589,6 @@
  {
   "id":"tr_lifeboat",
   "name":"Lifeboat and davit system",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "wood_construction",
@@ -2703,7 +2621,6 @@
  {
   "id":"tr_ship_telegraph",
   "name":"Ship telegraph signal system",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "electromagnet"
@@ -2735,7 +2652,6 @@
  {
   "id":"tr_gyrocompass_repeater",
   "name":"Gyrocompass repeater",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "gyroscope",
@@ -2769,7 +2685,6 @@
  {
   "id":"tr_log_sounding",
   "name":"Log and sounding instruments",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "cap_measure_len"
@@ -2801,7 +2716,6 @@
  {
   "id":"tr_lighthouse_fresnel",
   "name":"Lighthouse and Fresnel lens",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "lens_grinding",
@@ -2834,7 +2748,6 @@
  {
   "id":"tr_dry_dock",
   "name":"Dry dock facility",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "canal_lock",
@@ -2865,7 +2778,6 @@
  {
   "id":"tr_slipway_launch",
   "name":"Slipway for ship launch",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "wood_construction"
@@ -2896,7 +2808,6 @@
  {
   "id":"tr_canal_lock",
   "name":"Canal lock for water level control",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "wood_construction",
@@ -2929,7 +2840,6 @@
  {
   "id":"tr_canal_lift",
   "name":"Canal lift water elevator",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "canal_lock",
@@ -2962,7 +2872,6 @@
  {
   "id":"tr_dredger",
   "name":"Dredger for channel deepening",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "screw_propeller",
@@ -2996,7 +2905,6 @@
  {
   "id":"tr_tug",
   "name":"Tug boat for towing",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "screw_propeller",
@@ -3030,7 +2938,6 @@
  {
   "id":"tr_brake_shoe",
   "name":"Brake shoe on wheels",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "case_hardening",
@@ -3062,7 +2969,6 @@
  {
   "id":"tr_axle_bearing_box",
   "name":"Axle bearing journal box",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "finery_puddling",
@@ -3094,7 +3000,6 @@
  {
   "id":"tr_smoke_box",
   "name":"Smoke box and char arrester",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "tr_locomotive_boiler"
@@ -3124,7 +3029,6 @@
  {
   "id":"tr_grade_crossing",
   "name":"Grade crossing and safety gates",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "tr_semaphore_signal"
@@ -3156,7 +3060,6 @@
  {
   "id":"tr_rail_gauge_standardization",
   "name":"Standard rail gauge",
-  "tier":1,
   "cat":"rail",
   "pre":[
    "tr_sleeper_ballast",
@@ -3183,7 +3086,6 @@
  {
   "id":"tr_sextant_navigation",
   "name":"Sextant for celestial navigation",
-  "tier":2,
   "cat":"marine",
   "pre":[
    "lens_grinding",
@@ -3217,7 +3119,6 @@
  {
   "id":"tr_marine_chronometer",
   "name":"Marine chronometer for longitude",
-  "tier":3,
   "cat":"marine",
   "pre":[
    "clock_pendulum",
@@ -3251,7 +3152,6 @@
  {
   "id":"tr_mast_stepping",
   "name":"Mast stepping and rigging",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -3281,7 +3181,6 @@
  {
   "id":"tr_fore_and_aft_rigging",
   "name":"Fore-and-aft rigging system",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "tr_fore_aft_rig"
@@ -3312,7 +3211,6 @@
  {
   "id":"tr_keelson",
   "name":"Keelson internal keel",
-  "tier":1,
   "cat":"marine",
   "pre":[
    "frame_first_construction"
@@ -3342,7 +3240,6 @@
  {
   "id":"tr_hull_sheathing_wood",
   "name":"Internal hull sheathing and ceiling",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -3370,7 +3267,6 @@
  {
   "id":"tr_bowsprit",
   "name":"Bowsprit extension spar",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[
@@ -3400,7 +3296,6 @@
  {
   "id":"tr_rigging_block_lashing",
   "name":"Block rigging and rope lashing",
-  "tier":0,
   "cat":"marine",
   "pre":[],
   "traits":[

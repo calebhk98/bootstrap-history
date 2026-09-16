@@ -35,7 +35,13 @@ def load_trades():
 # Schema v2. `yrs`, `sus` and `gov` are v1 and are backfilled, not demanded.
 # Only these are genuinely required. Everything else has a sane default, because
 # rejecting a whole node over a missing `up` throws away real work.
-REQUIRED = ["id","name","tier","cat","pre","note"]
+# ``tier`` is deliberately not part of the authoring contract any more.  The
+# runtime still has a few tier-based decisions, so normalise_v2 supplies a
+# conservative compatibility value while those decisions are migrated in
+# later, small changes.  Keeping it out of REQUIRED is the important first
+# step: authors can remove tiers branch by branch without making merge reject
+# their nodes.
+REQUIRED = ["id","name","cat","pre","note"]
 DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap":200,"up":40,"risk":0.15,"rev":0,
             "sch":0,"art":1,"conf":"C","kb":""}
 

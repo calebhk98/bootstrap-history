@@ -2,7 +2,6 @@
   {
     "id": "ch2_lab_recrystallisation",
     "name": "Recrystallisation",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "thermometer"],
     "traits": ["labour_saving"],
@@ -18,7 +17,6 @@
   {
     "id": "ch2_lab_sublimation",
     "name": "Sublimation apparatus",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "cap_heat_1100"],
     "traits": ["labour_saving"],
@@ -34,7 +32,6 @@
   {
     "id": "ch2_lab_reflux",
     "name": "Reflux condenser",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "distillation_alcohol"],
     "traits": ["labour_saving"],
@@ -50,7 +47,6 @@
   {
     "id": "ch2_lab_soxhlet",
     "name": "Soxhlet extractor",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "reflux", "distillation_alcohol"],
     "req_any": [
@@ -69,7 +65,6 @@
   {
     "id": "ch2_lab_steam_distillation",
     "name": "Steam distillation",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "steam_atmospheric"],
     "traits": ["labour_saving"],
@@ -85,7 +80,6 @@
   {
     "id": "ch2_lab_vacuum_distillation",
     "name": "Vacuum distillation",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "vacuum_pumps", "thermometer"],
     "traits": ["labour_saving"],
@@ -101,7 +95,6 @@
   {
     "id": "ch2_lab_azeotropic_distillation",
     "name": "Azeotropic distillation",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "distillation_alcohol", "atomic_theory"],
     "traits": ["labour_saving"],
@@ -117,7 +110,6 @@
   {
     "id": "ch2_lab_fractional_crystallisation",
     "name": "Fractional crystallisation",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "thermometer", "recrystallisation"],
     "traits": ["labour_saving"],
@@ -133,7 +125,6 @@
   {
     "id": "ch2_lab_dialysis",
     "name": "Dialysis through parchment",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "mat_parchment"],
     "traits": ["labour_saving"],
@@ -149,7 +140,6 @@
   {
     "id": "ch2_lab_electrophoresis",
     "name": "Electrophoresis in gelatin",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "daniell_cell", "cap_pure_2N"],
     "traits": ["labour_saving"],
@@ -165,7 +155,6 @@
   {
     "id": "ch2_lab_paper_chromatography",
     "name": "Paper chromatography",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "mat_paper"],
     "req_any": [
@@ -184,7 +173,6 @@
   {
     "id": "ch2_lab_column_chromatography",
     "name": "Column chromatography",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "cap_tol_1mm"],
     "req_any": [
@@ -204,7 +192,6 @@
   {
     "id": "ch2_lab_gas_chromatography",
     "name": "Gas chromatography",
-    "tier": 4,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "industrial_gases", "cap_heat_1100", "thermometer"],
     "traits": ["labour_saving"],
@@ -220,7 +207,6 @@
   {
     "id": "ch2_lab_ion_exchange",
     "name": "Ion exchange resin",
-    "tier": 4,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "potash_soda", "coal_tar_products"],
     "traits": ["labour_saving"],
@@ -236,7 +222,6 @@
   {
     "id": "ch2_lab_solvent_extraction",
     "name": "Liquid-liquid extraction",
-    "tier": 2,
     "cat": "lab_technique",
     "pre": ["lab_apparatus"],
     "req_any": [
@@ -255,7 +240,6 @@
   {
     "id": "ch2_lab_centrifugation",
     "name": "Centrifuge",
-    "tier": 3,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "cap_power_steam"],
     "traits": ["labour_saving"],
@@ -271,7 +255,6 @@
   {
     "id": "ch2_lab_freeze_drying",
     "name": "Freeze-drying apparatus",
-    "tier": 4,
     "cat": "lab_technique",
     "pre": ["lab_apparatus", "vacuum_pumps", "mat_ice_artificial"],
     "traits": ["labour_saving"],
@@ -287,7 +270,6 @@
   {
     "id": "ch2_analysis_gravimetric",
     "name": "Gravimetric analysis",
-    "tier": 2,
     "cat": "analysis",
     "pre": ["lab_apparatus", "balance_analytical"],
     "traits": ["labour_saving"],
@@ -303,7 +285,6 @@
   {
     "id": "ch2_analysis_titrimetry",
     "name": "Titrimetry and burettes",
-    "tier": 2,
     "cat": "analysis",
     "pre": ["lab_apparatus", "glass_labware"],
     "req_any": [
@@ -322,7 +303,6 @@
   {
     "id": "ch2_analysis_indicator_dyes",
     "name": "Acid-base indicators",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "coal_tar_products"],
     "traits": ["labour_saving"],
@@ -338,7 +318,6 @@
   {
     "id": "ch2_analysis_redox_titration",
     "name": "Redox titration",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "atomic_theory"],
     "req_any": [
@@ -358,7 +337,6 @@
   {
     "id": "ch2_analysis_complexometric",
     "name": "Complexometric titration",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "atomic_theory"],
     "traits": ["labour_saving"],
@@ -374,7 +352,6 @@
   {
     "id": "ch2_analysis_kjeldahl",
     "name": "Kjeldahl nitrogen method",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "nitric_acid"],
     "req_any": [
@@ -394,7 +371,6 @@
   {
     "id": "ch2_analysis_combustion",
     "name": "Combustion analysis of organics",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "industrial_gases"],
     "req_any": [
@@ -413,7 +389,6 @@
   {
     "id": "ch2_analysis_flame_photometry",
     "name": "Flame photometry",
-    "tier": 4,
     "cat": "analysis",
     "pre": ["lab_apparatus", "spectroscope", "industrial_gases"],
     "traits": ["labour_saving"],
@@ -429,7 +404,6 @@
   {
     "id": "ch2_analysis_colorimetry",
     "name": "Colorimetry",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "glass_clear"],
     "traits": ["labour_saving"],
@@ -445,7 +419,6 @@
   {
     "id": "ch2_analysis_spectrophotometry",
     "name": "Spectrophotometry",
-    "tier": 4,
     "cat": "analysis",
     "pre": ["lab_apparatus", "spectroscope"],
     "traits": ["labour_saving"],
@@ -461,7 +434,6 @@
   {
     "id": "ch2_analysis_polarography",
     "name": "Polarography",
-    "tier": 4,
     "cat": "analysis",
     "pre": ["lab_apparatus", "vacuum_tube", "daniell_cell"],
     "traits": ["labour_saving"],
@@ -477,7 +449,6 @@
   {
     "id": "ch2_analysis_glass_ph_electrode",
     "name": "Glass pH electrode",
-    "tier": 4,
     "cat": "analysis",
     "pre": ["lab_apparatus", "glass_boro", "vacuum_tube"],
     "traits": ["labour_saving"],
@@ -493,7 +464,6 @@
   {
     "id": "ch2_analysis_conductometry",
     "name": "Conductometry",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "electromagnet"],
     "traits": ["labour_saving"],
@@ -509,7 +479,6 @@
   {
     "id": "ch2_analysis_refractometry",
     "name": "Refractometry",
-    "tier": 3,
     "cat": "analysis",
     "pre": ["lab_apparatus", "lens_grinding"],
     "traits": ["labour_saving"],
@@ -525,7 +494,6 @@
   {
     "id": "ch2_analysis_melting_point",
     "name": "Melting point determination",
-    "tier": 2,
     "cat": "analysis",
     "pre": ["lab_apparatus", "thermometer"],
     "traits": ["labour_saving"],
@@ -541,7 +509,6 @@
   {
     "id": "ch2_process_contact",
     "name": "Contact process for H2SO4",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["nitric_acid", "industrial_gases", "cap_heat_1300"],
     "req_any": [
@@ -562,7 +529,6 @@
   {
     "id": "ch2_process_deacon",
     "name": "Deacon process for Cl2",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["nitric_acid", "industrial_gases", "cap_heat_1300"],
     "req_any": [
@@ -583,7 +549,6 @@
   {
     "id": "ch2_process_castner_kellner",
     "name": "Castner-Kellner process",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["electrolysis_industrial", "potash_soda"],
     "traits": ["commerce", "infrastructure"],
@@ -601,7 +566,6 @@
   {
     "id": "ch2_process_bayer",
     "name": "Bayer process for alumina",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["potash_soda", "industrial_gases"],
     "req_any": [
@@ -622,7 +586,6 @@
   {
     "id": "ch2_process_frasch",
     "name": "Frasch process for sulphur",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["steam_high_pressure", "industrial_gases"],
     "req_any": [
@@ -643,7 +606,6 @@
   {
     "id": "ch2_process_ostwald",
     "name": "Ostwald process for HNO3",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["industrial_gases", "cap_heat_1100"],
     "req_any": [
@@ -664,7 +626,6 @@
   {
     "id": "ch2_process_birkeland_eyde",
     "name": "Birkeland-Eyde process for NOx",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["industrial_gases", "electric_arc"],
     "traits": ["commerce"],
@@ -682,7 +643,6 @@
   {
     "id": "ch2_process_cyanamide",
     "name": "Cyanamide process",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["industrial_gases", "cap_heat_1300", "calcium_carbide"],
     "traits": ["commerce"],
@@ -700,7 +660,6 @@
   {
     "id": "ch2_process_fischer_tropsch",
     "name": "Fischer-Tropsch synthesis",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["industrial_gases", "cap_heat_1100"],
     "req_any": [
@@ -721,7 +680,6 @@
   {
     "id": "ch2_process_bergius",
     "name": "Bergius coal liquefaction",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["industrial_gases", "cap_heat_1300"],
     "req_any": [
@@ -742,7 +700,6 @@
   {
     "id": "ch2_process_thermal_cracking",
     "name": "Thermal cracking of oil",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["cap_heat_1100"],
     "req_any": [
@@ -763,7 +720,6 @@
   {
     "id": "ch2_process_catalytic_cracking",
     "name": "Catalytic cracking of oil",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["cap_heat_800"],
     "req_any": [
@@ -784,7 +740,6 @@
   {
     "id": "ch2_process_reforming",
     "name": "Reforming of naphtha",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["cap_heat_1100"],
     "req_any": [
@@ -805,7 +760,6 @@
   {
     "id": "ch2_process_alkylation",
     "name": "Alkylation of aromatic hydrocarbons",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["cap_heat_700"],
     "req_any": [
@@ -826,7 +780,6 @@
   {
     "id": "ch2_process_claus",
     "name": "Claus process for sulphur recovery",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["potash_soda", "cap_heat_1100"],
     "req_any": [
@@ -847,7 +800,6 @@
   {
     "id": "ch2_process_kraft_pulping",
     "name": "Kraft pulping of wood",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["potash_soda", "cap_heat_1300"],
     "req_any": [
@@ -868,7 +820,6 @@
   {
     "id": "ch2_process_sulfite_pulping",
     "name": "Sulphite pulping of wood",
-    "tier": 4,
     "cat": "industrial_process",
     "pre": ["sulfuric_retort", "cap_heat_1100"],
     "req_any": [
@@ -889,7 +840,6 @@
   {
     "id": "ch2_rxn_esterification",
     "name": "Esterification reaction",
-    "tier": 2,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "nitric_acid"],
     "req_any": [
@@ -909,7 +859,6 @@
   {
     "id": "ch2_rxn_saponification",
     "name": "Saponification and soap making",
-    "tier": 2,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "potash_soda"],
     "req_any": [
@@ -929,7 +878,6 @@
   {
     "id": "ch2_rxn_nitration",
     "name": "Nitration reactions",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "nitric_acid"],
     "req_any": [
@@ -949,7 +897,6 @@
   {
     "id": "ch2_rxn_sulfonation",
     "name": "Sulfonation reactions",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "sulfuric_acid_conc"],
     "req_any": [
@@ -968,7 +915,6 @@
   {
     "id": "ch2_rxn_halogenation",
     "name": "Halogenation of aromatics",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_700"],
     "req_any": [
@@ -988,7 +934,6 @@
   {
     "id": "ch2_rxn_friedel_crafts",
     "name": "Friedel-Crafts acylation and alkylation",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_700"],
     "req_any": [
@@ -1008,7 +953,6 @@
   {
     "id": "ch2_rxn_aldol",
     "name": "Aldol condensation",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "potash_soda"],
     "req_any": [
@@ -1028,7 +972,6 @@
   {
     "id": "ch2_rxn_grignard",
     "name": "Grignard reaction",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_700"],
     "req_any": [
@@ -1048,7 +991,6 @@
   {
     "id": "ch2_rxn_diazotisation",
     "name": "Diazotisation and coupling",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "nitric_acid"],
     "req_any": [
@@ -1068,7 +1010,6 @@
   {
     "id": "ch2_rxn_bechamp_reduction",
     "name": "Bechamp reduction of nitro compounds",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_700"],
     "req_any": [
@@ -1088,7 +1029,6 @@
   {
     "id": "ch2_rxn_catalytic_hydrogenation",
     "name": "Catalytic hydrogenation",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "industrial_gases"],
     "req_any": [
@@ -1108,7 +1048,6 @@
   {
     "id": "ch2_rxn_permanganate_oxidation",
     "name": "Permanganate oxidation",
-    "tier": 2,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus"],
     "req_any": [
@@ -1127,7 +1066,6 @@
   {
     "id": "ch2_rxn_dichromate_oxidation",
     "name": "Dichromate oxidation",
-    "tier": 2,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "sulfuric_acid_conc"],
     "req_any": [
@@ -1146,7 +1084,6 @@
   {
     "id": "ch2_rxn_addition_polymerisation",
     "name": "Addition polymerisation",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_1100"],
     "req_any": [
@@ -1165,7 +1102,6 @@
   {
     "id": "ch2_rxn_condensation_polymerisation",
     "name": "Condensation polymerisation",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "cap_heat_1300"],
     "traits": ["labour_saving"],
@@ -1181,7 +1117,6 @@
   {
     "id": "ch2_rxn_vulcanisation",
     "name": "Vulcanisation of rubber",
-    "tier": 3,
     "cat": "organic_reaction",
     "pre": ["lab_apparatus", "mat_natural_rubber"],
     "req_any": [
@@ -1200,7 +1135,6 @@
   {
     "id": "ch2_prod_acetic_acid",
     "name": "Acetic acid production",
-    "tier": 3,
     "cat": "product",
     "pre": ["distillation_alcohol"],
     "req_any": [
@@ -1220,7 +1154,6 @@
   {
     "id": "ch2_prod_acetone",
     "name": "Acetone production",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus"],
     "req_any": [
@@ -1239,7 +1172,6 @@
   {
     "id": "ch2_prod_acetylene",
     "name": "Acetylene from calcium carbide",
-    "tier": 3,
     "cat": "product",
     "pre": ["calcium_carbide", "industrial_gases"],
     "traits": ["commerce", "infrastructure"],
@@ -1255,7 +1187,6 @@
   {
     "id": "ch2_prod_methanol",
     "name": "Methanol synthesis",
-    "tier": 4,
     "cat": "product",
     "pre": ["industrial_gases", "cap_heat_1300"],
     "req_any": [
@@ -1274,7 +1205,6 @@
   {
     "id": "ch2_prod_ether",
     "name": "Diethyl ether synthesis",
-    "tier": 2,
     "cat": "product",
     "pre": ["distillation_alcohol"],
     "req_any": [
@@ -1294,7 +1224,6 @@
   {
     "id": "ch2_prod_chloroform",
     "name": "Chloroform synthesis",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "mat_chlorine"],
     "req_any": [
@@ -1314,7 +1243,6 @@
   {
     "id": "ch2_prod_carbon_tetrachloride",
     "name": "Carbon tetrachloride synthesis",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "mat_chlorine"],
     "req_any": [
@@ -1334,7 +1262,6 @@
   {
     "id": "ch2_prod_phenol",
     "name": "Phenol production",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "industrial_gases"],
     "req_any": [
@@ -1354,7 +1281,6 @@
   {
     "id": "ch2_prod_benzene",
     "name": "Benzene from coal tar",
-    "tier": 3,
     "cat": "product",
     "pre": ["coal_tar_products", "distillation_alcohol"],
     "traits": ["commerce"],
@@ -1370,7 +1296,6 @@
   {
     "id": "ch2_prod_toluene",
     "name": "Toluene from coal tar",
-    "tier": 3,
     "cat": "product",
     "pre": ["coal_tar_products", "distillation_alcohol"],
     "traits": ["commerce"],
@@ -1386,7 +1311,6 @@
   {
     "id": "ch2_prod_xylene",
     "name": "Xylene from coal tar and synthesis",
-    "tier": 3,
     "cat": "product",
     "pre": ["coal_tar_products", "distillation_alcohol"],
     "req_any": [
@@ -1405,7 +1329,6 @@
   {
     "id": "ch2_prod_aniline",
     "name": "Aniline synthesis from nitrobenzene",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "rxn_bechamp_reduction"],
     "req_any": [
@@ -1425,7 +1348,6 @@
   {
     "id": "ch2_prod_urea",
     "name": "Urea synthesis from ammonia",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "industrial_gases"],
     "traits": ["commerce"],
@@ -1441,7 +1363,6 @@
   {
     "id": "ch2_prod_formaldehyde",
     "name": "Formaldehyde synthesis",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus", "industrial_gases"],
     "req_any": [
@@ -1461,7 +1382,6 @@
   {
     "id": "ch2_prod_glycerol",
     "name": "Glycerol as soap byproduct and synthetic",
-    "tier": 2,
     "cat": "product",
     "pre": ["rxn_saponification"],
     "traits": ["commerce"],
@@ -1477,7 +1397,6 @@
   {
     "id": "ch2_prod_citric_acid",
     "name": "Citric acid synthesis and fermentation",
-    "tier": 3,
     "cat": "product",
     "pre": ["lab_apparatus"],
     "req_any": [
@@ -1496,7 +1415,6 @@
   {
     "id": "ch2_polymer_celluloid",
     "name": "Celluloid from nitrocellulose",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["nitric_acid", "lab_apparatus"],
     "req_any": [
@@ -1515,7 +1433,6 @@
   {
     "id": "ch2_polymer_viscose",
     "name": "Viscose from cellulose",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "potash_soda"],
     "req_any": [
@@ -1534,7 +1451,6 @@
   {
     "id": "ch2_polymer_cellulose_acetate",
     "name": "Cellulose acetate plastic",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "acetic_anhydride"],
     "req_any": [
@@ -1553,7 +1469,6 @@
   {
     "id": "ch2_polymer_bakelite",
     "name": "Bakelite thermosetting resin",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "phenol"],
     "req_any": [
@@ -1573,7 +1488,6 @@
   {
     "id": "ch2_polymer_urea_formaldehyde",
     "name": "Urea-formaldehyde resin",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "urea", "formaldehyde"],
     "req_any": [
@@ -1592,7 +1506,6 @@
   {
     "id": "ch2_polymer_pvc",
     "name": "Polyvinyl chloride (PVC)",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["vinyl_chloride", "lab_apparatus"],
     "req_any": [
@@ -1611,7 +1524,6 @@
   {
     "id": "ch2_polymer_polystyrene",
     "name": "Polystyrene",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["styrene", "lab_apparatus"],
     "req_any": [
@@ -1630,7 +1542,6 @@
   {
     "id": "ch2_polymer_polyethylene",
     "name": "Polyethylene",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "industrial_gases"],
     "req_any": [
@@ -1649,7 +1560,6 @@
   {
     "id": "ch2_polymer_pmma",
     "name": "Polymethyl methacrylate (PMMA)",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["methyl_methacrylate", "lab_apparatus"],
     "req_any": [
@@ -1668,7 +1578,6 @@
   {
     "id": "ch2_polymer_nylon",
     "name": "Nylon-66 polyamide fibre",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "adipic_acid"],
     "req_any": [
@@ -1687,7 +1596,6 @@
   {
     "id": "ch2_polymer_polyester",
     "name": "Polyethylene terephthalate (PET) polyester",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "ethylene_glycol"],
     "req_any": [
@@ -1706,7 +1614,6 @@
   {
     "id": "ch2_polymer_neoprene",
     "name": "Neoprene synthetic rubber",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "chloroprene"],
     "req_any": [
@@ -1725,7 +1632,6 @@
   {
     "id": "ch2_polymer_buna",
     "name": "Buna synthetic rubber",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "butadiene", "styrene"],
     "req_any": [
@@ -1744,7 +1650,6 @@
   {
     "id": "ch2_polymer_silicone",
     "name": "Silicone polymers",
-    "tier": 4,
     "cat": "polymer",
     "pre": ["lab_apparatus", "silicon_metal"],
     "req_any": [
@@ -1764,7 +1669,6 @@
   {
     "id": "ch2_phys_thermochemistry",
     "name": "Thermochemistry and Hess's law",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "thermometer", "atomic_theory"],
     "traits": ["labour_saving"],
@@ -1780,7 +1684,6 @@
   {
     "id": "ch2_phys_kinetics",
     "name": "Chemical kinetics and rate laws",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "cap_measure_time_ms"],
     "traits": ["labour_saving"],
@@ -1796,7 +1699,6 @@
   {
     "id": "ch2_phys_equilibrium",
     "name": "Equilibrium and equilibrium constant",
-    "tier": 2,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "atomic_theory"],
     "traits": ["labour_saving"],
@@ -1812,7 +1714,6 @@
   {
     "id": "ch2_phys_le_chatelier",
     "name": "Le Chatelier's principle",
-    "tier": 2,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "equilibrium"],
     "traits": ["labour_saving"],
@@ -1828,7 +1729,6 @@
   {
     "id": "ch2_phys_phase_rule",
     "name": "Phase rule and phase diagrams",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "thermometer"],
     "traits": ["labour_saving"],
@@ -1844,7 +1744,6 @@
   {
     "id": "ch2_phys_colligative",
     "name": "Colligative properties",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "thermometer"],
     "traits": ["labour_saving"],
@@ -1860,7 +1759,6 @@
   {
     "id": "ch2_phys_mole",
     "name": "The mole and Avogadro constant",
-    "tier": 2,
     "cat": "physical_chemistry",
     "pre": ["balance_analytical", "atomic_theory"],
     "traits": ["labour_saving"],
@@ -1876,7 +1774,6 @@
   {
     "id": "ch2_phys_electrochemical_series",
     "name": "Electrochemical series",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "daniell_cell"],
     "traits": ["labour_saving"],
@@ -1892,7 +1789,6 @@
   {
     "id": "ch2_phys_overpotential",
     "name": "Overpotential and electrode kinetics",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "electrochemical_series"],
     "traits": ["labour_saving"],
@@ -1908,7 +1804,6 @@
   {
     "id": "ch2_phys_nernst_equation",
     "name": "Nernst equation for electrode potential",
-    "tier": 3,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "electrochemical_series", "logarithms"],
     "traits": ["labour_saving"],
@@ -1924,7 +1819,6 @@
   {
     "id": "ch2_phys_anodising",
     "name": "Anodising and anodic oxidation",
-    "tier": 4,
     "cat": "physical_chemistry",
     "pre": ["lab_apparatus", "electrolysis_industrial"],
     "req_any": [
