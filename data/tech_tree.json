@@ -1,7 +1,7 @@
 {
  "meta": {
   "cost_disclaimer": "Every ph/lab/cap figure is a [C] estimate unless the note says otherwise. They are calibrated so that the SHAPE of the tree is right: which items are cheap, which are slow, which are gated on people rather than money. Do not read three significant figures into any of them.",
-  "goal_node": "junction_transistor",
+  "goal_node": "point_contact_transistor",
   "goals": [
    {
     "blurb": "The original goal: reach the device that starts the electronic age.",
@@ -1992,7 +1992,9 @@
    "name": "Guano",
    "note": "Soluble enough to leach in rain, requiring application in late spring with incorporation, not spreading months ahead",
    "ph": 30.0,
-   "pre": [],
+   "pre": [
+    "ag2_guano_deposit_access"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.08,
@@ -2004,6 +2006,40 @@
    ],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "47_agri_food_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "ag2_guano_deposit_access",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Survey and secure concentrated guano deposits",
+   "note": "Locate a dry seabird colony with accumulated guano and secure extraction and shipping rights; ordinary local manure is not this concentrated mineral commodity.",
+   "ph": 80.0,
+   "pre": [
+    "sea_coastal_pilotage"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "47_agri_food_deep.json",
@@ -2081,6 +2117,40 @@
   },
   {
    "_src": "47_agri_food_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "ag2_hop_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire and cultivate hop rhizomes",
+   "note": "Obtain viable female hop rhizomes, establish trellised perennial plants, and dry the cones before hopped brewing is possible.",
+   "ph": 80.0,
+   "pre": [
+    "ag2_botanic_garden"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
+  },
+  {
+   "_src": "47_agri_food_deep.json",
    "adopt_yrs": 0,
    "art": 0.0,
    "build_yrs": 0.15,
@@ -2098,7 +2168,10 @@
    "name": "Hopping",
    "note": "Alpha acid isomerisation by boil time, late additions for aroma - extraction curves that changed brewing",
    "ph": 40.0,
-   "pre": [],
+   "pre": [
+    "ag2_hop_stock",
+    "ag2_malting"
+   ],
    "req_any": [],
    "rev": 80.0,
    "risk": 0.04,
@@ -3163,7 +3236,9 @@
    "name": "Pyrethrum",
    "note": "Grown in highlands and dried for extract; rapidly degraded in sunlight so evening spray timing matters",
    "ph": 70.0,
-   "pre": [],
+   "pre": [
+    "ag2_pyrethrum_stock"
+   ],
    "req_any": [],
    "rev": 170.0,
    "risk": 0.12,
@@ -3175,6 +3250,40 @@
    ],
    "up": 40.0,
    "yrs": 0.3
+  },
+  {
+   "_src": "47_agri_food_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "ag2_pyrethrum_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire pyrethrum planting stock",
+   "note": "Obtain viable Tanacetum cinerariifolium seed or divisions and establish a flower crop before extracting pyrethrins.",
+   "ph": 80.0,
+   "pre": [
+    "ag2_botanic_garden"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "47_agri_food_deep.json",
@@ -5186,7 +5295,8 @@
    "ph": 30.0,
    "pre": [
     "mat_silk",
-    "mat_wrought_iron"
+    "mat_wrought_iron",
+    "sea_lodestone"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -5854,12 +5964,13 @@
     "silk_kg": 4.0
    },
    "name": "Tethered observation balloon",
-   "note": "A single large envelope of stitched linen or silk, sealed with beeswax, displaces enough warm air to lift a man. Must be tethered to cordage or risk becoming uncontrolled. The State values this for reconnaissance, signalling and military observation. A man in the sky appears miraculous; mitigation is training and controlled small-scale trials, not secrecy.",
+   "note": "A tethered hot-air observation balloon requires a calculated lightweight envelope area, strong low-mass seams and tethers, a controlled heat source, and fire shielding. Test envelope mass and leakage unmanned before any lift; heavy waxed linen may not carry an observer.",
    "ph": 120.0,
    "pre": [
     "mat_beeswax",
     "mat_linen",
-    "mat_silk"
+    "mat_silk",
+    "cap_heat_0700"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -6700,10 +6811,12 @@
     "scribe": 2500.0
    },
    "mat": {},
-   "name": "Decimal positional notation, zero, negative numbers, decimal fractions",
-   "note": "Highest return on personal hours in the entire tree. Frame as recovered from Indian sources, which is even true. Sell it to bankers and the fiscus first; they will adopt it for self-interest and carry it for you.  (Needs no standing: writing down zero, or running a controlled experiment, is something a nobody can do. What standing buys is being BELIEVED, which is reputation, not a prerequisite.)",
+   "name": "Decimal arithmetic curriculum: zero, negatives, and fractions",
+   "note": "Extend introductory place-value notation into a taught decimal arithmetic curriculum covering zero as a number, negative quantities, and decimal fractions. Time represents instruction and adoption, not rediscovery by the founder.",
    "ph": 450.0,
-   "pre": [],
+   "pre": [
+    "sc2_notation_positional"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.1,
@@ -17371,10 +17484,11 @@
     "iron_bar_kg": 15.0
    },
    "name": "Lightning conductor and grounding",
-   "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing.",
+   "note": "A continuous low-resistance copper or iron path runs from an air terminal to a broad, damp earth connection. Every joint and the ground electrode matter more than the pointed tip.",
    "ph": 80.0,
    "pre": [
-    "mat_wrought_iron"
+    "mat_wrought_iron",
+    "mat_copper"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -17802,10 +17916,10 @@
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
    "_src": "22_civil.json",
    "_total_cost": 900.0,
-   "adopt_yrs": 0.0,
+   "adopt_yrs": 5,
    "art": 0.0,
-   "build_yrs": 1.0,
-   "cap": 200.0,
+   "build_yrs": 2,
+   "cap": 800.0,
    "cat": "water",
    "conf": "B",
    "dev_people": null,
@@ -17816,13 +17930,14 @@
    "kb_level": "module",
    "kind": "INFRASTRUCTURE",
    "lab": {
-    "labourer": 800.0
+    "labourer": 8000.0,
+    "mason": 4000.0
    },
    "mat": {
     "brick_1000": 80.0
    },
-   "name": "Separate foul and storm sewers",
-   "note": "Two pipes: foul (sewage) and storm (rain). Storm sewers are large but infrequent flow; foul sewers are constant. Combined sewers overflow during heavy rain, contaminating rivers. Separation is expensive but hygienic; Victorian engineers standardised it.",
+   "name": "Pilot separate foul and storm sewer standard",
+   "note": "Design and build a district-scale pilot with distinct foul and storm conduits, inspection access, gradients, and outfalls. It proves a standard; rebuilding an entire city remains a much larger civil programme.",
    "ph": 120.0,
    "pre": [
     "civ_sewer_roman"
@@ -17836,7 +17951,7 @@
     "infrastructure"
    ],
    "up": 30.0,
-   "yrs": 1.0
+   "yrs": 5.0
   },
   {
    "_src": "22_civil.json",
@@ -18139,10 +18254,11 @@
     "timber_m3": 3.0
    },
    "name": "Triangulated truss frame",
-   "note": "A truss is fundamentally different from an arch: it carries load by rigid tension and compression in its members, not by geometric compression of wedges. A triangle cannot be deformed without changing member length. This is not intuitive; it requires understanding materials can pull apart.",
+   "note": "A deliberately triangulated timber frame whose members carry tension or compression rather than relying on bending. The advance is explicit load paths and repeatable joints, not discovery that triangles can be built.",
    "ph": 120.0,
    "pre": [
-    "civ_arch_roman"
+    "civ_arch_roman",
+    "cap_tol_1mm"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -23697,7 +23813,9 @@
    "name": "Codebook for optical signal tower",
    "note": "Not the tower itself, but the agreed language it speaks. Without a standardised codebook (a government document), each tower operator invents his own alphabet. The innovation is making it systematic: three-position arms encode 8 letters per second in groups (like Morse). Requires coordination across the empire.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "tr_semaphore_signal"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.1,
@@ -24288,9 +24406,11 @@
     "timber_m3": 0.5
    },
    "name": "Signal flags for maritime communication",
-   "note": "Flags of different colours and patterns, read at distance. First step beyond simple smoke: it is quick, daylight-reliable, and needs no line-of-sight relay network. A ship can read flags from another ship miles away. Codebook is implicit in sailor tradition.",
+   "note": "A standard set of high-contrast flags and hoists conveys agreed messages between ships and shore. The project includes a shared code and drills, not merely sewing coloured cloth.",
    "ph": 40.0,
-   "pre": [],
+   "pre": [
+    "sea_coastal_pilotage"
+   ],
    "req_any": [],
    "rev": 150.0,
    "risk": 0.05,
@@ -25388,6 +25508,348 @@
    ],
    "up": 0.0,
    "yrs": 0.5
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 6,
+   "gov": 0,
+   "id": "ctl_bode_plot_margins",
+   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
+   "lab": {
+    "engineer": 200.0
+   },
+   "mat": {},
+   "name": "Bode plot, gain margin and phase margin",
+   "note": "Hendrik Bode, Bell Labs, published through the early 1940s. Plots log gain and phase separately against log frequency; straight-line asymptotes make Nyquist's encirclement test readable by eye, and the safety margin collapses to two numbers, gain margin and phase margin, that a working engineer can design a loop to hit rather than merely check afterward.",
+   "ph": 160.0,
+   "pre": [
+    "ctl_nyquist_stability_criterion",
+    "logarithms"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.08,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.4
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 60.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_governor_stability_theory",
+   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
+   "lab": {
+    "scholar": 200.0
+   },
+   "mat": {},
+   "name": "Governor stability theory (Maxwell 1868)",
+   "note": "James Clerk Maxwell, 'On Governors', Proceedings of the Royal Society, 1868. Writes the governor's own differential equation and shows the roots of its characteristic equation, not the mechanism's craftsmanship, decide whether speed settles to the setpoint or grows into a hunt. The first proof that a feedback loop can be mathematically unstable no matter how well it is built.",
+   "ph": 150.0,
+   "pre": [
+    "en_centrifugal_governor",
+    "calculus"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.08,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_hurwitz_criterion",
+   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
+   "lab": {
+    "scholar": 230.0
+   },
+   "mat": {},
+   "name": "Hurwitz's stability criterion",
+   "note": "Adolf Hurwitz, 1895, answering a direct request from Aurel Stodola, whose steam turbine governors would not settle: arranges the same coefficients into a square array and tests the sign of a sequence of its leading determinants. Later proved identical to Routh's test in different clothing, reached without either man knowing of the other's work.",
+   "ph": 170.0,
+   "pre": [
+    "ctl_governor_stability_theory",
+    "sc2_algebra_determinant"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.09,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.3,
+   "cap": 60.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_minorsky_pid_law",
+   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
+   "lab": {
+    "engineer": 260.0,
+    "scholar": 60.0
+   },
+   "mat": {},
+   "name": "Minorsky's three-term control law",
+   "note": "Nicolas Minorsky, 1922, watches a human helmsman steer the battleship USS New Mexico and formalises what the man is actually doing: correcting in proportion to the present heading error, to how fast that error is changing, and to how long and how far it has persisted. Weighting and adding those three terms is the first explicit proportional-integral-derivative control law, tested and logged at sea.",
+   "ph": 200.0,
+   "pre": [
+    "ctl_governor_stability_theory",
+    "newtonian_mechanics"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.12,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information",
+    "military"
+   ],
+   "up": 0.0,
+   "yrs": 0.4
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.5,
+   "art": 2.0,
+   "build_yrs": 0.3,
+   "cap": 80.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "ctl_nyquist_stability_criterion",
+   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
+   "lab": {
+    "engineer": 240.0,
+    "scholar": 80.0
+   },
+   "mat": {},
+   "name": "Nyquist stability criterion",
+   "note": "Harry Nyquist, Bell Labs, 1932, answers the question Black's 1927 feedback amplifier raised in practice: plot the open loop's gain and phase as one curve in the complex plane across every frequency, and count how many times that curve encircles the point minus one. The count of encirclements, not the size of the gain, says whether closing the loop rings, settles, or runs away.",
+   "ph": 220.0,
+   "pre": [
+    "ctl_routh_criterion",
+    "ctl_hurwitz_criterion",
+    "el2_negative_feedback_stability_gain",
+    "sc2_algebra_complex_numbers"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.11,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.5
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 1.5,
+   "art": 2.0,
+   "build_yrs": 0.8,
+   "cap": 600.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 3,
+   "dev_years": 9,
+   "gov": 0,
+   "id": "ctl_pneumatic_process_controller",
+   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
+   "lab": {
+    "engineer": 260.0,
+    "machinist": 200.0
+   },
+   "mat": {
+    "brass_kg": 8.0,
+    "bronze_kg": 4.0,
+    "leather_kg": 4.0
+   },
+   "name": "Pneumatic process controller",
+   "note": "Instrument makers, Foxboro's Stabilog of 1931 foremost, turn Minorsky's three terms into a compressed-air relay: a bellows reads the process deviation and strokes a nozzle, and the output air pressure, proportional to the error plus its own integral over time, directly positions a diaphragm valve with no electricity on the plant floor at all. This is the device that actually holds a furnace, distillation column or autoclave at its setpoint instead of requiring an operator to watch a gauge and turn a handle by hand.",
+   "ph": 260.0,
+   "pre": [
+    "ctl_minorsky_pid_law",
+    "cap_power_steam"
+   ],
+   "req_any": [
+    {
+     "group": "air_supply",
+     "options": {
+      "cap_power_electric": 0.9,
+      "cap_power_steam": 1.0
+     }
+    },
+    {
+     "group": "sensing_element",
+     "options": {
+      "in2_thermocouple": 0.95,
+      "opt_bourdon_gauge": 1.0,
+      "thermometer": 0.7
+     }
+    }
+   ],
+   "rev": 1500.0,
+   "risk": 0.16,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure",
+    "labour_saving"
+   ],
+   "up": 80.0,
+   "yrs": 1.5
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "ctl_root_locus",
+   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
+   "lab": {
+    "engineer": 210.0
+   },
+   "mat": {},
+   "name": "Root locus method",
+   "note": "Walter Evans, 1948. Plots exactly where the closed loop's poles sit in the complex plane as one gain is turned up from zero to infinity, by a short set of geometric rules on the open loop's own poles and zeros. A designer reads off, by eye, the highest gain that still leaves the poles short of the instability boundary, instead of re-solving Routh's array for every candidate gain in turn.",
+   "ph": 170.0,
+   "pre": [
+    "ctl_routh_criterion",
+    "ctl_hurwitz_criterion",
+    "sc2_algebra_complex_numbers"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.4
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "ctl_routh_criterion",
+   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
+   "lab": {
+    "scholar": 230.0
+   },
+   "mat": {},
+   "name": "Routh's stability criterion",
+   "note": "Edward Routh, Adams Prize essay, 1877, generalises Maxwell's two- and three-term cases to a characteristic polynomial of any order: arrange its coefficients in a triangular array and read stability off the signs of one column, with no root ever solved for.",
+   "ph": 170.0,
+   "pre": [
+    "ctl_governor_stability_theory",
+    "sc2_algebra_polynomial"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.09,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.1,
+   "cap": 20.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 2,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "ctl_ziegler_nichols_tuning",
+   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
+   "lab": {
+    "engineer": 180.0
+   },
+   "mat": {},
+   "name": "Ziegler-Nichols tuning rules",
+   "note": "John Ziegler and Nathaniel Nichols, Taylor Instrument Companies, 1942. Two short recipes, one from a single open-loop step test, one from pushing the closed loop to the edge of a sustained oscillation and timing its period, hand a plant engineer usable proportional, integral and derivative settings without ever writing down the process's own differential equation.",
+   "ph": 140.0,
+   "pre": [
+    "ctl_pneumatic_process_controller"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -37562,10 +38024,12 @@
    },
    "mat": {},
    "name": "Bill of exchange",
-   "note": "Written order to pay a sum of money at a future date. Allows moving value across distance without moving metal through bandit-infested roads. Reduces transport cost and risk of loss.",
+   "note": "A transferable written order settles a distant debt through a trusted merchant and banking network. The project is network acceptance and repeated clearing, not merely writing one document.",
    "ph": 150.0,
    "pre": [
-    "fin_contract_law"
+    "fin_contract_law",
+    "fin_argentarii",
+    "fin_market"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -37756,10 +38220,11 @@
    },
    "mat": {},
    "name": "Cartel and market sharing agreement",
-   "note": "Agreement between competitors to divide market and fix prices. Often illegal but profitable. Unstable because each member wants to cheat.",
+   "note": "A monitored agreement among established sellers to allocate customers, territory, or output. Its difficulty is repeated enforcement among rivals, not inventing private collusion.",
    "ph": 100.0,
    "pre": [
-    "fin_contract_law"
+    "fin_contract_law",
+    "fin_market"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -38946,10 +39411,11 @@
    },
    "mat": {},
    "name": "Guild and monopoly craft",
-   "note": "Association of craftsmen with exclusive right to practice the trade in a city. Enforces quality and training standards but restricts competition and raises prices.",
+   "note": "A licensed craft association that controls entry, training, and market privileges. It builds on an existing collegium but requires political recognition for monopoly powers.",
    "ph": 100.0,
    "pre": [
-    "fin_collegium"
+    "fin_collegium",
+    "fin_government"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -39300,10 +39766,12 @@
     "scribe": 150.0
    },
    "mat": {},
-   "name": "Lottery and state gambling",
-   "note": "State operates drawing where purchasers win prizes. Profitable because house advantage is high. Paradoxically, state lotteries funded real public works and created public capital.",
+   "name": "Public revenue lottery",
+   "note": "A government-authorised sale of numbered chances funds a declared public purpose, with published drawing and payout rules. Private lots and prize distributions are ancient; the reform is a recurring revenue-raising institution.",
    "ph": 150.0,
-   "pre": [],
+   "pre": [
+    "fin_government"
+   ],
    "req_any": [],
    "rev": 800.0,
    "risk": 0.1,
@@ -39770,10 +40238,11 @@
    },
    "mat": {},
    "name": "Patent and exclusive right",
-   "note": "State grants exclusive right to make an invention for a limited time. Creates monopoly the state did not previously grant. Incentivises disclosure rather than secrecy, but monopolists often resist.",
+   "note": "A state-recognised registry grants a time-limited exclusive right in exchange for public disclosure. An inventor can petition immediately, but completion means recognition and enforcement by the state.",
    "ph": 140.0,
    "pre": [
-    "fin_contract_law"
+    "fin_contract_law",
+    "fin_government"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -41014,10 +41483,11 @@
    },
    "mat": {},
    "name": "Trade union and workers collegium",
-   "note": "Association of workers to bargain collectively with employers. State view with suspicion as a conspiracy in restraint of trade. Wages negotiated by the union are higher than wages negotiated individually.",
+   "note": "A workers collegium organised for collective bargaining rather than social worship alone. Because Roman authorities police associations as potential factions, recognition and protection are the central project.",
    "ph": 120.0,
    "pre": [
-    "fin_collegium"
+    "fin_collegium",
+    "fin_government"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -41052,10 +41522,11 @@
    },
    "mat": {},
    "name": "Trademark and mark of quality",
-   "note": "Registered mark that identifies goods of a maker. Prevents confusion and protects reputation. Requires central registry and enforcement against counterfeits.",
+   "note": "A public registry records a maker mark and a court enforces it against confusing use. Ancient maker marks need no invention; the project is the registry and enforceable exclusive right.",
    "ph": 80.0,
    "pre": [
-    "fin_contract_law"
+    "fin_contract_law",
+    "fin_government"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -42288,8 +42759,8 @@
    "_total_cost": 977.0,
    "adopt_yrs": 0.0,
    "art": 0.0,
-   "build_yrs": 1.0,
-   "cap": 800.0,
+   "build_yrs": 2,
+   "cap": 1000.0,
    "cat": "storage",
    "conf": "B",
    "dev_people": null,
@@ -42300,15 +42771,16 @@
    "kb_level": "module",
    "kind": "ENGINEERING",
    "lab": {
-    "carpenter": 150.0,
-    "mason": 300.0
+    "carpenter": 600.0,
+    "labourer": 1200.0,
+    "mason": 1800.0
    },
    "mat": {
     "brick_1000": 10.0,
     "timber_m3": 10.0
    },
    "name": "Cylindrical silos for bulk grain storage",
-   "note": "Build tall cylindrical brick or wooden towers for grain storage. Pressure from grain weight above excludes insects and rodents. Chutes at bottom for withdrawal. More efficient than rectangular granaries. Enables large centralized storage for grain dole.",
+   "note": "A cylindrical masonry silo must resist lateral grain pressure, exclude groundwater and rodents, control moisture, and permit turning or aeration. Grain pressure does not itself prevent insects; dry loading and inspection remain essential.",
    "ph": 200.0,
    "pre": [
     "civ_arch_roman"
@@ -42322,7 +42794,7 @@
     "infrastructure"
    ],
    "up": 100.0,
-   "yrs": 1.0
+   "yrs": 2.0
   },
   {
    "_src": "11_food_agriculture.json",
@@ -43683,6 +44155,40 @@
    "yrs": 0.5
   },
   {
+   "_src": "11_food_agriculture.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "fud_whaling_gear",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Specialised whale boats, harpoons, and shore rendering",
+   "note": "Build manoeuvrable hunting boats, toggling harpoons and heavy lines, train crews, identify whale grounds, and establish shore cauldrons before an organised industry can operate.",
+   "ph": 80.0,
+   "pre": [
+    "sea_merchant_ships_large"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
+  },
+  {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
    "_src": "11_food_agriculture.json",
    "_total_cost": 2070.0,
@@ -43708,7 +44214,9 @@
    "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination.",
    "ph": 300.0,
    "pre": [
-    "sea_merchant_ships_large"
+    "sea_merchant_ships_large",
+    "fud_whaling_gear",
+    "sea_coastal_pilotage"
    ],
    "req_any": [],
    "rev": 1200.0,
@@ -44359,6 +44867,172 @@
    ],
    "up": 1400.0,
    "yrs": 1.5
+  },
+  {
+   "_src": "goals",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "milestone",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "goal_literacy_common",
+   "kb": "80_information_printing.md#literacy",
+   "kb_level": "recipe",
+   "lab": {},
+   "mat": {},
+   "name": "A literate people, not just a literate few",
+   "note": "This is not something you build; it happens on its own the moment the census shows one reader in five among the general population, not only the lettered and propertied. Schools and academies are what move that number, and they have to stay open - a school that closes stops teaching the year it closes, whatever it taught before that.",
+   "ph": 0.0,
+   "pre": [
+    "academy_network"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "milestone"
+   ],
+   "up": 0.0,
+   "win_condition": {
+    "metric": "literacy_general",
+    "op": ">=",
+    "value": 0.2
+   },
+   "yrs": 0.0
+  },
+  {
+   "_src": "goals",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "milestone",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "goal_literate_nation",
+   "kb": "80_information_printing.md#literacy",
+   "kb_level": "recipe",
+   "lab": {},
+   "mat": {},
+   "name": "A nation that reads",
+   "note": "This is not something you build; it happens on its own once schooling and academies, running for long enough against a countryside mechanised enough to spare its children for a classroom, put three in four of your people over the threshold of reading. The ceiling on how literate this society can ever become moves only as the land is mechanised - the reaper, the thresher, the tractor, not only the school - and what you built before the ceiling rose stays capped at it until it does.",
+   "ph": 0.0,
+   "pre": [
+    "ag2_balanced_ration",
+    "ag2_baler",
+    "ag2_battery_poultry",
+    "ag2_bordeaux_mixture",
+    "ag2_canning",
+    "ag2_chaff_cutter",
+    "ag2_combine_harvester",
+    "ag2_contour_ploughing",
+    "ag2_coulter",
+    "ag2_cultivator",
+    "ag2_ddt",
+    "ag2_fanning_mill",
+    "ag2_fermentation_control",
+    "ag2_gravity_irrigation",
+    "ag2_harrow",
+    "ag2_horse_hoe",
+    "ag2_lead_arsenate",
+    "ag2_lime_sulphur",
+    "ag2_mower",
+    "ag2_nicotine_pesticide",
+    "ag2_potato_lifter",
+    "ag2_power_take_off",
+    "ag2_pyrethrum",
+    "ag2_reaper",
+    "ag2_reaper_binder",
+    "ag2_ridging_plough",
+    "ag2_roller",
+    "ag2_root_cutter",
+    "ag2_sheep_dip",
+    "ag2_silage_silo",
+    "ag2_subsoiler",
+    "ag2_tedder",
+    "ag2_terracing",
+    "ag2_three_point_linkage",
+    "ag2_threshing_machine",
+    "ag2_tile_drainage",
+    "ag2_tractor_steam",
+    "ag2_winnower",
+    "fud_winnowing_machine",
+    "tl_tractor",
+    "academy_network"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "milestone"
+   ],
+   "up": 0.0,
+   "win_condition": {
+    "metric": "literacy_general",
+    "op": ">=",
+    "value": 0.75
+   },
+   "yrs": 0.0
+  },
+  {
+   "_src": "goals",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "milestone",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "goal_public_health",
+   "kb": "70_medicine_biology.md#public_health",
+   "kb_level": "recipe",
+   "lab": {},
+   "mat": {},
+   "name": "Epidemics stop deciding who lives",
+   "note": "This is not something you build; it happens on its own once enough of sanitation, quarantine, nursing, vaccination and the rest of what germ theory makes possible is standing at once to have cut four-fifths of what an epidemic or a bad harvest would otherwise take. No single measure does this alone - each one only takes a share of what is left - which is the honest reason this is a threshold and not a single technology.",
+   "ph": 0.0,
+   "pre": [
+    "sanitation_antisepsis",
+    "med_quarantine_sanitation",
+    "germ_theory",
+    "med_vaccination_progression",
+    "md2_vaccine_smallpox",
+    "soap_hard",
+    "med_nursing_profession",
+    "plague_preparedness",
+    "crop_rotation",
+    "ag2_silage_silo"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "milestone"
+   ],
+   "up": 0.0,
+   "win_condition": {
+    "metric": "epidemic_relief",
+    "op": ">=",
+    "value": 0.85
+   },
+   "yrs": 0.0
   },
   {
    "_src": "60_goalpath_deep.json",
@@ -45636,7 +46310,8 @@
    "note": "The water trap is the non-obvious critical innovation: standing water in an S-bend or U-bend below the bowl blocks sewer gas from backing into the house. Crapper patents an improved design in 1884. Modern plumbing code mandates traps.",
    "ph": 80.0,
    "pre": [
-    "hom_flush_latrine_simple"
+    "hom_flush_latrine_simple",
+    "hom_latrine_water_trap"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -45988,10 +46663,11 @@
     "lead_kg": 25.0
    },
    "name": "Latrine water trap (S-bend)",
-   "note": "The water trap is the critical innovation: standing water in an S-bend or U-bend below the toilet bowl blocks sewer gas from backing into the house. Non-obvious but essential for sanitary plumbing. This is discovered late, or not at all, in most of the ancient and early medieval world (Rome included).",
+   "note": "An S-shaped drain retains a water seal that blocks sewer gas. The seal must be replenished after evaporation and the downstream drain ventilated so siphoning does not empty it.",
    "ph": 60.0,
    "pre": [
-    "hom_flush_latrine_simple"
+    "hom_flush_latrine_simple",
+    "hom_lead_plumbing"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -46858,7 +47534,10 @@
    "ph": 40.0,
    "pre": [
     "cap_tol_1mm",
-    "mat_wrought_iron"
+    "mat_wrought_iron",
+    "mfg_wire_drawing",
+    "mt2_spring_steel",
+    "cap_tol_100um"
    ],
    "req_any": [],
    "rev": 15.0,
@@ -47120,7 +47799,10 @@
    "ph": 120.0,
    "pre": [
     "cap_tol_1mm",
-    "mat_wrought_iron"
+    "mat_wrought_iron",
+    "mfg_wire_drawing",
+    "tl_coil_spring",
+    "mt2_spring_steel"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -47600,11 +48282,12 @@
     "timber_m3": 6.0,
     "wool_kg": 1.0
    },
-   "name": "Rigid padded horse collar, whippletree, nailed horseshoe",
-   "note": "Roman throat-and-girth harness chokes a horse under heavy draught. The size of the improvement is disputed in modern scholarship, so claim a real but modest gain, not the old textbook figure of four times. Politically the safest technology in this document: it feeds people and moves army supplies and threatens nobody.",
+   "name": "Rigid padded horse collar",
+   "note": "A rigid padded collar transfers draft load to the shoulders without choking the horse. Fit and animal trials are the project; the whippletree and nailed horseshoe are separate nodes.",
    "ph": 200.0,
    "pre": [
-    "tex_wool"
+    "tex_wool",
+    "mat_leather"
    ],
    "req_any": [
     {
@@ -56948,6 +57631,40 @@
   },
   {
    "_src": "14_land_transport.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "lnd_nailed_horseshoe",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Nailed horseshoe",
+   "note": "Fit a shaped iron shoe to the insensitive hoof wall with correctly placed nails; farriery trials and hoof health are independent of harness design.",
+   "ph": 80.0,
+   "pre": [
+    "mat_wrought_iron"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
+  },
+  {
+   "_src": "14_land_transport.json",
    "_total_cost": 5960.0,
    "adopt_yrs": 0.0,
    "art": 0.0,
@@ -57707,6 +58424,40 @@
    "yrs": 0.5
   },
   {
+   "_src": "14_land_transport.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "lnd_whippletree",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Whippletree draft equaliser",
+   "note": "A pivoted transverse bar equalises pull between traces and prevents side loads from rubbing the animal; test geometry separately from the collar.",
+   "ph": 80.0,
+   "pre": [
+    "horse_collar"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
+  },
+  {
    "_src": "core",
    "_total_cost": 9500.0,
    "adopt_yrs": 0.0,
@@ -57887,6 +58638,44 @@
    "traits": [],
    "up": 0.0,
    "yrs": 1.5
+  },
+  {
+   "_src": "55_realism_part02.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 250.0,
+   "cat": "material",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "mat_antimony",
+   "kb": "",
+   "lab": {
+    "furnaceman": 300.0,
+    "miner": 300.0
+   },
+   "mat": {
+    "antimony_kg": 10.0
+   },
+   "name": "Antimony metal supply",
+   "note": "Identify stibnite, roast it with controlled fumes, and reduce the oxide to antimony metal. A priced quantity of antimony is not available until this supply process exists.",
+   "ph": 100.0,
+   "pre": [
+    "met_ore_crushing_sorting",
+    "cap_heat_1100"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "01_materials.json",
@@ -59806,6 +60595,40 @@
    ],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "01_materials.json",
+   "adopt_yrs": 0.0,
+   "art": 2.0,
+   "build_yrs": 0.5,
+   "cap": 400.0,
+   "cat": "material",
+   "conf": "A",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "mat_rubber_coagulated",
+   "kb": "89_remaining_arts.md#mat_rubber_coagulated",
+   "kb_level": "none",
+   "kind": "RESOURCE",
+   "lab": {
+    "labourer": 600.0
+   },
+   "mat": {},
+   "name": "Coagulated rubber: tapping and curing latex",
+   "note": "Knowing which vine to tap (mat_natural_rubber) is not the same act as having rubber. Tapped latex is a watery, short-lived emulsion that rots in days unless it is coagulated: drive off the ammonia with heat or wood smoke, or curdle it with a weak acid (formic or acetic), press the curd into sheet or crepe, and dry it. This is a standing tapping-and-curing operation - cuts, collecting cups, a smoke-house or coagulating tanks, and labour on a schedule the trees set, not a thing you do once. Before this node, every recipe below treated rubber_kg as a priced commodity you could simply buy once you knew the vine existed, which is the bug a play tester named: 'rubber... you should have to make it with your factory/warehouse.' Now you do.",
+   "ph": 150.0,
+   "pre": [
+    "mat_natural_rubber"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.25,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 0.5
   },
   {
    "_src": "01_materials.json",
@@ -63673,9 +64496,11 @@
    },
    "mat": {},
    "name": "Plaster cast immobilization",
-   "note": "Calcined gypsum and water; heat of hydration; padding for comfort; split cast to accommodate swelling; window for skin inspection",
+   "note": "Gypsum plaster bandage over clean padding immobilises a reduced fracture while it sets. Bone setting, swelling allowance, skin inspection, and keeping pressure off bony points are prerequisites.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "med_bone_setting"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -64935,9 +65760,11 @@
    },
    "mat": {},
    "name": "Vector control",
-   "note": "Mosquito, flea, louse identification; breeding site destruction; chemical insecticides; resistance development",
+   "note": "Map disease against mosquitoes, fleas, or lice and remove breeding sites, isolate bedding, and install barriers. Chemical insecticides and resistance management are separate later technologies.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "scientific_method"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -66906,11 +67733,13 @@
    "mat": {
     "linen_kg": 1.0
    },
-   "name": "Surgical gloves and mask",
-   "note": "Linen gloves and mask tied over mouth and nose. Blocks droplets and protects patient. Cloth gloves absorb blood and require frequent changing. Rubber gloves are unobtainable.",
+   "name": "Surgical barrier masks and hand coverings",
+   "note": "Boiled linen masks and disposable or freshly sterilised hand coverings reduce droplets and direct contamination only when combined with hand washing and sterile technique; cloth is not equivalent to impermeable rubber.",
    "ph": 40.0,
    "pre": [
-    "mat_linen"
+    "mat_linen",
+    "med_handwashing_semmelweis",
+    "med_sterile_technique"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -70730,6 +71559,41 @@
    "yrs": 0.4
   },
   {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.6,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 30.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 3,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "mfg_critical_path_method",
+   "kb": "89_remaining_arts.md#mfg_queueing_theory",
+   "lab": {
+    "engineer": 260.0
+   },
+   "mat": {},
+   "name": "Critical path method",
+   "note": "Morgan Walker and James Kelley for DuPont and Remington Rand, 1957, and in parallel the United States Navy's PERT for the Polaris programme, 1958. Draws the project as a network of tasks and dependencies rather than one bar chart, and shows only ONE chain through that network, the critical path, has zero slack. Every other task can slip for free within its own float; a single day lost anywhere on the critical path is a day lost on the whole project.",
+   "ph": 220.0,
+   "pre": [
+    "mfg_gantt_chart",
+    "mfg_linear_programming_simplex"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.13,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.6
+  },
+  {
    "_src": "43_manufacturing_deep.json",
    "_total_cost": 212.0,
    "adopt_yrs": 0.2,
@@ -71060,9 +71924,12 @@
     "paper_kg": 100.0
    },
    "name": "Drawing office",
-   "note": "One source of truth. Drawings are issued to shop floor only after approval. Changes are tracked. Library of standard parts. Three draftsmen can support 200 workers.",
+   "note": "A controlled office issues dimensioned drawings from common standards, records revisions, and withdraws obsolete copies so workshops build the same article.",
    "ph": 150.0,
-   "pre": [],
+   "pre": [
+    "units_standards",
+    "prc_straightedge"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.11,
@@ -71448,6 +72315,40 @@
    "sch": 0.0,
    "sus": 0,
    "traits": [],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.1,
+   "cap": 10.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "mfg_gantt_chart",
+   "kb": "89_remaining_arts.md#mfg_queueing_theory",
+   "lab": {
+    "engineer": 140.0
+   },
+   "mat": {},
+   "name": "Gantt chart",
+   "note": "Henry Gantt, about 1910 to 1915, building on Karol Adamiecki's earlier and less-known 1896 harmonogram. Draws every task as a horizontal bar against one shared calendar axis, start to finish, the whole schedule on a single page, as used at scale on Hoover Dam's construction. A manager sees which jobs are running late at a glance, instead of finding out from the foreman after the fact.",
+   "ph": 100.0,
+   "pre": [
+    "mfg_production_schedule"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.07,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information"
+   ],
    "up": 0.0,
    "yrs": 0.3
   },
@@ -72207,6 +73108,43 @@
    "yrs": 1.5
   },
   {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.3,
+   "cap": 60.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 2,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "mfg_linear_programming_simplex",
+   "kb": "89_remaining_arts.md#mfg_queueing_theory",
+   "lab": {
+    "engineer": 100.0,
+    "scholar": 280.0
+   },
+   "mat": {},
+   "name": "Linear programming and the simplex method",
+   "note": "George Dantzig, working on United States Air Force planning problems, 1947 (Leonid Kantorovich reached an equivalent formulation in 1939, unpublished in the West for years). Proves the best of every feasible allocation under linear constraints always sits at a CORNER of the constraint region, never in its interior, so an algorithm need only walk from corner to adjacent corner, improving each step, instead of searching a continuous space. The simplex method is that walk: the first time scarce-resource allocation is solved rather than argued over.",
+   "ph": 250.0,
+   "pre": [
+    "mil_operational_research",
+    "sc2_algebra_matrix"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.14,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information",
+    "commerce"
+   ],
+   "up": 0.0,
+   "yrs": 1.0
+  },
+  {
    "_src": "43_manufacturing_deep.json",
    "_total_cost": 451.25,
    "adopt_yrs": 0.3,
@@ -72338,10 +73276,12 @@
     "artisan": 150.0
    },
    "mat": {},
-   "name": "Casting mould",
-   "note": "The mould is made of compacted sand held in a flask. A pattern is pressed into the sand and withdrawn, leaving a cavity. The core sits inside and defines internal holes.",
+   "name": "Green-sand flask pattern and mould",
+   "note": "A reusable pattern, cope-and-drag flask, gates, risers, and rammed green sand produce repeatable metal castings. Generic casting moulds are ancient; this node standardises the flask process and shrinkage allowance.",
    "ph": 120.0,
-   "pre": [],
+   "pre": [
+    "met_green_sand_mold"
+   ],
    "req_any": [
     {
      "group": "pattern",
@@ -72934,9 +73874,11 @@
    "lab": {},
    "mat": {},
    "name": "Production schedule",
-   "note": "Balances demand, inventory, machine loading, and worker availability. Changes mid-month cause chaos. Lead time is built in. Revision cycle is weekly or monthly.",
+   "note": "A written routing and due-date board coordinates orders, materials, and labour across a workshop. It presupposes recorded commitments and repeated production, not modern software.",
    "ph": 130.0,
-   "pre": [],
+   "pre": [
+    "fin_contract_law"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.1,
@@ -73130,6 +74072,42 @@
    ],
    "up": 0.0,
    "yrs": 1.0
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.6,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 30.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "mfg_queueing_theory",
+   "kb": "89_remaining_arts.md#mfg_queueing_theory",
+   "lab": {
+    "scholar": 200.0
+   },
+   "mat": {},
+   "name": "Queueing theory (Erlang)",
+   "note": "Agner Krarup Erlang, Copenhagen Telephone Company, 1909. Models calls as arriving at random and holding a trunk for a random time, and derives the formula for the chance an arriving call finds every trunk already busy. An exchange can now be SIZED to a stated grade of service, one blocked call in a hundred, say, instead of guessed and found either wanting or wastefully oversized.",
+   "ph": 150.0,
+   "pre": [
+    "com_telephone_manual_exchange",
+    "sc2_probability_axioms"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information",
+    "commerce"
+   ],
+   "up": 0.0,
+   "yrs": 0.6
   },
   {
    "_src": "43_manufacturing_deep.json",
@@ -73749,7 +74727,7 @@
     "silver_kg": 2.0
    },
    "name": "Silver soldering",
-   "note": "Joint is stronger than soft solder and more ductile than braze. Used for jewelry, instruments, and small precision parts. Gap must be 0.1 mm.",
+   "note": "Ancient hard soldering joins closely hand-fitted precious-metal surfaces with a lower-melting silver-copper alloy and flux. Skilled filing and capillary action, rather than a claimed universal 0.1 mm machine tolerance, control the seam.",
    "ph": 100.0,
    "pre": [
     "cap_heat_0700",
@@ -82735,7 +83713,9 @@
    "note": "Fine ore mixed with binder (bentonite, lime) rolled into pellets; drying and light roasting harden them. Allows use of mill tailings and waste. Improves furnace permeability and reduces dust. Industrial pellet plants ~1920s.",
    "ph": 110.0,
    "pre": [
-    "cap_tol_1mm"
+    "cap_tol_1mm",
+    "met_ore_crushing_sorting",
+    "cap_heat_1100"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -84127,7 +85107,9 @@
    "ph": 110.0,
    "pre": [
     "mat_lead",
-    "mat_tin"
+    "mat_tin",
+    "prn_type_punch",
+    "mat_antimony"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -87328,6 +88310,46 @@
    "yrs": 2.0
   },
   {
+   "_src": "10_metallurgy.json",
+   "adopt_yrs": 0.0,
+   "art": 1.0,
+   "build_yrs": 0.1,
+   "cap": 60.0,
+   "cat": "alloys",
+   "conf": "B",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "phosphor_bronze_alloy",
+   "kb": "10_metallurgy.md#phosphor_bronze_alloy",
+   "kb_level": "none",
+   "kind": "RESOURCE",
+   "lab": {
+    "furnaceman": 150.0
+   },
+   "mat": {
+    "charcoal_kg": 40.0,
+    "copper_kg": 8.0,
+    "tin_kg": 1.0
+   },
+   "name": "Phosphor bronze: tin bronze deoxidised with phosphorus",
+   "note": "Ordinary tin bronze cast from an open melt is full of tin-oxide inclusions and has no useful spring temper. Phosphorus added as a deoxidiser (a dash of phosphor-copper master alloy, or bone ash charcoal in the crucible) scavenges the oxygen and leaves a bronze that can be cold-worked and keeps a spring set - exactly what a point-contact whisker needs to hold its few hundredths of a millimetre of gap under its own tension. Patented by the Pearson brothers in 1871. Before this node, gp_whisker_forming and point_contact_transistor both charged phosphor_bronze_g as a material cost while nothing gated it at all.",
+   "ph": 40.0,
+   "pre": [
+    "mat_copper",
+    "mat_tin",
+    "chm_phosphorus_extraction"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 0.1
+  },
+  {
    "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: strict control of temperature required for consistent photographic emulsion behavior]",
    "_src": "core",
    "_total_cost": 9086.0,
@@ -89464,10 +90486,11 @@
     "cast_iron_kg": 20.0
    },
    "name": "Straightedge and reference straightness",
-   "note": "Cast-iron bar hand-scraped flat within 0.05mm over metre length. Light falls through 0.1mm gap if not in contact. Essential reference tool. Worn straightedges become rounded and measure optimistically: must be checked against other straightedges in rotation.",
+   "note": "A reference edge produced by comparing and scraping three candidates so no single edge defines its own error; standard units make the result transferable.",
    "ph": 30.0,
    "pre": [
-    "cap_tol_1mm"
+    "cap_tol_1mm",
+    "units_standards"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -91972,7 +92995,8 @@
    "ph": 150.0,
    "pre": [
     "cap_tol_1mm",
-    "mat_brass"
+    "mat_brass",
+    "prn_hand_papermaking"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -94994,9 +96018,11 @@
    },
    "mat": {},
    "name": "Citation and bibliographic reference",
-   "note": "Standard notation evolved over centuries (now many styles). Teaching: plagiarism vs. citation. Adoption: fast once journals exist.",
+   "note": "A convention identifies author, work, section, and copied passage so readers can locate a claim across hand-copied texts. It does not promise modern page-stable citation before standard editions.",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "sc2_institution_textbook"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95026,9 +96052,11 @@
    "lab": {},
    "mat": {},
    "name": "Curriculum and course sequence",
-   "note": "Universities formalized in medieval period. Teaching: what order? Arithmetic before algebra, geometry before calculus. Adoption: slow because schools resist change.",
+   "note": "A published sequence states entry knowledge, lesson order, exercises, and completion standards for a school. It is an institutional teaching programme, not a private reading list.",
    "ph": 120.0,
-   "pre": [],
+   "pre": [
+    "school_founded"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95061,7 +96089,10 @@
    "name": "Doctorate and research degree",
    "note": "German universities formalised (1800s). Teaching: what counts as original? How evaluate quality? Adoption: now universal marker of research qualification.",
    "ph": 150.0,
-   "pre": [],
+   "pre": [
+    "fin_university",
+    "sc2_institution_examination"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95095,7 +96126,10 @@
    "name": "Examination and credentialing",
    "note": "Universities began written exams in 19th century. Teaching: standardises quality. Adoption: slow because it threatens existing credentials.",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "school_founded",
+    "sc2_institution_curriculum"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95125,9 +96159,12 @@
    "lab": {},
    "mat": {},
    "name": "Funded research programme",
-   "note": "NIH, NSF, DFIR modern examples. Teaching: how write proposal. Adoption: became essential by 1950s as research became expensive.",
+   "note": "A durable programme with a budget, trained investigators, records, and accountable patronage. Funding one experiment is immediate; maintaining an institution across projects is not.",
    "ph": 120.0,
-   "pre": [],
+   "pre": [
+    "school_founded",
+    "fin_contract_law"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95269,7 +96306,10 @@
    "name": "Referee and peer review",
    "note": "Formalised in 20th century (Nature and Science). Teaching: why anonymous matters (prevents conflicts). Adoption: slow because refereeing is unpaid.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "sc2_institution_research_group",
+    "sc2_institution_textbook"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95301,7 +96341,10 @@
    "name": "Research group and principal investigator",
    "note": "Liebig's group (1830s) was model. Teaching: how supervise and credit work. Adoption: fast in universities, slow in industry.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "school_founded",
+    "sc2_institution_funded_programme"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95471,9 +96514,11 @@
    "lab": {},
    "mat": {},
    "name": "Negative result and null finding",
-   "note": "Publication bias: journals reject negatives. Teaching: why matters (saves others' time). Adoption: slow because negatives disappoint.",
+   "note": "A reporting norm that records a well-designed null result with method and uncertainty so others do not silently repeat it.",
    "ph": 90.0,
-   "pre": [],
+   "pre": [
+    "scientific_method"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95537,9 +96582,12 @@
    "lab": {},
    "mat": {},
    "name": "Replication and repeatability",
-   "note": "Validates findings and catches fraud. Teaching: why peer skepticism matters. Adoption: slow because replication is unglamorous and often unrewarding.",
+   "note": "Independent practitioners repeat a documented experiment and compare results. Repeatability requires both a reporting method and more than one competent investigator.",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "scientific_method",
+    "sc2_institution_research_group"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95611,7 +96659,9 @@
    "name": "The decimal point convention",
    "note": "Napier used a period; Stevin used a circle. The point won. Adoption is fast once stakes are printing. Different countries use comma still.",
    "ph": 20.0,
-   "pre": [],
+   "pre": [
+    "sc2_notation_positional"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95757,7 +96807,9 @@
    "name": "Exponent notation",
    "note": "Vieta used q for quadratum (square), c for cubus. Descartes switched to superscripts. Typesetting superscripts is hard; printing adoption is slow.",
    "ph": 45.0,
-   "pre": [],
+   "pre": [
+    "algebra_symbolic"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -95903,8 +96955,8 @@
    "kind": "SCIENCE",
    "lab": {},
    "mat": {},
-   "name": "Positional notation and place value",
-   "note": "Babylonians and Indians used this. It is already established for decimals and whole numbers in most of these societies (Rome included). Not yet universal in all trades.",
+   "name": "Place-value notation",
+   "note": "Teach digits whose value depends on position, including an explicit zero placeholder. This introductory convention precedes the broader decimal arithmetic curriculum.",
    "ph": 0.0,
    "pre": [],
    "req_any": [],
@@ -95941,7 +96993,9 @@
    "name": "Root symbols and radical notation",
    "note": "Medieval \u221a is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing.",
    "ph": 40.0,
-   "pre": [],
+   "pre": [
+    "algebra_symbolic"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -96487,9 +97541,12 @@
    },
    "mat": {},
    "name": "Newton's law of universal gravitation",
-   "note": "Explains Kepler's laws. Teaching: derives planetary orbits. Adoption: transforms astronomy and physics into unified science.",
+   "note": "Teach and test the inverse-square relation using quantitative mechanics and astronomical observations. Writing the formula is immediate; making it a usable predictive theory is the project.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "sc2_physics_kinematics",
+    "algebra_symbolic"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -96557,9 +97614,12 @@
    },
    "mat": {},
    "name": "Kinematics: position, velocity, acceleration",
-   "note": "Ancient scholars attempted this without calculus. Teaching is trivial after derivatives exist. Adoption: immediate in physics and engineering.",
+   "note": "Measure position against time and calculate velocity and acceleration with algebra. The founder knows the equations, but useful instruction depends on common units and mathematical notation.",
    "ph": 90.0,
-   "pre": [],
+   "pre": [
+    "units_standards",
+    "algebra_symbolic"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -96699,9 +97759,12 @@
    },
    "mat": {},
    "name": "Momentum and impulse",
-   "note": "Descartes understood conservation; Newton formalized. Teaching: collisions and explosions. Adoption: immediate.",
+   "note": "Define momentum and impulse in common mass, length, and time units and teach their quantitative conservation in collisions. The concept is known immediately; measurement and instruction make it operational.",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "units_standards",
+    "arithmetic_positional"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -96769,9 +97832,13 @@
    },
    "mat": {},
    "name": "Newton's three laws of motion",
-   "note": "Principia (1687). Teaching: Galileo and Descartes prepared the ground. Adoption: transforms all engineering from qualitative to quantitative.",
+   "note": "Operational Newtonian mechanics: express force, mass, and acceleration in common units and solve the three laws quantitatively. Merely stating the laws is immediate; teaching engineers to calculate with them is the project.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "units_standards",
+    "algebra_symbolic",
+    "sc2_physics_kinematics"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -97285,7 +98352,10 @@
    "name": "Probability axioms and conditional probability",
    "note": "Formalized by Kolmogorov (1933). Teaching starts with dice and urn problems. Adoption: essential for statistics once this century opens.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "arithmetic_positional",
+    "algebra_symbolic"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -98902,10 +99972,12 @@
    "mat": {
     "timber_m3": 40.0
    },
-   "name": "Deep keel and the ability to sail to windward",
-   "note": "A deep keel resists leeway, which is what lets a square-rigged ship make ground upwind instead of only running before the wind. It is the difference between a boat that goes where the weather sends it and one that goes where you choose.",
+   "name": "Deeper keel for improved windward sailing",
+   "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship\u2019s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "sea_square_sail"
+   ],
    "req_any": [],
    "rev": 300.0,
    "risk": 0.1,
@@ -99057,9 +100129,11 @@
     "linen_kg": 0.5
    },
    "name": "Log line for speed",
-   "note": "A light wooden board (the log) on a long knotted line; thrown overboard, it stays in place while the ship moves; count the knots paid out in a sand-glass interval to find speed.",
+   "note": "A marked line streamed astern measures distance travelled during a reproducible interval timed with a portable clepsydra. Speed is the ratio; rope alone cannot supply it.",
    "ph": 30.0,
-   "pre": [],
+   "pre": [
+    "opt_water_clock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.05,
@@ -99380,10 +100454,10 @@
   {
    "_src": "15_ships.json",
    "_total_cost": 1138.5,
-   "adopt_yrs": 0.0,
+   "adopt_yrs": 8,
    "art": 0.0,
-   "build_yrs": 1.0,
-   "cap": 1000.0,
+   "build_yrs": 3,
+   "cap": 1200.0,
    "cat": "ships",
    "conf": "C",
    "dev_people": null,
@@ -99394,14 +100468,15 @@
    "kb_level": "module",
    "kind": "ENGINEERING",
    "lab": {
-    "artisan": 200.0,
-    "carpenter": 600.0
+    "artisan": 800.0,
+    "carpenter": 6000.0,
+    "smith": 600.0
    },
    "mat": {
     "timber_m3": 5.0
    },
    "name": "Skeleton-first hull construction",
-   "note": "Build the frame (ribs) first, then plank over it, not vice versa; cheaper and faster, scales to much larger ships, and uses timber more efficiently; requires a fundamental rethinking of carpentry.",
+   "note": "Develop frame-first hull construction through lofting, full-size framing trials, and at least one instrumented seagoing hull. This is a major conservative craft transition, not a bench prototype.",
    "ph": 250.0,
    "pre": [
     "cap_tol_1mm",
@@ -99417,7 +100492,7 @@
     "infrastructure"
    ],
    "up": 0.0,
-   "yrs": 1.0
+   "yrs": 8.0
   },
   {
    "_internal": "[REVIEWED: prerequisite(s) cap_measure_time_ms added by a reviewer working node by node. Reason: echo sounding requires millisecond timing for distance measurement]",
@@ -99682,7 +100757,8 @@
    "ph": 120.0,
    "pre": [
     "cap_tol_1mm",
-    "sea_steering_oars"
+    "sea_steering_oars",
+    "sea_skeleton_first"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -101210,7 +102286,7 @@
    },
    "mat": {},
    "name": "Hand ginning cotton",
-   "note": "Removing seeds from cotton by hand using a stick or roller. Slow: produces about 1 lb clean cotton per day. Mechanical ginning is revolutionary leap.",
+   "note": "Hand separation of cotton seed from imported cotton using fingers or paired rollers. Cotton supply must exist before the processing practice has an object.",
    "ph": 30.0,
    "pre": [
     "tex_cotton_trade"
@@ -101252,11 +102328,13 @@
     "timber_m3": 2.0
    },
    "name": "Horizontal loom",
-   "note": "Refined horizontal loom with better shaft control and cloth beam tension. Slightly faster than two-beam. Intermediate step toward mechanized looms.",
+   "note": "A horizontal frame holds the warp on beams while heddles raise alternating sheds. The project combines inherited loom components into a stable floor loom, not the invention of weaving.",
    "ph": 80.0,
    "pre": [
     "cap_tol_1mm",
-    "tex_two_beam_loom"
+    "tex_two_beam_loom",
+    "tx2_heddle",
+    "tx2_beam"
    ],
    "req_any": [],
    "rev": 400.0,
@@ -106909,11 +107987,13 @@
     "bronze_kg": 30.0,
     "wood_kg": 100.0
    },
-   "name": "Bilge pump",
-   "note": "Bilge pump is a simple piston pump with flapper valves. Two sailors working alternately can keep a large ship dry. The kernel is that a ship always leaks; a crew must pump continuously during a long voyage. Without pumping, a wooden ship sinks in weeks.",
+   "name": "Shipboard bilge-pump adaptation",
+   "note": "Adapt the inherited force pump to a ship with strainers, non-return valves, accessible maintenance, and a discharge above the waterline.",
    "ph": 50.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_muscle",
+    "pwr_force_pump",
+    "sea_merchant_ships_large"
    ],
    "req_any": [],
    "rev": 200.0,
@@ -108060,7 +109140,10 @@
    "name": "Hopper wagon for bulk minerals",
    "note": "Hopper wagons eliminate shoveling; load coal or ore, close the chute, and gravity empties it at the destination. Chutes must be wide enough that cargo bridges; a stuck chute is worthless. Hinged chutes that open suddenly can jam if a stone wedges in the opening.",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "tr_wooden_waggonway",
+    "tr_sleeper_ballast"
+   ],
    "req_any": [
     {
      "group": "structural_casting",
@@ -109333,10 +110416,12 @@
     "iron_bar_kg": 20.0,
     "wood_kg": 30.0
    },
-   "name": "Semaphore signal",
-   "note": "Semaphore arm at different angles means go, stop, or caution. All-night operation required lamps. The kernel is that a driver must know the state from a distance. Early railroad signals were simply 'stop' or 'go'; caution required a second signal to warn that the next signal might be red.",
+   "name": "Semaphore station and sight line",
+   "note": "A surveyed line-of-sight station with pivoting arms or shutters sends a small set of visible states. A useful network requires repeated stations and a separate shared codebook.",
    "ph": 40.0,
-   "pre": [],
+   "pre": [
+    "civ_surveying_groma"
+   ],
    "req_any": [],
    "rev": 300.0,
    "risk": 0.06,
@@ -109456,7 +110541,9 @@
    "name": "Sleeper and ballast foundation",
    "note": "Sleepers must be set at precise spacing and depth for even rail height. Ballast size matters: too large and rails rock, too small and it settles too quickly. Track workers use a wooden gauge and a line to check alignment.",
    "ph": 30.0,
-   "pre": [],
+   "pre": [
+    "tr_wooden_waggonway"
+   ],
    "req_any": [],
    "rev": 200.0,
    "risk": 0.05,
@@ -110620,6 +111707,40 @@
   },
   {
    "_src": "50_textiles_consumer_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "tx2_angora_goat_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire Angora goat breeding stock",
+   "note": "Obtain live Angora-type goats and maintain a breeding population; ordinary goats or imported finished mohair do not establish the named fibre supply.",
+   "ph": 80.0,
+   "pre": [
+    "sea_monsoon_route"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
+  },
+  {
+   "_src": "50_textiles_consumer_deep.json",
    "_total_cost": 1415.0,
    "adopt_yrs": 1,
    "art": 1.0,
@@ -111557,7 +112678,7 @@
     "wood_kg": 8.0
    },
    "name": "Carding: opening and aligning fibres",
-   "note": "Hand cards with bent wire teeth tease fibres, two cards with offset teeth align them parallel and remove neps, foundation of modern spinning",
+   "note": "Paired toothed cards open and align cleaned fibre into a roll for spinning. This is distinct from ancient combing and requires a repeatable field of fine teeth.",
    "ph": 60.0,
    "pre": [
     "cap_tol_1mm",
@@ -111598,7 +112719,9 @@
    "name": "Cashmere: goat undercoat fibre",
    "note": "Mongolian and Himalayan goat undercoat, extremely fine and soft, luxury fibre, Kashmir region centres of trade",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "tx2_cashmere_goat_stock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -111607,6 +112730,40 @@
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "50_textiles_consumer_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "tx2_cashmere_goat_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire cashmere-producing goat stock",
+   "note": "Obtain live fine-undercoat goats from Inner or Central Asian herds and establish a breeding flock; finished fibre cannot substitute for reproductive stock.",
+   "ph": 80.0,
+   "pre": [
+    "sea_monsoon_route"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "50_textiles_consumer_deep.json",
@@ -111902,9 +113059,12 @@
    },
    "mat": {},
    "name": "Corset: rigid body support garment",
-   "note": "Boned structure shapes silhouette, whalebone and metal stays, essential women's garment from medieval through 20th century",
+   "note": "A fitted, boned or corded support bodice built from measured patterns. This introduces a specific rigid garment rather than treating all body-support clothing as one invention.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "tx2_sizing_systems",
+    "mat_linen"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -112356,7 +113516,10 @@
    "name": "Drawing pin: short fastening point",
    "note": "Short point with wide head, brass or steel, holds paper to boards without permanent damage",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "mfg_wire_drawing",
+    "mat_paper"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -112824,7 +113987,9 @@
    "name": "Flyer: the earliest spinning frame component",
    "note": "U-shaped guide of twisted metal, draws fibre at constant rate while imparting twist, basis of all frame spinning before the ring frame",
    "ph": 70.0,
-   "pre": [],
+   "pre": [
+    "tex_spinning_wheel"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -113146,9 +114311,11 @@
     "iron_bar_kg": 8.0
    },
    "name": "Hook and eye: wire fastener",
-   "note": "Hand-formed wire hook and eye loop, traditional closure, essential for corsets and men's breeches",
+   "note": "A matched bent-wire hook and closed eye made from consistently drawn wire, sewn to a garment as a reusable fastening.",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "mfg_wire_drawing"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -113264,7 +114431,9 @@
    "name": "Jute cultivation and fibre",
    "note": "Indian river plant, coarse bast fibre, cheap and fast-growing, bagging and carpet use, emerges as industrial fibre in 19th century",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "tx2_jute_seed_stock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -113273,6 +114442,40 @@
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "50_textiles_consumer_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "tx2_jute_seed_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire viable jute seed and suitable land",
+   "note": "Bring viable South Asian jute seed to a warm, wet growing region and prove a local crop before fibre processing can begin.",
+   "ph": 80.0,
+   "pre": [
+    "sea_monsoon_route"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "50_textiles_consumer_deep.json",
@@ -113567,10 +114770,11 @@
     "mercury_kg": 5.0
    },
    "name": "Mirror: reflective glass surface",
-   "note": "Mercury backing silvered glass, produced in quantity by medieval period, tin-amalgam backing emerges as alternative",
+   "note": "A flat glass plate backed with a polished tin or lead-tin reflective layer and sealed from corrosion. The backing process, adhesion, and glass flatness distinguish it from an ancient polished-metal mirror.",
    "ph": 70.0,
    "pre": [
-    "mat_glass_soda"
+    "mat_glass_soda",
+    "mat_tin"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -113604,7 +114808,9 @@
    "name": "Mohair: angora goat fibre",
    "note": "Turkish angora goat fibre, lustrous and strong, luxury use, Istanbul region monopoly until late 19th century",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "tx2_angora_goat_stock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -113906,7 +115112,11 @@
    "name": "Paperclip: bent wire fastener",
    "note": "Wire bent into overlapping loops, simple but effective, mass production by 1900s enables cheap office supplies",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "mfg_wire_drawing",
+    "mt2_spring_steel",
+    "mat_paper"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -113941,7 +115151,10 @@
    "name": "Pattern grading: multi-size scaling",
    "note": "Master patterns scaled to multiple sizes, essential for ready-to-wear, ratio grading becomes standard practice",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "tx2_sizing_systems",
+    "tex_pattern_cutting"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -114467,7 +115680,9 @@
    "name": "Ramie cultivation and fibre",
    "note": "Asian bast fibre, fine and strong, China and India production, difficult processing limits adoption",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "tx2_ramie_plant_stock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -114476,6 +115691,40 @@
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "50_textiles_consumer_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "tx2_ramie_plant_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire ramie propagation stock",
+   "note": "Obtain live ramie roots or viable seed from Asia and establish the perennial crop in a suitable climate.",
+   "ph": 80.0,
+   "pre": [
+    "sea_monsoon_route"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "50_textiles_consumer_deep.json",
@@ -114661,9 +115910,11 @@
     "wax_kg": 10.0
    },
    "name": "Resist dyeing: pattern preservation",
-   "note": "Wax or paste mask areas of cloth before dyeing, creates patterns through negative space, includes batik and tie-dye",
+   "note": "Wax, starch paste, tied thread, or clay blocks dye from selected areas; remove the resist after the dye bath to reveal the pattern. Each resist must survive the bath without bleeding into the fibre.",
    "ph": 70.0,
-   "pre": [],
+   "pre": [
+    "tex_mordanting"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -115458,7 +116709,9 @@
    "name": "Silk: cultivated fibre",
    "note": "Protein fibre from silkworm cocoon, continuous filament, lustrous, expensive, Asian production trademarked",
    "ph": 40.0,
-   "pre": [],
+   "pre": [
+    "tx2_silkworm_stock"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -115467,6 +116720,40 @@
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
+  },
+  {
+   "_src": "50_textiles_consumer_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.5,
+   "cap": 200.0,
+   "cat": "access",
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "tx2_silkworm_stock",
+   "kb": "",
+   "lab": {
+    "artisan": 200.0
+   },
+   "mat": {},
+   "name": "Acquire silkworm eggs and mulberry stock",
+   "note": "Secure live Bombyx mori eggs and suitable mulberry planting stock through the Asian trade route. Imported silk cloth supplies neither organism.",
+   "ph": 80.0,
+   "pre": [
+    "sea_monsoon_route"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.2,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 20.0,
+   "yrs": 1.0
   },
   {
    "_src": "50_textiles_consumer_deep.json",
@@ -115526,9 +116813,12 @@
    },
    "mat": {},
    "name": "Sizing systems: body measurement standardisation",
-   "note": "Standard body measurements and fit models, crucial for mass production, significant variation by country and manufacturer",
+   "note": "A body-measurement survey tied to standard units and reusable garment patterns. The project establishes sample tables and workshop practice; it does not assume modern population-wide sizes.",
    "ph": 100.0,
-   "pre": [],
+   "pre": [
+    "units_standards",
+    "tex_pattern_cutting"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -115600,7 +116890,9 @@
    "name": "Spectacle frame: eye support structure",
    "note": "Horn or metal frame holding optical lenses, nose bridge and arms, emerged in medieval period with mass production in 1800s",
    "ph": 60.0,
-   "pre": [],
+   "pre": [
+    "hom_spectacles"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -115631,9 +116923,12 @@
    },
    "mat": {},
    "name": "Splitting: leather layering",
-   "note": "Separating hide into grain and buff layers, enables utilisation of full hide, requires sharp hand knives or mechanical blade",
+   "note": "Controlled splitting of a prepared hide into grain and flesh layers with a guided knife. This is a leather-finishing process, not the much later powered band-knife splitter.",
    "ph": 70.0,
-   "pre": [],
+   "pre": [
+    "tx2_currying",
+    "mat_leather"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -115975,9 +117270,11 @@
    },
    "mat": {},
    "name": "Twist insertion control",
-   "note": "Twist multiplier, turns per inch, balances strength and handle, S and Z directions, critical knowledge for spinner",
+   "note": "Quantified twist specification measured as turns per unit length and S/Z direction. Ordinary spinners already control twist by feel; this node standardises measurement so workshops can reproduce a specified yarn.",
    "ph": 50.0,
-   "pre": [],
+   "pre": [
+    "units_standards"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -116086,9 +117383,11 @@
     "wood_kg": 20.0
    },
    "name": "Warping mill: warp thread length setting",
-   "note": "Large wheel and pegs set warp length and thread count, critical for accurate cloth dimensions",
+   "note": "A rotating frame measures equal warp lengths and transfers them under controlled tension to the loom beam; the project adapts existing beam and winding practice.",
    "ph": 60.0,
-   "pre": [],
+   "pre": [
+    "tx2_beam"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -116302,7 +117601,7 @@
     "bronze_kg": 20.0
    },
    "name": "Define and publish standard length, mass, time and temperature",
-   "note": "Do this before writing any other recipe down. Every number in your corpus is meaningless to posterity without it. Make master standards in bronze, in triplicate, deposited in three cities.",
+   "note": "Define reproducible length, mass, time, and temperature scales, manufacture durable master artefacts, compare workshop copies, and publish procedures. The founder supplies definitions immediately; fabrication and adoption consume the project time.",
    "ph": 300.0,
    "pre": [],
    "req_any": [],
@@ -116764,730 +118063,6 @@
    ],
    "up": 0.0,
    "yrs": 6.0
-  },
-  {
-   "_src": "01_materials.json",
-   "adopt_yrs": 0.0,
-   "art": 2.0,
-   "build_yrs": 0.5,
-   "cap": 400.0,
-   "cat": "material",
-   "conf": "A",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "mat_rubber_coagulated",
-   "kb": "89_remaining_arts.md#mat_rubber_coagulated",
-   "kb_level": "none",
-   "kind": "RESOURCE",
-   "lab": {
-    "labourer": 600.0
-   },
-   "mat": {},
-   "name": "Coagulated rubber: tapping and curing latex",
-   "note": "Knowing which vine to tap (mat_natural_rubber) is not the same act as having rubber. Tapped latex is a watery, short-lived emulsion that rots in days unless it is coagulated: drive off the ammonia with heat or wood smoke, or curdle it with a weak acid (formic or acetic), press the curd into sheet or crepe, and dry it. This is a standing tapping-and-curing operation - cuts, collecting cups, a smoke-house or coagulating tanks, and labour on a schedule the trees set, not a thing you do once. Before this node, every recipe below treated rubber_kg as a priced commodity you could simply buy once you knew the vine existed, which is the bug a play tester named: 'rubber... you should have to make it with your factory/warehouse.' Now you do.",
-   "ph": 150.0,
-   "pre": [
-    "mat_natural_rubber"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.25,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [],
-   "up": 0.0,
-   "yrs": 0.5
-  },
-  {
-   "_src": "10_metallurgy.json",
-   "adopt_yrs": 0.0,
-   "art": 1.0,
-   "build_yrs": 0.1,
-   "cap": 60.0,
-   "cat": "alloys",
-   "conf": "B",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "phosphor_bronze_alloy",
-   "kb": "10_metallurgy.md#phosphor_bronze_alloy",
-   "kb_level": "none",
-   "kind": "RESOURCE",
-   "lab": {
-    "furnaceman": 150.0
-   },
-   "mat": {
-    "charcoal_kg": 40.0,
-    "copper_kg": 8.0,
-    "tin_kg": 1.0
-   },
-   "name": "Phosphor bronze: tin bronze deoxidised with phosphorus",
-   "note": "Ordinary tin bronze cast from an open melt is full of tin-oxide inclusions and has no useful spring temper. Phosphorus added as a deoxidiser (a dash of phosphor-copper master alloy, or bone ash charcoal in the crucible) scavenges the oxygen and leaves a bronze that can be cold-worked and keeps a spring set - exactly what a point-contact whisker needs to hold its few hundredths of a millimetre of gap under its own tension. Patented by the Pearson brothers in 1871. Before this node, gp_whisker_forming and point_contact_transistor both charged phosphor_bronze_g as a material cost while nothing gated it at all.",
-   "ph": 40.0,
-   "pre": [
-    "mat_copper",
-    "mat_tin",
-    "chm_phosphorus_extraction"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.1,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [],
-   "up": 0.0,
-   "yrs": 0.0
-  },
-  {
-   "_src": "goals",
-   "_total_cost": 0.0,
-   "adopt_yrs": 0.0,
-   "art": 0.0,
-   "build_yrs": 0.0,
-   "cap": 0.0,
-   "cat": "milestone",
-   "conf": "C",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "goal_literacy_common",
-   "kb": "80_information_printing.md#literacy",
-   "kb_level": "recipe",
-   "lab": {},
-   "mat": {},
-   "name": "A literate people, not just a literate few",
-   "note": "This is not something you build; it happens on its own the moment the census shows one reader in five among the general population, not only the lettered and propertied. Schools and academies are what move that number, and they have to stay open - a school that closes stops teaching the year it closes, whatever it taught before that.",
-   "ph": 0.0,
-   "pre": [
-    "academy_network"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.0,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "milestone"
-   ],
-   "up": 0.0,
-   "win_condition": {
-    "metric": "literacy_general",
-    "op": ">=",
-    "value": 0.2
-   },
-   "yrs": 0.0
-  },
-  {
-   "_src": "goals",
-   "_total_cost": 0.0,
-   "adopt_yrs": 0.0,
-   "art": 0.0,
-   "build_yrs": 0.0,
-   "cap": 0.0,
-   "cat": "milestone",
-   "conf": "C",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "goal_literate_nation",
-   "kb": "80_information_printing.md#literacy",
-   "kb_level": "recipe",
-   "lab": {},
-   "mat": {},
-   "name": "A nation that reads",
-   "note": "This is not something you build; it happens on its own once schooling and academies, running for long enough against a countryside mechanised enough to spare its children for a classroom, put three in four of your people over the threshold of reading. The ceiling on how literate this society can ever become moves only as the land is mechanised - the reaper, the thresher, the tractor, not only the school - and what you built before the ceiling rose stays capped at it until it does.",
-   "ph": 0.0,
-   "pre": [
-    "ag2_balanced_ration",
-    "ag2_baler",
-    "ag2_battery_poultry",
-    "ag2_bordeaux_mixture",
-    "ag2_canning",
-    "ag2_chaff_cutter",
-    "ag2_combine_harvester",
-    "ag2_contour_ploughing",
-    "ag2_coulter",
-    "ag2_cultivator",
-    "ag2_ddt",
-    "ag2_fanning_mill",
-    "ag2_fermentation_control",
-    "ag2_gravity_irrigation",
-    "ag2_harrow",
-    "ag2_horse_hoe",
-    "ag2_lead_arsenate",
-    "ag2_lime_sulphur",
-    "ag2_mower",
-    "ag2_nicotine_pesticide",
-    "ag2_potato_lifter",
-    "ag2_power_take_off",
-    "ag2_pyrethrum",
-    "ag2_reaper",
-    "ag2_reaper_binder",
-    "ag2_ridging_plough",
-    "ag2_roller",
-    "ag2_root_cutter",
-    "ag2_sheep_dip",
-    "ag2_silage_silo",
-    "ag2_subsoiler",
-    "ag2_tedder",
-    "ag2_terracing",
-    "ag2_three_point_linkage",
-    "ag2_threshing_machine",
-    "ag2_tile_drainage",
-    "ag2_tractor_steam",
-    "ag2_winnower",
-    "fud_winnowing_machine",
-    "tl_tractor",
-    "academy_network"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.0,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "milestone"
-   ],
-   "up": 0.0,
-   "win_condition": {
-    "metric": "literacy_general",
-    "op": ">=",
-    "value": 0.75
-   },
-   "yrs": 0.0
-  },
-  {
-   "_src": "goals",
-   "_total_cost": 0.0,
-   "adopt_yrs": 0.0,
-   "art": 0.0,
-   "build_yrs": 0.0,
-   "cap": 0.0,
-   "cat": "milestone",
-   "conf": "C",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "goal_public_health",
-   "kb": "70_medicine_biology.md#public_health",
-   "kb_level": "recipe",
-   "lab": {},
-   "mat": {},
-   "name": "Epidemics stop deciding who lives",
-   "note": "This is not something you build; it happens on its own once enough of sanitation, quarantine, nursing, vaccination and the rest of what germ theory makes possible is standing at once to have cut four-fifths of what an epidemic or a bad harvest would otherwise take. No single measure does this alone - each one only takes a share of what is left - which is the honest reason this is a threshold and not a single technology.",
-   "ph": 0.0,
-   "pre": [
-    "sanitation_antisepsis",
-    "med_quarantine_sanitation",
-    "germ_theory",
-    "med_vaccination_progression",
-    "md2_vaccine_smallpox",
-    "soap_hard",
-    "med_nursing_profession",
-    "plague_preparedness",
-    "crop_rotation",
-    "ag2_silage_silo"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.0,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "milestone"
-   ],
-   "up": 0.0,
-   "win_condition": {
-    "metric": "epidemic_relief",
-    "op": ">=",
-    "value": 0.85
-   },
-   "yrs": 0.0
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.3,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 60.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 3,
-   "gov": 0,
-   "id": "ctl_governor_stability_theory",
-   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "lab": {
-    "scholar": 200.0
-   },
-   "mat": {},
-   "name": "Governor stability theory (Maxwell 1868)",
-   "note": "James Clerk Maxwell, 'On Governors', Proceedings of the Royal Society, 1868. Writes the governor's own differential equation and shows the roots of its characteristic equation, not the mechanism's craftsmanship, decide whether speed settles to the setpoint or grows into a hunt. The first proof that a feedback loop can be mathematically unstable no matter how well it is built.",
-   "ph": 150.0,
-   "pre": [
-    "en_centrifugal_governor",
-    "calculus"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.08,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.3
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.3,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 40.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 2,
-   "gov": 0,
-   "id": "ctl_routh_criterion",
-   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "lab": {
-    "scholar": 230.0
-   },
-   "mat": {},
-   "name": "Routh's stability criterion",
-   "note": "Edward Routh, Adams Prize essay, 1877, generalises Maxwell's two- and three-term cases to a characteristic polynomial of any order: arrange its coefficients in a triangular array and read stability off the signs of one column, with no root ever solved for.",
-   "ph": 170.0,
-   "pre": [
-    "ctl_governor_stability_theory",
-    "sc2_algebra_polynomial"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.09,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.3
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.3,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 40.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 3,
-   "gov": 0,
-   "id": "ctl_hurwitz_criterion",
-   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "lab": {
-    "scholar": 230.0
-   },
-   "mat": {},
-   "name": "Hurwitz's stability criterion",
-   "note": "Adolf Hurwitz, 1895, answering a direct request from Aurel Stodola, whose steam turbine governors would not settle: arranges the same coefficients into a square array and tests the sign of a sequence of its leading determinants. Later proved identical to Routh's test in different clothing, reached without either man knowing of the other's work.",
-   "ph": 170.0,
-   "pre": [
-    "ctl_governor_stability_theory",
-    "sc2_algebra_determinant"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.09,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.3
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.5,
-   "art": 2.0,
-   "build_yrs": 0.3,
-   "cap": 80.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 2,
-   "gov": 0,
-   "id": "ctl_nyquist_stability_criterion",
-   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "lab": {
-    "engineer": 240.0,
-    "scholar": 80.0
-   },
-   "mat": {},
-   "name": "Nyquist stability criterion",
-   "note": "Harry Nyquist, Bell Labs, 1932, answers the question Black's 1927 feedback amplifier raised in practice: plot the open loop's gain and phase as one curve in the complex plane across every frequency, and count how many times that curve encircles the point minus one. The count of encirclements, not the size of the gain, says whether closing the loop rings, settles, or runs away.",
-   "ph": 220.0,
-   "pre": [
-    "ctl_routh_criterion",
-    "ctl_hurwitz_criterion",
-    "el2_negative_feedback_stability_gain",
-    "sc2_algebra_complex_numbers"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.11,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.5
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.4,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 40.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 6,
-   "gov": 0,
-   "id": "ctl_bode_plot_margins",
-   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "lab": {
-    "engineer": 200.0
-   },
-   "mat": {},
-   "name": "Bode plot, gain margin and phase margin",
-   "note": "Hendrik Bode, Bell Labs, published through the early 1940s. Plots log gain and phase separately against log frequency; straight-line asymptotes make Nyquist's encirclement test readable by eye, and the safety margin collapses to two numbers, gain margin and phase margin, that a working engineer can design a loop to hit rather than merely check afterward.",
-   "ph": 160.0,
-   "pre": [
-    "ctl_nyquist_stability_criterion",
-    "logarithms"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.08,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.4
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.4,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 40.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 1,
-   "gov": 0,
-   "id": "ctl_root_locus",
-   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "lab": {
-    "engineer": 210.0
-   },
-   "mat": {},
-   "name": "Root locus method",
-   "note": "Walter Evans, 1948. Plots exactly where the closed loop's poles sit in the complex plane as one gain is turned up from zero to infinity, by a short set of geometric rules on the open loop's own poles and zeros. A designer reads off, by eye, the highest gain that still leaves the poles short of the instability boundary, instead of re-solving Routh's array for every candidate gain in turn.",
-   "ph": 170.0,
-   "pre": [
-    "ctl_routh_criterion",
-    "ctl_hurwitz_criterion",
-    "sc2_algebra_complex_numbers"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.1,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.4
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.4,
-   "art": 1.0,
-   "build_yrs": 0.3,
-   "cap": 60.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 3,
-   "gov": 0,
-   "id": "ctl_minorsky_pid_law",
-   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "lab": {
-    "engineer": 260.0,
-    "scholar": 60.0
-   },
-   "mat": {},
-   "name": "Minorsky's three-term control law",
-   "note": "Nicolas Minorsky, 1922, watches a human helmsman steer the battleship USS New Mexico and formalises what the man is actually doing: correcting in proportion to the present heading error, to how fast that error is changing, and to how long and how far it has persisted. Weighting and adding those three terms is the first explicit proportional-integral-derivative control law, tested and logged at sea.",
-   "ph": 200.0,
-   "pre": [
-    "ctl_governor_stability_theory",
-    "newtonian_mechanics"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.12,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information",
-    "military"
-   ],
-   "up": 0.0,
-   "yrs": 0.4
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 1.5,
-   "art": 2.0,
-   "build_yrs": 0.8,
-   "cap": 600.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 3,
-   "dev_years": 9,
-   "gov": 0,
-   "id": "ctl_pneumatic_process_controller",
-   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "lab": {
-    "engineer": 260.0,
-    "machinist": 200.0
-   },
-   "mat": {
-    "brass_kg": 8.0,
-    "bronze_kg": 4.0,
-    "leather_kg": 4.0
-   },
-   "name": "Pneumatic process controller",
-   "note": "Instrument makers, Foxboro's Stabilog of 1931 foremost, turn Minorsky's three terms into a compressed-air relay: a bellows reads the process deviation and strokes a nozzle, and the output air pressure, proportional to the error plus its own integral over time, directly positions a diaphragm valve with no electricity on the plant floor at all. This is the device that actually holds a furnace, distillation column or autoclave at its setpoint instead of requiring an operator to watch a gauge and turn a handle by hand.",
-   "ph": 260.0,
-   "pre": [
-    "ctl_minorsky_pid_law",
-    "cap_power_steam"
-   ],
-   "req_any": [
-    {
-     "group": "air_supply",
-     "options": {
-      "cap_power_electric": 0.9,
-      "cap_power_steam": 1.0
-     }
-    },
-    {
-     "group": "sensing_element",
-     "options": {
-      "in2_thermocouple": 0.95,
-      "opt_bourdon_gauge": 1.0,
-      "thermometer": 0.7
-     }
-    }
-   ],
-   "rev": 1500.0,
-   "risk": 0.16,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "infrastructure",
-    "labour_saving"
-   ],
-   "up": 80.0,
-   "yrs": 1.5
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.3,
-   "art": 1.0,
-   "build_yrs": 0.1,
-   "cap": 20.0,
-   "cat": "control_theory",
-   "conf": "C",
-   "dev_people": 2,
-   "dev_years": 1,
-   "gov": 0,
-   "id": "ctl_ziegler_nichols_tuning",
-   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "lab": {
-    "engineer": 180.0
-   },
-   "mat": {},
-   "name": "Ziegler-Nichols tuning rules",
-   "note": "John Ziegler and Nathaniel Nichols, Taylor Instrument Companies, 1942. Two short recipes, one from a single open-loop step test, one from pushing the closed loop to the edge of a sustained oscillation and timing its period, hand a plant engineer usable proportional, integral and derivative settings without ever writing down the process's own differential equation.",
-   "ph": 140.0,
-   "pre": [
-    "ctl_pneumatic_process_controller"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.1,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.3
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.6,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 30.0,
-   "cat": "organisation",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 3,
-   "gov": 0,
-   "id": "mfg_queueing_theory",
-   "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "lab": {
-    "scholar": 200.0
-   },
-   "mat": {},
-   "name": "Queueing theory (Erlang)",
-   "note": "Agner Krarup Erlang, Copenhagen Telephone Company, 1909. Models calls as arriving at random and holding a trunk for a random time, and derives the formula for the chance an arriving call finds every trunk already busy. An exchange can now be SIZED to a stated grade of service, one blocked call in a hundred, say, instead of guessed and found either wanting or wastefully oversized.",
-   "ph": 150.0,
-   "pre": [
-    "com_telephone_manual_exchange",
-    "sc2_probability_axioms"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.1,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information",
-    "commerce"
-   ],
-   "up": 0.0,
-   "yrs": 0.6
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 1,
-   "art": 1.0,
-   "build_yrs": 0.3,
-   "cap": 60.0,
-   "cat": "organisation",
-   "conf": "C",
-   "dev_people": 2,
-   "dev_years": 2,
-   "gov": 0,
-   "id": "mfg_linear_programming_simplex",
-   "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "lab": {
-    "engineer": 100.0,
-    "scholar": 280.0
-   },
-   "mat": {},
-   "name": "Linear programming and the simplex method",
-   "note": "George Dantzig, working on United States Air Force planning problems, 1947 (Leonid Kantorovich reached an equivalent formulation in 1939, unpublished in the West for years). Proves the best of every feasible allocation under linear constraints always sits at a CORNER of the constraint region, never in its interior, so an algorithm need only walk from corner to adjacent corner, improving each step, instead of searching a continuous space. The simplex method is that walk: the first time scarce-resource allocation is solved rather than argued over.",
-   "ph": 250.0,
-   "pre": [
-    "mil_operational_research",
-    "sc2_algebra_matrix"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.14,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information",
-    "commerce"
-   ],
-   "up": 0.0,
-   "yrs": 1.0
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.3,
-   "art": 1.0,
-   "build_yrs": 0.1,
-   "cap": 10.0,
-   "cat": "organisation",
-   "conf": "C",
-   "dev_people": 1,
-   "dev_years": 2,
-   "gov": 0,
-   "id": "mfg_gantt_chart",
-   "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "lab": {
-    "engineer": 140.0
-   },
-   "mat": {},
-   "name": "Gantt chart",
-   "note": "Henry Gantt, about 1910 to 1915, building on Karol Adamiecki's earlier and less-known 1896 harmonogram. Draws every task as a horizontal bar against one shared calendar axis, start to finish, the whole schedule on a single page, as used at scale on Hoover Dam's construction. A manager sees which jobs are running late at a glance, instead of finding out from the foreman after the fact.",
-   "ph": 100.0,
-   "pre": [
-    "mfg_production_schedule"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.07,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.3
-  },
-  {
-   "_src": "62_control_ops_deep.json",
-   "adopt_yrs": 0.6,
-   "art": 1.0,
-   "build_yrs": 0.2,
-   "cap": 30.0,
-   "cat": "organisation",
-   "conf": "C",
-   "dev_people": 3,
-   "dev_years": 1,
-   "gov": 0,
-   "id": "mfg_critical_path_method",
-   "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "lab": {
-    "engineer": 260.0
-   },
-   "mat": {},
-   "name": "Critical path method",
-   "note": "Morgan Walker and James Kelley for DuPont and Remington Rand, 1957, and in parallel the United States Navy's PERT for the Polaris programme, 1958. Draws the project as a network of tasks and dependencies rather than one bar chart, and shows only ONE chain through that network, the critical path, has zero slack. Every other task can slip for free within its own float; a single day lost anywhere on the critical path is a day lost on the whole project.",
-   "ph": 220.0,
-   "pre": [
-    "mfg_gantt_chart",
-    "mfg_linear_programming_simplex"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.13,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [
-    "information"
-   ],
-   "up": 0.0,
-   "yrs": 0.6
   }
  ]
 }

@@ -1,0 +1,388 @@
+[
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_cashmere_goat_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire cashmere-producing goat stock",
+  "note": "Obtain live fine-undercoat goats from Inner or Central Asian herds and establish a breeding flock; finished fibre cannot substitute for reproductive stock.",
+  "ph": 80.0,
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_jute_seed_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire viable jute seed and suitable land",
+  "note": "Bring viable South Asian jute seed to a warm, wet growing region and prove a local crop before fibre processing can begin.",
+  "ph": 80.0,
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_angora_goat_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire Angora goat breeding stock",
+  "note": "Obtain live Angora-type goats and maintain a breeding population; ordinary goats or imported finished mohair do not establish the named fibre supply.",
+  "ph": 80.0,
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_ramie_plant_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire ramie propagation stock",
+  "note": "Obtain live ramie roots or viable seed from Asia and establish the perennial crop in a suitable climate.",
+  "ph": 80.0,
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_silkworm_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire silkworm eggs and mulberry stock",
+  "note": "Secure live Bombyx mori eggs and suitable mulberry planting stock through the Asian trade route. Imported silk cloth supplies neither organism.",
+  "ph": 80.0,
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "ag2_guano_deposit_access",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Survey and secure concentrated guano deposits",
+  "note": "Locate a dry seabird colony with accumulated guano and secure extraction and shipping rights; ordinary local manure is not this concentrated mineral commodity.",
+  "ph": 80.0,
+  "pre": [
+   "sea_coastal_pilotage"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "ag2_hop_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire and cultivate hop rhizomes",
+  "note": "Obtain viable female hop rhizomes, establish trellised perennial plants, and dry the cones before hopped brewing is possible.",
+  "ph": 80.0,
+  "pre": [
+   "ag2_botanic_garden"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "ag2_pyrethrum_stock",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Acquire pyrethrum planting stock",
+  "note": "Obtain viable Tanacetum cinerariifolium seed or divisions and establish a flower crop before extracting pyrethrins.",
+  "ph": 80.0,
+  "pre": [
+   "ag2_botanic_garden"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "fud_whaling_gear",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Specialised whale boats, harpoons, and shore rendering",
+  "note": "Build manoeuvrable hunting boats, toggling harpoons and heavy lines, train crews, identify whale grounds, and establish shore cauldrons before an organised industry can operate.",
+  "ph": 80.0,
+  "pre": [
+   "sea_merchant_ships_large"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "lnd_whippletree",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Whippletree draft equaliser",
+  "note": "A pivoted transverse bar equalises pull between traces and prevents side loads from rubbing the animal; test geometry separately from the collar.",
+  "ph": 80.0,
+  "pre": [
+   "horse_collar"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "lnd_nailed_horseshoe",
+  "kb": "",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Nailed horseshoe",
+  "note": "Fit a shaped iron shoe to the insensitive hoof wall with correctly placed nails; farriery trials and hoof health are independent of harness design.",
+  "ph": 80.0,
+  "pre": [
+   "mat_wrought_iron"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20.0
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1,
+  "build_yrs": 0.5,
+  "cap": 250,
+  "cat": "material",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "id": "mat_antimony",
+  "kb": "",
+  "lab": {
+   "furnaceman": 300,
+   "miner": 300
+  },
+  "mat": {
+   "antimony_kg": 10
+  },
+  "name": "Antimony metal supply",
+  "note": "Identify stibnite, roast it with controlled fumes, and reduce the oxide to antimony metal. A priced quantity of antimony is not available until this supply process exists.",
+  "ph": 100,
+  "pre": [
+   "met_ore_crushing_sorting",
+   "cap_heat_1100"
+  ],
+  "req_any": [],
+  "rev": 0,
+  "risk": 0.2,
+  "sch": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 20
+ }
+]
