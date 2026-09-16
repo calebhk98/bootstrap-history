@@ -74,9 +74,8 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |
 
 `tier` is deprecated and must not be added to new nodes. Availability is
-expressed by `pre`, capability rungs, cost, and calendar floors. Existing
-branches still contain tiers while they are migrated in manageable batches;
-the merge tool accepts both forms during that transition.
+expressed by `pre`, capability rungs, cost, and calendar floors. All branch sources are tierless; the merge tool temporarily accepts
+both forms for compatibility with external or older sources.
 
 ## PRICED_MATERIALS (allowed keys for `mat`)
 

@@ -416,7 +416,6 @@
    "risk": 0.2,
    "sch": 10.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "status_threatening"
    ],
@@ -452,7 +451,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "commerce"
@@ -488,7 +486,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -524,7 +521,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -574,7 +570,6 @@
    "risk": 0.22,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -610,7 +605,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -648,7 +642,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "food"
@@ -683,7 +676,6 @@
    "risk": 0.24,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "labour_saving"
@@ -722,7 +714,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -761,7 +752,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -794,7 +784,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "spectacle"
@@ -829,7 +818,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food",
     "commerce"
@@ -864,7 +852,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -898,7 +885,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -934,7 +920,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -973,7 +958,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -1009,7 +993,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -1041,7 +1024,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -1075,7 +1057,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "commerce",
@@ -1124,7 +1105,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "commerce"
@@ -1174,7 +1154,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -1233,7 +1212,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -1267,7 +1245,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -1304,7 +1281,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "commerce"
@@ -1339,7 +1315,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -1377,7 +1352,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -1415,7 +1389,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -1460,7 +1433,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -1498,7 +1470,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -1536,7 +1507,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -1577,7 +1547,6 @@
    "risk": 0.28,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "food",
     "labour_saving",
@@ -1617,7 +1586,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -1653,7 +1621,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -1689,7 +1656,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "commerce"
@@ -1740,7 +1706,6 @@
    "risk": 0.14,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -1779,7 +1744,6 @@
    "risk": 0.22,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "commerce"
@@ -1817,7 +1781,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -1854,7 +1817,6 @@
    "risk": 0.17,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -1890,7 +1852,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -1922,7 +1883,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -1970,7 +1930,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -2007,7 +1966,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -2041,7 +1999,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "commerce"
@@ -2081,7 +2038,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -2117,7 +2073,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "commerce"
@@ -2150,7 +2105,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -2192,7 +2146,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -2227,7 +2180,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food"
    ],
@@ -2261,7 +2213,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -2295,7 +2246,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -2327,7 +2277,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -2365,7 +2314,6 @@
    "risk": 0.22,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "labour_saving"
@@ -2405,7 +2353,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -2442,7 +2389,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -2476,7 +2422,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food"
    ],
@@ -2508,7 +2453,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -2544,7 +2488,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -2578,7 +2521,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -2629,7 +2571,6 @@
    "risk": 0.22,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -2670,7 +2611,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -2704,7 +2644,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food",
     "labour_saving"
@@ -2739,7 +2678,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food"
    ],
@@ -2775,7 +2713,6 @@
    "risk": 0.3,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -2809,7 +2746,6 @@
    "risk": 0.12,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -2843,7 +2779,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food"
    ],
@@ -2884,7 +2819,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "medical"
@@ -2920,7 +2854,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "medical"
@@ -2957,7 +2890,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "food",
     "commerce"
@@ -2992,7 +2924,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -3031,7 +2962,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -3065,7 +2995,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food"
    ],
@@ -3106,7 +3035,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -3141,7 +3069,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -3175,7 +3102,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -3213,7 +3139,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -3245,7 +3170,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "labour_saving"
@@ -3287,7 +3211,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -3327,7 +3250,6 @@
    "risk": 0.25,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -3363,7 +3285,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -3411,7 +3332,6 @@
    "risk": 0.22,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "infrastructure"
@@ -3444,7 +3364,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "commerce"
@@ -3479,7 +3398,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "information"
@@ -3518,7 +3436,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -3555,7 +3472,6 @@
    "risk": 0.35,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -3594,7 +3510,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -3633,7 +3548,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -3671,7 +3585,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -3705,7 +3618,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -3742,7 +3654,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "infrastructure"
@@ -3779,7 +3690,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "infrastructure"
@@ -3816,7 +3726,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "food"
@@ -3852,7 +3761,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "food"
@@ -3889,7 +3797,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -3937,7 +3844,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -3976,7 +3882,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -4012,7 +3917,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food"
    ],
@@ -4046,7 +3950,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "commerce"
@@ -4081,7 +3984,6 @@
    "risk": 0.25,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "food",
     "commerce",
@@ -4121,7 +4023,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -4162,7 +4063,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -4204,7 +4104,6 @@
    "risk": 0.14,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -4258,7 +4157,6 @@
    "risk": 0.18,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -4294,7 +4192,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -4335,7 +4232,6 @@
    "risk": 0.25,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -4374,7 +4270,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "medical",
     "food"
@@ -4422,7 +4317,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -4461,7 +4355,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -4495,7 +4388,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "medical",
     "food"
@@ -4533,7 +4425,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -4570,7 +4461,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "information"
@@ -4618,7 +4508,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -4654,7 +4543,6 @@
    "risk": 0.16,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "information"
@@ -6646,7 +6534,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -6690,7 +6577,6 @@
    "risk": 0.2,
    "sch": 4.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "inexplicable"
    ],
@@ -6736,7 +6622,6 @@
    "risk": 0.35,
    "sch": 6.0,
    "sus": 3,
-   "tier": 5,
    "traits": [
     "infrastructure"
    ],
@@ -6790,7 +6675,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 10,
-   "tier": 4,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -6826,7 +6710,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 2,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -6859,7 +6742,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "commerce"
    ],
@@ -6898,7 +6780,6 @@
    "risk": 0.1,
    "sch": 2.0,
    "sus": 2,
-   "tier": 0,
    "traits": [
     "inexplicable"
    ],
@@ -6945,7 +6826,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -6988,7 +6868,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -7033,7 +6912,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -7100,7 +6978,6 @@
    "risk": 0.35,
    "sch": 1.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -7146,7 +7023,6 @@
    "risk": 0.3,
    "sch": 1.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -7183,7 +7059,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -7226,7 +7101,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 3,
-   "tier": 1,
    "traits": [
     "luxury",
     "spectacle"
@@ -8387,7 +8261,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -8444,7 +8317,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -13147,7 +13019,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -16177,7 +16048,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "commerce",
     "infrastructure"
@@ -17645,7 +17515,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "religious_adjacent",
@@ -18521,7 +18390,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -18560,7 +18428,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -18602,7 +18469,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18642,7 +18508,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18683,7 +18548,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -18723,7 +18587,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18764,7 +18627,6 @@
    "risk": 0.17,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18802,7 +18664,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -18841,7 +18702,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -18882,7 +18742,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18921,7 +18780,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -18965,7 +18823,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -19004,7 +18861,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -19043,7 +18899,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -19079,7 +18934,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -19118,7 +18972,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -19164,7 +19017,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -19203,7 +19055,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -19242,7 +19093,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -19283,7 +19133,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -19323,7 +19172,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -19366,7 +19214,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -19410,7 +19257,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 60.0,
    "yrs": 0.5
@@ -19456,7 +19302,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -19495,7 +19340,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -19533,7 +19377,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -19573,7 +19416,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -19612,7 +19454,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -19651,7 +19492,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 120.0,
    "yrs": 1.0
@@ -19688,7 +19528,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -19726,7 +19565,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 100.0,
    "yrs": 1.5
@@ -19763,7 +19601,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -19802,7 +19639,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -19843,7 +19679,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -19881,7 +19716,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -19919,7 +19753,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 120.0,
    "yrs": 2.0
@@ -19955,7 +19788,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 100.0,
    "yrs": 0.8
@@ -19989,7 +19821,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 25.0,
    "yrs": 0.15
@@ -20026,7 +19857,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20065,7 +19895,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 100.0,
    "yrs": 0.8
@@ -20101,7 +19930,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -20151,7 +19979,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "military"
    ],
@@ -20190,7 +20017,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -20239,7 +20065,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20276,7 +20101,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "luxury"
    ],
@@ -20321,7 +20145,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -20362,7 +20185,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20401,7 +20223,6 @@
    "risk": 0.13,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -20441,7 +20262,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20481,7 +20301,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 30.0,
    "yrs": 0.4
@@ -20518,7 +20337,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -20558,7 +20376,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20595,7 +20412,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -20635,7 +20451,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -20673,7 +20488,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -20713,7 +20527,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -20770,7 +20583,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -20808,7 +20620,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -20846,7 +20657,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 150.0,
    "yrs": 2.5
@@ -20889,7 +20699,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 80.0,
    "yrs": 0.9
@@ -20926,7 +20735,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -20966,7 +20774,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -21006,7 +20813,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -21046,7 +20852,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 150.0,
    "yrs": 1.1
@@ -21082,7 +20887,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -21121,7 +20925,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -21160,7 +20963,6 @@
    "risk": 0.12,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "medical"
@@ -21200,7 +21002,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21238,7 +21039,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -21278,7 +21078,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21318,7 +21117,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -21356,7 +21154,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -21397,7 +21194,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -21440,7 +21236,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21481,7 +21276,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -21520,7 +21314,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -21558,7 +21351,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 15.0,
    "yrs": 0.15
@@ -21596,7 +21388,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -21635,7 +21426,6 @@
    "risk": 0.2,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -21674,7 +21464,6 @@
    "risk": 0.14,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21714,7 +21503,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 50.0,
    "yrs": 1.0
@@ -21750,7 +21538,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 60.0,
    "yrs": 0.6
@@ -21786,7 +21573,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "medical"
    ],
@@ -21824,7 +21610,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 50.0,
    "yrs": 0.5
@@ -21863,7 +21648,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 140.0,
    "yrs": 1.8
@@ -21900,7 +21684,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21937,7 +21720,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -21979,7 +21761,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -22018,7 +21799,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -22055,7 +21835,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -22094,7 +21873,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -22135,7 +21913,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -22174,7 +21951,6 @@
    "risk": 0.11,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -22214,7 +21990,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -22262,7 +22037,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -22307,7 +22081,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 200.0,
    "yrs": 1.2
@@ -22348,7 +22121,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -22386,7 +22158,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": -10,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -25344,7 +25115,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -25387,7 +25157,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "information",
     "religious_adjacent",
@@ -25429,7 +25198,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 2,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -25472,7 +25240,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -25514,7 +25281,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "infrastructure"
@@ -25573,7 +25339,6 @@
    "risk": 0.35,
    "sch": 1.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -25617,7 +25382,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 6,
-   "tier": 1,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -25665,7 +25429,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 4,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -25713,7 +25476,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -25760,7 +25522,6 @@
    "risk": 0.35,
    "sch": 8.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "spectacle"
    ],
@@ -25811,7 +25572,6 @@
    "risk": 0.3,
    "sch": 10.0,
    "sus": 18,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "information",
@@ -25856,7 +25616,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 5,
-   "tier": 1,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -25900,7 +25659,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -25974,7 +25732,6 @@
    "risk": 0.35,
    "sch": 4.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -32215,7 +31972,6 @@
    "risk": 0.35,
    "sch": 8.0,
    "sus": 4,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -32260,7 +32016,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 8,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -32317,7 +32072,6 @@
    "risk": 0.2,
    "sch": 3.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -32364,7 +32118,6 @@
    "risk": 0.2,
    "sch": 2.0,
    "sus": 15,
-   "tier": 2,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -32403,7 +32156,6 @@
    "risk": 0.12,
    "sch": 4.0,
    "sus": 3,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -32444,7 +32196,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -32486,7 +32237,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -32532,7 +32282,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -32579,7 +32328,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -32619,7 +32367,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -32664,7 +32411,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -32704,7 +32450,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -32749,7 +32494,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -32788,7 +32532,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -32828,7 +32571,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -32869,7 +32611,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -32920,7 +32661,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -32963,7 +32703,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -33005,7 +32744,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33045,7 +32783,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -33082,7 +32819,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -33124,7 +32860,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -33163,7 +32898,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -33203,7 +32937,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -33244,7 +32977,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33285,7 +33017,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33326,7 +33057,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33365,7 +33095,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33406,7 +33135,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33447,7 +33175,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33487,7 +33214,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33527,7 +33253,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33566,7 +33291,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33606,7 +33330,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33645,7 +33368,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33684,7 +33406,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33724,7 +33445,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33766,7 +33486,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -33808,7 +33527,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33849,7 +33567,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33887,7 +33604,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -33927,7 +33643,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -33992,7 +33707,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34047,7 +33761,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -34087,7 +33800,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34135,7 +33847,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -34181,7 +33892,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -34219,7 +33929,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -34273,7 +33982,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -34311,7 +34019,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -34362,7 +34069,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -34402,7 +34108,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -34442,7 +34147,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -34490,7 +34194,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -34536,7 +34239,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34575,7 +34277,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -34616,7 +34317,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -34658,7 +34358,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34698,7 +34397,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34737,7 +34435,6 @@
    "risk": 0.23,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -34773,7 +34470,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34809,7 +34505,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34849,7 +34544,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34889,7 +34583,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34929,7 +34622,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -34967,7 +34659,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -35008,7 +34699,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35048,7 +34738,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35086,7 +34775,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -35135,7 +34823,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35174,7 +34861,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "infrastructure"
    ],
@@ -35210,7 +34896,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -35249,7 +34934,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35288,7 +34972,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35330,7 +35013,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -35370,7 +35052,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -35417,7 +35098,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -35457,7 +35137,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35504,7 +35183,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -35562,7 +35240,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35607,7 +35284,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -35647,7 +35323,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35687,7 +35362,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35721,7 +35395,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -35760,7 +35433,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35799,7 +35471,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -35838,7 +35509,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35879,7 +35549,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35926,7 +35595,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -35982,7 +35650,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -36035,7 +35702,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -36076,7 +35742,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -36117,7 +35782,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -36158,7 +35822,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -36208,7 +35871,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36249,7 +35911,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36294,7 +35955,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36341,7 +36001,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36382,7 +36041,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -36421,7 +36079,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36469,7 +36126,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36508,7 +36164,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -36546,7 +36201,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -36588,7 +36242,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -36628,7 +36281,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -36667,7 +36319,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -36706,7 +36357,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36748,7 +36398,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -36788,7 +36437,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36831,7 +36479,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -36869,7 +36516,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -36913,7 +36559,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -36952,7 +36597,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -36992,7 +36636,6 @@
    "risk": 0.45,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37037,7 +36680,6 @@
    "risk": 0.45,
    "sch": 3.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37081,7 +36723,6 @@
    "risk": 0.5,
    "sch": 2.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37126,7 +36767,6 @@
    "risk": 0.35,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37168,7 +36808,6 @@
    "risk": 0.3,
    "sch": 1.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37210,7 +36849,6 @@
    "risk": 0.55,
    "sch": 1.0,
    "sus": 4,
-   "tier": 4,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37254,7 +36892,6 @@
    "risk": 0.45,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37309,7 +36946,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37361,7 +36997,6 @@
    "risk": 0.2,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "infrastructure",
@@ -37404,7 +37039,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "military"
@@ -37444,7 +37078,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "military"
@@ -37488,7 +37121,6 @@
    "risk": 0.35,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "military"
@@ -41797,7 +41429,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -41834,7 +41465,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -42109,7 +41739,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "food"
    ],
@@ -42227,7 +41856,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "food",
     "infrastructure"
@@ -43123,7 +42751,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "food"
    ],
@@ -43358,7 +42985,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "food"
    ],
@@ -44216,7 +43842,6 @@
    "risk": 0.4,
    "sch": 4.0,
    "sus": 1,
-   "tier": 4,
    "traits": [
     "luxury",
     "spectacle"
@@ -44262,7 +43887,6 @@
    "risk": 0.2,
    "sch": 2.0,
    "sus": 5,
-   "tier": 2,
    "traits": [
     "inexplicable",
     "religious_adjacent",
@@ -44310,7 +43934,6 @@
    "risk": 0.2,
    "sch": 3.0,
    "sus": 4,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -44365,7 +43988,6 @@
    "risk": 0.35,
    "sch": 18.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -44411,7 +44033,6 @@
    "risk": 0.4,
    "sch": 20.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -44449,7 +44070,6 @@
    "risk": 0.08,
    "sch": 1.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -44487,7 +44107,6 @@
    "risk": 0.1,
    "sch": 1.0,
    "sus": 5,
-   "tier": 0,
    "traits": [
     "infrastructure",
     "medical",
@@ -44536,7 +44155,6 @@
    "risk": 0.4,
    "sch": 18.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -44578,7 +44196,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 6,
-   "tier": 1,
    "traits": [
     "luxury",
     "spectacle"
@@ -44626,7 +44243,6 @@
    "risk": 0.35,
    "sch": 2.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "luxury",
     "spectacle"
@@ -44685,7 +44301,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "luxury",
     "spectacle"
@@ -44739,7 +44354,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "luxury",
     "spectacle"
@@ -44780,7 +44394,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -44830,7 +44443,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "infrastructure"
    ],
@@ -44871,7 +44483,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "infrastructure"
    ],
@@ -44910,7 +44521,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -44958,7 +44568,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -45013,7 +44622,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -45054,7 +44662,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -45096,7 +44703,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -45141,7 +44747,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "infrastructure"
    ],
@@ -45186,7 +44791,6 @@
    "risk": 0.3,
    "sch": 1.0,
    "sus": 25,
-   "tier": 2,
    "traits": [
     "inexplicable",
     "military"
@@ -45246,7 +44850,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -48017,7 +47620,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "food",
     "infrastructure"
@@ -48061,7 +47663,6 @@
    "risk": 0.4,
    "sch": 1.0,
    "sus": 14,
-   "tier": 2,
    "traits": [
     "inexplicable",
     "military"
@@ -48113,7 +47714,6 @@
    "risk": 0.25,
    "sch": 2.0,
    "sus": 8,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -48165,7 +47765,6 @@
    "risk": 0.35,
    "sch": 3.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -48201,7 +47800,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": -6,
-   "tier": 0,
    "traits": [
     "commerce"
    ],
@@ -48240,7 +47838,6 @@
    "risk": 0.1,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -48279,7 +47876,6 @@
    "risk": 0.14,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -48322,7 +47918,6 @@
    "risk": 0.13,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -48360,7 +47955,6 @@
    "risk": 0.09,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -48397,7 +47991,6 @@
    "risk": 0.16,
    "sch": 4.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle"
    ],
@@ -48438,7 +48031,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "infrastructure"
@@ -48478,7 +48070,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -48518,7 +48109,6 @@
    "risk": 0.13,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -48555,7 +48145,6 @@
    "risk": 0.09,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "spectacle"
    ],
@@ -48594,7 +48183,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -48634,7 +48222,6 @@
    "risk": 0.1,
    "sch": 1.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "labour_saving"
@@ -48675,7 +48262,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -48717,7 +48303,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -48771,7 +48356,6 @@
    "risk": 0.18,
    "sch": 4.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle",
     "information"
@@ -48816,7 +48400,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "spectacle"
@@ -48855,7 +48438,6 @@
    "risk": 0.1,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -48895,7 +48477,6 @@
    "risk": 0.17,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle",
     "labour_saving"
@@ -48935,7 +48516,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle",
     "information"
@@ -48978,7 +48558,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -49020,7 +48599,6 @@
    "risk": 0.08,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -49065,7 +48643,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -49104,7 +48681,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "military"
@@ -49144,7 +48720,6 @@
    "risk": 0.13,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -49190,7 +48765,6 @@
    "risk": 0.17,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -49235,7 +48809,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "spectacle",
     "information"
@@ -49272,7 +48845,6 @@
    "risk": 0.12,
    "sch": 3.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -49313,7 +48885,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -49354,7 +48925,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "commerce"
@@ -49398,7 +48968,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -49443,7 +49012,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -49482,7 +49050,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "infrastructure"
@@ -49523,7 +49090,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "information"
@@ -49561,7 +49127,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "information"
@@ -49601,7 +49166,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle",
     "labour_saving"
@@ -49640,7 +49204,6 @@
    "risk": 0.13,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -49686,7 +49249,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "luxury"
@@ -49731,7 +49293,6 @@
    "risk": 0.17,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -49767,7 +49328,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -49810,7 +49370,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "infrastructure"
@@ -49851,7 +49410,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -49890,7 +49448,6 @@
    "risk": 0.17,
    "sch": 4.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "spectacle"
@@ -49930,7 +49487,6 @@
    "risk": 0.1,
    "sch": 2.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving",
     "information"
@@ -49970,7 +49526,6 @@
    "risk": 0.06,
    "sch": 2.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -50010,7 +49565,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -50049,7 +49603,6 @@
    "risk": 0.13,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -50088,7 +49641,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -50126,7 +49678,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -50172,7 +49723,6 @@
    "risk": 0.2,
    "sch": 4.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -50214,7 +49764,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "information",
@@ -50259,7 +49808,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "information"
@@ -50300,7 +49848,6 @@
    "risk": 0.16,
    "sch": 2.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "information",
@@ -50340,7 +49887,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -50378,7 +49924,6 @@
    "risk": 0.18,
    "sch": 5.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "infrastructure"
@@ -50419,7 +49964,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -50459,7 +50003,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -50498,7 +50041,6 @@
    "risk": 0.14,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "labour_saving"
@@ -50537,7 +50079,6 @@
    "risk": 0.12,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "spectacle",
     "information"
@@ -50587,7 +50128,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "labour_saving"
@@ -50628,7 +50168,6 @@
    "risk": 0.12,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -50666,7 +50205,6 @@
    "risk": 0.16,
    "sch": 4.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -50705,7 +50243,6 @@
    "risk": 0.11,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -50743,7 +50280,6 @@
    "risk": 0.03,
    "sch": 1.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -50781,7 +50317,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "military"
@@ -50819,7 +50354,6 @@
    "risk": 0.13,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -50862,7 +50396,6 @@
    "risk": 0.19,
    "sch": 4.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -50904,7 +50437,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -50941,7 +50473,6 @@
    "risk": 0.14,
    "sch": 1.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -50980,7 +50511,6 @@
    "risk": 0.12,
    "sch": 4.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -51025,7 +50555,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -51063,7 +50592,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "military"
@@ -51105,7 +50633,6 @@
    "risk": 0.12,
    "sch": 1.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "labour_saving"
@@ -51145,7 +50672,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -51194,7 +50720,6 @@
    "risk": 0.17,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "infrastructure"
@@ -51235,7 +50760,6 @@
    "risk": 0.2,
    "sch": 5.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "infrastructure",
     "military"
@@ -51282,7 +50806,6 @@
    "risk": 0.16,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "information"
@@ -51321,7 +50844,6 @@
    "risk": 0.11,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -51361,7 +50883,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -51400,7 +50921,6 @@
    "risk": 0.1,
    "sch": 2.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -51438,7 +50958,6 @@
    "risk": 0.12,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "infrastructure"
@@ -51477,7 +50996,6 @@
    "risk": 0.16,
    "sch": 4.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "information"
@@ -51514,7 +51032,6 @@
    "risk": 0.13,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "spectacle",
     "information"
@@ -51561,7 +51078,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "infrastructure"
@@ -51602,7 +51118,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -51646,7 +51161,6 @@
    "risk": 0.16,
    "sch": 2.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -51684,7 +51198,6 @@
    "risk": 0.13,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -51723,7 +51236,6 @@
    "risk": 0.14,
    "sch": 3.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "commerce"
@@ -51764,7 +51276,6 @@
    "risk": 0.15,
    "sch": 3.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "spectacle"
@@ -51806,7 +51317,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "inexplicable"
    ],
@@ -51848,7 +51358,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -51888,7 +51397,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.5
@@ -51923,7 +51431,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 50.0,
    "yrs": 0.4
@@ -51959,7 +51466,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -51998,7 +51504,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -52036,7 +51541,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military"
    ],
@@ -52072,7 +51576,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -52111,7 +51614,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -52152,7 +51654,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -52192,7 +51693,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "inexplicable"
    ],
@@ -52233,7 +51733,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -52273,7 +51772,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 20.0,
    "yrs": 0.2
@@ -52310,7 +51808,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.3
@@ -52349,7 +51846,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "inexplicable"
    ],
@@ -52392,7 +51888,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -52430,7 +51925,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.3
@@ -52467,7 +51961,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -52508,7 +52001,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -52549,7 +52041,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "inexplicable"
    ],
@@ -52593,7 +52084,6 @@
    "risk": 0.3,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "military"
    ],
@@ -52632,7 +52122,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [],
    "up": 70.0,
    "yrs": 0.5
@@ -52674,7 +52163,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -52715,7 +52203,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -52758,7 +52245,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 8,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -52803,7 +52289,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "spectacle"
    ],
@@ -52846,7 +52331,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 8,
-   "tier": 3,
    "traits": [],
    "up": 200.0,
    "yrs": 1.0
@@ -52884,7 +52368,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.3
@@ -52921,7 +52404,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [],
    "up": 100.0,
    "yrs": 0.8
@@ -52957,7 +52439,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.2
@@ -52993,7 +52474,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.3
@@ -53030,7 +52510,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [],
    "up": 60.0,
    "yrs": 0.5
@@ -53066,7 +52545,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 25.0,
    "yrs": 0.2
@@ -53105,7 +52583,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -53142,7 +52619,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -53182,7 +52658,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "inexplicable"
@@ -53224,7 +52699,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -53264,7 +52738,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "inexplicable"
@@ -53306,7 +52779,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -53348,7 +52820,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -53389,7 +52860,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "information"
    ],
@@ -53430,7 +52900,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -53469,7 +52938,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -53509,7 +52977,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -53549,7 +53016,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information",
     "inexplicable"
@@ -53588,7 +53054,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "inexplicable"
    ],
@@ -53629,7 +53094,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "inexplicable"
    ],
@@ -53668,7 +53132,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -53716,7 +53179,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -53760,7 +53222,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "information"
    ],
@@ -53798,7 +53259,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -53836,7 +53296,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.4
@@ -53870,7 +53329,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "inexplicable"
@@ -53912,7 +53370,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -53950,7 +53407,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 50.0,
    "yrs": 0.4
@@ -53989,7 +53445,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -54026,7 +53481,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 50.0,
    "yrs": 0.4
@@ -54067,7 +53521,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -54106,7 +53559,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -54148,7 +53600,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "medical"
    ],
@@ -54187,7 +53638,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "medical"
    ],
@@ -54226,7 +53676,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 8,
-   "tier": 2,
    "traits": [],
    "up": 100.0,
    "yrs": 1.0
@@ -54264,7 +53713,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -54304,7 +53752,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -54344,7 +53791,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.4
@@ -54380,7 +53826,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "inexplicable"
@@ -54428,7 +53873,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.4
@@ -54467,7 +53911,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -54509,7 +53952,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -54554,7 +53996,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -54593,7 +54034,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -54632,7 +54072,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -54669,7 +54108,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -54711,7 +54149,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -54747,7 +54184,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -54785,7 +54221,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 20.0,
    "yrs": 0.1
@@ -54832,7 +54267,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -54873,7 +54307,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -54911,7 +54344,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information",
     "inexplicable"
@@ -54952,7 +54384,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -54991,7 +54422,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -55031,7 +54461,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military"
    ],
@@ -55070,7 +54499,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -55111,7 +54539,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -55150,7 +54577,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -55190,7 +54616,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.4
@@ -55230,7 +54655,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -55272,7 +54696,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 8,
-   "tier": 2,
    "traits": [],
    "up": 70.0,
    "yrs": 0.6
@@ -55310,7 +54733,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -55348,7 +54770,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 25.0,
    "yrs": 0.3
@@ -55385,7 +54806,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -55424,7 +54844,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -55476,7 +54895,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -55515,7 +54933,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 25.0,
    "yrs": 0.2
@@ -55549,7 +54966,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -55590,7 +55006,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -55629,7 +55044,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -55670,7 +55084,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 30.0,
    "yrs": 0.3
@@ -55707,7 +55120,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -55743,7 +55155,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 40.0,
    "yrs": 0.4
@@ -55783,7 +55194,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "labour_saving"
    ],
@@ -55831,7 +55241,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -55875,7 +55284,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -55914,7 +55322,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -55957,7 +55364,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -55996,7 +55402,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -56036,7 +55441,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -56079,7 +55483,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -56121,7 +55524,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -56168,7 +55570,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "status_threatening"
@@ -56214,7 +55615,6 @@
    "risk": 0.35,
    "sch": 25.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -56259,7 +55659,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -56306,7 +55705,6 @@
    "risk": 0.35,
    "sch": 3.0,
    "sus": 8,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -56361,7 +55759,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -56405,7 +55802,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 2,
-   "tier": 1,
    "traits": [
     "luxury",
     "spectacle"
@@ -58343,7 +57739,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -58388,7 +57783,6 @@
    "risk": 0.35,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -60056,7 +59450,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "commerce"
    ],
@@ -66259,7 +65652,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "medical"
    ],
@@ -67835,7 +67227,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -68051,7 +67442,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "military"
@@ -75451,7 +74841,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -75496,7 +74885,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "luxury",
     "spectacle"
@@ -75539,7 +74927,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75580,7 +74967,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75623,7 +75009,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -75663,7 +75048,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75701,7 +75085,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -75745,7 +75128,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75783,7 +75165,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -75825,7 +75206,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75868,7 +75248,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75910,7 +75289,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military",
     "infrastructure"
@@ -75949,7 +75327,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -75989,7 +75366,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76032,7 +75408,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -76076,7 +75451,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military"
    ],
@@ -76118,7 +75492,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76160,7 +75533,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -76204,7 +75576,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -76248,7 +75619,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -76288,7 +75658,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -76330,7 +75699,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -76373,7 +75741,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -76416,7 +75783,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -76459,7 +75825,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military",
     "weapon_democratising"
@@ -76501,7 +75866,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76544,7 +75908,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -76592,7 +75955,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -76636,7 +75998,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76680,7 +76041,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -76725,7 +76085,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -76767,7 +76126,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76809,7 +76167,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -76853,7 +76210,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -76896,7 +76252,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military",
     "infrastructure"
@@ -76938,7 +76293,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -76982,7 +76336,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 6,
-   "tier": 5,
    "traits": [
     "military"
    ],
@@ -77025,7 +76378,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77068,7 +76420,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -77106,7 +76457,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77150,7 +76500,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77188,7 +76537,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military",
     "information"
@@ -77231,7 +76579,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77273,7 +76620,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77321,7 +76667,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -77364,7 +76709,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77407,7 +76751,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77451,7 +76794,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77499,7 +76841,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -77543,7 +76884,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military",
     "information"
@@ -77589,7 +76929,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -77631,7 +76970,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -77675,7 +77013,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -77715,7 +77052,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -77760,7 +77096,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -77801,7 +77136,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "weapon_democratising"
@@ -77844,7 +77178,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -77886,7 +77219,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -77924,7 +77256,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -77965,7 +77296,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -78009,7 +77339,6 @@
    "risk": 0.06,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -78048,7 +77377,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78086,7 +77414,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78130,7 +77457,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78174,7 +77500,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78216,7 +77541,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -78258,7 +77582,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78303,7 +77626,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -78344,7 +77666,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78388,7 +77709,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78427,7 +77747,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -78469,7 +77788,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -78509,7 +77827,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78553,7 +77870,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78594,7 +77910,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "military",
     "infrastructure"
@@ -78639,7 +77954,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78680,7 +77994,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78723,7 +78036,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -78765,7 +78077,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -78807,7 +78118,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78850,7 +78160,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -78891,7 +78200,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78931,7 +78239,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -78969,7 +78276,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -79014,7 +78320,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -79056,7 +78361,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -79097,7 +78401,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -79141,7 +78444,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -79186,7 +78488,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -79232,7 +78533,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -79271,7 +78571,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -79313,7 +78612,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military",
     "information"
@@ -79358,7 +78656,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -79399,7 +78696,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "infrastructure"
@@ -79444,7 +78740,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -79487,7 +78782,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military",
     "weapon_democratising"
@@ -79530,7 +78824,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -79574,7 +78867,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 6,
-   "tier": 4,
    "traits": [
     "military",
     "weapon_democratising"
@@ -79618,7 +78910,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -79659,7 +78950,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military"
    ],
@@ -79705,7 +78995,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -79743,7 +79032,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military",
     "information"
@@ -79785,7 +79073,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -79832,7 +79119,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -79873,7 +79159,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -79915,7 +79200,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military"
    ],
@@ -79956,7 +79240,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -80006,7 +79289,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -80048,7 +79330,6 @@
    "risk": 0.04,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -80089,7 +79370,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -80127,7 +79407,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "infrastructure"
@@ -80170,7 +79449,6 @@
    "risk": 0.03,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -80209,7 +79487,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "military",
     "infrastructure"
@@ -80251,7 +79528,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military"
    ],
@@ -80292,7 +79568,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -80332,7 +79607,6 @@
    "risk": 0.01,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military"
    ],
@@ -80375,7 +79649,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -80418,7 +79691,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 6,
-   "tier": 2,
    "traits": [
     "military",
     "weapon_democratising"
@@ -80462,7 +79734,6 @@
    "risk": 0.02,
    "sch": 0.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "military"
    ],
@@ -80497,7 +79768,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -80541,7 +79811,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 3,
-   "tier": 1,
    "traits": [
     "luxury",
     "spectacle"
@@ -80588,7 +79857,6 @@
    "risk": 0.3,
    "sch": 4.0,
    "sus": 5,
-   "tier": 4,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -80629,7 +79897,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -80670,7 +79937,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -80711,7 +79977,6 @@
    "risk": 0.26,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -80751,7 +80016,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "industrial"
    ],
@@ -80789,7 +80053,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -80828,7 +80091,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -80872,7 +80134,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "industrial",
     "infrastructure"
@@ -80913,7 +80174,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -80955,7 +80215,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -80998,7 +80257,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -81039,7 +80297,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "luxury",
     "commerce"
@@ -81079,7 +80336,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -81123,7 +80379,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "luxury",
     "commerce"
@@ -81166,7 +80421,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81207,7 +80461,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -81248,7 +80501,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -81287,7 +80539,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81328,7 +80579,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -81379,7 +80629,6 @@
    "risk": 0.28,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -81418,7 +80667,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -81469,7 +80717,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81511,7 +80758,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial",
     "infrastructure"
@@ -81553,7 +80799,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -81595,7 +80840,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81636,7 +80880,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -81675,7 +80918,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81714,7 +80956,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -81762,7 +81003,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81801,7 +81041,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -81840,7 +81079,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -81881,7 +81119,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -81922,7 +81159,6 @@
    "risk": 0.23,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial",
     "infrastructure"
@@ -81963,7 +81199,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82003,7 +81238,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "commerce",
     "luxury"
@@ -82044,7 +81278,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82094,7 +81327,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial",
     "inexplicable"
@@ -82139,7 +81371,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "luxury",
     "commerce"
@@ -82180,7 +81411,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -82220,7 +81450,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82261,7 +81490,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -82305,7 +81533,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "industrial"
@@ -82348,7 +81575,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82397,7 +81623,6 @@
    "risk": 0.21,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82436,7 +81661,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -82477,7 +81701,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82517,7 +81740,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -82559,7 +81781,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial",
     "infrastructure"
@@ -82598,7 +81819,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82637,7 +81857,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -82685,7 +81904,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -82728,7 +81946,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -82769,7 +81986,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "spectacle",
     "inexplicable"
@@ -82811,7 +82027,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -82849,7 +82064,6 @@
    "risk": 0.24,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82899,7 +82113,6 @@
    "risk": 0.24,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -82938,7 +82151,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -82978,7 +82190,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -83031,7 +82242,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83075,7 +82285,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83116,7 +82325,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83167,7 +82375,6 @@
    "risk": 0.26,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -83210,7 +82417,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83252,7 +82458,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83303,7 +82508,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83342,7 +82546,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -83381,7 +82584,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83420,7 +82622,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -83461,7 +82662,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 3,
-   "tier": 4,
    "traits": [
     "spectacle",
     "infrastructure"
@@ -83504,7 +82704,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83544,7 +82743,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83588,7 +82786,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "luxury",
     "commerce"
@@ -83640,7 +82837,6 @@
    "risk": 0.28,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -83678,7 +82874,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83720,7 +82915,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -83761,7 +82955,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83802,7 +82995,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -83840,7 +83032,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -83889,7 +83080,6 @@
    "risk": 0.4,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -83928,7 +83118,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -83968,7 +83157,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -84006,7 +83194,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -84045,7 +83232,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "medical"
@@ -84085,7 +83271,6 @@
    "risk": 0.16,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -84125,7 +83310,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 3,
    "traits": [
     "infrastructure",
     "military"
@@ -84166,7 +83350,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -84207,7 +83390,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -84245,7 +83427,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -84288,7 +83469,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -84330,7 +83510,6 @@
    "risk": 0.14,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial",
     "infrastructure"
@@ -84375,7 +83554,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial",
     "infrastructure"
@@ -84417,7 +83595,6 @@
    "risk": 0.18,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -84459,7 +83636,6 @@
    "risk": 0.19,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -84501,7 +83677,6 @@
    "risk": 0.23,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -84541,7 +83716,6 @@
    "risk": 0.07,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "commerce"
@@ -84581,7 +83755,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -84621,7 +83794,6 @@
    "risk": 0.17,
    "sch": 0.0,
    "sus": 2,
-   "tier": 4,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -84660,7 +83832,6 @@
    "risk": 0.09,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -84708,7 +83879,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -84747,7 +83917,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [],
    "up": 40.0,
    "yrs": 1.2
@@ -84785,7 +83954,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -84824,7 +83992,6 @@
    "risk": 0.3,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -84875,7 +84042,6 @@
    "risk": 0.35,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -84926,7 +84092,6 @@
    "risk": 0.3,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -84970,7 +84135,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "information",
     "infrastructure"
@@ -85010,7 +84174,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -85060,7 +84223,6 @@
    "risk": 0.22,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -85100,7 +84262,6 @@
    "risk": 0.28,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -85152,7 +84313,6 @@
    "risk": 0.27,
    "sch": 0.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -85192,7 +84352,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure",
     "labour_saving"
@@ -85232,7 +84391,6 @@
    "risk": 0.13,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -85273,7 +84431,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "industrial"
    ],
@@ -85311,7 +84468,6 @@
    "risk": 0.11,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -85350,7 +84506,6 @@
    "risk": 0.24,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "industrial"
    ],
@@ -85400,7 +84555,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 8,
-   "tier": 4,
    "traits": [
     "industrial"
    ],
@@ -85450,7 +84604,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "industrial"
    ],
@@ -85487,7 +84640,6 @@
    "risk": 0.1,
    "sch": 3.0,
    "sus": 2,
-   "tier": 0,
    "traits": [
     "information",
     "status_threatening"
@@ -85541,7 +84693,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "inexplicable"
    ],
@@ -85593,7 +84744,6 @@
    "risk": 0.3,
    "sch": 2.0,
    "sus": 9,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -88104,7 +87254,6 @@
    "risk": 0.35,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -88139,7 +87288,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "commerce"
    ],
@@ -88174,7 +87322,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -88225,7 +87372,6 @@
    "risk": 0.35,
    "sch": 3.0,
    "sus": 8,
-   "tier": 3,
    "traits": [
     "spectacle"
    ],
@@ -88266,7 +87412,6 @@
    "risk": 0.2,
    "sch": 3.0,
    "sus": 8,
-   "tier": 2,
    "traits": [
     "infrastructure",
     "medical",
@@ -88317,7 +87462,6 @@
    "risk": 0.45,
    "sch": 25.0,
    "sus": 3,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -88360,7 +87504,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "inexplicable"
    ],
@@ -88413,7 +87556,6 @@
    "risk": 0.35,
    "sch": 15.0,
    "sus": 4,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -90998,7 +90140,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -91061,7 +90202,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 3,
-   "tier": 1,
    "traits": [
     "information",
     "status_threatening"
@@ -94560,7 +93700,6 @@
    "risk": 0.2,
    "sch": 8.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -94604,7 +93743,6 @@
    "risk": 0.3,
    "sch": 8.0,
    "sus": 10,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -94649,7 +93787,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 2,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -94718,7 +93855,6 @@
    "risk": 0.35,
    "sch": 3.0,
    "sus": 4,
-   "tier": 4,
    "traits": [
     "commerce",
     "infrastructure"
@@ -94761,7 +93897,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 1,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -94799,7 +93934,6 @@
    "risk": 0.15,
    "sch": 1.0,
    "sus": 4,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "medical"
@@ -94838,7 +93972,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -94876,7 +94009,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -94914,7 +94046,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -94952,7 +94083,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -94988,7 +94118,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -95025,7 +94154,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95063,7 +94191,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -95101,7 +94228,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95137,7 +94263,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -95175,7 +94300,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95213,7 +94337,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -95251,7 +94374,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95289,7 +94411,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95327,7 +94448,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95365,7 +94485,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95403,7 +94522,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95441,7 +94559,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95479,7 +94596,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95517,7 +94633,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95555,7 +94670,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95594,7 +94708,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95632,7 +94745,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95671,7 +94783,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -95712,7 +94823,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -95749,7 +94859,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95785,7 +94894,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -95821,7 +94929,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "commerce"
@@ -95862,7 +94969,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -95897,7 +95003,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -95930,7 +95035,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "labour_saving"
@@ -95964,7 +95068,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -95999,7 +95102,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96032,7 +95134,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96071,7 +95172,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96108,7 +95208,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96145,7 +95244,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -96178,7 +95276,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96211,7 +95308,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96249,7 +95345,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information",
     "labour_saving"
@@ -96285,7 +95380,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96318,7 +95412,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96355,7 +95448,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96388,7 +95480,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96423,7 +95514,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96456,7 +95546,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96494,7 +95583,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96530,7 +95618,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96568,7 +95655,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -96606,7 +95692,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96644,7 +95729,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -96680,7 +95764,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96723,7 +95806,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -96761,7 +95843,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96799,7 +95880,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96833,7 +95913,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -96869,7 +95948,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -96907,7 +95985,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -96947,7 +96024,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -96985,7 +96061,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97024,7 +96099,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97061,7 +96135,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "labour_saving"
@@ -97100,7 +96173,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97138,7 +96210,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97176,7 +96247,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97211,7 +96281,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97248,7 +96317,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97286,7 +96354,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "military",
     "information"
@@ -97324,7 +96391,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97359,7 +96425,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97397,7 +96462,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97432,7 +96496,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97469,7 +96532,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97504,7 +96566,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97541,7 +96602,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97578,7 +96638,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97615,7 +96674,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97650,7 +96708,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -97687,7 +96744,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97722,7 +96778,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "military",
     "labour_saving"
@@ -97762,7 +96817,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "military",
     "energy"
@@ -97801,7 +96855,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97842,7 +96895,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97880,7 +96932,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97917,7 +96968,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97954,7 +97004,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -97992,7 +97041,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98029,7 +97077,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -98066,7 +97113,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98103,7 +97149,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98142,7 +97187,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -98180,7 +97224,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98215,7 +97258,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving",
     "information"
@@ -98250,7 +97292,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -98287,7 +97328,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98323,7 +97363,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -98359,7 +97398,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98395,7 +97433,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "information"
    ],
@@ -98431,7 +97468,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "medical"
    ],
@@ -98467,7 +97503,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98503,7 +97538,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98543,7 +97577,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -98579,7 +97612,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "medical"
    ],
@@ -98615,7 +97647,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98651,7 +97682,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "information"
    ],
@@ -98687,7 +97717,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -98723,7 +97752,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98759,7 +97787,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -98795,7 +97822,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98831,7 +97857,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98867,7 +97892,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -98907,7 +97931,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 4,
-   "tier": 1,
    "traits": [
     "status_threatening"
    ],
@@ -98942,7 +97965,6 @@
    "risk": 0.2,
    "sch": 0.0,
    "sus": 3,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -98990,7 +98012,6 @@
    "risk": 0.35,
    "sch": 1.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -99272,7 +98293,6 @@
    "risk": 0.12,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "military",
@@ -99890,7 +98910,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "infrastructure",
     "commerce"
@@ -100804,7 +99823,6 @@
    "risk": 0.25,
    "sch": 1.0,
    "sus": 2,
-   "tier": 1,
    "traits": [
     "information",
     "infrastructure"
@@ -100854,7 +99872,6 @@
    "risk": 0.3,
    "sch": 14.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -100908,7 +99925,6 @@
    "risk": 0.45,
    "sch": 30.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -100966,7 +99982,6 @@
    "risk": 0.45,
    "sch": 25.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -101014,7 +100029,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 2,
-   "tier": 1,
    "traits": [
     "inexplicable"
    ],
@@ -101061,7 +100075,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 5,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "spectacle"
@@ -101107,7 +100120,6 @@
    "risk": 0.25,
    "sch": 3.0,
    "sus": 3,
-   "tier": 3,
    "traits": [
     "spectacle"
    ],
@@ -101146,7 +100158,6 @@
    "risk": 0.1,
    "sch": 1.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -101216,7 +100227,6 @@
    "risk": 0.35,
    "sch": 2.0,
    "sus": 4,
-   "tier": 3,
    "traits": [
     "infrastructure",
     "religious_adjacent"
@@ -101276,7 +100286,6 @@
    "risk": 0.4,
    "sch": 3.0,
    "sus": 3,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -101341,7 +100350,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 3,
-   "tier": 4,
    "traits": [
     "infrastructure"
    ],
@@ -101398,7 +100406,6 @@
    "risk": 0.4,
    "sch": 2.0,
    "sus": 10,
-   "tier": 2,
    "traits": [
     "inexplicable"
    ],
@@ -101464,7 +100471,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 6,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -101510,7 +100516,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 5,
-   "tier": 2,
    "traits": [
     "infrastructure",
     "luxury",
@@ -103493,7 +102498,6 @@
    "risk": 0.12,
    "sch": 4.0,
    "sus": 2,
-   "tier": 0,
    "traits": [
     "information"
    ],
@@ -103537,7 +102541,6 @@
    "risk": 0.2,
    "sch": 1.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "spectacle"
    ],
@@ -111572,7 +110575,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "commerce",
     "luxury"
@@ -111613,7 +110615,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.4
@@ -111651,7 +110652,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -111692,7 +110692,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -111736,7 +110735,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -111777,7 +110775,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "labour_saving"
@@ -111821,7 +110818,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -111859,7 +110855,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -111899,7 +110894,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "labour_saving"
@@ -111941,7 +110935,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -111981,7 +110974,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -112017,7 +111009,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -112056,7 +111047,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -112095,7 +111085,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -112129,7 +111118,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -112167,7 +111155,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "luxury",
     "status_threatening"
@@ -112206,7 +111193,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -112240,7 +111226,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -112278,7 +111263,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce"
    ],
@@ -112314,7 +111298,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.15
@@ -112355,7 +111338,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -112397,7 +111379,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -112437,7 +111418,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "spectacle"
@@ -112480,7 +111460,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.4
@@ -112513,7 +111492,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [],
    "up": 40.0,
    "yrs": 0.0
@@ -112551,7 +111529,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -112592,7 +111569,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "labour_saving"
@@ -112629,7 +111605,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -112665,7 +111640,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -112708,7 +111682,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -112748,7 +111721,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "luxury"
@@ -112785,7 +111757,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -112827,7 +111798,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "labour_saving"
@@ -112868,7 +111838,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -112906,7 +111875,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "labour_saving"
@@ -112943,7 +111911,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.5
@@ -112981,7 +111948,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -113017,7 +111983,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -113057,7 +112022,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -113093,7 +112057,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113129,7 +112092,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113165,7 +112127,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -113213,7 +112174,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -113255,7 +112215,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -113294,7 +112253,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -113333,7 +112291,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113371,7 +112328,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.15
@@ -113407,7 +112363,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -113441,7 +112396,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113477,7 +112431,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -113513,7 +112466,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113547,7 +112499,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113585,7 +112536,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving",
     "status_threatening"
@@ -113626,7 +112576,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -113664,7 +112613,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -113702,7 +112650,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113740,7 +112687,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -113778,7 +112724,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.15
@@ -113814,7 +112759,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "infrastructure"
    ],
@@ -113850,7 +112794,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -113888,7 +112831,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -113924,7 +112866,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [],
    "up": 0.0,
    "yrs": 0.5
@@ -113960,7 +112901,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "labour_saving"
    ],
@@ -113998,7 +112938,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -114035,7 +112974,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [],
    "up": 0.0,
    "yrs": 2.0
@@ -114073,7 +113011,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "spectacle",
     "commerce",
@@ -114115,7 +113052,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -114151,7 +113087,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -114185,7 +113120,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -114221,7 +113155,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -114259,7 +113192,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "information"
    ],
@@ -114303,7 +113235,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "information"
@@ -114340,7 +113271,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -114380,7 +113310,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114420,7 +113349,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114461,7 +113389,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -114498,7 +113425,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114539,7 +113465,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "labour_saving"
@@ -114579,7 +113504,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114617,7 +113541,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -114655,7 +113578,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -114689,7 +113611,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -114725,7 +113646,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -114768,7 +113688,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114806,7 +113725,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -114842,7 +113760,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "commerce",
     "luxury",
@@ -114883,7 +113800,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -114923,7 +113839,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -114961,7 +113876,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -114999,7 +113913,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.5
@@ -115035,7 +113948,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -115074,7 +113986,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "labour_saving",
     "commerce"
@@ -115118,7 +114029,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -115156,7 +114066,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -115197,7 +114106,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce",
     "luxury"
@@ -115247,7 +114155,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "commerce",
     "luxury",
@@ -115289,7 +114196,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -115329,7 +114235,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving",
     "commerce",
@@ -115370,7 +114275,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.5
@@ -115411,7 +114315,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 2,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -115453,7 +114356,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 2,
-   "tier": 3,
    "traits": [
     "labour_saving"
    ],
@@ -115495,7 +114397,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "information",
     "spectacle"
@@ -115538,7 +114439,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -115574,7 +114474,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -115611,7 +114510,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [
     "commerce",
     "luxury"
@@ -115654,7 +114552,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "luxury"
@@ -115695,7 +114592,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -115737,7 +114633,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce"
    ],
@@ -115775,7 +114670,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -115809,7 +114703,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -115851,7 +114744,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -115887,7 +114779,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -115928,7 +114819,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -115970,7 +114860,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.25
@@ -116009,7 +114898,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "commerce",
     "labour_saving"
@@ -116049,7 +114937,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "labour_saving",
@@ -116089,7 +114976,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -116125,7 +115011,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -116163,7 +115048,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [
     "labour_saving"
    ],
@@ -116199,7 +115083,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -116235,7 +115118,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -116278,7 +115160,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116321,7 +115202,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116361,7 +115241,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -116399,7 +115278,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "luxury"
@@ -116441,7 +115319,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116477,7 +115354,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -116513,7 +115389,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116555,7 +115430,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.15
@@ -116591,7 +115465,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -116627,7 +115500,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116663,7 +115535,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 2.0
@@ -116701,7 +115572,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.1
@@ -116737,7 +115607,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -116771,7 +115640,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -116810,7 +115678,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116853,7 +115720,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -116894,7 +115760,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -116932,7 +115797,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -116972,7 +115836,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -117010,7 +115873,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [],
    "up": 0.0,
    "yrs": 1.0
@@ -117046,7 +115908,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "spectacle",
     "luxury"
@@ -117087,7 +115948,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "commerce",
     "labour_saving"
@@ -117124,7 +115984,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -117165,7 +116024,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -117201,7 +116059,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -117238,7 +116095,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.25
@@ -117276,7 +116132,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -117311,7 +116166,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "labour_saving"
    ],
@@ -117349,7 +116203,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.3
@@ -117385,7 +116238,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 0,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -117424,7 +116276,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 0,
-   "tier": 1,
    "traits": [],
    "up": 0.0,
    "yrs": 0.2
@@ -117460,7 +116311,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 1,
-   "tier": 0,
    "traits": [
     "commerce"
    ],
@@ -117512,7 +116362,6 @@
    "risk": 0.3,
    "sch": 3.0,
    "sus": 7,
-   "tier": 4,
    "traits": [
     "spectacle"
    ],
@@ -117572,7 +116421,6 @@
    "risk": 0.4,
    "sch": 14.0,
    "sus": 6,
-   "tier": 5,
    "traits": [
     "inexplicable",
     "infrastructure",
@@ -117619,7 +116467,6 @@
    "risk": 0.15,
    "sch": 2.0,
    "sus": 12,
-   "tier": 3,
    "traits": [
     "inexplicable",
     "infrastructure"
@@ -117664,7 +116511,6 @@
    "risk": 0.15,
    "sch": 0.0,
    "sus": 1,
-   "tier": 1,
    "traits": [
     "infrastructure"
    ],
@@ -117705,7 +116551,6 @@
    "risk": 0.08,
    "sch": 0.0,
    "sus": 3,
-   "tier": 1,
    "traits": [
     "commerce"
    ],
@@ -117744,7 +116589,6 @@
    "risk": 0.05,
    "sch": 0.0,
    "sus": 4,
-   "tier": 0,
    "traits": [
     "information",
     "infrastructure"
@@ -117802,7 +116646,6 @@
    "risk": 0.3,
    "sch": 5.0,
    "sus": 2,
-   "tier": 5,
    "traits": [
     "infrastructure"
    ],
@@ -117858,7 +116701,6 @@
    "risk": 0.4,
    "sch": 1.0,
    "sus": 3,
-   "tier": 2,
    "traits": [
     "infrastructure"
    ],
@@ -117917,7 +116759,6 @@
    "risk": 0.45,
    "sch": 25.0,
    "sus": 1,
-   "tier": 5,
    "traits": [
     "inexplicable"
    ],
@@ -117955,7 +116796,6 @@
    "risk": 0.25,
    "sch": 0.0,
    "sus": 0,
-   "tier": 4,
    "traits": [],
    "up": 0.0,
    "yrs": 0.5
@@ -117996,7 +116836,6 @@
    "risk": 0.1,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [],
    "up": 0.0,
    "yrs": 0.0
@@ -118029,7 +116868,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 2,
    "traits": [
     "milestone"
    ],
@@ -118109,7 +116947,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 5,
    "traits": [
     "milestone"
    ],
@@ -118158,7 +116995,6 @@
    "risk": 0.0,
    "sch": 0.0,
    "sus": 0,
-   "tier": 3,
    "traits": [
     "milestone"
    ],
@@ -118173,7 +117009,6 @@
   {
    "id": "ctl_governor_stability_theory",
    "name": "Governor stability theory (Maxwell 1868)",
-   "tier": 2,
    "cat": "control_theory",
    "pre": [
     "en_centrifugal_governor",
@@ -118209,7 +117044,6 @@
   {
    "id": "ctl_routh_criterion",
    "name": "Routh's stability criterion",
-   "tier": 3,
    "cat": "control_theory",
    "pre": [
     "ctl_governor_stability_theory",
@@ -118245,7 +117079,6 @@
   {
    "id": "ctl_hurwitz_criterion",
    "name": "Hurwitz's stability criterion",
-   "tier": 3,
    "cat": "control_theory",
    "pre": [
     "ctl_governor_stability_theory",
@@ -118281,7 +117114,6 @@
   {
    "id": "ctl_nyquist_stability_criterion",
    "name": "Nyquist stability criterion",
-   "tier": 4,
    "cat": "control_theory",
    "pre": [
     "ctl_routh_criterion",
@@ -118320,7 +117152,6 @@
   {
    "id": "ctl_bode_plot_margins",
    "name": "Bode plot, gain margin and phase margin",
-   "tier": 4,
    "cat": "control_theory",
    "pre": [
     "ctl_nyquist_stability_criterion",
@@ -118356,7 +117187,6 @@
   {
    "id": "ctl_root_locus",
    "name": "Root locus method",
-   "tier": 4,
    "cat": "control_theory",
    "pre": [
     "ctl_routh_criterion",
@@ -118393,7 +117223,6 @@
   {
    "id": "ctl_minorsky_pid_law",
    "name": "Minorsky's three-term control law",
-   "tier": 3,
    "cat": "control_theory",
    "pre": [
     "ctl_governor_stability_theory",
@@ -118431,7 +117260,6 @@
   {
    "id": "ctl_pneumatic_process_controller",
    "name": "Pneumatic process controller",
-   "tier": 4,
    "cat": "control_theory",
    "pre": [
     "ctl_minorsky_pid_law",
@@ -118489,7 +117317,6 @@
   {
    "id": "ctl_ziegler_nichols_tuning",
    "name": "Ziegler-Nichols tuning rules",
-   "tier": 4,
    "cat": "control_theory",
    "pre": [
     "ctl_pneumatic_process_controller"
@@ -118524,7 +117351,6 @@
   {
    "id": "mfg_queueing_theory",
    "name": "Queueing theory (Erlang)",
-   "tier": 3,
    "cat": "organisation",
    "pre": [
     "com_telephone_manual_exchange",
@@ -118561,7 +117387,6 @@
   {
    "id": "mfg_linear_programming_simplex",
    "name": "Linear programming and the simplex method",
-   "tier": 4,
    "cat": "organisation",
    "pre": [
     "mil_operational_research",
@@ -118599,7 +117424,6 @@
   {
    "id": "mfg_gantt_chart",
    "name": "Gantt chart",
-   "tier": 2,
    "cat": "organisation",
    "pre": [
     "mfg_production_schedule"
@@ -118634,7 +117458,6 @@
   {
    "id": "mfg_critical_path_method",
    "name": "Critical path method",
-   "tier": 4,
    "cat": "organisation",
    "pre": [
     "mfg_gantt_chart",

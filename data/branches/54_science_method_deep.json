@@ -2,7 +2,6 @@
   {
     "id": "sc2_notation_positional",
     "name": "Positional notation and place value",
-    "tier": 0,
     "cat": "notation",
     "pre": [],
     "traits": [
@@ -21,7 +20,6 @@
   {
     "id": "sc2_notation_zero",
     "name": "Zero as a number",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "arithmetic_positional"
@@ -44,7 +42,6 @@
   {
     "id": "sc2_notation_negative",
     "name": "Negative numbers",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "arithmetic_positional"
@@ -67,7 +64,6 @@
   {
     "id": "sc2_notation_decimal_fraction",
     "name": "Decimal fractions",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "arithmetic_positional"
@@ -90,7 +86,6 @@
   {
     "id": "sc2_notation_decimal_point",
     "name": "The decimal point convention",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "decimal_fraction"
@@ -113,7 +108,6 @@
   {
     "id": "sc2_notation_equals_sign",
     "name": "The equals sign",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "arithmetic_positional"
@@ -136,7 +130,6 @@
   {
     "id": "sc2_notation_operator_symbols",
     "name": "Operator symbols: +, -, *, /",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "arithmetic_positional"
@@ -159,7 +152,6 @@
   {
     "id": "sc2_notation_exponents",
     "name": "Exponent notation",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "brackets"
@@ -182,7 +174,6 @@
   {
     "id": "sc2_notation_roots",
     "name": "Root symbols and radical notation",
-    "tier": 1,
     "cat": "notation",
     "pre": [
       "exponents"
@@ -205,7 +196,6 @@
   {
     "id": "sc2_notation_scientific",
     "name": "Scientific notation and powers of ten",
-    "tier": 2,
     "cat": "notation",
     "pre": [
       "exponents",
@@ -229,7 +219,6 @@
   {
     "id": "sc2_notation_metric_unit",
     "name": "Metric system: standard meters, kilograms, seconds",
-    "tier": 2,
     "cat": "notation",
     "pre": [
       "cap_measure_len",
@@ -257,7 +246,6 @@
   {
     "id": "sc2_notation_dimension",
     "name": "Dimensional analysis and unit checking",
-    "tier": 2,
     "cat": "notation",
     "pre": [
       "metric_unit",
@@ -281,7 +269,6 @@
   {
     "id": "sc2_notation_significant_figures",
     "name": "Significant figures and precision rules",
-    "tier": 2,
     "cat": "notation",
     "pre": [
       "cap_measure_mass_mg",
@@ -306,7 +293,6 @@
   {
     "id": "sc2_notation_error_propagation",
     "name": "Error propagation and uncertainty arithmetic",
-    "tier": 3,
     "cat": "notation",
     "pre": [
       "significant_figures",
@@ -330,7 +316,6 @@
   {
     "id": "sc2_algebra_symbolic",
     "name": "Symbolic algebra and letter variables",
-    "tier": 1,
     "cat": "algebra",
     "pre": [
       "algebra_symbolic",
@@ -354,7 +339,6 @@
   {
     "id": "sc2_algebra_quadratic",
     "name": "The quadratic equation and solution formula",
-    "tier": 1,
     "cat": "algebra",
     "pre": [
       "algebra_symbolic",
@@ -379,7 +363,6 @@
   {
     "id": "sc2_algebra_polynomial",
     "name": "Polynomial equations and factoring",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "quadratic",
@@ -403,7 +386,6 @@
   {
     "id": "sc2_algebra_binomial",
     "name": "Binomial theorem and binomial expansion",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "polynomial",
@@ -427,7 +409,6 @@
   {
     "id": "sc2_algebra_logarithm",
     "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
-    "tier": 1,
     "cat": "algebra",
     "pre": [
       "exponents",
@@ -451,7 +432,6 @@
   {
     "id": "sc2_algebra_infinite_series",
     "name": "Infinite series and convergence",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "calculus",
@@ -475,7 +455,6 @@
   {
     "id": "sc2_calculus_limit",
     "name": "The limit and convergence to a value",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "algebra_symbolic",
@@ -499,7 +478,6 @@
   {
     "id": "sc2_calculus_derivative",
     "name": "The derivative as instantaneous rate of change",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "calculus",
@@ -523,7 +501,6 @@
   {
     "id": "sc2_calculus_integral",
     "name": "The integral as area under a curve",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "derivative",
@@ -547,7 +524,6 @@
   {
     "id": "sc2_calculus_fundamental_theorem",
     "name": "Fundamental theorem: differentiation and integration are inverses",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "integral",
@@ -571,7 +547,6 @@
   {
     "id": "sc2_calculus_ode",
     "name": "Ordinary differential equations and solution methods",
-    "tier": 3,
     "cat": "algebra",
     "pre": [
       "calculus",
@@ -595,7 +570,6 @@
   {
     "id": "sc2_calculus_pde",
     "name": "Partial differential equations",
-    "tier": 3,
     "cat": "algebra",
     "pre": [
       "ode",
@@ -619,7 +593,6 @@
   {
     "id": "sc2_calculus_fourier_series",
     "name": "Fourier series: decomposing periodic functions",
-    "tier": 3,
     "cat": "algebra",
     "pre": [
       "infinite_series",
@@ -643,7 +616,6 @@
   {
     "id": "sc2_calculus_fourier_transform",
     "name": "Fourier transform and continuous frequency spectrum",
-    "tier": 3,
     "cat": "algebra",
     "pre": [
       "fourier_series"
@@ -666,7 +638,6 @@
   {
     "id": "sc2_algebra_complex_numbers",
     "name": "Complex numbers: a + bi where i\u00b2 = -1",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "algebra_symbolic",
@@ -690,7 +661,6 @@
   {
     "id": "sc2_algebra_vector",
     "name": "Vectors and vector algebra",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "complex_numbers",
@@ -714,7 +684,6 @@
   {
     "id": "sc2_algebra_matrix",
     "name": "Matrices and matrix multiplication",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "vector",
@@ -738,7 +707,6 @@
   {
     "id": "sc2_algebra_determinant",
     "name": "Determinants and matrix inversion",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "matrix"
@@ -761,7 +729,6 @@
   {
     "id": "sc2_algebra_tensor",
     "name": "Tensors and tensor notation",
-    "tier": 3,
     "cat": "algebra",
     "pre": [
       "matrix",
@@ -785,7 +752,6 @@
   {
     "id": "sc2_algebra_numerical_methods",
     "name": "Numerical methods: Newton-Raphson, bisection, iteration",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "calculus",
@@ -809,7 +775,6 @@
   {
     "id": "sc2_algebra_interpolation",
     "name": "Polynomial interpolation and finite differences",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "polynomial",
@@ -833,7 +798,6 @@
   {
     "id": "sc2_algebra_least_squares",
     "name": "Least squares method and curve fitting",
-    "tier": 2,
     "cat": "algebra",
     "pre": [
       "calculus",
@@ -857,7 +821,6 @@
   {
     "id": "sc2_geometry_coordinate",
     "name": "Coordinate geometry and the Cartesian plane",
-    "tier": 1,
     "cat": "geometry",
     "pre": [
       "geometry_analytic",
@@ -881,7 +844,6 @@
   {
     "id": "sc2_geometry_conics",
     "name": "Conic sections: circles, ellipses, parabolas, hyperbolas",
-    "tier": 2,
     "cat": "geometry",
     "pre": [
       "coordinate",
@@ -905,7 +867,6 @@
   {
     "id": "sc2_geometry_trigonometry",
     "name": "Trigonometric functions and tables",
-    "tier": 1,
     "cat": "geometry",
     "pre": [
       "geometry_analytic",
@@ -932,7 +893,6 @@
   {
     "id": "sc2_geometry_spherical_trig",
     "name": "Spherical trigonometry and navigation formulas",
-    "tier": 2,
     "cat": "geometry",
     "pre": [
       "trigonometry"
@@ -956,7 +916,6 @@
   {
     "id": "sc2_geometry_descriptive",
     "name": "Descriptive geometry and engineering drawing",
-    "tier": 2,
     "cat": "geometry",
     "pre": [
       "spherical_trig",
@@ -983,7 +942,6 @@
   {
     "id": "sc2_geometry_non_euclidean",
     "name": "Non-Euclidean geometry: hyperbolic and elliptic",
-    "tier": 3,
     "cat": "geometry",
     "pre": [
       "conics",
@@ -1007,7 +965,6 @@
   {
     "id": "sc2_geometry_differential",
     "name": "Differential geometry: curves and surfaces",
-    "tier": 3,
     "cat": "geometry",
     "pre": [
       "non_euclidean",
@@ -1031,7 +988,6 @@
   {
     "id": "sc2_probability_combinatorics",
     "name": "Permutations and combinations",
-    "tier": 1,
     "cat": "probability",
     "pre": [
       "algebra_symbolic",
@@ -1055,7 +1011,6 @@
   {
     "id": "sc2_probability_axioms",
     "name": "Probability axioms and conditional probability",
-    "tier": 1,
     "cat": "probability",
     "pre": [
       "combinatorics"
@@ -1078,7 +1033,6 @@
   {
     "id": "sc2_probability_normal_distribution",
     "name": "Normal (Gaussian) distribution and the bell curve",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "probability_axioms",
@@ -1102,7 +1056,6 @@
   {
     "id": "sc2_probability_central_limit",
     "name": "Central limit theorem",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "normal_distribution",
@@ -1126,7 +1079,6 @@
   {
     "id": "sc2_statistics_mean_variance",
     "name": "Mean, variance, and standard deviation",
-    "tier": 1,
     "cat": "probability",
     "pre": [
       "statistics_basic"
@@ -1149,7 +1101,6 @@
   {
     "id": "sc2_statistics_correlation",
     "name": "Correlation and covariance",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "mean_variance"
@@ -1172,7 +1123,6 @@
   {
     "id": "sc2_statistics_regression",
     "name": "Linear regression and the line of best fit",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "correlation",
@@ -1196,7 +1146,6 @@
   {
     "id": "sc2_statistics_t_test",
     "name": "Student's t-test for mean differences",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "chi_squared",
@@ -1220,7 +1169,6 @@
   {
     "id": "sc2_statistics_anova",
     "name": "Analysis of variance (ANOVA)",
-    "tier": 3,
     "cat": "probability",
     "pre": [
       "t_test",
@@ -1244,7 +1192,6 @@
   {
     "id": "sc2_statistics_sampling_theory",
     "name": "Sampling theory and the standard error",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "central_limit",
@@ -1268,7 +1215,6 @@
   {
     "id": "sc2_statistics_confidence_interval",
     "name": "Confidence interval and margin of error",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "sampling_theory",
@@ -1292,7 +1238,6 @@
   {
     "id": "sc2_statistics_significance_test",
     "name": "Significance test and p-value",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "chi_squared",
@@ -1316,7 +1261,6 @@
   {
     "id": "sc2_statistics_randomisation",
     "name": "Randomisation and random assignment",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "probability_axioms"
@@ -1339,7 +1283,6 @@
   {
     "id": "sc2_statistics_blocking",
     "name": "Blocking and stratification in experiments",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "randomisation"
@@ -1362,7 +1305,6 @@
   {
     "id": "sc2_statistics_control_group",
     "name": "Control group and negative control",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "blocking"
@@ -1385,7 +1327,6 @@
   {
     "id": "sc2_statistics_blinding",
     "name": "Blinding and double-blind experiments",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "control_group"
@@ -1408,7 +1349,6 @@
   {
     "id": "sc2_statistics_mortality_table",
     "name": "Mortality table and actuarial science",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "statistics_basic"
@@ -1432,7 +1372,6 @@
   {
     "id": "sc2_statistics_control_chart",
     "name": "Control chart and statistical process control",
-    "tier": 2,
     "cat": "probability",
     "pre": [
       "mean_variance",
@@ -1458,7 +1397,6 @@
   {
     "id": "sc2_physics_statics",
     "name": "Statics and forces in equilibrium",
-    "tier": 0,
     "cat": "physics",
     "pre": [],
     "traits": [
@@ -1477,7 +1415,6 @@
   {
     "id": "sc2_physics_kinematics",
     "name": "Kinematics: position, velocity, acceleration",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "derivative"
@@ -1500,7 +1437,6 @@
   {
     "id": "sc2_physics_newtons_laws",
     "name": "Newton's three laws of motion",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "kinematics"
@@ -1524,7 +1460,6 @@
   {
     "id": "sc2_physics_gravitation",
     "name": "Newton's law of universal gravitation",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "newtons_laws"
@@ -1547,7 +1482,6 @@
   {
     "id": "sc2_physics_momentum",
     "name": "Momentum and impulse",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "newtons_laws"
@@ -1570,7 +1504,6 @@
   {
     "id": "sc2_physics_energy",
     "name": "Kinetic energy and potential energy",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "calculus",
@@ -1594,7 +1527,6 @@
   {
     "id": "sc2_physics_work_power",
     "name": "Work, power, and efficiency",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "energy"
@@ -1618,7 +1550,6 @@
   {
     "id": "sc2_physics_elasticity",
     "name": "Elasticity and Hooke's law",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "newtons_laws"
@@ -1641,7 +1572,6 @@
   {
     "id": "sc2_physics_fluid_statics",
     "name": "Fluid statics and buoyancy",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "statics"
@@ -1664,7 +1594,6 @@
   {
     "id": "sc2_physics_hydrodynamics",
     "name": "Hydrodynamics and Bernoulli's equation",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "calculus",
@@ -1688,7 +1617,6 @@
   {
     "id": "sc2_physics_viscosity",
     "name": "Viscosity and Newton's law of friction",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "hydrodynamics"
@@ -1711,7 +1639,6 @@
   {
     "id": "sc2_physics_reynolds_number",
     "name": "Reynolds number and flow regime",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "viscosity",
@@ -1735,7 +1662,6 @@
   {
     "id": "sc2_physics_aerodynamic_lift",
     "name": "Aerodynamic lift and wing design",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "hydrodynamics",
@@ -1760,7 +1686,6 @@
   {
     "id": "sc2_physics_acoustics",
     "name": "Acoustics and sound propagation",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "hydrodynamics",
@@ -1786,7 +1711,6 @@
   {
     "id": "sc2_physics_wave_motion",
     "name": "Wave motion and the wave equation",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "calculus",
@@ -1810,7 +1734,6 @@
   {
     "id": "sc2_physics_geometric_optics",
     "name": "Geometric optics and ray tracing",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "telescope",
@@ -1834,7 +1757,6 @@
   {
     "id": "sc2_physics_diffraction",
     "name": "Diffraction and Fraunhofer patterns",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "physical_optics"
@@ -1857,7 +1779,6 @@
   {
     "id": "sc2_physics_spectrum",
     "name": "Electromagnetic spectrum",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "em_theory"
@@ -1880,7 +1801,6 @@
   {
     "id": "sc2_physics_electrostatics",
     "name": "Electrostatics and Coulomb's law",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "newtons_laws",
@@ -1904,7 +1824,6 @@
   {
     "id": "sc2_physics_magnetostatics",
     "name": "Magnetostatics and magnetic field",
-    "tier": 1,
     "cat": "physics",
     "pre": [
       "electrostatics"
@@ -1927,7 +1846,6 @@
   {
     "id": "sc2_physics_maxwell_equations",
     "name": "Maxwell's equations and electromagnetic theory",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "magnetostatics",
@@ -1951,7 +1869,6 @@
   {
     "id": "sc2_physics_em_wave",
     "name": "Electromagnetic wave and radiation",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "maxwell_equations"
@@ -1975,7 +1892,6 @@
   {
     "id": "sc2_physics_speed_of_light",
     "name": "Speed of light as fundamental constant",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "em_wave"
@@ -1998,7 +1914,6 @@
   {
     "id": "sc2_physics_kinetic_theory",
     "name": "Kinetic theory of gases",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "newtons_laws",
@@ -2022,7 +1937,6 @@
   {
     "id": "sc2_physics_statistical_mechanics",
     "name": "Statistical mechanics and ensemble theory",
-    "tier": 3,
     "cat": "physics",
     "pre": [
       "kinetic_theory",
@@ -2046,7 +1960,6 @@
   {
     "id": "sc2_physics_boltzmann_distribution",
     "name": "Boltzmann distribution and thermal equilibrium",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "statistical_mechanics"
@@ -2069,7 +1982,6 @@
   {
     "id": "sc2_physics_blackbody_radiation",
     "name": "Blackbody radiation and Planck's law",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "boltzmann_distribution",
@@ -2093,7 +2005,6 @@
   {
     "id": "sc2_physics_quantum_photon",
     "name": "The quantum and photon concept",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "blackbody_radiation"
@@ -2116,7 +2027,6 @@
   {
     "id": "sc2_physics_photoelectric_effect",
     "name": "Photoelectric effect and stopping potential",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "quantum_photon"
@@ -2142,7 +2052,6 @@
   {
     "id": "sc2_physics_wave_mechanics",
     "name": "Wave mechanics and Schr\u00f6dinger equation",
-    "tier": 3,
     "cat": "physics",
     "pre": [
       "bohr_atom",
@@ -2166,7 +2075,6 @@
   {
     "id": "sc2_physics_uncertainty_principle",
     "name": "Heisenberg uncertainty principle",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "wave_mechanics"
@@ -2189,7 +2097,6 @@
   {
     "id": "sc2_physics_nucleus_discovery",
     "name": "The nucleus and radioactivity",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "photoelectric_effect"
@@ -2212,7 +2119,6 @@
   {
     "id": "sc2_physics_neutron_discovery",
     "name": "The neutron",
-    "tier": 2,
     "cat": "physics",
     "pre": [
       "isotopes"
@@ -2235,7 +2141,6 @@
   {
     "id": "sc2_physics_nuclear_fission",
     "name": "Nuclear fission and chain reaction",
-    "tier": 3,
     "cat": "physics",
     "pre": [
       "neutron_discovery"
@@ -2259,7 +2164,6 @@
   {
     "id": "sc2_method_controlled_experiment",
     "name": "Controlled experiment and causality",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "scientific_method"
@@ -2282,7 +2186,6 @@
   {
     "id": "sc2_method_hypothesis",
     "name": "Hypothesis and prediction",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "controlled_experiment"
@@ -2305,7 +2208,6 @@
   {
     "id": "sc2_method_replication",
     "name": "Replication and repeatability",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "controlled_experiment"
@@ -2328,7 +2230,6 @@
   {
     "id": "sc2_method_lab_notebook",
     "name": "Laboratory notebook and data recording",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "scientific_method"
@@ -2354,7 +2255,6 @@
   {
     "id": "sc2_method_negative_result",
     "name": "Negative result and null finding",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "hypothesis",
@@ -2378,7 +2278,6 @@
   {
     "id": "sc2_method_peer_criticism",
     "name": "Peer criticism and expert review",
-    "tier": 1,
     "cat": "method",
     "pre": [
       "scientific_method"
@@ -2401,7 +2300,6 @@
   {
     "id": "sc2_institution_learned_society",
     "name": "Learned society and academy",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "academy_network"
@@ -2426,7 +2324,6 @@
   {
     "id": "sc2_institution_journal",
     "name": "Scientific journal and periodical",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "learned_society",
@@ -2453,7 +2350,6 @@
   {
     "id": "sc2_institution_referee",
     "name": "Referee and peer review",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "journal",
@@ -2478,7 +2374,6 @@
   {
     "id": "sc2_institution_citation",
     "name": "Citation and bibliographic reference",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "journal"
@@ -2501,7 +2396,6 @@
   {
     "id": "sc2_institution_textbook",
     "name": "Textbook and codified knowledge",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "journal",
@@ -2529,7 +2423,6 @@
   {
     "id": "sc2_institution_curriculum",
     "name": "Curriculum and course sequence",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "textbook"
@@ -2553,7 +2446,6 @@
   {
     "id": "sc2_institution_examination",
     "name": "Examination and credentialing",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "curriculum"
@@ -2578,7 +2470,6 @@
   {
     "id": "sc2_institution_doctorate",
     "name": "Doctorate and research degree",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "examination",
@@ -2602,7 +2493,6 @@
   {
     "id": "sc2_institution_research_group",
     "name": "Research group and principal investigator",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "doctorate",
@@ -2626,7 +2516,6 @@
   {
     "id": "sc2_institution_funded_programme",
     "name": "Funded research programme",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "research_group",
@@ -2650,7 +2539,6 @@
   {
     "id": "sc2_institution_patent_disclosure",
     "name": "Patent as disclosure and property right",
-    "tier": 1,
     "cat": "institution",
     "pre": [
       "scientific_method",

@@ -2,7 +2,6 @@
  {
   "id": "in2_simple_lens",
   "name": "Simple plano-convex lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "lens_grinding"
@@ -34,7 +33,6 @@
  {
   "id": "in2_doublet_lens",
   "name": "Doublet achromatic lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_simple_lens",
@@ -69,7 +67,6 @@
  {
   "id": "in2_triplet_lens",
   "name": "Triplet apochromatic lens",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "in2_doublet_lens",
@@ -105,7 +102,6 @@
  {
   "id": "in2_petzval_portrait_lens",
   "name": "Petzval portrait lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_doublet_lens"
@@ -139,7 +135,6 @@
  {
   "id": "in2_cooke_triplet_photography",
   "name": "Cooke triplet photographic lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_triplet_lens"
@@ -173,7 +168,6 @@
  {
   "id": "in2_tessar_lens",
   "name": "Tessar compound photographic lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_cooke_triplet_photography"
@@ -207,7 +201,6 @@
  {
   "id": "in2_telephoto_design",
   "name": "Telephoto lens principle",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_doublet_lens"
@@ -240,7 +233,6 @@
  {
   "id": "in2_wide_angle_lens",
   "name": "Wide angle photographic lens",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "in2_cooke_triplet_photography"
@@ -274,7 +266,6 @@
  {
   "id": "in2_primary_mirror",
   "name": "Telescope primary mirror parabolic",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "mirror_amalgam",
@@ -310,7 +301,6 @@
  {
   "id": "in2_cassegrain_reflector",
   "name": "Cassegrain reflector telescope",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_primary_mirror"
@@ -343,7 +333,6 @@
  {
   "id": "in2_newtonian_reflector",
   "name": "Newtonian reflector telescope",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_primary_mirror"
@@ -376,7 +365,6 @@
  {
   "id": "in2_schmidt_corrector_plate",
   "name": "Schmidt corrector plate",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "mirror_amalgam"
@@ -410,7 +398,6 @@
  {
   "id": "in2_prism_amici",
   "name": "Prism: Amici roof prism",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -443,7 +430,6 @@
  {
   "id": "in2_prism_porro",
   "name": "Prism: Porro prism binocular",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -476,7 +462,6 @@
  {
   "id": "in2_beam_splitter",
   "name": "Beam splitter dichroic mirror",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "mirror_amalgam"
@@ -510,7 +495,6 @@
  {
   "id": "in2_polariser_crystal",
   "name": "Polariser: Nicol prism calcite",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -544,7 +528,6 @@
  {
   "id": "in2_waveplate_mica",
   "name": "Wave plate phase retarder",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_polariser_crystal"
@@ -577,7 +560,6 @@
  {
   "id": "in2_interference_filter",
   "name": "Interference filter coated",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "in2_beam_splitter"
@@ -612,7 +594,6 @@
  {
   "id": "in2_antireflection_coating",
   "name": "Antireflection coating single wavelength",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_beam_splitter"
@@ -646,7 +627,6 @@
  {
   "id": "in2_reticle_crosshair",
   "name": "Reticle: crosshair or graticule",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "glass_clear"
@@ -676,7 +656,6 @@
  {
   "id": "in2_eyepiece_huygens",
   "name": "Eyepiece: Huygens",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -706,7 +685,6 @@
  {
   "id": "in2_eyepiece_kellner",
   "name": "Eyepiece: Kellner",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "in2_doublet_lens"
@@ -737,7 +715,6 @@
  {
   "id": "in2_eyepiece_ramsden",
   "name": "Eyepiece: Ramsden",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -767,7 +744,6 @@
  {
   "id": "in2_eyepiece_orthoscopic",
   "name": "Eyepiece: Orthoscopic",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_triplet_lens"
@@ -798,7 +774,6 @@
  {
   "id": "in2_eyepiece_erfle",
   "name": "Eyepiece: Erfle wide field",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_triplet_lens"
@@ -829,7 +804,6 @@
  {
   "id": "in2_condenser_substage",
   "name": "Condenser: sub-stage aperture control",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "in2_simple_lens"
@@ -859,7 +833,6 @@
  {
   "id": "in2_immersion_objective_oil",
   "name": "Immersion objective: oil lens",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_condenser_substage"
@@ -893,7 +866,6 @@
  {
   "id": "in2_phase_contrast_objective",
   "name": "Phase contrast objective and annuli",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "in2_immersion_objective_oil"
@@ -927,7 +899,6 @@
  {
   "id": "in2_dark_field_condenser",
   "name": "Dark field condenser: oblique illumination",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_condenser_substage"
@@ -957,7 +928,6 @@
  {
   "id": "in2_ultramicroscope",
   "name": "Ultramicroscope: dark field with slit lamp",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "in2_dark_field_condenser"
@@ -990,7 +960,6 @@
  {
   "id": "in2_microtome_sliding",
   "name": "Microtome: sliding blade",
-  "tier": 1,
   "cat": "optics",
   "pre": [
    "master_screw"
@@ -1021,7 +990,6 @@
  {
   "id": "in2_microtome_rotary",
   "name": "Microtome: rotary feed",
-  "tier": 2,
   "cat": "optics",
   "pre": [
    "master_screw"
@@ -1054,7 +1022,6 @@
  {
   "id": "in2_electron_microscope_column",
   "name": "Electron microscope: column and lens assembly",
-  "tier": 4,
   "cat": "optics",
   "pre": [
    "discharge_xray",
@@ -1090,7 +1057,6 @@
  {
   "id": "in2_electron_source_cathode",
   "name": "Electron source: heated cathode",
-  "tier": 3,
   "cat": "optics",
   "pre": [
    "discharge_xray"
@@ -1120,7 +1086,6 @@
  {
   "id": "in2_spectrograph_prism",
   "name": "Spectrograph: prism camera",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "spectroscope",
@@ -1155,7 +1120,6 @@
  {
   "id": "in2_spectrograph_grating",
   "name": "Spectrograph: grating camera",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "spectroscope",
@@ -1190,7 +1154,6 @@
  {
   "id": "in2_diffraction_grating",
   "name": "Diffraction grating: ruled reflective",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "in2_ruling_engine"
@@ -1224,7 +1187,6 @@
  {
   "id": "in2_ruling_engine",
   "name": "Ruling engine: precision screw diamond",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "master_screw",
@@ -1259,7 +1221,6 @@
  {
   "id": "in2_interferometer_michelson",
   "name": "Interferometer: Michelson",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "mirror_amalgam",
@@ -1294,7 +1255,6 @@
  {
   "id": "in2_interferometer_fabry_perot",
   "name": "Interferometer: Fabry-P\u00e9rot etalon",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "mirror_amalgam"
@@ -1328,7 +1288,6 @@
  {
   "id": "in2_mass_spectrograph",
   "name": "Mass spectrograph: deflection",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "electromagnet",
@@ -1364,7 +1323,6 @@
  {
   "id": "in2_cyclotron",
   "name": "Cyclotron accelerator: magnet and RF coil",
-  "tier": 5,
   "cat": "laboratory",
   "pre": [
    "electromagnet",
@@ -1400,7 +1358,6 @@
  {
   "id": "in2_van_de_graaff_generator",
   "name": "Van de Graaff static generator",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "electromagnet",
@@ -1436,7 +1393,6 @@
  {
   "id": "in2_cloud_chamber_wilson",
   "name": "Cloud chamber: Wilson expansion chamber",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "pump_pneumatic"
@@ -1471,7 +1427,6 @@
  {
   "id": "in2_photographic_emulsion",
   "name": "Photographic emulsion detector",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "photography"
@@ -1504,7 +1459,6 @@
  {
   "id": "in2_xray_diffraction_camera",
   "name": "X-ray diffraction camera: Bragg geometry",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "discharge_xray",
@@ -1539,7 +1493,6 @@
  {
   "id": "in2_electron_diffraction_camera",
   "name": "Electron diffraction camera: LEED",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "discharge_xray",
@@ -1574,7 +1527,6 @@
  {
   "id": "in2_ultracentrifuge",
   "name": "Ultracentrifuge: high-speed rotor",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "motor_transformer_ac",
@@ -1609,7 +1561,6 @@
  {
   "id": "in2_ph_meter_potentiometer",
   "name": "pH meter: glass electrode potentiometer",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "daniell_cell",
@@ -1645,7 +1596,6 @@
  {
   "id": "in2_oscilloscope_crt",
   "name": "Oscilloscope: cathode ray tube display",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "discharge_xray",
@@ -1682,7 +1632,6 @@
  {
   "id": "in2_strain_gauge_electric",
   "name": "Strain gauge: bonded resistance wire",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "micrometer_gauges",
@@ -1714,7 +1663,6 @@
  {
   "id": "in2_strain_gauge_bridge",
   "name": "Strain gauge bridge amplifier",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "in2_strain_gauge_electric",
@@ -1747,7 +1695,6 @@
  {
   "id": "in2_wind_tunnel_subsonic",
   "name": "Wind tunnel: subsonic test section",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "cap_power_steam",
@@ -1782,7 +1729,6 @@
  {
   "id": "in2_shock_tube",
   "name": "Shock tube: driven and dump sections",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "cap_heat_1600"
@@ -1815,7 +1761,6 @@
  {
   "id": "in2_towing_tank",
   "name": "Towing tank: model boat resistance measurement",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "cap_power_water"
@@ -1848,7 +1793,6 @@
  {
   "id": "in2_vibration_table",
   "name": "Vibration table: shaker with electromagnet",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "electromagnet",
@@ -1881,7 +1825,6 @@
  {
   "id": "in2_fatigue_machine",
   "name": "Fatigue test machine: rotating bending",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "motor_transformer_ac"
@@ -1912,7 +1855,6 @@
  {
   "id": "in2_creep_furnace",
   "name": "Creep furnace: constant load at high temperature",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "cap_heat_1600"
@@ -1944,7 +1886,6 @@
  {
   "id": "in2_high_pressure_cell",
   "name": "High pressure cell: diamond anvil or autoclave",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "cap_tol_10um",
@@ -1975,7 +1916,6 @@
  {
   "id": "in2_cryostat_dewar_flask",
   "name": "Cryostat: dewar flask double-walled",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "fused_quartz"
@@ -2007,7 +1947,6 @@
  {
   "id": "in2_joule_thomson_valve",
   "name": "Joule-Thomson expansion valve",
-  "tier": 2,
   "cat": "laboratory",
   "pre": [
    "cap_heat_1300"
@@ -2038,7 +1977,6 @@
  {
   "id": "in2_linde_cycle_expansion_engine",
   "name": "Linde cycle: expansion engine and recuperator",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "in2_joule_thomson_valve"
@@ -2069,7 +2007,6 @@
  {
   "id": "in2_claude_cycle_air_liquefaction",
   "name": "Claude cycle: air liquefaction with work extraction",
-  "tier": 3,
   "cat": "laboratory",
   "pre": [
    "in2_linde_cycle_expansion_engine"
@@ -2100,7 +2037,6 @@
  {
   "id": "in2_adiabatic_demagnetization",
   "name": "Adiabatic demagnetization apparatus",
-  "tier": 4,
   "cat": "laboratory",
   "pre": [
    "electromagnet",
@@ -2132,7 +2068,6 @@
  {
   "id": "in2_chain_surveyor",
   "name": "Measuring chain: steel links",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "cap_measure_len"
@@ -2162,7 +2097,6 @@
  {
   "id": "in2_tape_measure_steel",
   "name": "Steel measuring tape: wound on reel",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "cap_measure_len"
@@ -2193,7 +2127,6 @@
  {
   "id": "in2_spirit_level",
   "name": "Spirit level: bubble in tube",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "cap_tol_1mm"
@@ -2224,7 +2157,6 @@
  {
   "id": "in2_theodolite",
   "name": "Theodolite: angle measurement",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "in2_spirit_level",
@@ -2260,7 +2192,6 @@
  {
   "id": "in2_tacheometer",
   "name": "Tacheometer: distance and elevation measurement",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "in2_theodolite"
@@ -2294,7 +2225,6 @@
  {
   "id": "in2_plane_table",
   "name": "Plane table: graphical surveying",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "in2_spirit_level"
@@ -2325,7 +2255,6 @@
  {
   "id": "in2_alidade_ruler",
   "name": "Alidade: sight ruler for plane table",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "in2_plane_table"
@@ -2356,7 +2285,6 @@
  {
   "id": "in2_triangulation_tripod_station",
   "name": "Triangulation: station marker",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "in2_theodolite"
@@ -2387,7 +2315,6 @@
  {
   "id": "in2_baseline_measurement_apparatus",
   "name": "Baseline measurement: apparatus and calibration",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "in2_tape_measure_steel",
@@ -2419,7 +2346,6 @@
  {
   "id": "in2_geodetic_apparatus",
   "name": "Geodetic survey apparatus complete",
-  "tier": 3,
   "cat": "surveying",
   "pre": [
    "in2_baseline_measurement_apparatus",
@@ -2452,7 +2378,6 @@
  {
   "id": "in2_precise_levelling_rod",
   "name": "Precise levelling: rod and staff",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "in2_spirit_level",
@@ -2486,7 +2411,6 @@
  {
   "id": "in2_gravimeter_spring_balance",
   "name": "Gravimeter: spring balance portable",
-  "tier": 3,
   "cat": "surveying",
   "pre": [
    "micrometer_gauges"
@@ -2517,7 +2441,6 @@
  {
   "id": "in2_magnetometer_compass",
   "name": "Magnetometer: sensitive compass",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "magnet_permanent"
@@ -2549,7 +2472,6 @@
  {
   "id": "in2_sextant_navigation",
   "name": "Sextant: arc and optical system",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "mirror_amalgam",
@@ -2585,7 +2507,6 @@
  {
   "id": "in2_artificial_horizon_bubble",
   "name": "Artificial horizon: bubble level",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "in2_spirit_level"
@@ -2617,7 +2538,6 @@
  {
   "id": "in2_marine_chronometer",
   "name": "Marine chronometer: spring balance compensation",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "clock_pendulum",
@@ -2652,7 +2572,6 @@
  {
   "id": "in2_chronometer_rate_check",
   "name": "Chronometer rate observation",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "in2_marine_chronometer"
@@ -2683,7 +2602,6 @@
  {
   "id": "in2_sounding_machine_lead_line",
   "name": "Sounding machine: lead line and marks",
-  "tier": 1,
   "cat": "surveying",
   "pre": [
    "cap_measure_len"
@@ -2716,7 +2634,6 @@
  {
   "id": "in2_echo_sounder_acoustic",
   "name": "Echo sounder: acoustic depth finder",
-  "tier": 4,
   "cat": "surveying",
   "pre": [
    "cap_power_electric",
@@ -2750,7 +2667,6 @@
  {
   "id": "in2_gyrocompass",
   "name": "Gyrocompass: spinning rotor",
-  "tier": 4,
   "cat": "surveying",
   "pre": [
    "motor_transformer_ac"
@@ -2784,7 +2700,6 @@
  {
   "id": "in2_gyro_horizon_artificial",
   "name": "Gyro horizon: attitude indicator",
-  "tier": 3,
   "cat": "surveying",
   "pre": [
    "in2_gyrocompass"
@@ -2817,7 +2732,6 @@
  {
   "id": "in2_radio_direction_finder",
   "name": "Radio direction finder: loop antenna",
-  "tier": 3,
   "cat": "surveying",
   "pre": [
    "radio",
@@ -2851,7 +2765,6 @@
  {
   "id": "in2_aerial_camera_mount",
   "name": "Aerial camera: gyro-stabilized mount",
-  "tier": 3,
   "cat": "surveying",
   "pre": [
    "photography",
@@ -2884,7 +2797,6 @@
  {
   "id": "in2_photogrammetry_stereoscope",
   "name": "Photogrammetry: stereoscope and comparator",
-  "tier": 2,
   "cat": "surveying",
   "pre": [
    "in2_aerial_camera_mount"
@@ -2915,7 +2827,6 @@
  {
   "id": "in2_photometer_visual_comparison",
   "name": "Photometer: visual brightness comparison",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "in2_simple_lens"
@@ -2946,7 +2857,6 @@
  {
   "id": "in2_bolometer_thermal_detector",
   "name": "Bolometer: blackened platinum resistance",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "micrometer_gauges"
@@ -2977,7 +2887,6 @@
  {
   "id": "in2_photocell_vacuum_photoelectric",
   "name": "Photocell: vacuum photoelectric",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "discharge_xray"
@@ -3008,7 +2917,6 @@
  {
   "id": "in2_photomultiplier_cascade_amplifier",
   "name": "Photomultiplier: secondary emission cascade",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "in2_photocell_vacuum_photoelectric"
@@ -3039,7 +2947,6 @@
  {
   "id": "in2_spectral_radiometer",
   "name": "Spectral radiometer: grating and photocells",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "in2_spectrograph_grating",
@@ -3071,7 +2978,6 @@
  {
   "id": "in2_electroscope_gold_leaf",
   "name": "Electroscope: gold leaf detector",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "electrostatics"
@@ -3102,7 +3008,6 @@
  {
   "id": "in2_ionisation_chamber",
   "name": "Ionisation chamber: gas filled detector",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "in2_electroscope_gold_leaf"
@@ -3133,7 +3038,6 @@
  {
   "id": "in2_geiger_counter",
   "name": "Geiger-M\u00fcller counter: proportional region",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "in2_ionisation_chamber"
@@ -3164,7 +3068,6 @@
  {
   "id": "in2_scintillation_detector",
   "name": "Scintillation detector: crystal and photomultiplier",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "in2_photomultiplier_cascade_amplifier"
@@ -3194,7 +3097,6 @@
  {
   "id": "in2_travelling_microscope",
   "name": "Travelling microscope for length measurement",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "microscope_compound",
@@ -3227,7 +3129,6 @@
  {
   "id": "in2_optical_comparator",
   "name": "Optical comparator: magnified shadow projection",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "simple_lens",
@@ -3259,7 +3160,6 @@
  {
   "id": "in2_analytical_balance",
   "name": "Analytical balance: equal arm",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "cap_measure_mass_mg"
@@ -3290,7 +3190,6 @@
  {
   "id": "in2_torsion_balance",
   "name": "Torsion balance: vertical fiber suspension",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "analytical_balance"
@@ -3321,7 +3220,6 @@
  {
   "id": "in2_microbalance_quartz",
   "name": "Microbalance: quartz oscillator frequency shift",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "quartz_resonator"
@@ -3351,7 +3249,6 @@
  {
   "id": "in2_thermocouple",
   "name": "Thermocouple: junction EMF measurement",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "daniell_cell"
@@ -3383,7 +3280,6 @@
  {
   "id": "in2_resistance_thermometer_RTD",
   "name": "Resistance thermometer: platinum RTD",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "copper_refining"
@@ -3413,7 +3309,6 @@
  {
   "id": "in2_gas_thermometry_absolute",
   "name": "Gas thermometry: absolute temperature scale",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "thermometer",
@@ -3447,7 +3342,6 @@
  {
   "id": "in2_mercury_barometer",
   "name": "Mercury barometer: column height",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "thermometer"
@@ -3478,7 +3372,6 @@
  {
   "id": "in2_aneroid_capsule",
   "name": "Aneroid pressure gauge: evacuated bellows",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "cap_tol_100um"
@@ -3509,7 +3402,6 @@
  {
   "id": "in2_bourdon_pressure_gauge",
   "name": "Bourdon tube pressure gauge",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "cap_tol_100um"
@@ -3540,7 +3432,6 @@
  {
   "id": "in2_mcleod_vacuum_gauge",
   "name": "McLeod gauge: compression manometer",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "mercury_barometer"
@@ -3571,7 +3462,6 @@
  {
   "id": "in2_quartz_resonator_frequency",
   "name": "Quartz resonator: piezoelectric oscillator",
-  "tier": 3,
   "cat": "measurement",
   "pre": [
    "fused_quartz"
@@ -3604,7 +3494,6 @@
  {
   "id": "in2_orifice_flow_meter",
   "name": "Orifice plate: differential pressure flow measurement",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "mercury_barometer"
@@ -3635,7 +3524,6 @@
  {
   "id": "in2_venturi_flow_meter",
   "name": "Venturi tube: smooth convergent-divergent flow",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "orifice_flow_meter"
@@ -3666,7 +3554,6 @@
  {
   "id": "in2_pitot_tube",
   "name": "Pitot tube: total and static pressure difference",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "mercury_barometer"
@@ -3696,7 +3583,6 @@
  {
   "id": "in2_balance_spring_watch",
   "name": "Balance spring: spiral hairspring",
-  "tier": 2,
   "cat": "measurement",
   "pre": [
    "master_screw"
@@ -3727,7 +3613,6 @@
  {
   "id": "in2_tuning_fork_oscillator",
   "name": "Tuning fork: acoustic resonator",
-  "tier": 1,
   "cat": "measurement",
   "pre": [
    "cap_heat_1100"

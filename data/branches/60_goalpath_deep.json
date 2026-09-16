@@ -2,7 +2,6 @@
  {
   "id": "gp_carbon_brushes",
   "name": "Carbon and graphite brush contacts",
-  "tier": 1,
   "cat": "electrical",
   "pre": ["cap_heat_1100"],
   "req_any": [],
@@ -22,7 +21,6 @@
  {
   "id": "gp_laminated_core",
   "name": "Laminated iron core",
-  "tier": 2,
   "cat": "electrical",
   "pre": ["cementation_steel", "cap_tol_100um"],
   "req_any": [],
@@ -42,7 +40,6 @@
  {
   "id": "gp_magnet_wire_enamelled",
   "name": "Enamelled magnet wire",
-  "tier": 3,
   "cat": "electrical",
   "pre": ["copper_refining"],
   "req_any": [],
@@ -62,7 +59,6 @@
  {
   "id": "gp_glass_metal_seal",
   "name": "Glass to metal vacuum seal",
-  "tier": 4,
   "cat": "electrical",
   "pre": ["glass_clear", "cap_tol_100um"],
   "req_any": [],
@@ -82,7 +78,6 @@
  {
   "id": "gp_getter",
   "name": "Chemical getter",
-  "tier": 4,
   "cat": "electrical",
   "pre": ["el2_induction_heating_inductor_coupling", "glass_clear"],
   "req_any": [],
@@ -102,7 +97,6 @@
  {
   "id": "gp_exhaust_pinchoff",
   "name": "Exhaust and pinch-off technique",
-  "tier": 4,
   "cat": "electrical",
   "pre": ["cap_vac_1e6", "cap_heat_2000"],
   "req_any": [],
@@ -122,7 +116,6 @@
  {
   "id": "gp_controlled_atmosphere_chamber",
   "name": "Controlled atmosphere furnace chamber",
-  "tier": 5,
   "cat": "semiconductor",
   "pre": ["cap_vac_1torr", "fused_quartz", "industrial_gases"],
   "req_any": [],
@@ -142,7 +135,6 @@
  {
   "id": "gp_czochralski_puller",
   "name": "Seed-and-pull crystal grower",
-  "tier": 5,
   "cat": "semiconductor",
   "pre": ["cap_tol_10um", "motor_transformer_ac"],
   "req_any": [],
@@ -162,7 +154,6 @@
  {
   "id": "gp_whisker_forming",
   "name": "Point contact whisker forming",
-  "tier": 5,
   "cat": "semiconductor",
   "pre": ["cap_tol_10um", "daniell_cell"],
   "req_any": [],

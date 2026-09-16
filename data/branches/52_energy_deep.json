@@ -2,7 +2,6 @@
  {
   "id": "en_treadwheel",
   "name": "Treadwheel",
-  "tier": 0,
   "cat": "water_prime",
   "pre": [
    "cap_power_muscle"
@@ -34,7 +33,6 @@
  {
   "id": "en_horse_gin",
   "name": "Horse gin",
-  "tier": 0,
   "cat": "water_prime",
   "pre": [
    "cap_power_muscle"
@@ -66,7 +64,6 @@
  {
   "id": "en_undershot_wheel",
   "name": "Undershot water wheel",
-  "tier": 0,
   "cat": "water_prime",
   "pre": [
    "cap_power_water"
@@ -100,7 +97,6 @@
  {
   "id": "en_overshot_wheel",
   "name": "Overshot water wheel",
-  "tier": 0,
   "cat": "water_prime",
   "pre": [
    "cap_power_water"
@@ -134,7 +130,6 @@
  {
   "id": "en_breastshot_wheel",
   "name": "Breastshot water wheel",
-  "tier": 0,
   "cat": "water_prime",
   "pre": [
    "cap_power_water"
@@ -168,7 +163,6 @@
  {
   "id": "en_poncelet_wheel",
   "name": "Poncelet water wheel",
-  "tier": 1,
   "cat": "water_prime",
   "pre": [
    "en_breastshot_wheel",
@@ -203,7 +197,6 @@
  {
   "id": "en_fourneyron_turbine",
   "name": "Fourneyron turbine",
-  "tier": 2,
   "cat": "water_prime",
   "pre": [
    "en_poncelet_wheel",
@@ -239,7 +232,6 @@
  {
   "id": "en_francis_turbine",
   "name": "Francis inward flow turbine",
-  "tier": 2,
   "cat": "water_prime",
   "pre": [
    "en_fourneyron_turbine",
@@ -274,7 +266,6 @@
  {
   "id": "en_pelton_wheel",
   "name": "Pelton turbine",
-  "tier": 2,
   "cat": "water_prime",
   "pre": [
    "en_fourneyron_turbine",
@@ -310,7 +301,6 @@
  {
   "id": "en_kaplan_turbine",
   "name": "Kaplan propeller turbine",
-  "tier": 3,
   "cat": "water_prime",
   "pre": [
    "en_francis_turbine",
@@ -345,7 +335,6 @@
  {
   "id": "en_penstock",
   "name": "Penstock and flume",
-  "tier": 0,
   "cat": "water_infrastructure",
   "pre": [
    "cap_power_water"
@@ -379,7 +368,6 @@
  {
   "id": "en_draft_tube",
   "name": "Draft tube (diffuser)",
-  "tier": 1,
   "cat": "water_infrastructure",
   "pre": [
    "en_fourneyron_turbine"
@@ -413,7 +401,6 @@
  {
   "id": "en_water_wheel_governor",
   "name": "Governor for water wheel",
-  "tier": 1,
   "cat": "control",
   "pre": [
    "en_overshot_wheel",
@@ -449,7 +436,6 @@
  {
   "id": "en_tide_mill",
   "name": "Tide mill",
-  "tier": 1,
   "cat": "water_prime",
   "pre": [
    "en_overshot_wheel"
@@ -484,7 +470,6 @@
  {
   "id": "en_post_mill",
   "name": "Post mill",
-  "tier": 0,
   "cat": "wind_prime",
   "pre": [
    "cap_power_water"
@@ -519,7 +504,6 @@
  {
   "id": "en_tower_mill",
   "name": "Tower mill",
-  "tier": 0,
   "cat": "wind_prime",
   "pre": [
    "en_post_mill"
@@ -555,7 +539,6 @@
  {
   "id": "en_windmill_fantail",
   "name": "Windmill fantail",
-  "tier": 1,
   "cat": "wind_control",
   "pre": [
    "en_tower_mill",
@@ -590,7 +573,6 @@
  {
   "id": "en_patent_sail",
   "name": "Patent sail",
-  "tier": 1,
   "cat": "wind_prime",
   "pre": [
    "en_post_mill",
@@ -625,7 +607,6 @@
  {
   "id": "en_spring_sail",
   "name": "Spring sail",
-  "tier": 1,
   "cat": "wind_prime",
   "pre": [
    "en_patent_sail"
@@ -659,7 +640,6 @@
  {
   "id": "en_wind_pump",
   "name": "Wind pump",
-  "tier": 1,
   "cat": "wind_prime",
   "pre": [
    "en_post_mill"
@@ -694,7 +674,6 @@
  {
   "id": "en_wind_electric",
   "name": "Wind electric generator",
-  "tier": 3,
   "cat": "wind_prime",
   "pre": [
    "en_tower_mill",
@@ -730,7 +709,6 @@
  {
   "id": "en_atmospheric_engine",
   "name": "Atmospheric engine (Newcomen)",
-  "tier": 1,
   "cat": "steam_prime",
   "pre": [
    "cap_heat_1100",
@@ -767,7 +745,6 @@
  {
   "id": "en_separate_condenser",
   "name": "Separate condenser (Watt)",
-  "tier": 2,
   "cat": "steam_auxiliary",
   "pre": [
    "en_atmospheric_engine",
@@ -802,7 +779,6 @@
  {
   "id": "en_double_acting",
   "name": "Double-acting cylinder",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "en_atmospheric_engine",
@@ -837,7 +813,6 @@
  {
   "id": "en_parallel_motion",
   "name": "Parallel motion linkage (Watt)",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_double_acting",
@@ -871,7 +846,6 @@
  {
   "id": "en_centrifugal_governor",
   "name": "Centrifugal governor (Watt)",
-  "tier": 2,
   "cat": "control",
   "pre": [
    "en_separate_condenser",
@@ -907,7 +881,6 @@
  {
   "id": "en_sun_planet_gear",
   "name": "Sun and planet gear",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_double_acting",
@@ -942,7 +915,6 @@
  {
   "id": "en_high_pressure_engine",
   "name": "High pressure steam engine",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "cap_heat_1300",
@@ -988,7 +960,6 @@
  {
   "id": "en_expansive_working",
   "name": "Expansive working (cutoff)",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_high_pressure_engine"
@@ -1021,7 +992,6 @@
  {
   "id": "en_cutoff_valve",
   "name": "Cutoff valve (variable admission)",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_expansive_working",
@@ -1056,7 +1026,6 @@
  {
   "id": "en_corliss_valve",
   "name": "Corliss valve",
-  "tier": 2,
   "cat": "steam_auxiliary",
   "pre": [
    "en_cutoff_valve",
@@ -1091,7 +1060,6 @@
  {
   "id": "en_uniflow_engine",
   "name": "Uniflow steam engine",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "en_corliss_valve",
@@ -1126,7 +1094,6 @@
  {
   "id": "en_compound_engine",
   "name": "Compound engine (two or three stage)",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "en_high_pressure_engine",
@@ -1161,7 +1128,6 @@
  {
   "id": "en_condenser_jet",
   "name": "Jet condenser",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_separate_condenser"
@@ -1194,7 +1160,6 @@
  {
   "id": "en_condenser_surface",
   "name": "Surface condenser",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_separate_condenser",
@@ -1229,7 +1194,6 @@
  {
   "id": "en_feedwater_heater",
   "name": "Feedwater heater",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_separate_condenser"
@@ -1263,7 +1227,6 @@
  {
   "id": "en_economiser",
   "name": "Economiser",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_separate_condenser"
@@ -1297,7 +1260,6 @@
  {
   "id": "en_boiler_haystack",
   "name": "Haystack boiler",
-  "tier": 0,
   "cat": "steam_boiler",
   "pre": [
    "cap_heat_1100"
@@ -1330,7 +1292,6 @@
  {
   "id": "en_boiler_wagon",
   "name": "Wagon boiler",
-  "tier": 0,
   "cat": "steam_boiler",
   "pre": [
    "cap_heat_1100",
@@ -1364,7 +1325,6 @@
  {
   "id": "en_boiler_cornish",
   "name": "Cornish boiler",
-  "tier": 1,
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_wagon",
@@ -1399,7 +1359,6 @@
  {
   "id": "en_boiler_lancashire",
   "name": "Lancashire boiler",
-  "tier": 1,
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_cornish",
@@ -1434,7 +1393,6 @@
  {
   "id": "en_boiler_locomotive",
   "name": "Locomotive boiler",
-  "tier": 1,
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_wagon",
@@ -1469,7 +1427,6 @@
  {
   "id": "en_boiler_water_tube",
   "name": "Water tube boiler",
-  "tier": 2,
   "cat": "steam_boiler",
   "pre": [
    "cap_tol_10um",
@@ -1505,7 +1462,6 @@
  {
   "id": "en_boiler_babcock",
   "name": "Babcock & Wilcox boiler",
-  "tier": 2,
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_water_tube"
@@ -1540,7 +1496,6 @@
  {
   "id": "en_boiler_stirling",
   "name": "Stirling boiler",
-  "tier": 2,
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_water_tube"
@@ -1575,7 +1530,6 @@
  {
   "id": "en_safety_valve",
   "name": "Safety valve (pop-off)",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_high_pressure_engine"
@@ -1608,7 +1562,6 @@
  {
   "id": "en_pressure_gauge",
   "name": "Pressure gauge",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "cap_measure_temp",
@@ -1644,7 +1597,6 @@
  {
   "id": "en_steam_trap",
   "name": "Steam trap",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_separate_condenser"
@@ -1677,7 +1629,6 @@
  {
   "id": "en_superheater",
   "name": "Superheater",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_economiser"
@@ -1711,7 +1662,6 @@
  {
   "id": "en_steam_turbine_impulse",
   "name": "Impulse steam turbine (de Laval)",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "cap_heat_1300",
@@ -1747,7 +1697,6 @@
  {
   "id": "en_steam_turbine_reaction",
   "name": "Reaction steam turbine (Parsons)",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "en_steam_turbine_impulse",
@@ -1782,7 +1731,6 @@
  {
   "id": "en_steam_turbine_curtis",
   "name": "Curtis velocity-staged turbine",
-  "tier": 2,
   "cat": "steam_prime",
   "pre": [
    "en_steam_turbine_impulse"
@@ -1816,7 +1764,6 @@
  {
   "id": "en_turbine_blading",
   "name": "Turbine blade design and profile",
-  "tier": 2,
   "cat": "steam_auxiliary",
   "pre": [
    "cap_tol_10um",
@@ -1850,7 +1797,6 @@
  {
   "id": "en_turbine_condenser_vacuum",
   "name": "Turbine condenser and vacuum system",
-  "tier": 2,
   "cat": "steam_auxiliary",
   "pre": [
    "en_steam_turbine_reaction",
@@ -1886,7 +1832,6 @@
  {
   "id": "en_reduction_gear",
   "name": "Reduction gear (turbine to load)",
-  "tier": 1,
   "cat": "steam_auxiliary",
   "pre": [
    "en_steam_turbine_impulse",
@@ -1921,7 +1866,6 @@
  {
   "id": "en_gas_engine",
   "name": "Coal gas engine (Otto silent gas engine)",
-  "tier": 1,
   "cat": "ic_prime",
   "pre": [
    "coal_coke",
@@ -1957,7 +1901,6 @@
  {
   "id": "en_four_stroke_cycle",
   "name": "Four-stroke cycle (Otto)",
-  "tier": 1,
   "cat": "ic_prime",
   "pre": [
    "cap_heat_1100",
@@ -1992,7 +1935,6 @@
  {
   "id": "en_two_stroke_cycle",
   "name": "Two-stroke cycle",
-  "tier": 1,
   "cat": "ic_prime",
   "pre": [
    "cap_tol_1mm"
@@ -2025,7 +1967,6 @@
  {
   "id": "en_compression_ignition",
   "name": "Compression ignition (Diesel cycle)",
-  "tier": 2,
   "cat": "ic_prime",
   "pre": [
    "cap_heat_1300",
@@ -2070,7 +2011,6 @@
  {
   "id": "en_fuel_injection",
   "name": "Fuel injection system",
-  "tier": 2,
   "cat": "ic_auxiliary",
   "pre": [
    "en_compression_ignition",
@@ -2105,7 +2045,6 @@
  {
   "id": "en_hot_bulb_engine",
   "name": "Hot bulb engine",
-  "tier": 1,
   "cat": "ic_prime",
   "pre": [
    "cap_heat_1100",
@@ -2140,7 +2079,6 @@
  {
   "id": "en_gas_producer",
   "name": "Gas producer (wood or coal gasifier)",
-  "tier": 1,
   "cat": "fuel_processing",
   "pre": [
    "coal_coke",
@@ -2176,7 +2114,6 @@
  {
   "id": "en_carburetted_engine",
   "name": "Carburetted engine",
-  "tier": 1,
   "cat": "ic_prime",
   "pre": [
    "en_four_stroke_cycle",
@@ -2211,7 +2148,6 @@
  {
   "id": "en_poppet_valve",
   "name": "Poppet valve and camshaft",
-  "tier": 1,
   "cat": "ic_auxiliary",
   "pre": [
    "en_four_stroke_cycle",
@@ -2246,7 +2182,6 @@
  {
   "id": "en_sleeve_valve",
   "name": "Sleeve valve",
-  "tier": 1,
   "cat": "ic_auxiliary",
   "pre": [
    "en_poppet_valve",
@@ -2281,7 +2216,6 @@
  {
   "id": "en_supercharger",
   "name": "Supercharger (mechanically driven)",
-  "tier": 2,
   "cat": "ic_auxiliary",
   "pre": [
    "en_poppet_valve",
@@ -2316,7 +2250,6 @@
  {
   "id": "en_turbocharger",
   "name": "Turbocharger (exhaust-driven)",
-  "tier": 2,
   "cat": "ic_auxiliary",
   "pre": [
    "en_compression_ignition",
@@ -2351,7 +2284,6 @@
  {
   "id": "en_gas_turbine",
   "name": "Gas turbine (Brayton cycle)",
-  "tier": 3,
   "cat": "prime_experimental",
   "pre": [
    "cap_heat_1600",
@@ -2387,7 +2319,6 @@
  {
   "id": "en_jet_engine",
   "name": "Jet engine (turbojet)",
-  "tier": 3,
   "cat": "prime_experimental",
   "pre": [
    "en_gas_turbine"
@@ -2421,7 +2352,6 @@
  {
   "id": "en_rocket_motor",
   "name": "Rocket motor (solid or liquid fuel)",
-  "tier": 3,
   "cat": "prime_experimental",
   "pre": [
    "cap_heat_2000",
@@ -2456,7 +2386,6 @@
  {
   "id": "en_liquid_propellant",
   "name": "Liquid propellant systems",
-  "tier": 3,
   "cat": "fuel_advanced",
   "pre": [
    "en_rocket_motor"
@@ -2490,7 +2419,6 @@
  {
   "id": "en_stirling_engine",
   "name": "Stirling hot air engine",
-  "tier": 1,
   "cat": "prime_alternative",
   "pre": [
    "cap_heat_1100",
@@ -2525,7 +2453,6 @@
  {
   "id": "en_compressed_air_engine",
   "name": "Compressed air engine",
-  "tier": 1,
   "cat": "prime_alternative",
   "pre": [
    "cap_power_steam",
@@ -2560,7 +2487,6 @@
  {
   "id": "en_hydraulic_accumulator",
   "name": "Hydraulic accumulator",
-  "tier": 1,
   "cat": "hydraulic_power",
   "pre": [
    "cap_heat_1100",
@@ -2595,7 +2521,6 @@
  {
   "id": "en_hydraulic_power_main",
   "name": "Hydraulic power main (distribution network)",
-  "tier": 1,
   "cat": "hydraulic_power",
   "pre": [
    "en_hydraulic_accumulator"
@@ -2630,7 +2555,6 @@
  {
   "id": "en_spring_motor",
   "name": "Spring motor (large clockwork)",
-  "tier": 0,
   "cat": "prime_alternative",
   "pre": [
    "cap_tol_1mm"
@@ -2663,7 +2587,6 @@
  {
   "id": "en_flywheel_storage",
   "name": "Flywheel energy storage",
-  "tier": 1,
   "cat": "energy_storage",
   "pre": [
    "cap_tol_100um",
@@ -2698,7 +2621,6 @@
  {
   "id": "en_dynamo",
   "name": "Dynamo (DC generator with self-excitation)",
-  "tier": 2,
   "cat": "electrical_gen",
   "pre": [
    "dynamo"
@@ -2727,7 +2649,6 @@
  {
   "id": "en_commutator",
   "name": "Commutator (split ring rectifier)",
-  "tier": 1,
   "cat": "electrical_gen",
   "pre": [
    "cap_tol_100um",
@@ -2763,7 +2684,6 @@
  {
   "id": "en_alternator",
   "name": "Alternator (AC generator)",
-  "tier": 2,
   "cat": "electrical_gen",
   "pre": [
    "cap_tol_10um",
@@ -2799,7 +2719,6 @@
  {
   "id": "en_exciter",
   "name": "Exciter (small auxiliary generator)",
-  "tier": 1,
   "cat": "electrical_gen",
   "pre": [
    "en_alternator"
@@ -2833,7 +2752,6 @@
  {
   "id": "en_three_phase_gen",
   "name": "Three-phase generation",
-  "tier": 2,
   "cat": "electrical_gen",
   "pre": [
    "en_alternator"
@@ -2868,7 +2786,6 @@
  {
   "id": "en_transformer",
   "name": "Transformer (step up and step down)",
-  "tier": 2,
   "cat": "electrical_dist",
   "pre": [
    "motor_transformer_ac"
@@ -2897,7 +2814,6 @@
  {
   "id": "en_transmission_line",
   "name": "Transmission line (high voltage power cable)",
-  "tier": 2,
   "cat": "electrical_dist",
   "pre": [
    "en_alternator",
@@ -2933,7 +2849,6 @@
  {
   "id": "en_insulator",
   "name": "Insulator (ceramic bushings)",
-  "tier": 1,
   "cat": "electrical_dist",
   "pre": [
    "en_transmission_line"
@@ -2965,7 +2880,6 @@
  {
   "id": "en_switchgear",
   "name": "Switchgear (high voltage switch)",
-  "tier": 2,
   "cat": "electrical_dist",
   "pre": [
    "en_transmission_line",
@@ -3000,7 +2914,6 @@
  {
   "id": "en_circuit_breaker",
   "name": "Circuit breaker",
-  "tier": 2,
   "cat": "electrical_dist",
   "pre": [
    "en_switchgear",
@@ -3036,7 +2949,6 @@
  {
   "id": "en_fuse",
   "name": "Fuse (wire or cartridge)",
-  "tier": 1,
   "cat": "electrical_dist",
   "pre": [
    "cap_heat_1100"
@@ -3069,7 +2981,6 @@
  {
   "id": "en_lightning_arrester",
   "name": "Lightning arrester (surge diverter)",
-  "tier": 1,
   "cat": "electrical_dist",
   "pre": [
    "en_insulator"
@@ -3103,7 +3014,6 @@
  {
   "id": "en_substation",
   "name": "Substation (transformer station)",
-  "tier": 2,
   "cat": "electrical_dist",
   "pre": [
    "en_switchgear",
@@ -3139,7 +3049,6 @@
  {
   "id": "en_rotary_converter",
   "name": "Rotary converter (synchronous motor-generator)",
-  "tier": 2,
   "cat": "electrical_auxiliary",
   "pre": [
    "en_alternator",
@@ -3174,7 +3083,6 @@
  {
   "id": "en_battery_lead_acid",
   "name": "Lead acid storage battery",
-  "tier": 1,
   "cat": "electrical_storage",
   "pre": [
    "cap_tol_100um"
@@ -3210,7 +3118,6 @@
  {
   "id": "en_battery_nickel_iron",
   "name": "Nickel-iron storage battery",
-  "tier": 2,
   "cat": "electrical_storage",
   "pre": [
    "en_battery_lead_acid",
@@ -3246,7 +3153,6 @@
  {
   "id": "en_battery_charging",
   "name": "Battery charging system",
-  "tier": 1,
   "cat": "electrical_auxiliary",
   "pre": [
    "en_battery_lead_acid",
@@ -3281,7 +3187,6 @@
  {
   "id": "en_load_factor_diversity",
   "name": "Load factor and diversity management",
-  "tier": 1,
   "cat": "grid_operations",
   "pre": [
    "en_substation"
@@ -3311,7 +3216,6 @@
  {
   "id": "en_grid_interconnection",
   "name": "Grid interconnection",
-  "tier": 2,
   "cat": "grid_operations",
   "pre": [
    "en_substation",
@@ -3345,7 +3249,6 @@
  {
   "id": "en_frequency_standardisation",
   "name": "Frequency standardisation (50 or 60 Hz)",
-  "tier": 2,
   "cat": "grid_operations",
   "pre": [
    "en_alternator",
@@ -3378,7 +3281,6 @@
  {
   "id": "en_power_factor_correction",
   "name": "Power factor correction",
-  "tier": 1,
   "cat": "grid_operations",
   "pre": [
    "en_alternator"
@@ -3412,7 +3314,6 @@
  {
   "id": "en_hydroelectric_station",
   "name": "Hydroelectric power station",
-  "tier": 2,
   "cat": "power_station",
   "pre": [
    "en_francis_turbine",
@@ -3450,7 +3351,6 @@
  {
   "id": "en_thermal_station",
   "name": "Thermal power station (coal-fired)",
-  "tier": 2,
   "cat": "power_station",
   "pre": [
    "en_steam_turbine_reaction",
@@ -3489,7 +3389,6 @@
  {
   "id": "en_pumped_storage",
   "name": "Pumped storage hydroelectric system",
-  "tier": 2,
   "cat": "energy_storage",
   "pre": [
    "en_hydroelectric_station",
@@ -3524,7 +3423,6 @@
  {
   "id": "en_charcoal_burning",
   "name": "Charcoal production by burning",
-  "tier": 0,
   "cat": "fuel_production",
   "pre": [
    "cap_heat_1100"
@@ -3556,7 +3454,6 @@
  {
   "id": "en_coal_mining_washing",
   "name": "Coal mining and washing",
-  "tier": 0,
   "cat": "fuel_production",
   "pre": [
    "mining_concession"
@@ -3590,7 +3487,6 @@
  {
   "id": "en_coke_oven",
   "name": "Coke oven (beehive or by-product)",
-  "tier": 1,
   "cat": "fuel_production",
   "pre": [
    "coal_coke"
@@ -3624,7 +3520,6 @@
  {
   "id": "en_town_gas_retort",
   "name": "Town gas retort and generator",
-  "tier": 1,
   "cat": "fuel_production",
   "pre": [
    "coke_oven"
@@ -3659,7 +3554,6 @@
  {
   "id": "en_gas_holder",
   "name": "Gas holder (gasometer)",
-  "tier": 1,
   "cat": "fuel_infrastructure",
   "pre": [
    "en_town_gas_retort"
@@ -3694,7 +3588,6 @@
  {
   "id": "en_oil_drilling",
   "name": "Oil drilling and production",
-  "tier": 1,
   "cat": "fuel_production",
   "pre": [
    "cap_power_steam",
@@ -3729,7 +3622,6 @@
  {
   "id": "en_oil_refining_distillation",
   "name": "Oil refining and fractionation",
-  "tier": 1,
   "cat": "fuel_processing",
   "pre": [
    "en_oil_drilling",
@@ -3765,7 +3657,6 @@
  {
   "id": "en_oil_cracking",
   "name": "Oil cracking (thermal decomposition)",
-  "tier": 2,
   "cat": "fuel_processing",
   "pre": [
    "en_oil_refining_distillation"
@@ -3800,7 +3691,6 @@
  {
   "id": "en_kerosene",
   "name": "Kerosene (paraffin oil) production",
-  "tier": 1,
   "cat": "fuel_product",
   "pre": [
    "en_oil_refining_distillation"
@@ -3832,7 +3722,6 @@
  {
   "id": "en_petrol",
   "name": "Petrol (gasoline) production",
-  "tier": 1,
   "cat": "fuel_product",
   "pre": [
    "en_oil_refining_distillation"
@@ -3864,7 +3753,6 @@
  {
   "id": "en_fuel_oil",
   "name": "Fuel oil (bunker oil) production",
-  "tier": 1,
   "cat": "fuel_product",
   "pre": [
    "en_oil_refining_distillation"
@@ -3896,7 +3784,6 @@
  {
   "id": "en_lubricating_oil",
   "name": "Lubricating oil production",
-  "tier": 1,
   "cat": "fuel_product",
   "pre": [
    "en_oil_refining_distillation"
@@ -3928,7 +3815,6 @@
  {
   "id": "en_peat_fuel",
   "name": "Peat extraction and drying",
-  "tier": 0,
   "cat": "fuel_production",
   "pre": [
    "cap_power_water"
@@ -3961,7 +3847,6 @@
  {
   "id": "en_oil_shale_retorting",
   "name": "Oil shale retorting",
-  "tier": 1,
   "cat": "fuel_production",
   "pre": [
    "cap_heat_1100"

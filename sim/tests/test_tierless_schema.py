@@ -28,6 +28,7 @@ MIGRATED_BRANCHES = (
     "22_civil.json",
     "23_optics_instruments.json",
     "24_comms_computing.json",
+    "30_expeditions.json",
     "40_finance_institutions.json",
     "41_chemistry_deep.json",
     "42_electrical_deep.json",
@@ -35,6 +36,17 @@ MIGRATED_BRANCHES = (
     "44_medicine_deep.json",
     "45a_transport_land_deep.json",
     "45b_transport_rail_marine_deep.json",
+    "46_materials_deep.json",
+    "47_agri_food_deep.json",
+    "48_instruments_deep.json",
+    "49_military.json",
+    "50_textiles_consumer_deep.json",
+    "51_construction_deep.json",
+    "52_energy_deep.json",
+    "53_information_deep.json",
+    "54_science_method_deep.json",
+    "60_goalpath_deep.json",
+    "62_control_ops_deep.json",
 )
 
 
