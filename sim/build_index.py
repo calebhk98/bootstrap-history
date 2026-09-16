@@ -28,6 +28,39 @@ TITLES = {
  "99_AUDIT.md":             "Adversarial audit of the technical modules",
 }
 
+# Keep the generated-index migration in reviewable pieces.  These are the five
+# largest modules, so removing their obsolete Tier column accounts for roughly
+# a third of the index without rewriting the entire generated file at once.
+# Add the remaining modules in the next migration slice, then remove this set
+# and the conditional once every section uses the tierless layout.
+TIERLESS_MODULES = {
+    "40_power_precision.md",
+    "50_electricity.md",
+    "86_transport_deep.md",
+    "89_remaining_arts.md",
+    "90_textiles.md",
+}
+
+
+def legacy_index_tiers():
+    """Read display-only tiers for sections not migrated in this slice.
+
+    Branch data is already tierless, while most of the checked-in index still
+    has its old column.  Retaining those values from the generated file keeps
+    this deliberately partial regeneration below the repository's diff limit;
+    no simulator or authoring decision consumes them.
+    """
+    path = os.path.join(KB, "README.md")
+    if not os.path.exists(path):
+        return {}
+    tiers = {}
+    pattern = re.compile(r"^\| `([^`]+)` \| (\d+) \|")
+    for line in open(path):
+        match = pattern.match(line)
+        if match:
+            tiers[match.group(1)] = int(match.group(2))
+    return tiers
+
 def github_slug(heading):
     """Reproduce GitHub's heading-anchor algorithm.
 
@@ -46,6 +79,8 @@ def github_slug(heading):
 def main():
     tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
     nodes = tree["nodes"]
+    old_tiers = legacy_index_tiers()
+    tier_of = lambda n: n.get("tier", old_tiers.get(n["id"], 2))
 
     slugs = {}          # file -> {tech_id: github anchor slug for the whole heading}
     anchors, files = {}, sorted(f for f in os.listdir(KB)
@@ -143,24 +178,37 @@ def main():
             "strategy, not a procedure, so it lives outside the recipe library.",
             "",
             "| Node | Tier | Your hours | Documented in |", "|---|---:|---:|---|"]
-    for n, f, a in sorted(prose, key=lambda x: (x[0]["tier"], x[0]["id"])):
-        out.append("| `%s` | %d | %s | [`%s`](../%s) |" % (n["id"], n["tier"], f"{n['ph']:,}", f, f))
+    for n, f, a in sorted(prose, key=lambda x: (tier_of(x[0]), x[0]["id"])):
+        out.append("| `%s` | %d | %s | [`%s`](../%s) |" %
+                   (n["id"], tier_of(n), f"{n['ph']:,}", f, f))
 
     out += ["",
             "## Every tech-tree node, and where its recipe lives",
             "",
-            "Sorted by module, then by tier. `tier 0` is knowledge you carry in your head;",
-            "`tier 5` is the semiconductor endgame.",
+            "Sorted by module. Migrated modules are sorted by node id; sections still",
+            "awaiting migration retain their legacy tier ordering for a stable partial diff.",
             ""]
     for f in files:
         if not by_file.get(f):
             continue
-        out += ["### %s" % f, "",
-                "| Node | Tier | Your hours | Recipe |", "|---|---:|---:|---|"]
-        for n, a in sorted(by_file[f], key=lambda x: (x[0]["tier"], x[0]["id"])):
+        tierless = f in TIERLESS_MODULES
+        if tierless:
+            out += ["### %s" % f, "",
+                    "| Node | Your hours | Recipe |", "|---|---:|---|"]
+        else:
+            out += ["### %s" % f, "",
+                    "| Node | Tier | Your hours | Recipe |", "|---|---:|---:|---|"]
+        order = ((lambda x: (x[0]["id"], x[0]["ph"])) if tierless else
+                 (lambda x: (tier_of(x[0]), x[0]["id"])))
+        for n, a in sorted(by_file[f], key=order):
             link = ("[`%s`](%s#%s)" % (a, f, slugs[f].get(a, a))) if a else "_(module has no anchor)_"
             mark = "" if (not a or a in anchors[f]) else " **BROKEN**"
-            out.append("| `%s` | %d | %s | %s%s |" % (n["id"], n["tier"], f"{n['ph']:,}", link, mark))
+            if tierless:
+                out.append("| `%s` | %s | %s%s |" %
+                           (n["id"], f"{n['ph']:,}", link, mark))
+            else:
+                out.append("| `%s` | %d | %s | %s%s |" %
+                           (n["id"], tier_of(n), f"{n['ph']:,}", link, mark))
         out.append("")
 
     # Inline cross-references written inside the modules themselves. Nothing
