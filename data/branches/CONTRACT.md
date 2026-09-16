@@ -36,7 +36,6 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 {
   "id": "tex_spinning_wheel",
   "name": "Spinning wheel",
-  "tier": 1,
   "cat": "textiles",
   "pre": ["cap_tol_1mm", "crank_conrod", "mat_wrought_iron"],
   "kb": "",
@@ -59,7 +58,6 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 
 | field | meaning |
 |---|---|
-| `tier` | 0 Rome already has it and it is free, 1 immediate/cheap, 2 industrial foundation, 3 heavy industry, 4 late industrial, 5 modern, 9 UNOBTAINABLE |
 | `pre` | prerequisite ids, AND semantics. **Include capability rungs.** |
 | `ph` | the founder's own hours. Scarce: he has about 72,000 in a lifetime. Most nodes should be 40 to 400; only things needing his personal insight go above 600. |
 | `lab` | hired hours by trade. Allowed trades ONLY: labourer, artisan, master, glassblower, smith, carpenter, miner, scribe, scholar, furnaceman, potter, chemist, machinist |
@@ -74,6 +72,11 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `sch` / `art` | trained scholars and artisans required on staff |
 | `conf` | A well attested, B probable, C your estimate |
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |
+
+`tier` is deprecated and must not be added to new nodes. Availability is
+expressed by `pre`, capability rungs, cost, and calendar floors. Existing
+branches still contain tiers while they are migrated in manageable batches;
+the merge tool accepts both forms during that transition.
 
 ## PRICED_MATERIALS (allowed keys for `mat`)
 

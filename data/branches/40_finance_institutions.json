@@ -2,7 +2,6 @@
   {
     "id": "fin_coined_money",
     "name": "Coined money",
-    "tier": 0,
     "cat": "money",
     "pre": [],
     "traits": ["commerce"],
@@ -24,7 +23,6 @@
   {
     "id": "fin_argentarii",
     "name": "Deposit bankers (argentarii)",
-    "tier": 0,
     "cat": "banking",
     "pre": [],
     "traits": ["commerce"],
@@ -46,7 +44,6 @@
   {
     "id": "fin_maritime_loan",
     "name": "Maritime loan at high interest",
-    "tier": 0,
     "cat": "credit",
     "pre": [],
     "traits": ["commerce"],
@@ -68,7 +65,6 @@
   {
     "id": "fin_societas",
     "name": "Partnership (societas)",
-    "tier": 0,
     "cat": "organisation",
     "pre": [],
     "traits": ["commerce"],
@@ -90,7 +86,6 @@
   {
     "id": "fin_testament",
     "name": "Testament and inheritance law",
-    "tier": 0,
     "cat": "law",
     "pre": [],
     "traits": ["commerce"],
@@ -112,7 +107,6 @@
   {
     "id": "fin_contract_law",
     "name": "Contract law and enforcement",
-    "tier": 0,
     "cat": "law",
     "pre": [],
     "traits": ["commerce"],
@@ -134,7 +128,6 @@
   {
     "id": "fin_tax_farming",
     "name": "Tax farming and revenue contracts",
-    "tier": 0,
     "cat": "law",
     "pre": [],
     "traits": ["commerce"],
@@ -156,7 +149,6 @@
   {
     "id": "fin_market",
     "name": "Permanent market and market law",
-    "tier": 0,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce"],
@@ -178,7 +170,6 @@
   {
     "id": "fin_auction",
     "name": "Auction and competitive bidding",
-    "tier": 0,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce"],
@@ -200,7 +191,6 @@
   {
     "id": "fin_annona",
     "name": "Annona grain dole and administration",
-    "tier": 0,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce"],
@@ -222,7 +212,6 @@
   {
     "id": "fin_collegium",
     "name": "Professional associations (collegia)",
-    "tier": 0,
     "cat": "organisation",
     "pre": [],
     "traits": ["commerce"],
@@ -244,7 +233,6 @@
   {
     "id": "fin_arabic_numerals",
     "name": "Arabic numerals in commerce",
-    "tier": 1,
     "cat": "accounting",
     "pre": ["arithmetic_positional"],
     "traits": ["commerce", "information"],
@@ -266,7 +254,6 @@
   {
     "id": "fin_double_entry",
     "name": "Double-entry bookkeeping",
-    "tier": 2,
     "cat": "accounting",
     "pre": ["fin_arabic_numerals"],
     "traits": ["commerce", "information"],
@@ -288,7 +275,6 @@
   {
     "id": "fin_ledger",
     "name": "Ledger and account books",
-    "tier": 2,
     "cat": "accounting",
     "pre": ["fin_double_entry"],
     "traits": ["commerce", "information"],
@@ -310,7 +296,6 @@
   {
     "id": "fin_trial_balance",
     "name": "Trial balance and error detection",
-    "tier": 2,
     "cat": "accounting",
     "pre": ["fin_ledger"],
     "traits": ["commerce", "information"],
@@ -332,7 +317,6 @@
   {
     "id": "fin_bill_exchange",
     "name": "Bill of exchange",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -354,7 +338,6 @@
   {
     "id": "fin_endorsement",
     "name": "Endorsement and negotiability",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_bill_exchange"],
     "traits": ["commerce"],
@@ -376,7 +359,6 @@
   {
     "id": "fin_cheque",
     "name": "Cheque and demand draft",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_bill_exchange"],
     "traits": ["commerce"],
@@ -398,7 +380,6 @@
   {
     "id": "fin_promissory_note",
     "name": "Promissory note",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_bill_exchange"],
     "traits": ["commerce"],
@@ -420,7 +401,6 @@
   {
     "id": "fin_discounting",
     "name": "Discounting and advance payment",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_bill_exchange"],
     "traits": ["commerce"],
@@ -442,7 +422,6 @@
   {
     "id": "fin_deposit_bank",
     "name": "Deposit bank and current account",
-    "tier": 2,
     "cat": "banking",
     "pre": ["fin_argentarii", "fin_double_entry"],
     "traits": ["commerce"],
@@ -464,7 +443,6 @@
   {
     "id": "fin_fractional_reserve",
     "name": "Fractional reserve banking",
-    "tier": 2,
     "cat": "banking",
     "pre": ["fin_deposit_bank"],
     "traits": ["commerce", "status_threatening"],
@@ -486,7 +464,6 @@
   {
     "id": "fin_clearing_house",
     "name": "Clearing house and interbank settlement",
-    "tier": 3,
     "cat": "banking",
     "pre": ["fin_deposit_bank"],
     "traits": ["commerce", "infrastructure"],
@@ -508,7 +485,6 @@
   {
     "id": "fin_joint_stock",
     "name": "Joint-stock company with permanent existence",
-    "tier": 3,
     "cat": "organisation",
     "pre": ["fin_double_entry", "fin_societas"],
     "traits": ["commerce", "status_threatening"],
@@ -530,7 +506,6 @@
   {
     "id": "fin_limited_liability",
     "name": "Limited liability",
-    "tier": 3,
     "cat": "law",
     "pre": ["fin_joint_stock"],
     "traits": ["commerce", "status_threatening"],
@@ -552,7 +527,6 @@
   {
     "id": "fin_share",
     "name": "Share and share transfer",
-    "tier": 3,
     "cat": "investment",
     "pre": ["fin_limited_liability"],
     "traits": ["commerce"],
@@ -574,7 +548,6 @@
   {
     "id": "fin_stock_exchange",
     "name": "Stock exchange and organised trading",
-    "tier": 3,
     "cat": "investment",
     "pre": ["fin_share"],
     "traits": ["commerce", "infrastructure"],
@@ -596,7 +569,6 @@
   {
     "id": "fin_bond",
     "name": "Bond and debt security",
-    "tier": 3,
     "cat": "investment",
     "pre": ["fin_promissory_note"],
     "traits": ["commerce"],
@@ -618,7 +590,6 @@
   {
     "id": "fin_public_debt",
     "name": "Public debt and government borrowing",
-    "tier": 3,
     "cat": "law",
     "pre": ["fin_bond"],
     "traits": ["commerce"],
@@ -640,7 +611,6 @@
   {
     "id": "fin_central_bank",
     "name": "Central bank and monetary authority",
-    "tier": 3,
     "cat": "banking",
     "pre": ["fin_deposit_bank"],
     "traits": ["commerce", "status_threatening"],
@@ -662,7 +632,6 @@
   {
     "id": "fin_paper_money",
     "name": "Paper money and note issue",
-    "tier": 3,
     "cat": "money",
     "pre": ["fin_central_bank"],
     "traits": ["commerce"],
@@ -684,7 +653,6 @@
   {
     "id": "fin_seigniorage",
     "name": "Seigniorage and debasement",
-    "tier": 2,
     "cat": "money",
     "pre": ["fin_coined_money"],
     "traits": ["commerce"],
@@ -706,7 +674,6 @@
   {
     "id": "fin_bimetallism",
     "name": "Bimetallism and fixed exchange",
-    "tier": 2,
     "cat": "money",
     "pre": ["fin_coined_money"],
     "traits": ["commerce"],
@@ -728,7 +695,6 @@
   {
     "id": "fin_marine_insurance",
     "name": "Marine insurance",
-    "tier": 3,
     "cat": "insurance",
     "pre": ["fin_maritime_loan"],
     "traits": ["commerce"],
@@ -750,7 +716,6 @@
   {
     "id": "fin_fire_insurance",
     "name": "Fire insurance",
-    "tier": 3,
     "cat": "insurance",
     "pre": ["fin_marine_insurance"],
     "traits": ["commerce"],
@@ -772,7 +737,6 @@
   {
     "id": "fin_life_insurance",
     "name": "Life insurance",
-    "tier": 3,
     "cat": "insurance",
     "pre": ["fin_marine_insurance", "fin_mortality_table"],
     "traits": ["commerce"],
@@ -794,7 +758,6 @@
   {
     "id": "fin_mortality_table",
     "name": "Mortality table and actuarial mathematics",
-    "tier": 3,
     "cat": "mathematics",
     "pre": ["statistics_basic"],
     "traits": ["commerce", "information"],
@@ -816,7 +779,6 @@
   {
     "id": "fin_reinsurance",
     "name": "Reinsurance and risk pooling",
-    "tier": 3,
     "cat": "insurance",
     "pre": ["fin_marine_insurance"],
     "traits": ["commerce"],
@@ -838,7 +800,6 @@
   {
     "id": "fin_mortgage",
     "name": "Mortgage and real estate credit",
-    "tier": 2,
     "cat": "credit",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -860,7 +821,6 @@
   {
     "id": "fin_annuity",
     "name": "Annuity and fixed income stream",
-    "tier": 3,
     "cat": "investment",
     "pre": ["fin_bond"],
     "traits": ["commerce"],
@@ -882,7 +842,6 @@
   {
     "id": "fin_pension",
     "name": "Pension and retirement scheme",
-    "tier": 3,
     "cat": "insurance",
     "pre": ["fin_annuity"],
     "traits": ["commerce"],
@@ -904,7 +863,6 @@
   {
     "id": "fin_savings_bank",
     "name": "Savings bank for small deposits",
-    "tier": 3,
     "cat": "banking",
     "pre": ["fin_deposit_bank"],
     "traits": ["commerce"],
@@ -926,7 +884,6 @@
   {
     "id": "fin_pawnshop",
     "name": "Pawnshop and secured loan",
-    "tier": 1,
     "cat": "credit",
     "pre": [],
     "traits": ["commerce"],
@@ -948,7 +905,6 @@
   {
     "id": "fin_usury_law",
     "name": "Usury law and interest regulation",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -970,7 +926,6 @@
   {
     "id": "fin_usury_evasion",
     "name": "Usury evasion through legal fiction",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_usury_law"],
     "traits": ["commerce"],
@@ -992,7 +947,6 @@
   {
     "id": "fin_bankruptcy",
     "name": "Bankruptcy law and insolvency",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -1014,7 +968,6 @@
   {
     "id": "fin_patent",
     "name": "Patent and exclusive right",
-    "tier": 3,
     "cat": "law",
     "pre": ["fin_contract_law"],
     "traits": ["commerce", "status_threatening"],
@@ -1036,7 +989,6 @@
   {
     "id": "fin_patent_office",
     "name": "Patent office and examination",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_patent"],
     "traits": ["commerce", "information", "infrastructure"],
@@ -1058,7 +1010,6 @@
   {
     "id": "fin_copyright",
     "name": "Copyright and literary rights",
-    "tier": 3,
     "cat": "law",
     "pre": ["fin_patent", "printing_press"],
     "traits": ["commerce", "information"],
@@ -1080,7 +1031,6 @@
   {
     "id": "fin_trademark",
     "name": "Trademark and mark of quality",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -1102,7 +1052,6 @@
   {
     "id": "fin_brand",
     "name": "Brand and goodwill",
-    "tier": 2,
     "cat": "commerce",
     "pre": ["fin_trademark"],
     "traits": ["commerce"],
@@ -1124,7 +1073,6 @@
   {
     "id": "fin_employment_contract",
     "name": "Contract of employment",
-    "tier": 1,
     "cat": "labour",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -1146,7 +1094,6 @@
   {
     "id": "fin_wage",
     "name": "Wage and labour payment",
-    "tier": 0,
     "cat": "labour",
     "pre": [],
     "traits": ["commerce"],
@@ -1168,7 +1115,6 @@
   {
     "id": "fin_company_town",
     "name": "Company town and tied housing",
-    "tier": 3,
     "cat": "labour",
     "pre": ["fin_employment_contract"],
     "traits": ["commerce", "status_threatening"],
@@ -1190,7 +1136,6 @@
   {
     "id": "fin_trade_union",
     "name": "Trade union and workers collegium",
-    "tier": 3,
     "cat": "organisation",
     "pre": ["fin_collegium"],
     "traits": ["commerce", "status_threatening"],
@@ -1212,7 +1157,6 @@
   {
     "id": "fin_cartel",
     "name": "Cartel and market sharing agreement",
-    "tier": 2,
     "cat": "commerce",
     "pre": ["fin_contract_law"],
     "traits": ["commerce", "status_threatening"],
@@ -1234,7 +1178,6 @@
   {
     "id": "fin_monopoly",
     "name": "Monopoly and exclusive grant",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_contract_law"],
     "traits": ["commerce", "status_threatening"],
@@ -1256,7 +1199,6 @@
   {
     "id": "fin_tariff",
     "name": "Tariff and import duty",
-    "tier": 2,
     "cat": "law",
     "pre": ["fin_tax_farming"],
     "traits": ["commerce"],
@@ -1278,7 +1220,6 @@
   {
     "id": "fin_customs_house",
     "name": "Customs house and tariff collection",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_tariff"],
     "traits": ["commerce", "infrastructure"],
@@ -1300,7 +1241,6 @@
   {
     "id": "fin_standard_weights",
     "name": "Standard weights and measures",
-    "tier": 1,
     "cat": "institution",
     "pre": ["cap_measure_mass_mg", "cap_measure_len"],
     "traits": ["commerce", "infrastructure"],
@@ -1322,7 +1262,6 @@
   {
     "id": "fin_assay_office",
     "name": "Assay office and hallmarking",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_standard_weights"],
     "traits": ["commerce", "infrastructure"],
@@ -1344,7 +1283,6 @@
   {
     "id": "fin_futures",
     "name": "Futures contract and forward dealing",
-    "tier": 3,
     "cat": "investment",
     "pre": ["fin_bill_exchange"],
     "traits": ["commerce"],
@@ -1366,7 +1304,6 @@
   {
     "id": "fin_commodity_exchange",
     "name": "Commodity exchange and standardised contracts",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_futures"],
     "traits": ["commerce", "infrastructure"],
@@ -1388,7 +1325,6 @@
   {
     "id": "fin_arbitrage",
     "name": "Arbitrage and price equalisation",
-    "tier": 2,
     "cat": "commerce",
     "pre": ["fin_market"],
     "traits": ["commerce"],
@@ -1410,7 +1346,6 @@
   {
     "id": "fin_newspaper_business",
     "name": "Newspaper as business and subscription",
-    "tier": 3,
     "cat": "media",
     "pre": ["printing_press"],
     "traits": ["commerce", "information"],
@@ -1432,7 +1367,6 @@
   {
     "id": "fin_advertising",
     "name": "Advertising as industry",
-    "tier": 3,
     "cat": "media",
     "pre": ["fin_newspaper_business"],
     "traits": ["commerce", "information"],
@@ -1454,7 +1388,6 @@
   {
     "id": "fin_classified_ad",
     "name": "Classified advertisement",
-    "tier": 3,
     "cat": "media",
     "pre": ["fin_advertising"],
     "traits": ["commerce", "information"],
@@ -1476,7 +1409,6 @@
   {
     "id": "fin_almanac",
     "name": "Almanac and reference publication",
-    "tier": 2,
     "cat": "media",
     "pre": ["printing_press"],
     "traits": ["commerce", "information"],
@@ -1498,7 +1430,6 @@
   {
     "id": "fin_directory",
     "name": "Directory and business listing",
-    "tier": 3,
     "cat": "media",
     "pre": ["fin_newspaper_business"],
     "traits": ["commerce", "information"],
@@ -1520,7 +1451,6 @@
   {
     "id": "fin_postal_service",
     "name": "Postal service as paid business",
-    "tier": 2,
     "cat": "infrastructure",
     "pre": ["fin_contract_law"],
     "traits": ["commerce", "infrastructure"],
@@ -1542,7 +1472,6 @@
   {
     "id": "fin_post_office",
     "name": "Post office and mail handling",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_postal_service"],
     "traits": ["commerce", "infrastructure"],
@@ -1564,7 +1493,6 @@
   {
     "id": "fin_stamp",
     "name": "Postage stamp and paid marking",
-    "tier": 3,
     "cat": "media",
     "pre": ["fin_post_office"],
     "traits": ["commerce", "information"],
@@ -1586,7 +1514,6 @@
   {
     "id": "fin_telegraph_business",
     "name": "Telegraph as commercial service",
-    "tier": 3,
     "cat": "media",
     "pre": ["telegraph_electric"],
     "traits": ["commerce", "information", "infrastructure"],
@@ -1608,7 +1535,6 @@
   {
     "id": "fin_news_agency",
     "name": "News agency and wire service",
-    "tier": 3,
     "cat": "media",
     "pre": ["fin_telegraph_business"],
     "traits": ["commerce", "information"],
@@ -1630,7 +1556,6 @@
   {
     "id": "fin_lending_library",
     "name": "Lending library and subscription library",
-    "tier": 2,
     "cat": "media",
     "pre": ["printing_press"],
     "traits": ["commerce", "information"],
@@ -1652,7 +1577,6 @@
   {
     "id": "fin_coffeehouse",
     "name": "Coffee house as information market",
-    "tier": 2,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce", "information"],
@@ -1674,7 +1598,6 @@
   {
     "id": "fin_theatre_business",
     "name": "Theatre as business",
-    "tier": 2,
     "cat": "spectacle",
     "pre": [],
     "traits": ["commerce", "spectacle"],
@@ -1696,7 +1619,6 @@
   {
     "id": "fin_playing_card",
     "name": "Printed playing card and card game",
-    "tier": 1,
     "cat": "luxury",
     "pre": ["printing_press"],
     "traits": ["commerce", "luxury"],
@@ -1718,7 +1640,6 @@
   {
     "id": "fin_gambling_house",
     "name": "Gambling house and gaming establishment",
-    "tier": 1,
     "cat": "luxury",
     "pre": [],
     "traits": ["commerce", "luxury"],
@@ -1740,7 +1661,6 @@
   {
     "id": "fin_lottery",
     "name": "Lottery and state gambling",
-    "tier": 2,
     "cat": "law",
     "pre": [],
     "traits": ["commerce"],
@@ -1762,7 +1682,6 @@
   {
     "id": "fin_racecourse",
     "name": "Racecourse and pari-mutuel betting",
-    "tier": 2,
     "cat": "spectacle",
     "pre": [],
     "traits": ["commerce", "spectacle"],
@@ -1784,7 +1703,6 @@
   {
     "id": "fin_totalisator",
     "name": "Totalisator machine and automated payout",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_racecourse"],
     "traits": ["commerce", "infrastructure"],
@@ -1806,7 +1724,6 @@
   {
     "id": "fin_professional_sport",
     "name": "Professional sport as business",
-    "tier": 2,
     "cat": "spectacle",
     "pre": ["fin_theatre_business"],
     "traits": ["commerce", "spectacle"],
@@ -1828,7 +1745,6 @@
   {
     "id": "fin_ferry",
     "name": "Ferry and toll crossing",
-    "tier": 1,
     "cat": "transport",
     "pre": [],
     "traits": ["commerce", "infrastructure"],
@@ -1850,7 +1766,6 @@
   {
     "id": "fin_toll_bridge",
     "name": "Toll bridge and road toll",
-    "tier": 2,
     "cat": "transport",
     "pre": ["fin_ferry"],
     "traits": ["commerce", "infrastructure"],
@@ -1872,7 +1787,6 @@
   {
     "id": "fin_turnpike_trust",
     "name": "Turnpike trust and road company",
-    "tier": 3,
     "cat": "transport",
     "pre": ["fin_joint_stock"],
     "traits": ["commerce", "infrastructure"],
@@ -1894,7 +1808,6 @@
   {
     "id": "fin_canal_company",
     "name": "Canal company and inland waterway",
-    "tier": 3,
     "cat": "transport",
     "pre": ["fin_joint_stock"],
     "traits": ["commerce", "infrastructure"],
@@ -1916,7 +1829,6 @@
   {
     "id": "fin_railway_company",
     "name": "Railway company and rail service",
-    "tier": 3,
     "cat": "transport",
     "pre": ["fin_canal_company", "railway"],
     "traits": ["commerce", "infrastructure"],
@@ -1938,7 +1850,6 @@
   {
     "id": "fin_tramway",
     "name": "Tramway and urban rail",
-    "tier": 3,
     "cat": "transport",
     "pre": ["fin_railway_company"],
     "traits": ["commerce", "infrastructure"],
@@ -1960,7 +1871,6 @@
   {
     "id": "fin_omnibus",
     "name": "Omnibus and public stage coach",
-    "tier": 2,
     "cat": "transport",
     "pre": ["fin_ferry"],
     "traits": ["commerce", "infrastructure"],
@@ -1982,7 +1892,6 @@
   {
     "id": "fin_hotel",
     "name": "Hotel and commercial lodging",
-    "tier": 1,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce", "luxury"],
@@ -2004,7 +1913,6 @@
   {
     "id": "fin_inn",
     "name": "Inn and coaching house",
-    "tier": 1,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce", "luxury"],
@@ -2026,7 +1934,6 @@
   {
     "id": "fin_restaurant",
     "name": "Restaurant and commercial kitchen",
-    "tier": 2,
     "cat": "commerce",
     "pre": ["fin_hotel"],
     "traits": ["commerce"],
@@ -2048,7 +1955,6 @@
   {
     "id": "fin_department_store",
     "name": "Department store and general merchandise",
-    "tier": 3,
     "cat": "commerce",
     "pre": ["fin_market"],
     "traits": ["commerce"],
@@ -2070,7 +1976,6 @@
   {
     "id": "fin_mail_order",
     "name": "Mail order catalogue and distance selling",
-    "tier": 3,
     "cat": "commerce",
     "pre": ["fin_newspaper_business", "fin_postal_service"],
     "traits": ["commerce", "information"],
@@ -2092,7 +1997,6 @@
   {
     "id": "fin_chain_store",
     "name": "Chain store and multiple locations",
-    "tier": 3,
     "cat": "commerce",
     "pre": ["fin_department_store"],
     "traits": ["commerce"],
@@ -2114,7 +2018,6 @@
   {
     "id": "fin_trading_post",
     "name": "Trading post and remote store",
-    "tier": 1,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce"],
@@ -2136,7 +2039,6 @@
   {
     "id": "fin_factory",
     "name": "Factory and integrated production",
-    "tier": 2,
     "cat": "commerce",
     "pre": ["fin_trading_post"],
     "traits": ["commerce", "labour_saving"],
@@ -2158,7 +2060,6 @@
   {
     "id": "fin_plantation",
     "name": "Plantation and large estate agriculture",
-    "tier": 2,
     "cat": "commerce",
     "pre": [],
     "traits": ["commerce", "labour_saving"],
@@ -2180,7 +2081,6 @@
   {
     "id": "fin_guild",
     "name": "Guild and monopoly craft",
-    "tier": 1,
     "cat": "organisation",
     "pre": ["fin_collegium"],
     "traits": ["commerce", "status_threatening"],
@@ -2202,7 +2102,6 @@
   {
     "id": "fin_apprenticeship",
     "name": "Apprenticeship indenture and training contract",
-    "tier": 1,
     "cat": "labour",
     "pre": ["fin_contract_law"],
     "traits": ["commerce"],
@@ -2224,7 +2123,6 @@
   {
     "id": "fin_professional_exam",
     "name": "Professional examination and licence",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_guild"],
     "traits": ["commerce", "infrastructure"],
@@ -2246,7 +2144,6 @@
   {
     "id": "fin_university",
     "name": "University and degree-granting institution",
-    "tier": 2,
     "cat": "institution",
     "pre": ["collegium_licensed"],
     "traits": ["commerce", "information"],
@@ -2268,7 +2165,6 @@
   {
     "id": "fin_endowed_chair",
     "name": "Endowed chair and endowment",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_university"],
     "traits": ["commerce", "information"],
@@ -2290,7 +2186,6 @@
   {
     "id": "fin_research_institute",
     "name": "Research institute and endowed laboratory",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_endowed_chair"],
     "traits": ["commerce", "information"],
@@ -2312,7 +2207,6 @@
   {
     "id": "fin_learned_society",
     "name": "Learned society and academic journal",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_research_institute", "printing_press"],
     "traits": ["commerce", "information"],
@@ -2334,7 +2228,6 @@
   {
     "id": "fin_museum",
     "name": "Museum and public collection",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_university"],
     "traits": ["commerce", "spectacle"],
@@ -2356,7 +2249,6 @@
   {
     "id": "fin_census",
     "name": "Census and population enumeration",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_government"],
     "traits": ["commerce", "information"],
@@ -2378,7 +2270,6 @@
   {
     "id": "fin_survey_map",
     "name": "Survey and map as state instrument",
-    "tier": 2,
     "cat": "institution",
     "pre": ["world_map"],
     "traits": ["commerce", "information", "infrastructure"],
@@ -2400,7 +2291,6 @@
   {
     "id": "fin_government",
     "name": "Standing bureaucracy",
-    "tier": 0,
     "cat": "institution",
     "pre": [],
     "traits": ["commerce"],
@@ -2422,7 +2312,6 @@
   {
     "id": "fin_civil_service_exam",
     "name": "Civil service examination",
-    "tier": 2,
     "cat": "institution",
     "pre": ["fin_university"],
     "traits": ["commerce", "information"],
@@ -2444,7 +2333,6 @@
   {
     "id": "fin_statistical_office",
     "name": "Statistical office and data collection",
-    "tier": 3,
     "cat": "institution",
     "pre": ["fin_census"],
     "traits": ["commerce", "information"],

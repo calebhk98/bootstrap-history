@@ -2,7 +2,6 @@
  {
   "id": "tl_horseshoe",
   "name": "Nailed horseshoe",
-  "tier": 1,
   "cat": "animal_traction",
   "pre": ["mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -26,7 +25,6 @@
  {
   "id": "tl_horse_collar",
   "name": "Rigid padded horse collar",
-  "tier": 1,
   "cat": "animal_traction",
   "pre": ["mat_leather", "mat_wool"],
   "traits": ["labour_saving"],
@@ -50,7 +48,6 @@
  {
   "id": "tl_whippletree",
   "name": "Whippletree and swingletree",
-  "tier": 1,
   "cat": "animal_traction",
   "pre": ["tl_horse_collar", "mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -74,7 +71,6 @@
  {
   "id": "tl_tandem_harness",
   "name": "Tandem harness for shafts",
-  "tier": 1,
   "cat": "animal_traction",
   "pre": ["tl_horse_collar", "mat_leather"],
   "traits": ["labour_saving"],
@@ -98,7 +94,6 @@
  {
   "id": "tl_stirrup",
   "name": "Stirrup with foot loop",
-  "tier": 1,
   "cat": "animal_traction",
   "pre": ["mat_wrought_iron", "mat_leather"],
   "traits": ["labour_saving"],
@@ -122,7 +117,6 @@
  {
   "id": "tl_spoked_wheel",
   "name": "Improved spoked wheel",
-  "tier": 1,
   "cat": "wheels_running_gear",
   "pre": ["mat_wrought_iron", "mat_wood"],
   "traits": ["labour_saving"],
@@ -146,7 +140,6 @@
  {
   "id": "tl_iron_tyre",
   "name": "Iron tyre band",
-  "tier": 1,
   "cat": "wheels_running_gear",
   "pre": ["tl_spoked_wheel", "mat_wrought_iron", "cap_heat_1100"],
   "traits": ["labour_saving"],
@@ -170,7 +163,6 @@
  {
   "id": "tl_shrink_fit",
   "name": "Shrink-fit tyre assembly",
-  "tier": 1,
   "cat": "wheels_running_gear",
   "pre": ["tl_iron_tyre", "cap_heat_1100"],
   "traits": ["labour_saving"],
@@ -194,7 +186,6 @@
  {
   "id": "tl_macadam_road",
   "name": "Macadam road surface",
-  "tier": 2,
   "cat": "roads_surfaces",
   "pre": ["cap_tol_1mm"],
   "traits": ["infrastructure"],
@@ -218,7 +209,6 @@
  {
   "id": "tl_road_roller",
   "name": "Steam road roller",
-  "tier": 2,
   "cat": "roads_surfaces",
   "pre": ["tl_macadam_road", "steam_high_pressure", "crank_conrod"],
   "traits": ["labour_saving", "infrastructure"],
@@ -242,7 +232,6 @@
  {
   "id": "tl_tarmacadam",
   "name": "Tarmacadam: tar-bound stone",
-  "tier": 3,
   "cat": "roads_surfaces",
   "pre": ["tl_macadam_road", "mat_bitumen"],
   "traits": ["infrastructure"],
@@ -266,7 +255,6 @@
  {
   "id": "tl_concrete_roadway",
   "name": "Reinforced concrete road",
-  "tier": 3,
   "cat": "roads_surfaces",
   "pre": ["mat_concrete_reinforced"],
   "traits": ["infrastructure"],
@@ -290,7 +278,6 @@
  {
   "id": "tl_cambered_drainage",
   "name": "Cambered road and drainage",
-  "tier": 1,
   "cat": "roads_surfaces",
   "pre": [],
   "traits": ["infrastructure"],
@@ -314,7 +301,6 @@
  {
   "id": "tl_kerbing",
   "name": "Kerb and gutter edge",
-  "tier": 1,
   "cat": "roads_surfaces",
   "pre": ["mat_stone"],
   "traits": ["infrastructure"],
@@ -338,7 +324,6 @@
  {
   "id": "tl_level_crossing",
   "name": "Level crossing: road and rail",
-  "tier": 2,
   "cat": "roads_surfaces",
   "pre": ["railway"],
   "traits": ["infrastructure"],
@@ -362,7 +347,6 @@
  {
   "id": "tl_plain_bearing",
   "name": "Plain journal bearing",
-  "tier": 1,
   "cat": "wheels_running_gear",
   "pre": ["mat_bronze"],
   "traits": [],
@@ -386,7 +370,6 @@
  {
   "id": "tl_roller_bearing",
   "name": "Roller bearing: cylindrical",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["cap_tol_1mm", "mat_steel"],
   "traits": [],
@@ -410,7 +393,6 @@
  {
   "id": "tl_ball_bearing",
   "name": "Ball bearing: spherical",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["cap_tol_100um", "cap_heat_1100"],
   "traits": [],
@@ -434,7 +416,6 @@
  {
   "id": "tl_taper_roller_bearing",
   "name": "Taper roller bearing",
-  "tier": 3,
   "cat": "wheels_running_gear",
   "pre": ["tl_ball_bearing", "cap_tol_10um"],
   "traits": [],
@@ -458,7 +439,6 @@
  {
   "id": "tl_grease_cup",
   "name": "Grease cup with screw plunger",
-  "tier": 1,
   "cat": "wheels_running_gear",
   "pre": ["mat_wrought_iron"],
   "traits": [],
@@ -482,7 +462,6 @@
  {
   "id": "tl_oil_bath",
   "name": "Oil bath: submerged bearing",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["tl_ball_bearing", "mat_olive_oil"],
   "traits": [],
@@ -506,7 +485,6 @@
  {
   "id": "tl_leaf_spring",
   "name": "Leaf spring: stacked flat",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -530,7 +508,6 @@
  {
   "id": "tl_elliptic_spring",
   "name": "Elliptic spring: single curved",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["tl_leaf_spring", "cap_heat_1100"],
   "traits": ["labour_saving"],
@@ -554,7 +531,6 @@
  {
   "id": "tl_coil_spring",
   "name": "Coil spring: helical wire",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron", "cap_tol_1mm"],
   "traits": [],
@@ -578,7 +554,6 @@
  {
   "id": "tl_friction_damper",
   "name": "Friction damper: sliding block",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["tl_coil_spring"],
   "traits": [],
@@ -602,7 +577,6 @@
  {
   "id": "tl_hydraulic_shock",
   "name": "Hydraulic shock absorber",
-  "tier": 3,
   "cat": "carriage_engineering",
   "pre": ["tl_coil_spring", "cap_tol_10um"],
   "traits": [],
@@ -626,7 +600,6 @@
  {
   "id": "tl_fifth_wheel",
   "name": "Fifth wheel coupling",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron", "tl_ball_bearing"],
   "traits": ["labour_saving"],
@@ -650,7 +623,6 @@
  {
   "id": "tl_ackermann_steering",
   "name": "Ackermann steering geometry",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["cap_tol_1mm"],
   "traits": [],
@@ -674,7 +646,6 @@
  {
   "id": "tl_kingpin",
   "name": "Kingpin and steering arm",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron", "tl_ball_bearing"],
   "traits": [],
@@ -698,7 +669,6 @@
  {
   "id": "tl_brake_shoe",
   "name": "Brake shoe: curved pad",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_cast_iron"],
   "traits": ["labour_saving"],
@@ -722,7 +692,6 @@
  {
   "id": "tl_drum_brake",
   "name": "Drum brake: shoes in cylinder",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["tl_brake_shoe", "mat_cast_iron"],
   "traits": ["labour_saving"],
@@ -746,7 +715,6 @@
  {
   "id": "tl_disc_brake",
   "name": "Disc brake: pad on disk",
-  "tier": 3,
   "cat": "carriage_engineering",
   "pre": ["cap_tol_100um", "mat_bulk_steel"],
   "traits": ["labour_saving"],
@@ -770,7 +738,6 @@
  {
   "id": "tl_hydraulic_brake_line",
   "name": "Hydraulic brake line and cylinder",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["cap_tol_10um", "mat_bulk_steel"],
   "traits": ["labour_saving"],
@@ -794,7 +761,6 @@
  {
   "id": "tl_handbrake",
   "name": "Handbrake: lever and cable",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron", "mat_rope"],
   "traits": ["labour_saving"],
@@ -818,7 +784,6 @@
  {
   "id": "tl_differential",
   "name": "Differential: bevel gears",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["cap_tol_1mm", "mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -842,7 +807,6 @@
  {
   "id": "tl_live_axle",
   "name": "Live axle: powered driving",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["tl_differential"],
   "traits": ["labour_saving"],
@@ -866,7 +830,6 @@
  {
   "id": "tl_dead_axle",
   "name": "Dead axle: non-driven",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron"],
   "traits": [],
@@ -890,7 +853,6 @@
  {
   "id": "tl_universal_joint",
   "name": "Universal joint: Cardan shaft",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["cap_tol_1mm", "mat_wrought_iron"],
   "traits": [],
@@ -914,7 +876,6 @@
  {
   "id": "tl_propshaft",
   "name": "Propshaft: transmission shaft",
-  "tier": 2,
   "cat": "carriage_engineering",
   "pre": ["tl_universal_joint", "cap_tol_100um"],
   "traits": [],
@@ -938,7 +899,6 @@
  {
   "id": "tl_velocipede",
   "name": "Velocipede: pedal-driven wheel",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["tl_spoked_wheel", "cap_tol_1mm"],
   "traits": ["labour_saving"],
@@ -962,7 +922,6 @@
  {
   "id": "tl_penny_farthing",
   "name": "Penny-farthing: large wheel",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["tl_velocipede", "cap_tol_100um"],
   "traits": ["labour_saving"],
@@ -986,7 +945,6 @@
  {
   "id": "tl_chain_drive",
   "name": "Chain drive: roller chain",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["cap_tol_100um", "mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -1010,7 +968,6 @@
  {
   "id": "tl_safety_bicycle",
   "name": "Safety bicycle: chain-driven",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["tl_chain_drive", "tl_ball_bearing"],
   "traits": ["labour_saving"],
@@ -1034,7 +991,6 @@
  {
   "id": "tl_freewheel",
   "name": "Freewheel: ratchet hub",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["tl_safety_bicycle", "cap_tol_100um"],
   "traits": ["labour_saving"],
@@ -1058,7 +1014,6 @@
  {
   "id": "tl_derailleur",
   "name": "Derailleur: chain shifter",
-  "tier": 3,
   "cat": "bicycles",
   "pre": ["tl_freewheel", "cap_tol_10um"],
   "traits": ["labour_saving"],
@@ -1082,7 +1037,6 @@
  {
   "id": "tl_hub_gear",
   "name": "Hub gear: internal speeds",
-  "tier": 3,
   "cat": "bicycles",
   "pre": ["tl_freewheel", "cap_tol_10um"],
   "traits": ["labour_saving"],
@@ -1106,7 +1060,6 @@
  {
   "id": "tl_caliper_brake",
   "name": "Caliper brake: side-pull",
-  "tier": 2,
   "cat": "bicycles",
   "pre": ["tl_safety_bicycle", "cap_tol_100um"],
   "traits": ["labour_saving"],
@@ -1130,7 +1083,6 @@
  {
   "id": "tl_carburettor",
   "name": "Carburettor: fuel atomiser",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_bulk_steel"],
   "traits": [],
@@ -1154,7 +1106,6 @@
  {
   "id": "tl_throttle",
   "name": "Throttle valve: fuel control",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["tl_carburettor"],
   "traits": [],
@@ -1178,7 +1129,6 @@
  {
   "id": "tl_magneto_ignition",
   "name": "Magneto ignition: coil armature",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_measure_time_ms", "cap_heat_1100"],
   "traits": [],
@@ -1202,7 +1152,6 @@
  {
   "id": "tl_coil_ignition",
   "name": "Coil ignition: battery and breaker",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["electromagnet", "cap_measure_time_ms"],
   "traits": [],
@@ -1226,7 +1175,6 @@
  {
   "id": "tl_spark_plug",
   "name": "Spark plug: electrode gap",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_10um", "mat_porcelain"],
   "traits": [],
@@ -1250,7 +1198,6 @@
  {
   "id": "tl_distributor",
   "name": "Distributor: switching contacts",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["tl_spark_plug", "cap_tol_100um"],
   "traits": [],
@@ -1274,7 +1221,6 @@
  {
   "id": "tl_electric_starter",
   "name": "Electric starter motor",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["electric_starter", "cap_power_electric"],
   "traits": ["labour_saving"],
@@ -1298,7 +1244,6 @@
  {
   "id": "tl_dynamo",
   "name": "Dynamo: rotary power generator",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["dynamo", "cap_power_electric"],
   "traits": [],
@@ -1322,7 +1267,6 @@
  {
   "id": "tl_radiator",
   "name": "Radiator: water cooler",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_1mm", "mat_brass"],
   "traits": [],
@@ -1346,7 +1290,6 @@
  {
   "id": "tl_water_pump",
   "name": "Water pump: centrifugal",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_cast_iron"],
   "traits": [],
@@ -1370,7 +1313,6 @@
  {
   "id": "tl_thermostat",
   "name": "Thermostat: temperature valve",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_measure_temp", "mat_wrought_iron"],
   "traits": [],
@@ -1394,7 +1336,6 @@
  {
   "id": "tl_fan_belt",
   "name": "Fan belt and pulley drive",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["tl_water_pump", "mat_rubber"],
   "traits": [],
@@ -1418,7 +1359,6 @@
  {
   "id": "tl_cone_clutch",
   "name": "Cone clutch: friction surface",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_1mm", "mat_bronze"],
   "traits": [],
@@ -1442,7 +1382,6 @@
  {
   "id": "tl_plate_clutch",
   "name": "Plate clutch: disk friction",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_cast_iron"],
   "traits": [],
@@ -1466,7 +1405,6 @@
  {
   "id": "tl_sliding_gearbox",
   "name": "Sliding gearbox: mesh shift",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_1mm", "mat_cast_iron"],
   "traits": [],
@@ -1490,7 +1428,6 @@
  {
   "id": "tl_synchromesh",
   "name": "Synchromesh: synchronizer ring",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["tl_sliding_gearbox", "cap_tol_10um"],
   "traits": [],
@@ -1514,7 +1451,6 @@
  {
   "id": "tl_epicyclic_gearbox",
   "name": "Epicyclic gearbox: planetary",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_cast_iron"],
   "traits": [],
@@ -1538,7 +1474,6 @@
  {
   "id": "tl_automatic_transmission",
   "name": "Automatic transmission: hydraulic",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["tl_epicyclic_gearbox", "cap_tol_10um"],
   "traits": ["labour_saving"],
@@ -1562,7 +1497,6 @@
  {
   "id": "tl_fuel_pump",
   "name": "Fuel pump: mechanical",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["crank_conrod", "cap_tol_100um"],
   "traits": [],
@@ -1586,7 +1520,6 @@
  {
   "id": "tl_oil_pump",
   "name": "Oil pump: pressure lubrication",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["crank_conrod", "cap_tol_100um"],
   "traits": [],
@@ -1610,7 +1543,6 @@
  {
   "id": "tl_air_filter",
   "name": "Air filter: intake cleaning",
-  "tier": 1,
   "cat": "motor_subsystems",
   "pre": ["mat_cloth"],
   "traits": [],
@@ -1634,7 +1566,6 @@
  {
   "id": "tl_muffler",
   "name": "Muffler: silencer pipe",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["mat_cast_iron"],
   "traits": [],
@@ -1658,7 +1589,6 @@
  {
   "id": "tl_windscreen_wiper",
   "name": "Windscreen wiper: mechanical",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["crank_conrod", "mat_rubber"],
   "traits": ["labour_saving"],
@@ -1682,7 +1612,6 @@
  {
   "id": "tl_headlamp",
   "name": "Headlamp: electric light",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_power_electric", "arc_light_lamp"],
   "traits": ["infrastructure"],
@@ -1706,7 +1635,6 @@
  {
   "id": "tl_indicator",
   "name": "Indicator light: direction signal",
-  "tier": 1,
   "cat": "motor_subsystems",
   "pre": ["cap_power_electric"],
   "traits": ["infrastructure"],
@@ -1730,7 +1658,6 @@
  {
   "id": "tl_omnibus",
   "name": "Omnibus: passenger coach",
-  "tier": 2,
   "cat": "vehicle_types",
   "pre": ["tl_horse_collar", "tl_elliptic_spring"],
   "traits": ["commerce", "labour_saving"],
@@ -1754,7 +1681,6 @@
  {
   "id": "tl_horse_tram",
   "name": "Tram: horse-drawn",
-  "tier": 2,
   "cat": "vehicle_types",
   "pre": ["tl_omnibus", "railway"],
   "traits": ["commerce", "labour_saving"],
@@ -1778,7 +1704,6 @@
  {
   "id": "tl_steam_tram",
   "name": "Tram: steam-powered",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_horse_tram", "steam_high_pressure"],
   "traits": ["labour_saving", "infrastructure"],
@@ -1802,7 +1727,6 @@
  {
   "id": "tl_electric_tram",
   "name": "Tram: electric powered",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["power_grid", "tl_motor_dc"],
   "traits": ["labour_saving", "infrastructure"],
@@ -1826,7 +1750,6 @@
  {
   "id": "tl_trolleybus",
   "name": "Trolleybus: electric bus",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_electric_tram", "tl_omnibus"],
   "traits": ["labour_saving", "infrastructure"],
@@ -1850,7 +1773,6 @@
  {
   "id": "tl_motor_lorry",
   "name": "Motor lorry: gasoline truck",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_carburettor", "tl_coil_ignition", "tl_plate_clutch"],
   "traits": ["labour_saving", "commerce"],
@@ -1874,7 +1796,6 @@
  {
   "id": "tl_articulated_trailer",
   "name": "Articulated trailer: semi-trailer",
-  "tier": 2,
   "cat": "vehicle_types",
   "pre": ["tl_fifth_wheel", "tl_motor_lorry"],
   "traits": ["labour_saving", "commerce"],
@@ -1898,7 +1819,6 @@
  {
   "id": "tl_tractor",
   "name": "Tractor: agricultural motorvehicle",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_carburettor", "tl_ball_bearing"],
   "traits": ["labour_saving"],
@@ -1922,7 +1842,6 @@
  {
   "id": "tl_caterpillar_track",
   "name": "Caterpillar track: endless belt",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["cap_tol_1mm", "mat_wrought_iron"],
   "traits": ["labour_saving"],
@@ -1946,7 +1865,6 @@
  {
   "id": "tl_half_track",
   "name": "Half-track vehicle",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_caterpillar_track", "tl_motor_lorry"],
   "traits": ["labour_saving", "military"],
@@ -1970,7 +1888,6 @@
  {
   "id": "tl_motorcycle",
   "name": "Motorcycle: two-wheeled motor",
-  "tier": 3,
   "cat": "vehicle_types",
   "pre": ["tl_safety_bicycle", "tl_carburettor"],
   "traits": ["labour_saving", "commerce"],
@@ -1994,7 +1911,6 @@
  {
   "id": "tl_snow_plough",
   "name": "Snow plough: powered blade",
-  "tier": 2,
   "cat": "vehicle_types",
   "pre": ["tl_motor_lorry"],
   "traits": ["infrastructure"],
@@ -2018,7 +1934,6 @@
  {
   "id": "tl_pneumatic_tyre",
   "name": "Pneumatic tyre: air-filled",
-  "tier": 3,
   "cat": "wheels_running_gear",
   "pre": ["mat_natural_rubber", "cap_pure_2N", "cap_heat_1100"],
   "traits": ["labour_saving"],
@@ -2042,7 +1957,6 @@
  {
   "id": "tl_inner_tube",
   "name": "Inner tube: rubber bladder",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["tl_pneumatic_tyre"],
   "traits": [],
@@ -2066,7 +1980,6 @@
  {
   "id": "tl_tyre_bead",
   "name": "Tyre bead: rim seat",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["tl_pneumatic_tyre", "cap_tol_1mm"],
   "traits": [],
@@ -2090,7 +2003,6 @@
  {
   "id": "tl_tyre_tread",
   "name": "Tyre tread pattern",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["tl_pneumatic_tyre", "cap_heat_1100"],
   "traits": [],
@@ -2114,7 +2026,6 @@
  {
   "id": "tl_solid_rubber_tyre",
   "name": "Solid rubber tyre",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["mat_natural_rubber"],
   "traits": [],
@@ -2138,7 +2049,6 @@
  {
   "id": "tl_motor_dc",
   "name": "DC electric motor",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_power_electric", "electromagnet"],
   "traits": [],
@@ -2162,7 +2072,6 @@
  {
   "id": "tl_wire_spoke_wheel",
   "name": "Wire spoke wheel",
-  "tier": 2,
   "cat": "wheels_running_gear",
   "pre": ["tl_spoked_wheel", "cap_tol_100um"],
   "traits": ["labour_saving"],
@@ -2186,7 +2095,6 @@
  {
   "id": "tl_vulcanized_rubber",
   "name": "Vulcanized rubber",
-  "tier": 3,
   "cat": "wheels_running_gear",
   "pre": ["mat_natural_rubber", "mat_sulfur", "cap_heat_1100"],
   "traits": [],
@@ -2210,7 +2118,6 @@
  {
   "id": "tl_connecting_rod",
   "name": "Connecting rod: piston link",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_bulk_steel"],
   "traits": [],
@@ -2234,7 +2141,6 @@
  {
   "id": "tl_piston_assembly",
   "name": "Piston with rings",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_cast_iron"],
   "traits": [],
@@ -2258,7 +2164,6 @@
  {
   "id": "tl_intake_valve",
   "name": "Intake valve with cam",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_bulk_steel"],
   "traits": [],
@@ -2282,7 +2187,6 @@
  {
   "id": "tl_exhaust_valve",
   "name": "Exhaust valve with spring",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["tl_intake_valve", "cap_heat_1300"],
   "traits": [],
@@ -2306,7 +2210,6 @@
  {
   "id": "tl_carbide_lamp",
   "name": "Carbide headlamp",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["cap_gas_o2h2"],
   "traits": ["infrastructure"],
@@ -2330,7 +2233,6 @@
  {
   "id": "tl_storage_battery",
   "name": "Lead-acid storage battery",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["mat_lead", "mat_sulfuric_acid", "cap_power_electric"],
   "traits": [],
@@ -2354,7 +2256,6 @@
  {
   "id": "tl_engine_block",
   "name": "Engine block: cast cylinder",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["mat_cast_iron", "cap_heat_1600"],
   "traits": [],
@@ -2378,7 +2279,6 @@
  {
   "id": "tl_cooling_fan",
   "name": "Cooling fan: mechanical drive",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["tl_radiator"],
   "traits": [],
@@ -2402,7 +2302,6 @@
  {
   "id": "tl_pressure_relief_valve",
   "name": "Pressure relief valve: oil system",
-  "tier": 2,
   "cat": "motor_subsystems",
   "pre": ["tl_oil_pump"],
   "traits": [],
@@ -2426,7 +2325,6 @@
  {
   "id": "tl_cam_follower",
   "name": "Cam follower and tappet",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["cap_tol_100um", "mat_bulk_steel"],
   "traits": [],
@@ -2450,7 +2348,6 @@
  {
   "id": "tl_ignition_timing",
   "name": "Ignition timing advance mechanism",
-  "tier": 3,
   "cat": "motor_subsystems",
   "pre": ["tl_magneto_ignition", "cap_measure_time_ms"],
   "traits": [],
@@ -2474,7 +2371,6 @@
  {
   "id": "tl_transmission_lubrication",
   "name": "Transmission oil sump and drain",
-  "tier": 1,
   "cat": "motor_subsystems",
   "pre": ["mat_cast_iron"],
   "traits": [],
@@ -2498,7 +2394,6 @@
  {
   "id": "tl_wire_rope_brake",
   "name": "Wire rope brake cable",
-  "tier": 1,
   "cat": "carriage_engineering",
   "pre": ["mat_wrought_iron", "mat_rope"],
   "traits": [],
@@ -2522,7 +2417,6 @@
  {
   "id": "tl_anti_siphon_valve",
   "name": "Anti-siphon valve in fuel line",
-  "tier": 1,
   "cat": "motor_subsystems",
   "pre": ["tl_fuel_pump"],
   "traits": [],

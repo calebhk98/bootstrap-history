@@ -78,7 +78,9 @@ def haversine_km(lat1, lon1, lat2, lon2):
 def _load_tech_effects():
     p = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
     try:
-        return {k: v for k, v in json.load(open(p)).items() if not k.startswith("_")}
+        with open(p) as source:
+            effects = json.load(source)
+        return {k: v for k, v in effects.items() if not k.startswith("_")}
     except Exception:
         return {}
 
@@ -95,7 +97,8 @@ def _load_wages():
     at all. Swallowing an exception into a silent empty default is the same
     failure as the save file writing nulls: the bug is the except, not the data.
     """
-    p = json.load(open(PRICES))
+    with open(PRICES) as source:
+        p = json.load(source)
     return {k: v["rate"] for k, v in p["wage_rates_denarii_per_hour"].items()
             if isinstance(v, dict) and "rate" in v}
 
@@ -113,7 +116,8 @@ def _load_annual_wages():
     comes from that where it exists, and only falls back to the hourly rate
     where it does not.
     """
-    p = json.load(open(PRICES))
+    with open(PRICES) as source:
+        p = json.load(source)
     out = {}
     for k, v in p["wage_rates_denarii_per_hour"].items():
         if not isinstance(v, dict):
@@ -129,7 +133,8 @@ ANNUAL_WAGE = _load_annual_wages()
 
 
 def _load_trade_notes():
-    p = json.load(open(PRICES))
+    with open(PRICES) as source:
+        p = json.load(source)
     return {k: (v.get("note") or "") for k, v in p["wage_rates_denarii_per_hour"].items()
             if isinstance(v, dict)}
 
@@ -226,14 +231,22 @@ def load_civ(name="rome_100ad"):
 
 
 def load():
-    tree = json.load(open(TREE))
-    prices = json.load(open(PRICES))
+    with open(TREE) as source:
+        tree = json.load(source)
+    with open(PRICES) as source:
+        prices = json.load(source)
     nodes = {n["id"]: n for n in tree["nodes"]}
     wages = {k: v["rate"] for k, v in prices["wage_rates_denarii_per_hour"].items()
              if not k.startswith("_")}
     goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items()
              if not k.startswith("_")}
     for n in nodes.values():
+        # Tier is being retired from the authoring schema in stages.  Retain a
+        # conservative compatibility value until the remaining simulation
+        # policies have been converted to prerequisites/capabilities.  Doing
+        # this at the loading boundary means a hand-edited or newly authored
+        # tierless node cannot crash older runtime paths with KeyError.
+        n.setdefault("tier", 2)
         n["_labour_cost"] = sum(wages[t] * h for t, h in n["lab"].items())
         n["_material_cost"] = sum(goods[m] * q for m, q in n["mat"].items())
         n["_total_cost"] = n["_labour_cost"] + n["_material_cost"] + n["cap"]
@@ -629,6 +642,3 @@ DEFAULTS = dict(
     eminence_danger=26.0,
     horizon_years=500,
 )
-
-
-
