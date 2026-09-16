@@ -235,7 +235,7 @@ def _brief(s, nodes, k, fog):
                 "costs_per_year_after": round(n["up"], 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(s, n)}
-    return {"id": k, "name": n["name"], "tier": n["tier"], "cat": n["cat"],
+    return {"id": k, "name": n["name"], "cat": n["cat"],
             **_staff_fields(s, n),
             "cost": round(s.project_cost(k), 1), "founder_hours": n["ph"],
             "calendar_floor_years": round(s.calendar_floor(k), 2),
@@ -456,8 +456,7 @@ def _agent_available(s, nodes, cmd=None):
             _heard_all.sort(key=lambda k: (_sort_fn(s, nodes, k), k), reverse=reverse)
         else:
             _heard_all.sort(key=lambda k: (sum(1 for p_ in nodes[k]["pre"]
-                                               if p_ not in s.done),
-                                           nodes[k]["tier"], k))
+                                               if p_ not in s.done), k))
         # PAGEABLE, and it says when it is cut. This was a silent slice at 25
         # in a game where a play tester had a thousand nodes in play: no note
         # that it was truncated and no way to see the rest. `heard_offset`
@@ -682,7 +681,7 @@ def _node_explain(s, nodes, k):
     # on this", and `why sea_clinker_hull` was printing DIRECTLY UNLOCKS with a
     # node named on one line and TOTAL DOWNSTREAM: 0 on the next.
     n_blocks = len(_downstream_of(k, nodes))
-    bounty_by_type = (n["tier"] <= 2 and n["cat"] in ("glass_optics", "metallurgy", "precision",
+    bounty_by_type = (n["cat"] in ("glass_optics", "metallurgy", "precision",
                       "power", "agriculture", "information", "instruments"))
     started = k in s.done or k in s.active
     # THE SUPERVISION FIGURE, from the SAME function open_venture() enforces
@@ -695,7 +694,7 @@ def _node_explain(s, nodes, k):
     _foreman_trade, _foreman_fte = (s.venture_foreman(k) if _is_venture
                                      else (None, 0.0))
     out = {
-        "id": k, "name": n["name"], "tier": n["tier"], "cat": n["cat"], "confidence": n["conf"],
+        "id": k, "name": n["name"], "cat": n["cat"], "confidence": n["conf"],
         # See strip_self_play_advice (fog.py): drops any sentence that ranks
         # this node against the game or the tree itself - "the pivot of the
         # entire game", "THE highest expected-value node in the tree" - and

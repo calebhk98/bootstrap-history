@@ -162,7 +162,7 @@ class EconomyMixin:
         industrial revolution is unaffordable, which is false, and the reason it
         is false is that the revolution funds itself.
         """
-        diffused = sum(1 for k in self.done if self.nodes[k]["tier"] >= 2)
+        diffused = len(self.done - self.granted)
         e = 1.0 + 0.055 * diffused
         if not self.running("corpus_dispersed"):
             e = 1.0 + 0.030 * diffused      # knowledge locked in one workshop spreads slowly
@@ -976,8 +976,8 @@ class EconomyMixin:
     # IDEAS - a bounded, elastic price, and the loom's own twenty-times figure
     # - natively, rather than bolting a tonnage model onto a system that has
     # never tracked a single tonne of anything. Wiring commodities.py itself
-    # into Sim is the larger migration COMMODITIES.md section 11 describes and
-    # explicitly defers; this is not that migration.
+    # into Sim is the larger integration COMMODITIES.md section 11 describes
+    # and explicitly defers.
     #
     # SCOPE IS DELIBERATELY NARROW. Only categories that are a tangible good
     # sold to a broad population get this: cloth (`textiles`), preserved food
@@ -1892,7 +1892,7 @@ class EconomyMixin:
             n = self.nodes[k]
             if n["rev"] <= 0:
                 continue
-            weight += n["rev"] * (1.0 + 0.25 * n["tier"])
+            weight += n["rev"]
         # 40,000 of tier-weighted method roughly doubles what a workshop makes.
         result = 1.0 + 2.0 * (weight / (weight + 40000.0))
         self._cap_factor = result

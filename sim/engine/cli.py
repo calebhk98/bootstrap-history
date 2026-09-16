@@ -220,7 +220,7 @@ def load_strategy(name, nodes, goal):
         s = json.load(open(path))
         order = [k for k in s["order"] if k in nodes]
         # Everything the strategy did not name gets a sensible default ordering:
-        # things the goal needs first, then by tier, then cheapest first. Falling
+        # things the goal needs first, then cheapest first. Falling
         # back to alphabetical order made the simulation spend a century acquiring
         # ox carts before it touched a furnace.
         # FROM THE TREE, NOT SPELLED OUT HERE. This named the goal by hand, so
@@ -230,8 +230,7 @@ def load_strategy(name, nodes, goal):
         # silently and with nothing failing.
         need = closure(nodes, goal)
         rest = [k for k in nodes if k not in order]
-        rest.sort(key=lambda k: (k not in need, nodes[k]["tier"],
-                                 nodes[k]["_total_cost"], k))
+        rest.sort(key=lambda k: (k not in need, nodes[k]["_total_cost"], k))
         # STABILISE THE WHOLE THING TOGETHER, not the two halves separately.
         # Sorting `rest` on its own left 681 places where a node preceded its
         # own prerequisite, because a node in `rest` knows nothing about where
@@ -343,7 +342,7 @@ def cmd_validate(a):
         # 'sus' because I added them without the v1 scalars the explain path
         # still reads. Catch a missing field here, where it is a warning, rather
         # than in a player's session, where it is the end of their game.
-        for f in ("sus", "gov", "tier", "cat", "pre", "ph", "cap", "up", "risk"):
+        for f in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
             if f not in n:
                 errs.append("%s: missing required field '%s'" % (k, f))
     try:
@@ -436,14 +435,14 @@ def cmd_path(a):
     need = closure(nodes, goal)
     order = topo_order(nodes, need)
     cum_cost = cum_ph = 0.0
-    print("%-4s %-34s %-5s %8s %9s %6s %5s %5s" %
-          ("#", "node", "tier", "yourhrs", "cost(den)", "years", "risk", "conf"))
+    print("%-4s %-39s %8s %9s %6s %5s %5s" %
+          ("#", "node", "yourhrs", "cost(den)", "years", "risk", "conf"))
     print("-" * 88)
     for i, k in enumerate(order, 1):
         n = nodes[k]
         cum_cost += n["_total_cost"]; cum_ph += n["ph"]
-        print("%-4d %-34s %-5d %8d %9s %6.1f %5.2f %5s" %
-              (i, k[:34], n["tier"], n["ph"], f"{n['_total_cost']:,.0f}", n["yrs"], n["risk"], n["conf"]))
+        print("%-4d %-39s %8d %9s %6.1f %5.2f %5s" %
+              (i, k[:39], n["ph"], f"{n['_total_cost']:,.0f}", n["yrs"], n["risk"], n["conf"]))
     print("-" * 88)
     print("TOTAL  %d nodes   %s founder-hours   %s denarii" %
           (len(order), f"{cum_ph:,.0f}", f"{cum_cost:,.0f}"))
@@ -1954,7 +1953,7 @@ def cmd_why(a):
         near = [x for x in nodes if a.node.lower() in x.lower()]
         raise SystemExit("unknown node. did you mean: %s" % (", ".join(near[:8]) or "no idea"))
     n = nodes[k]
-    print("%s  [tier %d, %s, confidence %s]" % (n["name"], n["tier"], n["cat"], n["conf"]))
+    print("%s  [%s, confidence %s]" % (n["name"], n["cat"], n["conf"]))
     print("=" * 78)
     print(n["note"])
     print()
@@ -1986,7 +1985,7 @@ def cmd_why(a):
            % (25 * -n.get("gov", 0), 3 * -n.get("gov", 0),
               "senatorial patronage" if n.get("gov", 0) <= -2 else "a patron"))
           if n.get("gov", 0) < 0 else ""))
-    eligible = (n["tier"] <= 2 and n["cat"] in ("glass_optics", "metallurgy", "precision",
+    eligible = (n["cat"] in ("glass_optics", "metallurgy", "precision",
                 "power", "agriculture", "information", "instruments"))
     print("Bounty          : %s" % ("YES, can be bought as a public prize for about %s den"
                                     % f"{n['_total_cost'] * 2.5:,.0f}" if eligible else
@@ -2662,8 +2661,7 @@ def _save_listing(cfg):
     default_goal = tree["meta"]["goal_node"]
     # EACH SAVE NAMES ITS OWN GOAL NOW (see protocol.py's _goal/save_state),
     # so the closure a save's progress is measured against has to be THAT
-    # goal's, not always the transistor's - an old save with no "_goal" at
-    # all falls back to the tree's default, the same thing play/agent do.
+    # goal's, not always the transistor's.
     _need_cache = {}
     def _need_for(goal_id):
         goal_id = goal_id if goal_id in nodes else default_goal

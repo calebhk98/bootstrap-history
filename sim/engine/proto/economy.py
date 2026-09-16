@@ -241,7 +241,7 @@ def _agent_mines(s):
     same number. This does not fabricate what that model never recorded:
     a working carried over from a save written before this existed has
     "commissioned_year": None, shown as "unknown" (see load_state's own
-    migration comment), never a guessed year.
+    save/load contract), never a guessed year.
 
     Separately, auto_mine quietly took 353,039 a year against 467,227 of
     revenue for a play tester, and there was no command anywhere that named

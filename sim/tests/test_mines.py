@@ -292,27 +292,20 @@ check("...and mine_capacity (the derived property) agrees after the "
           - s_sv.mine_capacity.get("coal", 0.0)) < 1e-6,
       (s_sv.mine_capacity, s_sv2.mine_capacity))
 
-# --- SAVES, backward compatibility: a save written before workings existed
-# (an old-style "mine_capacity" dict, no "mines" list at all) still loads,
-# carries its capacity forward as one working per material, and does NOT
-# fabricate a commissioning year it never recorded.
-s_old = sim(capital=1.0)
-_old_blob = {"year": 150.0, "capital": 1000.0, "done": {"__set__": []},
-            "granted": {"__set__": []}, "active": {}, "_civ": s_old.civ.get("id"),
-            "_version": 1, "mine_capacity": {"coal": 250.0, "iron": 0.0}}
-_old_path = os.path.join(HERE, "_test_old_mines_save.json")
-with open(_old_path, "w") as _fh:
-    json.dump(_old_blob, _fh)
-S.load_state(s_old, _old_path)
-os.remove(_old_path)
-check("a save from before workings existed still loads and carries "
-      "capacity forward as a working, WITHOUT fabricating a commissioning "
-      "year it never recorded",
-      len(s_old.mines) == 1 and s_old.mines[0]["material"] == "coal"
-      and abs(s_old.mines[0]["capacity"] - 250.0) < 1e-6
-      and s_old.mines[0]["opened_year"] is None,
-      s_old.mines)
-check("...and a zero-capacity legacy entry (iron: 0.0) is not carried "
-      "forward as a phantom working",
-      not s_old._workings_of("iron"), s_old.mines)
-
+# Saves are intentionally ephemeral: a run is short, and silently translating
+# an older state shape would be less honest than refusing it.
+S.save_state(s_sv, _sv_path)
+with open(_sv_path) as _fh:
+    _stale_blob = json.load(_fh)
+_stale_blob["_version"] -= 1
+with open(_sv_path, "w") as _fh:
+    json.dump(_stale_blob, _fh)
+try:
+    S.load_state(sim(capital=1.0), _sv_path)
+    _stale_error = None
+except ValueError as _exc:
+    _stale_error = str(_exc)
+os.remove(_sv_path)
+check("a save from another format version is refused rather than migrated",
+      _stale_error is not None and "not migrated" in _stale_error,
+      _stale_error)

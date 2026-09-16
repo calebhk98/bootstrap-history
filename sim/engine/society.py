@@ -2379,8 +2379,7 @@ class SocietyMixin:
                         # abandoning the corpus yourself is a different
                         # mechanism and still applies.
                         losable = sorted(k for k in self.done
-                                         if self.nodes[k]["tier"] >= 2
-                                         and k not in self.granted
+                                         if k not in self.granted
                                          and k != "corpus_dispersed")
                         if losable:
                             drop = r.sample(losable, max(1, int(len(losable) * frac)))

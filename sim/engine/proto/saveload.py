@@ -14,6 +14,8 @@ from ..core import Sim
 
 
 
+SAVE_VERSION = 2
+
 SAVE_FIELDS = (
     # THE LOG, which the `log` command exists to read back and which was not
     # saved. The opening screen promises "progress is written to this file
@@ -27,15 +29,8 @@ SAVE_FIELDS = (
     "scholars", "artisans", "directors_extra", "reputation",
     "scandal", "eminence", "protection", "familiarity", "forest_ha",
     "nitre_bed_m2", "mine_pending", "mine_ready",
-    # WORKINGS, PLURAL: mine_capacity used to be the saved field, one float
-    # per material; it is now a computed property (economy.py), so what
-    # gets saved is the list it is computed FROM - each working with its
-    # own material, capacity, commissioning year, capex and depletion
-    # clock. Missing entirely, as in every save from before workings
-    # existed, reads back as no workings at all - see load_state's own
-    # migration of a genuinely old "mine_capacity" blob into this shape,
-    # which does not happen here but right after this loop, because it has
-    # to know whether "mines" was actually present in the file first.
+    # WORKINGS, PLURAL: the list each aggregate mine-capacity figure is
+    # computed from, including commissioning year, capex and depletion clock.
     "mines",
     "mine_tranches", "market_pressure", "slaves", "freedmen",
     "manumitted_total", "goal_year", "dead_reason", "insolvent_years",
@@ -68,15 +63,7 @@ SAVE_FIELDS = (
     "_said_near_limit",
     "shut_for_staff",
     # THE COUNTRY'S OWN ADOPTION OF WHAT YOU BUILT. See
-    # SocietyMixin._advance_food_diffusion_population (society.py): a
-    # ratchet that only ever grows, so a save missing it entirely (every
-    # save from before this mechanism existed) reads back as "nothing has
-    # diffused into the population yet", which is exactly true of those
-    # saves. _food_diffusion_said is the matching log throttle, same
-    # reasoning as the pre-existing _literacy_said never needing a save
-    # entry of its own - losing one generation's worth of throttling on an
-    # old save is not a fact about the game, only about when it next
-    # prints a line it would have printed anyway.
+    # SocietyMixin._advance_food_diffusion_population (society.py).
     "_food_pop_bonus_applied",
     # TONNES ON HAND. Own production a year did not use banks here instead of
     # evaporating, which is what lets a twenty-gram gold demand be met by
@@ -110,17 +97,10 @@ SAVE_FIELDS = (
     # stop being able to say it - see _founder_death_info.
     "_founder_death_aged", "_founder_death_year",
     # HOW MANY UNITS OF EACH SCALABLE INSTITUTION ARE ACTUALLY FOUNDED. See
-    # ProjectsMixin.institution_units (projects.py): a save missing this
-    # entirely - every save from before institutions were quantities - is
-    # read as every open one being exactly 1.0 unit, which is exactly what it
-    # always was, so an old save resumes unchanged.
+    # ProjectsMixin.institution_units (projects.py).
     "inst_units",
     # WHEN a taught trade was first taught, and which taught trades this
-    # society has since naturalised on its own - see
-    # SocietyMixin.advance_society (society.py). Missing entirely, as in
-    # every save from before this existed, reads back as "no trade has been
-    # taught long enough yet to naturalise", which is exactly true of a save
-    # from before the mechanism could ever have fired.
+    # society has since naturalised on its own.
     "trade_introduced_year", "trades_endemic",
     # ONE SNAPSHOT A YEAR, for `changes` and `economy`'s "what moved most" -
     # see _dashboard_snapshot. Missing entirely, as in every save from
@@ -195,7 +175,7 @@ def save_state(s, path):
         blob["_rng"] = [st[0], list(st[1]), st[2]]
     except Exception:
         blob["_rng"] = None
-    blob["_version"] = 1
+    blob["_version"] = SAVE_VERSION
     tmp = path + ".tmp"
     # A save into a directory that is not there killed the process outright on
     # a FileNotFoundError, which is the one thing a save must never do.
@@ -208,11 +188,13 @@ def save_state(s, path):
     return path
 
 
-# Required to even consider a file a save from this game. Not all of
-# SAVE_FIELDS: most of it is optional (fields that did not exist yet when an
-# older save was written are just skipped, same as always), but a file
-# missing any of these is not a save, it is some other JSON document.
-REQUIRED_SAVE_FIELDS = ("year", "capital", "done", "active", "_civ", "_version")
+# A run is short and save files are deliberately tied to the code that wrote
+# them. There is no upgrade path: accepting a partial older shape quietly
+# invents state, which is worse than asking the player to begin a new run.
+REQUIRED_SAVE_FIELDS = SAVE_FIELDS + (
+    "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
+    "_version",
+)
 
 # Fields that hold a SET of node ids (see save_state's {"__set__": [...]}
 # encoding). Anything named here is checked against the currently loaded
@@ -262,6 +244,20 @@ def _validate_save(blob, s):
                 % (", ".join(missing), ", ".join(REQUIRED_SAVE_FIELDS)))
     if not isinstance(blob.get("_version"), int):
         return "this save is corrupt: '_version' should be a whole number"
+    if blob["_version"] != SAVE_VERSION:
+        return ("this save uses format version %s; this build requires version %s. "
+                "Saved runs are not migrated; start a new run."
+                % (blob["_version"], SAVE_VERSION))
+    if blob["_goal"] not in s.nodes:
+        return "this save's goal is not in the current technology tree"
+    if not isinstance(blob["_civ_live"], dict) or not isinstance(blob["_weights"], dict):
+        return "this save is corrupt: civilization state should be objects"
+    try:
+        rng_version, rng_keys, rng_gaussian = blob["_rng"]
+        probe = random.Random()
+        probe.setstate((rng_version, tuple(int(x) for x in rng_keys), rng_gaussian))
+    except (TypeError, ValueError):
+        return "this save has an invalid random-number state"
     for f in ("year", "capital"):
         v = blob.get(f)
         if isinstance(v, bool) or not isinstance(v, (int, float)):
@@ -280,10 +276,12 @@ def _validate_save(blob, s):
     for k, v in active.items():
         if not isinstance(k, str) or not isinstance(v, dict):
             return "this save is corrupt: active[%r] is not a valid entry" % (k,)
-        for f in ("ph_left", "spent"):
+        for f in ("ph_left", "spent", "cost_left"):
             if f not in v or isinstance(v[f], bool) or not isinstance(v[f], (int, float)):
                 return ("this save is corrupt: active[%r] is missing a numeric "
                          "'%s'" % (k, f))
+        if not isinstance(v.get("lab_left"), dict):
+            return "this save is corrupt: active[%r] is missing 'lab_left'" % (k,)
 
     done = blob.get("done")
     if not (isinstance(done, dict) and isinstance(done.get("__set__"), list)):
@@ -380,8 +378,6 @@ def load_state(s, path):
                          "fog off; start a new game without it if that is what "
                          "you want.")
     for f in SAVE_FIELDS:
-        if f not in blob:
-            continue
         v = blob[f]
         # NEVER restore a null over a live default. A field that had not been
         # initialised yet when the game was saved, spend_last_year and
@@ -407,22 +403,6 @@ def load_state(s, path):
     s.failed_attempts = collections.defaultdict(
         int, {k: int(v) for k, v in (getattr(s, "failed_attempts", None) or {}).items()})
     s.shortages = collections.Counter(getattr(s, "shortages", None) or {})
-    # A SAVE FROM BEFORE WORKINGS EXISTED still names real capacity, under
-    # the old field name "mine_capacity" (one float per material - see
-    # SAVE_FIELDS's own comment on "mines"). "mines" is not in SAVE_FIELDS
-    # any more, so the loop above never touches it, and a file that
-    # predates this change has no "mines" key at all to have skipped. Carry
-    # that capacity forward as one working per material rather than losing
-    # it outright - but do NOT invent the year it was commissioned, which
-    # this file never recorded and a dashboard agent was right to refuse to
-    # fabricate: "opened_year": None, shown as "unknown" rather than a
-    # guess (see _agent_mines/render_mines).
-    if "mines" not in blob and isinstance(blob.get("mine_capacity"), dict):
-        s.mines = [{"material": m, "capacity": float(amt),
-                    "opened_year": None, "capex_paid": None,
-                    "intensity_yrs": 0.0}
-                   for m, amt in sorted(blob["mine_capacity"].items())
-                   if isinstance(amt, (int, float)) and amt > 0]
     # `operating` JUST WENT BACK TO BEING A PLAIN SET. The generic setattr
     # above has no idea self.operating is normally an _InvalidatingSet (see
     # economy.py) and replaced it with whatever plain `set(...)` came out of
@@ -434,29 +414,16 @@ def load_state(s, path):
     # this point mutates .operating directly. Re-wrap it, once, here.
     s._reset_operating()
     # The game this save IS, not whatever the command line happened to say.
-    if "_fog" in blob:
-        s.fog = bool(blob["_fog"])
-        if s.fog and not hasattr(s, "revealed"):
-            s.revealed = set()
-    if "_immortal" in blob:
-        s.cfg["immortal"] = bool(blob["_immortal"])
-    # A save from before goal selection existed has no "_goal" at all, and
-    # one whose goal node a later tree edit removed should not crash a
-    # resume - either way, fall back to whatever the command line/default
-    # already set on `s` before this was called, rather than raise.
-    if blob.get("_goal") in s.nodes:
-        s.goal = blob["_goal"]
-    if blob.get("_rng"):
-        try:
-            _v, _keys, _g = blob["_rng"]
-            s.rng.setstate((_v, tuple(int(x) for x in _keys), _g))
-        except Exception:
-            pass          # an old save without dice is still a loadable save
+    s.fog = bool(blob["_fog"])
+    s.cfg["immortal"] = bool(blob["_immortal"])
+    s.goal = blob["_goal"]
+    _v, _keys, _g = blob["_rng"]
+    s.rng.setstate((_v, tuple(int(x) for x in _keys), _g))
 
-    for k, v in (blob.get("_civ_live") or {}).items():
+    for k, v in blob["_civ_live"].items():
         if v is not None:
             s.civ[k] = v
-    s.w.update(blob.get("_weights") or {})
+    s.w.update(blob["_weights"])
     s.state_capacity = float(s.civ.get("state_capacity", s.state_capacity))
     s.fog = bool(blob.get("_fog", False))
     return s

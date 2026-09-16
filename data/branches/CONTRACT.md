@@ -73,9 +73,9 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `conf` | A well attested, B probable, C your estimate |
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |
 
-`tier` is deprecated and must not be added to new nodes. Availability is
-expressed by `pre`, capability rungs, cost, and calendar floors. All branch sources are tierless; the merge tool temporarily accepts
-both forms for compatibility with external or older sources.
+Availability and ordering are expressed by `pre`, capability rungs, cost,
+calendar floors, and civilization-specific starting knowledge. Numeric tiers
+are not part of the schema and must not be added to new nodes.
 
 ## PRICED_MATERIALS (allowed keys for `mat`)
 

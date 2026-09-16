@@ -23,7 +23,7 @@ _bl.revealed = set()
 _bl_cats = ("glass_optics", "metallurgy", "precision", "power", "agriculture",
            "information", "instruments")
 _bl_candidates = [k for k, n in NODES.items()
-                  if n["tier"] <= 2 and n["cat"] in _bl_cats and n["pre"]
+                  if n["cat"] in _bl_cats and n["pre"]
                   and any(p not in _bl.done for p in n["pre"])]
 _bl_target = None
 _bl_hidden = []
@@ -70,8 +70,8 @@ if _bl_target:
 # prerequisites, so it can actually be made `active`.
 _bls = sim(capital=1_000_000.0)
 _bls_target = next((k for k in _bls.order
-                    if NODES[k]["tier"] > 2 and _bls.can_start(k)), None)
-check("a real, startable, never-bounty-eligible (tier > 2) node exists to "
+                    if not _bls.bounty_eligible(k) and _bls.can_start(k)), None)
+check("a real, startable, never-bounty-eligible node exists to "
       "test the ordering against",
       _bls_target is not None, _bls_target)
 if _bls_target:

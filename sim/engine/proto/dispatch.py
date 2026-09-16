@@ -651,7 +651,7 @@ def _cmd_bounty(s, nodes, cmd, ended):
     # then had `bounty mat_platinum_bulk` refused as not bounty-eligible:
     # advice the game itself could have checked before giving. Since an
     # active project's prerequisites are already satisfied (that is what
-    # let it start), eligibility here depends only on tier/category, so
+    # let it start), eligibility here depends only on craft recognition, so
     # checking it before the "already active" branch costs nothing and
     # never sends a player to stop something that could not become a
     # bounty anyway.
@@ -667,12 +667,12 @@ def _cmd_bounty(s, nodes, cmd, ended):
             # cathode prerequisite.
             return {"ok": False, "error": s.missing_prereq_message(missing)}
         return {"ok": False,
-                "error": "not bounty-eligible (tier %d, category %s): a craftsman "
+                "error": "not bounty-eligible (category %s): a craftsman "
                          "in %s could not recognise success at this without "
                          "understanding the theory, so there is nothing to "
                          "award the prize for. A bounty works where the craft "
                          "already exists here and success is visible."
-                         % (n["tier"], n["cat"],
+                         % (n["cat"],
                             s.civ.get("name", "this society"))}
     if k in s.active:
         return {"ok": False, "error": "%s is already active; stop it first if you want "

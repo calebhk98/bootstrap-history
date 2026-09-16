@@ -196,8 +196,7 @@ s_se.end_year = s_se.cfg["start_year"] + 200
 _memo_se = {}
 _ok_se = [k for k in s_se.order if s_se.can_start(k, _memo=_memo_se)]
 _ok_se = [k for k in _ok_se
-          if not (NODES[k]["tier"] == 0 and NODES[k]["ph"] == 0
-                  and NODES[k]["_total_cost"] <= 1)]
+          if not (NODES[k]["ph"] == 0 and NODES[k]["_total_cost"] <= 1)]
 for _k_se in _ok_se[:15]:
     S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se})
 _step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})

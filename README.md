@@ -73,13 +73,13 @@ prerequisites by the technologies that need them. These are the answer to
 | Measurement | length, mass to 1 mg, temperature, high temperature, time to 1 s, to 1 ms, absolute electrical units, wavelength |
 
 **2. MATERIALS (73 nodes, `mat_*`).** Each is a node with its own prerequisites,
-not a line item with a price. Tier 0 means Rome already produces it and it is
-free. **There is no longer a tier-9 "unobtainable" bucket** - that category
+not a line item with a price. Rome's starting materials are granted explicitly
+by its civilization profile. **There is no longer an "unobtainable" bucket** - that category
 existed in an earlier version of the tree and it was wrong: rubber is not
 unobtainable, it is in West Africa; saltpetre effloresces on the Gangetic plain,
 on a route Rome already sails. `mat_natural_rubber`, `mat_gutta_percha`,
 `mat_quinine`, `mat_chile_nitrate`, `mat_newworld_crops`, `mat_cryolite` and
-`mat_platinum_bulk` all now sit at tier 4, each gated behind an `exp_*`
+`mat_platinum_bulk` are each gated behind an `exp_*`
 expedition node that prices what going to get it actually costs, exactly like
 every other distant material (see `rome/knowledge/95_expeditions.md`).
 
@@ -91,8 +91,8 @@ mining, precision and machine tools, medicine, civil engineering, optics and
 instruments, communications and computing remain the broad shape, on top of
 the original core spine.
 
-**Scale:** 2,833 nodes, 4,745 edges. Tier 0 (Rome already has it) 276, tier 1
-607, tier 2 915, tier 3 645, tier 4 309, tier 5 81.
+**Scale:** 2,833 nodes, 4,745 edges. Availability and ordering come from the
+prerequisite graph, costs, capability rungs, and civilization starting knowledge.
 **The transistor (`junction_transistor`, the 1951 device) needs 158 of them.
 The other 2,675 are the rest of technology, and that is the point:** a tree
 that only covers the path to a transistor is dishonest about what technology
@@ -114,8 +114,8 @@ python3 rome/sim/treetool.py judge --grade C    # everything at C or worse
 Defect classes it names: `CAP-NONE` and `CAP-HEAT/TOL/VAC/PURITY/POWER` (needs a
 capability rung it does not declare), `SHALLOW` and `THIN-CHAIN` (narrow at the
 top AND shallow all the way down), `BLOCKED` (depends on something
-unobtainable), `COST-HIGH` / `COST-LOW` / `HOURS-ZERO` (out of proportion for its
-tier), `NO-FLOOR` (heavy technology with no diffusion time), `NOTE-THIN`,
+unobtainable), `COST-HIGH` / `HOURS-ZERO` (out of proportion for its category or graph
+position), `NO-FLOOR` (long adoption with no diffusion time), `NOTE-THIN`,
 `NO-RECIPE`, `SOCIAL-FLAT`.
 
 **Read the score with suspicion.** `treetool.py repair` then fixes mechanically

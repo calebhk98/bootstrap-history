@@ -2,6 +2,110 @@
  "meta": {
   "cost_disclaimer": "Every ph/lab/cap figure is a [C] estimate unless the note says otherwise. They are calibrated so that the SHAPE of the tree is right: which items are cheap, which are slow, which are gated on people rather than money. Do not read three significant figures into any of them.",
   "goal_node": "junction_transistor",
+  "goals": [
+   {
+    "blurb": "The original goal: reach the device that starts the electronic age.",
+    "name": "Grown and alloy junction transistors",
+    "node": "junction_transistor",
+    "scale": "civilisation"
+   },
+   {
+    "blurb": "Found the method itself: controlled experiment, hypothesis, and a result someone else can repeat.",
+    "name": "Establish experimental science",
+    "node": "scientific_method",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Show, not just argue, that disease has a cause you can see and name.",
+    "name": "Develop germ theory",
+    "node": "germ_theory",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Write down everything you know, plainly enough that it outlives you.",
+    "name": "Leave behind a written corpus",
+    "node": "corpus_written",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Rise from a curiosity the state tolerates to someone it funds and defends.",
+    "name": "Win the patronage of the state",
+    "node": "patron_imperial",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Build the first source of a steady electric current.",
+    "name": "Establish electrical generation",
+    "node": "voltaic_pile",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Found the schools that make reading common rather than rare, and see it show up in the census.",
+    "name": "Raise literacy above a fifth",
+    "node": "goal_literacy_common",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Cut four-fifths of what plague and famine take, with sanitation, quarantine and the vaccines germ theory makes possible.",
+    "name": "Curb epidemic mortality",
+    "node": "goal_public_health",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Build the first engine that turns heat into work without a river or a draft animal.",
+    "name": "Produce a steam engine",
+    "node": "steam_atmospheric",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Make parts to a tolerance where any one of them fits in place of any other.",
+    "name": "Interchangeable manufacturing",
+    "node": "interchangeable_parts",
+    "scale": "lifetime"
+   },
+   {
+    "blurb": "Field the all-big-gun steel battleship that makes every earlier navy obsolete.",
+    "name": "Build a modern navy",
+    "node": "mil_dreadnought",
+    "scale": "generations"
+   },
+   {
+    "blurb": "Carry a signal the distance a continent, or an ocean, actually needs.",
+    "name": "Span a continent by telegraph",
+    "node": "com_loading_coil",
+    "scale": "generations"
+   },
+   {
+    "blurb": "Move from a blacksmith's iron to a steel industry: bulk production, alloys, and steel that does not rust.",
+    "name": "Industrialise steel",
+    "node": "mat_stainless",
+    "scale": "civilisation"
+   },
+   {
+    "blurb": "Turn the radio from a signalling device into a medium: scheduled programming, an audience, a business.",
+    "name": "Radio broadcasting",
+    "node": "com_broadcasting_institution",
+    "scale": "civilisation"
+   },
+   {
+    "blurb": "Pull nitrogen from the air itself and put it on the fields, ending the old ceiling on how much food the land can give.",
+    "name": "Synthetic fertiliser",
+    "node": "fud_haber_process_synthetic_nitrogen",
+    "scale": "civilisation"
+   },
+   {
+    "blurb": "Build a heavier-than-air machine that takes off, flies under its own power, and lands under control.",
+    "name": "Powered flight",
+    "node": "air_powered_aeroplane",
+    "scale": "civilisation"
+   },
+   {
+    "blurb": "Mechanise the fields enough to free the children working them, and put nearly everyone who could read before you in a classroom.",
+    "name": "Maximise literacy",
+    "node": "goal_literate_nation",
+    "scale": "civilisation"
+   }
+  ],
   "merged_duplicate_ids": {
    "ag2_caterpillar_track": "tl_caterpillar_track",
    "ag2_roller_mill": "fud_roller_mill",
@@ -253,7 +357,7 @@
   },
   "schema": {
    "art": "minimum trained technical artisans required on staff to attempt",
-   "bounty_rule": "A node can be bought as a public prize instead of built, if tier <= 2 AND cat is one of glass_optics, metallurgy, precision, power, agriculture, information, instruments. The test is whether a Roman artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, saves 65% of founder hours, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
+   "bounty_rule": "A node can be bought as a public prize when its craft category is glass_optics, metallurgy, precision, power, agriculture, information, or instruments, or when the selected civilization has a strong local craft tradition. The test is whether a local artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, saves 65% of founder hours, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
    "cap": "one-off capital in denarii beyond labour and materials (land, buildings, purchased tools)",
    "cat": "category",
    "conf": "A well attested, B probable, C author's estimate",
@@ -270,118 +374,13 @@
    "risk": "probability a given attempt fails outright and must be retried at 40% of cost",
    "sch": "minimum trained natural philosophers required on staff to attempt",
    "sus": "suspicion delta on completion, see 03_SOCIAL_POLITICS.md",
-   "tier": "0 knowledge you carry, 1 immediate/cheap, 2 industrial foundations, 3 heavy industry and early electricity, 4 vacuum/precision physics, 5 semiconductor endgame",
    "up": "annual upkeep in denarii once operating",
    "yrs": "minimum calendar years, a floor that labour cannot buy down (curing, growing, seasoning, maturation)"
   },
-  "schema_version": 2,
+  "schema_version": 3,
   "start_year": 100,
   "title": "Rome 100 AD to the Transistor: dependency tree",
-  "version": "1.0",
-  "goals": [
-   {
-    "node": "junction_transistor",
-    "name": "Grown and alloy junction transistors",
-    "blurb": "The original goal: reach the device that starts the electronic age.",
-    "scale": "civilisation"
-   },
-   {
-    "node": "scientific_method",
-    "name": "Establish experimental science",
-    "blurb": "Found the method itself: controlled experiment, hypothesis, and a result someone else can repeat.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "germ_theory",
-    "name": "Develop germ theory",
-    "blurb": "Show, not just argue, that disease has a cause you can see and name.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "corpus_written",
-    "name": "Leave behind a written corpus",
-    "blurb": "Write down everything you know, plainly enough that it outlives you.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "patron_imperial",
-    "name": "Win the patronage of the state",
-    "blurb": "Rise from a curiosity the state tolerates to someone it funds and defends.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "voltaic_pile",
-    "name": "Establish electrical generation",
-    "blurb": "Build the first source of a steady electric current.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "goal_literacy_common",
-    "name": "Raise literacy above a fifth",
-    "blurb": "Found the schools that make reading common rather than rare, and see it show up in the census.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "goal_public_health",
-    "name": "Curb epidemic mortality",
-    "blurb": "Cut four-fifths of what plague and famine take, with sanitation, quarantine and the vaccines germ theory makes possible.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "steam_atmospheric",
-    "name": "Produce a steam engine",
-    "blurb": "Build the first engine that turns heat into work without a river or a draft animal.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "interchangeable_parts",
-    "name": "Interchangeable manufacturing",
-    "blurb": "Make parts to a tolerance where any one of them fits in place of any other.",
-    "scale": "lifetime"
-   },
-   {
-    "node": "mil_dreadnought",
-    "name": "Build a modern navy",
-    "blurb": "Field the all-big-gun steel battleship that makes every earlier navy obsolete.",
-    "scale": "generations"
-   },
-   {
-    "node": "com_loading_coil",
-    "name": "Span a continent by telegraph",
-    "blurb": "Carry a signal the distance a continent, or an ocean, actually needs.",
-    "scale": "generations"
-   },
-   {
-    "node": "mat_stainless",
-    "name": "Industrialise steel",
-    "blurb": "Move from a blacksmith's iron to a steel industry: bulk production, alloys, and steel that does not rust.",
-    "scale": "civilisation"
-   },
-   {
-    "node": "com_broadcasting_institution",
-    "name": "Radio broadcasting",
-    "blurb": "Turn the radio from a signalling device into a medium: scheduled programming, an audience, a business.",
-    "scale": "civilisation"
-   },
-   {
-    "node": "fud_haber_process_synthetic_nitrogen",
-    "name": "Synthetic fertiliser",
-    "blurb": "Pull nitrogen from the air itself and put it on the fields, ending the old ceiling on how much food the land can give.",
-    "scale": "civilisation"
-   },
-   {
-    "node": "air_powered_aeroplane",
-    "name": "Powered flight",
-    "blurb": "Build a heavier-than-air machine that takes off, flies under its own power, and lands under control.",
-    "scale": "civilisation"
-   },
-   {
-    "node": "goal_literate_nation",
-    "name": "Maximise literacy",
-    "blurb": "Mechanise the fields enough to free the children working them, and put nearly everyone who could read before you in a classroom.",
-    "scale": "civilisation"
-   }
-  ]
+  "version": "1.0"
  },
  "nodes": [
   {
@@ -4307,9 +4306,9 @@
     {
      "group": "ammonia_supply",
      "options": {
-      "mat_ammonia": 1.0,
       "chm_haber_bosch": 1.0,
-      "chm_solvay_process": 1.0
+      "chm_solvay_process": 1.0,
+      "mat_ammonia": 1.0
      }
     }
    ],
@@ -7143,16 +7142,16 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     },
     {
      "group": "zinc_metal_supply",
      "options": {
       "mat_zinc": 1.0,
-      "zinc_metal": 1.0,
-      "zinc_industry_scale": 1.0
+      "zinc_industry_scale": 1.0,
+      "zinc_metal": 1.0
      }
     }
    ],
@@ -13061,10 +13060,10 @@
     {
      "group": "steam_supply",
      "options": {
-      "steam_atmospheric": 1.0,
-      "steam_watt": 1.0,
       "cap_power_steam": 1.0,
-      "steam_high_pressure": 1.0
+      "steam_atmospheric": 1.0,
+      "steam_high_pressure": 1.0,
+      "steam_watt": 1.0
      }
     }
    ],
@@ -13201,6 +13200,7 @@
    "yrs": 1.0
   },
   {
+   "_internal": "[FIXED after independent audit: nitration of benzene needs nitric acid, which was missing. The Bechamp reduction uses iron in dilute acid, not hydrogen, so the industrial_gases prerequisite was not load-bearing and has been removed.]",
    "_src": "18_chemicals.json",
    "_total_cost": 3153.0,
    "adopt_yrs": 0.0,
@@ -13240,8 +13240,7 @@
     "inexplicable"
    ],
    "up": 250.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: nitration of benzene needs nitric acid, which was missing. The Bechamp reduction uses iron in dilute acid, not hydrogen, so the industrial_gases prerequisite was not load-bearing and has been removed.]"
+   "yrs": 1.0
   },
   {
    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -13364,6 +13363,7 @@
    "yrs": 2.0
   },
   {
+   "_internal": "[FIXED after independent audit: the note said phenol and formaldehyde condense, but formaldehyde appeared in neither the prerequisites nor the materials.]",
    "_src": "18_chemicals.json",
    "_total_cost": 3922.0,
    "adopt_yrs": 0.0,
@@ -13403,8 +13403,7 @@
    "sus": 1,
    "traits": [],
    "up": 900.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: the note said phenol and formaldehyde condense, but formaldehyde appeared in neither the prerequisites nor the materials.]"
+   "yrs": 1.0
   },
   {
    "_src": "18_chemicals.json",
@@ -14261,6 +14260,7 @@
    "yrs": 0.5
   },
   {
+   "_internal": "[FIXED after independent audit: the cyanamide route runs through calcium carbide, which needs the electric arc furnace.]",
    "_src": "18_chemicals.json",
    "_total_cost": 5098.0,
    "adopt_yrs": 0.0,
@@ -14302,8 +14302,7 @@
     "infrastructure"
    ],
    "up": 400.0,
-   "yrs": 1.5,
-   "_internal": "[FIXED after independent audit: the cyanamide route runs through calcium carbide, which needs the electric arc furnace.]"
+   "yrs": 1.5
   },
   {
    "_src": "18_chemicals.json",
@@ -14350,6 +14349,7 @@
    "yrs": 1.5
   },
   {
+   "_internal": "[FIXED after independent audit: sulfonation needs sulfuric acid and the neutralisation needs soda ash; neither was listed.]",
    "_src": "18_chemicals.json",
    "_total_cost": 2562.0,
    "adopt_yrs": 0.0,
@@ -14388,8 +14388,7 @@
     "inexplicable"
    ],
    "up": 150.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: sulfonation needs sulfuric acid and the neutralisation needs soda ash; neither was listed.]"
+   "yrs": 1.0
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -17490,6 +17489,7 @@
    "yrs": 0.8
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 2.0,
    "build_yrs": 4.0,
@@ -17511,6 +17511,7 @@
    "note": "Dressing and placing large stone using stone tools, sand abrasive, ramps and enormous organised labour. The absence of iron chisels is not the obstacle people assume: it changes the time per block, not the possibility. Nothing downstream requires it: it is what a society builds WITH its capability, not a step toward more.",
    "ph": 150.0,
    "pre": [],
+   "req_any": [],
    "rev": 0.0,
    "risk": 0.12,
    "sch": 0.0,
@@ -17521,9 +17522,7 @@
     "spectacle"
    ],
    "up": 0.0,
-   "yrs": 4.0,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 4.0
   },
   {
    "_src": "22_civil.json",
@@ -22208,6 +22207,7 @@
    "yrs": 1.1
   },
   {
+   "_internal": "[FIXED after independent audit: the note itself said Babbage failed on tolerance, and the node listed no tolerance prerequisite at all.]",
    "_src": "24_comms_computing.json",
    "_total_cost": 16147.5,
    "adopt_yrs": 0.0,
@@ -22249,8 +22249,7 @@
    "sus": 2,
    "traits": [],
    "up": 0.0,
-   "yrs": 4.0,
-   "_internal": "[FIXED after independent audit: the note itself said Babbage failed on tolerance, and the node listed no tolerance prerequisite at all.]"
+   "yrs": 4.0
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -23004,8 +23003,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -23072,43 +23071,43 @@
    "yrs": 1.5
   },
   {
-   "id": "com_led",
-   "kind": "ENGINEERING",
-   "name": "Light-emitting diode",
+   "_src": "24_comms_computing.json",
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 1.2,
+   "cap": 1400.0,
    "cat": "electronics",
-   "pre": [
-    "com_semiconductor_diode"
-   ],
+   "conf": "C",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "com_led",
    "kb": "",
-   "ph": 160.0,
+   "kind": "ENGINEERING",
    "lab": {
     "chemist": 260.0,
-    "scholar": 120.0,
-    "optician": 80.0
+    "optician": 80.0,
+    "scholar": 120.0
    },
    "mat": {
     "germanium_g": 6.0,
-    "zinc_kg": 0.05,
-    "gold_g": 1.0
+    "gold_g": 1.0,
+    "zinc_kg": 0.05
    },
-   "cap": 1400.0,
-   "up": 0.0,
-   "yrs": 1.2,
-   "risk": 0.18,
-   "sus": 0,
-   "gov": 0,
-   "rev": 0.0,
-   "sch": 1.0,
-   "art": 0.0,
-   "conf": "C",
+   "name": "Light-emitting diode",
    "note": "Not a filament in a bulb: forward bias across a p-n junction whose semiconductor has a DIRECT band gap pushes electrons and holes together and they recombine by emitting a photon rather than heat, which is why an LED runs cool and a filament does not. Ordinary silicon and germanium, the substrate of com_semiconductor_diode, have an INDIRECT band gap and barely glow at all; H. J. Round noticed the effect in silicon carbide in 1907 and Oleg Losev photographed and characterised it through the 1920s, both too dim to matter. The practical device is Nick Holonyak's 1962 zinc-diffused gallium arsenide phosphide junction, the first LED bright enough to sell, and the diode's wavelength (hence its colour) is set by the band gap of the material chosen, not by a filter. This tree has no priced gallium, so the recipe below is germanium with a zinc-diffused junction, the nearest thing the price list has to the real III-V compound (CONTRACT_V2's rule for a missing material); treat the colour as monochromatic red, the first and for decades the only colour available, not as a general-purpose light source.",
-   "traits": [],
-   "build_yrs": 1.2,
-   "adopt_yrs": 0.0,
+   "ph": 160.0,
+   "pre": [
+    "com_semiconductor_diode"
+   ],
    "req_any": [],
-   "dev_years": null,
-   "dev_people": null,
-   "_src": "24_comms_computing.json"
+   "rev": 0.0,
+   "risk": 0.18,
+   "sch": 1.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 1.2
   },
   {
    "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance]",
@@ -23798,8 +23797,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -25301,6 +25300,7 @@
    "conf": "B",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 3,
    "id": "crucible_steel",
    "kb": "10_metallurgy.md#crucible_steel",
@@ -25343,8 +25343,7 @@
     "infrastructure"
    ],
    "up": 3200.0,
-   "yrs": 5.0,
-   "failure_kind": "process_control"
+   "yrs": 5.0
   },
   {
    "_src": "core",
@@ -31938,6 +31937,7 @@
    "conf": "B",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 2,
    "id": "electrolysis_industrial",
    "kb": "50_electricity.md#electrolysis_industrial",
@@ -31977,8 +31977,7 @@
     "infrastructure"
    ],
    "up": 40000.0,
-   "yrs": 15.0,
-   "failure_kind": "process_control"
+   "yrs": 15.0
   },
   {
    "_src": "core",
@@ -32063,8 +32062,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -36859,6 +36858,7 @@
    "yrs": 5.0
   },
   {
+   "_src": "core",
    "adopt_yrs": 12.0,
    "art": 2.0,
    "build_yrs": 4.0,
@@ -36888,6 +36888,7 @@
     "exp_provisioning_scurvy",
     "exp_openocean_navigation"
    ],
+   "req_any": [],
    "rev": 0.0,
    "risk": 0.45,
    "sch": 0.0,
@@ -36898,9 +36899,7 @@
     "food"
    ],
    "up": 0.0,
-   "yrs": 12.0,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 12.0
   },
   {
    "_src": "30_expeditions.json",
@@ -36988,8 +36987,8 @@
     {
      "group": "windward_capability",
      "options": {
-      "tr_fore_aft_rig": 1.0,
-      "sea_keel_deep": 0.85
+      "sea_keel_deep": 0.85,
+      "tr_fore_aft_rig": 1.0
      }
     }
    ],
@@ -41583,8 +41582,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -41828,6 +41827,7 @@
    "yrs": 1.0
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 0.0,
    "build_yrs": 2.0,
@@ -41852,6 +41852,7 @@
    "pre": [
     "exp_americas_factory"
    ],
+   "req_any": [],
    "rev": 900.0,
    "risk": 0.1,
    "sch": 0.0,
@@ -41861,9 +41862,7 @@
     "infrastructure"
    ],
    "up": 120.0,
-   "yrs": 2.0,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 2.0
   },
   {
    "_src": "11_food_agriculture.json",
@@ -42408,6 +42407,7 @@
    "yrs": 1.0
   },
   {
+   "_internal": "[FIXED after independent audit: hay needs a scythe and a dry barn, both of which any settled agricultural society already has. Crop rotation is unrelated.]",
    "_src": "11_food_agriculture.json",
    "_total_cost": 235.0,
    "adopt_yrs": 0.0,
@@ -42442,8 +42442,7 @@
     "food"
    ],
    "up": 0.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: hay needs a scythe and a dry barn, both of which any settled agricultural society already has. Crop rotation is unrelated.]"
+   "yrs": 1.0
   },
   {
    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -43438,8 +43437,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -43953,6 +43952,7 @@
    "conf": "A",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 0,
    "id": "ge_reduction",
    "kb": "55_semiconductors.md#germanium_sourcing",
@@ -43992,8 +43992,7 @@
     "inexplicable"
    ],
    "up": 0.0,
-   "yrs": 3.0,
-   "failure_kind": "process_control"
+   "yrs": 3.0
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: fractional distillation of volatile germanium tetrachloride requires high-purity refining technique]",
@@ -44007,6 +44006,7 @@
    "conf": "A",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 0,
    "id": "gecl4_purification",
    "kb": "55_semiconductors.md#germanium_sourcing",
@@ -44037,8 +44037,7 @@
     "inexplicable"
    ],
    "up": 0.0,
-   "yrs": 5.0,
-   "failure_kind": "process_control"
+   "yrs": 5.0
   },
   {
    "_src": "core",
@@ -44811,6 +44810,7 @@
    "conf": "B",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 2,
    "id": "high_temp_furnace",
    "kb": "10_metallurgy.md#high_temp_furnace",
@@ -44854,8 +44854,7 @@
     "infrastructure"
    ],
    "up": 6000.0,
-   "yrs": 7.0,
-   "failure_kind": "process_control"
+   "yrs": 7.0
   },
   {
    "_src": "12_household.json",
@@ -45121,44 +45120,44 @@
    "yrs": 0.75
   },
   {
-   "id": "hom_clothes_dryer_electric",
-   "kind": "ENGINEERING",
-   "name": "Clothes dryer, electric tumble",
+   "_src": "12_household.json",
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 1.2,
+   "cap": 260.0,
    "cat": "textiles",
-   "pre": [
-    "hom_washing_machine_electric",
-    "motor_transformer_ac",
-    "cap_power_electric"
-   ],
+   "conf": "B",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": -1,
+   "id": "hom_clothes_dryer_electric",
    "kb": "",
-   "ph": 130.0,
+   "kind": "ENGINEERING",
    "lab": {
     "artisan": 150.0,
     "smith": 90.0
    },
    "mat": {
+    "brass_kg": 5.0,
     "cast_iron_kg": 35.0,
-    "copper_kg": 3.0,
-    "brass_kg": 5.0
+    "copper_kg": 3.0
    },
-   "cap": 260.0,
-   "up": 0.0,
-   "yrs": 1.2,
-   "risk": 0.12,
-   "sus": 0,
-   "gov": -1,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 0.0,
-   "conf": "B",
+   "name": "Clothes dryer, electric tumble",
    "note": "A perforated drum tumbles wet laundry through warm air, driven by an electric motor and heated by a resistance element, replacing the clothesline and the mangle. A distinct invention from the washing machine itself, not a variant of it: Sampson patents a hand-cranked ventilating drum dryer in 1892, but the first practical automatic electric one is Hamilton Manufacturing's 1938 'Thor Automagic', which puts the drum, the motor and a thermostatically controlled heater in one cabinet. It needs nothing the electric washer has not already put in the house except the heating element.",
-   "traits": [],
-   "build_yrs": 1.2,
-   "adopt_yrs": 0.0,
+   "ph": 130.0,
+   "pre": [
+    "hom_washing_machine_electric",
+    "motor_transformer_ac",
+    "cap_power_electric"
+   ],
    "req_any": [],
-   "dev_years": null,
-   "dev_people": null,
-   "_src": "12_household.json"
+   "rev": 0.0,
+   "risk": 0.12,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 1.2
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -45651,43 +45650,43 @@
    "yrs": 0.5
   },
   {
-   "id": "hom_freezer_domestic",
-   "kind": "ENGINEERING",
-   "name": "Domestic deep freezer",
+   "_src": "12_household.json",
+   "adopt_yrs": 0.0,
+   "art": 1.0,
+   "build_yrs": 1.8,
+   "cap": 900.0,
    "cat": "cooling",
-   "pre": [
-    "hom_refrigerator_home_electric"
-   ],
+   "conf": "B",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 1,
+   "id": "hom_freezer_domestic",
    "kb": "",
-   "ph": 160.0,
+   "kind": "ENGINEERING",
    "lab": {
-    "master": 180.0,
     "artisan": 140.0,
+    "master": 180.0,
     "smith": 100.0
    },
    "mat": {
+    "brass_kg": 14.0,
     "cast_iron_kg": 90.0,
-    "copper_kg": 10.0,
-    "brass_kg": 14.0
+    "copper_kg": 10.0
    },
-   "cap": 900.0,
-   "up": 0.0,
-   "yrs": 1.8,
-   "risk": 0.14,
-   "sus": 0,
-   "gov": 1,
-   "rev": 0.0,
-   "sch": 1.0,
-   "art": 1.0,
-   "conf": "B",
+   "name": "Domestic deep freezer",
    "note": "Not a colder refrigerator: holding about -18C rather than +4C needs a larger-duty compressor, several times the insulation thickness, and a refrigerant charge and evaporator sized for the lower temperature, none of which the icebox-descended refrigerator cabinet provides. What actually pulls it into American homes through the 1940s is not the compressor, already solved by hom_refrigerator_home_electric, but the frozen-food industry giving people something worth freezing: Clarence Birdseye's flash-freezing process, commercialised from 1930, makes frozen food palatable enough to want months of storage rather than an icebox's days.",
-   "traits": [],
-   "build_yrs": 1.8,
-   "adopt_yrs": 0.0,
+   "ph": 160.0,
+   "pre": [
+    "hom_refrigerator_home_electric"
+   ],
    "req_any": [],
-   "dev_years": null,
-   "dev_people": null,
-   "_src": "12_household.json"
+   "rev": 0.0,
+   "risk": 0.14,
+   "sch": 1.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 1.8
   },
   {
    "_src": "12_household.json",
@@ -47135,6 +47134,7 @@
    "yrs": 1.0
   },
   {
+   "_internal": "[FIXED after independent audit: it consumed 40 kg of cast iron at tier 1. There is no cast iron yet outside societies that already have a blast furnace or an equivalent cast-iron tradition (Han China already has one); it cannot be a cheap early win anywhere else.]",
    "_src": "12_household.json",
    "_total_cost": 222.51999999999998,
    "adopt_yrs": 0.0,
@@ -47175,8 +47175,7 @@
    "sus": 0,
    "traits": [],
    "up": 0.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: it consumed 40 kg of cast iron at tier 1. There is no cast iron yet outside societies that already have a blast furnace or an equivalent cast-iron tradition (Han China already has one); it cannot be a cheap early win anywhere else.]"
+   "yrs": 1.0
   },
   {
    "_src": "12_household.json",
@@ -47628,6 +47627,7 @@
    "yrs": 1.0
   },
   {
+   "_internal": "[FIXED after independent audit: paper and distilled spirits were listed and neither is load-bearing. An oiled linen envelope over a wood fire needs sailcloth and oil, both tier 0 and already available in any of these societies.]",
    "_src": "core",
    "_total_cost": 4361.5,
    "adopt_yrs": 0.0,
@@ -47668,8 +47668,7 @@
     "military"
    ],
    "up": 0.0,
-   "yrs": 2.0,
-   "_internal": "[FIXED after independent audit: paper and distilled spirits were listed and neither is load-bearing. An oiled linen envelope over a wood fire needs sailcloth and oil, both tier 0 and already available in any of these societies.]"
+   "yrs": 2.0
   },
   {
    "_src": "core",
@@ -47705,8 +47704,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -47756,8 +47755,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -50119,8 +50118,8 @@
      "group": "zinc_metal_supply",
      "options": {
       "mat_zinc": 1.0,
-      "zinc_metal": 1.0,
-      "zinc_industry_scale": 1.0
+      "zinc_industry_scale": 1.0,
+      "zinc_metal": 1.0
      }
     }
    ],
@@ -55677,6 +55676,7 @@
    "conf": "B",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 1,
    "id": "lead_chamber",
    "kb": "20_chemistry.md#lead_chamber",
@@ -55710,8 +55710,7 @@
     "spectacle"
    ],
    "up": 5500.0,
-   "yrs": 5.0,
-   "failure_kind": "process_control"
+   "yrs": 5.0
   },
   {
    "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 300 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 400 hectares of forest under permanent management, which you must own before you light it.]",
@@ -59426,6 +59425,7 @@
    "yrs": 2.0
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 0.0,
    "build_yrs": 0.5,
@@ -59446,6 +59446,7 @@
    "note": "A pressure-flaked obsidian edge is sharper than any steel scalpel, a few molecules across, and it is the reason Mesoamerican surgery and butchery needed no metal. It is also brittle and blunts at once, so it is a consumable, not a tool. Nothing downstream requires it: it is a finished tool, not a rung.",
    "ph": 40.0,
    "pre": [],
+   "req_any": [],
    "rev": 150.0,
    "risk": 0.05,
    "sch": 0.0,
@@ -59454,9 +59455,7 @@
     "commerce"
    ],
    "up": 20.0,
-   "yrs": 0.5,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 0.5
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -65384,6 +65383,7 @@
    "yrs": 1.0
   },
   {
+   "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]",
    "_src": "21_medicine.json",
    "_total_cost": 648.03,
    "adopt_yrs": 0.0,
@@ -65420,10 +65420,10 @@
     "medical"
    ],
    "up": 100.0,
-   "yrs": 0.5,
-   "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]"
+   "yrs": 0.5
   },
   {
+   "_internal": "[FIXED after independent audit: the heat rung was redundant with the high pressure steam prerequisite.]",
    "_src": "21_medicine.json",
    "_total_cost": 2313.5,
    "adopt_yrs": 0.0,
@@ -65464,8 +65464,7 @@
     "spectacle"
    ],
    "up": 0.0,
-   "yrs": 0.5,
-   "_internal": "[FIXED after independent audit: the heat rung was redundant with the high pressure steam prerequisite.]"
+   "yrs": 0.5
   },
   {
    "_src": "21_medicine.json",
@@ -66144,8 +66143,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -67414,6 +67413,7 @@
    "yrs": 1.4
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 1.0,
    "build_yrs": 1.0,
@@ -67438,6 +67438,7 @@
    "note": "Bog ore is iron precipitated by bacteria in wetlands, gathered with a spade rather than mined, and it renews over a human lifetime. It is poor ore and it is everywhere in Scandinavia, which is why a society with no mining industry still had abundant iron.",
    "ph": 100.0,
    "pre": [],
+   "req_any": [],
    "rev": 420.0,
    "risk": 0.15,
    "sch": 0.0,
@@ -67447,9 +67448,7 @@
     "military"
    ],
    "up": 90.0,
-   "yrs": 1.0,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 1.0
   },
   {
    "_src": "19_metallurgy_mining.json",
@@ -67584,6 +67583,7 @@
    "yrs": 2.5
   },
   {
+   "_internal": "[FIXED after independent audit: it was tier 1 while depending on the blast furnace, which is a major independent metallurgical leap.]",
    "_src": "19_metallurgy_mining.json",
    "_total_cost": 898.7,
    "adopt_yrs": 0.0,
@@ -67627,8 +67627,7 @@
     "infrastructure"
    ],
    "up": 120.0,
-   "yrs": 1.8,
-   "_internal": "[FIXED after independent audit: it was tier 1 while depending on the blast furnace, which is a major independent metallurgical leap.]"
+   "yrs": 1.8
   },
   {
    "_src": "19_metallurgy_mining.json",
@@ -67982,8 +67981,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -68179,6 +68178,7 @@
    "yrs": 3.0
   },
   {
+   "_internal": "[FIXED after independent audit: molten zinc is about 450 C, nowhere near a blast furnace. Zinc metal was also listed twice.]",
    "_src": "19_metallurgy_mining.json",
    "_total_cost": 1143.2,
    "adopt_yrs": 0.0,
@@ -68214,8 +68214,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -68227,8 +68227,7 @@
     "infrastructure"
    ],
    "up": 0.0,
-   "yrs": 1.5,
-   "_internal": "[FIXED after independent audit: molten zinc is about 450 C, nowhere near a blast furnace. Zinc metal was also listed twice.]"
+   "yrs": 1.5
   },
   {
    "_src": "19_metallurgy_mining.json",
@@ -68579,8 +68578,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -69084,6 +69083,7 @@
    "yrs": 3.0
   },
   {
+   "_internal": "[FIXED after independent audit: the word stoichiometry is anachronistic for a tier 1 node; Richter is 1792. Ancient roasters worked by craft knowledge.]",
    "_src": "19_metallurgy_mining.json",
    "_total_cost": 182.0,
    "adopt_yrs": 0.0,
@@ -69121,8 +69121,7 @@
    "sus": 0,
    "traits": [],
    "up": 50.0,
-   "yrs": 0.6,
-   "_internal": "[FIXED after independent audit: the word stoichiometry is anachronistic for a tier 1 node; Richter is 1792. Ancient roasters worked by craft knowledge.]"
+   "yrs": 0.6
   },
   {
    "_src": "19_metallurgy_mining.json",
@@ -69410,8 +69409,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -69817,8 +69816,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -84735,8 +84734,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -86005,6 +86004,7 @@
    "yrs": 0.25
   },
   {
+   "_internal": "[FIXED after independent audit: a Nicol prism is cleaved calcite. Glass cannot substitute: birefringence is the entire mechanism.]",
    "_src": "23_optics_instruments.json",
    "_total_cost": 415.7,
    "adopt_yrs": 0.0,
@@ -86043,8 +86043,7 @@
     "spectacle"
    ],
    "up": 15.0,
-   "yrs": 0.5,
-   "_internal": "[FIXED after independent audit: a Nicol prism is cleaved calcite. Glass cannot substitute: birefringence is the entire mechanism.]"
+   "yrs": 0.5
   },
   {
    "_src": "23_optics_instruments.json",
@@ -87039,6 +87038,7 @@
    "yrs": 1.5
   },
   {
+   "_internal": "[FIXED after independent audit: a mechanical stroboscope is a slotted disc and needs no photography.]",
    "_src": "23_optics_instruments.json",
    "_total_cost": 854.975,
    "adopt_yrs": 0.0,
@@ -87076,8 +87076,7 @@
    "sus": 0,
    "traits": [],
    "up": 35.0,
-   "yrs": 0.6,
-   "_internal": "[FIXED after independent audit: a mechanical stroboscope is a slotted disc and needs no photography.]"
+   "yrs": 0.6
   },
   {
    "_src": "23_optics_instruments.json",
@@ -88473,6 +88472,7 @@
    "yrs": 0.3
   },
   {
+   "_internal": "[FIXED after independent audit: honing works to a micron; the 0.01 mm rung understated it.]",
    "_src": "20_precision.json",
    "_total_cost": 751.0,
    "adopt_yrs": 0.0,
@@ -88512,8 +88512,7 @@
     "labour_saving"
    ],
    "up": 70.0,
-   "yrs": 1.0,
-   "_internal": "[FIXED after independent audit: honing works to a micron; the 0.01 mm rung understated it.]"
+   "yrs": 1.0
   },
   {
    "_src": "20_precision.json",
@@ -88658,6 +88657,7 @@
    "yrs": 0.5
   },
   {
+   "_internal": "[FIXED after independent audit: it listed no lathe at all. Corrected to the treadle lathe with a flywheel, which is the right tier 1 parent; an automated first pass had wrongly attached the tier 2 turret lathe.]",
    "_src": "20_precision.json",
    "_total_cost": 115.4,
    "adopt_yrs": 0.0,
@@ -88697,10 +88697,10 @@
     "labour_saving"
    ],
    "up": 0.0,
-   "yrs": 0.2,
-   "_internal": "[FIXED after independent audit: it listed no lathe at all. Corrected to the treadle lathe with a flywheel, which is the right tier 1 parent; an automated first pass had wrongly attached the tier 2 turret lathe.]"
+   "yrs": 0.2
   },
   {
+   "_internal": "[FIXED after independent audit: it was tier 2 while depending on a tier 3 measuring instrument.]",
    "_src": "20_precision.json",
    "_total_cost": 410.5,
    "adopt_yrs": 0.0,
@@ -88741,8 +88741,7 @@
     "labour_saving"
    ],
    "up": 0.0,
-   "yrs": 0.8,
-   "_internal": "[FIXED after independent audit: it was tier 2 while depending on a tier 3 measuring instrument.]"
+   "yrs": 0.8
   },
   {
    "_src": "20_precision.json",
@@ -92519,8 +92518,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -93312,8 +93311,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -98266,6 +98265,7 @@
    "yrs": 0.5
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 2.0,
    "build_yrs": 1.5,
@@ -98289,6 +98289,7 @@
    "note": "Overlapping strakes riveted along their laps, so the SKIN carries the load and the frames only hold its shape. The hull flexes in a seaway instead of resisting it, which is why a Norse ship survives water that would open a rigid Mediterranean hull.",
    "ph": 150.0,
    "pre": [],
+   "req_any": [],
    "rev": 700.0,
    "risk": 0.12,
    "sch": 0.0,
@@ -98299,9 +98300,7 @@
     "commerce"
    ],
    "up": 180.0,
-   "yrs": 1.5,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 1.5
   },
   {
    "_src": "15_ships.json",
@@ -98884,6 +98883,7 @@
    "yrs": 0.2
   },
   {
+   "_src": "core",
    "adopt_yrs": 0,
    "art": 1.0,
    "build_yrs": 1.0,
@@ -98906,6 +98906,7 @@
    "note": "A deep keel resists leeway, which is what lets a square-rigged ship make ground upwind instead of only running before the wind. It is the difference between a boat that goes where the weather sends it and one that goes where you choose.",
    "ph": 100.0,
    "pre": [],
+   "req_any": [],
    "rev": 300.0,
    "risk": 0.1,
    "sch": 0.0,
@@ -98915,9 +98916,7 @@
     "commerce"
    ],
    "up": 60.0,
-   "yrs": 1.0,
-   "req_any": [],
-   "_src": "core"
+   "yrs": 1.0
   },
   {
    "_src": "15_ships.json",
@@ -99943,6 +99942,7 @@
    "conf": "A",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 0,
    "id": "single_crystal",
    "kb": "55_semiconductors.md#single_crystal_growth",
@@ -99986,8 +99986,7 @@
     "inexplicable"
    ],
    "up": 0.0,
-   "yrs": 5.0,
-   "failure_kind": "process_control"
+   "yrs": 5.0
   },
   {
    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -100083,6 +100082,7 @@
    "yrs": 7.0
   },
   {
+   "_internal": "[FIXED after independent audit: a ruled grating needs the finest screw you own; the node declared no tolerance rung.]",
    "_src": "core",
    "_total_cost": 3075.0,
    "adopt_yrs": 0.0,
@@ -100124,8 +100124,7 @@
     "spectacle"
    ],
    "up": 600.0,
-   "yrs": 2.0,
-   "_internal": "[FIXED after independent audit: a ruled grating needs the finest screw you own; the node declared no tolerance rung.]"
+   "yrs": 2.0
   },
   {
    "_src": "core",
@@ -100245,6 +100244,7 @@
    "conf": "B",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 3,
    "id": "steam_high_pressure",
    "kb": "40_power_precision.md#steam_high_pressure",
@@ -100290,8 +100290,7 @@
     "infrastructure"
    ],
    "up": 12000.0,
-   "yrs": 12.0,
-   "failure_kind": "process_control"
+   "yrs": 12.0
   },
   {
    "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: piston-cylinder precision for efficient sealing and smooth operation]",
@@ -100696,8 +100695,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     }
    ],
@@ -101675,8 +101674,8 @@
     {
      "group": "sulfuric_acid_supply",
      "options": {
-      "lead_chamber": 1.0,
-      "chm_contact_sulfuric": 1.0
+      "chm_contact_sulfuric": 1.0,
+      "lead_chamber": 1.0
      }
     },
     {
@@ -105932,6 +105931,7 @@
    "yrs": 2.5
   },
   {
+   "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]",
    "_src": "45a_transport_land_deep.json",
    "adopt_yrs": 0,
    "art": 1.0,
@@ -105979,8 +105979,7 @@
     "labour_saving"
    ],
    "up": 30.0,
-   "yrs": 0.2,
-   "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]"
+   "yrs": 0.2
   },
   {
    "_src": "45a_transport_land_deep.json",
@@ -112165,8 +112164,8 @@
     {
      "group": "bleach_supply",
      "options": {
-      "mat_chlorine": 1.0,
-      "chm_bleaching_powder": 1.0
+      "chm_bleaching_powder": 1.0,
+      "mat_chlorine": 1.0
      }
     }
    ],
@@ -116719,6 +116718,7 @@
    "conf": "A",
    "dev_people": null,
    "dev_years": null,
+   "failure_kind": "process_control",
    "gov": 0,
    "id": "zone_refining",
    "kb": "55_semiconductors.md#zone_refining",
@@ -116763,8 +116763,7 @@
     "inexplicable"
    ],
    "up": 0.0,
-   "yrs": 6.0,
-   "failure_kind": "process_control"
+   "yrs": 6.0
   },
   {
    "_src": "01_materials.json",
@@ -116819,9 +116818,9 @@
     "furnaceman": 150.0
    },
    "mat": {
+    "charcoal_kg": 40.0,
     "copper_kg": 8.0,
-    "tin_kg": 1.0,
-    "charcoal_kg": 40.0
+    "tin_kg": 1.0
    },
    "name": "Phosphor bronze: tin bronze deoxidised with phosphorus",
    "note": "Ordinary tin bronze cast from an open melt is full of tin-oxide inclusions and has no useful spring temper. Phosphorus added as a deoxidiser (a dash of phosphor-copper master alloy, or bone ash charcoal in the crucible) scavenges the oxygen and leaves a bronze that can be cold-worked and keeps a spring set - exactly what a point-contact whisker needs to hold its few hundredths of a millimetre of gap under its own tension. Patented by the Pearson brothers in 1871. Before this node, gp_whisker_forming and point_contact_transistor both charged phosphor_bronze_g as a material cost while nothing gated it at all.",
@@ -117007,260 +117006,281 @@
    "yrs": 0.0
   },
   {
-   "id": "ctl_governor_stability_theory",
-   "name": "Governor stability theory (Maxwell 1868)",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 60.0,
    "cat": "control_theory",
-   "pre": [
-    "en_centrifugal_governor",
-    "calculus"
-   ],
-   "traits": [
-    "information"
-   ],
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_governor_stability_theory",
    "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "ph": 150.0,
    "lab": {
     "scholar": 200.0
    },
    "mat": {},
-   "cap": 60.0,
-   "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.3,
-   "dev_years": 3,
-   "dev_people": 1,
-   "risk": 0.08,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Governor stability theory (Maxwell 1868)",
    "note": "James Clerk Maxwell, 'On Governors', Proceedings of the Royal Society, 1868. Writes the governor's own differential equation and shows the roots of its characteristic equation, not the mechanism's craftsmanship, decide whether speed settles to the setpoint or grows into a hunt. The first proof that a feedback loop can be mathematically unstable no matter how well it is built.",
-   "yrs": 0.3,
+   "ph": 150.0,
+   "pre": [
+    "en_centrifugal_governor",
+    "calculus"
+   ],
    "req_any": [],
-   "gov": 0,
+   "rev": 0.0,
+   "risk": 0.08,
+   "sch": 0.0,
    "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
   },
   {
-   "id": "ctl_routh_criterion",
-   "name": "Routh's stability criterion",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
    "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "ctl_routh_criterion",
+   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
+   "lab": {
+    "scholar": 230.0
+   },
+   "mat": {},
+   "name": "Routh's stability criterion",
+   "note": "Edward Routh, Adams Prize essay, 1877, generalises Maxwell's two- and three-term cases to a characteristic polynomial of any order: arrange its coefficients in a triangular array and read stability off the signs of one column, with no root ever solved for.",
+   "ph": 170.0,
    "pre": [
     "ctl_governor_stability_theory",
     "sc2_algebra_polynomial"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.09,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information"
    ],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
+   "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_hurwitz_criterion",
    "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "ph": 170.0,
    "lab": {
     "scholar": 230.0
    },
    "mat": {},
-   "cap": 40.0,
-   "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.3,
-   "dev_years": 2,
-   "dev_people": 1,
-   "risk": 0.09,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
-   "note": "Edward Routh, Adams Prize essay, 1877, generalises Maxwell's two- and three-term cases to a characteristic polynomial of any order: arrange its coefficients in a triangular array and read stability off the signs of one column, with no root ever solved for.",
-   "yrs": 0.3,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
-  },
-  {
-   "id": "ctl_hurwitz_criterion",
    "name": "Hurwitz's stability criterion",
-   "cat": "control_theory",
+   "note": "Adolf Hurwitz, 1895, answering a direct request from Aurel Stodola, whose steam turbine governors would not settle: arranges the same coefficients into a square array and tests the sign of a sequence of its leading determinants. Later proved identical to Routh's test in different clothing, reached without either man knowing of the other's work.",
+   "ph": 170.0,
    "pre": [
     "ctl_governor_stability_theory",
     "sc2_algebra_determinant"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.09,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information"
    ],
-   "kb": "89_remaining_arts.md#ctl_governor_stability_theory",
-   "ph": 170.0,
-   "lab": {
-    "scholar": 230.0
-   },
-   "mat": {},
-   "cap": 40.0,
    "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.3,
-   "dev_years": 3,
-   "dev_people": 1,
-   "risk": 0.09,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
-   "note": "Adolf Hurwitz, 1895, answering a direct request from Aurel Stodola, whose steam turbine governors would not settle: arranges the same coefficients into a square array and tests the sign of a sequence of its leading determinants. Later proved identical to Routh's test in different clothing, reached without either man knowing of the other's work.",
-   "yrs": 0.3,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "yrs": 0.3
   },
   {
-   "id": "ctl_nyquist_stability_criterion",
-   "name": "Nyquist stability criterion",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.5,
+   "art": 2.0,
+   "build_yrs": 0.3,
+   "cap": 80.0,
    "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "ctl_nyquist_stability_criterion",
+   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
+   "lab": {
+    "engineer": 240.0,
+    "scholar": 80.0
+   },
+   "mat": {},
+   "name": "Nyquist stability criterion",
+   "note": "Harry Nyquist, Bell Labs, 1932, answers the question Black's 1927 feedback amplifier raised in practice: plot the open loop's gain and phase as one curve in the complex plane across every frequency, and count how many times that curve encircles the point minus one. The count of encirclements, not the size of the gain, says whether closing the loop rings, settles, or runs away.",
+   "ph": 220.0,
    "pre": [
     "ctl_routh_criterion",
     "ctl_hurwitz_criterion",
     "el2_negative_feedback_stability_gain",
     "sc2_algebra_complex_numbers"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.11,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information"
    ],
-   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "ph": 220.0,
-   "lab": {
-    "engineer": 240.0,
-    "scholar": 80.0
-   },
-   "mat": {},
-   "cap": 80.0,
    "up": 0.0,
-   "build_yrs": 0.3,
-   "adopt_yrs": 0.5,
-   "dev_years": 2,
-   "dev_people": 1,
-   "risk": 0.11,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 2.0,
-   "conf": "C",
-   "note": "Harry Nyquist, Bell Labs, 1932, answers the question Black's 1927 feedback amplifier raised in practice: plot the open loop's gain and phase as one curve in the complex plane across every frequency, and count how many times that curve encircles the point minus one. The count of encirclements, not the size of the gain, says whether closing the loop rings, settles, or runs away.",
-   "yrs": 0.5,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "yrs": 0.5
   },
   {
-   "id": "ctl_bode_plot_margins",
-   "name": "Bode plot, gain margin and phase margin",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
    "cat": "control_theory",
-   "pre": [
-    "ctl_nyquist_stability_criterion",
-    "logarithms"
-   ],
-   "traits": [
-    "information"
-   ],
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 6,
+   "gov": 0,
+   "id": "ctl_bode_plot_margins",
    "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "ph": 160.0,
    "lab": {
     "engineer": 200.0
    },
    "mat": {},
-   "cap": 40.0,
-   "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.4,
-   "dev_years": 6,
-   "dev_people": 1,
-   "risk": 0.08,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Bode plot, gain margin and phase margin",
    "note": "Hendrik Bode, Bell Labs, published through the early 1940s. Plots log gain and phase separately against log frequency; straight-line asymptotes make Nyquist's encirclement test readable by eye, and the safety margin collapses to two numbers, gain margin and phase margin, that a working engineer can design a loop to hit rather than merely check afterward.",
-   "yrs": 0.4,
+   "ph": 160.0,
+   "pre": [
+    "ctl_nyquist_stability_criterion",
+    "logarithms"
+   ],
    "req_any": [],
-   "gov": 0,
+   "rev": 0.0,
+   "risk": 0.08,
+   "sch": 0.0,
    "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.4
   },
   {
-   "id": "ctl_root_locus",
-   "name": "Root locus method",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 40.0,
    "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "ctl_root_locus",
+   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
+   "lab": {
+    "engineer": 210.0
+   },
+   "mat": {},
+   "name": "Root locus method",
+   "note": "Walter Evans, 1948. Plots exactly where the closed loop's poles sit in the complex plane as one gain is turned up from zero to infinity, by a short set of geometric rules on the open loop's own poles and zeros. A designer reads off, by eye, the highest gain that still leaves the poles short of the instability boundary, instead of re-solving Routh's array for every candidate gain in turn.",
+   "ph": 170.0,
    "pre": [
     "ctl_routh_criterion",
     "ctl_hurwitz_criterion",
     "sc2_algebra_complex_numbers"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information"
    ],
-   "kb": "89_remaining_arts.md#ctl_nyquist_stability_criterion",
-   "ph": 170.0,
-   "lab": {
-    "engineer": 210.0
-   },
-   "mat": {},
-   "cap": 40.0,
    "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.4,
-   "dev_years": 1,
-   "dev_people": 1,
-   "risk": 0.1,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
-   "note": "Walter Evans, 1948. Plots exactly where the closed loop's poles sit in the complex plane as one gain is turned up from zero to infinity, by a short set of geometric rules on the open loop's own poles and zeros. A designer reads off, by eye, the highest gain that still leaves the poles short of the instability boundary, instead of re-solving Routh's array for every candidate gain in turn.",
-   "yrs": 0.4,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "yrs": 0.4
   },
   {
-   "id": "ctl_minorsky_pid_law",
-   "name": "Minorsky's three-term control law",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.4,
+   "art": 1.0,
+   "build_yrs": 0.3,
+   "cap": 60.0,
    "cat": "control_theory",
-   "pre": [
-    "ctl_governor_stability_theory",
-    "newtonian_mechanics"
-   ],
-   "traits": [
-    "information",
-    "military"
-   ],
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "ctl_minorsky_pid_law",
    "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "ph": 200.0,
    "lab": {
     "engineer": 260.0,
     "scholar": 60.0
    },
    "mat": {},
-   "cap": 60.0,
-   "up": 0.0,
-   "build_yrs": 0.3,
-   "adopt_yrs": 0.4,
-   "dev_years": 3,
-   "dev_people": 1,
-   "risk": 0.12,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Minorsky's three-term control law",
    "note": "Nicolas Minorsky, 1922, watches a human helmsman steer the battleship USS New Mexico and formalises what the man is actually doing: correcting in proportion to the present heading error, to how fast that error is changing, and to how long and how far it has persisted. Weighting and adding those three terms is the first explicit proportional-integral-derivative control law, tested and logged at sea.",
-   "yrs": 0.4,
+   "ph": 200.0,
+   "pre": [
+    "ctl_governor_stability_theory",
+    "newtonian_mechanics"
+   ],
    "req_any": [],
-   "gov": 0,
+   "rev": 0.0,
+   "risk": 0.12,
+   "sch": 0.0,
    "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "traits": [
+    "information",
+    "military"
+   ],
+   "up": 0.0,
+   "yrs": 0.4
   },
   {
-   "id": "ctl_pneumatic_process_controller",
-   "name": "Pneumatic process controller",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 1.5,
+   "art": 2.0,
+   "build_yrs": 0.8,
+   "cap": 600.0,
    "cat": "control_theory",
+   "conf": "C",
+   "dev_people": 3,
+   "dev_years": 9,
+   "gov": 0,
+   "id": "ctl_pneumatic_process_controller",
+   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
+   "lab": {
+    "engineer": 260.0,
+    "machinist": 200.0
+   },
+   "mat": {
+    "brass_kg": 8.0,
+    "bronze_kg": 4.0,
+    "leather_kg": 4.0
+   },
+   "name": "Pneumatic process controller",
+   "note": "Instrument makers, Foxboro's Stabilog of 1931 foremost, turn Minorsky's three terms into a compressed-air relay: a bellows reads the process deviation and strokes a nozzle, and the output air pressure, proportional to the error plus its own integral over time, directly positions a diaphragm valve with no electricity on the plant floor at all. This is the device that actually holds a furnace, distillation column or autoclave at its setpoint instead of requiring an operator to watch a gauge and turn a handle by hand.",
+   "ph": 260.0,
    "pre": [
     "ctl_minorsky_pid_law",
     "cap_power_steam"
@@ -117269,226 +117289,205 @@
     {
      "group": "air_supply",
      "options": {
-      "cap_power_steam": 1.0,
-      "cap_power_electric": 0.9
+      "cap_power_electric": 0.9,
+      "cap_power_steam": 1.0
      }
     },
     {
      "group": "sensing_element",
      "options": {
-      "opt_bourdon_gauge": 1.0,
       "in2_thermocouple": 0.95,
+      "opt_bourdon_gauge": 1.0,
       "thermometer": 0.7
      }
     }
    ],
+   "rev": 1500.0,
+   "risk": 0.16,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "infrastructure",
     "labour_saving"
    ],
-   "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "ph": 260.0,
-   "lab": {
-    "engineer": 260.0,
-    "machinist": 200.0
-   },
-   "mat": {
-    "brass_kg": 8.0,
-    "leather_kg": 4.0,
-    "bronze_kg": 4.0
-   },
-   "cap": 600.0,
    "up": 80.0,
-   "build_yrs": 0.8,
-   "adopt_yrs": 1.5,
-   "dev_years": 9,
-   "dev_people": 3,
-   "risk": 0.16,
-   "rev": 1500.0,
-   "sch": 0.0,
-   "art": 2.0,
-   "conf": "C",
-   "note": "Instrument makers, Foxboro's Stabilog of 1931 foremost, turn Minorsky's three terms into a compressed-air relay: a bellows reads the process deviation and strokes a nozzle, and the output air pressure, proportional to the error plus its own integral over time, directly positions a diaphragm valve with no electricity on the plant floor at all. This is the device that actually holds a furnace, distillation column or autoclave at its setpoint instead of requiring an operator to watch a gauge and turn a handle by hand.",
-   "yrs": 1.5,
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "yrs": 1.5
   },
   {
-   "id": "ctl_ziegler_nichols_tuning",
-   "name": "Ziegler-Nichols tuning rules",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.1,
+   "cap": 20.0,
    "cat": "control_theory",
-   "pre": [
-    "ctl_pneumatic_process_controller"
-   ],
-   "traits": [
-    "information"
-   ],
+   "conf": "C",
+   "dev_people": 2,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "ctl_ziegler_nichols_tuning",
    "kb": "89_remaining_arts.md#ctl_minorsky_pid_law",
-   "ph": 140.0,
    "lab": {
     "engineer": 180.0
    },
    "mat": {},
-   "cap": 20.0,
-   "up": 0.0,
-   "build_yrs": 0.1,
-   "adopt_yrs": 0.3,
-   "dev_years": 1,
-   "dev_people": 2,
-   "risk": 0.1,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Ziegler-Nichols tuning rules",
    "note": "John Ziegler and Nathaniel Nichols, Taylor Instrument Companies, 1942. Two short recipes, one from a single open-loop step test, one from pushing the closed loop to the edge of a sustained oscillation and timing its period, hand a plant engineer usable proportional, integral and derivative settings without ever writing down the process's own differential equation.",
-   "yrs": 0.3,
+   "ph": 140.0,
+   "pre": [
+    "ctl_pneumatic_process_controller"
+   ],
    "req_any": [],
-   "gov": 0,
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
    "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.3
   },
   {
-   "id": "mfg_queueing_theory",
-   "name": "Queueing theory (Erlang)",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.6,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 30.0,
    "cat": "organisation",
-   "pre": [
-    "com_telephone_manual_exchange",
-    "sc2_probability_axioms"
-   ],
-   "traits": [
-    "information",
-    "commerce"
-   ],
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 3,
+   "gov": 0,
+   "id": "mfg_queueing_theory",
    "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "ph": 150.0,
    "lab": {
     "scholar": 200.0
    },
    "mat": {},
-   "cap": 30.0,
-   "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.6,
-   "dev_years": 3,
-   "dev_people": 1,
-   "risk": 0.1,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Queueing theory (Erlang)",
    "note": "Agner Krarup Erlang, Copenhagen Telephone Company, 1909. Models calls as arriving at random and holding a trunk for a random time, and derives the formula for the chance an arriving call finds every trunk already busy. An exchange can now be SIZED to a stated grade of service, one blocked call in a hundred, say, instead of guessed and found either wanting or wastefully oversized.",
-   "yrs": 0.6,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
-  },
-  {
-   "id": "mfg_linear_programming_simplex",
-   "name": "Linear programming and the simplex method",
-   "cat": "organisation",
+   "ph": 150.0,
    "pre": [
-    "mil_operational_research",
-    "sc2_algebra_matrix"
+    "com_telephone_manual_exchange",
+    "sc2_probability_axioms"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.1,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information",
     "commerce"
    ],
-   "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "ph": 250.0,
-   "lab": {
-    "scholar": 280.0,
-    "engineer": 100.0
-   },
-   "mat": {},
-   "cap": 60.0,
    "up": 0.0,
-   "build_yrs": 0.3,
-   "adopt_yrs": 1,
-   "dev_years": 2,
-   "dev_people": 2,
-   "risk": 0.14,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
-   "note": "George Dantzig, working on United States Air Force planning problems, 1947 (Leonid Kantorovich reached an equivalent formulation in 1939, unpublished in the West for years). Proves the best of every feasible allocation under linear constraints always sits at a CORNER of the constraint region, never in its interior, so an algorithm need only walk from corner to adjacent corner, improving each step, instead of searching a continuous space. The simplex method is that walk: the first time scarce-resource allocation is solved rather than argued over.",
-   "yrs": 1.0,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "yrs": 0.6
   },
   {
-   "id": "mfg_gantt_chart",
-   "name": "Gantt chart",
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 1,
+   "art": 1.0,
+   "build_yrs": 0.3,
+   "cap": 60.0,
    "cat": "organisation",
-   "pre": [
-    "mfg_production_schedule"
-   ],
-   "traits": [
-    "information"
-   ],
+   "conf": "C",
+   "dev_people": 2,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "mfg_linear_programming_simplex",
    "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "ph": 100.0,
+   "lab": {
+    "engineer": 100.0,
+    "scholar": 280.0
+   },
+   "mat": {},
+   "name": "Linear programming and the simplex method",
+   "note": "George Dantzig, working on United States Air Force planning problems, 1947 (Leonid Kantorovich reached an equivalent formulation in 1939, unpublished in the West for years). Proves the best of every feasible allocation under linear constraints always sits at a CORNER of the constraint region, never in its interior, so an algorithm need only walk from corner to adjacent corner, improving each step, instead of searching a continuous space. The simplex method is that walk: the first time scarce-resource allocation is solved rather than argued over.",
+   "ph": 250.0,
+   "pre": [
+    "mil_operational_research",
+    "sc2_algebra_matrix"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.14,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "information",
+    "commerce"
+   ],
+   "up": 0.0,
+   "yrs": 1.0
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.3,
+   "art": 1.0,
+   "build_yrs": 0.1,
+   "cap": 10.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 1,
+   "dev_years": 2,
+   "gov": 0,
+   "id": "mfg_gantt_chart",
+   "kb": "89_remaining_arts.md#mfg_queueing_theory",
    "lab": {
     "engineer": 140.0
    },
    "mat": {},
-   "cap": 10.0,
-   "up": 0.0,
-   "build_yrs": 0.1,
-   "adopt_yrs": 0.3,
-   "dev_years": 2,
-   "dev_people": 1,
-   "risk": 0.07,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Gantt chart",
    "note": "Henry Gantt, about 1910 to 1915, building on Karol Adamiecki's earlier and less-known 1896 harmonogram. Draws every task as a horizontal bar against one shared calendar axis, start to finish, the whole schedule on a single page, as used at scale on Hoover Dam's construction. A manager sees which jobs are running late at a glance, instead of finding out from the foreman after the fact.",
-   "yrs": 0.3,
-   "req_any": [],
-   "gov": 0,
-   "sus": 0,
-   "_src": "62_control_ops_deep.json"
-  },
-  {
-   "id": "mfg_critical_path_method",
-   "name": "Critical path method",
-   "cat": "organisation",
+   "ph": 100.0,
    "pre": [
-    "mfg_gantt_chart",
-    "mfg_linear_programming_simplex"
+    "mfg_production_schedule"
    ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.07,
+   "sch": 0.0,
+   "sus": 0,
    "traits": [
     "information"
    ],
+   "up": 0.0,
+   "yrs": 0.3
+  },
+  {
+   "_src": "62_control_ops_deep.json",
+   "adopt_yrs": 0.6,
+   "art": 1.0,
+   "build_yrs": 0.2,
+   "cap": 30.0,
+   "cat": "organisation",
+   "conf": "C",
+   "dev_people": 3,
+   "dev_years": 1,
+   "gov": 0,
+   "id": "mfg_critical_path_method",
    "kb": "89_remaining_arts.md#mfg_queueing_theory",
-   "ph": 220.0,
    "lab": {
     "engineer": 260.0
    },
    "mat": {},
-   "cap": 30.0,
-   "up": 0.0,
-   "build_yrs": 0.2,
-   "adopt_yrs": 0.6,
-   "dev_years": 1,
-   "dev_people": 3,
-   "risk": 0.13,
-   "rev": 0.0,
-   "sch": 0.0,
-   "art": 1.0,
-   "conf": "C",
+   "name": "Critical path method",
    "note": "Morgan Walker and James Kelley for DuPont and Remington Rand, 1957, and in parallel the United States Navy's PERT for the Polaris programme, 1958. Draws the project as a network of tasks and dependencies rather than one bar chart, and shows only ONE chain through that network, the critical path, has zero slack. Every other task can slip for free within its own float; a single day lost anywhere on the critical path is a day lost on the whole project.",
-   "yrs": 0.6,
+   "ph": 220.0,
+   "pre": [
+    "mfg_gantt_chart",
+    "mfg_linear_programming_simplex"
+   ],
    "req_any": [],
-   "gov": 0,
+   "rev": 0.0,
+   "risk": 0.13,
+   "sch": 0.0,
    "sus": 0,
-   "_src": "62_control_ops_deep.json"
+   "traits": [
+    "information"
+   ],
+   "up": 0.0,
+   "yrs": 0.6
   }
  ]
 }

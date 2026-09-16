@@ -1450,8 +1450,6 @@ class ProjectsMixin:
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
         n = self.nodes[k]
-        if n["tier"] > 2:
-            return False
         # THE ALLOW-LIST IS ROME'S CRAFTS, and it was applied to everybody. A
         # Norse tester was refused a bounty on `sea_skeleton_first` -
         # shipbuilding - by a civilisation whose own profile marks ships as the
@@ -1618,13 +1616,7 @@ class ProjectsMixin:
         # precision_three_plate to a sack and watched `available` read "0
         # startable now" for a hundred and eighty years, because that node
         # gates the whole precision branch.
-        # Tier 9 once meant UNOBTAINABLE: rubber, quinine, New World crops. That
-        # concept was abolished, because nothing is unobtainable, only elsewhere,
-        # and the tree now routes those through exp_* expedition nodes instead.
-        # The guard stays only to stop a stray tier 9 from a new branch file
-        # silently making a technology permanently unbuildable; treetool now
-        # retiers them on merge, so this should never fire.
-        if n["tier"] == 9 or n["cat"] == "unobtainable":
+        if n["cat"] == "unobtainable":
             return False, ("retired category: unobtainable in this tree"
                            if _why else None)
         if self._is_foreign_only(k):
@@ -2101,18 +2093,15 @@ class ProjectsMixin:
         so is itself a decision - the guess below - that should happen once
         per project, not once per caller that wants to look).
 
-        AN OLD SAVE NEVER TRACKED THIS FIELD. The best guess available is
-        that the same share of each trade's total is left as is left of the
-        founder-hours total - generous rather than punitive: a project nine
-        tenths done on its own hours is assumed nine tenths done on its
-        hired hours too, not reset to owing the lot.
+        Hand-built simulations and diagnostic callers may omit the field; in
+        that case estimate the remaining trade work from founder-hour progress.
         """
         lab_left = st.get("lab_left")
         if lab_left is not None:
             return lab_left
         n = self.nodes[k]
-        _left_frac = min(1.0, st.get("ph_left", n["ph"]) / max(1.0, n["ph"]))
-        return {t: want * _left_frac for t, want in n["lab"].items()}
+        left_frac = min(1.0, st.get("ph_left", n["ph"]) / max(1.0, n["ph"]))
+        return {trade: want * left_frac for trade, want in n["lab"].items()}
 
     def trade_draw_plan(self, k, lab_left=None):
         """What project `k` would like to draw from each hired trade this
@@ -2337,8 +2326,8 @@ class ProjectsMixin:
     # controller in the tree), not a bigger workshop or more capital.
     #
     # WHICH NODES QUALIFY IS DATA, NOT A LIST HERE. A node opts in by
-    # carrying failure_kind: "process_control" in the tree itself - the
-    # tag lives beside the other properties of the technology (risk, tier,
+        # carrying failure_kind: "process_control" in the tree itself - the
+        # tag lives beside the other properties of the technology (risk,
     # traits) in tech_tree.json / the branch files, the same place every
     # other fact about a node lives. Nine core nodes carry it today
     # (zone_refining, single_crystal, gecl4_purification, ge_reduction,
@@ -2573,7 +2562,7 @@ class ProjectsMixin:
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
         gain = (0.6 + 0.5 * max(0.0, self.state_interest(n))
-                + (1.2 if n["rev"] > 0 else 0.0) + 0.25 * n["tier"])
+                + (1.2 if n["rev"] > 0 else 0.0))
         self.reputation = min(100.0, self.reputation + gain)
         self.scandal += self.alarm_of(n)
         self.gov += self.state_interest(n)

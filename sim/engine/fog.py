@@ -315,7 +315,7 @@ class FogMixin:
         # (core.py): the sack itself calls the same method, so this screen
         # cannot quote a hedge the sack does not honour.
         chance, frac, hedge = self.corpus_hedge()
-        at_risk = sum(1 for k in self.done if self.nodes[k]["tier"] >= 2)
+        at_risk = len(self.done - self.granted)
         # WHAT YOU HAVE ALREADY LOST, and have to build again. Without this the
         # only record of a sacking is a log line a century back, and a play
         # tester discovered theirs one refusal at a time - "missing

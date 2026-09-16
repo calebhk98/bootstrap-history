@@ -72,7 +72,6 @@ Most nodes have one to three. A water-driven trip hammer is
 {
   "id": "dom_thing",
   "name": "Plain name",
-  "tier": 2,
   "cat": "category",
   "pre": ["id", "id"],
   "req_any": [{"group":"fuel","options":{"a":1.0,"b":0.6}}],
