@@ -50,17 +50,23 @@ MIGRATED_BRANCHES = (
     "62_control_ops_deep.json",
 )
 
+TIERLESS_REVIEW_SNAPSHOTS = (
+    "AUDIT_SAMPLE.json",
+    "caps_batch_0.json",
+    "caps_batch_1.json",
+    "caps_batch_2.json",
+    "caps_batch_3.json",
+    "caps_batch_4.json",
+)
+
 
 class TierlessSchemaTests(unittest.TestCase):
-    def test_migrated_index_modules_do_not_render_tiers(self):
+    def test_generated_index_does_not_render_tiers(self):
         readme = os.path.join(build_index.KB, "README.md")
         with open(readme) as source:
             text = source.read()
-        for filename in build_index.TIERLESS_MODULES:
-            with self.subTest(filename=filename):
-                section = text.split("### %s" % filename, 1)[1].split("\n### ", 1)[0]
-                self.assertIn("| Node | Your hours | Recipe |", section)
-                self.assertNotIn("| Node | Tier |", section)
+        self.assertNotIn("| Node | Tier |", text)
+        self.assertNotIn("| Node | Tier | Your hours | Documented in |", text)
 
     def test_migrated_branch_nodes_are_tierless(self):
         for filename in MIGRATED_BRANCHES:
@@ -80,6 +86,15 @@ class TierlessSchemaTests(unittest.TestCase):
             generated_nodes = json.load(source)["nodes"]
         tiered_ids = {node["id"] for node in generated_nodes if "tier" in node}
         self.assertFalse(migrated_ids & tiered_ids)
+
+    def test_migrated_review_snapshots_are_tierless(self):
+        review_dir = os.path.join(data.ROOT, "data", "review")
+        for filename in TIERLESS_REVIEW_SNAPSHOTS:
+            with self.subTest(filename=filename):
+                with open(os.path.join(review_dir, filename)) as source:
+                    snapshot = json.load(source)
+                self.assertFalse([node.get("id") for node in snapshot
+                                  if "tier" in node])
 
     def test_treetool_accepts_and_normalises_a_tierless_node(self):
         node = {

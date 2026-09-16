@@ -2,7 +2,6 @@
  {
   "id": "air_coal_gas_generation",
   "name": "Coal gas for ballooning",
-  "tier": 3,
   "cat": "aviation",
   "current_pre": [
    "coal_coke",
@@ -13,7 +12,6 @@
  {
   "id": "air_parachute",
   "name": "Parachute",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "air_observation_balloon_tethered",
@@ -24,7 +22,6 @@
  {
   "id": "balance_analytical",
   "name": "Analytical balance reading to 1 milligram",
-  "tier": 2,
   "cat": "instruments",
   "current_pre": [
    "cementation_steel",
@@ -36,7 +33,6 @@
  {
   "id": "boring_mill",
   "name": "Cylinder boring mill",
-  "tier": 3,
   "cat": "precision",
   "current_pre": [
    "screw_lathe",
@@ -47,7 +43,6 @@
  {
   "id": "chm_alkali_waste",
   "name": "Leblanc process waste: calcium carbide and the alkali waste problem",
-  "tier": 2,
   "cat": "environmental_chemistry",
   "current_pre": [
    "soda_leblanc"
@@ -57,7 +52,6 @@
  {
   "id": "chm_celluloid",
   "name": "Celluloid: nitrocellulose plastics",
-  "tier": 4,
   "cat": "plastics",
   "current_pre": [
    "chm_guncotton"
@@ -67,7 +61,6 @@
  {
   "id": "chm_fulminate",
   "name": "Mercury fulminate preparation",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "mercury_supply",
@@ -78,7 +71,6 @@
  {
   "id": "chm_ion_exchange",
   "name": "Ion exchange resins for water softening and purification",
-  "tier": 4,
   "cat": "chemical_engineering",
   "current_pre": [
    "mat_bulk_steel"
@@ -88,7 +80,6 @@
  {
   "id": "chm_potash_mining",
   "name": "Potash mining and refining",
-  "tier": 2,
   "cat": "mineral_extraction",
   "current_pre": [
    "mining_concession"
@@ -98,7 +89,6 @@
  {
   "id": "chm_tnt",
   "name": "TNT: trinitrotoluene synthesis",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "chm_toluene"
@@ -108,7 +98,6 @@
  {
   "id": "civ_building_code",
   "name": "Building code and regulatory standards",
-  "tier": 3,
   "cat": "institutional",
   "current_pre": [
    "civ_factor_safety"
@@ -118,7 +107,6 @@
  {
   "id": "civ_dam_gravity",
   "name": "Gravity dam in masonry or concrete",
-  "tier": 2,
   "cat": "water",
   "current_pre": [
    "civ_arch_roman",
@@ -129,7 +117,6 @@
  {
   "id": "civ_lightning_conductor",
   "name": "Lightning conductor and grounding",
-  "tier": 2,
   "cat": "safety",
   "current_pre": [
    "mat_wrought_iron"
@@ -139,7 +126,6 @@
  {
   "id": "civ_town_planning",
   "name": "Town planning and street layout",
-  "tier": 2,
   "cat": "institutional",
   "current_pre": [
    "civ_surveying_groma"
@@ -149,7 +135,6 @@
  {
   "id": "com_amplitude_modulation",
   "name": "Amplitude modulation (AM) - encoding audio on radio",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "com_continuous_wave",
@@ -160,7 +145,6 @@
  {
   "id": "com_broadcasting_institution",
   "name": "Broadcasting as an institution - scheduled transmission and profit model",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "com_superheterodyne_receiver",
@@ -171,7 +155,6 @@
  {
   "id": "com_crystal_set",
   "name": "Crystal set receiver - galena rectifier radio",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "galena_detector",
@@ -182,7 +165,6 @@
  {
   "id": "com_heliograph",
   "name": "Heliograph - sun mirror telegraph",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "com_optical_codebook"
@@ -192,7 +174,6 @@
  {
   "id": "com_magnetic_core_memory",
   "name": "Magnetic core memory - fast addressable RAM",
-  "tier": 4,
   "cat": "storage",
   "current_pre": [
    "electromagnet",
@@ -203,7 +184,6 @@
  {
   "id": "com_morse_register",
   "name": "Morse register - recording apparatus",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric"
@@ -213,7 +193,6 @@
  {
   "id": "com_optical_tower",
   "name": "Optical semaphore tower",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "com_optical_codebook"
@@ -223,7 +202,6 @@
  {
   "id": "com_relay",
   "name": "Relay - current amplification for long lines",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -234,7 +212,6 @@
  {
   "id": "com_slide_rule",
   "name": "Slide rule - mechanical multiplier",
-  "tier": 3,
   "cat": "calculation",
   "current_pre": [
    "logarithms"
@@ -244,7 +221,6 @@
  {
   "id": "com_superheterodyne_receiver",
   "name": "Superheterodyne receiver - fixed intermediate frequency design",
-  "tier": 4,
   "cat": "radio",
   "current_pre": [
    "com_continuous_wave",
@@ -256,7 +232,6 @@
  {
   "id": "com_teleprinter",
   "name": "Teleprinter - automated telegraph typing",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -267,7 +242,6 @@
  {
   "id": "com_tv_mechanical_scanning",
   "name": "Mechanical television scanning - early image transmission",
-  "tier": 3,
   "cat": "television",
   "current_pre": [
    "com_antenna_ground"
@@ -277,7 +251,6 @@
  {
   "id": "com_waveguide",
   "name": "Waveguide - pipe for microwaves",
-  "tier": 4,
   "cat": "radar",
   "current_pre": [
    "com_radar_magnetron"
@@ -287,7 +260,6 @@
  {
   "id": "daniell_cell",
   "name": "Daniell cell and reliable current sources",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "voltaic_pile",
@@ -298,7 +270,6 @@
  {
   "id": "electrolysis_industrial",
   "name": "Chlor-alkali, aluminium and industrial electrochemistry",
-  "tier": 5,
   "cat": "chemistry",
   "current_pre": [
    "power_grid",
@@ -309,7 +280,6 @@
  {
   "id": "fud_beet_sugar_processing",
   "name": "Sugar beet cultivation and crystallization",
-  "tier": 2,
   "cat": "crops",
   "current_pre": [
    "fud_sugar_cane_cultivation"
@@ -319,7 +289,6 @@
  {
   "id": "fud_malt_production",
   "name": "Malt production from barley and other grains",
-  "tier": 1,
   "cat": "fermentation",
   "current_pre": [
    "crop_rotation"
@@ -329,7 +298,6 @@
  {
   "id": "fused_quartz",
   "name": "Fused silica working",
-  "tier": 4,
   "cat": "glass_optics",
   "current_pre": [
    "high_temp_furnace",
@@ -340,7 +308,6 @@
  {
   "id": "glass_borosilicate",
   "name": "Borosilicate glass",
-  "tier": 3,
   "cat": "glass_optics",
   "current_pre": [
    "glass_labware",
@@ -351,7 +318,6 @@
  {
   "id": "hom_attar_roses",
   "name": "Attar of roses",
-  "tier": 3,
   "cat": "personal",
   "current_pre": [
    "distillation_alcohol",
@@ -362,7 +328,6 @@
  {
   "id": "hom_electric_lighting",
   "name": "Electric lighting in home",
-  "tier": 4,
   "cat": "lighting",
   "current_pre": [
    "arc_light_lamp",
@@ -374,7 +339,6 @@
  {
   "id": "hom_sewer_stormwater_separation",
   "name": "Sewer separated from stormwater drain",
-  "tier": 3,
   "cat": "sanitation",
   "current_pre": [
    "hom_latrine_water_trap"
@@ -384,7 +348,6 @@
  {
   "id": "hydrofluoric_acid",
   "name": "Hydrofluoric acid",
-  "tier": 4,
   "cat": "chemistry",
   "current_pre": [
    "hydrochloric_acid",
@@ -395,7 +358,6 @@
  {
   "id": "lead_chamber",
   "name": "Lead chamber sulfuric acid at industrial scale",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "sulfuric_retort",
@@ -407,7 +369,6 @@
  {
   "id": "mat_aluminium",
   "name": "Aluminium",
-  "tier": 5,
   "cat": "material",
   "current_pre": [
    "electrolysis_industrial",
@@ -418,7 +379,6 @@
  {
   "id": "mat_dyes_synthetic",
   "name": "Synthetic dyes (aniline)",
-  "tier": 4,
   "cat": "material",
   "current_pre": [
    "destructive_distillation",
@@ -430,7 +390,6 @@
  {
   "id": "mat_graphite_pure",
   "name": "High purity graphite",
-  "tier": 5,
   "cat": "material",
   "current_pre": [
    "cap_heat_3000"
@@ -440,7 +399,6 @@
  {
   "id": "med_aspirin",
   "name": "Aspirin (acetylsalicylic acid)",
-  "tier": 2,
   "cat": "pharmacology",
   "current_pre": [
    "destructive_distillation"
@@ -450,7 +408,6 @@
  {
   "id": "med_insulin",
   "name": "Insulin extraction and purification",
-  "tier": 4,
   "cat": "pharmacology",
   "current_pre": [
    "analytical_chemistry"
@@ -460,7 +417,6 @@
  {
   "id": "med_sulfonamides",
   "name": "Sulfonamides (sulfanilamide)",
-  "tier": 3,
   "cat": "pharmacology",
   "current_pre": [
    "mat_dyes_synthetic",
@@ -471,7 +427,6 @@
  {
   "id": "met_black_powder_blasting",
   "name": "Blasting with black powder and dynamite",
-  "tier": 2,
   "cat": "mining",
   "current_pre": [
    "gunpowder",
@@ -482,7 +437,6 @@
  {
   "id": "met_investment_casting",
   "name": "Investment casting and lost wax",
-  "tier": 0,
   "cat": "casting",
   "current_pre": [],
   "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Rome has this for jewelry. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment. [AUDIT: t"
@@ -490,7 +444,6 @@
  {
   "id": "met_tempering_color",
   "name": "Tempering and temper color chart",
-  "tier": 1,
   "cat": "heat_treatment",
   "current_pre": [
    "case_hardening",
@@ -501,7 +454,6 @@
  {
   "id": "motor_transformer_ac",
   "name": "Motors, transformers, alternating current",
-  "tier": 4,
   "cat": "electrical",
   "current_pre": [
    "dynamo",
@@ -512,7 +464,6 @@
  {
   "id": "opt_oscilloscope",
   "name": "Oscilloscope (CRT time-display)",
-  "tier": 4,
   "cat": "measurement",
   "current_pre": [
    "cap_power_electric",
@@ -524,7 +475,6 @@
  {
   "id": "power_grid",
   "name": "Central generation and distribution",
-  "tier": 5,
   "cat": "electrical",
   "current_pre": [
    "motor_transformer_ac",
@@ -536,7 +486,6 @@
  {
   "id": "prn_gelatin_dry_plate",
   "name": "Gelatin dry plate",
-  "tier": 2,
   "cat": "photography",
   "current_pre": [
    "prn_wet_collodion_plate"
@@ -546,7 +495,6 @@
  {
   "id": "prn_silver_halide_chemistry",
   "name": "Silver halide chemistry",
-  "tier": 2,
   "cat": "chemistry",
   "current_pre": [
    "analytical_chemistry",
@@ -557,7 +505,6 @@
  {
   "id": "pwr_condenser",
   "name": "Condenser and vacuum",
-  "tier": 2,
   "cat": "power",
   "current_pre": [
    "steam_watt",
@@ -568,7 +515,6 @@
  {
   "id": "pwr_pumped_storage",
   "name": "Pumped storage hydroelectric",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "water_power_scale",
@@ -581,7 +527,6 @@
  {
   "id": "pwr_transformer",
   "name": "Transformer (step-up/step-down)",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "motor_transformer_ac",
@@ -592,7 +537,6 @@
  {
   "id": "screw_lathe",
   "name": "Screw-cutting lathe with lead screw and slide rest",
-  "tier": 3,
   "cat": "precision",
   "current_pre": [
    "master_screw",
@@ -604,7 +548,6 @@
  {
   "id": "sea_copper_sheathing",
   "name": "Copper-sheathed hull",
-  "tier": 3,
   "cat": "ships",
   "current_pre": [
    "sea_lead_sheathing",
@@ -615,7 +558,6 @@
  {
   "id": "sea_lead_line_hydro",
   "name": "Lead-line and hydrographic survey",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "sea_sounding_lines",
@@ -626,7 +568,6 @@
  {
   "id": "sea_submarine_cable",
   "name": "Submarine telegraph cable",
-  "tier": 4,
   "cat": "communication",
   "current_pre": [
    "telegraph_electric",
@@ -637,7 +578,6 @@
  {
   "id": "soda_leblanc",
   "name": "Leblanc and later Solvay soda",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "hydrochloric_acid",
@@ -649,7 +589,6 @@
  {
   "id": "telegraph_electric",
   "name": "Electric telegraph",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "electromagnet",
@@ -661,7 +600,6 @@
  {
   "id": "tex_synthetic_dyes",
   "name": "Synthetic aniline dyes",
-  "tier": 4,
   "cat": "textiles",
   "current_pre": [
    "mat_dyes_synthetic",
@@ -672,7 +610,6 @@
  {
   "id": "voltaic_pile",
   "name": "Voltaic pile",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "zinc_metal",

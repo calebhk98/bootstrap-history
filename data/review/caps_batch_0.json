@@ -2,7 +2,6 @@
  {
   "id": "air_aerofoil_section",
   "name": "Cambered aerofoil section",
-  "tier": 2,
   "cat": "aviation",
   "current_pre": [
    "scientific_method"
@@ -12,7 +11,6 @@
  {
   "id": "air_hydrogen_danger",
   "name": "Hydrogen safety limits",
-  "tier": 3,
   "cat": "aviation",
   "current_pre": [
    "air_coal_gas_generation"
@@ -22,7 +20,6 @@
  {
   "id": "analytical_chemistry",
   "name": "Gravimetric and volumetric analysis",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "balance_analytical",
@@ -35,7 +32,6 @@
  {
   "id": "bellows_water_blown",
   "name": "Water-driven double-acting bellows",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "water_power_scale",
@@ -46,7 +42,6 @@
  {
   "id": "cementation_steel",
   "name": "Blister steel by cementation",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "case_hardening",
@@ -57,7 +52,6 @@
  {
   "id": "chm_casein",
   "name": "Casein plastics from milk protein",
-  "tier": 4,
   "cat": "plastics",
   "current_pre": [
    "analytical_chemistry"
@@ -67,7 +61,6 @@
  {
   "id": "chm_dynamite",
   "name": "Dynamite: nitroglycerin in diatomaceous earth",
-  "tier": 3,
   "cat": "explosives",
   "current_pre": [
    "chm_nitroglycerin"
@@ -77,7 +70,6 @@
  {
   "id": "chm_glycerol",
   "name": "Glycerol production and purification",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "chm_soap_hard"
@@ -87,7 +79,6 @@
  {
   "id": "chm_naphthalene",
   "name": "Naphthalene extraction and purification",
-  "tier": 3,
   "cat": "chemical_engineering",
   "current_pre": [
    "chm_coal_tar_distillation"
@@ -97,7 +88,6 @@
  {
   "id": "chm_soap_hard",
   "name": "Hard soap from oil and caustic soda",
-  "tier": 2,
   "cat": "chemical_engineering",
   "current_pre": [
    "soap_hard",
@@ -108,7 +98,6 @@
  {
   "id": "chm_water_coagulation",
   "name": "Water treatment by coagulation and settling",
-  "tier": 2,
   "cat": "water_chemistry",
   "current_pre": [
    "analytical_chemistry"
@@ -118,7 +107,6 @@
  {
   "id": "civ_canal_pound_lock",
   "name": "Canal pound lock for level changes",
-  "tier": 2,
   "cat": "transport",
   "current_pre": [
    "civ_gate_sluice"
@@ -128,7 +116,6 @@
  {
   "id": "civ_glass_plate",
   "name": "Plate glass for windows and storefronts",
-  "tier": 3,
   "cat": "materials",
   "current_pre": [
    "mat_glass_soda",
@@ -139,7 +126,6 @@
  {
   "id": "civ_sewage_treatment",
   "name": "Sewage treatment works and activated sludge",
-  "tier": 4,
   "cat": "water",
   "current_pre": [
    "civ_sewer_separate",
@@ -150,7 +136,6 @@
  {
   "id": "clock_pendulum",
   "name": "Pendulum clock and later the balance spring",
-  "tier": 2,
   "cat": "precision",
   "current_pre": [
    "master_screw",
@@ -161,7 +146,6 @@
  {
   "id": "com_baudot_code",
   "name": "Baudot code - 5-bit telegraph encoding",
-  "tier": 3,
   "cat": "signalling",
   "current_pre": [
    "com_teleprinter"
@@ -171,7 +155,6 @@
  {
   "id": "com_coherer",
   "name": "Coherer - primitive radio detector",
-  "tier": 3,
   "cat": "radio",
   "current_pre": [
    "com_antenna_ground"
@@ -181,7 +164,6 @@
  {
   "id": "com_error_detecting_code",
   "name": "Error detecting and correcting codes",
-  "tier": 5,
   "cat": "computing",
   "current_pre": [
    "com_binary_arithmetic"
@@ -191,7 +173,6 @@
  {
   "id": "com_information_theory",
   "name": "Information theory - entropy and the bit",
-  "tier": 5,
   "cat": "computing",
   "current_pre": [
    "com_binary_arithmetic"
@@ -201,7 +182,6 @@
  {
   "id": "com_magnetic_tape_storage",
   "name": "Magnetic tape storage - bulk archival memory",
-  "tier": 4,
   "cat": "storage",
   "current_pre": [
    "com_magnetic_wire_storage"
@@ -211,7 +191,6 @@
  {
   "id": "com_multiplexing",
   "name": "Multiplexing - combining multiple signals on one line",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "com_trunk_lines"
@@ -221,7 +200,6 @@
  {
   "id": "com_radar_magnetron",
   "name": "Magnetron - compact high-power microwave generator",
-  "tier": 4,
   "cat": "radar",
   "current_pre": [
    "vacuum_tube",
@@ -232,7 +210,6 @@
  {
   "id": "com_ring_counter",
   "name": "Ring counter - timing and sequencing circuit",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "com_register_computing"
@@ -242,7 +219,6 @@
  {
   "id": "com_stock_ticker",
   "name": "Stock ticker - financial telegraph terminal",
-  "tier": 2,
   "cat": "signalling",
   "current_pre": [
    "telegraph_electric",
@@ -253,7 +229,6 @@
  {
   "id": "com_telephone_carbon_mic",
   "name": "Carbon microphone - pressure-to-resistance transducer",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "telegraph_electric",
@@ -264,7 +239,6 @@
  {
   "id": "com_trunk_lines",
   "name": "Trunk lines - long-distance telephone routes",
-  "tier": 3,
   "cat": "telephone",
   "current_pre": [
    "com_telephone_manual_exchange",
@@ -275,7 +249,6 @@
  {
   "id": "com_vacuum_tube_computer",
   "name": "Vacuum tube computer - high-speed electronic switching",
-  "tier": 4,
   "cat": "computing",
   "current_pre": [
    "vacuum_tube",
@@ -286,7 +259,6 @@
  {
   "id": "copper_refining",
   "name": "High-purity copper and insulated wire",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "drawplate_wire",
@@ -297,7 +269,6 @@
  {
   "id": "diffusion_pump",
   "name": "Rotary and mercury diffusion pumps",
-  "tier": 5,
   "cat": "instruments",
   "current_pre": [
    "vacuum_pumps",
@@ -309,7 +280,6 @@
  {
   "id": "electroplating",
   "name": "Electroplating and electro-refining",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "daniell_cell",
@@ -320,7 +290,6 @@
  {
   "id": "fud_drying_evaporated_milk",
   "name": "Drying and concentration of evaporated milk",
-  "tier": 2,
   "cat": "preservation",
   "current_pre": [
    "fud_pasteurisation",
@@ -331,7 +300,6 @@
  {
   "id": "fud_silage_fermentation",
   "name": "Silage production and fermented fodder storage",
-  "tier": 2,
   "cat": "agriculture",
   "current_pre": [
    "fud_hay_making_storage"
@@ -341,7 +309,6 @@
  {
   "id": "galvanometer",
   "name": "Tangent galvanometer and electrical metrology",
-  "tier": 3,
   "cat": "electrical",
   "current_pre": [
    "daniell_cell",
@@ -353,7 +320,6 @@
  {
   "id": "glass_labware",
   "name": "Retorts, flasks, condensers, tubing, graduated vessels",
-  "tier": 2,
   "cat": "glass_optics",
   "current_pre": [
    "glass_clear"
@@ -363,7 +329,6 @@
  {
   "id": "hom_cosmetics_modern_warning",
   "name": "Cosmetics with safety warnings",
-  "tier": 4,
   "cat": "personal",
   "current_pre": [
    "germ_theory",
@@ -374,7 +339,6 @@
  {
   "id": "hom_hypocaust",
   "name": "Hypocaust underfloor heating",
-  "tier": 0,
   "cat": "heating",
   "current_pre": [],
   "note": "Hot air from a furnace flows through hollow spaces beneath the floor. Expensive; only wealthy houses and public baths use it. Rome never develops the chimney, so room heating otherwise requires a brazier and open flame. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung i"
@@ -382,7 +346,6 @@
  {
   "id": "hom_vacuum_cleaner",
   "name": "Vacuum cleaner",
-  "tier": 4,
   "cat": "cleaning",
   "current_pre": [
    "motor_transformer_ac",
@@ -394,7 +357,6 @@
  {
   "id": "interchangeable_parts",
   "name": "Tolerances, jigs, fixtures and interchangeable manufacture",
-  "tier": 3,
   "cat": "precision",
   "current_pre": [
    "micrometer_gauges",
@@ -406,7 +368,6 @@
  {
   "id": "lnd_coal_tar_gas",
   "name": "Coal tar gas (coal gas)",
-  "tier": 2,
   "cat": "materials",
   "current_pre": [
    "coal_coke",
@@ -417,7 +378,6 @@
  {
   "id": "mat_calamine",
   "name": "Calamine (zinc carbonate/silicate ore)",
-  "tier": 0,
   "cat": "material",
   "current_pre": [],
   "note": "ROME HAS THIS and already smelts it into brass. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
@@ -425,7 +385,6 @@
  {
   "id": "mat_fused_quartz",
   "name": "Fused quartz",
-  "tier": 4,
   "cat": "material",
   "current_pre": [
    "fused_quartz",
@@ -436,7 +395,6 @@
  {
   "id": "mat_olive_oil",
   "name": "Olive oil",
-  "tier": 0,
   "cat": "material",
   "current_pre": [],
   "note": "ROME HAS THIS in industrial quantity. Soap, lighting, quenching, varnish base. [AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one y"
@@ -444,7 +402,6 @@
  {
   "id": "med_clinical_trials",
   "name": "Case control and randomised controlled trials",
-  "tier": 2,
   "cat": "public_health",
   "current_pre": [
    "med_epidemiology_statistics",
@@ -455,7 +412,6 @@
  {
   "id": "med_ophthalmoscope",
   "name": "Ophthalmoscope",
-  "tier": 2,
   "cat": "diagnostics",
   "current_pre": [
    "lens_grinding",
@@ -466,7 +422,6 @@
  {
   "id": "mercury_supply",
   "name": "Secure mercury supply",
-  "tier": 2,
   "cat": "metallurgy",
   "current_pre": [
    "lead_metallurgy",
@@ -477,7 +432,6 @@
  {
   "id": "met_drawn_tube",
   "name": "Drawn tube production",
-  "tier": 2,
   "cat": "forming",
   "current_pre": [
    "drawplate_wire",
@@ -488,7 +442,6 @@
  {
   "id": "met_pneumatic_drill",
   "name": "Pneumatic rock drill",
-  "tier": 3,
   "cat": "mining",
   "current_pre": [
    "steam_high_pressure",
@@ -499,7 +452,6 @@
  {
   "id": "met_trip_hammer",
   "name": "Trip hammer and water-driven forge hammer",
-  "tier": 0,
   "cat": "forming",
   "current_pre": [
    "cap_power_water",
@@ -510,7 +462,6 @@
  {
   "id": "nitric_acid",
   "name": "Nitric acid",
-  "tier": 3,
   "cat": "chemistry",
   "current_pre": [
    "sulfuric_retort",
@@ -521,7 +472,6 @@
  {
   "id": "opt_seismograph",
   "name": "Seismograph (earthquake measurement)",
-  "tier": 3,
   "cat": "measurement",
   "current_pre": [
    "galvanometer",
@@ -532,7 +482,6 @@
  {
   "id": "prn_calotype_process",
   "name": "Calotype negative-positive",
-  "tier": 2,
   "cat": "photography",
   "current_pre": [
    "prn_silver_halide_chemistry",
@@ -543,7 +492,6 @@
  {
   "id": "prn_newspaper_institution",
   "name": "Newspaper institution",
-  "tier": 2,
   "cat": "publishing",
   "current_pre": [
    "printing_press",
@@ -554,7 +502,6 @@
  {
   "id": "prn_wet_collodion_plate",
   "name": "Wet collodion plate",
-  "tier": 2,
   "cat": "photography",
   "current_pre": [
    "prn_calotype_process",
@@ -565,7 +512,6 @@
  {
   "id": "pwr_high_voltage_transmission",
   "name": "High voltage transmission",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "motor_transformer_ac",
@@ -576,7 +522,6 @@
  {
   "id": "pwr_substation",
   "name": "Substation and distribution",
-  "tier": 3,
   "cat": "power",
   "current_pre": [
    "pwr_high_voltage_transmission",
@@ -588,7 +533,6 @@
  {
   "id": "radio",
   "name": "Radio: spark, crystal set, then valve transmitters",
-  "tier": 5,
   "cat": "electrical",
   "current_pre": [
    "vacuum_tube",
@@ -599,7 +543,6 @@
  {
   "id": "sea_buoy",
   "name": "Buoy",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "sea_harbours_pozzolana"
@@ -609,7 +552,6 @@
  {
   "id": "sea_dredging",
   "name": "Dredging",
-  "tier": 3,
   "cat": "harbours",
   "current_pre": [
    "water_power_scale",
@@ -620,7 +562,6 @@
  {
   "id": "sea_mercator_projection",
   "name": "Mercator projection",
-  "tier": 2,
   "cat": "navigation",
   "current_pre": [
    "sea_charts_navigation",
@@ -631,7 +572,6 @@
  {
   "id": "semiconductor_metrology",
   "name": "Four-point probe, Hall effect, carrier measurement",
-  "tier": 5,
   "cat": "semiconductor",
   "current_pre": [
    "vacuum_tube",
@@ -643,7 +583,6 @@
  {
   "id": "steam_high_pressure",
   "name": "High pressure steam and adequate boilers",
-  "tier": 4,
   "cat": "power",
   "current_pre": [
    "steam_watt",
@@ -654,7 +593,6 @@
  {
   "id": "tex_field_bleaching",
   "name": "Field bleaching with sun",
-  "tier": 2,
   "cat": "textiles",
   "current_pre": [
    "tex_linen",
@@ -665,7 +603,6 @@
  {
   "id": "thermometer",
   "name": "Sealed liquid-in-glass thermometer with fixed points",
-  "tier": 2,
   "cat": "instruments",
   "current_pre": [
    "glass_labware",
@@ -677,7 +614,6 @@
  {
   "id": "zinc_industry_scale",
   "name": "Zinc smelting at industrial scale, with flue dust collection",
-  "tier": 5,
   "cat": "metallurgy",
   "current_pre": [
    "zinc_metal",
