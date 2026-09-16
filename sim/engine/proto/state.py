@@ -193,9 +193,14 @@ def _waiting_on(s, nodes, k, st, bill):
                     % ("{:,.0f}".format(per_year), "{:,.0f}".format(bill),
                        math.ceil(bill / per_year),
                        "" if math.ceil(bill / per_year) == 1 else "s"))
-        return ("unfunded now; will fund opportunistically as revenue arrives "
-                "this year: %s still owed and the next instalment of %s is "
-                "more than you can raise at this moment"
+        if s.spending_power("buy") <= 0.5:
+            return ("money: fully blocked until funding is available; %s is "
+                    "still owed and you cannot raise any of the next %s "
+                    "instalment now"
+                    % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
+        return ("money: unfunded now; will fund opportunistically as revenue "
+                "arrives this year: %s still owed and the next instalment of "
+                "%s is more than you can raise at this moment"
                 % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
     if st["ph_left"] <= 0:
         return "the calendar"

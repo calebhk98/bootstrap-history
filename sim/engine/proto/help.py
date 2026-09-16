@@ -198,6 +198,11 @@ def _agent_help(s, topic=None):
                           "your reach, and how many you employ",
             "materials": "stocks on hand, annual production and demand, and "
                          "current buy/sell values for every tracked material",
+            "capacity": "why active projects are moving at their present pace: "
+                        "annual material throughput and shortages, trade-hour "
+                        "demand and supply, power, staffing, and finance. "
+                        "Throughput is this year's flow; durable unused material "
+                        "is shown separately by 'materials' as stock on hand",
             "sell <material> <tonnes>": "sell material you actually have in stock",
             "hire / fire / train / commission": "see the labour topic",
             "buy": "farmland, worker housing, a named trade school, material "

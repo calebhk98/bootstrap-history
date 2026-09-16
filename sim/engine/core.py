@@ -344,21 +344,18 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # flatters the player and, worse, exposed a society's own ancestral
         # crafts to being "forgotten" in a sacking. Han China does not forget how
         # to cast iron because your workshop burned down.
-        missing = []
-        for k in self.civ.get("starting_techs", []):
-            if k in self.nodes:
-                self.done.add(k)
-                self._done_changed()
-                self.granted.add(k)
-            else:
-                missing.append(k)
+        starting_techs = self.civ["starting_techs"]
+        missing = sorted(k for k in starting_techs if k not in self.nodes)
         if missing:
-            # Loudly. Eight of these were silently dropped across three
-            # civilizations, including four of the Mexica's five, so their
-            # entire stated identity was fiction that nothing ever reported.
-            sys.stderr.write("WARNING: %s lists starting technologies that do not "
-                             "exist in the tree and have been ignored: %s\n"
+            # Refuse a corrupt opening rather than merely warning and running a
+            # different scenario. Eight ids were once silently dropped across
+            # three civilizations, including four of the Mexica's five.
+            raise ValueError("civilization %r lists unknown starting technologies: %s"
                              % (self.civ.get("id", "?"), ", ".join(missing)))
+        for k in starting_techs:
+            self.done.add(k)
+            self._done_changed()
+            self.granted.add(k)
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In

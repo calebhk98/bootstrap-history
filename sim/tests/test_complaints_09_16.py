@@ -1,5 +1,32 @@
 """Focused regressions for the second group of playtest complaints."""
 from .harness import *  # noqa: F401,F403
+from engine.protocol import _waiting_on as _waiting_on
+
+
+# Complaint 02 requires two genuinely different states: a project that can
+# consume revenue arriving later in the year, and one beyond all cash/credit
+# that cannot progress until its finances change.
+_money_node = "academy_network"
+_money_state = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=9000.0)
+_blocked = sim(capital=0.0)
+_blocked.capital = -50_000.0
+_blocked.credit_limit = lambda: 2_000.0
+_blocked.project_cost = lambda k: 9_000.0
+_blocked.active[_money_node] = dict(_money_state)
+_blocked_message = _waiting_on(_blocked, NODES, _money_node,
+                               _blocked.active[_money_node], 9000.0)
+check("a project with no spending power is labelled fully blocked",
+      _blocked_message.startswith("money: fully blocked"), _blocked_message)
+
+_opportunistic = sim(capital=1.0)
+_opportunistic.project_cost = lambda k: 9_000.0
+_opportunistic.active[_money_node] = dict(_money_state)
+_opportunistic_message = _waiting_on(
+    _opportunistic, NODES, _money_node, _opportunistic.active[_money_node], 9000.0)
+check("a project with some funding access is labelled opportunistic",
+      _opportunistic_message.startswith(
+          "money: unfunded now; will fund opportunistically"),
+      _opportunistic_message)
 
 
 # A binding material is a property of its consumers, not of the whole research
@@ -12,6 +39,18 @@ check("a nitre shortage throttles a project that consumes nitre",
       s.project_resource_throttle("gunpowder") == 0.05)
 check("the same nitre shortage leaves an unrelated research project at full pace",
       s.project_resource_throttle("scientific_method") == 1.0)
+
+
+# Capacity is the diagnostic that explains those per-project limits.  It must
+# be in the command index rather than discoverable only by guessing it, and it
+# must distinguish annual flow from durable inventory.
+_commands = S._agent_help(sim(), "commands")["commands"]
+check("capacity is discoverable in the main command index",
+      "capacity" in _commands, sorted(_commands))
+check("capacity help distinguishes throughput from material stock",
+      "throughput" in _commands["capacity"]
+      and "stock" in _commands["capacity"]
+      and "materials" in _commands["capacity"], _commands["capacity"])
 
 
 # A zero-hour, zero-cost, zero-risk capability is a state transition, not a
