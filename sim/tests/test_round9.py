@@ -122,8 +122,7 @@ class _AlwaysSackRNG:
 
 def _corpus_sack_scenario(hedge_node, n_done=300):
     s = sim(capital=1_000_000.0)
-    cands = sorted(k for k in NODES if NODES[k]["tier"] >= 2
-                   and k not in s.granted)[:n_done]
+    cands = sorted(k for k in NODES if k not in s.granted)[:n_done]
     s.done.update(cands)
     if hedge_node:
         s.done.add(hedge_node)
@@ -137,7 +136,7 @@ def _corpus_sack_scenario(hedge_node, n_done=300):
 
 def _expected_losable(s):
     return sorted(k for k in s.done
-                  if NODES[k]["tier"] >= 2 and k not in s.granted
+                  if k not in s.granted
                   and k != "corpus_dispersed")
 
 
@@ -211,15 +210,14 @@ for _seed in range(1, 7):
           getattr(s_f3, "forgotten", None))
 # And the converse: the exclusion is scoped to corpus_dispersed BY NAME,
 # not to tier 2 in general and not to corpus_written (tier 1, and so
-# already outside the sack's tier>=2 reach on its own, with or without this
+# already outside the sack's non-starting reach on its own, with or without this
 # fix - one set of books in one place was never the node this mechanism
 # could take either way; only corpus_dispersed's own tier made it eligible
 # before this fix, and only this fix's exclusion takes it out again). A
-# second, ordinary tier>=2 node sitting right next to corpus_dispersed in
+# second, ordinary non-starting node sitting right next to corpus_dispersed in
 # `done` is NOT spared.
 s_f3w = sim(capital=500000.0)
-_f3_other = next(k for k in NODES if NODES[k]["tier"] >= 2
-                 and k != "corpus_dispersed" and k not in s_f3w.granted)
+_f3_other = next(k for k in NODES if k != "corpus_dispersed" and k not in s_f3w.granted)
 s_f3w.done.update(["corpus_dispersed", _f3_other])
 s_f3w._done_changed()
 s_f3w.rng = _AlwaysSackRNG()
@@ -227,7 +225,7 @@ s_f3w.civ = dict(s_f3w.civ)
 s_f3w.civ["hazards"] = [{"name": "TEST SACK", "years": [s_f3w.year, s_f3w.year],
                          "sack_chance": 1.0}]
 s_f3w._shocks(s_f3w.year)
-check("an ordinary tier>=2 node sharing the sack with corpus_dispersed is "
+check("an ordinary non-starting node sharing the sack with corpus_dispersed is "
       "the one that goes, not corpus_dispersed - the exclusion is scoped "
       "to the one node whose whole claim is dispersal, not to tier 2 at "
       "large",
@@ -242,8 +240,7 @@ check("an ordinary tier>=2 node sharing the sack with corpus_dispersed is "
 # sacking. The text must be built from how things stood BEFORE the loss.
 s_f2 = sim(capital=500000.0)
 s_f2.done.add("corpus_dispersed")
-for _k in sorted(k for k in NODES if NODES[k]["tier"] >= 2
-                 and k not in s_f2.granted and k != "corpus_dispersed")[:200]:
+for _k in sorted(k for k in NODES if k not in s_f2.granted and k != "corpus_dispersed")[:200]:
     s_f2.done.add(_k)
 s_f2._done_changed()
 s_f2.rng = _AlwaysSackRNG()
@@ -295,8 +292,8 @@ check("the fixture is what it claims to be: both corpora done, neither "
       (s_fix.has("corpus_written"), s_fix.has("corpus_dispersed"),
        "corpus_written" in s_fix.operating, "corpus_dispersed" in s_fix.operating))
 _fix_losable_before = [k for k in s_fix.done
-                       if NODES[k]["tier"] >= 2 and k not in s_fix.granted]
-check("...and its losable pool (done, tier>=2, not granted) really is "
+                       if k not in s_fix.granted]
+check("...and its losable pool (done, non-starting, not granted) really is "
       "1,214, the figure the rest of this check is measured against",
       len(_fix_losable_before) == 1214, len(_fix_losable_before))
 _fix_pl, _fix_frac, _fix_hedge = s_fix.corpus_hedge()
@@ -359,8 +356,8 @@ class _AlwaysZeroRNG:
         return list(population)[:k]
 s_kr2 = sim(capital=1_000_000.0)
 _gc2 = sorted(S.closure(NODES, GOAL))
-_on_road_cands = [k for k in _gc2 if NODES[k]["tier"] >= 2][:6]
-check("a tier>=2 node on the actual road to the goal exists to test "
+_on_road_cands = [k for k in _gc2 if k not in S.Sim(NODES, PRICES, WAGES, GOODS).granted][:6]
+check("a non-starting node on the actual road to the goal exists to test "
       "against - this is a property of the live tree, not a fixture",
       len(_on_road_cands) >= 1, _on_road_cands)
 s_kr2.done.update(_on_road_cands)

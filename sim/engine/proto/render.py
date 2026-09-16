@@ -769,8 +769,6 @@ def render_why(out):
     L.append(title)
     L.append("=" * min(78, len(title)))
     bits = []
-    if out.get("tier") is not None:
-        bits.append("tier %s" % out["tier"])
     if out.get("cat"):
         bits.append(out["cat"])
     if out.get("confidence"):

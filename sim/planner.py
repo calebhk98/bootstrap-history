@@ -229,7 +229,7 @@ def pick_side_branches(nodes, need, s, limit):
     for k, n in nodes.items():
         if k in need or k in s.done or k in s.granted:
             continue
-        if n["tier"] == 9 or n["cat"] == "unobtainable":
+        if n["cat"] == "unobtainable":
             continue
         if s._is_foreign_only(k):
             continue
@@ -250,7 +250,7 @@ def pick_staffing(nodes, need, s):
     its `sch`/`art` requirement - "8 trained scholars, 16 trained artisans" -
     is a requirement on the HOUSEHOLD, and nothing in the tech tree supplies
     it. quantum_solidstate_theory is the cheapest node in the whole late
-    programme (3,200 denarii, two prerequisites, both tier 0) and it wants
+    programme (3,200 denarii and two prerequisites) and it wants
     eight trained scholars against a society whose lettered pool tops out at
     5.9 of them. A plan that orders the closure perfectly and never founds a
     school arrives there in year forty and is still sitting there six
@@ -422,7 +422,7 @@ def _repaired(nodes, goal, order):
     that straight to `Sim` measures a different, unrepaired thing than what a
     player or `run --strategy` would ever actually see. Round-trips through a
     real temp file rather than reimplementing `load_strategy`'s "everything
-    else, goal-critical-first, then tier, then cost" fallback ordering here a
+    else, goal-critical-first, then cost" fallback ordering here a
     second time, which is exactly the kind of duplication this module's other
     comments already argue against.
     """

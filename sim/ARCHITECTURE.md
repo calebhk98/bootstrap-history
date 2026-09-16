@@ -134,7 +134,7 @@ line count would move prose between files and buy nothing.
 
     data/tech_tree.json    2.8 MB, 2,849 nodes. data.py loads it; core,
                            economy, projects, settings, cli read it through
-                           data. treetool.py and migrate_v2.py WRITE it.
+                           data. treetool.py writes it.
     data/prices.json       data.py, economy.py.
     data/civilizations/    five playable civs. data.py, cli.py.
     data/world/            geography and commodities.

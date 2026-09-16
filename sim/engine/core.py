@@ -1702,8 +1702,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 refunded = 0.0
                 st["yrs"] += 1
                 frac = min(1.0, 1.0 / max(1.0, n["yrs"]))
-                # A project started before this field existed (an old save) has
-                # no bill to pay; give it one now rather than crash on it.
+                # Diagnostic callers can construct active-project dictionaries
+                # directly, so initialise an omitted bill defensively.
                 if st.get("cost_left") is None:
                     st["cost_left"] = max(0.0, self.project_cost(k) - st["spent"])
                 # LABOUR BY TRADE. The old model pooled every trade into one
@@ -2206,7 +2206,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         if not self.founder_alive and self.directors_extra < 0.5:
             self.stalled += 1
             if self.stalled >= 3:
-                losable = sorted(k for k in self.done if self.nodes[k]["tier"] >= 2)
+                losable = sorted(k for k in self.done if k not in self.granted)
                 # sorted() matters: self.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every

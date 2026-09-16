@@ -1,4 +1,4 @@
-"""Focused regression tests for the staged removal of technology tiers."""
+"""Focused regression tests for the tierless technology schema."""
 import copy
 import json
 import os
@@ -11,7 +11,7 @@ from sim import build_index
 from sim.engine import data
 
 
-MIGRATED_BRANCHES = (
+TIERLESS_BRANCHES = (
     "00_capabilities.json",
     "01_materials.json",
     "10_textiles.json",
@@ -68,8 +68,8 @@ class TierlessSchemaTests(unittest.TestCase):
         self.assertNotIn("| Node | Tier |", text)
         self.assertNotIn("| Node | Tier | Your hours | Documented in |", text)
 
-    def test_migrated_branch_nodes_are_tierless(self):
-        for filename in MIGRATED_BRANCHES:
+    def test_branch_nodes_are_tierless(self):
+        for filename in TIERLESS_BRANCHES:
             with self.subTest(filename=filename):
                 path = os.path.join(treetool.BR, filename)
                 with open(path) as source:
@@ -77,17 +77,17 @@ class TierlessSchemaTests(unittest.TestCase):
                 self.assertTrue(nodes)
                 self.assertFalse([node["id"] for node in nodes if "tier" in node])
 
-    def test_generated_tree_matches_migrated_tierless_sources(self):
-        migrated_ids = set()
-        for filename in MIGRATED_BRANCHES:
+    def test_generated_tree_matches_tierless_sources(self):
+        source_ids = set()
+        for filename in TIERLESS_BRANCHES:
             with open(os.path.join(treetool.BR, filename)) as source:
-                migrated_ids.update(node["id"] for node in json.load(source))
+                source_ids.update(node["id"] for node in json.load(source))
         with open(data.TREE) as source:
             generated_nodes = json.load(source)["nodes"]
         tiered_ids = {node["id"] for node in generated_nodes if "tier" in node}
-        self.assertFalse(migrated_ids & tiered_ids)
+        self.assertFalse(source_ids & tiered_ids)
 
-    def test_migrated_review_snapshots_are_tierless(self):
+    def test_review_snapshots_are_tierless(self):
         review_dir = os.path.join(data.ROOT, "data", "review")
         for filename in TIERLESS_REVIEW_SNAPSHOTS:
             with self.subTest(filename=filename):
@@ -107,7 +107,7 @@ class TierlessSchemaTests(unittest.TestCase):
 
         self.assertFalse(set(treetool.REQUIRED) - set(node))
         normalised = treetool.normalise_v2(copy.deepcopy(node))
-        self.assertEqual(normalised["tier"], 2)
+        self.assertNotIn("tier", normalised)
 
     def test_runtime_loads_a_tierless_node(self):
         with open(data.TREE) as source:
@@ -122,7 +122,7 @@ class TierlessSchemaTests(unittest.TestCase):
         try:
             with mock.patch.object(data, "TREE", path):
                 _, _, nodes, _, _ = data.load()
-            self.assertEqual(nodes[node["id"]]["tier"], 2)
+            self.assertNotIn("tier", nodes[node["id"]])
         finally:
             os.unlink(path)
 

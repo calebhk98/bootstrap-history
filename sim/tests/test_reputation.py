@@ -7,21 +7,21 @@ from .harness import *  # noqa: F401,F403
 # =============================================================================
 # REPUTATION: a tester reported it rewards raw completion count, so it can
 # be maximised by building trinkets you never use. Confirmed against the
-# real gain formula in projects.py: it reads n["rev"]/n["tier"]/traits and
+# real gain formula in projects.py: it reads n["rev"]/traits and
 # self.done, and never reads self.operating at all. This is diagnosed and
 # left as a finding, not fixed here: the fix lives in projects.py, which
 # this pass does not own (see the task's own file-ownership boundary) -
 # see the final report for the recommended change.
 # =============================================================================
 s_rep = sim()
-_rep_cands = [k for k, n in NODES.items() if n.get("rev", 0) > 0 and n.get("tier", 0) >= 3]
+_rep_cands = [k for k, n in NODES.items() if n.get("rev", 0) > 0]
 _rk = sorted(_rep_cands)[0]
 _n = NODES[_rk]
 _rep0 = s_rep.reputation
 s_rep.done.add(_rk); s_rep._done_changed(); s_rep.done_year[_rk] = s_rep.year
 s_rep.apply_tech_effects(_rk)
 _gain = (0.6 + 0.5 * max(0.0, s_rep.state_interest(_n))
-         + (1.2 if _n["rev"] > 0 else 0.0) + 0.25 * _n["tier"])
+         + (1.2 if _n["rev"] > 0 else 0.0))
 s_rep.reputation = min(100.0, s_rep.reputation + _gain)
 check("FINDING (not fixed here, see report): completing a revenue-bearing "
       "node raises reputation even when it is never opened as a concern",

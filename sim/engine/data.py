@@ -241,12 +241,6 @@ def load():
     goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items()
              if not k.startswith("_")}
     for n in nodes.values():
-        # Tier is being retired from the authoring schema in stages.  Retain a
-        # conservative compatibility value until the remaining simulation
-        # policies have been converted to prerequisites/capabilities.  Doing
-        # this at the loading boundary means a hand-edited or newly authored
-        # tierless node cannot crash older runtime paths with KeyError.
-        n.setdefault("tier", 2)
         n["_labour_cost"] = sum(wages[t] * h for t, h in n["lab"].items())
         n["_material_cost"] = sum(goods[m] * q for m, q in n["mat"].items())
         n["_total_cost"] = n["_labour_cost"] + n["_material_cost"] + n["cap"]

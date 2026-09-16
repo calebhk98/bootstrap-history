@@ -35,12 +35,8 @@ def load_trades():
 # Schema v2. `yrs`, `sus` and `gov` are v1 and are backfilled, not demanded.
 # Only these are genuinely required. Everything else has a sane default, because
 # rejecting a whole node over a missing `up` throws away real work.
-# ``tier`` is deliberately not part of the authoring contract any more.  The
-# runtime still has a few tier-based decisions, so normalise_v2 supplies a
-# conservative compatibility value while those decisions are migrated in
-# later, small changes.  Keeping it out of REQUIRED is the important first
-# step: authors can remove tiers branch by branch without making merge reject
-# their nodes.
+# Availability is described by prerequisites, capabilities, and costs rather
+# than a universal numeric rank.
 REQUIRED = ["id","name","cat","pre","note"]
 DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap":200,"up":40,"risk":0.15,"rev":0,
             "sch":0,"art":1,"conf":"C","kb":""}
@@ -59,10 +55,9 @@ def normalise_v2(n):
     for k, v in DEFAULTS.items():
         n.setdefault(k, json.loads(json.dumps(v)))
     for k, d in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
-                 ("sch",0),("art",1),("tier",2)):
+                 ("sch",0),("art",1)):
         n[k] = _num(n.get(k), d)
     n["risk"] = min(0.95, max(0.0, n["risk"]))
-    n["tier"] = int(n["tier"])
     for fld in ("lab","mat"):
         if not isinstance(n.get(fld), dict): n[fld] = {}
         else: n[fld] = {k: _num(v, 0) for k, v in n[fld].items()}
@@ -72,7 +67,7 @@ def normalise_v2(n):
     backfilled, so the simulator and the audit keep working during the change."""
     if "build_yrs" not in n and "yrs" in n:
         y = float(n.get("yrs", 0) or 0)
-        if y >= 5 and n.get("tier", 0) >= 3:
+        if y >= 5:
             n["build_yrs"], n["adopt_yrs"] = min(3.0, y / 3.0), y
         else:
             n["build_yrs"], n["adopt_yrs"] = y, 0.0
@@ -166,14 +161,6 @@ def cmd_merge(a):
                 continue
             # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
             # is unobtainable, only elsewhere. A new branch reintroduced it on
-            # the submarine cable, which made the node permanently unbuildable
-            # even though its prerequisites were correctly wired through the
-            # expedition. Reject the convention here so it cannot come back.
-            if n.get("tier") == 9:
-                n["tier"] = 5
-                warns.append("%s: %s used the abolished tier 9 'unobtainable'; "
-                             "retiered to 5, depend on an exp_* node instead"
-                             % (fn, n["id"]))
             normalise_v2(n)
             # resolve trade aliases rather than silently dropping the labour,
             # which would make the technology look cheaper than it is
@@ -308,119 +295,73 @@ def closure(nodes, k):
 
 
 def judge_node(n, nodes, stats):
-    """Score ONE technology on its own terms. Returns (score, [defects])."""
+    """Score one technology using its declared graph and category, not a rank."""
     d = []
-    tier = n["tier"]
-    if n["cat"] in ABSTRACT_CATS or tier == 9:
-        # ideas and dead ends are judged only on documentation and honesty
+    if n["cat"] in ABSTRACT_CATS:
         if len(n["note"]) < 60:
             d.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
-        if n["conf"] not in ("A","B","C"):
+        if n["conf"] not in ("A", "B", "C"):
             d.append(("NO-CONF", "confidence not stated"))
-        pen = sum(2 for _ in d)
-        return max(0, 100 - pen * 6), d
+        return max(0, 100 - len(d) * 12), d
+
     cl = closure(nodes, n["id"])
     caps = {c for c in cl if c.startswith(CAP_PREFIX)}
     text = (n["name"] + " " + n["note"]).lower()
     unob = [c for c in cl if nodes[c]["cat"] == "unobtainable"]
-
-    # --- 1. does it declare the capabilities it plainly needs?
-    # The exemption used to be a list of category names. Branch authors have
-    # since invented 240 categories, so that list silently stopped matching and
-    # the check began flagging pure mathematics for lacking a furnace. Test
-    # physicality directly instead: a node that consumes materials or real
-    # capital is an artefact and must bottom out in some physical ability; a
-    # node that consumes neither is an idea, a proof or an institution, and
-    # correctly requires no rung.
     physical = bool(n.get("mat")) or n.get("cap", 0) >= 200
-    if tier >= 2 and not caps and physical and n["cat"] not in (
-            "social","institution","mathematics","physics","foundation",
-            "information","capability"):
-        d.append(("CAP-NONE", "tier %d and nothing in its chain declares a capability rung "
-                              "(furnace, tolerance, vacuum, purity, power). This is the exact "
-                              "flaw the whole rebuild was meant to fix." % tier))
+    if not caps and physical and len(cl) >= 3 and n["cat"] not in (
+            "social", "institution", "mathematics", "physics", "foundation",
+            "information", "capability"):
+        d.append(("CAP-NONE", "physical work with no capability rung in its chain "
+                              "(furnace, tolerance, vacuum, purity, or power)"))
+
     def want(words, prefix, label):
         if any(w in text for w in words) and not any(c.startswith(prefix) for c in caps):
-            d.append(("CAP-" + label, "reads as needing a %s rung but none appears anywhere "
+            d.append(("CAP-" + label, "reads as needing a %s rung but none appears "
                                       "in its prerequisite chain" % label.lower()))
     want(HEAT_WORDS, "cap_heat_", "HEAT")
-    want(TOL_WORDS,  "cap_tol_",  "TOL")
-    want(VAC_WORDS,  "cap_vac_",  "VAC")
-    want(PUR_WORDS,  "cap_pure_", "PURITY")
-    if any(w in text for w in ELEC_WORDS) and tier >= 3 and not any(c.startswith("cap_power_") for c in caps):
-        d.append(("CAP-POWER", "electrical, tier 3 or above, and no power rung in its chain"))
+    want(TOL_WORDS, "cap_tol_", "TOL")
+    want(VAC_WORDS, "cap_vac_", "VAC")
+    want(PUR_WORDS, "cap_pure_", "PURITY")
+    if any(w in text for w in ELEC_WORDS) and not any(c.startswith("cap_power_") for c in caps):
+        d.append(("CAP-POWER", "electrical work with no power rung in its chain"))
 
-    # --- 2. is it shallow? a late technology with almost no stated dependencies
-    # A single direct prerequisite is NOT automatically a defect. In chemistry a
-    # derivative really does hang off one precursor: aspirin needs salicylic acid
-    # and little else, and its ancestry is 40 nodes deep. Only flag a node that is
-    # both narrow at the top AND shallow all the way down.
-    if tier >= 3 and len(n["pre"]) < 2 and len(cl) < 25:
-        d.append(("SHALLOW", "tier %d with %d direct prerequisite(s) and an ancestry only %d "
-                             "nodes deep. Narrow at the top is fine; narrow all the way down "
-                             "is not." % (tier, len(n["pre"]), len(cl))))
-    if tier >= 4 and len(cl) < 12:
-        d.append(("THIN-CHAIN", "tier %d but its whole ancestry is only %d nodes deep"
-                                % (tier, len(cl))))
-
-    # --- 3. is it reachable at all, and honest about it?
+    if len(n["pre"]) < 2 and 10 <= len(cl) < 25:
+        d.append(("SHALLOW", "%d direct prerequisite(s) and an ancestry only %d nodes deep"
+                             % (len(n["pre"]), len(cl))))
     if unob and n["cat"] != "unobtainable":
-        d.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE. Either it is "
-                             "impossible and should say so, or it needs a substitute path."
+        d.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
                              % ", ".join(sorted(unob)[:3])))
 
-    # --- 4. cost sanity, judged against its own tier not against the tree
-    med_cost, med_ph = stats["cost"].get(tier, 1), stats["ph"].get(tier, 1)
+    category = n["cat"]
+    med_cost = stats["cost"].get(category, 1)
     cost = n["_total_cost"]
     if med_cost > 0 and cost > med_cost * 25:
-        d.append(("COST-HIGH", "costs %s den, about %.0fx the median for tier %d"
-                               % (f"{cost:,.0f}", cost / med_cost, tier)))
-    if tier >= 3 and cost < 200:
-        d.append(("COST-LOW", "tier %d costing only %s den. Late technologies are not free."
-                              % (tier, f"{cost:,.0f}")))
+        d.append(("COST-HIGH", "costs %s den, about %.0fx the median for category %s"
+                               % (f"{cost:,.0f}", cost / med_cost, category)))
     if n["ph"] > 2000:
-        d.append(("HOURS-HIGH", "%s founder-hours, which is %.1f%% of a whole working life"
+        d.append(("HOURS-HIGH", "%s founder-hours, which is %.1f%% of a working life"
                                 % (f"{n['ph']:,}", 100.0 * n["ph"] / 72000)))
-    if tier >= 2 and n["ph"] == 0 and n["cat"] not in ("capability","material"):
-        d.append(("HOURS-ZERO", "tier %d and costs the founder no hours at all" % tier))
-
-    # --- 5. calendar honesty
-    if tier >= 4 and n["yrs"] < 1:
-        d.append(("NO-FLOOR", "tier %d with a calendar floor under a year. Heavy technology "
-                              "needs a generation to diffuse." % tier))
-
-    # --- 6. documentation
+    if len(cl) >= 3 and n["ph"] == 0 and n["cat"] not in ("capability", "material"):
+        d.append(("HOURS-ZERO", "non-foundational work costs the founder no hours"))
+    if n.get("adopt_yrs", 0) >= 5 and n["yrs"] < 1:
+        d.append(("NO-FLOOR", "long adoption has a calendar floor under a year"))
     if len(n["note"]) < 60:
-        d.append(("NOTE-THIN", "note is %d characters. The note is where the non-obvious "
-                               "kernel lives; without it the node is just a label."
-                               % len(n["note"])))
-    if not n.get("kb") and n["cat"] not in ("capability","material","unobtainable"):
-        d.append(("NO-RECIPE", "no knowledge-base link, so a reader can see WHAT and WHEN "
-                               "but not HOW. This is a documentation gap, not a modelling error."))
-    if n["conf"] not in ("A","B","C"):
+        d.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
+    if not n.get("kb") and n["cat"] not in ("capability", "material", "unobtainable"):
+        d.append(("NO-RECIPE", "no knowledge-base link"))
+    if n["conf"] not in ("A", "B", "C"):
         d.append(("NO-CONF", "confidence not stated"))
+    if len(cl) >= 3 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
+            and n["cat"] not in ("capability", "material", "unobtainable", "mathematics", "physics"):
+        d.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus"))
 
-    # --- 7. social model actually populated
-    # Schema v2 replaced the scalar gov/sus pair with `traits`, which the
-    # civilization file weights. A node is only socially flat if it has
-    # NEITHER representation. Checking gov/sus alone flagged 769 fully tagged
-    # v2 nodes as defective, which inflated the largest defect category in the
-    # audit by a factor of four and measured nothing.
-    if tier >= 2 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
-            and n["cat"] not in ("capability","material","unobtainable",
-                                 "mathematics","physics"):
-        d.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus, so every civilization "
-                                 "reacts to this identically, which is to say not at all. "
-                                 "Almost nothing at this scale is politically neutral."))
-
-    weights = {"NO-RECIPE":0.5, "CAP-NONE":3,"CAP-HEAT":2,"CAP-TOL":2,"CAP-VAC":2,"CAP-PURITY":2,"CAP-POWER":2,
-               "SHALLOW":3,"THIN-CHAIN":2,"BLOCKED":3,"COST-HIGH":1,"COST-LOW":1,
-               "HOURS-HIGH":1,"HOURS-ZERO":1,"NO-FLOOR":1,"NOTE-THIN":2,"NO-RECIPE":1,
-               "NO-CONF":1,"SOCIAL-FLAT":1}
-    penalty = sum(weights.get(c, 1) for c, _ in d)
-    score = max(0, int(round(100 - penalty * 6)))
-    return score, d
-
+    weights = {"NO-RECIPE": 1, "CAP-NONE": 3, "CAP-HEAT": 2, "CAP-TOL": 2,
+               "CAP-VAC": 2, "CAP-PURITY": 2, "CAP-POWER": 2, "SHALLOW": 3,
+               "BLOCKED": 3, "COST-HIGH": 1, "HOURS-HIGH": 1, "HOURS-ZERO": 1,
+               "NO-FLOOR": 1, "NOTE-THIN": 2, "NO-CONF": 1, "SOCIAL-FLAT": 1}
+    penalty = sum(weights.get(code, 1) for code, _ in d)
+    return max(0, int(round(100 - penalty * 6))), d
 
 def grade(s):
     return "A" if s >= 90 else "B" if s >= 78 else "C" if s >= 64 else "D" if s >= 50 else "F"
@@ -436,12 +377,11 @@ def cmd_judge(a):
         n["_total_cost"] = (sum(wages.get(t, 0) * h for t, h in n["lab"].items())
                             + sum(goods.get(m, 0) * q for m, q in n["mat"].items()) + n["cap"])
 
-    by_tier_cost, by_tier_ph = collections.defaultdict(list), collections.defaultdict(list)
+    by_category_cost = collections.defaultdict(list)
     for n in nodes.values():
-        by_tier_cost[n["tier"]].append(n["_total_cost"])
-        by_tier_ph[n["tier"]].append(n["ph"])
-    stats = {"cost": {t: statistics.median(v) for t, v in by_tier_cost.items()},
-             "ph":   {t: statistics.median(v) for t, v in by_tier_ph.items()}}
+        by_category_cost[n["cat"]].append(n["_total_cost"])
+    stats = {"cost": {cat: statistics.median(v)
+                      for cat, v in by_category_cost.items()}}
 
     results = {}
     for k, n in nodes.items():
@@ -454,8 +394,8 @@ def cmd_judge(a):
         n, (s, d) = nodes[a.id], results[a.id]
         print("%s  [%s]" % (n["name"], n["id"]))
         print("=" * 78)
-        print("grade %s (%d/100)   tier %d   %s   confidence %s"
-              % (grade(s), s, n["tier"], n["cat"], n["conf"]))
+        print("grade %s (%d/100)   %s   confidence %s"
+              % (grade(s), s, n["cat"], n["conf"]))
         print("direct prerequisites : %d   full ancestry : %d nodes"
               % (len(n["pre"]), len(closure(nodes, a.id)) - 1))
         print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
@@ -566,15 +506,15 @@ def cmd_repair(a):
     for n in nodes.values():
         n["_total_cost"] = (sum(wages.get(t,0)*h for t,h in n["lab"].items())
                             + sum(goods.get(m,0)*q for m,q in n["mat"].items()) + n["cap"])
-    by_tier_cost = collections.defaultdict(list); by_tier_ph = collections.defaultdict(list)
+    by_category_cost = collections.defaultdict(list)
     for n in nodes.values():
-        by_tier_cost[n["tier"]].append(n["_total_cost"]); by_tier_ph[n["tier"]].append(n["ph"])
-    stats = {"cost":{t:statistics.median(v) for t,v in by_tier_cost.items()},
-             "ph":{t:statistics.median(v) for t,v in by_tier_ph.items()}}
+        by_category_cost[n["cat"]].append(n["_total_cost"])
+    stats = {"cost": {cat: statistics.median(v)
+                      for cat, v in by_category_cost.items()}}
 
     counts = collections.Counter()
     for k, n in list(nodes.items()):
-        if n["cat"] in ABSTRACT_CATS or n["tier"] == 9:
+        if n["cat"] in ABSTRACT_CATS:
             continue
         score, defects = judge_node(n, nodes, stats)
         codes = {c for c, _ in defects}
@@ -591,26 +531,10 @@ def cmd_repair(a):
                 counts["cycle-forming edges refused"] += 1
                 return
             n["pre"].append(cap_id); added.append(cap_id)
-        t = min(5, max(0, n["tier"]))
-        # CAPABILITY INFERENCE IS OFF BY DEFAULT AND SHOULD STAY OFF.
-        # An independent reviewer sampled eight nodes carrying an inferred rung
-        # and found all eight wrong: a 1300 C furnace bolted onto a room
-        # temperature gelignite mix, a 1600 C furnace onto a pure paperwork node
-        # about binary arithmetic, a vacuum rung onto mercury extraction (which is
-        # backwards, mercury is what makes vacuum technology possible). A keyword
-        # heuristic over prose cannot infer physics. Pass --infer-caps only if you
-        # intend to review every edge it adds by hand.
-        if not getattr(a, "infer_caps", False):
-            if codes & {"CAP-NONE","CAP-HEAT","CAP-TOL","CAP-VAC","CAP-PURITY","CAP-POWER"}:
-                counts["capability gaps LEFT VISIBLE (not guessed at)"] += 1
-        elif "CAP-HEAT" in codes: add(HEAT_BY_TIER.get(t))
-        if getattr(a, "infer_caps", False) and "CAP-TOL"  in codes: add(TOL_BY_TIER.get(t))
-        if getattr(a, "infer_caps", False) and "CAP-VAC"  in codes: add(VAC_BY_TIER.get(max(3, t)))
-        if getattr(a, "infer_caps", False) and "CAP-PURITY" in codes: add(PUR_BY_TIER.get(max(3, t)))
-        if getattr(a, "infer_caps", False) and "CAP-POWER"in codes: add(PWR_BY_TIER.get(max(3, t)))
-        if getattr(a, "infer_caps", False) and "CAP-NONE" in codes and not added:
-            # give it the rung its tier implies rather than leaving it groundless
-            add(TOL_BY_TIER.get(t) if t <= 2 else HEAT_BY_TIER.get(t))
+        # Capability gaps remain visible for human review. A prose keyword
+        # heuristic cannot safely infer engineering prerequisites.
+        if codes & {"CAP-NONE", "CAP-HEAT", "CAP-TOL", "CAP-VAC", "CAP-PURITY", "CAP-POWER"}:
+            counts["capability gaps LEFT VISIBLE (not guessed at)"] += 1
         if added:
             counts["capability edges inferred"] += len(added)
             n["note"] = n["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
@@ -639,7 +563,7 @@ def cmd_repair(a):
                     n["note"] = n["note"].rstrip() + (" [AUDIT: State interest and suspicion "
                         "were unset and have been defaulted from the category.]")
                     break
-        if "NO-FLOOR" in codes and n["tier"] >= 4:
+        if "NO-FLOOR" in codes:
             n["yrs"] = max(n["yrs"], 2.0); counts["calendar floors raised"] += 1
     tree["nodes"] = [nodes[i] for i in sorted(nodes)]
     _write_json(tree, TREE, a)

@@ -26,7 +26,7 @@ check("bare null/number/string/list does not kill the session",
 
 # --- Norse BREAK: `why` crashed on nodes missing the v1 scalars
 missing = [x["id"] for x in TREE["nodes"]
-           if any(f not in x for f in ("sus", "gov", "tier", "cat", "pre"))]
+           if any(f not in x for f in ("sus", "gov", "cat", "pre"))]
 check("no node is missing a required field", not missing, str(missing[:4]))
 
 # --- Rome WEIRD: buy+manumit minted labour from money

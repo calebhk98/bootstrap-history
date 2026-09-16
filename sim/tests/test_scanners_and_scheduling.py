@@ -829,9 +829,8 @@ check("it shows up in the rendered text too, right where the staffing "
 # check still requires a semiconductor supplied by single_crystal or
 # silicon_path"). Verified against the live tree and the live engine: the
 # node's own req_any is empty and its only semiconductor prerequisite is
-# ge_reduction. The one place the old requirement still existed was a
-# one-time migration script's stale literal (migrate_v2.py), now guarded
-# against ever reapplying.
+# ge_reduction. The stale requirement has been removed from the live data and
+# start checks.
 # ======================================================================
 check("point_contact_transistor's req_any is empty - nothing substitutes "
       "single_crystal or silicon_path in for it",
@@ -857,27 +856,6 @@ check("junction_transistor, by contrast, genuinely does need single_crystal "
       "- that gate is real and correctly placed one node further on, not "
       "removed along with point_contact_transistor's stale one",
       "single_crystal" in NODES["junction_transistor"]["pre"], NODES["junction_transistor"]["pre"])
-import importlib as _IL
-_migrate_src = open(os.path.join(ROOT, "rome", "sim", "migrate_v2.py")).read()
-check("migrate_v2.py's SUBS table no longer carries the stale "
-      "point_contact_transistor substitution group at all",
-      '"point_contact_transistor": [{"group":"semiconductor"' not in _migrate_src,
-      None)
-_migrate_v2 = _IL.import_module("migrate_v2")
-import io as _IO, contextlib as _CTX
-_tree_path = os.path.join(ROOT, "rome", "data", "tech_tree.json")
-_tree_bytes_before = open(_tree_path, "rb").read()
-_mg_out = _IO.StringIO()
-with _CTX.redirect_stdout(_mg_out):
-    _mg_rc = _migrate_v2.main()
-check("running migrate_v2.py again against the CURRENT (already-migrated) "
-      "tree refuses to touch it, rather than silently re-applying its "
-      "snapshot-in-time SUBS table over later hand-fixes",
-      _mg_rc == 0 and "already schema v2" in _mg_out.getvalue(), _mg_out.getvalue())
-check("...and the tree on disk is provably byte-for-byte unchanged by that "
-      "no-op run (compared against a copy taken before calling it, not "
-      "against the in-memory NODES this whole suite has since mutated)",
-      open(_tree_path, "rb").read() == _tree_bytes_before, None)
 
 # A FREE PREREQUISITE SHOULD SAY IT IS FREE. Eight cap_* nodes cost nothing,
 # take no time and cannot fail, and a player still has to start each by hand.
@@ -931,7 +909,7 @@ check("under fog the free-prerequisite hint never names a capability the "
 _fp_free = [k for k, n in NODES.items()
             if k.startswith("cap_") and (n.get("_total_cost") or 0) <= 1
             and (n.get("ph") or 0) == 0 and (n.get("yrs") or 0) == 0
-            and (n.get("risk") or 0) == 0 and n["tier"] > 0]
+            and (n.get("risk") or 0) == 0]
 check("the free capability nodes the hint exists for are still free: no "
       "cost, no hours, no years, no risk",
       len(_fp_free) >= 8, sorted(_fp_free))
@@ -1682,7 +1660,7 @@ check("no militarily significant technology done: the state has nothing to "
       not _no_mil.military_demand_eligible(), _no_mil.military_leverage())
 _mil_done = _grown("rome_100ad")
 _mil_done.done.update(k for k in NODES if "military" in NODES[k].get("traits", ())
-                      and NODES[k]["tier"] <= 1)
+)
 _mil_done._done_changed()
 check("...but the FIRST working gun (one military-branch node, not a "
       "standing army) is already enough to be asked for",
@@ -1714,7 +1692,7 @@ _huge_shielded.protection = 0.85
 _huge_shielded.done.add("academy_network")
 _huge_shielded._done_changed()
 _huge_shielded.done.update(k for k in NODES if "military" in NODES[k].get("traits", ())
-                           and NODES[k]["tier"] <= 2)
+)
 _huge_shielded._done_changed()
 check("confiscation is mitigable, by exactly the things that mitigated it "
       "historically: a patron/standing, dispersed holdings, and being "
