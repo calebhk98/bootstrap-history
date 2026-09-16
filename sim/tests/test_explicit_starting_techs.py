@@ -39,3 +39,17 @@ _before = set(_mexica.granted)
 _mexica.step()
 check("advancing time does not infer additional starting ownership",
       _mexica.granted == _before, sorted(_mexica.granted - _before))
+
+# A typo in explicit scenario data must not degrade into a warning followed by
+# a different opening state.  That formerly hid eight bad ids across three
+# civilizations, including four of the Mexica's five declared technologies.
+_bad_civ = copy.deepcopy(S.load_civ("mexica_1500"))
+_bad_civ["starting_techs"].append("not_a_real_node")
+try:
+    S.Sim(NODES, ORDER, random.Random(1), events=False, civ=_bad_civ)
+except ValueError as _error:
+    _rejected_unknown_start = "not_a_real_node" in str(_error)
+else:
+    _rejected_unknown_start = False
+check("unknown explicit starting technologies fail fast",
+      _rejected_unknown_start, "invalid id was accepted")

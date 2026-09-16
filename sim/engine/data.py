@@ -220,7 +220,21 @@ def load_civ(name="rome_100ad"):
                       if x.endswith(".json") and not x.startswith("_"))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
     c = json.load(open(f))
-    c.setdefault("starting_techs", [])
+    # Opening ownership is scenario data, not an optional convenience with an
+    # implicit fallback.  Silently turning a missing declaration into an empty
+    # list makes a newly-authored scenario look valid while stripping its
+    # entire inherited material/capability state.
+    if "starting_techs" not in c:
+        raise ValueError("civilization %r must declare starting_techs explicitly"
+                         % c.get("id", name))
+    if not isinstance(c["starting_techs"], list):
+        raise ValueError("civilization %r starting_techs must be a list"
+                         % c.get("id", name))
+    duplicates = sorted(k for k, count in collections.Counter(
+        c["starting_techs"]).items() if count > 1)
+    if duplicates:
+        raise ValueError("civilization %r repeats starting technologies: %s"
+                         % (c.get("id", name), ", ".join(duplicates)))
     c.setdefault("values", {})
     for k, d in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),

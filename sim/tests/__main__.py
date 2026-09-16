@@ -58,6 +58,15 @@ TOPICS = [
     "allocate",
     "craftsmen_wording",
     "demographics",
+    # Focused complaint suites are first-class regressions too.  These used to
+    # exist on disk without appearing here, so the documented full-suite
+    # command silently skipped the fixes they were written to protect.
+    "complaints_09_16",
+    "complaint_13_specialist_supervision",
+    "complaints_17_24",
+    "dynamic_wages",
+    "economic_levers_inventory",
+    "explicit_starting_techs",
 ]
 
 
