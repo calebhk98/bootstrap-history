@@ -2,7 +2,6 @@
   {
     "id": "air_kite_basic",
     "name": "Kite",
-    "tier": 0,
     "cat": "aviation",
     "pre": ["mat_linen", "mat_silk"],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "air_observation_balloon_tethered",
     "name": "Tethered observation balloon",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["mat_linen", "mat_silk", "mat_beeswax"],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "air_hot_air_balloon_ref",
     "name": "hot_air_balloon",
-    "tier": 0,
     "cat": "aviation",
     "pre": ["hot_air_balloon"],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "air_goldbeater_skin",
     "name": "Goldbeater's skin envelope",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["air_observation_balloon_tethered"],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "air_varnished_silk_envelope",
     "name": "Varnished silk envelope",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["air_observation_balloon_tethered", "mat_shellac"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "air_hydrogen_generation_charcoal",
     "name": "Hydrogen from iron and acid",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["mat_wrought_iron", "mat_charcoal", "mat_salt", "distillation_alcohol"],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "air_coal_gas_generation",
     "name": "Coal gas for ballooning",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["coal_coke", "destructive_distillation"],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "air_balloon_valve",
     "name": "Balloon valve",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["air_observation_balloon_tethered", "mat_wrought_iron", "mat_leather"],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "air_balloon_ballast",
     "name": "Ballast and descent control",
-    "tier": 0,
     "cat": "aviation",
     "pre": ["air_observation_balloon_tethered"],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "air_parachute",
     "name": "Parachute",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_observation_balloon_tethered", "mat_linen"],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "air_elongated_envelope",
     "name": "Elongated balloon envelope",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_varnished_silk_envelope"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "air_dirigible_engine_mount",
     "name": "Mounted engine under balloon",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_elongated_envelope", "air_light_petrol_engine"],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "air_rigid_airship_frame",
     "name": "Rigid airship frame",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["air_dirigible_engine_mount", "mat_aluminium"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "air_hydrogen_danger",
     "name": "Hydrogen safety limits",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_coal_gas_generation"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "air_aerofoil_section",
     "name": "Cambered aerofoil section",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["scientific_method"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "air_cayley_forces",
     "name": "Separation of forces: lift, drag, thrust, control",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_aerofoil_section", "newtonian_mechanics"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "air_wind_tunnel",
     "name": "Wind tunnel for lift and drag measurement",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["cap_power_muscle", "cap_tol_1mm", "mat_cast_iron"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "air_glider_simple",
     "name": "Simple glider",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_aerofoil_section", "air_cayley_forces", "cap_tol_1mm"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "air_three_axis_control",
     "name": "Three-axis control: roll, pitch, yaw",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_glider_simple", "air_wind_tunnel"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "air_wing_warping",
     "name": "Wing warping",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_three_axis_control"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "air_aileron",
     "name": "Aileron for roll control",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_three_axis_control", "cap_tol_1mm"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "air_rudder_vertical",
     "name": "Rudder for yaw control",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["air_glider_simple"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "air_elevator_pitch",
     "name": "Elevator for pitch control",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["air_glider_simple"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "air_propeller_wing",
     "name": "Propeller as rotating aerofoil",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_aerofoil_section", "air_wind_tunnel"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "air_light_petrol_engine",
     "name": "Light petrol engine",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["mat_aluminium", "cap_tol_100um", "mat_tool_steel_hss"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "air_power_to_weight",
     "name": "Power-to-weight ratio and flight",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_light_petrol_engine", "air_cayley_forces"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "air_powered_aeroplane",
     "name": "Powered aeroplane",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_three_axis_control", "air_light_petrol_engine", "air_power_to_weight", "air_wind_tunnel"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "air_radial_engine",
     "name": "Radial engine",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_light_petrol_engine", "cap_tol_100um"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "air_rotary_engine",
     "name": "Rotary engine",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_light_petrol_engine", "cap_tol_100um"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "air_biplane",
     "name": "Biplane structure",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_three_axis_control"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "air_monoplane_structure",
     "name": "Monoplane cantilever wing",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["mat_bulk_steel", "cap_tol_100um", "air_three_axis_control"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "air_stressed_skin_fuselage",
     "name": "Stressed-skin fuselage",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["mat_aluminium", "mat_concrete_reinforced"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "air_airspeed_indicator",
     "name": "Airspeed indicator",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_pitot_tube", "barometer"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "air_pitot_tube",
     "name": "Pitot tube",
-    "tier": 1,
     "cat": "aviation",
     "pre": ["barometer"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "air_altimeter",
     "name": "Altimeter (aneroid barometer)",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["barometer", "cap_tol_1mm"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "air_compass_magnetic",
     "name": "Compass for navigation",
-    "tier": 0,
     "cat": "aviation",
     "pre": ["mat_wrought_iron", "mat_silk"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "air_artificial_horizon",
     "name": "Artificial horizon (gyroscopic)",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["cap_tol_10um", "mat_bulk_steel"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "air_flying_boat",
     "name": "Flying boat",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_powered_aeroplane", "mat_bulk_steel"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "air_aerodrome",
     "name": "Aerodrome (landing field)",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_powered_aeroplane"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "air_aerial_photography",
     "name": "Aerial photography",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_powered_aeroplane", "photography"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "air_aerial_reconnaissance",
     "name": "Aerial reconnaissance",
-    "tier": 2,
     "cat": "aviation",
     "pre": ["air_powered_aeroplane", "air_aerial_photography"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "air_aerial_bombing",
     "name": "Aerial bombing",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_powered_aeroplane", "mat_nitroglycerin"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "air_helicopter_rotor",
     "name": "Helicopter rotor system",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["air_aerofoil_section", "air_light_petrol_engine", "cap_tol_100um"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "air_autogyro",
     "name": "Autogyro (powered rotor-wing)",
-    "tier": 3,
     "cat": "aviation",
     "pre": ["air_aerofoil_section", "air_light_petrol_engine", "air_propeller_wing"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "air_jet_engine_concept",
     "name": "Jet engine principle",
-    "tier": 4,
     "cat": "aviation",
     "pre": ["thermodynamics_theory", "newtonian_mechanics", "mat_tool_steel_hss"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "air_jet_engine_build",
     "name": "Jet engine (centrifugal compressor)",
-    "tier": 5,
     "cat": "aviation",
     "pre": ["air_jet_engine_concept", "mat_tool_steel_hss", "cap_tol_10um", "mat_nickel"],
     "kb": "",

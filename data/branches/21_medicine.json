@@ -2,7 +2,6 @@
   {
     "id": "med_surgical_kit_good",
     "name": "Good surgical instrument kit",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["mat_bronze"],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "med_cataract_couching",
     "name": "Cataract couching",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["med_surgical_kit_good"],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "med_trepanation",
     "name": "Trepanation",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["med_surgical_kit_good"],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "med_amputation",
     "name": "Amputation and prosthetics",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["med_surgical_kit_good"],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "med_wound_suturing",
     "name": "Wound suturing",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["med_surgical_kit_good", "mat_linen"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "med_valetudinaria",
     "name": "Military field hospital (valetudinaria)",
-    "tier": 0,
     "cat": "institutions",
     "pre": ["sanitation_antisepsis"],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "med_opium_mandrake",
     "name": "Opium and mandrake tinctures",
-    "tier": 0,
     "cat": "pharmacology",
     "pre": ["mat_olive_oil"],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "med_herbal_pharmacy",
     "name": "Herbal pharmacy (Dioscorides Materia medica)",
-    "tier": 0,
     "cat": "pharmacology",
     "pre": ["mat_olive_oil"],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "med_bone_setting",
     "name": "Bone setting",
-    "tier": 0,
     "cat": "surgery",
     "pre": ["med_surgical_kit_good"],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "med_obstetric_practice",
     "name": "Obstetric practice",
-    "tier": 0,
     "cat": "obstetrics",
     "pre": ["mat_linen"],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "med_aqueducts_latrines",
     "name": "Aqueducts and public latrines",
-    "tier": 0,
     "cat": "public_health",
     "pre": ["mat_pozzolana"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "med_legal_physician",
     "name": "Legal protection for physicians",
-    "tier": 0,
     "cat": "institutions",
     "pre": [],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "med_ligature_haemostasis",
     "name": "Ligature over cautery for haemostasis",
-    "tier": 1,
     "cat": "surgery",
     "pre": ["med_amputation", "mat_linen"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "med_asepsis_antisepsis",
     "name": "Asepsis, antisepsis, and steam sterilization",
-    "tier": 2,
     "cat": "surgery",
     "pre": ["germ_theory", "sanitation_antisepsis", "steam_high_pressure"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "med_autoclave",
     "name": "Autoclave for steam sterilization",
-    "tier": 2,
     "cat": "instruments",
     "pre": ["steam_high_pressure", "glass_labware", "cap_heat_1300"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "med_surgical_gloves_mask",
     "name": "Surgical gloves and mask",
-    "tier": 1,
     "cat": "surgery",
     "pre": ["mat_linen"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "med_handwashing_semmelweis",
     "name": "Handwashing protocol (Semmelweis)",
-    "tier": 1,
     "cat": "surgery",
     "pre": ["germ_theory", "sanitation_antisepsis"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "med_ether_anaesthesia",
     "name": "Ether, chloroform, and nitrous oxide anaesthesia",
-    "tier": 2,
     "cat": "pharmacology",
     "pre": ["distillation_alcohol", "cap_heat_1100"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "med_cocaine_unobtainable",
     "name": "Cocaine for local anaesthesia (UNOBTAINABLE)",
-    "tier": 9,
     "cat": "pharmacology",
     "pre": [],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "med_hypodermic_syringe",
     "name": "Hypodermic syringe and hollow needle",
-    "tier": 2,
     "cat": "instruments",
     "pre": ["cap_tol_100um", "glass_labware", "steel_noric_kg"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "med_blood_groups",
     "name": "Blood groups and transfusion",
-    "tier": 2,
     "cat": "surgery",
     "pre": ["microscope_compound", "germ_theory", "med_hypodermic_syringe"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "med_saline_resuscitation",
     "name": "Saline and fluid resuscitation",
-    "tier": 1,
     "cat": "surgery",
     "pre": ["mat_salt", "glass_labware"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "med_stethoscope_percussion",
     "name": "Stethoscope and percussion",
-    "tier": 1,
     "cat": "diagnostics",
     "pre": ["germ_theory"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "med_clinical_thermometer",
     "name": "Clinical thermometer",
-    "tier": 1,
     "cat": "diagnostics",
     "pre": ["thermometer", "cap_tol_1mm"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "med_sphygmomanometer",
     "name": "Sphygmomanometer (blood pressure cuff)",
-    "tier": 2,
     "cat": "diagnostics",
     "pre": ["cap_measure_len", "glass_labware", "mercury_supply"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "med_ophthalmoscope",
     "name": "Ophthalmoscope",
-    "tier": 2,
     "cat": "diagnostics",
     "pre": ["lens_grinding", "mirror_amalgam"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "med_endoscope",
     "name": "Endoscope",
-    "tier": 3,
     "cat": "diagnostics",
     "pre": ["lens_grinding", "glass_labware", "cap_tol_100um"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "med_xray_imaging",
     "name": "X-ray imaging",
-    "tier": 3,
     "cat": "diagnostics",
     "pre": ["discharge_xray", "photography", "cap_vac_1torr"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "med_electrocardiogram",
     "name": "Electrocardiogram (ECG)",
-    "tier": 4,
     "cat": "diagnostics",
     "pre": ["galvanometer", "electromagnet", "cap_measure_elec"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "med_microscopy_pathology",
     "name": "Microscopy in pathology with histology",
-    "tier": 2,
     "cat": "diagnostics",
     "pre": ["microscope_compound", "germ_theory", "mat_dyes_synthetic"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "med_gram_stain_culture",
     "name": "Bacterial culture and Gram staining",
-    "tier": 2,
     "cat": "diagnostics",
     "pre": ["germ_theory", "glass_labware", "mat_dyes_synthetic"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "med_sterile_technique",
     "name": "Sterile technique",
-    "tier": 2,
     "cat": "surgery",
     "pre": ["med_asepsis_antisepsis", "med_autoclave"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "med_vaccination_progression",
     "name": "Vaccination: variolation to attenuated vaccines",
-    "tier": 2,
     "cat": "serology",
     "pre": ["germ_theory"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "med_antitoxin_serum",
     "name": "Antitoxin and serum therapy",
-    "tier": 2,
     "cat": "serology",
     "pre": ["germ_theory", "med_blood_groups"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "med_epidemiology_statistics",
     "name": "Epidemiology, statistics, and vital registration",
-    "tier": 1,
     "cat": "public_health",
     "pre": ["germ_theory", "statistics_basic"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "med_clinical_trials",
     "name": "Case control and randomised controlled trials",
-    "tier": 2,
     "cat": "public_health",
     "pre": ["med_epidemiology_statistics", "scientific_method"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "med_quarantine_sanitation",
     "name": "Quarantine, clean water, and sewage",
-    "tier": 1,
     "cat": "public_health",
     "pre": ["plague_preparedness", "germ_theory"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "med_vector_control",
     "name": "Vector control and drainage for malaria",
-    "tier": 1,
     "cat": "public_health",
     "pre": ["germ_theory"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "med_nutrition_vitamins",
     "name": "Nutrition, deficiency diseases, and vitamins",
-    "tier": 1,
     "cat": "pharmacology",
     "pre": ["germ_theory"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "med_insulin",
     "name": "Insulin extraction and purification",
-    "tier": 4,
     "cat": "pharmacology",
     "pre": ["analytical_chemistry"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "med_aspirin",
     "name": "Aspirin (acetylsalicylic acid)",
-    "tier": 2,
     "cat": "pharmacology",
     "pre": ["nitric_acid"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "med_sulfonamides",
     "name": "Sulfonamides (sulfanilamide)",
-    "tier": 3,
     "cat": "pharmacology",
     "pre": ["mat_dyes_synthetic", "analytical_chemistry"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "med_penicillin",
     "name": "Penicillin extraction and purification",
-    "tier": 4,
     "cat": "pharmacology",
     "pre": ["med_gram_stain_culture", "analytical_chemistry"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "med_obstetric_antisepsis",
     "name": "Antiseptic obstetrics and incubator",
-    "tier": 1,
     "cat": "obstetrics",
     "pre": ["med_handwashing_semmelweis", "med_obstetric_practice"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "med_dentistry",
     "name": "Dentistry and high-speed drill",
-    "tier": 2,
     "cat": "dentistry",
     "pre": ["cap_power_electric", "cap_heat_1100"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "med_spectacles_refraction",
     "name": "Spectacles and refraction testing",
-    "tier": 1,
     "cat": "ophthalmology",
     "pre": ["lens_grinding"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "med_hospital_institution",
     "name": "Hospital as an institution with records",
-    "tier": 1,
     "cat": "institutions",
     "pre": ["med_valetudinaria", "med_epidemiology_statistics"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "med_nursing_profession",
     "name": "Nursing as a trained profession",
-    "tier": 1,
     "cat": "institutions",
     "pre": ["med_hospital_institution", "germ_theory"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "med_medical_education",
     "name": "Medical education and cadaver dissection",
-    "tier": 1,
     "cat": "institutions",
     "pre": ["med_hospital_institution"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "med_forensic_medicine",
     "name": "Forensic medicine and autopsy",
-    "tier": 2,
     "cat": "institutions",
     "pre": ["med_medical_education", "med_legal_physician"],
     "kb": "",

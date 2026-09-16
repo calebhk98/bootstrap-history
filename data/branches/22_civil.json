@@ -2,7 +2,6 @@
   {
     "id": "civ_arch_roman",
     "name": "Roman masonry arch",
-    "tier": 0,
     "cat": "structures",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "civ_vault_barrel",
     "name": "Barrel vault",
-    "tier": 0,
     "cat": "structures",
     "pre": ["civ_arch_roman"],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "civ_dome_roman",
     "name": "Roman concrete dome",
-    "tier": 0,
     "cat": "structures",
     "pre": ["civ_vault_barrel", "mat_pozzolana"],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "civ_aqueduct_roman",
     "name": "Roman aqueduct with inverted siphons",
-    "tier": 0,
     "cat": "water",
     "pre": ["civ_arch_roman"],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "civ_road_paved",
     "name": "Roman paved road with surveying",
-    "tier": 0,
     "cat": "transport",
     "pre": ["civ_surveying_groma"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "civ_surveying_groma",
     "name": "Groma: Roman X-staff surveying tool",
-    "tier": 0,
     "cat": "tools",
     "pre": [],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "civ_chorobates",
     "name": "Chorobates: Roman water levelling rod",
-    "tier": 0,
     "cat": "tools",
     "pre": [],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "civ_sewer_roman",
     "name": "Roman sewer with gravity flow",
-    "tier": 0,
     "cat": "water",
     "pre": ["civ_arch_roman", "civ_surveying_groma"],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "civ_brick_tile",
     "name": "Roman fired brick and tile",
-    "tier": 0,
     "cat": "materials",
     "pre": [],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "civ_marble_facing",
     "name": "Marble veneer and ashlar facing",
-    "tier": 0,
     "cat": "materials",
     "pre": [],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "civ_insula",
     "name": "Insula: Roman apartment block",
-    "tier": 0,
     "cat": "buildings",
     "pre": ["civ_brick_tile", "civ_arch_roman"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "civ_glass_windows",
     "name": "Glass panes for windows",
-    "tier": 0,
     "cat": "materials",
     "pre": ["mat_glass_soda"],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "civ_amphitheatre",
     "name": "Amphitheatre with tiered seating",
-    "tier": 0,
     "cat": "buildings",
     "pre": ["civ_arch_roman", "civ_vault_barrel"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "civ_crane_treadwheel",
     "name": "Treadwheel crane",
-    "tier": 0,
     "cat": "machines",
     "pre": ["mat_wrought_iron"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "civ_cofferdam",
     "name": "Cofferdam and underwater concrete",
-    "tier": 0,
     "cat": "water",
     "pre": ["civ_arch_roman", "mat_pozzolana"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "civ_truss_triangulated",
     "name": "Triangulated truss frame",
-    "tier": 1,
     "cat": "structures",
     "pre": ["civ_arch_roman"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "civ_roof_king_post",
     "name": "King post roof truss",
-    "tier": 1,
     "cat": "structures",
     "pre": ["civ_truss_triangulated"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "civ_roof_queen_post",
     "name": "Queen post roof truss",
-    "tier": 1,
     "cat": "structures",
     "pre": ["civ_roof_king_post"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "civ_bridge_timber_truss",
     "name": "Timber trussed bridge",
-    "tier": 1,
     "cat": "transport",
     "pre": ["civ_truss_triangulated", "civ_arch_roman"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "civ_bridge_cast_iron",
     "name": "Cast iron bridge",
-    "tier": 2,
     "cat": "transport",
     "pre": ["blast_furnace", "civ_arch_roman"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "civ_iron_wrought",
     "name": "Wrought iron working and riveting",
-    "tier": 0,
     "cat": "materials",
     "pre": ["mat_wrought_iron"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "civ_bridge_wrought_iron_truss",
     "name": "Wrought iron truss bridge",
-    "tier": 2,
     "cat": "transport",
     "pre": ["civ_truss_triangulated", "civ_iron_wrought", "cap_measure_len"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "civ_wire_drawn",
     "name": "Drawn wire and wire rope",
-    "tier": 1,
     "cat": "materials",
     "pre": ["drawplate_wire", "mat_wrought_iron"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "civ_bridge_suspension",
     "name": "Suspension bridge with wire cables",
-    "tier": 3,
     "cat": "transport",
     "pre": ["civ_wire_drawn", "cap_measure_len", "geometry_analytic"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "civ_statics",
     "name": "Statics and equilibrium of forces",
-    "tier": 2,
     "cat": "theory",
     "pre": ["geometry_analytic", "newtonian_mechanics"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "civ_method_joints",
     "name": "Method of joints for truss analysis",
-    "tier": 2,
     "cat": "theory",
     "pre": ["civ_statics"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "civ_bending_moment",
     "name": "Bending moment and shear diagrams",
-    "tier": 3,
     "cat": "theory",
     "pre": ["civ_statics", "calculus"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "civ_neutral_axis",
     "name": "Neutral axis in bending",
-    "tier": 2,
     "cat": "theory",
     "pre": ["civ_bending_moment"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "civ_euler_buckling",
     "name": "Euler buckling of slender columns",
-    "tier": 3,
     "cat": "theory",
     "pre": ["civ_statics", "calculus", "newtonian_mechanics"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "civ_elasticity_theory",
     "name": "Theory of elasticity",
-    "tier": 4,
     "cat": "theory",
     "pre": ["civ_neutral_axis", "calculus"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "civ_factor_safety",
     "name": "Factor of safety concept",
-    "tier": 2,
     "cat": "theory",
     "pre": ["civ_method_joints", "statistics_basic"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "civ_materials_testing",
     "name": "Materials testing and calibration",
-    "tier": 2,
     "cat": "theory",
     "pre": ["balance_analytical", "cap_measure_mass_mg"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "civ_foundation_piles",
     "name": "Foundation piles and pile driving",
-    "tier": 1,
     "cat": "foundations",
     "pre": ["civ_statics"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "civ_foundation_spread",
     "name": "Spread footing on compacted soil",
-    "tier": 1,
     "cat": "foundations",
     "pre": ["civ_statics"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "civ_caisson",
     "name": "Caisson and underwater excavation",
-    "tier": 2,
     "cat": "foundations",
     "pre": ["civ_cofferdam"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "civ_caisson_compressed_air",
     "name": "Compressed air caisson and decompression",
-    "tier": 3,
     "cat": "foundations",
     "pre": ["civ_caisson", "cap_power_steam"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "civ_soil_mechanics",
     "name": "Soil mechanics and bearing capacity",
-    "tier": 4,
     "cat": "theory",
     "pre": ["civ_foundation_spread", "civ_statics", "analytical_chemistry"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "civ_tunnel_rock_drill",
     "name": "Rock drilling and tunnelling",
-    "tier": 2,
     "cat": "excavation",
     "pre": ["civ_statics", "cap_measure_len"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "civ_tunnel_shield",
     "name": "Tunnelling shield and incremental advance",
-    "tier": 3,
     "cat": "excavation",
     "pre": ["civ_tunnel_rock_drill", "civ_caisson"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "civ_dam_gravity",
     "name": "Gravity dam in masonry or concrete",
-    "tier": 2,
     "cat": "water",
     "pre": ["civ_arch_roman", "civ_statics"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "civ_dam_arch",
     "name": "Arch dam in concrete",
-    "tier": 3,
     "cat": "water",
     "pre": ["civ_dam_gravity", "civ_arch_roman"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "civ_dam_earth_fill",
     "name": "Earth fill dam with compacted layers",
-    "tier": 2,
     "cat": "water",
     "pre": ["civ_soil_mechanics"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "civ_spillway",
     "name": "Spillway and flood management",
-    "tier": 2,
     "cat": "water",
     "pre": ["civ_statics", "cap_measure_len"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "civ_water_treatment",
     "name": "Water treatment works and coagulation",
-    "tier": 3,
     "cat": "water",
     "pre": ["civ_aqueduct_roman", "analytical_chemistry"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "civ_pumping_station",
     "name": "Pumping station and mechanical lift",
-    "tier": 2,
     "cat": "water",
     "pre": ["bellows_water_blown", "civ_aqueduct_roman"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "civ_water_tower",
     "name": "Water tower and pressure system",
-    "tier": 1,
     "cat": "water",
     "pre": ["civ_pumping_station"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "civ_sewer_separate",
     "name": "Separate foul and storm sewers",
-    "tier": 2,
     "cat": "water",
     "pre": ["civ_sewer_roman"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "civ_sewage_treatment",
     "name": "Sewage treatment works and activated sludge",
-    "tier": 4,
     "cat": "water",
     "pre": ["civ_sewer_separate", "germ_theory"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "civ_steel_frame",
     "name": "Steel frame building",
-    "tier": 4,
     "cat": "buildings",
     "pre": ["mat_bulk_steel", "civ_method_joints", "interchangeable_parts"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "civ_curtain_wall",
     "name": "Curtain wall (non-load-bearing facade)",
-    "tier": 4,
     "cat": "buildings",
     "pre": ["civ_steel_frame", "mat_glass_soda"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "civ_elevator_otis",
     "name": "Elevator with safety brake (Otis)",
-    "tier": 3,
     "cat": "machines",
     "pre": ["steam_high_pressure", "civ_steel_frame"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "civ_reinforced_concrete",
     "name": "Reinforced concrete construction",
-    "tier": 4,
     "cat": "materials",
     "pre": ["mat_concrete_reinforced", "civ_neutral_axis"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "civ_prestressed_concrete",
     "name": "Prestressed concrete",
-    "tier": 4,
     "cat": "materials",
     "pre": ["civ_reinforced_concrete"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "civ_bridge_steel_arch",
     "name": "Steel arch bridge",
-    "tier": 4,
     "cat": "transport",
     "pre": ["mat_bulk_steel", "civ_arch_roman", "civ_method_joints"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "civ_bridge_cantilever",
     "name": "Cantilever bridge",
-    "tier": 4,
     "cat": "transport",
     "pre": ["mat_bulk_steel", "civ_bending_moment"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "civ_box_girder",
     "name": "Box girder beam",
-    "tier": 4,
     "cat": "structures",
     "pre": ["civ_neutral_axis", "mat_bulk_steel"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "civ_glass_plate",
     "name": "Plate glass for windows and storefronts",
-    "tier": 3,
     "cat": "materials",
     "pre": ["mat_glass_soda", "precision_three_plate"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "civ_fireproofing",
     "name": "Fireproofing and fire-resistant structure",
-    "tier": 3,
     "cat": "buildings",
     "pre": ["civ_steel_frame", "refractory_fireclay"],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "civ_building_code",
     "name": "Building code and regulatory standards",
-    "tier": 3,
     "cat": "institutional",
     "pre": ["civ_factor_safety"],
     "kb": "",
@@ -1300,7 +1241,6 @@
   {
     "id": "civ_lightning_conductor",
     "name": "Lightning conductor and grounding",
-    "tier": 2,
     "cat": "safety",
     "pre": ["mat_wrought_iron"],
     "kb": "",
@@ -1322,7 +1262,6 @@
   {
     "id": "civ_theodolite",
     "name": "Theodolite for surveying angles",
-    "tier": 2,
     "cat": "tools",
     "pre": ["lens_grinding", "cap_measure_len"],
     "kb": "",
@@ -1344,7 +1283,6 @@
   {
     "id": "civ_precise_levelling",
     "name": "Precise levelling and level network",
-    "tier": 2,
     "cat": "tools",
     "pre": ["telescope", "cap_measure_len"],
     "kb": "",
@@ -1366,7 +1304,6 @@
   {
     "id": "civ_town_planning",
     "name": "Town planning and street layout",
-    "tier": 2,
     "cat": "institutional",
     "pre": ["civ_surveying_groma"],
     "kb": "",
@@ -1388,7 +1325,6 @@
   {
     "id": "civ_harbour_dock",
     "name": "Harbour and dock with breakwaters",
-    "tier": 2,
     "cat": "water",
     "pre": ["civ_cofferdam", "civ_arch_roman"],
     "kb": "",
@@ -1410,7 +1346,6 @@
   {
     "id": "civ_canal_pound_lock",
     "name": "Canal pound lock for level changes",
-    "tier": 2,
     "cat": "transport",
     "pre": ["civ_gate_sluice"],
     "kb": "",
@@ -1432,7 +1367,6 @@
   {
     "id": "civ_gate_sluice",
     "name": "Sluice gate for water control",
-    "tier": 1,
     "cat": "water",
     "pre": ["civ_arch_roman"],
     "kb": "",
@@ -1454,7 +1388,6 @@
   {
     "id": "civ_dredging",
     "name": "Dredging for channel maintenance",
-    "tier": 2,
     "cat": "excavation",
     "pre": ["civ_pumping_station"],
     "kb": "",
@@ -1476,7 +1409,6 @@
   {
     "id": "civ_street_paved",
     "name": "Paved street and sidewalk",
-    "tier": 1,
     "cat": "transport",
     "pre": ["civ_road_paved"],
     "kb": "",
@@ -1498,7 +1430,6 @@
   {
     "id": "civ_street_lighting",
     "name": "Street lighting with electricity",
-    "tier": 4,
     "cat": "urban",
     "pre": ["arc_light_lamp", "power_grid"],
     "kb": "",

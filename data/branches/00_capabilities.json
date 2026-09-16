@@ -2,7 +2,6 @@
  {
   "id": "cap_heat_0700",
   "name": "Sustained 700 C (pottery kiln)",
-  "tier": 0,
   "cat": "capability",
   "pre": [],
   "kb": "",
@@ -24,7 +23,6 @@
  {
   "id": "cap_heat_1100",
   "name": "Sustained 1100 C (hand-blown charcoal)",
-  "tier": 0,
   "cat": "capability",
   "pre": [
    "cap_heat_0700",
@@ -49,7 +47,6 @@
  {
   "id": "cap_heat_1300",
   "name": "Sustained 1300 C (water-blown continuous blast)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_heat_1100",
@@ -74,7 +71,6 @@
  {
   "id": "cap_heat_1600",
   "name": "Sustained 1600 C (regenerative preheat)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_heat_1300",
@@ -99,7 +95,6 @@
  {
   "id": "cap_heat_2000",
   "name": "2000 C localised (oxy-hydrogen blowpipe)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_heat_1600",
@@ -124,7 +119,6 @@
  {
   "id": "cap_heat_3000",
   "name": "3000 C+ (electric arc / resistance)",
-  "tier": 4,
   "cat": "capability",
   "pre": [
    "cap_heat_2000",
@@ -149,7 +143,6 @@
  {
   "id": "cap_tol_1mm",
   "name": "Tolerance 1 mm (skilled hand craft)",
-  "tier": 0,
   "cat": "capability",
   "pre": [],
   "kb": "",
@@ -171,7 +164,6 @@
  {
   "id": "cap_tol_100um",
   "name": "Tolerance 0.1 mm (file, scraper, gauge)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_tol_1mm",
@@ -196,7 +188,6 @@
  {
   "id": "cap_tol_10um",
   "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)",
-  "tier": 3,
   "cat": "capability",
   "pre": [
    "cap_tol_100um",
@@ -222,7 +213,6 @@
  {
   "id": "cap_tol_1um",
   "name": "Tolerance 1 micron (lapping, grinding, optical flats)",
-  "tier": 4,
   "cat": "capability",
   "pre": [
    "cap_tol_10um",
@@ -247,7 +237,6 @@
  {
   "id": "cap_tol_100nm",
   "name": "Tolerance 0.1 micron (interferometric)",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_tol_1um",
@@ -272,7 +261,6 @@
  {
   "id": "cap_vac_1torr",
   "name": "Rough vacuum, about 1 torr (piston pump)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_tol_100um",
@@ -297,7 +285,6 @@
  {
   "id": "cap_vac_1e3",
   "name": "High vacuum, about 1e-3 torr (Sprengel mercury drop)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_vac_1torr",
@@ -323,7 +310,6 @@
  {
   "id": "cap_vac_1e6",
   "name": "Very high vacuum, 1e-6 torr (diffusion pump plus getters)",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_vac_1e3",
@@ -349,7 +335,6 @@
  {
   "id": "cap_vac_1e9",
   "name": "Ultra high vacuum, 1e-9 torr (bakeable metal systems)",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_vac_1e6",
@@ -375,7 +360,6 @@
  {
   "id": "cap_pure_2N",
   "name": "Purity 99% (careful classical refining)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "balance_analytical"
@@ -399,7 +383,6 @@
  {
   "id": "cap_pure_4N",
   "name": "Purity 99.99% (electrorefining, fractional crystallisation)",
-  "tier": 3,
   "cat": "capability",
   "pre": [
    "cap_pure_2N",
@@ -425,7 +408,6 @@
  {
   "id": "cap_pure_6N",
   "name": "Purity 99.9999% (fractional distillation of volatile compounds)",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_pure_4N",
@@ -451,7 +433,6 @@
  {
   "id": "cap_pure_9N",
   "name": "Purity 1 part in 1e9 (zone refining)",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_pure_6N",
@@ -479,7 +460,6 @@
  {
   "id": "cap_power_muscle",
   "name": "Muscle and animal power",
-  "tier": 0,
   "cat": "capability",
   "pre": [],
   "kb": "",
@@ -501,7 +481,6 @@
  {
   "id": "cap_power_water",
   "name": "Water power, tens of kW on one shaft",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_power_muscle",
@@ -526,7 +505,6 @@
  {
   "id": "cap_power_steam",
   "name": "Steam power, portable, hundreds of kW",
-  "tier": 4,
   "cat": "capability",
   "pre": [
    "cap_power_water",
@@ -551,7 +529,6 @@
  {
   "id": "cap_power_electric",
   "name": "Local electric power, kW scale",
-  "tier": 4,
   "cat": "capability",
   "pre": [
    "dynamo",
@@ -576,7 +553,6 @@
  {
   "id": "cap_power_grid",
   "name": "Grid electric power, MW scale",
-  "tier": 5,
   "cat": "capability",
   "pre": [
    "cap_power_electric",
@@ -601,7 +577,6 @@
  {
   "id": "cap_measure_len",
   "name": "Reproducible length standard",
-  "tier": 0,
   "cat": "capability",
   "pre": [
    "units_standards"
@@ -625,7 +600,6 @@
  {
   "id": "cap_measure_mass_mg",
   "name": "Mass to 1 milligram",
-  "tier": 2,
   "cat": "capability",
   "pre": [
    "balance_analytical"
@@ -649,7 +623,6 @@
  {
   "id": "cap_measure_temp",
   "name": "Temperature to a few degrees (liquid in glass)",
-  "tier": 2,
   "cat": "capability",
   "pre": [
    "thermometer"
@@ -673,7 +646,6 @@
  {
   "id": "cap_measure_temp_hi",
   "name": "High temperature (clay contraction and colour pyrometry)",
-  "tier": 1,
   "cat": "capability",
   "pre": [
    "cap_measure_temp",
@@ -698,7 +670,6 @@
  {
   "id": "cap_measure_time_s",
   "name": "Time to the second (pendulum)",
-  "tier": 2,
   "cat": "capability",
   "pre": [
    "clock_pendulum"
@@ -722,7 +693,6 @@
  {
   "id": "cap_measure_time_ms",
   "name": "Time to the millisecond (chronograph, tuning fork)",
-  "tier": 3,
   "cat": "capability",
   "pre": [
    "cap_measure_time_s",
@@ -747,7 +717,6 @@
  {
   "id": "cap_measure_elec",
   "name": "Absolute electrical units",
-  "tier": 3,
   "cat": "capability",
   "pre": [
    "galvanometer"
@@ -771,7 +740,6 @@
  {
   "id": "cap_measure_light",
   "name": "Interferometric length (wavelengths of light)",
-  "tier": 4,
   "cat": "capability",
   "pre": [
    "optical_flat_interference",
@@ -796,7 +764,6 @@
  {
   "id": "cap_gas_o2h2",
   "name": "Oxygen and hydrogen in quantity",
-  "tier": 3,
   "cat": "capability",
   "pre": [
    "industrial_gases"

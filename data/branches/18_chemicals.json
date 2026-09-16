@@ -2,7 +2,6 @@
   {
     "id": "chm_catalyst_concept",
     "name": "Catalysis and catalyst theory",
-    "tier": 2,
     "cat": "chemical_engineering",
     "pre": ["analytical_chemistry", "thermodynamics_theory", "crucible_steel"],
     "kb": "Catalysis speeds reaction by lowering activation energy without being consumed itself",
@@ -24,7 +23,6 @@
   {
     "id": "chm_pressure_vessel",
     "name": "High-pressure autoclave and steam digester",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["cap_heat_1300", "cap_tol_100um", "cap_measure_temp", "mat_wrought_iron", "steam_high_pressure"],
     "kb": "Containment of reaction at elevated temperature and pressure using riveted iron",
@@ -46,7 +44,6 @@
   {
     "id": "chm_pressure_gauge",
     "name": "Bourdon tube pressure gauge and safety relief valve",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["cap_tol_100um", "cap_measure_temp", "mat_brass", "master_screw"],
     "kb": "Spring-loaded metal tube to measure and limit pressure safely",
@@ -68,7 +65,6 @@
   {
     "id": "chm_contact_sulfuric",
     "name": "Contact process for sulfuric acid using platinum catalyst",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["sulfuric_retort", "lead_chamber", "cap_heat_1600", "cap_pure_4N", "chm_catalyst_concept", "chm_pressure_gauge"],
     "kb": "Catalytic oxidation of SO2 to SO3 across heated platinum at high purity",
@@ -90,7 +86,6 @@
   {
     "id": "chm_contact_vanadium",
     "name": "Vanadium pentoxide catalyst for contact sulfuric acid",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["chm_contact_sulfuric", "analytical_chemistry", "cap_pure_4N"],
     "kb": "V2O5 on silica support as cheaper alternative to platinum",
@@ -112,7 +107,6 @@
   {
     "id": "chm_oleum",
     "name": "Oleum (fuming sulfuric acid) production",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_contact_sulfuric", "lead_chamber"],
     "kb": "Concentration of sulfuric acid by absorption of SO3 into 100% H2SO4",
@@ -134,7 +128,6 @@
   {
     "id": "chm_solvay_process",
     "name": "Solvay process: ammonia-soda manufacturing",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["potash_soda", "soda_leblanc", "distillation_alcohol", "chm_pressure_gauge", "mat_ammonia"],
     "kb": "Absorbing ammonia in brine, then carbonating to precipitate sodium bicarbonate",
@@ -156,7 +149,6 @@
   {
     "id": "chm_ammonia_recovery",
     "name": "Ammonia recovery and regeneration in soda plants",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_solvay_process", "distillation_alcohol"],
     "kb": "Distillation column to recover NH3 from mother liquor and recycle to ammonia absorber",
@@ -178,7 +170,6 @@
   {
     "id": "chm_deacon_process",
     "name": "Deacon process: oxidation of hydrogen chloride to chlorine",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["hydrochloric_acid", "cap_heat_1600", "chm_catalyst_concept"],
     "kb": "Gas-phase oxidation of HCl with air over hot copper chloride catalyst",
@@ -200,7 +191,6 @@
   {
     "id": "chm_weldon_process",
     "name": "Weldon process: regeneration of manganese dioxide from manganous chloride",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["hydrochloric_acid", "chm_deacon_process"],
     "kb": "Oxidation of MnCl2 with bleach to regenerate MnO2, closing the chlorine cycle",
@@ -222,7 +212,6 @@
   {
     "id": "chm_bleaching_powder",
     "name": "Bleaching powder: mixed calcium hypochlorite",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["soda_leblanc", "chm_deacon_process"],
     "kb": "Absorption of chlorine gas into dry slaked lime to make stable powder",
@@ -244,7 +233,6 @@
   {
     "id": "chm_chlor_alkali_mercury",
     "name": "Chlor-alkali process: mercury cathode cell",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["electrolysis_industrial", "mercury_supply", "cap_tol_1mm", "cap_measure_elec"],
     "kb": "Electrolysis of brine with liquid mercury cathode to produce Cl2 gas and NaOH solution",
@@ -266,7 +254,6 @@
   {
     "id": "chm_chlor_alkali_diaphragm",
     "name": "Chlor-alkali process: asbestos diaphragm cell",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["electrolysis_industrial", "cap_measure_elec"],
     "kb": "Electrolysis of brine with asbestos cloth diaphragm separating anode and cathode",
@@ -288,7 +275,6 @@
   {
     "id": "chm_caustic_soda",
     "name": "Caustic soda: concentration and purification",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_chlor_alkali_mercury", "potash_soda", "cap_heat_1100"],
     "kb": "Concentration of dilute NaOH solution to 50% by evaporation under vacuum",
@@ -310,7 +296,6 @@
   {
     "id": "chm_ostwald_ammonia_oxidation",
     "name": "Ostwald process: oxidation of ammonia to nitric acid",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["chm_catalyst_concept", "cap_heat_1300", "nitric_acid", "industrial_gases"],
     "kb": "Catalytic oxidation of gaseous ammonia with air over hot platinum gauze",
@@ -332,7 +317,6 @@
   {
     "id": "chm_haber_bosch",
     "name": "Haber-Bosch synthesis of ammonia",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["industrial_gases", "cap_heat_1600", "chm_pressure_vessel", "chm_catalyst_concept", "chm_pressure_gauge", "cap_pure_4N"],
     "kb": "Synthesis of NH3 from N2 and H2 at 200 atm and 500 C over iron catalyst",
@@ -354,7 +338,6 @@
   {
     "id": "chm_cyanamide_fixation",
     "name": "Cyanamide process: nitrogen fixation by carbide",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["coal_coke", "cap_heat_3000"],
     "kb": "Production of calcium carbide, then reaction with nitrogen gas to make cyanamide",
@@ -376,7 +359,6 @@
   {
     "id": "chm_electric_arc_nitrogen",
     "name": "Electric arc nitrogen fixation: nitrogen oxides from air",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["industrial_gases", "cap_heat_3000"],
     "kb": "High-temperature arc oxidises nitrogen in air to nitric oxide, absorbed to yield nitric acid",
@@ -398,7 +380,6 @@
   {
     "id": "chm_superphosphate",
     "name": "Superphosphate: acidulation of rock phosphate",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["sulfuric_retort", "lead_chamber"],
     "kb": "Treatment of rock phosphate with sulfuric acid to make soluble phosphate fertiliser",
@@ -420,7 +401,6 @@
   {
     "id": "chm_potash_mining",
     "name": "Potash mining and refining",
-    "tier": 2,
     "cat": "mineral_extraction",
     "pre": ["mining_concession"],
     "kb": "Extraction of naturally-occurring potassium salt deposits",
@@ -442,7 +422,6 @@
   {
     "id": "chm_coal_tar_distillation",
     "name": "Coal tar fractionation and distillation",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["destructive_distillation", "fractionating_column"],
     "kb": "Separation of coal tar into volatile fractions: benzene, toluene, naphthalene, anthracene",
@@ -464,7 +443,6 @@
   {
     "id": "chm_fractionating_column",
     "name": "Fractionating column with bubble caps",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["distillation_alcohol", "cap_heat_1100", "cap_tol_1mm"],
     "kb": "Vertical column with bubble-cap trays to separate liquids by boiling point",
@@ -486,7 +464,6 @@
   {
     "id": "chm_benzene",
     "name": "Benzene extraction from coal tar",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_coal_tar_distillation", "cap_pure_4N"],
     "kb": "Fractional distillation of coal tar to isolate pure benzene",
@@ -508,7 +485,6 @@
   {
     "id": "chm_aniline",
     "name": "Aniline from benzene via nitrobenzene",
-    "tier": 4,
     "cat": "organic_chemistry",
     "pre": ["chm_benzene", "oleum", "industrial_gases"],
     "kb": "Nitration of benzene to nitrobenzene, then reduction with iron and acid",
@@ -530,7 +506,6 @@
   {
     "id": "chm_azo_dyes",
     "name": "Azo dyes: diazotisation and azo coupling",
-    "tier": 4,
     "cat": "organic_chemistry",
     "pre": ["chm_aniline", "nitric_acid"],
     "kb": "Conversion of aniline to diazonium salts, then coupling with phenols or naphthols",
@@ -552,7 +527,6 @@
   {
     "id": "chm_alizarin",
     "name": "Alizarin synthesis: oxidation of anthraquinone",
-    "tier": 4,
     "cat": "organic_chemistry",
     "pre": ["chm_coal_tar_distillation", "electrolysis_industrial"],
     "kb": "Oxidation of anthraquinone to alizarin, a red dye replacing madder root",
@@ -574,7 +548,6 @@
   {
     "id": "chm_indigo_synthesis",
     "name": "Indigo synthesis from N-phenylglycine",
-    "tier": 4,
     "cat": "organic_chemistry",
     "pre": ["chm_aniline", "analytical_chemistry"],
     "kb": "Fusion of indole intermediate to yield indigo; fusion with molten NaOH at 180 C",
@@ -596,7 +569,6 @@
   {
     "id": "chm_saccharin",
     "name": "Saccharin synthesis",
-    "tier": 4,
     "cat": "organic_chemistry",
     "pre": ["chm_benzene", "oleum"],
     "kb": "Sulfonation then oxidation of methylbenzene to benzosulfimide",
@@ -618,7 +590,6 @@
   {
     "id": "chm_salicylic_acid",
     "name": "Salicylic acid: hydroxylation of benzenesulfonic acid",
-    "tier": 3,
     "cat": "organic_chemistry",
     "pre": ["chm_benzene", "oleum", "cap_heat_1100"],
     "kb": "Sulfonation and alkali fusion to convert benzenesulfonic acid to phenol",
@@ -640,7 +611,6 @@
   {
     "id": "chm_aspirin",
     "name": "Aspirin synthesis from salicylic acid",
-    "tier": 3,
     "cat": "pharmaceutical",
     "pre": ["chm_salicylic_acid"],
     "kb": "Acetylation of salicylic acid with acetic anhydride to give acetylsalicylic acid",
@@ -662,7 +632,6 @@
   {
     "id": "chm_sulfonamides",
     "name": "Sulfonamide antibiotics: sulfanilamide synthesis",
-    "tier": 4,
     "cat": "pharmaceutical",
     "pre": ["chm_aniline", "chm_salicylic_acid"],
     "kb": "Sulfonation of aniline derivatives followed by amidation to yield sulfonamides",
@@ -684,7 +653,6 @@
   {
     "id": "chm_continuous_batch",
     "name": "Continuous versus batch processing decision",
-    "tier": 2,
     "cat": "chemical_engineering",
     "pre": ["cap_measure_time_s"],
     "kb": "Design choice between continuous reactors and batch kettles based on production rate and product lifetime",
@@ -706,7 +674,6 @@
   {
     "id": "chm_corrosion_lead",
     "name": "Corrosion-resistant plant: lead and lead-lined vessels",
-    "tier": 2,
     "cat": "materials",
     "pre": ["lead_metallurgy", "cap_tol_1mm"],
     "kb": "Lined vessels of lead sheet to contain sulfuric acid and chlorine",
@@ -728,7 +695,6 @@
   {
     "id": "chm_corrosion_stoneware",
     "name": "Corrosion-resistant vessels: acid-resistant stoneware",
-    "tier": 2,
     "cat": "materials",
     "pre": ["mat_porcelain"],
     "kb": "High-fired stoneware vessels glazed with acid-resistant glaze for chemical storage",
@@ -750,7 +716,6 @@
   {
     "id": "chm_corrosion_glass_lined",
     "name": "Glass-lined steel vessels",
-    "tier": 4,
     "cat": "materials",
     "pre": ["mat_glass_soda", "mat_bulk_steel", "cap_heat_1600"],
     "kb": "Fused glass coating on steel for acid resistance and thermal shock resistance",
@@ -772,7 +737,6 @@
   {
     "id": "chm_corrosion_stainless",
     "name": "Stainless steel vessels for corrosive service",
-    "tier": 5,
     "cat": "materials",
     "pre": ["mat_stainless", "mat_bulk_steel"],
     "kb": "Chromium-nickel stainless steel resistant to most chemicals and oxidising acids",
@@ -794,7 +758,6 @@
   {
     "id": "chm_filter_press",
     "name": "Filter press: plate-and-frame filtration",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["cap_tol_1mm", "iron_bar_kg"],
     "kb": "Packed plates with cloth or paper filter medium under mechanical pressure",
@@ -816,7 +779,6 @@
   {
     "id": "chm_centrifuge",
     "name": "Industrial centrifuge for separation",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["cap_tol_100um", "cap_power_steam"],
     "kb": "Rotating cylinder to separate solids from liquids by density, with scroll discharge",
@@ -838,7 +800,6 @@
   {
     "id": "chm_evaporator_surface",
     "name": "Surface evaporator for concentration",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["cap_heat_1100", "cap_measure_temp"],
     "kb": "Heated tube bundle in liquid to evaporate solvent slowly while concentrating dissolved salts",
@@ -860,7 +821,6 @@
   {
     "id": "chm_crystallisation",
     "name": "Crystallisation and crystal separation",
-    "tier": 2,
     "cat": "chemical_engineering",
     "pre": ["cap_measure_temp"],
     "kb": "Cooling of saturated solution to grow crystals, which are filtered and dried",
@@ -882,7 +842,6 @@
   {
     "id": "chm_ion_exchange",
     "name": "Ion exchange resins for water softening and purification",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["mat_bulk_steel", "formaldehyde_synthesis"],
     "kb": "Synthetic resin beads with exchangeable ions to remove hardness and trace metals",
@@ -904,7 +863,6 @@
   {
     "id": "chm_chromatography",
     "name": "Chromatography: column and paper methods",
-    "tier": 4,
     "cat": "analytical_chemistry",
     "pre": ["analytical_chemistry", "cap_pure_4N"],
     "kb": "Separation of mixtures by differential adsorption on a stationary phase",
@@ -926,7 +884,6 @@
   {
     "id": "chm_electroplating",
     "name": "Electroplating: deposition of nickel, chromium and precious metals",
-    "tier": 3,
     "cat": "electrochemistry",
     "pre": ["electroplating", "cap_measure_elec"],
     "kb": "Electrodeposition of metal ions onto a cathode to coat an object",
@@ -948,7 +905,6 @@
   {
     "id": "chm_alkali_waste",
     "name": "Leblanc process waste: calcium carbide and the alkali waste problem",
-    "tier": 2,
     "cat": "environmental_chemistry",
     "pre": ["soda_leblanc"],
     "kb": "Recognition that Leblanc produces enormous volumes of CaS and CaSO4 waste requiring regulation",
@@ -970,7 +926,6 @@
   {
     "id": "chm_industrial_hygiene",
     "name": "Industrial hygiene and occupational chemical poisoning",
-    "tier": 3,
     "cat": "occupational_health",
     "pre": ["germ_theory"],
     "kb": "Recognition of specific occupational poisons: phosphorus necrosis, mercury, lead, benzene, chlorine gas",
@@ -992,7 +947,6 @@
   {
     "id": "chm_black_powder",
     "name": "Black powder: gunpowder production",
-    "tier": 0,
     "cat": "explosives",
     "pre": ["gunpowder"],
     "kb": "Mixture of saltpetre, charcoal and sulfur, corned for stability",
@@ -1014,7 +968,6 @@
   {
     "id": "chm_guncotton",
     "name": "Guncotton: nitration of cellulose",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["nitric_acid", "oleum"],
     "kb": "Cellulose nitrated with mixed acid to yield highly explosive nitrocellulose",
@@ -1036,7 +989,6 @@
   {
     "id": "chm_nitroglycerin",
     "name": "Nitroglycerin synthesis and stabilisation",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_glycerol", "nitric_acid", "oleum"],
     "kb": "Nitration of glycerol to yield highly sensitive volatile liquid explosive",
@@ -1058,7 +1010,6 @@
   {
     "id": "chm_dynamite",
     "name": "Dynamite: nitroglycerin in diatomaceous earth",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_nitroglycerin"],
     "kb": "Adsorption of liquid nitroglycerin onto porous diatomaceous earth for safe transport and storage",
@@ -1080,7 +1031,6 @@
   {
     "id": "chm_gelignite",
     "name": "Gelignite: nitroglycerin in colloidal cellulose",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_nitroglycerin", "chm_guncotton"],
     "kb": "Stabilisation of nitroglycerin by absorbing into gelatinised nitrocellulose",
@@ -1102,7 +1052,6 @@
   {
     "id": "chm_smokeless_powder",
     "name": "Smokeless powder: nitrocellulose ballistic propellant",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_guncotton", "cap_pure_4N"],
     "kb": "Stabilised nitrocellulose grains for ballistic use, stable for decades",
@@ -1124,7 +1073,6 @@
   {
     "id": "chm_tnt",
     "name": "TNT: trinitrotoluene synthesis",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_toluene", "oleum"],
     "kb": "Nitration of toluene in three stages to yield trinitrotoluene",
@@ -1146,7 +1094,6 @@
   {
     "id": "chm_picric_acid",
     "name": "Picric acid: trinitrophenol synthesis",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_phenol", "oleum"],
     "kb": "Nitration of phenol to yield picric acid (trinitrophenol)",
@@ -1168,7 +1115,6 @@
   {
     "id": "chm_blasting_cap",
     "name": "Blasting cap and fulminate detonator",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["chm_fulminate", "cap_tol_1mm"],
     "kb": "Sealed copper tube containing mercury or lead fulminate to initiate high explosives",
@@ -1190,7 +1136,6 @@
   {
     "id": "chm_fulminate",
     "name": "Mercury fulminate preparation",
-    "tier": 3,
     "cat": "explosives",
     "pre": ["mercury_supply", "nitric_acid"],
     "kb": "Reaction of mercury with dilute nitric acid and ethanol to yield mercury fulminate",
@@ -1212,7 +1157,6 @@
   {
     "id": "chm_celluloid",
     "name": "Celluloid: nitrocellulose plastics",
-    "tier": 4,
     "cat": "plastics",
     "pre": ["chm_guncotton"],
     "kb": "Plasticisation of nitrocellulose with camphor to yield flexible thermoplastic sheet",
@@ -1234,7 +1178,6 @@
   {
     "id": "chm_casein",
     "name": "Casein plastics from milk protein",
-    "tier": 4,
     "cat": "plastics",
     "pre": ["analytical_chemistry"],
     "kb": "Precipitation of casein from milk, hardening with formaldehyde to yield hard plastic",
@@ -1256,7 +1199,6 @@
   {
     "id": "chm_bakelite",
     "name": "Bakelite: phenol-formaldehyde plastic",
-    "tier": 4,
     "cat": "plastics",
     "pre": ["chm_phenol", "formaldehyde_synthesis"],
     "kb": "Polycondensation of phenol with formaldehyde under heat and pressure in a mould",
@@ -1278,7 +1220,6 @@
   {
     "id": "chm_pvc_synthesis",
     "name": "Polyvinyl chloride (PVC) synthesis",
-    "tier": 4,
     "cat": "plastics",
     "pre": ["electrolysis_industrial", "mat_calcium_carbide"],
     "kb": "Polymerisation of vinyl chloride monomer under free-radical initiation",
@@ -1300,7 +1241,6 @@
   {
     "id": "chm_polyethylene",
     "name": "Polyethylene synthesis under high pressure",
-    "tier": 4,
     "cat": "plastics",
     "pre": ["chm_pressure_vessel", "industrial_gases"],
     "kb": "Polymerisation of ethylene at 1000 atm and 150 C with organic peroxide initiator",
@@ -1322,7 +1262,6 @@
   {
     "id": "chm_nylon",
     "name": "Nylon 6,6 synthesis and polymerisation",
-    "tier": 5,
     "cat": "plastics",
     "pre": ["chm_aniline", "analytical_chemistry"],
     "kb": "Polycondensation of adipic acid with hexamethylenediamine to yield nylon fibre",
@@ -1344,7 +1283,6 @@
   {
     "id": "chm_soap_hard",
     "name": "Hard soap from oil and caustic soda",
-    "tier": 2,
     "cat": "chemical_engineering",
     "pre": ["soap_hard", "potash_soda"],
     "kb": "Saponification of tallow or vegetable oil with caustic soda and salt precipitation",
@@ -1366,7 +1304,6 @@
   {
     "id": "chm_detergent_synthetic",
     "name": "Synthetic detergent from petroleum sulfonic acid",
-    "tier": 4,
     "cat": "chemical_engineering",
     "pre": ["mat_petroleum_refined"],
     "kb": "Sulfonation of long-chain alkene to yield sulfonic acid, then neutralisation to salt",
@@ -1388,7 +1325,6 @@
   {
     "id": "chm_glycerol",
     "name": "Glycerol production and purification",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_soap_hard"],
     "kb": "Recovery of glycerol from saponification of oils and fats",
@@ -1410,7 +1346,6 @@
   {
     "id": "chm_matches",
     "name": "Friction matches: red phosphorus safety match",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["phosphorus_extraction"],
     "kb": "Wooden sticks coated with red phosphorus, antimony sulfide and potassium dichromate",
@@ -1432,7 +1367,6 @@
   {
     "id": "chm_photography",
     "name": "Silver halide photographic chemistry",
-    "tier": 3,
     "cat": "photochemistry",
     "pre": ["photography", "analytical_chemistry"],
     "kb": "Sensitisation of silver halide emulsions and development chemistry for silver images",
@@ -1454,7 +1388,6 @@
   {
     "id": "chm_refrigerant_ammonia",
     "name": "Ammonia as refrigerant in compression cycles",
-    "tier": 3,
     "cat": "thermodynamics",
     "pre": ["chm_haber_bosch", "thermodynamics_theory"],
     "kb": "Use of ammonia as working fluid in mechanical refrigeration compression cycles",
@@ -1476,7 +1409,6 @@
   {
     "id": "chm_toluene",
     "name": "Toluene extraction from coal tar",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_coal_tar_distillation"],
     "kb": "Fractional distillation of coal tar to isolate methylbenzene",
@@ -1498,7 +1430,6 @@
   {
     "id": "chm_phenol",
     "name": "Phenol extraction from coal tar and synthesis",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_coal_tar_distillation", "chm_salicylic_acid"],
     "kb": "Distillation of coal tar yields crude phenol; direct synthesis via benzene sulfonation",
@@ -1520,7 +1451,6 @@
   {
     "id": "chm_naphthalene",
     "name": "Naphthalene extraction and purification",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_coal_tar_distillation"],
     "kb": "Distillation of coal tar above 250 C to obtain naphthalene; crystallisation and recrystallisation",
@@ -1542,7 +1472,6 @@
   {
     "id": "chm_anthracene",
     "name": "Anthracene extraction and oxidation",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["chm_coal_tar_distillation"],
     "kb": "Distillation of coal tar above 280 C and crystallisation to yield anthracene",
@@ -1564,7 +1493,6 @@
   {
     "id": "chm_activated_carbon",
     "name": "Activated carbon production and use",
-    "tier": 3,
     "cat": "chemical_engineering",
     "pre": ["charcoal_industrial", "cap_heat_1100"],
     "kb": "Activation of charcoal by steam or acid washing to create high surface area adsorbent",
@@ -1586,7 +1514,6 @@
   {
     "id": "chm_water_coagulation",
     "name": "Water treatment by coagulation and settling",
-    "tier": 2,
     "cat": "water_chemistry",
     "pre": ["analytical_chemistry"],
     "kb": "Use of aluminum sulfate or ferric salts to destabilise colloids and settle suspended solids",
@@ -1608,7 +1535,6 @@
   {
     "id": "chm_water_filtration",
     "name": "Sand filtration and multimedia filter beds",
-    "tier": 2,
     "cat": "water_chemistry",
     "pre": ["chm_water_coagulation"],
     "kb": "Passage of coagulated water through layers of sand and gravel to remove particles",
@@ -1630,7 +1556,6 @@
   {
     "id": "chm_water_chlorination",
     "name": "Chlorination of drinking water for disinfection",
-    "tier": 3,
     "cat": "water_chemistry",
     "pre": ["chm_deacon_process", "chm_bleaching_powder"],
     "kb": "Addition of chlorine gas or bleaching powder to water to kill pathogens",
@@ -1652,7 +1577,6 @@
   {
     "id": "chm_formaldehyde_synthesis",
     "name": "Formaldehyde oxidation of methanol",
-    "tier": 3,
     "cat": "organic_chemistry",
     "pre": ["distillation_alcohol", "chm_catalyst_concept"],
     "kb": "Catalytic oxidation of methanol vapour over silver or copper catalyst",
@@ -1674,7 +1598,6 @@
   {
     "id": "chm_phosphorus_extraction",
     "name": "White phosphorus extraction from bone ash",
-    "tier": 2,
     "cat": "mineral_extraction",
     "pre": ["cap_heat_1300"],
     "kb": "Roasting of bone ash with carbon in retort at 1300 C, collecting phosphorus vapour on water",

@@ -11,6 +11,23 @@ from sim.engine import data
 
 
 MIGRATED_BRANCHES = (
+    "00_capabilities.json",
+    "01_materials.json",
+    "10_textiles.json",
+    "11_food_agriculture.json",
+    "12_household.json",
+    "13_media.json",
+    "14_land_transport.json",
+    "15_ships.json",
+    "16_aviation.json",
+    "17_energy.json",
+    "18_chemicals.json",
+    "19_metallurgy_mining.json",
+    "20_precision.json",
+    "21_medicine.json",
+    "22_civil.json",
+    "23_optics_instruments.json",
+    "24_comms_computing.json",
     "40_finance_institutions.json",
     "41_chemistry_deep.json",
     "42_electrical_deep.json",
@@ -30,6 +47,16 @@ class TierlessSchemaTests(unittest.TestCase):
                     nodes = json.load(source)
                 self.assertTrue(nodes)
                 self.assertFalse([node["id"] for node in nodes if "tier" in node])
+
+    def test_generated_tree_matches_migrated_tierless_sources(self):
+        migrated_ids = set()
+        for filename in MIGRATED_BRANCHES:
+            with open(os.path.join(treetool.BR, filename)) as source:
+                migrated_ids.update(node["id"] for node in json.load(source))
+        with open(data.TREE) as source:
+            generated_nodes = json.load(source)["nodes"]
+        tiered_ids = {node["id"] for node in generated_nodes if "tier" in node}
+        self.assertFalse(migrated_ids & tiered_ids)
 
     def test_treetool_accepts_and_normalises_a_tierless_node(self):
         node = {

@@ -2,7 +2,6 @@
   {
     "id": "tex_wool",
     "name": "Wool fiber",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "tex_linen",
     "name": "Linen fiber from flax",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "tex_cotton_trade",
     "name": "Cotton by trade",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "tex_silk_trade",
     "name": "Silk by trade",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "tex_drop_spindle",
     "name": "Drop spindle",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "tex_fulling",
     "name": "Fulling cloth",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "tex_felting",
     "name": "Felting",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "tex_warp_weighted_loom",
     "name": "Warp-weighted loom",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "tex_two_beam_loom",
     "name": "Two-beam loom",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "tex_sailcloth",
     "name": "Sailcloth",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "tex_dye_madder",
     "name": "Dyeing with madder root",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "tex_dye_woad",
     "name": "Dyeing with woad",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "tex_dye_murex",
     "name": "Murex purple dyeing",
-    "tier": 0,
     "cat": "textiles",
     "pre": [],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "tex_carding",
     "name": "Carding fibers",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_wool",
@@ -318,7 +304,6 @@
   {
     "id": "tex_combing",
     "name": "Combing fibers",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_wool",
@@ -348,7 +333,6 @@
   {
     "id": "tex_spinning_wheel",
     "name": "Spinning wheel with flyer",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_drop_spindle",
@@ -380,7 +364,6 @@
   {
     "id": "tex_horizontal_loom",
     "name": "Horizontal loom",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_two_beam_loom",
@@ -411,7 +394,6 @@
   {
     "id": "tex_treadle_loom",
     "name": "Treadle loom",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_horizontal_loom",
@@ -443,7 +425,6 @@
   {
     "id": "tex_mordanting",
     "name": "Mordanting dyes with alum",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_dye_madder",
@@ -473,7 +454,6 @@
   {
     "id": "tex_indigo",
     "name": "Indigo dyeing",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_dye_woad",
@@ -504,7 +484,6 @@
   {
     "id": "tex_rope_walk",
     "name": "Rope walk and cordage",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_linen",
@@ -535,7 +514,6 @@
   {
     "id": "tex_canvas",
     "name": "Canvas cloth",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_linen",
@@ -564,7 +542,6 @@
   {
     "id": "tex_fitted_garment",
     "name": "Fitted garment tailoring",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_linen",
@@ -594,7 +571,6 @@
   {
     "id": "tex_shoddy",
     "name": "Shoddy and recycled wool",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_wool",
@@ -623,7 +599,6 @@
   {
     "id": "tex_hand_ginning",
     "name": "Hand ginning cotton",
-    "tier": 1,
     "cat": "textiles",
     "pre": [
       "tex_cotton_trade"
@@ -649,7 +624,6 @@
   {
     "id": "tex_flying_shuttle",
     "name": "Flying shuttle",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_treadle_loom",
@@ -682,7 +656,6 @@
   {
     "id": "tex_spinning_jenny",
     "name": "Spinning jenny",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_spinning_wheel",
@@ -715,7 +688,6 @@
   {
     "id": "tex_water_frame",
     "name": "Water frame spinner",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_spinning_wheel",
@@ -751,7 +723,6 @@
   {
     "id": "tex_power_loom",
     "name": "Power loom",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_treadle_loom",
@@ -788,7 +759,6 @@
   {
     "id": "tex_knitting_frame",
     "name": "Knitting frame",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "cap_tol_1mm",
@@ -822,7 +792,6 @@
   {
     "id": "tex_sewing_machine",
     "name": "Sewing machine with lockstitch",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "cap_tol_1mm",
@@ -855,7 +824,6 @@
   {
     "id": "tex_buttons_buttonholes",
     "name": "Buttons and buttonholes",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_fitted_garment",
@@ -885,7 +853,6 @@
   {
     "id": "tex_hosiery",
     "name": "Hosiery production",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_knitting_frame",
@@ -916,7 +883,6 @@
   {
     "id": "tex_cotton_gin",
     "name": "Cotton gin with saw",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "cap_tol_1mm",
@@ -950,7 +916,6 @@
   {
     "id": "tex_vegetable_tanning",
     "name": "Vegetable tanning of leather",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "mat_leather"
@@ -981,7 +946,6 @@
   {
     "id": "tex_fulling_water",
     "name": "Water-powered fulling mill",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_fulling",
@@ -1016,7 +980,6 @@
   {
     "id": "tex_field_bleaching",
     "name": "Field bleaching with sun",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_linen",
@@ -1045,7 +1008,6 @@
   {
     "id": "tex_calico_printing",
     "name": "Calico printing with blocks",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_cotton_trade",
@@ -1078,7 +1040,6 @@
   {
     "id": "tex_pattern_cutting",
     "name": "Standard pattern cutting and sizing",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_fitted_garment",
@@ -1110,7 +1071,6 @@
   {
     "id": "tex_tape_measure",
     "name": "Tape measure standardization",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "cap_measure_len"
@@ -1139,7 +1099,6 @@
   {
     "id": "tex_wool_combing_machinery",
     "name": "Wool combing machinery",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_combing",
@@ -1175,7 +1134,6 @@
   {
     "id": "tex_textile_factory",
     "name": "Textile mill and factory system",
-    "tier": 2,
     "cat": "textiles",
     "pre": [
       "tex_water_frame",
@@ -1212,7 +1170,6 @@
   {
     "id": "tex_spinning_mule",
     "name": "Spinning mule (jenny plus frame)",
-    "tier": 3,
     "cat": "textiles",
     "pre": [
       "tex_spinning_jenny",
@@ -1248,7 +1205,6 @@
   {
     "id": "tex_jacquard_loom",
     "name": "Jacquard loom with punched cards",
-    "tier": 3,
     "cat": "textiles",
     "pre": [
       "tex_power_loom",
@@ -1284,7 +1240,6 @@
   {
     "id": "tex_roller_printing",
     "name": "Roller printing of cloth",
-    "tier": 3,
     "cat": "textiles",
     "pre": [
       "tex_calico_printing",
@@ -1319,7 +1274,6 @@
   {
     "id": "tex_mercerisation",
     "name": "Mercerisation of cotton",
-    "tier": 3,
     "cat": "textiles",
     "pre": [
       "tex_cotton_trade",
@@ -1350,7 +1304,6 @@
   {
     "id": "tex_chlorine_bleaching",
     "name": "Chlorine bleaching of cloth",
-    "tier": 4,
     "cat": "textiles",
     "pre": [
       "tex_field_bleaching",
@@ -1384,7 +1337,6 @@
   {
     "id": "tex_synthetic_dyes",
     "name": "Synthetic aniline dyes",
-    "tier": 4,
     "cat": "textiles",
     "pre": [
       "mat_dyes_synthetic",
@@ -1414,7 +1366,6 @@
   {
     "id": "tex_rayon_nitro",
     "name": "Rayon from nitrocellulose",
-    "tier": 4,
     "cat": "textiles",
     "pre": [
       "mat_nitrocellulose",
@@ -1447,7 +1398,6 @@
   {
     "id": "tex_rayon_viscose",
     "name": "Rayon from viscose",
-    "tier": 4,
     "cat": "textiles",
     "pre": [
       "mat_natron",
@@ -1481,7 +1431,6 @@
   {
     "id": "tex_chrome_tanning",
     "name": "Chrome tanning of leather",
-    "tier": 4,
     "cat": "textiles",
     "pre": [
       "mat_chromium",
@@ -1513,7 +1462,6 @@
   {
     "id": "tex_nylon",
     "name": "Nylon fiber",
-    "tier": 5,
     "cat": "textiles",
     "pre": [
       "mat_ammonia",

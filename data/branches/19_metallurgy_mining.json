@@ -2,7 +2,6 @@
   {
     "id": "met_ore_crushing_sorting",
     "name": "Ore dressing: crushing and hand sorting",
-    "tier": 0,
     "cat": "mining",
     "pre": [],
     "kb": "",
@@ -24,7 +23,6 @@
   {
     "id": "met_fire_assay",
     "name": "Fire assay for ore grade",
-    "tier": 0,
     "cat": "mining",
     "pre": ["cap_heat_1100", "lead_metallurgy"],
     "kb": "",
@@ -46,7 +44,6 @@
   {
     "id": "met_water_ore_stamp",
     "name": "Water-powered ore stamp mill",
-    "tier": 1,
     "cat": "mining",
     "pre": ["cap_power_water", "crank_conrod"],
     "kb": "",
@@ -68,7 +65,6 @@
   {
     "id": "met_jigging_gravity",
     "name": "Jigging and gravity separation",
-    "tier": 1,
     "cat": "mining",
     "pre": ["met_ore_crushing_sorting", "cap_measure_len"],
     "kb": "",
@@ -90,7 +86,6 @@
   {
     "id": "met_roasting_calcining",
     "name": "Roasting and calcining ore",
-    "tier": 1,
     "cat": "smelting",
     "pre": ["cap_heat_1100", "charcoal_industrial"],
     "kb": "",
@@ -112,7 +107,6 @@
   {
     "id": "met_reverberatory",
     "name": "Reverberatory furnace",
-    "tier": 1,
     "cat": "smelting",
     "pre": ["cap_heat_1300", "refractory_fireclay", "charcoal_industrial"],
     "kb": "",
@@ -134,7 +128,6 @@
   {
     "id": "met_cupola_furnace",
     "name": "Cupola furnace for iron casting",
-    "tier": 1,
     "cat": "smelting",
     "pre": ["cap_heat_1300", "refractory_fireclay", "blast_furnace"],
     "kb": "",
@@ -156,7 +149,6 @@
   {
     "id": "met_froth_flotation",
     "name": "Froth flotation ore concentration",
-    "tier": 2,
     "cat": "mining",
     "pre": ["analytical_chemistry", "cap_measure_mass_mg", "cap_power_water"],
     "kb": "",
@@ -178,7 +170,6 @@
   {
     "id": "met_converter_furnace",
     "name": "Converter furnace for steel",
-    "tier": 2,
     "cat": "smelting",
     "pre": ["bessemer_openhearth", "met_basic_lining_phosphorus"],
     "kb": "",
@@ -200,7 +191,6 @@
   {
     "id": "met_basic_lining_phosphorus",
     "name": "Basic lining and the phosphorus problem",
-    "tier": 2,
     "cat": "materials",
     "pre": ["bessemer_openhearth", "analytical_chemistry"],
     "kb": "",
@@ -222,7 +212,6 @@
   {
     "id": "met_open_hearth_furnace",
     "name": "Open hearth furnace and scrap recycling",
-    "tier": 2,
     "cat": "smelting",
     "pre": ["high_temp_furnace", "met_reverberatory", "refractory_fireclay"],
     "kb": "",
@@ -244,7 +233,6 @@
   {
     "id": "met_continuous_casting",
     "name": "Continuous casting and ingot casting",
-    "tier": 2,
     "cat": "forming",
     "pre": ["high_temp_furnace", "cap_heat_1600"],
     "kb": "",
@@ -266,7 +254,6 @@
   {
     "id": "met_two_high_mill",
     "name": "Two-high rolling mill",
-    "tier": 2,
     "cat": "forming",
     "pre": ["cap_power_steam", "cap_heat_1300", "mat_cast_iron", "cap_tol_1mm"],
     "kb": "",
@@ -288,7 +275,6 @@
   {
     "id": "met_three_high_mill",
     "name": "Three-high rolling mill",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_two_high_mill", "cap_tol_100um", "mat_tool_steel_hss"],
     "kb": "",
@@ -310,7 +296,6 @@
   {
     "id": "met_reversing_mill",
     "name": "Reversing rolling mill",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_two_high_mill", "motor_transformer_ac"],
     "kb": "",
@@ -332,7 +317,6 @@
   {
     "id": "met_section_mill",
     "name": "Section mill for rails and beams",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_three_high_mill", "mat_tool_steel_hss"],
     "kb": "",
@@ -354,7 +338,6 @@
   {
     "id": "met_rail_mill",
     "name": "Rail mill production",
-    "tier": 2,
     "cat": "forming",
     "pre": ["met_two_high_mill", "railway"],
     "kb": "",
@@ -376,7 +359,6 @@
   {
     "id": "met_wire_rod_rolling",
     "name": "Wire rod rolling mill",
-    "tier": 2,
     "cat": "forming",
     "pre": ["met_two_high_mill", "cap_power_steam"],
     "kb": "",
@@ -398,7 +380,6 @@
   {
     "id": "met_tube_mill_seamless",
     "name": "Tube mill and seamless tube production",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_two_high_mill", "met_mannesmann_piercing", "cap_power_steam"],
     "kb": "",
@@ -420,7 +401,6 @@
   {
     "id": "met_mannesmann_piercing",
     "name": "Mannesmann piercing for seamless tube",
-    "tier": 3,
     "cat": "knowledge",
     "pre": ["met_two_high_mill", "geometry_analytic", "cap_power_steam"],
     "kb": "",
@@ -442,7 +422,6 @@
   {
     "id": "met_drawn_tube",
     "name": "Drawn tube production",
-    "tier": 2,
     "cat": "forming",
     "pre": ["drawplate_wire", "cap_power_water"],
     "kb": "",
@@ -464,7 +443,6 @@
   {
     "id": "met_trip_hammer",
     "name": "Trip hammer and water-driven forge hammer",
-    "tier": 0,
     "cat": "forming",
     "pre": ["cap_power_water", "crank_conrod"],
     "kb": "",
@@ -486,7 +464,6 @@
   {
     "id": "met_drop_hammer",
     "name": "Drop hammer for heavy forging",
-    "tier": 1,
     "cat": "forming",
     "pre": ["cap_power_water", "case_hardening"],
     "kb": "",
@@ -508,7 +485,6 @@
   {
     "id": "met_steam_hammer",
     "name": "Steam hammer for precision forging",
-    "tier": 3,
     "cat": "forming",
     "pre": ["steam_high_pressure", "cap_power_steam", "case_hardening"],
     "kb": "",
@@ -530,7 +506,6 @@
   {
     "id": "met_hydraulic_press",
     "name": "Hydraulic press and accumulator",
-    "tier": 3,
     "cat": "forming",
     "pre": ["steam_high_pressure", "cap_power_steam", "screw_lathe"],
     "kb": "",
@@ -552,7 +527,6 @@
   {
     "id": "met_extrusion_press",
     "name": "Extrusion and the extrusion press",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_hydraulic_press", "cap_heat_1300", "mat_tool_steel_hss"],
     "kb": "",
@@ -574,7 +548,6 @@
   {
     "id": "met_deep_drawing",
     "name": "Deep drawing and pressing dies",
-    "tier": 3,
     "cat": "forming",
     "pre": ["met_hydraulic_press", "cap_tol_100um", "met_annealing_recrystallization"],
     "kb": "",
@@ -596,7 +569,6 @@
   {
     "id": "met_green_sand_mold",
     "name": "Green sand molding for casting",
-    "tier": 1,
     "cat": "casting",
     "pre": ["sand_casting", "cap_heat_1300"],
     "kb": "",
@@ -618,7 +590,6 @@
   {
     "id": "met_dry_sand_mold",
     "name": "Dry sand molding for fine castings",
-    "tier": 2,
     "cat": "casting",
     "pre": ["met_green_sand_mold", "cap_heat_0700"],
     "kb": "",
@@ -640,7 +611,6 @@
   {
     "id": "met_investment_casting",
     "name": "Investment casting and lost wax",
-    "tier": 0,
     "cat": "casting",
     "pre": ["lost_wax_casting"],
     "kb": "",
@@ -662,7 +632,6 @@
   {
     "id": "met_die_casting",
     "name": "Die casting and hot chamber casting",
-    "tier": 3,
     "cat": "casting",
     "pre": ["met_hydraulic_press", "mat_zinc", "cap_heat_1300"],
     "kb": "",
@@ -684,7 +653,6 @@
   {
     "id": "met_chill_casting",
     "name": "Chill casting and directional solidification",
-    "tier": 2,
     "cat": "casting",
     "pre": ["met_green_sand_mold", "cap_measure_temp"],
     "kb": "",
@@ -706,7 +674,6 @@
   {
     "id": "met_powder_metallurgy",
     "name": "Powder metallurgy and sintering",
-    "tier": 3,
     "cat": "forming",
     "pre": ["atomic_theory", "cap_heat_1600", "cap_pure_4N"],
     "kb": "",
@@ -728,7 +695,6 @@
   {
     "id": "met_electroplating",
     "name": "Electroplating and coating",
-    "tier": 0,
     "cat": "surface_treatment",
     "pre": ["electroplating"],
     "kb": "",
@@ -750,7 +716,6 @@
   {
     "id": "met_electro_refining",
     "name": "Electro-refining for high-purity copper",
-    "tier": 0,
     "cat": "refining",
     "pre": ["electroplating", "copper_fire_refined"],
     "kb": "",
@@ -772,7 +737,6 @@
   {
     "id": "met_galvanizing",
     "name": "Galvanizing with zinc coating",
-    "tier": 2,
     "cat": "surface_treatment",
     "pre": ["mat_zinc", "zinc_metal", "cap_heat_1300"],
     "kb": "",
@@ -794,7 +758,6 @@
   {
     "id": "met_tin_plate",
     "name": "Tin plate production",
-    "tier": 2,
     "cat": "surface_treatment",
     "pre": ["electroplating", "mat_tin"],
     "kb": "",
@@ -816,7 +779,6 @@
   {
     "id": "met_annealing_recrystallization",
     "name": "Annealing and recrystallization",
-    "tier": 1,
     "cat": "heat_treatment",
     "pre": ["cap_heat_1100", "cap_measure_temp"],
     "kb": "",
@@ -838,7 +800,6 @@
   {
     "id": "met_quenching_media",
     "name": "Quenching media and quench crack prevention",
-    "tier": 2,
     "cat": "heat_treatment",
     "pre": ["case_hardening", "cap_measure_temp", "water_power_scale"],
     "kb": "",
@@ -860,7 +821,6 @@
   {
     "id": "met_tempering_color",
     "name": "Tempering and temper color chart",
-    "tier": 1,
     "cat": "heat_treatment",
     "pre": ["case_hardening", "cap_measure_temp"],
     "kb": "",
@@ -882,7 +842,6 @@
   {
     "id": "met_normalizing",
     "name": "Normalizing for uniformity",
-    "tier": 2,
     "cat": "heat_treatment",
     "pre": ["met_annealing_recrystallization", "cap_heat_1100"],
     "kb": "",
@@ -904,7 +863,6 @@
   {
     "id": "met_phase_diagram_knowledge",
     "name": "Iron-carbon phase diagram as scientific knowledge",
-    "tier": 2,
     "cat": "knowledge",
     "pre": ["analytical_chemistry", "thermodynamics_theory", "cap_measure_temp_hi"],
     "kb": "",
@@ -926,7 +884,6 @@
   {
     "id": "met_hardenability_alloys",
     "name": "Hardenability and alloy steel design",
-    "tier": 3,
     "cat": "materials",
     "pre": ["met_phase_diagram_knowledge", "atomic_theory"],
     "kb": "",
@@ -948,7 +905,6 @@
   {
     "id": "met_metallography",
     "name": "Metallography: polishing, etching and microscopy",
-    "tier": 3,
     "cat": "knowledge",
     "pre": ["microscope_compound", "cap_tol_100um", "analytical_chemistry"],
     "kb": "",
@@ -970,7 +926,6 @@
   {
     "id": "met_tensile_test",
     "name": "Tensile testing and the testing machine",
-    "tier": 3,
     "cat": "knowledge",
     "pre": ["statistics_basic", "cap_power_steam", "screw_lathe"],
     "kb": "",
@@ -992,7 +947,6 @@
   {
     "id": "met_hardness_test",
     "name": "Hardness testing and Rockwell scale",
-    "tier": 3,
     "cat": "knowledge",
     "pre": ["micrometer_gauges", "cap_tol_100um"],
     "kb": "",
@@ -1014,7 +968,6 @@
   {
     "id": "met_fatigue_testing",
     "name": "Fatigue testing and fracture mechanics",
-    "tier": 4,
     "cat": "knowledge",
     "pre": ["met_tensile_test", "statistics_basic"],
     "kb": "",
@@ -1036,7 +989,6 @@
   {
     "id": "met_spectroscopic_assay",
     "name": "Spectroscopic assay of metals",
-    "tier": 3,
     "cat": "knowledge",
     "pre": ["spectroscope", "analytical_chemistry"],
     "kb": "",
@@ -1058,7 +1010,6 @@
   {
     "id": "met_safety_lamps_ventilation",
     "name": "Safety lamps and mine ventilation",
-    "tier": 2,
     "cat": "mining",
     "pre": ["cap_power_water", "cap_heat_0700"],
     "kb": "",
@@ -1080,7 +1031,6 @@
   {
     "id": "met_mine_pumping",
     "name": "Mine pumping systems",
-    "tier": 1,
     "cat": "mining",
     "pre": ["cap_power_water", "screw_pump"],
     "kb": "",
@@ -1102,7 +1052,6 @@
   {
     "id": "met_winding_engine",
     "name": "Winding engine and mine shaft hoisting",
-    "tier": 2,
     "cat": "mining",
     "pre": ["steam_watt", "cap_power_steam"],
     "kb": "",
@@ -1124,7 +1073,6 @@
   {
     "id": "met_black_powder_blasting",
     "name": "Blasting with black powder and dynamite",
-    "tier": 2,
     "cat": "mining",
     "pre": ["gunpowder", "nitre_beds"],
     "kb": "",
@@ -1146,7 +1094,6 @@
   {
     "id": "met_dynamite_blasting",
     "name": "Dynamite and modern explosives",
-    "tier": 3,
     "cat": "mining",
     "pre": ["mat_nitroglycerin", "cap_measure_mass_mg"],
     "kb": "",
@@ -1168,7 +1115,6 @@
   {
     "id": "met_pneumatic_drill",
     "name": "Pneumatic rock drill",
-    "tier": 3,
     "cat": "mining",
     "pre": ["steam_high_pressure", "cap_power_steam"],
     "kb": "",
@@ -1190,7 +1136,6 @@
   {
     "id": "met_deep_shaft_sinking",
     "name": "Deep shaft sinking techniques",
-    "tier": 2,
     "cat": "mining",
     "pre": ["met_mine_pumping", "met_safety_lamps_ventilation"],
     "kb": "",
@@ -1212,7 +1157,6 @@
   {
     "id": "met_oxyacetylene_welding",
     "name": "Oxy-acetylene welding and brazing",
-    "tier": 3,
     "cat": "joining",
     "pre": ["cap_heat_2000", "industrial_gases", "met_acetylene_supply"],
     "kb": "",
@@ -1234,7 +1178,6 @@
   {
     "id": "met_arc_welding",
     "name": "Arc welding with electrode",
-    "tier": 4,
     "cat": "joining",
     "pre": ["cap_power_electric", "cap_heat_3000"],
     "kb": "",
@@ -1256,7 +1199,6 @@
   {
     "id": "met_resistance_welding",
     "name": "Resistance welding and spot welding",
-    "tier": 3,
     "cat": "joining",
     "pre": ["cap_power_electric", "cap_heat_1600"],
     "kb": "",
@@ -1278,7 +1220,6 @@
   {
     "id": "met_acetylene_supply",
     "name": "Acetylene from calcium carbide",
-    "tier": 3,
     "cat": "materials",
     "pre": ["cap_heat_1600", "industrial_gases"],
     "kb": "",

@@ -2,7 +2,6 @@
   {
     "id": "fud_three_field_rotation",
     "name": "Three-field crop rotation with fallowing",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -28,7 +27,6 @@
   {
     "id": "fud_selective_breeding_pedigree",
     "name": "Selective breeding with written pedigrees",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -57,7 +55,6 @@
   {
     "id": "fud_controlled_pollination",
     "name": "Controlled pollination of crop plants",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "fud_selective_breeding_pedigree"
@@ -83,7 +80,6 @@
   {
     "id": "fud_nitrogen_fixing_understanding",
     "name": "Recognition of nitrogen-fixing legume crops",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -109,7 +105,6 @@
   {
     "id": "fud_liming_acid_soils",
     "name": "Liming of acidic soils",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -138,7 +133,6 @@
   {
     "id": "fud_bone_meal_fertilizer",
     "name": "Bone meal as phosphate fertilizer",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -167,7 +161,6 @@
   {
     "id": "fud_alfalfa",
     "name": "Alfalfa (lucerne) cultivation",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "fud_nitrogen_fixing_understanding"
@@ -193,7 +186,6 @@
   {
     "id": "fud_turnips_winter_fodder",
     "name": "Turnips as storable winter animal feed",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -219,7 +211,6 @@
   {
     "id": "fud_clover_winter_fodder",
     "name": "Clover as winter grazing and fodder",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "fud_nitrogen_fixing_understanding"
@@ -245,7 +236,6 @@
   {
     "id": "fud_hay_making_storage",
     "name": "Hay making and dry storage",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -273,7 +263,6 @@
   {
     "id": "fud_silage_fermentation",
     "name": "Silage production and fermented fodder storage",
-    "tier": 2,
     "cat": "agriculture",
     "pre": [
       "fud_hay_making_storage"
@@ -303,7 +292,6 @@
   {
     "id": "fud_root_cellar_storage",
     "name": "Root cellar and cool storage construction",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -333,7 +321,6 @@
   {
     "id": "fud_heavy_mouldboard_plough_coulter",
     "name": "Heavy mouldboard plough with coulter (regional)",
-    "tier": 2,
     "cat": "agriculture",
     "pre": [
       "horse_collar",
@@ -364,7 +351,6 @@
   {
     "id": "fud_seed_drill",
     "name": "Mechanical seed drill",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "cap_tol_1mm"
@@ -394,7 +380,6 @@
   {
     "id": "fud_horse_hoe",
     "name": "Horse-drawn hoe for weeding between rows",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "fud_seed_drill",
@@ -425,7 +410,6 @@
   {
     "id": "fud_threshing_machine",
     "name": "Mechanical threshing machine",
-    "tier": 2,
     "cat": "agriculture",
     "pre": [
       "cap_power_muscle",
@@ -456,7 +440,6 @@
   {
     "id": "fud_winnowing_machine",
     "name": "Mechanical winnowing fan",
-    "tier": 2,
     "cat": "agriculture",
     "pre": [
       "fud_threshing_machine",
@@ -487,7 +470,6 @@
   {
     "id": "fud_mechanical_reaper",
     "name": "Mechanical grain reaper",
-    "tier": 2,
     "cat": "agriculture",
     "pre": [
       "horse_collar",
@@ -518,7 +500,6 @@
   {
     "id": "fud_combine_harvester",
     "name": "Combine harvester (reaper, thresher, winnower integrated)",
-    "tier": 4,
     "cat": "agriculture",
     "pre": [
       "fud_mechanical_reaper",
@@ -553,7 +534,6 @@
   {
     "id": "fud_guano_import_trade",
     "name": "Guano import and application as fertilizer",
-    "tier": 1,
     "cat": "agriculture",
     "pre": [
       "crop_rotation"
@@ -579,7 +559,6 @@
   {
     "id": "fud_superphosphate_fertilizer",
     "name": "Superphosphate from bones and sulfuric acid",
-    "tier": 3,
     "cat": "agriculture",
     "pre": [
       "fud_bone_meal_fertilizer",
@@ -612,7 +591,6 @@
   {
     "id": "fud_haber_process_synthetic_nitrogen",
     "name": "Haber process for synthetic ammonia and nitrate",
-    "tier": 5,
     "cat": "agriculture",
     "pre": [
       "industrial_gases",
@@ -645,7 +623,6 @@
   {
     "id": "fud_roller_mill",
     "name": "Roller mill for grain (replacing millstone)",
-    "tier": 2,
     "cat": "milling",
     "pre": [
       "water_power_scale",
@@ -678,7 +655,6 @@
   {
     "id": "fud_roller_milled_white_flour",
     "name": "White flour from roller milling and bran separation",
-    "tier": 2,
     "cat": "milling",
     "pre": [
       "fud_roller_mill"
@@ -704,7 +680,6 @@
   {
     "id": "fud_yeast_pure_culture",
     "name": "Pure yeast culture isolation and maintenance",
-    "tier": 2,
     "cat": "fermentation",
     "pre": [
       "distillation_alcohol"
@@ -733,7 +708,6 @@
   {
     "id": "fud_brewing_with_hops",
     "name": "Brewing with hops for flavor and preservation",
-    "tier": 1,
     "cat": "fermentation",
     "pre": [
       "crop_rotation"
@@ -759,7 +733,6 @@
   {
     "id": "fud_distillation_spirits",
     "name": "Distillation of spirits and liqueurs",
-    "tier": 1,
     "cat": "fermentation",
     "pre": [
       "distillation_alcohol"
@@ -788,7 +761,6 @@
   {
     "id": "fud_vinegar_production",
     "name": "Vinegar production via acetification",
-    "tier": 1,
     "cat": "fermentation",
     "pre": [
       "distillation_alcohol"
@@ -816,7 +788,6 @@
   {
     "id": "fud_rice_cultivation",
     "name": "Rice cultivation in paddies",
-    "tier": 1,
     "cat": "crops",
     "pre": [
       "crop_rotation"
@@ -842,7 +813,6 @@
   {
     "id": "fud_sugar_cane_cultivation",
     "name": "Sugar cane cultivation and juice extraction",
-    "tier": 1,
     "cat": "crops",
     "pre": [
       "crop_rotation"
@@ -868,7 +838,6 @@
   {
     "id": "fud_beet_sugar_processing",
     "name": "Sugar beet cultivation and crystallization",
-    "tier": 2,
     "cat": "crops",
     "pre": [
       "fud_sugar_cane_cultivation"
@@ -898,7 +867,6 @@
   {
     "id": "fud_tea_trade_import",
     "name": "Tea import and trade channels",
-    "tier": 1,
     "cat": "crops",
     "pre": [
       "crop_rotation"
@@ -924,7 +892,6 @@
   {
     "id": "fud_coffee_trade_import",
     "name": "Coffee import from Near East and Ethiopia",
-    "tier": 1,
     "cat": "crops",
     "pre": [
       "crop_rotation"
@@ -950,7 +917,6 @@
   {
     "id": "fud_potato_tier9",
     "name": "Potato cultivation (New World, unobtainable)",
-    "tier": 9,
     "cat": "crops",
     "pre": [],
     "kb": "",
@@ -972,7 +938,6 @@
   {
     "id": "fud_maize_tier9",
     "name": "Maize cultivation (New World, unobtainable)",
-    "tier": 9,
     "cat": "crops",
     "pre": [],
     "kb": "",
@@ -994,7 +959,6 @@
   {
     "id": "fud_chocolate_tier9",
     "name": "Chocolate from cacao (New World, unobtainable)",
-    "tier": 9,
     "cat": "crops",
     "pre": [],
     "kb": "",
@@ -1016,7 +980,6 @@
   {
     "id": "fud_canning_appert_method",
     "name": "Canning by Appert's method (heating in sealed glass)",
-    "tier": 2,
     "cat": "preservation",
     "pre": [
       "fud_bottling_sealed_cork",
@@ -1046,7 +1009,6 @@
   {
     "id": "fud_tin_plate_cans",
     "name": "Tin plate cans for food preservation",
-    "tier": 3,
     "cat": "preservation",
     "pre": [
       "fud_canning_appert_method",
@@ -1077,7 +1039,6 @@
   {
     "id": "fud_can_opener",
     "name": "Can opener device for tin cans",
-    "tier": 3,
     "cat": "preservation",
     "pre": [
       "fud_tin_plate_cans"
@@ -1106,7 +1067,6 @@
   {
     "id": "fud_pasteurisation",
     "name": "Pasteurisation of milk and beverages",
-    "tier": 2,
     "cat": "preservation",
     "pre": [
       "thermometer",
@@ -1136,7 +1096,6 @@
   {
     "id": "fud_bottling_sealed_cork",
     "name": "Bottling with cork closure and sealed glass",
-    "tier": 1,
     "cat": "preservation",
     "pre": [
       "crop_rotation"
@@ -1162,7 +1121,6 @@
   {
     "id": "fud_ice_house_construction",
     "name": "Ice house construction and storage",
-    "tier": 1,
     "cat": "refrigeration",
     "pre": [
       "fud_root_cellar_storage"
@@ -1192,7 +1150,6 @@
   {
     "id": "fud_ice_harvesting_and_cutting",
     "name": "Ice harvesting from frozen lakes and rivers",
-    "tier": 1,
     "cat": "refrigeration",
     "pre": [
       "fud_ice_house_construction"
@@ -1220,7 +1177,6 @@
   {
     "id": "fud_ice_trade_logistics",
     "name": "Trade and logistics of ice transport",
-    "tier": 2,
     "cat": "refrigeration",
     "pre": [
       "fud_ice_harvesting_and_cutting"
@@ -1247,7 +1203,6 @@
   {
     "id": "fud_mechanical_refrigeration",
     "name": "Mechanical refrigeration using compression and evaporation",
-    "tier": 3,
     "cat": "refrigeration",
     "pre": [
       "fud_ice_trade_logistics",
@@ -1281,7 +1236,6 @@
   {
     "id": "fud_cold_chain_refrigerated_shipping",
     "name": "Cold chain and refrigerated railway shipping",
-    "tier": 4,
     "cat": "refrigeration",
     "pre": [
       "fud_mechanical_refrigeration",
@@ -1312,7 +1266,6 @@
   {
     "id": "fud_freezing_with_mechanical_cold",
     "name": "Freezing food with mechanical refrigeration",
-    "tier": 4,
     "cat": "preservation",
     "pre": [
       "fud_mechanical_refrigeration",
@@ -1339,7 +1292,6 @@
   {
     "id": "fud_drying_evaporated_milk",
     "name": "Drying and concentration of evaporated milk",
-    "tier": 2,
     "cat": "preservation",
     "pre": [
       "fud_pasteurisation",
@@ -1369,7 +1321,6 @@
   {
     "id": "fud_fish_curing_and_smoking",
     "name": "Large-scale fish curing and smoking",
-    "tier": 1,
     "cat": "preservation",
     "pre": [],
     "kb": "",
@@ -1396,7 +1347,6 @@
   {
     "id": "fud_whaling_industry",
     "name": "Organized whaling industry for oil and meat",
-    "tier": 2,
     "cat": "fishing",
     "pre": [],
     "kb": "",
@@ -1421,7 +1371,6 @@
   {
     "id": "fud_vegetable_oil_extraction",
     "name": "Oil extraction from seeds and olives",
-    "tier": 1,
     "cat": "oils",
     "pre": [
       "crop_rotation"
@@ -1449,7 +1398,6 @@
   {
     "id": "fud_margarine_synthesis",
     "name": "Margarine from refined and hardened vegetable oils",
-    "tier": 3,
     "cat": "oils",
     "pre": [
       "fud_vegetable_oil_extraction",
@@ -1478,7 +1426,6 @@
   {
     "id": "fud_enclosure_of_common_land",
     "name": "Enclosure of common land and private farming",
-    "tier": 1,
     "cat": "economic",
     "pre": [
       "crop_rotation"
@@ -1504,7 +1451,6 @@
   {
     "id": "fud_farm_as_capital_enterprise",
     "name": "Farm as capital enterprise with investment and profit",
-    "tier": 1,
     "cat": "economic",
     "pre": [
       "fud_enclosure_of_common_land"
@@ -1530,7 +1476,6 @@
   {
     "id": "fud_agricultural_treatises",
     "name": "Written agricultural treatises and knowledge codification",
-    "tier": 1,
     "cat": "knowledge",
     "pre": [
       "crop_rotation"
@@ -1559,7 +1504,6 @@
   {
     "id": "fud_soil_composition_analysis",
     "name": "Understanding and testing soil composition",
-    "tier": 2,
     "cat": "knowledge",
     "pre": [
       "fud_agricultural_treatises"
@@ -1586,7 +1530,6 @@
   {
     "id": "fud_malt_production",
     "name": "Malt production from barley and other grains",
-    "tier": 1,
     "cat": "fermentation",
     "pre": [
       "crop_rotation"
@@ -1612,7 +1555,6 @@
   {
     "id": "fud_grain_storage_silos",
     "name": "Cylindrical silos for bulk grain storage",
-    "tier": 2,
     "cat": "storage",
     "pre": [],
     "kb": "",
@@ -1640,7 +1582,6 @@
   {
     "id": "fud_livestock_selective_cattle",
     "name": "Selective breeding of draft and dairy cattle",
-    "tier": 1,
     "cat": "livestock",
     "pre": [
       "fud_selective_breeding_pedigree"
@@ -1666,7 +1607,6 @@
   {
     "id": "fud_livestock_selective_sheep",
     "name": "Selective breeding of sheep for wool and meat",
-    "tier": 1,
     "cat": "livestock",
     "pre": [
       "fud_selective_breeding_pedigree"
@@ -1692,7 +1632,6 @@
   {
     "id": "fud_dairy_butter_production",
     "name": "Butter production at scale from dairy cattle",
-    "tier": 1,
     "cat": "dairy",
     "pre": [
       "fud_livestock_selective_cattle"
@@ -1718,7 +1657,6 @@
   {
     "id": "fud_dairy_cheese_aging",
     "name": "Controlled cheese aging and storage",
-    "tier": 1,
     "cat": "dairy",
     "pre": [
       "fud_livestock_selective_cattle"
@@ -1744,7 +1682,6 @@
   {
     "id": "fud_sourdough_starter",
     "name": "Sourdough starter culture maintenance",
-    "tier": 1,
     "cat": "fermentation",
     "pre": [
       "fud_yeast_pure_culture"
