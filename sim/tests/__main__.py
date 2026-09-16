@@ -67,6 +67,7 @@ TOPICS = [
     "dynamic_wages",
     "economic_levers_inventory",
     "explicit_starting_techs",
+    "realism_part02",
 ]
 
 
