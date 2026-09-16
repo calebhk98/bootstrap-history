@@ -72,8 +72,8 @@ strategy, not a procedure, so it lives outside the recipe library.
 
 ## Every tech-tree node, and where its recipe lives
 
-Sorted by module, then by tier. `tier 0` is knowledge you carry in your head;
-`tier 5` is the semiconductor endgame.
+Sorted by module. Migrated modules are sorted by node id; sections still
+awaiting migration retain their legacy tier ordering for a stable partial diff.
 
 ### 10_metallurgy.md
 
@@ -632,430 +632,430 @@ Sorted by module, then by tier. `tier 0` is knowledge you carry in your head;
 
 ### 40_power_precision.md
 
-| Node | Tier | Your hours | Recipe |
-|---|---:|---:|---|
-| `en_boiler_haystack` | 0 | 180.0 | _(module has no anchor)_ |
-| `en_boiler_wagon` | 0 | 200.0 | _(module has no anchor)_ |
-| `en_post_mill` | 0 | 250.0 | _(module has no anchor)_ |
-| `en_tower_mill` | 0 | 300.0 | _(module has no anchor)_ |
-| `pwr_animal_treadmill` | 0 | 0.0 | _(module has no anchor)_ |
-| `pwr_force_pump` | 0 | 0.0 | _(module has no anchor)_ |
-| `pwr_screw_press_power` | 0 | 0.0 | _(module has no anchor)_ |
-| `pwr_ship_sail` | 0 | 0.0 | _(module has no anchor)_ |
-| `units_standards` | 0 | 300.0 | [`micrometer_gauge_blocks`](40_power_precision.md#micrometer_gauge_blocks---screw-micrometer-vernier-scale-and-end) |
-| `crank_conrod` | 1 | 300.0 | [`crank_connecting_rod`](40_power_precision.md#crank_connecting_rod---the-crank-and-connecting-rod-no-attested) |
-| `en_battery_lead_acid` | 1 | 250.0 | _(module has no anchor)_ |
-| `en_boiler_cornish` | 1 | 250.0 | _(module has no anchor)_ |
-| `en_boiler_lancashire` | 1 | 250.0 | _(module has no anchor)_ |
-| `en_flywheel_storage` | 1 | 200.0 | _(module has no anchor)_ |
-| `en_tide_mill` | 1 | 200.0 | _(module has no anchor)_ |
-| `mfg_arbor` | 1 | 100.0 | _(module has no anchor)_ |
-| `mfg_cold_riveting` | 1 | 100.0 | _(module has no anchor)_ |
-| `mfg_flux` | 1 | 60.0 | _(module has no anchor)_ |
-| `mfg_forge_weld` | 1 | 100.0 | _(module has no anchor)_ |
-| `mfg_hot_riveting` | 1 | 80.0 | _(module has no anchor)_ |
-| `mfg_mandrel` | 1 | 80.0 | _(module has no anchor)_ |
-| `mfg_mould` | 1 | 120.0 | _(module has no anchor)_ |
-| `mfg_painting` | 1 | 80.0 | _(module has no anchor)_ |
-| `mfg_soft_solder` | 1 | 80.0 | _(module has no anchor)_ |
-| `prc_arbor_press` | 1 | 40.0 | _(module has no anchor)_ |
-| `prc_back_gear` | 1 | 60.0 | _(module has no anchor)_ |
-| `prc_drill_press` | 1 | 70.0 | _(module has no anchor)_ |
-| `prc_lathe_faceplate` | 1 | 40.0 | _(module has no anchor)_ |
-| `prc_mandrel_chuck` | 1 | 60.0 | _(module has no anchor)_ |
-| `prc_reamer_hand_flute` | 1 | 40.0 | _(module has no anchor)_ |
-| `prc_slide_rest_simple` | 1 | 100.0 | _(module has no anchor)_ |
-| `prc_square_reference` | 1 | 50.0 | _(module has no anchor)_ |
-| `prc_straightedge` | 1 | 30.0 | _(module has no anchor)_ |
-| `prc_tailstock_deadcentre` | 1 | 50.0 | _(module has no anchor)_ |
-| `prc_treadle_lathe_flywheel` | 1 | 80.0 | _(module has no anchor)_ |
-| `prc_twist_drill` | 1 | 50.0 | _(module has no anchor)_ |
-| `pwr_flywheel_governor` | 1 | 150.0 | _(module has no anchor)_ |
-| `pwr_leat_and_weir` | 1 | 200.0 | _(module has no anchor)_ |
-| `pwr_millpond` | 1 | 150.0 | _(module has no anchor)_ |
-| `pwr_norse_waterwheel` | 1 | 120.0 | _(module has no anchor)_ |
-| `pwr_oil_shale` | 1 | 80.0 | _(module has no anchor)_ |
-| `pwr_peat` | 1 | 100.0 | _(module has no anchor)_ |
-| `pwr_smeaton_efficiency` | 1 | 200.0 | _(module has no anchor)_ |
-| `water_power_scale` | 1 | 450.0 | [`water_power_scaleup`](40_power_precision.md#water_power_scaleup---scaling-up-the-water-wheel-rota-aquaria) |
-| `clock_pendulum` | 2 | 500.0 | [`clockwork_escapement`](40_power_precision.md#clockwork_escapement---verge-and-foliot-pendulum-and-balance) |
-| `en_boiler_water_tube` | 2 | 300.0 | _(module has no anchor)_ |
-| `en_hydroelectric_station` | 2 | 400.0 | _(module has no anchor)_ |
-| `en_pumped_storage` | 2 | 400.0 | _(module has no anchor)_ |
-| `en_transformer` | 2 | 250.0 | _(module has no anchor)_ |
-| `master_screw` | 2 | 700.0 | [`screw_cutting_lathe`](40_power_precision.md#screw_cutting_lathe---the-lead-screw-slide-rest-and-change-gears) |
-| `mfg_brazing` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_buffing` | 2 | 130.0 | _(module has no anchor)_ |
-| `mfg_carbon_steel_tool` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_chip_formation` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_collet` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_core_box` | 2 | 180.0 | _(module has no anchor)_ |
-| `mfg_cutting_fluid` | 2 | 40.0 | _(module has no anchor)_ |
-| `mfg_cutting_speed` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_die_set` | 2 | 180.0 | _(module has no anchor)_ |
-| `mfg_enamelling` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_forging_press` | 2 | 300.0 | _(module has no anchor)_ |
-| `mfg_four_jaw_chuck` | 2 | 140.0 | _(module has no anchor)_ |
-| `mfg_galvanising` | 2 | 130.0 | _(module has no anchor)_ |
-| `mfg_go_gauge` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_japanning` | 2 | 110.0 | _(module has no anchor)_ |
-| `mfg_pattern` | 2 | 150.0 | _(module has no anchor)_ |
-| `mfg_phosphating` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_pickling` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_plug_gauge` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_press_brake` | 2 | 280.0 | _(module has no anchor)_ |
-| `mfg_punch_press` | 2 | 300.0 | _(module has no anchor)_ |
-| `mfg_rake_clearance` | 2 | 80.0 | _(module has no anchor)_ |
-| `mfg_ring_gauge` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_rotary_table` | 2 | 220.0 | _(module has no anchor)_ |
-| `mfg_sand_blasting` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_sawing_machine` | 2 | 250.0 | _(module has no anchor)_ |
-| `mfg_shearing_machine` | 2 | 280.0 | _(module has no anchor)_ |
-| `mfg_shot_blasting` | 2 | 120.0 | _(module has no anchor)_ |
-| `mfg_silver_solder` | 2 | 100.0 | _(module has no anchor)_ |
-| `mfg_snap_gauge` | 2 | 110.0 | _(module has no anchor)_ |
-| `mfg_spinning_lathe` | 2 | 250.0 | _(module has no anchor)_ |
-| `mfg_thread_gauge` | 2 | 140.0 | _(module has no anchor)_ |
-| `mfg_three_jaw_chuck` | 2 | 150.0 | _(module has no anchor)_ |
-| `mfg_tolerance_limit` | 2 | 140.0 | _(module has no anchor)_ |
-| `mfg_tumbling` | 2 | 110.0 | _(module has no anchor)_ |
-| `mfg_wire_drawing` | 2 | 280.0 | _(module has no anchor)_ |
-| `prc_capstan_turret_lathe` | 2 | 150.0 | _(module has no anchor)_ |
-| `prc_change_gears_quadrant` | 2 | 80.0 | _(module has no anchor)_ |
-| `prc_compound_slide_rest` | 2 | 120.0 | _(module has no anchor)_ |
-| `prc_coolant_cutting_fluid` | 2 | 50.0 | _(module has no anchor)_ |
-| `prc_cylindrical_square` | 2 | 60.0 | _(module has no anchor)_ |
-| `prc_depth_gauge` | 2 | 40.0 | _(module has no anchor)_ |
-| `prc_dividing_head` | 2 | 100.0 | _(module has no anchor)_ |
-| `prc_fly_cutter` | 2 | 50.0 | _(module has no anchor)_ |
-| `prc_go_nogo_gauge` | 2 | 60.0 | _(module has no anchor)_ |
-| `prc_jig_and_fixture` | 2 | 120.0 | _(module has no anchor)_ |
-| `prc_lapping_plate` | 2 | 60.0 | _(module has no anchor)_ |
-| `prc_machine_frame_cast_iron` | 2 | 120.0 | _(module has no anchor)_ |
-| `prc_milling_machine` | 2 | 160.0 | _(module has no anchor)_ |
-| `prc_pantograph_copying` | 2 | 80.0 | _(module has no anchor)_ |
-| `prc_planer_machine` | 2 | 140.0 | _(module has no anchor)_ |
-| `prc_scraped_surface_plate` | 2 | 200.0 | _(module has no anchor)_ |
-| `prc_shaper_machine` | 2 | 100.0 | _(module has no anchor)_ |
-| `prc_slotter_machine` | 2 | 70.0 | _(module has no anchor)_ |
-| `prc_tap_die` | 2 | 80.0 | _(module has no anchor)_ |
-| `prc_three_wire_thread_measure` | 2 | 70.0 | _(module has no anchor)_ |
-| `prc_vernier_caliper` | 2 | 60.0 | _(module has no anchor)_ |
-| `precision_three_plate` | 2 | 500.0 | [`precision_three_plate`](40_power_precision.md#precision_three_plate---whitworths-three-plate-method-no-latin) |
-| `pwr_cable_tool_drilling` | 2 | 300.0 | _(module has no anchor)_ |
-| `pwr_coal_gas` | 2 | 300.0 | _(module has no anchor)_ |
-| `pwr_coal_seam` | 2 | 150.0 | _(module has no anchor)_ |
-| `pwr_coking` | 2 | 200.0 | _(module has no anchor)_ |
-| `pwr_condenser` | 2 | 200.0 | _(module has no anchor)_ |
-| `pwr_fuel_oil` | 2 | 150.0 | _(module has no anchor)_ |
-| `pwr_gas_main` | 2 | 250.0 | _(module has no anchor)_ |
-| `pwr_gas_meter` | 2 | 180.0 | _(module has no anchor)_ |
-| `pwr_indicator_diagram` | 2 | 200.0 | _(module has no anchor)_ |
-| `pwr_oil_refinery` | 2 | 300.0 | _(module has no anchor)_ |
-| `pwr_petroleum_seeps` | 2 | 100.0 | _(module has no anchor)_ |
-| `pwr_trompe` | 2 | 180.0 | _(module has no anchor)_ |
-| `pwr_water_turbine_fourneyron` | 2 | 300.0 | _(module has no anchor)_ |
-| `boring_mill` | 3 | 600.0 | [`boring_mill`](40_power_precision.md#boring_mill---the-cylinder-boring-machine-no-latin-term) |
-| `interchangeable_parts` | 3 | 800.0 | [`interchangeable_parts`](40_power_precision.md#interchangeable_parts---gono-go-gauges-tolerance-jigs-and) |
-| `mfg_adhesive_bond` | 3 | 140.0 | _(module has no anchor)_ |
-| `mfg_anodising` | 3 | 160.0 | _(module has no anchor)_ |
-| `mfg_arc_weld_bare` | 3 | 160.0 | _(module has no anchor)_ |
-| `mfg_arc_weld_coated` | 3 | 140.0 | _(module has no anchor)_ |
-| `mfg_brazed_tip` | 3 | 100.0 | _(module has no anchor)_ |
-| `mfg_broaching_machine` | 3 | 350.0 | _(module has no anchor)_ |
-| `mfg_comparator` | 3 | 200.0 | _(module has no anchor)_ |
-| `mfg_compound_die` | 3 | 250.0 | _(module has no anchor)_ |
-| `mfg_control_chart` | 3 | 200.0 | _(module has no anchor)_ |
-| `mfg_cylindrical_grinder` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_dial_indicator` | 3 | 180.0 | _(module has no anchor)_ |
-| `mfg_engine_lathe` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_escapement_lever` | 3 | 240.0 | _(module has no anchor)_ |
-| `mfg_gear_shaper` | 3 | 400.0 | _(module has no anchor)_ |
-| `mfg_height_gauge` | 3 | 160.0 | _(module has no anchor)_ |
-| `mfg_honing` | 3 | 280.0 | _(module has no anchor)_ |
-| `mfg_horizontal_mill` | 3 | 350.0 | _(module has no anchor)_ |
-| `mfg_indexing_head` | 3 | 250.0 | _(module has no anchor)_ |
-| `mfg_lapping` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_magnetic_chuck` | 3 | 200.0 | _(module has no anchor)_ |
-| `mfg_mushet_steel` | 3 | 150.0 | _(module has no anchor)_ |
-| `mfg_oxy_acetylene` | 3 | 180.0 | _(module has no anchor)_ |
-| `mfg_planer` | 3 | 350.0 | _(module has no anchor)_ |
-| `mfg_progressive_die` | 3 | 280.0 | _(module has no anchor)_ |
-| `mfg_radial_drill` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_roll_former` | 3 | 350.0 | _(module has no anchor)_ |
-| `mfg_sampling_plan` | 3 | 180.0 | _(module has no anchor)_ |
-| `mfg_shaper` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_sine_bar` | 3 | 150.0 | _(module has no anchor)_ |
-| `mfg_slotter` | 3 | 250.0 | _(module has no anchor)_ |
-| `mfg_tool_grinder` | 3 | 300.0 | _(module has no anchor)_ |
-| `mfg_turret_lathe` | 3 | 400.0 | _(module has no anchor)_ |
-| `mfg_universal_mill` | 3 | 400.0 | _(module has no anchor)_ |
-| `mfg_upsetter` | 3 | 400.0 | _(module has no anchor)_ |
-| `mfg_vertical_mill` | 3 | 350.0 | _(module has no anchor)_ |
-| `micrometer_gauges` | 3 | 500.0 | [`micrometer_gauge_blocks`](40_power_precision.md#micrometer_gauge_blocks---screw-micrometer-vernier-scale-and-end) |
-| `prc_autocollimator` | 3 | 110.0 | _(module has no anchor)_ |
-| `prc_automatic_screw_machine` | 3 | 200.0 | _(module has no anchor)_ |
-| `prc_ball_roller_bearing` | 3 | 140.0 | _(module has no anchor)_ |
-| `prc_ballscrew` | 3 | 130.0 | _(module has no anchor)_ |
-| `prc_broach_machine` | 3 | 110.0 | _(module has no anchor)_ |
-| `prc_comparator_optical` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_die_sinker` | 3 | 110.0 | _(module has no anchor)_ |
-| `prc_gauge_blocks_johansson` | 3 | 120.0 | _(module has no anchor)_ |
-| `prc_honing_machine` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_jig_boring_machine` | 3 | 150.0 | _(module has no anchor)_ |
-| `prc_lead_screw_error_cam` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_metrology_room_20c` | 3 | 200.0 | _(module has no anchor)_ |
-| `prc_optical_flat` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_profile_projector` | 3 | 110.0 | _(module has no anchor)_ |
-| `prc_roundness_measurement` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_surface_grinder` | 3 | 300.0 | _(module has no anchor)_ |
-| `prc_tool_cutter_grinder` | 3 | 120.0 | _(module has no anchor)_ |
-| `prc_tool_steel_hss_carbide` | 3 | 100.0 | _(module has no anchor)_ |
-| `prc_toolmaker_microscope` | 3 | 130.0 | _(module has no anchor)_ |
-| `prc_tracer_lathe` | 3 | 140.0 | _(module has no anchor)_ |
-| `prc_universal_milling_machine` | 3 | 180.0 | _(module has no anchor)_ |
-| `prc_vibration_and_chatter` | 3 | 100.0 | _(module has no anchor)_ |
-| `pwr_feedwater_heating` | 3 | 200.0 | _(module has no anchor)_ |
-| `pwr_high_voltage_transmission` | 3 | 300.0 | _(module has no anchor)_ |
-| `pwr_pipeline` | 3 | 250.0 | _(module has no anchor)_ |
-| `pwr_rotary_drilling` | 3 | 350.0 | _(module has no anchor)_ |
-| `pwr_selenium_metal` | 3 | 200.0 | _(module has no anchor)_ |
-| `pwr_thermoelectric_couple` | 3 | 200.0 | _(module has no anchor)_ |
-| `pwr_thermopile` | 3 | 150.0 | _(module has no anchor)_ |
-| `pwr_three_phase_ac` | 3 | 250.0 | _(module has no anchor)_ |
-| `screw_lathe` | 3 | 900.0 | [`screw_cutting_lathe`](40_power_precision.md#screw_cutting_lathe---the-lead-screw-slide-rest-and-change-gears) |
-| `steam_atmospheric` | 3 | 900.0 | [`steam_atmospheric`](40_power_precision.md#steam_atmospheric---the-newcomen-atmospheric-engine-no-latin-term) |
-| `mfg_air_gauge` | 4 | 250.0 | _(module has no anchor)_ |
-| `mfg_automatic_screw` | 4 | 500.0 | _(module has no anchor)_ |
-| `mfg_cam_lobe` | 4 | 300.0 | _(module has no anchor)_ |
-| `mfg_centreless_grinder` | 4 | 400.0 | _(module has no anchor)_ |
-| `mfg_dividing_engine` | 4 | 350.0 | _(module has no anchor)_ |
-| `mfg_flash_butt` | 4 | 200.0 | _(module has no anchor)_ |
-| `mfg_gear_grinder` | 4 | 400.0 | _(module has no anchor)_ |
-| `mfg_gear_hobber` | 4 | 450.0 | _(module has no anchor)_ |
-| `mfg_horizontal_jig_borer` | 4 | 350.0 | _(module has no anchor)_ |
-| `mfg_hss_development` | 4 | 400.0 | _(module has no anchor)_ |
-| `mfg_hss_production` | 4 | 80.0 | _(module has no anchor)_ |
-| `mfg_internal_grinder` | 4 | 350.0 | _(module has no anchor)_ |
-| `mfg_multi_spindle` | 4 | 600.0 | _(module has no anchor)_ |
-| `mfg_optical_comparator` | 4 | 300.0 | _(module has no anchor)_ |
-| `mfg_profile_mill` | 4 | 450.0 | _(module has no anchor)_ |
-| `mfg_resistance_seam` | 4 | 220.0 | _(module has no anchor)_ |
-| `mfg_resistance_spot` | 4 | 200.0 | _(module has no anchor)_ |
-| `mfg_stellite_tool` | 4 | 120.0 | _(module has no anchor)_ |
-| `mfg_submerged_arc` | 4 | 250.0 | _(module has no anchor)_ |
-| `mfg_superfinishing` | 4 | 350.0 | _(module has no anchor)_ |
-| `mfg_vertical_jig_borer` | 4 | 400.0 | _(module has no anchor)_ |
-| `prc_standard_meter_wavelength` | 4 | 150.0 | _(module has no anchor)_ |
-| `pwr_electric_motor_industry` | 4 | 300.0 | _(module has no anchor)_ |
-| `pwr_fuel_cell` | 4 | 300.0 | _(module has no anchor)_ |
-| `pwr_load_factor_economics` | 4 | 200.0 | _(module has no anchor)_ |
-| `pwr_selenium_cell` | 4 | 150.0 | _(module has no anchor)_ |
-| `pwr_selenium_photovoltaic` | 4 | 200.0 | _(module has no anchor)_ |
-| `steam_high_pressure` | 4 | 700.0 | [`steam_high_pressure`](40_power_precision.md#steam_high_pressure---high-pressure-non-condensing-steam-no-latin) |
-| `steam_watt` | 4 | 800.0 | [`steam_watt`](40_power_precision.md#steam_watt---watts-separate-condenser-no-latin-term) |
-| `mfg_cemented_carbide` | 5 | 200.0 | _(module has no anchor)_ |
-| `mfg_indexable_insert` | 5 | 150.0 | _(module has no anchor)_ |
-| `pwr_nuclear_fission` | 5 | 500.0 | _(module has no anchor)_ |
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `boring_mill` | 600.0 | [`boring_mill`](40_power_precision.md#boring_mill---the-cylinder-boring-machine-no-latin-term) |
+| `clock_pendulum` | 500.0 | [`clockwork_escapement`](40_power_precision.md#clockwork_escapement---verge-and-foliot-pendulum-and-balance) |
+| `crank_conrod` | 300.0 | [`crank_connecting_rod`](40_power_precision.md#crank_connecting_rod---the-crank-and-connecting-rod-no-attested) |
+| `en_battery_lead_acid` | 250.0 | _(module has no anchor)_ |
+| `en_boiler_cornish` | 250.0 | _(module has no anchor)_ |
+| `en_boiler_haystack` | 180.0 | _(module has no anchor)_ |
+| `en_boiler_lancashire` | 250.0 | _(module has no anchor)_ |
+| `en_boiler_wagon` | 200.0 | _(module has no anchor)_ |
+| `en_boiler_water_tube` | 300.0 | _(module has no anchor)_ |
+| `en_flywheel_storage` | 200.0 | _(module has no anchor)_ |
+| `en_hydroelectric_station` | 400.0 | _(module has no anchor)_ |
+| `en_post_mill` | 250.0 | _(module has no anchor)_ |
+| `en_pumped_storage` | 400.0 | _(module has no anchor)_ |
+| `en_tide_mill` | 200.0 | _(module has no anchor)_ |
+| `en_tower_mill` | 300.0 | _(module has no anchor)_ |
+| `en_transformer` | 250.0 | _(module has no anchor)_ |
+| `interchangeable_parts` | 800.0 | [`interchangeable_parts`](40_power_precision.md#interchangeable_parts---gono-go-gauges-tolerance-jigs-and) |
+| `master_screw` | 700.0 | [`screw_cutting_lathe`](40_power_precision.md#screw_cutting_lathe---the-lead-screw-slide-rest-and-change-gears) |
+| `mfg_adhesive_bond` | 140.0 | _(module has no anchor)_ |
+| `mfg_air_gauge` | 250.0 | _(module has no anchor)_ |
+| `mfg_anodising` | 160.0 | _(module has no anchor)_ |
+| `mfg_arbor` | 100.0 | _(module has no anchor)_ |
+| `mfg_arc_weld_bare` | 160.0 | _(module has no anchor)_ |
+| `mfg_arc_weld_coated` | 140.0 | _(module has no anchor)_ |
+| `mfg_automatic_screw` | 500.0 | _(module has no anchor)_ |
+| `mfg_brazed_tip` | 100.0 | _(module has no anchor)_ |
+| `mfg_brazing` | 120.0 | _(module has no anchor)_ |
+| `mfg_broaching_machine` | 350.0 | _(module has no anchor)_ |
+| `mfg_buffing` | 130.0 | _(module has no anchor)_ |
+| `mfg_cam_lobe` | 300.0 | _(module has no anchor)_ |
+| `mfg_carbon_steel_tool` | 100.0 | _(module has no anchor)_ |
+| `mfg_cemented_carbide` | 200.0 | _(module has no anchor)_ |
+| `mfg_centreless_grinder` | 400.0 | _(module has no anchor)_ |
+| `mfg_chip_formation` | 120.0 | _(module has no anchor)_ |
+| `mfg_cold_riveting` | 100.0 | _(module has no anchor)_ |
+| `mfg_collet` | 120.0 | _(module has no anchor)_ |
+| `mfg_comparator` | 200.0 | _(module has no anchor)_ |
+| `mfg_compound_die` | 250.0 | _(module has no anchor)_ |
+| `mfg_control_chart` | 200.0 | _(module has no anchor)_ |
+| `mfg_core_box` | 180.0 | _(module has no anchor)_ |
+| `mfg_cutting_fluid` | 40.0 | _(module has no anchor)_ |
+| `mfg_cutting_speed` | 100.0 | _(module has no anchor)_ |
+| `mfg_cylindrical_grinder` | 300.0 | _(module has no anchor)_ |
+| `mfg_dial_indicator` | 180.0 | _(module has no anchor)_ |
+| `mfg_die_set` | 180.0 | _(module has no anchor)_ |
+| `mfg_dividing_engine` | 350.0 | _(module has no anchor)_ |
+| `mfg_enamelling` | 120.0 | _(module has no anchor)_ |
+| `mfg_engine_lathe` | 300.0 | _(module has no anchor)_ |
+| `mfg_escapement_lever` | 240.0 | _(module has no anchor)_ |
+| `mfg_flash_butt` | 200.0 | _(module has no anchor)_ |
+| `mfg_flux` | 60.0 | _(module has no anchor)_ |
+| `mfg_forge_weld` | 100.0 | _(module has no anchor)_ |
+| `mfg_forging_press` | 300.0 | _(module has no anchor)_ |
+| `mfg_four_jaw_chuck` | 140.0 | _(module has no anchor)_ |
+| `mfg_galvanising` | 130.0 | _(module has no anchor)_ |
+| `mfg_gear_grinder` | 400.0 | _(module has no anchor)_ |
+| `mfg_gear_hobber` | 450.0 | _(module has no anchor)_ |
+| `mfg_gear_shaper` | 400.0 | _(module has no anchor)_ |
+| `mfg_go_gauge` | 100.0 | _(module has no anchor)_ |
+| `mfg_height_gauge` | 160.0 | _(module has no anchor)_ |
+| `mfg_honing` | 280.0 | _(module has no anchor)_ |
+| `mfg_horizontal_jig_borer` | 350.0 | _(module has no anchor)_ |
+| `mfg_horizontal_mill` | 350.0 | _(module has no anchor)_ |
+| `mfg_hot_riveting` | 80.0 | _(module has no anchor)_ |
+| `mfg_hss_development` | 400.0 | _(module has no anchor)_ |
+| `mfg_hss_production` | 80.0 | _(module has no anchor)_ |
+| `mfg_indexable_insert` | 150.0 | _(module has no anchor)_ |
+| `mfg_indexing_head` | 250.0 | _(module has no anchor)_ |
+| `mfg_internal_grinder` | 350.0 | _(module has no anchor)_ |
+| `mfg_japanning` | 110.0 | _(module has no anchor)_ |
+| `mfg_lapping` | 300.0 | _(module has no anchor)_ |
+| `mfg_magnetic_chuck` | 200.0 | _(module has no anchor)_ |
+| `mfg_mandrel` | 80.0 | _(module has no anchor)_ |
+| `mfg_mould` | 120.0 | _(module has no anchor)_ |
+| `mfg_multi_spindle` | 600.0 | _(module has no anchor)_ |
+| `mfg_mushet_steel` | 150.0 | _(module has no anchor)_ |
+| `mfg_optical_comparator` | 300.0 | _(module has no anchor)_ |
+| `mfg_oxy_acetylene` | 180.0 | _(module has no anchor)_ |
+| `mfg_painting` | 80.0 | _(module has no anchor)_ |
+| `mfg_pattern` | 150.0 | _(module has no anchor)_ |
+| `mfg_phosphating` | 100.0 | _(module has no anchor)_ |
+| `mfg_pickling` | 100.0 | _(module has no anchor)_ |
+| `mfg_planer` | 350.0 | _(module has no anchor)_ |
+| `mfg_plug_gauge` | 120.0 | _(module has no anchor)_ |
+| `mfg_press_brake` | 280.0 | _(module has no anchor)_ |
+| `mfg_profile_mill` | 450.0 | _(module has no anchor)_ |
+| `mfg_progressive_die` | 280.0 | _(module has no anchor)_ |
+| `mfg_punch_press` | 300.0 | _(module has no anchor)_ |
+| `mfg_radial_drill` | 300.0 | _(module has no anchor)_ |
+| `mfg_rake_clearance` | 80.0 | _(module has no anchor)_ |
+| `mfg_resistance_seam` | 220.0 | _(module has no anchor)_ |
+| `mfg_resistance_spot` | 200.0 | _(module has no anchor)_ |
+| `mfg_ring_gauge` | 120.0 | _(module has no anchor)_ |
+| `mfg_roll_former` | 350.0 | _(module has no anchor)_ |
+| `mfg_rotary_table` | 220.0 | _(module has no anchor)_ |
+| `mfg_sampling_plan` | 180.0 | _(module has no anchor)_ |
+| `mfg_sand_blasting` | 100.0 | _(module has no anchor)_ |
+| `mfg_sawing_machine` | 250.0 | _(module has no anchor)_ |
+| `mfg_shaper` | 300.0 | _(module has no anchor)_ |
+| `mfg_shearing_machine` | 280.0 | _(module has no anchor)_ |
+| `mfg_shot_blasting` | 120.0 | _(module has no anchor)_ |
+| `mfg_silver_solder` | 100.0 | _(module has no anchor)_ |
+| `mfg_sine_bar` | 150.0 | _(module has no anchor)_ |
+| `mfg_slotter` | 250.0 | _(module has no anchor)_ |
+| `mfg_snap_gauge` | 110.0 | _(module has no anchor)_ |
+| `mfg_soft_solder` | 80.0 | _(module has no anchor)_ |
+| `mfg_spinning_lathe` | 250.0 | _(module has no anchor)_ |
+| `mfg_stellite_tool` | 120.0 | _(module has no anchor)_ |
+| `mfg_submerged_arc` | 250.0 | _(module has no anchor)_ |
+| `mfg_superfinishing` | 350.0 | _(module has no anchor)_ |
+| `mfg_thread_gauge` | 140.0 | _(module has no anchor)_ |
+| `mfg_three_jaw_chuck` | 150.0 | _(module has no anchor)_ |
+| `mfg_tolerance_limit` | 140.0 | _(module has no anchor)_ |
+| `mfg_tool_grinder` | 300.0 | _(module has no anchor)_ |
+| `mfg_tumbling` | 110.0 | _(module has no anchor)_ |
+| `mfg_turret_lathe` | 400.0 | _(module has no anchor)_ |
+| `mfg_universal_mill` | 400.0 | _(module has no anchor)_ |
+| `mfg_upsetter` | 400.0 | _(module has no anchor)_ |
+| `mfg_vertical_jig_borer` | 400.0 | _(module has no anchor)_ |
+| `mfg_vertical_mill` | 350.0 | _(module has no anchor)_ |
+| `mfg_wire_drawing` | 280.0 | _(module has no anchor)_ |
+| `micrometer_gauges` | 500.0 | [`micrometer_gauge_blocks`](40_power_precision.md#micrometer_gauge_blocks---screw-micrometer-vernier-scale-and-end) |
+| `prc_arbor_press` | 40.0 | _(module has no anchor)_ |
+| `prc_autocollimator` | 110.0 | _(module has no anchor)_ |
+| `prc_automatic_screw_machine` | 200.0 | _(module has no anchor)_ |
+| `prc_back_gear` | 60.0 | _(module has no anchor)_ |
+| `prc_ball_roller_bearing` | 140.0 | _(module has no anchor)_ |
+| `prc_ballscrew` | 130.0 | _(module has no anchor)_ |
+| `prc_broach_machine` | 110.0 | _(module has no anchor)_ |
+| `prc_capstan_turret_lathe` | 150.0 | _(module has no anchor)_ |
+| `prc_change_gears_quadrant` | 80.0 | _(module has no anchor)_ |
+| `prc_comparator_optical` | 100.0 | _(module has no anchor)_ |
+| `prc_compound_slide_rest` | 120.0 | _(module has no anchor)_ |
+| `prc_coolant_cutting_fluid` | 50.0 | _(module has no anchor)_ |
+| `prc_cylindrical_square` | 60.0 | _(module has no anchor)_ |
+| `prc_depth_gauge` | 40.0 | _(module has no anchor)_ |
+| `prc_die_sinker` | 110.0 | _(module has no anchor)_ |
+| `prc_dividing_head` | 100.0 | _(module has no anchor)_ |
+| `prc_drill_press` | 70.0 | _(module has no anchor)_ |
+| `prc_fly_cutter` | 50.0 | _(module has no anchor)_ |
+| `prc_gauge_blocks_johansson` | 120.0 | _(module has no anchor)_ |
+| `prc_go_nogo_gauge` | 60.0 | _(module has no anchor)_ |
+| `prc_honing_machine` | 100.0 | _(module has no anchor)_ |
+| `prc_jig_and_fixture` | 120.0 | _(module has no anchor)_ |
+| `prc_jig_boring_machine` | 150.0 | _(module has no anchor)_ |
+| `prc_lapping_plate` | 60.0 | _(module has no anchor)_ |
+| `prc_lathe_faceplate` | 40.0 | _(module has no anchor)_ |
+| `prc_lead_screw_error_cam` | 100.0 | _(module has no anchor)_ |
+| `prc_machine_frame_cast_iron` | 120.0 | _(module has no anchor)_ |
+| `prc_mandrel_chuck` | 60.0 | _(module has no anchor)_ |
+| `prc_metrology_room_20c` | 200.0 | _(module has no anchor)_ |
+| `prc_milling_machine` | 160.0 | _(module has no anchor)_ |
+| `prc_optical_flat` | 100.0 | _(module has no anchor)_ |
+| `prc_pantograph_copying` | 80.0 | _(module has no anchor)_ |
+| `prc_planer_machine` | 140.0 | _(module has no anchor)_ |
+| `prc_profile_projector` | 110.0 | _(module has no anchor)_ |
+| `prc_reamer_hand_flute` | 40.0 | _(module has no anchor)_ |
+| `prc_roundness_measurement` | 100.0 | _(module has no anchor)_ |
+| `prc_scraped_surface_plate` | 200.0 | _(module has no anchor)_ |
+| `prc_shaper_machine` | 100.0 | _(module has no anchor)_ |
+| `prc_slide_rest_simple` | 100.0 | _(module has no anchor)_ |
+| `prc_slotter_machine` | 70.0 | _(module has no anchor)_ |
+| `prc_square_reference` | 50.0 | _(module has no anchor)_ |
+| `prc_standard_meter_wavelength` | 150.0 | _(module has no anchor)_ |
+| `prc_straightedge` | 30.0 | _(module has no anchor)_ |
+| `prc_surface_grinder` | 300.0 | _(module has no anchor)_ |
+| `prc_tailstock_deadcentre` | 50.0 | _(module has no anchor)_ |
+| `prc_tap_die` | 80.0 | _(module has no anchor)_ |
+| `prc_three_wire_thread_measure` | 70.0 | _(module has no anchor)_ |
+| `prc_tool_cutter_grinder` | 120.0 | _(module has no anchor)_ |
+| `prc_tool_steel_hss_carbide` | 100.0 | _(module has no anchor)_ |
+| `prc_toolmaker_microscope` | 130.0 | _(module has no anchor)_ |
+| `prc_tracer_lathe` | 140.0 | _(module has no anchor)_ |
+| `prc_treadle_lathe_flywheel` | 80.0 | _(module has no anchor)_ |
+| `prc_twist_drill` | 50.0 | _(module has no anchor)_ |
+| `prc_universal_milling_machine` | 180.0 | _(module has no anchor)_ |
+| `prc_vernier_caliper` | 60.0 | _(module has no anchor)_ |
+| `prc_vibration_and_chatter` | 100.0 | _(module has no anchor)_ |
+| `precision_three_plate` | 500.0 | [`precision_three_plate`](40_power_precision.md#precision_three_plate---whitworths-three-plate-method-no-latin) |
+| `pwr_animal_treadmill` | 0.0 | _(module has no anchor)_ |
+| `pwr_cable_tool_drilling` | 300.0 | _(module has no anchor)_ |
+| `pwr_coal_gas` | 300.0 | _(module has no anchor)_ |
+| `pwr_coal_seam` | 150.0 | _(module has no anchor)_ |
+| `pwr_coking` | 200.0 | _(module has no anchor)_ |
+| `pwr_condenser` | 200.0 | _(module has no anchor)_ |
+| `pwr_electric_motor_industry` | 300.0 | _(module has no anchor)_ |
+| `pwr_feedwater_heating` | 200.0 | _(module has no anchor)_ |
+| `pwr_flywheel_governor` | 150.0 | _(module has no anchor)_ |
+| `pwr_force_pump` | 0.0 | _(module has no anchor)_ |
+| `pwr_fuel_cell` | 300.0 | _(module has no anchor)_ |
+| `pwr_fuel_oil` | 150.0 | _(module has no anchor)_ |
+| `pwr_gas_main` | 250.0 | _(module has no anchor)_ |
+| `pwr_gas_meter` | 180.0 | _(module has no anchor)_ |
+| `pwr_high_voltage_transmission` | 300.0 | _(module has no anchor)_ |
+| `pwr_indicator_diagram` | 200.0 | _(module has no anchor)_ |
+| `pwr_leat_and_weir` | 200.0 | _(module has no anchor)_ |
+| `pwr_load_factor_economics` | 200.0 | _(module has no anchor)_ |
+| `pwr_millpond` | 150.0 | _(module has no anchor)_ |
+| `pwr_norse_waterwheel` | 120.0 | _(module has no anchor)_ |
+| `pwr_nuclear_fission` | 500.0 | _(module has no anchor)_ |
+| `pwr_oil_refinery` | 300.0 | _(module has no anchor)_ |
+| `pwr_oil_shale` | 80.0 | _(module has no anchor)_ |
+| `pwr_peat` | 100.0 | _(module has no anchor)_ |
+| `pwr_petroleum_seeps` | 100.0 | _(module has no anchor)_ |
+| `pwr_pipeline` | 250.0 | _(module has no anchor)_ |
+| `pwr_rotary_drilling` | 350.0 | _(module has no anchor)_ |
+| `pwr_screw_press_power` | 0.0 | _(module has no anchor)_ |
+| `pwr_selenium_cell` | 150.0 | _(module has no anchor)_ |
+| `pwr_selenium_metal` | 200.0 | _(module has no anchor)_ |
+| `pwr_selenium_photovoltaic` | 200.0 | _(module has no anchor)_ |
+| `pwr_ship_sail` | 0.0 | _(module has no anchor)_ |
+| `pwr_smeaton_efficiency` | 200.0 | _(module has no anchor)_ |
+| `pwr_thermoelectric_couple` | 200.0 | _(module has no anchor)_ |
+| `pwr_thermopile` | 150.0 | _(module has no anchor)_ |
+| `pwr_three_phase_ac` | 250.0 | _(module has no anchor)_ |
+| `pwr_trompe` | 180.0 | _(module has no anchor)_ |
+| `pwr_water_turbine_fourneyron` | 300.0 | _(module has no anchor)_ |
+| `screw_lathe` | 900.0 | [`screw_cutting_lathe`](40_power_precision.md#screw_cutting_lathe---the-lead-screw-slide-rest-and-change-gears) |
+| `steam_atmospheric` | 900.0 | [`steam_atmospheric`](40_power_precision.md#steam_atmospheric---the-newcomen-atmospheric-engine-no-latin-term) |
+| `steam_high_pressure` | 700.0 | [`steam_high_pressure`](40_power_precision.md#steam_high_pressure---high-pressure-non-condensing-steam-no-latin) |
+| `steam_watt` | 800.0 | [`steam_watt`](40_power_precision.md#steam_watt---watts-separate-condenser-no-latin-term) |
+| `units_standards` | 300.0 | [`micrometer_gauge_blocks`](40_power_precision.md#micrometer_gauge_blocks---screw-micrometer-vernier-scale-and-end) |
+| `water_power_scale` | 450.0 | [`water_power_scaleup`](40_power_precision.md#water_power_scaleup---scaling-up-the-water-wheel-rota-aquaria) |
 
 ### 50_electricity.md
 
-| Node | Tier | Your hours | Recipe |
-|---|---:|---:|---|
-| `em_theory` | 0 | 800.0 | _(module has no anchor)_ |
-| `com_optical_codebook` | 1 | 100.0 | _(module has no anchor)_ |
-| `com_signal_flags` | 1 | 40.0 | _(module has no anchor)_ |
-| `crude_cell` | 1 | 120.0 | [`crude_cell`](50_electricity.md#crude_cell---iron-and-copper-brine-cell) |
-| `el2_inductor_air_core` | 1 | 30.0 | _(module has no anchor)_ |
-| `el2_switch_knife` | 1 | 20.0 | _(module has no anchor)_ |
-| `el2_transformer_core_air` | 1 | 40.0 | _(module has no anchor)_ |
-| `com_heliograph` | 2 | 80.0 | _(module has no anchor)_ |
-| `com_jacquard_loom` | 2 | 250.0 | _(module has no anchor)_ |
-| `com_morse_code` | 2 | 60.0 | _(module has no anchor)_ |
-| `com_morse_register` | 2 | 100.0 | _(module has no anchor)_ |
-| `com_morse_sounder` | 2 | 80.0 | _(module has no anchor)_ |
-| `com_napiers_bones` | 2 | 100.0 | _(module has no anchor)_ |
-| `com_optical_tower` | 2 | 120.0 | _(module has no anchor)_ |
-| `com_relay` | 2 | 100.0 | _(module has no anchor)_ |
-| `com_stepped_drum` | 2 | 80.0 | _(module has no anchor)_ |
-| `com_stock_ticker` | 2 | 100.0 | _(module has no anchor)_ |
-| `com_telegraph_battery` | 2 | 60.0 | _(module has no anchor)_ |
-| `el2_alternator_rotating_field` | 2 | 120.0 | _(module has no anchor)_ |
-| `el2_amplifier_gain_voltage_current` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_bandpass_filter_notch_filter` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_capacitor_fixed_mica` | 2 | 50.0 | _(module has no anchor)_ |
-| `el2_capacitor_fixed_paper` | 2 | 60.0 | _(module has no anchor)_ |
-| `el2_capacitor_variable_air` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_circuit_breaker_thermal` | 2 | 60.0 | _(module has no anchor)_ |
-| `el2_detector_demodulation_envelope_product` | 2 | 75.0 | _(module has no anchor)_ |
-| `el2_dynamo_compound_wound` | 2 | 100.0 | _(module has no anchor)_ |
-| `el2_dynamo_series_wound` | 2 | 75.0 | _(module has no anchor)_ |
-| `el2_dynamo_shunt_wound` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_earthing_grounding_system` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_electroplating_and_electrorefining` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_impedance_matching_transformer_network` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_induction_motor_squirrel_cage` | 2 | 100.0 | _(module has no anchor)_ |
-| `el2_inductor_iron_core` | 2 | 60.0 | _(module has no anchor)_ |
-| `el2_insulator_pin_porcelain` | 2 | 40.0 | _(module has no anchor)_ |
-| `el2_lightning_arrestor_gap` | 2 | 50.0 | _(module has no anchor)_ |
-| `el2_low_pass_filter_high_pass_filter` | 2 | 50.0 | _(module has no anchor)_ |
-| `el2_meter_moving_coil_galvanometer` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_meter_moving_iron_attraction` | 2 | 60.0 | _(module has no anchor)_ |
-| `el2_microphone_carbon_contact` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_mixer_frequency_translation` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_modulator_amplitude_frequency_phase` | 2 | 90.0 | _(module has no anchor)_ |
-| `el2_oscillator_feedback_frequency_generation` | 2 | 90.0 | _(module has no anchor)_ |
-| `el2_power_supply_rectification_filtering` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_relay_electromagnetic` | 2 | 50.0 | _(module has no anchor)_ |
-| `el2_resistor_wirewound` | 2 | 40.0 | _(module has no anchor)_ |
-| `el2_resonance_frequency_selectivity` | 2 | 70.0 | _(module has no anchor)_ |
-| `el2_rheostat` | 2 | 80.0 | _(module has no anchor)_ |
-| `el2_tuned_circuit_resonance_tank` | 2 | 100.0 | _(module has no anchor)_ |
-| `electrostatics` | 2 | 350.0 | [`electrostatics`](50_electricity.md#electrostatics---static-machines-and-the-leyden-jar-electrum-vis-electrica) |
-| `com_analytical_engine` | 3 | 250.0 | _(module has no anchor)_ |
-| `com_antenna_ground` | 3 | 60.0 | _(module has no anchor)_ |
-| `com_arithmometer` | 3 | 120.0 | _(module has no anchor)_ |
-| `com_baudot_code` | 3 | 60.0 | _(module has no anchor)_ |
-| `com_cryptography_substitution` | 3 | 80.0 | _(module has no anchor)_ |
-| `com_difference_engine` | 3 | 200.0 | _(module has no anchor)_ |
-| `com_duplex_telegraph` | 3 | 120.0 | _(module has no anchor)_ |
-| `com_loading_coil` | 3 | 120.0 | _(module has no anchor)_ |
-| `com_mechanical_calculator` | 3 | 150.0 | _(module has no anchor)_ |
-| `com_multiplexing` | 3 | 120.0 | _(module has no anchor)_ |
-| `com_quadruplex_telegraph` | 3 | 140.0 | _(module has no anchor)_ |
-| `com_submarine_cable` | 3 | 200.0 | _(module has no anchor)_ |
-| `com_telephone_carbon_mic` | 3 | 100.0 | _(module has no anchor)_ |
-| `com_telephone_diaphragm` | 3 | 80.0 | _(module has no anchor)_ |
-| `com_telephone_manual_exchange` | 3 | 150.0 | _(module has no anchor)_ |
-| `com_teleprinter` | 3 | 140.0 | _(module has no anchor)_ |
-| `com_trunk_lines` | 3 | 100.0 | _(module has no anchor)_ |
-| `com_tv_mechanical_scanning` | 3 | 140.0 | _(module has no anchor)_ |
-| `copper_refining` | 3 | 400.0 | [`wire_insulation`](50_electricity.md#wire_insulation---insulated-wire-varnish-and-cable) |
-| `daniell_cell` | 3 | 250.0 | [`daniell_cell`](50_electricity.md#daniell_cell---two-fluid-cell-daniell-no-latin-name) |
-| `el2_antenna_patterns_radiation_efficiency` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_arc_welding_carbon_metal_electrode` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_bridge_resistance_AC_impedance` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_circuit_breaker_magnetic` | 3 | 70.0 | _(module has no anchor)_ |
-| `el2_contactor_industrial` | 3 | 80.0 | _(module has no anchor)_ |
-| `el2_counter_frequency_scaling_binary` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_diode_thermionic_rectifying_tube` | 3 | 70.0 | _(module has no anchor)_ |
-| `el2_discriminator_FM_demodulator` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_electric_drill_handheld_motor` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_electric_lift_motor_gear_reduction` | 3 | 130.0 | _(module has no anchor)_ |
-| `el2_electric_locomotive_traction_motor` | 3 | 150.0 | _(module has no anchor)_ |
-| `el2_electropolishing_etching_surface_finish` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_flip_flop_binary_latch_memory` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_galvanometer_ballistic_impulse` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_induction_heating_inductor_coupling` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_induction_motor_wound_rotor` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_insulator_bushing` | 3 | 60.0 | _(module has no anchor)_ |
-| `el2_loudspeaker_moving_coil_magnetic` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_megger_resistance_tester` | 3 | 90.0 | _(module has no anchor)_ |
-| `el2_meter_electrodynamometer_wattmeter` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_meter_energy_kWh_meter` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_microphone_dynamic_moving_coil` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_microphone_ribbon_velocity` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_multivibrator_binary_oscillator` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_negative_feedback_stability_gain` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_oscillograph_string_recorder` | 3 | 130.0 | _(module has no anchor)_ |
-| `el2_pentode_five_electrode_tube` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_photocell_vacuum_gas_photoelectric` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_photodiode_photocell_selenium` | 3 | 80.0 | _(module has no anchor)_ |
-| `el2_plug_socket_portable` | 3 | 70.0 | _(module has no anchor)_ |
-| `el2_potentiometer` | 3 | 180.0 | _(module has no anchor)_ |
-| `el2_potentiometer_method_measurement` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_power_factor_correction_capacitor` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_protective_relaying_differential` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_resistance_welding_spot_seam` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_resistor_carbon` | 3 | 60.0 | _(module has no anchor)_ |
-| `el2_ring_main_distribution` | 3 | 130.0 | _(module has no anchor)_ |
-| `el2_standard_cell_weston_saturated` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_standard_resistor_manganin` | 3 | 80.0 | _(module has no anchor)_ |
-| `el2_substation_voltage_regulation` | 3 | 140.0 | _(module has no anchor)_ |
-| `el2_synchronous_motor` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_synchroscope_phase_angle_indicator` | 3 | 80.0 | _(module has no anchor)_ |
-| `el2_tap_changer_load_compensator` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_tetrode_four_electrode_tube` | 3 | 110.0 | _(module has no anchor)_ |
-| `el2_three_wire_distribution_system` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_transmission_line_coaxial_cable` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_triode_amplifying_tube` | 3 | 100.0 | _(module has no anchor)_ |
-| `el2_trolleybus_catenary_power` | 3 | 120.0 | _(module has no anchor)_ |
-| `el2_universal_motor_AC_DC` | 3 | 90.0 | _(module has no anchor)_ |
-| `el2_voltage_regulation_series_shunt` | 3 | 100.0 | _(module has no anchor)_ |
-| `electromagnet` | 3 | 350.0 | [`electromagnet`](50_electricity.md#electromagnet---iron-core-electromagnet-and-relay) |
-| `electroplating` | 3 | 350.0 | [`electrolysis_industrial`](50_electricity.md#electrolysis_industrial---electroplating-electro-refining-chlor-alkali-aluminium) |
-| `galvanometer` | 3 | 400.0 | [`galvanometer`](50_electricity.md#galvanometer---tangent-galvanometer-and-the-absolute-measurement-bootstrap) |
-| `telegraph_electric` | 3 | 700.0 | [`telegraph`](50_electricity.md#telegraph---electric-line-telegraph) |
-| `voltaic_pile` | 3 | 300.0 | [`voltaic_pile`](50_electricity.md#voltaic_pile---zinc-and-copper-disc-pile) |
-| `arc_light_lamp` | 4 | 500.0 | [`incandescent_lamp`](50_electricity.md#incandescent_lamp---filament-lamp-carbon-then-tungsten) |
-| `com_accumulator` | 4 | 130.0 | _(module has no anchor)_ |
-| `com_binary_arithmetic` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_boolean_algebra` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_broadcasting_institution` | 4 | 200.0 | _(module has no anchor)_ |
-| `com_continuous_wave` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_crystal_set` | 4 | 80.0 | _(module has no anchor)_ |
-| `com_flip_flop` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_hollerith_tabulation` | 4 | 180.0 | _(module has no anchor)_ |
-| `com_logic_gate` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_magnetic_core_memory` | 4 | 140.0 | _(module has no anchor)_ |
-| `com_magnetic_drum_storage` | 4 | 110.0 | _(module has no anchor)_ |
-| `com_magnetic_tape_storage` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_magnetic_wire_storage` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_one_time_pad` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_radar_magnetron` | 4 | 160.0 | _(module has no anchor)_ |
-| `com_radio_spark_transmitter` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_register_computing` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_relay_computer` | 4 | 300.0 | _(module has no anchor)_ |
-| `com_ring_counter` | 4 | 110.0 | _(module has no anchor)_ |
-| `com_rotor_machine` | 4 | 160.0 | _(module has no anchor)_ |
-| `com_tv_electronic_camera` | 4 | 160.0 | _(module has no anchor)_ |
-| `com_tv_raster_sync` | 4 | 120.0 | _(module has no anchor)_ |
-| `com_vacuum_tube_computer` | 4 | 400.0 | _(module has no anchor)_ |
-| `com_vacuum_tube_pentode` | 4 | 110.0 | _(module has no anchor)_ |
-| `com_vacuum_tube_tetrode` | 4 | 100.0 | _(module has no anchor)_ |
-| `com_waveguide` | 4 | 80.0 | _(module has no anchor)_ |
-| `dynamo` | 4 | 800.0 | [`dynamo_motor`](50_electricity.md#dynamo_motor---faraday-disc-ring-and-drum-armatures-self-excitation) |
-| `el2_beam_tetrode_output_tube` | 4 | 130.0 | _(module has no anchor)_ |
-| `el2_capacitor_electrolytic` | 4 | 120.0 | _(module has no anchor)_ |
-| `el2_cathode_ray_tube_oscilloscope` | 4 | 150.0 | _(module has no anchor)_ |
-| `el2_dielectric_heating_capacitor_coupling` | 4 | 120.0 | _(module has no anchor)_ |
-| `el2_electrostatic_precipitation_dust_collection` | 4 | 130.0 | _(module has no anchor)_ |
-| `el2_load_dispatch_and_scheduling` | 4 | 150.0 | _(module has no anchor)_ |
-| `el2_microphone_condenser_electrostatic` | 4 | 130.0 | _(module has no anchor)_ |
-| `el2_quartz_crystal` | 4 | 100.0 | _(module has no anchor)_ |
-| `el2_radar_pulse_modulation_detection` | 4 | 200.0 | _(module has no anchor)_ |
-| `el2_rectifier_mercury_arc` | 4 | 100.0 | _(module has no anchor)_ |
-| `el2_rectifier_metal_layer` | 4 | 80.0 | _(module has no anchor)_ |
-| `el2_servo_motor_feedback` | 4 | 120.0 | _(module has no anchor)_ |
-| `el2_sonar_acoustic_detection_ranging` | 4 | 180.0 | _(module has no anchor)_ |
-| `el2_standardised_frequency_nominal` | 4 | 180.0 | _(module has no anchor)_ |
-| `el2_standardised_voltage_nominal` | 4 | 200.0 | _(module has no anchor)_ |
-| `el2_stepper_motor_PM` | 4 | 100.0 | _(module has no anchor)_ |
-| `el2_telephone_exchange_switching_network` | 4 | 200.0 | _(module has no anchor)_ |
-| `el2_thermistor_thermally_sensitive_resistor` | 4 | 100.0 | _(module has no anchor)_ |
-| `el2_thyratron_gas_filled_switching_tube` | 4 | 100.0 | _(module has no anchor)_ |
-| `el2_valve_voltmeter_high_impedance` | 4 | 120.0 | _(module has no anchor)_ |
-| `el2_varistor_voltage_dependent_resistor` | 4 | 90.0 | _(module has no anchor)_ |
-| `el2_waveguide_rectangular_propagation` | 4 | 130.0 | _(module has no anchor)_ |
-| `el2_xray_tube_high_voltage_cathode_rays` | 4 | 150.0 | _(module has no anchor)_ |
-| `motor_transformer_ac` | 4 | 700.0 | [`transformer_ac`](50_electricity.md#transformer_ac---ac-generation-transformers-lamination-three-phase) |
-| `com_compiler_and_language` | 5 | 300.0 | _(module has no anchor)_ |
-| `com_error_detecting_code` | 5 | 140.0 | _(module has no anchor)_ |
-| `com_information_theory` | 5 | 160.0 | _(module has no anchor)_ |
-| `com_integrated_circuit` | 5 | 220.0 | _(module has no anchor)_ |
-| `com_photolithography` | 5 | 180.0 | _(module has no anchor)_ |
-| `com_public_key_cryptography` | 5 | 200.0 | _(module has no anchor)_ |
-| `com_semiconductor_diode` | 5 | 100.0 | _(module has no anchor)_ |
-| `com_stored_program_concept` | 5 | 180.0 | _(module has no anchor)_ |
-| `el2_electron_microscope_electromagnetic_lens` | 5 | 200.0 | _(module has no anchor)_ |
-| `el2_inductor_ferrite_core` | 5 | 80.0 | _(module has no anchor)_ |
-| `el2_klystron_microwave_amplifier` | 5 | 150.0 | _(module has no anchor)_ |
-| `el2_magnetron_microwave_oscillator` | 5 | 160.0 | _(module has no anchor)_ |
-| `el2_photomultiplier_single_photon` | 5 | 140.0 | _(module has no anchor)_ |
-| `el2_printed_circuit_board` | 5 | 100.0 | _(module has no anchor)_ |
-| `el2_travelling_wave_tube_linear_amplifier` | 5 | 170.0 | _(module has no anchor)_ |
-| `electrolysis_industrial` | 5 | 700.0 | [`electrolysis_industrial`](50_electricity.md#electrolysis_industrial---electroplating-electro-refining-chlor-alkali-aluminium) |
-| `power_grid` | 5 | 900.0 | [`transformer_ac`](50_electricity.md#transformer_ac---ac-generation-transformers-lamination-three-phase) |
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `arc_light_lamp` | 500.0 | [`incandescent_lamp`](50_electricity.md#incandescent_lamp---filament-lamp-carbon-then-tungsten) |
+| `com_accumulator` | 130.0 | _(module has no anchor)_ |
+| `com_analytical_engine` | 250.0 | _(module has no anchor)_ |
+| `com_antenna_ground` | 60.0 | _(module has no anchor)_ |
+| `com_arithmometer` | 120.0 | _(module has no anchor)_ |
+| `com_baudot_code` | 60.0 | _(module has no anchor)_ |
+| `com_binary_arithmetic` | 100.0 | _(module has no anchor)_ |
+| `com_boolean_algebra` | 120.0 | _(module has no anchor)_ |
+| `com_broadcasting_institution` | 200.0 | _(module has no anchor)_ |
+| `com_compiler_and_language` | 300.0 | _(module has no anchor)_ |
+| `com_continuous_wave` | 120.0 | _(module has no anchor)_ |
+| `com_cryptography_substitution` | 80.0 | _(module has no anchor)_ |
+| `com_crystal_set` | 80.0 | _(module has no anchor)_ |
+| `com_difference_engine` | 200.0 | _(module has no anchor)_ |
+| `com_duplex_telegraph` | 120.0 | _(module has no anchor)_ |
+| `com_error_detecting_code` | 140.0 | _(module has no anchor)_ |
+| `com_flip_flop` | 100.0 | _(module has no anchor)_ |
+| `com_heliograph` | 80.0 | _(module has no anchor)_ |
+| `com_hollerith_tabulation` | 180.0 | _(module has no anchor)_ |
+| `com_information_theory` | 160.0 | _(module has no anchor)_ |
+| `com_integrated_circuit` | 220.0 | _(module has no anchor)_ |
+| `com_jacquard_loom` | 250.0 | _(module has no anchor)_ |
+| `com_loading_coil` | 120.0 | _(module has no anchor)_ |
+| `com_logic_gate` | 100.0 | _(module has no anchor)_ |
+| `com_magnetic_core_memory` | 140.0 | _(module has no anchor)_ |
+| `com_magnetic_drum_storage` | 110.0 | _(module has no anchor)_ |
+| `com_magnetic_tape_storage` | 120.0 | _(module has no anchor)_ |
+| `com_magnetic_wire_storage` | 100.0 | _(module has no anchor)_ |
+| `com_mechanical_calculator` | 150.0 | _(module has no anchor)_ |
+| `com_morse_code` | 60.0 | _(module has no anchor)_ |
+| `com_morse_register` | 100.0 | _(module has no anchor)_ |
+| `com_morse_sounder` | 80.0 | _(module has no anchor)_ |
+| `com_multiplexing` | 120.0 | _(module has no anchor)_ |
+| `com_napiers_bones` | 100.0 | _(module has no anchor)_ |
+| `com_one_time_pad` | 100.0 | _(module has no anchor)_ |
+| `com_optical_codebook` | 100.0 | _(module has no anchor)_ |
+| `com_optical_tower` | 120.0 | _(module has no anchor)_ |
+| `com_photolithography` | 180.0 | _(module has no anchor)_ |
+| `com_public_key_cryptography` | 200.0 | _(module has no anchor)_ |
+| `com_quadruplex_telegraph` | 140.0 | _(module has no anchor)_ |
+| `com_radar_magnetron` | 160.0 | _(module has no anchor)_ |
+| `com_radio_spark_transmitter` | 120.0 | _(module has no anchor)_ |
+| `com_register_computing` | 120.0 | _(module has no anchor)_ |
+| `com_relay` | 100.0 | _(module has no anchor)_ |
+| `com_relay_computer` | 300.0 | _(module has no anchor)_ |
+| `com_ring_counter` | 110.0 | _(module has no anchor)_ |
+| `com_rotor_machine` | 160.0 | _(module has no anchor)_ |
+| `com_semiconductor_diode` | 100.0 | _(module has no anchor)_ |
+| `com_signal_flags` | 40.0 | _(module has no anchor)_ |
+| `com_stepped_drum` | 80.0 | _(module has no anchor)_ |
+| `com_stock_ticker` | 100.0 | _(module has no anchor)_ |
+| `com_stored_program_concept` | 180.0 | _(module has no anchor)_ |
+| `com_submarine_cable` | 200.0 | _(module has no anchor)_ |
+| `com_telegraph_battery` | 60.0 | _(module has no anchor)_ |
+| `com_telephone_carbon_mic` | 100.0 | _(module has no anchor)_ |
+| `com_telephone_diaphragm` | 80.0 | _(module has no anchor)_ |
+| `com_telephone_manual_exchange` | 150.0 | _(module has no anchor)_ |
+| `com_teleprinter` | 140.0 | _(module has no anchor)_ |
+| `com_trunk_lines` | 100.0 | _(module has no anchor)_ |
+| `com_tv_electronic_camera` | 160.0 | _(module has no anchor)_ |
+| `com_tv_mechanical_scanning` | 140.0 | _(module has no anchor)_ |
+| `com_tv_raster_sync` | 120.0 | _(module has no anchor)_ |
+| `com_vacuum_tube_computer` | 400.0 | _(module has no anchor)_ |
+| `com_vacuum_tube_pentode` | 110.0 | _(module has no anchor)_ |
+| `com_vacuum_tube_tetrode` | 100.0 | _(module has no anchor)_ |
+| `com_waveguide` | 80.0 | _(module has no anchor)_ |
+| `copper_refining` | 400.0 | [`wire_insulation`](50_electricity.md#wire_insulation---insulated-wire-varnish-and-cable) |
+| `crude_cell` | 120.0 | [`crude_cell`](50_electricity.md#crude_cell---iron-and-copper-brine-cell) |
+| `daniell_cell` | 250.0 | [`daniell_cell`](50_electricity.md#daniell_cell---two-fluid-cell-daniell-no-latin-name) |
+| `dynamo` | 800.0 | [`dynamo_motor`](50_electricity.md#dynamo_motor---faraday-disc-ring-and-drum-armatures-self-excitation) |
+| `el2_alternator_rotating_field` | 120.0 | _(module has no anchor)_ |
+| `el2_amplifier_gain_voltage_current` | 80.0 | _(module has no anchor)_ |
+| `el2_antenna_patterns_radiation_efficiency` | 110.0 | _(module has no anchor)_ |
+| `el2_arc_welding_carbon_metal_electrode` | 120.0 | _(module has no anchor)_ |
+| `el2_bandpass_filter_notch_filter` | 70.0 | _(module has no anchor)_ |
+| `el2_beam_tetrode_output_tube` | 130.0 | _(module has no anchor)_ |
+| `el2_bridge_resistance_AC_impedance` | 120.0 | _(module has no anchor)_ |
+| `el2_capacitor_electrolytic` | 120.0 | _(module has no anchor)_ |
+| `el2_capacitor_fixed_mica` | 50.0 | _(module has no anchor)_ |
+| `el2_capacitor_fixed_paper` | 60.0 | _(module has no anchor)_ |
+| `el2_capacitor_variable_air` | 70.0 | _(module has no anchor)_ |
+| `el2_cathode_ray_tube_oscilloscope` | 150.0 | _(module has no anchor)_ |
+| `el2_circuit_breaker_magnetic` | 70.0 | _(module has no anchor)_ |
+| `el2_circuit_breaker_thermal` | 60.0 | _(module has no anchor)_ |
+| `el2_contactor_industrial` | 80.0 | _(module has no anchor)_ |
+| `el2_counter_frequency_scaling_binary` | 100.0 | _(module has no anchor)_ |
+| `el2_detector_demodulation_envelope_product` | 75.0 | _(module has no anchor)_ |
+| `el2_dielectric_heating_capacitor_coupling` | 120.0 | _(module has no anchor)_ |
+| `el2_diode_thermionic_rectifying_tube` | 70.0 | _(module has no anchor)_ |
+| `el2_discriminator_FM_demodulator` | 100.0 | _(module has no anchor)_ |
+| `el2_dynamo_compound_wound` | 100.0 | _(module has no anchor)_ |
+| `el2_dynamo_series_wound` | 75.0 | _(module has no anchor)_ |
+| `el2_dynamo_shunt_wound` | 80.0 | _(module has no anchor)_ |
+| `el2_earthing_grounding_system` | 80.0 | _(module has no anchor)_ |
+| `el2_electric_drill_handheld_motor` | 100.0 | _(module has no anchor)_ |
+| `el2_electric_lift_motor_gear_reduction` | 130.0 | _(module has no anchor)_ |
+| `el2_electric_locomotive_traction_motor` | 150.0 | _(module has no anchor)_ |
+| `el2_electron_microscope_electromagnetic_lens` | 200.0 | _(module has no anchor)_ |
+| `el2_electroplating_and_electrorefining` | 80.0 | _(module has no anchor)_ |
+| `el2_electropolishing_etching_surface_finish` | 100.0 | _(module has no anchor)_ |
+| `el2_electrostatic_precipitation_dust_collection` | 130.0 | _(module has no anchor)_ |
+| `el2_flip_flop_binary_latch_memory` | 120.0 | _(module has no anchor)_ |
+| `el2_galvanometer_ballistic_impulse` | 110.0 | _(module has no anchor)_ |
+| `el2_impedance_matching_transformer_network` | 70.0 | _(module has no anchor)_ |
+| `el2_induction_heating_inductor_coupling` | 100.0 | _(module has no anchor)_ |
+| `el2_induction_motor_squirrel_cage` | 100.0 | _(module has no anchor)_ |
+| `el2_induction_motor_wound_rotor` | 120.0 | _(module has no anchor)_ |
+| `el2_inductor_air_core` | 30.0 | _(module has no anchor)_ |
+| `el2_inductor_ferrite_core` | 80.0 | _(module has no anchor)_ |
+| `el2_inductor_iron_core` | 60.0 | _(module has no anchor)_ |
+| `el2_insulator_bushing` | 60.0 | _(module has no anchor)_ |
+| `el2_insulator_pin_porcelain` | 40.0 | _(module has no anchor)_ |
+| `el2_klystron_microwave_amplifier` | 150.0 | _(module has no anchor)_ |
+| `el2_lightning_arrestor_gap` | 50.0 | _(module has no anchor)_ |
+| `el2_load_dispatch_and_scheduling` | 150.0 | _(module has no anchor)_ |
+| `el2_loudspeaker_moving_coil_magnetic` | 110.0 | _(module has no anchor)_ |
+| `el2_low_pass_filter_high_pass_filter` | 50.0 | _(module has no anchor)_ |
+| `el2_magnetron_microwave_oscillator` | 160.0 | _(module has no anchor)_ |
+| `el2_megger_resistance_tester` | 90.0 | _(module has no anchor)_ |
+| `el2_meter_electrodynamometer_wattmeter` | 100.0 | _(module has no anchor)_ |
+| `el2_meter_energy_kWh_meter` | 110.0 | _(module has no anchor)_ |
+| `el2_meter_moving_coil_galvanometer` | 70.0 | _(module has no anchor)_ |
+| `el2_meter_moving_iron_attraction` | 60.0 | _(module has no anchor)_ |
+| `el2_microphone_carbon_contact` | 70.0 | _(module has no anchor)_ |
+| `el2_microphone_condenser_electrostatic` | 130.0 | _(module has no anchor)_ |
+| `el2_microphone_dynamic_moving_coil` | 100.0 | _(module has no anchor)_ |
+| `el2_microphone_ribbon_velocity` | 110.0 | _(module has no anchor)_ |
+| `el2_mixer_frequency_translation` | 80.0 | _(module has no anchor)_ |
+| `el2_modulator_amplitude_frequency_phase` | 90.0 | _(module has no anchor)_ |
+| `el2_multivibrator_binary_oscillator` | 110.0 | _(module has no anchor)_ |
+| `el2_negative_feedback_stability_gain` | 100.0 | _(module has no anchor)_ |
+| `el2_oscillator_feedback_frequency_generation` | 90.0 | _(module has no anchor)_ |
+| `el2_oscillograph_string_recorder` | 130.0 | _(module has no anchor)_ |
+| `el2_pentode_five_electrode_tube` | 120.0 | _(module has no anchor)_ |
+| `el2_photocell_vacuum_gas_photoelectric` | 100.0 | _(module has no anchor)_ |
+| `el2_photodiode_photocell_selenium` | 80.0 | _(module has no anchor)_ |
+| `el2_photomultiplier_single_photon` | 140.0 | _(module has no anchor)_ |
+| `el2_plug_socket_portable` | 70.0 | _(module has no anchor)_ |
+| `el2_potentiometer` | 180.0 | _(module has no anchor)_ |
+| `el2_potentiometer_method_measurement` | 100.0 | _(module has no anchor)_ |
+| `el2_power_factor_correction_capacitor` | 100.0 | _(module has no anchor)_ |
+| `el2_power_supply_rectification_filtering` | 80.0 | _(module has no anchor)_ |
+| `el2_printed_circuit_board` | 100.0 | _(module has no anchor)_ |
+| `el2_protective_relaying_differential` | 110.0 | _(module has no anchor)_ |
+| `el2_quartz_crystal` | 100.0 | _(module has no anchor)_ |
+| `el2_radar_pulse_modulation_detection` | 200.0 | _(module has no anchor)_ |
+| `el2_rectifier_mercury_arc` | 100.0 | _(module has no anchor)_ |
+| `el2_rectifier_metal_layer` | 80.0 | _(module has no anchor)_ |
+| `el2_relay_electromagnetic` | 50.0 | _(module has no anchor)_ |
+| `el2_resistance_welding_spot_seam` | 110.0 | _(module has no anchor)_ |
+| `el2_resistor_carbon` | 60.0 | _(module has no anchor)_ |
+| `el2_resistor_wirewound` | 40.0 | _(module has no anchor)_ |
+| `el2_resonance_frequency_selectivity` | 70.0 | _(module has no anchor)_ |
+| `el2_rheostat` | 80.0 | _(module has no anchor)_ |
+| `el2_ring_main_distribution` | 130.0 | _(module has no anchor)_ |
+| `el2_servo_motor_feedback` | 120.0 | _(module has no anchor)_ |
+| `el2_sonar_acoustic_detection_ranging` | 180.0 | _(module has no anchor)_ |
+| `el2_standard_cell_weston_saturated` | 100.0 | _(module has no anchor)_ |
+| `el2_standard_resistor_manganin` | 80.0 | _(module has no anchor)_ |
+| `el2_standardised_frequency_nominal` | 180.0 | _(module has no anchor)_ |
+| `el2_standardised_voltage_nominal` | 200.0 | _(module has no anchor)_ |
+| `el2_stepper_motor_PM` | 100.0 | _(module has no anchor)_ |
+| `el2_substation_voltage_regulation` | 140.0 | _(module has no anchor)_ |
+| `el2_switch_knife` | 20.0 | _(module has no anchor)_ |
+| `el2_synchronous_motor` | 110.0 | _(module has no anchor)_ |
+| `el2_synchroscope_phase_angle_indicator` | 80.0 | _(module has no anchor)_ |
+| `el2_tap_changer_load_compensator` | 100.0 | _(module has no anchor)_ |
+| `el2_telephone_exchange_switching_network` | 200.0 | _(module has no anchor)_ |
+| `el2_tetrode_four_electrode_tube` | 110.0 | _(module has no anchor)_ |
+| `el2_thermistor_thermally_sensitive_resistor` | 100.0 | _(module has no anchor)_ |
+| `el2_three_wire_distribution_system` | 120.0 | _(module has no anchor)_ |
+| `el2_thyratron_gas_filled_switching_tube` | 100.0 | _(module has no anchor)_ |
+| `el2_transformer_core_air` | 40.0 | _(module has no anchor)_ |
+| `el2_transmission_line_coaxial_cable` | 100.0 | _(module has no anchor)_ |
+| `el2_travelling_wave_tube_linear_amplifier` | 170.0 | _(module has no anchor)_ |
+| `el2_triode_amplifying_tube` | 100.0 | _(module has no anchor)_ |
+| `el2_trolleybus_catenary_power` | 120.0 | _(module has no anchor)_ |
+| `el2_tuned_circuit_resonance_tank` | 100.0 | _(module has no anchor)_ |
+| `el2_universal_motor_AC_DC` | 90.0 | _(module has no anchor)_ |
+| `el2_valve_voltmeter_high_impedance` | 120.0 | _(module has no anchor)_ |
+| `el2_varistor_voltage_dependent_resistor` | 90.0 | _(module has no anchor)_ |
+| `el2_voltage_regulation_series_shunt` | 100.0 | _(module has no anchor)_ |
+| `el2_waveguide_rectangular_propagation` | 130.0 | _(module has no anchor)_ |
+| `el2_xray_tube_high_voltage_cathode_rays` | 150.0 | _(module has no anchor)_ |
+| `electrolysis_industrial` | 700.0 | [`electrolysis_industrial`](50_electricity.md#electrolysis_industrial---electroplating-electro-refining-chlor-alkali-aluminium) |
+| `electromagnet` | 350.0 | [`electromagnet`](50_electricity.md#electromagnet---iron-core-electromagnet-and-relay) |
+| `electroplating` | 350.0 | [`electrolysis_industrial`](50_electricity.md#electrolysis_industrial---electroplating-electro-refining-chlor-alkali-aluminium) |
+| `electrostatics` | 350.0 | [`electrostatics`](50_electricity.md#electrostatics---static-machines-and-the-leyden-jar-electrum-vis-electrica) |
+| `em_theory` | 800.0 | _(module has no anchor)_ |
+| `galvanometer` | 400.0 | [`galvanometer`](50_electricity.md#galvanometer---tangent-galvanometer-and-the-absolute-measurement-bootstrap) |
+| `motor_transformer_ac` | 700.0 | [`transformer_ac`](50_electricity.md#transformer_ac---ac-generation-transformers-lamination-three-phase) |
+| `power_grid` | 900.0 | [`transformer_ac`](50_electricity.md#transformer_ac---ac-generation-transformers-lamination-three-phase) |
+| `telegraph_electric` | 700.0 | [`telegraph`](50_electricity.md#telegraph---electric-line-telegraph) |
+| `voltaic_pile` | 300.0 | [`voltaic_pile`](50_electricity.md#voltaic_pile---zinc-and-copper-disc-pile) |
 
 ### 55_semiconductors.md
 
@@ -1753,200 +1753,200 @@ Sorted by module, then by tier. `tier 0` is knowledge you carry in your head;
 
 ### 86_transport_deep.md
 
-| Node | Tier | Your hours | Recipe |
-|---|---:|---:|---|
-| `tr_bilge_pump` | 0 | 50.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_block_tackle` | 0 | 40.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_caulking_oakum` | 0 | 60.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_clinker_planking` | 0 | 100.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_hull_sheathing_wood` | 0 | 100.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_jib` | 0 | 30.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
-| `tr_mast_stepping` | 0 | 80.0 | [`tr_bowsprit`](86_transport_deep.md#tr_bowsprit---bowsprit-mast-stepping-and-rigging-hardware) |
-| `tr_reefing` | 0 | 50.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
-| `tr_rigging_block_lashing` | 0 | 60.0 | [`tr_bowsprit`](86_transport_deep.md#tr_bowsprit---bowsprit-mast-stepping-and-rigging-hardware) |
-| `tr_square_rig` | 0 | 40.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
-| `tr_staysail` | 0 | 40.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
-| `tr_wooden_waggonway` | 0 | 40.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
-| `sea_clinker_hull` | 1 | 150.0 | [`tr_clinker_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `sea_keel_deep` | 1 | 100.0 | [`tr_frame_first_construction`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tl_air_filter` | 1 | 60.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
-| `tl_anti_siphon_valve` | 1 | 50.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
-| `tl_brake_shoe` | 1 | 70.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tl_cambered_drainage` | 1 | 80.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
-| `tl_dead_axle` | 1 | 60.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
-| `tl_grease_cup` | 1 | 50.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_handbrake` | 1 | 70.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tl_indicator` | 1 | 70.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
-| `tl_iron_tyre` | 1 | 100.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
-| `tl_kerbing` | 1 | 60.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
-| `tl_kingpin` | 1 | 80.0 | [`tl_ackermann_steering`](86_transport_deep.md#tl_ackermann_steering---ackermann-steering-geometry) |
-| `tl_leaf_spring` | 1 | 100.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
-| `tl_plain_bearing` | 1 | 70.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_shrink_fit` | 1 | 120.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
-| `tl_spoked_wheel` | 1 | 80.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
-| `tl_stirrup` | 1 | 60.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
-| `tl_tandem_harness` | 1 | 70.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
-| `tl_transmission_lubrication` | 1 | 70.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
-| `tl_whippletree` | 1 | 60.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
-| `tl_wire_rope_brake` | 1 | 60.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tr_axle_bearing_box` | 1 | 60.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
-| `tr_blastpipe` | 1 | 50.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
-| `tr_canal_lock` | 1 | 250.0 | [`tr_canal_lock`](86_transport_deep.md#tr_canal_lock---canal-lock-and-canal-lift) |
-| `tr_capstan` | 1 | 80.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_carvel_planking` | 1 | 200.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_chain_cable` | 1 | 80.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_chair_key` | 1 | 50.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
-| `tr_copper_sheathing` | 1 | 180.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_fishplate` | 1 | 50.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
-| `tr_fore_and_aft_rigging` | 1 | 100.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
-| `tr_frame_first_construction` | 1 | 80.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_grade_crossing` | 1 | 80.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
-| `tr_hopper_wagon` | 1 | 50.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
-| `tr_keelson` | 1 | 80.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
-| `tr_leading_truck` | 1 | 80.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
-| `tr_lifeboat` | 1 | 100.0 | [`tr_lifeboat`](86_transport_deep.md#tr_lifeboat---lifeboat-submarine-hull-and-periscope) |
-| `tr_log_sounding` | 1 | 50.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
-| `tr_paddle_wheel` | 1 | 200.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
-| `tr_rail_gauge_standardization` | 1 | 40.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
-| `tr_riveted_plating` | 1 | 150.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
-| `tr_screw_coupling` | 1 | 40.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
-| `tr_semaphore_signal` | 1 | 40.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
-| `tr_ship_telegraph` | 1 | 60.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
-| `tr_sleeper_ballast` | 1 | 30.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
-| `tr_sleeping_car` | 1 | 60.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
-| `tr_slide_valve` | 1 | 70.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tr_slipway_launch` | 1 | 80.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
-| `tr_smoke_box` | 1 | 70.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
-| `tr_sprung_buffer` | 1 | 50.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
-| `tr_tug` | 1 | 100.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
-| `tr_watertight_bulkhead` | 1 | 70.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
-| `tr_windlass` | 1 | 100.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tl_articulated_trailer` | 2 | 170.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
-| `tl_ball_bearing` | 2 | 150.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_caliper_brake` | 2 | 100.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
-| `tl_carbide_lamp` | 2 | 100.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
-| `tl_chain_drive` | 2 | 120.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
-| `tl_coil_spring` | 2 | 110.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
-| `tl_cone_clutch` | 2 | 120.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_cooling_fan` | 2 | 100.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
-| `tl_differential` | 2 | 150.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
-| `tl_drum_brake` | 2 | 120.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tl_elliptic_spring` | 2 | 120.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
-| `tl_fan_belt` | 2 | 100.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
-| `tl_fifth_wheel` | 2 | 130.0 | [`tl_ackermann_steering`](86_transport_deep.md#tl_ackermann_steering---ackermann-steering-geometry) |
-| `tl_freewheel` | 2 | 100.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
-| `tl_friction_damper` | 2 | 90.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
-| `tl_fuel_pump` | 2 | 100.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
-| `tl_headlamp` | 2 | 120.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
-| `tl_horse_tram` | 2 | 180.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_hydraulic_brake_line` | 2 | 130.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tl_inner_tube` | 2 | 120.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tl_level_crossing` | 2 | 120.0 | [`tl_road_roller`](86_transport_deep.md#tl_road_roller---steam-road-roller-and-level-crossings) |
-| `tl_live_axle` | 2 | 120.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
-| `tl_muffler` | 2 | 80.0 | [`tl_muffler`](86_transport_deep.md#tl_muffler---muffler-and-windscreen-wiper) |
-| `tl_oil_bath` | 2 | 80.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_oil_pump` | 2 | 120.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
-| `tl_omnibus` | 2 | 250.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_penny_farthing` | 2 | 110.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
-| `tl_plate_clutch` | 2 | 130.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_pressure_relief_valve` | 2 | 90.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
-| `tl_propshaft` | 2 | 100.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
-| `tl_road_roller` | 2 | 160.0 | [`tl_road_roller`](86_transport_deep.md#tl_road_roller---steam-road-roller-and-level-crossings) |
-| `tl_roller_bearing` | 2 | 120.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_safety_bicycle` | 2 | 130.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
-| `tl_sliding_gearbox` | 2 | 140.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_snow_plough` | 2 | 150.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
-| `tl_solid_rubber_tyre` | 2 | 100.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tl_thermostat` | 2 | 90.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
-| `tl_throttle` | 2 | 80.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
-| `tl_tyre_bead` | 2 | 100.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tl_tyre_tread` | 2 | 110.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tl_universal_joint` | 2 | 110.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
-| `tl_velocipede` | 2 | 100.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
-| `tl_water_pump` | 2 | 110.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
-| `tl_windscreen_wiper` | 2 | 100.0 | [`tl_muffler`](86_transport_deep.md#tl_muffler---muffler-and-windscreen-wiper) |
-| `tl_wire_spoke_wheel` | 2 | 120.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
-| `tr_ballast_tank` | 2 | 120.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_block_signalling` | 2 | 100.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
-| `tr_bogie_truck` | 2 | 120.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
-| `tr_bullhead_rail` | 2 | 70.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
-| `tr_canal_lift` | 2 | 250.0 | [`tr_canal_lock`](86_transport_deep.md#tr_canal_lock---canal-lock-and-canal-lift) |
-| `tr_compound_expansion` | 2 | 300.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tr_double_bottom` | 2 | 150.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
-| `tr_dredger` | 2 | 200.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
-| `tr_dry_dock` | 2 | 200.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
-| `tr_injector_feedwater` | 2 | 100.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
-| `tr_interlocking_signal` | 2 | 180.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
-| `tr_locomotive_boiler` | 2 | 150.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
-| `tr_marine_engine` | 2 | 180.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
-| `tr_marshalling_hump` | 2 | 100.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
-| `tr_pantograph` | 2 | 100.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
-| `tr_piston_valve` | 2 | 100.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tr_points_frog` | 2 | 120.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
-| `tr_refrigerated_wagon` | 2 | 80.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
-| `tr_sextant_navigation` | 2 | 110.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
-| `tr_stephenson_linkmotion` | 2 | 120.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tr_stern_tube` | 2 | 100.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
-| `tr_stockless_anchor` | 2 | 100.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
-| `tr_superheater` | 2 | 200.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
-| `tr_tank_wagon` | 2 | 100.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
-| `tr_third_rail` | 2 | 80.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
-| `tr_track_circuit` | 2 | 120.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
-| `tr_turntable` | 2 | 100.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
-| `tr_vacuum_brake` | 2 | 100.0 | [`tr_brake_shoe`](86_transport_deep.md#tr_brake_shoe---rail-brake-shoe-vacuum-and-westinghouse-air-brake) |
-| `tr_walschaerts_valve` | 2 | 140.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tl_automatic_transmission` | 3 | 200.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_cam_follower` | 3 | 120.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
-| `tl_carburettor` | 3 | 150.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
-| `tl_caterpillar_track` | 3 | 200.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
-| `tl_coil_ignition` | 3 | 140.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
-| `tl_concrete_roadway` | 3 | 200.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
-| `tl_connecting_rod` | 3 | 150.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
-| `tl_derailleur` | 3 | 140.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
-| `tl_disc_brake` | 3 | 150.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
-| `tl_distributor` | 3 | 130.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
-| `tl_electric_starter` | 3 | 170.0 | [`tl_dynamo`](86_transport_deep.md#tl_dynamo---dynamo-and-electric-starting) |
-| `tl_electric_tram` | 3 | 200.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_engine_block` | 3 | 170.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
-| `tl_epicyclic_gearbox` | 3 | 170.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_exhaust_valve` | 3 | 150.0 | [`tl_intake_valve`](86_transport_deep.md#tl_intake_valve---poppet-valve-with-cam-and-spring) |
-| `tl_hub_gear` | 3 | 160.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
-| `tl_hydraulic_shock` | 3 | 160.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
-| `tl_ignition_timing` | 3 | 110.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
-| `tl_intake_valve` | 3 | 140.0 | [`tl_intake_valve`](86_transport_deep.md#tl_intake_valve---poppet-valve-with-cam-and-spring) |
-| `tl_magneto_ignition` | 3 | 160.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
-| `tl_motor_dc` | 3 | 140.0 | [`tl_dynamo`](86_transport_deep.md#tl_dynamo---dynamo-and-electric-starting) |
-| `tl_motor_lorry` | 3 | 240.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
-| `tl_motorcycle` | 3 | 180.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_piston_assembly` | 3 | 160.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
-| `tl_pneumatic_tyre` | 3 | 160.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tl_radiator` | 3 | 140.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
-| `tl_spark_plug` | 3 | 120.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
-| `tl_steam_tram` | 3 | 220.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_synchromesh` | 3 | 160.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
-| `tl_taper_roller_bearing` | 3 | 180.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
-| `tl_tractor` | 3 | 350.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
-| `tl_trolleybus` | 3 | 210.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
-| `tl_vulcanized_rubber` | 3 | 140.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
-| `tr_articulated_locomotive` | 3 | 200.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
-| `tr_automatic_train_stop` | 3 | 200.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
-| `tr_catenary_overhead` | 3 | 150.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
-| `tr_electric_locomotive` | 3 | 200.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
-| `tr_flatbottom_rail` | 3 | 90.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
-| `tr_gyrocompass_repeater` | 3 | 150.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
-| `tr_knuckle_coupler` | 3 | 150.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
-| `tr_marine_diesel` | 3 | 200.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
-| `tr_marine_turbine` | 3 | 250.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
-| `tr_rail_rolling` | 3 | 120.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
-| `tr_reduction_gearing` | 3 | 200.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
-| `tr_steel_hull` | 3 | 250.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
-| `tr_submarine_hull` | 3 | 250.0 | [`tr_lifeboat`](86_transport_deep.md#tr_lifeboat---lifeboat-submarine-hull-and-periscope) |
-| `tr_triple_expansion` | 3 | 200.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
-| `tr_variable_pitch_propeller` | 3 | 180.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
-| `tr_welded_hull` | 3 | 200.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
-| `tr_westinghouse_brake` | 3 | 180.0 | [`tr_brake_shoe`](86_transport_deep.md#tr_brake_shoe---rail-brake-shoe-vacuum-and-westinghouse-air-brake) |
-| `tr_diesel_electric` | 4 | 250.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
-| `tr_rail_welding` | 4 | 150.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `sea_clinker_hull` | 150.0 | [`tr_clinker_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `sea_keel_deep` | 100.0 | [`tr_frame_first_construction`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tl_air_filter` | 60.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
+| `tl_anti_siphon_valve` | 50.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
+| `tl_articulated_trailer` | 170.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
+| `tl_automatic_transmission` | 200.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_ball_bearing` | 150.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_brake_shoe` | 70.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_caliper_brake` | 100.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
+| `tl_cam_follower` | 120.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
+| `tl_cambered_drainage` | 80.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
+| `tl_carbide_lamp` | 100.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
+| `tl_carburettor` | 150.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
+| `tl_caterpillar_track` | 200.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
+| `tl_chain_drive` | 120.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
+| `tl_coil_ignition` | 140.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
+| `tl_coil_spring` | 110.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
+| `tl_concrete_roadway` | 200.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
+| `tl_cone_clutch` | 120.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_connecting_rod` | 150.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
+| `tl_cooling_fan` | 100.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
+| `tl_dead_axle` | 60.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
+| `tl_derailleur` | 140.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
+| `tl_differential` | 150.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
+| `tl_disc_brake` | 150.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_distributor` | 130.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
+| `tl_drum_brake` | 120.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_electric_starter` | 170.0 | [`tl_dynamo`](86_transport_deep.md#tl_dynamo---dynamo-and-electric-starting) |
+| `tl_electric_tram` | 200.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_elliptic_spring` | 120.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
+| `tl_engine_block` | 170.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
+| `tl_epicyclic_gearbox` | 170.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_exhaust_valve` | 150.0 | [`tl_intake_valve`](86_transport_deep.md#tl_intake_valve---poppet-valve-with-cam-and-spring) |
+| `tl_fan_belt` | 100.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
+| `tl_fifth_wheel` | 130.0 | [`tl_ackermann_steering`](86_transport_deep.md#tl_ackermann_steering---ackermann-steering-geometry) |
+| `tl_freewheel` | 100.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
+| `tl_friction_damper` | 90.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
+| `tl_fuel_pump` | 100.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
+| `tl_grease_cup` | 50.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_handbrake` | 70.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_headlamp` | 120.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
+| `tl_horse_tram` | 180.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_hub_gear` | 160.0 | [`tl_chain_drive`](86_transport_deep.md#tl_chain_drive---chain-drive-freewheel-and-gearing) |
+| `tl_hydraulic_brake_line` | 130.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_hydraulic_shock` | 160.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
+| `tl_ignition_timing` | 110.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
+| `tl_indicator` | 70.0 | [`tl_headlamp`](86_transport_deep.md#tl_headlamp---headlamp-and-signal-lighting) |
+| `tl_inner_tube` | 120.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_intake_valve` | 140.0 | [`tl_intake_valve`](86_transport_deep.md#tl_intake_valve---poppet-valve-with-cam-and-spring) |
+| `tl_iron_tyre` | 100.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
+| `tl_kerbing` | 60.0 | [`tl_macadam_road`](86_transport_deep.md#tl_macadam_road---macadam-and-bound-road-surfaces) |
+| `tl_kingpin` | 80.0 | [`tl_ackermann_steering`](86_transport_deep.md#tl_ackermann_steering---ackermann-steering-geometry) |
+| `tl_leaf_spring` | 100.0 | [`tl_leaf_spring`](86_transport_deep.md#tl_leaf_spring---leaf-spring-suspension) |
+| `tl_level_crossing` | 120.0 | [`tl_road_roller`](86_transport_deep.md#tl_road_roller---steam-road-roller-and-level-crossings) |
+| `tl_live_axle` | 120.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
+| `tl_magneto_ignition` | 160.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
+| `tl_motor_dc` | 140.0 | [`tl_dynamo`](86_transport_deep.md#tl_dynamo---dynamo-and-electric-starting) |
+| `tl_motor_lorry` | 240.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
+| `tl_motorcycle` | 180.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_muffler` | 80.0 | [`tl_muffler`](86_transport_deep.md#tl_muffler---muffler-and-windscreen-wiper) |
+| `tl_oil_bath` | 80.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_oil_pump` | 120.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
+| `tl_omnibus` | 250.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_penny_farthing` | 110.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
+| `tl_piston_assembly` | 160.0 | [`tl_engine_block`](86_transport_deep.md#tl_engine_block---cast-engine-block) |
+| `tl_plain_bearing` | 70.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_plate_clutch` | 130.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_pneumatic_tyre` | 160.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_pressure_relief_valve` | 90.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
+| `tl_propshaft` | 100.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
+| `tl_radiator` | 140.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
+| `tl_road_roller` | 160.0 | [`tl_road_roller`](86_transport_deep.md#tl_road_roller---steam-road-roller-and-level-crossings) |
+| `tl_roller_bearing` | 120.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_safety_bicycle` | 130.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
+| `tl_shrink_fit` | 120.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
+| `tl_sliding_gearbox` | 140.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_snow_plough` | 150.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
+| `tl_solid_rubber_tyre` | 100.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_spark_plug` | 120.0 | [`tl_magneto_ignition`](86_transport_deep.md#tl_magneto_ignition---magneto-ignition) |
+| `tl_spoked_wheel` | 80.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
+| `tl_steam_tram` | 220.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_stirrup` | 60.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
+| `tl_synchromesh` | 160.0 | [`tl_plate_clutch`](86_transport_deep.md#tl_plate_clutch---plate-clutch-and-gearbox) |
+| `tl_tandem_harness` | 70.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
+| `tl_taper_roller_bearing` | 180.0 | [`tl_ball_bearing`](86_transport_deep.md#tl_ball_bearing---ball-roller-and-taper-bearings) |
+| `tl_thermostat` | 90.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
+| `tl_throttle` | 80.0 | [`tl_carburettor`](86_transport_deep.md#tl_carburettor---carburettor-fuel-atomiser) |
+| `tl_tractor` | 350.0 | [`tl_motor_lorry`](86_transport_deep.md#tl_motor_lorry---motor-lorry-and-heavy-road-vehicles) |
+| `tl_transmission_lubrication` | 70.0 | [`tl_oil_pump`](86_transport_deep.md#tl_oil_pump---pressure-oil-pump) |
+| `tl_trolleybus` | 210.0 | [`tl_omnibus`](86_transport_deep.md#tl_omnibus---omnibus-and-public-transit) |
+| `tl_tyre_bead` | 100.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_tyre_tread` | 110.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_universal_joint` | 110.0 | [`tl_differential`](86_transport_deep.md#tl_differential---differential-bevel-gears) |
+| `tl_velocipede` | 100.0 | [`tl_safety_bicycle`](86_transport_deep.md#tl_safety_bicycle---safety-bicycle-and-its-ancestors) |
+| `tl_vulcanized_rubber` | 140.0 | [`tl_pneumatic_tyre`](86_transport_deep.md#tl_pneumatic_tyre---pneumatic-tyre) |
+| `tl_water_pump` | 110.0 | [`tl_radiator`](86_transport_deep.md#tl_radiator---radiator-water-cooling) |
+| `tl_whippletree` | 60.0 | [`tl_horse_collar`](86_transport_deep.md#tl_horse_collar---horse-collar-horseshoe-stirrup-and-harness) |
+| `tl_windscreen_wiper` | 100.0 | [`tl_muffler`](86_transport_deep.md#tl_muffler---muffler-and-windscreen-wiper) |
+| `tl_wire_rope_brake` | 60.0 | [`tl_brake_shoe`](86_transport_deep.md#tl_brake_shoe---brake-shoe-on-a-drum) |
+| `tl_wire_spoke_wheel` | 120.0 | [`tl_spoked_wheel`](86_transport_deep.md#tl_spoked_wheel---improved-spoked-and-wire-spoke-wheel) |
+| `tr_articulated_locomotive` | 200.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_automatic_train_stop` | 200.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
+| `tr_axle_bearing_box` | 60.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
+| `tr_ballast_tank` | 120.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_bilge_pump` | 50.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_blastpipe` | 50.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
+| `tr_block_signalling` | 100.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
+| `tr_block_tackle` | 40.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_bogie_truck` | 120.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
+| `tr_bullhead_rail` | 70.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_canal_lift` | 250.0 | [`tr_canal_lock`](86_transport_deep.md#tr_canal_lock---canal-lock-and-canal-lift) |
+| `tr_canal_lock` | 250.0 | [`tr_canal_lock`](86_transport_deep.md#tr_canal_lock---canal-lock-and-canal-lift) |
+| `tr_capstan` | 80.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_carvel_planking` | 200.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_catenary_overhead` | 150.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
+| `tr_caulking_oakum` | 60.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_chain_cable` | 80.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_chair_key` | 50.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_clinker_planking` | 100.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_compound_expansion` | 300.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_copper_sheathing` | 180.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_diesel_electric` | 250.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
+| `tr_double_bottom` | 150.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
+| `tr_dredger` | 200.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
+| `tr_dry_dock` | 200.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
+| `tr_electric_locomotive` | 200.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
+| `tr_fishplate` | 50.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_flatbottom_rail` | 90.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_fore_and_aft_rigging` | 100.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
+| `tr_frame_first_construction` | 80.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_grade_crossing` | 80.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
+| `tr_gyrocompass_repeater` | 150.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
+| `tr_hopper_wagon` | 50.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
+| `tr_hull_sheathing_wood` | 100.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_injector_feedwater` | 100.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
+| `tr_interlocking_signal` | 180.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
+| `tr_jib` | 30.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
+| `tr_keelson` | 80.0 | [`tr_carvel_planking`](86_transport_deep.md#tr_carvel_planking---hull-planking-framing-and-caulking) |
+| `tr_knuckle_coupler` | 150.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
+| `tr_leading_truck` | 80.0 | [`tr_flanged_wheel`](86_transport_deep.md#tr_flanged_wheel---flanged-wheel-axle-box-and-bogie) |
+| `tr_lifeboat` | 100.0 | [`tr_lifeboat`](86_transport_deep.md#tr_lifeboat---lifeboat-submarine-hull-and-periscope) |
+| `tr_locomotive_boiler` | 150.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
+| `tr_log_sounding` | 50.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
+| `tr_marine_diesel` | 200.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
+| `tr_marine_engine` | 180.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
+| `tr_marine_turbine` | 250.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
+| `tr_marshalling_hump` | 100.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
+| `tr_mast_stepping` | 80.0 | [`tr_bowsprit`](86_transport_deep.md#tr_bowsprit---bowsprit-mast-stepping-and-rigging-hardware) |
+| `tr_paddle_wheel` | 200.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
+| `tr_pantograph` | 100.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
+| `tr_piston_valve` | 100.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_points_frog` | 120.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
+| `tr_rail_gauge_standardization` | 40.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
+| `tr_rail_rolling` | 120.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_rail_welding` | 150.0 | [`tr_edge_rail`](86_transport_deep.md#tr_edge_rail---edge-rail-bullhead-and-flat-bottom-profiles) |
+| `tr_reduction_gearing` | 200.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
+| `tr_reefing` | 50.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
+| `tr_refrigerated_wagon` | 80.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
+| `tr_rigging_block_lashing` | 60.0 | [`tr_bowsprit`](86_transport_deep.md#tr_bowsprit---bowsprit-mast-stepping-and-rigging-hardware) |
+| `tr_riveted_plating` | 150.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
+| `tr_screw_coupling` | 40.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
+| `tr_semaphore_signal` | 40.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
+| `tr_sextant_navigation` | 110.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
+| `tr_ship_telegraph` | 60.0 | [`tr_marine_chronometer`](86_transport_deep.md#tr_marine_chronometer---navigation-instruments-chronometer-sextant-gyrocompass-log-lighthouse-ship-telegraph) |
+| `tr_sleeper_ballast` | 30.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
+| `tr_sleeping_car` | 60.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
+| `tr_slide_valve` | 70.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_slipway_launch` | 80.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
+| `tr_smoke_box` | 70.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
+| `tr_sprung_buffer` | 50.0 | [`tr_screw_coupling`](86_transport_deep.md#tr_screw_coupling---screw-coupling-buffer-and-knuckle-coupler) |
+| `tr_square_rig` | 40.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
+| `tr_staysail` | 40.0 | [`tr_square_rig`](86_transport_deep.md#tr_square_rig---sail-plans-square-lateen-fore-and-aft-jib-staysail-reefing) |
+| `tr_steel_hull` | 250.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
+| `tr_stephenson_linkmotion` | 120.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_stern_tube` | 100.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
+| `tr_stockless_anchor` | 100.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_submarine_hull` | 250.0 | [`tr_lifeboat`](86_transport_deep.md#tr_lifeboat---lifeboat-submarine-hull-and-periscope) |
+| `tr_superheater` | 200.0 | [`tr_locomotive_boiler`](86_transport_deep.md#tr_locomotive_boiler---locomotive-boiler-smokebox-blastpipe-superheater-injector) |
+| `tr_tank_wagon` | 100.0 | [`tr_hopper_wagon`](86_transport_deep.md#tr_hopper_wagon---specialised-wagons-hopper-tank-refrigerated-sleeping-car) |
+| `tr_third_rail` | 80.0 | [`tr_electric_locomotive`](86_transport_deep.md#tr_electric_locomotive---electric-and-diesel-electric-traction) |
+| `tr_track_circuit` | 120.0 | [`tr_semaphore_signal`](86_transport_deep.md#tr_semaphore_signal---semaphore-block-and-interlocking-signalling) |
+| `tr_triple_expansion` | 200.0 | [`tr_marine_engine`](86_transport_deep.md#tr_marine_engine---marine-steam-and-diesel-propulsion-machinery) |
+| `tr_tug` | 100.0 | [`tr_dry_dock`](86_transport_deep.md#tr_dry_dock---shipyard-infrastructure-dry-dock-slipway-tugs-dredging) |
+| `tr_turntable` | 100.0 | [`tr_points_frog`](86_transport_deep.md#tr_points_frog---points-frog-turntable-and-yard-switching) |
+| `tr_vacuum_brake` | 100.0 | [`tr_brake_shoe`](86_transport_deep.md#tr_brake_shoe---rail-brake-shoe-vacuum-and-westinghouse-air-brake) |
+| `tr_variable_pitch_propeller` | 180.0 | [`tr_sternpost_rudder`](86_transport_deep.md#tr_sternpost_rudder---propulsion-rudder-propeller-and-shafting) |
+| `tr_walschaerts_valve` | 140.0 | [`tr_slide_valve`](86_transport_deep.md#tr_slide_valve---slide-valve-piston-valve-and-valve-gear) |
+| `tr_watertight_bulkhead` | 70.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
+| `tr_welded_hull` | 200.0 | [`tr_iron_hull`](86_transport_deep.md#tr_iron_hull---iron-and-steel-hull-plating-and-bulkheads) |
+| `tr_westinghouse_brake` | 180.0 | [`tr_brake_shoe`](86_transport_deep.md#tr_brake_shoe---rail-brake-shoe-vacuum-and-westinghouse-air-brake) |
+| `tr_windlass` | 100.0 | [`tr_windlass`](86_transport_deep.md#tr_windlass---deck-machinery-windlass-capstan-anchor-chain-bilge-pump-ballast-block-and-tackle) |
+| `tr_wooden_waggonway` | 40.0 | [`tr_sleeper_ballast`](86_transport_deep.md#tr_sleeper_ballast---sleeper-ballast-and-track-gauge) |
 
 ### 87_construction.md
 
@@ -2134,408 +2134,408 @@ Sorted by module, then by tier. `tier 0` is knowledge you carry in your head;
 
 ### 89_remaining_arts.md
 
-| Node | Tier | Your hours | Recipe |
-|---|---:|---:|---|
-| `fin_collegium` | 0 | 120.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `fin_government` | 0 | 0.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
-| `fin_societas` | 0 | 40.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `prn_library_archive` | 0 | 0.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
-| `fin_guild` | 1 | 100.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `fin_standard_weights` | 1 | 150.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
-| `fud_agricultural_treatises` | 1 | 300.0 | [`fud_agricultural_treatises`](89_remaining_arts.md#fud_agricultural_treatises---written-treatises-and-soil-testing) |
-| `gp_carbon_brushes` | 1 | 50.0 | [`gp_carbon_brushes`](89_remaining_arts.md#gp_carbon_brushes---carbon-and-graphite-brush-contacts) |
-| `in2_analytical_balance` | 1 | 50.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
-| `in2_mercury_barometer` | 1 | 45.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
-| `in2_orifice_flow_meter` | 1 | 50.0 | [`in2_pitot_tube`](89_remaining_arts.md#in2_pitot_tube---flow-measurement-pitot-venturi-orifice) |
-| `in2_thermocouple` | 1 | 45.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
-| `in2_tuning_fork_oscillator` | 1 | 60.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
-| `md2_cadaver_dissection` | 1 | 100.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
-| `md2_case_record` | 1 | 80.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
-| `md2_case_series` | 1 | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `md2_medical_journal` | 1 | 120.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
-| `md2_medical_licensing` | 1 | 100.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
-| `md2_vital_registration` | 1 | 100.0 | [`md2_medical_statistics`](89_remaining_arts.md#md2_medical_statistics---medical-statistics-and-vital-registration) |
-| `prc_apprentice_system` | 1 | 150.0 | [`prc_apprentice_system`](89_remaining_arts.md#prc_apprentice_system---apprentice-system-and-toolroom-institution) |
-| `prn_cataloguing_system` | 1 | 200.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
-| `prn_index_concordance` | 1 | 300.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
-| `sc2_institution_citation` | 1 | 80.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
-| `sc2_institution_curriculum` | 1 | 120.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
-| `sc2_institution_doctorate` | 1 | 150.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
-| `sc2_institution_examination` | 1 | 80.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
-| `sc2_institution_funded_programme` | 1 | 120.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
-| `sc2_institution_journal` | 1 | 110.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
-| `sc2_institution_learned_society` | 1 | 100.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
-| `sc2_institution_patent_disclosure` | 1 | 100.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
-| `sc2_institution_referee` | 1 | 100.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
-| `sc2_institution_research_group` | 1 | 100.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
-| `sc2_institution_textbook` | 1 | 200.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
-| `sc2_method_controlled_experiment` | 1 | 100.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_method_hypothesis` | 1 | 90.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_method_lab_notebook` | 1 | 70.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_method_negative_result` | 1 | 90.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_method_peer_criticism` | 1 | 100.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_method_replication` | 1 | 80.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
-| `sc2_physics_elasticity` | 1 | 110.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
-| `sc2_physics_electrostatics` | 1 | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
-| `sc2_physics_energy` | 1 | 110.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `sc2_physics_fluid_statics` | 1 | 80.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
-| `sc2_physics_geometric_optics` | 1 | 100.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
-| `sc2_physics_gravitation` | 1 | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `sc2_physics_kinematics` | 1 | 90.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `sc2_physics_magnetostatics` | 1 | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
-| `sc2_physics_momentum` | 1 | 80.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `sc2_physics_newtons_laws` | 1 | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `sc2_physics_work_power` | 1 | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
-| `civ_factor_safety` | 2 | 100.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
-| `civ_materials_testing` | 2 | 150.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
-| `civ_method_joints` | 2 | 150.0 | [`civ_statics`](89_remaining_arts.md#civ_statics---statics-forces-and-moments-in-balance) |
-| `civ_neutral_axis` | 2 | 120.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
-| `civ_statics` | 2 | 200.0 | [`civ_statics`](89_remaining_arts.md#civ_statics---statics-forces-and-moments-in-balance) |
-| `ctl_governor_stability_theory` | 2 | 150.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
-| `fin_assay_office` | 2 | 180.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
-| `fin_census` | 2 | 200.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
-| `fin_civil_service_exam` | 2 | 180.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
-| `fin_customs_house` | 2 | 120.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
-| `fin_endowed_chair` | 2 | 150.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
-| `fin_museum` | 2 | 180.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
-| `fin_post_office` | 2 | 150.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
-| `fin_professional_exam` | 2 | 150.0 | [`fin_professional_exam`](89_remaining_arts.md#fin_professional_exam---professional-licensing-and-patent-office) |
-| `fin_survey_map` | 2 | 250.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
-| `fin_university` | 2 | 200.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
-| `fud_soil_composition_analysis` | 2 | 200.0 | [`fud_agricultural_treatises`](89_remaining_arts.md#fud_agricultural_treatises---written-treatises-and-soil-testing) |
-| `gp_laminated_core` | 2 | 90.0 | [`gp_laminated_core`](89_remaining_arts.md#gp_laminated_core---laminated-iron-core) |
-| `in2_aneroid_capsule` | 2 | 70.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
-| `in2_balance_spring_watch` | 2 | 100.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
-| `in2_mcleod_vacuum_gauge` | 2 | 85.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
-| `in2_resistance_thermometer_RTD` | 2 | 80.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
-| `in2_torsion_balance` | 2 | 85.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
-| `in2_travelling_microscope` | 2 | 80.0 | [`in2_optical_comparator`](89_remaining_arts.md#in2_optical_comparator---optical-length-measurement-comparator-and-travelling-microscope) |
-| `in2_venturi_flow_meter` | 2 | 70.0 | [`in2_pitot_tube`](89_remaining_arts.md#in2_pitot_tube---flow-measurement-pitot-venturi-orifice) |
-| `md2_agar_media` | 2 | 100.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
-| `md2_bioassay` | 2 | 140.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
-| `md2_blinding` | 2 | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `md2_case_control_study` | 2 | 160.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `md2_cell_theory` | 2 | 100.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
-| `md2_circulation` | 2 | 150.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_cohort_study` | 2 | 180.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `md2_digestion` | 2 | 140.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_drug_standardisation` | 2 | 150.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
-| `md2_gas_exchange` | 2 | 120.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_kidney` | 2 | 130.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_medical_statistics` | 2 | 140.0 | [`md2_medical_statistics`](89_remaining_arts.md#md2_medical_statistics---medical-statistics-and-vital-registration) |
-| `md2_microbiology_culture` | 2 | 140.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
-| `md2_nervous_system` | 2 | 160.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_nursing_profession` | 2 | 150.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
-| `md2_pharmacopoeia` | 2 | 180.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
-| `md2_placebo` | 2 | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `met_phase_diagram_knowledge` | 2 | 300.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
-| `mfg_bill_materials` | 2 | 140.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_blueprint` | 2 | 140.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_change_order` | 2 | 120.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_drawing_office` | 2 | 150.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_gantt_chart` | 2 | 100.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
-| `mfg_inventory_mgmt` | 2 | 120.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
-| `mfg_maintenance` | 2 | 130.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
-| `mfg_orthographic` | 2 | 130.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_piece_rate` | 2 | 100.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
-| `mfg_production_schedule` | 2 | 130.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
-| `mfg_standard_hour` | 2 | 120.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
-| `mfg_time_study` | 2 | 140.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
-| `mfg_tool_room` | 2 | 140.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
-| `mil_ammunition_standardisation` | 2 | 80.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
-| `mil_arsenal_manufacturing` | 2 | 110.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
-| `mil_general_staff` | 2 | 100.0 | [`mil_general_staff`](89_remaining_arts.md#mil_general_staff---professional-military-planning-general-staff-and-war-college) |
-| `mil_logistics_discipline` | 2 | 90.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
-| `mil_railway_mobilisation` | 2 | 100.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
-| `mil_war_college` | 2 | 100.0 | [`mil_general_staff`](89_remaining_arts.md#mil_general_staff---professional-military-planning-general-staff-and-war-college) |
-| `prc_toolroom_institution` | 2 | 100.0 | [`prc_apprentice_system`](89_remaining_arts.md#prc_apprentice_system---apprentice-system-and-toolroom-institution) |
-| `prn_copyright_economics` | 2 | 150.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
-| `sc2_physics_acoustics` | 2 | 120.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
-| `sc2_physics_aerodynamic_lift` | 2 | 130.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
-| `sc2_physics_blackbody_radiation` | 2 | 140.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
-| `sc2_physics_boltzmann_distribution` | 2 | 120.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
-| `sc2_physics_diffraction` | 2 | 120.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
-| `sc2_physics_em_wave` | 2 | 120.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
-| `sc2_physics_hydrodynamics` | 2 | 130.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
-| `sc2_physics_kinetic_theory` | 2 | 130.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
-| `sc2_physics_maxwell_equations` | 2 | 140.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
-| `sc2_physics_neutron_discovery` | 2 | 110.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_nucleus_discovery` | 2 | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_photoelectric_effect` | 2 | 110.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_quantum_photon` | 2 | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_reynolds_number` | 2 | 110.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
-| `sc2_physics_spectrum` | 2 | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
-| `sc2_physics_speed_of_light` | 2 | 100.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
-| `sc2_physics_uncertainty_principle` | 2 | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_viscosity` | 2 | 120.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
-| `sc2_physics_wave_motion` | 2 | 130.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
-| `civ_bending_moment` | 3 | 200.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
-| `civ_euler_buckling` | 3 | 180.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
-| `ctl_hurwitz_criterion` | 3 | 170.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
-| `ctl_minorsky_pid_law` | 3 | 200.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
-| `ctl_routh_criterion` | 3 | 170.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
-| `fin_commodity_exchange` | 3 | 180.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `fin_joint_stock` | 3 | 250.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `fin_learned_society` | 3 | 200.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
-| `fin_mortality_table` | 3 | 250.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
-| `fin_patent_office` | 3 | 200.0 | [`fin_professional_exam`](89_remaining_arts.md#fin_professional_exam---professional-licensing-and-patent-office) |
-| `fin_research_institute` | 3 | 250.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
-| `fin_statistical_office` | 3 | 220.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
-| `fin_totalisator` | 3 | 200.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `fin_trade_union` | 3 | 120.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
-| `gp_magnet_wire_enamelled` | 3 | 120.0 | [`gp_magnet_wire_enamelled`](89_remaining_arts.md#gp_magnet_wire_enamelled---enamelled-magnet-wire) |
-| `in2_gas_thermometry_absolute` | 3 | 140.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
-| `in2_microbalance_quartz` | 3 | 100.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
-| `in2_quartz_resonator_frequency` | 3 | 110.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
-| `md2_chromosome` | 3 | 120.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
-| `md2_endocrine_system` | 3 | 180.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_gene` | 3 | 100.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
-| `md2_immunity` | 3 | 200.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
-| `md2_mendelian_inheritance` | 3 | 80.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
-| `md2_randomised_controlled_trial` | 3 | 250.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
-| `met_hardness_test` | 3 | 140.0 | [`met_tensile_test`](89_remaining_arts.md#met_tensile_test---mechanical-testing-tensile-hardness-fatigue) |
-| `met_mannesmann_piercing` | 3 | 300.0 | [`met_mannesmann_piercing`](89_remaining_arts.md#met_mannesmann_piercing---mannesmann-piercing-for-seamless-tube) |
-| `met_metallography` | 3 | 200.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
-| `met_spectroscopic_assay` | 3 | 160.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
-| `mfg_dimensioning` | 3 | 160.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
-| `mfg_quality_dept` | 3 | 160.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
-| `mfg_queueing_theory` | 3 | 150.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
-| `mfg_work_study` | 3 | 200.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
-| `mil_conscription_reserve` | 3 | 60.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
-| `mil_cryptanalysis` | 3 | 110.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
-| `mil_signals_intelligence` | 3 | 80.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
-| `sc2_physics_nuclear_fission` | 3 | 140.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `sc2_physics_statistical_mechanics` | 3 | 160.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
-| `sc2_physics_wave_mechanics` | 3 | 180.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
-| `civ_elasticity_theory` | 4 | 300.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
-| `civ_soil_mechanics` | 4 | 250.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
-| `ctl_bode_plot_margins` | 4 | 160.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
-| `ctl_nyquist_stability_criterion` | 4 | 220.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
-| `ctl_pneumatic_process_controller` | 4 | 260.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
-| `ctl_root_locus` | 4 | 170.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
-| `ctl_ziegler_nichols_tuning` | 4 | 140.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
-| `gp_exhaust_pinchoff` | 4 | 100.0 | [`gp_exhaust_pinchoff`](89_remaining_arts.md#gp_exhaust_pinchoff---exhaust-and-pinch-off-technique) |
-| `gp_getter` | 4 | 130.0 | [`gp_getter`](89_remaining_arts.md#gp_getter---chemical-getter) |
-| `gp_glass_metal_seal` | 4 | 150.0 | [`gp_glass_metal_seal`](89_remaining_arts.md#gp_glass_metal_seal---glass-to-metal-vacuum-seal) |
-| `mat_chile_nitrate` | 4 | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_cryolite` | 4 | 200.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_gutta_percha` | 4 | 120.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_natural_rubber` | 4 | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_newworld_crops` | 4 | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_platinum_bulk` | 4 | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_quinine` | 4 | 150.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
-| `mat_rubber_coagulated` | 4 | 150.0 | [`mat_rubber_coagulated`](89_remaining_arts.md#mat_rubber_coagulated) **BROKEN** |
-| `md2_dna` | 4 | 150.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
-| `met_fatigue_testing` | 4 | 280.0 | [`met_tensile_test`](89_remaining_arts.md#met_tensile_test---mechanical-testing-tensile-hardness-fatigue) |
-| `mfg_critical_path_method` | 4 | 220.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
-| `mfg_linear_programming_simplex` | 4 | 250.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
-| `mil_operational_research` | 4 | 120.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
-| `gp_controlled_atmosphere_chamber` | 5 | 180.0 | [`gp_controlled_atmosphere_chamber`](89_remaining_arts.md#gp_controlled_atmosphere_chamber---controlled-atmosphere-furnace-chamber) |
-| `gp_czochralski_puller` | 5 | 200.0 | [`gp_czochralski_puller`](89_remaining_arts.md#gp_czochralski_puller---seed-and-pull-crystal-grower) |
-| `gp_whisker_forming` | 5 | 200.0 | [`gp_whisker_forming`](89_remaining_arts.md#gp_whisker_forming---point-contact-whisker-forming) |
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `civ_bending_moment` | 200.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
+| `civ_elasticity_theory` | 300.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
+| `civ_euler_buckling` | 180.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
+| `civ_factor_safety` | 100.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
+| `civ_materials_testing` | 150.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
+| `civ_method_joints` | 150.0 | [`civ_statics`](89_remaining_arts.md#civ_statics---statics-forces-and-moments-in-balance) |
+| `civ_neutral_axis` | 120.0 | [`civ_bending_moment`](89_remaining_arts.md#civ_bending_moment---bending-moment-shear-neutral-axis-elasticity-buckling) |
+| `civ_soil_mechanics` | 250.0 | [`civ_materials_testing`](89_remaining_arts.md#civ_materials_testing---materials-testing-safety-factor-soil-mechanics) |
+| `civ_statics` | 200.0 | [`civ_statics`](89_remaining_arts.md#civ_statics---statics-forces-and-moments-in-balance) |
+| `ctl_bode_plot_margins` | 160.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
+| `ctl_governor_stability_theory` | 150.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
+| `ctl_hurwitz_criterion` | 170.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
+| `ctl_minorsky_pid_law` | 200.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
+| `ctl_nyquist_stability_criterion` | 220.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
+| `ctl_pneumatic_process_controller` | 260.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
+| `ctl_root_locus` | 170.0 | [`ctl_nyquist_stability_criterion`](89_remaining_arts.md#ctl_nyquist_stability_criterion---nyquist-criterion-bode-plot-and-margins-root-locus) |
+| `ctl_routh_criterion` | 170.0 | [`ctl_governor_stability_theory`](89_remaining_arts.md#ctl_governor_stability_theory---stability-theory-maxwells-governor-equations-routh-and-hurwitz-criteria-nyquist-bode-root-locus) |
+| `ctl_ziegler_nichols_tuning` | 140.0 | [`ctl_minorsky_pid_law`](89_remaining_arts.md#ctl_minorsky_pid_law---the-designed-process-controller-three-term-pid-control-the-pneumatic-controller-ziegler-nichols-tuning) |
+| `fin_assay_office` | 180.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
+| `fin_census` | 200.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
+| `fin_civil_service_exam` | 180.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
+| `fin_collegium` | 120.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_commodity_exchange` | 180.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_customs_house` | 120.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
+| `fin_endowed_chair` | 150.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
+| `fin_government` | 0.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
+| `fin_guild` | 100.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_joint_stock` | 250.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_learned_society` | 200.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
+| `fin_mortality_table` | 250.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
+| `fin_museum` | 180.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
+| `fin_patent_office` | 200.0 | [`fin_professional_exam`](89_remaining_arts.md#fin_professional_exam---professional-licensing-and-patent-office) |
+| `fin_post_office` | 150.0 | [`fin_government`](89_remaining_arts.md#fin_government---standing-bureaucracy-post-office-civil-service-exam) |
+| `fin_professional_exam` | 150.0 | [`fin_professional_exam`](89_remaining_arts.md#fin_professional_exam---professional-licensing-and-patent-office) |
+| `fin_research_institute` | 250.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
+| `fin_societas` | 40.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_standard_weights` | 150.0 | [`fin_standard_weights`](89_remaining_arts.md#fin_standard_weights---standard-weights-assay-office-customs-house) |
+| `fin_statistical_office` | 220.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
+| `fin_survey_map` | 250.0 | [`fin_census`](89_remaining_arts.md#fin_census---census-survey-statistics-office-mortality-table) |
+| `fin_totalisator` | 200.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_trade_union` | 120.0 | [`fin_societas`](89_remaining_arts.md#fin_societas---business-organisation-partnership-to-joint-stock-exchange-guilds-unions-totalisator) |
+| `fin_university` | 200.0 | [`fin_university`](89_remaining_arts.md#fin_university---academic-and-research-institutions) |
+| `fud_agricultural_treatises` | 300.0 | [`fud_agricultural_treatises`](89_remaining_arts.md#fud_agricultural_treatises---written-treatises-and-soil-testing) |
+| `fud_soil_composition_analysis` | 200.0 | [`fud_agricultural_treatises`](89_remaining_arts.md#fud_agricultural_treatises---written-treatises-and-soil-testing) |
+| `gp_carbon_brushes` | 50.0 | [`gp_carbon_brushes`](89_remaining_arts.md#gp_carbon_brushes---carbon-and-graphite-brush-contacts) |
+| `gp_controlled_atmosphere_chamber` | 180.0 | [`gp_controlled_atmosphere_chamber`](89_remaining_arts.md#gp_controlled_atmosphere_chamber---controlled-atmosphere-furnace-chamber) |
+| `gp_czochralski_puller` | 200.0 | [`gp_czochralski_puller`](89_remaining_arts.md#gp_czochralski_puller---seed-and-pull-crystal-grower) |
+| `gp_exhaust_pinchoff` | 100.0 | [`gp_exhaust_pinchoff`](89_remaining_arts.md#gp_exhaust_pinchoff---exhaust-and-pinch-off-technique) |
+| `gp_getter` | 130.0 | [`gp_getter`](89_remaining_arts.md#gp_getter---chemical-getter) |
+| `gp_glass_metal_seal` | 150.0 | [`gp_glass_metal_seal`](89_remaining_arts.md#gp_glass_metal_seal---glass-to-metal-vacuum-seal) |
+| `gp_laminated_core` | 90.0 | [`gp_laminated_core`](89_remaining_arts.md#gp_laminated_core---laminated-iron-core) |
+| `gp_magnet_wire_enamelled` | 120.0 | [`gp_magnet_wire_enamelled`](89_remaining_arts.md#gp_magnet_wire_enamelled---enamelled-magnet-wire) |
+| `gp_whisker_forming` | 200.0 | [`gp_whisker_forming`](89_remaining_arts.md#gp_whisker_forming---point-contact-whisker-forming) |
+| `in2_analytical_balance` | 50.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
+| `in2_aneroid_capsule` | 70.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
+| `in2_balance_spring_watch` | 100.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
+| `in2_gas_thermometry_absolute` | 140.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
+| `in2_mcleod_vacuum_gauge` | 85.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
+| `in2_mercury_barometer` | 45.0 | [`in2_bourdon_pressure_gauge`](89_remaining_arts.md#in2_bourdon_pressure_gauge---pressure-and-vacuum-gauges) |
+| `in2_microbalance_quartz` | 100.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
+| `in2_orifice_flow_meter` | 50.0 | [`in2_pitot_tube`](89_remaining_arts.md#in2_pitot_tube---flow-measurement-pitot-venturi-orifice) |
+| `in2_quartz_resonator_frequency` | 110.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
+| `in2_resistance_thermometer_RTD` | 80.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
+| `in2_thermocouple` | 45.0 | [`in2_thermocouple`](89_remaining_arts.md#in2_thermocouple---temperature-measurement-thermocouple-rtd-gas-thermometry) |
+| `in2_torsion_balance` | 85.0 | [`in2_analytical_balance`](89_remaining_arts.md#in2_analytical_balance---precision-balances-equal-arm-torsion-quartz-microbalance) |
+| `in2_travelling_microscope` | 80.0 | [`in2_optical_comparator`](89_remaining_arts.md#in2_optical_comparator---optical-length-measurement-comparator-and-travelling-microscope) |
+| `in2_tuning_fork_oscillator` | 60.0 | [`in2_quartz_resonator_frequency`](89_remaining_arts.md#in2_quartz_resonator_frequency---frequency-standards-quartz-tuning-fork-hairspring) |
+| `in2_venturi_flow_meter` | 70.0 | [`in2_pitot_tube`](89_remaining_arts.md#in2_pitot_tube---flow-measurement-pitot-venturi-orifice) |
+| `mat_chile_nitrate` | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_cryolite` | 200.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_gutta_percha` | 120.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_natural_rubber` | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_newworld_crops` | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_platinum_bulk` | 60.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_quinine` | 150.0 | [`mat_natural_rubber`](89_remaining_arts.md#mat_natural_rubber---distant-materials-that-are-reachable-not-exotic) |
+| `mat_rubber_coagulated` | 150.0 | [`mat_rubber_coagulated`](89_remaining_arts.md#mat_rubber_coagulated) **BROKEN** |
+| `md2_agar_media` | 100.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
+| `md2_bioassay` | 140.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
+| `md2_blinding` | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_cadaver_dissection` | 100.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
+| `md2_case_control_study` | 160.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_case_record` | 80.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
+| `md2_case_series` | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_cell_theory` | 100.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
+| `md2_chromosome` | 120.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
+| `md2_circulation` | 150.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_cohort_study` | 180.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_digestion` | 140.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_dna` | 150.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
+| `md2_drug_standardisation` | 150.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
+| `md2_endocrine_system` | 180.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_gas_exchange` | 120.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_gene` | 100.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
+| `md2_immunity` | 200.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_kidney` | 130.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_medical_journal` | 120.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
+| `md2_medical_licensing` | 100.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
+| `md2_medical_statistics` | 140.0 | [`md2_medical_statistics`](89_remaining_arts.md#md2_medical_statistics---medical-statistics-and-vital-registration) |
+| `md2_mendelian_inheritance` | 80.0 | [`md2_cell_theory`](89_remaining_arts.md#md2_cell_theory---cell-theory-and-heredity-chromosomes-genes-dna-mendelian-ratios) |
+| `md2_microbiology_culture` | 140.0 | [`md2_agar_media`](89_remaining_arts.md#md2_agar_media---laboratory-and-anatomical-method-agar-culture-microbiology-bioassay-drug-standardisation-cadaver-dissection) |
+| `md2_nervous_system` | 160.0 | [`md2_circulation`](89_remaining_arts.md#md2_circulation---core-physiology-circulation-digestion-respiration-kidney-nerves-hormones-immunity) |
+| `md2_nursing_profession` | 150.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
+| `md2_pharmacopoeia` | 180.0 | [`md2_case_record`](89_remaining_arts.md#md2_case_record---medical-practice-institutions-case-records-journals-licensing-nursing-pharmacopoeia) |
+| `md2_placebo` | 100.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_randomised_controlled_trial` | 250.0 | [`md2_case_series`](89_remaining_arts.md#md2_case_series---clinical-study-design-case-series-to-randomised-controlled-trial) |
+| `md2_vital_registration` | 100.0 | [`md2_medical_statistics`](89_remaining_arts.md#md2_medical_statistics---medical-statistics-and-vital-registration) |
+| `met_fatigue_testing` | 280.0 | [`met_tensile_test`](89_remaining_arts.md#met_tensile_test---mechanical-testing-tensile-hardness-fatigue) |
+| `met_hardness_test` | 140.0 | [`met_tensile_test`](89_remaining_arts.md#met_tensile_test---mechanical-testing-tensile-hardness-fatigue) |
+| `met_mannesmann_piercing` | 300.0 | [`met_mannesmann_piercing`](89_remaining_arts.md#met_mannesmann_piercing---mannesmann-piercing-for-seamless-tube) |
+| `met_metallography` | 200.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
+| `met_phase_diagram_knowledge` | 300.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
+| `met_spectroscopic_assay` | 160.0 | [`met_metallography`](89_remaining_arts.md#met_metallography---metal-structure-analysis-metallography-phase-diagrams-spectroscopy) |
+| `mfg_bill_materials` | 140.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_blueprint` | 140.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_change_order` | 120.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_critical_path_method` | 220.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
+| `mfg_dimensioning` | 160.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_drawing_office` | 150.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_gantt_chart` | 100.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
+| `mfg_inventory_mgmt` | 120.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
+| `mfg_linear_programming_simplex` | 250.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
+| `mfg_maintenance` | 130.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
+| `mfg_orthographic` | 130.0 | [`mfg_drawing_office`](89_remaining_arts.md#mfg_drawing_office---engineering-drawing-and-documentation) |
+| `mfg_piece_rate` | 100.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
+| `mfg_production_schedule` | 130.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
+| `mfg_quality_dept` | 160.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
+| `mfg_queueing_theory` | 150.0 | [`mfg_queueing_theory`](89_remaining_arts.md#mfg_queueing_theory---operations-research-queueing-theory-linear-programming-and-the-simplex-method-gantt-charts-the-critical-path-method) |
+| `mfg_standard_hour` | 120.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
+| `mfg_time_study` | 140.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
+| `mfg_tool_room` | 140.0 | [`mfg_production_schedule`](89_remaining_arts.md#mfg_production_schedule---production-planning-and-control) |
+| `mfg_work_study` | 200.0 | [`mfg_time_study`](89_remaining_arts.md#mfg_time_study---scientific-management-time-study-work-study-standard-hour-piece-rate-assembly-line) |
+| `mil_ammunition_standardisation` | 80.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
+| `mil_arsenal_manufacturing` | 110.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
+| `mil_conscription_reserve` | 60.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
+| `mil_cryptanalysis` | 110.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
+| `mil_general_staff` | 100.0 | [`mil_general_staff`](89_remaining_arts.md#mil_general_staff---professional-military-planning-general-staff-and-war-college) |
+| `mil_logistics_discipline` | 90.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
+| `mil_operational_research` | 120.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
+| `mil_railway_mobilisation` | 100.0 | [`mil_conscription_reserve`](89_remaining_arts.md#mil_conscription_reserve---mass-mobilisation-conscription-railways-logistics-arsenal-manufacture) |
+| `mil_signals_intelligence` | 80.0 | [`mil_cryptanalysis`](89_remaining_arts.md#mil_cryptanalysis---signals-intelligence-cryptanalysis-operational-research) |
+| `mil_war_college` | 100.0 | [`mil_general_staff`](89_remaining_arts.md#mil_general_staff---professional-military-planning-general-staff-and-war-college) |
+| `prc_apprentice_system` | 150.0 | [`prc_apprentice_system`](89_remaining_arts.md#prc_apprentice_system---apprentice-system-and-toolroom-institution) |
+| `prc_toolroom_institution` | 100.0 | [`prc_apprentice_system`](89_remaining_arts.md#prc_apprentice_system---apprentice-system-and-toolroom-institution) |
+| `prn_cataloguing_system` | 200.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
+| `prn_copyright_economics` | 150.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
+| `prn_index_concordance` | 300.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
+| `prn_library_archive` | 0.0 | [`prn_library_archive`](89_remaining_arts.md#prn_library_archive---library-archive-cataloguing-indexing-copyright-economics) |
+| `sc2_institution_citation` | 80.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
+| `sc2_institution_curriculum` | 120.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
+| `sc2_institution_doctorate` | 150.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
+| `sc2_institution_examination` | 80.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
+| `sc2_institution_funded_programme` | 120.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
+| `sc2_institution_journal` | 110.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
+| `sc2_institution_learned_society` | 100.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
+| `sc2_institution_patent_disclosure` | 100.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
+| `sc2_institution_referee` | 100.0 | [`sc2_institution_journal`](89_remaining_arts.md#sc2_institution_journal---scientific-publication-journal-learned-society-citation-peer-review) |
+| `sc2_institution_research_group` | 100.0 | [`sc2_institution_funded_programme`](89_remaining_arts.md#sc2_institution_funded_programme---research-funding-and-management) |
+| `sc2_institution_textbook` | 200.0 | [`sc2_institution_curriculum`](89_remaining_arts.md#sc2_institution_curriculum---academic-teaching-institutions-curriculum-textbook-examination-doctorate) |
+| `sc2_method_controlled_experiment` | 100.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_method_hypothesis` | 90.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_method_lab_notebook` | 70.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_method_negative_result` | 90.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_method_peer_criticism` | 100.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_method_replication` | 80.0 | [`sc2_method_hypothesis`](89_remaining_arts.md#sc2_method_hypothesis---hypothesis-controlled-experiment-lab-notebook-replication-peer-criticism-negative-results) |
+| `sc2_physics_acoustics` | 120.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
+| `sc2_physics_aerodynamic_lift` | 130.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
+| `sc2_physics_blackbody_radiation` | 140.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
+| `sc2_physics_boltzmann_distribution` | 120.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
+| `sc2_physics_diffraction` | 120.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
+| `sc2_physics_elasticity` | 110.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
+| `sc2_physics_electrostatics` | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
+| `sc2_physics_em_wave` | 120.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
+| `sc2_physics_energy` | 110.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
+| `sc2_physics_fluid_statics` | 80.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
+| `sc2_physics_geometric_optics` | 100.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
+| `sc2_physics_gravitation` | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
+| `sc2_physics_hydrodynamics` | 130.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
+| `sc2_physics_kinematics` | 90.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
+| `sc2_physics_kinetic_theory` | 130.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
+| `sc2_physics_magnetostatics` | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
+| `sc2_physics_maxwell_equations` | 140.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
+| `sc2_physics_momentum` | 80.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
+| `sc2_physics_neutron_discovery` | 110.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_newtons_laws` | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
+| `sc2_physics_nuclear_fission` | 140.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_nucleus_discovery` | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_photoelectric_effect` | 110.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_quantum_photon` | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_reynolds_number` | 110.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
+| `sc2_physics_spectrum` | 100.0 | [`sc2_physics_electrostatics`](89_remaining_arts.md#sc2_physics_electrostatics---electromagnetism-electrostatics-magnetostatics-maxwells-equations-em-waves-spectrum) |
+| `sc2_physics_speed_of_light` | 100.0 | [`sc2_physics_geometric_optics`](89_remaining_arts.md#sc2_physics_geometric_optics---optics-geometric-rays-diffraction-speed-of-light) |
+| `sc2_physics_statistical_mechanics` | 160.0 | [`sc2_physics_kinetic_theory`](89_remaining_arts.md#sc2_physics_kinetic_theory---kinetic-theory-and-statistical-mechanics) |
+| `sc2_physics_uncertainty_principle` | 120.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_viscosity` | 120.0 | [`sc2_physics_fluid_statics`](89_remaining_arts.md#sc2_physics_fluid_statics---fluid-mechanics-statics-bernoulli-viscosity-reynolds-number) |
+| `sc2_physics_wave_mechanics` | 180.0 | [`sc2_physics_quantum_photon`](89_remaining_arts.md#sc2_physics_quantum_photon---quantum-and-nuclear-physics-photon-photoelectric-effect-uncertainty-wave-mechanics-nucleus-neutron-fission) |
+| `sc2_physics_wave_motion` | 130.0 | [`sc2_physics_elasticity`](89_remaining_arts.md#sc2_physics_elasticity---elasticity-wave-motion-acoustics-aerodynamic-lift) |
+| `sc2_physics_work_power` | 100.0 | [`sc2_physics_newtons_laws`](89_remaining_arts.md#sc2_physics_newtons_laws---classical-mechanics-newtons-laws-kinematics-momentum-energy-work-gravitation) |
 
 ### 90_textiles.md
 
-| Node | Tier | Your hours | Recipe |
-|---|---:|---:|---|
-| `mat_linen` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_cotton_trade` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_drop_spindle` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_dye_madder` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_dye_murex` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_dye_woad` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_felting` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_sailcloth` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_silk_trade` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_two_beam_loom` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_warp_weighted_loom` | 0 | 0.0 | _(module has no anchor)_ |
-| `tex_wool` | 0 | 0.0 | _(module has no anchor)_ |
-| `tx2_bleaching_sun` | 0 | 30.0 | _(module has no anchor)_ |
-| `tx2_bottle` | 0 | 60.0 | _(module has no anchor)_ |
-| `tx2_button_bone` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_button_horn` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_flax_fibre` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_hackling` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_heddle` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_hemp_fibre` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_needle` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_pin` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_retting` | 0 | 30.0 | _(module has no anchor)_ |
-| `tx2_rope_lay` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_scutching` | 0 | 50.0 | _(module has no anchor)_ |
-| `tx2_shaft` | 0 | 50.0 | _(module has no anchor)_ |
-| `tx2_shed` | 0 | 30.0 | _(module has no anchor)_ |
-| `tx2_silk_fibre` | 0 | 40.0 | _(module has no anchor)_ |
-| `tx2_wool_fibre` | 0 | 40.0 | _(module has no anchor)_ |
-| `tex_canvas` | 1 | 40.0 | _(module has no anchor)_ |
-| `tex_fitted_garment` | 1 | 50.0 | _(module has no anchor)_ |
-| `tex_hand_ginning` | 1 | 30.0 | _(module has no anchor)_ |
-| `tex_horizontal_loom` | 1 | 80.0 | _(module has no anchor)_ |
-| `tex_indigo` | 1 | 60.0 | _(module has no anchor)_ |
-| `tex_mordanting` | 1 | 40.0 | _(module has no anchor)_ |
-| `tex_rope_walk` | 1 | 70.0 | _(module has no anchor)_ |
-| `tex_shoddy` | 1 | 40.0 | _(module has no anchor)_ |
-| `tex_spinning_wheel` | 1 | 100.0 | _(module has no anchor)_ |
-| `tex_treadle_loom` | 1 | 90.0 | _(module has no anchor)_ |
-| `tx2_alum_tanning` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_beam` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_board_game` | 1 | 100.0 | _(module has no anchor)_ |
-| `tx2_bobbin_and_flyer` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_button_shell` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_cap_frame` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_cardboard_box` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_carding` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_cashmere` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_comb` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_combing` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_cordage_paperboard` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_corset` | 1 | 100.0 | _(module has no anchor)_ |
-| `tx2_cotton_ginning` | 1 | 120.0 | _(module has no anchor)_ |
-| `tx2_count_standard` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_currying` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_cutting_table` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_desizing` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_doll` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_doubling_frame` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_drawing` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_drawing_pin` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_dyeing_fibre` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_dyeing_piece` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_dyeing_yarn` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_envelope_flap` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_envelope_gummed` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_eye_pointed_needle` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_flyer` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_fulling` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_gilling` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_hook_and_eye` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_jute_fibre` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_let_off_motion` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_milling` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_mirror` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_mohair` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_paper_bag` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_paperclip` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_pattern_grading` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_playing_card` | 1 | 100.0 | _(module has no anchor)_ |
-| `tx2_postcard` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_printing_block` | 1 | 100.0 | _(module has no anchor)_ |
-| `tx2_ramie_fibre` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_resist_dyeing` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_roving_frame` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_scouring` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_screw_cap` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_selvedge` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_sericulture` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_shuttle` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_sizing_systems` | 1 | 100.0 | _(module has no anchor)_ |
-| `tx2_sliver_preparation` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_spectacle_frame` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_splitting` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_take_up_motion` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_temple` | 1 | 40.0 | _(module has no anchor)_ |
-| `tx2_twist_insertion` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_warp_sizing` | 1 | 50.0 | _(module has no anchor)_ |
-| `tx2_warping_mill` | 1 | 60.0 | _(module has no anchor)_ |
-| `tx2_watch_case` | 1 | 80.0 | _(module has no anchor)_ |
-| `tx2_wild_silk` | 1 | 70.0 | _(module has no anchor)_ |
-| `tx2_worsted` | 1 | 60.0 | _(module has no anchor)_ |
-| `tex_buttons_buttonholes` | 2 | 50.0 | _(module has no anchor)_ |
-| `tex_calico_printing` | 2 | 140.0 | _(module has no anchor)_ |
-| `tex_cotton_gin` | 2 | 80.0 | _(module has no anchor)_ |
-| `tex_field_bleaching` | 2 | 50.0 | _(module has no anchor)_ |
-| `tex_flying_shuttle` | 2 | 120.0 | _(module has no anchor)_ |
-| `tex_fulling_water` | 2 | 120.0 | _(module has no anchor)_ |
-| `tex_hosiery` | 2 | 70.0 | _(module has no anchor)_ |
-| `tex_knitting_frame` | 2 | 150.0 | _(module has no anchor)_ |
-| `tex_pattern_cutting` | 2 | 80.0 | _(module has no anchor)_ |
-| `tex_power_loom` | 2 | 250.0 | _(module has no anchor)_ |
-| `tex_sewing_machine` | 2 | 160.0 | _(module has no anchor)_ |
-| `tex_spinning_jenny` | 2 | 100.0 | _(module has no anchor)_ |
-| `tex_tape_measure` | 2 | 40.0 | _(module has no anchor)_ |
-| `tex_textile_factory` | 2 | 300.0 | _(module has no anchor)_ |
-| `tex_vegetable_tanning` | 2 | 100.0 | _(module has no anchor)_ |
-| `tex_water_frame` | 2 | 280.0 | _(module has no anchor)_ |
-| `tex_wool_combing_machinery` | 2 | 180.0 | _(module has no anchor)_ |
-| `tx2_asbestos_cloth` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_band_knife` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_brassiere` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_buttonhole_machine` | 2 | 120.0 | _(module has no anchor)_ |
-| `tx2_calendering` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_chain_stitch` | 2 | 90.0 | _(module has no anchor)_ |
-| `tx2_circular_knitting` | 2 | 120.0 | _(module has no anchor)_ |
-| `tx2_clockwork_toy` | 2 | 110.0 | _(module has no anchor)_ |
-| `tx2_corrugated_box` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_cropping` | 2 | 90.0 | _(module has no anchor)_ |
-| `tx2_discharge_printing` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_dobby` | 2 | 140.0 | _(module has no anchor)_ |
-| `tx2_dyeing_garment` | 2 | 90.0 | _(module has no anchor)_ |
-| `tx2_embossing` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_eraser` | 2 | 70.0 | _(module has no anchor)_ |
-| `tx2_friction_match` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_jacquard_cards` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_jacquard_head` | 2 | 200.0 | _(module has no anchor)_ |
-| `tx2_lasting_machine` | 2 | 120.0 | _(module has no anchor)_ |
-| `tx2_latch_needle` | 2 | 90.0 | _(module has no anchor)_ |
-| `tx2_lockstitch` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_mass_soap` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_mercerising` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_mule_jenny` | 2 | 160.0 | _(module has no anchor)_ |
-| `tx2_overlock_stitch` | 2 | 110.0 | _(module has no anchor)_ |
-| `tx2_paper_pattern` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_picking_mechanism` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_press_stud` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_printing_roller` | 2 | 160.0 | _(module has no anchor)_ |
-| `tx2_raising` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_razor_blade` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_ready_to_wear` | 2 | 120.0 | _(module has no anchor)_ |
-| `tx2_ring_frame` | 2 | 120.0 | _(module has no anchor)_ |
-| `tx2_ropemaking_machine` | 2 | 110.0 | _(module has no anchor)_ |
-| `tx2_safety_match` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_sewing_machine_domestic` | 2 | 140.0 | _(module has no anchor)_ |
-| `tx2_sewing_machine_industrial` | 2 | 150.0 | _(module has no anchor)_ |
-| `tx2_shampoo` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_shearing` | 2 | 70.0 | _(module has no anchor)_ |
-| `tx2_shoemaking_mechanised` | 2 | 150.0 | _(module has no anchor)_ |
-| `tx2_singeing` | 2 | 60.0 | _(module has no anchor)_ |
-| `tx2_stapler` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_stocking_frame` | 2 | 140.0 | _(module has no anchor)_ |
-| `tx2_throstle_frame` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_tin_can` | 2 | 80.0 | _(module has no anchor)_ |
-| `tx2_tin_toy` | 2 | 90.0 | _(module has no anchor)_ |
-| `tx2_toothpaste_tube` | 2 | 100.0 | _(module has no anchor)_ |
-| `tx2_warp_knitting` | 2 | 130.0 | _(module has no anchor)_ |
-| `tx2_waterproofing` | 2 | 80.0 | _(module has no anchor)_ |
-| `tex_mercerisation` | 3 | 100.0 | _(module has no anchor)_ |
-| `tex_roller_printing` | 3 | 180.0 | _(module has no anchor)_ |
-| `tex_spinning_mule` | 3 | 200.0 | _(module has no anchor)_ |
-| `tx2_automatic_bobbin_changer` | 3 | 140.0 | _(module has no anchor)_ |
-| `tx2_automatic_loom` | 3 | 180.0 | _(module has no anchor)_ |
-| `tx2_ballpoint_pen` | 3 | 120.0 | _(module has no anchor)_ |
-| `tx2_bicycle_consumer` | 3 | 140.0 | _(module has no anchor)_ |
-| `tx2_bleaching_chlorine` | 3 | 80.0 | _(module has no anchor)_ |
-| `tx2_bleaching_peroxide` | 3 | 90.0 | _(module has no anchor)_ |
-| `tx2_button_plastic` | 3 | 70.0 | _(module has no anchor)_ |
-| `tx2_camera_consumer` | 3 | 130.0 | _(module has no anchor)_ |
-| `tx2_elastic` | 3 | 90.0 | _(module has no anchor)_ |
-| `tx2_flameproofing` | 3 | 100.0 | _(module has no anchor)_ |
-| `tx2_glass_fibre` | 3 | 130.0 | _(module has no anchor)_ |
-| `tx2_gramophone` | 3 | 140.0 | _(module has no anchor)_ |
-| `tx2_mothproofing` | 3 | 90.0 | _(module has no anchor)_ |
-| `tx2_printing_screen` | 3 | 120.0 | _(module has no anchor)_ |
-| `tx2_rayon_cupro` | 3 | 150.0 | _(module has no anchor)_ |
-| `tx2_rubber_soles` | 3 | 100.0 | _(module has no anchor)_ |
-| `mat_dyes_synthetic` | 4 | 200.0 | _(module has no anchor)_ |
-| `tex_chlorine_bleaching` | 4 | 120.0 | _(module has no anchor)_ |
-| `tex_chrome_tanning` | 4 | 140.0 | _(module has no anchor)_ |
-| `tex_rayon_nitro` | 4 | 180.0 | _(module has no anchor)_ |
-| `tex_rayon_viscose` | 4 | 200.0 | _(module has no anchor)_ |
-| `tx2_acrylic` | 4 | 170.0 | _(module has no anchor)_ |
-| `tx2_nylon_6_6` | 4 | 180.0 | _(module has no anchor)_ |
-| `tx2_permanent_press` | 4 | 120.0 | _(module has no anchor)_ |
-| `tx2_polyester` | 4 | 180.0 | _(module has no anchor)_ |
-| `tx2_radio_set` | 4 | 150.0 | _(module has no anchor)_ |
-| `tx2_rayon_acetate` | 4 | 140.0 | _(module has no anchor)_ |
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `mat_dyes_synthetic` | 200.0 | _(module has no anchor)_ |
+| `mat_linen` | 0.0 | _(module has no anchor)_ |
+| `tex_buttons_buttonholes` | 50.0 | _(module has no anchor)_ |
+| `tex_calico_printing` | 140.0 | _(module has no anchor)_ |
+| `tex_canvas` | 40.0 | _(module has no anchor)_ |
+| `tex_chlorine_bleaching` | 120.0 | _(module has no anchor)_ |
+| `tex_chrome_tanning` | 140.0 | _(module has no anchor)_ |
+| `tex_cotton_gin` | 80.0 | _(module has no anchor)_ |
+| `tex_cotton_trade` | 0.0 | _(module has no anchor)_ |
+| `tex_drop_spindle` | 0.0 | _(module has no anchor)_ |
+| `tex_dye_madder` | 0.0 | _(module has no anchor)_ |
+| `tex_dye_murex` | 0.0 | _(module has no anchor)_ |
+| `tex_dye_woad` | 0.0 | _(module has no anchor)_ |
+| `tex_felting` | 0.0 | _(module has no anchor)_ |
+| `tex_field_bleaching` | 50.0 | _(module has no anchor)_ |
+| `tex_fitted_garment` | 50.0 | _(module has no anchor)_ |
+| `tex_flying_shuttle` | 120.0 | _(module has no anchor)_ |
+| `tex_fulling_water` | 120.0 | _(module has no anchor)_ |
+| `tex_hand_ginning` | 30.0 | _(module has no anchor)_ |
+| `tex_horizontal_loom` | 80.0 | _(module has no anchor)_ |
+| `tex_hosiery` | 70.0 | _(module has no anchor)_ |
+| `tex_indigo` | 60.0 | _(module has no anchor)_ |
+| `tex_knitting_frame` | 150.0 | _(module has no anchor)_ |
+| `tex_mercerisation` | 100.0 | _(module has no anchor)_ |
+| `tex_mordanting` | 40.0 | _(module has no anchor)_ |
+| `tex_pattern_cutting` | 80.0 | _(module has no anchor)_ |
+| `tex_power_loom` | 250.0 | _(module has no anchor)_ |
+| `tex_rayon_nitro` | 180.0 | _(module has no anchor)_ |
+| `tex_rayon_viscose` | 200.0 | _(module has no anchor)_ |
+| `tex_roller_printing` | 180.0 | _(module has no anchor)_ |
+| `tex_rope_walk` | 70.0 | _(module has no anchor)_ |
+| `tex_sailcloth` | 0.0 | _(module has no anchor)_ |
+| `tex_sewing_machine` | 160.0 | _(module has no anchor)_ |
+| `tex_shoddy` | 40.0 | _(module has no anchor)_ |
+| `tex_silk_trade` | 0.0 | _(module has no anchor)_ |
+| `tex_spinning_jenny` | 100.0 | _(module has no anchor)_ |
+| `tex_spinning_mule` | 200.0 | _(module has no anchor)_ |
+| `tex_spinning_wheel` | 100.0 | _(module has no anchor)_ |
+| `tex_tape_measure` | 40.0 | _(module has no anchor)_ |
+| `tex_textile_factory` | 300.0 | _(module has no anchor)_ |
+| `tex_treadle_loom` | 90.0 | _(module has no anchor)_ |
+| `tex_two_beam_loom` | 0.0 | _(module has no anchor)_ |
+| `tex_vegetable_tanning` | 100.0 | _(module has no anchor)_ |
+| `tex_warp_weighted_loom` | 0.0 | _(module has no anchor)_ |
+| `tex_water_frame` | 280.0 | _(module has no anchor)_ |
+| `tex_wool` | 0.0 | _(module has no anchor)_ |
+| `tex_wool_combing_machinery` | 180.0 | _(module has no anchor)_ |
+| `tx2_acrylic` | 170.0 | _(module has no anchor)_ |
+| `tx2_alum_tanning` | 60.0 | _(module has no anchor)_ |
+| `tx2_asbestos_cloth` | 80.0 | _(module has no anchor)_ |
+| `tx2_automatic_bobbin_changer` | 140.0 | _(module has no anchor)_ |
+| `tx2_automatic_loom` | 180.0 | _(module has no anchor)_ |
+| `tx2_ballpoint_pen` | 120.0 | _(module has no anchor)_ |
+| `tx2_band_knife` | 100.0 | _(module has no anchor)_ |
+| `tx2_beam` | 40.0 | _(module has no anchor)_ |
+| `tx2_bicycle_consumer` | 140.0 | _(module has no anchor)_ |
+| `tx2_bleaching_chlorine` | 80.0 | _(module has no anchor)_ |
+| `tx2_bleaching_peroxide` | 90.0 | _(module has no anchor)_ |
+| `tx2_bleaching_sun` | 30.0 | _(module has no anchor)_ |
+| `tx2_board_game` | 100.0 | _(module has no anchor)_ |
+| `tx2_bobbin_and_flyer` | 50.0 | _(module has no anchor)_ |
+| `tx2_bottle` | 60.0 | _(module has no anchor)_ |
+| `tx2_brassiere` | 100.0 | _(module has no anchor)_ |
+| `tx2_button_bone` | 40.0 | _(module has no anchor)_ |
+| `tx2_button_horn` | 40.0 | _(module has no anchor)_ |
+| `tx2_button_plastic` | 70.0 | _(module has no anchor)_ |
+| `tx2_button_shell` | 50.0 | _(module has no anchor)_ |
+| `tx2_buttonhole_machine` | 120.0 | _(module has no anchor)_ |
+| `tx2_calendering` | 80.0 | _(module has no anchor)_ |
+| `tx2_camera_consumer` | 130.0 | _(module has no anchor)_ |
+| `tx2_cap_frame` | 80.0 | _(module has no anchor)_ |
+| `tx2_cardboard_box` | 70.0 | _(module has no anchor)_ |
+| `tx2_carding` | 60.0 | _(module has no anchor)_ |
+| `tx2_cashmere` | 50.0 | _(module has no anchor)_ |
+| `tx2_chain_stitch` | 90.0 | _(module has no anchor)_ |
+| `tx2_circular_knitting` | 120.0 | _(module has no anchor)_ |
+| `tx2_clockwork_toy` | 110.0 | _(module has no anchor)_ |
+| `tx2_comb` | 50.0 | _(module has no anchor)_ |
+| `tx2_combing` | 50.0 | _(module has no anchor)_ |
+| `tx2_cordage_paperboard` | 50.0 | _(module has no anchor)_ |
+| `tx2_corrugated_box` | 100.0 | _(module has no anchor)_ |
+| `tx2_corset` | 100.0 | _(module has no anchor)_ |
+| `tx2_cotton_ginning` | 120.0 | _(module has no anchor)_ |
+| `tx2_count_standard` | 40.0 | _(module has no anchor)_ |
+| `tx2_cropping` | 90.0 | _(module has no anchor)_ |
+| `tx2_currying` | 60.0 | _(module has no anchor)_ |
+| `tx2_cutting_table` | 60.0 | _(module has no anchor)_ |
+| `tx2_desizing` | 50.0 | _(module has no anchor)_ |
+| `tx2_discharge_printing` | 100.0 | _(module has no anchor)_ |
+| `tx2_dobby` | 140.0 | _(module has no anchor)_ |
+| `tx2_doll` | 80.0 | _(module has no anchor)_ |
+| `tx2_doubling_frame` | 70.0 | _(module has no anchor)_ |
+| `tx2_drawing` | 50.0 | _(module has no anchor)_ |
+| `tx2_drawing_pin` | 50.0 | _(module has no anchor)_ |
+| `tx2_dyeing_fibre` | 60.0 | _(module has no anchor)_ |
+| `tx2_dyeing_garment` | 90.0 | _(module has no anchor)_ |
+| `tx2_dyeing_piece` | 80.0 | _(module has no anchor)_ |
+| `tx2_dyeing_yarn` | 70.0 | _(module has no anchor)_ |
+| `tx2_elastic` | 90.0 | _(module has no anchor)_ |
+| `tx2_embossing` | 80.0 | _(module has no anchor)_ |
+| `tx2_envelope_flap` | 60.0 | _(module has no anchor)_ |
+| `tx2_envelope_gummed` | 60.0 | _(module has no anchor)_ |
+| `tx2_eraser` | 70.0 | _(module has no anchor)_ |
+| `tx2_eye_pointed_needle` | 50.0 | _(module has no anchor)_ |
+| `tx2_flameproofing` | 100.0 | _(module has no anchor)_ |
+| `tx2_flax_fibre` | 40.0 | _(module has no anchor)_ |
+| `tx2_flyer` | 70.0 | _(module has no anchor)_ |
+| `tx2_friction_match` | 80.0 | _(module has no anchor)_ |
+| `tx2_fulling` | 60.0 | _(module has no anchor)_ |
+| `tx2_gilling` | 40.0 | _(module has no anchor)_ |
+| `tx2_glass_fibre` | 130.0 | _(module has no anchor)_ |
+| `tx2_gramophone` | 140.0 | _(module has no anchor)_ |
+| `tx2_hackling` | 40.0 | _(module has no anchor)_ |
+| `tx2_heddle` | 40.0 | _(module has no anchor)_ |
+| `tx2_hemp_fibre` | 40.0 | _(module has no anchor)_ |
+| `tx2_hook_and_eye` | 50.0 | _(module has no anchor)_ |
+| `tx2_jacquard_cards` | 80.0 | _(module has no anchor)_ |
+| `tx2_jacquard_head` | 200.0 | _(module has no anchor)_ |
+| `tx2_jute_fibre` | 50.0 | _(module has no anchor)_ |
+| `tx2_lasting_machine` | 120.0 | _(module has no anchor)_ |
+| `tx2_latch_needle` | 90.0 | _(module has no anchor)_ |
+| `tx2_let_off_motion` | 60.0 | _(module has no anchor)_ |
+| `tx2_lockstitch` | 100.0 | _(module has no anchor)_ |
+| `tx2_mass_soap` | 80.0 | _(module has no anchor)_ |
+| `tx2_mercerising` | 100.0 | _(module has no anchor)_ |
+| `tx2_milling` | 40.0 | _(module has no anchor)_ |
+| `tx2_mirror` | 70.0 | _(module has no anchor)_ |
+| `tx2_mohair` | 50.0 | _(module has no anchor)_ |
+| `tx2_mothproofing` | 90.0 | _(module has no anchor)_ |
+| `tx2_mule_jenny` | 160.0 | _(module has no anchor)_ |
+| `tx2_needle` | 40.0 | _(module has no anchor)_ |
+| `tx2_nylon_6_6` | 180.0 | _(module has no anchor)_ |
+| `tx2_overlock_stitch` | 110.0 | _(module has no anchor)_ |
+| `tx2_paper_bag` | 60.0 | _(module has no anchor)_ |
+| `tx2_paper_pattern` | 100.0 | _(module has no anchor)_ |
+| `tx2_paperclip` | 50.0 | _(module has no anchor)_ |
+| `tx2_pattern_grading` | 80.0 | _(module has no anchor)_ |
+| `tx2_permanent_press` | 120.0 | _(module has no anchor)_ |
+| `tx2_picking_mechanism` | 100.0 | _(module has no anchor)_ |
+| `tx2_pin` | 40.0 | _(module has no anchor)_ |
+| `tx2_playing_card` | 100.0 | _(module has no anchor)_ |
+| `tx2_polyester` | 180.0 | _(module has no anchor)_ |
+| `tx2_postcard` | 70.0 | _(module has no anchor)_ |
+| `tx2_press_stud` | 80.0 | _(module has no anchor)_ |
+| `tx2_printing_block` | 100.0 | _(module has no anchor)_ |
+| `tx2_printing_roller` | 160.0 | _(module has no anchor)_ |
+| `tx2_printing_screen` | 120.0 | _(module has no anchor)_ |
+| `tx2_radio_set` | 150.0 | _(module has no anchor)_ |
+| `tx2_raising` | 80.0 | _(module has no anchor)_ |
+| `tx2_ramie_fibre` | 50.0 | _(module has no anchor)_ |
+| `tx2_rayon_acetate` | 140.0 | _(module has no anchor)_ |
+| `tx2_rayon_cupro` | 150.0 | _(module has no anchor)_ |
+| `tx2_razor_blade` | 100.0 | _(module has no anchor)_ |
+| `tx2_ready_to_wear` | 120.0 | _(module has no anchor)_ |
+| `tx2_resist_dyeing` | 70.0 | _(module has no anchor)_ |
+| `tx2_retting` | 30.0 | _(module has no anchor)_ |
+| `tx2_ring_frame` | 120.0 | _(module has no anchor)_ |
+| `tx2_rope_lay` | 40.0 | _(module has no anchor)_ |
+| `tx2_ropemaking_machine` | 110.0 | _(module has no anchor)_ |
+| `tx2_roving_frame` | 60.0 | _(module has no anchor)_ |
+| `tx2_rubber_soles` | 100.0 | _(module has no anchor)_ |
+| `tx2_safety_match` | 100.0 | _(module has no anchor)_ |
+| `tx2_scouring` | 40.0 | _(module has no anchor)_ |
+| `tx2_screw_cap` | 80.0 | _(module has no anchor)_ |
+| `tx2_scutching` | 50.0 | _(module has no anchor)_ |
+| `tx2_selvedge` | 40.0 | _(module has no anchor)_ |
+| `tx2_sericulture` | 80.0 | _(module has no anchor)_ |
+| `tx2_sewing_machine_domestic` | 140.0 | _(module has no anchor)_ |
+| `tx2_sewing_machine_industrial` | 150.0 | _(module has no anchor)_ |
+| `tx2_shaft` | 50.0 | _(module has no anchor)_ |
+| `tx2_shampoo` | 100.0 | _(module has no anchor)_ |
+| `tx2_shearing` | 70.0 | _(module has no anchor)_ |
+| `tx2_shed` | 30.0 | _(module has no anchor)_ |
+| `tx2_shoemaking_mechanised` | 150.0 | _(module has no anchor)_ |
+| `tx2_shuttle` | 50.0 | _(module has no anchor)_ |
+| `tx2_silk_fibre` | 40.0 | _(module has no anchor)_ |
+| `tx2_singeing` | 60.0 | _(module has no anchor)_ |
+| `tx2_sizing_systems` | 100.0 | _(module has no anchor)_ |
+| `tx2_sliver_preparation` | 40.0 | _(module has no anchor)_ |
+| `tx2_spectacle_frame` | 60.0 | _(module has no anchor)_ |
+| `tx2_splitting` | 70.0 | _(module has no anchor)_ |
+| `tx2_stapler` | 100.0 | _(module has no anchor)_ |
+| `tx2_stocking_frame` | 140.0 | _(module has no anchor)_ |
+| `tx2_take_up_motion` | 60.0 | _(module has no anchor)_ |
+| `tx2_temple` | 40.0 | _(module has no anchor)_ |
+| `tx2_throstle_frame` | 100.0 | _(module has no anchor)_ |
+| `tx2_tin_can` | 80.0 | _(module has no anchor)_ |
+| `tx2_tin_toy` | 90.0 | _(module has no anchor)_ |
+| `tx2_toothpaste_tube` | 100.0 | _(module has no anchor)_ |
+| `tx2_twist_insertion` | 50.0 | _(module has no anchor)_ |
+| `tx2_warp_knitting` | 130.0 | _(module has no anchor)_ |
+| `tx2_warp_sizing` | 50.0 | _(module has no anchor)_ |
+| `tx2_warping_mill` | 60.0 | _(module has no anchor)_ |
+| `tx2_watch_case` | 80.0 | _(module has no anchor)_ |
+| `tx2_waterproofing` | 80.0 | _(module has no anchor)_ |
+| `tx2_wild_silk` | 70.0 | _(module has no anchor)_ |
+| `tx2_wool_fibre` | 40.0 | _(module has no anchor)_ |
+| `tx2_worsted` | 60.0 | _(module has no anchor)_ |
 
 ### 91_household.md
 

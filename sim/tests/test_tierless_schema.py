@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from sim import treetool
+from sim import build_index
 from sim.engine import data
 
 
@@ -51,6 +52,16 @@ MIGRATED_BRANCHES = (
 
 
 class TierlessSchemaTests(unittest.TestCase):
+    def test_migrated_index_modules_do_not_render_tiers(self):
+        readme = os.path.join(build_index.KB, "README.md")
+        with open(readme) as source:
+            text = source.read()
+        for filename in build_index.TIERLESS_MODULES:
+            with self.subTest(filename=filename):
+                section = text.split("### %s" % filename, 1)[1].split("\n### ", 1)[0]
+                self.assertIn("| Node | Your hours | Recipe |", section)
+                self.assertNotIn("| Node | Tier |", section)
+
     def test_migrated_branch_nodes_are_tierless(self):
         for filename in MIGRATED_BRANCHES:
             with self.subTest(filename=filename):
