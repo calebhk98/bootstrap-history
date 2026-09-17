@@ -288,12 +288,34 @@ a milestone moves; it is the first thing anyone reads.
 | | milestone | state |
 |---|---|---|
 | 0 | the production side | **done.** 99.7% of consumption sites; `sim/validate_production.py` |
-| 1 | provenance and a burndown | **mechanism built, nothing migrated.** `sim/constants.py`; 98 named constants and 1,367 inline literals still to move |
-| 2 | the synthetic world | not started. See the note under it - it may no longer be needed in the form described |
+| 1 | provenance and a burndown | **under way, and it works.** `sim/constants.py`; the burndown reported 0 of 32 for its whole life until the two bugs behind that were fixed. `economy.py` (240 constants) and `cli.py` (11) migrated; `society.py`, `core.py`, `labour.py`, `projects.py` in flight |
+| 2 | the synthetic world | not started, and probably unnecessary - see the note below |
 | 3 | the household extraction | **done.** `sim/engine/actors/household.py`; all 9 fingerprint scenarios byte-identical |
-| 4 | food and people | **in progress.** Demography and agriculture being built as standalone modules under `sim/world/` |
-| 5 | the wage, and the price solve | **half done.** `sim/solve_prices.py` converges and prices every material in labour-hours. The WAGE half waits on 4 |
-| 6+ | transport, settlements, state finance, war | not started |
+| 4 | food and people | **built and NOT WIRED.** `sim/world/agriculture.py` and `demography.py` pass on their own terms; `docs/architecture/WIRING_MILESTONE_4.md` is the plan and predicts all 9 scenarios diverging from year 0 |
+| 5 | the wage, and the price solve | **material half done, wage half blocked.** Every material priced in labour-hours; capital wired in (~1% effect); rent built in `sim/world/deposits.py`; energy in flight. The WAGE waits on 4 |
+| 6+ | transport, settlements, state finance, war | **partly built, none wired.** `sim/world/transport.py` (freight from animal metabolism), `military_logistics.py` (an army's consumption and its supply range) exist standalone |
+
+**THE PATTERN THIS TABLE NOW SHOWS, and it is the thing to act on.** Five
+standalone modules under `sim/world/` - agriculture, demography, transport,
+deposits, military logistics - are built, tested and inert. None is wired
+into the engine. CLAUDE.md §4 says "coverage is not the same as being wired
+in" about `data/production/`; it applies here with more force, because a
+module that nothing calls cannot even be wrong yet.
+
+Building standalone was right and should continue - it is what let each of
+these be tested on its own terms rather than through a 4,000-line engine
+guarded by assertions about book prices. But the ratio has tipped. The next
+round's most valuable work is wiring, not another module.
+
+**WHAT IS ACTUALLY BLOCKING THE HEADLINE GOAL.** `Complaints/32` measured
+it: with rent zero, energy unpriced and capital unread, every price in this
+model was exactly the labour embodied in the good. Capital and rent are now
+in and energy is in flight, and the gap barely moved for the materials where
+the margin is not forced - mercury stays ~1,440x below book. The remaining
+lever is DEMAND, which is also the shared root of `Complaints/29` (joint
+production cannot be split from the cost side) and of the aggregate-demand
+disagreement recorded in `Complaints/35`. That is why a demand module is
+being built now rather than more supply-side data.
 
 Two things that were not obvious when this plan was written and are now:
 
