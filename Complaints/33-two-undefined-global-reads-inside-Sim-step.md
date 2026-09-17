@@ -1,88 +1,91 @@
-# `Sim.step` reads an undefined global `n` in two places
+# WITHDRAWN: the "undefined global in `Sim.step`" was an artefact I created and then diagnosed
 
-**Type:** Latent bug, engine
-**Priority:** Medium. It cannot be hit by anything we currently run, which is exactly why it has survived.
+**Type:** Retracted finding / process failure
+**Priority:** The retraction is low. The lesson is high.
 
-## What is there
+**Status: the bug described below DOES NOT EXIST and never did.** This file is
+kept rather than deleted because the way it came to be written is worth more
+than the thing it claimed.
 
-`sim/engine/core.py`, inside `Sim.step`:
+## What this complaint originally said
 
-```
-1971:   if not any(_is_gone(t) for t in n["lab"]):
-2438:   blocked = [t for t, want in n["lab"].items()
-```
+That `sim/engine/core.py` contained two reads of an undefined global `n`
+inside `Sim.step`, at lines 1971 and 2438, which would raise `NameError` if
+reached and were therefore dead code sitting in the engine's main tick. It
+was asserted with a disassembly, a count of `LOAD_GLOBAL` instructions, and a
+list of every non-builtin non-module global in the function. It was
+confidently wrong.
 
-There is no module-level `n` in `core.py` and no builtin `n`. Both compile to
-`LOAD_GLOBAL 'n'`. Reaching either line raises `NameError: name 'n' is not
-defined`.
-
-Found by disassembly rather than by reading, which is the point:
-
-```python
-step = <the code object for Sim.step>
-[ins for ins in dis.get_instructions(step)
- if "LOAD_GLOBAL" in ins.opname and ins.argval == "n"]     # two hits
-```
-
-The set of `LOAD_GLOBAL` names in `Sim.step` that are neither module-level
-nor builtin is exactly `['n']`.
-
-## Why nothing has noticed
-
-The suite is green at 1,670 checks and all nine `perf_fingerprint` scenarios
-run to completion. So in every path we exercise, these two lines are dead.
-They do not look dead. They sit in the engine's main tick, inside what reads
-like ordinary guard logic about a node's labour requirements, and a reader
-skimming for the reason a technology is blocked would believe them.
-
-Dead code that looks live is worse than dead code that looks dead, because
-the next person to change the surrounding logic will reason about it.
-
-## How it surfaced
-
-The round 3 naming sweep. An agent renaming locals in `core.py` bound these
-two references to a real local, which removed `n` from `co_names`.
-`prove_rename_safe.py` refused the file:
+## What was actually true
 
 ```
-Sim.step: an ATTRIBUTE or GLOBAL changed, not a local - removed ['n'], added nothing
+c25259b  (before naming round 3)   LOAD_GLOBAL 'n' in Sim.step: 0
+39f5d14  (before naming round 3)   LOAD_GLOBAL 'n' in Sim.step: 0
+993b2c7  (the commit that introduced it)  LOAD_GLOBAL 'n' in Sim.step: 2
 ```
 
-That is the prover doing exactly its job. The rename would have turned
-"raises NameError" into "reads an actual node dict", which is a behaviour
-change wearing a rename's clothes - and it would have gone in under a commit
-message about naming, unreviewed. A second effect in the same function:
-`year` moved from `co_varnames` to `co_cellvars`, meaning a nested scope
-began closing over it, which is the scope-boundary form of NAMING_PLAN A.5's
-third hazard.
+At every real commit in this repository's history, `n` in `Sim.step` is a
+plain local: present in `co_varnames`, absent from `co_names`. The two
+`LOAD_GLOBAL` instructions exist in exactly one commit, `993b2c7`, and that
+commit is mine.
 
-This is the first time on this branch the bytecode proof has found something
-the test suite could not. Worth recording on its own: the suite asserts on
-outputs, and an unreachable line produces no output to assert on.
+## How I created it and then found it
 
-## What NOT to do
+`993b2c7` is the burndown fix. I staged three files explicitly. It committed
+six, because six agents shared this checkout AND its git index, another
+session had staged into that index first, and `git commit` commits the index
+rather than what you just added. One of the three extra files was
+`sim/engine/core.py`, caught mid-rename: an agent had renamed the local `n`
+to `node` at its binding site but had not yet reached those two references,
+so `n` there was briefly an unbound name that compiled to `LOAD_GLOBAL`.
 
-Do not fix it inside a naming commit. A locals-only rename sweep is the
-wrong place for a behaviour change, and "the rename happens to make the line
-work" is not a reason to believe the line is right.
+I then ran `prove_rename_safe.py` against HEAD. HEAD was my own broken
+commit. The prover correctly reported that `co_names` had lost `n`, meaning
+the working tree was closer to correct than the thing I was comparing it to.
+I read that backwards, disassembled the broken commit, found exactly what a
+half-finished rename looks like, and wrote it up as a latent engine bug -
+including a section on how not to fix it, and a paragraph congratulating the
+bytecode proof for finding something the test suite could not.
 
-## What to do
+Then I messaged the agent and told it to revert the two sites to match the
+broken state. **It refused, with evidence**, and was right to. An agent that
+had done as it was told would have reintroduced a `NameError` that had never
+existed, in a commit whose message said it was restoring correctness.
 
-Work out what `n` was MEANT to be at each site before binding it to
-anything. The two lines want a node record - the surrounding code is about a
-node's `lab` requirements - so the likely history is a local that was renamed
-or a loop that was restructured, leaving these behind. Establishing which,
-and whether the guard they implement is still wanted at all, decides between
-three different fixes: bind them correctly, delete them, or restore the loop
-they belonged to.
+## The lesson, which is the reason this file survives
 
-Whichever it is, it needs its own commit, a regression test that reaches the
-line, and a `perf_fingerprint` check - because if the guard starts firing,
-behaviour changes.
+`CLAUDE.md` 6 already says "when you instrument a bug, the instrument is
+part of the experiment". This is the same failure one level up: **the commit
+was part of the experiment.** I created a state, made it the baseline,
+compared against it, and could not tell my own artefact from the code's
+history - because once committed, an artefact looks exactly like history.
 
-## Related
+Three specific things to carry forward:
 
-`Complaints/31` is the other case where a tool refused something correct-
-looking and was right. The pattern is the same: a checker that only accepts
-what it can prove will sometimes reject a change that a reader is sure about,
-and the rejection is worth reading rather than working around.
+1. **In a shared checkout, `git commit` takes the INDEX, not your files.**
+   Use `git commit -o <pathspec>`, which commits only the named paths
+   whatever else is staged. I learned this the shallow way once already this
+   session - after a directory-level `git add` swept in a file another agent
+   was still writing - and wrote down "stage files, not directories", which
+   was too weak a rule to prevent the recurrence.
+
+2. **`HEAD` is not a baseline in a shared checkout.** Prove against a fixed
+   commit chosen before the work started. Two agents worked this out
+   independently and both anchored to `39f5d14` instead of `HEAD`, which is
+   why their proofs were sound while my diagnosis was not.
+
+3. **A finding that arrives with a clean mechanism deserves MORE suspicion,
+   not less.** Every piece of evidence here was real: the instruction counts,
+   the `co_names` diff, the absent module-level binding. The disassembly was
+   correct. The input was wrong, and a correct method on a wrong input
+   produces a confident, well-evidenced, wholly fictitious result.
+
+## Also withdrawn
+
+The claim, made in `dcf84a0`'s commit message and elsewhere, that this was
+"the first time on this branch the bytecode proof found something the test
+suite could not". It found a mid-edit file, which is what it is for, and the
+suite would have caught the same thing had it been run against that commit.
+The prover's real wins on this branch are the naming rounds, where it proved
+roughly 900 renames inert across sixteen files - which is a better result
+than the one I invented for it.
