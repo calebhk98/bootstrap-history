@@ -200,9 +200,13 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   and 3 hidden behind `self.__dict__[...]`), ~314 methods, six mixins that
   all talk through `self`. A full decomposition has been considered and
   rejected with reasons in `sim/ARCHITECTURE.md`. Do not silently restart it.
-- **Five of eight engine files are majority comment.** The comments are how
-  agents hand each other the reason a thing is the way it is. They are
-  load-bearing. Do not strip them to "clean up".
+- **Much of the engine is majority comment, and the comments are
+  load-bearing.** They are how agents hand each other the reason a thing is
+  the way it is. Do not strip them to "clean up". (The old "five of eight"
+  figure was stale and, worse, unreproducible - it never recorded whether a
+  docstring counted as comment or code. Counting docstrings as
+  documentation it is four of eight; as code, one. `sim/ARCHITECTURE.md`
+  now states the rule and gives the command.)
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 

@@ -116,18 +116,58 @@ unchanged, because that is the part nothing currently guards.
 
 ## What IS worth restructuring
 
-Measured code lines, excluding comments and blank lines:
+Code lines, counted as **lines that are neither blank nor comment-only**
+(docstrings count as code under this rule). Re-measured 2026-09-17, after
+the household extraction, four naming rounds and the economy.py constants
+migration:
 
-    cli.py                2,128 code
-    economy.py            1,514 code
-    proto/dispatch.py     1,507 code
-    proto/render.py       1,337 code
-    society.py            1,114 code
-    projects.py           1,071 code
-    core.py                 913 code   ( 2,363 total, 61% comment)
-    labour.py               739 code   ( 2,085 total, 65% comment)
-    protocol.py              65 code   (the shim)
-    test_regressions.py       5 code   (the shim)
+    economy.py            4,665 code   (6,268 total, 26% comment)
+    cli.py                2,481 code   (3,322 total, 25% comment)
+    society.py            1,669 code   (2,633 total, 37% comment)
+    proto/dispatch.py     1,591 code   (2,597 total, 39% comment)
+    projects.py           1,518 code   (2,667 total, 43% comment)
+    core.py               1,512 code   (3,169 total, 52% comment)
+    proto/render.py       1,440 code   (1,764 total, 18% comment)
+    labour.py             1,297 code   (2,180 total, 41% comment)
+    protocol.py              78 code   (   81 total,  4% comment)
+    test_regressions.py      24 code   (   41 total, 41% comment)
+
+    python3 - <<'EOF'
+    import os
+    for p in [...]:
+        lines = open(p).read().splitlines()
+        code = sum(1 for l in lines
+                   if l.strip() and not l.strip().startswith("#"))
+        print(p, code, len(lines))
+    EOF
+
+THE RULE IS SPELLED OUT AND THE COMMAND IS GIVEN because the previous
+version of this table recorded neither, and the numbers could not be
+reproduced. Two plausible readings of "excluding comments and blank lines"
+- with and without docstrings counted as code - both disagree with the old
+figures, so nobody can now tell what was measured or extend the table
+consistently. Per CLAUDE.md SS8, a count in a prose document has to be
+something the next person can re-run, not a number they have to trust.
+
+Two things this re-measurement shows.
+
+economy.py has roughly tripled and is now by a wide margin the largest file
+in the engine, most of that from the constants migration turning 240 bare
+literals into declare() calls with sourced `why` text. Its comment share
+FELL to 26% while its real documentation went sharply up, because a `why`
+string is code under this rule and a `#` line is not. That is a good
+illustration of why the rule has to be stated.
+
+"Five of eight engine files are majority comment" is now stale, and HOW
+stale depends on the rule - which is the point. Counting docstrings as
+code, only core.py is majority comment (52%). Counting them as
+documentation, four are: labour.py 64%, society.py 58%, projects.py 58%,
+core.py 54%. Either way it is four or one, not five.
+
+THE CLAIM THAT MATTERS IS UNAFFECTED. The comments are how agents hand each
+other the reason a thing is the way it is, they are load-bearing, and they
+must not be stripped to "clean up". That was never really an argument about
+percentages.
 
 Five of eight engine files are **majority comment**. `core.py` looks like a
 2,200-line file and is 893 lines of code. Splitting those by line count would
