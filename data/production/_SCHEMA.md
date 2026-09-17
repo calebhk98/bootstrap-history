@@ -32,6 +32,39 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
 
+## WHAT THIS SCHEMA DOES NOT MODEL, AND THE SIZE OF THE HOLE
+
+Found by building `sim/solve_prices.py` and reading the answer, which is the
+only way these things get found.
+
+The solver computes, for every material, the cost of its inputs plus the cost
+of its labour. That is **prime cost**. It is not a price, and the gap is
+structural rather than a matter of precision:
+
+| missing | status |
+|---|---|
+| **capital** | **no field exists.** A furnace, a forge, a mill, a ship |
+| rent | `extracted_from` marks it; the solver fixes it at zero this round |
+| energy | `energy_mj` exists; nothing prices it yet |
+| transport | not modelled anywhere |
+| margin, risk, failed batches | not modelled anywhere |
+
+Capital is the big one and the only one with no field at all. Every entry
+here says what a process eats and nothing about what it is done *in*. The
+tech tree carries that as `cap`, which is 23.5% of its whole cost base, and
+none of it has crossed into this directory.
+
+The size of the hole, measured rather than guessed: a kilogram of iron bar
+comes out at **0.95 labour-hours**, which at the book unskilled wage is 71
+denarii a tonne against a book price of 1,000. Fourteen times. Put the other
+way round, the computed number says an unskilled labourer could buy a kilo of
+iron with about an hour's work - which is roughly true today and was nowhere
+near true in Rome, where iron was dear.
+
+So the solver's numbers are an **honest lower bound**, and knowing precisely
+which four things are missing is worth more than a closer number would be.
+Do not add a fudge factor to close the gap. Add capital.
+
 ## Confidence, and what it is actually measuring
 
 `conf` grades **how well the numbers are evidenced**, not how sure you feel.
