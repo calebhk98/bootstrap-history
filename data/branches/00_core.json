@@ -1,0 +1,6131 @@
+[
+ {
+  "adopt_yrs": 10.0,
+  "art": 10.0,
+  "build_yrs": 3.0,
+  "cap": 45000.0,
+  "cat": "institution",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -2,
+  "id": "academy_network",
+  "kb": "03_SOCIAL_POLITICS.md#academy_network",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scholar": 8000.0,
+   "scribe": 6000.0
+  },
+  "mat": {},
+  "name": "Three geographically separated academies",
+  "note": "Three houses, sited far enough apart, geographically and politically, that no single disaster or crackdown takes all of them at once: a dry archive site, a western site, an eastern site. Every civilization you can play has its own version of this problem and its own ground to choose (Alexandria's papyrus-preserving dryness is the Roman answer; look to what your own geography and political map actually offer). Redundancy is the only defence and it is not optional. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. THE STATE WILL ACTIVELY RESIST THIS. A private association spanning several regions looks like exactly what every pre-modern government fears: a faction with a loyalty of its own (Trajan refuses Pliny even a licensed fire brigade at Nicomedia for this reason, Ep. 10.34). You need the favour of whoever actually rules where you are before you attempt it, and you should site the three houses under three different patrons so that it does not look like one organisation.",
+  "ph": 2500.0,
+  "pre": [
+   "corpus_dispersed",
+   "endowment_land"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 10.0,
+  "sus": 2,
+  "traits": [
+   "status_threatening"
+  ],
+  "up": 9000.0,
+  "yrs": 10.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 1.0,
+  "cap": 200.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "algebra_symbolic",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 800.0
+  },
+  "mat": {},
+  "name": "Symbolic algebra and equation notation",
+  "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you add 5 and triple it you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere.",
+  "ph": 500.0,
+  "pre": [
+   "arithmetic_positional"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 3.0,
+  "cap": 3000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "analytical_chemistry",
+  "kb": "20_chemistry.md#analytical_chemistry",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 6000.0
+  },
+  "mat": {
+   "glass_raw_kg": 200.0
+  },
+  "name": "Gravimetric and volumetric analysis",
+  "note": "Not optional and not glamorous. Without quantitative analysis every process in your programme is a folk recipe that degrades with each retelling. This node is what makes the corpus reproducible by people you never met.",
+  "ph": 900.0,
+  "pre": [
+   "atomic_theory",
+   "balance_analytical",
+   "hydrochloric_acid",
+   "nitric_acid"
+  ],
+  "req_any": [],
+  "rev": 1200.0,
+  "risk": 0.2,
+  "sch": 4.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 2500.0,
+  "yrs": 3.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide production at 2000 C requires electric arc furnace]",
+  "adopt_yrs": 12.0,
+  "art": 60.0,
+  "build_yrs": 3.0,
+  "cap": 60000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "arc_furnace_ferroalloys",
+  "kb": "10_metallurgy.md#alloy_steels_ferroalloys",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 4000.0,
+   "furnaceman": 9000.0
+  },
+  "mat": {
+   "carbon_kg": 60000.0,
+   "iron_ore_kg": 150000.0,
+   "lime_kg": 90000.0
+  },
+  "name": "Electric arc furnace, carbides and ferroalloys",
+  "note": "Temperatures no fuel-fired furnace reaches. Gives calcium carbide (hence acetylene), ferrosilicon, ferromanganese, tungsten and chromium steels, and high-purity graphite for the semiconductor programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 600.0,
+  "pre": [
+   "cap_heat_3000",
+   "high_temp_furnace",
+   "power_grid"
+  ],
+  "req_any": [],
+  "rev": 40000.0,
+  "risk": 0.35,
+  "sch": 6.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 35000.0,
+  "yrs": 12.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent carbon filaments require high vacuum bulb to prevent oxidation]",
+  "adopt_yrs": 0.0,
+  "art": 10.0,
+  "build_yrs": 3.0,
+  "cap": 7000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "arc_light_lamp",
+  "kb": "50_electricity.md#incandescent_lamp",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 4000.0,
+   "glassblower": 3000.0
+  },
+  "mat": {
+   "charcoal_kg": 900.0,
+   "copper_kg": 600.0,
+   "glass_raw_kg": 400.0
+  },
+  "name": "Arc lighting and incandescent lamps",
+  "note": "Light without fire, in a city terrified of fire, is one of the great political gifts you can make: the crowded wooden and tenement quarters of any pre-industrial city burn constantly and the fear is real (Rome's insulae are the best-documented case). Carbon filaments first; tungsten needs a metallurgy you will not have for a long time.",
+  "ph": 500.0,
+  "pre": [
+   "cap_vac_1e3",
+   "dynamo",
+   "vacuum_pumps"
+  ],
+  "req_any": [
+   {
+    "group": "conductor",
+    "options": {
+     "copper_refining": 1.0,
+     "mat_aluminium": 0.6
+    }
+   }
+  ],
+  "rev": 9000.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 10,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 4000.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 1.0,
+  "cap": 300.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "arithmetic_positional",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 2500.0
+  },
+  "mat": {},
+  "name": "Decimal arithmetic curriculum: zero, negatives, and fractions",
+  "note": "Extend introductory place-value notation into a taught decimal arithmetic curriculum covering zero as a number, negative quantities, and decimal fractions. Time represents instruction and adoption, not rediscovery by the founder.",
+  "ph": 450.0,
+  "pre": [
+   "sc2_notation_positional"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 600.0,
+  "cat": "foundation",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "arrival_orientation",
+  "kb": "00_BRIEFING.md",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Six months of listening before you act",
+  "note": "OPTIONAL, and no longer a prerequisite for anything. It buys you accurate local prices, the actual law of this province, who is who, and a large reduction in early blunder risk. Skip it if you want to move fast and find out the hard way what things cost. The simulator lets you skip it, because a model that forces the cautious opening is not a model, it is an opinion.",
+  "ph": 900.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.02,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 0.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 300.0,
+  "cat": "chemistry",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "atomic_theory",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 2000.0
+  },
+  "mat": {},
+  "name": "Atoms, elements, atomic weights, stoichiometry, the periodic table",
+  "note": "You can write the periodic table from memory on day one. It is worth roughly 150 years of chemistry. It only becomes operational once you have the analytical balance, so write it early and prove it later.",
+  "ph": 1000.0,
+  "pre": [
+   "arithmetic_positional",
+   "scientific_method"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 2.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precise knife edges and beam require fine manufacturing tolerance]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 2200.0,
+  "cat": "instruments",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "balance_analytical",
+  "kb": "30_glass_optics.md#balance_analytical",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 2500.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "agate_kg": 1.0,
+   "brass_kg": 40.0,
+   "steel_noric_kg": 25.0
+  },
+  "name": "Analytical balance reading to 1 milligram",
+  "note": "Agate or hardened steel knife edges, a beam stiff enough not to sag, damping, a draught shield, and a master weight set. This is the instrument that converts alchemy into chemistry. Nothing downstream is reproducible without it.",
+  "ph": 700.0,
+  "pre": [
+   "cap_tol_100um",
+   "cementation_steel",
+   "precision_three_plate",
+   "units_standards"
+  ],
+  "req_any": [],
+  "rev": 900.0,
+  "risk": 0.3,
+  "sch": 2.0,
+  "sus": 2,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 500.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 300.0,
+  "cat": "instruments",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "barometer",
+  "kb": "30_glass_optics.md#thermometer",
+  "kind": "ENGINEERING",
+  "lab": {
+   "glassblower": 500.0
+  },
+  "mat": {
+   "glass_raw_kg": 15.0,
+   "mercury_kg": 12.0
+  },
+  "name": "Mercury barometer, and the first hard vacuum",
+  "note": "The Torricellian space above the column is free vacuum and it will shock every philosopher in the Empire, because Aristotle says it cannot exist. Handle that argument carefully; it is a bigger cultural event than a technical one.",
+  "ph": 200.0,
+  "pre": [
+   "glass_labware",
+   "mercury_supply"
+  ],
+  "req_any": [],
+  "rev": 300.0,
+  "risk": 0.15,
+  "sch": 1.0,
+  "sus": 6,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 100.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 2000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "bellows_water_blown",
+  "kb": "10_metallurgy.md#bellows_water_blown",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 1800.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "iron_bar_kg": 250.0,
+   "leather_kg": 150.0,
+   "timber_m3": 25.0
+  },
+  "name": "Water-driven double-acting bellows",
+  "note": "The single highest-leverage mechanical change available to pre-industrial metallurgy. Continuous high-volume blast is what separates a bloomery from a blast furnace.",
+  "ph": 300.0,
+  "pre": [
+   "refractory_fireclay",
+   "water_power_scale"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 300 tonnes of product a year it consumes about 900 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 1,200 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: produces liquid cast iron requiring water-blown continuous blast furnace heat]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 300,
+  "art": 6.0,
+  "build_yrs": 5.0,
+  "cap": 12000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "blast_furnace",
+  "kb": "10_metallurgy.md#blast_furnace_cast_iron",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 9000.0,
+   "labourer": 14000.0,
+   "potter": 1500.0,
+   "smith": 2500.0
+  },
+  "mat": {
+   "charcoal_kg": 4500000.0,
+   "clay_kg": 40000.0,
+   "iron_ore_kg": 3300000.0,
+   "lime_kg": 25000.0
+  },
+  "name": "Tall shaft blast furnace and cast iron",
+  "note": "Cast iron has been routine in Han China for 500 years and is unknown in the Mediterranean and Atlantic worlds; whichever of those you are building from, this is the biggest single technology gap you face. Height, continuous blast and a limestone flux turn a bloomery into a foundry. High risk: the first two or three furnaces will chill, scaffold or burn through. This becomes the financial engine of the middle game. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 900.0,
+  "pre": [
+   "bellows_water_blown",
+   "cap_heat_1300",
+   "charcoal_industrial"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.8,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.8
+    }
+   },
+   {
+    "group": "blast",
+    "options": {
+     "bellows_water_blown": 1.0,
+     "cap_power_muscle": 0.35,
+     "cap_power_steam": 1.2
+    }
+   }
+  ],
+  "rev": 22000.0,
+  "risk": 0.35,
+  "sch": 1.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 7000.0,
+  "yrs": 5.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: steam engine cylinders need tight tolerance for piston sealing]",
+  "adopt_yrs": 0.0,
+  "art": 5.0,
+  "build_yrs": 3.0,
+  "cap": 6000.0,
+  "cat": "precision",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "boring_mill",
+  "kb": "40_power_precision.md#boring_mill",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 3000.0,
+   "machinist": 4000.0,
+   "smith": 2500.0
+  },
+  "mat": {
+   "iron_bar_kg": 3000.0,
+   "steel_noric_kg": 120.0
+  },
+  "name": "Cylinder boring mill",
+  "note": "Wilkinson's machine, and the actual reason there was no useful steam engine before 1775. The bar must be supported at both ends so it cannot follow the existing crooked hole. Without this there is no piston that seals, and without that there is no engine.",
+  "ph": 600.0,
+  "pre": [
+   "blast_furnace",
+   "cap_tol_100um",
+   "screw_lathe"
+  ],
+  "req_any": [],
+  "rev": 2500.0,
+  "risk": 0.3,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 2200.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 150.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "calculus",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 1200.0
+  },
+  "mat": {},
+  "name": "Differential and integral calculus",
+  "note": "Archimedes' method of exhaustion, where it is available to you, is the nearest foundation, and it is a good one. Present as completing Archimedes.",
+  "ph": 800.0,
+  "pre": [
+   "geometry_analytic"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.12,
+  "sch": 2.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 1500.0,
+  "cat": "glass_optics",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "camera_obscura",
+  "kb": "30_glass_optics.md#camera_obscura_photography",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 300.0,
+   "carpenter": 400.0
+  },
+  "mat": {
+   "glass_raw_kg": 6.0,
+   "timber_m3": 2.0
+  },
+  "name": "Camera obscura with lens",
+  "note": "Immediate cultural value as a drawing and surveying aid, and it teaches optics to your students far faster than argument. Alhazen is 900 years away and the principle is already latent in Aristotle's pinhole observations.",
+  "ph": 120.0,
+  "pre": [
+   "cap_tol_1mm",
+   "lens_grinding"
+  ],
+  "req_any": [],
+  "rev": 600.0,
+  "risk": 0.08,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 100.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "capability",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "cap_power_human",
+  "kb": "",
+  "kind": "CAPABILITY",
+  "lab": {},
+  "mat": {},
+  "name": "Human muscle power",
+  "note": "People can supply continuous hand, foot, treadwheel, capstan, or hauling power; one adult sustains roughly 75 W. This universal capability does not imply oxen, horses, wheeled traction, or any other draught-animal system.",
+  "ph": 0.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 800.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "case_hardening",
+  "kb": "10_metallurgy.md#case_hardening",
+  "kind": "ENGINEERING",
+  "lab": {
+   "smith": 2000.0
+  },
+  "mat": {
+   "charcoal_kg": 3000.0,
+   "iron_bar_kg": 300.0,
+   "olive_oil_kg": 150.0
+  },
+  "name": "Systematic case hardening, quenching and tempering",
+  "note": "Smiths already do all of this in any developed ironworking tradition, but inconsistently and without a temperature scale. Give them temper colours on polished steel as a repeatable index and the reject rate collapses. Cheap, immediate, militarily valuable, entirely unmagical.",
+  "ph": 300.0,
+  "pre": [
+   "units_standards",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 1500.0,
+  "risk": 0.12,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 400.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 60 tonnes of product a year it consumes about 120 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 160 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: carbon diffusion into iron bars at sustained ~1000C]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 60,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 3000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "cementation_steel",
+  "kb": "10_metallurgy.md#cementation_steel",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 3500.0,
+   "labourer": 3000.0,
+   "smith": 2000.0
+  },
+  "mat": {
+   "charcoal_kg": 240000.0,
+   "clay_kg": 8000.0,
+   "iron_bar_kg": 4000.0
+  },
+  "name": "Blister steel by cementation",
+  "note": "Bar iron packed in charcoal in a sealed chest, held at roughly 1000 C for days. Carbon diffuses in slowly, on the order of millimetres per day, so use thin bars. Consistent steel in quantity for the first time.",
+  "ph": 400.0,
+  "pre": [
+   "cap_heat_1100",
+   "case_hardening",
+   "refractory_fireclay"
+  ],
+  "req_any": [
+   {
+    "group": "carburiser",
+    "options": {
+     "bone_kg": 0.8,
+     "coal_kg": 0.6,
+     "mat_charcoal": 1.0
+    }
+   }
+  ],
+  "rev": 6000.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 1800.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 3.0,
+  "cap": 3500.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "charcoal_industrial",
+  "kb": "10_metallurgy.md#charcoal_industrial",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 12000.0
+  },
+  "mat": {
+   "firewood_kg": 400000.0,
+   "iugerum_land": 200.0
+  },
+  "name": "Coppiced charcoal at industrial scale",
+  "note": "Charcoal supply, not ore, is the real ceiling on pre-coke iron output, and it deforests regions. Coppice rotation of 15-20 years on dedicated land is the answer. Budget the land or your furnace will starve.",
+  "ph": 250.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 1200.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 2200.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 3.0,
+  "cap": 6000.0,
+  "cat": "social",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "citizenship",
+  "kb": "03_SOCIAL_POLITICS.md#citizenship",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Legal standing: a status the courts will hear",
+  "note": "In Rome this is citizenship by grant, and what it buys is provocatio, the right of appeal, which is the difference between a governor executing you and Rome hearing you. Every society has its own version of the same thing and none of them is optional: registered household status and rank under the Han, a free man's standing at the thing in Scandinavia, a burgess of a borough in England, membership of a calpulli among the Mexica. Without it you are a body someone may dispose of. Buy it the way it is bought here, with a public benefaction and the right friends.",
+  "ph": 250.0,
+  "pre": [
+   "patron_local"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce",
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "buildings",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "civ_circus_racecourse",
+  "kb": "85_transport_civil.md",
+  "kind": "ENGINEERING",
+  "lab": {},
+  "mat": {},
+  "name": "Circus and horse-racing venue",
+  "note": "A long U-shaped racing venue with starting gates, a central spina, turning posts, tiered spectator seating, and space for chariot or horse races. Roman circuses are racing venues, structurally and institutionally distinct from amphitheatres used for arena spectacles.",
+  "ph": 0.0,
+  "pre": [
+   "civ_arch_roman"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 2.0,
+  "build_yrs": 4.0,
+  "cap": 3000.0,
+  "cat": "structures",
+  "conf": "B",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 4,
+  "id": "civ_monumental_stone",
+  "kb": "87_construction.md#cn_quarry_wedge",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 20000.0,
+   "mason": 9000.0
+  },
+  "mat": {},
+  "name": "Monumental stone construction without iron tools",
+  "note": "Dressing and placing large stone using stone tools, sand abrasive, ramps and enormous organised labour. The absence of iron chisels is not the obstacle people assume: it changes the time per block, not the possibility. Nothing downstream requires it: it is what a society builds WITH its capability, not a step toward more.",
+  "ph": 150.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.12,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure",
+   "religious_adjacent",
+   "spectacle"
+  ],
+  "up": 0.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "clock_mechanical_escapement",
+  "kb": "40_power_precision.md#clockwork_escapement",
+  "kind": "ENGINEERING",
+  "lab": {},
+  "mat": {},
+  "name": "Weight-driven mechanical clock with verge escapement",
+  "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. This inherited medieval mechanism is the causal predecessor of later pendulum regulation.",
+  "ph": 0.0,
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: escapement and clock wheels require 0.1mm tolerance work]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 2200.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "clock_pendulum",
+  "kb": "40_power_precision.md#clockwork_escapement",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 3000.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "brass_kg": 60.0,
+   "iron_bar_kg": 150.0,
+   "steel_noric_kg": 25.0
+  },
+  "name": "Pendulum-regulated clock",
+  "note": "Replace a mechanical clock\u2019s foliot regulator with a pendulum whose near-isochronous swing provides much steadier timekeeping. The project includes the escapement geometry and fine gearing needed to exploit that regulator; balance springs are a separate portable-watch development. This is a seventeenth-century advance, not inherited medieval clockwork.",
+  "ph": 500.0,
+  "pre": [
+   "clock_mechanical_escapement",
+   "cap_tol_100um",
+   "case_hardening",
+   "master_screw"
+  ],
+  "req_any": [],
+  "rev": 2400.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure",
+   "labour_saving"
+  ],
+  "up": 700.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: coking coal to 900-1000 C to remove sulfur and volatiles]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 3.0,
+  "cap": 5000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "coal_coke",
+  "kb": "10_metallurgy.md#coal_and_coke",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 6000.0,
+   "miner": 6000.0
+  },
+  "mat": {
+   "coal_kg": 150000.0
+  },
+  "name": "Coal, and coking it",
+  "note": "Romans burn coal in Britain but never coke it. Raw coal ruins iron through sulfur; coking drives off sulfur and volatiles and leaves a strong porous fuel that will bear the burden in a tall furnace. Breaks the charcoal ceiling permanently.",
+  "ph": 350.0,
+  "pre": [
+   "cap_heat_1100",
+   "charcoal_industrial"
+  ],
+  "req_any": [],
+  "rev": 1800.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 2500.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 1.0,
+  "cap": 2500.0,
+  "cat": "institution",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "collegium_licensed",
+  "kb": "03_SOCIAL_POLITICS.md#collegium_licensed",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scribe": 300.0
+  },
+  "mat": {},
+  "name": "Licensed collegium of physicians and teachers",
+  "note": "Unlicensed associations are illegal in most of these societies, and for the same reason: a state that cannot see inside a private association suspects it is a faction (Trajan refuses Pliny even a fire brigade at Nicomedia for exactly this fear, Ep. 10.34). Get the licence, under whatever name your own government gives it, or your school is read as a conspiracy.",
+  "ph": 350.0,
+  "pre": [
+   "citizenship",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": -10,
+  "traits": [
+   "commerce"
+  ],
+  "up": 400.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_pure_4N added by a reviewer working node by node. Reason: electrorefining produces 99.99 percent pure copper]",
+  "adopt_yrs": 0.0,
+  "art": 4.0,
+  "build_yrs": 2.0,
+  "cap": 2500.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "copper_refining",
+  "kb": "50_electricity.md#wire_insulation",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 3000.0,
+   "smith": 2500.0
+  },
+  "mat": {
+   "copper_kg": 2000.0,
+   "linen_kg": 200.0,
+   "olive_oil_kg": 300.0,
+   "shellac_kg": 40.0,
+   "silk_kg": 15.0
+  },
+  "name": "High-purity copper and insulated wire",
+  "note": "You have no rubber and no gutta percha and will not have either. Silk wrapping, oiled linen, shellac varnish from the Indian trade, and bitumen for cables. Impurities in copper cost you conductivity badly, so fire-refine now and electro-refine as soon as you have current to spare.",
+  "ph": 400.0,
+  "pre": [
+   "cap_pure_4N",
+   "drawplate_wire",
+   "mat_copper"
+  ],
+  "req_any": [
+   {
+    "group": "conductor_stock",
+    "options": {
+     "cap_pure_4N": 1.0,
+     "mat_copper": 0.7
+    }
+   }
+  ],
+  "rev": 2000.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 1800.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 5.0,
+  "build_yrs": 8.0,
+  "cap": 6000.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -1,
+  "id": "corpus_dispersed",
+  "kb": "80_information_printing.md",
+  "kind": "INSTITUTION",
+  "lab": {
+   "artisan": 6000.0,
+   "labourer": 2000.0,
+   "scribe": 3000.0
+  },
+  "mat": {
+   "linen_rag_kg": 9000.0
+  },
+  "name": "Print and disperse hundreds of copies across three continents",
+  "note": "THE highest expected-value node in the tree, and it is cheap. The lesson of Alexandria is not that books burn, it is that single copies burn. Push copies into every library, temple archive and private collection from Britain to India. This is what carries the programme through 235-284 AD. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. Same objection as the press, multiplied. Hundreds of copies of a technical corpus in private hands is exactly what an anxious regime dislikes. Present it as a gift to the libraries of the Empire and give the first copies to the emperor's own foundations.",
+  "ph": 800.0,
+  "pre": [
+   "corpus_written",
+   "printing_press"
+  ],
+  "req_any": [],
+  "rev": 900.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "information",
+   "religious_adjacent",
+   "status_threatening"
+  ],
+  "up": 2500.0,
+  "yrs": 8.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 10.0,
+  "cap": 1500.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "corpus_written",
+  "kb": "80_information_printing.md",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scribe": 8000.0
+  },
+  "mat": {
+   "papyrus_sheet": 4000.0
+  },
+  "name": "Write the corpus: everything you know, in plain quantitative Greek and Latin",
+  "note": "The largest single call on your personal hours in the entire game, and the one you must not cut. Write plainly and with numbers. The alchemists' habit of deliberate obscurity destroyed centuries of work. Assume every reader is competent and knows nothing.",
+  "ph": 6000.0,
+  "pre": [
+   "scientific_method",
+   "units_standards"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.05,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "information"
+  ],
+  "up": 600.0,
+  "yrs": 10.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 700.0,
+  "cat": "power",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "crank_conrod",
+  "kb": "40_power_precision.md#crank_connecting_rod",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 1400.0,
+   "smith": 900.0
+  },
+  "mat": {
+   "iron_bar_kg": 200.0,
+   "timber_m3": 12.0
+  },
+  "name": "Crank, connecting rod, flywheel, cam and trip hammer",
+  "note": "Not attested in the Roman world until the Hierapolis sawmill relief, c. 3rd century. One afternoon for a good carpenter. Unlocks sawmills, ore stamps, forge hammers, pumps and eventually every engine.",
+  "ph": 300.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 600.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 250.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 6.0,
+  "cap": 2500.0,
+  "cat": "agriculture",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "crop_rotation",
+  "kb": "75_agriculture_food.md#crop_rotation",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 800.0,
+   "labourer": 6000.0
+  },
+  "mat": {
+   "iron_bar_kg": 250.0
+  },
+  "name": "Legume rotation, heavy plough, marling, selective breeding",
+  "note": "Columella already recommends legumes; the systematic three-field rotation and controlled comparison are yours. Slow because you cannot rush a growing season, which is why the yrs floor is 6. Feeds the surplus population that a technical civilisation requires and buys you enormous goodwill.",
+  "ph": 450.0,
+  "pre": [
+   "horse_collar",
+   "statistics_basic"
+  ],
+  "req_any": [],
+  "rev": 3000.0,
+  "risk": 0.15,
+  "sch": 1.0,
+  "sus": 0,
+  "traits": [
+   "food",
+   "infrastructure"
+  ],
+  "up": 800.0,
+  "yrs": 6.0
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 30 tonnes of product a year it consumes about 60 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 80 hectares of forest under permanent management, which you must own before you light it.]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 30,
+  "art": 4.0,
+  "build_yrs": 5.0,
+  "cap": 6000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 3,
+  "id": "crucible_steel",
+  "kb": "10_metallurgy.md#crucible_steel",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 5000.0,
+   "smith": 3000.0
+  },
+  "mat": {
+   "charcoal_kg": 300000.0,
+   "clay_kg": 12000.0,
+   "coal_kg": 60000.0,
+   "iron_bar_kg": 3000.0
+  },
+  "name": "Crucible steel",
+  "note": "Huntsman fired his crucibles with coke, which is possible only because the steel is sealed inside a lidded clay pot: the fuel and the metal never meet, so the sulfur cannot get in. The closed crucible is doing as much work as the temperature. Melt blister steel in a closed crucible so the composition homogenises and the slag separates. The crucible surviving 1600 C is the hard part and is why this waits on good refractories. Gate on every cutting tool, every lead screw, and therefore on all precision. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 600.0,
+  "pre": [
+   "cementation_steel",
+   "coal_coke",
+   "cap_heat_1600"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.9,
+     "coal_coke": 1.0,
+     "coal_kg": 0.9,
+     "mat_charcoal": 0.9
+    }
+   }
+  ],
+  "rev": 11000.0,
+  "risk": 0.35,
+  "sch": 1.0,
+  "sus": 2,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 3200.0,
+  "yrs": 5.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 150.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "crude_cell",
+  "kb": "50_electricity.md#crude_cell",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 300.0
+  },
+  "mat": {
+   "copper_kg": 10.0,
+   "iron_bar_kg": 10.0,
+   "salt_kg": 20.0
+  },
+  "name": "Copper-iron brine cell",
+  "note": "A poor cell, and you can have it on arrival. Copper and iron in brine give roughly 0.4 to 0.7 volts with high internal resistance, and it polarises within minutes. It will not electroplate and it will not electrolyse water usefully. It WILL deflect a compass needle and it will bias a galena crystal, which means the crystal rectifier and the first electrical measurements do not have to wait thirty years for zinc metal. Use it as the teaching instrument and the proof of concept, then replace it the day the pile exists.",
+  "ph": 120.0,
+  "pre": [
+   "lead_metallurgy",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 1.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 0.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 900.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "daniell_cell",
+  "kb": "50_electricity.md#daniell_cell",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1200.0,
+   "potter": 600.0
+  },
+  "mat": {
+   "blue_vitriol_kg": 300.0,
+   "clay_kg": 600.0,
+   "copper_kg": 150.0,
+   "zinc_kg": 120.0
+  },
+  "name": "Daniell cell and reliable current sources",
+  "note": "The two-solution design stops polarisation, so the cell holds its voltage for hours instead of minutes. Around 1.1 volts and dependable, which is what makes telegraphy and electroplating practical rather than theatrical.",
+  "ph": 250.0,
+  "pre": [
+   "sulfuric_retort",
+   "voltaic_pile"
+  ],
+  "req_any": [],
+  "rev": 500.0,
+  "risk": 0.15,
+  "sch": 2.0,
+  "sus": 4,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 700.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: coal coking and wood tar production require 1000+ C heating]",
+  "adopt_yrs": 0.0,
+  "art": 5.0,
+  "build_yrs": 3.0,
+  "cap": 8000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "destructive_distillation",
+  "kb": "20_chemistry.md#destructive_distillation",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 3000.0,
+   "chemist": 3000.0,
+   "labourer": 5000.0
+  },
+  "mat": {
+   "coal_kg": 120000.0,
+   "firewood_kg": 150000.0,
+   "iron_bar_kg": 4000.0
+  },
+  "name": "Destructive distillation of wood and coal",
+  "note": "Wood gives methanol, acetic acid, tar and charcoal. Coal gives coke, coal gas, coal tar and ammonia liquor. Coal tar is the gateway to phenol, benzene, aniline dyes and eventually plastics; coal gas gives you street lighting, which is a spectacular and profitable public benefaction.",
+  "ph": 600.0,
+  "pre": [
+   "cap_heat_1100",
+   "coal_coke",
+   "lab_apparatus"
+  ],
+  "req_any": [],
+  "rev": 7000.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 4500.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 12.0,
+  "build_yrs": 4.0,
+  "cap": 9000.0,
+  "cat": "instruments",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "diffusion_pump",
+  "kb": "55_semiconductors.md#vacuum_pumps",
+  "kind": "ENGINEERING",
+  "lab": {
+   "glassblower": 2500.0,
+   "machinist": 4000.0
+  },
+  "mat": {
+   "glass_raw_kg": 200.0,
+   "mercury_kg": 60.0,
+   "steel_noric_kg": 300.0
+  },
+  "name": "Rotary and mercury diffusion pumps",
+  "note": "Gets you from roughly 1e-4 to 1e-6 torr and below, which is what vacuum tubes and later semiconductor processing require. Needs a motor for the backing pump, so it waits on the electrical programme.",
+  "ph": 600.0,
+  "pre": [
+   "cap_vac_1torr",
+   "interchangeable_parts",
+   "motor_transformer_ac",
+   "vacuum_pumps"
+  ],
+  "req_any": [],
+  "rev": 800.0,
+  "risk": 0.35,
+  "sch": 8.0,
+  "sus": 2,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 5000.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 10.0,
+  "build_yrs": 4.0,
+  "cap": 8000.0,
+  "cat": "physics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "discharge_xray",
+  "kb": "55_semiconductors.md#crookes_xray_electron",
+  "kind": "SCIENCE",
+  "lab": {
+   "glassblower": 3000.0,
+   "scholar": 6000.0
+  },
+  "mat": {
+   "copper_kg": 300.0,
+   "glass_raw_kg": 200.0,
+   "platinum_g": 60.0
+  },
+  "name": "Discharge tubes, cathode rays, X-rays, the electron",
+  "note": "You already know the answers, so this is instrument building rather than discovery and it compresses enormously. Medical radiography will make you famous and, if you are careless, will kill your operators. Publish the dose warnings before the first demonstration; the early history of X-rays is a catalogue of amputations.",
+  "ph": 700.0,
+  "pre": [
+   "dynamo",
+   "em_theory",
+   "vacuum_pumps"
+  ],
+  "req_any": [
+   {
+    "group": "platinum_supply",
+    "options": {
+     "mat_platinum_bulk": 1.0
+    }
+   }
+  ],
+  "rev": 3000.0,
+  "risk": 0.3,
+  "sch": 10.0,
+  "sus": 18,
+  "traits": [
+   "inexplicable",
+   "information",
+   "infrastructure"
+  ],
+  "up": 5000.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 1400.0,
+  "cat": "chemistry",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "distillation_alcohol",
+  "kb": "20_chemistry.md#distillation_fractional",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 1800.0,
+   "smith": 600.0
+  },
+  "mat": {
+   "copper_kg": 120.0,
+   "wine_common_kg": 8000.0
+  },
+  "name": "Worm condenser, distilled spirits, essential oils",
+  "note": "Alexandrian alchemists already have alembics; the worm condenser is the missing part. Rose attar and other essential oils carry the margin. Also gives you your first laboratory solvent and your first antiseptic. Do not tell anyone it burns until you have a patron.",
+  "ph": 450.0,
+  "pre": [
+   "glass_labware",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 4200.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 5,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 900.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 350.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "drawplate_wire",
+  "kb": "10_metallurgy.md#wire_drawing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "smith": 900.0
+  },
+  "mat": {
+   "iron_bar_kg": 60.0,
+   "steel_noric_kg": 15.0,
+   "tallow_kg": 30.0
+  },
+  "name": "The drawplate and drawn wire",
+  "note": "The old way of making wire, cutting strip and swaging it, is already common practice. A hardened plate with graded tapered holes, tallow lubricant and annealing between passes gives long round wire cheaply. You will need tens of kilometres for a single dynamo, so build it now and forget about it.",
+  "ph": 180.0,
+  "pre": [
+   "case_hardening",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 800.0,
+  "risk": 0.12,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 150.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_elec added by a reviewer working node by node. Reason: self-excited generator requires electrical measurement to understand and regulate output]",
+  "adopt_yrs": 7.0,
+  "art": 25.0,
+  "build_yrs": 2.3333333333333335,
+  "cap": 12000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "dynamo",
+  "kb": "50_electricity.md#dynamo_motor",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 6000.0,
+   "electrician": 220.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "copper_kg": 2500.0,
+   "iron_bar_kg": 4000.0,
+   "shellac_kg": 90.0,
+   "steel_plate_kg": 1.5
+  },
+  "name": "Dynamo with self-excitation",
+  "note": "The chicken-and-egg looks fatal: you need a field to make current and an electromagnet needs current. Residual magnetism in the iron core is enough to start it and the output builds itself up. Nobody guesses this and everybody wastes years on permanent magnets. Put it on the millpond shaft you already built. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 800.0,
+  "pre": [
+   "cap_measure_elec",
+   "copper_refining",
+   "electromagnet",
+   "en_commutator",
+   "gp_carbon_brushes",
+   "gp_laminated_core",
+   "gp_magnet_wire_enamelled",
+   "interchangeable_parts",
+   "water_power_scale"
+  ],
+  "req_any": [
+   {
+    "group": "conductor",
+    "options": {
+     "copper_refining": 1.0,
+     "iron_bar_kg": 0.3,
+     "mat_aluminium": 0.6,
+     "mat_copper": 0.75
+    }
+   },
+   {
+    "group": "insulation",
+    "options": {
+     "linen_kg": 0.5,
+     "mat_bitumen": 0.45,
+     "mat_natural_rubber": 1.0,
+     "mat_shellac": 1.0,
+     "silk_kg": 0.95
+    }
+   }
+  ],
+  "rev": 12000.0,
+  "risk": 0.35,
+  "sch": 4.0,
+  "sus": 8,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 6000.0,
+  "yrs": 7.0
+ },
+ {
+  "adopt_yrs": 15.0,
+  "art": 80.0,
+  "build_yrs": 3.0,
+  "cap": 70000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 2,
+  "id": "electrolysis_industrial",
+  "kb": "50_electricity.md#electrolysis_industrial",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 12000.0,
+   "chemist": 9000.0
+  },
+  "mat": {
+   "bauxite_kg": 90000.0,
+   "carbon_kg": 30000.0,
+   "cryolite_kg": 9000.0,
+   "salt_kg": 200000.0
+  },
+  "name": "Chlor-alkali, aluminium and industrial electrochemistry",
+  "note": "Aluminium needs cryolite (Greenland) or a synthetic fluoride bath from your own hydrofluoric acid, which is the realistic route for you. Chlorine gives bleach and disinfectant, which loops back into public health. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 700.0,
+  "pre": [
+   "electroplating",
+   "power_grid"
+  ],
+  "req_any": [
+   {
+    "group": "cryolite_supply",
+    "options": {
+     "mat_cryolite": 1.0
+    }
+   }
+  ],
+  "rev": 55000.0,
+  "risk": 0.35,
+  "sch": 8.0,
+  "sus": 4,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 40000.0,
+  "yrs": 15.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 1.0,
+  "cap": 1000.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "electromagnet",
+  "kb": "50_electricity.md#electromagnet",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2000.0,
+   "smith": 900.0
+  },
+  "mat": {
+   "copper_kg": 150.0,
+   "iron_bar_kg": 300.0,
+   "shellac_kg": 15.0
+  },
+  "name": "Electromagnet, relay, and the Wheatstone bridge",
+  "note": "Iron amplifying a current's magnetism is the effect on which motors, generators, telegraphs and relays all rest. It is also the most alarming demonstration you will give: heavy iron moving at a distance with no visible cause.",
+  "ph": 350.0,
+  "pre": [
+   "galvanometer"
+  ],
+  "req_any": [],
+  "rev": 700.0,
+  "risk": 0.15,
+  "sch": 2.0,
+  "sus": 8,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 600.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 3000.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "electroplating",
+  "kb": "50_electricity.md#electrolysis_industrial",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2500.0,
+   "chemist": 2000.0,
+   "electrician": 100.0
+  },
+  "mat": {
+   "copper_kg": 900.0,
+   "nickel_kg": 10.0,
+   "silver_kg": 15.0,
+   "sulfuric_acid_kg": 900.0
+  },
+  "name": "Electroplating and electro-refining",
+  "note": "The object to be coated is the cathode. Current density must be controlled; too high and the deposit is burnt and powdery, too low and adhesion suffers. Electroplating of chromium requires three stages: copper strike, nickel, then thin chromium for corrosion resistance.",
+  "ph": 350.0,
+  "pre": [
+   "analytical_chemistry",
+   "daniell_cell"
+  ],
+  "req_any": [
+   {
+    "group": "sulfuric_acid_supply",
+    "options": {
+     "chm_contact_sulfuric": 1.0,
+     "lead_chamber": 1.0
+    }
+   }
+  ],
+  "rev": 5500.0,
+  "risk": 0.2,
+  "sch": 3.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 2200.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 1200.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "electrostatics",
+  "kb": "50_electricity.md#electrostatics",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1500.0,
+   "glassblower": 800.0
+  },
+  "mat": {
+   "glass_raw_kg": 40.0,
+   "silk_kg": 2.0,
+   "tin_kg": 15.0
+  },
+  "name": "Friction machine, Leyden jar, electroscope",
+  "note": "Spectacular, cheap, and it produces exactly the kind of effect that gets a man tried for magic. Do it in daylight, in front of a magistrate, and explain it as a property of amber long known to the Greeks, which is even true (elektron is Greek for amber). High voltage, negligible current: useless for chemistry, excellent for persuasion. CORRECTION to an earlier version of this tree: this no longer requires electromagnetic theory. Franklin and Volta had none. Making the theory a prerequisite for the experiment put the whole of calculus on the electrical critical path, which is backwards. The State neither wants this nor forbids it. It simply looks like sorcery, which is a different and worse problem.",
+  "ph": 350.0,
+  "pre": [
+   "glass_labware",
+   "lab_apparatus"
+  ],
+  "req_any": [],
+  "rev": 600.0,
+  "risk": 0.2,
+  "sch": 2.0,
+  "sus": 15,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 500.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 3.0,
+  "cap": 400.0,
+  "cat": "physics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "em_theory",
+  "kb": "50_electricity.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 2500.0
+  },
+  "mat": {},
+  "name": "Electromagnetic theory",
+  "note": "Write it down before you can demonstrate any of it. Faraday's and Maxwell's conclusions handed to a school that can already do calculus collapses a century into a decade.",
+  "ph": 800.0,
+  "pre": [
+   "calculus",
+   "newtonian_mechanics"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.12,
+  "sch": 4.0,
+  "sus": 3,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 8000.0,
+  "cat": "institution",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "endowment_land",
+  "kb": "03_SOCIAL_POLITICS.md#endowment_land",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scribe": 400.0
+  },
+  "mat": {
+   "iugerum_land": 600.0
+  },
+  "name": "Endow the institute in land, not coin",
+  "note": "Land outlives coin: whatever currency you are using will eventually be debased or disrupted, and land will not. This is how a programme outlives its founder. In Rome the vehicle is testamentary law and the fundatio (Pliny's alimenta, Trajan's own); every society you can play has some durable equivalent, and it is bought or built the way endowments are always built here: with a public benefaction and the right friends.",
+  "ph": 500.0,
+  "pre": [
+   "school_founded"
+  ],
+  "req_any": [],
+  "rev": 4500.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 12.0,
+  "art": 2.0,
+  "build_yrs": 4.0,
+  "cap": 42000.0,
+  "cat": "expedition",
+  "conf": "B",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 3,
+  "id": "exp_import_draught_animals",
+  "kb": "95_expeditions.md#transplant_botany",
+  "kind": "INFRASTRUCTURE",
+  "lab": {
+   "labourer": 6000.0,
+   "merchant": 2000.0,
+   "sailor": 9000.0
+  },
+  "mat": {
+   "timber_m3": 400.0,
+   "wheat_kg": 90000.0
+  },
+  "name": "Import and establish draught animals",
+  "note": "The answer to a continent with no draught animals is to go and get some, which is exactly what happened in 1519. Horses, oxen and donkeys survive a sea crossing badly and breed slowly, so this is not a purchase, it is a founding herd plus the decade it takes to multiply: adopt_yrs is 12 because that is generations, not shipping. Carry mares in foal rather than stallions, carry far more fodder and water than seems sane, and expect to lose a third at sea. Once established they are permanent and self-replacing, which is why this is worth four years and 42,000 denarii to a society that has been carrying every load on human backs.",
+  "ph": 300.0,
+  "pre": [
+   "exp_oceangoing_hull",
+   "exp_provisioning_scurvy",
+   "exp_openocean_navigation"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.45,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "food"
+  ],
+  "up": 0.0,
+  "yrs": 12.0
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 250 tonnes of product a year it consumes about 1,500 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 2,000 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: decarburizing cast iron in puddling furnace at 1300 C requires water-blown blast furnace heat]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 250,
+  "art": 4.0,
+  "build_yrs": 2.0,
+  "cap": 5000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "finery_puddling",
+  "kb": "10_metallurgy.md#finery_forge",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 5000.0,
+   "labourer": 6000.0,
+   "smith": 4000.0
+  },
+  "mat": {
+   "charcoal_kg": 3000000.0,
+   "clay_kg": 15000.0
+  },
+  "name": "Finery forge and the puddling furnace",
+  "note": "Cort's reverberatory hearth is the point: the coal burns in a separate chamber and the flame is reflected onto the metal, so the sulfur never touches the iron. That single arrangement is what let Britain stop making wrought iron out of forests. Cast iron is brittle and useless for anything that must bend. Decarburise it back to wrought iron in a finery, then in a reverberatory puddling furnace where the fuel never touches the metal. Now you have cheap bar iron in quantity, which is the input to everything mechanical.",
+  "ph": 500.0,
+  "pre": [
+   "blast_furnace",
+   "cap_heat_1300"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.9,
+     "coal_coke": 0.95,
+     "coal_kg": 1.0,
+     "mat_charcoal": 0.9
+    }
+   }
+  ],
+  "rev": 9000.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 3500.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 10000.0,
+  "cat": "institution",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "freedman_staff",
+  "kb": "03_SOCIAL_POLITICS.md#freedman_staff",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Buy, train and manumit a technical staff",
+  "note": "Acquire, train and free a technical staff: buy or bind skilled workers, teach them, release them from their obligation, then pay and keep them. A freed worker who remains literate and paid transmits knowledge onward; a coerced one does not. In Rome this is manumission of skilled slaves, who retain an obligation to their former owner as patron and ran much of Roman commerce; the Norse equivalent is working off a debt-thrall's bond. Whichever form bondage takes where you are playing, this is both the ethical and the efficient answer. Grants +8 artisans. A person is not a material: this node used to spend 8.0 units of a fictitious mat_ good called slave_skilled, priced as if a trained adult were a stocked commodity like iron bars - data/production/40_organics.json refuses to write it a production recipe for exactly that reason. What this project actually spends is a one-time capital outlay, the price of acquiring eight already-skilled people, so that cost (8 times the 1000 denarii/head data/prices.json already carried for slave_skilled, itself unchanged) now sits in cap instead of mat, alongside the founder's 900 hours spent negotiating, training and formally freeing them. This still does not reach into the household's own slave ledger: buying and freeing people through this node changes hired_cap() the way the institution always did, but does not touch self.household.slaves or self.household.freedmen the way buy_slaves()/manumit() in sim/engine/labour.py do for a founder who buys people directly. Linking the two - so this node draws down the same market and the same household state as buy_slaves rather than a parallel flat number - is further work, flagged rather than done here. See Complaints/28-material-keys-that-are-not-materials.md.",
+  "ph": 900.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 1400.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "located_material",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "fud_cacao",
+  "kb": "75_agriculture_food.md",
+  "kind": "RESOURCE",
+  "lab": {},
+  "mat": {},
+  "name": "Cacao",
+  "note": "NOT UNOBTAINABLE. Cacao is a Caribbean and Mesoamerican tree crop: one voyage for seed stock, then transplant and grow it forever. The same Atlantic crossing that reaches potato and maize reaches this too.",
+  "ph": 60.0,
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "food"
+  ],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 600.0,
+  "cat": "agriculture",
+  "conf": "B",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 2,
+  "id": "fud_chinampa",
+  "kb": "76_farming_food_deep.md#ag2_terracing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 4000.0
+  },
+  "mat": {
+   "timber_m3": 40.0
+  },
+  "name": "Chinampa raised-bed agriculture",
+  "note": "Lake-bed plots built up from dredged mud and staked with willow, cropped several times a year with the water table always at the roots. Yields per hectare beat anything in Europe and it needs no plough and no draught animal, which is exactly why Mesoamerica could carry dense cities without either. This is native to the lake basins of central Mexico; anyone not already there needs to reach the Americas first (see exp_americas_factory) and then adapt the technique to their own wetlands.",
+  "ph": 120.0,
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "req_any": [],
+  "rev": 900.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "food",
+   "infrastructure"
+  ],
+  "up": 120.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "located_material",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "fud_maize",
+  "kb": "75_agriculture_food.md",
+  "kind": "RESOURCE",
+  "lab": {},
+  "mat": {},
+  "name": "Maize",
+  "note": "NOT UNOBTAINABLE. Maize is a Mesoamerican grain: one voyage for seed stock, then it is yours to grow every season after. The same crossing that reaches potato and cacao reaches this too.",
+  "ph": 60.0,
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "food"
+  ],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "located_material",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "fud_potato",
+  "kb": "75_agriculture_food.md",
+  "kind": "RESOURCE",
+  "lab": {},
+  "mat": {},
+  "name": "The potato",
+  "note": "NOT UNOBTAINABLE. Two to four times the calories per hectare of wheat on poor ground. The plant is Andean: one voyage for seed stock out of South America, then you grow it forever.",
+  "ph": 60.0,
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "food"
+  ],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 8.0,
+  "build_yrs": 4.0,
+  "cap": 9000.0,
+  "cat": "glass_optics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "fused_quartz",
+  "kb": "30_glass_optics.md#fused_quartz",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 2000.0,
+   "glassblower": 4000.0
+  },
+  "mat": {
+   "hydrogen_m3": 12000.0,
+   "oxygen_m3": 6000.0,
+   "sand_quartz_kg": 2000.0
+  },
+  "name": "Fused silica working",
+  "note": "Pure silica worked at 1700 to 2000 C with an oxy-hydrogen flame. Indispensable later: you cannot zone refine germanium in anything that contaminates it.",
+  "ph": 700.0,
+  "pre": [
+   "cap_gas_o2h2",
+   "cap_heat_2000",
+   "high_temp_furnace"
+  ],
+  "req_any": [],
+  "rev": 1500.0,
+  "risk": 0.4,
+  "sch": 4.0,
+  "sus": 1,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 5000.0,
+  "yrs": 4.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 200.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "galena_detector",
+  "kb": "55_semiconductors.md#galena_detector",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 400.0
+  },
+  "mat": {
+   "brass_kg": 3.0,
+   "copper_kg": 2.0,
+   "galena_kg": 3.0
+  },
+  "name": "Galena cat's whisker point-contact rectifier",
+  "note": "A working semiconductor device achievable in any pre-industrial economy with a lead mine, using mineral lead sulfide straight out of the ground and a springy wire. No purification, no doping, no vacuum, no theory. It is nearly free, it is a genuine rectifier, and it is the proof-of-concept that justifies a two-century programme to a sceptical patron. Build it the moment you have a cell and fine wire. It depends on the crude brine cell, not on the voltaic pile, which is what makes the year-three claim in 00_NONOBVIOUS_TRICKS actually true.",
+  "ph": 150.0,
+  "pre": [
+   "crude_cell",
+   "drawplate_wire",
+   "lead_metallurgy"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 2.0,
+  "sus": 5,
+  "traits": [
+   "inexplicable",
+   "religious_adjacent",
+   "spectacle"
+  ],
+  "up": 0.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil windings and compass needle require fine wire and precision]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 1200.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "galvanometer",
+  "kb": "50_electricity.md#galvanometer",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1200.0,
+   "machinist": 1800.0
+  },
+  "mat": {
+   "brass_kg": 25.0,
+   "copper_kg": 40.0
+  },
+  "name": "Tangent galvanometer and electrical metrology",
+  "note": "A coil of known radius and turn count, a compass needle, and the Earth's field give absolute current from pure geometry, with no calibrated instrument to start from. This solves the electrical metrology bootstrap that otherwise looks circular.",
+  "ph": 400.0,
+  "pre": [
+   "cap_tol_100um",
+   "copper_refining",
+   "daniell_cell",
+   "geometry_analytic"
+  ],
+  "req_any": [],
+  "rev": 400.0,
+  "risk": 0.2,
+  "sch": 3.0,
+  "sus": 4,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 500.0,
+  "yrs": 1.5
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_0700, cap_pure_6N added by a reviewer working node by node. Reason: hydrogen reduction at 650 C requires furnace; graphite boat must be purer than semiconductor product]",
+  "adopt_yrs": 0.0,
+  "art": 12.0,
+  "build_yrs": 3.0,
+  "cap": 16000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 0,
+  "id": "ge_reduction",
+  "kb": "55_semiconductors.md#germanium_sourcing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 6000.0,
+   "furnaceman": 3000.0
+  },
+  "mat": {
+   "graphite_kg": 600.0,
+   "hydrogen_m3": 9000.0
+  },
+  "name": "Reduction of germanium dioxide to metal under hydrogen",
+  "note": "Hydrogen at roughly 650 C reduces the dioxide to grey powder; melt it into an ingot in a high purity graphite boat under hydrogen. Everything that touches the metal from here on contaminates it, so the boat, the tube and the gas must all be purer than the product.",
+  "ph": 600.0,
+  "pre": [
+   "cap_gas_o2h2",
+   "cap_heat_0700",
+   "cap_pure_6N",
+   "fused_quartz",
+   "gecl4_purification"
+  ],
+  "req_any": [
+   {
+    "group": "pure_graphite_supply",
+    "options": {
+     "mat_graphite_pure": 1.0
+    }
+   }
+  ],
+  "rev": 0.0,
+  "risk": 0.35,
+  "sch": 18.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: fractional distillation of volatile germanium tetrachloride requires high-purity refining technique]",
+  "adopt_yrs": 5.0,
+  "art": 14.0,
+  "build_yrs": 1.6666666666666667,
+  "cap": 22000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 0,
+  "id": "gecl4_purification",
+  "kb": "55_semiconductors.md#germanium_sourcing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 12000.0
+  },
+  "mat": {
+   "glass_raw_kg": 900.0,
+   "hydrochloric_acid_kg": 12000.0
+  },
+  "name": "Germanium tetrachloride fractional distillation",
+  "note": "The door. Germanium is a nightmare to purify as metal or oxide and easy as a volatile chloride boiling at about 86 C, which you can fractionate like brandy. Distil repeatedly in a tall packed column, hydrolyse back to the dioxide with ultrapure water, and you are already at parts per million before you have done anything clever.",
+  "ph": 900.0,
+  "pre": [
+   "cap_pure_6N",
+   "fused_quartz",
+   "germanium_extraction",
+   "glass_borosilicate"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.4,
+  "sch": 20.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 5.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 1.0,
+  "cap": 100.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "geometry_analytic",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 3000.0
+  },
+  "mat": {},
+  "name": "Coordinate geometry and trigonometric tables",
+  "note": "Hipparchus and Ptolemy already have chord tables, so this lands on prepared ground.",
+  "ph": 350.0,
+  "pre": [
+   "algebra_symbolic"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.08,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 250.0,
+  "cat": "medicine",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "germ_theory",
+  "kb": "70_medicine_biology.md#germ_theory",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 1500.0
+  },
+  "mat": {},
+  "name": "Germ theory of disease",
+  "note": "The bead microscope makes this demonstrable rather than assertable, which is the whole difference. Galen's humoral theory is the obstacle and it is defended by the entire medical profession.",
+  "ph": 350.0,
+  "pre": [
+   "glass_bead_microscope"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 1.0,
+  "sus": 5,
+  "traits": [
+   "infrastructure",
+   "medical",
+   "spectacle"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 5.0,
+  "art": 16.0,
+  "build_yrs": 1.6666666666666667,
+  "cap": 25000.0,
+  "cat": "semiconductor",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "germanium_extraction",
+  "kb": "55_semiconductors.md#germanium_sourcing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 6000.0,
+   "chemist": 9000.0
+  },
+  "mat": {
+   "flue_dust_kg": 150000.0,
+   "hydrochloric_acid_kg": 9000.0,
+   "sulfuric_acid_kg": 6000.0
+  },
+  "name": "Germanium concentrate from flue dust and coal ash",
+  "note": "Germanium is 1.6 ppm in the crust and essentially never occurs as its own workable ore in reach. Zinc flue dust and certain coal ashes are the realistic sources. The spectroscope is how you find it at all: without emission spectroscopy you would be searching blind for an element nobody has ever seen.",
+  "ph": 900.0,
+  "pre": [
+   "analytical_chemistry",
+   "hydrochloric_acid",
+   "lead_chamber",
+   "spectroscope",
+   "zinc_industry_scale"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.4,
+  "sch": 18.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 5.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap": 150.0,
+  "cat": "glass_optics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "glass_bead_microscope",
+  "kb": "30_glass_optics.md#glass_bead_microscope",
+  "kind": "ENGINEERING",
+  "lab": {
+   "glassblower": 300.0,
+   "smith": 200.0
+  },
+  "mat": {
+   "brass_kg": 4.0,
+   "glass_raw_kg": 2.0
+  },
+  "name": "Single-bead microscope",
+  "note": "Cost is trivial and the payoff is germ theory, cell biology and a demonstration nobody can dismiss. Build this in your first year. Van Leeuwenhoek out-resolved compound microscopes with it for fifty years.",
+  "ph": 300.0,
+  "pre": [
+   "lens_grinding"
+  ],
+  "req_any": [],
+  "rev": 204.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 6,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 50.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: borosilicate melting requires sustained 1600 C furnace heat]",
+  "adopt_yrs": 0.0,
+  "art": 4.0,
+  "build_yrs": 3.0,
+  "cap": 4500.0,
+  "cat": "glass_optics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "glass_borosilicate",
+  "kb": "30_glass_optics.md#glass_borosilicate",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 2000.0,
+   "glassblower": 3000.0,
+   "labourer": 4000.0
+  },
+  "mat": {
+   "boric_acid_kg": 900.0,
+   "natron_kg": 900.0,
+   "sand_quartz_kg": 5000.0
+  },
+  "name": "Borosilicate glass",
+  "note": "Needs boron. The Larderello fumaroles in Tuscany emit boric acid and are inside the Empire, which is a genuinely lucky break if it holds; verify on arrival before planning around it. Low thermal expansion is the difference between a laboratory and a pile of broken retorts.",
+  "ph": 500.0,
+  "pre": [
+   "cap_heat_1600",
+   "glass_labware",
+   "sulfuric_retort"
+  ],
+  "req_any": [],
+  "rev": 2500.0,
+  "risk": 0.35,
+  "sch": 2.0,
+  "sus": 2,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 2500.0,
+  "yrs": 3.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 50 tonnes of product a year it consumes about 125 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 167 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: soda-lime glass melting requires 1000-1100 C furnace]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 50,
+  "art": 3.0,
+  "build_yrs": 1.5,
+  "cap": 3000.0,
+  "cat": "glass_optics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "glass_clear",
+  "kb": "30_glass_optics.md#glass_clear_cristallo",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 2500.0,
+   "glassblower": 3000.0
+  },
+  "mat": {
+   "charcoal_kg": 187500.0,
+   "lime_kg": 1200.0,
+   "natron_kg": 3000.0,
+   "pyrolusite_kg": 60.0,
+   "sand_quartz_kg": 52500.0
+  },
+  "name": "Deliberately water-clear soda-lime glass to specification",
+  "note": "Near-colourless soda-lime glass, and the trick that pyrolusite is glassmaker's soap, are already known wherever a live glass industry exists (Rome is the best-documented case). What is missing is control: iron-free sand chosen deliberately, a weighed manganese dose, and a proper annealing lehr. Cheapest high-value upgrade to a live glass industry.",
+  "ph": 400.0,
+  "pre": [
+   "cap_heat_1100",
+   "refractory_fireclay",
+   "workshop_first"
+  ],
+  "req_any": [
+   {
+    "group": "flux",
+    "options": {
+     "natron_kg": 0.95,
+     "potash_soda": 1.0,
+     "wood_ash_kg": 0.7
+    }
+   }
+  ],
+  "rev": 3500.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 1800.0,
+  "yrs": 1.5
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: graduated vessels and tubing require 0.1mm precision marks and smoothness]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 1.5,
+  "cap": 2000.0,
+  "cat": "glass_optics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "glass_labware",
+  "kb": "30_glass_optics.md#glass_lab_ware",
+  "kind": "ENGINEERING",
+  "lab": {
+   "glassblower": 4000.0
+  },
+  "mat": {
+   "charcoal_kg": 25000.0,
+   "glass_raw_kg": 900.0
+  },
+  "name": "Retorts, flasks, condensers, tubing, graduated vessels",
+  "note": "The single item that most limits early chemistry. You will break a great deal of it. Until borosilicate, thermal shock is your main enemy: heat on a sand bath, never on a flame.",
+  "ph": 500.0,
+  "pre": [
+   "cap_tol_100um",
+   "glass_clear"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "coal_kg": 0.9,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 1200.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 3,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 1400.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "milestone",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "goal_literacy_common",
+  "kb": "80_information_printing.md#literacy",
+  "lab": {},
+  "mat": {},
+  "name": "A literate people, not just a literate few",
+  "note": "This is not something you build; it happens on its own the moment the census shows one reader in five among the general population, not only the lettered and propertied. Schools and academies are what move that number, and they have to stay open - a school that closes stops teaching the year it closes, whatever it taught before that.",
+  "ph": 0.0,
+  "pre": [
+   "academy_network"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "milestone"
+  ],
+  "up": 0.0,
+  "win_condition": {
+   "metric": "literacy_general",
+   "op": ">=",
+   "value": 0.2
+  },
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "milestone",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "goal_literate_nation",
+  "kb": "80_information_printing.md#literacy",
+  "lab": {},
+  "mat": {},
+  "name": "A nation that reads",
+  "note": "This is not something you build; it happens on its own once schooling and academies, running for long enough against a countryside mechanised enough to spare its children for a classroom, put three in four of your people over the threshold of reading. The ceiling on how literate this society can ever become moves only as the land is mechanised - the reaper, the thresher, the tractor, not only the school - and what you built before the ceiling rose stays capped at it until it does.",
+  "ph": 0.0,
+  "pre": [
+   "ag2_balanced_ration",
+   "ag2_baler",
+   "ag2_battery_poultry",
+   "ag2_bordeaux_mixture",
+   "ag2_canning",
+   "ag2_chaff_cutter",
+   "ag2_combine_harvester",
+   "ag2_contour_ploughing",
+   "ag2_coulter",
+   "ag2_cultivator",
+   "ag2_ddt",
+   "ag2_fanning_mill",
+   "ag2_fermentation_control",
+   "ag2_gravity_irrigation",
+   "ag2_harrow",
+   "ag2_horse_hoe",
+   "ag2_lead_arsenate",
+   "ag2_lime_sulphur",
+   "ag2_mower",
+   "ag2_nicotine_pesticide",
+   "ag2_potato_lifter",
+   "ag2_power_take_off",
+   "ag2_pyrethrum",
+   "ag2_reaper",
+   "ag2_reaper_binder",
+   "ag2_ridging_plough",
+   "ag2_roller",
+   "ag2_root_cutter",
+   "ag2_sheep_dip",
+   "ag2_silage_silo",
+   "ag2_subsoiler",
+   "ag2_tedder",
+   "ag2_terracing",
+   "ag2_three_point_linkage",
+   "ag2_threshing_machine",
+   "ag2_tile_drainage",
+   "ag2_tractor_steam",
+   "ag2_winnower",
+   "fud_winnowing_machine",
+   "tl_tractor",
+   "academy_network"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "milestone"
+  ],
+  "up": 0.0,
+  "win_condition": {
+   "metric": "literacy_general",
+   "op": ">=",
+   "value": 0.75
+  },
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "milestone",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "goal_public_health",
+  "kb": "70_medicine_biology.md#public_health",
+  "lab": {},
+  "mat": {},
+  "name": "Epidemics stop deciding who lives",
+  "note": "This is not something you build; it happens on its own once enough of sanitation, quarantine, nursing, vaccination and the rest of what germ theory makes possible is standing at once to have cut four-fifths of what an epidemic or a bad harvest would otherwise take. No single measure does this alone - each one only takes a share of what is left - which is the honest reason this is a threshold and not a single technology.",
+  "ph": 0.0,
+  "pre": [
+   "sanitation_antisepsis",
+   "med_quarantine_sanitation",
+   "germ_theory",
+   "med_vaccination_progression",
+   "md2_vaccine_smallpox",
+   "soap_hard",
+   "med_nursing_profession",
+   "plague_preparedness",
+   "crop_rotation",
+   "ag2_silage_silo"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.0,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "milestone"
+  ],
+  "up": 0.0,
+  "win_condition": {
+   "metric": "epidemic_relief",
+   "op": ">=",
+   "value": 0.85
+  },
+  "yrs": 0.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 1.5,
+  "cap": 2500.0,
+  "cat": "military",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "gunpowder",
+  "kb": "20_chemistry.md#gunpowder",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1800.0,
+   "labourer": 2500.0
+  },
+  "mat": {
+   "charcoal_kg": 150.0,
+   "nitre_kg": 1500.0,
+   "sulfur_kg": 200.0
+  },
+  "name": "Corned gunpowder",
+  "note": "75/15/10 by mass, and the ratio is worthless without corning: wet the mix, press the cake, break it into grains, sieve. OPTIONAL AND DANGEROUS. It buys imperial favour instantly and it makes every future usurper more dangerous, including during the Third Century Crisis when you most need the Empire to hold. Recommended: develop the chemistry, withhold the corning, and keep it as a survival card.",
+  "ph": 300.0,
+  "pre": [
+   "charcoal_industrial",
+   "mil_serpentine_powder",
+   "nitre_beds"
+  ],
+  "req_any": [],
+  "rev": 6000.0,
+  "risk": 0.3,
+  "sch": 1.0,
+  "sus": 25,
+  "traits": [
+   "inexplicable",
+   "military"
+  ],
+  "up": 1500.0,
+  "yrs": 1.5
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 400 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 533 hectares of forest under permanent management, which you must own before you light it.]",
+  "adopt_yrs": 7.0,
+  "annual_output_t": 200,
+  "art": 10.0,
+  "build_yrs": 2.3333333333333335,
+  "cap": 11000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 2,
+  "id": "high_temp_furnace",
+  "kb": "10_metallurgy.md#high_temp_furnace",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 6000.0,
+   "potter": 2500.0,
+   "smith": 3500.0
+  },
+  "mat": {
+   "charcoal_kg": 933333.0,
+   "clay_kg": 25000.0,
+   "coal_kg": 90000.0,
+   "iron_bar_kg": 3000.0
+  },
+  "name": "Regenerative and forced-draught furnaces to 1600 C+",
+  "note": "Siemens regenerative preheat recycles flue heat into the incoming air and is the cheapest route past what charcoal and a bellows can do. Gate on fused quartz, on high-grade steel, and on most of Module 50. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 800.0,
+  "pre": [
+   "cap_measure_temp_hi",
+   "crucible_steel",
+   "mt2_silica_brick_refractory",
+   "thermodynamics_theory"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 7000.0,
+  "risk": 0.3,
+  "sch": 2.0,
+  "sus": 2,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 6000.0,
+  "yrs": 7.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 400.0,
+  "cat": "agriculture",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "horse_collar",
+  "kb": "75_agriculture_food.md#horse_collar_harness",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 900.0,
+   "smith": 700.0
+  },
+  "mat": {
+   "iron_bar_kg": 150.0,
+   "leather_kg": 3.0,
+   "timber_m3": 6.0,
+   "wool_kg": 1.0
+  },
+  "name": "Rigid padded horse collar",
+  "note": "A rigid padded collar transfers draft load to the shoulders without choking the horse. Fit and animal trials are the project; the whippletree and nailed horseshoe are separate nodes.",
+  "ph": 200.0,
+  "pre": [
+   "tex_wool",
+   "mat_leather"
+  ],
+  "req_any": [
+   {
+    "group": "organic_material",
+    "options": {
+     "mat_leather": 1.0,
+     "tex_wool": 0.6
+    }
+   }
+  ],
+  "rev": 900.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "food",
+   "infrastructure"
+  ],
+  "up": 150.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[FIXED after independent audit: paper and distilled spirits were listed and neither is load-bearing. An oiled linen envelope over a wood fire needs sailcloth and oil, both tier 0 and already available in any of these societies.]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 3000.0,
+  "cat": "military",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "hot_air_balloon",
+  "kb": "85_transport_civil.md",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2500.0,
+   "labourer": 1500.0
+  },
+  "mat": {
+   "firewood_kg": 8000.0,
+   "linen_kg": 400.0,
+   "olive_oil_kg": 300.0
+  },
+  "name": "Hot air balloon for observation",
+  "note": "Low technology, moderate cost, high spectacle, and the State wants it for siege observation and signalling. Also one of the fastest ways to be accused of sorcery, so fly it first for the army with the governor watching, never privately at night. Linen sized with oil is the envelope.",
+  "ph": 400.0,
+  "pre": [
+   "tex_sailcloth"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.4,
+  "sch": 1.0,
+  "sus": 14,
+  "traits": [
+   "inexplicable",
+   "military"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 1400.0,
+  "cat": "chemistry",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "hydrochloric_acid",
+  "kb": "20_chemistry.md#hydrochloric_acid",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 1500.0,
+   "glassblower": 800.0
+  },
+  "mat": {
+   "salt_kg": 3000.0,
+   "sulfuric_acid_kg": 2500.0
+  },
+  "name": "Hydrochloric acid and aqua regia",
+  "note": "Salt plus oil of vitriol. The salt-cake residue is the feedstock for the Leblanc soda process, so nothing is wasted. Aqua regia dissolves gold, which is a demonstration that will terrify the mint and delight your patron; use it carefully.",
+  "ph": 300.0,
+  "pre": [
+   "sulfuric_retort"
+  ],
+  "req_any": [
+   {
+    "group": "sulfuric_acid_supply",
+    "options": {
+     "chm_contact_sulfuric": 1.0,
+     "lead_chamber": 1.0
+    }
+   }
+  ],
+  "rev": 1400.0,
+  "risk": 0.25,
+  "sch": 2.0,
+  "sus": 8,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 900.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 2.0,
+  "cap": 2000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "hydrofluoric_acid",
+  "kb": "20_chemistry.md#hydrofluoric_acid",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 1800.0
+  },
+  "mat": {
+   "fluorspar_kg": 600.0,
+   "lead_kg": 400.0,
+   "sulfuric_acid_kg": 900.0
+  },
+  "name": "Hydrofluoric acid",
+  "note": "Lead or wax vessels only; it eats glass, which is also what makes it useful. Extreme and insidious toxicity: it penetrates skin painlessly, seeks calcium in bone, and kills hours later. You have no calcium gluconate. Treat it as the most dangerous substance in your laboratory.",
+  "ph": 400.0,
+  "pre": [
+   "hydrochloric_acid",
+   "lead_metallurgy"
+  ],
+  "req_any": [
+   {
+    "group": "sulfuric_acid_supply",
+    "options": {
+     "chm_contact_sulfuric": 1.0,
+     "lead_chamber": 1.0
+    }
+   }
+  ],
+  "rev": 500.0,
+  "risk": 0.35,
+  "sch": 3.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 1400.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 1500.0,
+  "cat": "foundation",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "identity_cover",
+  "kb": "03_SOCIAL_POLITICS.md#identity_cover",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scribe": 400.0
+  },
+  "mat": {},
+  "name": "Establish a respectable cover identity",
+  "note": "Buy books, a house, clothes, a literate freed or hired secretary, and a reputation for piety (in Rome this is specifically the Alexandrian physician-philosopher persona; every society has its own version of a scholar-notable it will not look at twice: a monk or clerk under any literate king, a temple-trained scribe in Mesoamerica, a rune-literate skald or lawspeaker in Scandinavia). Reduces all future suspicion.",
+  "ph": 500.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.05,
+  "sch": 0.0,
+  "sus": -6,
+  "traits": [
+   "commerce"
+  ],
+  "up": 200.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: manufacturing tolerance standard based on 0.1mm precision]",
+  "adopt_yrs": 8.0,
+  "art": 30.0,
+  "build_yrs": 2.6666666666666665,
+  "cap": 7000.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -1,
+  "id": "interchangeable_parts",
+  "kb": "40_power_precision.md#interchangeable_parts",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 6000.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "iron_bar_kg": 2000.0,
+   "steel_noric_kg": 300.0
+  },
+  "name": "Tolerances, jigs, fixtures and interchangeable manufacture",
+  "note": "A management and measurement innovation more than a mechanical one, and it is what turns a workshop into an industry. The army will want it for weapons before anyone else does, which is your funding argument. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. THE STATE WILL RESIST THIS. Interchangeable manufacture visibly replaces free urban artisans with unskilled hands and gauges. Suetonius, Vespasian 18: an engineer offers a cheap machine for hauling columns to the Capitol, and Vespasian rewards him but declines to use it, saying he must be allowed to feed his poor commons. Site it in the provinces, staff it conspicuously with freedmen, and frame it as arming the legions rather than as saving wages.",
+  "ph": 800.0,
+  "pre": [
+   "cap_tol_100um",
+   "micrometer_gauges",
+   "prc_dividing_head",
+   "screw_lathe",
+   "statistics_basic"
+  ],
+  "req_any": [],
+  "rev": 8000.0,
+  "risk": 0.3,
+  "sch": 2.0,
+  "sus": 2,
+  "traits": [
+   "labour_saving",
+   "status_threatening"
+  ],
+  "up": 4000.0,
+  "yrs": 8.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_10um added by a reviewer working node by node. Reason: emitter and collector regions require 10-50 micrometer manufacturing precision]",
+  "adopt_yrs": 0.0,
+  "art": 30.0,
+  "build_yrs": 4.0,
+  "cap": 25000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "junction_transistor",
+  "kb": "55_semiconductors.md#junction_transistor",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 9000.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "germanium_g": 600.0,
+   "indium_g": 200.0
+  },
+  "name": "Grown and alloy junction transistors",
+  "note": "The point-contact device is a laboratory curiosity. The junction transistor is manufacturable, rugged and reproducible, and it is what actually replaces the vacuum tube. If you only get one generation past the goal, get this one.",
+  "ph": 800.0,
+  "pre": [
+   "cap_tol_10um",
+   "point_contact_transistor",
+   "single_crystal"
+  ],
+  "req_any": [],
+  "rev": 30000.0,
+  "risk": 0.35,
+  "sch": 25.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 18000.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 1.5,
+  "cap": 3000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "lab_apparatus",
+  "kb": "20_chemistry.md#lab_apparatus",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 2500.0,
+   "potter": 1500.0
+  },
+  "mat": {
+   "clay_kg": 4000.0,
+   "copper_kg": 120.0,
+   "lead_kg": 300.0
+  },
+  "name": "A working laboratory: retorts, baths, lutes, crucibles, fume management",
+  "note": "Alexandrian alchemy already looks like this, so it is culturally normal, which is your cover. Fume management is not optional; the classic way a bootstrapper dies is chlorine or nitrogen dioxide in a closed room.",
+  "ph": 600.0,
+  "pre": [
+   "glass_labware",
+   "refractory_fireclay"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 1.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 0.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 5.0,
+  "art": 5.0,
+  "build_yrs": 1.6666666666666667,
+  "cap": 9000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 1,
+  "id": "lead_chamber",
+  "kb": "20_chemistry.md#lead_chamber",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 4000.0,
+   "labourer": 7000.0,
+   "smith": 3500.0
+  },
+  "mat": {
+   "lead_kg": 9000.0,
+   "nitre_kg": 1800.0,
+   "sulfur_kg": 18000.0
+  },
+  "name": "Lead chamber sulfuric acid at industrial scale",
+  "note": "Burn sulfur with saltpetre in a lead-lined chamber; the nitrogen oxides shuttle oxygen catalytically. Lead is the material across the ancient world that survives the conditions, and it is cheap and plentiful almost anywhere lead ore is worked. This is the node that turns chemistry from a laboratory curiosity into an industry. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 900.0,
+  "pre": [
+   "lead_metallurgy",
+   "nitre_beds",
+   "sulfuric_retort"
+  ],
+  "req_any": [],
+  "rev": 9000.0,
+  "risk": 0.35,
+  "sch": 3.0,
+  "sus": 8,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 5500.0,
+  "yrs": 5.0
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 300 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 400 hectares of forest under permanent management, which you must own before you light it.]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 200,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 1200.0,
+  "cat": "metallurgy",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "lead_metallurgy",
+  "kb": "10_metallurgy.md#lead_silver_cupellation",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 1500.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "charcoal_kg": 300000.0,
+   "galena_kg": 280000.0
+  },
+  "name": "Lead sheet, pipe, litharge and cupellation control",
+  "note": "This is already done, and done well, wherever there is a developed lead-mining and -working tradition (Rome is the best-documented case). You need lead in bulk for the lead chamber process, for cable sheathing, for accumulators, and for acid plumbing. Also secures your galena supply for the crystal detector.",
+  "ph": 200.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 1600.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 700.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 900.0,
+  "cat": "glass_optics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "lens_grinding",
+  "kb": "30_glass_optics.md#lens_grinding",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2500.0,
+   "glassblower": 800.0
+  },
+  "mat": {
+   "copper_kg": 30.0,
+   "emery_kg": 40.0,
+   "glass_raw_kg": 60.0,
+   "tin_kg": 8.0
+  },
+  "name": "Ground and polished spherical lenses",
+  "note": "Reading spectacles for a literate elite that goes presbyopic at forty and has no remedy. Enormous margin, obvious utility, zero threat. This is your best year-one revenue product and it also buys you your first patron.",
+  "ph": 600.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 3200.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 400.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 4.0,
+  "cap": 1200.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "logarithms",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 40000.0
+  },
+  "mat": {
+   "papyrus_sheet": 3000.0
+  },
+  "name": "Logarithms and computed tables",
+  "note": "The 40,000 scribe-hours are real: Napier spent 20 years and Briggs employed computers. This is a pure money-for-time trade and it is worth it, because every engineer and astronomer after you saves a factor of ten on arithmetic.",
+  "ph": 400.0,
+  "pre": [
+   "algebra_symbolic"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 2.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 4.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lapping master screw with a long nut requires file and gauge precision to average errors]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 1500.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "master_screw",
+  "kb": "40_power_precision.md#screw_cutting_lathe",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 4000.0
+  },
+  "mat": {
+   "emery_kg": 30.0,
+   "iron_bar_kg": 200.0,
+   "steel_noric_kg": 40.0
+  },
+  "name": "The first accurate screw, and thread standards",
+  "note": "The bootstrap problem: to cut an accurate screw you need an accurate screw. Escape it by wrapping a strip round a cylinder to generate a first rough helix, then correcting a master by lapping with a long nut, which averages out the errors. Slow, fiddly, and it is the gate on all measurement.",
+  "ph": 700.0,
+  "pre": [
+   "cap_tol_100um",
+   "cementation_steel",
+   "precision_three_plate"
+  ],
+  "req_any": [],
+  "rev": 300.0,
+  "risk": 0.35,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 400.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 120.0,
+  "cat": "material",
+  "conf": "A",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 0,
+  "id": "mat_obsidian_blade",
+  "kb": "",
+  "kind": "RESOURCE",
+  "lab": {
+   "artisan": 600.0
+  },
+  "mat": {},
+  "name": "Obsidian blade knapping",
+  "note": "A pressure-flaked obsidian edge is sharper than any steel scalpel, a few molecules across, and it is the reason Mesoamerican surgery and butchery needed no metal. It is also brittle and blunts at once, so it is a consumable, not a tool. Nothing downstream requires it: it is a finished tool, not a rung.",
+  "ph": 40.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 150.0,
+  "risk": 0.05,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 20.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 0.5,
+  "cap": 400.0,
+  "cat": "material",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "mat_rubber_coagulated",
+  "kb": "89_remaining_arts.md#mat_rubber_coagulated",
+  "kind": "RESOURCE",
+  "lab": {
+   "labourer": 600.0
+  },
+  "mat": {},
+  "name": "Coagulated rubber: tapping and curing latex",
+  "note": "Knowing which vine to tap (mat_natural_rubber) is not the same act as having rubber. Tapped latex is a watery, short-lived emulsion that rots in days unless it is coagulated: drive off the ammonia with heat or wood smoke, or curdle it with a weak acid (formic or acetic), press the curd into sheet or crepe, and dry it. This is a standing tapping-and-curing operation - cuts, collecting cups, a smoke-house or coagulating tanks, and labour on a schedule the trees set, not a thing you do once. Before this node, every recipe below treated rubber_kg as a priced commodity you could simply buy once you knew the vine existed, which is the bug a play tester named: 'rubber... you should have to make it with your factory/warehouse.' Now you do.",
+  "ph": 150.0,
+  "pre": [
+   "mat_natural_rubber"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [],
+  "up": 0.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.0,
+  "cap": 0.0,
+  "cat": "located_material",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "med_coca_alkaloid",
+  "kb": "70_medicine_biology.md",
+  "kind": "RESOURCE",
+  "lab": {},
+  "mat": {},
+  "name": "Cocaine from coca",
+  "note": "NOT UNOBTAINABLE, only Andean. The first effective local anaesthetic, from the same Andean slopes as cinchona bark: one voyage reaches both.",
+  "ph": 60.0,
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "medical"
+  ],
+  "up": 0.0,
+  "yrs": 0.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 2500.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "mercury_supply",
+  "kb": "10_metallurgy.md#mercury",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 1200.0,
+   "miner": 2000.0
+  },
+  "mat": {
+   "cinnabar_kg": 400.0
+  },
+  "name": "Secure mercury supply",
+  "note": "Almaden is an imperial monopoly, so this is a political node before it is a technical one. Mercury gives you barometers, the Sprengel pump, mirrors and the first hard vacuum humans have ever had. Quantity sized for programme needs, not for trade: 400 kg of cinnabar yields roughly 300 kg of mercury, which is ample for barometers, thermometers, Sprengel pumps and a mirror works. Cinnabar is priced from Pliny NH 33.118. CORRECTION: this no longer requires the imperial mining concession. Cinnabar is traded across the Empire as the pigment minium and you can simply buy it and retort it yourself. The concession buys you BULK mercury cheaply, which matters later for mirrors and pumps, and it is a separate problem from getting your first kilogramme.",
+  "ph": 150.0,
+  "pre": [
+   "lab_apparatus",
+   "lead_metallurgy"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 700.0,
+  "cat": "metallurgy",
+  "conf": "A",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 2,
+  "id": "met_bloomery_bog_iron",
+  "kb": "10_metallurgy.md#bloomery_iron",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 2500.0,
+   "labourer": 2000.0
+  },
+  "mat": {
+   "charcoal_kg": 9000.0,
+   "clay_kg": 800.0
+  },
+  "name": "Bloomery smelting of bog iron",
+  "note": "Bog ore is iron precipitated by bacteria in wetlands, gathered with a spade rather than mined, and it renews over a human lifetime. It is poor ore and it is everywhere in Scandinavia, which is why a society with no mining industry still had abundant iron.",
+  "ph": 100.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 420.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure",
+   "military"
+  ],
+  "up": 90.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 1800.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "micrometer_gauges",
+  "kb": "40_power_precision.md#micrometer_gauge_blocks",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 3500.0
+  },
+  "mat": {
+   "brass_kg": 40.0,
+   "steel_noric_kg": 60.0
+  },
+  "name": "Micrometer, verniers, gauge blocks, go/no-go gauges",
+  "note": "Measurement precedes manufacture. Publish your standards and distribute copies of the master gauges to every workshop you fund, or your parts will not interchange between cities.",
+  "ph": 500.0,
+  "pre": [
+   "master_screw",
+   "precision_three_plate"
+  ],
+  "req_any": [],
+  "rev": 900.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 600.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 3.0,
+  "cap": 2500.0,
+  "cat": "glass_optics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "microscope_compound",
+  "kb": "30_glass_optics.md#microscope_compound",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2000.0,
+   "machinist": 2500.0
+  },
+  "mat": {
+   "brass_kg": 60.0,
+   "glass_raw_kg": 40.0,
+   "lead_kg": 200.0
+  },
+  "name": "Compound microscope with achromatic objective",
+  "note": "Do not build this before the bead microscope. A bad compound instrument is worse than a good single lens, which is exactly why van Leeuwenhoek won for fifty years. Needs lead flint glass for the achromatic doublet.",
+  "ph": 600.0,
+  "pre": [
+   "glass_bead_microscope",
+   "precision_three_plate",
+   "telescope"
+  ],
+  "req_any": [],
+  "rev": 1800.0,
+  "risk": 0.3,
+  "sch": 2.0,
+  "sus": 3,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 800.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 15000.0,
+  "cat": "social",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "mining_concession",
+  "kb": "01_WORLD_STATE_100AD.md",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Mineral concessions and access to imperial mines",
+  "note": "Mercury (Almaden) and much else is an imperial monopoly. Halves the cost of all ore and metal inputs thereafter.",
+  "ph": 400.0,
+  "pre": [
+   "patron_imperial"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 3000.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 1500.0,
+  "cat": "glass_optics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "mirror_amalgam",
+  "kb": "30_glass_optics.md#mirrors_amalgam",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1200.0,
+   "glassblower": 1800.0
+  },
+  "mat": {
+   "glass_raw_kg": 200.0,
+   "mercury_kg": 40.0,
+   "tin_kg": 30.0
+  },
+  "name": "Tin-mercury amalgam plate mirrors",
+  "note": "Existing mirrors are small, dark and mostly polished bronze or lead-backed glass. A true plate mirror is a luxury good with an obscene margin. Mercury vapour will poison your workers; ventilate, rotate them, and do not let them eat in the shop.",
+  "ph": 350.0,
+  "pre": [
+   "glass_clear",
+   "lens_grinding"
+  ],
+  "req_any": [],
+  "rev": 5000.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "luxury",
+   "spectacle"
+  ],
+  "up": 700.0,
+  "yrs": 1.5
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: laminated cores require thin consistent sheets for efficiency]",
+  "adopt_yrs": 10.0,
+  "art": 40.0,
+  "build_yrs": 3.0,
+  "cap": 16000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "motor_transformer_ac",
+  "kb": "50_electricity.md#transformer_ac",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 8000.0,
+   "machinist": 7000.0
+  },
+  "mat": {
+   "copper_kg": 4000.0,
+   "iron_sheet_kg": 6000.0,
+   "shellac_kg": 150.0
+  },
+  "name": "Motors, transformers, alternating current",
+  "note": "Laminate the cores or eddy currents will eat your efficiency and cook the iron. Three-phase and transformers make distribution possible, which is what turns a workshop generator into a grid. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 700.0,
+  "pre": [
+   "cap_tol_100um",
+   "dynamo",
+   "em_theory"
+  ],
+  "req_any": [],
+  "rev": 20000.0,
+  "risk": 0.3,
+  "sch": 4.0,
+  "sus": 5,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 8000.0,
+  "yrs": 10.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 300.0,
+  "cat": "physics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -1,
+  "id": "newtonian_mechanics",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 2000.0
+  },
+  "mat": {},
+  "name": "Newtonian mechanics and gravitation",
+  "note": "Directly contradicts Aristotle in public, which is the expensive part. The astronomical predictions it makes are your proof and they are unanswerable. Publicly overturns Aristotle on motion. Make the case with predictions that cannot be argued with (planetary positions, pendulum periods, artillery trajectories) rather than with argument.",
+  "ph": 600.0,
+  "pre": [
+   "calculus"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 3.0,
+  "sus": 2,
+  "traits": [
+   "information",
+   "status_threatening"
+  ],
+  "up": 0.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 2.5,
+  "cap": 2600.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "nitre_beds",
+  "kb": "20_chemistry.md#saltpetre_nitre_beds",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 800.0,
+   "labourer": 9000.0
+  },
+  "mat": {
+   "firewood_kg": 60000.0,
+   "lime_kg": 9000.0,
+   "manure_kg": 300000.0,
+   "wood_ash_kg": 25000.0
+  },
+  "name": "Nitre beds and potassium nitrate",
+  "note": "START THIS IN MONTH ONE. It is the longest lead-time item in the tree: the beds take 12-24 months to mature no matter what you spend. Real saltpetre exists in none of these economies yet; the word often used for it in old sources (Roman nitrum, for one) usually turns out to mean sodium carbonate instead, a common false-cognate trap. The non-obvious step is boiling the leachate with wood-ash potash to convert calcium nitrate to the potassium salt, which is the one that actually works.",
+  "ph": 350.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [
+   {
+    "group": "nitrate_source",
+    "options": {
+     "exp_trade_route_extend": 1.4,
+     "manure_kg": 1.0
+    }
+   }
+  ],
+  "rev": 1400.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 1600.0,
+  "yrs": 2.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 1800.0,
+  "cat": "chemistry",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "nitric_acid",
+  "kb": "20_chemistry.md#nitric_acid",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 2000.0,
+   "glassblower": 900.0
+  },
+  "mat": {
+   "glass_raw_kg": 80.0,
+   "nitre_kg": 900.0,
+   "sulfuric_acid_kg": 900.0
+  },
+  "name": "Nitric acid",
+  "note": "Saltpetre plus oil of vitriol, distilled. Unlocks aqua regia, silver nitrate (hence photography and silvered mirrors), etching, nitrates and, if you choose it, high explosives. The brown fumes will kill anyone who breathes them and the damage is delayed by hours.",
+  "ph": 400.0,
+  "pre": [
+   "nitre_beds",
+   "sulfuric_retort"
+  ],
+  "req_any": [
+   {
+    "group": "sulfuric_acid_supply",
+    "options": {
+     "chm_contact_sulfuric": 1.0,
+     "lead_chamber": 1.0
+    }
+   }
+  ],
+  "rev": 2200.0,
+  "risk": 0.3,
+  "sch": 2.0,
+  "sus": 9,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 1200.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 3.0,
+  "cap": 25000.0,
+  "cat": "social",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "patron_imperial",
+  "kb": "03_SOCIAL_POLITICS.md#patron_imperial",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Imperial patronage",
+  "note": "Approach through the a rationibus or the Praetorian Prefect, not the emperor. The optical telegraph is the demonstration that buys this: an empire's core problem is that a message to the Rhine takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
+  "ph": 900.0,
+  "pre": [
+   "patron_senatorial",
+   "semaphore_telegraph"
+  ],
+  "req_any": [],
+  "rev": 20000.0,
+  "risk": 0.35,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 1200.0,
+  "cat": "social",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "patron_local",
+  "kb": "03_SOCIAL_POLITICS.md#patron_local",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Secure a town patron",
+  "note": "Cheapest entry gift is a pair of reading lenses for an ageing magistrate. Halves incoming suspicion.",
+  "ph": 400.0,
+  "pre": [
+   "identity_cover"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 200.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 12000.0,
+  "cat": "social",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "patron_senatorial",
+  "kb": "03_SOCIAL_POLITICS.md#patron_senatorial",
+  "kind": "INSTITUTION",
+  "lab": {},
+  "mat": {},
+  "name": "Senatorial patronage",
+  "note": "Bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type.",
+  "ph": 600.0,
+  "pre": [
+   "school_founded"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "commerce"
+  ],
+  "up": 1000.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 0.1,
+  "cap": 60.0,
+  "cat": "alloys",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "phosphor_bronze_alloy",
+  "kb": "10_metallurgy.md#phosphor_bronze_alloy",
+  "kind": "RESOURCE",
+  "lab": {
+   "furnaceman": 150.0
+  },
+  "mat": {
+   "charcoal_kg": 40.0,
+   "copper_kg": 8.0,
+   "tin_kg": 1.0
+  },
+  "name": "Phosphor bronze: tin bronze deoxidised with phosphorus",
+  "note": "Ordinary tin bronze cast from an open melt is full of tin-oxide inclusions and has no useful spring temper. Phosphorus added as a deoxidiser (a dash of phosphor-copper master alloy, or bone ash charcoal in the crucible) scavenges the oxygen and leaves a bronze that can be cold-worked and keeps a spring set - exactly what a point-contact whisker needs to hold its few hundredths of a millimetre of gap under its own tension. Patented by the Pearson brothers in 1871. Before this node, gp_whisker_forming and point_contact_transistor both charged phosphor_bronze_g as a material cost while nothing gated it at all.",
+  "ph": 40.0,
+  "pre": [
+   "mat_copper",
+   "mat_tin",
+   "chm_phosphorus_extraction"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [],
+  "up": 0.0,
+  "yrs": 0.1
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: strict control of temperature required for consistent photographic emulsion behavior]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 4.0,
+  "cap": 4000.0,
+  "cat": "instruments",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "photography",
+  "kb": "30_glass_optics.md#camera_obscura_photography",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1500.0,
+   "chemist": 3500.0,
+   "scholar": 100.0
+  },
+  "mat": {
+   "coal_kg": 100.0,
+   "glass_raw_kg": 200.0,
+   "nitric_acid_kg": 150.0,
+   "silver_kg": 10.0
+  },
+  "name": "Silver halide photography on glass",
+  "note": "Silver halide crystals are formed by mixing silver nitrate and sodium halide. Gelatin is added as a binder. Development is performed with reducing agents like hydroquinone or metol in alkaline conditions. Each step requires strict control of temperature, pH and oxidising impurities. Photographic film is the foundation of cinema and still photography.",
+  "ph": 800.0,
+  "pre": [
+   "camera_obscura",
+   "glass_clear",
+   "nitric_acid",
+   "analytical_chemistry",
+   "cap_measure_temp",
+   "mat_silver"
+  ],
+  "req_any": [],
+  "rev": 3000.0,
+  "risk": 0.35,
+  "sch": 3.0,
+  "sus": 8,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 2000.0,
+  "yrs": 4.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 4.0,
+  "cap": 6000.0,
+  "cat": "medicine",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "plague_preparedness",
+  "kb": "70_medicine_biology.md#quarantine_publichealth",
+  "kind": "INSTITUTION",
+  "lab": {
+   "labourer": 6000.0,
+   "scholar": 2500.0
+  },
+  "mat": {},
+  "name": "Quarantine, clean water, sanitation and variolation programme",
+  "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public.",
+  "ph": 700.0,
+  "pre": [
+   "germ_theory",
+   "school_founded"
+  ],
+  "req_any": [],
+  "rev": 2000.0,
+  "risk": 0.2,
+  "sch": 3.0,
+  "sus": 8,
+  "traits": [
+   "infrastructure",
+   "medical",
+   "spectacle"
+  ],
+  "up": 2000.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 20.0,
+  "build_yrs": 4.0,
+  "cap": 20000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "point_contact_transistor",
+  "kb": "55_semiconductors.md#point_contact_transistor",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 8000.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "germanium_g": 200.0,
+   "gold_g": 20.0,
+   "phosphor_bronze_g": 60.0
+  },
+  "name": "Point-contact transistor",
+  "note": "An n-type germanium slab with two phosphor bronze points a fraction of a millimetre apart, plus a forming pulse. Fragile, noisy, irreproducible and hand-made, and it worked: Bardeen and Brattain got amplification out of POLYCRYSTALLINE germanium in December 1947, with no pulled crystal and no zone refining, neither of which existed yet. This is the moment the thing is proved possible. It is not yet a thing you can manufacture.",
+  "ph": 900.0,
+  "pre": [
+   "galena_detector",
+   "ge_reduction",
+   "gp_whisker_forming",
+   "micrometer_gauges",
+   "prc_lapping_plate",
+   "quantum_solidstate_theory",
+   "vacuum_tube"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.45,
+  "sch": 25.0,
+  "sus": 3,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 900.0,
+  "cat": "chemistry",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "potash_soda",
+  "kb": "20_chemistry.md#potash_and_soda",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 900.0,
+   "labourer": 3000.0
+  },
+  "mat": {
+   "lime_kg": 4000.0,
+   "natron_kg": 2000.0,
+   "wood_ash_kg": 40000.0
+  },
+  "name": "Potash, caustic potash, soda and caustic soda",
+  "note": "Natron in bulk (Rome draws its from Egypt) and wood ash are both already available in most ancient economies, one or the other or both. Causticising with slaked lime is the step not yet taken. Feeds soap, glass and the nitre beds.",
+  "ph": 200.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 1100.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 700.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 25.0,
+  "art": 200.0,
+  "build_yrs": 3.0,
+  "cap": 150000.0,
+  "cat": "electrical",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "power_grid",
+  "kb": "50_electricity.md#transformer_ac",
+  "kind": "INFRASTRUCTURE",
+  "lab": {
+   "artisan": 30000.0,
+   "labourer": 60000.0,
+   "machinist": 20000.0
+  },
+  "mat": {
+   "copper_kg": 40000.0,
+   "iron_sheet_kg": 60000.0,
+   "steel_plate_kg": 90000.0
+  },
+  "name": "Central generation and distribution",
+  "note": "The precondition for every energy-intensive process that follows: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a semiconductor programme consumes. This is a civilisational-scale project, not a workshop one. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. A power grid needs generation, transformers, transmission and the steel to build all three. It does not need a railway: this node required one, which pulled the whole eighteen-node railway programme and its serial time into the critical path to a transistor. Bulk steel, which the railway also needed, is the real shared dependency.",
+  "ph": 900.0,
+  "pre": [
+   "en_circuit_breaker",
+   "en_frequency_standardisation",
+   "en_insulator",
+   "en_substation",
+   "en_switchgear",
+   "en_transformer",
+   "en_transmission_line",
+   "mat_bulk_steel",
+   "motor_transformer_ac",
+   "steam_high_pressure"
+  ],
+  "req_any": [],
+  "rev": 120000.0,
+  "risk": 0.35,
+  "sch": 15.0,
+  "sus": 4,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 70000.0,
+  "yrs": 25.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 900.0,
+  "cat": "precision",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "precision_three_plate",
+  "kb": "40_power_precision.md#precision_three_plate",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 3000.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "emery_kg": 60.0,
+   "iron_bar_kg": 400.0,
+   "tallow_kg": 40.0
+  },
+  "name": "True plane surfaces by the three-plate method",
+  "note": "The foundation of everything mechanical, and it needs nothing any Iron-Age workshop does not already have. Two plates lapped together converge on a matched sphere and socket. Three plates lapped in rotation can only converge on flat. From the plane you derive the straightedge, the square, the gauge, the screw, and every machine after.",
+  "ph": 500.0,
+  "pre": [
+   "case_hardening",
+   "units_standards"
+  ],
+  "req_any": [],
+  "rev": 400.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 300.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 4.0,
+  "build_yrs": 2.0,
+  "cap": 4000.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -1,
+  "id": "printing_press",
+  "kb": "80_information_printing.md",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 3000.0,
+   "carpenter": 1500.0,
+   "smith": 3000.0
+  },
+  "mat": {
+   "antimony_kg": 40.0,
+   "iron_bar_kg": 300.0,
+   "lead_kg": 400.0,
+   "olive_oil_kg": 200.0,
+   "tin_kg": 60.0
+  },
+  "name": "Movable type and the screw press",
+  "note": "A screw press for oil and wine is already common wherever agriculture is pressed this way (Rome among others), so half the machine already exists. The hard parts are the punch-cut matrix, the adjustable hand mould for casting type at speed, and oil-based ink that will not bead on metal. POLITICALLY AMBIGUOUS. Cheap accurate copying breaks the elite's control of what is known and by whom. Frame it as multiplying the classics, never as publishing. Print the classics first and visibly.",
+  "ph": 900.0,
+  "pre": [
+   "cementation_steel",
+   "rag_paper"
+  ],
+  "req_any": [
+   {
+    "group": "substrate",
+    "options": {
+     "papyrus_sheet": 0.3,
+     "parchment_sheet": 0.35,
+     "rag_paper": 1.0
+    }
+   },
+   {
+    "group": "type_metal",
+    "options": {
+     "antimony_kg": 1.0,
+     "lead_kg": 0.6,
+     "mat_bronze": 0.5
+    }
+   }
+  ],
+  "rev": 3400.0,
+  "risk": 0.25,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "information",
+   "status_threatening"
+  ],
+  "up": 1500.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 4.0,
+  "cap": 800.0,
+  "cat": "physics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "quantum_solidstate_theory",
+  "kb": "55_semiconductors.md#semiconductor_theory",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 6000.0
+  },
+  "mat": {},
+  "name": "Band theory, doping, carriers, the p-n junction",
+  "note": "The single largest time saving in the programme. Historically this took from 1900 to 1947 and several Nobel prizes. You carry the conclusions. Write them down in your first decade, in plain quantitative language, in many copies, because you will not live to see them tested.",
+  "ph": 1800.0,
+  "pre": [
+   "atomic_theory",
+   "em_theory"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 8.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 8.0,
+  "art": 20.0,
+  "build_yrs": 2.6666666666666665,
+  "cap": 15000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "radio",
+  "kb": "55_semiconductors.md#radio_spark_to_valve",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 6000.0,
+   "machinist": 3000.0
+  },
+  "mat": {
+   "copper_kg": 900.0,
+   "galena_kg": 10.0,
+   "glass_raw_kg": 150.0
+  },
+  "name": "Radio: spark, crystal set, then valve transmitters",
+  "note": "Wireless communication over the whole Mediterranean, including to ships, which no empire has ever had. Strategically this is worth more than the electric telegraph and it is the second great gift to the State. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 700.0,
+  "pre": [
+   "galena_detector",
+   "vacuum_tube"
+  ],
+  "req_any": [],
+  "rev": 25000.0,
+  "risk": 0.3,
+  "sch": 8.0,
+  "sus": 10,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 9000.0,
+  "yrs": 8.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 1.5,
+  "cap": 3500.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "rag_paper",
+  "kb": "80_information_printing.md",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 2500.0,
+   "labourer": 5000.0,
+   "scribe": 100.0
+  },
+  "mat": {
+   "lime_kg": 600.0,
+   "linen_rag_kg": 6000.0,
+   "paper_kg": 20.0
+  },
+  "name": "Rag paper from linen",
+  "note": "Cai Lun's paper is 105 AD in China and will not reach the Mediterranean for centuries. Ret and lime the rags, beat them to pulp with a water-driven stamper, lift on a wire mould, press and size. Cheaper than papyrus, far cheaper than parchment, and it is the substrate of everything in Module 80.",
+  "ph": 400.0,
+  "pre": [
+   "water_power_scale",
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 2600.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "information"
+  ],
+  "up": 1200.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 20.0,
+  "art": 150.0,
+  "build_yrs": 3.0,
+  "cap": 90000.0,
+  "cat": "transport",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "railway",
+  "kb": "85_transport_civil.md",
+  "kind": "INFRASTRUCTURE",
+  "lab": {
+   "labourer": 60000.0,
+   "machinist": 15000.0,
+   "smith": 12000.0
+  },
+  "mat": {
+   "steel_plate_kg": 400000.0,
+   "timber_m3": 4000.0
+  },
+  "name": "Iron rail, locomotive and permanent way",
+  "note": "Where the existing road network is already excellent (Rome's is the classic case) the marginal gain from rail is smaller than it was in 1830s Britain, but bulk freight overland at a fortieth of the cost still changes what can be built inland. Politically superb: it is unambiguously an instrument of whatever state you serve. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. The 400 tonnes of rail steel is a demonstration line of roughly 4 km at about 100 kg per metre of track, not a network. A network is a further order of magnitude and is why the calendar floor here is a generation.",
+  "ph": 800.0,
+  "pre": [
+   "lnd_flanged_wheel",
+   "mat_bulk_steel",
+   "steam_high_pressure",
+   "tr_axle_bearing_box",
+   "tr_blastpipe",
+   "tr_block_signalling",
+   "tr_bogie_truck",
+   "tr_fishplate",
+   "tr_flatbottom_rail",
+   "tr_injector_feedwater",
+   "tr_interlocking_signal",
+   "tr_locomotive_boiler",
+   "tr_points_frog",
+   "tr_rail_rolling",
+   "tr_screw_coupling",
+   "tr_sleeper_ballast",
+   "tr_sprung_buffer",
+   "tr_vacuum_brake"
+  ],
+  "req_any": [
+   {
+    "group": "rail_metal",
+    "options": {
+     "finery_puddling": 0.55,
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.3
+    }
+   }
+  ],
+  "rev": 60000.0,
+  "risk": 0.35,
+  "sch": 3.0,
+  "sus": 4,
+  "traits": [
+   "commerce",
+   "infrastructure"
+  ],
+  "up": 35000.0,
+  "yrs": 20.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 1600.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "refractory_fireclay",
+  "kb": "10_metallurgy.md#refractory_fireclay",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 2500.0,
+   "potter": 2000.0
+  },
+  "mat": {
+   "clay_kg": 20000.0,
+   "sand_quartz_kg": 6000.0
+  },
+  "name": "Fireclay, grog and silica refractories",
+  "note": "Nothing hot happens without a vessel that survives it. Excellent ceramics already exist in most of these societies, but without systematic refractory grading. Test candidate clays by firing to failure and record the results; this is your first real experimental programme.",
+  "ph": 350.0,
+  "pre": [
+   "workshop_first"
+  ],
+  "req_any": [],
+  "rev": 600.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 700.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 400.0,
+  "cat": "medicine",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "sanitation_antisepsis",
+  "kb": "70_medicine_biology.md#sanitation_antisepsis",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scholar": 900.0
+  },
+  "mat": {},
+  "name": "Boiled water, handwashing, wound irrigation, quarantine",
+  "note": "Costs an argument, not a coin. Saves more lives than every machine in this document combined, wherever it is adopted. Sell it to the army first: an army already has field hospitals and an officer class that measures results (Rome's valetudinaria is the model).",
+  "ph": 300.0,
+  "pre": [
+   "distillation_alcohol"
+  ],
+  "req_any": [],
+  "rev": 1400.0,
+  "risk": 0.15,
+  "sch": 1.0,
+  "sus": 4,
+  "traits": [
+   "infrastructure",
+   "medical"
+  ],
+  "up": 300.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 4.0,
+  "cap": 8000.0,
+  "cat": "institution",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "school_founded",
+  "kb": "03_SOCIAL_POLITICS.md#school_founded",
+  "kind": "INSTITUTION",
+  "lab": {
+   "scholar": 4000.0,
+   "scribe": 2000.0
+  },
+  "mat": {},
+  "name": "Found the school (the Museum)",
+  "note": "The pivot of the entire game. Converts your hours into other people's hours permanently. Every year of delay here costs more than any single technology. Grants +4 scholars immediately and adds capacity for +2 scholars per year to the household training pipeline thereafter; this raises the reachable staff pool and deputy capacity, not the school headline count. Graduates become usable as hiring and training fill that capacity. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. OPTIONAL. Nothing in the technical tree requires it. It is simply the highest-leverage thing you can spend money on, because it converts your hours into other people's hours permanently. You may decline to found it and hire craftsmen forever instead; the simulator will let you, and will show you the cost.",
+  "ph": 2000.0,
+  "pre": [
+   "arithmetic_positional",
+   "collegium_licensed",
+   "freedman_staff"
+  ],
+  "req_any": [],
+  "rev": 800.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 4,
+  "traits": [
+   "status_threatening"
+  ],
+  "up": 2500.0,
+  "yrs": 4.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 2.0,
+  "cap": 100.0,
+  "cat": "foundation",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": -1,
+  "id": "scientific_method",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 500.0
+  },
+  "mat": {},
+  "name": "Controlled experiment, hypothesis, replication, publication",
+  "note": "The hard part is not stating it, it is displacing Aristotelian authority. Risk is high because the failure mode is cultural, not technical. Multiplier on every research node thereafter. Contradicting Aristotle and Galen in public is a social act before it is an intellectual one, and their defenders hold the chairs, the patronage and the medical guild. Expect organised opposition, not curiosity.  (Needs no standing: writing down zero, or running a controlled experiment, is something a nobody can do. What standing buys is being BELIEVED, which is reputation, not a prerequisite.)",
+  "ph": 350.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 100.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 5.0,
+  "build_yrs": 3.0,
+  "cap": 5000.0,
+  "cat": "precision",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "screw_lathe",
+  "kb": "40_power_precision.md#screw_cutting_lathe",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 1500.0,
+   "machinist": 6000.0,
+   "smith": 3000.0
+  },
+  "mat": {
+   "brass_kg": 80.0,
+   "iron_bar_kg": 1800.0,
+   "steel_noric_kg": 150.0
+  },
+  "name": "Screw-cutting lathe with lead screw and slide rest",
+  "note": "The machine that makes machines. Everything after this gets easier, and each generation of lathe builds a better one. Maudslay's insight is the slide rest: take the tool out of the operator's hand and the accuracy stops depending on his wrist.",
+  "ph": 900.0,
+  "pre": [
+   "crucible_steel",
+   "master_screw",
+   "prc_change_gears_quadrant",
+   "prc_slide_rest_simple",
+   "water_power_scale"
+  ],
+  "req_any": [],
+  "rev": 3500.0,
+  "risk": 0.35,
+  "sch": 1.0,
+  "sus": 2,
+  "traits": [
+   "labour_saving"
+  ],
+  "up": 1800.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 2200.0,
+  "cat": "ships",
+  "conf": "A",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 3,
+  "id": "sea_clinker_hull",
+  "kb": "86_transport_deep.md#tr_clinker_planking",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 6000.0
+  },
+  "mat": {
+   "iron_bar_kg": 400.0,
+   "timber_m3": 90.0
+  },
+  "name": "Clinker-built hull",
+  "note": "Overlapping strakes riveted along their laps, so the SKIN carries the load and the frames only hold its shape. The hull flexes in a seaway instead of resisting it, which is why a Norse ship survives water that would open a rigid Mediterranean hull.",
+  "ph": 150.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 700.0,
+  "risk": 0.12,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure",
+   "military",
+   "commerce"
+  ],
+  "up": 180.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 900.0,
+  "cat": "ships",
+  "conf": "A",
+  "dev_people": 0,
+  "dev_years": 0,
+  "gov": 2,
+  "id": "sea_keel_deep",
+  "kb": "86_transport_deep.md#tr_frame_first_construction",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 3000.0
+  },
+  "mat": {
+   "timber_m3": 40.0
+  },
+  "name": "Deeper keel for improved windward sailing",
+  "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship\u2019s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
+  "ph": 100.0,
+  "pre": [
+   "sea_square_sail"
+  ],
+  "req_any": [],
+  "rev": 300.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure",
+   "commerce"
+  ],
+  "up": 60.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 4.0,
+  "build_yrs": 3.0,
+  "cap": 18000.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "semaphore_telegraph",
+  "kb": "80_information_printing.md",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 4000.0,
+   "carpenter": 6000.0,
+   "labourer": 10000.0
+  },
+  "mat": {
+   "iron_bar_kg": 900.0,
+   "timber_m3": 250.0
+  },
+  "name": "Optical semaphore chain",
+  "note": "Chappe's chain did Paris to Lille, 230 km, in minutes. Rome to the Rhine in a day instead of a month is worth more to an emperor than any weapon. THIS is the demonstration that buys imperial patronage. Requires the telescope to read the arms at distance.",
+  "ph": 700.0,
+  "pre": [
+   "patron_senatorial",
+   "telescope"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.25,
+  "sch": 1.0,
+  "sus": 2,
+  "traits": [
+   "information",
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_elec added by a reviewer working node by node. Reason: four-point probe and Hall effect require electrical measurement]",
+  "adopt_yrs": 0.0,
+  "art": 10.0,
+  "build_yrs": 4.0,
+  "cap": 9000.0,
+  "cat": "semiconductor",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "semiconductor_metrology",
+  "kb": "55_semiconductors.md#semiconductor_metrology",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 5000.0,
+   "machinist": 3000.0
+  },
+  "mat": {
+   "copper_kg": 90.0,
+   "glass_raw_kg": 90.0
+  },
+  "name": "Four-point probe, Hall effect, carrier measurement",
+  "note": "You cannot purify what you cannot measure. Resistivity to four significant figures and a Hall measurement for carrier type and density are the feedback loop that makes the entire purification programme convergent instead of blind.",
+  "ph": 800.0,
+  "pre": [
+   "cap_measure_elec",
+   "el2_potentiometer_method_measurement",
+   "el2_valve_voltmeter_high_impedance",
+   "electromagnet",
+   "galvanometer",
+   "quantum_solidstate_theory",
+   "vacuum_tube"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.3,
+  "sch": 14.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 4.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi added by a reviewer working node by node. Reason: 1414 C crystal growth requires high-temperature pyrometry]",
+  "adopt_yrs": 7.0,
+  "art": 40.0,
+  "build_yrs": 2.3333333333333335,
+  "cap": 60000.0,
+  "cat": "semiconductor",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "silicon_path",
+  "kb": "55_semiconductors.md#silicon_path",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 15000.0,
+   "machinist": 9000.0
+  },
+  "mat": {
+   "graphite_kg": 2000.0,
+   "hydrochloric_acid_kg": 15000.0,
+   "sand_quartz_kg": 9000.0
+  },
+  "name": "Silicon: trichlorosilane purification and high-temperature crystal growth",
+  "note": "Silicon is everywhere, which is why it wins in the end, and it melts at 1414 C against germanium's 938 C, needs far better crucible chemistry, and its purification runs through trichlorosilane. Germanium first is the right bootstrap order and history agrees for exactly these reasons.",
+  "ph": 1000.0,
+  "pre": [
+   "arc_furnace_ferroalloys",
+   "cap_measure_temp_hi",
+   "hydrofluoric_acid",
+   "junction_transistor"
+  ],
+  "req_any": [
+   {
+    "group": "pure_graphite_supply",
+    "options": {
+     "mat_graphite_pure": 1.0
+    }
+   }
+  ],
+  "rev": 40000.0,
+  "risk": 0.45,
+  "sch": 30.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 40000.0,
+  "yrs": 7.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi, cap_tol_10um added by a reviewer working node by node. Reason: Czochralski pulling requires high-temperature pyrometry at melting point and slide rest precision for seed control]",
+  "adopt_yrs": 5.0,
+  "art": 25.0,
+  "build_yrs": 1.6666666666666667,
+  "cap": 30000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 0,
+  "id": "single_crystal",
+  "kb": "55_semiconductors.md#single_crystal_growth",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 9000.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "argon_or_h2_m3": 9000.0,
+   "graphite_kg": 600.0,
+   "quartz_tube_kg": 200.0
+  },
+  "name": "Czochralski single crystal growth and controlled doping",
+  "note": "Dip a seed into the melt and pull slowly while rotating. Add the dopant to the melt in weighed traces; this is where the analytical balance earns its keep two centuries later. Grain boundaries destroy carrier lifetime, so a single crystal is what makes a transistor MANUFACTURABLE: reproducible, rugged, and able to be made by the thousand. Teal and Little pulled the first germanium crystals in 1948, the year AFTER the point-contact device was demonstrated on ordinary polycrystalline material.",
+  "ph": 1000.0,
+  "pre": [
+   "cap_measure_temp_hi",
+   "cap_tol_10um",
+   "gp_controlled_atmosphere_chamber",
+   "gp_czochralski_puller",
+   "in2_xray_diffraction_camera",
+   "prc_gauge_blocks_johansson",
+   "semiconductor_metrology",
+   "zone_refining"
+  ],
+  "req_any": [
+   {
+    "group": "pure_graphite_supply",
+    "options": {
+     "mat_graphite_pure": 1.0
+    }
+   }
+  ],
+  "rev": 0.0,
+  "risk": 0.45,
+  "sch": 25.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 5.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
+  "adopt_yrs": 0.0,
+  "art": 1.0,
+  "build_yrs": 1.0,
+  "cap": 1200.0,
+  "cat": "chemistry",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "soap_hard",
+  "kb": "20_chemistry.md#potash_and_soda",
+  "kind": "SCIENCE",
+  "lab": {
+   "artisan": 1500.0,
+   "labourer": 2000.0
+  },
+  "mat": {
+   "firewood_kg": 9000.0,
+   "lime_kg": 800.0,
+   "olive_oil_kg": 3000.0,
+   "salt_kg": 8.0,
+   "wood_ash_kg": 15.0
+  },
+  "name": "Hard soap from oil and causticised lye",
+  "note": "Soap as a cleanser is missing from some ancient economies and already known in others (notably attested among Gallic and Germanic peoples, per Pliny). This word is already in the vocabulary wherever it applies; do not redefine it. It is included here to prevent anachronism where soap does not yet exist for you.",
+  "ph": 250.0,
+  "pre": [
+   "workshop_first",
+   "potash_soda"
+  ],
+  "req_any": [],
+  "rev": 1800.0,
+  "risk": 0.1,
+  "sch": 0.0,
+  "sus": 2,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 600.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 7.0,
+  "art": 6.0,
+  "build_yrs": 2.3333333333333335,
+  "cap": 11000.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "soda_leblanc",
+  "kb": "20_chemistry.md#potash_and_soda",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 3000.0,
+   "furnaceman": 4000.0,
+   "labourer": 8000.0
+  },
+  "mat": {
+   "coal_kg": 60000.0,
+   "lime_kg": 25000.0,
+   "salt_kg": 40000.0,
+   "sulfuric_acid_kg": 30000.0
+  },
+  "name": "Leblanc and later Solvay soda",
+  "note": "Frees you from the Egyptian natron supply and gives alkali in industrial quantity for glass, soap, paper and textiles. Leblanc is filthy: the hydrogen chloride and sulfide waste caused genuine environmental disasters in Britain. Condense the acid gas from the start; you will want the hydrochloric acid anyway. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 600.0,
+  "pre": [
+   "charcoal_industrial",
+   "hydrochloric_acid",
+   "lead_chamber"
+  ],
+  "req_any": [],
+  "rev": 11000.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 5,
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "up": 7000.0,
+  "yrs": 7.0
+ },
+ {
+  "_internal": "[FIXED after independent audit: a ruled grating needs the finest screw you own; the node declared no tolerance rung.]",
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 2.0,
+  "cap": 1800.0,
+  "cat": "instruments",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "spectroscope",
+  "kb": "30_glass_optics.md#spectroscope",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1500.0,
+   "machinist": 1800.0
+  },
+  "mat": {
+   "brass_kg": 40.0,
+   "glass_raw_kg": 20.0
+  },
+  "name": "Prism and grating spectroscope",
+  "note": "Highest information yield per denarius of any instrument you can build. Emission lines identify elements you have no other way to detect, and much later it is how you verify that your germanium is actually germanium.",
+  "ph": 500.0,
+  "pre": [
+   "atomic_theory",
+   "balance_analytical",
+   "cap_tol_10um",
+   "telescope"
+  ],
+  "req_any": [],
+  "rev": 700.0,
+  "risk": 0.25,
+  "sch": 3.0,
+  "sus": 3,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 600.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 1.0,
+  "cap": 50.0,
+  "cat": "mathematics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "statistics_basic",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scribe": 400.0
+  },
+  "mat": {},
+  "name": "Averages, error, sampling, controlled comparison",
+  "note": "Enables the medical trials that make germ theory persuasive rather than merely correct, and enables census and annona work that buys imperial favour.",
+  "ph": 300.0,
+  "pre": [
+   "arithmetic_positional",
+   "scientific_method"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.1,
+  "sch": 1.0,
+  "sus": 1,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 7.0,
+  "art": 8.0,
+  "build_yrs": 2.3333333333333335,
+  "cap": 14000.0,
+  "cat": "power",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "steam_atmospheric",
+  "kb": "40_power_precision.md#steam_atmospheric",
+  "kind": "ENGINEERING",
+  "lab": {
+   "labourer": 6000.0,
+   "machinist": 6000.0,
+   "smith": 6000.0
+  },
+  "mat": {
+   "cast_iron_kg": 500.0,
+   "coal_kg": 200000.0,
+   "copper_kg": 600.0,
+   "iron_bar_kg": 9000.0
+  },
+  "name": "Newcomen atmospheric engine",
+  "note": "Appallingly inefficient, around 0.5 to 1 percent, but it does not care: its job is pumping water out of coal and metal mines, where the fuel is free at the pithead. Do not attempt this before water power is exhausted; Italy and Gaul have rivers. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 900.0,
+  "pre": [
+   "boring_mill",
+   "cap_heat_1100",
+   "cap_tol_1mm",
+   "coal_coke",
+   "finery_puddling",
+   "thermodynamics_theory"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.7,
+     "coal_coke": 1.0,
+     "firewood_kg": 0.45,
+     "mat_charcoal": 0.7
+    }
+   },
+   {
+    "group": "pressure_vessel",
+    "options": {
+     "finery_puddling": 0.75,
+     "mat_bronze": 0.45,
+     "mat_bulk_steel": 1.0,
+     "mat_copper": 0.35,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ],
+  "rev": 6000.0,
+  "risk": 0.35,
+  "sch": 2.0,
+  "sus": 4,
+  "traits": [
+   "infrastructure",
+   "religious_adjacent"
+  ],
+  "up": 7000.0,
+  "yrs": 7.0
+ },
+ {
+  "adopt_yrs": 12.0,
+  "art": 50.0,
+  "build_yrs": 3.0,
+  "cap": 26000.0,
+  "cat": "power",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 3,
+  "id": "steam_high_pressure",
+  "kb": "40_power_precision.md#steam_high_pressure",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 9000.0,
+   "smith": 9000.0
+  },
+  "mat": {
+   "iron_bar_kg": 9000.0,
+   "steel_plate_kg": 25000.0
+  },
+  "name": "High pressure steam and adequate boilers",
+  "note": "Power density enough for locomotives and ships. Be honest with your students about how many people early boilers killed, and build a hydraulic test and a relief valve into the very first one. A boiler explosion anywhere in a pre-industrial society will be read as divine judgment on the whole programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 700.0,
+  "pre": [
+   "mat_bulk_steel",
+   "steam_watt"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.6,
+     "mat_petroleum_refined": 1.0
+    }
+   },
+   {
+    "group": "pressure_vessel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_wrought_iron": 0.45
+    }
+   }
+  ],
+  "rev": 22000.0,
+  "risk": 0.4,
+  "sch": 3.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 12000.0,
+  "yrs": 12.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: piston-cylinder precision for efficient sealing and smooth operation]",
+  "adopt_yrs": 9.0,
+  "art": 35.0,
+  "build_yrs": 3.0,
+  "cap": 20000.0,
+  "cat": "power",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "steam_watt",
+  "kb": "40_power_precision.md#steam_watt",
+  "kind": "ENGINEERING",
+  "lab": {
+   "machinist": 8000.0,
+   "smith": 6000.0
+  },
+  "mat": {
+   "brass_kg": 400.0,
+   "copper_kg": 1200.0,
+   "iron_bar_kg": 12000.0
+  },
+  "name": "Separate condenser and rotative engines",
+  "note": "Roughly a fourfold fuel saving, plus rotative motion via the sun and planet gear, which puts an engine anywhere rather than only at a pithead. This is the node that lets industry leave the riverbank. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 800.0,
+  "pre": [
+   "cap_tol_100um",
+   "interchangeable_parts",
+   "steam_atmospheric"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "coal_coke": 1.0,
+     "firewood_kg": 0.45,
+     "mat_charcoal": 0.7,
+     "mat_petroleum_refined": 0.95
+    }
+   },
+   {
+    "group": "pressure_vessel",
+    "options": {
+     "mat_bronze": 0.4,
+     "mat_bulk_steel": 1.0,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ],
+  "rev": 14000.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 9000.0,
+  "yrs": 9.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: green vitriol dehydration at approximately 480 C requires pottery kiln scale heat]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 3500.0,
+  "cat": "chemistry",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "sulfuric_retort",
+  "kb": "20_chemistry.md#sulfuric_acid_retort",
+  "kind": "SCIENCE",
+  "lab": {
+   "chemist": 3000.0,
+   "furnaceman": 2500.0,
+   "potter": 2000.0
+  },
+  "mat": {
+   "charcoal_kg": 40000.0,
+   "clay_kg": 6000.0,
+   "green_vitriol_kg": 6000.0
+  },
+  "name": "Oil of vitriol by dry distillation of green vitriol",
+  "note": "The master key to all chemistry. Green vitriol lies in heaps at every pyrite mine as a weathering product and nobody yet has any idea what it is for. High risk because the retorts fail constantly at the temperature required. Small scale, expensive acid, but it bootstraps the chamber process.",
+  "ph": 800.0,
+  "pre": [
+   "cap_heat_0700",
+   "glass_labware",
+   "lab_apparatus"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "coal_kg": 0.9,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 1500.0,
+  "risk": 0.4,
+  "sch": 2.0,
+  "sus": 10,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 2200.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 12.0,
+  "art": 30.0,
+  "build_yrs": 3.0,
+  "cap": 35000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "telegraph_electric",
+  "kb": "50_electricity.md#telegraph",
+  "kind": "INFRASTRUCTURE",
+  "lab": {
+   "artisan": 8000.0,
+   "labourer": 25000.0,
+   "smith": 4000.0
+  },
+  "mat": {
+   "copper_kg": 9000.0,
+   "glass_raw_kg": 2000.0,
+   "iron_bar_kg": 6000.0,
+   "shellac_kg": 150.0
+  },
+  "name": "Electric telegraph",
+  "note": "The killer application for an empire and the thing that makes your programme permanently indispensable to the State. Glass or ceramic insulators on poles, relays every few tens of kilometres, Daniell cells at each station. Once a distant frontier can answer the capital in an hour, no ruler will ever let your institute be closed. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 700.0,
+  "pre": [
+   "crude_cell",
+   "daniell_cell",
+   "electromagnet",
+   "semaphore_telegraph"
+  ],
+  "req_any": [
+   {
+    "group": "conductor",
+    "options": {
+     "copper_refining": 1.0,
+     "iron_bar_kg": 0.45,
+     "mat_copper": 0.8
+    }
+   },
+   {
+    "group": "insulation",
+    "options": {
+     "glass_clear": 0.8,
+     "mat_bitumen": 0.55,
+     "mat_gutta_percha": 1.0,
+     "mat_shellac": 0.7
+    }
+   }
+  ],
+  "rev": 30000.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 15000.0,
+  "yrs": 12.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 700.0,
+  "cat": "glass_optics",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 3,
+  "id": "telescope",
+  "kb": "30_glass_optics.md#telescope",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1500.0,
+   "carpenter": 600.0
+  },
+  "mat": {
+   "emery_kg": 15.0,
+   "glass_raw_kg": 25.0,
+   "timber_m3": 3.0
+  },
+  "name": "Refracting telescope",
+  "note": "Military and naval value is immediate and obvious, which makes it one of the safest impressive things you can make. Chromatic aberration forces long tubes until you have flint glass for achromats.",
+  "ph": 350.0,
+  "pre": [
+   "glass_clear",
+   "lens_grinding"
+  ],
+  "req_any": [],
+  "rev": 2000.0,
+  "risk": 0.2,
+  "sch": 1.0,
+  "sus": 5,
+  "traits": [
+   "infrastructure",
+   "luxury",
+   "spectacle"
+  ],
+  "up": 250.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 3.0,
+  "cap": 600.0,
+  "cat": "physics",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "thermodynamics_theory",
+  "kb": "60_mathematics_method.md",
+  "kind": "SCIENCE",
+  "lab": {
+   "scholar": 3000.0
+  },
+  "mat": {},
+  "name": "Heat, energy, entropy, the gas laws",
+  "note": "Requires the thermometer to be more than words. Without it you cannot design an efficient engine or a controlled furnace.",
+  "ph": 700.0,
+  "pre": [
+   "newtonian_mechanics",
+   "thermometer"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.12,
+  "sch": 4.0,
+  "sus": 2,
+  "traits": [
+   "information"
+  ],
+  "up": 0.0,
+  "yrs": 3.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.5,
+  "cap": 800.0,
+  "cat": "instruments",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "thermometer",
+  "kb": "30_glass_optics.md#thermometer",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 900.0,
+   "glassblower": 1200.0
+  },
+  "mat": {
+   "glass_raw_kg": 30.0,
+   "mercury_kg": 6.0
+  },
+  "name": "Sealed liquid-in-glass thermometer with fixed points",
+  "note": "Melting ice and boiling water as fixed points. Without a repeatable temperature scale not one recipe in this guide can be transmitted to anyone who is not standing beside you. Prerequisite for thermodynamics being real rather than rhetorical.",
+  "ph": 400.0,
+  "pre": [
+   "glass_labware",
+   "mercury_supply",
+   "units_standards"
+  ],
+  "req_any": [],
+  "rev": 900.0,
+  "risk": 0.2,
+  "sch": 1.0,
+  "sus": 3,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 300.0,
+  "yrs": 1.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 250.0,
+  "cat": "foundation",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "units_standards",
+  "kb": "40_power_precision.md#micrometer_gauge_blocks",
+  "kind": "SCIENCE",
+  "lab": {
+   "carpenter": 200.0,
+   "smith": 400.0
+  },
+  "mat": {
+   "bronze_kg": 20.0
+  },
+  "name": "Define and publish standard length, mass, time and temperature",
+  "note": "Define reproducible length, mass, time, and temperature scales, manufacture durable master artefacts, compare workshop copies, and publish procedures. The founder supplies definitions immediately; fabrication and adoption consume the project time.",
+  "ph": 300.0,
+  "pre": [],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.05,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "commerce"
+  ],
+  "up": 30.0,
+  "yrs": 0.5
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 2500.0,
+  "cat": "instruments",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "vacuum_pumps",
+  "kb": "55_semiconductors.md#vacuum_pumps",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 1500.0,
+   "glassblower": 2500.0
+  },
+  "mat": {
+   "glass_raw_kg": 150.0,
+   "mercury_kg": 80.0
+  },
+  "name": "Sprengel mercury pump and high vacuum",
+  "note": "THE cheap shortcut of the endgame. Falling mercury drops each trap a slug of gas and carry it out. No pistons, no seals, no tolerances, and it reaches pressures good enough for discharge tubes and lamps using nothing but glass tubing and mercury. It skips the whole precision-machining prerequisite that a piston pump would impose. Add a McLeod gauge, which is the same trick in reverse, to know what you have achieved.",
+  "ph": 500.0,
+  "pre": [
+   "barometer",
+   "glass_labware",
+   "mercury_supply"
+  ],
+  "req_any": [
+   {
+    "group": "working_fluid",
+    "options": {
+     "mat_olive_oil": 0.5,
+     "mercury_supply": 1.0
+    }
+   }
+  ],
+  "rev": 400.0,
+  "risk": 0.3,
+  "sch": 3.0,
+  "sus": 7,
+  "traits": [
+   "spectacle"
+  ],
+  "up": 1500.0,
+  "yrs": 2.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: triode and amplifier require very high vacuum to prevent arcing and ensure long tube life]",
+  "adopt_yrs": 8.0,
+  "art": 25.0,
+  "build_yrs": 2.6666666666666665,
+  "cap": 14000.0,
+  "cat": "electrical",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "vacuum_tube",
+  "kb": "55_semiconductors.md#vacuum_tube",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 3000.0,
+   "glassblower": 6000.0,
+   "machinist": 4000.0
+  },
+  "mat": {
+   "barium_kg": 10.0,
+   "glass_raw_kg": 300.0,
+   "nickel_kg": 40.0,
+   "tungsten_kg": 6.0
+  },
+  "name": "Diode, triode, and the first amplifier",
+  "note": "Glass-to-metal seals need matched thermal expansion (Dumet wire) or they crack; getters finish the vacuum after sealing. A working amplifier transforms every instrument you own and is the practical precondition for doing sensitive semiconductor measurements at all. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 900.0,
+  "pre": [
+   "cap_vac_1e6",
+   "copper_refining",
+   "diffusion_pump",
+   "discharge_xray",
+   "gp_exhaust_pinchoff",
+   "gp_getter",
+   "gp_glass_metal_seal",
+   "in2_electron_source_cathode"
+  ],
+  "req_any": [
+   {
+    "group": "nickel_supply",
+    "options": {
+     "mat_nickel": 1.0
+    }
+   }
+  ],
+  "rev": 12000.0,
+  "risk": 0.4,
+  "sch": 14.0,
+  "sus": 6,
+  "traits": [
+   "inexplicable",
+   "infrastructure",
+   "spectacle"
+  ],
+  "up": 9000.0,
+  "yrs": 8.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 700.0,
+  "cat": "electrical",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "voltaic_pile",
+  "kb": "50_electricity.md#voltaic_pile",
+  "kind": "ENGINEERING",
+  "lab": {
+   "artisan": 900.0
+  },
+  "mat": {
+   "copper_kg": 80.0,
+   "linen_kg": 20.0,
+   "salt_kg": 50.0,
+   "zinc_kg": 80.0
+  },
+  "name": "Voltaic pile",
+  "note": "Trivially cheap once zinc metal exists, and utterly impossible before it. This is why zinc is on the critical path and why almost every plan misses it. Continuous current for the first time in history, and everything electrical follows. It needs copper DISCS, not fine insulated wire, so it does not wait on the wire-insulation node.",
+  "ph": 300.0,
+  "pre": [
+   "crude_cell",
+   "mat_copper",
+   "zinc_metal"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.15,
+  "sch": 2.0,
+  "sus": 12,
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ],
+  "up": 0.0,
+  "yrs": 1.0
+ },
+ {
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
+  "adopt_yrs": 0.0,
+  "art": 3.0,
+  "build_yrs": 2.0,
+  "cap": 4500.0,
+  "cat": "power",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "water_power_scale",
+  "kb": "40_power_precision.md#water_power_scaleup",
+  "kind": "ENGINEERING",
+  "lab": {
+   "carpenter": 4000.0,
+   "labourer": 8000.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "iron_bar_kg": 600.0,
+   "timber_m3": 90.0
+  },
+  "name": "Large watermill system: overshot wheels, millponds and leats",
+  "note": "Build and manage a substantial watermill site: impound water, control it through leats, and drive one or more overshot wheels at useful power. Medieval England inherits this civil and hydraulic capability. General-purpose line shafts that distribute power among unrelated industrial machines are not included.",
+  "ph": 450.0,
+  "pre": [
+   "crank_conrod"
+  ],
+  "req_any": [],
+  "rev": 2200.0,
+  "risk": 0.15,
+  "sch": 0.0,
+  "sus": 1,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 900.0,
+  "yrs": 2.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 2.0,
+  "build_yrs": 1.0,
+  "cap": 5000.0,
+  "cat": "institution",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "workshop_first",
+  "kb": "00_BRIEFING.md",
+  "kind": "INSTITUTION",
+  "lab": {
+   "carpenter": 1200.0,
+   "labourer": 3000.0
+  },
+  "mat": {
+   "brick_1000": 30.0,
+   "timber_m3": 40.0
+  },
+  "name": "First workshop and laboratory",
+  "note": "On navigable water. With a walled yard, a separate furnace shed downwind, and a door onto the street so that witnesses can see you are not conjuring.",
+  "ph": 500.0,
+  "pre": [
+   "patron_local"
+  ],
+  "req_any": [],
+  "rev": 0.0,
+  "risk": 0.08,
+  "sch": 0.0,
+  "sus": 3,
+  "traits": [
+   "commerce"
+  ],
+  "up": 900.0,
+  "yrs": 1.0
+ },
+ {
+  "adopt_yrs": 0.0,
+  "art": 0.0,
+  "build_yrs": 0.5,
+  "cap": 150.0,
+  "cat": "information",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "world_map",
+  "kb": "60_mathematics_method.md",
+  "kind": "ENGINEERING",
+  "lab": {
+   "scribe": 600.0
+  },
+  "mat": {
+   "papyrus_sheet": 200.0
+  },
+  "name": "Publish an accurate world map and sailing directions",
+  "note": "Nearly free, immediately impressive, militarily and commercially valuable, and hard to call magic. Present as compiled from Indian and Chinese merchant reports. Ptolemy's Geography is c. 150 AD, so you are 50 years early, which is credible rather than miraculous.",
+  "ph": 250.0,
+  "pre": [
+   "identity_cover"
+  ],
+  "req_any": [],
+  "rev": 500.0,
+  "risk": 0.05,
+  "sch": 0.0,
+  "sus": 4,
+  "traits": [
+   "information",
+   "infrastructure"
+  ],
+  "up": 50.0,
+  "yrs": 0.5
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 1500 tonnes of product a year it consumes about 18,000 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 24,000 hectares of forest under permanent management, which you must own before you light it.]",
+  "adopt_yrs": 12.0,
+  "annual_output_t": 1500,
+  "art": 70.0,
+  "build_yrs": 3.0,
+  "cap": 50000.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 2,
+  "id": "zinc_industry_scale",
+  "kb": "55_semiconductors.md#germanium_sourcing",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 4000.0,
+   "furnaceman": 12000.0,
+   "labourer": 15000.0
+  },
+  "mat": {
+   "calamine_kg": 18000000.0,
+   "charcoal_kg": 54000000.0,
+   "coal_kg": 400000.0
+  },
+  "name": "Zinc smelting at industrial scale, with flue dust collection",
+  "note": "Zinc is the hidden gate on the electrical age and this node is 83 per cent of the whole tree's charcoal. The carbon here does two jobs, reducing the oxide inside the retort and firing the retort from outside, and coke serves for both: the Belgian horizontal retorts ran on coal. That matters enormously, because 54,000 tonnes of charcoal a year is 72,000 hectares of coppice, and coal you can dig. Zinc earns its own way as brass, galvanising and batteries. Its second and hidden purpose is that germanium concentrates in the flue dust of zinc smelters, at the parts-per-thousand level in the dust against 1.6 ppm in the crust. Design the flues for dust collection from the first furnace or you will rebuild them later. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "ph": 600.0,
+  "pre": [
+   "high_temp_furnace",
+   "power_grid",
+   "zinc_metal"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 45000.0,
+  "risk": 0.3,
+  "sch": 5.0,
+  "sus": 2,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 30000.0,
+  "yrs": 12.0
+ },
+ {
+  "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 20 tonnes of product a year it consumes about 240 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 320 hectares of forest under permanent management, which you must own before you light it.]",
+  "adopt_yrs": 0.0,
+  "annual_output_t": 20,
+  "art": 3.0,
+  "build_yrs": 3.0,
+  "cap": 5500.0,
+  "cat": "metallurgy",
+  "conf": "B",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 1,
+  "id": "zinc_metal",
+  "kb": "10_metallurgy.md#zinc_metal",
+  "kind": "ENGINEERING",
+  "lab": {
+   "furnaceman": 4000.0,
+   "labourer": 3000.0,
+   "potter": 2500.0
+  },
+  "mat": {
+   "calamine_kg": 240000.0,
+   "charcoal_kg": 720000.0,
+   "clay_kg": 10000.0
+  },
+  "name": "Zinc metal by downward distillation",
+  "note": "CRITICAL PATH, and nobody guesses it. Zinc boils at 907 C, below the temperature at which calamine is reduced, so the metal leaves as vapour and reburns at the furnace mouth. That is precisely why brass gets made by cementation everywhere, without anyone having seen the metal itself. Seal the retort and condense downward, as at Zawar. Without this there is no good voltaic pile, and without a pile there is no electricity. It is also your realistic germanium source, twice over.",
+  "ph": 700.0,
+  "pre": [
+   "cementation_steel",
+   "refractory_fireclay"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85
+    }
+   }
+  ],
+  "rev": 4000.0,
+  "risk": 0.4,
+  "sch": 1.0,
+  "sus": 3,
+  "traits": [
+   "infrastructure"
+  ],
+  "up": 3000.0,
+  "yrs": 3.0
+ },
+ {
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp_hi, cap_tol_10um added by a reviewer working node by node. Reason: dragging molten zone requires high-temperature pyrometry at melting point and slide rest precision for heater control]",
+  "adopt_yrs": 6.0,
+  "art": 25.0,
+  "build_yrs": 2.0,
+  "cap": 35000.0,
+  "cat": "semiconductor",
+  "conf": "A",
+  "dev_people": null,
+  "dev_years": null,
+  "failure_kind": "process_control",
+  "gov": 0,
+  "id": "zone_refining",
+  "kb": "55_semiconductors.md#zone_refining",
+  "kind": "ENGINEERING",
+  "lab": {
+   "chemist": 12000.0,
+   "machinist": 6000.0
+  },
+  "mat": {
+   "copper_kg": 900.0,
+   "graphite_kg": 900.0,
+   "hydrogen_m3": 12000.0,
+   "quartz_tube_kg": 300.0
+  },
+  "name": "Zone refining to one part in 1e9",
+  "note": "The specific trick that makes semiconductors possible at all. Most impurities prefer the liquid, so a narrow molten zone dragged along an ingot sweeps them to one end; repeat and the purity compounds. Nothing else reaches these levels. It needs a tube furnace, a quartz or graphite boat, a hydrogen or inert atmosphere, and a way to move a heater slowly and repeatably, which is why it waits on motors.",
+  "ph": 1200.0,
+  "pre": [
+   "arc_furnace_ferroalloys",
+   "cap_measure_temp_hi",
+   "cap_tol_10um",
+   "el2_induction_heating_inductor_coupling",
+   "ge_reduction",
+   "gp_controlled_atmosphere_chamber",
+   "motor_transformer_ac",
+   "semiconductor_metrology"
+  ],
+  "req_any": [
+   {
+    "group": "pure_graphite_supply",
+    "options": {
+     "mat_graphite_pure": 1.0
+    }
+   }
+  ],
+  "rev": 0.0,
+  "risk": 0.45,
+  "sch": 25.0,
+  "sus": 1,
+  "traits": [
+   "inexplicable"
+  ],
+  "up": 0.0,
+  "yrs": 6.0
+ }
+]
