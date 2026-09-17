@@ -1449,7 +1449,7 @@ class ProjectsMixin:
         artisan can recognise success without understanding the theory. You
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
-        n = self.nodes[k]
+        node = self.nodes[k]
         # THE ALLOW-LIST IS ROME'S CRAFTS, and it was applied to everybody. A
         # Norse tester was refused a bounty on `sea_skeleton_first` -
         # shipbuilding - by a civilisation whose own profile marks ships as the
@@ -1458,34 +1458,34 @@ class ProjectsMixin:
         # rule: anything this society is measurably GOOD at (its own cost
         # multipliers say so) can be recognised by its own craftsmen, whatever
         # Rome's craft categories happen to be.
-        if n["cat"] in ("glass_optics", "metallurgy", "precision", "power",
+        if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
-            return all(p in self.household.done for p in n["pre"])
+            return all(prereq_id in self.household.done for prereq_id in node["pre"])
         if self.civ_cost_factor(k) < 0.95:
-            return all(p in self.household.done for p in n["pre"])
+            return all(prereq_id in self.household.done for prereq_id in node["pre"])
         return False
 
     def post_bounty(self, k):
         """Pay well over the odds, save 65% of your own hours, gain visibility."""
-        n = self.nodes[k]
+        node = self.nodes[k]
         # 2.5x the cost THIS society would actually incur, not 2.5x an
         # abstract base. A playtester found `why` quoting 188 denarii to build a
         # node while `bounty` demanded 588 for the same thing, because the
         # bounty ignored the civilization and price factors the build applies.
-        price = (n["_total_cost"] * 2.5 * self.civ_cost_factor(k)
+        price = (node["_total_cost"] * 2.5 * self.civ_cost_factor(k)
                  * self.material_cost_factor(k) * self.cost_money_factor())
         if price > self.household.capital:
             return False
         self.household.capital -= price
         self.household.total_spend += price
         self.household.bounties_paid += 1
-        self.household.active[k] = dict(ph_left=n["ph"] * 0.35, yrs=0.0, spent=price)
+        self.household.active[k] = dict(ph_left=node["ph"] * 0.35, yrs=0.0, spent=price)
         self.household.bountied.add(k)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` now measure. This used to also add to a `suspicion`
         # scalar that nothing ever read; see core.py's note on scandal.
         self.household.log.append((self.year, "posted a public bounty for %s (%s den)"
-                         % (n["name"], f"{price:,.0f}")))
+                         % (node["name"], f"{price:,.0f}")))
         return True
 
     def substitution_quality(self, k):
@@ -1495,14 +1495,14 @@ class ProjectsMixin:
         pressure vessel. Wood in a bronze boiler works. It is just bad, and the
         quality factor is how bad: it multiplies output and divides efficiency.
         """
-        n = self.nodes[k]
-        groups = n.get("req_any") or []
+        node = self.nodes[k]
+        groups = node.get("req_any") or []
         if not groups:
             return 1.0, True
-        q = 1.0
-        for g in groups:
+        quality = 1.0
+        for group in groups:
             best = 0.0
-            for opt, qual in (g.get("options") or {}).items():
+            for opt, qual in (group.get("options") or {}).items():
                 if opt in self.household.done or opt in self.nodes.get(k, {}).get("mat", {}):
                     best = max(best, float(qual))
                 elif opt not in self.nodes:
@@ -1516,17 +1516,17 @@ class ProjectsMixin:
                 # A GROUP KEY IS A SLUG, NOT PROSE. Surfacing it verbatim put
                 # "unknown_source" in front of a player, which is data, not
                 # English. Say it as words.
-                _gname = (g.get("name") or g.get("group") or "").replace("_", " ")
+                _gname = (group.get("name") or group.get("group") or "").replace("_", " ")
                 if _gname:
                     _gname = ("an " if _gname[0] in "aeiou" else "a ") + _gname
                 self.household._last_subst_gap = (
                     _gname or "one of the things it can be made from",
-                    sorted((g.get("options") or {}), key=lambda o:
-                           -float((g.get("options") or {})[o]))[:4])
+                    sorted((group.get("options") or {}), key=lambda o:
+                           -float((group.get("options") or {})[o]))[:4])
                 return 0.0, False        # no option in this group is available
-            q *= best
+            quality *= best
         self.household._last_subst_gap = None
-        return q, True
+        return quality, True
 
     def start_reason(self, k, ignore_trade=False, _memo=None, _why=True):
         """Same legality test as `can_start`, but explains a refusal instead of
@@ -1773,13 +1773,13 @@ class ProjectsMixin:
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
         # engineer: the wage table says so itself. You make one by teaching one.
-        absent = [] if ignore_trade else sorted(t for t in n["lab"]
-                                                if not self.trade_available(t))
+        absent = [] if ignore_trade else sorted(trade_id for trade_id in n["lab"]
+                                                if not self.trade_available(trade_id))
         if absent:
             return False, (("this needs %s and there are none in this society. "
                            'Teach one: {"cmd":"train","trade":"%s","n":2} '
                            "(about 450 of your own hours each, two years)"
-                           % (", ".join(a + "s" for a in absent), absent[0]))
+                           % (", ".join(trade_id + "s" for trade_id in absent), absent[0]))
                            if _why else None)
         # AND SOMEBODY HAS TO BE LEFT. A trade you taught still counts as
         # existing after the last of them has died or been poached, so `why`
@@ -1791,15 +1791,15 @@ class ProjectsMixin:
         # People already being TAUGHT count: they will be ready, and starting
         # work that lands the year they qualify is the right thing to do.
         _none_left = [] if ignore_trade else sorted(
-            t for t, want in (n["lab"] or {}).items()
-            if want > 0 and self.market_supply(t) <= 0.0
-            and self._trade_headcount_pending(t) <= 0.0)
+            trade_id for trade_id, want in (n["lab"] or {}).items()
+            if want > 0 and self.market_supply(trade_id) <= 0.0
+            and self._trade_headcount_pending(trade_id) <= 0.0)
         if _none_left:
             return False, (("this needs %s and there is not one left here to do "
                            "it: you taught the trade and nobody is currently "
                            'holding it. {"cmd":"train","trade":"%s","n":2} makes '
                            "more, or hire from your own if you have any"
-                           % (", ".join(a + "s" for a in _none_left), _none_left[0]))
+                           % (", ".join(trade_id + "s" for trade_id in _none_left), _none_left[0]))
                            if _why else None)
         # SOCIAL APPROVAL GATE. Some things the State does not want built, and no
         # amount of money substitutes for someone powerful being willing to be
