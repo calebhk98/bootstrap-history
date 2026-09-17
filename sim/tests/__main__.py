@@ -86,6 +86,9 @@ TOPICS = [
     # _run_topic handles both. It had never run: unregistered here, and unable
     # to import under the old rome.sim.tests rooting even if it had been.
     "tierless_schema",
+    # The tool that makes the naming sweep affordable; verified here because a
+    # verification tool nobody verified is a rubber stamp.
+    "rename_prover",
     # The suite has to be able to run before anything above it can:
     # this topic checks that it does so from a checkout of any name,
     # in any directory. It is last because it re-runs one cheap topic

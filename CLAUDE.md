@@ -120,6 +120,7 @@ python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
 python3 sim/repro_nondeterminism.py        # the determinism bug, in ten seconds
+python3 sim/prove_rename_safe.py HEAD      # prove a rename changed nothing but names
 ```
 
 The suite runs from a checkout of any name, in any directory. If you find
@@ -159,11 +160,17 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 
 ## 7. Naming
 
-An AST scan counts **3,813 bindings of identifiers two characters or shorter,
-across 332 distinct names and 83 files**: `k` alone is 568 bindings in 53
-files, `s` is 264, `n` is 198, `r` is 197. That is the single biggest
-obstacle to anyone reading this code, and it gets worse every time someone
-adds to it.
+Identifiers two characters or shorter, measured three ways because the number
+you quote depends on what you count: **4,972 occurrences** (what a rename tool
+must actually touch), **3,813 binding sites**, **3,759 name-per-scope** (what a
+reader meets). Across 176 to 332 distinct names, depending on the same choice,
+in 72 of 83 files. `k` alone is 568 across 53 files.
+
+Quote the 4,972 when sizing the work and say which you mean, because the first
+two attempts at this number disagreed and both were right.
+
+This is the single biggest obstacle to anyone reading this code, and it gets
+worse every time someone adds to it.
 
 **The rule for new and edited code:** spell names out. The only acceptable
 short names are `i` as a loop index, and `x`/`y` as coordinates, and only
@@ -174,9 +181,20 @@ This applies to prose and design documents too. `p = A'p + w·l + rents` is
 four letters standing for four things nobody can recover without the
 textbook - write `price_of(good)`, `hours_per_unit`, `wage_of(trade)`.
 
-A sweep of the existing 3,813 is planned; see
-`docs/architecture/NAMING_PLAN.md` for the tiering and the tooling. Purely
-local variables are safe to rename mechanically. The tech-tree DATA schema
+A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
+the per-name meanings and the tooling. **72.4% is Tier 1** - purely local
+variables, provably safe. Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one
+thing everywhere; most vary by site (`q` is a function, a quantity, a quality
+score and a price quote in four different places), so there is no global
+find-and-replace for them.
+
+`python3 sim/prove_rename_safe.py <ref>` proves a rename changed nothing but
+names, by comparing compiled bytecode: a local's name is not in `co_code`, so
+a pure local rename leaves the executed bytes identical, while an attribute or
+global moves `co_names` and a literal moves `co_consts`. That is a proof over
+every possible run rather than a sample of nine, and it does not depend on
+`perf_fingerprint` working. It does NOT cover parameter renames, where a
+caller passing by keyword breaks invisibly - it reports those separately. The tech-tree DATA schema
 fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`, `sch`, `art`, `sus`, `gov`,
 `conf`, `pre`, `yrs`, `kb`) are a separate and much harder problem: they are
 in 2,864 nodes of JSON, in save files, and in the protocol, so changing them
