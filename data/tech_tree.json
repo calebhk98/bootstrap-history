@@ -13174,7 +13174,7 @@
   {
    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
    "_src": "18_chemicals.json",
-   "_total_cost": 1562.2,
+   "_total_cost": 1562.9,
    "adopt_yrs": 0.0,
    "art": 0.0,
    "build_yrs": 0.5,
@@ -13193,11 +13193,10 @@
     "furnaceman": 150.0
    },
    "mat": {
-    "coal_kg": 200.0,
-    "steam_kg": 100.0
+    "coal_kg": 245.0
    },
    "name": "Activated carbon production and use",
-   "note": "Charcoal is heated with steam at 900 C. Water reacts with carbon, gasifying the interior and creating a porous structure with enormous surface area, up to 3000 m2/g. Activated carbon adsorbs colour, odour and trace contaminants. It is used for water treatment and gas purification.",
+   "note": "Charcoal is heated with steam at 900 C. Water reacts with carbon, gasifying the interior and creating a porous structure with enormous surface area, up to 3000 m2/g. Activated carbon adsorbs colour, odour and trace contaminants. It is used for water treatment and gas purification. Steam is not a stocked material - it is water raised on the spot by the same furnace this node already burns coal_kg for, and pricing it as a separate purchased kilogram double-counted the fuel. Folded into coal_kg instead: 100 kg of steam needs roughly 2.6 MJ/kg to heat feedwater from ambient to boiling and then vaporise it (sensible heat plus the ~2.26 MJ/kg latent heat of vaporisation this file's own brine-boiling entries use), which at a rough 20 percent furnace efficiency (matching lime_kg's kiln estimate in data/production/30_fuel_stone.json, since this is the same kind of furnace-integrated boiler rather than an insulated one built for the purpose) and coal's ~29 MJ/kg calorific value comes to about 45 kg of coal - 200 kg for the activation reaction itself plus that 45 kg for the steam, giving 245 kg total. The req_any steam_supply group below already gates this node on having SOME steam-generating technology; that answers whether you can raise steam at all, which is a different question from how much fuel this one batch burns doing it, so both stay. See Complaints/28-material-keys-that-are-not-materials.md.",
    "ph": 100.0,
    "pre": [
     "cap_heat_1100",
@@ -16240,39 +16239,6 @@
    "_total_cost": 0.0,
    "adopt_yrs": 0.0,
    "art": 0.0,
-   "build_yrs": 0.0,
-   "cap": 0.0,
-   "cat": "buildings",
-   "conf": "A",
-   "dev_people": null,
-   "dev_years": null,
-   "gov": 0,
-   "id": "civ_circus_racecourse",
-   "kb": "85_transport_civil.md",
-   "kb_level": "module",
-   "kind": "ENGINEERING",
-   "lab": {},
-   "mat": {},
-   "name": "Circus and horse-racing venue",
-   "note": "A long U-shaped racing venue with starting gates, a central spina, turning posts, tiered spectator seating, and space for chariot or horse races. Roman circuses are racing venues, structurally and institutionally distinct from amphitheatres used for arena spectacles.",
-   "ph": 0.0,
-   "pre": [
-    "civ_arch_roman"
-   ],
-   "req_any": [],
-   "rev": 0.0,
-   "risk": 0.0,
-   "sch": 0.0,
-   "sus": 0,
-   "traits": [],
-   "up": 0.0,
-   "yrs": 0.0
-  },
-  {
-   "_src": "22_civil.json",
-   "_total_cost": 0.0,
-   "adopt_yrs": 0.0,
-   "art": 0.0,
    "build_yrs": 2.0,
    "cap": 3000.0,
    "cat": "water",
@@ -16781,6 +16747,39 @@
    ],
    "up": 0.0,
    "yrs": 0.2
+  },
+  {
+   "_src": "22_civil.json",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "buildings",
+   "conf": "A",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "civ_circus_racecourse",
+   "kb": "85_transport_civil.md",
+   "kb_level": "module",
+   "kind": "ENGINEERING",
+   "lab": {},
+   "mat": {},
+   "name": "Circus and horse-racing venue",
+   "note": "A long U-shaped racing venue with starting gates, a central spina, turning posts, tiered spectator seating, and space for chariot or horse races. Roman circuses are racing venues, structurally and institutionally distinct from amphitheatres used for arena spectacles.",
+   "ph": 0.0,
+   "pre": [
+    "civ_arch_roman"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 0.0
   },
   {
    "_src": "22_civil.json",
@@ -18593,7 +18592,7 @@
     "steel_noric_kg": 25.0
    },
    "name": "Pendulum-regulated clock",
-   "note": "Replace a mechanical clock’s foliot regulator with a pendulum whose near-isochronous swing provides much steadier timekeeping. The project includes the escapement geometry and fine gearing needed to exploit that regulator; balance springs are a separate portable-watch development. This is a seventeenth-century advance, not inherited medieval clockwork.",
+   "note": "Replace a mechanical clock\u2019s foliot regulator with a pendulum whose near-isochronous swing provides much steadier timekeeping. The project includes the escapement geometry and fine gearing needed to exploit that regulator; balance springs are a separate portable-watch development. This is a seventeenth-century advance, not inherited medieval clockwork.",
    "ph": 500.0,
    "pre": [
     "clock_mechanical_escapement",
@@ -42017,7 +42016,7 @@
    "adopt_yrs": 0.0,
    "art": 0.0,
    "build_yrs": 2.0,
-   "cap": 2000.0,
+   "cap": 10000.0,
    "cat": "institution",
    "conf": "C",
    "dev_people": null,
@@ -42027,11 +42026,9 @@
    "kb": "03_SOCIAL_POLITICS.md#freedman_staff",
    "kind": "INSTITUTION",
    "lab": {},
-   "mat": {
-    "slave_skilled": 8.0
-   },
+   "mat": {},
    "name": "Buy, train and manumit a technical staff",
-   "note": "Acquire, train and free a technical staff: buy or bind skilled workers, teach them, release them from their obligation, then pay and keep them. A freed worker who remains literate and paid transmits knowledge onward; a coerced one does not. In Rome this is manumission of skilled slaves, who retain an obligation to their former owner as patron and ran much of Roman commerce; the Norse equivalent is working off a debt-thrall's bond. Whichever form bondage takes where you are playing, this is both the ethical and the efficient answer. Grants +8 artisans.",
+   "note": "Acquire, train and free a technical staff: buy or bind skilled workers, teach them, release them from their obligation, then pay and keep them. A freed worker who remains literate and paid transmits knowledge onward; a coerced one does not. In Rome this is manumission of skilled slaves, who retain an obligation to their former owner as patron and ran much of Roman commerce; the Norse equivalent is working off a debt-thrall's bond. Whichever form bondage takes where you are playing, this is both the ethical and the efficient answer. Grants +8 artisans. A person is not a material: this node used to spend 8.0 units of a fictitious mat_ good called slave_skilled, priced as if a trained adult were a stocked commodity like iron bars - data/production/40_organics.json refuses to write it a production recipe for exactly that reason. What this project actually spends is a one-time capital outlay, the price of acquiring eight already-skilled people, so that cost (8 times the 1000 denarii/head data/prices.json already carried for slave_skilled, itself unchanged) now sits in cap instead of mat, alongside the founder's 900 hours spent negotiating, training and formally freeing them. This still does not reach into the household's own slave ledger: buying and freeing people through this node changes hired_cap() the way the institution always did, but does not touch self.household.slaves or self.household.freedmen the way buy_slaves()/manumit() in sim/engine/labour.py do for a founder who buys people directly. Linking the two - so this node draws down the same market and the same household state as buy_slaves rather than a parallel flat number - is further work, flagged rather than done here. See Complaints/28-material-keys-that-are-not-materials.md.",
    "ph": 900.0,
    "pre": [
     "workshop_first"
@@ -50070,7 +50067,7 @@
     "iron_bar_kg": 6.0
    },
    "name": "Frequency modulation",
-   "note": "Audio signal varies the frequency of the RF carrier instead of the amplitude. A 100 MHz carrier modulated with 1 kHz audio swings ±75 kHz. FM is immune to amplitude noise (static, ignition noise), so reception is much quieter. Bandwidth is about 10x wider than AM (200 kHz for 15 kHz audio), requiring wider channel spacing. Requires sophisticated receivers (discriminators, limiters). Adopted late (1940s in consumer radio) due to infrastructure cost, but ultimately superior.",
+   "note": "Audio signal varies the frequency of the RF carrier instead of the amplitude. A 100 MHz carrier modulated with 1 kHz audio swings \u00b175 kHz. FM is immune to amplitude noise (static, ignition noise), so reception is much quieter. Bandwidth is about 10x wider than AM (200 kHz for 15 kHz audio), requiring wider channel spacing. Requires sophisticated receivers (discriminators, limiters). Adopted late (1940s in consumer radio) due to infrastructure cost, but ultimately superior.",
    "ph": 180.0,
    "pre": [
     "if_triode_oscillator",
@@ -53435,7 +53432,7 @@
    "mat": {
     "brass_kg": 8.0
    },
-   "name": "Geiger-Müller counter: proportional region",
+   "name": "Geiger-M\u00fcller counter: proportional region",
    "note": "Pulse output independent of input energy (above threshold); excellent counting efficiency. Dead time 100-300 microseconds limits count rate.",
    "ph": 110.0,
    "pre": [
@@ -53754,7 +53751,7 @@
    "mat": {
     "silver_kg": 2.0
    },
-   "name": "Interferometer: Fabry-Pérot etalon",
+   "name": "Interferometer: Fabry-P\u00e9rot etalon",
    "note": "Multiple reflections enhance sharpness; useful for spectral lines separated by nanometers. Parallelism and surface flatness required to better than 0.1 wavelength.",
    "ph": 130.0,
    "pre": [
@@ -68246,7 +68243,7 @@
     "timber_m3": 2.0
    },
    "name": "Annealing and recrystallization",
-   "note": "Heat work-hardened metal to a dull red and cool slowly. Atoms rearrange into stress-free grains and the metal becomes soft and ductile again. Must not overheat or grains grow coarse and the metal becomes brittle. The window is narrow—a difference of 50 degrees C makes the difference between a good anneal and scrap. Requires experience to recognize the right color.",
+   "note": "Heat work-hardened metal to a dull red and cool slowly. Atoms rearrange into stress-free grains and the metal becomes soft and ductile again. Must not overheat or grains grow coarse and the metal becomes brittle. The window is narrow\u2014a difference of 50 degrees C makes the difference between a good anneal and scrap. Requires experience to recognize the right color.",
    "ph": 100.0,
    "pre": [
     "cap_heat_1100",
@@ -68501,7 +68498,7 @@
     "limestone_kg": 20.0
    },
    "name": "Converter furnace for steel",
-   "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid—if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
+   "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
    "ph": 180.0,
    "pre": [
     "cap_heat_1600",
@@ -68594,7 +68591,7 @@
     "steel_plate_kg": 100.0
    },
    "name": "Deep drawing and pressing dies",
-   "note": "Press a flat metal sheet with a die into a deep cup shape in a single stroke. The metal must be annealed and soaped to prevent sticking and tearing. Multiple draws with annealing between are needed for very deep cups. The challenge is uniform thickness—the metal flows unevenly and thin spots tear or wrinkle. Needs precision dies and pressure control.",
+   "note": "Press a flat metal sheet with a die into a deep cup shape in a single stroke. The metal must be annealed and soaped to prevent sticking and tearing. Multiple draws with annealing between are needed for very deep cups. The challenge is uniform thickness\u2014the metal flows unevenly and thin spots tear or wrinkle. Needs precision dies and pressure control.",
    "ph": 350.0,
    "pre": [
     "cap_tol_100um",
@@ -68639,7 +68636,7 @@
     "timber_m3": 50.0
    },
    "name": "Deep shaft sinking techniques",
-   "note": "Going deeper than 200 meters requires support sets (timber or steel frames), continuous pumping of inflow water, adequate ventilation at depth, and precise control of powder charges to avoid enlarding the hole. The pressure of overlying rock increases shear stress on timbering. Major collapses are common. The time to sink a shaft grows non-linearly with depth—doubling depth more than quadruples time.",
+   "note": "Going deeper than 200 meters requires support sets (timber or steel frames), continuous pumping of inflow water, adequate ventilation at depth, and precise control of powder charges to avoid enlarding the hole. The pressure of overlying rock increases shear stress on timbering. Major collapses are common. The time to sink a shaft grows non-linearly with depth\u2014doubling depth more than quadruples time.",
    "ph": 240.0,
    "pre": [
     "met_mine_pumping",
@@ -68682,7 +68679,7 @@
     "zinc_kg": 100.0
    },
    "name": "Die casting and hot chamber casting",
-   "note": "Inject molten zinc or aluminum into a hardened steel die at high speed under high pressure. Cool rapidly and eject. Produces dimensionally consistent parts at high volume. The die cost is enormous and only amortizes over thousands of parts. Porosity from trapped gas is the chronic defect—degassing the metal before injection is essential.",
+   "note": "Inject molten zinc or aluminum into a hardened steel die at high speed under high pressure. Cool rapidly and eject. Produces dimensionally consistent parts at high volume. The die cost is enormous and only amortizes over thousands of parts. Porosity from trapped gas is the chronic defect\u2014degassing the metal before injection is essential.",
    "ph": 180.0,
    "pre": [
     "cap_heat_1300",
@@ -69232,7 +69229,7 @@
     "nickel_kg": 20.0
    },
    "name": "Hardenability and alloy steel design",
-   "note": "Adding chromium, nickel, molybdenum, or vanadium increases the depth to which a steel can be hardened. Thick bars that quench-harden only to the surface need alloy addition to harden through. Hardenability is separate from hardness—a hard steel is not necessarily hardenable to depth. Engineers design alloys to achieve both the hardness and the through-hardening needed for large bearings and gears.",
+   "note": "Adding chromium, nickel, molybdenum, or vanadium increases the depth to which a steel can be hardened. Thick bars that quench-harden only to the surface need alloy addition to harden through. Hardenability is separate from hardness\u2014a hard steel is not necessarily hardenable to depth. Engineers design alloys to achieve both the hardness and the through-hardening needed for large bearings and gears.",
    "ph": 280.0,
    "pre": [
     "atomic_theory",
@@ -69420,7 +69417,7 @@
     "timber_m3": 3.0
    },
    "name": "Jigging and gravity separation",
-   "note": "Shake crushed ore in a slurry in a funnel-bottomed box; dense ore sinks, waste rock suspends and overflows. The real work is tuning the shake frequency and water flow—too fast and you lose ore, too slow and waste carries through. This becomes faster and cheaper than hand sorting at scale.",
+   "note": "Shake crushed ore in a slurry in a funnel-bottomed box; dense ore sinks, waste rock suspends and overflows. The real work is tuning the shake frequency and water flow\u2014too fast and you lose ore, too slow and waste carries through. This becomes faster and cheaper than hand sorting at scale.",
    "ph": 80.0,
    "pre": [
     "cap_measure_len",
@@ -69502,7 +69499,7 @@
     "sulfuric_acid_kg": 3.0
    },
    "name": "Metallography: polishing, etching and microscopy",
-   "note": "Polish a section of steel to mirror smoothness, etch with dilute acid to reveal grain boundaries and phases, look through a microscope. The microstructure tells you if the heat treatment worked, if the segregation is acceptable, if cracks are present. This single instrument—the microscope—transformed metallurgy from craft to science. No expensive equipment needed: a microscope and an etchant are sufficient.",
+   "note": "Polish a section of steel to mirror smoothness, etch with dilute acid to reveal grain boundaries and phases, look through a microscope. The microstructure tells you if the heat treatment worked, if the segregation is acceptable, if cracks are present. This single instrument\u2014the microscope\u2014transformed metallurgy from craft to science. No expensive equipment needed: a microscope and an etchant are sufficient.",
    "ph": 200.0,
    "pre": [
     "analytical_chemistry",
@@ -69556,7 +69553,7 @@
     "timber_m3": 12.0
    },
    "name": "Mine pumping systems",
-   "note": "Use water power to drive a Cornish engine or a Newcomen atmospheric engine, then a force pump lifts water from the lowest level. Deep mines fill with water faster than hand bailing can remove it. The pumping plant is the largest single capital expense of a deep mine—without it, you cannot go deeper than about 100 meters. The pump must run constantly during operations.",
+   "note": "Use water power to drive a Cornish engine or a Newcomen atmospheric engine, then a force pump lifts water from the lowest level. Deep mines fill with water faster than hand bailing can remove it. The pumping plant is the largest single capital expense of a deep mine\u2014without it, you cannot go deeper than about 100 meters. The pump must run constantly during operations.",
    "ph": 180.0,
    "pre": [
     "cap_power_water"
@@ -69959,7 +69956,7 @@
     "timber_m3": 5.0
    },
    "name": "Reverberatory furnace",
-   "note": "The charge sits on the hearth, flames from a separate firebox bounce off an arched roof and melt the metal. Fuel never touches the charge—this is the crucial difference from a blast furnace. Enables puddling and copper refining because slag does not contaminate with coke ash. The roof must be shaped right or it cracks under thermal shock.",
+   "note": "The charge sits on the hearth, flames from a separate firebox bounce off an arched roof and melt the metal. Fuel never touches the charge\u2014this is the crucial difference from a blast furnace. Enables puddling and copper refining because slag does not contaminate with coke ash. The roof must be shaped right or it cracks under thermal shock.",
    "ph": 200.0,
    "pre": [
     "cap_heat_1300",
@@ -70471,7 +70468,7 @@
     "timber_m3": 6.0
    },
    "name": "Two-high rolling mill",
-   "note": "Two iron rolls, one fixed, one movable, crush hot steel bar between them. The bar emerges thinner and longer. Needs rolls of sufficient hardness and a power source that does not stall under load—cast iron rolls are barely adequate and shatter under shock; hardened steel rolls are better but hard to make. The steel must be hot enough to flow without cracking. Getting the temperature, roll gap, and feed speed in balance is an art.",
+   "note": "Two iron rolls, one fixed, one movable, crush hot steel bar between them. The bar emerges thinner and longer. Needs rolls of sufficient hardness and a power source that does not stall under load\u2014cast iron rolls are barely adequate and shatter under shock; hardened steel rolls are better but hard to make. The steel must be hot enough to flow without cracking. Getting the temperature, roll gap, and feed speed in balance is an art.",
    "ph": 280.0,
    "pre": [
     "cap_heat_1300",
@@ -70602,7 +70599,7 @@
     "timber_m3": 4.0
    },
    "name": "Wire rod rolling mill",
-   "note": "A series of small oval and round rolls progressively thins a bar into coiled wire rod, which is then drawn to final size. The wire emerges hot and coils as it cools. The speed is high—modern mills run at meters per second—so you need strong power and excellent roll material or the rolls will crack and scatter pieces. A single roll failure at speed can cause line shutdown for a day.",
+   "note": "A series of small oval and round rolls progressively thins a bar into coiled wire rod, which is then drawn to final size. The wire emerges hot and coils as it cools. The speed is high\u2014modern mills run at meters per second\u2014so you need strong power and excellent roll material or the rolls will crack and scatter pieces. A single roll failure at speed can cause line shutdown for a day.",
    "ph": 160.0,
    "pre": [
     "cap_power_steam",
@@ -84231,7 +84228,7 @@
    },
    "mat": {},
    "name": "Pneumatic rock drill: compressed air powered percussion",
-   "note": "Siméon and Sommeiller (1860s) developed air drill for Alpine tunnels. Hand hammers then competed. Air compressor (steam-driven or water-turbine) provides 6-10 bar. Speeds tunneling 10x. Mine development accelerated post-1870s.",
+   "note": "Sim\u00e9on and Sommeiller (1860s) developed air drill for Alpine tunnels. Hand hammers then competed. Air compressor (steam-driven or water-turbine) provides 6-10 bar. Speeds tunneling 10x. Mine development accelerated post-1870s.",
    "ph": 140.0,
    "pre": [
     "cap_gas_o2h2",
@@ -90070,11 +90067,10 @@
     "scholar": 80.0
    },
    "mat": {
-    "glass_raw_kg": 2.0,
-    "monochromatic_light_kg": 0.0
+    "glass_raw_kg": 2.0
    },
    "name": "Optical flat and Newton's rings for flatness",
-   "note": "Thick glass plate ground flat within 0.2 microns. Monochromatic light creates Newton's rings: dark fringes show topography to 0.25 microns. Enables checking grinder wheel truing and lapping plate flatness. Only optical method for surface checking under 1 micron.",
+   "note": "Thick glass plate ground flat within 0.2 microns. Monochromatic light creates Newton's rings: dark fringes show topography to 0.25 microns. Enables checking grinder wheel truing and lapping plate flatness. Only optical method for surface checking under 1 micron. Monochromatic light has no mass and was never a material to buy by the kilogram - it is an instrument capability (a sodium lamp, a spectroscope's slit and prism) that this node uses repeatedly rather than consumes, and this node's own prerequisites already name that instrument twice over: cap_measure_light (interferometric length by wavelengths of light) and arc_light_lamp, the light source it runs. Nothing further belongs in mat. See Complaints/28-material-keys-that-are-not-materials.md.",
    "ph": 100.0,
    "pre": [
     "arc_light_lamp",
@@ -93633,7 +93629,7 @@
     "sulfuric_acid_kg": 5.0
    },
    "name": "Fuel cell (hydrogen-oxygen)",
-   "note": "Hydrogen and oxygen react at separate electrodes in an electrolyte, producing DC directly. Efficient, silent, no heat loss, but hydrogen is expensive to produce. Grove and Schönbein discovered it in the 1840s; Grove built a telegraph powered by fuel cells.",
+   "note": "Hydrogen and oxygen react at separate electrodes in an electrolyte, producing DC directly. Efficient, silent, no heat loss, but hydrogen is expensive to produce. Grove and Sch\u00f6nbein discovered it in the 1840s; Grove built a telegraph powered by fuel cells.",
    "ph": 300.0,
    "pre": [
     "cap_gas_o2h2",
@@ -95092,7 +95088,7 @@
    },
    "mat": {},
    "name": "Binomial theorem and binomial expansion",
-   "note": "Newton discovered this; Pascal's triangle gives coefficients. Teaching: why does (x+y)² = x² + 2xy + y²? Draw a square divided into four. Why does (x+y)³ work the same way? Induction proof follows. Adoption: fast, because it saves multiplication.",
+   "note": "Newton discovered this; Pascal's triangle gives coefficients. Teaching: why does (x+y)\u00b2 = x\u00b2 + 2xy + y\u00b2? Draw a square divided into four. Why does (x+y)\u00b3 work the same way? Induction proof follows. Adoption: fast, because it saves multiplication.",
    "ph": 90.0,
    "pre": [
     "algebra_symbolic"
@@ -95128,7 +95124,7 @@
     "scribe": 200.0
    },
    "mat": {},
-   "name": "Complex numbers: a + bi where i² = -1",
+   "name": "Complex numbers: a + bi where i\u00b2 = -1",
    "note": "Cardano's cubic formula forced complex intermediate steps. Teaching: geometry (rotation and scaling in the plane) makes it tangible. Adoption: fast in AC electricity and physics.",
    "ph": 110.0,
    "pre": [
@@ -95310,7 +95306,7 @@
     "scribe": 140.0
    },
    "mat": {},
-   "name": "Logarithm as inverse exponent: log₁₀(1000) = 3",
+   "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
    "note": "Napier invented this to replace multiplication with addition: multiply by looking up logs, adding, looking up antilog. Teaching: understand exponent rules first. Then log is just naming the exponent. The product rule is obvious once you see it.",
    "ph": 70.0,
    "pre": [
@@ -95457,7 +95453,7 @@
    },
    "mat": {},
    "name": "The quadratic equation and solution formula",
-   "note": "Babylonians completed the square geometrically. Al-Khwarizmi had the method. Descartes proved it algebraically. Teaching: deriving the formula from completing the square takes an hour and feels like discovery. The ± notation is key.",
+   "note": "Babylonians completed the square geometrically. Al-Khwarizmi had the method. Descartes proved it algebraically. Teaching: deriving the formula from completing the square takes an hour and feels like discovery. The \u00b1 notation is key.",
    "ph": 80.0,
    "pre": [
     "algebra_symbolic"
@@ -95827,7 +95823,7 @@
    },
    "mat": {},
    "name": "Partial differential equations",
-   "note": "d²u/dt² = c² d²u/dx² (wave equation); solutions require boundary conditions. Teaching is hard; Fourier series helps. Adoption is by mathematical physicists first.",
+   "note": "d\u00b2u/dt\u00b2 = c\u00b2 d\u00b2u/dx\u00b2 (wave equation); solutions require boundary conditions. Teaching is hard; Fourier series helps. Adoption is by mathematical physicists first.",
    "ph": 200.0,
    "pre": [
     "calculus",
@@ -97028,7 +97024,7 @@
    },
    "mat": {},
    "name": "Operator symbols: +, -, *, /",
-   "note": "Germany adopted + and - in 15th c. for accounting. Multiplication: earlier × (Oughtred) and · (Leibniz) both persist. Division: ÷ (Obelus) is late 17th c. Adoption is printing-driven.",
+   "note": "Germany adopted + and - in 15th c. for accounting. Multiplication: earlier \u00d7 (Oughtred) and \u00b7 (Leibniz) both persist. Division: \u00f7 (Obelus) is late 17th c. Adoption is printing-driven.",
    "ph": 35.0,
    "pre": [
     "arithmetic_positional"
@@ -97098,7 +97094,7 @@
    },
    "mat": {},
    "name": "Root symbols and radical notation",
-   "note": "Medieval √ is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing.",
+   "note": "Medieval \u221a is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing.",
    "ph": 40.0,
    "pre": [
     "algebra_symbolic"
@@ -97978,7 +97974,7 @@
    },
    "mat": {},
    "name": "Nuclear fission and chain reaction",
-   "note": "Meitner and Frisch (1938-1939); Manhattan Project (1942-1945). Teaching: Einstein's E = mc², mass defect, reaction rates. Adoption: immediate military application (bomb and reactor).",
+   "note": "Meitner and Frisch (1938-1939); Manhattan Project (1942-1945). Teaching: Einstein's E = mc\u00b2, mass defect, reaction rates. Adoption: immediate military application (bomb and reactor).",
    "ph": 140.0,
    "pre": [
     "sc2_physics_wave_mechanics",
@@ -98347,8 +98343,8 @@
     "scribe": 320.0
    },
    "mat": {},
-   "name": "Wave mechanics and Schrödinger equation",
-   "note": "Schrödinger (1926). Teaching is technically hard and philosophically confusing (wave vs particle). Adoption: slow but now universal in quantum chemistry.",
+   "name": "Wave mechanics and Schr\u00f6dinger equation",
+   "note": "Schr\u00f6dinger (1926). Teaching is technically hard and philosophically confusing (wave vs particle). Adoption: slow but now universal in quantum chemistry.",
    "ph": 180.0,
    "pre": [
     "sc2_calculus_pde",
@@ -100080,7 +100076,7 @@
     "timber_m3": 40.0
    },
    "name": "Deeper keel for improved windward sailing",
-   "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship’s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
+   "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship\u2019s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
    "ph": 100.0,
    "pre": [
     "sea_square_sail"

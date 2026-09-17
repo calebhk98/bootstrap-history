@@ -70,3 +70,76 @@ authoring data.
 The production entries for all four are written to be honest in the meantime:
 they say what the thing actually is, and their confidence marks say the entry
 is wrong in kind rather than merely uncertain in degree.
+
+## Resolved: the three fixed, `argon_or_h2_m3` left as recorded above
+
+`monochromatic_light_kg`, `steam_kg` and `slave_skilled` are gone from every
+node's `mat` list, and their `conf: D` entries in `data/production/` are
+deleted (per this file's own instruction to delete rather than refine them).
+`argon_or_h2_m3` is untouched, as the section above says to leave it until
+something actually needs the argon/hydrogen distinction.
+
+**`prc_optical_flat`** (`data/branches/20_precision.json`) - `mat` no longer
+carries `monochromatic_light`. Nothing needed inventing: the node's own `pre`
+already named `cap_measure_light` (interferometric length by wavelengths of
+light) and `arc_light_lamp` (the light source it runs), so whoever wrote
+those had already done the capability half of this fix and simply left the
+stale material key behind. The removed quantity was priced at 0 denarii, so
+this is a pure schema correction with no cost effect at all.
+
+**`chm_activated_carbon`** (`data/branches/18_chemicals.json`) - `mat` no
+longer carries `steam_kg`; `coal_kg` rises from 200 to 245 to cover it,
+derived the way `data/production/`'s own fuel-estimate entries are: sensible
+heat plus the ~2.26 MJ/kg latent heat of vaporisation for the 100 kg of
+steam, at a ~20% furnace efficiency (the same figure `lime_kg`'s kiln entry
+in `data/production/30_fuel_stone.json` uses) and coal's ~29 MJ/kg calorific
+value, giving about 45 kg of extra coal. The node also carries a `req_any`
+"steam_supply" gate (any of `cap_power_steam`, `steam_atmospheric`,
+`steam_high_pressure`, `steam_watt`) that turned out to exist ONLY in
+`data/tech_tree.json`, not in the branch file - an earlier, undocumented
+partial attempt at this same fix, addressing "can you raise steam at all"
+while leaving the double-counted fuel key in place. Left it as the answer to
+that question; `coal_kg` answers the separate question of how much fuel this
+one batch burns.
+
+**`freedman_staff`** - `mat` no longer carries `slave_skilled`; the same
+valuation (8 people at the 1000 denarii/head `data/prices.json` already
+carried) now sits in `cap` (2000 to 10000) instead, since acquiring people is
+a one-time capital outlay, not a material - exactly how `buy_slaves()` in
+`sim/engine/labour.py` already treats the identical transaction (a straight
+`household.capital` deduction, no `lab` hours). This node has NO branch
+source at all - it is a `"_src": "core"` node, one of the ones that predate
+`data/branches/` - so the edit went into `data/tech_tree.json` directly,
+which for this node is the only place the definition lives. The link the
+"what is missing" line above asked for is still missing: building this node
+still does not touch `self.household.slaves` or `self.household.freedmen`,
+only `hired_cap()`. It remains a parallel, unlinked way of modelling the same
+thing `buy_slaves()`/`manumit()` do with real market depth and a training
+lag. Wiring the two together is an engine change, not a data fix, and is not
+done here.
+
+**A mechanical finding worth recording alongside the fix itself:**
+`sim/treetool.py`'s `cmd_merge` seeds its working node table from the
+CURRENT `data/tech_tree.json`, and a branch file's node whose id is already
+in that table is skipped ("duplicate id, keeping the first") rather than
+overwriting it. Editing only the branch files for `chm_activated_carbon` and
+`prc_optical_flat` and re-running `merge` left the old `mat` untouched in the
+merged output - the branch edits were silently discarded. So "edit the
+branch, then merge" only ever applies to a brand-new node id; changing an
+existing one requires editing `data/tech_tree.json` itself (keeping the
+branch file in sync as documentation of record). All three nodes were edited
+in both places here, and a second `merge` run afterwards is a no-op (verified
+node-by-node), confirming the fix is stable under the tool.
+
+**Fingerprint:** `perf_fingerprint.py check` against a baseline recorded
+before this change reports 8 of 9 scenarios diverging - every Rome, Han,
+Norse and England scenario, and the 400-year Rome run - each at its own year
+(20 to 110), and only `mexica_1500/seed1` unchanged (Mexica's own tech order
+apparently never reaches any of these three nodes within 200 years). Three
+node costs changing was always going to move affordability broadly across
+civilisations that reach `freedman_staff` and `chm_activated_carbon` early;
+what matters is that no scenario diverges at year 0 or collapses into
+chaos - each is a specific, dated point consistent with one of these three
+projects becoming affordable a little earlier or later than before.
+`sim/simulator.py validate` and `sim/test_regressions.py` (1623 checks) both
+pass unchanged; no regression test had baked in any of the three old costs.
