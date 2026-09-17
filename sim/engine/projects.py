@@ -1565,8 +1565,8 @@ class ProjectsMixin:
         the default."""
         if k not in self.nodes:
             return False, ("no such node" if _why else None)
-        n = self.nodes[k]
-        if n.get("win_condition"):
+        node = self.nodes[k]
+        if node.get("win_condition"):
             # A THRESHOLD GOAL, NOT A PROJECT. This is measured, not built:
             # nobody ever spends hours or money on it, so it is never
             # offered as something to start, whatever its (always zero)
@@ -1580,7 +1580,7 @@ class ProjectsMixin:
             # no mutation, no log) but there is no reason to call it at all
             # when nobody will read the string it returns.
             return False, (("this is not something you build; it happens on "
-                           "its own once %s" % win_condition_describe(n))
+                           "its own once %s" % win_condition_describe(node))
                            if _why else None)
         if k in self.household.done:
             # A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already
@@ -1616,7 +1616,7 @@ class ProjectsMixin:
         # precision_three_plate to a sack and watched `available` read "0
         # startable now" for a hundred and eighty years, because that node
         # gates the whole precision branch.
-        if n["cat"] == "unobtainable":
+        if node["cat"] == "unobtainable":
             return False, ("retired category: unobtainable in this tree"
                            if _why else None)
         if self._is_foreign_only(k):
@@ -1624,7 +1624,7 @@ class ProjectsMixin:
                            "no such thing, and it is not something you can build "
                            "here" % self.civ.get("name", "this society"))
                            if _why else None)
-        missing = [p for p in n["pre"] if p not in self.household.done]
+        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done]
         if missing:
             # NAME ONLY WHAT YOU HAVE HEARD OF. A tester wrote a twenty-line
             # crawler that did nothing but read this message, and mapped 163
@@ -1655,8 +1655,8 @@ class ProjectsMixin:
             if not _why:
                 return False, None
             _grp, _opts = getattr(self.household, "_last_subst_gap", None) or (None, [])
-            _seen = [o for o in _opts
-                     if o not in self.nodes or self.is_visible(o, _memo=_memo)]
+            _seen = [option_id for option_id in _opts
+                     if option_id not in self.nodes or self.is_visible(option_id, _memo=_memo)]
             return False, ("this needs %s and you have none of the things that "
                            "would serve%s"
                            % (_grp or "a material or a vessel it can be built "
@@ -1731,13 +1731,13 @@ class ProjectsMixin:
                            "so is finishing or stopping what is running."
                            % (getattr(self.household, "insolvent_years", 0), -self.household.capital))
                            if _why else None)
-        if n["sch"] > self.effective_scholars():
+        if node["sch"] > self.effective_scholars():
             # _staff_advice is pure (labour.py: no rng, no log, no mutation -
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
             # it is skipped along with the rest of the sentence.
             return False, (("needs %d trained scholars, you have %.1f (you are one of them). %s"
-                           % (n["sch"], self.effective_scholars(), self._staff_advice("scholars")))
+                           % (node["sch"], self.effective_scholars(), self._staff_advice("scholars")))
                            if _why else None)
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
@@ -1755,7 +1755,7 @@ class ProjectsMixin:
         #
         # Buying a jobbing carpenter for a season to raise your workshop is
         # what a person in this position actually did.
-        if n["art"] > self.craft_hands_available():
+        if node["art"] > self.craft_hands_available():
             # A SHARE OF A YEAR, NOT ONLY BODIES. craft_hands_available()
             # adds hours already bought under contract as that fraction of
             # one more craftsman's year (see its own docstring: "a year of
@@ -1767,13 +1767,13 @@ class ProjectsMixin:
                            "counting people on your staff plus any hours "
                            "already bought under contract as that share of "
                            "one more. %s"
-                           % (n["art"], self.craft_hands_available(),
+                           % (node["art"], self.craft_hands_available(),
                               self._staff_advice("artisans")))
                            if _why else None)
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
         # engineer: the wage table says so itself. You make one by teaching one.
-        absent = [] if ignore_trade else sorted(trade_id for trade_id in n["lab"]
+        absent = [] if ignore_trade else sorted(trade_id for trade_id in node["lab"]
                                                 if not self.trade_available(trade_id))
         if absent:
             return False, (("this needs %s and there are none in this society. "
@@ -1791,7 +1791,7 @@ class ProjectsMixin:
         # People already being TAUGHT count: they will be ready, and starting
         # work that lands the year they qualify is the right thing to do.
         _none_left = [] if ignore_trade else sorted(
-            trade_id for trade_id, want in (n["lab"] or {}).items()
+            trade_id for trade_id, want in (node["lab"] or {}).items()
             if want > 0 and self.market_supply(trade_id) <= 0.0
             and self._trade_headcount_pending(trade_id) <= 0.0)
         if _none_left:
@@ -1809,15 +1809,15 @@ class ProjectsMixin:
         # Never let the gate ask for a thing in order to get that same thing:
         # the patronage and institution nodes are how you BUY permission, so they
         # cannot themselves require permission.
-        if n["cat"] in ("social", "institution", "foundation", "capability", "material"):
+        if node["cat"] in ("social", "institution", "foundation", "capability", "material"):
             return True, None
-        si = self.state_interest(n)
+        state_interest_score = self.state_interest(node)
         # state_interest() itself is always computed, above: it decides the
         # branch. _patron_advice, below, is not - it is pure (no rng, no
         # log, no mutation: see its own docstring) but it can call
         # is_visible() on a prerequisite chain, which is another recursive
         # descent nobody needs when only the boolean was asked for.
-        if si < -0.4 and not self.running("patron_local"):
+        if state_interest_score < -0.4 and not self.running("patron_local"):
             # NAME THE NODE, by the word you would type. "Get at least a local
             # patron first" was the whole message, and a play tester who read
             # it several times never connected it to `patron_local`, which was
@@ -1834,15 +1834,15 @@ class ProjectsMixin:
             # fog it is worse than nothing, because it is a free reveal.
             return False, (("the state is wary of this (state interest %.1f); "
                            "%s"
-                           % (si, self._patron_advice("patron_local",
+                           % (state_interest_score, self._patron_advice("patron_local",
                                                       "a local patron's name "
                                                       "behind you")))
                            if _why else None)
-        if si < -1.2 and not (self.running("patron_senatorial") or self.household.protection > 0.45):
+        if state_interest_score < -1.2 and not (self.running("patron_senatorial") or self.household.protection > 0.45):
             return False, (("the state actively opposes this (state interest "
                            "%.1f); %s, or protection above 0.45 (you have "
                            "%.2f)"
-                           % (si, self._patron_advice("patron_senatorial",
+                           % (state_interest_score, self._patron_advice("patron_senatorial",
                                                       "patronage at the very "
                                                       "top"),
                               self.household.protection))
@@ -1870,9 +1870,9 @@ class ProjectsMixin:
         # is a recursion this line does not need: the missing-prereq case is
         # the one that actually bit, and the fog filter for naming them
         # already exists.
-        missing = [p for p in self.nodes[k]["pre"] if p not in self.household.done]
+        missing = [prereq_id for prereq_id in self.nodes[k]["pre"] if prereq_id not in self.household.done]
         if missing:
-            seen = [p for p in missing if self.is_visible(p)]
+            seen = [prereq_id for prereq_id in missing if self.is_visible(prereq_id)]
             return ("get %s first, which itself wants %s"
                     % (in_world,
                        ", ".join(seen) if seen
@@ -1922,8 +1922,8 @@ class ProjectsMixin:
                                          or {}).get(k, 0.0)))
         price -= _paid_now
         # sorted(): summing floats over a dict whose keys came from a set.
-        owed = sum(st.get("cost_left") or 0.0
-                   for st in (self.household.active[x] for x in sorted(self.household.active)))
+        owed = sum(project_state.get("cost_left") or 0.0
+                   for project_state in (self.household.active[node_id] for node_id in sorted(self.household.active)))
         ceiling = max(0.0, self.household.capital) + self.credit_limit()
         # `self.household.active and` used to guard this, which exempted the FIRST
         # project from the only affordability test there is. A break tester
@@ -1938,7 +1938,7 @@ class ProjectsMixin:
                            "you can raise %s. Finish or stop something first."
                            % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
                               "{:,.0f}".format(ceiling)))
-        n = self.nodes[k]
+        node = self.nodes[k]
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the
         # creditors stop a project the money already sunk into it is kept
         # against the node, and this is where it comes back off the bill.
@@ -1957,16 +1957,16 @@ class ProjectsMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.household.active[k] = dict(ph_left=float(n["ph"]), yrs=0.0,
+        self.household.active[k] = dict(ph_left=float(node["ph"]), yrs=0.0,
                               spent=_already, cost_left=price,
-                              lab_left=dict(n["lab"]))
+                              lab_left=dict(node["lab"]))
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the
         # normal path: those are projects even when founder-hours happen to be
         # zero.
-        if (n["ph"] <= 0 and self.calendar_floor(k) <= 0 and price <= 0.5
-                and not n["lab"] and self.effective_risk(k) <= 0):
+        if (node["ph"] <= 0 and self.calendar_floor(k) <= 0 and price <= 0.5
+                and not node["lab"] and self.effective_risk(k) <= 0):
             self._complete(k)
             return True, None
         if _already > 0.5:
@@ -1995,12 +1995,12 @@ class ProjectsMixin:
         """
         if k not in self.household.active:
             return False, "not active"
-        st = self.household.active.pop(k)
+        project_state = self.household.active.pop(k)
         self.household.bountied.discard(k)
         _paid = getattr(self.household, "paid_towards", None)
         if _paid is None:
             _paid = self.household.paid_towards = {}
-        kept = max(0.0, st.get("spent", 0.0))
+        kept = max(0.0, project_state.get("spent", 0.0))
         if kept > 0.5:
             _paid[k] = _paid.get(k, 0.0) + kept
         return True, ("stopped. The %s denarii already paid stands to your "
@@ -2036,7 +2036,7 @@ class ProjectsMixin:
         the allocation runs (the 'work' warning below) cannot silently
         disagree with what step() actually offers.
         """
-        st, n = self.household.active[k], self.nodes[k]
+        project_state, node = self.household.active[k], self.nodes[k]
         # THE THROTTLE IS NOT APPLIED HERE, and must not be. step() spends
         # `min(remaining, this) * throttle`, and folding the throttle in
         # changes that to `min(remaining, this * throttle)`, which is a
@@ -2048,7 +2048,7 @@ class ProjectsMixin:
         # stretched thin, and no check in this suite caught it. What this
         # returns is the project's WANT; every caller applies the brake for
         # its own purpose.
-        return max(st["ph_left"], n["ph"] / max(n["yrs"], 1.0))
+        return max(project_state["ph_left"], node["ph"] / max(node["yrs"], 1.0))
 
     def active_hours_still_wanted(self):
         """{project id: hours} for every active project that would still like
@@ -2059,12 +2059,12 @@ class ProjectsMixin:
         may sum or rank it, and self.household.active's own order is not fixed.
         """
         out = {}
-        for k in sorted(self.household.active):
-            if k not in self.nodes:
+        for node_id in sorted(self.household.active):
+            if node_id not in self.nodes:
                 continue
-            pace = self.project_hour_pace(k)
+            pace = self.project_hour_pace(node_id)
             if pace > 0.5:
-                out[k] = pace
+                out[node_id] = pace
         return out
 
     def lab_max_span(self, k):
@@ -2083,8 +2083,8 @@ class ProjectsMixin:
         step() - so it earns proportionately more room, to a ceiling of four
         times its own floor rather than an unbounded one.
         """
-        n = self.nodes[k]
-        return max(40.0, float(n["yrs"]) * 4.0)
+        node = self.nodes[k]
+        return max(40.0, float(node["yrs"]) * 4.0)
 
     def _effective_lab_left(self, k, st):
         """What is left of each hired trade's total for active project `k`,
@@ -2099,9 +2099,9 @@ class ProjectsMixin:
         lab_left = st.get("lab_left")
         if lab_left is not None:
             return lab_left
-        n = self.nodes[k]
-        left_frac = min(1.0, st.get("ph_left", n["ph"]) / max(1.0, n["ph"]))
-        return {trade: want * left_frac for trade, want in n["lab"].items()}
+        node = self.nodes[k]
+        left_frac = min(1.0, st.get("ph_left", node["ph"]) / max(1.0, node["ph"]))
+        return {trade: want * left_frac for trade, want in node["lab"].items()}
 
     def trade_draw_plan(self, k, lab_left=None):
         """What project `k` would like to draw from each hired trade this
@@ -2123,15 +2123,15 @@ class ProjectsMixin:
         the same way, so a forecast and the real allocator can disagree
         about what a project GETS, never about what it WANTS.
         """
-        n = self.nodes[k]
+        node = self.nodes[k]
         out = {}
-        for t, want in n["lab"].items():
-            left = want if lab_left is None else lab_left.get(t, 0.0)
+        for trade_id, want in node["lab"].items():
+            left = want if lab_left is None else lab_left.get(trade_id, 0.0)
             if left <= 0 or want <= 0:
                 continue
-            nominal = want / max(1.0, n["yrs"])
+            nominal = want / max(1.0, node["yrs"])
             ceiling = nominal * self.LAB_CREW_RATE_MULT
-            out[t] = {"nominal": nominal, "left": left, "ceiling": ceiling,
+            out[trade_id] = {"nominal": nominal, "left": left, "ceiling": ceiling,
                       "desired": min(left, ceiling)}
         return out
 
@@ -2152,19 +2152,19 @@ class ProjectsMixin:
         by_trade = collections.defaultdict(list)
         # sorted(): this feeds float sums, and self.household.active is a dict whose
         # key order depends on PYTHONHASHSEED.
-        for k in sorted(self.household.active):
-            st = self.household.active[k]
-            for t, p in self.trade_draw_plan(
-                    k, self._effective_lab_left(k, st)).items():
-                demand[t] += p["desired"]
-                by_trade[t].append(k)
+        for node_id in sorted(self.household.active):
+            project_state = self.household.active[node_id]
+            for trade_id, plan in self.trade_draw_plan(
+                    node_id, self._effective_lab_left(node_id, project_state)).items():
+                demand[trade_id] += plan["desired"]
+                by_trade[trade_id].append(node_id)
         out = {}
-        for t in sorted(demand):
-            supply = self.hours_you_can_call_on(t)
-            out[t] = {"demand_hours_this_year": round(demand[t], 1),
+        for trade_id in sorted(demand):
+            supply = self.hours_you_can_call_on(trade_id)
+            out[trade_id] = {"demand_hours_this_year": round(demand[trade_id], 1),
                       "supply_hours_this_year": round(supply, 1),
-                      "oversubscribed": bool(demand[t] > supply + 1e-6),
-                      "projects_drawing_on_it": sorted(by_trade[t])}
+                      "oversubscribed": bool(demand[trade_id] > supply + 1e-6),
+                      "projects_drawing_on_it": sorted(by_trade[trade_id])}
         return out
 
     def lab_year_draw(self, k, st, frac, hired_left):
@@ -2188,25 +2188,25 @@ class ProjectsMixin:
         are done here, which is the real allocation and happens exactly once
         a year, inside step().
         """
-        n = self.nodes[k]
+        node = self.nodes[k]
         if st.get("lab_left") is None:
             st["lab_left"] = self._effective_lab_left(k, st)
         lab_left = st["lab_left"]
-        hh = 0.0
+        hired_hours = 0.0
         worst = 1.0
         plan = self.trade_draw_plan(k, lab_left)
-        for t, p in plan.items():
-            left, nominal = p["left"], p["nominal"]
-            have = max(0.0, self.hours_you_can_call_on(t)
-                       - self.household.trade_hours_used.get(t, 0.0))
+        for trade_id, plan_entry in plan.items():
+            left, nominal = plan_entry["left"], plan_entry["nominal"]
+            have = max(0.0, self.hours_you_can_call_on(trade_id)
+                       - self.household.trade_hours_used.get(trade_id, 0.0))
             # THE CEILING IS A CREW, NOT A CALENDAR, so take whatever of this
             # is both USEFUL (no more than is left to do) and AVAILABLE (no
             # more than the trade can actually supply this year), up to the
             # site's own headroom above its calibrated pace.
-            drawn = min(left, p["ceiling"], have)
-            lab_left[t] = max(0.0, left - drawn)
-            self.household.trade_hours_used[t] = self.household.trade_hours_used.get(t, 0.0) + drawn
-            hh += drawn
+            drawn = min(left, plan_entry["ceiling"], have)
+            lab_left[trade_id] = max(0.0, left - drawn)
+            self.household.trade_hours_used[trade_id] = self.household.trade_hours_used.get(trade_id, 0.0) + drawn
+            hired_hours += drawn
             # THE WARNING IS STILL DRAWN AT THE OLD PACE. Extra capacity above
             # the historical figure is a bonus with no penalty either way; a
             # SHORTFALL below the pace the node was actually calibrated
@@ -2219,10 +2219,10 @@ class ProjectsMixin:
         if worst < 1.0:
             frac *= worst
             st["short_of_trade"] = sorted(
-                t for t, left in lab_left.items()
-                if left > 0 and (self.hours_you_can_call_on(t)
-                                  - self.household.trade_hours_used.get(t, 0.0))
-                < min(left, n["lab"][t] / max(1.0, n["yrs"])))[:3]
+                trade_id for trade_id, left in lab_left.items()
+                if left > 0 and (self.hours_you_can_call_on(trade_id)
+                                  - self.household.trade_hours_used.get(trade_id, 0.0))
+                < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
         else:
             st.pop("short_of_trade", None)
         # THE DEADLINE. A trade that never clears its balance used to mean the
@@ -2234,12 +2234,12 @@ class ProjectsMixin:
         # People die and what they knew goes with them; nothing here pretends
         # otherwise.
         if st["yrs"] >= self.lab_max_span(k) and any(value > 0.5 for value in lab_left.values()):
-            unmet = sorted(t for t, value in lab_left.items() if value > 0.5)
-            return hh, worst, frac, (
+            unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
+            return hired_hours, worst, frac, (
                 "after %d years there was still not enough %s here to finish "
                 "it. What was spent is lost; you still know what you learned "
                 "along the way" % (int(self.lab_max_span(k)), " or ".join(unmet[:2])))
-        return hh, worst, frac, None
+        return hired_hours, worst, frac, None
 
     # ---- A FAILED ATTEMPT TEACHES YOU SOMETHING -----------------------------
     # A player who had already won the game objected to the mechanic just
@@ -2282,11 +2282,11 @@ class ProjectsMixin:
     RETRY_RISK_DECAY = 0.6         # each failure closes 40% of what is left
 
     def _retry_risk_multiplier(self, k):
-        m = self.household.failed_attempts.get(k, 0)
-        if m <= 0:
+        attempt_count = self.household.failed_attempts.get(k, 0)
+        if attempt_count <= 0:
             return 1.0
         return (self.RETRY_RISK_FLOOR
-                + (1.0 - self.RETRY_RISK_FLOOR) * self.RETRY_RISK_DECAY ** m)
+                + (1.0 - self.RETRY_RISK_FLOOR) * self.RETRY_RISK_DECAY ** attempt_count)
 
     # CALENDAR: a fraction of the years already spent on THIS attempt is
     # banked toward the next one instead of being erased, on the same
@@ -2393,10 +2393,10 @@ class ProjectsMixin:
         already does a hundred complicated things does not start the social
         diffusion of the hundred-and-first from zero credibility.
         """
-        n = self.nodes[k]
-        floor = n["yrs"]
-        if n["yrs"] >= 5:   # diffusion-limited nodes, not physical curing
-            floor = max(2.0, n["yrs"] / (1.0 + self.household.reputation / 90.0))
+        node = self.nodes[k]
+        floor = node["yrs"]
+        if node["yrs"] >= 5:   # diffusion-limited nodes, not physical curing
+            floor = max(2.0, node["yrs"] / (1.0 + self.household.reputation / 90.0))
         return floor
 
     def expected_calendar_years(self, k, _max_extra_attempts=500):
@@ -2445,50 +2445,50 @@ class ProjectsMixin:
            wrinkle, and the player's own choice, not the dice's.
         """
         floor = self.calendar_floor(k)
-        i0 = self.household.failed_attempts.get(k, 0)
+        initial_failed_attempts = self.household.failed_attempts.get(k, 0)
         _had_key = k in self.household.failed_attempts
         _active = self.household.active.get(k) if k in self.household.active else None
         total = 0.0
         survive = 1.0
-        i = i0
+        attempt_index = initial_failed_attempts
         try:
             while True:
-                if i == i0 and _active is not None:
+                if attempt_index == initial_failed_attempts and _active is not None:
                     # ALREADY MID-ATTEMPT: use the real elapsed clock, not a
                     # recomputed banked fraction - more honest about a
                     # project already part-way through its current attempt.
-                    a = max(0.0, floor - _active.get("yrs", 0.0))
-                elif i == i0:
+                    years_this_attempt = max(0.0, floor - _active.get("yrs", 0.0))
+                elif attempt_index == initial_failed_attempts:
                     # NOT ACTIVE: whether this is the very first attempt ever
                     # (i0 == 0) or a restart after a manual `stop` (i0 > 0),
                     # start_project always zeroes `yrs` - see assumption 3 -
                     # so the next attempt pays the full floor either way.
-                    a = floor
+                    years_this_attempt = floor
                 else:
-                    a = floor * (1.0 - self._retry_calendar_retain(k, i))
-                total += survive * a
+                    years_this_attempt = floor * (1.0 - self._retry_calendar_retain(k, attempt_index))
+                total += survive * years_this_attempt
                 # STAND IN FOR "i FAILURES SO FAR", ask effective_risk, then
                 # move on - the real count is restored in `finally` below,
                 # not here, so an exception mid-loop can never leave it wrong.
-                self.household.failed_attempts[k] = i
+                self.household.failed_attempts[k] = attempt_index
                 survive *= self.effective_risk(k)
-                i += 1
-                if survive < 1e-12 or i - i0 > _max_extra_attempts:
+                attempt_index += 1
+                if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
             if _had_key:
-                self.household.failed_attempts[k] = i0
+                self.household.failed_attempts[k] = initial_failed_attempts
             else:
                 self.household.failed_attempts.pop(k, None)
         return total
 
     def _complete(self, k):
-        n = self.nodes[k]
+        node = self.nodes[k]
         _risk_this_attempt = self.effective_risk(k)
         if self.rng.random() < _risk_this_attempt:
             _yrs_before = self.household.active[k]["yrs"]
             self.household.failed_attempts[k] += 1
-            self.household.active[k]["ph_left"] = n["ph"] * 0.4
+            self.household.active[k]["ph_left"] = node["ph"] * 0.4
             # THE CALENDAR CLOCK IS NOT WIPED. It used to be set to 0.0
             # unconditionally, restarting the same multi-year diffusion
             # process from nothing every time - the exact complaint above.
@@ -2504,7 +2504,7 @@ class ProjectsMixin:
             # ready.
             _retain = self._retry_calendar_retain(k)
             self.household.active[k]["yrs"] = _yrs_before * _retain
-            _lost = n["_total_cost"] * 0.4 * self.cost_money_factor()
+            _lost = node["_total_cost"] * 0.4 * self.cost_money_factor()
             self.household.capital -= _lost
             # SAY SO. The roll has always worked - 40 failures in 200 at a
             # stated 20% - and it has never once announced itself: it reset the
@@ -2535,7 +2535,7 @@ class ProjectsMixin:
                              "this way is %d%%, down from the %d%% this attempt "
                              "just faced, and %.1f of the %.1f years already "
                              "spent count toward next time's wait."
-                             % (n["name"], 40, "{:,.0f}".format(n["ph"] * 0.4),
+                             % (node["name"], 40, "{:,.0f}".format(node["ph"] * 0.4),
                                 "{:,.0f}".format(max(0.0, _lost)),
                                 self.household.failed_attempts[k] + 1,
                                 round(_next_risk * 100),
@@ -2561,11 +2561,11 @@ class ProjectsMixin:
         # Visible, useful, State-approved work builds standing. Obscure laboratory
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
-        gain = (0.6 + 0.5 * max(0.0, self.state_interest(n))
-                + (1.2 if n["rev"] > 0 else 0.0))
+        gain = (0.6 + 0.5 * max(0.0, self.state_interest(node))
+                + (1.2 if node["rev"] > 0 else 0.0))
         self.household.reputation = min(100.0, self.household.reputation + gain)
-        self.household.scandal += self.alarm_of(n)
-        self.household.gov += self.state_interest(n)
+        self.household.scandal += self.alarm_of(node)
+        self.household.gov += self.state_interest(node)
         # _grant_staff, NOT a bare += on self.household.scholars/self.household.artisans. The old
         # direct assignment was overwritten out of existence the very next
         # time anything called _resync_pools() - which step() does
@@ -2598,9 +2598,9 @@ class ProjectsMixin:
         if self.is_venture(k) and not self.policy.get("auto_open", not self.manual):
             self.household.log.append((self.year, "completed: %s. You know how; nothing "
                                         "is earning yet - 'open %s' to run it"
-                                        % (n["name"], k)))
+                                        % (node["name"], k)))
         else:
-            self.household.log.append((self.year, "completed: " + n["name"]))
+            self.household.log.append((self.year, "completed: " + node["name"]))
         if k == self.goal and self.household.goal_year is None:
             self.household.goal_year = self.year
 
