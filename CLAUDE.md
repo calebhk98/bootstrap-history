@@ -112,11 +112,31 @@ direction rather than approved plans.
 
 Two things from the plan worth knowing before you touch anything:
 
-**The tree has no production side.** It records what every process consumes
-and almost never what anything produces. Of 162 materials consumed, zero have
-a producing node that declares a yield; `iron_bar_kg` is consumed by 590 nodes
-and nothing makes it. That, and not the existence of `prices.json`, is why
-every cost bottoms out in a book value. Run `python3 sim/audit_costs.py`.
+**The tree had no production side; `data/production/` is now it.** The tree
+records what every process consumes and nothing about what anything produces,
+which - not the existence of `prices.json` - is why every cost bottomed out in
+a book value: there was no physical structure to compute one from.
+
+`data/production/` covers **99.1% of consumption sites** (154 of 162
+materials). Read `data/production/_SCHEMA.md` before adding to it. The rule
+that governs every number there: a yield is a physical fact - ore grade times
+recovery, reaction stoichiometry, latent heat - and is NEVER derived from what
+the material sells for, nor tuned so a computed price matches `prices.json`.
+Those prices are 91.8% the author's own estimates and this data exists to
+replace them.
+
+    python3 sim/validate_production.py          errors and coverage
+    python3 sim/validate_production.py --todo   what is still missing
+    python3 sim/audit_costs.py                  where the cost base is
+
+The remaining 0.9% is deliberate and recorded: four explosives precursors,
+two trace metals with no independent ore, and `coal_tar_kg`, which is covered
+as a joint output without a key of its own.
+
+**Nothing reads this data yet.** The price solver described in
+`ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 2 is the next piece, and until it
+exists the engine still uses `prices.json`. Coverage is not the same as
+being wired in.
 
 **Make the founder's mechanisms general enough that other actors can use
 them**, rather than making the founder less detailed.
