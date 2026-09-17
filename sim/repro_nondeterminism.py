@@ -96,9 +96,9 @@ def repro(runs=4):
     digests = []
     for i in range(runs):
         years, _cpu, _ = P.run(scenario)
-        d = P.digest(years)
-        digests.append(d)
-        print("  run %d  %s" % (i + 1, d))
+        digest = P.digest(years)
+        digests.append(digest)
+        print("  run %d  %s" % (i + 1, digest))
     print()
     if len(set(digests)) == 1:
         print("All %d runs agree. That happens: the effect is sporadic, not" % runs)
@@ -122,39 +122,41 @@ def bisect(attempts=8):
     two runs at a time, rather than for all of them, keeps the memory down.
     """
     scenario = P.SCENARIOS[0]
-    y1, _, s1 = P.run(scenario, keep_states=True)
-    i = None
+    first_years, _, first_states = P.run(scenario, keep_states=True)
+    diff_index = None
     for attempt in range(attempts):
-        y2, _, s2 = P.run(scenario, keep_states=True)
-        i = next((i for i, (a, b) in enumerate(zip(y1, y2)) if a != b), None)
-        if i is not None:
+        second_years, _, second_states = P.run(scenario, keep_states=True)
+        diff_index = next((position for position, (first_year_value, second_year_value)
+                           in enumerate(zip(first_years, second_years))
+                           if first_year_value != second_year_value), None)
+        if diff_index is not None:
             print("(disagreed on attempt %d)" % (attempt + 2))
             break
-    if i is None:
+    if diff_index is None:
         print("%d runs all agreed; nothing to bisect this time. Try again."
               % (attempts + 1))
         return 0
-    print("first differing year index: %d\n" % i)
-    a, b = s1[i], s2[i]
-    for field in sorted(set(a) | set(b)):
-        if a.get(field) == b.get(field):
+    print("first differing year index: %d\n" % diff_index)
+    first_state, second_state = first_states[diff_index], second_states[diff_index]
+    for field in sorted(set(first_state) | set(second_state)):
+        if first_state.get(field) == second_state.get(field):
             continue
-        av, bv = a.get(field), b.get(field)
-        if isinstance(av, dict) and isinstance(bv, dict):
-            for k in sorted(set(av) | set(bv)):
-                ka, kb = av.get(k) or {}, bv.get(k) or {}
-                if not (isinstance(ka, dict) and isinstance(kb, dict)):
-                    if ka != kb:
+        first_value, second_value = first_state.get(field), second_state.get(field)
+        if isinstance(first_value, dict) and isinstance(second_value, dict):
+            for key in sorted(set(first_value) | set(second_value)):
+                first_entry, second_entry = first_value.get(key) or {}, second_value.get(key) or {}
+                if not (isinstance(first_entry, dict) and isinstance(second_entry, dict)):
+                    if first_entry != second_entry:
                         print("  %-14s %-22s A=%s B=%s"
-                              % (field, k, ka, kb))
+                              % (field, key, first_entry, second_entry))
                     continue
-                for f2 in sorted(set(ka) | set(kb)):
-                    if ka.get(f2) != kb.get(f2):
+                for subfield in sorted(set(first_entry) | set(second_entry)):
+                    if first_entry.get(subfield) != second_entry.get(subfield):
                         print("  %-14s %-22s %-22s\n%17sA=%s\n%17sB=%s"
-                              % (field, k, f2, "", ka.get(f2), "", kb.get(f2)))
+                              % (field, key, subfield, "", first_entry.get(subfield), "", second_entry.get(subfield)))
         else:
             print("  %-14s A=%s\n%17sB=%s"
-                  % (field, repr(av)[:90], "", repr(bv)[:90]))
+                  % (field, repr(first_value)[:90], "", repr(second_value)[:90]))
     return 1
 
 
@@ -185,13 +187,13 @@ def caches():
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--bisect", action="store_true",
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--bisect", action="store_true",
                     help="find the first differing year and field")
-    ap.add_argument("--caches", action="store_true",
+    parser.add_argument("--caches", action="store_true",
                     help="show the state shared between runs")
-    ap.add_argument("--runs", type=int, default=4)
-    args = ap.parse_args(argv)
+    parser.add_argument("--runs", type=int, default=4)
+    args = parser.parse_args(argv)
     if args.bisect:
         return bisect()
     if args.caches:

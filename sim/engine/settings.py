@@ -189,10 +189,10 @@ def resolve_rows_per_page(cfg=None):
     if cfg is None:
         cfg = load_config()
     try:
-        n = int(cfg.get("rows_per_page", FALLBACK_ROWS_PER_PAGE))
+        rows = int(cfg.get("rows_per_page", FALLBACK_ROWS_PER_PAGE))
     except (TypeError, ValueError):
-        n = FALLBACK_ROWS_PER_PAGE
-    return n if n > 0 else FALLBACK_ROWS_PER_PAGE
+        rows = FALLBACK_ROWS_PER_PAGE
+    return rows if rows > 0 else FALLBACK_ROWS_PER_PAGE
 
 
 def config_path():
@@ -203,17 +203,17 @@ def load_config():
     """The player's saved preferences, or CONFIG_DEFAULTS if there are none
     yet or the file cannot be read. Never raises: a corrupt or missing
     config is a fresh install, not an error a player should see."""
-    cfg = dict(CONFIG_DEFAULTS)
+    config = dict(CONFIG_DEFAULTS)
     try:
-        with open(config_path()) as fh:
-            raw = json.load(fh)
+        with open(config_path()) as handle:
+            raw = json.load(handle)
         if isinstance(raw, dict):
-            for k in CONFIG_DEFAULTS:
-                if k in raw:
-                    cfg[k] = raw[k]
+            for key in CONFIG_DEFAULTS:
+                if key in raw:
+                    config[key] = raw[key]
     except (OSError, ValueError):
         pass
-    return cfg
+    return config
 
 
 def save_config(cfg):
@@ -227,11 +227,11 @@ def save_config(cfg):
             os.makedirs(parent, exist_ok=True)
         except OSError:
             return False
-    out = {k: cfg.get(k, CONFIG_DEFAULTS[k]) for k in CONFIG_DEFAULTS}
+    payload = {key: cfg.get(key, CONFIG_DEFAULTS[key]) for key in CONFIG_DEFAULTS}
     tmp = path + ".tmp"
     try:
-        with open(tmp, "w") as fh:
-            json.dump(out, fh, indent=1, sort_keys=True)
+        with open(tmp, "w") as handle:
+            json.dump(payload, handle, indent=1, sort_keys=True)
         os.replace(tmp, path)
         return True
     except OSError:
@@ -245,26 +245,26 @@ def resolve_save_dir(cfg=None, ensure=True):
     written to at all, the same fallback _pick_session_filename always had."""
     env = os.environ.get(SAVE_DIR_ENV)
     if env:
-        d = os.path.expanduser(env)
+        save_dir = os.path.expanduser(env)
     else:
         if cfg is None:
             cfg = load_config()
-        d = cfg.get("save_dir") or _DEFAULT_SAVE_DIR
-        d = os.path.expanduser(d)
+        save_dir = cfg.get("save_dir") or _DEFAULT_SAVE_DIR
+        save_dir = os.path.expanduser(save_dir)
     if ensure:
         try:
-            os.makedirs(d, exist_ok=True)
+            os.makedirs(save_dir, exist_ok=True)
             # Confirm it is actually writable, not merely present - a
             # directory that exists but is read-only would otherwise surface
             # as a save failure deep inside the game instead of here, where
             # the player is choosing a location and can pick another one.
-            probe = os.path.join(d, ".rome-write-test")
+            probe = os.path.join(save_dir, ".rome-write-test")
             with open(probe, "w"):
                 pass
             os.remove(probe)
         except OSError:
             return "."
-    return d
+    return save_dir
 
 
 # ---------------------------------------------------------------------------
@@ -284,8 +284,8 @@ def load_session_meta(session):
     if not path or not os.path.exists(path):
         return {}
     try:
-        with open(path) as fh:
-            value = json.load(fh)
+        with open(path) as handle:
+            value = json.load(handle)
         return value if isinstance(value, dict) else {}
     except (OSError, ValueError):
         return {}
@@ -297,8 +297,8 @@ def save_session_meta(session, meta):
         return False
     tmp = path + ".tmp"
     try:
-        with open(tmp, "w") as fh:
-            json.dump(meta, fh, indent=1, sort_keys=True)
+        with open(tmp, "w") as handle:
+            json.dump(meta, handle, indent=1, sort_keys=True)
         os.replace(tmp, path)
         return True
     except OSError:
@@ -395,30 +395,30 @@ def list_saves(save_dir):
     shown, with what little can be read from it, rather than silently
     dropped from the list a player is choosing a filename out of.
     """
-    out = []
+    rows = []
     try:
         names = os.listdir(save_dir)
     except OSError:
-        return out
-    for fn in sorted(names):
-        if not fn.endswith(".json") or fn.endswith(".meta.json"):
+        return rows
+    for filename in sorted(names):
+        if not filename.endswith(".json") or filename.endswith(".meta.json"):
             continue
-        path = os.path.join(save_dir, fn)
+        path = os.path.join(save_dir, filename)
         try:
-            st = os.stat(path)
+            file_stat = os.stat(path)
         except OSError:
             continue
-        if st.st_size == 0:
+        if file_stat.st_size == 0:
             # A slot claimed by _pick_session_filename's O_EXCL but never
             # actually played into - see cli.py's _is_claimed_slot. Not a
             # save; skip it rather than show a player an entry that errors
             # the moment they pick it.
             continue
-        row = {"path": path, "filename": fn, "mtime": st.st_mtime,
+        row = {"path": path, "filename": filename, "mtime": file_stat.st_mtime,
                "readable": False}
         try:
-            with open(path) as fh:
-                blob = json.load(fh)
+            with open(path) as handle:
+                blob = json.load(handle)
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
             row.update({
@@ -438,9 +438,9 @@ def list_saves(save_dir):
             })
         except (OSError, ValueError):
             pass
-        out.append(row)
-    out.sort(key=lambda r: -r["mtime"])
-    return out
+        rows.append(row)
+    rows.sort(key=lambda r: -r["mtime"])
+    return rows
 
 
 def humanize_age(mtime):

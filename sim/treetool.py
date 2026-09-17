@@ -195,12 +195,12 @@ def cmd_merge(a):
             # field. Left alone it reports as a broken link to a file whose
             # name is a sentence. Move it to note where note is empty and
             # clear the field, so it reports as an honest documentation gap.
-            kb = str(node.get("kb", "")).strip()
-            if kb and not re.match(r"^\d\d_[A-Za-z0-9_]+\.md(#|$)", kb):
+            kb_field = str(node.get("kb", "")).strip()
+            if kb_field and not re.match(r"^\d\d_[A-Za-z0-9_]+\.md(#|$)", kb_field):
                 if not str(node.get("note", "")).strip():
-                    node["note"] = kb
-                kb = ""
-            node["kb"] = kb
+                    node["note"] = kb_field
+                kb_field = ""
+            node["kb"] = kb_field
             node["_src"] = filename
             nodes[node["id"]] = node
             added += 1
@@ -369,7 +369,7 @@ def grade(s):
 
 def cmd_judge(a):
     tree = json.load(open(TREE))
-    nodes = {n["id"]: n for n in tree["nodes"]}
+    nodes = {node["id"]: node for node in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
     wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
     goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
@@ -499,7 +499,7 @@ def cmd_repair(a):
     here is recorded in the node so a reader can discount it.
     """
     tree = json.load(open(TREE))
-    nodes = {n["id"]: n for n in tree["nodes"]}
+    nodes = {node["id"]: node for node in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
     wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
     goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
@@ -543,21 +543,21 @@ def cmd_repair(a):
         # documentation level
         if not node.get("kb"):
             if ident.startswith("com_"):
-                mod = ("94_computing.md" if any(word in ident for word in COMPUTING_WORDS)
+                doc_module = ("94_computing.md" if any(word in ident for word in COMPUTING_WORDS)
                        else "50_electricity.md")
             else:
-                mod = next((value for pre, value in PREFIX_MODULE.items() if ident.startswith(pre)), None)
-            if mod:
-                node["kb"] = mod; node["kb_level"] = "module"; counts["module-level doc links"] += 1
+                doc_module = next((value for pre, value in PREFIX_MODULE.items() if ident.startswith(pre)), None)
+            if doc_module:
+                node["kb"] = doc_module; node["kb_level"] = "module"; counts["module-level doc links"] += 1
             else:
                 node["kb_level"] = "none"; counts["still undocumented"] += 1
         else:
             node["kb_level"] = "recipe" if "#" in node["kb"] else "module"
         # social model
         if "SOCIAL-FLAT" in codes:
-            hay = (node["cat"] + " " + ident).lower()
-            for key, (gov_default, sus_default) in SOCIAL_DEFAULT.items():
-                if key in hay:
+            haystack = (node["cat"] + " " + ident).lower()
+            for category_marker, (gov_default, sus_default) in SOCIAL_DEFAULT.items():
+                if category_marker in haystack:
                     node["gov"], node["sus"] = gov_default, sus_default
                     counts["social defaults applied"] += 1
                     node["note"] = node["note"].rstrip() + (" [AUDIT: State interest and suspicion "
@@ -592,30 +592,30 @@ def cmd_apply_caps(a):
         except Exception as e:
             print("unparseable: %s (%s)" % (os.path.basename(path), e))
             continue
-        for nid, fix in fixes.items():
-            if nid not in nodes:
+        for node_id, fix in fixes.items():
+            if node_id not in nodes:
                 unknown += 1
                 continue
             add = fix.get("add") or []
             if not add:
                 empty += 1
                 continue
-            node = nodes[nid]
+            node = nodes[node_id]
             got = []
-            for cap in add:
-                if cap not in nodes:
+            for cap_id in add:
+                if cap_id not in nodes:
                     refused += 1
                     continue
-                if cap in node["pre"]:
+                if cap_id in node["pre"]:
                     continue
-                if nid in closure(nodes, cap):
+                if node_id in closure(nodes, cap_id):
                     refused += 1          # would make the graph eat itself
                     continue
-                node["pre"].append(cap)
-                got.append(cap)
+                node["pre"].append(cap_id)
+                got.append(cap_id)
                 applied += 1
             if got:
-                reasons[nid] = (got, fix.get("reason", ""))
+                reasons[node_id] = (got, fix.get("reason", ""))
                 node["note"] = node["note"].rstrip() + (
                     " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
@@ -627,8 +627,8 @@ def cmd_apply_caps(a):
     print("   edges refused (unknown or cycle) %d" % refused)
     print("   unknown node ids                 %d" % unknown)
     print("\nsample of what was added:")
-    for nid, (got, why) in list(reasons.items())[:12]:
-        print("   %-34s + %-38s %s" % (nid[:34], ", ".join(got)[:38], why[:70]))
+    for node_id, (got, why) in list(reasons.items())[:12]:
+        print("   %-34s + %-38s %s" % (node_id[:34], ", ".join(got)[:38], why[:70]))
     return 0
 
 

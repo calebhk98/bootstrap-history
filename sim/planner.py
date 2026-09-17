@@ -112,12 +112,12 @@ def cpm(nodes, need):
     order says (see the module docstring).
     """
     order = topo_order(nodes, need)
-    es, ef = {}, {}
+    earliest_start, ef = {}, {}
     for node_id in order:
         node = nodes[node_id]
         pred_ef = [ef[prereq] for prereq in node["pre"] if prereq in need]
-        es[node_id] = max(pred_ef) if pred_ef else 0.0
-        ef[node_id] = es[node_id] + duration(node)
+        earliest_start[node_id] = max(pred_ef) if pred_ef else 0.0
+        ef[node_id] = earliest_start[node_id] + duration(node)
     total = max(ef.values()) if ef else 0.0
     # Dependants WITHIN `need`, computed once rather than rescanning every
     # node for every k - closure(nodes, goal) is an ANCESTOR set, so every
@@ -128,13 +128,13 @@ def cpm(nodes, need):
         for prereq in nodes[dependant_id]["pre"]:
             if prereq in need:
                 deps[prereq].append(dependant_id)
-    ls, lf, slack = {}, {}, {}
+    ls, latest_finish, slack = {}, {}, {}
     for node_id in reversed(order):
         dep_ls = [ls[dependant_id] for dependant_id in deps[node_id]]
-        lf[node_id] = min(dep_ls) if dep_ls else total
-        ls[node_id] = lf[node_id] - duration(nodes[node_id])
-        slack[node_id] = ls[node_id] - es[node_id]
-    return {"es": es, "ef": ef, "ls": ls, "lf": lf, "slack": slack, "total": total}
+        latest_finish[node_id] = min(dep_ls) if dep_ls else total
+        ls[node_id] = latest_finish[node_id] - duration(nodes[node_id])
+        slack[node_id] = ls[node_id] - earliest_start[node_id]
+    return {"es": earliest_start, "ef": ef, "ls": ls, "lf": latest_finish, "slack": slack, "total": total}
 
 
 # SORTING BY (slack, earliest start) IS NOT ITSELF A TOPOLOGICAL ORDER, and
@@ -308,13 +308,13 @@ def interleave(order, extras, every=8):
     """
     if not extras:
         return list(order)
-    out, ei = [], 0
+    out, extra_index = [], 0
     for i, node_id in enumerate(order):
         out.append(node_id)
-        if ei < len(extras) and (i + 1) % every == 0:
-            out.append(extras[ei])
-            ei += 1
-    out.extend(extras[ei:])
+        if extra_index < len(extras) and (i + 1) % every == 0:
+            out.append(extras[extra_index])
+            extra_index += 1
+    out.extend(extras[extra_index:])
     return out
 
 
@@ -464,8 +464,8 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
         res = [Sim(nodes, full, random.Random(seed + i), events=True,
                    civ=load_civ(civ)).run(goal, horizon)
                for i in range(mc)]
-        wins = sum(1 for r in res if r.goal_year)
-        years = sorted(r.goal_year for r in res if r.goal_year)
+        wins = sum(1 for run in res if run.goal_year)
+        years = sorted(run.goal_year for run in res if run.goal_year)
         med = years[len(years) // 2] if years else None
         # Win rate first, then an EARLIER median beats a later one - negated so
         # a plain tuple comparison ("higher score wins") reads the right way
@@ -483,7 +483,7 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
             # the trial budget on a repeat.
             log("  no trial reached the goal this round; stopping refinement early")
             break
-        cur_order, _c, cur_extras, _staff = backward_plan(
+        cur_order, _cpm_result, cur_extras, _staff = backward_plan(
             nodes, goal, s, seed_order=seq,
             side_branches=len(extras), side_branch_every=side_branch_every)
     return best_order, best_extras, best_score
@@ -533,7 +533,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
                                       horizon, seed, refine_rounds,
                                       side_branch_every, log)
     need = closure(nodes, goal)
-    crit = sum(1 for k in need if cpm_result["slack"].get(k, 0) <= 1e-6)
+    crit = sum(1 for node_id in need if cpm_result["slack"].get(node_id, 0) <= 1e-6)
     rationale = [
         "Computed backward from the goal by critical-path method (CPM) over "
         "its %d-node prerequisite closure, not observed from a lucky run: "
@@ -549,8 +549,8 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "override the CPM ordering of two nodes at different slack."
             % (seed_strategy, len(seed_order)))
     if staffing:
-        peak_scholars = max((nodes[k]["sch"] for k in need), default=0.0)
-        peak_artisans = max((nodes[k]["art"] for k in need), default=0.0)
+        peak_scholars = max((nodes[node_id]["sch"] for node_id in need), default=0.0)
+        peak_artisans = max((nodes[node_id]["art"] for node_id in need), default=0.0)
         rationale.append(
             "NOT ORDERED HERE, BUT IN THE WAY: this road wants %.0f trained "
             "scholars and %.0f trained artisans at its heaviest, and %s "
@@ -565,7 +565,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "particular run's income, which a structural pass over the tech "
             "tree cannot make."
             % (peak_scholars, peak_artisans, civ, len(staffing), ", ".join(staffing),
-               "{:,.0f}".format(sum(nodes[k]["_total_cost"] for k in staffing))))
+               "{:,.0f}".format(sum(nodes[node_id]["_total_cost"] for node_id in staffing))))
     if extras:
         rationale.append(
             "%d revenue-positive side branch(es) outside the goal's own "
@@ -607,7 +607,7 @@ def main():
     order, rationale, cpm_result = plan(args.civ, args.goal, args.seed_strategy, args.side_branches,
                                args.side_branch_every, args.refine_rounds, args.mc,
                                args.horizon, args.seed)
-    tree, _p, nodes, _w, _g = load()
+    tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, args.goal)
     label = ("PLANNED (CPM): backward-chained from %s over its prerequisite "
             "closure for %s%s" % (goal, args.civ,

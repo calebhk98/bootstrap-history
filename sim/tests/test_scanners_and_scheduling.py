@@ -17,10 +17,10 @@ from .harness import *  # noqa: F401,F403
 _fogscan = sim(capital=5_000_000.0)
 _fogscan.fog = True
 _fogscan.revealed = set()
-_fogscan_visible = sorted(k for k in NODES if _fogscan.is_visible(k))
+_fogscan_visible = sorted(node_id for node_id in NODES if _fogscan.is_visible(node_id))
 _fogscan_goal = _fogscan.goal
-_fogscan_hidden = {k for k in NODES
-                   if k not in _fogscan_visible and k != _fogscan_goal}
+_fogscan_hidden = {node_id for node_id in NODES
+                   if node_id not in _fogscan_visible and node_id != _fogscan_goal}
 check("a fresh fogged founder has both a visible node and a large hidden "
       "remainder to test against - a property of the live tree, not an "
       "invented fixture",
@@ -130,7 +130,7 @@ check("...and the scan actually found real pointers to check - an empty "
 # failing the same way twice and a banked share of the calendar clock - see
 # projects.py's own section comment on _complete for the full reasoning.
 _s_rl = sim(capital=10 ** 9)
-_rl_k = [k for k in NODES if NODES[k]["risk"] >= 0.15][0]
+_rl_k = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15][0]
 # _retry_risk_multiplier reads failed_attempts off the Sim itself, so the
 # cleanest way to check the whole decaying sequence is to walk it forward by
 # setting failed_attempts directly rather than actually rolling failures.
@@ -148,7 +148,7 @@ check("each later attempt's risk is strictly lower than the one before it, "
       and _seq[3] <= _seq[0] * 0.75, _seq)
 check("...but it is never a guarantee: risk never reaches zero, bounded "
       "below by RETRY_RISK_FLOOR's own share of the bare risk",
-      all(s_ >= NODES[_rl_k]["risk"] * _s_rl.RETRY_RISK_FLOOR - 1e-9 for s_ in _seq),
+      all(risk_value >= NODES[_rl_k]["risk"] * _s_rl.RETRY_RISK_FLOOR - 1e-9 for risk_value in _seq),
       _seq)
 _s_rl.failed_attempts[_rl_k] = 0
 
@@ -161,7 +161,7 @@ class _AlwaysFails(random.Random):
 
 
 _s_cal = sim(capital=10 ** 9)
-_cal_k = [k for k in NODES if NODES[k]["risk"] >= 0.15 and NODES[k]["yrs"] >= 5][0]
+_cal_k = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15 and NODES[node_id]["yrs"] >= 5][0]
 _cal_floor = NODES[_cal_k]["yrs"]
 _s_cal.rng = _AlwaysFails()
 _banked = []
@@ -178,7 +178,7 @@ check("even the FIRST failure already banks a real share of the elapsed "
 check("every later failure banks MORE of the clock than the one before, "
       "with shrinking increments, and never the full floor",
       all(_banked[i] > _banked[i - 1] for i in range(1, 4))
-      and all(b < _cal_floor for b in _banked), (_banked, _cal_floor))
+      and all(banked_value < _cal_floor for banked_value in _banked), (_banked, _cal_floor))
 check("...capped well short of the whole floor - RETRY_CALENDAR_CAP's own "
       "share - so a retried programme is readier, never instantly ready",
       _banked[-1] <= _cal_floor * _s_cal.RETRY_CALENDAR_CAP + 1e-6, _banked)
@@ -192,12 +192,12 @@ check("...capped well short of the whole floor - RETRY_CALENDAR_CAP's own "
 # lands" and "how long the hedge takes" closes.
 _s_tl = sim(civ="rome_100ad")
 _s_tl.year = 150
-_tl_far = next((r for r in _s_tl.hazard_timeline()
-               if r["name"] == "Third century crisis"), None)
+_tl_far = next((entry for entry in _s_tl.hazard_timeline()
+               if entry["name"] == "Third century crisis"), None)
 _s_tl2 = sim(civ="rome_100ad")
 _s_tl2.year = 234
-_tl_near = next((r for r in _s_tl2.hazard_timeline()
-                 if r["name"] == "Third century crisis"), None)
+_tl_near = next((entry for entry in _s_tl2.hazard_timeline()
+                 if entry["name"] == "Third century crisis"), None)
 check("hazard_timeline names the Third century crisis while it is still "
       "visibly ahead and again once it is nearly here",
       _tl_far is not None and _tl_near is not None, (_tl_far, _tl_near))
@@ -210,9 +210,9 @@ check("the SAME hazard's urgency tag escalates as the date closes in - "
                                   "begin hedge now", "happening now"),
       (_tl_far, _tl_near))
 check("hazard_timeline is sorted nearest first",
-      [r["years_until"] for r in _s_tl.hazard_timeline()]
-      == sorted(r["years_until"] for r in _s_tl.hazard_timeline()),
-      [r["years_until"] for r in _s_tl.hazard_timeline()])
+      [entry["years_until"] for entry in _s_tl.hazard_timeline()]
+      == sorted(entry["years_until"] for entry in _s_tl.hazard_timeline()),
+      [entry["years_until"] for entry in _s_tl.hazard_timeline()])
 _rk_tl = S._agent_dispatch(_s_tl, NODES, {"cmd": "risk"})
 check("the `risk` command itself carries the compact timeline, not just "
       "the per-kind breakdown",
@@ -226,7 +226,7 @@ check("the `risk` command itself carries the compact timeline, not just "
 # supervision is within 5 craftsmen of closure" - a warning, not a third
 # automation; nothing here hires, teaches or stops anything on its own.
 _s_sw = sim(civ="rome_100ad")
-_sw_cands = [k for k in NODES if NODES[k].get("rev", 0) > 0][:30]
+_sw_cands = [node_id for node_id in NODES if NODES[node_id].get("rev", 0) > 0][:30]
 _s_sw.done.update(_sw_cands)
 _s_sw._done_changed()
 _s_sw.artisans, _s_sw.scholars = 40.0, 10.0
@@ -246,11 +246,11 @@ check("within the band: a warning names a real operating concern and how "
 check("the concern it names is the same one close_unstaffed_ventures would "
       "actually close first (dearest to keep, for what it ties up)",
       _sw_warn and _sw_warn[0]["id"] == sorted(
-          [k for k in _s_sw.operating if _s_sw.venture_hands(k)[1] > 0.005
-           or _s_sw.venture_hands(k)[0] > 0.005],
-          key=lambda k: ((NODES[k]["rev"] - NODES[k]["up"])
-                         / max(0.01, _s_sw.venture_hands(k)[1]),
-                         -_s_sw.venture_hands(k)[1]))[0],
+          [node_id for node_id in _s_sw.operating if _s_sw.venture_hands(node_id)[1] > 0.005
+           or _s_sw.venture_hands(node_id)[0] > 0.005],
+          key=lambda node_id: ((NODES[node_id]["rev"] - NODES[node_id]["up"])
+                         / max(0.01, _s_sw.venture_hands(node_id)[1]),
+                         -_s_sw.venture_hands(node_id)[1]))[0],
       _sw_warn)
 _sw_before = set(_s_sw.operating)
 _s_sw.artisans = _sw_art_used - 2.0    # room exhausted
@@ -308,10 +308,10 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # tells them that for the goal they actually picked.
 from engine import cli as _CLI
 
-_hz_notes = " ".join(n for _node_id, _l, _year, n in _CLI.HORIZON_MODES).lower()
+_hz_notes = " ".join(note for _node_id, _label, _year, note in _CLI.HORIZON_MODES).lower()
 check("no horizon-mode description quotes the dice-free floor or calls any "
       "setting unreachable",
-      not any(w in _hz_notes for w in
+      not any(word in _hz_notes for word in
               ("dice-free", "unlucky-proof", "1,019", "1019", "451")),
       _hz_notes)
 check("the floor table itself is still there, still per-civilisation, and "
@@ -383,9 +383,9 @@ except OSError:
 # blind spot this comment says must not exist.
 _NOT_SAVED_ON_PURPOSE = frozenset()
 _fresh = sim()
-_accum = {k for k, value in vars(_fresh).items()
+_accum = {attr_name for attr_name, value in vars(_fresh).items()
           if isinstance(value, (_coll.defaultdict, _coll.Counter))}
-_accum |= {k for k, value in vars(_fresh.household).items()
+_accum |= {attr_name for attr_name, value in vars(_fresh.household).items()
            if isinstance(value, (_coll.defaultdict, _coll.Counter))}
 check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
       "listed as deliberately unsaved, so the next one added cannot quietly "
@@ -436,7 +436,7 @@ check("mid-run, before the goal and before the horizon, `score` still "
       "shows every component - what you are optimising, not only what you "
       "already won",
       _rep_mid["total"] is None and not _rep_mid["goal_reached"]
-      and all(c.get("raw") is not None for c in _rep_mid["components"].values()),
+      and all(component.get("raw") is not None for component in _rep_mid["components"].values()),
       _rep_mid["components"].keys())
 check("...and says the goal has not been reached YET, not that it never "
       "will be - the run is still live",
@@ -502,15 +502,15 @@ check("...while a player who never reached it under fog still reads the "
 # --- ACHIEVEMENTS: each one flips on its own tracked field, in isolation,
 # and none of them fire before the goal is reached at all.
 def _won_sim(**extra):
-    s = sim(capital=5_000_000.0)
-    s.goal_year = s.year + 1
-    for k, value in extra.items():
-        setattr(s, k, value)
-    return s
+    won_sim = sim(capital=5_000_000.0)
+    won_sim.goal_year = won_sim.year + 1
+    for attr_name, value in extra.items():
+        setattr(won_sim, attr_name, value)
+    return won_sim
 
 _ach_clean = _SCORE(_won_sim(), NODES)["achievements"]
 check("a clean won run earns every achievement this suite can isolate",
-      all(a["won"] for name, a in _ach_clean.items()
+      all(achievement["won"] for name, achievement in _ach_clean.items()
           if name != "outpaced_the_fastest_plan"),
       _ach_clean)
 check("...and a run that never reached the goal earns none at all - no "
@@ -562,7 +562,7 @@ check("...while dawdling to five thousand years after the start does not",
 # same way the rest of this suite proves determinism elsewhere (see the
 # literacy/trade-absorption check just above this section's own kin).
 def _score_snapshot(seed_env):
-    p = subprocess.run(
+    proc = subprocess.run(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
          "from engine.protocol import score_report as SC; "
@@ -580,7 +580,7 @@ def _score_snapshot(seed_env):
          "r['total'])))"],
         capture_output=True, text=True, timeout=60, cwd=HERE,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout.strip()
+    return proc.stdout.strip()
 _score_seed_a, _score_seed_b = _par_map(_score_snapshot, ("0", "98765"))
 check("the institutions component, and the total it feeds, are identical "
       "under a different PYTHONHASHSEED",
@@ -627,7 +627,7 @@ _s_perfect.reputation = 1e9
 _s_perfect.scandal = -1e9
 _s_perfect.done = set(NODES)
 _s_perfect._done_changed()
-_s_perfect.inst_units = {k: 1e9 for k in _s_perfect.SCALABLE_INSTITUTIONS}
+_s_perfect.inst_units = {institution: 1e9 for institution in _s_perfect.SCALABLE_INSTITUTIONS}
 for _cik in _s_perfect.CAPABILITY_INSTITUTIONS:
     _s_perfect.operating.add(_cik)
 _rep_perfect = _SCORE(_s_perfect, NODES)
@@ -687,7 +687,7 @@ check("render_state no longer crashes when a staffing warning is live, and "
 # the guarantee, not a re-run of the simulation on every gate pass.
 # ======================================================================
 _s_ey = sim(civ="rome_100ad")
-_riskfree = next(k for k in NODES if NODES[k].get("risk", 1) == 0)
+_riskfree = next(node_id for node_id in NODES if NODES[node_id].get("risk", 1) == 0)
 check("risk-free node: expected calendar years is exactly the bare floor - "
       "there is nothing to retry",
       abs(_s_ey.expected_calendar_years(_riskfree)
@@ -767,7 +767,7 @@ _s_ey3.trades_created.update(["chemist", "machinist"])
 _s_ey3.employees["chemist"], _s_ey3.employees["machinist"] = 20.0, 20.0
 _avail_pct = S._agent_dispatch(_s_ey3, NODES, {"cmd": "available", "find": "point_contact_transistor"})
 _avail_rows = _avail_pct.get("available")
-_avail_row = next((r for r in _avail_rows if r.get("id") == "point_contact_transistor"), None) \
+_avail_row = next((row for row in _avail_rows if row.get("id") == "point_contact_transistor"), None) \
     if isinstance(_avail_rows, list) else None
 check("`available` carries the same expected-years figure on the row, not "
       "only on `why`",
@@ -798,9 +798,9 @@ _help_front = S._agent_dispatch(_s_hc, NODES, {"cmd": "help"})["help"]
 check("the no-topic help screen names `help commands` and `log` outright, "
       "not only inside the 'more topics' map a player has to already "
       "suspect exists",
-      any("help" in str(k).lower() or "log" in str(value).lower()
-          for k, value in _help_front.items()
-          if "command index" in str(k).lower() or "exact history" in str(k).lower()),
+      any("help" in str(topic).lower() or "log" in str(content).lower()
+          for topic, content in _help_front.items()
+          if "command index" in str(topic).lower() or "exact history" in str(topic).lower()),
       list(_help_front.keys()))
 check("...and the text itself actually says 'help' topic 'commands' and "
       "mentions log/values/money/automation/save-load, so a reader does not "
@@ -901,26 +901,26 @@ _s_fpf = sim()
 _s_fpf.fog = True
 _s_fpf.revealed = set()
 _s_fpf.done.add("thermometer"); _s_fpf._done_changed()
-_fp_hidden = [k for k in ("cap_measure_temp", "cap_measure_elec",
+_fp_hidden = [node_id for node_id in ("cap_measure_temp", "cap_measure_elec",
                           "cap_power_water", "cap_power_steam")
-              if not _s_fpf.is_visible(k)]
+              if not _s_fpf.is_visible(node_id)]
 _fp_msgs = []
 for _k in sorted(NODES):
-    if any(h in NODES[_k]["pre"] for h in _fp_hidden):
+    if any(hidden_id in NODES[_k]["pre"] for hidden_id in _fp_hidden):
         _, _w = _s_fpf.start_reason(_k)
         if _w:
             _fp_msgs.append(_w)
 check("under fog the free-prerequisite hint never names a capability the "
       "player has not heard of",
-      bool(_fp_hidden) and not any(h in m for m in _fp_msgs for h in _fp_hidden),
+      bool(_fp_hidden) and not any(hidden_id in message for message in _fp_msgs for hidden_id in _fp_hidden),
       (_fp_hidden, _fp_msgs[:2]))
 
 # AND THE PREMISE. If one of these ever acquires a cost, the sentence above
 # stops being true, so the set it describes has to stay genuinely free.
-_fp_free = [k for k, n in NODES.items()
-            if k.startswith("cap_") and (n.get("_total_cost") or 0) <= 1
-            and (n.get("ph") or 0) == 0 and (n.get("yrs") or 0) == 0
-            and (n.get("risk") or 0) == 0]
+_fp_free = [node_id for node_id, node in NODES.items()
+            if node_id.startswith("cap_") and (node.get("_total_cost") or 0) <= 1
+            and (node.get("ph") or 0) == 0 and (node.get("yrs") or 0) == 0
+            and (node.get("risk") or 0) == 0]
 check("the free capability nodes the hint exists for are still free: no "
       "cost, no hours, no years, no risk",
       len(_fp_free) >= 8, sorted(_fp_free))
@@ -975,7 +975,7 @@ check("the higher-priority project's own share came off the FULL pool, and "
       (_st_doc["pool_remaining_before_this_year"],
        _st_cur["pool_remaining_before_this_year"]))
 _pf_alloc = S._agent_dispatch(_s_alloc, NODES, {"cmd": "portfolio"})
-_pf_rows = {r["id"]: r for r in _pf_alloc["projects"]}
+_pf_rows = {row["id"]: row for row in _pf_alloc["projects"]}
 check("`portfolio` prints the SAME numbers the allocator stored - not a "
       "second guess at them: displayed share and applied share can never "
       "differ, because they are read from the identical st dict",
@@ -991,7 +991,7 @@ check("`portfolio` prints the SAME numbers the allocator stored - not a "
 # THE SAME INVARIANT, THROUGH A JSON ROUND-TRIP - what an agent parsing
 # `portfolio json` actually receives, not the live Python dict.
 _pf_parsed = json.loads(json.dumps(_pf_alloc))
-_pf_parsed_rows = {r["id"]: r for r in _pf_parsed["projects"]}
+_pf_parsed_rows = {row["id"]: row for row in _pf_parsed["projects"]}
 check("the same equality survives a real json.dumps/json.loads round trip",
       _pf_parsed_rows["sc2_institution_doctorate"]["hours_offered_this_year"]
       == _st_doc["hours_offered_this_year"],
@@ -1004,8 +1004,8 @@ check("the same equality survives a real json.dumps/json.loads round trip",
 # using projects, one shared trade, supply pinned to 1,500 - well under
 # what six projects each wanting hundreds of hours would want at once.
 _s_dem = sim(civ="rome_100ad", capital=5_000_000.0)
-_dem_targets = sorted(k for k in NODES
-                      if (NODES[k].get("lab") or {}).get("chemist"))[:6]
+_dem_targets = sorted(node_id for node_id in NODES
+                      if (NODES[node_id].get("lab") or {}).get("chemist"))[:6]
 for _k in _dem_targets:
     _n = NODES[_k]
     _s_dem.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
@@ -1013,7 +1013,7 @@ for _k in _dem_targets:
                              lab_left=dict(_n["lab"]))
 _dem_real_hycco = _s_dem.hours_you_can_call_on
 _s_dem.hours_you_can_call_on = (
-    lambda t, _r=_dem_real_hycco: 1500.0 if t == "chemist" else _r(t))
+    lambda trade, _fallback=_dem_real_hycco: 1500.0 if trade == "chemist" else _fallback(trade))
 # INDEPENDENTLY DERIVED, from trade_draw_plan (the same read-only formula
 # lab_year_draw itself uses for the demand side) called once per project -
 # not the aggregate function under test - so a break in the aggregation
@@ -1037,8 +1037,8 @@ check("...and names every project actually drawing on it, so a player can "
       set(_dvs["chemist"]["projects_drawing_on_it"]) == set(_dem_targets),
       _dvs["chemist"]["projects_drawing_on_it"])
 _port_dem = _APORT(_s_dem, NODES)
-_port_dem_row = next(r for r in _port_dem["trade_hours_demand_vs_supply"]
-                     if r["trade"] == "chemist")
+_port_dem_row = next(row for row in _port_dem["trade_hours_demand_vs_supply"]
+                     if row["trade"] == "chemist")
 check("`portfolio`'s own trade-demand table reads the identical numbers, "
       "never a re-derived estimate that could disagree with them",
       _port_dem_row["demand_hours_this_year"]
@@ -1059,7 +1059,7 @@ _s_over.employees["chemist"] = 20.0
 _s_over._resync_pools()
 _over_real_hycco = _s_over.hours_you_can_call_on
 _s_over.hours_you_can_call_on = (
-    lambda t, _r=_over_real_hycco: 150.0 if t == "chemist" else _r(t))
+    lambda trade, _fallback=_over_real_hycco: 150.0 if trade == "chemist" else _fallback(trade))
 _ok_over, _why_over = _s_over.start_project("md2_local_anaesthesia")
 check("(setup) the first chemist-needing project starts cleanly on its own",
       _ok_over, _why_over)
@@ -1083,7 +1083,7 @@ check("...and it does not block the start - overcommitting is still the "
 # share one label and one remedy-less sentence.
 from engine.protocol import _portfolio_constraint as _PCON
 _s_staff = sim(civ="rome_100ad", capital=1e9)
-_staff_k = next(k for k in NODES if (NODES[k].get("lab") or {}).get("chemist"))
+_staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
 _n_staff = NODES[_staff_k]
 _s_staff.active[_staff_k] = dict(ph_left=float(_n_staff["ph"]), yrs=0.0,
                                  spent=0.0, cost_left=_s_staff.project_cost(_staff_k),
@@ -1106,9 +1106,9 @@ _s_book.active[_staff_k] = dict(ph_left=float(_n_book["ph"]), yrs=0.0,
 # A real competing project, so the portfolio view and the per-project reason
 # are testing the same allocation data rather than an invented used-hours
 # counter that could equally have been this project's own successful draw.
-_other_book = next(k for k in NODES
-                   if k != _staff_k and (NODES[k].get("lab") or {}).get("chemist")
-                   and (NODES[k]["lab"]["chemist"] / max(1.0, NODES[k]["yrs"])
+_other_book = next(node_id for node_id in NODES
+                   if node_id != _staff_k and (NODES[node_id].get("lab") or {}).get("chemist")
+                   and (NODES[node_id]["lab"]["chemist"] / max(1.0, NODES[node_id]["yrs"])
                         + NODES[_staff_k]["lab"]["chemist"]
                         / max(1.0, NODES[_staff_k]["yrs"])
                         > _s_book.hours_you_can_call_on("chemist")))
@@ -1258,7 +1258,7 @@ for _jc in ("state", "portfolio", "risk"):
 # `state` entry below reports the apology and this check fails.
 _s_rr = sim(capital=400000.0)
 _s_rr.end_year = _s_rr.cfg["start_year"] + _s_rr.cfg["horizon_years"]
-_rr_cands = [k for k in sorted(NODES) if NODES[k].get("rev", 0) > 0][:30]
+_rr_cands = [node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) > 0][:30]
 _s_rr.done.update(_rr_cands)
 _s_rr._done_changed()
 _s_rr.artisans, _s_rr.scholars = 40.0, 10.0
@@ -1323,8 +1323,8 @@ _ctl_new_ids = ["ctl_governor_stability_theory", "ctl_routh_criterion",
                 "mfg_critical_path_method"]
 check("every new control-theory / operations-research node parsed into the "
       "merged tree under the id the branch file gave it",
-      all(k in NODES for k in _ctl_new_ids),
-      [k for k in _ctl_new_ids if k not in NODES])
+      all(node_id in NODES for node_id in _ctl_new_ids),
+      [node_id for node_id in _ctl_new_ids if node_id not in NODES])
 check("Maxwell's 1868 governor paper is cited by name and date, not just "
       "gestured at, and sits behind the SAME centrifugal governor the tree "
       "already lets a player build",
@@ -1365,9 +1365,9 @@ check("the critical path method sits next to the SAME production-schedule "
 check("none of the 13 new nodes was inserted as a prerequisite of anything "
       "that already existed - they consume the existing tree, the existing "
       "tree does not consume them, so the goal's closure cannot have moved",
-      not any(k in (n.get("pre", []) or [])
-              or any(k in gp.get("options", {}) for gp in n.get("req_any", []) or [])
-              for i, n in NODES.items() for k in _ctl_new_ids
+      not any(new_id in (node.get("pre", []) or [])
+              or any(new_id in option_group.get("options", {}) for option_group in node.get("req_any", []) or [])
+              for i, node in NODES.items() for new_id in _ctl_new_ids
               if i not in _ctl_new_ids),
       "a pre-existing node references a new one")
 check("...and the goal's required closure is still exactly 154 nodes, "
@@ -1382,7 +1382,7 @@ _process_control_ids = {"zone_refining", "single_crystal", "gecl4_purification",
                          "ge_reduction", "lead_chamber", "crucible_steel",
                          "high_temp_furnace", "steam_high_pressure",
                          "electrolysis_industrial"}
-_tagged = {k for k, n in NODES.items() if n.get("failure_kind") == "process_control"}
+_tagged = {node_id for node_id, node in NODES.items() if node.get("failure_kind") == "process_control"}
 check("exactly the nine continuous hold-at-setpoint processes are tagged "
       "failure_kind=process_control - each one's OWN note already describes "
       "holding a temperature, rate or composition, which is why it was "
@@ -1502,12 +1502,12 @@ check("...and once patron_local IS startable, the refusal hands over the "
 _s_pat3 = sim(civ="rome_100ad")
 _s_pat3.fog = True
 _s_pat3.revealed = set()
-_pat_sen = [_w for _w in
+_pat_sen = [_warning for _warning in
             (_s_pat3.start_reason(_node_id)[1] for _node_id in sorted(NODES))
-            if _w and "actively opposes" in _w]
+            if _warning and "actively opposes" in _warning]
 check("the senatorial-patronage refusal does not leak its id under fog "
       "either",
-      not any("patron_senatorial" in _w for _w in _pat_sen),
+      not any("patron_senatorial" in _warning for _warning in _pat_sen),
       _pat_sen[:1])
 
 # THE POLICY SCREEN GROUPS BY WHAT IS ACTUALLY RUNNING. An England play
@@ -1559,16 +1559,16 @@ check("...and it was off by default, which is the whole of why they did not "
 # false is not. Vague is allowed, wrong is not.
 check("only a genuine zero is described as having nothing resting on it",
       _PROTO._rests_band(0).startswith("nothing else")
-      and not any(_PROTO._rests_band(_n).startswith("nothing else")
-                  for _n in (1, 2, 3, 4, 41, 301, 1201)),
-      [(_n, _PROTO._rests_band(_n)) for _n in (0, 1, 2, 3, 4)])
+      and not any(_PROTO._rests_band(_downstream_count).startswith("nothing else")
+                  for _downstream_count in (1, 2, 3, 4, 41, 301, 1201)),
+      [(_downstream_count, _PROTO._rests_band(_downstream_count)) for _downstream_count in (0, 1, 2, 3, 4)])
 check("...and the bands still climb, so the new rung did not break the "
       "ladder",
-      len({_PROTO._rests_band(_n) for _n in (0, 1, 4, 41, 301, 1201)}) == 6,
-      [_PROTO._rests_band(_n) for _n in (0, 1, 4, 41, 301, 1201)])
+      len({_PROTO._rests_band(_downstream_count) for _downstream_count in (0, 1, 4, 41, 301, 1201)}) == 6,
+      [_PROTO._rests_band(_downstream_count) for _downstream_count in (0, 1, 4, 41, 301, 1201)])
 check("...and every band has a short form for the column that renders it",
-      all(_PROTO._rests_band(_n) in _PROTO._RESTS_SHORT
-          for _n in (0, 1, 4, 41, 301, 1201)),
+      all(_PROTO._rests_band(_downstream_count) in _PROTO._RESTS_SHORT
+          for _downstream_count in (0, 1, 4, 41, 301, 1201)),
       sorted(_PROTO._RESTS_SHORT))
 
 # THE TWO PAIRS THEY ACTUALLY REPORTED, end to end through `why`.
@@ -1618,7 +1618,7 @@ for _cv in _ALL_CIVS:
     check("%s: its civilization file carries its OWN requisition/office/"
           "military/confiscation names and notes, not a shared generic one"
           % _cv,
-          all(_sp.get(k) for k in (
+          all(_sp.get(field_name) for field_name in (
               "requisition_name", "requisition_note", "requisition_base_share",
               "office_name", "office_note", "office_base_share",
               "military_name", "military_note",
@@ -1631,13 +1631,13 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     civilisation whose state_capacity is not Norse's - built once here
     rather than copied into every check below.
     """
-    s = sim(civ=civ, events=True)
-    s.employees["artisan"] = employees
-    s._resync_pools()
-    s.capital = capital
-    s.eminence = eminence
-    s.update_protection()
-    return s
+    grown_sim = sim(civ=civ, events=True)
+    grown_sim.employees["artisan"] = employees
+    grown_sim._resync_pools()
+    grown_sim.capital = capital
+    grown_sim.eminence = eminence
+    grown_sim.update_protection()
+    return grown_sim
 
 
 _big = _grown("rome_100ad")
@@ -1679,7 +1679,7 @@ check("no militarily significant technology done: the state has nothing to "
       "ask this household for",
       not _no_mil.military_demand_eligible(), _no_mil.military_leverage())
 _mil_done = _grown("rome_100ad")
-_mil_done.done.update(k for k in NODES if "military" in NODES[k].get("traits", ())
+_mil_done.done.update(node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())
 )
 _mil_done._done_changed()
 check("...but the FIRST working gun (one military-branch node, not a "
@@ -1711,7 +1711,7 @@ _huge_shielded = _grown("rome_100ad", employees=2000.0, capital=60000000.0, emin
 _huge_shielded.protection = 0.85
 _huge_shielded.done.add("academy_network")
 _huge_shielded._done_changed()
-_huge_shielded.done.update(k for k in NODES if "military" in NODES[k].get("traits", ())
+_huge_shielded.done.update(node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())
 )
 _huge_shielded._done_changed()
 check("confiscation is mitigable, by exactly the things that mitigated it "
@@ -1752,8 +1752,8 @@ _fogged.fog = True
 _fogged.year = _fogged.year
 _before_log = len(_fogged.log)
 _fogged._state_pressure(_fogged.year)
-_new_lines = " ".join(m for _year, m in _fogged.log[_before_log:])
-_leaked = [k for k in NODES if k in _new_lines]
+_new_lines = " ".join(message for _year, message in _fogged.log[_before_log:])
+_leaked = [node_id for node_id in NODES if node_id in _new_lines]
 check("the state-notices-you log lines never leak a bare node id, under fog "
       "or off it - only this civilisation's own plain historical names",
       not _leaked, _leaked[:5])
@@ -1779,9 +1779,9 @@ check("with events off, the probabilistic confiscation/military rolls never "
       "that one is APPROACHING is allowed through regardless, the same way "
       "eminence's own conspicuousness warning in core.py's step() is not "
       "gated on events either, only its dice roll is",
-      not any("handed over" in m or "the state takes what it judges" in m
-             for _year, m in _det_off.log[-5:]),
-      [m for _year, m in _det_off.log[-5:]])
+      not any("handed over" in message or "the state takes what it judges" in message
+             for _year, message in _det_off.log[-5:]),
+      [message for _year, message in _det_off.log[-5:]])
 check("...but the deterministic requisition/office tax still applies - it "
       "is not a roll of the dice, and a dice-free trial must still feel it",
       _det_off.capital < _cap_before_off, (_det_off.capital, _cap_before_off))
@@ -1792,5 +1792,5 @@ _det_on.rng = _AlwaysFires(1)
 _det_on._state_pressure(_det_on.year)
 check("...and with events on, the same always-fires rng DOES produce the "
       "confiscation tail event this time",
-      any("the state takes what it judges" in m for _year, m in _det_on.log),
-      [m for _year, m in _det_on.log[-5:]])
+      any("the state takes what it judges" in message for _year, message in _det_on.log),
+      [message for _year, message in _det_on.log[-5:]])

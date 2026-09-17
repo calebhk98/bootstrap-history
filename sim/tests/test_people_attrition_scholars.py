@@ -92,12 +92,12 @@ check("...but a whole number still goes through, and lands exactly that many",
 # fix - that the ceiling itself widens with the institutions - is checked
 # below in milliseconds and stays on the fast path.
 def _auto_hire_respects_the_wall():
-    s_ = sim(capital=1e9, manual=False)
+    household = sim(capital=1e9, manual=False)
     for _ in range(250):
-        s_.step()
-    return (s_.scholars <= s_.literate_capacity("scholar") + 1e-6
-            and s_.scholars > 10.0,
-            (s_.scholars, s_.literate_capacity("scholar")))
+        household.step()
+    return (household.scholars <= household.literate_capacity("scholar") + 1e-6
+            and household.scholars > 10.0,
+            (household.scholars, household.literate_capacity("scholar")))
 
 slow_check("auto_hire never grows scholars past the wall hire() enforces, and "
            "over two and a half centuries grows well past the old ceiling of six",
@@ -290,14 +290,14 @@ check("following `pre` alone understates what the goal needs by the "
 # staffing and money both solved spent 277 of its years short of saltpetre.
 def _nitre_laid(capital):
     """One year of the auto_mine nitre branch at a given wealth."""
-    n = sim(civ="rome_100ad")
-    n.capital = float(capital)
-    n.policy["auto_mine"] = True
-    n.nitre_bed_m2 = 0.0
-    n.binding = "saltpetre"
-    before = n.nitre_bed_m2
-    n.step()
-    return n.nitre_bed_m2 - before
+    household = sim(civ="rome_100ad")
+    household.capital = float(capital)
+    household.policy["auto_mine"] = True
+    household.nitre_bed_m2 = 0.0
+    household.binding = "saltpetre"
+    before = household.nitre_bed_m2
+    household.step()
+    return household.nitre_bed_m2 - before
 
 check("the nitre purchase is held to a flat two thousand denarii a year "
       "however rich the household - sizing it to the shortfall instead, "
@@ -333,7 +333,7 @@ _DEV_WORDS = ("audit", "fixed after", "todo", "fixme", "xxx", "see job",
 _leaks = []
 for _k, _n in sorted(NODES.items()):
     for _m in _BRACKETED.findall(_n.get("note") or ""):
-        if any(_w in _m.lower() for _w in _DEV_WORDS):
+        if any(word in _m.lower() for word in _DEV_WORDS):
             _leaks.append((_k, _m[:70]))
 check("no node's player-facing note carries a bracketed developer aside - "
       "an outside player found '[FIXED after independent audit: ...]' in a "
@@ -341,14 +341,14 @@ check("no node's player-facing note carries a bracketed developer aside - "
       _leaks == [], _leaks[:4])
 check("...and the markers were moved rather than destroyed, so the "
       "provenance of an inferred edge is still recoverable",
-      sum(1 for _n in NODES.values()
-          if "FIXED after independent audit" in (_n.get("_internal") or "")) == 22,
-      sum(1 for _n in NODES.values()
-          if "FIXED after independent audit" in (_n.get("_internal") or "")))
+      sum(1 for node in NODES.values()
+          if "FIXED after independent audit" in (node.get("_internal") or "")) == 22,
+      sum(1 for node in NODES.values()
+          if "FIXED after independent audit" in (node.get("_internal") or "")))
 check("nothing in the engine reads _internal, which is what makes it safe "
       "to keep developer notes there",
-      not any("_internal" in open(os.path.join(HERE, "engine", _f)).read()
-              for _f in ("core.py", "economy.py", "projects.py", "labour.py",
+      not any("_internal" in open(os.path.join(HERE, "engine", filename)).read()
+              for filename in ("core.py", "economy.py", "projects.py", "labour.py",
                          "society.py", "protocol.py", "cli.py", "fog.py",
                          "data.py")),
       "engine files mentioning _internal")
@@ -469,13 +469,13 @@ check("a cap that does not parse is refused, not shrugged off into "
 check("platinum is reachable the way its own note and the geography file "
       "both say it is, overland, without rounding the Cape",
       "exp_africa_circumnavigation" not in S.closure(NODES, "mat_platinum_bulk"),
-      sorted(x for x in S.closure(NODES, "mat_platinum_bulk")
-             if x.startswith("exp_")))
+      sorted(node_id for node_id in S.closure(NODES, "mat_platinum_bulk")
+             if node_id.startswith("exp_")))
 check("...and the goal no longer requires an age of exploration to reach a "
       "transistor: one trade route, not six voyages",
-      sorted(x for x in S.closure(NODES, GOAL) if x.startswith("exp_"))
+      sorted(node_id for node_id in S.closure(NODES, GOAL) if node_id.startswith("exp_"))
       == ["exp_trade_route_extend"],
-      sorted(x for x in S.closure(NODES, GOAL) if x.startswith("exp_")))
+      sorted(node_id for node_id in S.closure(NODES, GOAL) if node_id.startswith("exp_")))
 check("the Colombian placers are still a route, just not the only one",
       "americas_south" in (GEO_MATS := S.load_geography()
                            ["located_materials"]["platinum"]["regions"])
@@ -513,10 +513,10 @@ check("topo_order puts a single-option req_any dependency before the node "
 check("hard_pre never repeats an id, however a node names it - a "
       "duplicate inflates topo_order's in-degree past what the decrement "
       "can undo, and reports ten blameless nodes as a cycle",
-      all(len(S.hard_pre(NODES, k)) == len(set(S.hard_pre(NODES, k)))
-          for k in NODES),
-      [k for k in sorted(NODES)
-       if len(S.hard_pre(NODES, k)) != len(set(S.hard_pre(NODES, k)))][:5])
+      all(len(S.hard_pre(NODES, node_id)) == len(set(S.hard_pre(NODES, node_id)))
+          for node_id in NODES),
+      [node_id for node_id in sorted(NODES)
+       if len(S.hard_pre(NODES, node_id)) != len(set(S.hard_pre(NODES, node_id)))][:5])
 _syn_req = {
     "goal2":  {"pre": ["mandatory"], "req_any": [], "yrs": 0, "ph": 0, "_total_cost": 0},
     "mandatory": {"pre": [], "req_any": [{"group": "g1", "options": {"onlyroute": 1.0}}],
@@ -549,29 +549,29 @@ check("a genuine req_any CHOICE is left alone - neither option of a "
 # against a society whose lettered pool tops out at 5.9.
 check("the planner names the institutions that train people, which the "
       "goal's own prerequisite closure never mentions",
-      _p_staff and all(k not in _p_need for k in _p_staff)
+      _p_staff and all(node_id not in _p_need for node_id in _p_staff)
       and "school_founded" in _p_staff and "academy_network" in _p_staff,
       _p_staff)
 check("...and does not order them, which was measured and made Rome's run "
       "three centuries worse - 278,000 denarii of founding cost and "
       "perpetual upkeep against a household that starts with four hundred",
-      all(k not in _p_order for k in _p_staff),
-      [k for k in _p_staff if k in _p_order])
+      all(node_id not in _p_order for node_id in _p_staff),
+      [node_id for node_id in _p_staff if node_id in _p_order])
 check("the staffing list is read from the same table staff_capacity() "
       "itself iterates, so the two cannot drift apart",
-      all(k in {e[0] for e in S.Sim.STAFF_CAPACITY_SOURCES} for k in _p_staff),
+      all(node_id in {entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES} for node_id in _p_staff),
       sorted(_p_staff))
 check("every node staff_capacity() credits actually exists in the tree - "
       "bessemer_openhearth did not, so its sixty-five artisans were never "
       "once handed over",
-      [e[0] for e in S.Sim.STAFF_CAPACITY_SOURCES if e[0] not in NODES] == [],
-      [e[0] for e in S.Sim.STAFF_CAPACITY_SOURCES if e[0] not in NODES])
-_p_zero = [k for k in _p_need if _p_c["slack"][k] <= 1e-6]
-_p_pos = {k: i for i, k in enumerate(_p_order)}
+      [entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES if entry[0] not in NODES] == [],
+      [entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES if entry[0] not in NODES])
+_p_zero = [node_id for node_id in _p_need if _p_c["slack"][node_id] <= 1e-6]
+_p_pos = {node_id: i for i, node_id in enumerate(_p_order)}
 check("every zero-slack (critical-path) node is ordered before every node "
       "that has room to wait",
-      max(_p_pos[k] for k in _p_zero) < min(_p_pos[k] for k in _p_need
-                                            if _p_c["slack"][k] > 1e-6),
+      max(_p_pos[node_id] for node_id in _p_zero) < min(_p_pos[node_id] for node_id in _p_need
+                                            if _p_c["slack"][node_id] > 1e-6),
       "critical nodes occupy positions 0-%d of %d" % (len(_p_zero) - 1, len(_p_order)))
 check("the critical-path total the planner computes matches `validate`'s "
       "142-year figure for this tree",
@@ -588,17 +588,17 @@ _p_path = os.path.join(ROOT, _PLAY_DIR, "planned_check.json")
 PLANNER.write_strategy(_p_path, "test", [], PLANNER.interleave(
     _p_order, PLANNER.pick_side_branches(NODES, _p_need, _p_s, 12), 8))
 _p_label, _p_full, _p_bounties = S.load_strategy(_p_path, NODES, GOAL)
-_p_fullpos = {k: i for i, k in enumerate(_p_full)}
-_p_violations = [(p, k) for k in _p_need for p in NODES[k]["pre"]
-                 if p in _p_need and _p_fullpos.get(p, -1) > _p_fullpos.get(k, 10 ** 9)]
+_p_fullpos = {node_id: i for i, node_id in enumerate(_p_full)}
+_p_violations = [(prereq_id, node_id) for node_id in _p_need for prereq_id in NODES[node_id]["pre"]
+                 if prereq_id in _p_need and _p_fullpos.get(prereq_id, -1) > _p_fullpos.get(node_id, 10 ** 9)]
 check("a plan this module writes never asks the engine to start something "
       "before its own prerequisite, once loaded the same way --strategy loads it",
       not _p_violations, _p_violations[:5])
 check("the side branches a plan weaves in are all revenue-positive and none "
       "is a technical prerequisite of the goal",
       _p_extras is not None and all(
-          k not in _p_need and NODES[k]["rev"] > NODES[k]["up"]
-          for k in PLANNER.pick_side_branches(NODES, _p_need, _p_s, 12)),
+          node_id not in _p_need and NODES[node_id]["rev"] > NODES[node_id]["up"]
+          for node_id in PLANNER.pick_side_branches(NODES, _p_need, _p_s, 12)),
       PLANNER.pick_side_branches(NODES, _p_need, _p_s, 12)[:5])
 
 # A SEED IMPROVES TIES, IT DOES NOT OVERRIDE THE GRAPH. Proven on a tiny

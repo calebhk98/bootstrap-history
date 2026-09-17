@@ -47,8 +47,8 @@ check("...and what it closed is still something you know how to do",
       _LOSS in s.done and _KNOW1 in s.done,
       "still known: %s %s" % (_LOSS in s.done, _KNOW1 in s.done))
 check("shed_loss_makers mothballs, and NAMES, what it takes",
-      _LOSS in s.mothballed and any(_LOSS in m for _, m in s.log),
-      [m for _, m in s.log])
+      _LOSS in s.mothballed and any(_LOSS in message for _, message in s.log),
+      [message for _, message in s.log])
 # The control: a loss-maker that is SHUT is left alone entirely.
 s_sh = sim(capital=-100000.0)
 s_sh.done.add(_LOSS); s_sh._done_changed()
@@ -77,8 +77,8 @@ check("a concern the creditors took is still a thing you know how to do",
       _LOSS in s.done,
       "still known: %s" % (_LOSS in s.done))
 check("creditors' seizure mothballs, and NAMES, what it takes",
-      _LOSS in s.mothballed and any(_LOSS in m for _, m in s.log),
-      [m for _, m in s.log])
+      _LOSS in s.mothballed and any(_LOSS in message for _, message in s.log),
+      [message for _, message in s.log])
 
 # --- C: a repossessed work must not look like fresh research
 s = sim(capital=100000.0)
@@ -89,7 +89,7 @@ check("a mothballed work refuses to be started as if it were new research",
       not ok and "restore" in why, why)
 avail = S._agent_available(s, NODES, {"all": True})
 check("a mothballed work does not appear in available looking like new research",
-      not any(e["id"] == _LOSS for e in avail["available"]), avail["count"])
+      not any(entry["id"] == _LOSS for entry in avail["available"]), avail["count"])
 
 # --- ROUND 8: THE DEADLOCK. A play tester lost precision_three_plate to a
 # third-century sack and could not get it back by any verb: `start` sent them
@@ -109,7 +109,7 @@ check("...and restore says to build it, not that it cannot be restored",
       not ok_rs and "start" in why_rs, why_rs)
 _av_dl = S._agent_available(s_dl, NODES, {"all": True})
 check("...and it is visible in available, not hidden behind a stale mothball",
-      any(e["id"] == _LOSS for e in _av_dl["available"]), _av_dl["count"])
+      any(entry["id"] == _LOSS for entry in _av_dl["available"]), _av_dl["count"])
 s_dl.start_project(_LOSS)
 check("...and starting it clears the stale mothball entry",
       _LOSS not in s_dl.mothballed and _LOSS in s_dl.active,
@@ -189,7 +189,7 @@ for _ in range(6):
         if off > 1:
             ratios.append(eff / off)
 check("an underfunded project's refund is proportional, not always exactly half",
-      any(abs(r - 0.5) > 0.02 for r in ratios), ratios)
+      any(abs(ratio - 0.5) > 0.02 for ratio in ratios), ratios)
 st = S._agent_state(s, NODES, {})
 check("state reports the year's hours summary",
       st.get("hours_this_year") == s.hours_this_year, st.get("hours_this_year"))
@@ -218,8 +218,8 @@ check("available returns quickly under fog, not in tens of seconds",
 # that used to stand in for it.
 # ============================================================================
 
-_christ = next(h for h in S.load_civ("norse_900ad")["hazards"]
-              if h["name"].startswith("Christianisation"))
+_christ = next(hazard for hazard in S.load_civ("norse_900ad")["hazards"]
+              if hazard["name"].startswith("Christianisation"))
 check("Christianisation now carries a values delta, not just a TODO note",
       bool(_christ.get("values")), _christ.get("values"))
 
@@ -276,8 +276,8 @@ check("a hazard that carries ONLY a values delta (no staff_loss, sack_chance, "
 # about Christianisation producing "no event and no visible consequence".
 r, _, _ = proto([{"cmd": "risk"}], civ="norse_900ad")
 kr = r[0]["knowledge_risk"]
-christ_row = next((h for h in kr["known_hazards_ahead"]
-                   if h["name"].startswith("Christianisation")), None)
+christ_row = next((hazard for hazard in kr["known_hazards_ahead"]
+                   if hazard["name"].startswith("Christianisation")), None)
 check("knowledge_risk lists Christianisation among the hazards ahead, "
       "before it starts",
       christ_row is not None, kr.get("known_hazards_ahead"))
@@ -330,9 +330,9 @@ def _run_agent(input_lines, extra_args=(), civ="rome_100ad", cwd=None):
     """Drive the real `agent` subcommand in a real subprocess, optionally with
     extra CLI flags (--pretty among them). Returns (stdout, stderr, returncode)."""
     cmd = [sys.executable, os.path.join(HERE, "simulator.py"), "agent", "--civ", civ] + list(extra_args)
-    p = subprocess.run(cmd, input="\n".join(json.dumps(c) for c in input_lines) + "\n",
+    proc = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in input_lines) + "\n",
                        capture_output=True, text=True, timeout=300, cwd=(cwd or ROOT))
-    return p.stdout, p.stderr, p.returncode
+    return proc.stdout, proc.stderr, proc.returncode
 
 
 _PRETTY_CMDS = [
@@ -425,7 +425,7 @@ _pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                      input=_menu_input, capture_output=True, text=True, timeout=120,
                      cwd=_menu_dir, env=_menu_env)
 check("the menu offers a main menu with New game, Load, and Options",
-      all(w in _pm.stdout for w in ("New game", "Load a saved game", "Options")),
+      all(option in _pm.stdout for option in ("New game", "Load a saved game", "Options")),
       _pm.stdout[:2000])
 check("the menu says it is starting, not offering a command to run later",
       "Starting now" in _pm.stdout, _pm.stdout[-500:])
@@ -436,15 +436,15 @@ check("the menu names a resumable --session file ending in .json",
 _save_dir = os.path.join(os.path.expanduser("~"), ".rome-saves")
 check("saves are written somewhere of their own, not beside the source",
       os.path.isdir(_save_dir)
-      and not [f for f in os.listdir(_menu_dir) if f.endswith(".json")],
+      and not [filename for filename in os.listdir(_menu_dir) if filename.endswith(".json")],
       _save_dir)
-_saved = ([f for f in os.listdir(_save_dir) if f.endswith(".json")]
+_saved = ([filename for filename in os.listdir(_save_dir) if filename.endswith(".json")]
           if os.path.isdir(_save_dir) else [])
 # The one this run chose, by name out of the banner, rather than "exactly one
 # file in the directory" - the save directory is the user's and keeps every
 # game they have played.
-_named = [ln.split("--session")[1].strip()
-          for ln in _pm.stdout.splitlines() if "--session" in ln]
+_named = [line.split("--session")[1].strip()
+          for line in _pm.stdout.splitlines() if "--session" in line]
 check("the menu's chosen session file actually exists on disk after playing",
       _named and os.path.exists(_named[0]), (_named[:1], len(_saved)))
 check("the menu drops straight into a playable session, no extra prompt",
@@ -475,7 +475,7 @@ _pr = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                      timeout=120, cwd=_redir_dir, env=_redir_env)
 check("ROME_SAVE_DIR redirects the menu's save away from the config file's "
       "own save_dir, and away from the default",
-      any(f.endswith(".json") for f in os.listdir(_redir_dir)),
+      any(filename.endswith(".json") for filename in os.listdir(_redir_dir)),
       (_pr.stdout[-400:], os.listdir(_redir_dir)))
 
 # --- the Options menu: a preference set from it is read back on the NEXT
@@ -514,7 +514,7 @@ _pl_load = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                           cwd=_load_dir, env=_load_env)
 check("Load a saved game lists the civilisation and year of a save on disk",
       "AD" in _pl_load.stdout and
-      any(c in _pl_load.stdout for c in
+      any(civ_name in _pl_load.stdout for civ_name in
           ("Rome", "Trajan", "Han", "Viking", "Norse", "Edward", "Mexica")),
       _pl_load.stdout[-1200:])
 check("...and how far along it is (a technology count, since this save has "
@@ -586,7 +586,7 @@ check("...and that survives a resume, the ordinary save mechanism already "
       "SAVE_FIELDS)", "and ageing" in _ig5.stdout, _ig5.stdout[-800:])
 check("the in-game options menu never offers to change civilisation, kit or "
       "fog - none of those are honest to change mid-game",
-      not any(w in _ig1.stdout for w in
+      not any(option in _ig1.stdout for option in
               ("change the civilisation", "change the kit",
                "change the starting", "turn fog")),
       [line for line in _ig1.stdout.splitlines() if "fog" in line.lower()])
@@ -628,14 +628,14 @@ _appopt = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                          input="3\nb\nq\n", capture_output=True, text=True,
                          timeout=60, cwd=_appopt_dir, env=_appopt_env)
 check("the main-menu Options screen offers the application preferences",
-      all(w in _appopt.stdout for w in
+      all(option in _appopt.stdout for option in
           ("save location", "display width", "rows per table",
            "welcome/tutorial")),
       _appopt.stdout[-1200:])
 check("...and no longer offers the per-game defaults that used to live here - "
       "civilisation, starting kit, fog, and mortality are a playthrough's own "
       "business, decided when that game starts, not a standing preference",
-      not any(w in _appopt.stdout for w in
+      not any(option in _appopt.stdout for option in
               ("default civilisation", "default starting kit",
                "default fog of war", "default mortality",
                "default horizon")),
@@ -867,21 +867,21 @@ os.makedirs(os.path.join(ROOT, _PLAY_DIR), exist_ok=True)
 
 
 def _play(lines, civ=None, extra=()):
-    p_ = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play"]
+    proc = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play"]
                         + (["--civ", civ] if civ else []) + list(extra),
                         input="".join(line + "\n" for line in lines),
                         capture_output=True, text=True, timeout=240, cwd=ROOT)
     # BOTH STREAMS. A refusal printed on stderr is still a refusal the player
     # sees, and a check that reads only stdout silently passes a game that
     # started the wrong civilisation over the top of a save.
-    return p_.stdout + p_.stderr, p_.returncode
+    return proc.stdout + proc.stderr, proc.returncode
 
 
 _pl, _rc = _play(["state", "money", "labour", "risk", "policy", "available",
                   "hire smith 1", "step 1", "quit"])
 check("typed play reaches the whole game, not six commands of its own",
-      all(t in _pl for t in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE")) and _rc == 0,
-      [t for t in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE") if t not in _pl])
+      all(marker in _pl for marker in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE")) and _rc == 0,
+      [marker for marker in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE") if marker not in _pl])
 check("typed play never answers a person in JSON",
       '{"cmd"' not in _pl, [line for line in _pl.splitlines() if '{"cmd"' in line][:3])
 _pl2, _ = _play(["available metallurgy", "quit"])
@@ -986,7 +986,7 @@ _wk, _, _ = proto([{"cmd": "hire", "trade": "chemist", "n": 1},
 check("you cannot be paid for a trade this society does not have",
       _wk[0].get("ok") is False and _wk[1].get("ok") is False
       and _wk[2].get("ok") is True,
-      [r.get("ok") for r in _wk])
+      [result.get("ok") for result in _wk])
 
 # 2. Staff force-fired to zero with credit still to spare, and nothing logged.
 # The tester's exact condition: staff on the books, capital NEGATIVE but only a
@@ -1030,7 +1030,7 @@ _b2 = sum(s.employees.values())
 s.step()
 check("losing staff you cannot pay is written in the log, never silent",
       sum(s.employees.values()) < _b2
-      and any("cannot pay everyone" in m for _year, m in s.log),
+      and any("cannot pay everyone" in message for _year, message in s.log),
       "%.2f -> %.2f, log %r" % (_b2, sum(s.employees.values()), s.log[-3:]))
 
 # 3. state.living_cost was living_and_appearances PLUS the whole payroll, while
@@ -1042,8 +1042,8 @@ _costs = (_mo.get("what_it_costs_you") or {})
 check("state and money do not label the same money two different ways",
       abs(_st.get("living_cost", 0) - _costs.get("living_and_appearances", -1)) < 0.15
       and abs(_st.get("wage_bill", 0) - _costs.get("wages", -1)) < 0.15,
-      "state %r / money %r" % ({k: _st.get(k) for k in ("living_cost", "wage_bill")},
-                               {k: _costs.get(k) for k in ("living_and_appearances", "wages")}))
+      "state %r / money %r" % ({field_name: _st.get(field_name) for field_name in ("living_cost", "wage_bill")},
+                               {field_name: _costs.get(field_name) for field_name in ("living_and_appearances", "wages")}))
 
 # 4. `path` under fog said "you have not discovered this" about a technology
 #    the same session reported as done.
@@ -1057,14 +1057,14 @@ check("path under fog gives the real reason, not a false one about discovery",
 #    kept because a hand-maintained list drifts again the moment one is added.)
 _uc, _, _ = proto([{"cmd": "frobnicate"}])
 check("the unknown-command hint names every command there is",
-      all(c in (_uc[0].get("error") or "") for c in S.KNOWN_COMMANDS if c != "quit"),
-      [c for c in S.KNOWN_COMMANDS if c not in (_uc[0].get("error") or "")])
+      all(command in (_uc[0].get("error") or "") for command in S.KNOWN_COMMANDS if command != "quit"),
+      [command for command in S.KNOWN_COMMANDS if command not in (_uc[0].get("error") or "")])
 
 # 6. 0.999 years was refused and 1.99 was silently floored to one.
 _fy, _, _ = proto([{"cmd": "step", "years": 1.99}, {"cmd": "step", "years": 2}])
 check("a fractional number of years is refused, not silently rounded",
       _fy[0].get("ok") is False and _fy[1].get("ok") is True,
-      [r.get("ok") or r.get("error") for r in _fy])
+      [result.get("ok") or result.get("error") for result in _fy])
 
 # --- the Mexica play tester: a project's own accounting -----------------------
 # Their three findings, each with the condition that produced it. All three need
@@ -1075,13 +1075,13 @@ check("a fractional number of years is refused, not silently rounded",
 def _starved(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     """One project that cannot finish, in a year that is short of both the
     trade it needs and the money to pay for it."""
-    s = sim(capital=capital)
-    s.start_project("identity_cover")
-    s.active["identity_cover"]["cost_left"] = cost_left
-    _real = s.market_supply
-    s.market_supply = lambda t, _r=_real: _r(t) * supply
-    s.capital = -s.credit_limit() * arrears      # in arrears, inside the limit
-    return s
+    starved_sim = sim(capital=capital)
+    starved_sim.start_project("identity_cover")
+    starved_sim.active["identity_cover"]["cost_left"] = cost_left
+    _real = starved_sim.market_supply
+    starved_sim.market_supply = lambda trade, _fallback=_real: _fallback(trade) * supply
+    starved_sim.capital = -starved_sim.credit_limit() * arrears      # in arrears, inside the limit
+    return starved_sim
 
 
 # 1. Hours could be refunded twice - once for the trade shortage and again for
@@ -1126,30 +1126,30 @@ check("a small remaining bill is actually paid off, not approached for ever",
 # is checking even has anything to say. The three checks that share that setup
 # move together, since re-running it for each would cost three times as much.
 def _hazard_advice_names_hedges():
-    s_ = sim(civ="mexica_1500", manual=False)
-    s_.fog = True
-    s_.revealed = set()
+    hazard_sim = sim(civ="mexica_1500", manual=False)
+    hazard_sim.fog = True
+    hazard_sim.revealed = set()
     for _i in range(45):
-        s_.step()
-    counters = {n for n, _s2, _l in s_.HAZARD_COUNTERS["staff_loss"]}
-    near = counters | {p_ for n in counters if n in NODES
-                       for p_ in NODES[n]["pre"]}
+        hazard_sim.step()
+    counters = {node_id for node_id, _s2, _hazard_label in hazard_sim.HAZARD_COUNTERS["staff_loss"]}
+    near = counters | {prereq_id for node_id in counters if node_id in NODES
+                       for prereq_id in NODES[node_id]["pre"]}
     # Keep this focused on advice ordering rather than on which nodes the
     # revised civilization opening happens to reveal during the optimizer
     # run.  The player in the reported case had these candidate hedges in
     # view, so make that fixture condition explicit.
-    s_.revealed.update(near)
-    steps = (s_.hazard_advice("staff_loss")
+    hazard_sim.revealed.update(near)
+    steps = (hazard_sim.hazard_advice("staff_loss")
              .get("you_could_begin_now_toward_it") or [])
     named = bool(steps) and all(
-        e.get("id") and (e["can_begin_now"] or e.get("waiting_on"))
-        for e in steps)
-    ordered = [e["can_begin_now"] for e in steps] == sorted(
-        (e["can_begin_now"] for e in steps), reverse=True)
-    real = all(e["id"] in near for e in steps)
+        step.get("id") and (step["can_begin_now"] or step.get("waiting_on"))
+        for step in steps)
+    ordered = [step["can_begin_now"] for step in steps] == sorted(
+        (step["can_begin_now"] for step in steps), reverse=True)
+    real = all(step["id"] in near for step in steps)
     return named and ordered and real, [
-        (e["id"], e["can_begin_now"], (e.get("waiting_on") or "")[:40])
-        for e in steps]
+        (step["id"], step["can_begin_now"], (step.get("waiting_on") or "")[:40])
+        for step in steps]
 
 slow_check("a hazard names things in front of you that hedge against it, "
            "startable ones first, and every one really is a hedge",
@@ -1199,11 +1199,11 @@ _bt, _, _ = proto([{"cmd": "bounty", "id": GOAL},
 _GOAL_PRE = NODES[GOAL]["pre"]
 _bt_text = json.dumps(_bt)
 check("no command names a prerequisite of something you have not heard of",
-      not any(p_ in _bt_text for p_ in _GOAL_PRE),
-      [p_ for p_ in _GOAL_PRE if p_ in _bt_text])
+      not any(prereq_id in _bt_text for prereq_id in _GOAL_PRE),
+      [prereq_id for prereq_id in _GOAL_PRE if prereq_id in _bt_text])
 check("...and only `why` answers about the goal at all; the rest still refuse",
-      all(r.get("ok") is False for r in _bt[:3]) and _bt[3].get("ok") is True,
-      [r.get("ok") for r in _bt])
+      all(result.get("ok") is False for result in _bt[:3]) and _bt[3].get("ok") is True,
+      [result.get("ok") for result in _bt])
 check("...and what `why` says about the goal counts what it cannot name",
       "have not heard of" in json.dumps(_bt[3]), json.dumps(_bt[3])[:200])
 
@@ -1290,13 +1290,13 @@ check("teaching a trade does not destroy the save",
 _av, _, _ = proto([{"cmd": "available"}], fog=True)
 _row = (_av[0].get("cheapest_six") or [{}])[0]
 check("available shows what a thing earns, costs after, and what rests on it",
-      all(f in _row for f in ("earns_per_year", "costs_per_year_after",
+      all(field in _row for field in ("earns_per_year", "costs_per_year_after",
                               "how_much_rests_on_this")),
       sorted(_row))
 check("available names the high-leverage things, not only the cheap ones",
-      any(e.get("id") in ("identity_cover", "units_standards")
-          for e in (_av[0].get("most_rests_on_these") or [])),
-      [e.get("id") for e in (_av[0].get("most_rests_on_these") or [])])
+      any(entry.get("id") in ("identity_cover", "units_standards")
+          for entry in (_av[0].get("most_rests_on_these") or [])),
+      [entry.get("id") for entry in (_av[0].get("most_rests_on_these") or [])])
 
 # 3. Under fog the game said "there is no score but what you have built" while
 #    an ending screen named a goal. The founder knows what a transistor is; fog
@@ -1344,7 +1344,7 @@ check("starting something says what bill you have just taken on",
 #    five hundred years. Two testers read a dead vestige as a broken mechanic.
 _su, _, _ = proto([{"cmd": "state"}])
 check("no dead field is reported every turn as though it were a mechanic",
-      "suspicion" not in _su[0], [k for k in _su[0] if "susp" in k])
+      "suspicion" not in _su[0], [field_name for field_name in _su[0] if "susp" in field_name])
 
 # --- the playtest-notes sweep -------------------------------------------------
 # S1: every capital loss was written `capital *= x`, which is sign-blind. At
@@ -1387,13 +1387,13 @@ check("hours reported as effective are hours that actually came off the work",
 # nothing about the 128 nodes the strategy names explicitly and so could never
 # place anything that depended on them. 100% after the fix.
 _lab_o, _order_o, _b_o = S.load_strategy("recommended", NODES, GOAL)
-_idx_o = {k: i for i, k in enumerate(_order_o)}
-_viol = [(k, p_) for k in _order_o for p_ in NODES[k]["pre"]
-         if _idx_o.get(p_, -1) > _idx_o[k]]
+_idx_o = {node_id: i for i, node_id in enumerate(_order_o)}
+_viol = [(node_id, prereq_id) for node_id in _order_o for prereq_id in NODES[node_id]["pre"]
+         if _idx_o.get(prereq_id, -1) > _idx_o[node_id]]
 check("no technology is ordered before something it requires",
       not _viol, "%d violations, e.g. %s" % (len(_viol), _viol[:3]))
 _need_o = S.closure(NODES, GOAL)
-_last = max(_idx_o[k] for k in _need_o if k in _idx_o)
+_last = max(_idx_o[node_id] for node_id in _need_o if node_id in _idx_o)
 check("everything the goal needs is near the front, not spread over the tree",
       _last < 400, "the last goal-critical node sits at index %d of %d"
                    % (_last, len(_order_o)))
@@ -1413,7 +1413,7 @@ for _k in list(s.order):
         elif "work in hand" in (_why or ""):
             _refused = _why
             break
-_owed = sum(st.get("cost_left") or 0.0 for st in s.active.values())
+_owed = sum(project_state.get("cost_left") or 0.0 for project_state in s.active.values())
 check("you cannot commit to more work than cash and credit could ever cover",
       _refused is not None and _owed <= max(0.0, s.capital) + s.credit_limit() + 1,
       "took %d projects, owing %.0f against %.0f of cash and credit"
@@ -1473,7 +1473,7 @@ _g3, _, _ = proto([{"cmd": "why", "id": "cap_heat_1300"}], civ="han_china_100ad"
 check("nothing this society already has is also reported as missing something",
       _g3[0].get("done") is True and not _g3[0].get("missing_prerequisites")
       and _g3[0].get("held_without_building_it") is True,
-      {k: _g3[0].get(k) for k in ("done", "missing_prerequisites",
+      {field_name: _g3[0].get(field_name) for field_name in ("done", "missing_prerequisites",
                                   "held_without_building_it")})
 # ...and the fix must NOT be to close the grant over its prerequisites, which
 # would hand Tenochtitlan sextants and cementation steel for nothing, because
@@ -1482,8 +1482,8 @@ _mx = sim(civ="mexica_1500")
 check("a society is not granted the route another society would take to it",
       "cementation_steel" not in _mx.done and "clock_pendulum" not in _mx.done
       and "fud_maize" in _mx.done,
-      [k for k in ("fud_maize", "cementation_steel", "clock_pendulum")
-       if k in _mx.done])
+      [node_id for node_id in ("fud_maize", "cementation_steel", "clock_pendulum")
+       if node_id in _mx.done])
 
 # --- knowing how, and actually running it ------------------------------------
 # The user, on the deepest thing anyone said about this model: "you research
@@ -1526,7 +1526,7 @@ s3 = sim(capital=1000000.0)
 # BIG ENOUGH THAT ONE PERSON CANNOT RUN IT. The founder counts as a pair of
 # hands now, so a small shop is exactly what they CAN open alone; the staffing
 # rule is about scale, and this check has to test scale.
-_heavy = [k for k in NODES if NODES[k]["rev"] >= 6000][:1]
+_heavy = [node_id for node_id in NODES if NODES[node_id]["rev"] >= 6000][:1]
 if _heavy:
     s3.done.add(_heavy[0]); s3._done_changed()
     s3.artisans = 0.0
@@ -1573,7 +1573,7 @@ check("what you are running survives a save and reload",
 # for wages - which is exactly why silence was the defect.
 s = sim(civ="norse_900ad", capital=40000.0)
 s.hire("smith", 3)
-_loser = [k for k in NODES if NODES[k]["up"] > NODES[k]["rev"] > 0][:1]
+_loser = [node_id for node_id in NODES if NODES[node_id]["up"] > NODES[node_id]["rev"] > 0][:1]
 if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
 s.capital = -900.0
@@ -1583,7 +1583,7 @@ check("a run that has effectively stopped says so, and says what would restart i
       _diag and _diag["what_would_change_it"]
       # "work for wages" became "work as a <trade>", because advice that does
       # not say which job to take can be followed into a loss.
-      and any(w.startswith("work as a ") for w in _diag["what_would_change_it"]),
+      and any(reason.startswith("work as a ") for reason in _diag["what_would_change_it"]),
       _diag)
 check("a solvent run is not told it is stuck",
       sim(civ="norse_900ad").stall_diagnosis() is None,
@@ -1599,7 +1599,7 @@ _ROMAN = ("_roman", "_rome", "annona", "insula", "societas", "collegium",
           "argentarii", "latifundi", "cursus", "pharos")
 for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
     _sc = sim(civ=_civ)
-    _bad = sorted(k for k in _sc.granted if any(m in k for m in _ROMAN))
+    _bad = sorted(granted_name for granted_name in _sc.granted if any(roman_marker in granted_name for roman_marker in _ROMAN))
     check("%s is not handed Roman institutions for nothing" % _civ,
           not _bad, _bad)
 
@@ -1664,9 +1664,9 @@ _fg, _, _ = proto([{"cmd": "why", "id": "transistor"},
                    {"cmd": "why", "id": "vacuum"},
                    {"cmd": "why", "id": "semiconductor"}], fog=True)
 check("a misspelling cannot be used to enumerate the tree through the fog",
-      all("transistor" not in (r.get("error") or "").replace("'transistor'", "")
-          and "vacuum_tube" not in (r.get("error") or "") for r in _fg),
-      [r.get("error", "")[:80] for r in _fg])
+      all("transistor" not in (result.get("error") or "").replace("'transistor'", "")
+          and "vacuum_tube" not in (result.get("error") or "") for result in _fg),
+      [result.get("error", "")[:80] for result in _fg])
 
 # open/ventures are how technology turns into income and were missing from the
 # command list; `open` on the founder's own practice denied it was theirs while
@@ -1675,7 +1675,7 @@ _hc, _, _ = proto([{"cmd": "help", "topic": "commands"},
                    {"cmd": "open", "id": "med_cataract_couching"}],
                   civ="han_china_100ad")
 check("every way of turning knowledge into income is in the command list",
-      all(c in json.dumps(_hc[0]) for c in ("open", "ventures")),
+      all(command in json.dumps(_hc[0]) for command in ("open", "ventures")),
       sorted((_hc[0].get("commands") or {}).keys())[:6])
 check("the game does not deny that your own practice is yours",
       "already doing that" in (_hc[1].get("error") or ""), _hc[1].get("error"))
@@ -1695,13 +1695,13 @@ if os.path.exists(os.path.join(ROOT, _rs2)):
 
 
 def _agent_session(cmds, first=False):
-    a = [sys.executable, os.path.join(HERE, "simulator.py"), "agent",
+    argv = [sys.executable, os.path.join(HERE, "simulator.py"), "agent",
          "--session", _rs2]
     if first:
-        a += ["--civ", "han_china_100ad"]
-    p_ = subprocess.run(a, input="\n".join(json.dumps(c) for c in cmds) + "\n",
+        argv += ["--civ", "han_china_100ad"]
+    proc = subprocess.run(argv, input="\n".join(json.dumps(command) for command in cmds) + "\n",
                         capture_output=True, text=True, timeout=240, cwd=ROOT)
-    return [json.loads(line) for line in p_.stdout.splitlines() if line.strip()]
+    return [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
 
 
 _agent_session([{"cmd": "start", "id": "fin_bimetallism"}], first=True)
@@ -1748,7 +1748,7 @@ check("ids that carry capitals are reachable, and case is not the player's probl
 _av, _ = _play(["available all", "quit"])
 _longest = max(NODES, key=len)
 check("no id is truncated in the table a player copies ids from",
-      all(len(w) <= 30 or w in _av for w in [_longest]) or _longest not in _av,
+      all(len(node_id) <= 30 or node_id in _av for node_id in [_longest]) or _longest not in _av,
       "longest id is %d chars" % len(_longest))
 
 # 6. A year's hours must add up. Block 5b reused the name `pool`, clobbering
@@ -1833,11 +1833,11 @@ check("...but being received by a patron, and publishing, still do",
 
 
 def _persona(has):
-    s_ = sim(civ="england_1300")
+    persona_sim = sim(civ="england_1300")
     if has:
-        run_it(s_, "identity_cover")
-    s_.update_protection()
-    return s_
+        run_it(persona_sim, "identity_cover")
+    persona_sim.update_protection()
+    return persona_sim
 
 
 _no, _yes = _persona(False), _persona(True)
@@ -1877,10 +1877,10 @@ s.employees = {}
 s.capital = 0.0
 s.year = 1348
 s._shocks(1348)
-_plague = [m for _year, m in s.log if "Black Death" in m]
+_plague = [message for _year, message in s.log if "Black Death" in message]
 check("a hazard that took nothing from you says so",
-      not _plague or all("-45%" not in m or "nothing it could take" in m
-                         for m in _plague),
+      not _plague or all("-45%" not in message or "nothing it could take" in message
+                         for message in _plague),
       _plague)
 
 # --- round 6, the England break tester ---------------------------------------
@@ -1891,11 +1891,11 @@ check("a hazard that took nothing from you says so",
 #    the same loom still paying 435 a year in 1800 through the Black Death.
 s = sim(civ="england_1300", capital=500000.0)
 s.hire("artisan", 6)
-_big = [k for k in NODES if 2000 <= NODES[k]["rev"] <= 9000][:4]
+_big = [node_id for node_id in NODES if 2000 <= NODES[node_id]["rev"] <= 9000][:4]
 for _k in _big:
     s.done.add(_k)
 s._done_changed()
-_opened = [k for k in _big if s.open_venture(k)[0]]
+_opened = [node_id for node_id in _big if s.open_venture(node_id)[0]]
 _rev_staffed = s.revenue()
 s.fire("artisan", 6)
 s.step()
@@ -1904,14 +1904,14 @@ check("a concern nobody is left to watch stops trading",
       "revenue %.0f -> %.0f, still running %d"
       % (_rev_staffed, s.revenue(), len(s.operating)))
 check("...and the game says which ones closed and why",
-      any("nobody left to keep an eye on" in m for _year, m in s.log),
-      [m for _year, m in s.log][-2:])
+      any("nobody left to keep an eye on" in message for _year, message in s.log),
+      [message for _year, message in s.log][-2:])
 
 # 2. Failure risk fired correctly and announced nothing, so a tester watched
 #    about 113 builds, expected nine failures and found no occurrence of
 #    "fail", "abandon" or "lost" anywhere, and concluded the mechanic was dead.
 s = sim(capital=5000000.0)
-_risky = [k for k in NODES if NODES[k]["risk"] >= 0.15][:1][0]
+_risky = [node_id for node_id in NODES if NODES[node_id]["risk"] >= 0.15][:1][0]
 _fails = 0
 for _i in range(120):
     s.active[_risky] = dict(ph_left=0.0, yrs=99.0, spent=0.0, cost_left=0.0)
@@ -1921,10 +1921,10 @@ for _i in range(120):
         _fails += 1
         del s.active[_risky]
 check("a failed attempt is announced, not silently absorbed",
-      _fails > 0 and any("FAILED at" in m for _year, m in s.log),
+      _fails > 0 and any("FAILED at" in message for _year, message in s.log),
       "%d failures in 120 at risk %.2f, logged %d"
       % (_fails, NODES[_risky]["risk"],
-         sum(1 for _year, m in s.log if "FAILED at" in m)))
+         sum(1 for _year, message in s.log if "FAILED at" in message)))
 
 # 3. Three distinguishable refusals were themselves the tree: real-and-heard-of,
 #    real-but-unheard-of, and nonexistent. Sixteen plain-English guesses
@@ -1933,9 +1933,9 @@ _tri, _, _ = proto([{"cmd": "why", "id": "telescope"},
                     {"cmd": "why", "id": "zzzzznotathing"},
                     {"cmd": "why", "id": "dynamo"}],
                    civ="england_1300", fog=True)
-_msgs = {(r.get("error") or "").split("Did you mean")[0].strip() for r in _tri}
+_msgs = {(response.get("error") or "").split("Did you mean")[0].strip() for response in _tri}
 check("a name you have not heard of and a name that does not exist read alike",
-      len(_msgs) == 1, [m[:60] for m in _msgs])
+      len(_msgs) == 1, [message[:60] for message in _msgs])
 
 # --- round 6, the England play tester ----------------------------------------
 # 1. Bought people counted at full worth from the day of purchase, so the
@@ -2003,8 +2003,8 @@ s = sim(capital=400.0)
 s.eminence = s.cfg["eminence_danger"] * 0.9
 s.step()
 check("becoming conspicuous is said out loud before it kills you",
-      any("BECOMING CONSPICUOUS" in m for _year, m in s.log),
-      [m for _year, m in s.log][-2:])
+      any("BECOMING CONSPICUOUS" in message for _year, message in s.log),
+      [message for _year, message in s.log][-2:])
 _he, _, _ = proto([{"cmd": "help", "topic": "eminence"}])
 check("...and there is a help topic for it",
       "eminence" in json.dumps(_he[0]).lower() and "no such topic" not in json.dumps(_he[0]),
@@ -2147,10 +2147,10 @@ _dg, _, _ = proto([{"cmd": "available"}], fog=True)
 _lev = [x["id"] for x in (_dg[0].get("most_rests_on_these") or [])]
 check("the leverage column is not emptied by things being cheap",
       len(_lev) >= 4, _lev)
-_by_reach = sorted(_lev, key=lambda k: -S.downstream_count(NODES, k))
+_by_reach = sorted(_lev, key=lambda node_id: -S.downstream_count(NODES, node_id))
 check("...and it really is the highest-leverage work available",
       _lev and S.downstream_count(NODES, _lev[0]) >= 50,
-      [(k, S.downstream_count(NODES, k)) for k in _lev])
+      [(node_id, S.downstream_count(NODES, node_id)) for node_id in _lev])
 
 # A break tester multiplied out the factors `why` shows for clock_pendulum,
 # got 4,747.6 against a stated 4,834, and called it the one card in the game
@@ -2223,7 +2223,7 @@ s.year = 1519
 for _ in range(6):
     s._shocks(s.year)
     s.year += 1
-_sacks = [m for _year, m in s.log if "sacked" in m]
+_sacks = [message for _year, message in s.log if "sacked" in message]
 check("a sacking says what it took from you",
       _sacks and ("taken" in _sacks[0] or "nothing it could take" in _sacks[0]),
       _sacks[:1])
@@ -2232,7 +2232,7 @@ s2.year = 1519
 for _ in range(6):
     s2._shocks(s2.year)
     s2.year += 1
-_sacks2 = [m for _year, m in s2.log if "sacked" in m]
+_sacks2 = [message for _year, message in s2.log if "sacked" in message]
 check("...and says so plainly when it took nothing",
       not _sacks2 or "nothing it could take" in _sacks2[0], _sacks2[:1])
 
