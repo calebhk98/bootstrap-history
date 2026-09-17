@@ -7,8 +7,100 @@ their own. Behaviour is unchanged and verified byte-identical.
 import collections, json, math, os, random
 from collections import defaultdict
 
+from constants import declare
 from .data import *          # the shared tables and loaders
 from .data import (TECH_EFFECTS, TRADES_ABSENT, closure, critical_path)
+
+
+STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT = declare(
+    "STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT", -0.9, kind="temporary_heuristic",
+    unit="dimensionless (multiplies w_religious_rigidity)", source=None,
+    confidence="D",
+    why="How much a religiously rigid society's OWN interest in a technology "
+        "is suppressed by that technology being religious_adjacent - "
+        "negative because rigidity chills state interest in it rather than "
+        "raising it, near but not equal to a full -1.0 offset. No source "
+        "ties this specific fraction to any state's actual interest in "
+        "religious matters; a real figure needs a model of how a state's "
+        "own priorities are formed, not a hand-picked weight per trait.")
+
+ALARM_WEIGHT_INEXPLICABLE = declare(
+    "ALARM_WEIGHT_INEXPLICABLE", 10.0, kind="temporary_heuristic",
+    unit="alarm points (multiplies w_magic_fear)", source=None,
+    confidence="D",
+    why="How alarming an effect a society has no category for is, before "
+        "any defence - the largest of the per-trait weights here because "
+        "alarm_of's own docstring says this is the thing that matters, not "
+        "speed or money. No source measures a society's fright at an "
+        "unexplained effect in these units; a real mechanism would derive "
+        "alarm from what a specific society's own epistemic categories can "
+        "and cannot explain, not from a fixed per-trait table.")
+ALARM_WEIGHT_SPECTACLE = declare(
+    "ALARM_WEIGHT_SPECTACLE", 4.0, kind="temporary_heuristic",
+    unit="alarm points (multiplies w_magic_fear)", source=None,
+    confidence="D",
+    why="A visible spectacle alarms a magic-fearing society less than "
+        "something truly inexplicable does - it is still explained by "
+        "showmanship - so this sits at a fixed fraction of "
+        "ALARM_WEIGHT_INEXPLICABLE. Tuned to feel proportionate, not "
+        "derived from any source.")
+ALARM_WEIGHT_RELIGIOUS_ADJACENT = declare(
+    "ALARM_WEIGHT_RELIGIOUS_ADJACENT", 9.0, kind="temporary_heuristic",
+    unit="alarm points (multiplies w_religious_rigidity)", source=None,
+    confidence="D",
+    why="How alarming a religious authority finds a religiously-adjacent "
+        "effect, in the same invented units as every other weight in this "
+        "table. No source; a real figure needs a model of a specific "
+        "religious institution's own doctrine and its actual reaction to a "
+        "specific claim, not one number for the whole category.")
+ALARM_WEIGHT_STATUS_THREATENING = declare(
+    "ALARM_WEIGHT_STATUS_THREATENING", 5.0, kind="temporary_heuristic",
+    unit="alarm points", source=None, confidence="D",
+    why="How alarming a technology that threatens the standing of an "
+        "existing elite is, flat regardless of the society's own weights - "
+        "unlike the other terms here, this one carries no `weights[...]` "
+        "multiplier at all, which is itself an unexamined choice. Tuned "
+        "game balance, not a measured social reaction.")
+ALARM_WEIGHT_WEAPON_DEMOCRATISING = declare(
+    "ALARM_WEIGHT_WEAPON_DEMOCRATISING", 6.0, kind="temporary_heuristic",
+    unit="alarm points", source=None, confidence="D",
+    why="How alarming a weapon that lets ordinary people fight on equal "
+        "terms with an elite is, also flat regardless of the society's own "
+        "weights - see military_leverage()'s own docstring for the other "
+        "half of what this trait does. Invented game balance.")
+ALARM_WEIGHT_LABOUR_SAVING = declare(
+    "ALARM_WEIGHT_LABOUR_SAVING", 4.0, kind="temporary_heuristic",
+    unit="alarm points (multiplies max(0, -w_labour_saving))", source=None,
+    confidence="D",
+    why="How alarming a labour-saving technology is to a society that "
+        "specifically fears labour displacement (negative w_labour_saving) "
+        "- zero for a society that does not. Tuned to sit alongside the "
+        "other per-trait weights above, not measured.")
+ALARM_FAMILIARITY_FLOOR = declare(
+    "ALARM_FAMILIARITY_FLOOR", 0.12, kind="temporary_heuristic",
+    unit="dimensionless (floor on 1 - familiarity)", source=None,
+    confidence="D",
+    why="However habituated a society becomes to the founder, alarm never "
+        "falls below this floor - a full stranger is not read the same as "
+        "a lifelong native however long the founder has been visible. "
+        "Chosen so familiarity remains a strong, not total, defence; not "
+        "derived from any measured habituation curve.")
+ALARM_PROTECTION_FLOOR = declare(
+    "ALARM_PROTECTION_FLOOR", 0.15, kind="temporary_heuristic",
+    unit="dimensionless (floor on 1 - protection)", source=None,
+    confidence="D",
+    why="However protected the founder is by patrons, office and money, "
+        "alarm never falls below this floor - protection can blunt "
+        "suspicion, never erase it outright. Chosen for the same reason as "
+        "ALARM_FAMILIARITY_FLOOR; not measured.")
+ALARM_IDENTITY_COVER_MULTIPLIER = declare(
+    "ALARM_IDENTITY_COVER_MULTIPLIER", 0.75, kind="temporary_heuristic",
+    unit="dimensionless multiplier", source=None, confidence="D",
+    why="A respectable cover identity reads an inexplicable effect as "
+        "learning rather than sorcery - see the comment just above this "
+        "constant's use - cutting alarm by a quarter. Tuned so having a "
+        "cover identity is a real, visible help without eliminating alarm "
+        "outright; not measured against any historical case.")
 
 
 class SocietyMixin:
@@ -17,7 +109,7 @@ class SocietyMixin:
         state_weights = dict(self.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
-                  "religious_adjacent": -0.9 * weights["w_religious_rigidity"]})
+                  "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})
         return sum(state_weights.get(trait, 0.0) for trait in n.get("traits", []))
 
     def alarm_of(self, n):
@@ -29,20 +121,20 @@ class SocietyMixin:
         weights = self.w
         alarm = 0.0
         for trait in n.get("traits", []):
-            if   trait == "inexplicable":        alarm += 10.0 * weights["w_magic_fear"]
-            elif trait == "spectacle":           alarm += 4.0  * weights["w_magic_fear"]
-            elif trait == "religious_adjacent":  alarm += 9.0  * weights["w_religious_rigidity"]
-            elif trait == "status_threatening":  alarm += 5.0
-            elif trait == "weapon_democratising":alarm += 6.0
-            elif trait == "labour_saving":       alarm += 4.0  * max(0.0, -weights["w_labour_saving"])
+            if   trait == "inexplicable":        alarm += ALARM_WEIGHT_INEXPLICABLE * weights["w_magic_fear"]
+            elif trait == "spectacle":           alarm += ALARM_WEIGHT_SPECTACLE  * weights["w_magic_fear"]
+            elif trait == "religious_adjacent":  alarm += ALARM_WEIGHT_RELIGIOUS_ADJACENT  * weights["w_religious_rigidity"]
+            elif trait == "status_threatening":  alarm += ALARM_WEIGHT_STATUS_THREATENING
+            elif trait == "weapon_democratising":alarm += ALARM_WEIGHT_WEAPON_DEMOCRATISING
+            elif trait == "labour_saving":       alarm += ALARM_WEIGHT_LABOUR_SAVING  * max(0.0, -weights["w_labour_saving"])
         alarm *= (1.0 + max(0.0, -weights["w_novelty"]))
-        alarm *= max(0.12, 1.0 - self.household.familiarity)      # people habituate, fast
-        alarm *= max(0.15, 1.0 - self.household.protection)       # patrons, office, money
+        alarm *= max(ALARM_FAMILIARITY_FLOOR, 1.0 - self.household.familiarity)      # people habituate, fast
+        alarm *= max(ALARM_PROTECTION_FLOOR, 1.0 - self.household.protection)       # patrons, office, money
         # A recognised scholar doing something strange is a scholar; a stranger
         # doing the same thing is a sorcerer. This is the persona working, and
         # it is what the node has always said it does.
         if self.running("identity_cover"):
-            alarm *= 0.75
+            alarm *= ALARM_IDENTITY_COVER_MULTIPLIER
         return alarm
 
     def military_leverage(self):
@@ -75,7 +167,144 @@ class SocietyMixin:
                 if "military" in self.nodes[node_id].get("traits", ()))
         if military_node_count <= 0:
             return 0.0
-        return min(1.0, math.sqrt(military_node_count / 25.0))
+        return min(1.0, math.sqrt(military_node_count / self.MILITARY_LEVERAGE_SATURATES_AT))
+
+    MILITARY_LEVERAGE_SATURATES_AT = declare(
+        "MILITARY_LEVERAGE_SATURATES_AT", 25.0, kind="temporary_heuristic",
+        unit="founder-built military-branch nodes", source=None,
+        confidence="D",
+        why="How many founder-built military nodes reach full military "
+            "leverage (1.0) - a little over a fifth of the tree's 111+ "
+            "military branch, chosen (see this method's own docstring) so "
+            "leverage cannot be maxed by a token gesture nor by treating "
+            "the whole military branch as a strategy unto itself. Not "
+            "measured against any historical count of decisive weapons.")
+
+    PATRON_PROTECTION_LOCAL = declare(
+        "PATRON_PROTECTION_LOCAL", 0.18, kind="temporary_heuristic",
+        unit="dimensionless protection points (multiplies patronage_weight)",
+        source=None, confidence="D",
+        why="How much protection a local patron's name buys against "
+            "accusation, scaled by this society's own patronage_weight. No "
+            "attested source ties a specific protection value to a "
+            "specific patron tier; a real figure needs a model of how "
+            "much a patron of this rank could actually shield a client in "
+            "court or before a magistrate.")
+    PATRON_PROTECTION_SENATORIAL = declare(
+        "PATRON_PROTECTION_SENATORIAL", 0.26, kind="temporary_heuristic",
+        unit="dimensionless protection points (multiplies patronage_weight)",
+        source=None, confidence="D",
+        why="As PATRON_PROTECTION_LOCAL, senatorial tier - larger, tuned to "
+            "feel proportionate to the step up in patron standing, not "
+            "measured.")
+    PATRON_PROTECTION_IMPERIAL = declare(
+        "PATRON_PROTECTION_IMPERIAL", 0.32, kind="temporary_heuristic",
+        unit="dimensionless protection points (multiplies patronage_weight)",
+        source=None, confidence="D",
+        why="As PATRON_PROTECTION_SENATORIAL, imperial tier - the largest "
+            "of the three, tuned rather than measured.")
+
+    MILITARY_USEFULNESS_PROTECTION = declare(
+        "MILITARY_USEFULNESS_PROTECTION", 0.09, kind="temporary_heuristic",
+        unit="dimensionless protection points (multiplies patronage_weight "
+             "* military_leverage)", source=None, confidence="D",
+        why="Extra protection a patron gives a founder who can supply "
+            "cannon or bastions, on top of the flat patron protection - "
+            "gated on having a patron at all, since a founder with no "
+            "buyer for it is not protected by knowing how to cast one. "
+            "Tuned to be a real but secondary bonus alongside the patron "
+            "tiers, not measured against any attested case.")
+    IDENTITY_COVER_PROTECTION = declare(
+        "IDENTITY_COVER_PROTECTION", 0.12, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="What a respectable cover identity - books, a house, clothes, "
+            "a secretary, a reputation for piety - is worth against "
+            "accusation. See this method's own comment on what "
+            "identity_cover actually buys; the figure itself is invented "
+            "game balance.")
+    CITIZENSHIP_PROTECTION = declare(
+        "CITIZENSHIP_PROTECTION", 0.10, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="What formal citizenship (legal standing, the right to appeal "
+            "a verdict) is worth against accusation. Plausible in kind - "
+            "citizenship is a real legal shield - and invented in size.")
+    COLLEGIUM_LICENSED_PROTECTION = declare(
+        "COLLEGIUM_LICENSED_PROTECTION", 0.10, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="What a licensed collegium (a legally recognised guild body) "
+            "is worth against accusation. Not sourced to any attested "
+            "collegium privilege.")
+    ENDOWMENT_LAND_PROTECTION = declare(
+        "ENDOWMENT_LAND_PROTECTION", 0.08, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="What conspicuous benefaction - an endowment of land - is "
+            "worth against accusation: a visible act of civic generosity "
+            "that buys goodwill. Invented size.")
+    LEARNED_INSTITUTION_PROTECTION = declare(
+        "LEARNED_INSTITUTION_PROTECTION", 0.06, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="What founding a university or a school is worth against "
+            "accusation - smallest of the built protections here, on the "
+            "reasoning that a teacher is respectable but less politically "
+            "connected than a patron or a magistracy. Tuned, not measured.")
+    PRESSED_OFFICE_PROTECTION = declare(
+        "PRESSED_OFFICE_PROTECTION", 0.10, kind="temporary_heuristic",
+        unit="dimensionless protection points", source=None,
+        confidence="D",
+        why="The protection a pressed civic office buys, once the state "
+            "has noticed the household - a burden and a shield at once, "
+            "see office_report()'s own docstring. Sized similarly to the "
+            "built protections above rather than measured against any "
+            "attested decurionate privilege.")
+    REPUTATION_PROTECTION_CAP = declare(
+        "REPUTATION_PROTECTION_CAP", 0.30, kind="temporary_heuristic",
+        unit="dimensionless (maximum protection from reputation alone)",
+        source=None, confidence="D",
+        why="Ceiling on how much sheer personal reputation, independent of "
+            "any patron or office, can protect a founder - so reputation "
+            "alone cannot out-protect every built defence combined. "
+            "Chosen to match the shape of the other protection caps in "
+            "this method, not measured.")
+    REPUTATION_PROTECTION_SCALE = declare(
+        "REPUTATION_PROTECTION_SCALE", 260.0, kind="temporary_heuristic",
+        unit="reputation points per unit of protection", source=None,
+        confidence="D",
+        why="How fast reputation converts into protection, against "
+            "REPUTATION_PROTECTION_CAP above. Reputation's own scale is "
+            "itself invented (see STANDING_* in economy.py), so this "
+            "denominator is a heuristic layered on a heuristic.")
+    BRIBERY_PROTECTION_CAP = declare(
+        "BRIBERY_PROTECTION_CAP", 0.30, kind="temporary_heuristic",
+        unit="dimensionless (maximum protection from bribery alone)",
+        source=None, confidence="D",
+        why="Ceiling on how much protection bribery, advocacy and piety "
+            "can buy on their own, matching REPUTATION_PROTECTION_CAP so "
+            "neither spendable defence dominates the other. Tuned, not "
+            "measured against any attested bribe schedule.")
+    BRIBERY_PROTECTION_INCOME_SHARE = declare(
+        "BRIBERY_PROTECTION_INCOME_SHARE", 0.6, kind="temporary_heuristic",
+        unit="dimensionless (fraction of revenue treated as a full bribery "
+             "budget)", source=None, confidence="D",
+        why="What share of a year's revenue spent on bribes counts as a "
+            "maximal bribery effort, the denominator bribes_ytd is judged "
+            "against. No source ties a specific spending share to a "
+            "specific bribe's actual effect on an accusation; a real "
+            "figure needs a model of what a bribe could actually buy from "
+            "a given magistrate.")
+    PROTECTION_CEILING = declare(
+        "PROTECTION_CEILING", 0.92, kind="temporary_heuristic",
+        unit="dimensionless (maximum total protection)", source=None,
+        confidence="D",
+        why="However many defences a household stacks, protection never "
+            "reaches 1.0 - nothing makes a founder completely immune to "
+            "accusation. Chosen to leave alarm_of's own protection floor "
+            "(ALARM_PROTECTION_FLOOR) meaningful even at maximum "
+            "protection; not measured.")
 
     def update_protection(self):
         """Standing, office and MONEY all protect. The old model had money only
@@ -83,9 +312,9 @@ class SocietyMixin:
         magistracies and, in a society with a bribability of 0.55, verdicts."""
         protection = 0.0
         weights = self.w
-        if self.running("patron_local"):        protection += 0.18 * weights["patronage_weight"]
-        if self.running("patron_senatorial"):   protection += 0.26 * weights["patronage_weight"]
-        if self.running("patron_imperial"):     protection += 0.32 * weights["patronage_weight"]
+        if self.running("patron_local"):        protection += self.PATRON_PROTECTION_LOCAL * weights["patronage_weight"]
+        if self.running("patron_senatorial"):   protection += self.PATRON_PROTECTION_SENATORIAL * weights["patronage_weight"]
+        if self.running("patron_imperial"):     protection += self.PATRON_PROTECTION_IMPERIAL * weights["patronage_weight"]
         # AN ARMOURER IS PROTECTED DIFFERENTLY FROM A PHILOSOPHER, AND ONLY
         # WHEN SOMEBODY WANTS WHAT HE MAKES. Sejanus's people were safe until
         # they no longer had anything Tiberius needed, and the same logic
@@ -98,7 +327,7 @@ class SocietyMixin:
         # term already charges you for and this does NOT cancel.
         if (self.running("patron_local") or self.running("patron_senatorial")
                 or self.running("patron_imperial")):
-            protection += 0.09 * weights["patronage_weight"] * self.military_leverage()
+            protection += self.MILITARY_USEFULNESS_PROTECTION * weights["patronage_weight"] * self.military_leverage()
         # IT SAYS "REDUCES ALL FUTURE SUSPICION" AND IT DID NOTHING OF THE KIND.
         # identity_cover's entire implementation was +1.0 to the reputation
         # floor and +400 to the credit limit, and the suspicion it promised to
@@ -108,11 +337,11 @@ class SocietyMixin:
         # a persona: books, a house, clothes, a secretary and a reputation for
         # piety. What that buys is that an inexplicable effect coming out of
         # YOUR workshop is read as learning rather than as sorcery.
-        if self.running("identity_cover"):      protection += 0.12
-        if self.has("citizenship"):         protection += 0.10
-        if self.running("collegium_licensed"):  protection += 0.10
-        if self.running("endowment_land"):      protection += 0.08   # conspicuous benefaction
-        if self.running("fin_university") or self.running("school_founded"): protection += 0.06
+        if self.running("identity_cover"):      protection += self.IDENTITY_COVER_PROTECTION
+        if self.has("citizenship"):         protection += self.CITIZENSHIP_PROTECTION
+        if self.running("collegium_licensed"):  protection += self.COLLEGIUM_LICENSED_PROTECTION
+        if self.running("endowment_land"):      protection += self.ENDOWMENT_LAND_PROTECTION   # conspicuous benefaction
+        if self.running("fin_university") or self.running("school_founded"): protection += self.LEARNED_INSTITUTION_PROTECTION
         # BOTH A BURDEN AND A SHIELD. Once this household is large enough for
         # the state to press a civic office on it (state_notice() past
         # STATE_NOTICE_THRESHOLD - see office_report(), _state_pressure()),
@@ -123,14 +352,55 @@ class SocietyMixin:
         # - which is the whole point: "the version you do not get to decline
         # cheaply".
         if self.state_notice() > self.STATE_NOTICE_THRESHOLD:
-            protection += 0.10
-        protection += min(0.30, self.household.reputation / 260.0)
+            protection += self.PRESSED_OFFICE_PROTECTION
+        protection += min(self.REPUTATION_PROTECTION_CAP,
+                           self.household.reputation / self.REPUTATION_PROTECTION_SCALE)
         # BRIBERY, ADVOCACY AND PIETY: an explicit, spendable defence.
         income = max(1.0, self.revenue())
-        protection += min(0.30, (self.household.bribes_ytd / (income * 0.6)) * weights["bribability"])
-        self.household.protection = min(0.92, protection)
+        protection += min(self.BRIBERY_PROTECTION_CAP,
+                           (self.household.bribes_ytd / (income * self.BRIBERY_PROTECTION_INCOME_SHARE))
+                           * weights["bribability"])
+        self.household.protection = min(self.PROTECTION_CEILING, protection)
 
-    WITHDRAW_EVERY = 12          # years; being seen to retire twice is not retiring
+    WITHDRAW_EVERY = declare(
+        "WITHDRAW_EVERY", 12, kind="temporary_heuristic", unit="years",
+        source=None, confidence="D",
+        why="How long after withdrawing from public life the founder must "
+            "wait before doing it again - being seen to retire twice in a "
+            "short span is not retirement, it is a performance. A real "
+            "figure needs a model of how quickly a specific society forgets "
+            "a public retirement; this is a round number chosen to feel "
+            "like a real cooling-off period, not derived from one.")
+    WITHDRAW_MIN_EMINENCE_FRACTION = declare(
+        "WITHDRAW_MIN_EMINENCE_FRACTION", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (fraction of eminence_danger)", source=None,
+        confidence="D",
+        why="Below this share of the danger line, nobody has noticed the "
+            "founder enough for withdrawing to buy anything - so the "
+            "action is refused rather than silently wasting standing. "
+            "Chosen to match the other half-danger-line thresholds this "
+            "file uses (e.g. YOU ARE BECOMING CONSPICUOUS in core.py), not "
+            "derived from a model of what makes someone worth withdrawing "
+            "from.")
+    WITHDRAW_REPUTATION_RETENTION = declare(
+        "WITHDRAW_REPUTATION_RETENTION", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the gap above the standing floor "
+             "kept)", source=None, confidence="D",
+        why="Withdrawing moves reputation only halfway to the standing "
+            "floor, not all the way to it - the work already done still "
+            "stands for something. Chosen so withdrawal is a real, costly "
+            "decision without being total self-erasure; not derived from "
+            "any account of how quickly a real retirement was actually "
+            "forgotten.")
+    WITHDRAW_EMINENCE_RETENTION = declare(
+        "WITHDRAW_EMINENCE_RETENTION", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (fraction of eminence kept)", source=None,
+        confidence="D",
+        why="Withdrawing halves eminence outright, mirroring "
+            "WITHDRAW_REPUTATION_RETENTION's own halving of the standing "
+            "gap - the one lever this file gives against prominence "
+            "should visibly work. Tuned to make the decision worthwhile, "
+            "not measured.")
 
     def withdraw_from_public_life(self):
         """Deliberately become a smaller man. The one lever against prominence.
@@ -168,7 +438,7 @@ class SocietyMixin:
         # nobody has noticed, retiring is not modesty, it is throwing away the
         # standing that gets your work funded and staffed.
         danger = self.cfg["eminence_danger"]
-        if self.household.eminence < danger * 0.5:
+        if self.household.eminence < danger * self.WITHDRAW_MIN_EMINENCE_FRACTION:
             return False, ("nobody is watching you closely enough for this to "
                            "buy anything: prominence is %.1f against a danger "
                            "line of %.0f. Withdrawing now would only cost you "
@@ -182,8 +452,8 @@ class SocietyMixin:
         self.household.last_withdrawal = self.year
         rep_before, em_before = self.household.reputation, self.household.eminence
         # Halfway to the floor, not to zero: the work stands.
-        self.household.reputation = floor + (self.household.reputation - floor) * 0.5
-        self.household.eminence *= 0.5
+        self.household.reputation = floor + (self.household.reputation - floor) * self.WITHDRAW_REPUTATION_RETENTION
+        self.household.eminence *= self.WITHDRAW_EMINENCE_RETENTION
         self.update_protection()
         msg = ("you withdraw from public life: reputation %.1f -> %.1f, "
                "eminence %.1f -> %.1f. What you built still stands, and that "
@@ -193,15 +463,52 @@ class SocietyMixin:
         self.household.log.append((self.year, msg))
         return True, msg
 
+    EMINENCE_HAZARD_SCALE = declare(
+        "EMINENCE_HAZARD_SCALE", 90.0, kind="temporary_heuristic",
+        unit="eminence points per unit of yearly ruin probability",
+        source=None, confidence="D",
+        why="How much eminence above the danger line it takes to add a "
+            "full 100% to this year's chance of a prominence event - the "
+            "same denominator core.py's step() uses when it actually rolls "
+            "the dice, kept as one shared constant so the number quoted "
+            "here can never disagree with the one that fires. Tuned so "
+            "the risk climbs noticeably but not instantly past the line, "
+            "not measured against any real rate of political destruction.")
+    EMINENCE_OUTCOME_CONFISCATION_SHARE = declare(
+        "EMINENCE_OUTCOME_CONFISCATION_SHARE", 0.45, kind="temporary_heuristic",
+        unit="dimensionless (share of prominence events)", source=None,
+        confidence="D",
+        why="Of the events prominence causes, the share that are property "
+            "confiscation and forced retirement - shared with core.py's "
+            "step(), which rolls against this same split. Invented "
+            "proportions, not measured against any attested rate of each "
+            "outcome for a fallen Roman grandee.")
+    EMINENCE_OUTCOME_PATRON_LOST_SHARE = declare(
+        "EMINENCE_OUTCOME_PATRON_LOST_SHARE", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (share of prominence events)", source=None,
+        confidence="D",
+        why="Of the events prominence causes, the share that are a patron "
+            "destroyed in someone else's quarrel - shared with core.py's "
+            "step(). Invented, not measured.")
+    EMINENCE_OUTCOME_RUN_ENDS_SHARE = declare(
+        "EMINENCE_OUTCOME_RUN_ENDS_SHARE", 0.20, kind="temporary_heuristic",
+        unit="dimensionless (share of prominence events)", source=None,
+        confidence="D",
+        why="Of the events prominence causes, the share that end the run "
+            "outright - the remainder after EMINENCE_OUTCOME_CONFISCATION_"
+            "SHARE and EMINENCE_OUTCOME_PATRON_LOST_SHARE, shared with "
+            "core.py's step(). Invented, not measured.")
+
     def eminence_report(self):
         """Where you stand against the one danger no patron can protect you from."""
         cfg = self.cfg
         danger = cfg["eminence_danger"]
         yearly = self.prominence_hazard()
-        # eminence decays 0.93 a year and gains `yearly`, so this is where it
-        # settles if nothing changes.
-        settles = yearly / 0.07
-        probability = max(0.0, (self.household.eminence - danger) / 90.0)
+        # eminence decays self.EMINENCE_DECAY_RATE a year (see core.py's
+        # step()) and gains `yearly`, so this is where it settles if
+        # nothing changes.
+        settles = yearly / (1.0 - self.EMINENCE_DECAY_RATE)
+        probability = max(0.0, (self.household.eminence - danger) / self.EMINENCE_HAZARD_SCALE)
         helps = []
         if not self.running("academy_network"):
             helps.append("a wide, dispersed institution is harder to destroy than "
@@ -209,7 +516,7 @@ class SocietyMixin:
         if self.running("patron_imperial"):
             helps.append("you are as close to the throne as it is possible to "
                          "stand, which is the most exposed place there is")
-        if self.household.capital > 250000:
+        if self.household.capital > self.EMINENCE_WEALTH_VISIBLE_THRESHOLD:
             helps.append("visible wealth is half of what makes you a target")
         # THE LEVER, NAMED. Two play testers read this screen, found no command
         # in it that meant "get smaller", and died. It is `withdraw`.
@@ -235,15 +542,97 @@ class SocietyMixin:
                 # the end. Reading "chance of ruin" as "chance of death" was the
                 # game's fault, not theirs.
                 "if_it_lands_it_is": {
-                    "property confiscated and a forced retirement": 0.45,
-                    "your patron destroyed in someone else's quarrel": 0.35,
-                    "the end of the run": 0.20},
-                "chance_the_run_ENDS_this_year": round(probability * 0.20, 4),
+                    "property confiscated and a forced retirement": self.EMINENCE_OUTCOME_CONFISCATION_SHARE,
+                    "your patron destroyed in someone else's quarrel": self.EMINENCE_OUTCOME_PATRON_LOST_SHARE,
+                    "the end of the run": self.EMINENCE_OUTCOME_RUN_ENDS_SHARE},
+                "chance_the_run_ENDS_this_year": round(probability * self.EMINENCE_OUTCOME_RUN_ENDS_SHARE, 4),
                 "the_one_lever": _lever_note,
                 "what_would_change_it": helps,
                 "note": "This is prominence, not scandal. It cannot be bribed "
                         "away, and every defence that makes you safer from "
                         "accusation makes you larger and so raises this."}
+
+    EMINENCE_HAZARD_BASE_SCALE = declare(
+        "EMINENCE_HAZARD_BASE_SCALE", 2.2, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="Overall scale on the yearly prominence hazard - see this "
+            "method's own docstring for why the mechanic exists at all "
+            "(everything else saturates and left 200 successful runs out "
+            "of 200 with nothing able to touch the founder). Tuned by "
+            "measuring settled values against the danger line for two "
+            "dice-free trials (see the 'A SIXTH OFF' comment below); not "
+            "derived from any model of how quickly a real autocracy turns "
+            "on a client.")
+    EMINENCE_DANGER_WEIGHT_DEFAULT = declare(
+        "EMINENCE_DANGER_WEIGHT_DEFAULT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="Fallback value for a civilisation file that does not set its "
+            "own w_eminence_danger weight - a mid-scale default rather "
+            "than zero, so a civilisation that forgot to set this is not "
+            "silently immune to the mechanic. Not itself measured.")
+    EMINENCE_HAZARD_REPUTATION_SHARE = declare(
+        "EMINENCE_HAZARD_REPUTATION_SHARE", 0.70, kind="temporary_heuristic",
+        unit="dimensionless (weight in the hazard mix)", source=None,
+        confidence="D",
+        why="How much of the prominence hazard comes from reputation "
+            "(squared, so it is dominated by the already-famous) versus "
+            "visible wealth - reputation weighted heavier because being "
+            "personally renowned is closer to what actually destroyed "
+            "Sejanus, Seneca and Thrasea Paetus (see this method's own "
+            "docstring) than mere money was. Tuned split, not fitted to "
+            "any of those cases individually.")
+    EMINENCE_HAZARD_WEALTH_SHARE = declare(
+        "EMINENCE_HAZARD_WEALTH_SHARE", 0.30, kind="temporary_heuristic",
+        unit="dimensionless (weight in the hazard mix)", source=None,
+        confidence="D",
+        why="The complement of EMINENCE_HAZARD_REPUTATION_SHARE: how much "
+            "of the prominence hazard comes from visible wealth alone.")
+    EMINENCE_REPUTATION_SCALE = declare(
+        "EMINENCE_REPUTATION_SCALE", 100.0, kind="temporary_heuristic",
+        unit="reputation points", source=None, confidence="D",
+        why="Reference reputation this hazard treats as '1.0 famous' - "
+            "reputation's own scale is itself invented (see STANDING_* in "
+            "economy.py), so this normalisation is a heuristic layered on "
+            "a heuristic.")
+    EMINENCE_WEALTH_VISIBLE_THRESHOLD = declare(
+        "EMINENCE_WEALTH_VISIBLE_THRESHOLD", 250000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Capital treated as '1.0 visibly rich' for the prominence "
+            "hazard, and reused verbatim by eminence_report's own "
+            "what_would_change_it note and by household_scale's "
+            "HOUSEHOLD_WEALTH_SATURATES_AT comment as the smaller, "
+            "personal-wealth line beneath that mechanic's much larger "
+            "fiscal one. A round number marking enough personal wealth to "
+            "be a courtier's envy, not measured against any specific "
+            "attested Roman fortune.")
+    EMINENCE_IMPERIAL_PATRON_MULTIPLIER = declare(
+        "EMINENCE_IMPERIAL_PATRON_MULTIPLIER", 1.5, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="Standing nearest the throne is the most exposed place there "
+            "is - see this method's own docstring - so an imperial patron "
+            "raises the hazard by half again. Tuned to be a real, visible "
+            "cost to the strongest patronage tier, not measured.")
+    EMINENCE_ACADEMY_NETWORK_MULTIPLIER = declare(
+        "EMINENCE_ACADEMY_NETWORK_MULTIPLIER", 0.65, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="A wide, dispersed institution is harder to destroy than one "
+            "great man, cutting the hazard by over a third. Tuned to make "
+            "academy_network a real hedge without eliminating the hazard "
+            "outright; not measured.")
+    EMINENCE_FAMILIARITY_RELIEF = declare(
+        "EMINENCE_FAMILIARITY_RELIEF", 0.15, kind="temporary_heuristic",
+        unit="dimensionless (fraction of hazard familiarity removes)",
+        source=None, confidence="D",
+        why="How much familiarity - the model's own measure of how "
+            "unsurprising the founder has become - softens the prominence "
+            "hazard. 'A SIXTH OFF, NOT A THIRD' below records that this "
+            "was first tried at a third and measured, across three "
+            "thousand run-years, to make the mechanic literally "
+            "unreachable (every reported chance of ruin summed to 0.00); "
+            "a sixth was chosen so a decades-long fixture of the city "
+            "settles just under the danger line and one who has also "
+            "reached the throne settles well over it - calibrated against "
+            "that measurement, not derived from a model of habituation.")
 
     def prominence_hazard(self):
         """Eminence is its own hazard, and protection does NOT reduce it.
@@ -267,14 +656,17 @@ class SocietyMixin:
         outcome is a bad year, a confiscation or a lost patron, not a death.
         """
         weights = self.w
-        rep = max(0.0, self.household.reputation) / 100.0
-        wealth = min(1.0, max(0.0, self.household.capital) / 250000.0)
-        hazard = 2.2 * weights.get("w_eminence_danger", 0.5) * (0.70 * rep * rep + 0.30 * wealth)
+        rep = max(0.0, self.household.reputation) / self.EMINENCE_REPUTATION_SCALE
+        wealth = min(1.0, max(0.0, self.household.capital) / self.EMINENCE_WEALTH_VISIBLE_THRESHOLD)
+        hazard = (self.EMINENCE_HAZARD_BASE_SCALE
+                  * weights.get("w_eminence_danger", self.EMINENCE_DANGER_WEIGHT_DEFAULT)
+                  * (self.EMINENCE_HAZARD_REPUTATION_SHARE * rep * rep
+                     + self.EMINENCE_HAZARD_WEALTH_SHARE * wealth))
         if self.running("patron_imperial"):
-            hazard *= 1.5          # nearest the throne, most exposed to its turnover
+            hazard *= self.EMINENCE_IMPERIAL_PATRON_MULTIPLIER          # nearest the throne, most exposed to its turnover
         # A wide, dispersed institution is harder to destroy than one great man.
         if self.running("academy_network"):
-            hazard *= 0.65
+            hazard *= self.EMINENCE_ACADEMY_NETWORK_MULTIPLIER
         # AND A CITY GETS USED TO YOU. familiarity is the model's own measure of
         # how unsurprising you have become - it already decays the alarm your
         # work causes - and it was the one defence prominence ignored. Two play
@@ -293,7 +685,7 @@ class SocietyMixin:
         # for ninety years settles just under the danger line and a man who has
         # also got himself next to the throne settles well over it, which is
         # the shape the whole mechanic is about.
-        hazard *= (1.0 - 0.15 * self.household.familiarity)
+        hazard *= (1.0 - self.EMINENCE_FAMILIARITY_RELIEF * self.household.familiarity)
         return hazard
 
     # ---- THE STATE NOTICES YOU ----------------------------------------------
@@ -340,7 +732,14 @@ class SocietyMixin:
     # for everyone else, and can eventually cross these same lines; that is
     # the mechanic correctly answering "what if the player builds the state
     # up", not a special case written in for it.
-    HOUSEHOLD_HEADCOUNT_SATURATES_AT = 500.0
+    HOUSEHOLD_HEADCOUNT_SATURATES_AT = declare(
+        "HOUSEHOLD_HEADCOUNT_SATURATES_AT", 500.0, kind="temporary_heuristic",
+        unit="employees+slaves+freedmen", source=None, confidence="D",
+        why="Headcount at which household_scale()'s headcount term "
+            "saturates at 1.0 - a round number chosen so the state's "
+            "notice keeps climbing over most of a run's plausible staff "
+            "size rather than maxing out early; not fitted to any "
+            "specific historical household's size.")
     # Ten times prominence_hazard's own 250,000-denarii "visibly rich" line,
     # deliberately: that number marks enough personal wealth for a courtier to
     # envy, which is a different and smaller bar than enough FISCAL scale for
@@ -350,7 +749,18 @@ class SocietyMixin:
     # grain fleet is this one's, and that is a ten-million-denarii household,
     # not a quarter-million one - see the measured trajectories in this
     # section's own commit for where Rome and Han actually cross it.
-    HOUSEHOLD_WEALTH_SATURATES_AT = 10000000.0
+    HOUSEHOLD_WEALTH_SATURATES_AT = declare(
+        "HOUSEHOLD_WEALTH_SATURATES_AT", 10000000.0, kind="temporary_heuristic",
+        unit="denarii", source=None,
+        confidence="D",
+        why="Capital at which household_scale()'s wealth term saturates - "
+            "ten times prominence_hazard's own 250,000-denarii 'visibly "
+            "rich' line (EMINENCE_WEALTH_VISIBLE_THRESHOLD), deliberately: "
+            "personal envy and fiscal scale worth an official's time are "
+            "different, larger bars. See the comment above for the "
+            "reasoning; the figure itself is chosen to fit the measured "
+            "trajectories of two dice-free trials, not derived from a "
+            "fiscal model.")
 
     def household_scale(self):
         """0..1: how large and visible this household is to a state deciding
@@ -377,7 +787,35 @@ class SocietyMixin:
                        / self.HOUSEHOLD_WEALTH_SATURATES_AT)
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, self.household.eminence) / danger)
-        return 0.45 * head_s + 0.35 * wealth_s + 0.20 * emin_s
+        return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s
+                + self.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_s
+                + self.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * emin_s)
+
+    HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT = declare(
+        "HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT", 0.45, kind="temporary_heuristic",
+        unit="dimensionless (weight in household_scale mix)", source=None,
+        confidence="D",
+        why="How much household_scale() weights headcount - heaviest, "
+            "because a state assessing a household for requisition counts "
+            "workshops and granaries, not court gossip (see this method's "
+            "own docstring). Tuned split, not fitted to any specific "
+            "fiscal assessment.")
+    HOUSEHOLD_SCALE_WEALTH_WEIGHT = declare(
+        "HOUSEHOLD_SCALE_WEALTH_WEIGHT", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (weight in household_scale mix)", source=None,
+        confidence="D",
+        why="How much household_scale() weights visible wealth - second "
+            "heaviest, for the same reasoning as "
+            "HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT. Tuned, not measured.")
+    HOUSEHOLD_SCALE_EMINENCE_WEIGHT = declare(
+        "HOUSEHOLD_SCALE_EMINENCE_WEIGHT", 0.20, kind="temporary_heuristic",
+        unit="dimensionless (weight in household_scale mix)", source=None,
+        confidence="D",
+        why="How much household_scale() weights eminence (personal "
+            "prominence) - smallest, because a household can be "
+            "economically enormous and personally obscure, the exact gap "
+            "this mechanic exists to close (see this method's own "
+            "docstring). Tuned, not measured.")
 
     def state_notice(self):
         """0..1: state_capacity times household_scale() - the single gate
@@ -400,20 +838,51 @@ class SocietyMixin:
     # for the full trajectory. Requisition and office share this one line:
     # both are the state treating an enterprise as large enough to count,
     # just in two different registers (goods taken vs. a burden of service).
-    STATE_NOTICE_THRESHOLD = 0.35
-    # Arms draw attention at a lower bar than general economic weight - "a
-    # household that can make firearms in 400 AD Rome will be asked for
-    # them" does not wait for the household to also be rich - so this is
-    # lower, paired with its own floor on military_leverage() below rather
-    # than on notice alone.
-    STATE_NOTICE_THRESHOLD_MILITARY = 0.20
-    # Roughly one military-branch node done (military_leverage() reaches
-    # 0.20 at n=1 of 25 - see that method's own docstring): the FIRST working
-    # gun, not a standing army, is already enough for a state that can fight
-    # to want an accounting of it.
-    MIL_LEVERAGE_FLOOR_FOR_DEMAND = 0.20
-    MILITARY_DEMAND_COOLDOWN_YEARS = 20.0
-    MILITARY_DEMAND_ANNUAL_CHANCE = 0.10
+    STATE_NOTICE_THRESHOLD = declare(
+        "STATE_NOTICE_THRESHOLD", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (state_notice, 0..1)", source=None,
+        confidence="D",
+        why="Below this, the state has bigger things to do than assess "
+            "one household. Fitted so a Han dice-free trial crosses it "
+            "around year 400-420, well before that trial's own year-551 "
+            "goal, not in an epilogue after the tree is finished - a "
+            "calibration choice against measured trajectories, not a "
+            "derivation from a fiscal-capacity model.")
+    STATE_NOTICE_THRESHOLD_MILITARY = declare(
+        "STATE_NOTICE_THRESHOLD_MILITARY", 0.20, kind="temporary_heuristic",
+        unit="dimensionless (state_notice, 0..1)", source=None,
+        confidence="D",
+        why="Arms draw attention at a lower bar than general economic "
+            "weight - 'a household that can make firearms in 400 AD Rome "
+            "will be asked for them' does not wait for the household to "
+            "also be rich - so this sits below STATE_NOTICE_THRESHOLD, "
+            "paired with MIL_LEVERAGE_FLOOR_FOR_DEMAND rather than acting "
+            "on notice alone. Tuned, not measured.")
+    MIL_LEVERAGE_FLOOR_FOR_DEMAND = declare(
+        "MIL_LEVERAGE_FLOOR_FOR_DEMAND", 0.20, kind="temporary_heuristic",
+        unit="dimensionless (military_leverage, 0..1)", source=None,
+        confidence="D",
+        why="Roughly one military-branch node done (military_leverage() "
+            "reaches 0.20 at n=1 of 25 - see that method's own docstring): "
+            "the FIRST working gun, not a standing army, is already "
+            "enough for a state that can fight to want an accounting of "
+            "it. Chosen to line up with military_leverage()'s own curve, "
+            "not measured independently.")
+    MILITARY_DEMAND_COOLDOWN_YEARS = declare(
+        "MILITARY_DEMAND_COOLDOWN_YEARS", 20.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Minimum gap between one military-supply demand and the next "
+            "on the same household - long enough that it reads as an "
+            "occasional levy rather than an annual tax. Round number, not "
+            "derived from any attested requisition schedule.")
+    MILITARY_DEMAND_ANNUAL_CHANCE = declare(
+        "MILITARY_DEMAND_ANNUAL_CHANCE", 0.10, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability once eligible)",
+        source=None, confidence="D",
+        why="Once a household is militarily useful and visible enough "
+            "(military_demand_eligible), the yearly chance the state "
+            "actually asks. Invented frequency, not fitted to any "
+            "attested requisition rate.")
     # The tail risk, and deliberately a much higher line than the one above:
     # confiscation is not the ordinary cost of being noticed, it is what
     # happens at the very top of the same scale, to a household the state
@@ -424,9 +893,31 @@ class SocietyMixin:
     # this section's commit message. Never lowered to make this bite earlier:
     # a tail risk that fires in the middle of an ordinary run is not a tail
     # risk, it is a second flat tax wearing a dice roll.
-    STATE_NOTICE_THRESHOLD_CONFISCATION = 0.75
-    CONFISCATION_MAX_RATE = 0.28
-    CONFISCATION_CAPITAL_LOSS = 0.25
+    STATE_NOTICE_THRESHOLD_CONFISCATION = declare(
+        "STATE_NOTICE_THRESHOLD_CONFISCATION", 0.75, kind="temporary_heuristic",
+        unit="dimensionless (state_notice, 0..1)", source=None,
+        confidence="D",
+        why="Where the tail confiscation risk begins - see the comment "
+            "above: calibrated so it is crossed only late (the final "
+            "quarter to sixth of a run) in both measured dice-free "
+            "trials, deliberately never lowered to make it bite earlier. "
+            "A calibration choice against those trajectories, not a "
+            "derivation from a state-capacity model.")
+    CONFISCATION_MAX_RATE = declare(
+        "CONFISCATION_MAX_RATE", 0.28, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability at full notice)",
+        source=None, confidence="D",
+        why="Yearly confiscation probability once state_notice reaches "
+            "1.0 (scaled down below that by _notice_over). Invented "
+            "ceiling, not fitted to any attested confiscation rate for a "
+            "fortune too large to go on taxing.")
+    CONFISCATION_CAPITAL_LOSS = declare(
+        "CONFISCATION_CAPITAL_LOSS", 0.25, kind="temporary_heuristic",
+        unit="dimensionless (fraction of capital seized)", source=None,
+        confidence="D",
+        why="Fraction of capital an outright confiscation takes. Tuned to "
+            "be a real, painful loss without being a whole-fortune wipe; "
+            "not sourced to any attested confiscation.")
 
     def _notice_over(self, threshold):
         """0..1: how far past `threshold` state_notice() stands, as a share
@@ -455,14 +946,35 @@ class SocietyMixin:
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, []
         state_pressure_cfg = self.civ.get("state_pressure") or {}
-        base = float(state_pressure_cfg.get("requisition_base_share", 0.15))
+        base = float(state_pressure_cfg.get("requisition_base_share",
+                                             self.REQUISITION_BASE_SHARE_DEFAULT))
         share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
         why = []
         if self.household.protection > 0:
-            share *= (1.0 - 0.55 * self.household.protection)
+            share *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * self.household.protection)
             why.append("bargained down by standing and patronage (protection "
                        "%d%%)" % round(self.household.protection * 100))
         return max(0.0, share), why
+
+    REQUISITION_BASE_SHARE_DEFAULT = declare(
+        "REQUISITION_BASE_SHARE_DEFAULT", 0.15, kind="temporary_heuristic",
+        unit="dimensionless (share of revenue at full notice)",
+        source=None, confidence="D",
+        why="Fallback requisition share for a civilisation file that does "
+            "not set its own requisition_base_share - most civ files do "
+            "set one (Rome's annona and munera, Han's monopolies, and so "
+            "on), so this only matters for a file that omits it. Invented "
+            "figure, not fitted to any attested requisition rate.")
+    REQUISITION_PROTECTION_DISCOUNT = declare(
+        "REQUISITION_PROTECTION_DISCOUNT", 0.55, kind="temporary_heuristic",
+        unit="dimensionless (fraction discounted at protection=1.0)",
+        source=None, confidence="D",
+        why="How much a fully-protected household bargains its "
+            "requisition assessment down - a well-connected man negotiates "
+            "his assessment down but does not buy exemption outright (see "
+            "this method's own docstring). Tuned so protection is a real, "
+            "substantial discount without erasing the state's claim; not "
+            "measured.")
 
     def office_report(self):
         """(share of this year's revenue, office's name in this civilisation)
@@ -479,9 +991,20 @@ class SocietyMixin:
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, None
         state_pressure_cfg = self.civ.get("state_pressure") or {}
-        base = float(state_pressure_cfg.get("office_base_share", 0.05))
+        base = float(state_pressure_cfg.get("office_base_share",
+                                             self.OFFICE_BASE_SHARE_DEFAULT))
         share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
         return max(0.0, share), state_pressure_cfg.get("office_name", "a civic office")
+
+    OFFICE_BASE_SHARE_DEFAULT = declare(
+        "OFFICE_BASE_SHARE_DEFAULT", 0.05, kind="temporary_heuristic",
+        unit="dimensionless (share of revenue at full notice)",
+        source=None, confidence="D",
+        why="Fallback pressed-office cost for a civilisation file that "
+            "does not set its own office_base_share. Invented figure, "
+            "smaller than REQUISITION_BASE_SHARE_DEFAULT because an office "
+            "also buys back protection (see this method's own docstring); "
+            "not fitted to any attested decurionate or shrievalty cost.")
 
     def military_demand_eligible(self):
         """Is this household both militarily useful and visible enough that
@@ -522,21 +1045,56 @@ class SocietyMixin:
         probability = self.CONFISCATION_MAX_RATE * over
         mitig, why = 1.0, []
         if self.household.protection > 0:
-            mitig *= (1.0 - 0.5 * self.household.protection)
+            mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.household.protection)
             why.append("a patron and standing high enough to matter")
         dispersal = 0.0
         if self.has("academy_network"):
-            dispersal = max(dispersal, 0.35)
+            dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ACADEMY_NETWORK)
         elif self.has("endowment_land"):
-            dispersal = max(dispersal, 0.20)
+            dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ENDOWMENT_LAND)
         if dispersal > 0:
             mitig *= (1.0 - dispersal)
             why.append("holdings too dispersed to be seized at a stroke")
         lev = self.military_leverage()
         if lev > 0:
-            mitig *= (1.0 - 0.4 * lev)
+            mitig *= (1.0 - self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT * lev)
             why.append("too useful to the state to strip clean")
         return probability * mitig, why
+
+    CONFISCATION_PROTECTION_DISCOUNT = declare(
+        "CONFISCATION_PROTECTION_DISCOUNT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (fraction discounted at protection=1.0)",
+        source=None, confidence="D",
+        why="How much a fully-protected household's confiscation risk is "
+            "cut by a patron and general standing. Tuned to be a real, "
+            "partial mitigation rather than a full defence - this is the "
+            "treasury's own claim, not a courtroom accusation protection "
+            "otherwise defends against - not measured.")
+    CONFISCATION_DISPERSAL_ACADEMY_NETWORK = declare(
+        "CONFISCATION_DISPERSAL_ACADEMY_NETWORK", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (fraction of confiscation risk removed)",
+        source=None, confidence="D",
+        why="How much a dispersed academy network mitigates confiscation "
+            "risk - 'too dispersed to seize at a stroke', the same reading "
+            "HAZARD_COUNTERS already gives academy_network against "
+            "sack_chance. Tuned to be the stronger of the two dispersal "
+            "hedges; not measured.")
+    CONFISCATION_DISPERSAL_ENDOWMENT_LAND = declare(
+        "CONFISCATION_DISPERSAL_ENDOWMENT_LAND", 0.20, kind="temporary_heuristic",
+        unit="dimensionless (fraction of confiscation risk removed)",
+        source=None, confidence="D",
+        why="How much an endowment of land mitigates confiscation risk - "
+            "weaker than CONFISCATION_DISPERSAL_ACADEMY_NETWORK because "
+            "land is still one seizable holding rather than a network "
+            "spread across multiple places. Tuned, not measured.")
+    CONFISCATION_MILITARY_USEFULNESS_DISCOUNT = declare(
+        "CONFISCATION_MILITARY_USEFULNESS_DISCOUNT", 0.4, kind="temporary_heuristic",
+        unit="dimensionless (fraction discounted at military_leverage=1.0)",
+        source=None, confidence="D",
+        why="How much being militarily useful to the state mitigates "
+            "confiscation risk - a state does not strip clean the one "
+            "workshop that arms it (see this method's own docstring). "
+            "Tuned, not measured.")
 
     def state_pressure_report(self):
         """What `risk`/`state` shows BEFORE any of this bites - the same
@@ -584,6 +1142,35 @@ class SocietyMixin:
         out["what_helps"] = ("a patron or standing; holdings not all in one "
                              "place; being useful to a state that fights")
         return out
+
+    MILITARY_DEMAND_BASE_SHARE = declare(
+        "MILITARY_DEMAND_BASE_SHARE", 0.10, kind="temporary_heuristic",
+        unit="dimensionless (share of revenue)", source=None,
+        confidence="D",
+        why="Base share of revenue a military supply demand takes, before "
+            "scaling with how militarily useful the household is. Invented "
+            "figure, not fitted to any attested requisition-in-kind rate.")
+    MILITARY_DEMAND_LEVERAGE_SHARE = declare(
+        "MILITARY_DEMAND_LEVERAGE_SHARE", 0.10, kind="temporary_heuristic",
+        unit="dimensionless (share of revenue at military_leverage=1.0)",
+        source=None, confidence="D",
+        why="Extra share of revenue a military demand takes for a household "
+            "at full military leverage - a state asks more of a workshop "
+            "that can supply more. Tuned, not measured.")
+    MILITARY_DEMAND_PROTECTION_DISCOUNT = declare(
+        "MILITARY_DEMAND_PROTECTION_DISCOUNT", 0.4, kind="temporary_heuristic",
+        unit="dimensionless (fraction discounted at protection=1.0)",
+        source=None, confidence="D",
+        why="How much a fully-protected household's military demand is "
+            "discounted - a patron's standing softens even a demand that "
+            "is not otherwise bargainable. Tuned, not measured.")
+    CONFISCATION_REPUTATION_LOSS = declare(
+        "CONFISCATION_REPUTATION_LOSS", 6, kind="temporary_heuristic",
+        unit="reputation points", source=None, confidence="D",
+        why="Reputation lost when the treasury confiscates a fortune - "
+            "being stripped of wealth by the state is itself a public "
+            "humiliation. Tuned to be a real, noticeable hit alongside "
+            "STANDING_* figures elsewhere in this engine; not measured.")
 
     def _state_pressure(self, yr):
         """Once a year: the state notices what this household has become,
@@ -636,7 +1223,9 @@ class SocietyMixin:
                     and self.rng.random() < self.MILITARY_DEMAND_ANNUAL_CHANCE):
                 self.household.last_military_demand = yr
                 lev = self.military_leverage()
-                take = rev * (0.10 + 0.10 * lev) * (1.0 - 0.4 * self.household.protection)
+                take = (rev * (self.MILITARY_DEMAND_BASE_SHARE
+                               + self.MILITARY_DEMAND_LEVERAGE_SHARE * lev)
+                        * (1.0 - self.MILITARY_DEMAND_PROTECTION_DISCOUNT * self.household.protection))
                 take = max(0.0, take)
                 self.household.capital -= take
                 name = state_pressure_cfg.get("military_name", "the arsenal")
@@ -667,7 +1256,7 @@ class SocietyMixin:
                 had = max(0.0, self.household.capital)
                 self.lose_capital(self.CONFISCATION_CAPITAL_LOSS)
                 lost = had - max(0.0, self.household.capital)
-                self.household.reputation = max(0.0, self.household.reputation - 6)
+                self.household.reputation = max(0.0, self.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
                 self.household.log.append((yr, "%s: the state takes what it judges a "
                                      "fortune too large to go on merely "
@@ -722,7 +1311,32 @@ class SocietyMixin:
     # visibly larger population, and it is short enough that a civilization
     # which never stops building these nodes still cannot make the ramp
     # itself the fast part of the cascade.
-    POP_TECH_RAMP_YEARS = 40
+    POP_TECH_RAMP_YEARS = declare(
+        "POP_TECH_RAMP_YEARS", 40, kind="temporary_heuristic", unit="years",
+        source=None, confidence="C",
+        why="How many years a population-raising technology's total effect "
+            "is spread over before showing in the headcount - two adult "
+            "generations, roughly how long a mortality improvement takes "
+            "to work through age structure into a visibly larger "
+            "population (see comment above). A plausible order of "
+            "magnitude, not a fitted demographic transition time.")
+
+    VALUE_WEIGHT_FLOOR = declare(
+        "VALUE_WEIGHT_FLOOR", -1.0, kind="temporary_heuristic",
+        unit="dimensionless (bound on any self.w value weight)",
+        source=None, confidence="D",
+        why="Lower bound any societal value weight (self.w) can be pushed "
+            "to by a tech effect or a values-shifting hazard - symmetric "
+            "with a weight's own natural -1..1 scale. Not derived from "
+            "any model of how far a society's values can actually move.")
+    VALUE_WEIGHT_CEILING = declare(
+        "VALUE_WEIGHT_CEILING", 1.5, kind="temporary_heuristic",
+        unit="dimensionless (bound on any self.w value weight)",
+        source=None, confidence="D",
+        why="Upper bound any societal value weight can be pushed to - "
+            "asymmetric with VALUE_WEIGHT_FLOOR, allowing a weight to be "
+            "reinforced somewhat past its natural 1.0 ceiling by repeated "
+            "tech effects. Tuned, not derived.")
 
     def apply_tech_effects(self, k):
         """Building something changes what this society is like.
@@ -749,7 +1363,7 @@ class SocietyMixin:
                 continue
             if field in self.w:
                 before = self.w[field]
-                self.w[field] = max(-1.0, min(1.5, before + delta))
+                self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + delta))
                 changed.append(field)
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))
@@ -836,7 +1450,14 @@ class SocietyMixin:
     # Reaches full effect at 18 of the 40 matching nodes done (see
     # _is_agri_mechanisation): a little under half, "substantially
     # mechanised farming", not "literally every one of them".
-    AGRI_MECHANISATION_SATURATES_AT = 18.0
+    AGRI_MECHANISATION_SATURATES_AT = declare(
+        "AGRI_MECHANISATION_SATURATES_AT", 18.0, kind="temporary_heuristic",
+        unit="matching done nodes (of 40)", source=None, confidence="D",
+        why="Count of mechanisation-trait nodes done at which "
+            "agrarian_slack() saturates at 1.0 - a little under half of "
+            "the 40 matching nodes, chosen to mean 'substantially "
+            "mechanised farming' rather than 'literally every one'. Not "
+            "fitted to any measured mechanisation threshold.")
 
     def agrarian_slack(self):
         """0..1: how much of the countryside's labour mechanised farming has
@@ -888,7 +1509,36 @@ class SocietyMixin:
     # freed farm labour, because this model has no lever for that route and
     # a number this file cannot actually justify with a mechanism is not one
     # it should claim.
-    LITERACY_ROOM_WITHOUT_MECHANISATION = 0.35
+    LITERACY_ROOM_WITHOUT_MECHANISATION = declare(
+        "LITERACY_ROOM_WITHOUT_MECHANISATION", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (literate share, 0..1)", source=None,
+        confidence="D",
+        why="Literacy ceiling reachable on schooling and urban/clerical "
+            "literacy alone, farming untouched by hand - a merchant class, "
+            "priesthood and bureaucracy, above Rome's own bare 12% general "
+            "literacy and well short of a modern figure. Kept deliberately "
+            "conservative rather than citing an outlier campaign this "
+            "model has no lever for (see comment above); not derived from "
+            "a model of pre-industrial literacy.")
+    LITERACY_MECHANISATION_ROOM = declare(
+        "LITERACY_MECHANISATION_ROOM", 0.55, kind="temporary_heuristic",
+        unit="dimensionless (literate share, 0..1, at full mechanisation)",
+        source=None, confidence="D",
+        why="Extra literacy ceiling full agricultural mechanisation opens "
+            "up, taking the ceiling to exactly 0.90 together with "
+            "LITERACY_ROOM_WITHOUT_MECHANISATION - the answer to 'can I "
+            "create a 90%+ literate population', costing exactly what the "
+            "user's own caveat says it costs. Chosen to land on that "
+            "round target, not derived from a labour-supply model.")
+    LITERACY_CEILING_GENERAL_MAX = declare(
+        "LITERACY_CEILING_GENERAL_MAX", 0.90, kind="temporary_heuristic",
+        unit="dimensionless (literate share, 0..1)", source=None,
+        confidence="D",
+        why="Hard ceiling on general literacy however much mechanisation "
+            "and schooling a society has - a hard 10% of any "
+            "pre-transistor-era population (the very young, the infirm, "
+            "the itinerant) is not a schooling question at all. Round "
+            "figure, not derived from a demographic breakdown.")
 
     def literacy_ceiling_general(self):
         """The most of the general population schooling could ever make
@@ -905,7 +1555,8 @@ class SocietyMixin:
         question at all.
         """
         room = self.LITERACY_ROOM_WITHOUT_MECHANISATION
-        return min(0.90, room + 0.55 * self.agrarian_slack())
+        return min(self.LITERACY_CEILING_GENERAL_MAX,
+                   room + self.LITERACY_MECHANISATION_ROOM * self.agrarian_slack())
 
     # The propertied and lettered class literacy_elite measures was never
     # the class tied to the fields, so its ceiling does not read
@@ -913,7 +1564,15 @@ class SocietyMixin:
     # child a society has whether or not a single field has been mechanised.
     # Left short of 1.0 for the same reason literacy_ceiling_general is: some
     # fraction of any class is never going to be readers.
-    LITERACY_CEILING_ELITE = 0.97
+    LITERACY_CEILING_ELITE = declare(
+        "LITERACY_CEILING_ELITE", 0.97, kind="temporary_heuristic",
+        unit="dimensionless (literate share, 0..1)", source=None,
+        confidence="D",
+        why="Ceiling on literacy among the propertied and lettered class, "
+            "left short of 1.0 for the same reason "
+            "LITERACY_CEILING_GENERAL_MAX is: some fraction of any class "
+            "is never going to be readers. Round figure, not derived from "
+            "any measured elite-literacy ceiling.")
 
     def literacy_ceiling_elite(self):
         return self.LITERACY_CEILING_ELITE
@@ -937,8 +1596,17 @@ class SocietyMixin:
             return 0.0
         flow = self.institution_units("school_founded") ** 0.5
         if self.running("academy_network"):
-            flow += 1.5 * self.institution_units("academy_network") ** 0.5
+            flow += self.ACADEMY_SCHOOLING_FLOW_MULTIPLIER * self.institution_units("academy_network") ** 0.5
         return flow
+
+    ACADEMY_SCHOOLING_FLOW_MULTIPLIER = declare(
+        "ACADEMY_SCHOOLING_FLOW_MULTIPLIER", 1.5, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="How much more schooling flow an academy network unit "
+            "contributes than a school unit does - a bigger, later "
+            "institution teaching more per unit. Tuned to feel "
+            "proportionate, not measured against any attested academy "
+            "output.")
 
     # HOW FAST LITERACY CLOSES THE GAP TO ITS CEILING, per unit of
     # _schooling_flow, per year. At flow 1.0 (a single ordinary school and
@@ -952,7 +1620,16 @@ class SocietyMixin:
     # long lifetimes, which is the other half of what the user asked for:
     # yes, 90%+ is reachable, and it costs generations of sustained schooling
     # and mechanisation, not five turns of building schools.
-    LITERACY_GROWTH_RATE_GENERAL = 0.006
+    LITERACY_GROWTH_RATE_GENERAL = declare(
+        "LITERACY_GROWTH_RATE_GENERAL", 0.006, kind="temporary_heuristic",
+        unit="dimensionless per unit of schooling flow, per year",
+        source=None, confidence="D",
+        why="How fast general literacy closes the gap to its ceiling per "
+            "unit of _schooling_flow - see comment above: at flow 1.0 "
+            "this is a ~167-year time constant, requiring sustained "
+            "investment across generations; at flow ~7 it falls to about "
+            "24 years. Tuned to hit those two illustrative time constants, "
+            "not fitted to any measured literacy-growth curve.")
     # Faster than the general rate: the propertied class an academy draws on
     # is a far smaller pool to reach than "the whole countryside", so the
     # same institutional effort closes its gap faster. Chosen so Rome's own
@@ -960,7 +1637,25 @@ class SocietyMixin:
     # only slightly over a run even under heavy investment - this lever is
     # for the civilisations that start far below it, Norse and Mexica among
     # them, not a way to squeeze Rome's last few points out faster.
-    LITERACY_GROWTH_RATE_ELITE = 0.010
+    LITERACY_GROWTH_RATE_ELITE = declare(
+        "LITERACY_GROWTH_RATE_ELITE", 0.010, kind="temporary_heuristic",
+        unit="dimensionless per unit of schooling flow, per year",
+        source=None, confidence="D",
+        why="How fast elite literacy closes its gap - faster than the "
+            "general rate because the propertied class an academy draws "
+            "on is a far smaller pool to reach (see comment above). "
+            "Chosen so Rome's own high starting elite literacy moves only "
+            "slightly over a run; not fitted to a measured curve.")
+
+    PRINTING_DIFFUSION_SCHOOLING_BOOST = declare(
+        "PRINTING_DIFFUSION_SCHOOLING_BOOST", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (multiplies information_diffusion_index)",
+        source=None, confidence="D",
+        why="How much faster schooling closes literacy's gap once "
+            "printing has diffused past the founder's own workshop - "
+            "texts actually exist to teach from. Tuned to be a real, "
+            "visible boost without letting a country of diffused printing "
+            "teach anyone by itself (still requires flow>0); not measured.")
 
     def _advance_literacy(self, yr):
         """Once a year: let running schools and academies close part of the
@@ -983,7 +1678,7 @@ class SocietyMixin:
         # above - a country full of diffused printing with no school open
         # still teaches nobody, by the same "taught, not a free drift"
         # rule every other figure in this section already follows.
-        flow *= (1.0 + 0.5 * self.information_diffusion_index())
+        flow *= (1.0 + self.PRINTING_DIFFUSION_SCHOOLING_BOOST * self.information_diffusion_index())
         changed = {}
         gen = float(self.civ.get("literacy_general", 0.0))
         gen_ceil = self.literacy_ceiling_general()
@@ -1048,11 +1743,25 @@ class SocietyMixin:
     # never builds a school keeps a trade as their own personal secret for
     # as long as the run lasts, which is the honest answer to "after 100
     # years I'm still the only one" when nothing was ever done to change it.
-    TRADE_ABSORPTION_BASE_YEARS = 110.0
+    TRADE_ABSORPTION_BASE_YEARS = declare(
+        "TRADE_ABSORPTION_BASE_YEARS", 110.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years before a founder-taught trade becomes endemic to the "
+            "society, absent any schooling flow - see the section comment "
+            "above for the framing ('an EDUCATED society eventually "
+            "produces its own electricians'). Round figure chosen to put "
+            "the total span at about a century; not fitted to any "
+            "attested trade-naturalisation record.")
     # Never faster than one working lifetime, however much is invested: a
     # trade the founder taught last year cannot be "something this society
     # has always had" by definition, whatever the schooling budget is.
-    TRADE_ABSORPTION_MIN_YEARS = 35.0
+    TRADE_ABSORPTION_MIN_YEARS = declare(
+        "TRADE_ABSORPTION_MIN_YEARS", 35.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Floor on how fast schooling can make a trade endemic, however "
+            "much is invested - roughly one working lifetime, so a trade "
+            "taught last year cannot already be 'something this society "
+            "has always had'. Round figure, not measured.")
 
     def _trade_absorption_years(self, flow):
         return max(self.TRADE_ABSORPTION_MIN_YEARS,
@@ -1065,7 +1774,15 @@ class SocietyMixin:
     # near its own natural ceiling" is on the order of a century, generations
     # either way you slice it, which is the pace the brief asked this whole
     # mechanism to run at.
-    TRADE_DIFFUSION_APPROACH_RATE = 0.05
+    TRADE_DIFFUSION_APPROACH_RATE = declare(
+        "TRADE_DIFFUSION_APPROACH_RATE", 0.05, kind="temporary_heuristic",
+        unit="dimensionless (fraction of remaining gap closed per year)",
+        source=None, confidence="D",
+        why="Once endemic, how fast a trade's headcount approaches "
+            "literate_capacity()'s own ceiling - a 20-year time constant "
+            "on top of the years it already took to become endemic, so "
+            "the whole span is century-scale. Tuned to that target pace, "
+            "not measured.")
 
     def _advance_trade_absorption(self, yr):
         for trade in sorted(TRADES_ABSENT):
@@ -1169,14 +1886,80 @@ class SocietyMixin:
     # opposite case, a technique you worked out and never opened for
     # business, is exactly what `k not in self.household.operating` below returns zero
     # for, because nobody has anything to watch.
-    VENTURE_DIFFUSION_HALF_LIFE_YEARS = 40.0
+    VENTURE_DIFFUSION_HALF_LIFE_YEARS = declare(
+        "VENTURE_DIFFUSION_HALF_LIFE_YEARS", 40.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years for half of a visibly-run venture's original edge to "
+            "leak to competitors, absent any publishing or literacy "
+            "effect - pitched at the low end of 'a generation or two' "
+            "(see comment above). Chosen to sit in that plausible range, "
+            "not fitted to any measured rate of competitive imitation.")
     # HOWEVER LONG YOU HAVE BEEN VISIBLE, some of a first-mover's edge never
     # leaves: your own customers, your own reputation for the thing, your own
     # head start on the next improvement. Capped, the same way protection,
     # familiarity and every other saturating share in this file are capped,
     # so this can never be read as "and eventually it reaches 1.0", a claim
     # this model has no basis for making.
-    VENTURE_DIFFUSION_CAP = 0.65
+    VENTURE_DIFFUSION_CAP = declare(
+        "VENTURE_DIFFUSION_CAP", 0.65, kind="temporary_heuristic",
+        unit="dimensionless (share, 0..1)", source=None, confidence="D",
+        why="However long a venture has been visibly run, some of a "
+            "first-mover's edge never leaves - customers, reputation, a "
+            "head start on the next improvement (see comment above). "
+            "Capped so this is never read as eventually reaching 1.0; not "
+            "measured.")
+    CORPUS_DIFFUSION_PACE_DISPERSED = declare(
+        "CORPUS_DIFFUSION_PACE_DISPERSED", 1.7, kind="temporary_heuristic",
+        unit="dimensionless (diffusion pace multiplier)", source=None,
+        confidence="D",
+        why="How much faster knowledge diffuses to rivals once it is "
+            "written AND dispersed - a rival can read it rather than "
+            "reverse-engineer it from watching the workshop. Shared "
+            "between diffusion_share (this founder's own venture) and "
+            "_diffusion_pace (the whole society's adoption) so the two "
+            "never disagree about what dispersal is worth. Tuned, not "
+            "measured.")
+    CORPUS_DIFFUSION_PACE_WRITTEN = declare(
+        "CORPUS_DIFFUSION_PACE_WRITTEN", 1.3, kind="temporary_heuristic",
+        unit="dimensionless (diffusion pace multiplier)", source=None,
+        confidence="D",
+        why="How much faster knowledge diffuses once merely written down "
+            "(not yet dispersed) - smaller than "
+            "CORPUS_DIFFUSION_PACE_DISPERSED because copies still sit in "
+            "one place. Shared with _diffusion_pace; tuned, not measured.")
+    LITERACY_DIFFUSION_PACE_BASE = declare(
+        "LITERACY_DIFFUSION_PACE_BASE", 0.7, kind="temporary_heuristic",
+        unit="dimensionless (pace multiplier floor)", source=None,
+        confidence="D",
+        why="Floor on the literacy-driven diffusion-pace multiplier, at "
+            "the reference literacy level - a society at or below "
+            "reference literacy still diffuses at 70% pace, never zero. "
+            "Shared with _diffusion_pace; tuned, not measured.")
+    LITERACY_DIFFUSION_PACE_SPAN = declare(
+        "LITERACY_DIFFUSION_PACE_SPAN", 0.3, kind="temporary_heuristic",
+        unit="dimensionless (pace multiplier span above the floor)",
+        source=None, confidence="D",
+        why="How much extra diffusion pace a more literate society buys "
+            "on top of LITERACY_DIFFUSION_PACE_BASE, up to "
+            "LITERACY_DIFFUSION_PACE_CAP_RATIO times the reference "
+            "literacy. Shared with _diffusion_pace; tuned, not measured.")
+    LITERACY_DIFFUSION_PACE_CAP_RATIO = declare(
+        "LITERACY_DIFFUSION_PACE_CAP_RATIO", 2.0, kind="temporary_heuristic",
+        unit="dimensionless (multiple of reference literacy)", source=None,
+        confidence="D",
+        why="Ceiling on how much a society's literacy, relative to the "
+            "reference level, can boost diffusion pace - twice the "
+            "reference literacy is treated as maximally literate for this "
+            "purpose. Shared with _diffusion_pace; tuned, not measured.")
+    DIFFUSION_PACE_FLOOR = declare(
+        "DIFFUSION_PACE_FLOOR", 0.4, kind="temporary_heuristic",
+        unit="dimensionless (minimum diffusion pace)", source=None,
+        confidence="D",
+        why="Floor on the overall diffusion pace divisor, so a society "
+            "with no accelerants at all still diffuses at some minimum "
+            "rate rather than the half-life going to infinity. Shared "
+            "between diffusion_share and _diffusion_pace; tuned, not "
+            "measured.")
 
     def diffusion_share(self, k):
         """0..VENTURE_DIFFUSION_CAP: how much of what running venture `k`
@@ -1213,12 +1996,15 @@ class SocietyMixin:
         age = max(0.0, self.year - started)
         pace = 1.0
         if self.running("corpus_dispersed"):
-            pace = 1.7
+            pace = self.CORPUS_DIFFUSION_PACE_DISPERSED
         elif self.running("corpus_written"):
-            pace = 1.3
+            pace = self.CORPUS_DIFFUSION_PACE_WRITTEN
         gen_lit = float(self.civ.get("literacy_general", 0.12))
-        pace *= 0.7 + 0.3 * min(2.0, gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL))
-        half_life = self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(0.4, pace)
+        pace *= (self.LITERACY_DIFFUSION_PACE_BASE
+                 + self.LITERACY_DIFFUSION_PACE_SPAN
+                 * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
+                       gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL)))
+        half_life = self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(self.DIFFUSION_PACE_FLOOR, pace)
         share = 1.0 - 0.5 ** (age / half_life)
         return min(self.VENTURE_DIFFUSION_CAP, max(0.0, share))
 
@@ -1288,8 +2074,43 @@ class SocietyMixin:
     # generation) is pitched at the low end of "a few decades", matching
     # Nunn and Qian's (2011) own description of the potato's spread across
     # Europe as a matter of generations rather than years.
+    DIFFUSION_HALF_LIFE_FOOD_YEARS = declare(
+        "DIFFUSION_HALF_LIFE_FOOD_YEARS", 25.0, kind="temporary_heuristic",
+        unit="years", source="Nunn and Qian (2011) describe the potato's "
+             "spread across Europe as a matter of generations rather than "
+             "years.",
+        confidence="C",
+        why="Years for half of a newly-completed food technology to "
+            "spread through the wider society, absent any literacy or "
+            "state-capacity effect - a better crop is something a "
+            "neighbour can see working and copy without reading a word. "
+            "Pitched at the low end of 'a few decades' to match the cited "
+            "source's description, not fitted to it numerically.")
+    DIFFUSION_HALF_LIFE_MILITARY_YEARS = declare(
+        "DIFFUSION_HALF_LIFE_MILITARY_YEARS", 20.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years for half of a newly-completed military technology to "
+            "reach the state's own armies - fastest of the four "
+            "categories, a working gun is something a neighbour can copy "
+            "without reading a word. Tuned, not measured.")
+    DIFFUSION_HALF_LIFE_MEDICAL_YEARS = declare(
+        "DIFFUSION_HALF_LIFE_MEDICAL_YEARS", 35.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years for half of a newly-completed medical technology to "
+            "spread - slower than food or military because germ theory or "
+            "a vaccine depends on publishing and on somebody literate "
+            "enough to read it. Tuned, not measured.")
+    DIFFUSION_HALF_LIFE_INFORMATION_YEARS = declare(
+        "DIFFUSION_HALF_LIFE_INFORMATION_YEARS", 30.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years for half of a newly-completed information technology "
+            "(printing and the like) to spread through society. Tuned, "
+            "not measured.")
     DIFFUSION_HALF_LIFE_YEARS = {
-        "food": 25.0, "military": 20.0, "medical": 35.0, "information": 30.0,
+        "food": DIFFUSION_HALF_LIFE_FOOD_YEARS,
+        "military": DIFFUSION_HALF_LIFE_MILITARY_YEARS,
+        "medical": DIFFUSION_HALF_LIFE_MEDICAL_YEARS,
+        "information": DIFFUSION_HALF_LIFE_INFORMATION_YEARS,
     }
 
     def _diffusion_category(self, n):
@@ -1345,15 +2166,34 @@ class SocietyMixin:
         pace = 1.0
         if cat in ("medical", "information"):
             if self.running("corpus_dispersed"):
-                pace = 1.7
+                pace = self.CORPUS_DIFFUSION_PACE_DISPERSED
             elif self.running("corpus_written"):
-                pace = 1.3
+                pace = self.CORPUS_DIFFUSION_PACE_WRITTEN
             gen_lit = float(self.civ.get("literacy_general", 0.12))
-            pace *= 0.7 + 0.3 * min(2.0, gen_lit
-                                    / max(0.02, self.LITERACY_REFERENCE_GENERAL))
+            pace *= (self.LITERACY_DIFFUSION_PACE_BASE
+                     + self.LITERACY_DIFFUSION_PACE_SPAN
+                     * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
+                           gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL)))
         elif cat == "military":
-            pace *= 0.5 + 1.5 * self.state_capacity
+            pace *= self.MILITARY_DIFFUSION_PACE_BASE + self.MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN * self.state_capacity
         return pace
+
+    MILITARY_DIFFUSION_PACE_BASE = declare(
+        "MILITARY_DIFFUSION_PACE_BASE", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (pace multiplier floor)", source=None,
+        confidence="D",
+        why="Floor on military diffusion pace at zero state capacity - an "
+            "army re-equips slowly, not instantly, even for the "
+            "weakest-capacity state. Tuned, not measured.")
+    MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN = declare(
+        "MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN", 1.5, kind="temporary_heuristic",
+        unit="dimensionless (pace multiplier span across state_capacity)",
+        source=None, confidence="D",
+        why="How much extra military diffusion pace a maximally capable "
+            "state buys on top of MILITARY_DIFFUSION_PACE_BASE - what "
+            "limits an army re-equipping is organisation and money, not "
+            "literacy (see this method's own docstring). Tuned, not "
+            "measured.")
 
     def civ_diffusion(self, k):
         """0..1: how much of the WHOLE SOCIETY, not this household, has
@@ -1432,11 +2272,29 @@ class SocietyMixin:
     # never as an instant lump sum - see _TECH_EFFECTS.json's own
     # population field note for why the INSTANT deltas stay small instead
     # of scoring this the way Nunn and Qian (2011) actually would.
-    FOOD_DIFFUSION_POP_BONUS_MAX = 0.25
+    FOOD_DIFFUSION_POP_BONUS_MAX = declare(
+        "FOOD_DIFFUSION_POP_BONUS_MAX", 0.25, kind="temporary_heuristic",
+        unit="dimensionless (fraction of baseline population)",
+        source=None, confidence="D",
+        why="Ceiling on how much the country's baseline population rises "
+            "as food technologies fully diffuse - capped well above what "
+            "a single node's instant _TECH_EFFECTS.json delta could reach "
+            "(0.25 versus ~0.02 each) only because it is earned slowly, "
+            "over generations, never as a lump sum (see comment above). "
+            "Not fitted to Nunn and Qian (2011) or any other source "
+            "numerically.")
     # How fast the realised bonus chases its own target once diffusion
     # moves it - fast relative to diffusion's own decades, so diffusion
     # itself, not this, is the slow part a player is actually watching.
-    FOOD_DIFFUSION_POP_APPROACH_RATE = 0.15
+    FOOD_DIFFUSION_POP_APPROACH_RATE = declare(
+        "FOOD_DIFFUSION_POP_APPROACH_RATE", 0.15, kind="temporary_heuristic",
+        unit="dimensionless (fraction of remaining gap closed per year)",
+        source=None, confidence="D",
+        why="How fast the realised population bonus chases its own "
+            "diffusion-driven target - deliberately fast relative to "
+            "diffusion's own multi-decade half-life, so diffusion, not "
+            "this, is the slow part a player actually watches. Tuned, not "
+            "measured.")
 
     def _advance_food_diffusion_population(self, yr):
         target = self.FOOD_DIFFUSION_POP_BONUS_MAX * self.food_diffusion_index()
@@ -1476,7 +2334,15 @@ class SocietyMixin:
     # medical_diffusion_relief is that missing number, read by _shocks
     # directly against `raw`, never against `loss` (which stays the
     # founder's own, private, has()-gated figure it always was).
-    MEDICAL_DIFFUSION_RELIEF_CAP = 0.85
+    MEDICAL_DIFFUSION_RELIEF_CAP = declare(
+        "MEDICAL_DIFFUSION_RELIEF_CAP", 0.85, kind="temporary_heuristic",
+        unit="dimensionless (fraction of empire-wide epidemic harm removed)",
+        source=None, confidence="D",
+        why="Ceiling on how much the country's own absorbed medicine can "
+            "soften an empire-wide epidemic's raw historical rate, "
+            "leaving a residual so no cure ever reduces a historical "
+            "pandemic to literally nothing. Tuned, not measured against "
+            "any actual disease-control record.")
 
     def medical_diffusion_relief(self):
         return min(self.MEDICAL_DIFFUSION_RELIEF_CAP, self.medical_diffusion_index())
@@ -1493,8 +2359,23 @@ class SocietyMixin:
     # already gates military leverage's own patronage bonus, because a
     # foundry with nobody to arm is not the state's equipment yet, however
     # much of the tree it covers.
-    STATE_MIL_RELIEF_CAP_OUTPUT = 0.25
-    STATE_MIL_RELIEF_CAP_SACK = 0.35
+    STATE_MIL_RELIEF_CAP_OUTPUT = declare(
+        "STATE_MIL_RELIEF_CAP_OUTPUT", 0.25, kind="temporary_heuristic",
+        unit="dimensionless (fraction of output-shock harm removed at "
+             "full diffusion)", source=None, confidence="D",
+        why="Ceiling on how much the state's own armed forces (once the "
+            "founder's military work has diffused to them) soften an "
+            "output-crushing war - smaller than STATE_MIL_RELIEF_CAP_SACK "
+            "because output shocks have other causes besides invasion. "
+            "Tuned, not measured.")
+    STATE_MIL_RELIEF_CAP_SACK = declare(
+        "STATE_MIL_RELIEF_CAP_SACK", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (fraction of sack-chance harm removed at full "
+             "diffusion)", source=None, confidence="D",
+        why="Ceiling on how much the state's own armed forces soften "
+            "sack_chance specifically - 'give the Roman government "
+            "cannons and it is not being sacked by tribes' (see the "
+            "section comment above). Tuned, not measured.")
 
     def _state_military_diffusion_relief(self, cap):
         diffused = self.state_military_diffusion()
@@ -1710,6 +2591,18 @@ class SocietyMixin:
                 why.append(reason2)
         return mult, why
 
+    MILITARY_WAR_RELIEF_CAP = declare(
+        "MILITARY_WAR_RELIEF_CAP", 0.30, kind="temporary_heuristic",
+        unit="dimensionless (fraction of war output-shock relieved at "
+             "military_leverage=1.0)", source=None, confidence="D",
+        why="Ceiling on how much a founder's own military work softens an "
+            "output-crushing war - matched to endowment_land's own share "
+            "in HAZARD_COUNTERS['output_factor'] rather than exceeding it, "
+            "so land and an army are comparable hedges and neither dwarfs "
+            "the other (see this method's own docstring). A relative "
+            "calibration against another already-tuned figure, not a "
+            "measured relief rate.")
+
     def _military_war_relief(self):
         """A state that can fight loses less of its economy when it has to.
 
@@ -1737,7 +2630,7 @@ class SocietyMixin:
         lev = self.military_leverage()
         if lev <= 0.0:
             return 1.0, None
-        share = 0.30 * lev
+        share = self.MILITARY_WAR_RELIEF_CAP * lev
         return (1.0 - share), ("an army and treasury the state can call on "
                                "(military strength %d%%)" % round(lev * 100))
 
@@ -2170,6 +3063,94 @@ class SocietyMixin:
                 adjusted[field] = h[field] * scale
         return adjusted
 
+    STAFF_LOSS_HAZARD_ANNUAL_CHANCE = declare(
+        "STAFF_LOSS_HAZARD_ANNUAL_CHANCE", 0.32, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability while the hazard's window "
+             "is open)", source=None, confidence="D",
+        why="Chance, in any given year of a staff_loss hazard's dated "
+            "window, that it actually strikes this year rather than "
+            "passing quietly - a multi-year plague window does not bite "
+            "every single year of it. Tuned so the hazard is likely but "
+            "not certain within its window; not fitted to any attested "
+            "epidemic-year distribution.")
+    PLAGUE_CASH_LOSS_SHARE = declare(
+        "PLAGUE_CASH_LOSS_SHARE", 0.6, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the staff-loss fraction)",
+        source=None, confidence="D",
+        why="How much capital a staff-loss hazard also takes, as a "
+            "multiple of the staff fraction lost - a plague empties the "
+            "market as well as the workshop (see comment above). Tuned to "
+            "make the cash loss proportionate to the staff loss, not "
+            "measured against any attested plague-year revenue collapse.")
+    PLAGUE_RECOVERY_YEARS_REFERENCE = declare(
+        "PLAGUE_RECOVERY_YEARS_REFERENCE", 150.0, kind="hardcoded_historical_outcome",
+        unit="years", source="Broadberry et al., British Economic Growth, "
+             "2015: England's population took roughly 150 years to regain "
+             "its pre-Black-Death level.",
+        confidence="B",
+        why="Reference recovery time for a hazard of "
+            "PLAGUE_RECOVERY_REFERENCE_SEVERITY's own severity - other "
+            "hazards' recovery horizons scale off this reference in "
+            "proportion to how much of the population they actually took "
+            "(see core.py's _demographic_recovery). FLAGGED AS A CLAUDE.md "
+            "SS3.1/3.2 RISK, the same shape as economy.py's DEBT_BASE_RATE: "
+            "it is a real, attested demographic OUTCOME (how long England "
+            "specifically took to recover from one specific plague) used "
+            "directly as the model's recovery-speed parameter, rather than "
+            "a rate derived from fertility, mortality decline and the "
+            "land-labour ratio the way CLAUDE.md SS3.1 asks a recovery "
+            "dynamic to be derived. It looks sourced, which is what makes "
+            "it dangerous in the same way DEBT_BASE_RATE was: the citation "
+            "is genuine, and the number is still the answer, not an input "
+            "to a demographic model that does not exist yet.")
+    PLAGUE_RECOVERY_REFERENCE_SEVERITY = declare(
+        "PLAGUE_RECOVERY_REFERENCE_SEVERITY", 0.45, kind="hardcoded_historical_outcome",
+        unit="dimensionless (staff_loss fraction)", source=
+        "england_1300.json's own Black Death entry (staff_loss 0.45).",
+        confidence="B",
+        why="The staff_loss severity PLAGUE_RECOVERY_YEARS_REFERENCE's "
+            "150 years is calibrated to specifically - so the Antonine "
+            "plague (0.28) gets a shorter, gentler recovery than the "
+            "Black Death, not the same 150 years regardless of size. Read "
+            "directly off england_1300.json rather than duplicated by "
+            "hand, but kept as its own declared number because this file "
+            "cannot import that civilisation file's data at class-body "
+            "time.")
+    SACK_CAPITAL_LOSS = declare(
+        "SACK_CAPITAL_LOSS", 0.60, kind="temporary_heuristic",
+        unit="dimensionless (fraction of capital)", source=None,
+        confidence="D",
+        why="Fraction of capital a sack takes - the largest single-event "
+            "capital loss in this file, reflecting that a raid can carry "
+            "off cash and portable goods wholesale. Tuned, not measured "
+            "against any attested sacking's proceeds.")
+    SACK_STAFF_RETENTION = declare(
+        "SACK_STAFF_RETENTION", 0.55, kind="temporary_heuristic",
+        unit="dimensionless (fraction of artisans/scholars/hired staff "
+             "kept)", source=None, confidence="D",
+        why="Fraction of artisans, scholars and every hired trade kept "
+            "after a sack - applied uniformly across every trade so a "
+            "sack is not gentler to hired staff than the plague family is "
+            "(see comment above). Tuned, not measured.")
+    REAL_EROSION_CASH_LOSS_SHARE = declare(
+        "REAL_EROSION_CASH_LOSS_SHARE", 0.85, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the debasement rate)",
+        source=None, confidence="D",
+        why="How much of a currency debasement's rate also bites the "
+            "cash actually held, on top of the money_real devaluation "
+            "applied to everything - debasement destroys held coin faster "
+            "than it destroys quoted labour/material costs (see this "
+            "branch's own comment). Tuned, not measured against any "
+            "attested debasement episode's real losses.")
+    SACK_DIRECTORS_RETENTION = declare(
+        "SACK_DIRECTORS_RETENTION", 0.65, kind="temporary_heuristic",
+        unit="dimensionless (fraction of deputy directors kept)",
+        source=None, confidence="D",
+        why="Fraction of deputy directors kept after a sack - higher than "
+            "SACK_STAFF_RETENTION on the reasoning that the institutions "
+            "producing deputies are more resilient than ordinary staff on "
+            "the ground. Tuned, not measured.")
+
     def _shocks(self, yr):
         """Dated catastrophes, read from the CIVILIZATION file.
 
@@ -2185,7 +3166,7 @@ class SocietyMixin:
             if not (hazard_start <= yr <= hazard_end):
                 continue
             hazard = self._resolve_hazard_condition(hazard, yr, hazard_start)
-            if "staff_loss" in hazard and rng.random() < 0.32:
+            if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
                 relief, why = self.hazard_relief("staff_loss")
                 loss = hazard["staff_loss"] * relief
                 _people_before = (self.household.scholars + self.household.artisans
@@ -2200,7 +3181,7 @@ class SocietyMixin:
                 # message reading "staff -45%", and reasonably concluded the
                 # accounts were broken. A plague empties the market as well as
                 # the workshop; that is real, and it has to be said.
-                cash = self.lose_capital(loss * 0.6)
+                cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
                 # SAY WHAT ACTUALLY HAPPENED TO YOU. A weird-play tester with no
                 # staff and no money read "staff -45%, and 0 pence gone" three
                 # years running and reasonably concluded the event was firing
@@ -2237,8 +3218,10 @@ class SocietyMixin:
                 med_relief = self.medical_diffusion_relief()
                 raw = historical * (1.0 - med_relief)
                 self.pop_deficit = 1.0 - (1.0 - self.pop_deficit) * (1.0 - raw)
-                self._pop_recovery_years = max(self._pop_recovery_years,
-                                                150.0 * (raw / 0.45))
+                self._pop_recovery_years = max(
+                    self._pop_recovery_years,
+                    self.PLAGUE_RECOVERY_YEARS_REFERENCE
+                    * (raw / self.PLAGUE_RECOVERY_REFERENCE_SEVERITY))
                 # The event has happened NOW.  Do not leave the population
                 # and wage screens at their pre-plague values until the next
                 # annual resolution; refresh without advancing recovery.
@@ -2338,11 +3321,11 @@ class SocietyMixin:
                     _people0 = (self.household.artisans + self.household.scholars
                                 + sum(self.household.employees.values()))
                     _act0 = len(self.household.active)
-                    self.lose_capital(0.60)
-                    self.household.artisans *= 0.55; self.household.scholars *= 0.55
+                    self.lose_capital(self.SACK_CAPITAL_LOSS)
+                    self.household.artisans *= self.SACK_STAFF_RETENTION; self.household.scholars *= self.SACK_STAFF_RETENTION
                     for trade in list(self.household.employees):
-                        self.household.employees[trade] *= 0.55
-                    self.household.directors_extra *= 0.65
+                        self.household.employees[trade] *= self.SACK_STAFF_RETENTION
+                    self.household.directors_extra *= self.SACK_DIRECTORS_RETENTION
                     for node_id in sorted(self.household.active):
                         self.household.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
                         self.household.active[node_id]["yrs"] = 0.0
@@ -2492,7 +3475,7 @@ class SocietyMixin:
             if "real_erosion" in hazard:
                 relief, why = self.hazard_relief("real_erosion")
                 self.money_real *= (1 - hazard["real_erosion"])
-                bite = hazard["real_erosion"] * 0.85 * relief
+                bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
                 had = max(0.0, self.household.capital)
                 self.lose_capital(bite)
                 lost = had - max(0.0, self.household.capital)
@@ -2543,7 +3526,7 @@ class SocietyMixin:
                     if field not in self.w:
                         continue
                     before = self.w[field]
-                    self.w[field] = max(-1.0, min(1.5, before + total_delta / span))
+                    self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
                     if abs(self.w[field] - before) > 1e-9:
                         changed[field] = self.w[field]
                 # VISIBLE WHILE IT HAPPENS, not only in hindsight: a tester
@@ -2560,6 +3543,68 @@ class SocietyMixin:
                                         ", ".join("%s now %.2f" % (field, value)
                                                   for field, value in sorted(changed.items())))))
 
+    PATRON_DEATH_ANNUAL_CHANCE = declare(
+        "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability, local patron only)",
+        source=None, confidence="D",
+        why="Yearly chance a local patron dies, prompting the need to "
+            "court an heir - invented frequency, not fitted to any "
+            "attested mortality rate for a Roman patronal relationship.")
+    PATRON_DEATH_COOLDOWN_YEARS = declare(
+        "PATRON_DEATH_COOLDOWN_YEARS", 25, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Minimum gap between one patron's death and the next roll - a "
+            "patron dies once and then you have courted his heir; the "
+            "cooling-off keeps this from repeating within an implausibly "
+            "short span. Round number, not measured.")
+    PATRON_DEATH_SCANDAL = declare(
+        "PATRON_DEATH_SCANDAL", 4, kind="temporary_heuristic",
+        unit="scandal points", source=None, confidence="D",
+        why="Scandal a patron's death and the scramble to court his heir "
+            "generates. Tuned to be a real but minor bump; not measured.")
+    PATRON_DEATH_PROTECTION_RETENTION = declare(
+        "PATRON_DEATH_PROTECTION_RETENTION", 0.6, kind="temporary_heuristic",
+        unit="dimensionless (fraction of protection kept)", source=None,
+        confidence="D",
+        why="Fraction of protection kept when a patron dies - losing most "
+            "of your cover until a new patron relationship is established. "
+            "Tuned, not measured.")
+    PATRON_DEATH_COURTING_GIFT = declare(
+        "PATRON_DEATH_COURTING_GIFT", 800.0, kind="temporary_heuristic",
+        unit="denarii at price_index=1.0", source=None, confidence="D",
+        why="Cost of courting a dead patron's heir afresh, at this "
+            "society's own price level. Invented figure, not sourced to "
+            "any attested gift-giving custom.")
+    FIRE_ANNUAL_CHANCE = declare(
+        "FIRE_ANNUAL_CHANCE", 0.03, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability)", source=None,
+        confidence="D",
+        why="Yearly chance of a fire in the household's own quarter - a "
+            "tester playing Han China counted nine fires in Luoyang's "
+            "insula district in a hundred years, which this rate is "
+            "roughly consistent with, but the figure itself was chosen "
+            "rather than fitted to an urban-fire record.")
+    FIRE_CAPITAL_LOSS = declare(
+        "FIRE_CAPITAL_LOSS", 0.18, kind="temporary_heuristic",
+        unit="dimensionless (fraction of capital)", source=None,
+        confidence="D",
+        why="Fraction of capital a fire destroys. Tuned to be a real but "
+            "recoverable setback; not measured against any attested urban "
+            "fire's losses.")
+    BANDITRY_ANNUAL_CHANCE = declare(
+        "BANDITRY_ANNUAL_CHANCE", 0.02, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability)", source=None,
+        confidence="D",
+        why="Yearly chance banditry or a frontier war disrupts supply. "
+            "Invented frequency, not fitted to any attested record.")
+    BANDITRY_CAPITAL_LOSS = declare(
+        "BANDITRY_CAPITAL_LOSS", 0.10, kind="temporary_heuristic",
+        unit="dimensionless (fraction of capital)", source=None,
+        confidence="D",
+        why="Fraction of capital banditry or a frontier disruption costs - "
+            "smaller than FIRE_CAPITAL_LOSS, a supply disruption rather "
+            "than outright destruction. Tuned, not measured.")
+
     def _random_events(self, yr):
         rng = self.rng
         # A patron dies ONCE and then you have courted his heir. The old model
@@ -2570,13 +3615,13 @@ class SocietyMixin:
         # this comment describes never applied to anything: the roll came up
         # five per cent a year for ever, which is precisely the behaviour the
         # fix was written to stop. (The save list carried the unread name too.)
-        if (rng.random() < 0.05 and self.running("patron_local")
-                and yr - getattr(self, "last_patron_death", -99) > 25):
+        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running("patron_local")
+                and yr - getattr(self, "last_patron_death", -99) > self.PATRON_DEATH_COOLDOWN_YEARS):
             self.last_patron_death = yr
-            self.household.scandal += 4
+            self.household.scandal += self.PATRON_DEATH_SCANDAL
             was = self.household.protection
-            self.household.protection *= 0.6
-            gift = 800.0 * self.price_index
+            self.household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
+            gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
                 self.household.capital -= gift
@@ -2589,27 +3634,27 @@ class SocietyMixin:
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "
-                       "%d%% and scandal rises by 4"
+                       "%d%% and scandal rises by %d"
                        % ("{:,.0f}".format(gift), was * 100,
-                          self.household.protection * 100))
+                          self.household.protection * 100, self.PATRON_DEATH_SCANDAL))
             else:
                 msg = ("your patron dies. No money was spent because "
                        "auto_court_heir is off; protection falls from %d%% "
-                       "to %d%% and scandal rises by 4"
-                       % (was * 100, self.household.protection * 100))
+                       "to %d%% and scandal rises by %d"
+                       % (was * 100, self.household.protection * 100, self.PATRON_DEATH_SCANDAL))
             self.household.log.append((yr, msg))
-        if rng.random() < 0.03:
+        if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, self.household.capital)
-            self.lose_capital(0.18)
+            self.lose_capital(self.FIRE_CAPITAL_LOSS)
             # An insula is a Roman tenement block, and a tester playing Han China
             # counted nine fires in the insula district of Luoyang in a hundred
             # years. Every civilization file names its own quarter.
             self.household.log.append((yr, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
-        if rng.random() < 0.02:
+        if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, self.household.capital)
-            self.lose_capital(0.10)
+            self.lose_capital(self.BANDITRY_CAPITAL_LOSS)
             self.household.log.append((yr, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 

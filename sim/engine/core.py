@@ -1,6 +1,7 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, json, math, os, random
 
+from constants import declare
 from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, DEFAULTS, WAGES, load_civ, load_geography,
                    load_resources, trade_family)
@@ -17,6 +18,39 @@ from .actors import Household
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin):
+    STATE_CAPACITY_DEFAULT = declare(
+        "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
+        unit="dimensionless (0..1)", source=None, confidence="D",
+        why="Fallback state_capacity for a civilisation file that does not "
+            "set its own - every shipped civ file does set one, so this "
+            "only matters for one that omits it. A mid-high default so a "
+            "missing field does not silently cripple every state-notice "
+            "mechanic; not fitted to any specific state.")
+    DEFAULT_POPULATION_100AD = declare(
+        "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
+        unit="people", source="Widely cited estimate of the Roman Empire's "
+             "population around 100 AD.",
+        confidence="C",
+        why="Fallback starting population, and the reference population "
+            "pop_scale=1.0 is defined against, for a civilisation file "
+            "that does not set its own `population` field. Every shipped "
+            "civ file does set one; this is the scenario's own initial "
+            "condition, not a tuned game-balance number.")
+    FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
+        "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Floor on the founder's gaussian-drawn remaining lifespan, so "
+            "an unlucky draw does not end a run in its first years before "
+            "anything is possible. Round guard value, not a mortality "
+            "estimate.")
+    POP_SCALE_FLOOR = declare(
+        "POP_SCALE_FLOOR", 0.05, kind="temporary_heuristic",
+        unit="dimensionless (minimum pop_scale)", source=None,
+        confidence="D",
+        why="Floor under pop_scale so a tiny starting civilisation "
+            "population never divides a formula by something vanishingly "
+            "small. Guard value, not a demographic claim.")
+
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False):
         self.nodes = nodes
@@ -55,8 +89,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.price_index = float(self.civ.get("price_index", 1.0))
         self.wage_index = float(self.civ.get("wage_index", 1.0))
         self._wage_index_base = self.wage_index
-        self.state_capacity = float(self.civ.get("state_capacity", 0.7))
-        self.pop_scale = max(0.05, float(self.civ.get("population", 65e6)) / 65e6)
+        self.state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT))
+        self.pop_scale = max(self.POP_SCALE_FLOOR,
+                              float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
+                              / self.DEFAULT_POPULATION_100AD)
         # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
         # playtester watched the Black Death take a third of their own staff
         # and nothing else happen to the world around them, and asked why a
@@ -202,8 +238,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
         self.life_left = (1e9 if self.cfg["immortal"]
-                          else max(5, rng.gauss(self.cfg["founder_life_mean"],
-                                                self.cfg["founder_life_sd"])))
+                          else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
+                                    rng.gauss(self.cfg["founder_life_mean"],
+                                              self.cfg["founder_life_sd"])))
         self.living_cost_paid = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,
         # not about this household. money_real is currency debasement;
@@ -1217,6 +1254,45 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     def revealed(self, value):
         self.household.revealed = value
 
+    MIN_RECOVERY_TAU_YEARS = declare(
+        "MIN_RECOVERY_TAU_YEARS", 10.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Floor on the demographic-recovery time constant, so a tiny "
+            "recorded _pop_recovery_years does not make the deficit "
+            "vanish in an implausible single year. Guard value, not a "
+            "measured recovery floor.")
+    DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS = declare(
+        "DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS", 3.0, kind="temporary_heuristic",
+        unit="dimensionless (time constants)", source=
+        "e**-3 ~= 0.05, the standard 'three time constants' rule of "
+        "thumb for exponential decay.",
+        confidence="B",
+        why="How many exponential time constants _pop_recovery_years is "
+            "defined to span, so that by that year the deficit has decayed "
+            "to about 5% of its post-shock value - a standard mathematical "
+            "convention for defining 'recovered', not itself a free "
+            "parameter of the demographic model.")
+    WAGE_SCARCITY_ELASTICITY = declare(
+        "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_historical_outcome",
+        unit="dimensionless (wage premium per unit of population deficit)",
+        source="Phelps Brown and Hopkins' English real-wage index shows "
+             "roughly a doubling across the century after 1348.",
+        confidence="C",
+        why="How much scarcer labour raises its own price - see the "
+            "comment above: at this elasticity, a Black-Death-sized "
+            "deficit compounding over the century it takes to decay "
+            "reproduces roughly the cited real-wage doubling. FLAGGED AS "
+            "A CLAUDE.md SS3.1/3.2 RISK: chosen specifically to land in "
+            "the range that reproduces a known historical wage-index "
+            "outcome (Phelps Brown and Hopkins), rather than derived from "
+            "labour supply and demand fundamentals - the same shape as "
+            "economy.py's DEBT_BASE_RATE, a real attested figure standing "
+            "in for a market mechanism this project has not built. It is "
+            "not fitted to the series numerically, but it was picked "
+            "because it lands near the answer, which is the thing SS3.2 "
+            "asks a baseline to reach independently rather than by "
+            "construction.")
+
     def _demographic_recovery(self, yr):
         """Mortality shocks fade and population-raising technologies build in.
 
@@ -1245,7 +1321,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         Black Death, not the same 150 years regardless of size.
         """
         if self.pop_deficit > 1e-6:
-            tau = max(10.0, self._pop_recovery_years) / 3.0
+            tau = max(self.MIN_RECOVERY_TAU_YEARS, self._pop_recovery_years) / self.DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS
             self.pop_deficit *= math.exp(-1.0 / tau)
         else:
             self.pop_deficit = 0.0
@@ -1264,7 +1340,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         Kept separate from recovery so a shock can make its announced effects
         visible immediately, without also granting a free year of recovery.
         """
-        self.pop_scale = max(0.05, self._pop_scale_base * (1.0 - self.pop_deficit))
+        self.pop_scale = max(self.POP_SCALE_FLOOR, self._pop_scale_base * (1.0 - self.pop_deficit))
         # LABOUR SCARCER, SO DEARER. Elasticity 0.9 means a population still a
         # third below trend (deficit 0.33) carries about a 30% wage premium;
         # run for a century, as the Black Death's deficit roughly does before
@@ -1276,7 +1352,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # multiplied by, so this one number is the whole of "higher wages
         # raise the cost of everything built with labour" - nothing else
         # downstream needs to change.
-        self.wage_index = self._wage_index_base * (1.0 + 0.9 * self.pop_deficit)
+        self.wage_index = self._wage_index_base * (1.0 + self.WAGE_SCARCITY_ELASTICITY * self.pop_deficit)
         # SAY WHY THE WAGE BILL MOVED. A plague that quietly doubles every
         # hiring and teaching cost for decades and never says so reads as the
         # economy drifting for no reason - exactly the complaint this whole
@@ -1297,7 +1373,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
     # Years between one automatic teaching of a trade and the next. Long
     # enough that restoring a lost trade is an event rather than a habit.
-    RETEACH_EVERY = 25
+    RETEACH_EVERY = declare(
+        "RETEACH_EVERY", 25, kind="temporary_heuristic", unit="years",
+        source=None, confidence="D",
+        why="Minimum gap between one automatic re-teaching of a lost "
+            "trade and the next, so restoring it is an event rather than "
+            "a habit the optimizer leans on every year. Round number, not "
+            "measured.")
 
     def has(self, k):
         return k in self.household.done
@@ -1316,6 +1398,51 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # to expect. Call this, from both places, rather than re-deriving it -
     # that is the only way to make the two screens unable to disagree
     # again.
+    CORPUS_HEDGE_LOSS_CHANCE_DISPERSED = declare(
+        "CORPUS_HEDGE_LOSS_CHANCE_DISPERSED", 0.12, kind="temporary_heuristic",
+        unit="dimensionless (probability a sack takes any corpus at all)",
+        source=None, confidence="D",
+        why="Chance a sack takes any of the corpus at all once it is "
+            "written and dispersed - lowest of the three hedge states, "
+            "because copies already sit in other people's hands beyond "
+            "this one site. Tuned, not measured.")
+    CORPUS_HEDGE_FRACTION_LOST_DISPERSED = declare(
+        "CORPUS_HEDGE_FRACTION_LOST_DISPERSED", 0.08, kind="temporary_heuristic",
+        unit="dimensionless (fraction of losable technologies taken)",
+        source=None, confidence="D",
+        why="If a sack does take from the corpus while dispersed, how "
+            "much of what is still losable it takes - smallest of the "
+            "three states. Tuned, not measured.")
+    CORPUS_HEDGE_LOSS_CHANCE_WRITTEN = declare(
+        "CORPUS_HEDGE_LOSS_CHANCE_WRITTEN", 0.45, kind="temporary_heuristic",
+        unit="dimensionless (probability a sack takes any corpus at all)",
+        source=None, confidence="D",
+        why="Chance a sack takes any of the corpus once it is merely "
+            "written down (not yet dispersed) - one set of books in one "
+            "place is still losable. Tuned, not measured.")
+    CORPUS_HEDGE_FRACTION_LOST_WRITTEN = declare(
+        "CORPUS_HEDGE_FRACTION_LOST_WRITTEN", 0.22, kind="temporary_heuristic",
+        unit="dimensionless (fraction of losable technologies taken)",
+        source=None, confidence="D",
+        why="If a sack does take from the corpus while merely written, "
+            "how much of what is still losable it takes. Tuned, not "
+            "measured.")
+    CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
+        "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
+        unit="dimensionless (probability a sack takes any corpus at all)",
+        source=None, confidence="D",
+        why="Chance a sack takes any of the corpus with no written hedge "
+            "at all - the founder's own head and workshop are the only "
+            "copy. Tuned to make an unhedged corpus genuinely dangerous "
+            "to hold; not measured.")
+    CORPUS_HEDGE_FRACTION_LOST_NONE = declare(
+        "CORPUS_HEDGE_FRACTION_LOST_NONE", 0.40, kind="temporary_heuristic",
+        unit="dimensionless (fraction of losable technologies taken)",
+        source=None, confidence="D",
+        why="If a sack does take from an unhedged corpus, how much of "
+            "what is still losable it takes - largest of the three "
+            "states. Tuned, not measured.")
+
     def corpus_hedge(self):
         """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
 
@@ -1324,10 +1451,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         None if neither corpus exists yet.
         """
         if self.has("corpus_dispersed"):
-            return 0.12, 0.08, "corpus_dispersed"
+            return self.CORPUS_HEDGE_LOSS_CHANCE_DISPERSED, self.CORPUS_HEDGE_FRACTION_LOST_DISPERSED, "corpus_dispersed"
         if self.has("corpus_written"):
-            return 0.45, 0.22, "corpus_written"
-        return 0.80, 0.40, None
+            return self.CORPUS_HEDGE_LOSS_CHANCE_WRITTEN, self.CORPUS_HEDGE_FRACTION_LOST_WRITTEN, "corpus_written"
+        return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
     # geography.json used to hard-code one `reach` per region, measured from
@@ -1339,6 +1466,438 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # civilization has never seen -- was reach 0. That is backwards for
     # every civilization except Rome. Everything below computes reach from
     # the ACTUAL civilization's own home ground instead.
+
+    STAFF_ATTRITION_RATE = declare(
+        "STAFF_ATTRITION_RATE", 0.035, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability per person)", source=
+        "Rough order-of-magnitude estimate combining Roman adult mortality "
+        "with normal turnover (poaching, retirement).", confidence="C",
+        why="Yearly chance any one employed person dies or leaves for a "
+            "better offer - applied per whole person (see the comment "
+            "below on why headcount is rolled discretely rather than "
+            "smoothed). A plausible order of magnitude for a pre-modern "
+            "adult workforce, not fitted to an attested Roman mortality "
+            "table.")
+    DIRECTORS_EXTRA_APPROACH_RATE = declare(
+        "DIRECTORS_EXTRA_APPROACH_RATE", 0.12, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the gap to capacity closed per "
+             "year)", source=None, confidence="D",
+        why="How fast the household's deputy-director pool approaches "
+            "what its institutions can support, net of the same "
+            "STAFF_ATTRITION_RATE that thins ordinary staff. Tuned so "
+            "deputies build up over several years rather than "
+            "instantaneously; not measured.")
+
+    AUTO_HIRE_CREDIT_ROOM_SHARE = declare(
+        "AUTO_HIRE_CREDIT_ROOM_SHARE", 0.75, kind="temporary_heuristic",
+        unit="dimensionless (share of credit_limit treated as still "
+             "usable for growth)", source=None, confidence="D",
+        why="How deep into arrears the automation will still hire, "
+            "relative to the credit line - deep arrears means building, "
+            "not growing, is the household's actual state (see comment "
+            "above). Tuned, not measured.")
+    AUTO_HIRE_SCHOLAR_EXTRA_SHARE = declare(
+        "AUTO_HIRE_SCHOLAR_EXTRA_SHARE", 0.35, kind="temporary_heuristic",
+        unit="dimensionless (share of supervision-room headroom spent on "
+             "scholars)", source=None, confidence="D",
+        why="How much of the household's extra supervision headroom is "
+            "aimed at scholars versus artisans when auto_hire grows the "
+            "staff. Tuned split, not measured.")
+    AUTO_HIRE_SCHOLAR_APPROACH_RATE = declare(
+        "AUTO_HIRE_SCHOLAR_APPROACH_RATE", 0.18, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the gap to target closed per "
+             "year)", source=None, confidence="D",
+        why="How fast the scholar pool approaches its target headcount "
+            "under auto_hire - smoothed rather than instant so growth "
+            "reads as hiring over years, not a single jump. Tuned, not "
+            "measured.")
+    AUTO_HIRE_ARTISAN_APPROACH_RATE = declare(
+        "AUTO_HIRE_ARTISAN_APPROACH_RATE", 0.22, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the gap to target closed per "
+             "year)", source=None, confidence="D",
+        why="As AUTO_HIRE_SCHOLAR_APPROACH_RATE, for artisans - slightly "
+            "faster, tuned rather than measured.")
+    AUTO_HIRE_SLAVE_CRAFT_CREDIT = declare(
+        "AUTO_HIRE_SLAVE_CRAFT_CREDIT", 0.7, kind="temporary_heuristic",
+        unit="dimensionless (fraction of a slave counted as a craft "
+             "worker already)", source=None, confidence="D",
+        why="How much of the desired artisan headcount an existing slave "
+            "is treated as already covering, before auto_hire tops up the "
+            "generic craft bucket - slaves are not all doing craft work, "
+            "so this is a partial credit rather than one-for-one. Tuned, "
+            "not measured.")
+
+    TRADE_REPLACEMENT_TARGET_HEADCOUNT = declare(
+        "TRADE_REPLACEMENT_TARGET_HEADCOUNT", 2.0, kind="temporary_heuristic",
+        unit="people", source=None, confidence="D",
+        why="Minimum headcount auto_hire tries to keep in any trade the "
+            "founder has ever taught, once attrition has thinned it - "
+            "enough that a taught trade cannot silently vanish from a "
+            "single death. Round number, not measured.")
+    TRADE_REPLACEMENT_AFFORDABILITY_YEARS = declare(
+        "TRADE_REPLACEMENT_AFFORDABILITY_YEARS", 6, kind="temporary_heuristic",
+        unit="years of that trade's annual wage", source=None,
+        confidence="D",
+        why="How much spare capital (in years of the trade's own wage) "
+            "the household must hold before auto_hire replaces a lost "
+            "taught worker - a buffer so this does not spend the "
+            "household into arrears over one specialist. Tuned, not "
+            "measured.")
+
+    AUTO_MANUMIT_ANNUAL_CHANCE = declare(
+        "AUTO_MANUMIT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
+        unit="dimensionless (yearly probability, optimizer only)",
+        source=None, confidence="D",
+        why="Yearly chance the optimizer's standing policy manumits some "
+            "slaves, when it holds any. Invented frequency, not fitted to "
+            "any attested manumission rate.")
+    AUTO_MANUMIT_SHARE_DIVISOR = declare(
+        "AUTO_MANUMIT_SHARE_DIVISOR", 4, kind="temporary_heuristic",
+        unit="dimensionless (divisor; frees roughly a quarter)",
+        source=None, confidence="D",
+        why="How large a bite auto-manumission takes when it fires - "
+            "roughly a quarter of current slaves, at least one. Tuned, "
+            "not measured.")
+    OUTPUT_RECOVERY_RATE = declare(
+        "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
+        unit="dimensionless per year (base recovery toward output_factor "
+             "1.0)", source=None, confidence="D",
+        why="Base yearly recovery rate of output_factor after a war or "
+            "other output shock, doubled at full military leverage (see "
+            "comment above) - an armed empire recovers roughly twice as "
+            "fast as an unarmed one, not instantly. Tuned to make a war's "
+            "damage linger for decades, not measured against any attested "
+            "postwar recovery rate.")
+
+    INSOLVENCY_FLOOR_MIN = declare(
+        "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Floor on how deep into arrears a household can sit before "
+            "insolvency's staff bleed can begin, for a household with "
+            "very low revenue - so a household earning almost nothing is "
+            "not bled the instant it dips a denarius below zero. Round "
+            "number, not measured.")
+    INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
+        "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
+        unit="years of revenue", source=None, confidence="D",
+        why="How many years of revenue a household may sit in arrears "
+            "before insolvency's staff bleed can begin, for a household "
+            "with meaningful revenue - scales the floor to the "
+            "household's own size rather than a flat number. Tuned, not "
+            "measured.")
+    INSOLVENCY_YEARS_BEFORE_BLEED = declare(
+        "INSOLVENCY_YEARS_BEFORE_BLEED", 3, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Consecutive years of genuine insolvency (income not "
+            "covering costs, past INSOLVENCY_FLOOR_MIN/"
+            "INSOLVENCY_FLOOR_REVENUE_MULTIPLE) before staff actually "
+            "start leaving - a brief dip is not treated the same as "
+            "sustained failure. Round number, not measured.")
+    INSOLVENCY_BLEED_CAP = declare(
+        "INSOLVENCY_BLEED_CAP", 0.15, kind="temporary_heuristic",
+        unit="dimensionless (maximum fraction of staff lost per year)",
+        source=None, confidence="D",
+        why="Ceiling on how much of the artisan pool insolvency can bleed "
+            "in a single year, however long the household has been "
+            "insolvent - a floor against the doom loop this mechanism "
+            "replaced (see comment above: a Norse run once sat insolvent "
+            "for 495 years, bleeding without limit). Tuned, not measured.")
+    INSOLVENCY_BLEED_RATE = declare(
+        "INSOLVENCY_BLEED_RATE", 0.04, kind="temporary_heuristic",
+        unit="dimensionless (fraction of staff lost per insolvent year)",
+        source=None, confidence="D",
+        why="How fast the insolvency bleed grows with consecutive "
+            "insolvent years, capped at INSOLVENCY_BLEED_CAP. Tuned, not "
+            "measured.")
+    INSOLVENCY_ARTISAN_FLOOR = declare(
+        "INSOLVENCY_ARTISAN_FLOOR", 3.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D",
+        why="Minimum artisans an insolvent household keeps, however long "
+            "it bleeds - a household that has shed everything else can "
+            "still climb back rather than being erased outright. Round "
+            "number, not measured.")
+    INSOLVENCY_SCHOLAR_FLOOR = declare(
+        "INSOLVENCY_SCHOLAR_FLOOR", 1.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D",
+        why="Minimum scholars an insolvent household keeps, for the same "
+            "reason as INSOLVENCY_ARTISAN_FLOOR. Round number, not "
+            "measured.")
+    INSOLVENCY_SCHOLAR_BLEED_DISCOUNT = declare(
+        "INSOLVENCY_SCHOLAR_BLEED_DISCOUNT", 0.6, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the artisan bleed rate applied "
+             "to scholars)", source=None, confidence="D",
+        why="Scholars bleed slower than artisans under insolvency - "
+            "tuned so a household in arrears keeps more of its scarce, "
+            "harder-to-replace literate staff; not measured.")
+
+    REPUTATION_DECAY_TOWARD_FLOOR = declare(
+        "REPUTATION_DECAY_TOWARD_FLOOR", 0.97, kind="temporary_heuristic",
+        unit="dimensionless (fraction of the gap above the standing floor "
+             "kept per year)", source=None, confidence="D",
+        why="How much of reputation's gap above the standing floor "
+            "survives each year - reputation decays toward what a "
+            "founder is actually known for (the floor), not toward zero "
+            "(see comment above). A slow decay, tuned so novelty fades "
+            "over decades rather than years; not measured against any "
+            "attested reputation-decay rate.")
+    FAMILIARITY_CEILING = declare(
+        "FAMILIARITY_CEILING", 0.9, kind="temporary_heuristic",
+        unit="dimensionless (0..1)", source=None, confidence="D",
+        why="Ceiling on familiarity, however long or publicly the founder "
+            "has worked - a society never becomes fully unable to be "
+            "surprised. Round figure, not measured.")
+    FAMILIARITY_PUBLICATION_WEIGHT = declare(
+        "FAMILIARITY_PUBLICATION_WEIGHT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (weight per spectacle/inexplicable node done)",
+        source=None, confidence="D",
+        why="How much each publicly astonishing thing the founder has "
+            "done adds to familiarity's growth, relative to the passage "
+            "of time (FAMILIARITY_TENURE_WEIGHT). Tuned, not measured.")
+    FAMILIARITY_TENURE_WEIGHT = declare(
+        "FAMILIARITY_TENURE_WEIGHT", 0.25, kind="temporary_heuristic",
+        unit="dimensionless (weight per year since year 100)", source=None,
+        confidence="D",
+        why="How much the mere passage of time (being a known fixture) "
+            "adds to familiarity's growth, relative to specific "
+            "publications (FAMILIARITY_PUBLICATION_WEIGHT). Tuned, not "
+            "measured.")
+    MARKET_PRESSURE_DECAY = declare(
+        "MARKET_PRESSURE_DECAY", 0.55, kind="temporary_heuristic",
+        unit="dimensionless (fraction kept per year)", source=None,
+        confidence="D",
+        why="How much of last year's market pressure (the price bump a "
+            "household's own buying caused) survives into this year - "
+            "sellers restock, so the pressure fades. Tuned, not measured.")
+    MARKET_PRESSURE_ANNUAL_FADE = declare(
+        "MARKET_PRESSURE_ANNUAL_FADE", 2.0, kind="temporary_heuristic",
+        unit="market-pressure points", source=None, confidence="D",
+        why="Flat yearly reduction in market pressure on top of "
+            "MARKET_PRESSURE_DECAY's proportional fade, so a small "
+            "residual pressure reaches exactly zero rather than decaying "
+            "forever. Tuned, not measured.")
+    SCANDAL_DECAY_RATE = declare(
+        "SCANDAL_DECAY_RATE", 0.90, kind="temporary_heuristic",
+        unit="dimensionless (fraction kept per year)", source=None,
+        confidence="D",
+        why="How much of last year's scandal survives, absent any fresh "
+            "cause or bribery - scandal fades on its own, slower than "
+            "market pressure but faster than reputation moves toward its "
+            "floor. Tuned, not measured.")
+    EMINENCE_DECAY_RATE = declare(
+        "EMINENCE_DECAY_RATE", 0.93, kind="temporary_heuristic",
+        unit="dimensionless (fraction kept per year, before this year's "
+             "hazard is added)", source=None, confidence="D",
+        why="How much of last year's eminence survives before adding this "
+            "year's prominence_hazard() - see society.py's eminence_report "
+            "and prominence_hazard, which both reference this same rate "
+            "(as self.EMINENCE_DECAY_RATE) so the reported settling value "
+            "can never disagree with what actually accumulates here. "
+            "Tuned so eminence settles at a level roughly proportionate to "
+            "sustained hazard, not measured.")
+    AUTO_BRIBE_SCANDAL_THRESHOLD = declare(
+        "AUTO_BRIBE_SCANDAL_THRESHOLD", 8, kind="temporary_heuristic",
+        unit="scandal points", source=None, confidence="D",
+        why="Scandal level above which the optimizer's standing bribery "
+            "policy actually starts spending - below it, scandal is not "
+            "yet worth buying down. Tuned, not measured.")
+    AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
+        "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Minimum capital before the optimizer's bribery policy will "
+            "spend at all, so a poor household is not bled dry bribing "
+            "away scandal it might survive anyway. Round number, not "
+            "measured.")
+    AUTO_BRIBE_CAPITAL_SHARE = declare(
+        "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
+        unit="dimensionless (share of capital)", source=None,
+        confidence="D",
+        why="Ceiling on how much of current capital one year's bribery "
+            "spend can be, so buying down scandal cannot alone bankrupt "
+            "the household. Tuned, not measured.")
+    AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
+        "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
+        unit="denarii per scandal point", source=None, confidence="D",
+        why="What buying down one point of scandal costs, capping total "
+            "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
+            "not sourced to any attested bribe schedule.")
+    BRIBES_YTD_DECAY = declare(
+        "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
+        unit="dimensionless (fraction kept per year)", source=None,
+        confidence="D",
+        why="How much of the running bribes_ytd total (itself the "
+            "denominator update_protection() reads for the bribery "
+            "protection term) survives into next year - a bribe's "
+            "protective effect fades rather than accumulating forever. "
+            "Tuned, not measured.")
+    BRIBE_SCANDAL_REDUCTION_SCALE = declare(
+        "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
+        unit="denarii per scandal point removed (before bribability)",
+        source=None, confidence="D",
+        why="How much bribery spend it takes to remove one point of "
+            "scandal, scaled further by this society's own bribability "
+            "weight. Invented figure, not sourced to any attested bribe "
+            "schedule.")
+
+    SCANDAL_HAZARD_SCALE = declare(
+        "SCANDAL_HAZARD_SCALE", 60.0, kind="temporary_heuristic",
+        unit="scandal points per unit of yearly denunciation probability",
+        source=None, confidence="D",
+        why="How much scandal above the danger line it takes to add a "
+            "full 100% to this year's denunciation chance - shared with "
+            "the 'YOU ARE BEING TALKED ABOUT' warning text so the number "
+            "quoted there can never disagree with the one that fires. "
+            "Tuned, not measured against any attested denunciation rate.")
+    EMINENCE_CONFISCATION_CAPITAL_LOSS = declare(
+        "EMINENCE_CONFISCATION_CAPITAL_LOSS", 0.55, kind="temporary_heuristic",
+        unit="dimensionless (fraction of capital)", source=None,
+        confidence="D",
+        why="Fraction of capital the eminence-driven confiscation outcome "
+            "takes - distinct from society.py's state-notice-driven "
+            "CONFISCATION_CAPITAL_LOSS, this is the court's jealousy of a "
+            "great man, unbribable by design (see prominence_hazard's own "
+            "docstring). Tuned, not measured.")
+    EMINENCE_CONFISCATION_REPUTATION_LOSS = declare(
+        "EMINENCE_CONFISCATION_REPUTATION_LOSS", 18, kind="temporary_heuristic",
+        unit="reputation points", source=None, confidence="D",
+        why="Reputation lost to an eminence-driven confiscation and forced "
+            "retirement - the largest single reputation hit in this file, "
+            "reflecting public disgrace on top of the property loss. "
+            "Tuned, not measured.")
+    EMINENCE_CONFISCATION_RETENTION = declare(
+        "EMINENCE_CONFISCATION_RETENTION", 0.45, kind="temporary_heuristic",
+        unit="dimensionless (fraction of eminence kept)", source=None,
+        confidence="D",
+        why="Fraction of eminence kept after a confiscation and forced "
+            "withdrawal - the outcome itself lowers prominence sharply. "
+            "Tuned, not measured.")
+    EMINENCE_PATRON_LOSS_RETENTION = declare(
+        "EMINENCE_PATRON_LOSS_RETENTION", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (fraction of eminence kept)", source=None,
+        confidence="D",
+        why="Fraction of eminence kept after a patron is destroyed in "
+            "someone else's quarrel - a smaller drop than "
+            "EMINENCE_CONFISCATION_RETENTION since the founder's own "
+            "position is not directly struck. Tuned, not measured.")
+    EMINENCE_PATRON_LOSS_REPUTATION_LOSS = declare(
+        "EMINENCE_PATRON_LOSS_REPUTATION_LOSS", 10, kind="temporary_heuristic",
+        unit="reputation points", source=None, confidence="D",
+        why="Reputation lost when a patron is destroyed - smaller than "
+            "EMINENCE_CONFISCATION_REPUTATION_LOSS since the disgrace is "
+            "the patron's, not directly the founder's. Tuned, not "
+            "measured.")
+
+    BONDAGE_LABOUR_SHARE = declare(
+        "BONDAGE_LABOUR_SHARE", 0.75, kind="temporary_heuristic",
+        unit="dimensionless (share of a founder-year's hours)",
+        source=None, confidence="D",
+        why="Share of a founder's yearly hours treated as owed labour "
+            "while serving out a debt-bondage term. Tuned to leave some "
+            "hours for the founder's own affairs even in bondage; not "
+            "measured.")
+    BONDAGE_LABOURER_WAGE_DEFAULT = declare(
+        "BONDAGE_LABOURER_WAGE_DEFAULT", 0.075, kind="temporary_heuristic",
+        unit="denarii/hour at price_index=1.0", source=None,
+        confidence="D",
+        why="Fallback labourer wage rate for computing bondage repayment "
+            "if WAGES has no 'labourer' entry - WAGES normally does carry "
+            "one, so this only matters as a defensive default.")
+    BONDAGE_WAGE_MARKUP = declare(
+        "BONDAGE_WAGE_MARKUP", 1.2, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="Markup on the plain labourer wage used to value bonded "
+            "labour toward debt repayment - bonded labour is valued a "
+            "little above the cheapest free-market rate. Tuned, not "
+            "measured.")
+    SANITATION_LIFE_EXTENSION_YEARS = declare(
+        "SANITATION_LIFE_EXTENSION_YEARS", 0.12, kind="temporary_heuristic",
+        unit="years added per year of founder mortality roll",
+        source=None, confidence="D",
+        why="Extra expected lifespan per year once sanitation and "
+            "antisepsis are known - 'you at least do not die of a septic "
+            "cut'. A real effect in kind (antisepsis measurably cut "
+            "mortality), invented in this specific magnitude; a real "
+            "figure needs an actual survival-curve shift rather than a "
+            "flat annual bonus.")
+    DISSOLUTION_YEARS_BEFORE_FORGETTING = declare(
+        "DISSOLUTION_YEARS_BEFORE_FORGETTING", 3, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years a founderless programme sits stalled before it starts "
+            "actively forgetting technologies - a brief gap is not yet "
+            "dissolution. Round number, not measured.")
+    DISSOLUTION_FORGET_FRACTION_DIVISOR = declare(
+        "DISSOLUTION_FORGET_FRACTION_DIVISOR", 6, kind="temporary_heuristic",
+        unit="dimensionless (divisor; forgets roughly a sixth)",
+        source=None, confidence="D",
+        why="How large a bite a dissolving programme's forgetting takes "
+            "each qualifying year - roughly a sixth of what remains "
+            "losable. Tuned so full dissolution over "
+            "DISSOLUTION_YEARS_UNTIL_END years is gradual, not "
+            "instantaneous; not measured.")
+    DISSOLUTION_YEARS_UNTIL_END = declare(
+        "DISSOLUTION_YEARS_UNTIL_END", 12, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Years a founderless, deputy-less programme can dissolve "
+            "before the run ends outright - stated directly to the player "
+            "('the programme goes on without you... over twelve years' / "
+            "'the run ends at twelve'), so this number is quoted in "
+            "several log messages as well as enforced here. Round number, "
+            "not measured.")
+
+    MAX_ACTIVE_PROJECTS_BASE = declare(
+        "MAX_ACTIVE_PROJECTS_BASE", 2, kind="temporary_heuristic",
+        unit="projects", source=None, confidence="D",
+        why="Minimum number of projects a household can hold active at "
+            "once, before scholars/artisans/director hours add more. "
+            "Round number, not measured.")
+    MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS = declare(
+        "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS", 2000.0, kind="temporary_heuristic",
+        unit="founder-hours per extra active project", source=None,
+        confidence="D",
+        why="How many director-hours of capacity buy one more active "
+            "project slot - see the comment above: doubling this whole "
+            "formula was measured to make every civilisation worse (Rome "
+            "fell from 33% of runs reaching the transistor to none), "
+            "because more projects in hand divide the same purse into "
+            "smaller annual payments. Kept at the value that measured "
+            "better, not derived from a model of attention or budgeting.")
+    MAX_ACTIVE_PROJECTS_PER_SCHOLAR = declare(
+        "MAX_ACTIVE_PROJECTS_PER_SCHOLAR", 12.0, kind="temporary_heuristic",
+        unit="scholars per extra active project", source=None,
+        confidence="D",
+        why="How many scholars buy one more active project slot. Tuned "
+            "alongside MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS and "
+            "MAX_ACTIVE_PROJECTS_PER_ARTISAN as one measured formula; not "
+            "independently derived.")
+    MAX_ACTIVE_PROJECTS_PER_ARTISAN = declare(
+        "MAX_ACTIVE_PROJECTS_PER_ARTISAN", 25.0, kind="temporary_heuristic",
+        unit="artisans per extra active project", source=None,
+        confidence="D",
+        why="How many artisans buy one more active project slot - see "
+            "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS's own comment for the "
+            "measurement this whole formula was tuned and then held "
+            "against.")
+
+    WAGE_FALLBACK_MIN_HOURS = declare(
+        "WAGE_FALLBACK_MIN_HOURS", 100.0, kind="temporary_heuristic",
+        unit="founder-hours", source=None, confidence="D",
+        why="Minimum unused hours before the optimizer's wage-work "
+            "fallback bothers activating - not worth the overhead of "
+            "selling a token amount. Round number, not measured.")
+    WAGE_FALLBACK_LIVING_COST_YEARS = declare(
+        "WAGE_FALLBACK_LIVING_COST_YEARS", 2, kind="temporary_heuristic",
+        unit="years of living cost", source=None, confidence="D",
+        why="How thin a cash buffer (in years of living cost) triggers "
+            "the optimizer selling idle hours for wages rather than "
+            "riding out a bad year - see comment above: without this, a "
+            "single early fire could end a run in a handful of years. "
+            "Tuned, not measured.")
+    WAGE_FALLBACK_MAX_HOURS = declare(
+        "WAGE_FALLBACK_MAX_HOURS", 1200.0, kind="temporary_heuristic",
+        unit="founder-hours/year", source=None, confidence="D",
+        why="Ceiling on how many hours a year the wage-work fallback will "
+            "sell, so it cannot consume the entire year even when nothing "
+            "else has any claim on the founder's time. Tuned, not "
+            "measured.")
 
     def step(self):
         cfg = self.cfg
@@ -1401,7 +1960,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         #    long civilization runs are calibrated against. With it off, the only
         #    things that change the staff are hire, fire, train, buy and manumit.
         sc_cap, ar_cap, di_cap = self.staff_capacity()
-        ATTRITION = 0.035           # Roman adult mortality plus normal turnover
+        ATTRITION = self.STAFF_ATTRITION_RATE
         # PEOPLE ARE WHOLE. This used to multiply every trade's headcount by
         # (1 - ATTRITION) and carry on, so ten smiths lost exactly 0.35 of a
         # smith and the engine went on holding the fraction: a household
@@ -1529,7 +2088,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # what decides how many, and it correctly says nobody when there is
         # nothing spare.
         _hire_room = (self.household.capital >= 0
-                      or -self.household.capital <= self.credit_limit() * 0.75)
+                      or -self.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         if (self.policy.get("auto_hire", not self.manual) and _hire_room):
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
@@ -1550,13 +2109,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # tree actually asks for (the goal wants 25; building the
             # institutions staff_capacity() already credits widens this same
             # wall past that well before the goal is in reach).
-            target_sc = min(sc_cap + extra * 0.35, self.literate_capacity("scholar"))
-            desired_sc = self.household.scholars + (target_sc - self.household.scholars) * 0.18
+            target_sc = min(sc_cap + extra * self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.literate_capacity("scholar"))
+            desired_sc = self.household.scholars + (target_sc - self.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
             target_ar = ar_cap + extra
-            desired_ar = self.household.artisans + (target_ar - self.household.artisans) * 0.22
+            desired_ar = self.household.artisans + (target_ar - self.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * 0.7)
+            craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             generic = self.household.employees.get("artisan", 0.0)
             specials = sum(value for trade_id, value in self.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and trade_family(trade_id) == "craft")
@@ -1627,9 +2186,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if trade_id in ("artisan", "scholar"):
                     continue
                 have = self.household.employees.get(trade_id, 0.0)
-                want = max(have, 2.0 if trade_id in self.household.trades_created else 0.0)
+                want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.household.capital > self.annual_wage(trade_id) * 6:
+                if short > 0.02 and self.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     self.household.employees[trade_id] = have + short
                     self.household.capital -= short * self.annual_wage(trade_id)
             self._resync_pools()
@@ -1642,7 +2201,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # different hat.
         if self.policy.get("auto_commission", not self.manual):
             self.auto_commission_for_blocked()
-        self.household.directors_extra += (di_cap - self.household.directors_extra) * 0.12 - self.household.directors_extra * ATTRITION
+        self.household.directors_extra += (di_cap - self.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.household.directors_extra * ATTRITION
         self.household.artisans = max(0.0, self.household.artisans)
         self.household.scholars = max(0.0, self.household.scholars)
         self.household.directors_extra = max(0.0, self.household.directors_extra)
@@ -1735,8 +2294,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 self.household.insolvent_years = 0
             else:
                 self.household.insolvent_years = getattr(self.household, "insolvent_years", 0) + 1
-            floor = -max(4000.0, self.revenue() * 2.0)
-            if self.household.capital < floor and self.household.insolvent_years >= 3:
+            floor = -max(self.INSOLVENCY_FLOOR_MIN, self.revenue() * self.INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
+            if self.household.capital < floor and self.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
                 # wages unpaid: freedmen leave first, they are free to
                 # A FLOOR, because the first version was a doom loop. Staff bled
                 # without limit, so fewer people earned less, which deepened the
@@ -1745,9 +2304,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # unable to end. Insolvency should cost you your expansion, not
                 # trap you in a state you can never leave: a household that has
                 # shed everything also stops paying for it, and can climb back.
-                bleed = min(0.15, 0.04 * self.household.insolvent_years)
-                self.household.artisans = max(3.0, self.household.artisans * (1.0 - bleed))
-                self.household.scholars = max(1.0, self.household.scholars * (1.0 - bleed * 0.6))
+                bleed = min(self.INSOLVENCY_BLEED_CAP, self.INSOLVENCY_BLEED_RATE * self.household.insolvent_years)
+                self.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.household.artisans * (1.0 - bleed))
+                self.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
                 if self.household.insolvent_years in (3, 6, 12, 25):
                     self.household.log.append((year, "IN ARREARS for %d years: staff are leaving "
                                          "because you cannot pay them" % self.household.insolvent_years))
@@ -1822,8 +2381,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if got:
                     self.household.log.append((year, "bought %d people for the workshop" % got))
         if self.policy.get("auto_manumit", not self.manual) and self.household.slaves:
-            if self.rng.random() < 0.25:
-                freed = self.manumit(max(1, self.household.slaves // 4))
+            if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
+                freed = self.manumit(max(1, self.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
                     self.household.log.append((year, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's
@@ -1843,7 +2402,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # an unarmed one takes, not instantly - the war still happened
             # and the years it cost are not given back.
             self.output_factor = min(1.0, self.output_factor
-                                     + 0.006 * (1.0 + self.military_leverage()))
+                                     + self.OUTPUT_RECOVERY_RATE * (1.0 + self.military_leverage()))
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
         # to add a fresh deficit - see _demographic_recovery for why.
@@ -2095,8 +2654,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # more projects in hand divide the same purse into smaller annual
             # payments, so everything crawls and nothing finishes. Spreading a
             # fixed budget across more work is not more work. Left as it was.
-            max_active = int(2 + self.director_pool() / 2000.0
-                             + self.household.scholars / 12.0 + self.household.artisans / 25.0)
+            max_active = int(self.MAX_ACTIVE_PROJECTS_BASE
+                             + self.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
+                             + self.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
+                             + self.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
             # EARN A LIVING FIRST. Now that a project must actually be paid for,
             # a founder who arrives with 400 denarii and walks the goal-ordered
             # list starves: every human tester worked this out for themselves
@@ -2826,10 +3387,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         #     equivalent, so a single bad year in the opening decade could end a
         #     run: one Rome seed earned four technologies in five hundred years
         #     because a fire in 103 took a fifth of everything it had.
-        if (not self.manual and remaining > 100.0
-                and (self.household.capital < self.living_cost() * 2 or not self.household.active)):
+        if (not self.manual and remaining > self.WAGE_FALLBACK_MIN_HOURS
+                and (self.household.capital < self.living_cost() * self.WAGE_FALLBACK_LIVING_COST_YEARS
+                     or not self.household.active)):
             trade = ("scholar" if self.effective_scholars() >= 1 else "scribe")
-            hours = min(remaining, 1200.0)
+            hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
             # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
             # now cost you the share of your practice they were sold out of
             # (see practice_attention), and without this check the optimizer
@@ -2847,7 +3409,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
             rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
-                    * (1.0 + min(0.5, self.household.reputation / 200.0)))
+                    * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
+                                 self.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
                 _, err = self.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
@@ -2867,13 +3430,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # has heard of because thirty quiet years passed. What fades is novelty;
         # what remains is the work.
         floor = self.standing_floor()
-        self.household.reputation = floor + (self.household.reputation - floor) * 0.97
+        self.household.reputation = floor + (self.household.reputation - floor) * self.REPUTATION_DECAY_TOWARD_FLOOR
         # ADAPTATION. Every year the world has known you, and every visible thing
         # you have already done, makes the next one less astonishing.
         pub = sum(1 for node_id in self.household.done
                   if set(self.nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
-        self.household.familiarity = min(0.9, 1.0 - math.exp(-self.w["adaptation_rate"] *
-                                                   (0.5 * pub + 0.25 * (self.year - 100))))
+        self.household.familiarity = min(
+            self.FAMILIARITY_CEILING,
+            1.0 - math.exp(-self.w["adaptation_rate"]
+                           * (self.FAMILIARITY_PUBLICATION_WEIGHT * pub
+                              + self.FAMILIARITY_TENURE_WEIGHT * (self.year - 100))))
         # WHERE THE YEAR'S HOURS WENT. Four projects each showed exactly half
         # their founder hours left after one year, with 2,400 available and
         # only about 200 apparently spent, and a tester had no way to see why:
@@ -2905,7 +3471,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.household.spend_last_year = self.household._spend_this_year
         self.household._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
-        self.household.market_pressure = max(0.0, self.household.market_pressure * 0.55 - 2.0)
+        self.household.market_pressure = max(0.0, self.household.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
         # WARN BEFORE IT KILLS YOU. A play tester built 952 technologies, was
         # three nodes from the goal, and the run ended on a 2% roll against an
         # eminence of 28.2 - with no escalation of any kind beforehand, and
@@ -2937,20 +3503,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
         self._state_pressure(year)
-        self.household.scandal *= 0.90
+        self.household.scandal *= self.SCANDAL_DECAY_RATE
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot
         # buy an emperor's judgement that you have grown too large, and the
         # attempt is itself evidence against you.
-        self.household.eminence = self.household.eminence * 0.93 + self.prominence_hazard()
+        self.household.eminence = self.household.eminence * self.EMINENCE_DECAY_RATE + self.prominence_hazard()
         # you can buy your way out of trouble, and a sane player does
-        if self.household.scandal > 8 and self.household.capital > 2000 and self.policy.get("auto_bribe", not self.manual):
-            spend = min(self.household.capital * 0.12, self.household.scandal * 260)
+        if (self.household.scandal > self.AUTO_BRIBE_SCANDAL_THRESHOLD
+                and self.household.capital > self.AUTO_BRIBE_CAPITAL_THRESHOLD
+                and self.policy.get("auto_bribe", not self.manual)):
+            spend = min(self.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
+                        self.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
             self.household.capital -= spend
-            self.household.bribes_ytd = 0.7 * self.household.bribes_ytd + spend
-            self.household.scandal -= spend / 300.0 * self.w["bribability"]
+            self.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.household.bribes_ytd + spend
+            self.household.scandal -= spend / self.BRIBE_SCANDAL_REDUCTION_SCALE * self.w["bribability"]
         else:
-            self.household.bribes_ytd *= 0.7
+            self.household.bribes_ytd *= self.BRIBES_YTD_DECAY
         self.household.scandal = max(0.0, self.household.scandal)
         # WARN, THE WAY EMINENCE DOES. Denunciation ends the run outright and
         # said nothing at all first: a break tester read "RUN ENDS: denounced:
@@ -2971,11 +3540,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
                                  % (self.household.scandal, _sd,
-                                    100.0 * max(0.0, (self.household.scandal - _sd) / 60.0))))
+                                    100.0 * max(0.0, (self.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.household.scandal < _sd * 0.5:
             self.household._said_scandal = 0
         if self.events and self.household.scandal > cfg["suspicion_danger"]:
-            probability = (self.household.scandal - cfg["suspicion_danger"]) / 60.0
+            probability = (self.household.scandal - cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:
                 self._catastrophe("denounced: %s" % ("as a sorcerer" if self.w["w_magic_fear"] > 0.5
                                                      else "as a subversive"))
@@ -2983,17 +3552,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # bad year rather than a death: a confiscation, a patron destroyed in
         # someone else's quarrel, a forced withdrawal from public life.
         if self.events and self.household.eminence > cfg["eminence_danger"]:
-            probability = (self.household.eminence - cfg["eminence_danger"]) / 90.0
+            probability = (self.household.eminence - cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
             if self.rng.random() < probability:
                 roll = self.rng.random()
-                if roll < 0.45:
-                    take = self.household.capital * 0.55
+                if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
+                    take = self.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
                     self.household.capital -= take
-                    self.household.reputation = max(0.0, self.household.reputation - 18)
-                    self.household.eminence *= 0.45
+                    self.household.reputation = max(0.0, self.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
+                    self.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                     self.household.log.append((year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
-                elif roll < 0.80:
+                elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in ("patron_imperial", "patron_senatorial"):
                         if pat in self.household.done:
                             self.household.done.discard(pat)
@@ -3001,8 +3570,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                             self.household.log.append((year, "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
-                    self.household.eminence *= 0.5
-                    self.household.reputation = max(0.0, self.household.reputation - 10)
+                    self.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
+                    self.household.reputation = max(0.0, self.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
                 else:
                     self._catastrophe("too eminent: brought down not for what you built "
                                       "but for how large you had become")
@@ -3012,8 +3581,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         #     you know.
         if self.household.bondage_years_left > 0:
             self.household.bondage_years_left -= 1
-            paid = self.cfg["founder_hours_per_year"] * 0.75 * \
-                (WAGES.get("labourer", 0.075) * 1.2) * self.wage_index * self.price_index
+            paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE * \
+                (WAGES.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
             self.household.bondage_debt = max(0.0, self.household.bondage_debt - paid)
             if self.household.bondage_debt <= 0 and self.household.bondage_years_left > 0:
                 self.household.bondage_years_left = 0     # paid early
@@ -3027,7 +3596,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         if self.founder_alive:
             self.life_left -= 1
             if self.running("sanitation_antisepsis"):
-                self.life_left += 0.12      # you at least do not die of a septic cut
+                self.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.life_left <= 0:
                 self.founder_alive = False
                 # SAY WHAT IT MEANS, not only that it happened. Two round-12
@@ -3057,7 +3626,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # a programme with no director is not paused, it is dissolving
         if not self.founder_alive and self.household.directors_extra < 0.5:
             self.household.stalled += 1
-            if self.household.stalled >= 3:
+            if self.household.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
                 losable = sorted(node_id for node_id in self.household.done if node_id not in self.household.granted)
                 # sorted() matters: self.household.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
@@ -3065,7 +3634,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # invocation. Every figure this project has reported was, strictly,
                 # unreproducible.
                 if losable:
-                    for node_id in self.rng.sample(losable, max(1, len(losable) // 6)):
+                    for node_id in self.rng.sample(losable, max(1, len(losable) // self.DISSOLUTION_FORGET_FRACTION_DIVISOR)):
                         self.household.operating.discard(node_id)
                         self.household.done.discard(node_id)
                         self._done_changed()
@@ -3079,7 +3648,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                      "take over. What you built is being "
                                      "forgotten. The run ends at twelve."
                                  % self.household.stalled))
-            if self.household.stalled >= 12:
+            if self.household.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   "the school dispersed and the work was forgotten")
         else:

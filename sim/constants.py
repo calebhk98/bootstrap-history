@@ -278,6 +278,8 @@ def _import_declaring_modules():
     for module in ("engine.data",
                    "engine.economy",
                    "engine.cli",
+                   "engine.core",
+                   "engine.society",
                    "sim.world.agriculture",
                    "sim.world.demography",
                    "sim.world.transport",
