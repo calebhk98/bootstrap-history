@@ -465,6 +465,20 @@ bytecode changes.**
   passed, purely because `ident` sorts between `goods` and `node` exactly
   where `k` did.
 
+- **Renaming a local ONTO a name that already exists in the same scope merges
+  two slots into one.** The inverse of the first hazard, and it reads as
+  correct right up until the prover refuses it. Hit in `proto/render.py`'s
+  `render_money`, where the loop key `k` was renamed to `label` and there was
+  already a different local called `label`, computed from `k` one line later.
+  Renamed to `raw_key` instead. Grep the enclosing function for the new name
+  before using it.
+
+- **The cell-variable hazard above was hit independently by two agents in the
+  same round**, on different files, both concluding at first that the prover
+  was broken. It is not rare and it is not a corner case. `proto/nodes.py`'s
+  `_did_you_mean` needed `x` to become `result_id` rather than `node_id`,
+  purely so the captured names kept their original alphabetical order.
+
   The cheap pre-check that avoids both: before renaming a local, ask whether
   it is referenced inside a nested `def`/`lambda`/comprehension body. Being a
   comprehension's outermost iterable does NOT force capture. Round 2's other
