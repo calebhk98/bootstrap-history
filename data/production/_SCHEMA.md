@@ -26,7 +26,9 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `outputs` | {material_key: quantity}. Usually one key. More than one means genuine joint production - smelting galena yields lead AND silver, and pretending otherwise misprices both. |
 | `inputs` | {material_key: quantity} consumed to produce that output. Keys must be material keys the tree already uses, or new ones you also define an entry for. A material with no inputs is EXTRACTED rather than made: say so in extracted_from. |
 | `labour_hours` | {trade: hours} to produce one basis unit. Trades must exist in data/prices.json wage_rates_denarii_per_hour. |
-| `energy_mj` | Process heat and mechanical work that is not already accounted for by a fuel listed in inputs. Usually 0 for pre-industrial processes, where the fuel IS the energy. |
+| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel. Priced by `sim/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal or coal, whichever is cheaper at solved prices). Usually 0 for pre-industrial processes, where the fuel IS the energy. |
+| `mechanical_mj` | Shaft work not already accounted for by `inputs` - INCLUDING work delivered as electricity, which is a carrier for shaft work rather than a source of its own (see ENERGY in `sim/solve_prices.py`'s module docstring). Priced through the same file's mechanical energy market (a water wheel's amortised build, or human muscle, whichever is cheaper). |
+| `energy_mj` | The residual: process heat or work needing a technology neither energy market above can supply (a temperature no priced fuel reaches, say). Left deliberately uncosted - see quartz_tube_kg for the one entry that still uses it, and ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. |
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
@@ -104,6 +106,34 @@ resolve correctly because `sim/solve_prices.py`'s resolvability pass now
 tests cycles for productiveness instead of refusing every one outright; see
 Complaints/31 and Complaints/32.
 
+## ENERGY
+
+`thermal_mj` and `mechanical_mj` are the two carriers a process can draw on
+for heat or work beyond what a fuel already in its `inputs` supplies -
+never the same carrier: a kilogram of charcoal cannot turn a shaft, and a
+water wheel cannot melt an ore, so this file keeps the two separate rather
+than pricing one undifferentiated "energy" that would let the cheaper of
+the two silently stand in for both. Both are priced, not looked up: see
+`data/production/70_energy.json`, which defines each carrier as a MATERIAL
+with several TECHNIQUES for supplying it (a fuel-burning route for thermal;
+a water wheel or human muscle for mechanical), exactly like `salt_kg` has a
+solar-pan technique and a brine-boiling one - `sim/solve_prices.py` picks
+whichever technique is cheaper at the solved prices, so the choice of fuel
+or motive power is an OUTPUT of the solve, never a fact stated in advance.
+See ENERGY in that file's module docstring for the physics (calorific
+values, furnace efficiency, a water wheel's typical kilowatts from
+`data/world/resources.json`) and for what is deliberately NOT modelled yet
+(a site-scarcity rent on the best mill sites; an ox as well as a labourer
+turning the crank).
+
+`energy_mj` still exists for the rare case neither carrier reaches - a
+process needing a temperature or a technology this file cannot yet price a
+fuel path for. `quartz_tube_kg`'s oxy-hydrogen flame (1700-2000 C, hotter
+than any charcoal or coal fire) is the one entry that still uses it, and
+its own `yield_basis` explains why inventing a hydrogen-production number
+to close that last gap would be exactly the unearned precision the RULE
+THAT GOVERNS EVERY NUMBER above warns against.
+
 ## WHICH MATERIALS GOT CAPITAL, AND WHICH WERE LEFT CAPITAL-LIGHT ON PURPOSE
 
 Capital was added where it plausibly dominates - heavy, campaign-run
@@ -119,9 +149,9 @@ draw-bench and dies), `copper_kg` (a small shaft furnace, added to
 `00_examples.json` as the worked example of the field's shape), `lead_kg`
 (smelting hearth and cupellation furnace), `zinc_electrolytic_kg` and
 `aluminium_kg` (the reduction cell itself only - the generating plant behind
-their `energy_mj` is excluded for the same reason `energy_mj` is not priced:
-pricing it would mean assuming a fuel and a generating technology, which is
-exactly the invented conversion this project is trying to avoid), `glass_raw_kg`
+their `mechanical_mj` is excluded from THIS capital list, but is no longer
+uncosted: it is priced separately, through the mechanical energy market in
+`data/production/70_energy.json` - see ENERGY above), `glass_raw_kg`
 (pot furnace, relined nearly every campaign), `coal_kg` (shaft timbering and
 winding gear - real capital that is easy to forget because extraction entries
 otherwise carry only labour), `sulfuric_acid_kg` (the lead chamber itself -
@@ -164,7 +194,7 @@ structural rather than a matter of precision:
 |---|---|
 | **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/solve_prices.py` |
 | rent | `extracted_from` marks it; the solver fixes it at zero this round |
-| energy | `energy_mj` exists; nothing prices it yet |
+| energy | **priced now.** `thermal_mj` and `mechanical_mj` are read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json` (see ENERGY in that file's module docstring); `energy_mj` remains for the one entry (quartz_tube_kg) needing a technology neither market reaches |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 

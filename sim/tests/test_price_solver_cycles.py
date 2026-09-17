@@ -18,6 +18,7 @@ like test_agriculture.py and test_demography.py, so it can exercise
 solve_prices directly without dragging in sim/tests/harness.py and the whole
 engine behind it.
 """
+import collections
 import unittest
 
 from sim import solve_prices
@@ -135,6 +136,84 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
             "genuine data hole, or it is a cycle that Complaints/31's "
             "resolvability defect is refusing - check which before adding a "
             "workaround.")
+
+
+class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
+    """Complaints/32's third gap: `thermal_mj` and `mechanical_mj` are real
+    dependencies now (see `_dependency_materials` and ENERGY in
+    sim/solve_prices.py's module docstring), not a scalar the resolvability
+    pass could ignore the way it correctly ignores the still-uncosted
+    `energy_mj`. These two tests are the same shape as the capital-cycle
+    tests above, just for the newer field: a material that needs an energy
+    carrier with no producer must NOT get a price, and one where a producer
+    exists must.
+    """
+
+    def test_a_material_needing_unpriced_mechanical_energy_has_no_path(self):
+        # No entry anywhere produces "mechanical_mj" here, so wire_drawn's
+        # dependency on it can never be satisfied - it must be refused, not
+        # silently priced as if mechanical_mj cost nothing.
+        entries = {
+            "iron_bar": {"outputs": {"iron_bar_kg": 1.0}, "inputs": {},
+                        "labour_hours": {"labourer": 1.0}},
+            "wire_drawn": {"outputs": {"wire_drawn_kg": 1.0},
+                          "inputs": {"iron_bar_kg": 1.05},
+                          "labour_hours": {"smith": 0.06},
+                          "mechanical_mj": 0.15},
+        }
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries))
+        self.assertEqual(
+            resolvable, {"iron_bar_kg"},
+            "wire_drawn_kg resolved despite needing mechanical_mj, which "
+            "nothing here produces - _dependency_materials has stopped "
+            "treating energy fields as real dependencies.")
+
+    def test_a_material_needing_priced_mechanical_energy_resolves(self):
+        # Same recipe, but now a technique for mechanical_mj exists (a
+        # trivial stand-in for mechanical_mj_human_muscle) - wire_drawn
+        # should resolve once its energy dependency does.
+        entries = {
+            "iron_bar": {"outputs": {"iron_bar_kg": 1.0}, "inputs": {},
+                        "labour_hours": {"labourer": 1.0}},
+            "muscle": {"outputs": {"mechanical_mj": 0.27}, "inputs": {},
+                      "labour_hours": {"labourer": 1.0}},
+            "wire_drawn": {"outputs": {"wire_drawn_kg": 1.0},
+                          "inputs": {"iron_bar_kg": 1.05},
+                          "labour_hours": {"smith": 0.06},
+                          "mechanical_mj": 0.15},
+        }
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries))
+        self.assertEqual(resolvable, {"iron_bar_kg", "mechanical_mj", "wire_drawn_kg"})
+
+    def test_recipe_cost_and_allocation_prices_the_energy_terms(self):
+        # The dependency graph seeing the edge is necessary but not
+        # sufficient - the actual cost sum has to add it in too, at the
+        # BATCH level (like inputs/labour_hours), not per unit of output
+        # like capital. 1 kg needs 10 MJ of mechanical_mj at 2.0 h/MJ, on
+        # top of a 3.0 h labour cost - the process should total 23.0 h.
+        entry = {
+            "outputs": {"widget_kg": 1.0}, "inputs": {},
+            "labour_hours": {"labourer": 3.0}, "mechanical_mj": 10.0,
+        }
+        total_cost, output_prices = solve_prices.recipe_cost_and_allocation(
+            "widget", entry, {"mechanical_mj": 2.0},
+            collections.defaultdict(lambda: 1.0))
+        self.assertEqual(total_cost, 23.0)
+        self.assertEqual(output_prices["widget_kg"], 23.0)
+
+    def test_recipe_cost_and_allocation_refuses_to_guess_a_missing_energy_price(self):
+        # Mirrors the existing behaviour for a missing ordinary input: if
+        # mechanical_mj has no price yet, this recipe has none either,
+        # rather than silently treating the energy term as free.
+        entry = {
+            "outputs": {"widget_kg": 1.0}, "inputs": {},
+            "labour_hours": {"labourer": 3.0}, "mechanical_mj": 10.0,
+        }
+        result = solve_prices.recipe_cost_and_allocation(
+            "widget", entry, {}, collections.defaultdict(lambda: 1.0))
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":
