@@ -280,6 +280,8 @@ def _import_declaring_modules():
                    "engine.cli",
                    "engine.core",
                    "engine.society",
+                   "engine.labour",
+                   "engine.projects",
                    "sim.world.agriculture",
                    "sim.world.demography",
                    "sim.world.transport",
