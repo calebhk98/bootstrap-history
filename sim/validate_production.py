@@ -142,15 +142,38 @@ def check(entries, known_materials, known_trades):
         kilogram_inputs = sum(quantity for key, quantity in inputs.items()
                               if key.endswith("_kg")
                               and isinstance(quantity, (int, float)))
-        if (inputs and kilogram_inputs > 0
-                and outputs and all(key.endswith("_kg") for key in outputs)):
+        if outputs and all(key.endswith("_kg") for key in outputs) and inputs:
             kilogram_outputs = sum(q for q in outputs.values()
                                    if isinstance(q, (int, float)))
-            if kilogram_outputs > kilogram_inputs:
+            if kilogram_inputs > 0:
+                if kilogram_outputs > kilogram_inputs:
+                    problems.append(
+                        "%s: yields %.0f kg from %.0f kg of inputs. Matter "
+                        "does not appear - check for an inverted ratio or a "
+                        "unit slip." % (where, kilogram_outputs, kilogram_inputs))
+            else:
+                # THE CHECK ABOVE CAN BE DODGED, AND ONCE WAS, BY ACCIDENT.
+                #
+                # An entry producing kilograms whose every input is quoted in
+                # some other unit - cubic metres of timber, cubic metres of
+                # hydrogen - has nothing to weigh, so the conservation test
+                # simply did not run and the entry passed in silence. That is
+                # how wood_pulp_kg was briefly written to make pulp out of
+                # timber_m3: matter appearing from nowhere, and a clean bill of
+                # health, because the only check that would have noticed
+                # measured a quantity the entry did not have.
+                #
+                # Reported rather than passed. Usually the honest fix is the
+                # one that entry took - source the mass from a material that is
+                # actually weighed - and where it genuinely is not possible,
+                # saying so out loud is still better than silence, which reads
+                # exactly like success.
                 problems.append(
-                    "%s: yields %.0f kg from %.0f kg of inputs. Matter does "
-                    "not appear - check for an inverted ratio or a unit slip."
-                    % (where, kilogram_outputs, kilogram_inputs))
+                    "%s: yields %.0f kg but no input is quoted in kilograms "
+                    "(%s), so conservation of mass cannot be checked at all. "
+                    "Source the mass from a weighed material, or say in "
+                    "yield_basis why it cannot be."
+                    % (where, kilogram_outputs, ", ".join(sorted(inputs))))
 
     return problems
 
