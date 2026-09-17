@@ -82,40 +82,40 @@ def wage_table(prices):
 def audit():
     tree, prices, nodes, _wages, _goods = S.load()
     if not isinstance(nodes, dict):
-        nodes = {n["id"]: n for n in nodes}
+        nodes = {node["id"]: node for node in nodes}
     wages = wage_table(prices)
-    mat_price = {k: float(value["p"])
-                 for k, value in (prices.get("purchase_prices_denarii") or {}).items()
+    mat_price = {material_key: float(value["p"])
+                 for material_key, value in (prices.get("purchase_prices_denarii") or {}).items()
                  if isinstance(value, dict) and "p" in value}
 
     consumers = collections.Counter()
-    for n in nodes.values():
-        for key in (n.get("mat") or {}):
+    for node in nodes.values():
+        for key in (node.get("mat") or {}):
             consumers[key] += 1
 
     materials = []
     for key, used_by in consumers.most_common():
-        p = producer_of(key, nodes)
+        producer = producer_of(key, nodes)
         materials.append({
             "material": key,
             "consumed_by_nodes": used_by,
-            "producer": p["id"] if p else None,
-            "producer_has_recipe": bool(p and (p.get("mat") or p.get("lab"))),
-            "producer_declares_output": bool(p and p.get("annual_output_t")),
+            "producer": producer["id"] if producer else None,
+            "producer_has_recipe": bool(producer and (producer.get("mat") or producer.get("lab"))),
+            "producer_declares_output": bool(producer and producer.get("annual_output_t")),
             "book_price_denarii": mat_price.get(key),
         })
 
     # Where the denarii actually are. `cap` is documented as capital BEYOND
     # labour and materials, so these three are additive, not overlapping.
     totals = collections.Counter()
-    for n in nodes.values():
-        totals["labour"] += sum(wages[t] * float(h)
-                                for t, h in (n.get("lab") or {}).items()
-                                if t in wages)
-        totals["materials"] += sum(mat_price[m] * float(q)
-                                   for m, q in (n.get("mat") or {}).items()
-                                   if m in mat_price)
-        totals["capital_lump"] += float(n.get("cap") or 0.0)
+    for node in nodes.values():
+        totals["labour"] += sum(wages[trade] * float(hours)
+                                for trade, hours in (node.get("lab") or {}).items()
+                                if trade in wages)
+        totals["materials"] += sum(mat_price[material_key] * float(quantity)
+                                   for material_key, quantity in (node.get("mat") or {}).items()
+                                   if material_key in mat_price)
+        totals["capital_lump"] += float(node.get("cap") or 0.0)
 
     conf = collections.Counter()
     for section in ("purchase_prices_denarii", "wage_rates_denarii_per_hour",
@@ -125,13 +125,13 @@ def audit():
                 conf[value["conf"]] += 1
 
     def populated(field):
-        return sum(1 for n in nodes.values()
-                   if n.get(field) not in (None, 0, 0.0, "", {}, []))
+        return sum(1 for node in nodes.values()
+                   if node.get(field) not in (None, 0, 0.0, "", {}, []))
 
     return {
         "nodes": len(nodes),
-        "fields_populated": {f: populated(f)
-                             for f in ("lab", "mat", "ph", "cap", "rev", "up")},
+        "fields_populated": {field: populated(field)
+                             for field in ("lab", "mat", "ph", "cap", "rev", "up")},
         "cost_base_denarii": dict(totals),
         "price_confidence": dict(conf),
         "materials": materials,
@@ -144,24 +144,24 @@ def _bar(share, width=28):
 
 
 def report(a, show_materials=False):
-    n = a["nodes"]
+    node_count = a["nodes"]
     print("TECH TREE COST AUDIT")
     print("=" * 72)
-    print("%d nodes\n" % n)
+    print("%d nodes\n" % node_count)
 
     print("INPUT SIDE - what every process consumes. Already physical:")
-    for f, unit in (("lab", "hours by trade"), ("mat", "kg / units"),
+    for field, unit in (("lab", "hours by trade"), ("mat", "kg / units"),
                     ("ph", "founder hours")):
-        c = a["fields_populated"][f]
+        c = a["fields_populated"][field]
         print("  %-4s %-16s %5d nodes  %5.1f%%  %s"
-              % (f, unit, c, 100.0 * c / n, _bar(c / n)))
+              % (field, unit, c, 100.0 * c / node_count, _bar(c / node_count)))
     print()
 
     print("OUTPUT SIDE - what anything produces. This is the gap:")
     mats = a["materials"]
-    with_producer = [m for m in mats if m["producer"]]
-    with_recipe = [m for m in with_producer if m["producer_has_recipe"]]
-    with_output = [m for m in with_producer if m["producer_declares_output"]]
+    with_producer = [material for material in mats if material["producer"]]
+    with_recipe = [material for material in with_producer if material["producer_has_recipe"]]
+    with_output = [material for material in with_producer if material["producer_declares_output"]]
     print("  materials consumed somewhere in the tree      %5d" % len(mats))
     print("  ...with a node that plausibly produces them   %5d  %5.1f%%"
           % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))))
@@ -172,20 +172,20 @@ def report(a, show_materials=False):
     print()
     print("  A price cannot be solved out of a matrix with no outputs in it.")
     print("  The most-consumed materials with no producer at all:")
-    for m in [m for m in mats if not m["producer"]][:6]:
-        print("      %-18s consumed by %4d nodes" % (m["material"],
-                                                     m["consumed_by_nodes"]))
+    for material in [material for material in mats if not material["producer"]][:6]:
+        print("      %-18s consumed by %4d nodes" % (material["material"],
+                                                     material["consumed_by_nodes"]))
     print()
 
     print("STILL PRICED FROM A BOOK - where the denarii come from today:")
     cb = a["cost_base_denarii"]
     total = sum(cb.values()) or 1.0
-    for k, label in (("materials", "materials (mat, physical)"),
+    for cost_key, label in (("materials", "materials (mat, physical)"),
                      ("capital_lump", "capital lump (cap, denarii)"),
                      ("labour", "hired labour (lab, physical)")):
         print("  %-28s %14s  %5.1f%%  %s"
-              % (label, format(cb[k], ",.0f"), 100.0 * cb[k] / total,
-                 _bar(cb[k] / total)))
+              % (label, format(cb[cost_key], ",.0f"), 100.0 * cb[cost_key] / total,
+                 _bar(cb[cost_key] / total)))
     print("  %-28s %14s" % ("TOTAL", format(total, ",.0f")))
     print()
     print("  Materials and labour are already physical quantities, so pricing")
@@ -197,46 +197,46 @@ def report(a, show_materials=False):
     print()
 
     c = a["price_confidence"]
-    tot = sum(c.values()) or 1
+    confidence_total = sum(c.values()) or 1
     print("CONFIDENCE IN THE BOOK ITSELF (data/prices.json):")
     for grade, meaning in (("A", "well attested"),
                            ("B", "probable, contested in detail"),
                            ("C", "the author's own estimate")):
         print("  %s  %-32s %4d  %5.1f%%"
-              % (grade, meaning, c.get(grade, 0), 100.0 * c.get(grade, 0) / tot))
+              % (grade, meaning, c.get(grade, 0), 100.0 * c.get(grade, 0) / confidence_total))
     print()
 
     if show_materials:
         print("EVERY MATERIAL")
         print("-" * 72)
         print("  %-22s %6s  %-22s %s" % ("material", "used", "producer", "state"))
-        for m in mats:
-            if not m["producer"]:
+        for material in mats:
+            if not material["producer"]:
                 state = "NO PRODUCER"
-            elif not m["producer_has_recipe"]:
+            elif not material["producer_has_recipe"]:
                 state = "producer is an empty marker"
-            elif not m["producer_declares_output"]:
+            elif not material["producer_declares_output"]:
                 state = "recipe but no yield"
             else:
                 state = "complete"
             print("  %-22s %6d  %-22s %s"
-                  % (m["material"], m["consumed_by_nodes"],
-                     m["producer"] or "-", state))
+                  % (material["material"], material["consumed_by_nodes"],
+                     material["producer"] or "-", state))
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--materials", action="store_true",
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--materials", action="store_true",
                     help="list every material and whether anything makes it")
-    ap.add_argument("--json", action="store_true",
+    parser.add_argument("--json", action="store_true",
                     help="machine-readable output")
-    args = ap.parse_args(argv)
-    a = audit()
+    args = parser.parse_args(argv)
+    audit_result = audit()
     if args.json:
-        json.dump(a, sys.stdout, indent=1)
+        json.dump(audit_result, sys.stdout, indent=1)
         print()
     else:
-        report(a, show_materials=args.materials)
+        report(audit_result, show_materials=args.materials)
     return 0
 
 

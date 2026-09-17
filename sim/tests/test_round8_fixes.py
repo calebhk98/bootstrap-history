@@ -13,13 +13,13 @@ from .harness import *  # noqa: F401,F403
 # profitable one. A tester watched a 600-a-year wagon shop close twice while a
 # concern earning nothing and staffed identically stayed open.
 s_cl = sim(capital=200000.0)
-_pair = [k for k in NODES
-         if NODES[k]["rev"] > 0 and NODES[k]["up"] >= 0 and not NODES[k]["pre"]]
+_pair = [node_id for node_id in NODES
+         if NODES[node_id]["rev"] > 0 and NODES[node_id]["up"] >= 0 and not NODES[node_id]["pre"]]
 s_cl.done.update(NODES)                 # know everything, so `open` is free
 s_cl.operating = set()
-_rich = max(NODES, key=lambda k: NODES[k]["rev"] - NODES[k]["up"])
-_poor = min((k for k in NODES if NODES[k]["rev"] > 0),
-            key=lambda k: NODES[k]["rev"] - NODES[k]["up"])
+_rich = max(NODES, key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
+_poor = min((node_id for node_id in NODES if NODES[node_id]["rev"] > 0),
+            key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 s_cl.operating.update([_rich, _poor])
 s_cl.scholars = s_cl.artisans = 0
 s_cl.founder_alive = False              # nobody at all: it must close both,
@@ -44,7 +44,7 @@ for _f in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
     _civ = json.load(open(os.path.join(ROOT, "data/civilizations", _f)))
     for _h in _civ.get("hazards", []):
         _txt = " ".join(str(_h.get(x, "")) for x in ("name", "note"))
-        _dirty += [(_f, _h.get("name"), _j) for _j in _JARGON if _j in _txt]
+        _dirty += [(_f, _h.get("name"), _jargon_term) for _jargon_term in _JARGON if _jargon_term in _txt]
 check("no hazard a player reads names an internal values-vector key",
       not _dirty, _dirty[:3])
 
@@ -55,11 +55,11 @@ _steps = []
 for _kind in sorted(S.Sim.HAZARD_COUNTERS):
     _steps += s_hz.hedge_first_steps(_kind)
 check("every hedge the game suggests says what it gets you",
-      _steps and all(e.get("because_it_gives_you") for e in _steps),
-      [e["id"] for e in _steps if not e.get("because_it_gives_you")][:3])
+      _steps and all(step.get("because_it_gives_you") for step in _steps),
+      [step["id"] for step in _steps if not step.get("because_it_gives_you")][:3])
 check("...and a prerequisite says which counter it is a step toward",
-      any(str(e["because_it_gives_you"]).startswith("a step toward")
-          for e in _steps))
+      any(str(step["because_it_gives_you"]).startswith("a step toward")
+          for step in _steps))
 
 # --- BREAK: a save written with the fog OFF loaded into a fogged game and
 # handed the player the whole tree. The check has to run BEFORE the save's own
@@ -93,17 +93,17 @@ for _y in range(100, 400):
     s_pd.year = _y
     _before = len(s_pd.log)
     s_pd._random_events(_y)
-    _deaths += [m for _, m in s_pd.log[_before:] if "patron dies" in m]
+    _deaths += [message for _, message in s_pd.log[_before:] if "patron dies" in message]
 check("a patron cannot die twice inside the cooling-off period",
       len(_deaths) <= 300 // 25 + 1,
       "%d deaths in 300 years" % len(_deaths))
-_years = [y for y, m in s_pd.log if "patron dies" in m]
+_years = [y for y, message in s_pd.log if "patron dies" in message]
 check("...and the gap between them is at least the 25 years it promises",
-      all(b - a > 25 for a, b in zip(_years, _years[1:])), _years)
+      all(later_year - earlier_year > 25 for earlier_year, later_year in zip(_years, _years[1:])), _years)
 check("a patron's death names what it cost you",
-      not _years or any("courting cost" in m and "protection falls" in m
-                        for _, m in s_pd.log if "patron dies" in m),
-      [m for _, m in s_pd.log if "patron dies" in m][:1])
+      not _years or any("courting cost" in message and "protection falls" in message
+                        for _, message in s_pd.log if "patron dies" in message),
+      [message for _, message in s_pd.log if "patron dies" in message][:1])
 
 # --- BREAK: a fire and a raid announced themselves and left the player to
 # diff their own state to find out whether anything had happened.
@@ -112,9 +112,9 @@ s_fx.rng = random.Random(7)
 for _y in range(100, 200):
     s_fx.year = _y
     s_fx._random_events(_y)
-_dis = [m for _, m in s_fx.log if "fire in" in m or "banditry" in m]
+_dis = [message for _, message in s_fx.log if "fire in" in message or "banditry" in message]
 check("a fire or a raid says what it took",
-      _dis and all("denarii" in m or "holding none" in m for m in _dis),
+      _dis and all("denarii" in message or "holding none" in message for message in _dis),
       _dis[:2])
 
 # --- BREAK: shed_loss_makers scanned `done`, so it could unlearn a concern
@@ -125,14 +125,14 @@ check("a fire or a raid says what it took",
 # concern earning 150 against 15 of upkeep sat shut for six years in silence.
 s_ao = sim(capital=1.0)
 # Dear to open and plainly worth opening: auto_open must refuse it and SAY SO.
-_v = max((k for k in NODES if NODES[k]["rev"] > NODES[k]["up"] > 0),
-         key=lambda k: NODES[k]["rev"] - NODES[k]["up"])
+_v = max((node_id for node_id in NODES if NODES[node_id]["rev"] > NODES[node_id]["up"] > 0),
+         key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 s_ao.done.add(_v); s_ao._done_changed()
 _opened = s_ao.auto_open_ventures()
 check("auto_open opens nothing it cannot pay the capex on",
       _v not in _opened, (_v, _opened[:3]))
 check("auto_open says why the best concern is still shut",
-      any(_v in m for _, m in s_ao.log), [m for _, m in s_ao.log][:2])
+      any(_v in message for _, message in s_ao.log), [message for _, message in s_ao.log][:2])
 
 # --- BREAK: auto_open_ventures blanket-refused EVERYTHING once a household
 # owed more than half its credit line, including an already-completed,
@@ -165,9 +165,9 @@ check("a completed concern that would take years to pay for its own door "
       "still stays shut while deep in arrears",
       _long not in _opened_deep2, (_long, _opened_deep2))
 check("...and the refusal names its own payback period and what would clear it",
-      any("pay for its own doors" in m and "clear enough debt" in m
-          for _, m in s_deep2.log),
-      [m for _, m in s_deep2.log])
+      any("pay for its own doors" in message and "clear enough debt" in message
+          for _, message in s_deep2.log),
+      [message for _, message in s_deep2.log])
 
 # ...and an INSTITUTION - which is what the original ABANDONED-206 regression
 # is actually about (a standing bleed against revenue you do not have) - stays
@@ -241,7 +241,7 @@ for _b in ("charcoal", "saltpetre", "iron"):
 # and the arithmetic is unchanged.
 s_pr = sim()
 _prac = sorted(s_pr._practice_set())
-_expect = sum(NODES[k]["rev"] for k in _prac) * s_pr.PRACTICE_SHARE
+_expect = sum(NODES[node_id]["rev"] for node_id in _prac) * s_pr.PRACTICE_SHARE
 check("the practice pays its share of the quoted figure, not a ramp step",
       abs(s_pr.revenue() - _expect) < 0.5, (s_pr.revenue(), _expect))
 s_pr5 = sim()
@@ -253,7 +253,7 @@ check("the ledger says why the practice pays less than the tree quotes",
       s_pr.practice_note() and "a third" in s_pr.practice_note(),
       s_pr.practice_note())
 check("a concern you opened is NOT described as your practice",
-      all(k in s_pr.granted for k in _prac), _prac[:3])
+      all(node_id in s_pr.granted for node_id in _prac), _prac[:3])
 
 # --- BREAK: `available` carried nine numbers and not one of them was the
 # staff, so six projects picked on cost and hours all waited on people.
@@ -261,8 +261,8 @@ s_av = sim()
 _av, _, _ = proto([{"cmd": "available", "find": "flax"}])
 _rows = _av[0].get("available") or []
 check("available says what standing staff a project needs",
-      _rows and any(r.get("needs_staff") for r in _rows),
-      [(r["id"], r.get("needs_staff")) for r in _rows][:3])
+      _rows and any(row.get("needs_staff") for row in _rows),
+      [(row["id"], row.get("needs_staff")) for row in _rows][:3])
 # The marker uses the SAME measure the gate uses - the founder's own hands and
 # anything under contract included - so on turn one, when the founder can do a
 # one-craftsman job themselves, nothing is starred. A break tester read "* means
@@ -270,13 +270,13 @@ check("available says what standing staff a project needs",
 from engine.protocol import _short_of_staff
 _s_star = sim()
 check("...and marks exactly the ones the start gate would refuse for staff",
-      all(bool(r.get("short_of_staff"))
-          == (NODES[r["id"]]["art"] > _s_star.craft_hands_available() + 1e-9
-              or NODES[r["id"]]["sch"] > _s_star.effective_scholars() + 1e-9)
-          for r in _rows),
-      [(r["id"], r.get("short_of_staff"), NODES[r["id"]]["art"],
-        _s_star.craft_hands_available()) for r in _rows][:3])
-_big = [k for k in sorted(NODES) if NODES[k]["art"] > 20][:1]
+      all(bool(row.get("short_of_staff"))
+          == (NODES[row["id"]]["art"] > _s_star.craft_hands_available() + 1e-9
+              or NODES[row["id"]]["sch"] > _s_star.effective_scholars() + 1e-9)
+          for row in _rows),
+      [(row["id"], row.get("short_of_staff"), NODES[row["id"]]["art"],
+        _s_star.craft_hands_available()) for row in _rows][:3])
+_big = [node_id for node_id in sorted(NODES) if NODES[node_id]["art"] > 20][:1]
 if _big:
     check("...and a job wanting twenty craftsmen IS starred on turn one",
           _short_of_staff(_s_star, NODES[_big[0]]), _big[0])
@@ -309,7 +309,7 @@ while s_db.year < 210:
 check("debasement does not move a real price quote (the model is real terms)",
       abs(s_db.project_cost("horse_collar") - _before_price) < 1e-6,
       (_before_price, s_db.project_cost("horse_collar")))
-_dbm = [m for _, m in s_db.log if "coin is worth" in m]
+_dbm = [message for _, message in s_db.log if "coin is worth" in message]
 check("...and the announcement says so, rather than leaving it to be found",
       _dbm and "do not move" in _dbm[0] and "your chest" in _dbm[0],
       _dbm[:1])
@@ -323,10 +323,10 @@ check("...and names what the debasement actually took this year",
 # ======================================================================
 
 def _big(rep=98.0, em=39.0, yr=250, cap=5000000.0):
-    s_ = sim(capital=cap)
-    s_.done.update(list(NODES)[:1400]); s_._done_changed()
-    s_.reputation, s_.eminence, s_.year = rep, em, yr
-    return s_
+    big_sim = sim(capital=cap)
+    big_sim.done.update(list(NODES)[:1400]); big_sim._done_changed()
+    big_sim.reputation, big_sim.eminence, big_sim.year = rep, em, yr
+    return big_sim
 
 _em = _big()
 _rep0, _em0 = _em.reputation, _em.eminence
@@ -432,7 +432,7 @@ _msg_rich = _WO(s_pace, NODES, _slow, s_pace.active[_slow],
 check("a rich player is told the pace, not that they are short of money",
       "pace" in _msg_rich and "a year" in _msg_rich, _msg_rich)
 check("...and is told how many more years that pace needs",
-      "year" in _msg_rich and any(c.isdigit() for c in _msg_rich), _msg_rich)
+      "year" in _msg_rich and any(char.isdigit() for char in _msg_rich), _msg_rich)
 s_broke = sim(capital=1.0)
 s_broke.credit_limit = lambda: 0.0
 s_broke.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,
@@ -450,7 +450,7 @@ ok_t, _ = s_tr.train("machinist", 3)
 check("teaching a trade puts people in training", ok_t and s_tr.training, s_tr.training)
 ok_f, note_f = s_tr.fire("machinist", 3)
 check("dismissing a trade you are teaching cancels the apprenticeship",
-      ok_f and not [r for r in s_tr.training if len(r) > 3 and r[2] == "machinist"],
+      ok_f and not [record for record in s_tr.training if len(record) > 3 and record[2] == "machinist"],
       (note_f, s_tr.training))
 check("...and says so, because what you paid to feed them is spent",
       note_f and "stopped teaching" in note_f, note_f)
@@ -539,8 +539,8 @@ check("a society with no draught animal cannot begin draught-animal work",
 check("...and the refusal names the one thing that would open it",
       "exp_import_draught_animals" in _why_h, _why_h)
 check("...and it is not in what you could begin today",
-      not any(e["id"] == _HORSE
-              for e in S._agent_available(_mex, NODES, {"all": True})["available"]),
+      not any(entry["id"] == _HORSE
+              for entry in S._agent_available(_mex, NODES, {"all": True})["available"]),
       _HORSE)
 _mex.done.add("exp_import_draught_animals"); _mex._done_changed()
 check("...and bringing the animals across opens all of it at once",
@@ -599,7 +599,7 @@ check("the arrears banner quotes the same loss the ledger does",
       _diag and "{:,.0f}".format(-_led) in _diag["you_are_stuck"],
       (_diag or {}).get("you_are_stuck"))
 check("...and names the part of it that is interest on the arrears themselves",
-      any("interest on the arrears" in w for w in _diag["what_would_change_it"]),
+      any("interest on the arrears" in reason for reason in _diag["what_would_change_it"]),
       _diag["what_would_change_it"])
 
 # --- BREAK: the banner recommended wage work, and `work` answered the player
@@ -608,8 +608,8 @@ check("...and names the part of it that is interest on the arrears themselves",
 s_w = sim(capital=-4000.0)
 s_w.insolvent_years = 20
 _dw = s_w.stall_diagnosis()
-_wages = [w for w in (_dw or {}).get("what_would_change_it", [])
-          if w.startswith("work as a ")]
+_wages = [reason for reason in (_dw or {}).get("what_would_change_it", [])
+          if reason.startswith("work as a ")]
 if _wages:
     _trade = _wages[0].split("work as a ")[1].split(":")[0].strip()
     _pay, _note = sim(capital=-4000.0).work_for_wages(_trade, 2000)
@@ -637,9 +637,9 @@ _rn, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 1e21},
                    {"cmd": "buy", "what": "forest", "n": 1e30},
                    {"cmd": "buy", "what": "forest", "n": 3}])
 check("an absurd quantity is refused as absurd, not priced in scientific notation",
-      all("e+" not in (r.get("error") or "") for r in _rn[:2])
-      and all(r.get("ok") is False for r in _rn[:2]),
-      [r.get("error", "")[:60] for r in _rn[:2]])
+      all("e+" not in (response.get("error") or "") for response in _rn[:2])
+      and all(response.get("ok") is False for response in _rn[:2]),
+      [response.get("error", "")[:60] for response in _rn[:2]])
 check("...and an ordinary quantity still goes through the same reader",
       _rn[2].get("ok") is not None, _rn[2])
 
@@ -670,7 +670,7 @@ check("...and names restore, which is the verb that reopens it",
 # under a stated 233.5. A claim of exact addition, checkable in one line.
 for _civ_name in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300"):
     _s = sim(civ=_civ_name, capital=200000.0)
-    for _i, _k in enumerate(k_ for k_ in NODES if NODES[k_]["rev"] > 0):
+    for _i, _k in enumerate(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
         if _i >= 6:
             break
         _s.done.add(_k); _s.operating.add(_k)
@@ -710,7 +710,7 @@ check("a trade you employ is still listed as one you could hire",
 s_ch = sim(capital=500000.0)
 s_ch.done.update(NODES); s_ch._done_changed()
 s_ch.artisans = s_ch.scholars = 5.0
-_v = next(k for k in NODES if s_ch.is_venture(k) and NODES[k]["rev"] > 500)
+_v = next(node_id for node_id in NODES if s_ch.is_venture(node_id) and NODES[node_id]["rev"] > 500)
 s_ch.open_venture(_v)
 _full = s_ch.venture_capex(_v)
 s_ch.artisans = s_ch.scholars = 0.0
@@ -758,8 +758,8 @@ s_hl.active[_need_eng] = dict(ph_left=float(NODES[_need_eng]["ph"]), yrs=0.0,
                               spent=0.0, cost_left=s_hl.project_cost(_need_eng))
 s_hl.step()
 check("a project that cannot go on says so the first year, not the fourth",
-      any(_need_eng in m and "before it is abandoned" in m for _, m in s_hl.log),
-      [m for _, m in s_hl.log][:2])
+      any(_need_eng in message and "before it is abandoned" in message for _, message in s_hl.log),
+      [message for _, message in s_hl.log][:2])
 _st_all = S._agent_state(s_hl, NODES)
 _st_hl = _st_all["active"][_need_eng]
 check("...and state carries the countdown and the trade that would save it",
@@ -791,9 +791,9 @@ check("giving that advice does not recurse into itself",
 # etc.)" - the one blocked-reason a play tester never decoded. It named no
 # candidate and no fix.
 s_sub = sim()
-_gap = next((k for k in sorted(NODES) if NODES[k].get("req_any")
-             and not s_sub.substitution_quality(k)[1]
-             and all(p in s_sub.done for p in NODES[k]["pre"])), None)
+_gap = next((node_id for node_id in sorted(NODES) if NODES[node_id].get("req_any")
+             and not s_sub.substitution_quality(node_id)[1]
+             and all(prereq_id in s_sub.done for prereq_id in NODES[node_id]["pre"])), None)
 if _gap:
     _why_sub = s_sub.start_reason(_gap)[1]
     check("a substitution group says what it wants and what would serve",
@@ -809,7 +809,7 @@ for _k in sorted(NODES):
     if not NODES[_k].get("req_any") or s_sub_f.substitution_quality(_k)[1]:
         continue
     _msg = s_sub_f.start_reason(_k)[1]
-    _named = [o for o in NODES if o in _msg and not s_sub_f.is_visible(o)]
+    _named = [node_id for node_id in NODES if node_id in _msg and not s_sub_f.is_visible(node_id)]
     if _named:
         check("a substitution refusal never names a node you cannot see",
               False, (_k, _named[:3]))
@@ -829,10 +829,10 @@ s_lim = sim()
 s_lim.capital = -s_lim.credit_limit() * 0.75
 s_lim.warn_near_the_limit(105)
 check("the credit limit warns you BEFORE you cross it",
-      any("CLOSE TO THE LIMIT" in m for _, m in s_lim.log), [m for _, m in s_lim.log])
+      any("CLOSE TO THE LIMIT" in message for _, message in s_lim.log), [message for _, message in s_lim.log])
 check("...and names what you could still do about it",
-      any("stop" in m and "mothball" in m for _, m in s_lim.log),
-      [m for _, m in s_lim.log][:1])
+      any("stop" in message and "mothball" in message for _, message in s_lim.log),
+      [message for _, message in s_lim.log][:1])
 _n_before = len(s_lim.log)
 s_lim.warn_near_the_limit(106)
 check("...and does not say it again every year",
@@ -840,7 +840,7 @@ check("...and does not say it again every year",
 s_ok = sim()
 s_ok.warn_near_the_limit(105)
 check("a solvent player is not warned about a limit they are nowhere near",
-      not s_ok.log, [m for _, m in s_ok.log])
+      not s_ok.log, [message for _, message in s_ok.log])
 _rm, _, _ = proto([{"cmd": "money"}])
 check("the ledger says how much of the credit line is used",
       _rm[0].get("of_that_limit_you_have_used") is not None,
@@ -922,13 +922,13 @@ check("...and a trade says which of the two it is",
 # nothing ever said so - the largest change to the resource the game is built
 # on, noticed by accident.
 def _deputies_are_announced():
-    s_ = sim(capital=2000000.0, manual=False)
-    run_it(s_, "school_founded", "patron_imperial", "academy_network")
+    deputies_sim = sim(capital=2000000.0, manual=False)
+    run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
     for _ in range(30):
-        s_.step()
-    said = [m for _, m in s_.log if "deput" in m]
-    return (any("deput" in m and "your year is" in m for _, m in s_.log)
-            and len(said) <= int(s_.directors_extra) + 1, said[:1])
+        deputies_sim.step()
+    said = [message for _, message in deputies_sim.log if "deput" in message]
+    return (any("deput" in message and "your year is" in message for _, message in deputies_sim.log)
+            and len(said) <= int(deputies_sim.directors_extra) + 1, said[:1])
 
 slow_check("gaining a deputy is announced with what it does to your year, "
            "once per whole deputy rather than every year",
@@ -1101,7 +1101,7 @@ _slow_pace = "academy_network"
 s_pace2 = sim(capital=0.0)
 s_pace2.capital = -50000.0
 s_pace2.credit_limit = lambda: 2000.0
-s_pace2.project_cost = lambda k: 9000.0
+s_pace2.project_cost = lambda node_id: 9000.0
 s_pace2.active[_slow_pace] = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=9000.0)
 _msg_pace_deep = _WO(s_pace2, NODES, _slow_pace, s_pace2.active[_slow_pace], 9000.0)
 check("a household 50,000 past a 2,000 line is told MONEY is what holds the "
@@ -1183,7 +1183,7 @@ _rn2, _, _ = proto([{"cmd": "hire", "trade": "smith", "n": 2},
                     {"cmd": "step", "years": 1},
                     {"cmd": "money"}], kit="absurd")
 _lab = _rn2[1]
-_rows = {r["trade"]: r for r in (_lab.get("on_your_staff") or [])}
+_rows = {record["trade"]: record for record in (_lab.get("on_your_staff") or [])}
 if "smith" in _rows:
     check("the wage bill is the quoted wage times the number of people",
           abs(_rows["smith"]["a_year_of_one"] * _rows["smith"]["you_employ"]
@@ -1235,13 +1235,13 @@ s_ins = sim(capital=-99999.0)
 s_ins.reputation = 4.9
 s_ins.insolvent_years = 30
 s_ins.enforce_credit_limit(150)
-_m1 = [m for _, m in s_ins.log if "INSOLVENCY" in m][-1]
+_m1 = [message for _, message in s_ins.log if "INSOLVENCY" in message][-1]
 check("a reputation penalty announces what it actually took",
       "-4.9" in _m1, _m1)
 s_ins.capital = -99999.0
 s_ins.insolvent_years = 30
 s_ins.enforce_credit_limit(200)
-_m2 = [m for _, m in s_ins.log if "INSOLVENCY" in m][-1]
+_m2 = [message for _, message in s_ins.log if "INSOLVENCY" in message][-1]
 check("...and says plainly when there was nothing left to take",
       "already at nothing" in _m2, _m2)
 
@@ -1267,7 +1267,7 @@ check("a trade that needs no letters is not capped by literacy at all",
 # --- BREAK: `train electrician 20` gave 27 while machinists stopped at 5.9.
 check("every taught trade is bounded by literacy, electrician included",
       not (set(S.Sim.LITERATE_TRADES) ^ set(S.Sim.LITERATE_TRADES))
-      and all(t in S.Sim.LITERATE_TRADES for t in S.TRADES_ABSENT),
+      and all(trade in S.Sim.LITERATE_TRADES for trade in S.TRADES_ABSENT),
       sorted(set(S.TRADES_ABSENT) - set(S.Sim.LITERATE_TRADES)))
 s_el = sim(capital=2000000.0)
 _ok_el, _why_el = s_el.train("electrician", 20)

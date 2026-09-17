@@ -99,3 +99,59 @@ into `sim/solve_prices.py`, they meet the resolvability defect in
 `Complaints/31`, which refuses every cycle - so 31 is now a prerequisite for
 wiring capital in, not a someday item. It took under an hour from writing that
 complaint for its predicted case to appear in real data.
+
+---
+
+## Rent now exists, and the answer is partly yes and informatively partly no
+
+`sim/world/deposits.py` derives extraction cost per deposit from ore grade,
+depth and hardness, sorts deposits into a supply curve, and finds the
+marginal one for a demanded quantity. Measured against book, per metal:
+
+```
+gold      5.2x under book   <- by far the closest of any metal
+iron     16.7x
+lead     20.6x
+copper   45.7x
+silver   60.4x
+tin       133x
+mercury  1600x              <- barely moved
+```
+
+**Gold is the proof that the mechanism works.** It is the one metal where
+demand forces the margin onto a genuinely worse deposit: Las Medulas'
+hydraulic alluvial workings cost 166.7 h/kg and can supply only 5.85 of the
+9 t/yr, so Dacia's hard vein gold at 8,750 h/kg sets the price - 52x costlier
+despite roughly 27x the grade, because alluvial gravel and hard rock are not
+the same job. Las Medulas then earns 8,583 h/kg of rent, which is 98% of the
+price. Where the margin is forced, the derived number lands within a factor
+of five of the book. Nowhere else in this project has come that close.
+
+**Mercury is the proof that rent is not the whole answer**, and it is the
+more useful result. Almaden's grade is high enough to cover 85% of the
+stated 40 t/yr cheaply, so the margin never gets pushed and the price stays
+at 0.50 h/kg. Comparing against `cinnabar_kg` (54 den/kg, the raw mineral,
+no smelting) rather than `mercury_kg` removes the missing-smelting excuse
+and it is still about 1,440x low. Rent, correctly computed, does not explain
+Roman mercury.
+
+So something else is doing most of that price's work. The candidates, none
+of which are in this model:
+
+- **Output restricted below capacity by an institution.** Roman mercury was
+  a state monopoly, and a monopolist who caps output at less than Almaden
+  could produce forces the margin onto Monte Amiata and above. This is a
+  rule over the economy rather than a fact about rock, which puts it in the
+  institutions layer, and it is the first concrete case this project has
+  found where an institution sets a price that no physical mechanism can.
+- **Demand genuinely higher than the 40 t/yr input.** The quantity is a
+  parameter, and the whole model is only as good as it.
+- **Security and mortality overhead on convict mines**, which is a real cost
+  of production this model does not carry.
+
+## What this changes about the order in Complaints/32 above
+
+Rent was correctly identified as the largest single missing term and it is
+now in. It closes the case where the margin is forced and leaves the case
+where it is not. The next lever is therefore NOT more deposit data: it is
+whatever decides how much is demanded and who is allowed to supply it.

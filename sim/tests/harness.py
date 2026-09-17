@@ -77,13 +77,13 @@ _real_subprocess_run = subprocess.run
 
 
 def _timed_subprocess_run(*a, **kw):
-    t0 = time.time()
+    start_time = time.time()
     try:
         return _real_subprocess_run(*a, **kw)
     finally:
-        dt = time.time() - t0
+        elapsed_seconds = time.time() - start_time
         with _SUBPROC_LOCK:
-            _SUBPROC_TIME[0] += dt
+            _SUBPROC_TIME[0] += elapsed_seconds
             _SUBPROC_CALLS[0] += 1
 
 
@@ -129,8 +129,8 @@ def _par_map(fn, items):
     items = list(items)
     if JOBS <= 1 or len(items) <= 1:
         return [fn(x) for x in items]
-    with _concurrent_futures.ThreadPoolExecutor(max_workers=min(JOBS, len(items))) as ex:
-        return list(ex.map(fn, items))
+    with _concurrent_futures.ThreadPoolExecutor(max_workers=min(JOBS, len(items))) as executor:
+        return list(executor.map(fn, items))
 
 
 # --- progress, to stderr only (stdout - the thing diffed against an older
@@ -149,11 +149,11 @@ def _progress_ping():
 
 
 def sim(civ="rome_100ad", capital=None, manual=True, events=False):
-    cfg = {"start_capital": capital} if capital is not None else None
-    s = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
-              civ=S.load_civ(civ), cfg=cfg)
-    s.goal, s.done_year = GOAL, {}
-    return s
+    config = {"start_capital": capital} if capital is not None else None
+    test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
+              civ=S.load_civ(civ), cfg=config)
+    test_sim.goal, test_sim.done_year = GOAL, {}
+    return test_sim
 
 
 def run_it(s, *keys):
@@ -164,9 +164,9 @@ def run_it(s, *keys):
     A check that wants the capability has to open the place, the same as a
     player would.
     """
-    for k in keys:
-        s.done.add(k)
-        s.operating.add(k)
+    for key in keys:
+        s.done.add(key)
+        s.operating.add(key)
     s._done_changed()
     return s
 
@@ -221,15 +221,15 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
         cmd += ["--kit", kit]
     if fog:
         cmd += ["--fog"]
-    p = subprocess.run(cmd, input="\n".join(json.dumps(c) for c in lines) + "\n",
+    completed_process = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in lines) + "\n",
                        capture_output=True, text=True, timeout=300, cwd=ROOT)
-    out = []
-    for ln in p.stdout.splitlines():
+    parsed_lines = []
+    for line in completed_process.stdout.splitlines():
         try:
-            out.append(json.loads(ln))
+            parsed_lines.append(json.loads(line))
         except ValueError:
             pass
-    return out, p.stdout, p.returncode
+    return parsed_lines, completed_process.stdout, completed_process.returncode
 
 
 # ============================================================================
@@ -280,15 +280,15 @@ _PLAY_DIR = "_playtest_tmp"
 def _remove_scratch_dirs_if_green():
     if FAILURES:
         return
-    for _d in (_LOADTEST_DIR, _PLAY_DIR):
-        shutil.rmtree(os.path.join(ROOT, _d), ignore_errors=True)
+    for scratch_dir in (_LOADTEST_DIR, _PLAY_DIR):
+        shutil.rmtree(os.path.join(ROOT, scratch_dir), ignore_errors=True)
 
 
 # --- from the old "HISTORICAL EVENTS ANSWER TO WHAT WAS ACTUALLY BUILT"
 # section: look up one named hazard from a civilisation file, by name.
 def _hazard(civname, hazard_name):
-    _c = S.load_civ(civname)
-    return next(h for h in _c["hazards"] if h["name"] == hazard_name)
+    civ_data = S.load_civ(civname)
+    return next(hazard for hazard in civ_data["hazards"] if hazard["name"] == hazard_name)
 
 
 # --- from the old "TWO LOOMS COMPETE" goods-market section: n_looms real,
@@ -298,30 +298,30 @@ def _mk_loom_sim(n_looms, age_years):
     """n_looms real, distinct textiles-category venture nodes, all opened
     the same year, aged the same number of years. Uses real tree nodes
     (not synthetic ones), the same way the rest of this file does."""
-    cand = sorted(k for k, n in NODES.items()
-                  if n.get("cat") == "textiles" and n.get("rev"))
-    assert len(cand) >= n_looms, "not enough textiles venture nodes in the tree"
-    chosen = cand[:n_looms]
-    s = sim(civ="rome_100ad", capital=5_000_000.0)
-    s.artisans = s.scholars = 100.0 * n_looms
+    candidates = sorted(node_id for node_id, node in NODES.items()
+                  if node.get("cat") == "textiles" and node.get("rev"))
+    assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
+    chosen = candidates[:n_looms]
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
+    loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
-        s.employees[trade] = 100.0 * n_looms
-    s.year = 100
-    for k in chosen:
-        s.done.add(k)
-        s.done_year[k] = 100
-    s._done_changed()
-    for k in chosen:
-        for trade, required in NODES[k].get("lab", {}).get("trades", {}).items():
-            s.employees[trade] = max(s.employees.get(trade, 0.0),
+        loom_sim.employees[trade] = 100.0 * n_looms
+    loom_sim.year = 100
+    for node_id in chosen:
+        loom_sim.done.add(node_id)
+        loom_sim.done_year[node_id] = 100
+    loom_sim._done_changed()
+    for node_id in chosen:
+        for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():
+            loom_sim.employees[trade] = max(loom_sim.employees.get(trade, 0.0),
                                      float(required) * n_looms)
-        ok, msg = s.open_venture(k)
-        assert ok, (k, msg)
-    s.year = 100 + age_years
-    return s, chosen
+        ok, msg = loom_sim.open_venture(node_id)
+        assert ok, (node_id, msg)
+    loom_sim.year = 100 + age_years
+    return loom_sim, chosen
 
 
 # --- mid-file "from engine.X import Y as Z" aliases: pure, side-effect-free
@@ -372,4 +372,4 @@ import time as _time
 # flat script had at global scope, including the (many) leading-underscore
 # names above - a plain `import *` skips those unless __all__ says otherwise.
 # Computed, not hand-listed, so nothing added above is ever silently dropped.
-__all__ = [_n for _n in list(globals()) if not _n.startswith("__")]
+__all__ = [name for name in list(globals()) if not name.startswith("__")]
