@@ -123,6 +123,11 @@ TOPICS = [
     # or any other sim/world/ module - see that module's own docstring for
     # why. Also unittest.TestCase-style.
     "demand",
+    # docs/architecture/DEMAND_AT_SCALE.md: pins two structural defects in
+    # the demand system - the hard subsistence cliff and the Engel-curve
+    # floor - in the "assert the wrong behaviour, invert don't delete"
+    # style test_price_solver_cycles.py used before Complaints/31 was fixed.
+    "demand_at_scale",
     # Guards the two silent bugs that made --burndown print "0 numbers
     # declared" while 32 were declared, which left milestone 1 unmeasurable.
     "constants_burndown",
