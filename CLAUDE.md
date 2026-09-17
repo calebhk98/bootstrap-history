@@ -171,7 +171,9 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
-- **`Sim` is one god object** - ~157 attributes, ~314 methods, six mixins that
+- **`Sim` is one god object** - **165** instance attributes (re-measured; the
+  ~157 in `sim/ARCHITECTURE.md` misses 8 reached only as `s.X` from `proto/`
+  and 3 hidden behind `self.__dict__[...]`), ~314 methods, six mixins that
   all talk through `self`. A full decomposition has been considered and
   rejected with reasons in `sim/ARCHITECTURE.md`. Do not silently restart it.
 - **Five of eight engine files are majority comment.** The comments are how
@@ -218,12 +220,17 @@ a pure local rename leaves the executed bytes identical, while an attribute or
 global moves `co_names` and a literal moves `co_consts`. That is a proof over
 every possible run rather than a sample of nine, and it does not depend on
 `perf_fingerprint` working. It does NOT cover parameter renames, where a
-caller passing by keyword breaks invisibly - it reports those separately. The tech-tree DATA schema
-fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`, `sch`, `art`, `sus`, `gov`,
-`conf`, `pre`, `yrs`, `kb`) are a separate and much harder problem: they are
-in 2,864 nodes of JSON, in save files, and in the protocol, so changing them
-is a data migration with a compatibility shim, not a refactor. Do not start
-it casually.
+caller passing by keyword breaks invisibly - it reports those separately.
+
+The tech-tree DATA schema fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`,
+`sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`, `kb`) are a separate job,
+and a cheaper one than it looks. Measured: **739 read sites across 13 files**,
+plus the 2,864 nodes and the 41 `data/branches/*.json` sources. No save
+migration is needed at all - saves store node ids, never node records - and
+the JSON protocol already translates these to readable keys on the way out
+(`n["ph"]` becomes `"founder_hours_total"`), so nothing on the wire changes.
+One real collision: `gov` is both a per-node field and a `Sim` attribute in
+`SAVE_FIELDS`. Two renames, not one.
 
 ---
 

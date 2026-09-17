@@ -1,0 +1,50 @@
+{
+ "_note": "One entry of each shape. See _SCHEMA.md.",
+ "materials": {
+  "copper_ore_kg": {
+   "outputs": {
+    "copper_ore_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 18.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of run-of-mine sulphide ore at the pit head",
+   "yield_basis": "EXTRACTED, so there are no material inputs and no cost of production - only labour, and a rent on the deposit set by the poorest ore still worth hauling. The labour figure is the physical work of breaking and moving rock: an ancient miner with hammer, gad and fire-setting moves on the order of 50-60 kg of hard rock per hour in a worked adit, so a tonne is roughly 18 hours. Grade is NOT in this number - it belongs to the smelting entry that consumes this ore, because the same tonne of rock costs the same to dig whether it assays 2% or 4%.",
+   "conf": "C"
+  },
+  "copper_kg": {
+   "outputs": {
+    "copper_kg": 1000.0
+   },
+   "inputs": {
+    "copper_ore_kg": 50000.0,
+    "charcoal_kg": 4000.0,
+    "flux_kg": 300.0
+   },
+   "labour_hours": {
+    "furnaceman": 120.0,
+    "smith": 40.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of fire-refined copper",
+   "yield_basis": "SMELTED, so the yield is grade times recovery. Cyprus and Rio Tinto sulphide ores run 2-4% copper; roast-and-reduction in a shaft furnace recovers on the order of 80% of it, the rest going to slag and flue. One tonne of metal therefore needs 30-60 t of ore, taken here at 50 t. Charcoal is set by the reduction chemistry plus the heat to hold 1200 C through several roasts, about 4 kg per kg of metal, which is why a smelter is sited by a forest rather than by the mine. None of these numbers is derived from the price of copper.",
+   "conf": "C"
+  },
+  "timber_m3": {
+   "outputs": {
+    "timber_m3": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 9.0,
+    "carpenter": 3.0
+   },
+   "extracted_from": "forest",
+   "basis": "per cubic metre of squared, seasoned construction timber delivered at the wood yard",
+   "yield_basis": "HARVESTED, so the limit is the forest's annual growth rather than a recipe, and the entry earns a rent on woodland rather than a cost of production. A managed temperate broadleaf woodland puts on roughly 3-5 cubic metres per hectare per year, which is the real constraint on how much timber a region can supply indefinitely. The labour is felling, cross-cutting, hauling and squaring by axe and pit saw; roughly a third of the standing volume is lost to kerf, taper, sapwood and defect, so a cubic metre of usable squared timber starts as about 1.5 standing. Seasoning is time, not labour, and belongs in the build calendar rather than here.",
+   "conf": "C"
+  }
+ }
+}
