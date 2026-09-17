@@ -106,6 +106,12 @@ TOPICS = [
     # import of sim/engine/ or the other sim/world/ modules - see that
     # module's own docstring for why. Also unittest.TestCase-style.
     "transport",
+    # sim/world/deposits.py: Ricardian rent (marginal-deposit pricing) from
+    # ore grade, depth and hardness, standalone and with no import of
+    # sim/engine/ or the other sim/world/ modules - see that module's own
+    # docstring for why and Complaints/32 for the gap it closes. Also
+    # unittest.TestCase-style.
+    "deposits",
     # Guards the two silent bugs that made --burndown print "0 numbers
     # declared" while 32 were declared, which left milestone 1 unmeasurable.
     "constants_burndown",
