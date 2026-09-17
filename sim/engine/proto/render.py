@@ -72,8 +72,8 @@ def render_capacity(out):
                      % _fmt_num(pw["transmission_capacity_kw"]))
         if pw.get("mechanical_shaft_power_kw"):
             L.append("    mechanical shaft power available: "
-                     + ", ".join("%s %s kW" % (k, _fmt_num(v))
-                                 for k, v in pw["mechanical_shaft_power_kw"].items()))
+                     + ", ".join("%s %s kW" % (k, _fmt_num(value))
+                                 for k, value in pw["mechanical_shaft_power_kw"].items()))
         if pw.get("electricity_is_the_binding_constraint"):
             L.append("    ELECTRICITY IS THE BINDING CONSTRAINT this year "
                      "(throttle %s)" % _pct(pw.get("throttle")))
@@ -245,9 +245,9 @@ def render_changes(out):
     for label, key in (("built", "technologies_completed"),
                        ("newly heard of", "technologies_newly_heard_of"),
                        ("opened", "concerns_opened"), ("closed", "concerns_closed")):
-        v = out.get(key)
-        if isinstance(v, list) and v:
-            L.append("  %s: %s" % (label, ", ".join(v)))
+        value = out.get(key)
+        if isinstance(value, list) and value:
+            L.append("  %s: %s" % (label, ", ".join(value)))
     ev = out.get("notable_events")
     if isinstance(ev, list) and ev:
         L.append("")
@@ -274,7 +274,7 @@ def render_final(out):
                  % _fmt_num(out["failed_attempts"]))
     if out.get("the_goal"):
         L.append("")
-        _had = next((v for k, v in out.items() if k.startswith("you_had_")), 0)
+        _had = next((value for k, value in out.items() if k.startswith("you_had_")), 0)
         L.append("  THE ROAD TO %s" % str(out["the_goal"]).upper())
         L.append("    %s nodes in all; you had %s of them and %s were still to build"
                  % (_fmt_num(out.get("the_whole_road_was")), _fmt_num(_had),
@@ -462,8 +462,8 @@ def render_state(out):
         L.append("  household places: %s used - what you can feed, house and "
                  "oversee. 'labour' says what raises it."
                  % out["household_places_used_of_all"])
-    for t, v in sorted(employees.items()):
-        L.append("  %-16s %s" % (t, _fmt_num(v)))
+    for t, value in sorted(employees.items()):
+        L.append("  %-16s %s" % (t, _fmt_num(value)))
     if not employees:
         L.append("  nobody")
     if out.get("what_you_can_field"):
@@ -703,8 +703,8 @@ def render_available(out):
             for e in out["most_rests_on_these"]:
                 L.append(_available_row(e, _w, _purse))
         L.append("")
-        for k, v in (out.get("to_see_more") or {}).items():
-            L.append("  %s: %s" % (k, v))
+        for k, value in (out.get("to_see_more") or {}).items():
+            L.append("  %s: %s" % (k, value))
     elif "available" in out and not out["available"]:
         # No column headings over no rows. A play tester read "1-0 matching
         # 'furnace'" above an empty table and could not tell whether the
@@ -965,13 +965,13 @@ def render_money(out):
     src = out.get("where_the_money_comes_from") or {}
     if src:
         L.append("  from:")
-        for k, v in sorted(src.items(),
+        for k, value in sorted(src.items(),
                            key=lambda kv: -(kv[1] if isinstance(kv[1], (int, float)) else 0)):
             # The engine's own rows are node ids and must stay verbatim; the
             # aggregate lines are marked with a leading underscore so they sort
             # and read as what they are rather than as technologies.
             label = k[1:].replace("_", " ") if k.startswith("_") else k
-            L.append("    %-38s %s" % (label, _fmt_num(v)))
+            L.append("    %-38s %s" % (label, _fmt_num(value)))
         L.append("    %-38s %s" % ("(these add up to the revenue above)", ""))
         if out.get("still_building_up_custom"):
             L.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
@@ -985,11 +985,11 @@ def render_money(out):
     costs = out.get("what_it_costs_you") or {}
     if costs:
         L.append("Costs:")
-        for k, v in costs.items():
-            if v is None:
+        for k, value in costs.items():
+            if value is None:
                 continue
             L.append("  %-30s %s"
-                     % (k.lstrip("_").replace("_", " "), _fmt_num(v)))
+                     % (k.lstrip("_").replace("_", " "), _fmt_num(value)))
     L.append("Net/yr before the work in hand: %s   (recurring - `state` "
              "prints this same figure)     spent on projects last step: %s"
              % (_fmt_num(out.get("net_per_year")),
@@ -1026,8 +1026,8 @@ def render_stuck(out):
             if r.get("why"):
                 L.append(_wrap(r["why"], indent="    "))
             _why_underfunded = r.get("each_why_underfunded") or {}
-            for k, v in sorted((r.get("each_waiting_on") or {}).items()):
-                L.append(_wrap("%s - waiting on %s" % (k, v), indent="    "))
+            for k, value in sorted((r.get("each_waiting_on") or {}).items()):
+                L.append(_wrap("%s - waiting on %s" % (k, value), indent="    "))
                 if _why_underfunded.get(k):
                     L.append(_wrap(_why_underfunded[k], indent="      "))
             if r.get("the_nearest_few"):
@@ -1433,32 +1433,32 @@ def render_generic(resp, indent=""):
     fallback for all of them rather than one function apiece.
     """
     L = []
-    for k, v in resp.items():
+    for k, value in resp.items():
         if k == "ok":
             continue
         label = k.replace("_", " ")
-        if isinstance(v, dict):
-            if v:
+        if isinstance(value, dict):
+            if value:
                 L.append("%s%s:" % (indent, label))
-                L.append(render_generic(v, indent + "  "))
+                L.append(render_generic(value, indent + "  "))
             else:
                 L.append("%s%s: (none)" % (indent, label))
-        elif isinstance(v, list):
-            if not v:
+        elif isinstance(value, list):
+            if not value:
                 L.append("%s%s: (none)" % (indent, label))
-            elif all(isinstance(x, (str, int, float)) and not isinstance(x, bool) for x in v):
-                L.append("%s%s: %s" % (indent, label, ", ".join(_fmt_num(x) if isinstance(x, (int, float)) else str(x) for x in v)))
+            elif all(isinstance(x, (str, int, float)) and not isinstance(x, bool) for x in value):
+                L.append("%s%s: %s" % (indent, label, ", ".join(_fmt_num(x) if isinstance(x, (int, float)) else str(x) for x in value)))
             else:
                 L.append("%s%s:" % (indent, label))
-                for item in v:
+                for item in value:
                     if isinstance(item, dict):
                         L.append(indent + "  - " + ", ".join("%s=%s" % (kk, vv) for kk, vv in item.items()))
                     else:
                         L.append("%s  - %s" % (indent, item))
-        elif isinstance(v, (int, float)) and not isinstance(v, bool):
-            L.append("%s%s: %s" % (indent, label, _fmt_num(v)))
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            L.append("%s%s: %s" % (indent, label, _fmt_num(value)))
         else:
-            L.append("%s%s: %s" % (indent, label, v))
+            L.append("%s%s: %s" % (indent, label, value))
     return "\n".join(L)
 
 
@@ -1546,8 +1546,8 @@ def render_policy(out):
         L.append("")
         L.append("  NOT ACTING JUST NOW:")
         if isinstance(stopped, dict):
-            for k, v in sorted(stopped.items()):
-                L.append(_wrap("%s - %s" % (k, v), indent="    "))
+            for k, value in sorted(stopped.items()):
+                L.append(_wrap("%s - %s" % (k, value), indent="    "))
         else:
             L.append(_wrap(str(stopped), indent="    "))
     return "\n".join(L)
@@ -1651,8 +1651,8 @@ def _typed_form(obj):
         return None
     bits = [str(op)]
     if op == "policy" and isinstance(obj.get("set"), dict):
-        for k, v in obj["set"].items():
-            bits += [str(k), "on" if v else "off"]
+        for k, value in obj["set"].items():
+            bits += [str(k), "on" if value else "off"]
         return " ".join(bits)
     for key in ("id", "topic", "trade", "what", "material", "subject", "group",
                 "file", "path"):
@@ -1696,7 +1696,7 @@ def _typed_deep(obj):
     if isinstance(obj, list):
         return [_typed_deep(x) for x in obj]
     if isinstance(obj, dict):
-        return {k: _typed_deep(v) for k, v in obj.items()}
+        return {k: _typed_deep(value) for k, value in obj.items()}
     return obj
 
 

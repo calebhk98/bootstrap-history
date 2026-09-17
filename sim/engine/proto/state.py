@@ -78,7 +78,7 @@ def _risk_without_the_essays(kr):
     ahead = out.get("known_hazards_ahead")
     if isinstance(ahead, list):
         out["known_hazards_ahead"] = [
-            {k: v for k, v in h.items() if k not in ("note", "what_you_can_do")}
+            {k: value for k, value in h.items() if k not in ("note", "what_you_can_do")}
             for h in ahead if isinstance(h, dict)]
         out["the_full_account_of_each"] = '{"cmd":"risk"}'
     return out
@@ -101,7 +101,7 @@ def _staff_fraction_note(s):
     """
     if (abs(s.scholars - round(s.scholars)) < 0.02
             and abs(s.artisans - round(s.artisans)) < 0.02
-            and all(abs(v - round(v)) < 0.02 for v in s.employees.values())):
+            and all(abs(value - round(value)) < 0.02 for value in s.employees.values())):
         return None
     return ("these are continuous full-time-equivalents, not a count of "
             "whole people: hiring phases in, training takes years, and "
@@ -575,7 +575,7 @@ def _agent_state(s, nodes, cmd=None):
              % "{:,.0f}".format(max(0.0, s.director_pool()
                                     - s.director_hours_committed())))
             if (active
-                and all(v["founder_hours_left"] <= 0 for v in active.values())
+                and all(value["founder_hours_left"] <= 0 for value in active.values())
                 and max(0.0, s.director_pool()
                         - s.director_hours_committed()) > 200)
             # AND WHEN NOTHING IS RUNNING AT ALL, which the first branch cannot
@@ -675,7 +675,7 @@ def _agent_state(s, nodes, cmd=None):
             "artisans": s._staff_advice("artisans"),
         },
         "where_the_money_comes_from": s.revenue_sources(),
-        "employees": {t: round(v, 2) for t, v in sorted(s.employees.items()) if v > 0.005},
+        "employees": {t: round(value, 2) for t, value in sorted(s.employees.items()) if value > 0.005},
         "employees_total": round(sum(s.employees.values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
             % (s.headcount(), s.headcount() + max(0.0, s.household_room())),
@@ -765,7 +765,7 @@ def _agent_state(s, nodes, cmd=None):
                 and s.scandal < s.cfg["suspicion_danger"]) else None),
         "resource_throttle": round(s.throttle, 3), "throttle_binding": s.binding,
         "forest_ha": round(s.forest_ha, 1),
-        "mine_capacity": {m: round(v, 1) for m, v in s.mine_capacity.items()},
+        "mine_capacity": {m: round(value, 1) for m, value in s.mine_capacity.items()},
         "slaves": s.slaves, "freedmen": s.freedmen,
         "scholars_including_you": round(s.effective_scholars(), 2),
         "founder_ages": not s.cfg.get("immortal", True),

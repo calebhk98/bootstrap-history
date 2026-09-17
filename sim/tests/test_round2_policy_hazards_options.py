@@ -194,7 +194,7 @@ st = S._agent_state(s, NODES, {})
 check("state reports the year's hours summary",
       st.get("hours_this_year") == s.hours_this_year, st.get("hours_this_year"))
 check("state reports hours offered/effective per active project",
-      not st["active"] or any("hours_offered_this_year" in v for v in st["active"].values()),
+      not st["active"] or any("hours_offered_this_year" in value for value in st["active"].values()),
       st["active"])
 
 # --- performance: `available` must return quickly even deep in the tree under
@@ -377,10 +377,10 @@ check("--pretty renders money as a ledger, to stderr",
 check("--pretty renders labour readably, to stderr",
       "ON YOUR STAFF" in _err_pretty, "")
 check("--pretty never mixes a Python dict repr into the risk rendering",
-      "{'" not in _err_pretty, [l for l in _err_pretty.splitlines() if "{'" in l])
+      "{'" not in _err_pretty, [line for line in _err_pretty.splitlines() if "{'" in line])
 check("why does not print the missing-prerequisites list twice",
       _err_pretty.count("bellows_water_blown") <= 1 or "MISSING PREREQUISITES" not in _err_pretty,
-      [l for l in _err_pretty.splitlines() if "bellows_water_blown" in l])
+      [line for line in _err_pretty.splitlines() if "bellows_water_blown" in line])
 check("without --pretty, stderr carries no rendered reply (only the welcome banner)",
       "RUNNING (" not in _err_plain and "LEDGER" not in _err_plain, _err_plain[:200])
 
@@ -589,7 +589,7 @@ check("the in-game options menu never offers to change civilisation, kit or "
       not any(w in _ig1.stdout for w in
               ("change the civilisation", "change the kit",
                "change the starting", "turn fog")),
-      [l for l in _ig1.stdout.splitlines() if "fog" in l.lower()])
+      [line for line in _ig1.stdout.splitlines() if "fog" in line.lower()])
 
 # --- moving a save from the in-game options command actually relocates it,
 # meta-sidecar included, and the old file is gone.
@@ -661,8 +661,8 @@ _dw_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
                            "play", "--civ", "rome_100ad", "--session", _dw_session],
                           input="quit\n", capture_output=True, text=True,
                           timeout=120, env=_dw_env2)
-_dw_arrival_lines = [l for l in _dw_play.stdout.splitlines()
-                     if l.strip().startswith("You arrive in")]
+_dw_arrival_lines = [line for line in _dw_play.stdout.splitlines()
+                     if line.strip().startswith("You arrive in")]
 check("a wider display width actually produces a longer wrapped line than "
       "the old hardcoded 76 ever could",
       _dw_arrival_lines and len(_dw_arrival_lines[0]) > 76,
@@ -869,7 +869,7 @@ os.makedirs(os.path.join(ROOT, _PLAY_DIR), exist_ok=True)
 def _play(lines, civ=None, extra=()):
     p_ = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play"]
                         + (["--civ", civ] if civ else []) + list(extra),
-                        input="".join(l + "\n" for l in lines),
+                        input="".join(line + "\n" for line in lines),
                         capture_output=True, text=True, timeout=240, cwd=ROOT)
     # BOTH STREAMS. A refusal printed on stderr is still a refusal the player
     # sees, and a check that reads only stdout silently passes a game that
@@ -883,7 +883,7 @@ check("typed play reaches the whole game, not six commands of its own",
       all(t in _pl for t in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE")) and _rc == 0,
       [t for t in ("YEAR", "LEDGER", "ON YOUR STAFF", "AVAILABLE") if t not in _pl])
 check("typed play never answers a person in JSON",
-      '{"cmd"' not in _pl, [l for l in _pl.splitlines() if '{"cmd"' in l][:3])
+      '{"cmd"' not in _pl, [line for line in _pl.splitlines() if '{"cmd"' in line][:3])
 _pl2, _ = _play(["available metallurgy", "quit"])
 check("a typed narrowing of available works as the reply advertises it",
       "AVAILABLE" in _pl2 and "metallurgy" in _pl2.lower(), _pl2[:200])
@@ -1030,7 +1030,7 @@ _b2 = sum(s.employees.values())
 s.step()
 check("losing staff you cannot pay is written in the log, never silent",
       sum(s.employees.values()) < _b2
-      and any("cannot pay everyone" in m for _y, m in s.log),
+      and any("cannot pay everyone" in m for _year, m in s.log),
       "%.2f -> %.2f, log %r" % (_b2, sum(s.employees.values()), s.log[-3:]))
 
 # 3. state.living_cost was living_and_appearances PLUS the whole payroll, while
@@ -1168,7 +1168,7 @@ _r2, _ = _play(["state", "quit"], extra=["--session", _rs])       # no --civ, as
 check("a save resumes without being told again which game it is",
       "Resumed from" in _r2 and "1302" in _r2, _r2[:400])
 check("fog survives a save and reload, rather than opening the whole tree",
-      "Fog of war is on" in _r2, [l for l in _r2.splitlines() if "og of war" in l])
+      "Fog of war is on" in _r2, [line for line in _r2.splitlines() if "og of war" in line])
 _r3, _ = _play(["quit"], civ="rome_100ad", extra=["--session", _rs])
 check("a --civ that contradicts the save is refused, not started over the top",
       "that save is a" in _r3 or "different civilisation" in _r3, _r3[:300])
@@ -1453,7 +1453,7 @@ check("shutting a work down and reopening it is never free",
 _tp, _ = _play(["why AG2_MARLING", "step 1; step 1", "state", "quit"],
                civ="england_1300")
 check("a typed id is not case-sensitive when the game knows the right one",
-      "COST:" in _tp, [l for l in _tp.splitlines() if "REFUSED" in l][:2])
+      "COST:" in _tp, [line for line in _tp.splitlines() if "REFUSED" in line][:2])
 check("two commands on one line are refused, not half-executed",
       "one command per line" in _tp and "YEAR 1300" in _tp, _tp[:200])
 
@@ -1701,7 +1701,7 @@ def _agent_session(cmds, first=False):
         a += ["--civ", "han_china_100ad"]
     p_ = subprocess.run(a, input="\n".join(json.dumps(c) for c in cmds) + "\n",
                         capture_output=True, text=True, timeout=240, cwd=ROOT)
-    return [json.loads(l) for l in p_.stdout.splitlines() if l.strip()]
+    return [json.loads(line) for line in p_.stdout.splitlines() if line.strip()]
 
 
 _agent_session([{"cmd": "start", "id": "fin_bimetallism"}], first=True)
@@ -1741,7 +1741,7 @@ check("a bribe that would buy nothing is refused, not charged",
 #    typed made them unreachable from the typed front end.
 _cap, _ = _play(["why cap_pure_2N", "why CAP_PURE_2N", "why AG2_MARLING", "quit"])
 check("ids that carry capitals are reachable, and case is not the player's problem",
-      _cap.count("COST:") == 3, [l for l in _cap.splitlines() if "REFUSED" in l][:2])
+      _cap.count("COST:") == 3, [line for line in _cap.splitlines() if "REFUSED" in line][:2])
 
 # 5. `available` truncated ids at 30 characters, so the longest could not be
 #    copied out of the table that told you to use them.
@@ -1877,7 +1877,7 @@ s.employees = {}
 s.capital = 0.0
 s.year = 1348
 s._shocks(1348)
-_plague = [m for _y, m in s.log if "Black Death" in m]
+_plague = [m for _year, m in s.log if "Black Death" in m]
 check("a hazard that took nothing from you says so",
       not _plague or all("-45%" not in m or "nothing it could take" in m
                          for m in _plague),
@@ -1904,8 +1904,8 @@ check("a concern nobody is left to watch stops trading",
       "revenue %.0f -> %.0f, still running %d"
       % (_rev_staffed, s.revenue(), len(s.operating)))
 check("...and the game says which ones closed and why",
-      any("nobody left to keep an eye on" in m for _y, m in s.log),
-      [m for _y, m in s.log][-2:])
+      any("nobody left to keep an eye on" in m for _year, m in s.log),
+      [m for _year, m in s.log][-2:])
 
 # 2. Failure risk fired correctly and announced nothing, so a tester watched
 #    about 113 builds, expected nine failures and found no occurrence of
@@ -1921,10 +1921,10 @@ for _i in range(120):
         _fails += 1
         del s.active[_risky]
 check("a failed attempt is announced, not silently absorbed",
-      _fails > 0 and any("FAILED at" in m for _y, m in s.log),
+      _fails > 0 and any("FAILED at" in m for _year, m in s.log),
       "%d failures in 120 at risk %.2f, logged %d"
       % (_fails, NODES[_risky]["risk"],
-         sum(1 for _y, m in s.log if "FAILED at" in m)))
+         sum(1 for _year, m in s.log if "FAILED at" in m)))
 
 # 3. Three distinguishable refusals were themselves the tree: real-and-heard-of,
 #    real-but-unheard-of, and nonexistent. Sixteen plain-English guesses
@@ -2003,8 +2003,8 @@ s = sim(capital=400.0)
 s.eminence = s.cfg["eminence_danger"] * 0.9
 s.step()
 check("becoming conspicuous is said out loud before it kills you",
-      any("BECOMING CONSPICUOUS" in m for _y, m in s.log),
-      [m for _y, m in s.log][-2:])
+      any("BECOMING CONSPICUOUS" in m for _year, m in s.log),
+      [m for _year, m in s.log][-2:])
 _he, _, _ = proto([{"cmd": "help", "topic": "eminence"}])
 check("...and there is a help topic for it",
       "eminence" in json.dumps(_he[0]).lower() and "no such topic" not in json.dumps(_he[0]),
@@ -2016,11 +2016,11 @@ check("...and there is a help topic for it",
 _cur, _ = _play(["state", "money", "quote mine coal 500", "quit"], civ="england_1300")
 check("an English game is counted in pence and never in denarii",
       " den " not in _cur and "denarii" not in _cur and "pence" in _cur,
-      [l for l in _cur.splitlines() if " den " in l or "denarii" in l][:2])
+      [line for line in _cur.splitlines() if " den " in line or "denarii" in line][:2])
 _cur2, _ = _play(["state", "quit"], civ="han_china_100ad")
 check("a Han game is counted in cash",
       "cash" in _cur2 and "denarii" not in _cur2,
-      [l for l in _cur2.splitlines() if "denarii" in l][:2])
+      [line for line in _cur2.splitlines() if "denarii" in line][:2])
 
 # The help shows {"cmd":"labour","trade":"smith"}, so `labour trade smith` is
 # the obvious typed reading of it - and was answered "no such trade: trade".
@@ -2028,14 +2028,14 @@ _syn, _ = _play(["available subject metallurgy", "labour trade smith", "quit"],
                 civ="england_1300")
 check("the typed form of what the help shows actually works",
       "no such trade: trade" not in _syn and "AVAILABLE: 0 startable" not in _syn,
-      [l for l in _syn.splitlines() if "REFUSED" in l][:2])
+      [line for line in _syn.splitlines() if "REFUSED" in line][:2])
 
 # `ventures` fell through to the generic dump and printed lists of dicts as
 # raw Python.
 _vr, _ = _play(["ventures", "quit"], civ="england_1300")
 check("ventures is rendered as a table, not as raw Python",
       "CONCERNS" in _vr and "{'id':" not in _vr and "{\"id\":" not in _vr,
-      [l for l in _vr.splitlines() if "{'" in l][:2])
+      [line for line in _vr.splitlines() if "{'" in line][:2])
 
 # effective_scholars() has always counted the founder as one of the scholars;
 # nothing counted them as a pair of hands, though the premise of the game is a
@@ -2203,7 +2203,7 @@ check("...and buying within it still works",
 _hh, _ = _play(["buy slaves 5", "labour", "quit"], civ="rome_100ad",
                extra=["--kit", "equestrian"])
 check("people you own appear in your household, not as nobody",
-      "people you own" in _hh, [l for l in _hh.splitlines() if "STAFF" in l][:2])
+      "people you own" in _hh, [line for line in _hh.splitlines() if "STAFF" in line][:2])
 check("a training row without a trade is not printed as None",
       "None x" not in _hh and "None" not in _hh.split("IN TRAINING")[-1][:200],
       _hh.split("IN TRAINING")[-1][:120])
@@ -2212,7 +2212,7 @@ check("a training row without a trade is not printed as None",
 _sa, _ = _play(["step abc", "state", "quit"], civ="rome_100ad")
 check("a step that is not a number is refused, not silently taken as one",
       "not a number" in _sa and "YEAR 100" in _sa,
-      [l for l in _sa.splitlines() if "YEAR" in l][:2])
+      [line for line in _sa.splitlines() if "YEAR" in line][:2])
 
 # 5. "A site is sacked" took 62% of a tester's money, restarted every project
 #    and cut their people nearly in half, and printed only those five words -
@@ -2223,7 +2223,7 @@ s.year = 1519
 for _ in range(6):
     s._shocks(s.year)
     s.year += 1
-_sacks = [m for _y, m in s.log if "sacked" in m]
+_sacks = [m for _year, m in s.log if "sacked" in m]
 check("a sacking says what it took from you",
       _sacks and ("taken" in _sacks[0] or "nothing it could take" in _sacks[0]),
       _sacks[:1])
@@ -2232,7 +2232,7 @@ s2.year = 1519
 for _ in range(6):
     s2._shocks(s2.year)
     s2.year += 1
-_sacks2 = [m for _y, m in s2.log if "sacked" in m]
+_sacks2 = [m for _year, m in s2.log if "sacked" in m]
 check("...and says so plainly when it took nothing",
       not _sacks2 or "nothing it could take" in _sacks2[0], _sacks2[:1])
 
@@ -2240,7 +2240,7 @@ check("...and says so plainly when it took nothing",
 #    learning or as sorcery, and it appeared on no screen and in no help topic.
 _pr, _ = _play(["state", "bribe 700", "state", "quit"],
                civ="rome_100ad", extra=["--kit", "equestrian"])
-_lines = [l for l in _pr.splitlines() if "STANDING:" in l]
+_lines = [line for line in _pr.splitlines() if "STANDING:" in line]
 check("protection is on the screen that shows your standing",
       len(_lines) >= 2 and "protection" in _lines[0] and _lines[0] != _lines[1],
       _lines[:2])

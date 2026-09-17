@@ -1361,7 +1361,7 @@ def _cmd_labour(s, nodes, cmd, ended):
         if long:
             r["wage_foundation"] = {
                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
-                **{k: round(v, 3) for k, v in s.wage_cost_factors(t).items()},
+                **{k: round(value, 3) for k, value in s.wage_cost_factors(t).items()},
                 "demographic_scarcity": round(s.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(s.price_index, 3),
@@ -2508,7 +2508,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
     # check lives here, once, before any handler sees the id.
     if getattr(s, "fog", False) and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
-        _k = cmd.get("id")
+        _node_id = cmd.get("id")
         # THE SAME ANSWER WHETHER OR NOT IT EXISTS. Refusing an unheard-of node
         # with "you have never heard of that" and a nonexistent one with
         # "unknown node 'X'" makes the two distinguishable, and that difference
@@ -2530,10 +2530,10 @@ def _agent_dispatch_inner(s, nodes, cmd):
         # that error recursively to recover 134 hidden ids. `why` under fog
         # already says only "this needs 7 other things you have not heard of
         # yet", which is the honest answer.
-        _goal_why = (_op == "why" and _k == getattr(s, "goal", None))
-        if _op in _ID_COMMANDS and isinstance(_k, str) and not _goal_why and (
-                _k not in nodes or not s.is_visible(_k)):
-            if _k == getattr(s, "goal", None):
+        _goal_why = (_op == "why" and _node_id == getattr(s, "goal", None))
+        if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
+                _node_id not in nodes or not s.is_visible(_node_id)):
+            if _node_id == getattr(s, "goal", None):
                 # You know its name; you were handed it on arrival. Telling you
                 # that you have never heard of the thing you are aiming at, and
                 # then guessing you meant fin_contract_law, is absurd on its
@@ -2542,8 +2542,8 @@ def _agent_dispatch_inner(s, nodes, cmd):
                         "error": "that is what you are aiming at, and you cannot "
                                  "act on it yet: everything it rests on is still "
                                  "beyond what you have heard of. 'why %s' is all "
-                                 "of it you can see from here." % _k}
-            near = _did_you_mean(_k, nodes, s=s)
+                                 "of it you can see from here." % _node_id}
+            near = _did_you_mean(_node_id, nodes, s=s)
             # SAY WHERE THE SUGGESTIONS COME FROM. The suggestions are already
             # filtered through is_visible, so nothing hidden is ever named -
             # but this said "you have never heard of any such thing... nothing
@@ -2576,7 +2576,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
                          % type(cmd["id"]).__name__}
 
     # NaN and Infinity, anywhere in the command, before anything is touched.
-    bad = sorted(k for k, v in cmd.items() if not _clean(v))
+    bad = sorted(k for k, value in cmd.items() if not _clean(value))
     if bad:
         return {"ok": False,
                 "error": "%s must be a real number; NaN and Infinity are not "

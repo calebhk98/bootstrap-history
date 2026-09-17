@@ -113,8 +113,8 @@ check("...and the programme dissolving is counted down where a player sees it",
 # audit.]" in their note field, the win condition among them, naming the task
 # numbering of the agent that had edited them. The reasoning for a change
 # belongs in the commit message; the note field is what the player reads.
-_leaks = sorted(k for k, v in NODES.items()
-                if "AUDIT" in ((v.get("note") or "") + (v.get("name") or "")))
+_leaks = sorted(k for k, value in NODES.items()
+                if "AUDIT" in ((value.get("note") or "") + (value.get("name") or "")))
 check("no developer change-log marker is shipped in player-facing prose",
       not _leaks, _leaks[:5])
 

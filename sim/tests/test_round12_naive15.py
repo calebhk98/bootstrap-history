@@ -192,7 +192,7 @@ check("...and still leads with 'nobody to do the work', so 'portfolio' "
 # the founder stretched thin is exactly when a material shortage should bite,
 # and it silently stopped biting. Nothing in this suite caught it, so:
 _s_th = sim()
-_th_k = next(_k for _k in ORDER if _s_th.start_reason(_k)[0])
+_th_k = next(_node_id for _node_id in ORDER if _s_th.start_reason(_node_id)[0])
 _s_th.start_project(_th_k)
 _s_th.throttle = 0.5
 _pace_half = _s_th.project_hour_pace(_th_k)

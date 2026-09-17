@@ -133,9 +133,9 @@ def _unlocked_by_index(nodes):
     if entry is not None and entry[0] is nodes:
         return entry[1]
     idx = {}
-    for m, v in nodes.items():
-        prereqs = set(v["pre"])
-        for g in (v.get("req_any") or []):
+    for m, value in nodes.items():
+        prereqs = set(value["pre"])
+        for g in (value.get("req_any") or []):
             prereqs.update(g.get("options") or {})
         for p in prereqs:
             idx.setdefault(p, []).append(m)

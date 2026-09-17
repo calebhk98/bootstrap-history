@@ -2233,8 +2233,8 @@ class ProjectsMixin:
         # moving, never actually finishing, and never SAID to have failed.
         # People die and what they knew goes with them; nothing here pretends
         # otherwise.
-        if st["yrs"] >= self.lab_max_span(k) and any(v > 0.5 for v in lab_left.values()):
-            unmet = sorted(t for t, v in lab_left.items() if v > 0.5)
+        if st["yrs"] >= self.lab_max_span(k) and any(value > 0.5 for value in lab_left.values()):
+            unmet = sorted(t for t, value in lab_left.items() if value > 0.5)
             return hh, worst, frac, (
                 "after %d years there was still not enough %s here to finish "
                 "it. What was spent is lost; you still know what you learned "

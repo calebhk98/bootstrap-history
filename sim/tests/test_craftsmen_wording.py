@@ -235,7 +235,7 @@ def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
     _s.done_year = {k: yr - years_before for k in med_nodes}
     _s.rng = random.Random(1)
     _s._shocks(yr)
-    return next((m for _y, m in _s.log if hazard_substr in m), "")
+    return next((m for _year, m in _s.log if hazard_substr in m), "")
 
 
 _antonine_fresh = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 0)

@@ -227,7 +227,7 @@ def _score_components(s, nodes, reveal_tree_total):
         else:
             inst_vals.append(1.0 if s.running(k) else 0.0)
     inst_norm = (sum(inst_vals) / len(inst_vals)) if inst_vals else 0.0
-    out["institutions"] = {"raw": sum(1 for v in inst_vals if v > 0.0),
+    out["institutions"] = {"raw": sum(1 for value in inst_vals if value > 0.0),
                             "of_total": len(inst_vals),
                             "normalized": inst_norm}
 
@@ -265,7 +265,7 @@ def _score_components(s, nodes, reveal_tree_total):
     res_parts = [corpus_preserved, solvent_share, staffing_share,
                  scandal_margin, founder_share]
     res_norm = sum(res_parts) / len(res_parts)
-    out["resilience"] = {"raw": sum(1 for v in res_parts if v >= 0.999),
+    out["resilience"] = {"raw": sum(1 for value in res_parts if value >= 0.999),
                           "of_total": len(res_parts), "normalized": res_norm}
 
     # STANDING (5%) - reputation alone, not eminence: eminence is a danger

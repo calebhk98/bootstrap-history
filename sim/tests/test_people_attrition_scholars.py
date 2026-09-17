@@ -382,7 +382,7 @@ _ao_txt = str(_ao)
 check("auto_open's help admits it opens the institutions that train people "
       "even at a loss, which is what it actually does",
       "at a loss" in _ao_txt and "scholars come from" in _ao_txt,
-      [l for l in _ao_txt.split(".") if "auto_open" in l][:1])
+      [line for line in _ao_txt.split(".") if "auto_open" in line][:1])
 check("...and still says what it leaves shut, the case the original "
       "sentence was written for",
       "left shut" in _ao_txt, "left shut")

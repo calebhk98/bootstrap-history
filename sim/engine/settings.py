@@ -285,8 +285,8 @@ def load_session_meta(session):
         return {}
     try:
         with open(path) as fh:
-            v = json.load(fh)
-        return v if isinstance(v, dict) else {}
+            value = json.load(fh)
+        return value if isinstance(value, dict) else {}
     except (OSError, ValueError):
         return {}
 

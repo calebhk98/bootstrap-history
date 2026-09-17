@@ -198,8 +198,8 @@ def parse_typed(line):
             t = str(w)
             for pre in ("limit:", "limit=", "n:", "n="):
                 if t.lower().startswith(pre):
-                    v = _typed_number(t[len(pre):])
-                    if v is None:
+                    value = _typed_number(t[len(pre):])
+                    if value is None:
                         # AND A CAP THAT DID NOT PARSE IS A REFUSAL, not a
                         # shrug. Falling through to no limit at all means the
                         # one typo a player can make while trying to be
@@ -209,7 +209,7 @@ def parse_typed(line):
                                       "highest-leverage things you could "
                                       "begin today; 'rush' alone begins every "
                                       "one of them." % t[len(pre):])
-                    _lim = v
+                    _lim = value
                     break
         if _lim is None and nums:
             _lim = nums[0]

@@ -411,7 +411,7 @@ p = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "agent",
                     "--civ", "rome_100ad", "--fog"],
                    input='{"cmd":"why","id":"identity_cover"}\n',
                    capture_output=True, text=True, timeout=120, cwd=ROOT)
-reply = json.loads([l for l in p.stdout.splitlines() if l.strip()][0])
+reply = json.loads([line for line in p.stdout.splitlines() if line.strip()][0])
 check("fog hides the exact downstream count",
       reply.get("downstream_count") is None and reply.get("how_much_rests_on_this"),
       "downstream %r band %r" % (reply.get("downstream_count"),
@@ -431,7 +431,7 @@ r, _, _ = proto([{"cmd": "state"}, {"cmd": "available"}, {"cmd": "help"},
 sizes = {c: len(json.dumps(x)) for c, x in
          zip(("state", "available", "help", "labour"), r)}
 check("no ordinary reply is a wall of text",
-      all(v < 6000 for v in sizes.values()), str(sizes))
+      all(value < 6000 for value in sizes.values()), str(sizes))
 
 # a late-game available must not blow up either: it was 165KB at year 250.
 #
@@ -643,10 +643,10 @@ bare_rome_notes = [k for k, n in NODES.items()
 check("no node note bluntly claims 'Rome [already] has this'",
       not bare_rome_notes, str(bare_rome_notes[:5]))
 
-bare_rome_prices = [k for k, v in PRICES["wage_rates_denarii_per_hour"].items()
-                     if not k.startswith("_") and isinstance(v, dict)
-                     and ("Rome has" in (v.get("note") or "")
-                          or "Rome already has" in (v.get("note") or ""))]
+bare_rome_prices = [k for k, value in PRICES["wage_rates_denarii_per_hour"].items()
+                     if not k.startswith("_") and isinstance(value, dict)
+                     and ("Rome has" in (value.get("note") or "")
+                          or "Rome already has" in (value.get("note") or ""))]
 check("no wage-rate note bluntly claims 'Rome has these'",
       not bare_rome_prices, str(bare_rome_prices))
 

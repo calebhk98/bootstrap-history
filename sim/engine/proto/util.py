@@ -189,20 +189,20 @@ def _qty(cmd, key, default=None):
     a mistake is name it. A numeric string is still accepted, because "5" is
     unambiguous and refusing it helps nobody.
     """
-    v = cmd.get(key, default)
-    if v is None:
+    value = cmd.get(key, default)
+    if value is None:
         return None, "%s is required" % key
-    if isinstance(v, bool):
+    if isinstance(value, bool):
         return None, "%s must be a number, not true or false" % key
-    if isinstance(v, (int, float)):
-        f = float(v)
-    elif isinstance(v, str):
+    if isinstance(value, (int, float)):
+        f = float(value)
+    elif isinstance(value, str):
         try:
-            f = float(v.strip())
+            f = float(value.strip())
         except ValueError:
-            return None, "%s must be a number, not %r" % (key, v)
+            return None, "%s must be a number, not %r" % (key, value)
     else:
-        return None, "%s must be a number, not %s" % (key, type(v).__name__)
+        return None, "%s must be a number, not %s" % (key, type(value).__name__)
     if f != f or f in (float("inf"), float("-inf")):
         return None, ("%s must be a real number; NaN and Infinity are not "
                       "quantities" % key)
@@ -281,7 +281,7 @@ def _localise_words(obj, pairs):
         return [_localise_words(x, pairs) for x in obj]
     if isinstance(obj, dict):
         # Keys are protocol; only the values a person reads get rewritten.
-        return {k: _localise_words(v, pairs) for k, v in obj.items()}
+        return {k: _localise_words(value, pairs) for k, value in obj.items()}
     return obj
 
 
@@ -304,5 +304,5 @@ def _localise_money(obj, word):
     if isinstance(obj, dict):
         # KEYS ARE NOT PROSE. A field name is part of the protocol and scripts
         # match on it; only the values a person reads get rewritten.
-        return {k: _localise_money(v, word) for k, v in obj.items()}
+        return {k: _localise_money(value, word) for k, value in obj.items()}
     return obj

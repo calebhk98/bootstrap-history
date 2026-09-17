@@ -1310,7 +1310,7 @@ class SocietyMixin:
                 c = self._diffusion_category(n)
                 if c:
                     cache[c].append(k)
-            cache = {c: tuple(sorted(v)) for c, v in cache.items()}
+            cache = {c: tuple(sorted(value)) for c, value in cache.items()}
             self._diffusible_ids_cache = cache
         return cache.get(cat, ())
 
@@ -1559,12 +1559,12 @@ class SocietyMixin:
         if self.civ.get("id") == "rome_100ad":
             return False
         cache = self.__dict__.setdefault("_foreign_institution_cache", {})
-        v = cache.get(k)
-        if v is None:
+        value = cache.get(k)
+        if value is None:
             hay = (k + " " + self.nodes[k].get("name", "")).lower()
-            v = any(m in hay for m in self.FOREIGN_MARKERS)
-            cache[k] = v
-        return v
+            value = any(m in hay for m in self.FOREIGN_MARKERS)
+            cache[k] = value
+        return value
 
     def _is_foreign_only(self, k):
         """A legal or civic institution of a society that is not this one."""
@@ -1575,12 +1575,12 @@ class SocietyMixin:
         if self.civ.get("id") == "rome_100ad":
             return False
         cache = self.__dict__.setdefault("_foreign_only_cache", {})
-        v = cache.get(k)
-        if v is None:
+        value = cache.get(k)
+        if value is None:
             hay = (k + " " + self.nodes[k].get("name", "")).lower()
-            v = any(m in hay for m in self.FOREIGN_INSTITUTIONS)
-            cache[k] = v
-        return v
+            value = any(m in hay for m in self.FOREIGN_INSTITUTIONS)
+            cache[k] = value
+        return value
 
     def needs_first(self, k):
         """(node, why) this society must have before it can begin `k` at all.
@@ -2557,8 +2557,8 @@ class SocietyMixin:
                 if changed and (yr == a or yr == b or (yr - a) % 10 == 0):
                     self.household.log.append((yr, "%s: the society's values are shifting (%s)"
                                      % (h.get("name", "hazard"),
-                                        ", ".join("%s now %.2f" % (f, v)
-                                                  for f, v in sorted(changed.items())))))
+                                        ", ".join("%s now %.2f" % (f, value)
+                                                  for f, value in sorted(changed.items())))))
 
     def _random_events(self, yr):
         r = self.rng

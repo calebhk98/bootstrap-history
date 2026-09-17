@@ -69,13 +69,13 @@ def producer_of(material_key, nodes):
 def wage_table(prices):
     """Hourly wage per trade, as data.py derives it from prices.json."""
     out = {}
-    for trade, v in (prices.get("wage_rates_denarii_per_hour") or {}).items():
-        if not isinstance(v, dict):
+    for trade, value in (prices.get("wage_rates_denarii_per_hour") or {}).items():
+        if not isinstance(value, dict):
             continue
-        if "rate" in v:
-            out[trade] = float(v["rate"])
-        elif "day_hs" in v:
-            out[trade] = float(v["day_hs"]) / 4.0 / 10.0
+        if "rate" in value:
+            out[trade] = float(value["rate"])
+        elif "day_hs" in value:
+            out[trade] = float(value["day_hs"]) / 4.0 / 10.0
     return out
 
 
@@ -84,9 +84,9 @@ def audit():
     if not isinstance(nodes, dict):
         nodes = {n["id"]: n for n in nodes}
     wages = wage_table(prices)
-    mat_price = {k: float(v["p"])
-                 for k, v in (prices.get("purchase_prices_denarii") or {}).items()
-                 if isinstance(v, dict) and "p" in v}
+    mat_price = {k: float(value["p"])
+                 for k, value in (prices.get("purchase_prices_denarii") or {}).items()
+                 if isinstance(value, dict) and "p" in value}
 
     consumers = collections.Counter()
     for n in nodes.values():
@@ -120,9 +120,9 @@ def audit():
     conf = collections.Counter()
     for section in ("purchase_prices_denarii", "wage_rates_denarii_per_hour",
                     "transport_multipliers", "starting_kit_options"):
-        for v in (prices.get(section) or {}).values():
-            if isinstance(v, dict) and "conf" in v:
-                conf[v["conf"]] += 1
+        for value in (prices.get(section) or {}).values():
+            if isinstance(value, dict) and "conf" in value:
+                conf[value["conf"]] += 1
 
     def populated(field):
         return sum(1 for n in nodes.values()

@@ -115,7 +115,7 @@ check("...and every switch the game offers says what it does",
       [k for k in _pl[0]["policy"]
        if not (_pl[0].get("what_each_does") or {}).get(k)])
 check("...and no line of that screen runs past the width everything else wraps to",
-      max(len(l) for l in _pl_txt.splitlines()) <= 78,
+      max(len(line) for line in _pl_txt.splitlines()) <= 78,
       max(_pl_txt.splitlines(), key=len))
 
 _cmd2, _err2 = _PT("why horizontal loom")

@@ -572,8 +572,8 @@ def _summarise(results, label):
         elif not r.goal_year: causes["ran out of horizon"] += 1
     if causes:
         print("failure modes       :")
-        for cause, v in sorted(causes.items(), key=lambda x: -x[1]):
-            print("   %-58s %3d (%.0f%%)" % (cause, v, 100.0 * v / len(results)))
+        for cause, value in sorted(causes.items(), key=lambda x: -x[1]):
+            print("   %-58s %3d (%.0f%%)" % (cause, value, 100.0 * value / len(results)))
     # where do runs get stuck. PRECISE EVEN AT N=25: almost every run that
     # does not reach the goal is blocked on one of a small handful of nodes,
     # which is a near-certain event rather than the ~1% one the success rate
@@ -587,8 +587,8 @@ def _summarise(results, label):
             if miss: stuck[miss[0]] += 1
     if stuck:
         print("first blocked node  :")
-        for kk, v in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
-            print("   %-58s %3d" % (kk, v))
+        for kk, value in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
+            print("   %-58s %3d" % (kk, value))
     # THE SUCCESS RATE, BELOW THE FOLD, NOT AS THE HEADLINE - see the "what
     # this measures" line above for why, and this project's own diagnosis
     # (planner.py's docstring) for the number that made the point concrete:
@@ -663,8 +663,8 @@ def _summarise(results, label):
         # gets printed - out of scope here. Relabelling the existing number
         # honestly is the fix that belongs in a "what gets printed" pass.
         print("years spent short of a raw material (SUM across %d runs, not a median):" % n)
-        for mat, v in sh.most_common(5):
-            print("   %-12s %d run-years" % (mat, v))
+        for mat, value in sh.most_common(5):
+            print("   %-12s %d run-years" % (mat, value))
     fh = sorted(r.forest_ha for r in results)
     print("coppice woodland owned: median %.0f hectares" % fh[len(fh) // 2])
     rep = sorted(r.reputation for r in results)
@@ -2042,14 +2042,14 @@ def cmd_sweep(a):
     print("-" * 92)
     any_thin = False
     any_success = False
-    for v in values:
+    for value in values:
         cfg, life = {}, None
         if key == "founder_life_mean":
-            cfg = {"immortal": False, "founder_life_mean": v, "founder_life_sd": 4.0}
+            cfg = {"immortal": False, "founder_life_mean": value, "founder_life_sd": 4.0}
         elif key == "founder_life":
-            life = v
+            life = value
         else:
-            cfg[key] = v
+            cfg[key] = value
         res = []
         for i in range(a.mc):
             # COMMON RANDOM NUMBERS across the points of this sweep, same
@@ -2073,7 +2073,7 @@ def cmd_sweep(a):
         any_thin = any_thin or thin
         any_success = any_success or succ > 0
         print("%-12s %7.0f%% %16s %8s %8s   %s" %
-              (f"{v:,}", 100.0 * succ / len(res),
+              (f"{value:,}", 100.0 * succ / len(res),
                "[%.0f%%,%.0f%%]" % (100.0 * lo, 100.0 * hi),
                (str(ok[len(ok) // 2]) + "*" if thin else ok[len(ok) // 2]) if ok else "never",
                ok[len(ok) // 4] if ok else "-",
@@ -2152,7 +2152,7 @@ def cmd_civs(a):
         if not f.endswith(".json") or f.startswith("_"):
             continue
         c = json.load(open(os.path.join(CIVDIR, f)))
-        v = c["values"]
+        value = c["values"]
         print("%-16s %s, %s" % (c["id"], c["name"], c["year"]))
         print("   %s" % c.get("blurb", ""))
         homes = [region_names.get(r, r) for r in c.get("home_regions") or []]
@@ -2163,10 +2163,10 @@ def cmd_civs(a):
                  c.get("base_reach", 0), len(c.get("starting_techs", []))))
         print("   fears the inexplicable %.2f | fears heterodoxy %.2f | resents machines %+.2f "
               "| bribable %.2f | habituates %.2f"
-              % (v["w_magic_fear"], v["w_religious_rigidity"], v["w_labour_saving"],
-                 v["bribability"], v["adaptation_rate"]))
+              % (value["w_magic_fear"], value["w_religious_rigidity"], value["w_labour_saving"],
+                 value["bribability"], value["adaptation_rate"]))
         print("   eminence is dangerous %.2f  (how much prominence ITSELF endangers you)"
-              % v.get("w_eminence_danger", 0.5))
+              % value.get("w_eminence_danger", 0.5))
         mults = c.get("cost_multipliers") or {}
         if mults:
             easy = sorted((x for x in mults.items() if x[1] < 1.0), key=lambda x: x[1])[:4]
@@ -2941,11 +2941,11 @@ def _options_menu(cfg):
             print("   -- saved.")
 
         elif word in ("4", "welcome", "tutorial"):
-            v = _ask("   Show the welcome message and tutorial on new games? "
+            value = _ask("   Show the welcome message and tutorial on new games? "
                      "[y/n] ", ["y", "n"],
                      "y" if cfg.get("show_welcome", True) else "n")
-            if v:
-                cfg["show_welcome"] = (v == "y")
+            if value:
+                cfg["show_welcome"] = (value == "y")
                 settings.save_config(cfg)
                 print("   -- saved.")
 

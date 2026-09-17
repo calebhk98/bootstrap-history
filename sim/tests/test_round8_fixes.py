@@ -298,7 +298,7 @@ _wy, _, _ = proto([{"cmd": "why", "id": "horse_collar"},
 _wp = "\n".join(_RP("why", x) for x in _wy)
 check("why states that a prerequisite must be finished, and stays finished",
       "FINISHED" in _wp or "finished counts for ever" in _wp,
-      [l for l in _wp.splitlines() if "PREREQ" in l][:3])
+      [line for line in _wp.splitlines() if "PREREQ" in line][:3])
 
 # --- BREAK: a debasement announced itself and moved no price a player could
 # see, because the model is in real terms. Say so, and name the real bite.
@@ -676,7 +676,7 @@ for _civ_name in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300"
         _s.done.add(_k); _s.operating.add(_k)
     _s._done_changed()
     _src = _s.revenue_sources()
-    _sum = sum(v for v in _src.values() if isinstance(v, (int, float)))
+    _sum = sum(value for value in _src.values() if isinstance(value, (int, float)))
     check("%s: the ledger rows add up to the revenue they are printed under"
           % _civ_name, abs(_sum - _s.revenue()) < 0.05, (_sum, _s.revenue()))
 
@@ -768,7 +768,7 @@ check("...and state carries the countdown and the trade that would save it",
       _st_hl)
 check("...and the page says the one command that keeps your hours",
       "stop %s" % _need_eng in _RP("state", _st_all),
-      [l for l in _RP("state", _st_all).splitlines() if "ABANDONED" in l])
+      [line for line in _RP("state", _st_all).splitlines() if "ABANDONED" in line])
 
 
 # --- BREAK: the advice on how to get artisans said "build workshop_first (you

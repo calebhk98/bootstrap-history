@@ -192,8 +192,8 @@ def _power_status(s, nodes):
     out["transmission_capacity_kw"] = round(gen["transmission_kw"], 1)
     mech = gen["mechanical_kw"]
     if mech.get("water") or mech.get("steam"):
-        out["mechanical_shaft_power_kw"] = {k: round(v, 1)
-                                            for k, v in sorted(mech.items()) if v}
+        out["mechanical_shaft_power_kw"] = {k: round(value, 1)
+                                            for k, value in sorted(mech.items()) if value}
     if s.binding == "electricity":
         out["electricity_is_the_binding_constraint"] = True
         out["throttle"] = round(s.throttle, 3)
@@ -353,7 +353,7 @@ def _agent_mines(s):
             "mines_you_own": rows or "none",
             "they_cost_you_a_year_in_all": round(s.mine_operating_cost(), 1),
             "your_revenue_is": round(s.revenue(), 1),
-            "still_being_sunk": {m: v[1] for m, v in sorted(_pending.items())},
+            "still_being_sunk": {m: value[1] for m, value in sorted(_pending.items())},
             "note": "Workings are charged every year they stand, whether or "
                     "not you use what they raise. One you no longer need is "
                     "money going out for nothing: 'close <material>'. "
@@ -608,7 +608,7 @@ def _dashboard_snapshot(s):
         "employees_total": round(sum(s.employees.values()), 2),
         "scholars": round(s.scholars, 2),
         "artisans": round(s.artisans, 2),
-        "mine_capacity": {m: round(v, 1) for m, v in s.mine_capacity.items()},
+        "mine_capacity": {m: round(value, 1) for m, value in s.mine_capacity.items()},
         "scandal": round(s.scandal, 2),
         "reputation": round(s.reputation, 1),
         "eminence": round(s.eminence, 2),
@@ -678,7 +678,7 @@ def _agent_economy(s, cmd=None):
             {"trade": t, "a_year_of_one": round(s.annual_wage(t), 0),
              "wage_foundation": {
                  "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
-                 **{k: round(v, 3) for k, v in s.wage_cost_factors(t).items()},
+                 **{k: round(value, 3) for k, value in s.wage_cost_factors(t).items()},
                  "demographic_scarcity": round(s.wage_index, 3),
                  "local_trade_scarcity": round(s.labour_price_factor(t), 3)}}
             for t in sorted(WAGES) if s.trade_available(t)]

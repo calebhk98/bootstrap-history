@@ -316,7 +316,7 @@ class FogMixin:
         # only record of a sacking is a log line a century back, and a play
         # tester discovered theirs one refusal at a time - "missing
         # prerequisites: <thing you built two hundred years ago>".
-        _gone = sorted((k for k, _y in (getattr(self.household, "forgotten", None) or {}).items()
+        _gone = sorted((k for k, _year in (getattr(self.household, "forgotten", None) or {}).items()
                         if k not in self.household.done),
                        key=lambda k: -(self.household.forgotten[k]))
         upcoming = []

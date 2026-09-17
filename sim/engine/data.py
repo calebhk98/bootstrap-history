@@ -80,7 +80,7 @@ def _load_tech_effects():
     try:
         with open(p) as source:
             effects = json.load(source)
-        return {k: v for k, v in effects.items() if not k.startswith("_")}
+        return {k: value for k, value in effects.items() if not k.startswith("_")}
     except Exception:
         return {}
 
@@ -99,8 +99,8 @@ def _load_wages():
     """
     with open(PRICES) as source:
         p = json.load(source)
-    return {k: v["rate"] for k, v in p["wage_rates_denarii_per_hour"].items()
-            if isinstance(v, dict) and "rate" in v}
+    return {k: value["rate"] for k, value in p["wage_rates_denarii_per_hour"].items()
+            if isinstance(value, dict) and "rate" in value}
 
 
 WAGES = _load_wages()
@@ -119,13 +119,13 @@ def _load_annual_wages():
     with open(PRICES) as source:
         p = json.load(source)
     out = {}
-    for k, v in p["wage_rates_denarii_per_hour"].items():
-        if not isinstance(v, dict):
+    for k, value in p["wage_rates_denarii_per_hour"].items():
+        if not isinstance(value, dict):
             continue
-        if "day_hs" in v:
-            out[k] = v["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
-        elif "rate" in v:
-            out[k] = v["rate"] * 2500.0
+        if "day_hs" in value:
+            out[k] = value["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
+        elif "rate" in value:
+            out[k] = value["rate"] * 2500.0
     return out
 
 
@@ -135,8 +135,8 @@ ANNUAL_WAGE = _load_annual_wages()
 def _load_trade_notes():
     with open(PRICES) as source:
         p = json.load(source)
-    return {k: (v.get("note") or "") for k, v in p["wage_rates_denarii_per_hour"].items()
-            if isinstance(v, dict)}
+    return {k: (value.get("note") or "") for k, value in p["wage_rates_denarii_per_hour"].items()
+            if isinstance(value, dict)}
 
 
 TRADE_NOTES = _load_trade_notes()
@@ -250,9 +250,9 @@ def load():
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {n["id"]: n for n in tree["nodes"]}
-    wages = {k: v["rate"] for k, v in prices["wage_rates_denarii_per_hour"].items()
+    wages = {k: value["rate"] for k, value in prices["wage_rates_denarii_per_hour"].items()
              if not k.startswith("_")}
-    goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items()
+    goods = {k: value["p"] for k, value in prices["purchase_prices_denarii"].items()
              if not k.startswith("_")}
     for n in nodes.values():
         n["_labour_cost"] = sum(wages[t] * h for t, h in n["lab"].items())

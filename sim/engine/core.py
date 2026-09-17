@@ -226,7 +226,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # cost that follows from it. All of the below depends only on the
         # civ file and the (static) geography file, so it is computed once.
         self.geo = load_geography()
-        self._regions = {k: v for k, v in (self.geo.get("regions") or {}).items()
+        self._regions = {k: value for k, value in (self.geo.get("regions") or {}).items()
                           if not k.startswith("_")}
         self._home_centroid = self._compute_home_centroid()
         # node id -> located_materials key. Lets material_cost_factor() find
@@ -1558,7 +1558,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # for you are generic craftsmen and scribes, and that is all they are.
             craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * 0.7)
             generic = self.household.employees.get("artisan", 0.0)
-            specials = sum(v for t, v in self.household.employees.items()
+            specials = sum(value for t, value in self.household.employees.items()
                            if t not in ("artisan", "scholar") and trade_family(t) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS. The generic bucket was
             # the remainder after every taught trade had taken its share, so
@@ -1889,15 +1889,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # outside this block ever reads it, so it cannot go stale.
             _ms_memo, _ta_memo = {}, {}
             def _market_supply(t):
-                v = _ms_memo.get(t)
-                if v is None:
-                    v = _ms_memo[t] = self.market_supply(t)
-                return v
+                value = _ms_memo.get(t)
+                if value is None:
+                    value = _ms_memo[t] = self.market_supply(t)
+                return value
             def _trade_avail(t):
-                v = _ta_memo.get(t)
-                if v is None:
-                    v = _ta_memo[t] = self.trade_available(t)
-                return v
+                value = _ta_memo.get(t)
+                if value is None:
+                    value = _ta_memo[t] = self.trade_available(t)
+                return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
             for k in self.household.active:
@@ -1957,13 +1957,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # recomputing the same two calls from scratch each time.
             _gone_memo = {}
             def _is_gone(t):
-                v = _gone_memo.get(t)
-                if v is None:
-                    v = _gone_memo[t] = (
+                value = _gone_memo.get(t)
+                if value is None:
+                    value = _gone_memo[t] = (
                         not _trade_avail(t)
                         or (_market_supply(t) <= 0.0
                             and self._trade_headcount_pending(t) <= 0.0))
-                return v
+                return value
             for k in self.order:
                 if k in self.household.done or k in self.household.active:
                     continue
@@ -1983,7 +1983,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # a teaching treadmill. A trade is worth restoring; it is not worth
             # half of every year for ever.
             _taught = self.household.last_taught
-            want = {t: v for t, v in want.items()
+            want = {t: value for t, value in want.items()
                     if yr - _taught.get(t, -999) >= self.RETEACH_EVERY}
             # AND ONLY IF YOU CAN PAY THEM. train() checked hours, literacy and
             # household room and never once looked at money - so a Rome
@@ -2805,13 +2805,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # by id for a deterministic order across runs with the same seed -
         # several projects can be cut short in the same year.
         if _directed_hours_unused:
-            for _k, _hr, _why in sorted(_directed_hours_unused):
+            for _node_id, _hr, _why in sorted(_directed_hours_unused):
                 self.household.log.append((yr, "DIRECTED HOURS UNUSED: you allocated hours "
                                      "to %s this year that it could not use - "
                                      "%s of them went begging because %s. "
                                      "'portfolio' shows the rest; 'allocate' "
                                      "changes or clears the standing order"
-                                 % (self.nodes[_k]["name"],
+                                 % (self.nodes[_node_id]["name"],
                                     "{:,.0f}".format(_hr), _why)))
 
         # Snapshot BEFORE 5b spends more of `remaining` on wage work: otherwise

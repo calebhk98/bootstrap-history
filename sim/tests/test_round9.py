@@ -671,7 +671,7 @@ check("...and what the chance of being denounced this year is",
       _st_sc.get("chance_of_being_denounced_this_year"))
 check("...and the page prints both, next to the eminence line that already did",
       "SCANDAL is dangerous above" in _RP("state", _st_sc),
-      [l for l in _RP("state", _st_sc).splitlines() if "dangerous above" in l])
+      [line for line in _RP("state", _st_sc).splitlines() if "dangerous above" in line])
 
 # --- BREAK: the advertised price index touched nothing a player feels.
 # Revenue ~233 and living costs 230.0 TO THE DECIMAL in all five civs, against
@@ -1083,7 +1083,7 @@ def _reteaching_is_once_a_generation():
         for t, y in getattr(s_, "last_taught", {}).items():
             if before.get(t) != y:
                 per_trade[t] = per_trade.get(t, 0) + 1
-    return (all(v <= 40 // s_.RETEACH_EVERY + 1 for v in per_trade.values()),
+    return (all(value <= 40 // s_.RETEACH_EVERY + 1 for value in per_trade.values()),
             per_trade)
 
 slow_check("...and no more than once a generation FOR THE SAME TRADE",

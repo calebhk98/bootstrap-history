@@ -205,8 +205,8 @@ def main():
     print("wrote knowledge/README.md")
     print("  modules indexed : %d" % len(files))
     print("  nodes linked    : %d recipe + %d prose = %d of %d"
-          % (sum(len(v) for v in by_file.values()), len(prose),
-             sum(len(v) for v in by_file.values()) + len(prose), len(nodes)))
+          % (sum(len(value) for value in by_file.values()), len(prose),
+             sum(len(value) for value in by_file.values()) + len(prose), len(nodes)))
     print("  no link by design: %d   undocumented gap: %d" % (len(bydesign), len(gap)))
     print("  broken files    : %d" % len(broken_file))
     print("  broken anchors  : %d" % len(broken_anchor))

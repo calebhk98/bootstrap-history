@@ -52,15 +52,15 @@ def _num(v, d=0.0):
 
 
 def normalise_v2(n):
-    for k, v in DEFAULTS.items():
-        n.setdefault(k, json.loads(json.dumps(v)))
+    for k, value in DEFAULTS.items():
+        n.setdefault(k, json.loads(json.dumps(value)))
     for k, d in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
                  ("sch",0),("art",1)):
         n[k] = _num(n.get(k), d)
     n["risk"] = min(0.95, max(0.0, n["risk"]))
     for fld in ("lab","mat"):
         if not isinstance(n.get(fld), dict): n[fld] = {}
-        else: n[fld] = {k: _num(v, 0) for k, v in n[fld].items()}
+        else: n[fld] = {k: _num(value, 0) for k, value in n[fld].items()}
     if not isinstance(n.get("pre"), list): n["pre"] = []
     if not isinstance(n.get("traits"), list): n["traits"] = []
     """Accept either schema and leave the node in v2 shape with v1 fields
@@ -253,8 +253,8 @@ def cmd_merge(a):
         print("   ... %d more" % (len(warns) - 25))
     if dangling:
         print("\nmost-wanted unresolved prereq ids (candidates for new nodes):")
-        for k, v in dangling.most_common(20):
-            print("   %-40s wanted by %d nodes" % (k, v))
+        for k, value in dangling.most_common(20):
+            print("   %-40s wanted by %d nodes" % (k, value))
     return 0
 
 
@@ -371,8 +371,8 @@ def cmd_judge(a):
     tree = json.load(open(TREE))
     nodes = {n["id"]: n for n in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
-    wages = {k: v["rate"] for k, v in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
-    goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
+    wages = {k: value["rate"] for k, value in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
+    goods = {k: value["p"] for k, value in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
     for n in nodes.values():
         n["_total_cost"] = (sum(wages.get(t, 0) * h for t, h in n["lab"].items())
                             + sum(goods.get(m, 0) * q for m, q in n["mat"].items()) + n["cap"])
@@ -380,8 +380,8 @@ def cmd_judge(a):
     by_category_cost = collections.defaultdict(list)
     for n in nodes.values():
         by_category_cost[n["cat"]].append(n["_total_cost"])
-    stats = {"cost": {cat: statistics.median(v)
-                      for cat, v in by_category_cost.items()}}
+    stats = {"cost": {cat: statistics.median(value)
+                      for cat, value in by_category_cost.items()}}
 
     results = {}
     for k, n in nodes.items():
@@ -424,8 +424,8 @@ def cmd_judge(a):
     print("grades       : " + "  ".join("%s %d (%.0f%%)" % (g, dist[g], 100.0 * dist[g] / len(nodes))
                                         for g in "ABCDF"))
     print("\nDEFECTS BY FREQUENCY")
-    for c, v in defects.most_common():
-        print("   %-12s %4d  (%.0f%% of nodes)" % (c, v, 100.0 * v / len(nodes)))
+    for c, value in defects.most_common():
+        print("   %-12s %4d  (%.0f%% of nodes)" % (c, value, 100.0 * value / len(nodes)))
     print("\nWORST NODES")
     worst = sorted(results.items(), key=lambda x: x[1][0])[:20]
     for k, (s, d) in worst:
@@ -501,16 +501,16 @@ def cmd_repair(a):
     tree = json.load(open(TREE))
     nodes = {n["id"]: n for n in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
-    wages = {k: v["rate"] for k, v in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
-    goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
+    wages = {k: value["rate"] for k, value in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
+    goods = {k: value["p"] for k, value in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
     for n in nodes.values():
         n["_total_cost"] = (sum(wages.get(t,0)*h for t,h in n["lab"].items())
                             + sum(goods.get(m,0)*q for m,q in n["mat"].items()) + n["cap"])
     by_category_cost = collections.defaultdict(list)
     for n in nodes.values():
         by_category_cost[n["cat"]].append(n["_total_cost"])
-    stats = {"cost": {cat: statistics.median(v)
-                      for cat, v in by_category_cost.items()}}
+    stats = {"cost": {cat: statistics.median(value)
+                      for cat, value in by_category_cost.items()}}
 
     counts = collections.Counter()
     for k, n in list(nodes.items()):
@@ -546,7 +546,7 @@ def cmd_repair(a):
                 mod = ("94_computing.md" if any(w in k for w in COMPUTING_WORDS)
                        else "50_electricity.md")
             else:
-                mod = next((v for pre, v in PREFIX_MODULE.items() if k.startswith(pre)), None)
+                mod = next((value for pre, value in PREFIX_MODULE.items() if k.startswith(pre)), None)
             if mod:
                 n["kb"] = mod; n["kb_level"] = "module"; counts["module-level doc links"] += 1
             else:
@@ -568,8 +568,8 @@ def cmd_repair(a):
     tree["nodes"] = [nodes[i] for i in sorted(nodes)]
     _write_json(tree, TREE, a)
     print("REPAIR PASS")
-    for k, v in counts.most_common():
-        print("   %-32s %d" % (k, v))
+    for k, value in counts.most_common():
+        print("   %-32s %d" % (k, value))
     return 0
 
 

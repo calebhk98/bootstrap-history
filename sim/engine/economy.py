@@ -1944,7 +1944,7 @@ class EconomyMixin:
         # that caps the whole figure were never rows at all.
         ranked = sorted(rows.items(), key=lambda kv: -kv[1])
         out = dict(ranked[:15])
-        rest = sum(v for _k, v in ranked[15:])
+        rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
             out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
         wo = self.workshop_output() * (self.economy ** 0.75) * self.output_factor
@@ -2311,8 +2311,8 @@ class EconomyMixin:
         cached = getattr(EconomyMixin, "_material_prices_cache", None)
         if cached is None:
             raw = json.load(open(os.path.join(_commod.ROOT, "data", "prices.json")))
-            cached = {k: v["p"] for k, v in raw["purchase_prices_denarii"].items()
-                     if isinstance(v, dict) and "p" in v}
+            cached = {k: value["p"] for k, value in raw["purchase_prices_denarii"].items()
+                     if isinstance(value, dict) and "p" in value}
             EconomyMixin._material_prices_cache = cached
         return cached
 
@@ -2774,7 +2774,7 @@ class EconomyMixin:
             quote = self.material_trade_quote(material)
             if not quote:
                 continue
-            annual_demand = sum(v for _tag, v in demand.get(material, ()))
+            annual_demand = sum(value for _tag, value in demand.get(material, ()))
             own = sum(self._own_material_supply(tag) for emp, tag in self._own_production_tags()
                       if emp == material)
             rows.append({**quote, "stock_on_hand_tonnes": self.material_stock_t(material),
@@ -3748,8 +3748,8 @@ class EconomyMixin:
         """Fraction of day-one yield THIS working still gets, from ITS OWN
         cumulative intensity since ITS OWN commissioning year (see the class
         comment above `_workings_of`) - the per-working half of the fix."""
-        i = working.get("intensity_yrs", 0.0)
-        return max(self.DEPLETION_FLOOR, 1.0 - i / self.DEPLETION_HALF_LIFE_YRS)
+        intensity_years = working.get("intensity_yrs", 0.0)
+        return max(self.DEPLETION_FLOOR, 1.0 - intensity_years / self.DEPLETION_HALF_LIFE_YRS)
 
     def mine_depletion_factor(self, mat):
         """This material's CURRENT typical depletion, as the
@@ -3869,7 +3869,7 @@ class EconomyMixin:
         a fully depleted, untooled working costs at most 2x book (not
         infinite), and full mining technology on a fresh deposit costs no
         less than 0.4x (not free)."""
-        _y, cost = self.mining_tech(mat)
+        _year, cost = self.mining_tech(mat)
         return max(0.4, min(2.5, cost / self.mine_depletion_factor(mat)))
 
     def mining_cost_scale_for(self, working):
@@ -3879,7 +3879,7 @@ class EconomyMixin:
         running than a fresh one of the same material, which the old
         material-level figure could not say because it had no idea which
         working was which."""
-        _y, cost = self.mining_tech(working["material"])
+        _year, cost = self.mining_tech(working["material"])
         return max(0.4, min(2.5, cost / self.mine_depletion_factor_for(working)))
 
     def mine_yield_t_for(self, working):

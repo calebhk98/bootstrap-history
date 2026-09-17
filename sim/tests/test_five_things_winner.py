@@ -151,7 +151,7 @@ check("run/compare/play/agent's --horizon flag still defaults to 500, "
       "completely unaffected by the difficulty-mode work above - Endless "
       "is reached only through the wizard or the in-game 'options' command, "
       "never through a bare --horizon flag",
-      len(_horizon_seen) == 4 and all(v == 500 for v in _horizon_seen.values()),
+      len(_horizon_seen) == 4 and all(value == 500 for value in _horizon_seen.values()),
       _horizon_seen)
 
 # --- ITEM 3: SESSION COMMANDS WITHOUT BACKING OUT THROUGH MENUS. 'saves',

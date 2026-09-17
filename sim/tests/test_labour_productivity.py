@@ -440,7 +440,7 @@ _KNOWN_UNGATED = {"nickel_kg": {"electroplating"}}
 
 _mat_gaps = {}
 for _mat, _prods in _GATED_MATERIALS.items():
-    _consumers = [k for k, v in NODES.items() if (v.get("mat") or {}).get(_mat)]
+    _consumers = [k for k, value in NODES.items() if (value.get("mat") or {}).get(_mat)]
     _excuse = _KNOWN_UNGATED.get(_mat, set())
     _bad = [k for k in _consumers
             if k not in _excuse and not (_prods & _full_ancestors(k))]
@@ -454,7 +454,7 @@ check("...and there really are gated materials and consumers here to check, "
       "not an empty audit passing by having nothing to look at",
       len(_GATED_MATERIALS) >= 20
       and sum(1 for _m in _GATED_MATERIALS
-              for _k, _v in NODES.items() if (_v.get("mat") or {}).get(_m)) >= 60,
+              for _node_id, _v in NODES.items() if (_v.get("mat") or {}).get(_m)) >= 60,
       len(_GATED_MATERIALS))
 _graphite_bad = [k for k in _graphite_pinned
                  if "mat_graphite_pure" not in _full_ancestors(k)]

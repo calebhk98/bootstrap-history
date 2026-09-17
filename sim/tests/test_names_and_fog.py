@@ -141,9 +141,9 @@ check("a plain page still defaults to cheapest first",
 # and is the legend for them nearby rather than a screen away.
 _staff_pretty = _RP("available", r2[0])
 _lines = _staff_pretty.splitlines()
-_staff_hdr = next(i for i, l in enumerate(_lines) if "STAFF" in l)
-_staff_legend = next((i for i, l in enumerate(_lines)
-                      if "STAFF is the standing people" in l), None)
+_staff_hdr = next(i for i, line in enumerate(_lines) if "STAFF" in line)
+_staff_legend = next((i for i, line in enumerate(_lines)
+                      if "STAFF is the standing people" in line), None)
 check("the STAFF column has its legend within a few lines of the table, "
       "not a screen away",
       _staff_legend is not None and _staff_legend - _staff_hdr < 15,

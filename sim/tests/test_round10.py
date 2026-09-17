@@ -193,8 +193,8 @@ def _anc_of(k, seen=None):
         if _p not in seen:
             seen.add(_p); _anc_of(_p, seen)
     return seen
-_rub_users = sorted(k for k, v in NODES.items()
-                    if any("rubber" in m for m in (v.get("mat") or {})))
+_rub_users = sorted(k for k, value in NODES.items()
+                    if any("rubber" in m for m in (value.get("mat") or {})))
 _ungated = [k for k in _rub_users
             if not ({"mat_natural_rubber", "mat_synthetic_rubber"} & _anc_of(k))]
 # --- BREAK: a node whose own note names a material it does not require. The
@@ -401,7 +401,7 @@ check("available says what you could raise for a project",
 _page = _RP("available", _rav[0])
 check("...and marks the rows you could not raise it for",
       "*" in _page and "A * after COST" in _page,
-      [l for l in _page.splitlines() if "after COST" in l])
+      [line for line in _page.splitlines() if "after COST" in line])
 _cheap, _, _ = proto([{"cmd": "available", "limit": 2}])
 check("...and does not mark what you can plainly afford",
       "A * after COST" not in _RP("available", _cheap),
@@ -480,8 +480,8 @@ check("wages remain elevated the year after a mortality shock",
       s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
-      any("running" in m and "above normal" in m for _y, m in s.log),
-      [m for _y, m in s.log if "wage" in m.lower()])
+      any("running" in m and "above normal" in m for _year, m in s.log),
+      [m for _year, m in s.log if "wage" in m.lower()])
 
 # --- it fades on the clock the hazard earned, not instantly and not
 # forever - the actual brief: "the effect decaying back over a historically
@@ -558,7 +558,7 @@ def _plague_line(mitigated_nodes):
     _s.rng = random.Random(1)          # a seed that rolls the 32% plague check
     _s.year = 165
     _s._shocks(165)
-    return next((_m for _y, _m in _s.log if "Antonine plague" in _m), "")
+    return next((_m for _year, _m in _s.log if "Antonine plague" in _m), "")
 
 
 _HEAVY = ["sanitation_antisepsis", "med_quarantine_sanitation", "germ_theory",

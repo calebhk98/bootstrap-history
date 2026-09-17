@@ -82,11 +82,11 @@ def _strings_of(obj):
     if isinstance(obj, str):
         yield obj
     elif isinstance(obj, dict):
-        for v in obj.values():
-            yield from _strings_of(v)
+        for value in obj.values():
+            yield from _strings_of(value)
     elif isinstance(obj, (list, tuple)):
-        for v in obj:
-            yield from _strings_of(v)
+        for value in obj:
+            yield from _strings_of(value)
 
 
 _ptr_sim = sim(capital=5_000_000.0)
@@ -308,7 +308,7 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # tells them that for the goal they actually picked.
 from engine import cli as _CLI
 
-_hz_notes = " ".join(n for _k, _l, _y, n in _CLI.HORIZON_MODES).lower()
+_hz_notes = " ".join(n for _node_id, _l, _year, n in _CLI.HORIZON_MODES).lower()
 check("no horizon-mode description quotes the dice-free floor or calls any "
       "setting unreachable",
       not any(w in _hz_notes for w in
@@ -383,10 +383,10 @@ except OSError:
 # blind spot this comment says must not exist.
 _NOT_SAVED_ON_PURPOSE = frozenset()
 _fresh = sim()
-_accum = {k for k, v in vars(_fresh).items()
-          if isinstance(v, (_coll.defaultdict, _coll.Counter))}
-_accum |= {k for k, v in vars(_fresh.household).items()
-           if isinstance(v, (_coll.defaultdict, _coll.Counter))}
+_accum = {k for k, value in vars(_fresh).items()
+          if isinstance(value, (_coll.defaultdict, _coll.Counter))}
+_accum |= {k for k, value in vars(_fresh.household).items()
+           if isinstance(value, (_coll.defaultdict, _coll.Counter))}
 check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
       "listed as deliberately unsaved, so the next one added cannot quietly "
       "reset on every resume the way retry learning did",
@@ -504,8 +504,8 @@ check("...while a player who never reached it under fog still reads the "
 def _won_sim(**extra):
     s = sim(capital=5_000_000.0)
     s.goal_year = s.year + 1
-    for k, v in extra.items():
-        setattr(s, k, v)
+    for k, value in extra.items():
+        setattr(s, k, value)
     return s
 
 _ach_clean = _SCORE(_won_sim(), NODES)["achievements"]
@@ -798,16 +798,16 @@ _help_front = S._agent_dispatch(_s_hc, NODES, {"cmd": "help"})["help"]
 check("the no-topic help screen names `help commands` and `log` outright, "
       "not only inside the 'more topics' map a player has to already "
       "suspect exists",
-      any("help" in str(k).lower() or "log" in str(v).lower()
-          for k, v in _help_front.items()
+      any("help" in str(k).lower() or "log" in str(value).lower()
+          for k, value in _help_front.items()
           if "command index" in str(k).lower() or "exact history" in str(k).lower()),
       list(_help_front.keys()))
 check("...and the text itself actually says 'help' topic 'commands' and "
       "mentions log/values/money/automation/save-load, so a reader does not "
       "have to guess what 'the complete command index' contains",
-      any("\"topic\":\"commands\"" in str(v) and "log" in str(v)
-          for v in _help_front.values()),
-      [v for v in _help_front.values() if "\"topic\":\"commands\"" in str(v)])
+      any("\"topic\":\"commands\"" in str(value) and "log" in str(value)
+          for value in _help_front.values()),
+      [value for value in _help_front.values() if "\"topic\":\"commands\"" in str(value)])
 _s_wk = sim(civ="rome_100ad")
 _st1 = S._agent_dispatch(_s_wk, NODES, {"cmd": "state"})
 check("a fresh game's very first `state` points at `help commands` and "
@@ -1019,8 +1019,8 @@ _s_dem.hours_you_can_call_on = (
 # not the aggregate function under test - so a break in the aggregation
 # loop shows up as a mismatch here.
 _expect_demand = sum(
-    _s_dem.trade_draw_plan(_k, None).get("chemist", {}).get("desired", 0.0)
-    for _k in _dem_targets)
+    _s_dem.trade_draw_plan(_node_id, None).get("chemist", {}).get("desired", 0.0)
+    for _node_id in _dem_targets)
 _dvs = _s_dem.trade_demand_vs_supply()
 check("trade_demand_vs_supply sums each active project's own read-only "
       "demand for the trade, not a second, independently-guessed total",
@@ -1503,7 +1503,7 @@ _s_pat3 = sim(civ="rome_100ad")
 _s_pat3.fog = True
 _s_pat3.revealed = set()
 _pat_sen = [_w for _w in
-            (_s_pat3.start_reason(_k)[1] for _k in sorted(NODES))
+            (_s_pat3.start_reason(_node_id)[1] for _node_id in sorted(NODES))
             if _w and "actively opposes" in _w]
 check("the senatorial-patronage refusal does not leak its id under fog "
       "either",
@@ -1528,9 +1528,9 @@ check("the policy screen says which automatic behaviours are running now "
       and "WOULD do if you turned it on" in _pol_txt, _pol_txt[:300])
 check("...with every switch still listed exactly once between the two "
       "groups, none dropped by the grouping",
-      all(_k in _pol_txt for _k in (_pol_out.get("policy") or {}))
-      and all(_pol_txt.count("  %-18s " % _k) == 1
-              for _k in (_pol_out.get("policy") or {})),
+      all(_node_id in _pol_txt for _node_id in (_pol_out.get("policy") or {}))
+      and all(_pol_txt.count("  %-18s " % _node_id) == 1
+              for _node_id in (_pol_out.get("policy") or {})),
       sorted(_pol_out.get("policy") or {}))
 
 # AND THE THING THEY THOUGHT WAS BROKEN IS NOT BROKEN.
@@ -1589,9 +1589,9 @@ _rb_kids = collections.Counter()
 for _k, _n in NODES.items():
     for _p in _n["pre"]:
         _rb_kids[_p] += 1
-_rb_liars = [_k for _k in sorted(NODES)
-             if _rb_kids[_k] > 0
-             and _PROTO._rests_band(_rb_kids[_k]).startswith("nothing else")]
+_rb_liars = [_node_id for _node_id in sorted(NODES)
+             if _rb_kids[_node_id] > 0
+             and _PROTO._rests_band(_rb_kids[_node_id]).startswith("nothing else")]
 check("no node in the whole tree that something else depends on is "
       "described as having nothing resting on it",
       not _rb_liars, _rb_liars[:8])
@@ -1752,7 +1752,7 @@ _fogged.fog = True
 _fogged.year = _fogged.year
 _before_log = len(_fogged.log)
 _fogged._state_pressure(_fogged.year)
-_new_lines = " ".join(m for _y, m in _fogged.log[_before_log:])
+_new_lines = " ".join(m for _year, m in _fogged.log[_before_log:])
 _leaked = [k for k in NODES if k in _new_lines]
 check("the state-notices-you log lines never leak a bare node id, under fog "
       "or off it - only this civilisation's own plain historical names",
@@ -1780,8 +1780,8 @@ check("with events off, the probabilistic confiscation/military rolls never "
       "eminence's own conspicuousness warning in core.py's step() is not "
       "gated on events either, only its dice roll is",
       not any("handed over" in m or "the state takes what it judges" in m
-             for _y, m in _det_off.log[-5:]),
-      [m for _y, m in _det_off.log[-5:]])
+             for _year, m in _det_off.log[-5:]),
+      [m for _year, m in _det_off.log[-5:]])
 check("...but the deterministic requisition/office tax still applies - it "
       "is not a roll of the dice, and a dice-free trial must still feel it",
       _det_off.capital < _cap_before_off, (_det_off.capital, _cap_before_off))
@@ -1792,5 +1792,5 @@ _det_on.rng = _AlwaysFires(1)
 _det_on._state_pressure(_det_on.year)
 check("...and with events on, the same always-fires rng DOES produce the "
       "confiscation tail event this time",
-      any("the state takes what it judges" in m for _y, m in _det_on.log),
-      [m for _y, m in _det_on.log[-5:]])
+      any("the state takes what it judges" in m for _year, m in _det_on.log),
+      [m for _year, m in _det_on.log[-5:]])

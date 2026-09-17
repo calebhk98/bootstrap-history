@@ -174,8 +174,8 @@ def caches():
     P.run(dict(P.SCENARIOS[0], years=20))
     print()
     for name in SHARED_CACHES:
-        v = getattr(EconomyMixin, name, None)
-        print("  %-32s %s" % (name, "populated, hash " + _h(vars(v) if hasattr(v, "__dict__") else v)))
+        value = getattr(EconomyMixin, name, None)
+        print("  %-32s %s" % (name, "populated, hash " + _h(vars(value) if hasattr(value, "__dict__") else value)))
     print()
     print("These are cached ON THE CLASS, so every Sim built afterwards in this")
     print("process shares them. They are built deterministically from JSON and")

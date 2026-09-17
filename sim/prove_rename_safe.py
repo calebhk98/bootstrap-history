@@ -56,9 +56,23 @@ WHAT IT DOES NOT COVER, and you must read this before trusting it:
     `f(s=...)` breaks. Parameters are Tier 2 for exactly this reason.
     `--check-params` reports which renamed locals are parameters, so you can
     check their call sites by hand.
-  * **Not comments or docstrings.** A docstring is `co_consts[0]`, so editing
-    one fails this check. Correct but occasionally annoying: keep a rename
-    commit free of prose edits and make those separately.
+  * **Docstrings yes, COMMENTS NO.** A docstring is `co_consts[0]`, so editing
+    one fails this check - correct, if occasionally annoying, and the reason to
+    keep a rename commit free of prose edits.
+
+    A comment is a different matter and it is this tool's real blind spot.
+    Comments are discarded by the compiler and appear nowhere in a code
+    object, so a rename that deleted or mangled every comment in a file would
+    pass here with a clean bill of health. In this repository that is not a
+    small gap: five of eight engine files are majority comment, and CLAUDE.md
+    calls them load-bearing, because they are how one agent hands the next the
+    reason a thing is the way it is.
+
+    So a proven rename still needs one more check, which is cheap:
+
+        git diff -U0 | grep -E "^[-+]\\s*#"
+
+    Nothing should come back. Do that before believing this tool, not after.
   * **Nothing about whether the new name is any good.** That is a review.
 """
 import argparse
