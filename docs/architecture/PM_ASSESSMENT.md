@@ -219,6 +219,18 @@ remaining phases are unreachable until it exists.
 
 ### 3.5 The cost of re-deriving 2,864 nodes is not mentioned anywhere
 
+> **Correction, added after measuring rather than estimating.** The claim below
+> is too pessimistic, and the error mattered enough to change the plan.
+> `lab` and `mat` are **already physical** - hours by trade and kg by material -
+> populated on 89% and 65% of nodes, with zero trades and zero materials the
+> price tables do not know. They are an authored input-output matrix, not a
+> re-authoring job. Only the three denarii lumps need converting: `cap` (2,504
+> nodes), `up` (1,411) and `rev` (1,249). And materials are 73.9% of the tree's
+> whole cost base, so pricing what is already physical converts three quarters
+> of all costs without editing a single node. See
+> `ENDOGENOUS_COSTS_AND_DOMAINS.md` §1, which supersedes this section and the
+> sequencing in §5.
+
 Review §12 calmly says `cap` becomes derived, `rev` becomes derived, `up`
 becomes explicit maintenance consumption, `risk` becomes derived, `adopt_yrs`
 gets replaced by diffusion behaviour. Every one of the 2,864 nodes carries

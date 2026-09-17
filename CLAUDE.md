@@ -62,11 +62,17 @@ biological limits, geography, and initial conditions (the population in 100 AD,
 which mines are open, what is already known). See
 `docs/architecture/HISTORICAL_SIM_ARCHITECTURE.md` §2.2 and §10.
 
-**3.2 The baseline must still look like our timeline.** With no intervention,
-an ensemble of runs should sit inside the historically plausible region -
-without getting there by scripting the answer. This constraint and 3.1 pull
-against each other; that tension is the central engineering problem of the
-project, not a detail.
+**3.2 The historical record must be a plausible outcome, not the only one.**
+Settled with the stakeholder. With no intervention, the real trajectory should
+be a plausible draw from an ensemble of baseline runs - validated against
+distributions and relationships (population ranges, urbanisation share,
+wage-to-grain ratios, technology appearance windows), never against dated
+events. If the baseline reliably reproduces the Antonine plague in 165 AD,
+that is evidence we cheated, not evidence it works.
+
+The baseline is explicitly allowed to get worse while the mechanisms that will
+make it good are being built. Every step toward endogeneity costs historical
+match in the short run, and there is no path that avoids it.
 
 **3.3 Interventions propagate through normal rules.** A gold deposit is a
 resource stock at a location. Rifles are objects with ammunition and
@@ -81,21 +87,23 @@ Tag them so the migration queue is measurable.
 
 ## 4. Architecture direction
 
-Two reference documents live in `docs/architecture/`:
+`docs/architecture/` holds four documents; read its README first. The live
+plan is `ENDOGENOUS_COSTS_AND_DOMAINS.md`: how a price gets calculated rather
+than looked up, which domains produce prices and which only consume them, and
+the milestones. `PM_ASSESSMENT.md` is the reasoning behind it. The two
+external design documents are saved verbatim as inputs to both, and are
+direction rather than approved plans.
 
-- `HISTORICAL_SIM_ARCHITECTURE.md` - the target model: shared world state,
-  stocks/flows/processes/constraints, capability frontiers, actor-owned
-  knowledge, endogenous prices.
-- `CURRENT_CODE_ARCHITECTURE_REVIEW.md` - a review of this repo against that
-  target, recommending in-place expansion rather than a rewrite.
+Two things from the plan worth knowing before you touch anything:
 
-Treat both as direction, not as an approved plan. Where they disagree with a
-decision recorded in this repo, the repo's recorded decision wins until it is
-explicitly revisited.
+**The tree has no production side.** It records what every process consumes
+and almost never what anything produces. Of 162 materials consumed, zero have
+a producing node that declares a yield; `iron_bar_kg` is consumed by 590 nodes
+and nothing makes it. That, and not the existence of `prices.json`, is why
+every cost bottoms out in a book value. Run `python3 sim/audit_costs.py`.
 
-The agreed direction in one line: **make the founder's mechanisms general
-enough that other actors can use them**, rather than making the founder less
-detailed.
+**Make the founder's mechanisms general enough that other actors can use
+them**, rather than making the founder less detailed.
 
 ---
 
@@ -106,18 +114,33 @@ python3 sim/simulator.py validate          # after EVERY edit to data/
 python3 sim/test_regressions.py            # full suite (~68s)
 python3 sim/test_regressions.py --list     # topic names
 python3 sim/test_regressions.py --only mines,demographics
-python3 sim/perf_fingerprint.py record before.json
-python3 sim/perf_fingerprint.py check before.json   # proves behaviour unchanged
+python3 sim/perf_fingerprint.py record before.json   # SEE THE WARNING IN 6
+python3 sim/perf_fingerprint.py check before.json
 python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
+python3 sim/audit_costs.py                 # how much of the cost base is calculated
+python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
 ```
+
+The suite runs from a checkout of any name, in any directory. If you find
+anything that depends on the checkout being called `rome`, it is a bug; see
+`sim/tests/test_suite_portability.py`.
 
 ---
 
 ## 6. Traps that have already bitten someone
 
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
-  outputs and messages, not on the simulation being the same simulation. Use
-  `perf_fingerprint.py` for that. It does not cover `protocol.py`.
+  outputs and messages, not on the simulation being the same simulation.
+  `perf_fingerprint.py` is supposed to cover that, and it does not cover
+  `protocol.py`, where a third of the code lives.
+- **`perf_fingerprint.py` does not currently reproduce its own recording.** A
+  pristine checkout of `origin/main`, recorded and then checked against
+  itself, reports two of nine scenarios diverged, at different years each
+  time. A single scenario run alone in a fresh process is stable across runs
+  and across hash seeds, so the suspicion is state shared between scenarios
+  inside one process. Until this is fixed, **a clean `check` proves nothing
+  and a dirty one accuses nothing.** Do not start a refactor of the
+  simulation loop behind it.
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
