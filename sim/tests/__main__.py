@@ -95,6 +95,17 @@ TOPICS = [
     # for why, and sim/world/__init__.py for the package as a whole. Also
     # unittest.TestCase-style.
     "demography",
+    # sim/world/military_logistics.py: rations, fodder, baggage-train range
+    # and firearm ammunition/maintenance as consumption arithmetic,
+    # standalone and with no import of sim/engine/ or the other sim/world/
+    # modules - see that module's own docstring for why. Also
+    # unittest.TestCase-style.
+    "military_logistics",
+    # sim/world/transport.py: freight cost per tonne-km from draught-animal
+    # metabolism, rolling resistance and gradient, standalone and with no
+    # import of sim/engine/ or the other sim/world/ modules - see that
+    # module's own docstring for why. Also unittest.TestCase-style.
+    "transport",
     # Guards the two silent bugs that made --burndown print "0 numbers
     # declared" while 32 were declared, which left milestone 1 unmeasurable.
     "constants_burndown",
