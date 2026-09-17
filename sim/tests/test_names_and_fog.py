@@ -70,8 +70,8 @@ check("...and a vague guess does not silently resolve to the goal",
 # suggestion offered, and none of them may come back "never heard of".
 # =============================================================================
 r, _, _ = proto([{"cmd": "why", "id": "aqueduct_survey"}], fog=True, kit="poor_scholar")
-_sugg = [s_.strip() for s_ in
-         r[0].get("error", "").split("Did you mean:")[-1].split(",") if s_.strip()] \
+_sugg = [suggestion.strip() for suggestion in
+         r[0].get("error", "").split("Did you mean:")[-1].split(",") if suggestion.strip()] \
         if "Did you mean" in r[0].get("error", "") else []
 _checks = [{"cmd": "why", "id": sid} for sid in _sugg]
 _verify, _, _ = (proto(_checks) if _checks else ([], "", 0))
@@ -107,8 +107,8 @@ check("...but the same heard-of list still shows up unfiltered when no "
       "empty heard-of list with no search active")
 _hd_match = S._agent_available(s_hd, NODES, {"find": "corpus"})
 check("...and a search that DOES match a heard-of item still shows it",
-      any(h["id"] == "corpus_written"
-          for h in _hd_match.get("heard_of_but_cannot_begin") or []),
+      any(entry["id"] == "corpus_written"
+          for entry in _hd_match.get("heard_of_but_cannot_begin") or []),
       _hd_match.get("heard_of_but_cannot_begin"))
 
 
@@ -119,7 +119,7 @@ check("...and a search that DOES match a heard-of item still shows it",
 # nearest) and `reverse`, on both the startable list and the heard-of one.
 # =============================================================================
 r, _, _ = proto([{"cmd": "available", "limit": 10, "sort": "risk", "reverse": True}])
-_risks = [e["risk"] for e in r[0]["available"]]
+_risks = [entry["risk"] for entry in r[0]["available"]]
 check("available can be sorted by risk, reversed, all the way through the page",
       _risks == sorted(_risks, reverse=True), _risks)
 
@@ -133,9 +133,9 @@ check("the printed table keeps the JSON's sort order rather than re-sorting "
 
 r2, _, _ = proto([{"cmd": "available", "limit": 3}])
 check("a plain page still defaults to cheapest first",
-      [e["cost"] for e in r2[0]["available"]]
-      == sorted(e["cost"] for e in r2[0]["available"]),
-      [e["cost"] for e in r2[0]["available"]])
+      [entry["cost"] for entry in r2[0]["available"]]
+      == sorted(entry["cost"] for entry in r2[0]["available"]),
+      [entry["cost"] for entry in r2[0]["available"]])
 
 # --- the tester's other question: does `available` show staff requirements,
 # and is the legend for them nearby rather than a screen away.

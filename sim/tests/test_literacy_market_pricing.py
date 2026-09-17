@@ -365,11 +365,11 @@ check("a total shortage never prices a commodity above its ceiling",
 rng = random.Random(3)
 noisy = [LED.price_with_noise("iron", 2000.0, 2475.0, rng) for _ in range(200)]
 check("fluctuation stays within the same floor/ceiling bounds over many draws",
-      all(base * c["price_floor_factor"] - 1e-9 <= p <= base * c["price_ceiling_factor"] + 1e-9
-          for p in noisy),
+      all(base * c["price_floor_factor"] - 1e-9 <= price <= base * c["price_ceiling_factor"] + 1e-9
+          for price in noisy),
       (min(noisy), max(noisy)))
 check("fluctuation actually varies year to year rather than being decorative",
-      len(set(round(p, 4) for p in noisy)) > 50, len(set(noisy)))
+      len(set(round(price, 4) for price in noisy)) > 50, len(set(noisy)))
 
 # --- 'how much you have' is a stock, tracked separately from the flows
 # above (COMMODITIES.md section 8): a minimal Ledger proves the distinction
