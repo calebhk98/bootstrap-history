@@ -202,7 +202,11 @@ def _import_declaring_modules():
     # above: this tool should keep reporting when something else is broken.
     # The rule when you add a module that calls declare(): add it here in the
     # same commit, or your numbers do not exist as far as the burndown knows.
-    for module in ("engine.data", "sim.world.agriculture", "sim.world.demography"):
+    for module in ("engine.data",
+                   "sim.world.agriculture",
+                   "sim.world.demography",
+                   "sim.world.transport",
+                   "sim.world.military_logistics"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001

@@ -73,26 +73,77 @@ class BurndownActuallyCountsTests(unittest.TestCase):
         self.assertIn("sim.world.agriculture", stdout)
         self.assertIn("sim.world.demography", stdout)
 
-    def test_in_process_and_subprocess_agree(self):
-        # The dual-registry bug made these two disagree: importing the
-        # modules by hand showed 32, running the tool showed 0. If they ever
-        # disagree again, the two-module-object problem is back.
-        sys.path.insert(0, _REPOSITORY_ROOT)
-        try:
-            from sim.world import agriculture as _agriculture  # noqa: F401
-            from sim.world import demography as _demography    # noqa: F401
-            from sim import constants
-            in_process = constants.burndown()["declared"]
-        finally:
-            sys.path.remove(_REPOSITORY_ROOT)
+    def test_a_clean_registry_matches_the_tools_count(self):
+        # WHAT THIS REPLACES, AND WHY. The first version of this check
+        # compared an IN-PROCESS registry against the tool's. That was wrong
+        # and it failed as soon as two new declaring modules appeared: inside
+        # a full suite run the in-process registry has accumulated every
+        # module that any earlier topic happened to import, so it counts more
+        # than the tool's explicit list does. The check was measuring test
+        # execution order, not the bug it was written for.
+        #
+        # The bug it IS written for is the dual-registry one - this file
+        # loaded twice, as __main__ and as sim.constants, with the
+        # declarations landing in one copy and the report reading the other.
+        # Two clean subprocesses catch that without either being polluted:
+        # one imports the modules by their dotted names and reads the
+        # registry, the other runs the command-line tool.
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "from sim import constants\n"
+            "constants._import_declaring_modules()\n"
+            "constants._adopt_the_canonical_registry()\n"
+            "print(constants.burndown()['declared'])\n" % _REPOSITORY_ROOT)
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=_REPOSITORY_ROOT, capture_output=True,
+                                text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        imported_cleanly = int(result.stdout.strip())
 
         stdout, _stderr = self._run_burndown()
         from_the_tool = int(stdout.split()[0])
         self.assertEqual(
-            in_process, from_the_tool,
-            "the registry seen by an in-process import disagrees with the "
-            "one the command-line tool reports - see this module's "
-            "docstring on the two module objects.")
+            imported_cleanly, from_the_tool,
+            "importing the declaring modules by name gives a different "
+            "count than the command-line tool reports. That is the "
+            "two-module-object problem back again - see this module's "
+            "docstring.")
+
+    def test_every_declaring_module_under_sim_world_is_in_the_list(self):
+        # The rule the comment in _import_declaring_modules() states, now
+        # enforced instead of merely asked for. A module that calls declare()
+        # and is not in that list has its numbers silently missing from the
+        # burndown, which looks exactly like having fewer outstanding
+        # promises than you really do - the optimistic direction, and the
+        # one nobody checks.
+        #
+        # This is how transport.py and military_logistics.py went missing:
+        # both were written by agents who were correctly told not to edit
+        # sim/constants.py, so neither could add itself. A rule that depends
+        # on the person who cannot follow it is not a rule.
+        world_directory = os.path.join(_REPOSITORY_ROOT, "sim", "world")
+        declaring = set()
+        for entry in sorted(os.listdir(world_directory)):
+            if not entry.endswith(".py") or entry == "__init__.py":
+                continue
+            with open(os.path.join(world_directory, entry)) as handle:
+                if "declare(" in handle.read():
+                    declaring.add("sim.world." + entry[:-3])
+
+        sys.path.insert(0, _REPOSITORY_ROOT)
+        try:
+            import inspect
+            from sim import constants
+            listed = inspect.getsource(constants._import_declaring_modules)
+        finally:
+            sys.path.remove(_REPOSITORY_ROOT)
+
+        missing = sorted(name for name in declaring if name not in listed)
+        self.assertEqual(
+            missing, [],
+            "these sim/world modules call declare() but are not in "
+            "sim/constants.py's _import_declaring_modules() list, so their "
+            "numbers are missing from the burndown: %s" % ", ".join(missing))
 
 
 if __name__ == "__main__":
