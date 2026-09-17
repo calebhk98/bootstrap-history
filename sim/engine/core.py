@@ -1,18 +1,18 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, json, math, os, random
-from collections import defaultdict
 
 from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, DEFAULTS, WAGES, load_civ, load_geography,
                    load_resources, trade_family)
 
 
-from .economy import EconomyMixin, _InvalidatingSet
+from .economy import EconomyMixin
 from .fog import FogMixin
 from .geography import GeographyMixin
 from .labour import LabourMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
+from .actors import Household
 
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
@@ -79,89 +79,34 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._pop_tech_pending = []
         self.year = self.cfg["start_year"]
         c = self.cfg
+        # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
+        # as its own object rather than eighty-odd attributes of this one. See
+        # sim/engine/actors/household.py for what it holds and
+        # docs/architecture/HOUSEHOLD_EXTRACTION.md for why: making this an
+        # object of its own, rather than more state on `Sim`, is what would let
+        # a government, a rival household or a firm exist someday, each owning
+        # its own purse and its own knowledge instead of sharing this one.
+        #
         # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
         # The kits are quoted in Rome 100 AD denarii, and once revenue and
         # living costs started converting (see economy.living_cost) leaving the
         # purse flat meant "four hundred denarii" bought a third more months of
         # bread in Luoyang than in Scandinavia, silently, for no modelled
         # reason. A kit is "a few months' subsistence", and a few months'
-        # subsistence costs what it costs where you are.
-        self.capital = float(c["start_capital"]) * self.price_index
-        self.done = set()
-        self._done_seq = None
-        self._cap_factor = None   # capability_factor()'s cache; see economy.py
-        self.training = []        # [[artisan_capacity, year_it_matures], ...]
-        self.granted = set()      # held because the SOCIETY has it, not because you built it
-        self.active = {}          # id -> dict(ph_left, years_elapsed, spent)
-        self.failed_attempts = defaultdict(int)
-        # YOU ARRIVE ALONE. No employees, no slaves, no household: you stepped
-        # out of the future into a street in a city where nobody knows you, and
-        # the three artisans the model used to hand you on arrival were never
-        # hired by anybody. You are your own only scholar (see
-        # effective_scholars) and everyone else has to be found, paid, taught or
-        # bought, by you, on purpose.
-        self.scholars = 0.0
-        self.artisans = 0.0
-        self.directors_extra = 0.0
-        # Standing staff BY TRADE, which is what makes a smith not a scribe.
-        self.employees = {}
-        # Trades this society does not have and you have taught into existence.
-        self.trades_created = set()
-        # WHEN a taught trade was first taught, and which taught trades this
-        # society has since gone on to naturalise on its own - see
-        # SocietyMixin.advance_society (society.py) for what moves these and
-        # why. Separate from trades_created because that set answers "can
-        # this be hired at all", which stays true for ever once taught, while
-        # these two answer "since when" and "does the society now supply its
-        # own", which trades_created alone cannot say.
-        self.trade_introduced_year = {}
-        self.trades_endemic = set()
-        self.contract_projects = set()   # projects staffed by the job, not by employees
-        self.wages_paid = 0.0
-        self.contract_hours = {}         # trade -> hours bought this year, by the job
-        self.commissioned = {}           # trade -> hours bought this year, cumulative log
-        self.teaching_hours_this_year = 0.0
-        # A STANDING INSTRUCTION, NOT A ONE-TURN COMMAND. {project id: hours
-        # a year} for every project the player has told step() to give a
-        # fixed share of their own hours to, every year, without having to
-        # retype it - this game is played over hundreds of turns. The
-        # reserved key "work" is the same standing instruction for selling
-        # hours as wages (see `work_trade` just below): "work" is never a
-        # node id, so it can never collide with one. Read ONLY by step()'s
-        # own allocator (core.py, "5. progress") and reported back verbatim
-        # by `portfolio` (protocol.py) - see that loop's own comment on why
-        # an explicit allocation has to flow through the exact code that
-        # already decides and reports the ordinary, undirected split, not a
-        # second path that could disagree with it. Hours nobody has
-        # directed are untouched by this and keep being shared out by
-        # priority exactly as before - a player who never calls `allocate`
-        # sees no change at all.
-        self.hour_allocations = {}
-        # WHICH TRADE "work" IN hour_allocations SELLS HOURS AS. A STANDING
-        # hour-allocation for wages has to name one, the same way the `work`
-        # command itself takes a trade argument every time it is typed; this
-        # is that argument, remembered.
-        self.work_trade = None
-        self.trade_hours_used = {}       # trade -> hours consumed by projects this year
-        self.mothballed = set()          # completed works you shut down on purpose
-        self.forgotten = {}              # {node: year} destroyed by a sacking
-        self.opened_year = {}            # {node: year} the doors first opened
-        self.paid_towards = {}           # {node: denarii} sunk before it stopped
-        self.last_taught = {}            # {trade: year} auto_train last taught it
-        self.wages_prepaid = 0.0         # first-year wages `hire` already took
-        # WHAT YOU ACTUALLY RUN, as opposed to what you know how to do. Revenue
-        # and upkeep follow this set and nothing else does. See is_venture and
-        # open_venture in projects.py: completing the research used to start
-        # paying you whether or not you ever opened the doors.
+        # subsistence costs what it costs where you are. Computed here, where
+        # `price_index` is in scope, and handed in as a plain number: a
+        # Household should not need to know the shape of a run's config dict
+        # to be built.
         #
-        # An _InvalidatingSet (economy.py), not a plain set: every .add/
-        # .discard/.update/... invalidates capability_factor()'s cache
-        # through the object itself. See _operating_changed()'s comment in
-        # economy.py for why this is a set subclass and not a property.
-        self.operating = _InvalidatingSet(on_change=self._operating_changed)
-        self.bondage_years_left = 0.0    # years of service still owed for a debt
-        self.bondage_debt = 0.0
-        self.credit_frozen_until = 0     # year until which nobody will fund new work
+        # `operating_changed=self._operating_changed`: `self` (this Sim) is
+        # fully allocated already, even this early in `__init__` - Python
+        # hands `__init__` a real, if not-yet-populated, instance - so a bound
+        # method of it can be passed down right now. See Household.__init__'s
+        # own docstring for why the callback travels this way instead of the
+        # household reaching back up for it.
+        self.household = Household(
+            starting_capital=float(c["start_capital"]) * self.price_index,
+            operating_changed=self._operating_changed)
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # A tester's objection, and the right one: "everything that is automatic
@@ -171,6 +116,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # log line saying it had happened. Defaults differ between the optimizer
         # and a human: the optimizer has to run unattended, so it manages its own
         # household; a player is handed nothing they did not ask for.
+        #
+        # STAYS ON `Sim`, NOT ON `Household` - see household.py's module
+        # docstring: one key, auto_court_heir, is written for succession after
+        # a mortal owner's death, and the rest of the dict is not worth
+        # splitting away from it for that.
         self.policy = {
             "auto_hire":     not manual,   # grow the staff toward what you can support
             # ON for the optimizer, OFF for a player, and that distinction is the
@@ -226,66 +176,43 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # before this field existed, and that is exactly what happened the
         # first time this was tried: all nine fingerprint scenarios
         # diverged at year 0, every one of them tracing back to a
-        # SAVE_FIELDS member. So every name below has been checked against
-        # SAVE_FIELDS (protocol.py) and is NOT a member of it; the ones
-        # that ARE members (`insolvent_years`, `wage_hours_this_year`,
-        # `_said_deputies`, `_said_scandal`, `last_withdrawal`,
-        # `_food_pop_bonus_applied`, `_said_output`, `_said_debasement`,
-        # `last_patron_death`) are deliberately left OUT of this
-        # constructor and still read through `getattr(self, name, default)`
-        # at every call site, unchanged - the lazy-creation pattern there is
-        # load-bearing, not an oversight. (Also checked: no `del self.<name>`
-        # anywhere ever removes any of these again - there is exactly one
-        # `del self.` in the whole package, `del self.active[k]` in
-        # projects.py, a dict item, not an attribute.)
-        self._staff_scale = 1.0            # labour.py's staff_capacity() sets the real value every step before core.py reads it; this is only the pre-first-step default
-        self._spend_this_year = 0.0        # denarii spent this year; reset to 0.0 at the end of every step() (spend_last_year, the field that IS saved, always gets a real value from this every step)
-        self._said_eminence = -999         # last eminence "band" warned about; -999 guarantees the first qualifying band always warns
+        # SAVE_FIELDS member.
+        #
+        # ONLY THE FIELDS THAT STAYED ON `Sim` remain here after the household
+        # extraction - the household's own equivalents of this same pattern
+        # (`insolvent_years`, `wage_hours_this_year`, `_said_deputies`, and
+        # the rest) moved to Household.__init__ along with everything else it
+        # owns; see that constructor's own copy of this comment. What is left
+        # below is WORLD state (a shock or a debasement is something that
+        # happened to the whole society, not to this household alone) and so
+        # was never a candidate to move.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns
-        self._said_requisition = -999         # last year a state-requisition note was printed
-        self._said_notice_approach = 0        # last state-notice "band" warned about
-        self.last_military_demand = -999      # last year a military levy was taken
-        self._said_confiscation_band = -1     # last confiscation-risk "band" warned about
         self._literacy_said = -999            # last year a literacy-census note was printed
         self._food_diffusion_said = -999      # last year a food-diffusion note was printed
         self._said_condition = set()          # hazard-condition messages already printed once
+        # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
+        # to a household in general, and stay on `Sim` for exactly that reason
+        # - see household.py's module docstring for the full argument. Moving
+        # them would mean deciding, right now, with no second example to
+        # design against, what death, personal hours or a patron mean for a
+        # firm or a government; that is a real design question and this
+        # extraction does not answer it by default.
         self.founder_alive = True
-        self.gov = 0.0
-        self.log = []
         self.dead_reason = None
-        self.goal_year = None
-        self.money_real = 1.0     # purchasing power of a denarius, 1.0 at 100 AD
-
-        self.economy = 1.0        # size of the imperial economy relative to 100 AD
-        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         self.director_hours_spent_founder = 0.0
-        self.stalled = 0
-        self.last_settlement = -999
-        self.bounties_paid = 0
-        self.bountied = set()
-        self.total_spend = 0.0
         # founder remaining lifespan, elite male already aged 35
         self.life_left = (1e9 if self.cfg["immortal"]
                           else max(5, rng.gauss(self.cfg["founder_life_mean"],
                                                 self.cfg["founder_life_sd"])))
-        # REPUTATION: your ability to be believed and followed. Distinct from money
-        # and from political protection. A man with a great reputation gets his
-        # ideas adopted; a man without one gets them ignored however right he is.
-        self.reputation = 5.0
-        # SCANDAL replaces the old scalar "suspicion". Doing something a society
-        # cannot explain is alarming; doing a lot of ordinary things over decades
-        # is not. The old model conflated speed with sorcery, which is wrong: the
-        # iPhone was astonishing in 2007 and boring by 2012.
-        self.scandal = 0.0
-        self.eminence = 0.0
-        self.familiarity = 0.0      # how used to you the world has become
-        self.protection = 0.0       # patrons, office, citizenship, priesthood
-        self.bribes_ytd = 0.0
-        self.slaves = 0
-        self.freedmen = 0
-        self.manumitted_total = 0
         self.living_cost_paid = 0.0
-        self.atrocity = 0           # counted, never scored as a benefit
+        # WORLD state: monetary and real facts about the whole civilisation,
+        # not about this household. money_real is currency debasement;
+        # economy/output_factor are the size and health of the whole imperial
+        # economy relative to 100 AD, crushed by war and plague, not by any
+        # one household's fortunes.
+        self.money_real = 1.0     # purchasing power of a denarius, 1.0 at 100 AD
+        self.economy = 1.0        # size of the imperial economy relative to 100 AD
+        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # Until this existed the model assumed that if a material existed
         # anywhere you had unlimited quantities of it. That was the largest
@@ -323,27 +250,18 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._mineral_scale = {m: self._compute_mineral_scale(m)
                                 for m in ("iron", "coal", "copper", "lead",
                                           "tin", "silver", "saltpetre")}
-        self.forest_ha = 0.0        # coppice you own, in hectares
-        self.nitre_bed_m2 = 0.0
-        self.market_pressure = 0.0  # how hard you have recently leaned on the slave market
-        # A WORKING IS A THING: material, rated capacity, the year it was
-        # commissioned, what it cost to sink, and its own depletion clock -
-        # see economy.py's class comment above _workings_of(). mine_capacity
-        # is now a property computed from this list (economy.py), not a
-        # second number kept in sync by hand.
-        self.mines = []             # your OWN workings - see EconomyMixin
-        self.mine_pending = {}      # sunk but not yet producing
-        self.mine_ready = {}        # material -> year it comes on stream
-        self.mine_cost_paid = 0.0
-        self.shortages = collections.Counter()
-        self.throttle = 1.0
-        self.binding = None
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned. A playtester pointed out that these were being
         # counted in done_earned as though the founder had built them, which both
         # flatters the player and, worse, exposed a society's own ancestral
         # crafts to being "forgotten" in a sacking. Han China does not forget how
         # to cast iron because your workshop burned down.
+        #
+        # Populates self.household.done/.granted, not a fresh set here, and
+        # stays on Sim rather than moving into Household.__init__ because it
+        # needs the loaded tree and civ record to validate against (and to
+        # raise ValueError on an unknown starting technology) - state this
+        # class deliberately does not hold a reference to.
         starting_techs = self.civ["starting_techs"]
         missing = sorted(k for k in starting_techs if k not in self.nodes)
         if missing:
@@ -353,14 +271,951 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             raise ValueError("civilization %r lists unknown starting technologies: %s"
                              % (self.civ.get("id", "?"), ", ".join(missing)))
         for k in starting_techs:
-            self.done.add(k)
+            self.household.done.add(k)
             self._done_changed()
-            self.granted.add(k)
+            self.household.granted.add(k)
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer Roman materials or institutions for another
         # civilization from those fields.
+
+    # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
+    #
+    # Everything below is a thin, single-line forward to `self.household`,
+    # for the JSON protocol, save/load, the CLI and the tests - none of them
+    # hot, all of them outside the engine. See
+    # docs/architecture/HOUSEHOLD_EXTRACTION.md section 2 for why this is a
+    # property here and a rewritten call site (`self.household.x`) inside the
+    # six mixins and core.py's own methods, rather than one convenient
+    # `__getattr__` covering both: measured at 51x slower per access than the
+    # rewrite, and slow exactly on the path - `self.x` succeeding today,
+    # `__getattr__` firing only on failure - that is the COMMON case for every
+    # one of these once the field lives on `household` instead of `self`.
+    #
+    # Every getter is exactly one attribute access and nothing else, on
+    # purpose (see the same section): a bug inside a longer property body
+    # would raise its own AttributeError, indistinguishable from the
+    # intentional one below, and get silently swallowed by any caller using
+    # `getattr(sim, name, default)`.
+    #
+    # LAZY FIELDS (the household never assigns these until something actually
+    # happens worth recording) are marked below: the getter raises
+    # AttributeError exactly when `self.household` does not have the
+    # attribute yet, ON PURPOSE - it supplies no default of its own, so
+    # `getattr(sim, name, default)` still sees the field's true, possibly-
+    # absent, state, exactly as it did before this field moved. See
+    # sim/ARCHITECTURE.md for the one time promoting a lazily-created field
+    # to a real attribute passed the whole suite while silently breaking
+    # this exact contract.
+
+    @property
+    def _cap_factor(self):
+        return self.household._cap_factor
+
+    @_cap_factor.setter
+    def _cap_factor(self, value):
+        self.household._cap_factor = value
+
+    @property
+    def _done_seq(self):
+        return self.household._done_seq
+
+    @_done_seq.setter
+    def _done_seq(self, value):
+        self.household._done_seq = value
+
+    @property
+    def _said_confiscation_band(self):
+        return self.household._said_confiscation_band
+
+    @_said_confiscation_band.setter
+    def _said_confiscation_band(self, value):
+        self.household._said_confiscation_band = value
+
+    @property
+    def _said_eminence(self):
+        return self.household._said_eminence
+
+    @_said_eminence.setter
+    def _said_eminence(self, value):
+        self.household._said_eminence = value
+
+    @property
+    def _said_notice_approach(self):
+        return self.household._said_notice_approach
+
+    @_said_notice_approach.setter
+    def _said_notice_approach(self, value):
+        self.household._said_notice_approach = value
+
+    @property
+    def _said_requisition(self):
+        return self.household._said_requisition
+
+    @_said_requisition.setter
+    def _said_requisition(self, value):
+        self.household._said_requisition = value
+
+    @property
+    def _spend_this_year(self):
+        return self.household._spend_this_year
+
+    @_spend_this_year.setter
+    def _spend_this_year(self, value):
+        self.household._spend_this_year = value
+
+    @property
+    def _staff_scale(self):
+        return self.household._staff_scale
+
+    @_staff_scale.setter
+    def _staff_scale(self, value):
+        self.household._staff_scale = value
+
+    @property
+    def active(self):
+        return self.household.active
+
+    @active.setter
+    def active(self, value):
+        self.household.active = value
+
+    @property
+    def artisans(self):
+        return self.household.artisans
+
+    @artisans.setter
+    def artisans(self, value):
+        self.household.artisans = value
+
+    @property
+    def atrocity(self):
+        return self.household.atrocity
+
+    @atrocity.setter
+    def atrocity(self, value):
+        self.household.atrocity = value
+
+    @property
+    def binding(self):
+        return self.household.binding
+
+    @binding.setter
+    def binding(self, value):
+        self.household.binding = value
+
+    @property
+    def bondage_debt(self):
+        return self.household.bondage_debt
+
+    @bondage_debt.setter
+    def bondage_debt(self, value):
+        self.household.bondage_debt = value
+
+    @property
+    def bondage_years_left(self):
+        return self.household.bondage_years_left
+
+    @bondage_years_left.setter
+    def bondage_years_left(self, value):
+        self.household.bondage_years_left = value
+
+    @property
+    def bountied(self):
+        return self.household.bountied
+
+    @bountied.setter
+    def bountied(self, value):
+        self.household.bountied = value
+
+    @property
+    def bounties_paid(self):
+        return self.household.bounties_paid
+
+    @bounties_paid.setter
+    def bounties_paid(self, value):
+        self.household.bounties_paid = value
+
+    @property
+    def bribes_ytd(self):
+        return self.household.bribes_ytd
+
+    @bribes_ytd.setter
+    def bribes_ytd(self, value):
+        self.household.bribes_ytd = value
+
+    @property
+    def capital(self):
+        return self.household.capital
+
+    @capital.setter
+    def capital(self, value):
+        self.household.capital = value
+
+    @property
+    def commissioned(self):
+        return self.household.commissioned
+
+    @commissioned.setter
+    def commissioned(self, value):
+        self.household.commissioned = value
+
+    @property
+    def contract_hours(self):
+        return self.household.contract_hours
+
+    @contract_hours.setter
+    def contract_hours(self, value):
+        self.household.contract_hours = value
+
+    @property
+    def contract_projects(self):
+        return self.household.contract_projects
+
+    @contract_projects.setter
+    def contract_projects(self, value):
+        self.household.contract_projects = value
+
+    @property
+    def credit_frozen_until(self):
+        return self.household.credit_frozen_until
+
+    @credit_frozen_until.setter
+    def credit_frozen_until(self, value):
+        self.household.credit_frozen_until = value
+
+    @property
+    def directors_extra(self):
+        return self.household.directors_extra
+
+    @directors_extra.setter
+    def directors_extra(self, value):
+        self.household.directors_extra = value
+
+    @property
+    def done(self):
+        return self.household.done
+
+    @done.setter
+    def done(self, value):
+        self.household.done = value
+
+    @property
+    def eminence(self):
+        return self.household.eminence
+
+    @eminence.setter
+    def eminence(self, value):
+        self.household.eminence = value
+
+    @property
+    def employees(self):
+        return self.household.employees
+
+    @employees.setter
+    def employees(self, value):
+        self.household.employees = value
+
+    @property
+    def failed_attempts(self):
+        return self.household.failed_attempts
+
+    @failed_attempts.setter
+    def failed_attempts(self, value):
+        self.household.failed_attempts = value
+
+    @property
+    def familiarity(self):
+        return self.household.familiarity
+
+    @familiarity.setter
+    def familiarity(self, value):
+        self.household.familiarity = value
+
+    @property
+    def forest_ha(self):
+        return self.household.forest_ha
+
+    @forest_ha.setter
+    def forest_ha(self, value):
+        self.household.forest_ha = value
+
+    @property
+    def forgotten(self):
+        return self.household.forgotten
+
+    @forgotten.setter
+    def forgotten(self, value):
+        self.household.forgotten = value
+
+    @property
+    def freedmen(self):
+        return self.household.freedmen
+
+    @freedmen.setter
+    def freedmen(self, value):
+        self.household.freedmen = value
+
+    @property
+    def goal_year(self):
+        return self.household.goal_year
+
+    @goal_year.setter
+    def goal_year(self, value):
+        self.household.goal_year = value
+
+    @property
+    def gov(self):
+        return self.household.gov
+
+    @gov.setter
+    def gov(self, value):
+        self.household.gov = value
+
+    @property
+    def granted(self):
+        return self.household.granted
+
+    @granted.setter
+    def granted(self, value):
+        self.household.granted = value
+
+    @property
+    def hour_allocations(self):
+        return self.household.hour_allocations
+
+    @hour_allocations.setter
+    def hour_allocations(self, value):
+        self.household.hour_allocations = value
+
+    @property
+    def last_military_demand(self):
+        return self.household.last_military_demand
+
+    @last_military_demand.setter
+    def last_military_demand(self, value):
+        self.household.last_military_demand = value
+
+    @property
+    def last_settlement(self):
+        return self.household.last_settlement
+
+    @last_settlement.setter
+    def last_settlement(self, value):
+        self.household.last_settlement = value
+
+    @property
+    def last_taught(self):
+        return self.household.last_taught
+
+    @last_taught.setter
+    def last_taught(self, value):
+        self.household.last_taught = value
+
+    @property
+    def log(self):
+        return self.household.log
+
+    @log.setter
+    def log(self, value):
+        self.household.log = value
+
+    @property
+    def manumitted_total(self):
+        return self.household.manumitted_total
+
+    @manumitted_total.setter
+    def manumitted_total(self, value):
+        self.household.manumitted_total = value
+
+    @property
+    def market_pressure(self):
+        return self.household.market_pressure
+
+    @market_pressure.setter
+    def market_pressure(self, value):
+        self.household.market_pressure = value
+
+    @property
+    def mine_cost_paid(self):
+        return self.household.mine_cost_paid
+
+    @mine_cost_paid.setter
+    def mine_cost_paid(self, value):
+        self.household.mine_cost_paid = value
+
+    @property
+    def mine_pending(self):
+        return self.household.mine_pending
+
+    @mine_pending.setter
+    def mine_pending(self, value):
+        self.household.mine_pending = value
+
+    @property
+    def mine_ready(self):
+        return self.household.mine_ready
+
+    @mine_ready.setter
+    def mine_ready(self, value):
+        self.household.mine_ready = value
+
+    @property
+    def mine_tranches(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.mine_tranches
+
+    @mine_tranches.setter
+    def mine_tranches(self, value):
+        self.household.mine_tranches = value
+
+    @property
+    def mines(self):
+        return self.household.mines
+
+    @mines.setter
+    def mines(self, value):
+        self.household.mines = value
+
+    @property
+    def mothballed(self):
+        return self.household.mothballed
+
+    @mothballed.setter
+    def mothballed(self, value):
+        self.household.mothballed = value
+
+    @property
+    def nitre_bed_m2(self):
+        return self.household.nitre_bed_m2
+
+    @nitre_bed_m2.setter
+    def nitre_bed_m2(self, value):
+        self.household.nitre_bed_m2 = value
+
+    @property
+    def opened_year(self):
+        return self.household.opened_year
+
+    @opened_year.setter
+    def opened_year(self, value):
+        self.household.opened_year = value
+
+    @property
+    def operating(self):
+        return self.household.operating
+
+    @operating.setter
+    def operating(self, value):
+        self.household.operating = value
+
+    @property
+    def paid_towards(self):
+        return self.household.paid_towards
+
+    @paid_towards.setter
+    def paid_towards(self, value):
+        self.household.paid_towards = value
+
+    @property
+    def protection(self):
+        return self.household.protection
+
+    @protection.setter
+    def protection(self, value):
+        self.household.protection = value
+
+    @property
+    def reputation(self):
+        return self.household.reputation
+
+    @reputation.setter
+    def reputation(self, value):
+        self.household.reputation = value
+
+    @property
+    def scandal(self):
+        return self.household.scandal
+
+    @scandal.setter
+    def scandal(self, value):
+        self.household.scandal = value
+
+    @property
+    def scholars(self):
+        return self.household.scholars
+
+    @scholars.setter
+    def scholars(self, value):
+        self.household.scholars = value
+
+    @property
+    def shortages(self):
+        return self.household.shortages
+
+    @shortages.setter
+    def shortages(self, value):
+        self.household.shortages = value
+
+    @property
+    def slaves(self):
+        return self.household.slaves
+
+    @slaves.setter
+    def slaves(self, value):
+        self.household.slaves = value
+
+    @property
+    def stalled(self):
+        return self.household.stalled
+
+    @stalled.setter
+    def stalled(self, value):
+        self.household.stalled = value
+
+    @property
+    def teaching_hours_this_year(self):
+        return self.household.teaching_hours_this_year
+
+    @teaching_hours_this_year.setter
+    def teaching_hours_this_year(self, value):
+        self.household.teaching_hours_this_year = value
+
+    @property
+    def throttle(self):
+        return self.household.throttle
+
+    @throttle.setter
+    def throttle(self, value):
+        self.household.throttle = value
+
+    @property
+    def total_spend(self):
+        return self.household.total_spend
+
+    @total_spend.setter
+    def total_spend(self, value):
+        self.household.total_spend = value
+
+    @property
+    def trade_hours_used(self):
+        return self.household.trade_hours_used
+
+    @trade_hours_used.setter
+    def trade_hours_used(self, value):
+        self.household.trade_hours_used = value
+
+    @property
+    def trade_introduced_year(self):
+        return self.household.trade_introduced_year
+
+    @trade_introduced_year.setter
+    def trade_introduced_year(self, value):
+        self.household.trade_introduced_year = value
+
+    @property
+    def trades_created(self):
+        return self.household.trades_created
+
+    @trades_created.setter
+    def trades_created(self, value):
+        self.household.trades_created = value
+
+    @property
+    def trades_endemic(self):
+        return self.household.trades_endemic
+
+    @trades_endemic.setter
+    def trades_endemic(self, value):
+        self.household.trades_endemic = value
+
+    @property
+    def training(self):
+        return self.household.training
+
+    @training.setter
+    def training(self, value):
+        self.household.training = value
+
+    @property
+    def wages_paid(self):
+        return self.household.wages_paid
+
+    @wages_paid.setter
+    def wages_paid(self, value):
+        self.household.wages_paid = value
+
+    @property
+    def wages_prepaid(self):
+        return self.household.wages_prepaid
+
+    @wages_prepaid.setter
+    def wages_prepaid(self, value):
+        self.household.wages_prepaid = value
+
+    @property
+    def work_trade(self):
+        return self.household.work_trade
+
+    @work_trade.setter
+    def work_trade(self, value):
+        self.household.work_trade = value
+
+    @property
+    def _dashboard_history(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._dashboard_history
+
+    @_dashboard_history.setter
+    def _dashboard_history(self, value):
+        self.household._dashboard_history = value
+
+    @property
+    def _demand_by_emp_key_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._demand_by_emp_key_cache
+
+    @_demand_by_emp_key_cache.setter
+    def _demand_by_emp_key_cache(self, value):
+        self.household._demand_by_emp_key_cache = value
+
+    @property
+    def _demand_by_tag_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._demand_by_tag_cache
+
+    @_demand_by_tag_cache.setter
+    def _demand_by_tag_cache(self, value):
+        self.household._demand_by_tag_cache = value
+
+    @property
+    def _goods_cat_state_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._goods_cat_state_cache
+
+    @_goods_cat_state_cache.setter
+    def _goods_cat_state_cache(self, value):
+        self.household._goods_cat_state_cache = value
+
+    @property
+    def _labour_pressure(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._labour_pressure
+
+    @_labour_pressure.setter
+    def _labour_pressure(self, value):
+        self.household._labour_pressure = value
+
+    @property
+    def _last_buy_refusal(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._last_buy_refusal
+
+    @_last_buy_refusal.setter
+    def _last_buy_refusal(self, value):
+        self.household._last_buy_refusal = value
+
+    @property
+    def _last_subst_gap(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._last_subst_gap
+
+    @_last_subst_gap.setter
+    def _last_subst_gap(self, value):
+        self.household._last_subst_gap = value
+
+    @property
+    def _material_demand_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._material_demand_cache
+
+    @_material_demand_cache.setter
+    def _material_demand_cache(self, value):
+        self.household._material_demand_cache = value
+
+    @property
+    def _material_stock_ledger(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._material_stock_ledger
+
+    @_material_stock_ledger.setter
+    def _material_stock_ledger(self, value):
+        self.household._material_stock_ledger = value
+
+    @property
+    def _operating_ver(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._operating_ver
+
+    @_operating_ver.setter
+    def _operating_ver(self, value):
+        self.household._operating_ver = value
+
+    @property
+    def _practice_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._practice_cache
+
+    @_practice_cache.setter
+    def _practice_cache(self, value):
+        self.household._practice_cache = value
+
+    @property
+    def _rev_up_candidates_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._rev_up_candidates_cache
+
+    @_rev_up_candidates_cache.setter
+    def _rev_up_candidates_cache(self, value):
+        self.household._rev_up_candidates_cache = value
+
+    @property
+    def _said_autoopen(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_autoopen
+
+    @_said_autoopen.setter
+    def _said_autoopen(self, value):
+        self.household._said_autoopen = value
+
+    @property
+    def _said_deputies(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_deputies
+
+    @_said_deputies.setter
+    def _said_deputies(self, value):
+        self.household._said_deputies = value
+
+    @property
+    def _said_near_limit(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_near_limit
+
+    @_said_near_limit.setter
+    def _said_near_limit(self, value):
+        self.household._said_near_limit = value
+
+    @property
+    def _said_parallelism(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_parallelism
+
+    @_said_parallelism.setter
+    def _said_parallelism(self, value):
+        self.household._said_parallelism = value
+
+    @property
+    def _said_scandal(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_scandal
+
+    @_said_scandal.setter
+    def _said_scandal(self, value):
+        self.household._said_scandal = value
+
+    @property
+    def _said_stack_caution(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._said_stack_caution
+
+    @_said_stack_caution.setter
+    def _said_stack_caution(self, value):
+        self.household._said_stack_caution = value
+
+    @property
+    def _stock_throttle_cache(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._stock_throttle_cache
+
+    @_stock_throttle_cache.setter
+    def _stock_throttle_cache(self, value):
+        self.household._stock_throttle_cache = value
+
+    @property
+    def _stock_throttle_sig(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household._stock_throttle_sig
+
+    @_stock_throttle_sig.setter
+    def _stock_throttle_sig(self, value):
+        self.household._stock_throttle_sig = value
+
+    @property
+    def done_year(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.done_year
+
+    @done_year.setter
+    def done_year(self, value):
+        self.household.done_year = value
+
+    @property
+    def farm_hectares(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.farm_hectares
+
+    @farm_hectares.setter
+    def farm_hectares(self, value):
+        self.household.farm_hectares = value
+
+    @property
+    def granted_staff(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.granted_staff
+
+    @granted_staff.setter
+    def granted_staff(self, value):
+        self.household.granted_staff = value
+
+    @property
+    def insolvent_years(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.insolvent_years
+
+    @insolvent_years.setter
+    def insolvent_years(self, value):
+        self.household.insolvent_years = value
+
+    @property
+    def inst_units(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.inst_units
+
+    @inst_units.setter
+    def inst_units(self, value):
+        self.household.inst_units = value
+
+    @property
+    def interest_paid(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.interest_paid
+
+    @interest_paid.setter
+    def interest_paid(self, value):
+        self.household.interest_paid = value
+
+    @property
+    def last_withdrawal(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.last_withdrawal
+
+    @last_withdrawal.setter
+    def last_withdrawal(self, value):
+        self.household.last_withdrawal = value
+
+    @property
+    def scandal_last_year(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.scandal_last_year
+
+    @scandal_last_year.setter
+    def scandal_last_year(self, value):
+        self.household.scandal_last_year = value
+
+    @property
+    def shut_for_staff(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.shut_for_staff
+
+    @shut_for_staff.setter
+    def shut_for_staff(self, value):
+        self.household.shut_for_staff = value
+
+    @property
+    def spend_last_year(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.spend_last_year
+
+    @spend_last_year.setter
+    def spend_last_year(self, value):
+        self.household.spend_last_year = value
+
+    @property
+    def trade_schools(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.trade_schools
+
+    @trade_schools.setter
+    def trade_schools(self, value):
+        self.household.trade_schools = value
+
+    @property
+    def wage_hours_this_year(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.wage_hours_this_year
+
+    @wage_hours_this_year.setter
+    def wage_hours_this_year(self, value):
+        self.household.wage_hours_this_year = value
+
+    @property
+    def wages_earned(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.wages_earned
+
+    @wages_earned.setter
+    def wages_earned(self, value):
+        self.household.wages_earned = value
+
+    @property
+    def worker_housing_places(self):
+        # LAZY: absence is meaningful (see the section comment above).
+        # Do not add a default here.
+        return self.household.worker_housing_places
+
+    @worker_housing_places.setter
+    def worker_housing_places(self, value):
+        self.household.worker_housing_places = value
+
+    @property
+    def revealed(self):
+        # LAZY, AND A RATCHET, NOT A DEFAULT: the real ratchet logic
+        # (union-only writes) lives on Household.revealed, moved there with
+        # the rest of fog-of-war visibility - see fog.py's FogMixin comment
+        # and sim/engine/actors/household.py. This is a plain forward, not
+        # a second ratchet: assigning through it calls Household's setter
+        # exactly once.
+        return self.household.revealed
+
+    @revealed.setter
+    def revealed(self, value):
+        self.household.revealed = value
 
     def _demographic_recovery(self, yr):
         """Mortality shocks fade and population-raising technologies build in.
@@ -432,7 +1287,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         premium = (self.wage_index / self._wage_index_base - 1.0) * 100
         if premium > 0.5 and yr - self._said_wage_cascade >= 15:
             self._said_wage_cascade = yr
-            self.log.append((yr, "population still %d%% below trend: wages "
+            self.household.log.append((yr, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
                                  "as the population does"
@@ -445,7 +1300,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     RETEACH_EVERY = 25
 
     def has(self, k):
-        return k in self.done
+        return k in self.household.done
 
     # THE ONE PLACE that answers "what is my corpus worth against a
     # sacking" - the sack in SocietyMixin._shocks and the `risk` reply in
@@ -496,7 +1351,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # The figure was never wrong; it was answering about a year that had
         # already gone. A player needs the direction as well as the level, and
         # this is the only place that knows both.
-        self.scandal_last_year = self.scandal
+        self.household.scandal_last_year = self.household.scandal
 
         # 0. PEOPLE WHOSE APPRENTICESHIP ENDED. This block used to sit at the
         #    very BOTTOM of step(), after the year's work had already been
@@ -505,9 +1360,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         #    and the ready_year and found each a year late. A man who finishes
         #    his training at the turn of the year works that year.
         # People bought this year are not artisans this year.
-        if self.training:
+        if self.household.training:
             still = []
-            for row in self.training:
+            for row in self.household.training:
                 cap, ready = row[0], row[1]
                 trade = row[2] if len(row) > 2 else None
                 count = row[3] if len(row) > 3 else 0.0
@@ -515,16 +1370,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     if trade:
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
-                        self.employees[trade] = self.employees.get(trade, 0.0) + count
-                        self.log.append((self.year, "%g %s%s finish their training"
+                        self.household.employees[trade] = self.household.employees.get(trade, 0.0) + count
+                        self.household.log.append((self.year, "%g %s%s finish their training"
                                          % (count, trade, "s" if count != 1 else "")))
                         self._resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
                         # from the people you actually hold - see the note
-                        # there about why adding to self.artisans directly was
+                        # there about why adding to self.household.artisans directly was
                         # thrown away at the next call.
-                        self.log.append((self.year,
+                        self.household.log.append((self.year,
                                          "%g of the people you bought finish "
                                          "learning the work" % round(cap / 0.55, 1)))
                 else:
@@ -532,7 +1387,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # BEFORE the resync, not after: _resync_pools counts who is still
             # learning off this very list, so recomputing while the matured row
             # was still on it cost a whole extra year of everybody's time.
-            self.training = still
+            self.household.training = still
             self._resync_pools()
 
 
@@ -563,15 +1418,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # version was tuned against; no single person is ever a third of a
         # casualty.
         _lost = {}
-        for t in sorted(self.employees):
-            head = int(round(self.employees[t]))
+        for t in sorted(self.household.employees):
+            head = int(round(self.household.employees[t]))
             survivors = sum(1 for _ in range(head) if self.rng.random() >= ATTRITION)
             if head - survivors > 0:
                 _lost[t] = head - survivors
             if survivors > 0:
-                self.employees[t] = float(survivors)
+                self.household.employees[t] = float(survivors)
             else:
-                self.employees.pop(t)
+                self.household.employees.pop(t)
         # AND SAY SO. Now that a death is a whole person rather than three
         # hundredths of one, it is a thing that HAPPENED, and it was happening
         # in complete silence. A break tester hired five scholars, stepped five
@@ -581,7 +1436,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # The rate is right (measured at 0.825 survival over five years against
         # 0.837 expected, across forty seeds); the reporting was missing.
         if _lost:
-            self.log.append((yr, "you lose %s to death and to better offers"
+            self.household.log.append((yr, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (n, t, "" if n == 1 else "s")
                                          for t, n in sorted(_lost.items()))))
         self._resync_pools()
@@ -619,7 +1474,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                  + self.mine_operating_cost())
         # capital is negative in arrears; credit_limit() is how far into arrears
         # anyone will let you go, so this is what you can actually still spend.
-        headroom = max(0.0, self.capital + self.credit_limit())
+        headroom = max(0.0, self.household.capital + self.credit_limit())
         can_pay = self.revenue() - other + headroom
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
@@ -629,11 +1484,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words now, because the tester
         # read its promise as covering this and was entitled to.
-        if payroll > can_pay and self.employees:
+        if payroll > can_pay and self.household.employees:
             short = payroll - can_pay
             gone = 0.0
             # shed, dearest first, until the wages you are left with fit
-            for t in sorted(self.employees, key=lambda t: -self.annual_wage(t)):
+            for t in sorted(self.household.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
                     break
                 wage = self.annual_wage(t)
@@ -646,19 +1501,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # paid. Rounding up sheds one whole person too many at worst,
                 # which is the safe direction for a household that genuinely
                 # cannot make payroll.
-                cut = min(self.employees[t], math.ceil(short / wage - 1e-9))
-                self.employees[t] -= cut
+                cut = min(self.household.employees[t], math.ceil(short / wage - 1e-9))
+                self.household.employees[t] -= cut
                 short -= cut * wage
                 gone += cut
-                if self.employees[t] < 0.5:
-                    self.employees.pop(t)
+                if self.household.employees[t] < 0.5:
+                    self.household.employees.pop(t)
             self._resync_pools()
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
             # is more consequential than any of the flavour events that do get
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.log.append((yr, "you cannot pay everyone: %.1f of your staff "
+                self.household.log.append((yr, "you cannot pay everyone: %.1f of your staff "
                                      "leave for work that pays" % gone))
         # NOT `capital > 0`. This is the same catch-22 auto_open_ventures was
         # already caught by and had fixed: a household in arrears could never
@@ -673,16 +1528,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # subtracts living cost, upkeep and the wages you are carrying - is
         # what decides how many, and it correctly says nobody when there is
         # nothing spare.
-        _hire_room = (self.capital >= 0
-                      or -self.capital <= self.credit_limit() * 0.75)
+        _hire_room = (self.household.capital >= 0
+                      or -self.household.capital <= self.credit_limit() * 0.75)
         if (self.policy.get("auto_hire", not self.manual) and _hire_room):
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
             # have to pay for.
-            extra = self.supervision_room() * self._staff_scale
+            extra = self.supervision_room() * self.household._staff_scale
             # THE SAME WALL hire() AND train() ENFORCE. This used to smooth
-            # self.scholars toward sc_cap directly, mutating the pool itself
+            # self.household.scholars toward sc_cap directly, mutating the pool itself
             # with no call anywhere near literate_capacity() - the wall a
             # player typing `hire scholar 12` was refused at 5.9, "ever, at
             # any price". A break tester turned auto_hire on, came back forty
@@ -696,14 +1551,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # institutions staff_capacity() already credits widens this same
             # wall past that well before the goal is in reach).
             target_sc = min(sc_cap + extra * 0.35, self.literate_capacity("scholar"))
-            desired_sc = self.scholars + (target_sc - self.scholars) * 0.18
+            desired_sc = self.household.scholars + (target_sc - self.household.scholars) * 0.18
             target_ar = ar_cap + extra
-            desired_ar = self.artisans + (target_ar - self.artisans) * 0.22
+            desired_ar = self.household.artisans + (target_ar - self.household.artisans) * 0.22
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = max(0.0, desired_ar - self.freedmen - self.slaves * 0.7)
-            generic = self.employees.get("artisan", 0.0)
-            specials = sum(v for t, v in self.employees.items()
+            craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * 0.7)
+            generic = self.household.employees.get("artisan", 0.0)
+            specials = sum(v for t, v in self.household.employees.items()
                            if t not in ("artisan", "scholar") and trade_family(t) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS. The generic bucket was
             # the remainder after every taught trade had taken its share, so
@@ -744,7 +1599,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # refusal here is not an error - it is the same wall a player hits -
             # so it is simply not acted on.
             def _grow_to(trade, want):
-                have = self.employees.get(trade, 0.0)
+                have = self.household.employees.get(trade, 0.0)
                 delta = self._stochastic_round(want) - have
                 if delta >= 1.0:
                     self.hire(trade, int(delta))
@@ -768,15 +1623,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # precision_three_plate: not that machinists were never taught, but
             # that the last one died and the top-up had already forgotten they
             # existed.
-            for t in sorted(set(self.employees) | set(self.trades_created)):
+            for t in sorted(set(self.household.employees) | set(self.household.trades_created)):
                 if t in ("artisan", "scholar"):
                     continue
-                have = self.employees.get(t, 0.0)
-                want = max(have, 2.0 if t in self.trades_created else 0.0)
+                have = self.household.employees.get(t, 0.0)
+                want = max(have, 2.0 if t in self.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.capital > self.annual_wage(t) * 6:
-                    self.employees[t] = have + short
-                    self.capital -= short * self.annual_wage(t)
+                if short > 0.02 and self.household.capital > self.annual_wage(t) * 6:
+                    self.household.employees[t] = have + short
+                    self.household.capital -= short * self.annual_wage(t)
             self._resync_pools()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY.
         # Letting contracted craftsmen count toward a project's staff
@@ -787,20 +1642,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # different hat.
         if self.policy.get("auto_commission", not self.manual):
             self.auto_commission_for_blocked()
-        self.directors_extra += (di_cap - self.directors_extra) * 0.12 - self.directors_extra * ATTRITION
-        self.artisans = max(0.0, self.artisans)
-        self.scholars = max(0.0, self.scholars)
-        self.directors_extra = max(0.0, self.directors_extra)
+        self.household.directors_extra += (di_cap - self.household.directors_extra) * 0.12 - self.household.directors_extra * ATTRITION
+        self.household.artisans = max(0.0, self.household.artisans)
+        self.household.scholars = max(0.0, self.household.scholars)
+        self.household.directors_extra = max(0.0, self.household.directors_extra)
         # SAY IT WHEN IT CROSSES A WHOLE PERSON. A play tester noticed "10,175
         # founder-hours free this year (2,000 of your own, plus 4.5 deputies at
         # 1,800 hours each)" by accident, after playing for a century on the
         # assumption that their year was two thousand hours and would stay
         # that way. The single largest change to the resource the whole game
         # is built on had never announced itself.
-        _whole = int(self.directors_extra)
-        if _whole > int(getattr(self, "_said_deputies", 0)):
-            self._said_deputies = _whole
-            self.log.append((yr, "you now have %d deput%s directing work in "
+        _whole = int(self.household.directors_extra)
+        if _whole > int(getattr(self.household, "_said_deputies", 0)):
+            self.household._said_deputies = _whole
+            self.household.log.append((yr, "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
@@ -816,19 +1671,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # first year: the advance, then the identical year again at the next
         # step. A break tester found hire-then-fire in one turn burned the
         # advance for no work at all.
-        prepaid = min(lc, self.wages_prepaid)
+        prepaid = min(lc, self.household.wages_prepaid)
         lc -= prepaid
-        self.wages_prepaid = 0.0
+        self.household.wages_prepaid = 0.0
         self.living_cost_paid += lc
         mo = self.mine_operating_cost()
-        self.mine_cost_paid += mo
-        self.capital += self.revenue() - self.upkeep() - lc - mo
+        self.household.mine_cost_paid += mo
+        self.household.capital += self.revenue() - self.upkeep() - lc - mo
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
         # minus four million denarii, unable to afford anything at all, which
         # the log reported as being "blocked" on a treadle lathe.
-        if self.capital < 0 and self.mine_capacity and self.policy.get("auto_mothball", True):
+        if self.household.capital < 0 and self.mine_capacity and self.policy.get("auto_mothball", True):
             self.mothball_mines()
         # A CONCERN NEEDS SOMEBODY WATCHING IT EVERY YEAR, not only on the day
         # you open it. `open` refused without supervisors and then nothing ever
@@ -864,7 +1719,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # dramatic one. Nobody arrests you for debt. What happens is that people
         # you cannot pay stop turning up, and nobody will extend you credit for
         # something new while you are in arrears.
-        if self.capital < 0:
+        if self.household.capital < 0:
             # BEING IN DEBT IS NOT THE SAME AS BEING INSOLVENT. This counted a
             # year of arrears for every year capital was below zero, whatever
             # the household was earning - so a Rome run with revenue of 1,006
@@ -877,11 +1732,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _net = (self.revenue() - self.upkeep() - self.living_cost()
                     - self.mine_operating_cost())
             if _net > 0:
-                self.insolvent_years = 0
+                self.household.insolvent_years = 0
             else:
-                self.insolvent_years = getattr(self, "insolvent_years", 0) + 1
+                self.household.insolvent_years = getattr(self.household, "insolvent_years", 0) + 1
             floor = -max(4000.0, self.revenue() * 2.0)
-            if self.capital < floor and self.insolvent_years >= 3:
+            if self.household.capital < floor and self.household.insolvent_years >= 3:
                 # wages unpaid: freedmen leave first, they are free to
                 # A FLOOR, because the first version was a doom loop. Staff bled
                 # without limit, so fewer people earned less, which deepened the
@@ -890,12 +1745,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # unable to end. Insolvency should cost you your expansion, not
                 # trap you in a state you can never leave: a household that has
                 # shed everything also stops paying for it, and can climb back.
-                bleed = min(0.15, 0.04 * self.insolvent_years)
-                self.artisans = max(3.0, self.artisans * (1.0 - bleed))
-                self.scholars = max(1.0, self.scholars * (1.0 - bleed * 0.6))
-                if self.insolvent_years in (3, 6, 12, 25):
-                    self.log.append((yr, "IN ARREARS for %d years: staff are leaving "
-                                         "because you cannot pay them" % self.insolvent_years))
+                bleed = min(0.15, 0.04 * self.household.insolvent_years)
+                self.household.artisans = max(3.0, self.household.artisans * (1.0 - bleed))
+                self.household.scholars = max(1.0, self.household.scholars * (1.0 - bleed * 0.6))
+                if self.household.insolvent_years in (3, 6, 12, 25):
+                    self.household.log.append((yr, "IN ARREARS for %d years: staff are leaving "
+                                         "because you cannot pay them" % self.household.insolvent_years))
                 # ABANDONMENT, and this is what makes insolvency survivable.
                 # The failed Norse run carried 3,920 denarii of upkeep against
                 # 3,134 of revenue: permanently underwater, floored at three
@@ -916,9 +1771,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # it whether or not auto_shed was switched off, in a game whose
                 # own help says "every one of them is a switch you control".
                 if net < 0 and self.policy.get("auto_shed", True):
-                    burden = sorted((k for k in self.done
+                    burden = sorted((k for k in self.household.done
                                      if self.nodes[k]["up"] > self.nodes[k]["rev"]
-                                     and k not in self.granted
+                                     and k not in self.household.granted
                                      and not self.never_abandon(k)),
                                     key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
                     shed = []
@@ -939,19 +1794,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                         # they sat on a quarter of a billion denarii. The same
                         # pair of lines was fixed in enforce_credit_limit and in
                         # shed_loss_makers and survived here.
-                        self.operating.discard(k)
-                        self.mothballed.add(k)   # you can buy it back
+                        self.household.operating.discard(k)
+                        self.household.mothballed.add(k)   # you can buy it back
                         shed.append(k)
                     if shed:
                         # NAME THEM, for the same reason as shed_loss_makers and
                         # the creditors' seizure below: a bare count does not
                         # tell a player what they lost or why it later
                         # reappeared mothballed rather than gone for good.
-                        self.log.append((yr, "ABANDONED %d works you could no longer "
+                        self.household.log.append((yr, "ABANDONED %d works you could no longer "
                                              "maintain; they have fallen into disrepair: %s"
                                              % (len(shed), ", ".join(shed))))
         else:
-            self.insolvent_years = 0
+            self.household.insolvent_years = 0
         # A standing workforce policy, and ONLY when the optimizer is playing.
         #
         # This used to run in manual mode too, so a player who never issued a
@@ -962,15 +1817,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # hiding the acquisition. Buying people on someone's behalf without
         # telling them is the worst version of that.
         if self.policy.get("auto_buy_people", False):
-            if self.capital > 6000 and self.artisans < 12 and self.running("workshop_first"):
-                got = self.buy_slaves(min(6, int(self.capital // 1500)))
+            if self.household.capital > 6000 and self.household.artisans < 12 and self.running("workshop_first"):
+                got = self.buy_slaves(min(6, int(self.household.capital // 1500)))
                 if got:
-                    self.log.append((yr, "bought %d people for the workshop" % got))
-        if self.policy.get("auto_manumit", not self.manual) and self.slaves:
+                    self.household.log.append((yr, "bought %d people for the workshop" % got))
+        if self.policy.get("auto_manumit", not self.manual) and self.household.slaves:
             if self.rng.random() < 0.25:
-                freed = self.manumit(max(1, self.slaves // 4))
+                freed = self.manumit(max(1, self.household.slaves // 4))
                 if freed:
-                    self.log.append((yr, "freed %d people" % freed))
+                    self.household.log.append((yr, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
         if self.output_factor < 1.0:
@@ -983,7 +1838,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # about the state's fortunes moved at all. military_leverage() is
             # the same count update_protection() and
             # hazard_relief("output_factor") (society.py) already read off
-            # self.done; at full leverage the recovery rate doubles, so an
+            # self.household.done; at full leverage the recovery rate doubles, so an
             # armed empire is back to normal trade in roughly half the years
             # an unarmed one takes, not instantly - the war still happened
             # and the years it cost are not given back.
@@ -1045,7 +1900,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 return v
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
-            for k in self.active:
+            for k in self.household.active:
                 for t in self.nodes[k]["lab"]:
                     if _market_supply(t) <= 0.0:
                         want[t] = want.get(t, 0) + 500
@@ -1076,7 +1931,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # reason _market_supply/_trade_avail already are: it reads only
             # _trade_avail(t), _market_supply(t) and
             # self._trade_headcount_pending(t), and the last of those
-            # (labour.py) reads only self.training and self.employees -
+            # (labour.py) reads only self.household.training and self.household.employees -
             # neither mutated anywhere in this block; train(), at the very
             # end of it, is the only thing that changes either, exactly as
             # the comment above already established for the other two. So
@@ -1110,7 +1965,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                             and self._trade_headcount_pending(t) <= 0.0))
                 return v
             for k in self.order:
-                if k in self.done or k in self.active:
+                if k in self.household.done or k in self.household.active:
                     continue
                 n = self.nodes[k]
                 if not any(_is_gone(t) for t in n["lab"]):
@@ -1127,7 +1982,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # technologies to 229, 56 and 188, the whole difference going into
             # a teaching treadmill. A trade is worth restoring; it is not worth
             # half of every year for ever.
-            _taught = self.last_taught
+            _taught = self.household.last_taught
             want = {t: v for t, v in want.items()
                     if yr - _taught.get(t, -999) >= self.RETEACH_EVERY}
             # AND ONLY IF YOU CAN PAY THEM. train() checked hours, literacy and
@@ -1149,11 +2004,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _spare_tr = self.revenue() - self.upkeep() - self.living_cost()
             for t, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
                 _wages = 2.0 * self.annual_wage(t)
-                _budget = (max(0.0, _spare_tr) + max(0.0, self.capital) * 0.10
+                _budget = (max(0.0, _spare_tr) + max(0.0, self.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
                     continue
-                _first = t not in self.trades_created
+                _first = t not in self.household.trades_created
                 ok, _msg = self.train(t, 2)
                 # THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
                 # attempt meant a refusal - no room in the household, no hours
@@ -1162,7 +2017,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # never asked again.
                 if ok:
                     _taught[t] = yr
-                    self.log.append((yr, "you begin teaching the first %ss this "
+                    self.household.log.append((yr, "you begin teaching the first %ss this "
                                          "world has ever had" % t if _first else
                                      "the last %ss are gone; you begin teaching "
                                      "more" % t))
@@ -1180,16 +2035,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # earlier this same turn has already sold some of the hours this
         # directive wants; this only sells the remainder, never the whole
         # directive again on top of what was already sold.
-        _wd = self.hour_allocations.get("work")
-        if _wd and _wd > 0 and self.work_trade:
-            _already = getattr(self, "wage_hours_this_year", 0.0)
+        _wd = self.household.hour_allocations.get("work")
+        if _wd and _wd > 0 and self.household.work_trade:
+            _already = getattr(self.household, "wage_hours_this_year", 0.0)
             _want = max(0.0, _wd - _already)
             if _want > 0.5:
                 _room = max(0.0, self.director_pool() - self.director_hours_committed())
                 _take = min(_want, _room)
                 _got = 0.0
                 if _take > 0.5:
-                    _pay, _werr = self.work_for_wages(self.work_trade, _take)
+                    _pay, _werr = self.work_for_wages(self.household.work_trade, _take)
                     # pay > 0 with an error is a WARNING (a bad trade, or
                     # starving an active project of its last hours), not a
                     # refusal - see work_for_wages's own docstring. The sale
@@ -1203,11 +2058,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # either went unsold or went somewhere the player never
                 # chose.
                 if _wd - (_already + _got) > 1.0:
-                    self.log.append((yr, "DIRECTED HOURS UNUSED: your standing "
+                    self.household.log.append((yr, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
                                          "'allocate' changes or clears it"
-                                     % ("{:,.0f}".format(_wd), self.work_trade,
+                                     % ("{:,.0f}".format(_wd), self.household.work_trade,
                                         "{:,.0f}".format(_already + _got),
                                         "no more of your own hours were left "
                                         "to sell once your projects and "
@@ -1225,12 +2080,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # let you type a node id, but that only did `order.remove/insert(0)`
         # a few lines above this loop's own input; the loop then ran anyway
         # and started other things you never asked for. `self.manual` cuts
-        # that off at the root: nothing is ever added to `self.active` here,
+        # that off at the root: nothing is ever added to `self.household.active` here,
         # so the only way anything starts is start_project(), called by a
         # human or a script. Everything below this block (materials, staff,
         # money, hazards, the calendar) is untouched by `manual` and keeps
         # running exactly as before.
-        if not self.manual and yr >= self.credit_frozen_until:
+        if not self.manual and yr >= self.household.credit_frozen_until:
             # More directors means more things in hand at once, and a big trained staff
             # lets routine work proceed without the founder watching it.
             # How many things can be in hand at once. I tried doubling this on
@@ -1241,7 +2096,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # payments, so everything crawls and nothing finishes. Spreading a
             # fixed budget across more work is not more work. Left as it was.
             max_active = int(2 + self.director_pool() / 2000.0
-                             + self.scholars / 12.0 + self.artisans / 25.0)
+                             + self.household.scholars / 12.0 + self.household.artisans / 25.0)
             # EARN A LIVING FIRST. Now that a project must actually be paid for,
             # a founder who arrives with 400 denarii and walks the goal-ordered
             # list starves: every human tester worked this out for themselves
@@ -1269,28 +2124,28 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 _earner_set = set(earners)
                 candidates = earners + [k for k in self.order if k not in _earner_set]
             # INCREMENTAL COUNT, NOT A SET REBUILT PER ITERATION. Written as
-            # `len(self.active) - len(self.bountied & set(self.active))`
-            # inside the loop below, this rebuilt `set(self.active)` from
+            # `len(self.household.active) - len(self.household.bountied & set(self.household.active))`
+            # inside the loop below, this rebuilt `set(self.household.active)` from
             # scratch on every one of the 2,849 iterations of `candidates` -
             # the identical mistake `_earner_set` (above) had already been
             # fixed for, 30 lines earlier in this same function. Unlike
-            # `earners`, `self.active` IS mutated inside this loop (a normal
+            # `earners`, `self.household.active` IS mutated inside this loop (a normal
             # start at the bottom, or post_bounty() below, which adds to both
-            # `self.active` and `self.bountied` at once), so the fix cannot
+            # `self.household.active` and `self.household.bountied` at once), so the fix cannot
             # be "hoist one set outside the loop" - it has to track the two
             # mutations as they happen instead:
-            #   - post_bounty(k) succeeding adds k to self.active AND to
-            #     self.bountied together, so a bountied project never counts
+            #   - post_bounty(k) succeeding adds k to self.household.active AND to
+            #     self.household.bountied together, so a bountied project never counts
             #     against max_active: _non_bountied_active is left unchanged.
-            #   - a normal start only adds k to self.active, so
+            #   - a normal start only adds k to self.household.active, so
             #     _non_bountied_active goes up by one.
             # Nothing else in this loop's body (can_start, project_cost,
             # funding_capacity, committed_spend, bounty_eligible) touches
-            # self.active or self.bountied - checked in projects.py and
+            # self.household.active or self.household.bountied - checked in projects.py and
             # economy.py - so these two increments are the only places the
             # tracked count can move, and it is computed once up front
             # (O(active), not O(order)) rather than every iteration.
-            _non_bountied_active = len(self.active) - len(self.bountied & set(self.active))
+            _non_bountied_active = len(self.household.active) - len(self.household.bountied & set(self.household.active))
             for k in candidates:
                 if _non_bountied_active >= max_active:
                     break
@@ -1328,15 +2183,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if self.project_cost(k) > room:
                     continue
                 if k in self.bounty_set and self.bounty_eligible(k) and self.post_bounty(k):
-                    # post_bounty() just added k to both self.active and
-                    # self.bountied - the count of NON-bountied active
+                    # post_bounty() just added k to both self.household.active and
+                    # self.household.bountied - the count of NON-bountied active
                     # projects is unchanged.
                     continue
                 # lab_left starts full here too, for the same reason
                 # start_project (projects.py) sets it at creation rather than
                 # leaving lab_year_draw to guess it from ph_left the first
                 # time it runs - see the comment there.
-                self.active[k] = dict(ph_left=float(n["ph"]), yrs=0.0, spent=0.0,
+                self.household.active[k] = dict(ph_left=float(n["ph"]), yrs=0.0, spent=0.0,
                                       cost_left=self.project_cost(k),
                                       lab_left=dict(n["lab"]))
                 _non_bountied_active += 1
@@ -1368,19 +2223,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # no answer at all for coal: the binding constraint fell through
             # both branches and the run simply sat throttled. That is why coal
             # showed 1,669 shortage-years in a 395 year run.
-            if self.binding == "charcoal":
+            if self.household.binding == "charcoal":
                 if self.policy.get("auto_forest", not self.manual):
                     # SIZED FROM THE SHORTFALL, like the mine branch below,
                     # rather than from a flat share of cash. A tenth of a
                     # denarius of capital bought a ten-thousandth of a hectare
                     # while the demand was measured in hundreds of tonnes.
                     _need_t = (self.annual_material_demand().get("charcoal_kg", 0.0)
-                               / 1000.0) - self.forest_ha * self.CHARCOAL_PER_HA
+                               / 1000.0) - self.household.forest_ha * self.CHARCOAL_PER_HA
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-            elif (self.binding in self.MINE_CAPEX_PER_T_YR
+            elif (self.household.binding in self.MINE_CAPEX_PER_T_YR
                     and self.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
@@ -1401,16 +2256,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # sorted(), because this feeds a float sum.
                 keys = tuple(sorted(kk for kk, (bucket, _tag)
                                     in self.MATERIAL_CHECKS.items()
-                                    if bucket == self.binding))
+                                    if bucket == self.household.binding))
                 short = sum(dem.get(kk, 0.0) for kk in keys)
-                want = max(0.0, short - self.mine_capacity.get(self.binding, 0.0))
-                self.open_mine(self.binding, min(want, self.capital * 0.25
-                                                 / max(1.0, self.MINE_CAPEX_PER_T_YR[self.binding])))
+                want = max(0.0, short - self.mine_capacity.get(self.household.binding, 0.0))
+                self.open_mine(self.household.binding, min(want, self.household.capital * 0.25
+                                                 / max(1.0, self.MINE_CAPEX_PER_T_YR[self.household.binding])))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
-                if self.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.capital / 1800.0))
-            elif (self.binding == "saltpetre"
+                if self.household.binding in ("iron", "copper", "lead"):
+                    self.buy_forest(min(200.0, self.household.capital / 1800.0))
+            elif (self.household.binding == "saltpetre"
                     and self.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase. This branch sat
                 # outside the policy check and took five per cent of a manual
@@ -1433,20 +2288,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # The shortage is real and unresolved; more money is not the
                 # answer to it, and this comment is here so the next person to
                 # notice the asymmetry does not spend the afternoon I did.
-                spend = min(self.capital * 0.05, 2000)
-                self.capital -= spend
-                self.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
-                self.log.append((yr, "laid down %d square metres of nitre bed "
+                spend = min(self.household.capital * 0.05, 2000)
+                self.household.capital -= spend
+                self.household.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
+                self.household.log.append((yr, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
-        if thr < 0.6 and self.binding:
+        if thr < 0.6 and self.household.binding:
             # SAY WHAT TO DO ABOUT IT. A play tester read "SHORT OF SALTPETRE:
             # work at 5% of plan" for thirty years and could not find out what
             # saltpetre was for, who wanted it, or what would fix it. A number
             # that low with no remedy attached reads as the game being stuck.
-            self.log.append((yr, "SHORT OF %s: work running at %d%% of plan. %s"
-                             % (self.binding.upper(), thr * 100,
-                                self.shortage_remedy(self.binding))))
+            self.household.log.append((yr, "SHORT OF %s: work running at %d%% of plan. %s"
+                             % (self.household.binding.upper(), thr * 100,
+                                self.shortage_remedy(self.household.binding))))
 
         # 5. progress. Director hours go to the HIGHEST-PRIORITY active projects
         #    first, not spread evenly: a director who gives every project equal
@@ -1457,8 +2312,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # NODE IN THE TREE. This used to be a bare
         # `{k: i for i, k in enumerate(self.order)}` - a fresh 2,849-entry
         # dict built from scratch every single year to answer `rank.get(k,
-        # 9999)` for the at most a few dozen keys in self.active. Nothing
-        # below reads `rank` for any node NOT in self.active (checked: its
+        # 9999)` for the at most a few dozen keys in self.household.active. Nothing
+        # below reads `rank` for any node NOT in self.household.active (checked: its
         # only other use is the `_pool_rank` loop variable a few lines
         # further down, an unrelated name), so recording a position for
         # every other one of the ~2,849 nodes was pure waste - 0.64ms/year
@@ -1475,7 +2330,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # does not reorder `order` and gives no such guarantee - the early
         # exit is a bonus, not a requirement of correctness). Recomputed
         # fresh every call, exactly as before: no cache, no staleness risk.
-        _active_left = set(self.active)
+        _active_left = set(self.household.active)
         rank = {}
         if _active_left:
             for i, k in enumerate(self.order):
@@ -1498,14 +2353,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # every project sorts into the same single undirected bucket it
         # always did, and this line changes nothing for them.
         active_sorted = sorted(
-            self.active,
-            key=lambda k: (0 if self.hour_allocations.get(k, 0.0) > 0 else 1,
+            self.household.active,
+            key=lambda k: (0 if self.household.hour_allocations.get(k, 0.0) > 0 else 1,
                            rank.get(k, 9999)))
         remaining = pool
-        self.trade_hours_used = {}
-        # Summed as the loop runs, not re-read from self.active afterwards,
+        self.household.trade_hours_used = {}
+        # Summed as the loop runs, not re-read from self.household.active afterwards,
         # because a project that completes THIS year is popped from
-        # self.active before we would get to it. See the hours_this_year
+        # self.household.active before we would get to it. See the hours_this_year
         # summary this feeds, below the loop.
         hours_effective_total = 0.0
         # NAMED, NOT JUST STORED ON THE PROJECT. `why_underfunded` (set below,
@@ -1544,7 +2399,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _pool_total_this_year = pool
         _pool_active_count_this_year = len(active_sorted)
         for _pool_rank, k in enumerate(active_sorted, start=1):
-                st = self.active[k]
+                st = self.household.active[k]
                 n = self.nodes[k]
                 st["pool_total_this_year"] = _pool_total_this_year
                 st["pool_active_count_this_year"] = _pool_active_count_this_year
@@ -1587,11 +2442,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     st["stalled_years"] = st.get("stalled_years", 0) + 1
                     st["blocked_on_trades"] = blocked
                     if st["stalled_years"] >= 4:
-                        self.log.append((yr, "HALTED %s: there is nobody here who can "
+                        self.household.log.append((yr, "HALTED %s: there is nobody here who can "
                                              "do this work (%s). What you spent is lost"
                                          % (k, ", ".join(blocked[:2]))))
-                        self.active.pop(k, None)
-                        self.bountied.discard(k)
+                        self.household.active.pop(k, None)
+                        self.household.bountied.discard(k)
                     else:
                         # WARN BEFORE THE MONEY GOES. Six projects were wiped in
                         # one year for a play tester who had no way to list what
@@ -1599,7 +2454,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                         # and then took everything spent. Say it each year, with
                         # the number of years left and what would fix it.
                         _left = 4 - st["stalled_years"]
-                        self.log.append((yr, "%s cannot go on: no %s here. It has "
+                        self.household.log.append((yr, "%s cannot go on: no %s here. It has "
                                              "%d year%s before it is abandoned and "
                                              "what you spent on it is lost. Teach "
                                              "the trade, or 'stop %s' now and keep "
@@ -1628,7 +2483,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # (active_sorted, above) and that an undirected project
                 # never crowds this one out of the share the player asked
                 # for it to have.
-                _dir_hours = self.hour_allocations.get(k)
+                _dir_hours = self.household.hour_allocations.get(k)
                 _pace_cap = self.project_hour_pace(k)
                 _project_throttle = self.project_resource_throttle(k)
                 if _dir_hours and _dir_hours > 0:
@@ -1676,13 +2531,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # that many hours even with the whole pool behind it. Either
                 # is a real, nameable reason; "it disappeared" is not.
                 if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-                    if (_project_throttle < 0.98 and self.binding
+                    if (_project_throttle < 0.98 and self.household.binding
                             and _pace_cap >= _dir_hours - 0.5):
                         _directed_hours_unused.append((k, round(_dir_hours - per, 0),
                             "a shortage of %s has every project (this one "
                             "included) running at %d%% of the pace its "
                             "hours alone would allow"
-                            % (self.binding, round(_project_throttle * 100))))
+                            % (self.household.binding, round(_project_throttle * 100))))
                     elif _pace_cap * _project_throttle < _dir_hours - 0.5:
                         _directed_hours_unused.append((k, round(_dir_hours - per, 0),
                             "its own pace this year - at most %s hours, set "
@@ -1715,9 +2570,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # call site only has to act on what it returns.
                 hh, worst, frac, _abandon = self.lab_year_draw(k, st, frac, hired_left)
                 if _abandon:
-                    self.log.append((yr, "ABANDONED %s: %s" % (k, _abandon)))
-                    self.active.pop(k, None)
-                    self.bountied.discard(k)
+                    self.household.log.append((yr, "ABANDONED %s: %s" % (k, _abandon)))
+                    self.household.active.pop(k, None)
+                    self.household.bountied.discard(k)
                     continue
                 if worst < 1.0:
                     # NEVER ALL OF IT. The refund says "hours offered but not
@@ -1787,7 +2642,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # of them sat unpayable and unfinished for two hundred years.
                 fixed = self.living_cost() + self.upkeep() + self.mine_operating_cost()
                 reserve = max(0.0, fixed - self.revenue())
-                purse = self.capital + self.credit_limit() * 0.6 - reserve
+                purse = self.household.capital + self.credit_limit() * 0.6 - reserve
                 # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE. A
                 # project with cost_left already at zero asks for money=0
                 # this year, and money(0) > purse was still true whenever
@@ -1834,7 +2689,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     st["why_underfunded"] = (
                         "in arrears: after fixed costs there is nothing left to "
                         "draw on, so the hours offered this year did almost "
-                        "nothing" if self.capital < 0 else
+                        "nothing" if self.household.capital < 0 else
                         "this year's instalment is more than the purse will bear")
                     # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
                     # the project and answers the question if a player thinks
@@ -1843,13 +2698,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # nothing prompted them to look. Recorded here (only the
                     # arrears case, only if it actually cost real hours) and
                     # logged once below, after the loop.
-                    if self.capital < 0 and give_back > 1.0:
+                    if self.household.capital < 0 and give_back > 1.0:
                         _arrears_hours_lost.append((k, round(give_back, 0)))
                 else:
                     st.pop("underfunded_this_year", None)
                     st.pop("why_underfunded", None)
-                self.capital -= money
-                self.total_spend += money
+                self.household.capital -= money
+                self.household.total_spend += money
                 st["spent"] += money
                 st["cost_left"] = max(0.0, st["cost_left"] - money)
                 # spent_hours, NOT per. `per` is what was OFFERED, and it is
@@ -1883,7 +2738,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # purse-can-only-absorb-so-much-a-year pace, which is
                     # real money trouble without capital actually being
                     # negative).
-                    if _inner_gap > 1.0 and st.get("why_underfunded") and self.capital >= 0:
+                    if _inner_gap > 1.0 and st.get("why_underfunded") and self.household.capital >= 0:
                         _directed_hours_unused.append(
                             (k, round(_inner_gap, 0), st["why_underfunded"]))
                     elif _inner_gap > 1.0 and st.get("short_of_trade"):
@@ -1895,7 +2750,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # notional figure made project_spend_last_year disagree with
                 # the actual capital movement by a factor of 89, which a tester
                 # caught by comparing three numbers in a single `state` reply.
-                self._spend_this_year = self._spend_this_year + money
+                self.household._spend_this_year = self.household._spend_this_year + money
                 # calendar_floor(k), NOT a second copy of this formula -
                 # expected_calendar_years (projects.py) needs the identical
                 # figure to project retries honestly, and a rule living in
@@ -1933,7 +2788,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _total_lost = sum(h for _, h in _arrears_hours_lost)
             _names = ", ".join("%s (%s hr)" % (k, "{:,.0f}".format(h))
                                 for k, h in _arrears_hours_lost)
-            self.log.append((yr, "IN ARREARS: %s founder-hours meant for %s did "
+            self.household.log.append((yr, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
                                  "- that time does not come back, arrears or not. "
                                  "'work' sells idle hours for wages instead of "
@@ -1951,7 +2806,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # several projects can be cut short in the same year.
         if _directed_hours_unused:
             for _k, _hr, _why in sorted(_directed_hours_unused):
-                self.log.append((yr, "DIRECTED HOURS UNUSED: you allocated hours "
+                self.household.log.append((yr, "DIRECTED HOURS UNUSED: you allocated hours "
                                      "to %s this year that it could not use - "
                                      "%s of them went begging because %s. "
                                      "'portfolio' shows the rest; 'allocate' "
@@ -1972,7 +2827,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         #     run: one Rome seed earned four technologies in five hundred years
         #     because a fire in 103 took a fifth of everything it had.
         if (not self.manual and remaining > 100.0
-                and (self.capital < self.living_cost() * 2 or not self.active)):
+                and (self.household.capital < self.living_cost() * 2 or not self.household.active)):
             trade = ("scholar" if self.effective_scholars() >= 1 else "scribe")
             hours = min(remaining, 1200.0)
             # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
@@ -1992,7 +2847,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
             rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
-                    * (1.0 + min(0.5, self.reputation / 200.0)))
+                    * (1.0 + min(0.5, self.household.reputation / 200.0)))
             if hours * rate > practice_lost:
                 _, err = self.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
@@ -2012,12 +2867,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # has heard of because thirty quiet years passed. What fades is novelty;
         # what remains is the work.
         floor = self.standing_floor()
-        self.reputation = floor + (self.reputation - floor) * 0.97
+        self.household.reputation = floor + (self.household.reputation - floor) * 0.97
         # ADAPTATION. Every year the world has known you, and every visible thing
         # you have already done, makes the next one less astonishing.
-        pub = sum(1 for k in self.done
+        pub = sum(1 for k in self.household.done
                   if set(self.nodes[k].get("traits", [])) & {"spectacle", "inexplicable"})
-        self.familiarity = min(0.9, 1.0 - math.exp(-self.w["adaptation_rate"] *
+        self.household.familiarity = min(0.9, 1.0 - math.exp(-self.w["adaptation_rate"] *
                                                    (0.5 * pub + 0.25 * (self.year - 100))))
         # WHERE THE YEAR'S HOURS WENT. Four projects each showed exactly half
         # their founder hours left after one year, with 2,400 available and
@@ -2028,8 +2883,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # `hours_this_year` in `state`.
         self.hours_this_year = {
             "available": round(self.director_pool(), 1),
-            "wage_work": round(getattr(self, "wage_hours_this_year", 0.0), 1),
-            "teaching": round(self.teaching_hours_this_year, 1),
+            "wage_work": round(getattr(self.household, "wage_hours_this_year", 0.0), 1),
+            "teaching": round(self.household.teaching_hours_this_year, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
             # actually reduced their founder_hours_left. The gap between the
@@ -2042,15 +2897,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         }
         # Reset AFTER the progress pass above, which is where the hours you sold
         # are subtracted from the hours you have left to direct.
-        self.wage_hours_this_year = 0.0
+        self.household.wage_hours_this_year = 0.0
         # Contracted work is bought for a year and expires with it: hours you
         # paid a shop for in 142 are not still sitting there in 143.
-        self.contract_hours = {}
-        self.teaching_hours_this_year = 0.0
-        self.spend_last_year = self._spend_this_year
-        self._spend_this_year = 0.0
+        self.household.contract_hours = {}
+        self.household.teaching_hours_this_year = 0.0
+        self.household.spend_last_year = self.household._spend_this_year
+        self.household._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
-        self.market_pressure = max(0.0, self.market_pressure * 0.55 - 2.0)
+        self.household.market_pressure = max(0.0, self.household.market_pressure * 0.55 - 2.0)
         # WARN BEFORE IT KILLS YOU. A play tester built 952 technologies, was
         # three nodes from the goal, and the run ended on a 2% roll against an
         # eminence of 28.2 - with no escalation of any kind beforehand, and
@@ -2058,18 +2913,18 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # the stat that ends the run". It is the one hazard that cannot be
         # bribed away and the one the player was never told was closing in.
         _danger = self.cfg["eminence_danger"]
-        if self.eminence > _danger * 0.75:
-            _said = self._said_eminence
-            _band = int(self.eminence / max(1.0, _danger * 0.15))
+        if self.household.eminence > _danger * 0.75:
+            _said = self.household._said_eminence
+            _band = int(self.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
-                self._said_eminence = _band
-                self.log.append((yr, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.household._said_eminence = _band
+                self.household.log.append((yr, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
                                      "visible wealth. A wide, dispersed "
                                      "institution is what survives you"
-                                 % (self.eminence, _danger)))
+                                 % (self.household.eminence, _danger)))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -2082,21 +2937,21 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
         self._state_pressure(yr)
-        self.scandal *= 0.90
+        self.household.scandal *= 0.90
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot
         # buy an emperor's judgement that you have grown too large, and the
         # attempt is itself evidence against you.
-        self.eminence = self.eminence * 0.93 + self.prominence_hazard()
+        self.household.eminence = self.household.eminence * 0.93 + self.prominence_hazard()
         # you can buy your way out of trouble, and a sane player does
-        if self.scandal > 8 and self.capital > 2000 and self.policy.get("auto_bribe", not self.manual):
-            spend = min(self.capital * 0.12, self.scandal * 260)
-            self.capital -= spend
-            self.bribes_ytd = 0.7 * self.bribes_ytd + spend
-            self.scandal -= spend / 300.0 * self.w["bribability"]
+        if self.household.scandal > 8 and self.household.capital > 2000 and self.policy.get("auto_bribe", not self.manual):
+            spend = min(self.household.capital * 0.12, self.household.scandal * 260)
+            self.household.capital -= spend
+            self.household.bribes_ytd = 0.7 * self.household.bribes_ytd + spend
+            self.household.scandal -= spend / 300.0 * self.w["bribability"]
         else:
-            self.bribes_ytd *= 0.7
-        self.scandal = max(0.0, self.scandal)
+            self.household.bribes_ytd *= 0.7
+        self.household.scandal = max(0.0, self.household.scandal)
         # WARN, THE WAY EMINENCE DOES. Denunciation ends the run outright and
         # said nothing at all first: a break tester read "RUN ENDS: denounced:
         # as a sorcerer" after eleven quiet years, with `state` showing
@@ -2105,49 +2960,49 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # above 26 ... 0% chance the run ENDS this year". Two hazards of the
         # same shape, one of them legible.
         _sd = c["suspicion_danger"]
-        if self.scandal > _sd * 0.75:
-            _band = int(self.scandal / max(1.0, _sd * 0.15))
-            if _band > int(getattr(self, "_said_scandal", 0)):
-                self._said_scandal = _band
-                self.log.append((yr, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+        if self.household.scandal > _sd * 0.75:
+            _band = int(self.household.scandal / max(1.0, _sd * 0.15))
+            if _band > int(getattr(self.household, "_said_scandal", 0)):
+                self.household._said_scandal = _band
+                self.household.log.append((yr, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
-                                 % (self.scandal, _sd,
-                                    100.0 * max(0.0, (self.scandal - _sd) / 60.0))))
-        elif self.scandal < _sd * 0.5:
-            self._said_scandal = 0
-        if self.events and self.scandal > c["suspicion_danger"]:
-            p = (self.scandal - c["suspicion_danger"]) / 60.0
+                                 % (self.household.scandal, _sd,
+                                    100.0 * max(0.0, (self.household.scandal - _sd) / 60.0))))
+        elif self.household.scandal < _sd * 0.5:
+            self.household._said_scandal = 0
+        if self.events and self.household.scandal > c["suspicion_danger"]:
+            p = (self.household.scandal - c["suspicion_danger"]) / 60.0
             if self.rng.random() < p:
                 self._catastrophe("denounced: %s" % ("as a sorcerer" if self.w["w_magic_fear"] > 0.5
                                                      else "as a subversive"))
         # The eminence hazard is separate and unbribable. Its usual outcome is a
         # bad year rather than a death: a confiscation, a patron destroyed in
         # someone else's quarrel, a forced withdrawal from public life.
-        if self.events and self.eminence > c["eminence_danger"]:
-            p = (self.eminence - c["eminence_danger"]) / 90.0
+        if self.events and self.household.eminence > c["eminence_danger"]:
+            p = (self.household.eminence - c["eminence_danger"]) / 90.0
             if self.rng.random() < p:
                 roll = self.rng.random()
                 if roll < 0.45:
-                    take = self.capital * 0.55
-                    self.capital -= take
-                    self.reputation = max(0.0, self.reputation - 18)
-                    self.eminence *= 0.45
-                    self.log.append((yr, "PROMINENCE: property confiscated, %d den lost, "
+                    take = self.household.capital * 0.55
+                    self.household.capital -= take
+                    self.household.reputation = max(0.0, self.household.reputation - 18)
+                    self.household.eminence *= 0.45
+                    self.household.log.append((yr, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < 0.80:
                     for pat in ("patron_imperial", "patron_senatorial"):
-                        if pat in self.done:
-                            self.done.discard(pat)
+                        if pat in self.household.done:
+                            self.household.done.discard(pat)
                             self._done_changed()
-                            self.log.append((yr, "PROMINENCE: your patron is destroyed in "
+                            self.household.log.append((yr, "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
-                    self.eminence *= 0.5
-                    self.reputation = max(0.0, self.reputation - 10)
+                    self.household.eminence *= 0.5
+                    self.household.reputation = max(0.0, self.household.reputation - 10)
                 else:
                     self._catastrophe("too eminent: brought down not for what you built "
                                       "but for how large you had become")
@@ -2155,17 +3010,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # 6b. serving out a debt. The hours you owe go to the creditor and the
         #     debt falls; when it is done you are free, and you keep everything
         #     you know.
-        if self.bondage_years_left > 0:
-            self.bondage_years_left -= 1
+        if self.household.bondage_years_left > 0:
+            self.household.bondage_years_left -= 1
             paid = self.cfg["founder_hours_per_year"] * 0.75 * \
                 (WAGES.get("labourer", 0.075) * 1.2) * self.wage_index * self.price_index
-            self.bondage_debt = max(0.0, self.bondage_debt - paid)
-            if self.bondage_debt <= 0 and self.bondage_years_left > 0:
-                self.bondage_years_left = 0     # paid early
-            if self.bondage_years_left <= 0:
-                self.bondage_years_left = 0.0
-                self.bondage_debt = 0.0
-                self.log.append((yr, "your term is served and the debt is discharged; "
+            self.household.bondage_debt = max(0.0, self.household.bondage_debt - paid)
+            if self.household.bondage_debt <= 0 and self.household.bondage_years_left > 0:
+                self.household.bondage_years_left = 0     # paid early
+            if self.household.bondage_years_left <= 0:
+                self.household.bondage_years_left = 0.0
+                self.household.bondage_debt = 0.0
+                self.household.log.append((yr, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
         # 7. founder mortality
@@ -2184,8 +3039,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # fact silent about the consequence - deputies carry the work,
                 # and with none the programme dissolves over twelve years - but
                 # nothing ever told the player either half of that.
-                _dep = self.directors_extra
-                self.log.append((yr, "THE FOUNDER DIES, aged about %d. %s"
+                _dep = self.household.directors_extra
+                self.household.log.append((yr, "THE FOUNDER DIES, aged about %d. %s"
                                  % (self.cfg["founder_arrival_age"] + yr
                                     - self.cfg["start_year"],
                                     ("Your %.1f deputies direct the work in your "
@@ -2200,35 +3055,35 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                     "effectively over; 'state' shows how far you "
                                     "got.")))
         # a programme with no director is not paused, it is dissolving
-        if not self.founder_alive and self.directors_extra < 0.5:
-            self.stalled += 1
-            if self.stalled >= 3:
-                losable = sorted(k for k in self.done if k not in self.granted)
-                # sorted() matters: self.done is a SET, and a set iterates in an
+        if not self.founder_alive and self.household.directors_extra < 0.5:
+            self.household.stalled += 1
+            if self.household.stalled >= 3:
+                losable = sorted(k for k in self.household.done if k not in self.household.granted)
+                # sorted() matters: self.household.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every
                 # invocation. Every figure this project has reported was, strictly,
                 # unreproducible.
                 if losable:
                     for k in self.rng.sample(losable, max(1, len(losable) // 6)):
-                        self.operating.discard(k)
-                        self.done.discard(k)
+                        self.household.operating.discard(k)
+                        self.household.done.discard(k)
                         self._done_changed()
             # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT. Twelve years of a
             # dissolving programme passed with nothing said but the shedding
             # itself, so a tester read the losses as unexplained and the run as
             # merely unlucky rather than finished.
-            if self.stalled in (3, 6, 9, 11):
-                self.log.append((yr, "THE PROGRAMME IS DISSOLVING: %d year(s) "
+            if self.household.stalled in (3, 6, 9, 11):
+                self.household.log.append((yr, "THE PROGRAMME IS DISSOLVING: %d year(s) "
                                      "since the founder died with no deputy to "
                                      "take over. What you built is being "
                                      "forgotten. The run ends at twelve."
-                                 % self.stalled))
-            if self.stalled >= 12:
+                                 % self.household.stalled))
+            if self.household.stalled >= 12:
                 self._catastrophe("the founder died without training successors; "
                                   "the school dispersed and the work was forgotten")
         else:
-            self.stalled = 0
+            self.household.stalled = 0
 
         # 8. random events
         if self.events and not self.dead_reason:
@@ -2271,7 +3126,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         because nobody did any work; a measurement crossed a line. Sorted
         so the order is reproducible under a fixed PYTHONHASHSEED, the same
         reasoning `topo_order` and the attrition loop above already give
-        for walking `self.nodes`/`self.done` in id order rather than a bare
+        for walking `self.nodes`/`self.household.done` in id order rather than a bare
         set's own iteration order.
 
         Walks `self._win_condition_keys` (built once, in __init__, from the
@@ -2282,7 +3137,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         C-level, nothing further to profile under it).
         """
         for k in self._win_condition_keys:
-            if k in self.done:
+            if k in self.household.done:
                 continue
             wc = self.nodes[k]["win_condition"]
             if not wc:
@@ -2292,19 +3147,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             met = (val >= target) if op == ">=" else (val <= target) if op == "<=" else False
             if not met:
                 continue
-            self.done.add(k)
+            self.household.done.add(k)
             self._done_changed()
-            self.done_year[k] = yr
-            self.log.append((yr, "achieved: " + self.nodes[k]["name"]))
-            if k == self.goal and self.goal_year is None:
-                self.goal_year = yr
+            self.household.done_year[k] = yr
+            self.household.log.append((yr, "achieved: " + self.nodes[k]["name"]))
+            if k == self.goal and self.household.goal_year is None:
+                self.household.goal_year = yr
 
     def run(self, goal, horizon=None):
         self.goal = goal
-        self.done_year = {}
+        self.household.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.year < end and not self.dead_reason and self.goal_year is None:
+        while self.year < end and not self.dead_reason and self.household.goal_year is None:
             self.step()
         return self
 

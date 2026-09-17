@@ -129,7 +129,7 @@ class EconomyMixin:
         Novelty fades. A corpus in three libraries, a school with students and a
         senator who will receive you do not.
         """
-        earned = len(self.done) - len(self.granted)
+        earned = len(self.household.done) - len(self.household.granted)
         f = 0.5 + 0.55 * math.sqrt(max(0, earned))
         if self.running("corpus_written"):     f += 3.0
         if self.running("corpus_dispersed"):   f += 6.0
@@ -147,11 +147,11 @@ class EconomyMixin:
         if self.running("identity_cover"):     f += 1.0
         # Scandal is the one thing that eats into standing rather than sitting
         # alongside it: being notorious is not the same as being unknown.
-        return max(0.0, f - 0.5 * self.scandal)
+        return max(0.0, f - 0.5 * self.household.scandal)
 
     def rep_factor(self):
         """How much easier reputation makes everything. 1.0 at zero reputation."""
-        return 1.0 + self.reputation / 120.0
+        return 1.0 + self.household.reputation / 120.0
 
     def economy_index(self):
         """Diffused technology enriches the whole Empire, not only your workshop.
@@ -162,7 +162,7 @@ class EconomyMixin:
         industrial revolution is unaffordable, which is false, and the reason it
         is false is that the revolution funds itself.
         """
-        diffused = len(self.done - self.granted)
+        diffused = len(self.household.done - self.household.granted)
         e = 1.0 + 0.055 * diffused
         if not self.running("corpus_dispersed"):
             e = 1.0 + 0.030 * diffused      # knowledge locked in one workshop spreads slowly
@@ -172,7 +172,7 @@ class EconomyMixin:
         if not self.running("patron_imperial"):
             return 0.0
         return (2500.0 * self.economy * self.state_capacity * self.pop_scale ** 0.4
-                * (1.0 + max(0.0, self.gov) / 25.0) * self.rep_factor())
+                * (1.0 + max(0.0, self.household.gov) / 25.0) * self.rep_factor())
 
     def credit_limit(self, _rev=None, _upkeep=None):
         """How far into arrears anyone will actually let you go.
@@ -226,8 +226,8 @@ class EconomyMixin:
         if self.running("collegium_licensed"):
             base += 4000.0 * self.institution_units("collegium_licensed")
         if self.running("endowment_land"):     base += 30000.0      # real collateral
-        base += max(0.0, self.reputation) * 250.0
-        base += self.forest_ha * 120.0                           # also collateral
+        base += max(0.0, self.household.reputation) * 250.0
+        base += self.household.forest_ha * 120.0                           # also collateral
         # A FLOOR of one year's running costs, because everyone everywhere has
         # always been able to run a tab. The baker, the landlord and the smith
         # all carry you for a season; what they will not do is advance you cash.
@@ -279,7 +279,7 @@ class EconomyMixin:
         correctly priced on its own screen, stacked into a debt spiral
         that nothing added up until the interest was already compounding.
         """
-        return sum(st.get("cost_left") or 0.0 for st in self.active.values())
+        return sum(st.get("cost_left") or 0.0 for st in self.household.active.values())
 
     def funding_capacity(self):
         """What you can actually expect to have to spend on projects.
@@ -315,8 +315,8 @@ class EconomyMixin:
         up = self.upkeep()
         fixed = (up + self.living_cost(_rev=rev, _upkeep=up)
                  + self.mine_operating_cost()
-                 + max(0.0, -self.capital) * self.debt_interest_rate())
-        return (max(0.0, self.capital)
+                 + max(0.0, -self.household.capital) * self.debt_interest_rate())
+        return (max(0.0, self.household.capital)
                 + self.credit_limit(_rev=rev, _upkeep=up) * 0.5
                 + max(0.0, rev - fixed) * 5.0)
 
@@ -334,7 +334,7 @@ class EconomyMixin:
         let the loss-makers go the same year you notice, and then your income is
         your practice again, which is what you started with and is enough.
         """
-        if self.capital >= 0:
+        if self.household.capital >= 0:
             return
         shed = []
         while True:
@@ -359,9 +359,9 @@ class EconomyMixin:
                 # nothing at all: upkeep follows `operating` and a closed
                 # concern was already costing nothing. The player lost the
                 # knowledge and kept the deficit.
-                for k in sorted(self.operating):
+                for k in sorted(self.household.operating):
                     n = self.nodes[k]
-                    if (n["up"] <= n["rev"] or k in self.granted
+                    if (n["up"] <= n["rev"] or k in self.household.granted
                             or self.never_abandon(k)):
                         continue
                     if (k in self.CAPABILITY_INSTITUTIONS) != bool(_pass):
@@ -378,7 +378,7 @@ class EconomyMixin:
             # knowledge stays: you cannot forget how a thing works because you
             # could not pay for it this year. (This used to discard it from
             # `done` two lines under a comment saying it did not.)
-            self.operating.discard(worst)
+            self.household.operating.discard(worst)
             # MOTHBALLED, not merely discarded: this is the plant falling into
             # disrepair, exactly like a deliberate `mothball`, and it must show
             # up the same way - in `state.mothballed`, and NOT back in
@@ -386,14 +386,14 @@ class EconomyMixin:
             # this it was a bare discard, so a repossessed work reappeared
             # indistinguishable from something you had never built, and
             # `restore` (a fraction of the cost) was never offered.
-            self.mothballed.add(worst)
+            self.household.mothballed.add(worst)
             shed.append(worst)
         if shed:
             # NAME THEM. "stopped maintaining 1 works" told a player nothing:
             # not which one, not how to get it back. A tester asked the fair
             # question - how do you understand what you lost, or why an option
             # reappeared, if you were never told its name?
-            self.log.append((yr, "in arrears, so closed %d concern%s that cost more "
+            self.household.log.append((yr, "in arrears, so closed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
                              % (len(shed), "" if len(shed) == 1 else "s",
@@ -415,20 +415,20 @@ class EconomyMixin:
         if self.running("patron_imperial"):     r -= 0.03
         if self.running("endowment_land"):      r -= 0.02          # secured, not personal
         if self.running("fin_argentarii"):      r -= 0.01          # a banker you know
-        r -= min(0.03, max(0.0, self.reputation) / 3000.0)
+        r -= min(0.03, max(0.0, self.household.reputation) / 3000.0)
         return max(0.0, r)
 
     def charge_interest(self, yr):
         """Arrears accrue. They did not before, which made debt free money."""
-        if self.capital >= 0:
+        if self.household.capital >= 0:
             return 0.0
         rate = self.debt_interest_rate()
-        owed = -self.capital * rate
-        self.capital -= owed
-        self.interest_paid = getattr(self, "interest_paid", 0.0) + owed
-        if owed > 0 and (getattr(self, "insolvent_years", 0) in (1, 5, 15)):
-            self.log.append((yr, "interest on %0.f denarii of arrears at %.1f%% a year"
-                                 % (-self.capital, rate * 100)))
+        owed = -self.household.capital * rate
+        self.household.capital -= owed
+        self.household.interest_paid = getattr(self.household, "interest_paid", 0.0) + owed
+        if owed > 0 and (getattr(self.household, "insolvent_years", 0) in (1, 5, 15)):
+            self.household.log.append((yr, "interest on %0.f denarii of arrears at %.1f%% a year"
+                                 % (-self.household.capital, rate * 100)))
         return owed
 
     def warn_near_the_limit(self, yr):
@@ -443,10 +443,10 @@ class EconomyMixin:
         year before.
         """
         limit = self.credit_limit()
-        if limit <= 0 or self.capital >= 0:
-            self._said_near_limit = False
+        if limit <= 0 or self.household.capital >= 0:
+            self.household._said_near_limit = False
             return
-        used = -self.capital / limit
+        used = -self.household.capital / limit
         # PAST IT IS NOT "CLOSE TO" IT, and past it the halting has already
         # happened: a break tester read "CLOSE TO THE LIMIT ... (103%) ... every
         # project in hand is halted" in a year when nothing was halted, because
@@ -454,21 +454,21 @@ class EconomyMixin:
         # with it. Warn about what is still ahead of you, not about what has
         # just been done.
         if used >= 1.0:
-            self._said_near_limit = True
+            self.household._said_near_limit = True
             return
         if used < 0.7:
-            self._said_near_limit = False
+            self.household._said_near_limit = False
             return
-        if getattr(self, "_said_near_limit", False):
+        if getattr(self.household, "_said_near_limit", False):
             return
-        self._said_near_limit = True
-        self.log.append((yr, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+        self.household._said_near_limit = True
+        self.household.log.append((yr, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
                              "here will advance you (%d%%). Past it every "
                              "project in hand is halted unfinished and nobody "
                              "funds new work for some years. 'stop' a project, "
                              "'mothball' a loss-maker or 'fire' somebody while "
                              "it is still your choice"
-                         % ("{:,.0f}".format(-self.capital),
+                         % ("{:,.0f}".format(-self.household.capital),
                             "{:,.0f}".format(limit), used * 100)))
 
     def enforce_credit_limit(self, yr):
@@ -481,11 +481,11 @@ class EconomyMixin:
         indebted, which is a position you can work out of.
         """
         limit = self.credit_limit()
-        if self.capital >= -limit:
+        if self.household.capital >= -limit:
             return
         # stop everything in progress: you cannot fund it
-        if self.active:
-            dropped = sorted(self.active)
+        if self.household.active:
+            dropped = sorted(self.household.active)
             # WHAT YOU PAID IS NOT BURNED. "Halted" means paused to a reader
             # and meant deleted here: a break tester watched 795 denarii and
             # about 800 founder-hours vanish, with scientific_method dying 115
@@ -493,18 +493,18 @@ class EconomyMixin:
             # thing is still half built when the money runs out; the site does
             # not un-dig itself. What you paid stands to your credit and comes
             # off the bill when you begin again.
-            _paid = getattr(self, "paid_towards", None)
+            _paid = getattr(self.household, "paid_towards", None)
             if _paid is None:
-                _paid = self.paid_towards = {}
+                _paid = self.household.paid_towards = {}
             _kept = 0.0
             for k in dropped:
-                st = self.active.pop(k, None)
+                st = self.household.active.pop(k, None)
                 if st:
                     _paid[k] = _paid.get(k, 0.0) + max(0.0, st.get("spent", 0.0))
                     _kept += max(0.0, st.get("spent", 0.0))
-                self.bountied.discard(k)
-            self.credit_frozen_until = yr + 5
-            self.log.append((yr, "CREDIT EXHAUSTED: %d project%s stopped, "
+                self.household.bountied.discard(k)
+            self.household.credit_frozen_until = yr + 5
+            self.household.log.append((yr, "CREDIT EXHAUSTED: %d project%s stopped, "
                                  "unfinished: %s. The %s denarii already paid "
                                  "stands to your credit and comes off the "
                                  "bill if you begin again. Nobody will fund new "
@@ -514,20 +514,20 @@ class EconomyMixin:
                                 + (" and others" if len(dropped) > 4 else ""),
                                 "{:,.0f}".format(_kept), yr + 5)))
         # let go of what you cannot maintain
-        if self.capital < -limit:
+        if self.household.capital < -limit:
             self.mothball_mines()
-        if self.capital < -limit:
+        if self.household.capital < -limit:
             # From what you are RUNNING: a creditor cannot seize a thing you
             # merely know how to do, and closing something that was not open
             # saves nobody anything.
-            burden = sorted((k for k in self.operating
+            burden = sorted((k for k in self.household.operating
                              if self.nodes[k]["up"] > self.nodes[k]["rev"]
-                             and k not in self.granted
+                             and k not in self.household.granted
                              and not self.never_abandon(k)),
                             key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
             taken = []
             for k in burden:
-                if self.capital >= -limit:
+                if self.household.capital >= -limit:
                     break
                 # THEY TAKE THE CONCERN, NOT YOUR MEMORY OF HOW IT WORKED.
                 # This discarded the node from `done` and left it in
@@ -542,13 +542,13 @@ class EconomyMixin:
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
-                self.operating.discard(k)
-                self.capital += self.nodes[k]["up"] * 2.0
+                self.household.operating.discard(k)
+                self.household.capital += self.nodes[k]["up"] * 2.0
                 # MOTHBALLED, not merely discarded - see the identical comment
                 # in shed_loss_makers. Without this a work creditors took stood
                 # indistinguishable from research never begun, and `restore`
                 # (a fraction of the cost) was never offered for it.
-                self.mothballed.add(k)
+                self.household.mothballed.add(k)
                 taken.append(k)
             # Only say it if it happened. This line used to fire every year
             # whether or not there was anything left to take, so a run with
@@ -557,7 +557,7 @@ class EconomyMixin:
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
-                self.log.append((yr, "creditors took what they could: %d concerns "
+                self.household.log.append((yr, "creditors took what they could: %d concerns "
                                      "closed and sold up: %s. You keep the "
                                      "knowledge; reopening means paying for the "
                                      "premises again"
@@ -568,12 +568,12 @@ class EconomyMixin:
         # of income forever. Nobody keeps four hundred dependants they cannot
         # feed. People are sold or freed and they leave, and the point of modelling
         # it is that shedding them is how you become solvent again.
-        if self.capital < -limit and (self.slaves or self.freedmen):
-            freed = self.slaves + self.freedmen
-            self.manumit(self.slaves)          # you do not sell them on
-            self.freedmen = 0
-            self.artisans = max(3.0, self.artisans * 0.4)
-            self.log.append((yr, "the household disperses: %d people leave, because "
+        if self.household.capital < -limit and (self.household.slaves or self.household.freedmen):
+            freed = self.household.slaves + self.household.freedmen
+            self.manumit(self.household.slaves)          # you do not sell them on
+            self.household.freedmen = 0
+            self.household.artisans = max(3.0, self.household.artisans * 0.4)
+            self.household.log.append((yr, "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed))
 
         # DEBT BONDAGE, where the society had it, and worked off, because that is
@@ -589,13 +589,13 @@ class EconomyMixin:
         # In bondage your hours are not your own. That is the whole penalty, and
         # it is a heavy one in a game whose scarcest resource is your hours; but
         # it ends, and it ends sooner if the work is worth something.
-        if (self.capital < -limit and self.civ.get("debt_bondage")
-                and not self.bondage_years_left):
+        if (self.household.capital < -limit and self.civ.get("debt_bondage")
+                and not self.household.bondage_years_left):
             term = float(self.civ.get("bondage_years", 10))
-            self.bondage_years_left = term
-            self.bondage_debt = -self.capital
-            self.capital = 0.0
-            self.log.append((yr, "BONDAGE: you cannot pay, and you enter service for "
+            self.household.bondage_years_left = term
+            self.household.bondage_debt = -self.household.capital
+            self.household.capital = 0.0
+            self.household.log.append((yr, "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
                                  "worked off, and then you are free again" % term))
@@ -610,21 +610,21 @@ class EconomyMixin:
         # dramatic event five hundred times. A write-off is a once-in-a-life
         # humiliation, not an annual accounting entry, and between them you are
         # simply in arrears, which already has consequences of its own.
-        if self.capital < -limit and yr - getattr(self, "last_settlement", -999) >= 10:
-            self.last_settlement = yr
-            self.capital = -limit * 0.35
+        if self.household.capital < -limit and yr - getattr(self.household, "last_settlement", -999) >= 10:
+            self.household.last_settlement = yr
+            self.household.capital = -limit * 0.35
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED. Two settlements
             # each said "reputation -12" against a reputation of 4.9, and the
             # second did nothing at all - a break tester checked, and was right
             # that a penalty which cannot be paid should not be quoted.
-            _rep_hit = min(12.0, max(0.0, self.reputation))
-            self.reputation = max(0.0, self.reputation - 12)
+            _rep_hit = min(12.0, max(0.0, self.household.reputation))
+            self.household.reputation = max(0.0, self.household.reputation - 12)
             # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
             # from a debt cost a little standing and nothing else, and standing
             # grows back. A person who has just been written off does not get
             # a fresh line of credit the following morning.
-            _frozen_before = getattr(self, "credit_frozen_until", 0)
-            self.credit_frozen_until = max(_frozen_before, yr + 12)
+            _frozen_before = getattr(self.household, "credit_frozen_until", 0)
+            self.household.credit_frozen_until = max(_frozen_before, yr + 12)
             # SAY WHAT ACTUALLY HAPPENED. "The debt is written off" while
             # leaving the player owing a third of their credit line is a
             # sentence that contradicts the number on the next line, and a
@@ -646,8 +646,8 @@ class EconomyMixin:
             # settlement (0 -> yr+12 is a bigger number, by that test, same
             # as a real extension).
             _moved = (_frozen_before > yr
-                     and self.credit_frozen_until > _frozen_before)
-            self.log.append((yr, "INSOLVENCY SETTLED: most of the debt is written "
+                     and self.household.credit_frozen_until > _frozen_before)
+            self.household.log.append((yr, "INSOLVENCY SETTLED: most of the debt is written "
                                  "off and you still owe about %s denarii. Your "
                                  "name is worth less for it (reputation %s), and "
                                  "you keep your knowledge and your practice%s"
@@ -658,7 +658,7 @@ class EconomyMixin:
                                      "pushes the date nobody will fund you "
                                      "again until from %d out to %d - it moves "
                                      "with every settlement, not just the first"
-                                     % (_frozen_before, self.credit_frozen_until))
+                                     % (_frozen_before, self.household.credit_frozen_until))
                                     if _moved else "")))
 
     def stall_diagnosis(self):
@@ -681,14 +681,14 @@ class EconomyMixin:
         because the alternative is a player spending an hour discovering it by
         experiment.
         """
-        if self.capital >= 0 or getattr(self, "insolvent_years", 0) < 8:
+        if self.household.capital >= 0 or getattr(self.household, "insolvent_years", 0) < 8:
             return None
         # THE SAME NET THE LEDGER PRINTS. This left out the interest on the
         # arrears, which is the one cost that exists BECAUSE you are in
         # arrears: a break tester read "you lose 46 denarii a year" directly
         # above "Net/yr: -159.5" and reported the banner as quoting a loss that
         # is not the loss.
-        interest = max(0.0, -self.capital) * self.debt_interest_rate()
+        interest = max(0.0, -self.household.capital) * self.debt_interest_rate()
         # revenue_capacity(), to actually BE "the same net the ledger
         # prints" above, now that the ledger's own net_per_year reads it
         # too - both were reading plain revenue() and calling themselves
@@ -703,7 +703,7 @@ class EconomyMixin:
         if net >= 0:
             return None
         ways = []
-        pool = self.director_pool() - getattr(self, "wage_hours_this_year", 0.0)
+        pool = self.director_pool() - getattr(self.household, "wage_hours_this_year", 0.0)
         if pool > 100:
             # ONLY IF IT WOULD ACTUALLY GAIN. Selling your hours takes them out
             # of your own practice, so with a practice to lose this is often
@@ -724,7 +724,7 @@ class EconomyMixin:
             if best_t:
                 rate = ANNUAL_WAGE[best_t] / self.HOURS_PER_PERSON_YEAR
                 would_earn = (pool * rate * self.price_index * self.wage_index
-                              * (1.0 + min(0.5, self.reputation / 200.0)))
+                              * (1.0 + min(0.5, self.household.reputation / 200.0)))
                 # What those same hours are already earning in the practice.
                 practice = sum(self.nodes[k]["rev"] for k in self._practice_set())
                 would_cost = (practice * self.PRACTICE_SHARE
@@ -738,7 +738,7 @@ class EconomyMixin:
                                    "{:,.0f}".format(would_earn),
                                    "{:,.0f}".format(would_cost),
                                    "{:,.0f}".format(would_earn - would_cost)))
-        losers = sorted((k for k in self.operating
+        losers = sorted((k for k in self.household.operating
                          if self.nodes[k]["up"] > self.nodes[k]["rev"]),
                         key=lambda k: self.nodes[k]["rev"] - self.nodes[k]["up"])
         if losers:
@@ -763,7 +763,7 @@ class EconomyMixin:
         return {"you_are_stuck": ("you have been in arrears %d years and you "
                                   "lose %s denarii a year, so nothing you start "
                                   "will ever be paid for"
-                                  % (self.insolvent_years,
+                                  % (self.household.insolvent_years,
                                      "{:,.0f}".format(-net))),
                 "this_is_not_the_end_of_the_run": ("it is escapable, and none of "
                                                    "these need anybody to lend "
@@ -786,12 +786,12 @@ class EconomyMixin:
         """What you could actually raise, by what you mean to spend it on."""
         share = 1.0 if kind == "start" else 0.5
         # THE DEBT YOU ALREADY CARRY COUNTS AGAINST YOU. This read
-        # max(0.0, self.capital) + credit_limit() * share, which floored the
+        # max(0.0, self.household.capital) + credit_limit() * share, which floored the
         # capital term and so ignored arrears entirely: a household 500 into
         # a 210-denarii credit line was told it could still raise 105. It
         # cannot. credit_limit() is "how far into arrears anyone will let you
         # go" - an absolute floor on capital, which is exactly how
-        # enforce_credit_limit() reads it (`if self.capital >= -limit`), not
+        # enforce_credit_limit() reads it (`if self.household.capital >= -limit`), not
         # headroom to be added on top of a debt.
         #
         # The floor belongs on the ANSWER, not on the capital term: you can
@@ -816,8 +816,8 @@ class EconomyMixin:
             # opens even while deep in arrears" and its slow-payback sibling,
             # which holds the line the other way: a concern that takes YEARS
             # to clear its own capex still does not open on this.
-            return max(0.0, self.capital) + self.credit_limit() * share
-        return max(0.0, self.capital + self.credit_limit() * share)
+            return max(0.0, self.household.capital) + self.credit_limit() * share
+        return max(0.0, self.household.capital + self.credit_limit() * share)
 
     def cost_money_factor(self):
         """What a denarius of QUOTED cost means, for spending purposes.
@@ -859,30 +859,30 @@ class EconomyMixin:
                 * self.material_market_factor(k))
 
     def _done_changed(self):
-        """Call after anything adds to or removes from self.done.
+        """Call after anything adds to or removes from self.household.done.
 
         Also invalidates capability_factor()'s cache: that walk filters
-        done_in_order() by self.granted too, and every site that adds to
-        self.granted does so in the same breath as adding to self.done (see
+        done_in_order() by self.household.granted too, and every site that adds to
+        self.household.granted does so in the same breath as adding to self.household.done (see
         the comments on capability_factor), so no separate granted-changed
         signal exists or is needed.
         """
-        self._done_seq = None
-        self._cap_factor = None
+        self.household._done_seq = None
+        self.household._cap_factor = None
 
     def _operating_changed(self):
-        """Call after anything adds to or removes from self.operating.
+        """Call after anything adds to or removes from self.household.operating.
 
-        The `_InvalidatingSet` self.operating is built from (see that
+        The `_InvalidatingSet` self.household.operating is built from (see that
         class's comment, just above EconomyMixin) calls this on every
         mutation automatically - every `.add`/`.discard`/`.update`/... from
         any of the nine-odd call sites across core.py/projects.py/
         economy.py/society.py, and any future one, with nothing for any of
         them to remember. See capability_factor(), its only reader so far.
 
-        A property (`self.operating` intercepting every READ, the way
+        A property (`self.household.operating` intercepting every READ, the way
         `revealed` in engine/fog.py intercepts every WRITE) was tried first
-        and measured worse, not better: self.operating is read in the
+        and measured worse, not better: self.household.operating is read in the
         hottest loop in the engine - `_goods_category_state` and
         `goods_market_factor` alone read it roughly sixteen million times
         in the 300-year profile this fix was measured against - so a
@@ -903,7 +903,7 @@ class EconomyMixin:
         issued mid-session through the agent/play JSON protocol loads into
         the SAME long-lived object a player goes on playing in, and every
         open/close/mothball after that load mutates .operating directly.
-        Left alone, that setattr would silently downgrade self.operating to
+        Left alone, that setattr would silently downgrade self.household.operating to
         a plain, non-invalidating set for the rest of that process's life.
         load_state calls _reset_operating() (below) once, right after its
         generic loop, to close that one specific gap explicitly instead of
@@ -921,7 +921,7 @@ class EconomyMixin:
         actual inputs (self.year plus this set) change far less often than
         they are read. It carries the exact same one known gap this
         docstring already describes for `_cap_factor` - a caller that
-        replaces `self.operating` with a plain `set()` rather than going
+        replaces `self.household.operating` with a plain `set()` rather than going
         through `_reset_operating()` (test_regressions.py's ROUND 8 close-
         order test does this once, deliberately, to build a fixture) stops
         this counter advancing for the rest of that object's life, same as
@@ -932,17 +932,17 @@ class EconomyMixin:
         one hand-built test fixture does, and it never asks for a goods
         price, an income factor, or a revenue/upkeep total afterward.
         """
-        self._cap_factor = None
-        self._operating_ver = getattr(self, "_operating_ver", 0) + 1
+        self.household._cap_factor = None
+        self.household._operating_ver = getattr(self.household, "_operating_ver", 0) + 1
 
     def _reset_operating(self):
-        """Re-wrap self.operating in a fresh `_InvalidatingSet` and
+        """Re-wrap self.household.operating in a fresh `_InvalidatingSet` and
         invalidate once. See the long comment on _operating_changed() for
         why this exists and why it is not a property instead: this is the
         one call site (load_state, protocol.py) that replaces
-        self.operating wholesale on a Sim that may go on being mutated
+        self.household.operating wholesale on a Sim that may go on being mutated
         afterward in the same process."""
-        self.operating = _InvalidatingSet(self.operating, on_change=self._operating_changed)
+        self.household.operating = _InvalidatingSet(self.household.operating, on_change=self._operating_changed)
         self._operating_changed()
 
     def venture_ramp(self, k):
@@ -956,9 +956,9 @@ class EconomyMixin:
         one case a break tester checked. Custom takes time to find whoever owns
         the shop.
         """
-        started = (getattr(self, "opened_year", None) or {}).get(k)
+        started = (getattr(self.household, "opened_year", None) or {}).get(k)
         if started is None:
-            started = self.done_year.get(k, self.year)
+            started = self.household.done_year.get(k, self.year)
         age = self.year - started
         return min(1.0, (age + 1) / self.cfg["revenue_ramp_years"])
 
@@ -1210,22 +1210,22 @@ class EconomyMixin:
         #   constant for the entire year's worth of calls this is trying to
         #   collapse, and a NEW year always gets a different key, never a
         #   stale hit.
-        #   self.operating's membership is the other input read below (the
-        #   `for m in ...: if m not in self.operating` test); `_operating_ver`
+        #   self.household.operating's membership is the other input read below (the
+        #   `for m in ...: if m not in self.household.operating` test); `_operating_ver`
         #   is a plain counter bumped by _operating_changed(), which the
-        #   _InvalidatingSet backing self.operating (see that class's own
+        #   _InvalidatingSet backing self.household.operating (see that class's own
         #   comment, top of file) fires on EVERY .add/.discard/.update/...
         #   from any of the nine-odd call sites across core.py/projects.py/
         #   economy.py/society.py - the exact mechanism _cap_factor's own
         #   cache already trusts for the same set, and it carries the same
         #   one accepted gap that one already has (see _operating_changed's
-        #   own docstring): a caller that replaces self.operating with a
+        #   own docstring): a caller that replaces self.household.operating with a
         #   bare set() rather than going through _reset_operating() stops
         #   this counter, same as it already stops _cap_factor. Not a new
         #   risk.
         #   `opened_year` (read below via `started`) is never mutated
         #   anywhere except projects.py's open_venture, and there only ever
-        #   in the same call, immediately after, as `self.operating.add(k)`
+        #   in the same call, immediately after, as `self.household.operating.add(k)`
         #   - grep the engine for "opened_year" and it is the only
         #   assignment site outside __init__'s empty {} and load_state's
         #   generic setattr (which itself calls _reset_operating(), and so
@@ -1245,11 +1245,11 @@ class EconomyMixin:
         #   there this cache is not stale, only (like the code before this
         #   change) reading done_year's default of self.year for a node that
         #   was never truly opened.
-        key = (self.year, getattr(self, "_operating_ver", 0))
-        cache = getattr(self, "_goods_cat_state_cache", None)
+        key = (self.year, getattr(self.household, "_operating_ver", 0))
+        cache = getattr(self.household, "_goods_cat_state_cache", None)
         if cache is None or cache[0] != key:
             cache = (key, {})
-            self._goods_cat_state_cache = cache
+            self.household._goods_cat_state_cache = cache
         bucket = cache[1]
         if cat in bucket:
             return bucket[cat]
@@ -1269,11 +1269,11 @@ class EconomyMixin:
         # order-independent, so dropping the sort changes no result. See
         # PERFORMANCE.md.
         for m in self._nodes_in_cat(cat):
-            if m not in self.operating:
+            if m not in self.household.operating:
                 continue
-            started = (getattr(self, "opened_year", None) or {}).get(m)
+            started = (getattr(self.household, "opened_year", None) or {}).get(m)
             if started is None:
-                started = self.done_year.get(m, self.year)
+                started = self.household.done_year.get(m, self.year)
             ages.append(max(0.0, self.year - started))
         if not ages:
             bucket[cat] = None
@@ -1370,7 +1370,7 @@ class EconomyMixin:
         # Household-backed farms supply staples even before a processing
         # concern exists. Diminishing returns reach the same 0.55 floor as the
         # established food market rather than making subsistence free.
-        farm_ha = max(0.0, getattr(self, "farm_hectares", 0.0))
+        farm_ha = max(0.0, getattr(self.household, "farm_hectares", 0.0))
         farm_ratio = max(0.55, 1.0 / (1.0 + farm_ha / 120.0))
         return min(market_ratio, farm_ratio)
 
@@ -1382,20 +1382,20 @@ class EconomyMixin:
         """Buy productive farmland that lowers the household staple price."""
         hectares = float(hectares)
         cost = hectares * self.FARM_COST_PER_HA * self.price_index
-        if hectares <= 0 or cost > self.capital:
+        if hectares <= 0 or cost > self.household.capital:
             return 0.0
-        self.capital -= cost
-        self.farm_hectares = getattr(self, "farm_hectares", 0.0) + hectares
+        self.household.capital -= cost
+        self.household.farm_hectares = getattr(self.household, "farm_hectares", 0.0) + hectares
         return hectares
 
     def build_worker_housing(self, places):
         """Add durable worker housing and relieve household crowding."""
         places = float(places)
         cost = places * self.HOUSING_COST_PER_PLACE * self.price_index
-        if places <= 0 or cost > self.capital:
+        if places <= 0 or cost > self.household.capital:
             return 0.0
-        self.capital -= cost
-        self.worker_housing_places = getattr(self, "worker_housing_places", 0.0) + places
+        self.household.capital -= cost
+        self.household.worker_housing_places = getattr(self.household, "worker_housing_places", 0.0) + places
         return places
 
     # How much a fully-saturated essential's cheapness (price_ratio at its
@@ -1466,7 +1466,7 @@ class EconomyMixin:
         alone would.
         """
         cat = self.nodes[k].get("cat")
-        if k not in self.operating:
+        if k not in self.household.operating:
             return 1.0
         r = self._goods_category_ratios(cat)
         if r is None:
@@ -1503,7 +1503,7 @@ class EconomyMixin:
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        if k in self.operating:
+        if k in self.household.operating:
             return self.goods_market_factor(k)
         r = self._goods_category_ratios(cat, extra=1)
         if r is None:
@@ -1538,7 +1538,7 @@ class EconomyMixin:
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        opened = k in self.operating
+        opened = k in self.household.operating
         factor = (self.goods_market_factor(k) if opened
                   else self.goods_market_factor_if_opened(k))
         if factor is None or abs(factor - 1.0) < 0.01:
@@ -1623,7 +1623,7 @@ class EconomyMixin:
         """
         rows = []
         quoted_total = actual_total = 0.0
-        for k in sorted(self.operating):
+        for k in sorted(self.household.operating):
             cfg = self.GOODS_CATEGORIES.get(self.nodes[k].get("cat"))
             if not cfg:
                 continue
@@ -1676,7 +1676,7 @@ class EconomyMixin:
     def done_in_order(self):
         """Everything you have finished, in a FIXED order.
 
-        `self.done` is a set of strings, and a set of strings iterates in an
+        `self.household.done` is a set of strings, and a set of strings iterates in an
         order that depends on PYTHONHASHSEED, which Python randomises per
         process. Three places summed floats over it - revenue, upkeep and
         material demand - and floating point addition is not associative, so
@@ -1696,9 +1696,9 @@ class EconomyMixin:
         # remove from `done`, rather than by a length check, because a year that
         # abandons one work and completes another leaves the length identical
         # and the contents different.
-        seq = getattr(self, "_done_seq", None)
+        seq = getattr(self.household, "_done_seq", None)
         if seq is None:
-            seq = self._done_seq = [k for k in self.order if k in self.done]
+            seq = self.household._done_seq = [k for k in self.order if k in self.household.done]
         return seq
 
     # WHAT ONE PERSON'S PRACTICE IS WORTH, against what the tree quotes for the
@@ -1741,26 +1741,26 @@ class EconomyMixin:
         pool = self.director_pool()
         if pool <= 0:
             return 1.0
-        sold = min(pool, getattr(self, "wage_hours_this_year", 0.0))
+        sold = min(pool, getattr(self.household, "wage_hours_this_year", 0.0))
         return max(0.0, 1.0 - sold / pool)
 
     def revenue_capacity(self):
         """What you would earn in an ordinary year, with your own hands on your
         own work. Used where a swing in ONE year should not count - a lender
         does not cut your line because you took a job this year."""
-        _sold = getattr(self, "wage_hours_this_year", 0.0)
-        self.wage_hours_this_year = 0.0
+        _sold = getattr(self.household, "wage_hours_this_year", 0.0)
+        self.household.wage_hours_this_year = 0.0
         try:
             return self.revenue()
         finally:
-            self.wage_hours_this_year = _sold
+            self.household.wage_hours_this_year = _sold
 
     def revenue(self):
         r = 0.0
         attention = self.practice_attention()
         practice_set = self._practice_set()
-        granted = self.granted
-        operating = self.operating
+        granted = self.household.granted
+        operating = self.household.operating
         # SCAN ONLY WHAT COULD POSSIBLY PAY. Every node this loop's own body
         # goes on to skip - not operating and not practised - was already
         # true of the whole rest of `done`, which only grows; see
@@ -1829,13 +1829,13 @@ class EconomyMixin:
         """What your standing staff produces and sells, over and above projects."""
         if not (self.running("workshop_first") or self.running("school_founded")):
             return 0.0
-        craft = sum(n for t, n in self.employees.items() if trade_family(t) == "craft")
-        craft += self.freedmen + self.slaves * 0.7
+        craft = sum(n for t, n in self.household.employees.items() if trade_family(t) == "craft")
+        craft += self.household.freedmen + self.household.slaves * 0.7
         wage = 0.0
-        for t, n in self.employees.items():
+        for t, n in self.household.employees.items():
             if trade_family(t) == "craft":
                 wage += n * ANNUAL_WAGE.get(t, 375.0)
-        wage += (self.freedmen + self.slaves * 0.7) * ANNUAL_WAGE.get("artisan", 250.0)
+        wage += (self.household.freedmen + self.household.slaves * 0.7) * ANNUAL_WAGE.get("artisan", 250.0)
         mark = 1.55
         if self.running("interchangeable_parts"):  mark += 0.35
         if self.running("power_grid"):             mark += 0.45
@@ -1868,7 +1868,7 @@ class EconomyMixin:
         technologies is how you get a run holding more method than the empire.
 
         CACHED. A 300-year profile called this ~17,000 times, every one of
-        them walking the full done list - self.done/self.operating change far
+        them walking the full done list - self.household.done/self.household.operating change far
         less often than that (done_in_order() itself was fixed the same way,
         earlier, for the same reason). The cache holds the FINISHED RESULT of
         exactly this walk, recomputed from scratch - same order, same
@@ -1876,8 +1876,8 @@ class EconomyMixin:
         invalidated, so it is bit-identical to calling this uncached every
         time: see _done_changed() and _operating_changed(), the only two
         places that clear it. An incremental version that added and
-        subtracted a node's weight as it entered or left self.done/
-        self.operating was considered and rejected: float addition is not
+        subtracted a node's weight as it entered or left self.household.done/
+        self.household.operating was considered and rejected: float addition is not
         associative, and the order nodes enter or leave at runtime is not the
         order done_in_order() walks them in, so an incremental running total
         would drift from a full recompute in its last bits over a long run -
@@ -1886,12 +1886,12 @@ class EconomyMixin:
         calls into however many times done/operating actually change in a
         run (a few hundred), not however many times this is asked.
         """
-        cached = getattr(self, "_cap_factor", None)
+        cached = getattr(self.household, "_cap_factor", None)
         if cached is not None:
             return cached
         weight = 0.0
         for k in self.done_in_order():
-            if k in self.granted or k in self.operating:
+            if k in self.household.granted or k in self.household.operating:
                 continue
             n = self.nodes[k]
             if n["rev"] <= 0:
@@ -1899,7 +1899,7 @@ class EconomyMixin:
             weight += n["rev"]
         # 40,000 of tier-weighted method roughly doubles what a workshop makes.
         result = 1.0 + 2.0 * (weight / (weight + 40000.0))
-        self._cap_factor = result
+        self.household._cap_factor = result
         return result
 
     def revenue_sources(self):
@@ -1913,10 +1913,10 @@ class EconomyMixin:
         """
         rows = {}
         for k in self.done_in_order():
-            practice = k in self.granted and self._practisable(k)
-            if k in self.granted and not practice:
+            practice = k in self.household.granted and self._practisable(k)
+            if k in self.household.granted and not practice:
                 continue
-            if not practice and k not in self.operating:
+            if not practice and k not in self.household.operating:
                 continue
             n = self.nodes[k]
             if not n["rev"]:
@@ -2004,9 +2004,9 @@ class EconomyMixin:
         every value is a number that has to sum to the revenue above it.
         """
         young = []
-        for k in sorted(self.operating):
+        for k in sorted(self.household.operating):
             n = self.nodes.get(k)
-            if not n or not n["rev"] or k in self.granted:
+            if not n or not n["rev"] or k in self.household.granted:
                 continue
             ramp = self.venture_ramp(k)
             if ramp < 0.999:
@@ -2049,11 +2049,11 @@ class EconomyMixin:
         The answer never changes unless the granted set does, which happens at
         setup and never again.
         """
-        cache = getattr(self, "_practice_cache", None)
-        if cache is None or cache[0] != len(self.granted):
-            cache = (len(self.granted),
-                     frozenset(k for k in self.granted if self._practisable(k)))
-            self._practice_cache = cache
+        cache = getattr(self.household, "_practice_cache", None)
+        if cache is None or cache[0] != len(self.household.granted):
+            cache = (len(self.household.granted),
+                     frozenset(k for k in self.household.granted if self._practisable(k)))
+            self.household._practice_cache = cache
         return cache[1]
 
     def _revenue_upkeep_candidates(self):
@@ -2092,8 +2092,8 @@ class EconomyMixin:
             unchanged here since this reads exactly the same `operating`.
           - the identity of _practice_set()'s own cached frozenset, which
             THAT method already rebuilds (a new object, new identity) the
-            moment len(self.granted) changes - see its own docstring. Since
-            self.granted is only ever grown (grep the engine: every mutation
+            moment len(self.household.granted) changes - see its own docstring. Since
+            self.household.granted is only ever grown (grep the engine: every mutation
             site is `.add`, never `.discard`/`.remove`/`&=`/`-=`), a length
             check is sound there in a way it would not be for `done`, and
             this cache inherits that same soundness by keying on the
@@ -2129,14 +2129,14 @@ class EconomyMixin:
         # seq and practice_set alive for as long as the entry may be compared
         # against them makes the collision structurally impossible rather than
         # merely unmeasured.
-        operating_version = getattr(self, "_operating_ver", 0)
-        cached = getattr(self, "_rev_up_candidates_cache", None)
+        operating_version = getattr(self.household, "_operating_ver", 0)
+        cached = getattr(self.household, "_rev_up_candidates_cache", None)
         if (cached is not None and cached[0] is seq
                 and cached[1] is practice_set and cached[2] == operating_version):
             return cached[3]
-        operating = self.operating
+        operating = self.household.operating
         cands = [k for k in seq if k in operating or k in practice_set]
-        self._rev_up_candidates_cache = (seq, practice_set, operating_version, cands)
+        self.household._rev_up_candidates_cache = (seq, practice_set, operating_version, cands)
         return cands
 
     def upkeep(self):
@@ -2149,7 +2149,7 @@ class EconomyMixin:
         practice_set = self._practice_set()
         return sum(self.institution_upkeep(k)
                    for k in self._revenue_upkeep_candidates()
-                   if k in self.operating or k in practice_set)
+                   if k in self.household.operating or k in practice_set)
 
     # What a school costs on the day you found it, as a share of what it costs
     # once it is full: the building, the lease, and one teacher.
@@ -2186,7 +2186,7 @@ class EconomyMixin:
         # every unopened institution's prospective upkeep into a small
         # negative number (upkeep 0 against real revenue), which read as free
         # and let the affordability gate through on nothing.
-        _units = (self.institution_units(k) if k in self.operating else 1.0) \
+        _units = (self.institution_units(k) if k in self.household.operating else 1.0) \
             if k in self.SCALABLE_INSTITUTIONS else 1.0
         up = n["up"] * _units
         if k not in self.CAPABILITY_INSTITUTIONS or up <= 0:
@@ -2374,7 +2374,7 @@ class EconomyMixin:
         above."""
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
-            return ledger.country_output(tag, built=self.done)
+            return ledger.country_output(tag, built=self.household.done)
         price = self._book_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
@@ -2443,7 +2443,7 @@ class EconomyMixin:
                 continue
             best, pick = 0.0, None
             for opt, qual in (g.get("options") or {}).items():
-                have = opt in self.done or opt not in self.nodes
+                have = opt in self.household.done or opt not in self.nodes
                 if have and float(qual) > best:
                     best, pick = float(qual), opt
             if pick and ("coke" in pick or "coal" in pick):
@@ -2453,7 +2453,7 @@ class EconomyMixin:
     def annual_material_demand(self):
         """Tonnes per year of the materials that actually bind, from work in hand."""
         d = collections.Counter()
-        for k in sorted(self.active):
+        for k in sorted(self.household.active):
             n = self.nodes[k]
             span = max(1.0, float(n.get("build_yrs") or n.get("yrs") or 1.0))
             coke = self.chosen_fuel(k) == "coke"
@@ -2528,11 +2528,11 @@ class EconomyMixin:
         bought from anyone: mines you sank, woodland you bought, nitre beds
         you built. See MATERIAL_CHECKS for which tag means what."""
         if tag == "forest1":
-            return self.forest_ha * self.CHARCOAL_PER_HA
+            return self.household.forest_ha * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return self.forest_ha * self.CHARCOAL_PER_HA * 4
+            return self.household.forest_ha * self.CHARCOAL_PER_HA * 4
         if tag == "nitre":
-            return self.nitre_bed_m2 * 0.0008
+            return self.household.nitre_bed_m2 * 0.0008
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
@@ -2704,9 +2704,9 @@ class EconomyMixin:
         documents for why commodities.py stays a library Sim calls into for
         specific answers (wire_chain_report's propagate_demand) rather than
         a second source of truth Sim's own state has to agree with."""
-        s = getattr(self, "_material_stock_ledger", None)
+        s = getattr(self.household, "_material_stock_ledger", None)
         if s is None:
-            s = self._material_stock_ledger = collections.Counter()
+            s = self.household._material_stock_ledger = collections.Counter()
         elif not isinstance(s, collections.Counter):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
@@ -2714,7 +2714,7 @@ class EconomyMixin:
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            s = self._material_stock_ledger = collections.Counter(s)
+            s = self.household._material_stock_ledger = collections.Counter(s)
         return s
 
     def material_stock_t(self, emp_key):
@@ -2744,11 +2744,11 @@ class EconomyMixin:
         # The market figure is an annual flow ceiling, not an infinite shop.
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
         cost = tonnes * quote["buy_per_tonne"]
-        if tonnes <= 0 or cost > self.capital:
+        if tonnes <= 0 or cost > self.household.capital:
             return 0.0
-        self.capital -= cost
+        self.household.capital -= cost
         self._material_stock()[quote["material"]] += tonnes
-        self._stock_throttle_sig = None
+        self.household._stock_throttle_sig = None
         return tonnes
 
     def sell_material_stock(self, material, tonnes):
@@ -2760,8 +2760,8 @@ class EconomyMixin:
         if sold <= 0:
             return 0.0
         self._material_stock()[quote["material"]] -= sold
-        self.capital += sold * quote["sell_per_tonne"]
-        self._stock_throttle_sig = None
+        self.household.capital += sold * quote["sell_per_tonne"]
+        self.household._stock_throttle_sig = None
         return sold
 
     def materials_report(self):
@@ -2829,15 +2829,15 @@ class EconomyMixin:
         #3 describes, just the zero-demand edge of it rather than the
         partially-used one the main loop already banks correctly.
         `self.mine_capacity` is keyed by emp_key already (core.py's own
-        auto-mine opens `self.binding`, which IS an emp_key - see
+        auto-mine opens `self.household.binding`, which IS an emp_key - see
         MATERIAL_CHECKS), so "mine:" + that key is exactly the tag
         _own_material_supply already knows how to read, curated commodity
         or not."""
         out = {(m, "mine:" + m) for m, t in self.mine_capacity.items() if t > 0}
-        if self.forest_ha > 0:
+        if self.household.forest_ha > 0:
             out.add(("charcoal", "forest1"))
             out.add(("charcoal", "forest4"))
-        if self.nitre_bed_m2 > 0:
+        if self.household.nitre_bed_m2 > 0:
             out.add(("saltpetre", "nitre"))
         return out
 
@@ -2868,7 +2868,7 @@ class EconomyMixin:
     # see _electricity_demand_kw). resource_throttle() below folds the two
     # together into the SAME worst-binding-constraint arithmetic iron and
     # copper already use, rather than inventing a second scarcity vocabulary:
-    # electricity can become `self.binding`, appears in `self.shortages` the
+    # electricity can become `self.household.binding`, appears in `self.household.shortages` the
     # same way "iron" or "saltpetre" already do, and reports itself through
     # the same `throttle_binding`/`why` machinery. It does NOT go through the
     # stock-banking half of that function (see the comment where it is
@@ -3004,17 +3004,17 @@ class EconomyMixin:
         """
         local_kw = sum(self.POWER_ANCHOR_KW[tier]
                        for nid, tier in sorted(self.GENERATION_LOCAL_NODES.items())
-                       if nid in self.done)
+                       if nid in self.household.done)
         grid_kw = sum(self.POWER_ANCHOR_KW[tier]
                      for nid, tier in sorted(self.GENERATION_GRID_NODES.items())
-                     if nid in self.done)
+                     if nid in self.household.done)
         transmission_kw = sum(self.POWER_ANCHOR_KW[tier]
                               for nid, tier in sorted(self.TRANSMISSION_NODES.items())
-                              if nid in self.done)
+                              if nid in self.household.done)
         mechanical_kw = {}
         for fam, (chain, tier) in sorted(self.MECHANICAL_PRIME_MOVER_CHAINS.items()):
             mechanical_kw[fam] = (self.POWER_ANCHOR_KW[tier]
-                                  if any(nid in self.done for nid in chain) else 0.0)
+                                  if any(nid in self.household.done for nid in chain) else 0.0)
         return {
             "local_kw": local_kw,
             "grid_kw": grid_kw,
@@ -3142,9 +3142,9 @@ class EconomyMixin:
         if q <= 0:
             return 0.0
         span = max(1.0, float(n.get("build_yrs") or n.get("yrs") or 1.0))
-        if k in self.active:
+        if k in self.household.active:
             return q / span / 1000.0
-        if k in self.done and float(n.get("up") or 0) > 0:
+        if k in self.household.done and float(n.get("up") or 0) > 0:
             return 0.5 * q / span / 1000.0
         return 0.0
 
@@ -3165,10 +3165,10 @@ class EconomyMixin:
             n = self.nodes.get(k)
             if n is None:
                 continue
-            if k in self.active:
+            if k in self.household.active:
                 total += self.GENERIC_ELECTRIC_LOAD_KW
-            elif (k in self.done and float(n.get("up") or 0) > 0
-                  and k in getattr(self, "operating", ())):
+            elif (k in self.household.done and float(n.get("up") or 0) > 0
+                  and k in getattr(self.household, "operating", ())):
                 # STANDING draw, where upkeep IS the right question: a thing
                 # that costs nothing to keep is not an installation humming
                 # away in the background, and one that is built but shut draws
@@ -3191,9 +3191,9 @@ class EconomyMixin:
         # calls is the quadratic blowup this codebase already had to fix once
         # for done_in_order() (see its own comment). Good for one step(): a
         # query between steps reads the demand as of the last one, which is
-        # already true of price_index, self.economy and self.throttle itself.
-        self._material_demand_cache = self.annual_material_demand()
-        industrial, lab = self._throttle_demand_split(self._material_demand_cache)
+        # already true of price_index, self.economy and self.household.throttle itself.
+        self.household._material_demand_cache = self.annual_material_demand()
+        industrial, lab = self._throttle_demand_split(self.household._material_demand_cache)
         stock = self._material_stock()
         # IDEMPOTENT WHEN NOTHING HAS ACTUALLY CHANGED. protocol.py's own
         # `why` handler calls this twice in a row to build one message
@@ -3225,12 +3225,12 @@ class EconomyMixin:
         elec_need = self._electricity_demand_kw()
         elec_have = self.generation_capacity_kw()
         sig = (self.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
-               tuple(sorted(self.mine_capacity.items())), self.forest_ha,
-               self.nitre_bed_m2, tuple(sorted(stock.items())),
+               tuple(sorted(self.mine_capacity.items())), self.household.forest_ha,
+               self.household.nitre_bed_m2, tuple(sorted(stock.items())),
                elec_need, elec_have)
-        if sig == getattr(self, "_stock_throttle_sig", None):
-            self.throttle, self.binding = self._stock_throttle_cache
-            return self.throttle
+        if sig == getattr(self.household, "_stock_throttle_sig", None):
+            self.household.throttle, self.household.binding = self.household._stock_throttle_cache
+            return self.household.throttle
         worst, who = 1.0, None
         if elec_need > 1e-9 and elec_have < elec_need:
             f = max(0.05, elec_have / elec_need)
@@ -3274,16 +3274,16 @@ class EconomyMixin:
             # (DOCS_VS_ENGINE.md #3). Capped at own_and_stock, never at the
             # larger `have`, for exactly the reason in the comment above.
             stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
-        self.throttle, self.binding = worst, who
+        self.household.throttle, self.household.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,
         # now-settled stock) matches and replays rather than spending again.
-        self._stock_throttle_sig = (sig[0], sig[1], sig[2], sig[3], sig[4],
+        self.household._stock_throttle_sig = (sig[0], sig[1], sig[2], sig[3], sig[4],
                                      sig[5], tuple(sorted(stock.items())),
                                      sig[7], sig[8])
-        self._stock_throttle_cache = (worst, who)
+        self.household._stock_throttle_cache = (worst, who)
         if who:
-            self.shortages[who] += 1
+            self.household.shortages[who] += 1
         return worst
 
     def project_resource_throttle(self, k):
@@ -3297,7 +3297,7 @@ class EconomyMixin:
         projects with no matching input retain their full labour pace.
         """
         factor = self.resource_throttle()
-        binding = self.binding
+        binding = self.household.binding
         if factor >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":
@@ -3318,7 +3318,7 @@ class EconomyMixin:
     def _cached_material_demand(self):
         """annual_material_demand(), reusing resource_throttle()'s cache when
         there is one. See the comment there."""
-        d = getattr(self, "_material_demand_cache", None)
+        d = getattr(self.household, "_material_demand_cache", None)
         return d if d is not None else self.annual_material_demand()
 
     def _cached_demand_by_tag(self):
@@ -3343,7 +3343,7 @@ class EconomyMixin:
         documents and takes, for the identical reason. `id()` is only
         unique among objects that are still alive: annual_material_demand()
         returns a brand-new Counter every call, the OLD one is dropped as
-        soon as resource_throttle() overwrites self._material_demand_cache
+        soon as resource_throttle() overwrites self.household._material_demand_cache
         with the next year's, and CPython hands a freed small object's
         address to the very next same-sized allocation often enough that a
         later tick's Counter regularly landed at the exact address an
@@ -3363,11 +3363,11 @@ class EconomyMixin:
         argues for the same shape of cache.
         """
         demand = self._cached_material_demand()
-        cached = getattr(self, "_demand_by_tag_cache", None)
+        cached = getattr(self.household, "_demand_by_tag_cache", None)
         if cached is not None and cached[0] is demand:
             return cached[1]
         by_tag = self._demand_by_supply_tag(demand)
-        self._demand_by_tag_cache = (demand, by_tag)
+        self.household._demand_by_tag_cache = (demand, by_tag)
         return by_tag
 
     def material_price_factor(self, emp_key):
@@ -3438,13 +3438,13 @@ class EconomyMixin:
         hypothetical one). A new tick produces a new annual_material_demand()
         result, which invalidates both caches together automatically."""
         demand = self._cached_material_demand()
-        cached = getattr(self, "_demand_by_emp_key_cache", None)
+        cached = getattr(self.household, "_demand_by_emp_key_cache", None)
         if cached is not None and cached[0] is demand:
             return cached[1]
         grouped = {}
         for (ek, tag), need in self._cached_demand_by_tag().items():
             grouped.setdefault(ek, []).append((tag, need))
-        self._demand_by_emp_key_cache = (demand, grouped)
+        self.household._demand_by_emp_key_cache = (demand, grouped)
         return grouped
 
     def material_market_factor(self, k):
@@ -3717,7 +3717,7 @@ class EconomyMixin:
     # added to it, and depletion (below) aged the WHOLE material at once, so
     # a shaft opened in year 400 was exactly as worked-out as one opened
     # three centuries earlier purely because they shared a material key.
-    # self.mines is the fix: a list of actual workings, each its own dict
+    # self.household.mines is the fix: a list of actual workings, each its own dict
     # with the material it raises, its rated capacity, the year it was
     # commissioned, what it cost to sink, and its OWN depletion clock
     # (intensity_yrs) running from that year, not from whenever the
@@ -3728,19 +3728,19 @@ class EconomyMixin:
     # step with the workings that actually make it up.
     def _workings_of(self, mat):
         """This civilisation's own workings raising `mat`, in the order they
-        were commissioned (self.mines is append-only in commission order,
+        were commissioned (self.household.mines is append-only in commission order,
         never hash-ordered, so this is deterministic across runs)."""
-        return [w for w in getattr(self, "mines", ()) if w.get("material") == mat]
+        return [w for w in getattr(self.household, "mines", ()) if w.get("material") == mat]
 
     @property
     def mine_capacity(self):
         """Rated capacity of your own workings, summed by material -
-        DERIVED from self.mines, not a second number that has to agree with
+        DERIVED from self.household.mines, not a second number that has to agree with
         it. Read-only: opening, closing and mothballing a working all act
-        on self.mines itself (see open_mine/commission_mines/close_mine/
+        on self.household.mines itself (see open_mine/commission_mines/close_mine/
         mothball_mines), and this recomputes from whatever that list says."""
         out = {}
-        for w in getattr(self, "mines", ()):
+        for w in getattr(self.household, "mines", ()):
             out[w["material"]] = out.get(w["material"], 0.0) + w["capacity"]
         return out
 
@@ -3773,12 +3773,12 @@ class EconomyMixin:
         core.py's step() already calls exactly once a year -- see that
         function's own comment -- so this needed no new call site.
 
-        Iterates self.mines (a list, in commission order) and caches
+        Iterates self.household.mines (a list, in commission order) and caches
         mine_land_ceiling() per material seen rather than per working, so
-        this is neither hash-ordered (self.mines is a list) nor quadratic in
+        this is neither hash-ordered (self.household.mines is a list) nor quadratic in
         the number of workings of one material."""
         ceilings = {}
-        for w in getattr(self, "mines", ()):
+        for w in getattr(self.household, "mines", ()):
             mat = w["material"]
             if mat not in ceilings:
                 ceilings[mat] = max(1.0, self.mine_land_ceiling(mat))
@@ -3915,7 +3915,7 @@ class EconomyMixin:
         opex = t * opex_per_t * self.price_index * scale
         ceiling = self.mine_land_ceiling(mat)
         room = max(0.0, ceiling - self.mine_capacity.get(mat, 0.0)
-                   - self.mine_pending.get(mat, 0.0))
+                   - self.household.mine_pending.get(mat, 0.0))
         depl = self.mine_depletion_factor(mat)
         note = ("The yearly cost is charged whether or not you use the "
                 "output, and goes on until you close it. Mothballing is "
@@ -3935,7 +3935,7 @@ class EconomyMixin:
                 "to_sink_it": round(sink, 1),
                 "every_year_it_stands": round(opex, 1),
                 "years_before_it_produces": self.MINE_LEAD_YEARS,
-                "you_have": round(self.capital, 1),
+                "you_have": round(self.household.capital, 1),
                 "you_could_raise": round(self.spending_power("buy"), 1),
                 "you_can_afford_about": round(
                     self.spending_power("buy") / max(cap * self.price_index * scale, 1e-9), 3),
@@ -4008,7 +4008,7 @@ class EconomyMixin:
         """
         mat = self._normalize_material_name(mat)
         workings = self._workings_of(mat)
-        pend = [t for t in getattr(self, "mine_tranches", []) if t[0] == mat]
+        pend = [t for t in getattr(self.household, "mine_tranches", []) if t[0] == mat]
         if not workings and not pend:
             return False, ("you have no %s workings, and none being sunk" % mat
                            if self.mineable(mat)
@@ -4019,11 +4019,11 @@ class EconomyMixin:
         # were actually costing, not a figure blended across every shaft of
         # this material as if they were all worked equally hard.
         saved = sum(self.mine_operating_cost_for(w) for w in workings)
-        self.mines = [w for w in getattr(self, "mines", [])
+        self.household.mines = [w for w in getattr(self.household, "mines", [])
                      if w.get("material") != mat]
-        self.mine_tranches = [t for t in getattr(self, "mine_tranches", [])
+        self.household.mine_tranches = [t for t in getattr(self.household, "mine_tranches", [])
                               if t[0] != mat]
-        self.log.append((self.year, "you close the %s workings" % mat))
+        self.household.log.append((self.year, "you close the %s workings" % mat))
         return True, ("the %s workings are closed. You stop paying %.0f a year. "
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
@@ -4064,7 +4064,7 @@ class EconomyMixin:
         ceiling = self.mine_land_ceiling(mat)
         have_cap = self.mine_capacity
         t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
-                                          - self.mine_pending.get(mat, 0.0)))
+                                          - self.household.mine_pending.get(mat, 0.0)))
         if t_per_yr <= 0:
             return 0.0
         # DEEPER ONES COST MORE. mining_cost_scale() is 1.0 on a fresh
@@ -4074,7 +4074,7 @@ class EconomyMixin:
         # blasting or a railway -- see that method's own comment.
         scale = self.mining_cost_scale(mat)
         cost = t_per_yr * cap * self.price_index * scale
-        if cost > self.capital:
+        if cost > self.household.capital:
             # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING.
             # This quietly took every denarius a break tester had and handed
             # back 22% of the mine they asked for. `hire` refuses and quotes
@@ -4084,11 +4084,11 @@ class EconomyMixin:
             # request for a particular mine.
             if not partial:
                 return 0.0
-            t_per_yr = self.capital / (cap * self.price_index * scale)
-            cost = self.capital
+            t_per_yr = self.household.capital / (cap * self.price_index * scale)
+            cost = self.household.capital
         if t_per_yr <= 0:
             return 0.0
-        self.capital -= cost
+        self.household.capital -= cost
         # Each investment is its own working with its own sinking time. Pooling
         # them and taking the LATEST ready date meant a player who invested
         # spare cash every year, which is exactly what a poor civilization must
@@ -4099,38 +4099,38 @@ class EconomyMixin:
         # being folded into one number for the material - `cost` is carried
         # along so that working can say what it actually cost to sink, not
         # a figure recomputed later against a price_index that has since moved.
-        self.mine_tranches = getattr(self, "mine_tranches", [])
-        self.mine_tranches.append([mat, t_per_yr, self.year + self.MINE_LEAD_YEARS, cost])
-        self.mine_pending[mat] = self.mine_pending.get(mat, 0.0) + t_per_yr
+        self.household.mine_tranches = getattr(self.household, "mine_tranches", [])
+        self.household.mine_tranches.append([mat, t_per_yr, self.year + self.MINE_LEAD_YEARS, cost])
+        self.household.mine_pending[mat] = self.household.mine_pending.get(mat, 0.0) + t_per_yr
         return t_per_yr
 
     def commission_mines(self):
         """Move finished tranches from pending into standing workings
-        (self.mines), tranche by tranche. Each tranche becomes exactly one
+        (self.household.mines), tranche by tranche. Each tranche becomes exactly one
         working, commissioned in the year it actually came on stream (the
         tranche's own `ready` year, which is when its own depletion clock
         starts - see _advance_mine_depletion) - not merged into any other
         working of the same material, so a shaft opened in year 400 stays
         a distinct, unworn thing next to one opened three centuries before
         it."""
-        self.mines = getattr(self, "mines", [])
+        self.household.mines = getattr(self.household, "mines", [])
         still = []
-        for tranche in getattr(self, "mine_tranches", []):
+        for tranche in getattr(self.household, "mine_tranches", []):
             mat, amount, ready = tranche[0], tranche[1], tranche[2]
             # capex_paid: absent on a tranche written by a save from before
             # this field existed (see SAVE_FIELDS/load_state) - honestly
             # unknown, not fabricated, so 0.0 rather than a guess.
             capex_paid = tranche[3] if len(tranche) > 3 else 0.0
             if self.year >= ready:
-                self.mines.append({"material": mat, "capacity": amount,
+                self.household.mines.append({"material": mat, "capacity": amount,
                                    "opened_year": ready, "capex_paid": capex_paid,
                                    "intensity_yrs": 0.0})
-                self.mine_pending[mat] = max(0.0, self.mine_pending.get(mat, 0.0) - amount)
-                if self.mine_pending.get(mat, 0.0) <= 0:
-                    self.mine_pending.pop(mat, None)
+                self.household.mine_pending[mat] = max(0.0, self.household.mine_pending.get(mat, 0.0) - amount)
+                if self.household.mine_pending.get(mat, 0.0) <= 0:
+                    self.household.mine_pending.pop(mat, None)
             else:
                 still.append(tranche)
-        self.mine_tranches = still
+        self.household.mine_tranches = still
         # ONE YEAR OF DEPLETION. core.py's step() calls commission_mines()
         # exactly once a year (see its own comment, "materials: buy the
         # woodland... before the shortage bites"), so this needed no new
@@ -4149,18 +4149,18 @@ class EconomyMixin:
         instead of the newest or oldest being arbitrarily preferred."""
         order = sorted(self.mine_capacity, key=lambda m: -self._mine_opex(m))
         for m in order:
-            if self.capital >= 0:
+            if self.household.capital >= 0:
                 break
             kept = []
             for w in self._workings_of(m):
                 cut = w["capacity"] * 0.5
-                self.capital += cut * self._mine_opex(m) * self.price_index
+                self.household.capital += cut * self._mine_opex(m) * self.price_index
                 w["capacity"] -= cut
                 if w["capacity"] >= 1.0:
                     kept.append(w)
-            self.mines = [w for w in self.mines
+            self.household.mines = [w for w in self.household.mines
                          if w.get("material") != m] + kept
-            self.log.append((self.year, "MOTHBALLED half the %s workings; you could "
+            self.household.log.append((self.year, "MOTHBALLED half the %s workings; you could "
                                         "not pay to keep them running" % m))
         # This used to clamp capital to minus one year's revenue every time any
         # mine was held, which forgave debt the mothballing had not actually
@@ -4178,10 +4178,10 @@ class EconomyMixin:
         now does in open_mine() - and, since this sums per working rather
         than per material average, two workings of the same material at
         different ages now cost what they actually, individually cost.
-        Iterates self.mines, a list in commission order rather than a set
+        Iterates self.household.mines, a list in commission order rather than a set
         or dict, so this stays deterministic across hash seeds with no
         sorted() needed."""
-        return sum(self.mine_operating_cost_for(w) for w in getattr(self, "mines", ()))
+        return sum(self.mine_operating_cost_for(w) for w in getattr(self.household, "mines", ()))
 
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
     # purchase itself cannot drift apart: a break tester spent 68% of their
@@ -4216,13 +4216,13 @@ class EconomyMixin:
     def buy_forest(self, ha):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
         nobody thinks to buy, and the one that decides whether a furnace runs."""
-        room = max(0.0, self.forest_land_ceiling() - self.forest_ha)
+        room = max(0.0, self.forest_land_ceiling() - self.household.forest_ha)
         if ha > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
             # and a log line, which the player DOES see, is the honest way
             # to say why the hectares bought were fewer than asked.
-            self.log.append((self.year,
+            self.household.log.append((self.year,
                              "you can hold at most %.0f hectares of coppice here; "
                              "bought %.0f, not %.0f" % (self.forest_land_ceiling(),
                                                         room, ha)))
@@ -4230,10 +4230,10 @@ class EconomyMixin:
         if ha <= 0:
             return 0.0
         cost = ha * self.FOREST_COST_PER_HA * self.price_index
-        if cost > self.capital:
+        if cost > self.household.capital:
             return 0.0
-        self.capital -= cost
-        self.forest_ha += ha
+        self.household.capital -= cost
+        self.household.forest_ha += ha
         return ha
 
     # Two denarii the square metre, which is the figure step() has always used
@@ -4257,10 +4257,10 @@ class EconomyMixin:
         if m2 <= 0:
             return 0.0
         cost = m2 * self.NITRE_COST_PER_M2 * self.price_index
-        if cost > self.capital:
+        if cost > self.household.capital:
             return 0.0
-        self.capital -= cost
-        self.nitre_bed_m2 += m2
+        self.household.capital -= cost
+        self.household.nitre_bed_m2 += m2
         return m2
 
     def shortage_remedy(self, binding):
@@ -4275,7 +4275,7 @@ class EconomyMixin:
             return ""
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / 1000.0 - self.forest_ha * self.CHARCOAL_PER_HA)
+                       / 1000.0 - self.household.forest_ha * self.CHARCOAL_PER_HA)
             ha = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return ("Charcoal is grown, not bought: about %s more hectare%s of "
                     "coppice would cover it ('buy forest %d', roughly %s "
@@ -4285,7 +4285,7 @@ class EconomyMixin:
                        ha))
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / 1000.0
-            available = (self.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            available = (self.household.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
             deficit = max(0.0, demand - available)
@@ -4373,13 +4373,13 @@ class EconomyMixin:
         rev = self.revenue() if _rev is None else _rev
         wages = self.wage_bill()
         base = 120.0 * px                             # bare subsistence, one person
-        household = 90.0 * px * (1 + self.freedmen * 0.5 + self.slaves * 0.35)
+        household = 90.0 * px * (1 + self.household.freedmen * 0.5 + self.household.slaves * 0.35)
         tax = max(0.0, rev) * 0.06                     # portoria, vicesima, local dues
         status = 0.0
         if self.has("citizenship"):        status += 200 * px
         if self.running("patron_senatorial"):  status += 900 * px
         if self.running("patron_imperial"):    status += 2500 * px
-        status += max(0.0, self.capital) * 0.015      # you cannot look poor and rich
+        status += max(0.0, self.household.capital) * 0.015      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES. This was unconditional and
         # there was no way to shed it: a Rome run sat at 1,343 of revenue
         # against 1,391 of living costs, of which 1,100 was the standing upkeep
@@ -4394,7 +4394,7 @@ class EconomyMixin:
         # themselves starve you.
         up = self.upkeep() if _upkeep is None else _upkeep
         room = max(0.0, rev - base - household - tax - up - wages)
-        status = min(status, room * 0.75 + max(0.0, self.capital) * 0.015)
+        status = min(status, room * 0.75 + max(0.0, self.household.capital) * 0.015)
         return base + household + tax + status + wages
 
     HOURS_PER_PERSON_YEAR = 2000.0   # prices.json: a 10-hour day, 250 days, less feasts

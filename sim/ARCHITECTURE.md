@@ -60,7 +60,30 @@ depends on what. That is the trap this document exists to spring.
 
 ## The runtime graph is one god object
 
-`Sim` has **157 distinct instance attributes** and **314 methods** across six
+**RE-MEASURED after the household extraction.** `Sim` now assigns **55**
+instance attributes on `self`, and carries **104 forwarding properties** to a
+`Household` object holding **68** of its own. The founder's money, staff,
+knowledge, inventory and standing left `Sim` for
+`sim/engine/actors/household.py`; what stayed is the world, the scenario, and
+eight fields biographical to one mortal person (`founder_alive`, `life_left`,
+`dead_reason` and kin) which have no meaning for a government or a firm and
+so are waiting for a second actor to say what they should become.
+
+The figure this file used to give was 157 attributes, and that was itself an
+undercount: a later measurement found **165**, because eight attributes are
+never touched through `self` anywhere in the mixins (they are only ever
+reached as `s.X` from `engine/proto/`) and three more hide behind
+`self.__dict__[...]`. See `docs/architecture/SIM_STATE_INVENTORY.md` for the
+full table and the counting method.
+
+The method count is now **411** across the mixins, up from 314, which is
+almost entirely the forwarding properties.
+
+The paragraph below is left as written, because its argument is still the
+argument - the coupling is the domain, and the extraction did not remove it,
+it gave one coherent group of fields an owner.
+
+`Sim` had **157 distinct instance attributes** and **314 methods** across six
 mixins. Calls between mixin files, counted by `self.<method>()`:
 
     core      -> economy    62        society  -> projects   30

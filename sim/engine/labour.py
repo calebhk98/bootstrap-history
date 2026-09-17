@@ -46,10 +46,10 @@ class LabourMixin:
             # In bondage most of your hours are owed to somebody else. Not all
             # of them: nobody worked every waking hour, and the evenings are
             # where the work gets done. This is the cost, and it is temporary.
-            if self.bondage_years_left > 0:
+            if self.household.bondage_years_left > 0:
                 own *= 0.25
             h += own
-        h += self.directors_extra * self.cfg["director_hours_per_year"]
+        h += self.household.directors_extra * self.cfg["director_hours_per_year"]
         return h
 
     # ---- literacy bounds who you can hire ----------------------------------
@@ -123,7 +123,7 @@ class LabourMixin:
         FOR `scholar` ONLY, THIS IS NOT THE WHOLE WALL. A player who typed
         `hire scholar 12` was refused at 5.9, "ever, at any price" - and
         auto_hire, forty years later with the same civilisation, held 146.4
-        scholars, because step() smoothed self.scholars toward
+        scholars, because step() smoothed self.household.scholars toward
         staff_capacity()'s institutional ceiling directly and never once
         called hire() or read this function. Fixing the bypass (see step(),
         core.py) without fixing the number it now has to respect would have
@@ -179,7 +179,7 @@ class LabourMixin:
             # trains scholars outright and carries their keep on the
             # institution's own upkeep (see _grant_staff) - it is not a second,
             # looser estimate of the same thing, it is the number step() was
-            # already smoothing self.scholars toward before this function's
+            # already smoothing self.household.scholars toward before this function's
             # cap ever got in the way. Zero with no such institution running,
             # which is why a fresh household still sees exactly the
             # market-share figure above and no more.
@@ -236,9 +236,9 @@ class LabourMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        pending = sum(row[3] for row in self.training
+        pending = sum(row[3] for row in self.household.training
                       if len(row) > 2 and row[2] == trade)
-        return self.employees.get(trade, 0.0) + pending
+        return self.household.employees.get(trade, 0.0) + pending
 
     # ---- the market responds to demand, and to supply ----------------------
     # FINDINGS_ROUND2 section R: market_pressure already does this for slaves
@@ -250,7 +250,7 @@ class LabourMixin:
     # has to know this exists). 0.6x a year, the same rate market_pressure
     # decays at (0.55, near enough) - mostly gone in three years.
     def labour_pressure(self, trade):
-        rec = getattr(self, "_labour_pressure", None)
+        rec = getattr(self.household, "_labour_pressure", None)
         rec = rec.get(trade) if rec else None
         if not rec:
             return 0.0
@@ -259,9 +259,9 @@ class LabourMixin:
         return hours * (0.6 ** age)
 
     def _add_labour_pressure(self, trade, hours):
-        d = getattr(self, "_labour_pressure", None)
+        d = getattr(self.household, "_labour_pressure", None)
         if d is None:
-            d = self._labour_pressure = {}
+            d = self.household._labour_pressure = {}
         d[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
 
     def _labour_price_factor_from(self, pressure, supply):
@@ -316,15 +316,15 @@ class LabourMixin:
         if n <= 0:
             return self.labour_price_factor(trade)
         add_hours = n * self.HOURS_PER_PERSON_YEAR
-        before = self.employees.get(trade, 0.0)
-        self.employees[trade] = before + n
+        before = self.household.employees.get(trade, 0.0)
+        self.household.employees[trade] = before + n
         try:
             supply_after = self.market_supply(trade)
         finally:
             if before:
-                self.employees[trade] = before
+                self.household.employees[trade] = before
             else:
-                self.employees.pop(trade, None)
+                self.household.employees.pop(trade, None)
         pressure_after = self.labour_pressure(trade) + add_hours
         return self._labour_price_factor_from(pressure_after, supply_after)
 
@@ -380,25 +380,25 @@ class LabourMixin:
         # A CLOSED ROOM SOURCE IS NOT A MISSING ONE. staff_capacity() already
         # drops a source's places the moment its venture is not running (see
         # STAFF_CAPACITY_SOURCES's must_be_running), and the advice below used
-        # to filter only on `k not in self.done` - so a school built, then
+        # to filter only on `k not in self.household.done` - so a school built, then
         # shut for want of a supervisor, vanished from this text entirely: not
         # counted (correctly), and never named as the cheapest way back,
         # either. A player who hit the ceiling it had been holding up was
         # told to build endowment_land or court an imperial patron instead of
         # simply reopening what they already owned.
         reopen = [(k, add) for k, add in self.ROOM_SOURCES
-                  if k in self.done and k in self.nodes and k not in self.operating
+                  if k in self.household.done and k in self.nodes and k not in self.household.operating
                   and self.is_venture(k)]
         reopen.sort(key=lambda kv: -kv[1])
         want = [(k, add) for k, add in self.ROOM_SOURCES
-                if k not in self.done and k in self.nodes
+                if k not in self.household.done and k in self.nodes
                 and self.is_visible(k)]
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
         def _distance(k):
-            return len(closure(self.nodes, k) - self.done)
+            return len(closure(self.nodes, k) - self.household.done)
         want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
@@ -619,7 +619,7 @@ class LabourMixin:
         # anything: money already going to rent and to people you already
         # employ is not there to hire more people with.
         spare = max(0.0, (self.revenue() - self.upkeep() - self.living_cost())
-                    * self.rep_factor() + max(0.0, self.capital) * 0.06)
+                    * self.rep_factor() + max(0.0, self.household.capital) * 0.06)
         budget = spare * 0.40
         afford = budget / (420.0 * self.price_index * self.wage_index)
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
@@ -642,7 +642,7 @@ class LabourMixin:
         # above was undone by the floor beneath it: "grow the staff toward what
         # you can house and pay" has to be able to mean nobody.
         scale = min(1.0, afford / max(1.0, sc + ar + extra * 1.35))
-        self._staff_scale = scale     # step() applies this to `extra` too
+        self.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.
@@ -668,8 +668,8 @@ class LabourMixin:
         this is the honest version of the same headroom. You hire them, you pay
         them every year, and you can only supervise so many.
         """
-        room = (6.0 + 14.0 * self.directors_extra
-                + max(0.0, getattr(self, "worker_housing_places", 0.0)))
+        room = (6.0 + 14.0 * self.household.directors_extra
+                + max(0.0, getattr(self.household, "worker_housing_places", 0.0)))
         if self.running("workshop_first"):
             room += 6.0 * self.institution_units("workshop_first")
         if self.running("school_founded"):
@@ -733,9 +733,9 @@ class LabourMixin:
         """
         rows = [{"source": "yourself", "people": 6.0,
                  "what_it_is": "what one person can keep an eye on"}]
-        if self.directors_extra > 0.005:
+        if self.household.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
-                         round(14.0 * self.directors_extra, 2),
+                         round(14.0 * self.household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
         for key, per, words in (
                 ("workshop_first", 6.0, "a place of your own to work in"),
@@ -803,13 +803,13 @@ class LabourMixin:
             # multiplier via running(node), so a school built and then shut
             # for want of a supervisor stops widening the hiring pool exactly
             # as if it had never been built - and this advice, filtering on
-            # `node not in self.done`, fell silent about it rather than
+            # `node not in self.household.done`, fell silent about it rather than
             # naming the actual remedy. Reopening costs a supervisor, not a
             # second institution; say that first.
-            elif node in self.done and node not in self.operating and self.is_venture(node):
+            elif node in self.household.done and node not in self.household.operating and self.is_venture(node):
                 bits.append("reopen %s ('open %s') - you already built this; "
                             "it is only shut" % (node, node))
-            elif node not in self.done and self.is_visible(node):
+            elif node not in self.household.done and self.is_visible(node):
                 # NOT A CIRCLE. `why workshop_first` says it is blocked for want
                 # of artisans, and the advice on how to get artisans said "build
                 # workshop_first (you need somewhere for them to work)" - a play
@@ -821,7 +821,7 @@ class LabourMixin:
                 # start_reason - which calls this function, so the obvious
                 # version of this test recurses until the stack gives out.
                 _n = self.nodes[node]
-                _short = (_n["art"] > self.artisans + 1e-9 if kind == "artisans"
+                _short = (_n["art"] > self.household.artisans + 1e-9 if kind == "artisans"
                           else _n["sch"] > self.effective_scholars() + 1e-9)
                 if _short:
                     bits.append("build %s eventually (%s) - but it is itself "
@@ -900,11 +900,11 @@ class LabourMixin:
         # ran a 2.3x spread.
         rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
-               * (1.0 + min(0.5, self.reputation / 200.0)))
+               * (1.0 + min(0.5, self.household.reputation / 200.0)))
         before_practice = self.revenue()
-        self.capital += pay
-        self.wage_hours_this_year = getattr(self, "wage_hours_this_year", 0.0) + hours
-        self.wages_earned = getattr(self, "wages_earned", 0.0) + pay
+        self.household.capital += pay
+        self.household.wage_hours_this_year = getattr(self.household, "wage_hours_this_year", 0.0) + hours
+        self.household.wages_earned = getattr(self.household, "wages_earned", 0.0) + pay
         # SAY WHEN IT IS A BAD TRADE. Selling your hours costs you the practice
         # those same hours were running (see practice_attention), and for a
         # physician it is usually a loss: a tester measured a full year of
@@ -978,7 +978,7 @@ class LabourMixin:
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for t, n in self.employees.items():
+        for t, n in self.household.employees.items():
             total += n * self.annual_wage(t)
         return total
 
@@ -1045,7 +1045,7 @@ class LabourMixin:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return self.scholars + (1.0 if self.founder_alive else 0.0)
+        return self.household.scholars + (1.0 if self.founder_alive else 0.0)
 
     def trade_available(self, t):
         """Can this trade be had here at all, at any price?
@@ -1056,8 +1056,8 @@ class LabourMixin:
         """
         if t not in TRADES_ABSENT:
             return True
-        return (t in self.trades_created
-                or getattr(self, "trade_schools", {}).get(t, 0.0) > 0)
+        return (t in self.household.trades_created
+                or getattr(self.household, "trade_schools", {}).get(t, 0.0) > 0)
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
@@ -1066,14 +1066,14 @@ class LabourMixin:
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
         cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
-        if seats <= 0 or cost > self.capital:
+        if seats <= 0 or cost > self.household.capital:
             return False, "cannot afford that trade school"
-        self.capital -= cost
-        schools = getattr(self, "trade_schools", None)
+        self.household.capital -= cost
+        schools = getattr(self.household, "trade_schools", None)
         if schools is None:
-            schools = self.trade_schools = {}
+            schools = self.household.trade_schools = {}
         schools[trade] = schools.get(trade, 0.0) + seats
-        self.trades_created.add(trade)
+        self.household.trades_created.add(trade)
         return True, None
 
     def _trade_market_class(self, t):
@@ -1206,11 +1206,11 @@ class LabourMixin:
         if not self.trade_available(t):
             return 0.0
         base = self.cfg["hired_hours_cap_base"] * (0.25 + 0.75 * min(1.0, self.pop_scale))
-        school_hours = (getattr(self, "trade_schools", {}).get(t, 0.0)
+        school_hours = (getattr(self.household, "trade_schools", {}).get(t, 0.0)
                         * self.HOURS_PER_PERSON_YEAR)
         if t in TRADES_ABSENT:
             # Only the people you taught, plus the ones they have taught since.
-            return (self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR * 1.5
+            return (self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR * 1.5
                     + school_hours)
         cls = self._trade_market_class(t)
         if cls in ("abundant", "common"):
@@ -1240,7 +1240,7 @@ class LabourMixin:
         # train().
         if t in self.LITERATE_TRADES:
             cap *= self.literacy_factor(t)
-        return (cap + self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        return (cap + self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
                 + school_hours)
 
     def reachable_trade_population(self, t):
@@ -1302,7 +1302,7 @@ class LabourMixin:
             # into existence by you alone (trade_available already checked
             # this is now true), so "the country's" population of the trade
             # IS what you have taught - there is no wider pool to estimate.
-            return self.employees.get(t, 0.0)
+            return self.household.employees.get(t, 0.0)
         return urban * self.TRADE_DENSITY.get(self._trade_market_class(t), 0.0)
 
     def home_town_population_estimate(self):
@@ -1342,7 +1342,7 @@ class LabourMixin:
         for t in sorted(WAGES):
             national = self.national_trade_population(t)
             reach = self.reachable_trade_population(t) if self.trade_available(t) else 0.0
-            have = self.employees.get(t, 0.0)
+            have = self.household.employees.get(t, 0.0)
             trades.append({
                 "trade": t,
                 "exists_here": self.trade_available(t),
@@ -1478,7 +1478,7 @@ class LabourMixin:
         """
         bonus = 0.0
         for node, tr, add in self.LABOUR_PRODUCTIVITY_SOURCES:
-            if tr == trade and node in self.done:
+            if tr == trade and node in self.household.done:
                 bonus += add
         return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
 
@@ -1512,12 +1512,12 @@ class LabourMixin:
         # out of the hours it can call on, which is this number, not how
         # many people the town could in principle hire (market_supply, still
         # unchanged, still governs hiring capacity and labour_price_factor).
-        return ((self.market_supply(t) + self.contract_hours.get(t, 0.0))
+        return ((self.market_supply(t) + self.household.contract_hours.get(t, 0.0))
                 * self.labour_productivity(t))
 
     def hours_reserved(self, t):
         """Hours of this trade you have already bought from an outside shop."""
-        return self.contract_hours.get(t, 0.0)
+        return self.household.contract_hours.get(t, 0.0)
 
     def market_supply_split(self, t):
         """(the town's hours, your own people's hours). Same total, said honestly.
@@ -1529,7 +1529,7 @@ class LabourMixin:
         smith-hours available. The arithmetic was right and the label was
         wrong: the town's share had not moved at all.
         """
-        mine = self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        mine = self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
         total = self.market_supply(t)
         if t in TRADES_ABSENT:
             # There is no market in these at all; every hour is somebody you
@@ -1562,7 +1562,7 @@ class LabourMixin:
                 "can point to; a wage, an apprentice's keep or a commission "
                 "fee is money simply spent, and nothing stands behind that "
                 "the way a half-built project does). You are %s short."
-                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.capital),
+                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.household.capital),
                    "{:,.0f}".format(max(0.0, room)),
                    "{:,.0f}".format(max(0.0, fee - room))))
 
@@ -1647,11 +1647,11 @@ class LabourMixin:
                               " - %d is the most whole people you can take" % whole
                               if whole else " - you have no room for even one",
                               self._room_advice()))
-        self.capital -= fee
+        self.household.capital -= fee
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
-        self.wages_prepaid = getattr(self, "wages_prepaid", 0.0) + fee
-        self.employees[trade] = self.employees.get(trade, 0.0) + float(n)
+        self.household.wages_prepaid = getattr(self.household, "wages_prepaid", 0.0) + fee
+        self.household.employees[trade] = self.household.employees.get(trade, 0.0) + float(n)
         self._add_labour_pressure(trade, float(n) * self.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE. This returned None, so the
@@ -1664,7 +1664,7 @@ class LabourMixin:
                       "first year in advance). You now have %.1f, and %.2f "
                       "household place(s) left"
                       % (n, trade, "" if n == 1 else "s",
-                         "{:,.0f}".format(fee), self.employees[trade],
+                         "{:,.0f}".format(fee), self.household.employees[trade],
                          max(0.0, self.household_room())))
 
     def fire(self, trade, n):
@@ -1681,8 +1681,8 @@ class LabourMixin:
         the way any abandoned work is, and they do not arrive.
         """
         trade = str(trade or "").strip().lower()
-        have = self.employees.get(trade, 0.0)
-        pending = sum(r[3] for r in self.training
+        have = self.household.employees.get(trade, 0.0)
+        pending = sum(r[3] for r in self.household.training
                       if len(r) > 3 and r[2] == trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
@@ -1700,14 +1700,14 @@ class LabourMixin:
         note = None
         if have > 0:
             gone = min(n, have)
-            self.employees[trade] = have - gone
-            if self.employees[trade] <= 1e-9:
-                self.employees.pop(trade)
+            self.household.employees[trade] = have - gone
+            if self.household.employees[trade] <= 1e-9:
+                self.household.employees.pop(trade)
             n -= gone
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if n > 0 and pending > 0:
             stopped, still = 0.0, []
-            for r in self.training:
+            for r in self.household.training:
                 if len(r) > 3 and r[2] == trade and n > 0:
                     take = min(n, r[3])
                     r[3] -= take
@@ -1715,7 +1715,7 @@ class LabourMixin:
                     stopped += take
                 if len(r) <= 3 or r[3] > 1e-9:
                     still.append(r)
-            self.training = still
+            self.household.training = still
             if stopped > 0:
                 note = ((note + "; " if note else "")
                         + "stopped teaching %g more (what you paid to keep them "
@@ -1749,7 +1749,7 @@ class LabourMixin:
                        else "glassblower" if trade == "optician"
                        else "scribe" if trade == "chemist"
                        else "smith")).strip().lower()
-        if frm in TRADES_ABSENT and frm not in self.trades_created:
+        if frm in TRADES_ABSENT and frm not in self.household.trades_created:
             return False, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
@@ -1795,10 +1795,10 @@ class LabourMixin:
             return False, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (n, trade, "" if n == 1 else "s"), fee)
-        self.capital -= fee
-        self.teaching_hours_this_year = getattr(self, "teaching_hours_this_year", 0.0) + hours
-        self.trades_created.add(trade)
-        self.training.append([0.0, self.year + 2.0, trade, float(n)])
+        self.household.capital -= fee
+        self.household.teaching_hours_this_year = getattr(self.household, "teaching_hours_this_year", 0.0) + hours
+        self.household.trades_created.add(trade)
+        self.household.training.append([0.0, self.year + 2.0, trade, float(n)])
         self._add_labour_pressure(frm, float(n) * self.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK. A play tester's `train machinist 4` quietly ate
         # 1,800 of their 2,000 founder-hours and, with nothing left to
@@ -1813,7 +1813,7 @@ class LabourMixin:
         # not yet finished (ready is the year they MATURE, not the year they
         # start). What this never said, in either direction: they cannot do
         # a day of the work before that year, and core.py adds them to
-        # self.employees itself the moment they do, automatically - no
+        # self.household.employees itself the moment they do, automatically - no
         # 'hire' needed to put THESE apprentices to work.
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
@@ -1857,10 +1857,10 @@ class LabourMixin:
         for k in self.order:
             if seen >= look:
                 break
-            if k in self.done or k in self.active or k not in need:
+            if k in self.household.done or k in self.household.active or k not in need:
                 continue
             n = self.nodes[k]
-            if any(p not in self.done for p in n["pre"]):
+            if any(p not in self.household.done for p in n["pre"]):
                 continue
             seen += 1
             short = n["art"] - self.craft_hands_available()
@@ -1873,7 +1873,7 @@ class LabourMixin:
             for t in sorted(WAGES):
                 if trade_family(t) != "craft" or not self.trade_available(t):
                     continue
-                spare = self.market_supply(t) - self.contract_hours.get(t, 0.0)
+                spare = self.market_supply(t) - self.household.contract_hours.get(t, 0.0)
                 if spare < hours:
                     continue
                 if best is None or WAGES[t] < WAGES[best]:
@@ -1893,7 +1893,7 @@ class LabourMixin:
         year of a carpenter's time IS a carpenter, for the purposes of whether
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
-        contracted = sum(h for t, h in getattr(self, "contract_hours", {}).items()
+        contracted = sum(h for t, h in getattr(self.household, "contract_hours", {}).items()
                          if trade_family(t) == "craft")
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
@@ -1904,7 +1904,7 @@ class LabourMixin:
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
         own = 1.0 if self.founder_alive else 0.0
-        return self.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
+        return self.household.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
 
     def commission(self, trade, hours):
         """Pay for a job, not for a person.
@@ -1922,7 +1922,7 @@ class LabourMixin:
         if not self.trade_available(trade):
             return False, ("no %s will take the work; the trade does not exist here: %s"
                            % (trade, TRADE_NOTES.get(trade, "")))
-        spare = self.market_supply(trade) - self.contract_hours.get(trade, 0.0)
+        spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
         if hours > spare:
             return False, ("the %ss here can spare %.0f more hours this year, not %.0f"
                            % (trade, max(0.0, spare), hours))
@@ -1934,14 +1934,14 @@ class LabourMixin:
         if fee > self.spending_power("buy"):
             return False, self._cash_in_hand_refusal(
                 "%.0f hours of a %s" % (hours, trade), fee)
-        self.capital -= fee
-        self.contract_hours[trade] = self.contract_hours.get(trade, 0.0) + hours
-        self.commissioned[trade] = self.commissioned.get(trade, 0.0) + hours
+        self.household.capital -= fee
+        self.household.contract_hours[trade] = self.household.contract_hours.get(trade, 0.0) + hours
+        self.household.commissioned[trade] = self.household.commissioned.get(trade, 0.0) + hours
         self._add_labour_pressure(trade, hours)
         return True, ("%.0f hours of a %s bought for %.0f denarii" % (hours, trade, fee))
 
     def headcount(self):
-        return sum(self.employees.values()) + self.slaves + self.freedmen
+        return sum(self.household.employees.values()) + self.household.slaves + self.household.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.
@@ -1954,21 +1954,21 @@ class LabourMixin:
         and correctly identified it as the dominant strategy in the game. There
         is one year, and one pair of hands.
         """
-        return (getattr(self, "teaching_hours_this_year", 0.0)
-                + getattr(self, "wage_hours_this_year", 0.0))
+        return (getattr(self.household, "teaching_hours_this_year", 0.0)
+                + getattr(self.household, "wage_hours_this_year", 0.0))
 
     def _grant_staff(self, scholars=0.0, artisans=0.0):
         """An institution hands you people outright, on completion - the
         school's own professors, the freedmen a patron staffs your workshop
         with. They are not on the payroll you can fire (their keep is already
         inside the institution's own upkeep), so they do not belong in
-        `self.employees`; they have to survive `_resync_pools()` some other
+        `self.household.employees`; they have to survive `_resync_pools()` some other
         way, which is what this records.
 
-        Before this existed, `_complete()` added straight to self.scholars /
-        self.artisans, and the very next call to `_resync_pools()` - which
+        Before this existed, `_complete()` added straight to self.household.scholars /
+        self.household.artisans, and the very next call to `_resync_pools()` - which
         runs unconditionally every single step() - overwrote both from
-        `self.employees` alone and threw the grant away entirely. A player
+        `self.household.employees` alone and threw the grant away entirely. A player
         who founded the school, in the one mode (`--manual`, which the
         interactive protocol always uses) where nothing else keeps employees
         and the aggregate in step, read the node's own description promising
@@ -1976,13 +1976,13 @@ class LabourMixin:
         trained scholars, you have 1.0" - the pivot node, built and paid for,
         doing nothing at all.
         """
-        g = getattr(self, "granted_staff", None)
+        g = getattr(self.household, "granted_staff", None)
         if g is None:
-            g = self.granted_staff = {"scholars": 0.0, "artisans": 0.0}
+            g = self.household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
         g["scholars"] = g.get("scholars", 0.0) + scholars
         g["artisans"] = g.get("artisans", 0.0) + artisans
-        self.scholars += scholars
-        self.artisans += artisans
+        self.household.scholars += scholars
+        self.household.artisans += artisans
 
     def _resync_pools(self):
         """Recompute the two aggregate pools the tech tree asks for from the
@@ -2011,19 +2011,19 @@ class LabourMixin:
 
         PLUS WHAT AN INSTITUTION GRANTED OUTRIGHT. See _grant_staff: those
         people are real and already paid for out of the institution's own
-        upkeep, and this is the one place that ever told self.scholars and
-        self.artisans what they are, so it is the one place that has to add
+        upkeep, and this is the one place that ever told self.household.scholars and
+        self.household.artisans what they are, so it is the one place that has to add
         the grant back rather than let it be overwritten out of existence.
         """
-        craft = sum(n for t, n in self.employees.items() if trade_family(t) == "craft")
-        schol = self.employees.get("scholar", 0.0)
-        granted = getattr(self, "granted_staff", None) or {}
+        craft = sum(n for t, n in self.household.employees.items() if trade_family(t) == "craft")
+        schol = self.household.employees.get("scholar", 0.0)
+        granted = getattr(self.household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. Two things were wrong
         # here at once and they cancelled into a disappearance. Everyone bought
         # counted at full worth from the day of purchase, so the training lag
         # that buy_slaves' own docstring promises did nothing; and when a
         # training row finally matured, step() added its capacity to
-        # self.artisans - which THIS function then recomputed from scratch and
+        # self.household.artisans - which THIS function then recomputed from scratch and
         # threw away at the next call. A play tester bought and freed people,
         # saw them enter training as a trade named literally `None`, and
         # watched their craftsmen fall from 35 to 3.8 when the training
@@ -2032,19 +2032,19 @@ class LabourMixin:
         # count below.
         # buy_slaves stores 0.55 of a worker per person bought, so that is the
         # divisor that recovers the headcount still learning.
-        learning = sum(row[0] for row in getattr(self, "training", ())
+        learning = sum(row[0] for row in getattr(self.household, "training", ())
                        if len(row) <= 2) / 0.55
-        owned = max(0.0, self.freedmen + self.slaves - learning)
+        owned = max(0.0, self.household.freedmen + self.household.slaves - learning)
         # Split what is left in the same proportion as what is held.
-        held = self.freedmen + self.slaves
+        held = self.household.freedmen + self.household.slaves
         if held > 0:
-            free_share = self.freedmen / held
+            free_share = self.household.freedmen / held
         else:
             free_share = 0.0
-        self.artisans = (craft + owned * free_share * 1.0
+        self.household.artisans = (craft + owned * free_share * 1.0
                          + owned * (1.0 - free_share) * 0.7
                          + granted.get("artisans", 0.0))
-        self.scholars = schol + granted.get("scholars", 0.0)
+        self.household.scholars = schol + granted.get("scholars", 0.0)
 
     TRAINING_YEARS = 3.0      # nobody is a useful artisan the week you buy them
 
@@ -2072,7 +2072,7 @@ class LabourMixin:
         # overcharged a single large call relative to the same number bought in
         # slices, which is why slicing still saved about a fifth. Now the nth
         # head costs what the nth head costs however you group them.
-        already = getattr(self, "market_pressure", 0.0)
+        already = getattr(self.household, "market_pressure", 0.0)
         n = float(n_people)
         e = 1.85                       # 1 + 0.85
         integral = (((already + n) ** e) - (already ** e)) / (e * (depth ** 0.85))
@@ -2127,7 +2127,7 @@ class LabourMixin:
         # needs all three exactly as much as a person you pay. More so.
         room = self.household_room()
         if n_people > room:
-            self._last_buy_refusal = (
+            self.household._last_buy_refusal = (
                 "you can supervise, house and teach %.2f more people, not %g - "
                 "and a person you own needs feeding and housing exactly as much "
                 "as one you pay. %s"
@@ -2135,22 +2135,22 @@ class LabourMixin:
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
-        if price > self.capital:
+        if price > self.household.capital:
             return 0
-        self.capital -= price
-        self.slaves += n_people
-        self.market_pressure = getattr(self, "market_pressure", 0.0) + n_people
-        # Untrained on arrival. They become productive through self.training.
-        self.training.append([n_people * 0.55, self.year + self.TRAINING_YEARS])
+        self.household.capital -= price
+        self.household.slaves += n_people
+        self.household.market_pressure = getattr(self.household, "market_pressure", 0.0) + n_people
+        # Untrained on arrival. They become productive through self.household.training.
+        self.household.training.append([n_people * 0.55, self.year + self.TRAINING_YEARS])
         return n_people
 
     def manumit(self, n_people):
-        n_people = min(n_people, self.slaves)
+        n_people = min(n_people, self.household.slaves)
         if not n_people:
             return 0
-        self.slaves -= n_people
-        self.freedmen += n_people
-        self.manumitted_total += n_people
+        self.household.slaves -= n_people
+        self.household.freedmen += n_people
+        self.household.manumitted_total += n_people
         # The SAME person, working properly: 0.55 to 1.0, not another whole
         # worker. This was the double count.
         #
@@ -2164,17 +2164,17 @@ class LabourMixin:
         # The training queue also carries taught-trade rows now (which have a
         # trade name in them and no artisan capacity), so read column 0 by index
         # rather than unpacking a row whose width is no longer fixed.
-        in_training = sum(row[0] for row in self.training)
+        in_training = sum(row[0] for row in self.household.training)
         untrained = min(n_people, int(in_training / 0.55 + 0.5))
         trained_freed = max(0, n_people - untrained)
-        self.artisans += trained_freed * 0.45
+        self.household.artisans += trained_freed * 0.45
         if untrained:
             share = untrained / max(1.0, in_training / 0.55)
-            for row in self.training:
+            for row in self.household.training:
                 row[0] *= 1.0 + 0.45 / 0.55 * min(1.0, share)
         # Manumission was publicly admired, and admiration saturates. The first
         # freedmen you make are a statement; the four hundredth is a payroll.
         # Uncapped, this was a reputation pump that beat taking a patron.
-        gain = 0.4 * n_people / (1.0 + self.manumitted_total / 25.0)
-        self.reputation += min(gain, 6.0)
+        gain = 0.4 * n_people / (1.0 + self.household.manumitted_total / 25.0)
+        self.household.reputation += min(gain, 6.0)
         return n_people

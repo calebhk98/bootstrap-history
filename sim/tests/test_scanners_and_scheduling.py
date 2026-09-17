@@ -373,9 +373,20 @@ except OSError:
 # that is the shape of state most likely to be added without anyone
 # remembering the save contract. Any future one has to be saved or
 # deliberately named here, rather than silently resetting every resume.
+#
+# BOTH `vars(sim())` AND `vars(sim().household)`, since the household
+# extraction (see docs/architecture/HOUSEHOLD_EXTRACTION.md) moved both of
+# the accumulators this check was written for - failed_attempts and
+# shortages - off `Sim` itself and onto `Sim.household`. Scanning `Sim`
+# alone here would silently stop catching a future accumulator the moment it
+# is added to the household rather than to the world, which is exactly the
+# blind spot this comment says must not exist.
 _NOT_SAVED_ON_PURPOSE = frozenset()
-_accum = {k for k, v in vars(sim()).items()
+_fresh = sim()
+_accum = {k for k, v in vars(_fresh).items()
           if isinstance(v, (_coll.defaultdict, _coll.Counter))}
+_accum |= {k for k, v in vars(_fresh.household).items()
+           if isinstance(v, (_coll.defaultdict, _coll.Counter))}
 check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
       "listed as deliberately unsaved, so the next one added cannot quietly "
       "reset on every resume the way retry learning did",

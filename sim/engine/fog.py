@@ -100,37 +100,33 @@ class FogMixin:
     # format can do that - it is that reload also handed back every denarius
     # and year that discovery cost, for free, as many times as you like.
     #
-    # The fix is a property instead of a plain attribute, so it holds
-    # regardless of WHICH code assigns to `.revealed` - load_state
-    # (protocol.py) is the path the exploit uses, but this does not require
-    # editing it or knowing about every future caller: assigning a smaller
-    # set here only ever grows what is already known, never shrinks it. A
-    # genuinely fresh Sim is untouched - the first assignment ever made (both
-    # `play` and `agent` set `s.revealed = set()` right after construction,
-    # before any `load_state`) has nothing to union with yet, so it is a
-    # plain replace, exactly as before this existed.
-    @property
-    def revealed(self):
-        return self.__dict__.get("_revealed", set())
-
-    @revealed.setter
-    def revealed(self, value):
-        cur = self.__dict__.get("_revealed")
-        self.__dict__["_revealed"] = (set(value) if cur is None
-                                      else set(cur) | set(value))
+    # THE RATCHET ITSELF NOW LIVES ON `Household`, not here: `revealed` is
+    # this household's own accumulated knowledge of the tree, which is
+    # exactly the shape of state HOUSEHOLD_EXTRACTION.md moved onto its own
+    # object, and a property is still how the ratchet holds regardless of
+    # WHICH code assigns to it - `load_state` (proto/saveload.py, via the
+    # `Sim.revealed` outside-surface property near the bottom of core.py) is
+    # the path the exploit this fixed used, but the ratchet does not need to
+    # know about every future caller either way: assigning a smaller set only
+    # ever grows what is already known, never shrinks it. See
+    # sim/engine/actors/household.py for the property itself. Every call
+    # site below reads and writes `self.household.revealed` directly, for
+    # the same reason every other moved field's engine-internal call sites
+    # do (HOUSEHOLD_EXTRACTION.md section 2): this is the hot path, not the
+    # outside surface.
 
     def reveal_from(self, k):
         """Completing something teaches you what it leads towards, vaguely."""
         if not getattr(self, "fog", False):
             return
-        self.revealed = set(getattr(self, "revealed", set()))
-        self.revealed.add(k)
+        self.household.revealed = set(getattr(self.household, "revealed", set()))
+        self.household.revealed.add(k)
         for other, n in self.nodes.items():
             if k in n.get("pre", []):
-                self.revealed.add(other)
+                self.household.revealed.add(other)
             for g in n.get("req_any", []):
                 if k in (g.get("options") or {}):
-                    self.revealed.add(other)
+                    self.household.revealed.add(other)
 
     def is_visible(self, k, _memo=None):
         """Can the player see this node at all?
@@ -153,9 +149,9 @@ class FogMixin:
         """
         if not getattr(self, "fog", False):
             return True
-        if k in self.done or k in self.active:
+        if k in self.household.done or k in self.household.active:
             return True
-        if k in getattr(self, "revealed", set()):
+        if k in getattr(self.household, "revealed", set()):
             return True
         memo = {} if _memo is None else _memo
         if k in memo:
@@ -228,7 +224,7 @@ class FogMixin:
     # upkeep if it is ever OPENED, so completing them on the player's behalf
     # would be spending their money on a decision they were never asked about.
     # They do not need opening to satisfy a prerequisite - start_reason tests
-    # `p not in self.done`, not operating - so the honest fix is to say what
+    # `p not in self.household.done`, not operating - so the honest fix is to say what
     # the refusal was already about: this one is free, start it.
     FREE_PREREQ_NAMED_AT_MOST = 3
 
@@ -246,7 +242,7 @@ class FogMixin:
             # ONLY IF THEY CAN ACT ON IT NOW. Naming a free node that is
             # itself blocked is not help, it is a second refusal wearing the
             # first one's clothes.
-            if all(q in self.done for q in n["pre"]):
+            if all(q in self.household.done for q in n["pre"]):
                 ready.append(p)
         if not ready:
             return ""
@@ -315,14 +311,14 @@ class FogMixin:
         # (core.py): the sack itself calls the same method, so this screen
         # cannot quote a hedge the sack does not honour.
         chance, frac, hedge = self.corpus_hedge()
-        at_risk = len(self.done - self.granted)
+        at_risk = len(self.household.done - self.household.granted)
         # WHAT YOU HAVE ALREADY LOST, and have to build again. Without this the
         # only record of a sacking is a log line a century back, and a play
         # tester discovered theirs one refusal at a time - "missing
         # prerequisites: <thing you built two hundred years ago>".
-        _gone = sorted((k for k, _y in (getattr(self, "forgotten", None) or {}).items()
-                        if k not in self.done),
-                       key=lambda k: -(self.forgotten[k]))
+        _gone = sorted((k for k, _y in (getattr(self.household, "forgotten", None) or {}).items()
+                        if k not in self.household.done),
+                       key=lambda k: -(self.household.forgotten[k]))
         upcoming = []
         for h in (self.civ.get("hazards") or []):
             yrs = h.get("years") or []
@@ -423,7 +419,7 @@ class FogMixin:
             "critical_capabilities_not_operating": self.capability_gaps() or None,
             **({"you_have_already_lost": len(_gone),
                 "and_have_to_build_again": _gone[:10],
-                "the_most_recent_went_in": self.forgotten[_gone[0]]} if _gone else {}),
+                "the_most_recent_went_in": self.household.forgotten[_gone[0]]} if _gone else {}),
             # Under fog, do not name a node the player has not discovered. A
             # tester was told in `state` that corpus_dispersed would hedge them,
             # asked `why` about it, and was told they had never heard of it.
