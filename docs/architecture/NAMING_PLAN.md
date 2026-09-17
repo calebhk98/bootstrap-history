@@ -439,6 +439,38 @@ Breakdown of the Tier 2 bucket:
 
 ### A.5 Specific hazards found
 
+**Found the hard way in round 2, on the six standalone tools. Both make a
+rename that is correct in isolation fail `prove_rename_safe.py`, and both
+look like the prover is broken. It is not; it is right, and these are real
+bytecode changes.**
+
+- **One short name bound twice in one function for two different meanings
+  shares one local slot.** Give the two occurrences two different new names
+  and that one slot becomes two, shifting every `LOAD_FAST`/`STORE_FAST`
+  index after it - so the bytecode is genuinely different even though every
+  individual rename reads correctly. Every occurrence of such a name inside
+  one function must map to a SINGLE new name, or be left alone. Hit on `q`
+  in `treetool.py`'s `cmd_merge`, where it meant a resolved prerequisite id
+  in one half and a material quantity in the other. This is the mechanical
+  consequence of the thing CLAUDE.md §7 already warns about in the abstract
+  (`q` is four different things in four places) - when the four places are
+  one function, you cannot fix them separately.
+
+- **CPython orders CELL variables alphabetically, not by first appearance.**
+  A local captured by a nested `def`, `lambda` or comprehension body becomes
+  a cell variable, and `co_cellvars` is sorted. So a captured local's NEW
+  name has to sort into the same position among the other captured names as
+  the old one did, or the indices move although only one name changed. Hit
+  on `k` in `treetool.py`'s `cmd_repair`: `dict_key` failed and `ident`
+  passed, purely because `ident` sorts between `goods` and `node` exactly
+  where `k` did.
+
+  The cheap pre-check that avoids both: before renaming a local, ask whether
+  it is referenced inside a nested `def`/`lambda`/comprehension body. Being a
+  comprehension's outermost iterable does NOT force capture. Round 2's other
+  five files were analysed that way up front and proved clean on the first
+  attempt; the two that were not took several passes each.
+
 - **A real `getattr`/`setattr` check came back clean.** Grepped for
   `getattr(self, <1-2 char var>)` / `setattr(self, <1-2 char var>, ...)`
   across `sim/`: zero hits. No short *code* identifier is used as a dynamic
