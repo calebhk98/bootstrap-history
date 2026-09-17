@@ -46,7 +46,12 @@ SAVE_FIELDS = (
     # revert to "let the allocator decide" on every resume, which is the
     # exact silent-reset fault `policy` itself was fixed for.
     "hour_allocations", "work_trade",
-    "commissioned", "teaching_hours_this_year", "wages_paid",
+    # teaching_hours_this_year was listed here as well as below. Harmless -
+    # the tuple is only ever iterated, so the field was simply saved twice -
+    # but it made the list 99 literals naming 98 fields, and a list that does
+    # not agree with itself is a list nobody trusts to be complete. It lives
+    # below, with the other within-year tallies its comment is about.
+    "commissioned", "wages_paid",
     "bondage_years_left", "bondage_debt", "money_real", "credit_frozen_until",
     # Counters and within-year tallies that were being silently reset on every
     # single command, because with --session every command is a save and a load.
