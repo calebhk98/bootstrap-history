@@ -42,8 +42,8 @@ def _subject_of(n):
     There are 241 distinct `cat` values and 26 knowledge modules. The modules
     are the ones a person would recognise as subjects.
     """
-    kb = (n.get("kb") or "").split("#")[0]
-    return SUBJECTS.get(kb[:2], "everything else")
+    kb_code = (n.get("kb") or "").split("#")[0]
+    return SUBJECTS.get(kb_code[:2], "everything else")
 
 
 def _staff_short(n):
@@ -168,22 +168,22 @@ def _fog_revenue_estimate(s, k):
     Roman trade is tighter than a guess about a Han institution nobody wrote
     down the takings of, the same as a historian's own uncertainty would be.
     """
-    n = s.nodes[k]
-    real = n["rev"]
+    node = s.nodes[k]
+    real = node["rev"]
     if real <= 0:
         return None          # nothing to estimate; a non-earner is a non-earner under fog too
     key = "%s|%s|%.1f|%s" % (s.civ.get("id") or s.civ.get("name") or "civ",
                              getattr(s, "goal", "") or "",
                              s.cfg.get("start_capital", 0.0), k)
-    h = hashlib.sha256(key.encode("utf-8")).digest()
-    half = {"A": 0.30, "B": 0.55}.get(n.get("conf"), 0.85)
-    lo_frac = 0.35 + (h[0] / 255.0) * 0.55
-    hi_frac = 0.35 + (h[1] / 255.0) * 0.90
-    lo = _coarse_round(real * (1.0 - half * lo_frac))
-    hi = _coarse_round(real * (1.0 + half * hi_frac))
-    if hi <= lo:
-        hi = lo + (5 if lo < 100 else 25 if lo < 1000 else 100)
-    return [lo, hi]
+    digest = hashlib.sha256(key.encode("utf-8")).digest()
+    half = {"A": 0.30, "B": 0.55}.get(node.get("conf"), 0.85)
+    lo_frac = 0.35 + (digest[0] / 255.0) * 0.55
+    hi_frac = 0.35 + (digest[1] / 255.0) * 0.90
+    low = _coarse_round(real * (1.0 - half * lo_frac))
+    high = _coarse_round(real * (1.0 + half * hi_frac))
+    if high <= low:
+        high = low + (5 if low < 100 else 25 if low < 1000 else 100)
+    return [low, high]
 
 
 def _brief(s, nodes, k, fog):
@@ -198,7 +198,7 @@ def _brief(s, nodes, k, fog):
     hundred and sixty. "Competent play degenerates into writing a scraper" is a
     fair description of an interface that hides its own decisive numbers.
     """
-    n = nodes[k]
+    node = nodes[k]
     # The SHORT band in a table row. `why` gets the long sentence, because it
     # is explaining one thing; a row is a row, and eleven copies of "nothing
     # else; this is worth having for itself" is half a kilobyte of a reply that
@@ -211,10 +211,10 @@ def _brief(s, nodes, k, fog):
         # _revenue_known_exactly for the one that `why` does need, because
         # `why` also answers for things you finished years ago.
         _est = _fog_revenue_estimate(s, k)
-        return {"id": k, "name": n["name"],
+        return {"id": k, "name": node["name"],
                 "cost": round(s.project_cost(k), 1),
-                "your_hours": n["ph"],
-                "least_years": n["yrs"],
+                "your_hours": node["ph"],
+                "least_years": node["yrs"],
                 # effective_risk, NOT n["risk"]. Once a project has failed
                 # once, retry learning means the tree's bare figure is no
                 # longer what the dice use, and quoting it would understate
@@ -229,20 +229,20 @@ def _brief(s, nodes, k, fog):
                 # project. Zero when the work cannot fail, so nothing invents
                 # a danger that is not there.
                 "failure_costs": (round(s.project_cost(k) * 0.4, 1)
-                                  if n["risk"] else 0.0),
-                "failure_costs_hours": round(n["ph"] * 0.4, 1) if n["risk"] else 0.0,
-                "earns_per_year": _est if _est is not None else round(n["rev"], 1),
-                "costs_per_year_after": round(n["up"], 1),
+                                  if node["risk"] else 0.0),
+                "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
+                "earns_per_year": _est if _est is not None else round(node["rev"], 1),
+                "costs_per_year_after": round(node["up"], 1),
                 "how_much_rests_on_this": rests,
-                **_staff_fields(s, n)}
-    return {"id": k, "name": n["name"], "cat": n["cat"],
-            **_staff_fields(s, n),
-            "cost": round(s.project_cost(k), 1), "founder_hours": n["ph"],
+                **_staff_fields(s, node)}
+    return {"id": k, "name": node["name"], "cat": node["cat"],
+            **_staff_fields(s, node),
+            "cost": round(s.project_cost(k), 1), "founder_hours": node["ph"],
             "calendar_floor_years": round(s.calendar_floor(k), 2),
-            "nominal_calendar_floor_before_reputation": n["yrs"],
+            "nominal_calendar_floor_before_reputation": node["yrs"],
             "risk": s.effective_risk(k),
-            "earns_per_year": round(n["rev"], 1),
-            "costs_per_year_after": round(n["up"], 1),
+            "earns_per_year": round(node["rev"], 1),
+            "costs_per_year_after": round(node["up"], 1),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
             # req_any options to it introduces real CYCLES (junction_transistor
@@ -256,19 +256,19 @@ def _brief(s, nodes, k, fog):
 
 
 def _full_entry(s, nodes, k, fog):
-    e = _brief(s, nodes, k, fog)
-    n = nodes[k]
+    entry = _brief(s, nodes, k, fog)
+    node = nodes[k]
     if fog:
-        e["summary"] = s.fog_summary(k)
-        if n["lab"]:
-            e["trades_needed"] = sorted(n["lab"])
+        entry["summary"] = s.fog_summary(k)
+        if node["lab"]:
+            entry["trades_needed"] = sorted(node["lab"])
     else:
-        e["prerequisites"] = n["pre"]
+        entry["prerequisites"] = node["pre"]
         # See strip_self_play_advice: a node's own note is data written by a
         # designer ranking it against the rest of the tree, not something the
         # founder in the story could know, and that stays cut whether or not
         # fog is on - see the block comment in fog.py.
-        e["note"] = strip_self_play_advice(n["note"])
+        entry["note"] = strip_self_play_advice(node["note"])
     # THE HONEST TOTAL, not the risk and the floor left for the player to
     # multiply by hand - and only HERE, on the full per-node entry, not on
     # _brief's own compact digest rows (cheapest_six, most_rests_on_these):
@@ -278,10 +278,10 @@ def _full_entry(s, nodes, k, fog):
     # sampler. See expected_calendar_years' own docstring (projects.py): it
     # is >= the floor above, strictly more once risk is above zero, and it
     # is why a 45%-risk, 4-year-floor node is not a 4-year project.
-    if n.get("risk"):
-        e["expected_calendar_years_with_retries"] = round(
+    if node.get("risk"):
+        entry["expected_calendar_years_with_retries"] = round(
             s.expected_calendar_years(k), 2)
-    return e
+    return entry
 
 
 # EVERY SORT A PLAYER ASKED FOR, one table. Both the paged `available` list
@@ -319,9 +319,9 @@ _SORT_KEYS = {
     # did and was never trying to, so it is renamed to say what it actually
     # measures. "near"/"nearest" still work, for any script already using
     # them, but no longer appear in the advertised list below.
-    "fewest_missing": lambda s, n, k: sum(1 for p in n[k]["pre"] if p not in s.done),
-    "near": lambda s, n, k: sum(1 for p in n[k]["pre"] if p not in s.done),
-    "nearest": lambda s, n, k: sum(1 for p in n[k]["pre"] if p not in s.done),
+    "fewest_missing": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
+    "near": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
+    "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
 }
 
 _SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "risk",
@@ -357,7 +357,7 @@ def _agent_available(s, nodes, cmd=None):
     # upward of a minute; sharing the memo across the sweep makes it once
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}
-    ok = [k for k in s.order if s.can_start(k, _memo=_memo)]
+    startable = [node_id for node_id in s.order if s.can_start(node_id, _memo=_memo)]
     # QUOTES ARE THE NATURAL INSTINCT for a subject with a space in it, and
     # `available "power and precision"` silently matched nothing while the
     # unquoted form worked. Strip them rather than failing quietly.
@@ -388,12 +388,12 @@ def _agent_available(s, nodes, cmd=None):
         terms = [term for term in find.replace("_", " ").split() if term]
         return bool(terms) and all(term in haystack for term in terms)
 
-    sel, why_these = ok, None
+    sel, why_these = startable, None
     if find:
-        sel = [k for k in ok if matches_find(k)]
+        sel = [node_id for node_id in startable if matches_find(node_id)]
         why_these = "matching %r" % find
     elif want_subject:
-        sel = [k for k in ok if want_subject in _subject_of(nodes[k]).lower()]
+        sel = [node_id for node_id in startable if want_subject in _subject_of(nodes[node_id]).lower()]
         why_these = "in %r" % want_subject
         if not sel:
             # THE SUMMARY COUNTED IT AND THE FILTER DID NOT. `available` listed
@@ -401,15 +401,15 @@ def _agent_available(s, nodes, cmd=None):
             # politics` answered "nothing in it", because the one item was
             # already active. Say which, rather than appearing to disagree with
             # the line above it.
-            _busy = sorted(k for k in nodes
-                           if want_subject in _subject_of(nodes[k]).lower()
-                           and (k in s.active or k in s.done)
-                           and (not fog or s.is_visible(k)))
+            _busy = sorted(node_id for node_id in nodes
+                           if want_subject in _subject_of(nodes[node_id]).lower()
+                           and (node_id in s.active or node_id in s.done)
+                           and (not fog or s.is_visible(node_id)))
             if _busy:
                 why_these += (" - nothing left to begin; you already have or "
                               "are working on " + ", ".join(_busy[:4]))
     if afford is not None:
-        sel = [k for k in sel if s.project_cost(k) <= afford]
+        sel = [node_id for node_id in sel if s.project_cost(node_id) <= afford]
     # PAGE IN THE ORDER YOU DISPLAY. Each page was sorted by cost as it was
     # printed, but the pages were CUT from strategy order, so a break tester
     # asking for the cheapest work found it at item 31 - and the first page was
@@ -432,9 +432,9 @@ def _agent_available(s, nodes, cmd=None):
         # had no way to page past it. Fewest missing prerequisites first is the
         # order that answers the question the list is actually asked: what is
         # nearly within reach?
-        _heard_all = [k for k in getattr(s, "revealed", set())
-                      if k not in s.done and k not in s.active
-                      and not s.start_reason(k)[0]]
+        _heard_all = [node_id for node_id in getattr(s, "revealed", set())
+                      if node_id not in s.done and node_id not in s.active
+                      and not s.start_reason(node_id)[0]]
         # THE SAME SEARCH, OR NOTHING. This block used to ignore `find` and
         # `subject` entirely and print its usual nearest-first twenty-five
         # regardless of what was typed, so `available find zzz` - a search
@@ -445,18 +445,18 @@ def _agent_available(s, nodes, cmd=None):
         # heard-of-but-not-yet-startable is exactly the case this list exists
         # to answer, so the fix is to search it rather than hide it outright.
         if find:
-            _heard_all = [k for k in _heard_all if matches_find(k)]
+            _heard_all = [node_id for node_id in _heard_all if matches_find(node_id)]
         elif want_subject:
-            _heard_all = [k for k in _heard_all
-                          if want_subject in _subject_of(nodes[k]).lower()]
+            _heard_all = [node_id for node_id in _heard_all
+                          if want_subject in _subject_of(nodes[node_id]).lower()]
         # NEAREST-FIRST BY DEFAULT, but the same `sort`/`reverse` a player set
         # on the startable list applies here too - one vocabulary for both
         # halves of the screen, per the sort table's own docstring.
         if _sort_fn:
             _heard_all.sort(key=lambda k: (_sort_fn(s, nodes, k), k), reverse=reverse)
         else:
-            _heard_all.sort(key=lambda k: (sum(1 for p_ in nodes[k]["pre"]
-                                               if p_ not in s.done), k))
+            _heard_all.sort(key=lambda k: (sum(1 for prereq_id in nodes[k]["pre"]
+                                               if prereq_id not in s.done), k))
         # PAGEABLE, and it says when it is cut. This was a silent slice at 25
         # in a game where a play tester had a thousand nodes in play: no note
         # that it was truncated and no way to see the rest. `heard_offset`
@@ -468,8 +468,8 @@ def _agent_available(s, nodes, cmd=None):
         heard = _heard_all[_hoff:_hoff + 25]
         heard_more = max(0, len(_heard_all) - _hoff - len(heard))
         heard_from = _hoff
-    heard_block = [{"id": k, "name": nodes[k]["name"],
-                    "why_not": s.start_reason(k)[1]} for k in heard]
+    heard_block = [{"id": node_id, "name": nodes[node_id]["name"],
+                    "why_not": s.start_reason(node_id)[1]} for node_id in heard]
 
     # A LIST was asked for: a subject, a search, an explicit page, or everything.
     if find or want_subject or limit or offset or show_all or afford is not None:
@@ -478,7 +478,7 @@ def _agent_available(s, nodes, cmd=None):
         # screen - see its own comment, near TYPED_HINTS - instead of typing
         # limit:N by hand on every page of a long search or subject list.
         page = sel if show_all else sel[offset:offset + (limit or DEFAULT_AVAILABLE_LIMIT)]
-        out = {"ok": True, "count": len(sel), "of_everything_startable": len(ok),
+        out = {"ok": True, "count": len(sel), "of_everything_startable": len(startable),
                # The same figure the digest carries, so a paged list can mark
                # what you could not raise today. See _cost_marker.
                "you_could_raise_for_a_project": round(s.spending_power("start"), 1),
@@ -486,7 +486,7 @@ def _agent_available(s, nodes, cmd=None):
                            if not page else
                            "%d-%d%s" % (offset + 1, offset + len(page),
                                         (" " + why_these) if why_these else "")),
-               "available": [_full_entry(s, nodes, k, fog) for k in page]}
+               "available": [_full_entry(s, nodes, node_id, fog) for node_id in page]}
         if not page:
             # "1-0 matching 'furnace'" over an empty table is a range that
             # cannot exist, printed where an answer should be. Say the answer
@@ -535,21 +535,21 @@ def _agent_available(s, nodes, cmd=None):
 
     # DEFAULT: the digest.
     groups = {}
-    for k in ok:
-        g = groups.setdefault(_subject_of(nodes[k]), [])
-        g.append(k)
+    for node_id in startable:
+        group = groups.setdefault(_subject_of(nodes[node_id]), [])
+        group.append(node_id)
     # The AFFORD column is about STARTING work, so it uses the rule `start`
     # uses. It used the purchase rule, which is why the hint under the table
     # offered "available afford 1,083" for a player `start` would have let
     # commit 1,767. See Sim.spending_power.
     purse = s.spending_power("start")
     rows = []
-    for name, ks in sorted(groups.items(), key=lambda kv: -len(kv[1])):
-        costs = sorted(s.project_cost(k) for k in ks)
-        rows.append({"subject": name, "things": len(ks),
+    for name, node_ids in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+        costs = sorted(s.project_cost(node_id) for node_id in node_ids)
+        rows.append({"subject": name, "things": len(node_ids),
                      "cheapest": round(costs[0], 1),
                      "dearest": round(costs[-1], 1),
-                     "you_could_pay_for": sum(1 for c in costs if c <= purse)})
+                     "you_could_pay_for": sum(1 for cost in costs if cost <= purse)})
     # LEVERAGE FIRST, then price. These two lists deduplicated the wrong way
     # round: the leverage list dropped anything that was also in the cheapest
     # six, and the spine of this game is precisely the nodes that are BOTH -
@@ -558,14 +558,14 @@ def _agent_available(s, nodes, cmd=None):
     # was the only thing between me and a branch". Being cheap is the reason
     # they are easy to miss, not a reason to hide them from the column that
     # exists to find them.
-    _lev_all = sorted(ok, key=lambda k: (-downstream_count(nodes, k),
+    _lev_all = sorted(startable, key=lambda k: (-downstream_count(nodes, k),
                                          s.project_cost(k)))
     # Keep the default reply below its readability budget. Five leverage rows
     # and six cheap rows crept over 6 KB as the explicit opening states grew;
     # four and five still expose both rankings without making the digest a page.
     leverage = _lev_all[:4]
-    cheap = [k for k in sorted(ok, key=lambda k: s.project_cost(k))
-             if k not in leverage][:5]
+    cheap = [node_id for node_id in sorted(startable, key=lambda k: s.project_cost(k))
+             if node_id not in leverage][:5]
     # AND THE FOUR MOST RESTS ON. A normal-play tester found that the spine of
     # the whole game is a handful of cheap, zero-revenue, tier-0 nodes -
     # units_standards, identity_cover, patron_local, workshop_first - and that
@@ -573,20 +573,20 @@ def _agent_available(s, nodes, cmd=None):
     # id, a hundred at first and four hundred and sixty by the end. The digest
     # sorted by price, which is the one axis on which those nodes look like
     # nothing. Leverage is a column the game already knows.
-    out = {"ok": True, "count": len(ok),
+    out = {"ok": True, "count": len(startable),
            "showing": "a summary by subject, because the full list is %d things"
-                      % len(ok),
+                      % len(startable),
            "subjects": rows,
            # _brief for a DIGEST. _full_entry carried each node's prerequisites
            # and full note - several hundred bytes apiece that the table never
            # renders and that `why` exists to give you properly. The digest's
            # job is to help you choose which `why` to run, and it has a size
            # budget precisely so that it stays a digest.
-           "cheapest_six": [_brief(s, nodes, k, fog) for k in cheap],
+           "cheapest_six": [_brief(s, nodes, node_id, fog) for node_id in cheap],
            # _brief, not _full_entry: the table renders only the columns, and a
            # second block of fog summaries pushed the reply past the size a
            # reply is allowed to be. See the wall-of-text check.
-           "most_rests_on_these": [_brief(s, nodes, k, fog) for k in leverage],
+           "most_rests_on_these": [_brief(s, nodes, node_id, fog) for node_id in leverage],
            "to_see_more": {
                "one subject": '{"cmd":"available","subject":"metallurgy"}',
                "by name": '{"cmd":"available","find":"furnace"}',
@@ -656,7 +656,7 @@ def _rests_band(n):
 
 
 def _node_explain(s, nodes, k):
-    n = nodes[k]
+    node = nodes[k]
     # WHAT IS LEFT OF IT, not what it always was. A play tester read identical
     # figures in year 436 after building 227 technologies as in year 100 with
     # nothing built, and reasonably said the number never counts down. The
@@ -684,7 +684,7 @@ def _node_explain(s, nodes, k):
     # on this", and `why sea_clinker_hull` was printing DIRECTLY UNLOCKS with a
     # node named on one line and TOTAL DOWNSTREAM: 0 on the next.
     n_blocks = len(_downstream_of(k, nodes))
-    bounty_by_type = (n["cat"] in ("glass_optics", "metallurgy", "precision",
+    bounty_by_type = (node["cat"] in ("glass_optics", "metallurgy", "precision",
                       "power", "agriculture", "information", "instruments"))
     started = k in s.done or k in s.active
     # THE SUPERVISION FIGURE, from the SAME function open_venture() enforces
@@ -697,14 +697,14 @@ def _node_explain(s, nodes, k):
     _foreman_trade, _foreman_fte = (s.venture_foreman(k) if _is_venture
                                      else (None, 0.0))
     out = {
-        "id": k, "name": n["name"], "cat": n["cat"], "confidence": n["conf"],
+        "id": k, "name": node["name"], "cat": node["cat"], "confidence": node["conf"],
         # See strip_self_play_advice (fog.py): drops any sentence that ranks
         # this node against the game or the tree itself - "the pivot of the
         # entire game", "THE highest expected-value node in the tree" - and
         # keeps everything else the note says. Applied here, not only under
         # fog: telling a player outright which of their own choices is
         # correct is the game answering its own question either way.
-        "note": strip_self_play_advice(n["note"]),
+        "note": strip_self_play_advice(node["note"]),
         # FOG-SCRUBBED. The knowledge-base citation is a section anchor into
         # a shared markdown file, and the tree's own convention names most
         # anchors after the node id they document - so "kb":
@@ -714,8 +714,8 @@ def _node_explain(s, nodes, k):
         # fog scanner in test_regressions.py (which exists to catch exactly
         # this on the NEXT command too), not by a playtester. fog_scrub is
         # the one filter every such free-text field goes through.
-        "kb": s.fog_scrub(n["kb"]),
-        "founder_hours": n["ph"],
+        "kb": s.fog_scrub(node["kb"]),
+        "founder_hours": node["ph"],
         # Two different kinds of people, and a tester reasonably read the two
         # fields as contradicting each other ("hired_labour names an engineer,
         # staff_needed asks for artisans; the two labour fields don't agree on
@@ -723,8 +723,8 @@ def _node_explain(s, nodes, k):
         # hired_labour is HOURS OF A JOB, bought from whoever does that trade
         # here, for this project only. staff_needed is PEOPLE ON YOUR OWN BOOKS
         # who understand your methods and stay afterwards.
-        "hired_labour": n["lab"],
-        "materials": n["mat"],
+        "hired_labour": node["lab"],
+        "materials": node["mat"],
         # `why` used to quote the BASE cost, identical for every civilization,
         # while step() charged that base multiplied by this society's domain
         # factor and by how far it sits from the material's source. A Han
@@ -733,10 +733,10 @@ def _node_explain(s, nodes, k):
         # flavour text. It is not: the CHARGE has always applied both factors.
         # The QUOTE was lying, which is the more embarrassing half, because a
         # player plans against the quote.
-        "cost": {"labour": round(n["_labour_cost"], 1),
-                 "materials": round(n["_material_cost"], 1),
-                 "capital": n["cap"],
-                 "base_total": round(n["_total_cost"], 1),
+        "cost": {"labour": round(node["_labour_cost"], 1),
+                 "materials": round(node["_material_cost"], 1),
+                 "capital": node["cap"],
+                 "base_total": round(node["_total_cost"], 1),
                  "civ_domain_factor": round(s.civ_cost_factor(k), 3),
                  "material_distance_factor": round(s.material_cost_factor(k), 3),
                  # THE SCARCITY PREMIUM, which project_cost multiplies in and
@@ -809,8 +809,8 @@ def _node_explain(s, nodes, k):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": n["up"],
-        "revenue": (n["rev"] if (not getattr(s, "fog", False)
+        "upkeep": node["up"],
+        "revenue": (node["rev"] if (not getattr(s, "fog", False)
                                  or _revenue_known_exactly(s, k))
                    else (_fog_revenue_estimate(s, k) or 0.0)),
         "revenue_forecast_scope": (
@@ -826,14 +826,14 @@ def _node_explain(s, nodes, k):
         # tree quotes the trade as an organised concern, and one person in a
         # rented room is not one.
         "but_it_pays_YOU": (
-            round(n["rev"] * s.PRACTICE_SHARE * s.practice_attention(), 1)
-            if k in s._practice_set() and n["rev"] else None),
+            round(node["rev"] * s.PRACTICE_SHARE * s.practice_attention(), 1)
+            if k in s._practice_set() and node["rev"] else None),
         "because": ("this is your own practice, not a concern: it pays about a "
                     "third of what the tree quotes for the trade, and selling "
                     "your hours for wages takes another bite"
-                    if k in s._practice_set() and n["rev"] else None),
+                    if k in s._practice_set() and node["rev"] else None),
         "calendar_floor_years": round(s.calendar_floor(k), 2),
-        "nominal_calendar_floor_before_reputation": n["yrs"],
+        "nominal_calendar_floor_before_reputation": node["yrs"],
         "risk": s.effective_risk(k),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
@@ -853,14 +853,14 @@ def _node_explain(s, nodes, k):
         # WHAT THE FAILURES SO FAR HAVE BOUGHT, said out loud, because a
         # number that quietly improves is a number a player cannot plan with.
         "attempts_already_failed": int(getattr(s, "failed_attempts", {}).get(k, 0)),
-        "risk_before_any_attempt": n["risk"],
+        "risk_before_any_attempt": node["risk"],
         # THE SUM, NOT ONLY THE RATE. See _node_explain's own note: a failure
         # takes a flat 40% of the money and puts 40% of the hours back on the
         # slate, and a player deciding whether to risk it is holding the size
         # of the project in their head, not the percentage.
-        "failure_costs": round(s.project_cost(k) * 0.4, 1) if n["risk"] else 0.0,
-        "failure_costs_hours": round(n["ph"] * 0.4, 1) if n["risk"] else 0.0,
-        "staff_needed": {"scholars": n["sch"], "artisans": n["art"]},
+        "failure_costs": round(s.project_cost(k) * 0.4, 1) if node["risk"] else 0.0,
+        "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
+        "staff_needed": {"scholars": node["sch"], "artisans": node["art"]},
         # THE FIGURE THE GAME ACTUALLY TESTS. start_project gates artisans on
         # craft_hands_available() - staff, plus yourself, plus any hours you
         # have already bought - and this printed s.artisans, which is only the
@@ -885,15 +885,15 @@ def _node_explain(s, nodes, k):
         "more_scholars_than_this_society_can_supply": (
             "%s wanted; you have %.1f and literacy here will never let you HIRE "
             "more than %.1f. Printing, paper, schools and academies raise both."
-            % (n["sch"], s.effective_scholars(), s.literate_capacity("scholar"))
-            if (n["sch"] > s.literate_capacity("scholar")
-                and n["sch"] > s.effective_scholars()) else None),
+            % (node["sch"], s.effective_scholars(), s.literate_capacity("scholar"))
+            if (node["sch"] > s.literate_capacity("scholar")
+                and node["sch"] > s.effective_scholars()) else None),
         "more_craftsmen_than_your_household_can_hold": (
             "%s wanted; you have %.1f and could hold %.1f in all. %s"
-            % (n["art"], s.artisans,
+            % (node["art"], s.artisans,
                s.headcount() + max(0.0, s.household_room()), s._room_advice())
-            if (n["art"] > s.headcount() + max(0.0, s.household_room())
-                and n["art"] > s.artisans) else None),
+            if (node["art"] > s.headcount() + max(0.0, s.household_room())
+                and node["art"] > s.artisans) else None),
         # A SECOND STAFF FIGURE, AND IT IS NOT THE SAME NUMBER. staff_needed
         # above is the BUILD crew - what start_project gates on, and what
         # goes idle again once the work is finished. A going concern is a
@@ -942,14 +942,14 @@ def _node_explain(s, nodes, k):
             % (_sup_sch, _sup_art, _free_sch, _free_art)
             if _is_venture and (_sup_sch > _free_sch + 1e-9
                                 or _sup_art > _free_art + 1e-9) else None),
-        "suspicion": n.get("sus", 0), "state_interest_trait_score": n.get("gov", 0),
+        "suspicion": node.get("sus", 0), "state_interest_trait_score": node.get("gov", 0),
         "bounty_eligible_by_type": bounty_by_type,
         # NOT CHARGED UNTIL YOU OPEN IT. A tester read the upkeep off `why`,
         # built the thing, and found nothing on the bill - correctly, because
         # revenue and upkeep follow what you RUN. The figure is real; it just
         # is not yours yet.
         "revenue_and_upkeep_apply_only_once_opened": (
-            True if (n["rev"] > 0 or n["up"] > 0) and k not in s.granted
+            True if (node["rev"] > 0 or node["up"] > 0) and k not in s.granted
             and k not in s.operating else None),
         # "FINISHED, STAYS FINISHED" MEANS THREE DIFFERENT THINGS, and this
         # engine said it the same way for all three. Most of what you build is
@@ -989,8 +989,8 @@ def _node_explain(s, nodes, k):
         # every turn. Unfiltered, that one exception printed the goal's seven
         # hidden prerequisites by name in the JSON, which is the fog exploit
         # this file has already closed twice.
-        "direct_prerequisites": ([p for p in n["pre"] if s.is_visible(p)]
-                                 if getattr(s, "fog", False) else n["pre"]),
+        "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if s.is_visible(prereq_id)]
+                                 if getattr(s, "fog", False) else node["pre"]),
         # A GRANTED NODE IS HELD, WHATEVER ROUTE THE TREE DRAWS TO IT. `why
         # cap_heat_1300` on Han reported done:true, missing_prerequisites:
         # ["cap_heat_1100"] and can_start_now:false in one object - three
@@ -1005,16 +1005,16 @@ def _node_explain(s, nodes, k):
         # nothing. What is actually wrong is the claim that a thing you have
         # is missing something.
         "missing_prerequisites": ([] if k in s.granted
-                                  else [p for p in n["pre"] if p not in s.done
+                                  else [prereq_id for prereq_id in node["pre"] if prereq_id not in s.done
                                         and (not getattr(s, "fog", False)
-                                             or s.is_visible(p))]),
+                                             or s.is_visible(prereq_id))]),
         "prerequisites_you_have_not_heard_of": (
-            sum(1 for p in n["pre"] if not s.is_visible(p))
+            sum(1 for prereq_id in node["pre"] if not s.is_visible(prereq_id))
             if getattr(s, "fog", False) else 0) or None,
         "held_without_building_it": k in s.granted,
         "prerequisites_are_how_another_society_would_get_this": (
             "this society already has it; the list above is the route somebody "
-            "who did not would have to take" if k in s.granted and n["pre"]
+            "who did not would have to take" if k in s.granted and node["pre"]
             else None),
         # Same reasoning: the size and cost of everything BEHIND a node is a
         # measurement of a tree you cannot see. You do know how many of its own
@@ -1023,7 +1023,7 @@ def _node_explain(s, nodes, k):
         "chain_size": (len(need) if not getattr(s, "fog", False) else None),
         "chain_size_counting_what_you_have_built": (
             len(_chain_all) if not getattr(s, "fog", False) else None),
-        "chain_founder_hours": (sum(nodes[x]["ph"] for x in need)
+        "chain_founder_hours": (sum(nodes[node_id]["ph"] for node_id in need)
                                 if not getattr(s, "fog", False) else None),
         # AT THIS SOCIETY'S PRICES, like the COST line four rows above it. This
         # summed the tree's BASE cost and applied none of the multipliers the
@@ -1032,7 +1032,7 @@ def _node_explain(s, nodes, k):
         # Han and 35,108 for the Norse. A break tester checked it and called it
         # a 31% error in the poorest civilisation; chain_size and
         # chain_founder_hours were exact, and only the money was wrong.
-        "chain_cost": (round(sum(s.project_cost(x) for x in sorted(need)), 1)
+        "chain_cost": (round(sum(s.project_cost(node_id) for node_id in sorted(need)), 1)
                        if not getattr(s, "fog", False) else None),
         "critical_path_years": (critical_path(nodes, k)[0]
                                 if not getattr(s, "fog", False) else None),
@@ -1093,7 +1093,7 @@ def _node_explain(s, nodes, k):
     # A tester read them as contradicting each other, so the explanation earns
     # its place; carrying it on every reply whether or not the node hires anyone
     # is 400 bytes of boilerplate per call.
-    absent = sorted(t for t in n["lab"] if not s.trade_available(t))
+    absent = sorted(trade for trade in node["lab"] if not s.trade_available(trade))
     if absent:
         out["trades_that_do_not_exist_here"] = absent
         out["hired_labour_means"] = ("hours of a trade bought in for this job only. "
@@ -1106,8 +1106,8 @@ def _node_explain(s, nodes, k):
     # (market_supply, not trade_available) and refuses; `why` said nothing
     # about it beforehand. A Rome player hit that refusal with no warning on
     # either this screen or train's own success message.
-    _taught_but_empty = sorted(t for t in n["lab"]
-                               if t not in absent and s.market_supply(t) <= 0.0)
+    _taught_but_empty = sorted(trade for trade in node["lab"]
+                               if trade not in absent and s.market_supply(trade) <= 0.0)
     if _taught_but_empty:
         out["trades_taught_but_nobody_here_to_do_them_yet"] = _taught_but_empty
         out["trades_taught_but_nobody_here_means"] = (
@@ -1118,7 +1118,7 @@ def _node_explain(s, nodes, k):
             "on this trade until they finish; if nobody is even learning it "
             "yet, starting is refused outright. Check 'labour' for who is "
             "in training, or 'hire' to add people to this trade right now.")
-    if n["art"] > s.artisans or n["sch"] > s.effective_scholars():
+    if node["art"] > s.artisans or node["sch"] > s.effective_scholars():
         out["staff_needed_means"] = ("people kept on your own staff, who understand "
                                      "your methods and stay when this is finished. "
                                      "Different from hired_labour, which is hours of "

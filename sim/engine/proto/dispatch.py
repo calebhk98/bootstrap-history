@@ -72,33 +72,33 @@ def _cmd_score(s, nodes, cmd, ended):
 
 
 def _cmd_why(s, nodes, cmd, ended):
-    k = cmd.get("id")
+    node_id = cmd.get("id")
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.
-    if (isinstance(k, str) and k in nodes and not s.is_visible(k)
-            and k != getattr(s, "goal", None)):
+    if (isinstance(node_id, str) and node_id in nodes and not s.is_visible(node_id)
+            and node_id != getattr(s, "goal", None)):
         return {"ok": False,
                 "error": "you have never heard of that. You know what you have "
                          "built and what you could begin now; use 'available'."}
-    if not isinstance(k, str):
+    if not isinstance(node_id, str):
         return {"ok": False,
                 "error": 'which one? give an id, for example '
                          '{"cmd":"why","id":"units_standards"}. '
                          'Use {"cmd":"available"} to see what you could begin.'
-                if k is None else
-                "id must be a name in quotes, not %s" % type(k).__name__}
-    if k not in nodes:
+                if node_id is None else
+                "id must be a name in quotes, not %s" % type(node_id).__name__}
+    if node_id not in nodes:
         # Only blame the fog when there IS any. With it off a break tester
         # mistyped an id and was told the fog was limiting the suggestions,
         # in a game they had explicitly started with the whole tree visible.
         return {"ok": False, "error": "unknown node %r. did you mean: %s"
-                % (k, ", ".join(_did_you_mean(k, nodes, s=s))
+                % (node_id, ", ".join(_did_you_mean(node_id, nodes, s=s))
                    or ("no idea, and under fog of war I can only suggest "
                        "things you have heard of"
                        if getattr(s, "fog", False)
                        else "no idea - nothing in the tree is spelled much "
                             "like that"))}
-    return dict(ok=True, **_node_explain(s, nodes, k))
+    return dict(ok=True, **_node_explain(s, nodes, node_id))
 
 
 
@@ -116,13 +116,13 @@ def _cmd_path(s, nodes, cmd, ended):
                          "not been, whether or not you have built this "
                          "particular thing already. Use 'available' to see "
                          "what you could begin now."}
-    k = cmd.get("id")
-    if k not in nodes:
-        return {"ok": False, "error": "unknown node id %r" % k}
-    need = closure(nodes, k)
+    node_id = cmd.get("id")
+    if node_id not in nodes:
+        return {"ok": False, "error": "unknown node id %r" % node_id}
+    need = closure(nodes, node_id)
     order = topo_order(nodes, need)
-    remaining = [x for x in order if x not in s.done]
-    out = {"ok": True, "id": k, "name": nodes[k]["name"], "done": k in s.done,
+    remaining = [node_id for node_id in order if node_id not in s.done]
+    out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in s.done,
            "remaining_count": len(remaining), "remaining": remaining}
     # THE JOIN NOBODY HAD: "what the goal still needs" and "what I could
     # start today" were two separate reports - this one, and `available`
@@ -132,11 +132,11 @@ def _cmd_path(s, nodes, cmd, ended):
     # player asked for exactly this. Do the intersection here, once,
     # cheapest first, so it never has to be done by eye or by script
     # again.
-    _startable = sorted((x for x in remaining if s.can_start(x)),
+    _startable = sorted((node_id for node_id in remaining if s.can_start(node_id)),
                         key=lambda x: s.project_cost(x))
     out["startable_today_count"] = len(_startable)
     out["startable_today_toward_this"] = (
-        [_brief(s, nodes, x, False) for x in _startable[:30]] or "nothing yet")
+        [_brief(s, nodes, node_id, False) for node_id in _startable[:30]] or "nothing yet")
     if len(_startable) > 30:
         out["and_more_startable_today"] = len(_startable) - 30
     out["still_waiting_on_something_else"] = len(remaining) - len(_startable)
@@ -180,8 +180,8 @@ def _cmd_path(s, nodes, cmd, ended):
     # with the COMBINED bill of everything listed above, not each item's
     # own affordability, which is the exact number these players were
     # never shown before committing to more than one.
-    if _startable and all(nodes[x]["rev"] <= 0 for x in _startable):
-        _combined = sum(s.project_cost(x) for x in _startable)
+    if _startable and all(nodes[node_id]["rev"] <= 0 for node_id in _startable):
+        _combined = sum(s.project_cost(node_id) for node_id in _startable)
         _raise = s.spending_power("start")
         out["this_route_pays_for_nothing"] = (
             "every one of the %d things above is knowledge or "
@@ -217,8 +217,8 @@ def _cmd_path(s, nodes, cmd, ended):
     # it is not remaining, and nothing downstream is blocked by it. It is
     # still the thing a player driving from `path` most needs to see after
     # a bad century, because its plant is gone and its income with it.
-    _shut = sorted(x for x in need
-                   if x in getattr(s, "mothballed", set()) and x in s.done)
+    _shut = sorted(node_id for node_id in need
+                   if node_id in getattr(s, "mothballed", set()) and node_id in s.done)
     if _shut:
         out["on_this_route_but_shut_down"] = _shut[:10]
         out["reopen_them_with"] = ("'restore <id>' - you still know how, so "
@@ -232,10 +232,10 @@ def _cmd_path(s, nodes, cmd, ended):
 def _cmd_start(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be started. 'state' shows where you finished and how far you got" % ended}
-    k = cmd.get("id")
-    if k not in nodes:
+    node_id = cmd.get("id")
+    if node_id not in nodes:
         return {"ok": False, "error": "unknown node id %r. use {\"cmd\":\"available\"} "
-                                      "or {\"cmd\":\"why\",\"id\":...} to find valid ids" % k}
+                                      "or {\"cmd\":\"why\",\"id\":...} to find valid ids" % node_id}
     # SAY UP FRONT WHEN THE SOCIETY CANNOT STAFF IT. A play tester started
     # arithmetic_positional, which wants 2,500 scribe-hours a year against
     # a national ceiling of 1,321, and watched it sit at "81% spent" from
@@ -253,15 +253,15 @@ def _cmd_start(s, nodes, cmd, ended):
     # thing that commit's own message promised could not happen again.
     _impossible = []
     _impossible_trades = set()
-    _n0 = nodes[k]
+    _n0 = nodes[node_id]
     _frac0 = min(1.0, 1.0 / max(1.0, _n0["yrs"]))
-    for _t, _want in (_n0["lab"] or {}).items():
+    for _trade, _want in (_n0["lab"] or {}).items():
         _need = _want * _frac0
-        if _need > 0 and s.hours_you_can_call_on(_t) < _need:
+        if _need > 0 and s.hours_you_can_call_on(_trade) < _need:
             _impossible.append("%s (wants %.0f hours a year; this society can "
                                "field %.0f at most)"
-                               % (_t, _need, max(0.0, s.hours_you_can_call_on(_t))))
-            _impossible_trades.add(_t)
+                               % (_trade, _need, max(0.0, s.hours_you_can_call_on(_trade))))
+            _impossible_trades.add(_trade)
     # OVERSUBSCRIBED IS NOT THE SAME AS IMPOSSIBLE. The society may be
     # able to field the trade this wants and STILL not have enough of
     # it left once your own OTHER active work is already drawing on it
@@ -276,35 +276,35 @@ def _cmd_start(s, nodes, cmd, ended):
     # figures can never tell two different stories about the same year.
     _demand_now = s.trade_demand_vs_supply()
     _oversub = []
-    for _t, _p in s.trade_draw_plan(k, None).items():
-        if _t in _impossible_trades:
+    for _trade, _plan in s.trade_draw_plan(node_id, None).items():
+        if _trade in _impossible_trades:
             continue          # already said, and said more plainly
-        _supply = s.hours_you_can_call_on(_t)
+        _supply = s.hours_you_can_call_on(_trade)
         if _supply <= 0:
             continue
-        _existing = _demand_now.get(_t, {}).get("demand_hours_this_year", 0.0)
-        _competitors = len(_demand_now.get(_t, {}).get("projects_drawing_on_it", ()))
-        _new_total = _existing + _p["desired"]
+        _existing = _demand_now.get(_trade, {}).get("demand_hours_this_year", 0.0)
+        _competitors = len(_demand_now.get(_trade, {}).get("projects_drawing_on_it", ()))
+        _new_total = _existing + _plan["desired"]
         if _new_total > _supply + 1e-6:
             _oversub.append(
                 "%s: this portfolio would want %s hours a year against "
                 "%s this society can supply (%d other active project%s "
                 "already drawing on it); this one competes for what is "
                 "left, it does not get %s to itself"
-                % (_t, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
+                % (_trade, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
                    _competitors, "" if _competitors == 1 else "s",
-                   "{:,.0f}".format(_p["desired"])))
-    ok, why = s.start_project(k)
+                   "{:,.0f}".format(_plan["desired"])))
+    ok, why = s.start_project(node_id)
     if not ok:
         return {"ok": False, "error": why}
-    n = nodes[k]
+    node = nodes[node_id]
     # SAY SO, FOR THE PLAYER'S OWN RECORD. start_project itself only logs
     # the RESTART case (see its own self.log.append for "begun again");
     # a fresh start was silent, so a player reading `log` back saw
     # completions and failures appear out of nowhere with no record of
     # having chosen to begin them.
-    if s.active.get(k, {}).get("spent", 0.0) <= 0.5:
-        s.log.append((s.year, "started: %s" % n["name"]))
+    if s.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
+        s.log.append((s.year, "started: %s" % node["name"]))
     # THE PRICE YOU ACTUALLY COMMITTED TO. A normal-play tester read a cost
     # of 106,567 off `why`, started the thing forty years later, and was
     # billed 207,811 - because project_cost moves with prices, the coinage,
@@ -312,13 +312,13 @@ def _cmd_start(s, nodes, cmd, ended):
     # them the earlier figure was a snapshot. The bill IS fixed at the
     # moment you start; what was missing was any statement of what it was
     # fixed AT.
-    bill = round(s.active.get(k, {}).get("cost_left", s.project_cost(k)), 1)
+    bill = round(s.active.get(node_id, {}).get("cost_left", s.project_cost(node_id)), 1)
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None
-    out = {"ok": True, "started": k, "name": n["name"], "founder_hours_needed": n["ph"],
-           "calendar_floor_years": round(s.calendar_floor(k), 2),
-           "nominal_calendar_floor_before_reputation": n["yrs"],
+    out = {"ok": True, "started": node_id, "name": node["name"], "founder_hours_needed": node["ph"],
+           "calendar_floor_years": round(s.calendar_floor(node_id), 2),
+           "nominal_calendar_floor_before_reputation": node["yrs"],
            # SAID AT THE MOMENT OF COMMITMENT, not only on `why` beforehand
            # or `available` in passing - this is the screen the player is
            # actually looking at when the risk becomes theirs. See
@@ -327,7 +327,7 @@ def _cmd_start(s, nodes, cmd, ended):
            # rule _complete applies on every failure, not a plain
            # geometric series on the bare risk field.
            "expected_calendar_years_with_retries": round(
-               s.expected_calendar_years(k), 2),
+               s.expected_calendar_years(node_id), 2),
            "the_bill_you_have_taken_on": bill,
            "note": "This is the price as of today, and it is now fixed for "
                    "this project. Quotes move with prices, the coinage and "
@@ -354,7 +354,7 @@ def _cmd_start(s, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    if n["yrs"] >= 2 and not getattr(s, "_said_parallelism", False):
+    if node["yrs"] >= 2 and not getattr(s, "_said_parallelism", False):
         s._said_parallelism = True
         out["a_calendar_floor_is_not_exclusive_research_time"] = (
             "%s will take at least %d year%s, whatever else you do. That "
@@ -364,7 +364,7 @@ def _cmd_start(s, nodes, cmd, ended):
             "in the meantime. The strongest play is usually to keep "
             "several things running at once - start preparing the next "
             "layer now rather than waiting for this one to finish."
-            % (n["name"], n["yrs"], "" if n["yrs"] == 1 else "s"))
+            % (node["name"], node["yrs"], "" if node["yrs"] == 1 else "s"))
     if _warn_staff:
         out["but"] = _warn_staff
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player
@@ -377,8 +377,8 @@ def _cmd_start(s, nodes, cmd, ended):
     # Said here too, at the one other moment it can still change
     # anything, with today's free staff - not a promise, since attrition
     # and hiring between now and completion can move either number.
-    if s.is_venture(k):
-        _sup_sch, _sup_art = s.venture_hands(k)
+    if s.is_venture(node_id):
+        _sup_sch, _sup_art = s.venture_hands(node_id)
         _free_sch, _free_art = s.venture_staff_free()
         if _sup_sch > _free_sch + 1e-9 or _sup_art > _free_art + 1e-9:
             out["today_you_could_not_open_this_when_it_is_done"] = (
@@ -500,7 +500,7 @@ def _cmd_start(s, nodes, cmd, ended):
     # work, and years later it was HALTED with everything spent on it
     # lost, with no warning at the point they could still have done
     # something about it. Name it here instead.
-    short = sorted(t for t in n["lab"] if s.market_supply(t) <= 0.0)
+    short = sorted(trade for trade in node["lab"] if s.market_supply(trade) <= 0.0)
     if short:
         out["warning"] = (
             "no one can do this work YET: %s. The trade exists here or is "
@@ -515,16 +515,16 @@ def _cmd_start(s, nodes, cmd, ended):
 
 
 def _cmd_stop(s, nodes, cmd, ended):
-    k = cmd.get("id")
-    ok, why = s.stop_project(k)
+    node_id = cmd.get("id")
+    ok, why = s.stop_project(node_id)
     if not ok:
         return {"ok": False, "error": why}
     # stop_project ITSELF never touches self.log - see its own docstring,
     # which is entirely about what the hours and money do, not about
     # recording the decision. A deliberate abandonment is exactly the
     # kind of thing a player asked `log` to be able to find again.
-    s.log.append((s.year, "stopped: %s (%s)" % (nodes[k]["name"], why)))
-    return {"ok": True, "stopped": k, "what_happened": why}
+    s.log.append((s.year, "stopped: %s (%s)" % (nodes[node_id]["name"], why)))
+    return {"ok": True, "stopped": node_id, "what_happened": why}
 
 
 
@@ -549,7 +549,7 @@ def _cmd_rush(s, nodes, cmd, ended):
     if limit is not None and limit < 1:
         return {"ok": False, "error": "limit must be at least 1"}
     _memo = {}
-    _ok = [k for k in s.order if s.can_start(k, _memo=_memo)]
+    _ok = [node_id for node_id in s.order if s.can_start(node_id, _memo=_memo)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
     # a downstream_count - that is a fog spoiler, see _node_explain's own
     # comment on it - it only uses the number to decide which of several
@@ -563,9 +563,9 @@ def _cmd_rush(s, nodes, cmd, ended):
     if limit is None and not cmd.get("force"):
         return {"ok": True, "preview": True,
                 "count_would_start": len(_ok),
-                "would_start": [{"id": k, "name": nodes[k]["name"],
-                                  "cost": round(s.project_cost(k), 1)}
-                                 for k in _ok],
+                "would_start": [{"id": node_id, "name": nodes[node_id]["name"],
+                                  "cost": round(s.project_cost(node_id), 1)}
+                                 for node_id in _ok],
                 "nothing_changed": True,
                 "how_to_confirm": ("Use 'rush force' to begin this unbounded "
                                    "set, or 'rush limit:N' to begin at most N.")}
@@ -586,12 +586,12 @@ def _cmd_rush(s, nodes, cmd, ended):
     _budget = s.director_pool() * _HORIZON_YEARS
     started, not_started = [], []
     _owed = 0.0
-    for k in _ok:
+    for node_id in _ok:
         if limit is not None and len(started) >= limit:
             break
-        if started and _owed + nodes[k]["ph"] > _budget:
+        if started and _owed + nodes[node_id]["ph"] > _budget:
             not_started.append({
-                "id": k, "name": nodes[k]["name"],
+                "id": node_id, "name": nodes[node_id]["name"],
                 "why": "not begun: the %d things already started this turn "
                        "owe %s of your hours, and you have about %s a year. "
                        "Beginning more would not make them go faster, only "
@@ -599,20 +599,20 @@ def _cmd_rush(s, nodes, cmd, ended):
                        % (len(started), "{:,.0f}".format(_owed),
                           "{:,.0f}".format(s.director_pool()))})
             continue
-        ok2, why = s.start_project(k)
+        ok2, why = s.start_project(node_id)
         if ok2:
-            _owed += nodes[k]["ph"]
-            n = nodes[k]
+            _owed += nodes[node_id]["ph"]
+            node = nodes[node_id]
             # SAY SO, for the same reason the single-id `start` does: a
             # player reading `log` back should see every begun-work as a
             # choice they made, not a completion that appeared unasked.
-            if s.active.get(k, {}).get("spent", 0.0) <= 0.5:
-                s.log.append((s.year, "started: %s" % n["name"]))
-            started.append({"id": k, "name": n["name"],
-                            "cost": round(s.active.get(k, {}).get(
-                                "cost_left", s.project_cost(k)), 1)})
+            if s.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
+                s.log.append((s.year, "started: %s" % node["name"]))
+            started.append({"id": node_id, "name": node["name"],
+                            "cost": round(s.active.get(node_id, {}).get(
+                                "cost_left", s.project_cost(node_id)), 1)})
         else:
-            not_started.append({"id": k, "why": why})
+            not_started.append({"id": node_id, "why": why})
     return {"ok": True, "started": started, "count_started": len(started),
             "not_started": not_started,
             "count_not_started": len(not_started),
@@ -641,11 +641,11 @@ def _cmd_rush(s, nodes, cmd, ended):
 def _cmd_bounty(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
-    k = cmd.get("id")
-    if k not in nodes:
-        return {"ok": False, "error": "unknown node id %r" % k}
-    if k in s.done:
-        return {"ok": False, "error": "%s is already done" % k}
+    node_id = cmd.get("id")
+    if node_id not in nodes:
+        return {"ok": False, "error": "unknown node id %r" % node_id}
+    if node_id in s.done:
+        return {"ok": False, "error": "%s is already done" % node_id}
     # ELIGIBILITY FIRST, ALWAYS - a tester was told to stop an active
     # mat_platinum_bulk in order to switch it to a bounty, did so, and
     # then had `bounty mat_platinum_bulk` refused as not bounty-eligible:
@@ -655,9 +655,9 @@ def _cmd_bounty(s, nodes, cmd, ended):
     # checking it before the "already active" branch costs nothing and
     # never sends a player to stop something that could not become a
     # bounty anyway.
-    if not s.bounty_eligible(k):
-        n = nodes[k]
-        missing = [p for p in n["pre"] if p not in s.done]
+    if not s.bounty_eligible(node_id):
+        node = nodes[node_id]
+        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in s.done]
         if missing:
             # SAME FOG FILTER `why` USES, not a second one. This used to
             # print every missing prerequisite by raw id regardless of
@@ -672,17 +672,17 @@ def _cmd_bounty(s, nodes, cmd, ended):
                          "understanding the theory, so there is nothing to "
                          "award the prize for. A bounty works where the craft "
                          "already exists here and success is visible."
-                         % (n["cat"],
+                         % (node["cat"],
                             s.civ.get("name", "this society"))}
-    if k in s.active:
+    if node_id in s.active:
         return {"ok": False, "error": "%s is already active; stop it first if you want "
-                                      "to switch to a bounty instead" % k}
-    price = (nodes[k]["_total_cost"] * 2.5 * s.civ_cost_factor(k)
-             * s.material_cost_factor(k) * s.cost_money_factor())
-    if not s.post_bounty(k):
+                                      "to switch to a bounty instead" % node_id}
+    price = (nodes[node_id]["_total_cost"] * 2.5 * s.civ_cost_factor(node_id)
+             * s.material_cost_factor(node_id) * s.cost_money_factor())
+    if not s.post_bounty(node_id):
         return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
                                       "you have %.0f. Earn or wait, then try again" % (price, s.capital)}
-    return {"ok": True, "posted": k, "price": round(price, 1), "capital": round(s.capital, 1)}
+    return {"ok": True, "posted": node_id, "price": round(price, 1), "capital": round(s.capital, 1)}
 
 
 
@@ -694,7 +694,7 @@ def _cmd_buy(s, nodes, cmd, ended):
     # and so missed the guards _qty carries: a break tester bought
     # 1e30 hectares of coppice and read the refusal in binary rounding
     # error.
-    n, _err_n = _qty(cmd, "n", 0)
+    quantity, _err_n = _qty(cmd, "n", 0)
     if _err_n:
         return {"ok": False, "error": _err_n + ". Nothing was changed."}
     # A playtester passed n:-5 and got money from nothing. buy_forest(-5)
@@ -702,24 +702,24 @@ def _cmd_buy(s, nodes, cmd, ended):
     # -1250 > 400 is false, then credited the capital and set forest_ha to
     # -5, while the reply said ok:false. The refusal was reported AFTER the
     # mutation had already happened. Validate before touching anything.
-    if not (n > 0):
+    if not (quantity > 0):
         return {"ok": False,
-                "error": "n must be greater than zero, got %g. Nothing was changed." % n}
+                "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
     if what == "forest":
-        got = s.buy_forest(n)
+        got = s.buy_forest(quantity)
         if got <= 0:
             return {"ok": False, "error": "cannot afford %.0f ha of coppice woodland "
-                                          "(you have %.0f denarii)" % (n, s.capital)}
+                                          "(you have %.0f denarii)" % (quantity, s.capital)}
         return {"ok": True, "bought_ha": got, "forest_ha": round(s.forest_ha, 1),
                 "capital": round(s.capital, 1)}
     if what in ("nitre", "nitre_bed", "saltpetre", "nitre beds"):
-        got = s.build_nitre(n)
+        got = s.build_nitre(quantity)
         if got <= 0:
             return {"ok": False,
                     "error": "cannot afford %.0f square metres of nitre bed "
                              "(that is %s denarii and you have %s). Nothing "
                              "was changed."
-                             % (n, "{:,.0f}".format(n * s.NITRE_COST_PER_M2
+                             % (quantity, "{:,.0f}".format(quantity * s.NITRE_COST_PER_M2
                                                     * s.price_index),
                                 "{:,.0f}".format(s.capital))}
         return {"ok": True, "laid_m2": got,
@@ -728,7 +728,7 @@ def _cmd_buy(s, nodes, cmd, ended):
                     round(s.nitre_bed_m2 * s.NITRE_YIELD_T_PER_M2, 3),
                 "capital": round(s.capital, 1)}
     if what in ("farm", "food"):
-        got = s.invest_farm(n)
+        got = s.invest_farm(quantity)
         if got <= 0:
             return {"ok": False, "error": "cannot afford that farmland"}
         return {"ok": True, "bought_farm_hectares": got,
@@ -736,7 +736,7 @@ def _cmd_buy(s, nodes, cmd, ended):
                 "food_cost_factor": round(s.essential_price_ratio(), 3),
                 "capital": round(s.capital, 1)}
     if what in ("housing", "houses"):
-        got = s.build_worker_housing(n)
+        got = s.build_worker_housing(quantity)
         if got <= 0:
             return {"ok": False, "error": "cannot afford that worker housing"}
         return {"ok": True, "built_worker_housing_places": got,
@@ -744,16 +744,16 @@ def _cmd_buy(s, nodes, cmd, ended):
                 "capital": round(s.capital, 1)}
     if what in ("school", "trade_school", "trade school"):
         trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
-        ok, why = s.found_trade_school(trade, n)
+        ok, why = s.found_trade_school(trade, quantity)
         if not ok:
             return {"ok": False, "error": why}
-        return {"ok": True, "trade": trade, "new_training_seats": n,
+        return {"ok": True, "trade": trade, "new_training_seats": quantity,
                 "trade_school_seats": s.trade_schools[trade],
                 "market_supply_hours_per_year": round(s.market_supply(trade), 1),
                 "capital": round(s.capital, 1)}
     if what in ("material", "stock"):
         material = cmd.get("material")
-        got = s.buy_material_stock(material, n)
+        got = s.buy_material_stock(material, quantity)
         if got <= 0:
             return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
         return {"ok": True, "material": material, "bought_tonnes": got,
@@ -775,8 +775,8 @@ def _cmd_buy(s, nodes, cmd, ended):
         # partial=False: a mine you asked for by name is bought in full or
         # not at all. It used to spend every denarius you had and hand back
         # a fraction, without asking.
-        price = s.mine_quote(mat, n).get("to_sink_it") if hasattr(s, "mine_quote") else None
-        got = s.open_mine(mat, n, partial=False)
+        price = s.mine_quote(mat, quantity).get("to_sink_it") if hasattr(s, "mine_quote") else None
+        got = s.open_mine(mat, quantity, partial=False)
         if got <= 0:
             if price is not None and price > s.capital:
                 return {"ok": False,
@@ -785,8 +785,8 @@ def _cmd_buy(s, nodes, cmd, ended):
                                  "for what you can pay for, or check the price "
                                  'first with {"cmd":"quote","what":"mine",'
                                  '"material":"%s","n":%g}.'
-                                 % (float(n), mat, "{:,.0f}".format(price),
-                                    "{:,.0f}".format(s.capital), mat, float(n))}
+                                 % (float(quantity), mat, "{:,.0f}".format(price),
+                                    "{:,.0f}".format(s.capital), mat, float(quantity))}
             return {"ok": False, "error": "could not commission any %s capacity right now "
                                           "(ceiling reached, or standing too low for a "
                                           "concession that size)" % mat}
@@ -795,9 +795,9 @@ def _cmd_buy(s, nodes, cmd, ended):
         # ready_year was always null so there was no way to know whether the
         # workings would appear in four years or ninety-five. Both of those
         # are the model being coy about its own arithmetic.
-        tranche = [t for t in getattr(s, "mine_tranches", []) if t[0] == mat]
-        ready = min((t[2] for t in tranche), default=None)
-        asked = float(n)
+        tranche = [entry for entry in getattr(s, "mine_tranches", []) if entry[0] == mat]
+        ready = min((entry[2] for entry in tranche), default=None)
+        asked = float(quantity)
         reply = {"ok": True, "material": mat,
                  "you_asked_for_t_per_yr": asked,
                  "commissioned_t_per_yr": round(got, 2),
@@ -813,22 +813,22 @@ def _cmd_buy(s, nodes, cmd, ended):
         return reply
     if what == "slaves":
         s._last_buy_refusal = None
-        got = s.buy_slaves(int(n))
+        got = s.buy_slaves(int(quantity))
         if got <= 0 and getattr(s, "_last_buy_refusal", None):
             return {"ok": False, "error": s._last_buy_refusal}
         if got <= 0:
             # Quote the price actually asked. It is no longer 300 flat: a
             # large purchase bids the local market up, and saying "300 each"
             # while charging far more is the model lying to the player.
-            q = s.slave_quote(int(n))
+            quote = s.slave_quote(int(quantity))
             return {"ok": False,
                     "error": "cannot afford %d slaves: %.0f denarii "
                              "(%.0f each after the market moves against a purchase "
                              "this size) and you have %.0f"
-                             % (int(n), q, q / max(1, int(n)), s.capital)}
+                             % (int(quantity), quote, quote / max(1, int(quantity)), s.capital)}
         return {"ok": True, "bought": got, "slaves": s.slaves, "capital": round(s.capital, 1)}
     if what == "manumit":
-        got = s.manumit(int(n))
+        got = s.manumit(int(quantity))
         if got <= 0:
             return {"ok": False, "error": "you have no slaves to free"}
         return {"ok": True, "manumitted": got, "freedmen": s.freedmen, "slaves": s.slaves}
@@ -843,10 +843,10 @@ def _cmd_materials(s, nodes, cmd, ended):
 
 def _cmd_sell(s, nodes, cmd, ended):
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
-    n, err = _qty(cmd, "n", 0)
-    if err or n <= 0:
+    quantity, err = _qty(cmd, "n", 0)
+    if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
-    sold = s.sell_material_stock(material, n)
+    sold = s.sell_material_stock(material, quantity)
     if sold <= 0:
         return {"ok": False, "error": "you have none of that material stock to sell"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
@@ -909,10 +909,10 @@ def _cmd_allocate(s, nodes, cmd, ended):
     # second guess at them. See core.py's own long comment on exactly
     # how a directive changes the allocator (order, not ceiling) and
     # what happens when it cannot be honoured.
-    k = cmd.get("id")
-    if k is None:
-        _rows = [{"id": kk, "hours_a_year": hh}
-                 for kk, hh in sorted(s.hour_allocations.items()) if kk != "work"]
+    target_id = cmd.get("id")
+    if target_id is None:
+        _rows = [{"id": target_id, "hours_a_year": hours}
+                 for target_id, hours in sorted(s.hour_allocations.items()) if target_id != "work"]
         _out = {"ok": True, "allocations": _rows or "none"}
         if s.hour_allocations.get("work"):
             _out["work"] = {"trade": s.work_trade,
@@ -930,7 +930,7 @@ def _cmd_allocate(s, nodes, cmd, ended):
     if hours < 0:
         return {"ok": False, "error": "hours must be a number, 0 or "
                                       "more. 0 clears the standing order."}
-    if k == "work":
+    if target_id == "work":
         if hours <= 0:
             had = s.hour_allocations.pop("work", None)
             s.work_trade = None
@@ -943,7 +943,7 @@ def _cmd_allocate(s, nodes, cmd, ended):
                              "{\"cmd\":\"allocate\",\"id\":\"work\","
                              "\"trade\":\"labourer\",\"hours\":100}"}
         if trade not in WAGES:
-            here = sorted(t for t in WAGES if s.trade_available(t))
+            here = sorted(trade for trade in WAGES if s.trade_available(trade))
             return {"ok": False, "error": "no such trade. you could work "
                                           "as: " + ", ".join(here)}
         if not s.trade_available(trade):
@@ -960,20 +960,20 @@ def _cmd_allocate(s, nodes, cmd, ended):
                         "you sell by hand the same year, before your "
                         "projects see what is left. 'allocate' with "
                         "hours 0 clears it" % trade}
-    if k not in nodes:
+    if target_id not in nodes:
         return {"ok": False, "error": "unknown node id %r. 'state' lists "
-                                      "what is active" % k}
-    if k not in s.active:
+                                      "what is active" % target_id}
+    if target_id not in s.active:
         return {"ok": False,
                 "error": "%s is not active, so there is nothing for a "
                          "directive to apply to yet. 'start' it first, "
-                         "then 'allocate' it hours" % k}
+                         "then 'allocate' it hours" % target_id}
     if hours <= 0:
-        had = s.hour_allocations.pop(k, None)
-        return ({"ok": True, "cleared": k, "had_been_a_year": had}
-                if had else {"ok": True, "cleared": k})
-    s.hour_allocations[k] = float(hours)
-    return {"ok": True, "set": k, "name": nodes[k]["name"],
+        had = s.hour_allocations.pop(target_id, None)
+        return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
+                if had else {"ok": True, "cleared": target_id})
+    s.hour_allocations[target_id] = float(hours)
+    return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),
             "note": "this many of your own hours go to %s every year "
                     "from now on, ahead of anything you have not "
@@ -981,13 +981,13 @@ def _cmd_allocate(s, nodes, cmd, ended):
                     "has or what this project's own pace can use; "
                     "'portfolio' shows what it actually gets each year "
                     "and why. 'allocate' with hours 0 clears it"
-                    % nodes[k]["name"]}
+                    % nodes[target_id]["name"]}
 
 
 
 def _cmd_risk(s, nodes, cmd, ended):
-    kr = s.knowledge_risk()
-    return {"ok": True, "knowledge_risk": kr, "year": s.year,
+    knowledge_risk = s.knowledge_risk()
+    return {"ok": True, "knowledge_risk": knowledge_risk, "year": s.year,
             "note": "What history is about to do to you, and what you have "
                     "built that blunts it. Every hazard here is fightable."}
 
@@ -1103,20 +1103,20 @@ def _cmd_stuck(s, nodes, cmd, ended):
     # stall_diagnosis only spoke after eight years of insolvency.
     _fog = getattr(s, "fog", False)
     reasons = []
-    _startable = [k for k in nodes
-                  if k not in s.done and k not in s.active
-                  and (not _fog or s.is_visible(k))
-                  and s.start_reason(k)[0]]
-    _afford = [k for k in _startable
-               if s.project_cost(k) <= s.spending_power("start")]
+    _startable = [node_id for node_id in nodes
+                  if node_id not in s.done and node_id not in s.active
+                  and (not _fog or s.is_visible(node_id))
+                  and s.start_reason(node_id)[0]]
+    _afford = [node_id for node_id in _startable
+               if s.project_cost(node_id) <= s.spending_power("start")]
     if s.active:
         _waits = {}
         _why_underfunded = {}
-        for k, st in sorted(s.active.items()):
-            bill = st.get("cost_left")
+        for node_id, progress in sorted(s.active.items()):
+            bill = progress.get("cost_left")
             if bill is None:
-                bill = max(0.0, s.project_cost(k) - st["spent"])
-            _waits[k] = _waiting_on(s, nodes, k, st, bill)
+                bill = max(0.0, s.project_cost(node_id) - progress["spent"])
+            _waits[node_id] = _waiting_on(s, nodes, node_id, progress, bill)
             # SAME GAP AS `why` AND `state`: arrears gives unspendable
             # founder hours back, so this can say "waiting on your hours"
             # for a project that is really stuck on money, on the exact
@@ -1124,8 +1124,8 @@ def _cmd_stuck(s, nodes, cmd, ended):
             # why_underfunded, already computed onto st by core.py, is
             # the real reason - carry it per project, not just the string
             # above.
-            if st.get("why_underfunded"):
-                _why_underfunded[k] = st["why_underfunded"]
+            if progress.get("why_underfunded"):
+                _why_underfunded[node_id] = progress["why_underfunded"]
         reasons.append({"what": "work in hand",
                         "how_many": len(s.active),
                         "each_waiting_on": _waits,
@@ -1140,7 +1140,7 @@ def _cmd_stuck(s, nodes, cmd, ended):
     _goal_routing_off_under_fog = False
     if _goal in nodes and not _fog:
         _road = closure(nodes, _goal) - s.done
-        _road_open = [k for k in _road if s.start_reason(k)[0]]
+        _road_open = [node_id for node_id in _road if s.start_reason(node_id)[0]]
         if _road and not _road_open:
             _near = sorted(_road, key=lambda k: len(closure(nodes, k) - s.done))
             reasons.append({
@@ -1183,9 +1183,9 @@ def _cmd_stuck(s, nodes, cmd, ended):
     # AND WHAT YOU HAVE BUILT AND NEVER SWITCHED ON. A break tester read
     # "NOTHING YOU COULD BEGIN" while two concerns sat finished and closed
     # that between them raised their revenue by 71%.
-    _shut = sorted(k for k in s.done
-                   if s.is_venture(k) and k not in s.operating
-                   and nodes[k]["rev"] > nodes[k]["up"])
+    _shut = sorted(node_id for node_id in s.done
+                   if s.is_venture(node_id) and node_id not in s.operating
+                   and nodes[node_id]["rev"] > nodes[node_id]["up"])
     if _shut:
         # DO NOT RECOMMEND A COMMAND THAT WILL FAIL. This used to pick
         # the best-margin shut concern by revenue minus upkeep alone and
@@ -1210,7 +1210,7 @@ def _cmd_stuck(s, nodes, cmd, ended):
             return (_need_sch <= _sch_free + 0.01
                     and _need_art <= _art_free + 0.01
                     and _capex_now(_k) <= s.spending_power("buy"))
-        _really_openable = [k for k in _shut if _openable(k)]
+        _really_openable = [node_id for node_id in _shut if _openable(node_id)]
         if _really_openable:
             _best = max(_really_openable,
                        key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
@@ -1262,8 +1262,8 @@ def _cmd_stuck(s, nodes, cmd, ended):
                                "them costs %s, against the %s you could "
                                "raise"
                                % (len(_startable),
-                                  "{:,.0f}".format(min(s.project_cost(k)
-                                                       for k in _startable)),
+                                  "{:,.0f}".format(min(s.project_cost(node_id)
+                                                       for node_id in _startable)),
                                   "{:,.0f}".format(s.spending_power("start")))})
     if s.binding and s.resource_throttle() < 0.95:
         reasons.append({"what": "a raw material",
@@ -1355,13 +1355,13 @@ def _cmd_labour(s, nodes, cmd, ended):
         # for decades: leaning on a trade's local supply bids it up, and
         # the premium appeared in the bill and nowhere else.
         _lpf = s.labour_price_factor(t)
-        r = {"trade": t,
+        entry = {"trade": t,
              "a_year_of_one": round(s.annual_wage(t), 0),
              "you_employ": round(s.employees.get(t, 0.0), 2)}
         if long:
-            r["wage_foundation"] = {
+            entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
-                **{k: round(value, 3) for k, value in s.wage_cost_factors(t).items()},
+                **{factor_key: round(value, 3) for factor_key, value in s.wage_cost_factors(t).items()},
                 "demographic_scarcity": round(s.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(s.price_index, 3),
@@ -1371,8 +1371,8 @@ def _cmd_labour(s, nodes, cmd, ended):
         # _staff_fraction_note. Checked on this one trade alone, not
         # the whole household, so a whole-number trade gets no
         # footnote even while another trade is mid-attrition.
-        if abs(r["you_employ"] - round(r["you_employ"])) >= 0.02:
-            r["you_employ_is_fractional_because"] = (
+        if abs(entry["you_employ"] - round(entry["you_employ"])) >= 0.02:
+            entry["you_employ_is_fractional_because"] = (
                 "a continuous full-time-equivalent, not a count of "
                 "whole people: hiring phases in, training takes years, "
                 "and attrition trims a little every year rather than "
@@ -1384,22 +1384,22 @@ def _cmd_labour(s, nodes, cmd, ended):
         # 500-year game. A wall you can only discover by walking into it is
         # not a wall, it is a trap.
         if t in s.LITERATE_TRADES:
-            r["most_this_society_can_ever_supply"] = round(
+            entry["most_this_society_can_ever_supply"] = round(
                 s.literate_capacity(t), 1)
-            r["you_have_or_are_teaching"] = round(
+            entry["you_have_or_are_teaching"] = round(
                 s._trade_headcount_pending(t), 2)
-            r["what_widens_it"] = ("printing, paper, schools and academies - "
+            entry["what_widens_it"] = ("printing, paper, schools and academies - "
                                    "they raise how many people here can "
                                    "read, and this ceiling rises with it")
         if _lpf > 1.005:
-            r["dearer_than_usual_by"] = "%d%%" % ((_lpf - 1.0) * 100)
+            entry["dearer_than_usual_by"] = "%d%%" % ((_lpf - 1.0) * 100)
             # "HERE" IS ONE TOWN, NOT THE COUNTRY. A player who reads
             # this as a claim about the whole of Rome or Han China
             # concludes the game is absurd - that is the demographics
             # complaint this line exists to head off. See the
             # population command for the country-wide figure this
             # household's own reach is being measured against.
-            r["because"] = ("you have taken on a large share of the %ss "
+            entry["because"] = ("you have taken on a large share of the %ss "
                             "within this household's reach - one town's "
                             "labour market, not the whole country; the "
                             "population command shows how the two "
@@ -1407,7 +1407,7 @@ def _cmd_labour(s, nodes, cmd, ended):
                             "anything that widens the supply, brings it "
                             "back down" % t)
         if long:
-            r.update({"kind": trade_family(t),
+            entry.update({"kind": trade_family(t),
                       "wage_per_hour": round(WAGES[t] * s.wage_index
                                              * s.price_index, 3),
                       # SPLIT, because the total includes your own people
@@ -1456,7 +1456,7 @@ def _cmd_labour(s, nodes, cmd, ended):
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
                 # below.
-                r["a_year_of_one_after_you_hire_one"] = _rate_after
+                entry["a_year_of_one_after_you_hire_one"] = _rate_after
                 # THE BANNER IS FOR SCARCITY, NOT ARITHMETIC. One more
                 # hire measurably moves the price of almost any trade in
                 # a town this size - labourer's base pool is roughly a
@@ -1473,21 +1473,21 @@ def _cmd_labour(s, nodes, cmd, ended):
                 # is not.
                 if _lpf_after > 1.05:
                     _have = s.employees.get(t, 0.0)
-                    r["hiring_moves_the_price"] = True
+                    entry["hiring_moves_the_price"] = True
                     # NOT JUST THE NEW HIRE. The whole point is that this
                     # rate applies to everyone you already have too, the
                     # instant you take one more on - so the bill, not
                     # only the per-head rate, is what has to be shown.
-                    r["wage_bill_for_this_trade_now"] = round(
-                        _have * r["a_year_of_one"], 0)
-                    r["wage_bill_for_this_trade_after_hiring_one_more"] = round(
+                    entry["wage_bill_for_this_trade_now"] = round(
+                        _have * entry["a_year_of_one"], 0)
+                    entry["wage_bill_for_this_trade_after_hiring_one_more"] = round(
                         (_have + 1.0) * _rate_after, 0)
-        return r
+        return entry
     if one:
-        r = row(one, long=True)
-        r["exists_here"] = s.trade_available(one)
-        return {"ok": True, "trade": r}
-    have = sorted(t for t in WAGES if s.employees.get(t, 0.0) > 0.005)
+        entry = row(one, long=True)
+        entry["exists_here"] = s.trade_available(one)
+        return {"ok": True, "trade": entry}
+    have = sorted(trade for trade in WAGES if s.employees.get(trade, 0.0) > 0.005)
     # NOT "TRADES YOU DO NOT YET EMPLOY", and not "trades that exist"
     # either. Excluding the ones you have reads as "no more smiths
     # available" the moment you hire your first smith, which `hire smith 1`
@@ -1495,13 +1495,13 @@ def _cmd_labour(s, nodes, cmd, ended):
     # the list while `labour machinist` said "the town can supply: 0
     # hours", which a play tester read side by side. It is every trade
     # there is actually somebody here to hire.
-    hirable = sorted(t for t in WAGES
-                     if s.trade_available(t) and s.market_supply_split(t)[0] > 0)
-    taught_only = sorted(t for t in WAGES
-                         if s.trade_available(t) and t not in hirable)
-    absent = sorted(t for t in WAGES if not s.trade_available(t))
+    hirable = sorted(trade for trade in WAGES
+                     if s.trade_available(trade) and s.market_supply_split(trade)[0] > 0)
+    taught_only = sorted(trade for trade in WAGES
+                         if s.trade_available(trade) and trade not in hirable)
+    absent = sorted(trade for trade in WAGES if not s.trade_available(trade))
     return {"ok": True,
-            "on_your_staff": [row(t) for t in have] or "nobody",
+            "on_your_staff": [row(trade) for trade in have] or "nobody",
             "you_could_hire_here": hirable,
             "only_the_ones_you_taught": taught_only,
             "do_not_exist_here": absent,
@@ -1562,12 +1562,12 @@ def _cmd_labour(s, nodes, cmd, ended):
             # is how two separate testers concluded the game had lost track
             # of their household. It knows exactly what they are.
             "in_training": [
-                {"trade": (r_[2] if len(r_) > 2
+                {"trade": (training_record[2] if len(training_record) > 2
                            else "people you bought, learning the work"),
-                 "people": (r_[3] if len(r_) > 3
-                            else round(r_[0] / 0.55, 2)),
-                 "ready_year": r_[1]}
-                for r_ in getattr(s, "training", [])],
+                 "people": (training_record[3] if len(training_record) > 3
+                            else round(training_record[0] / 0.55, 2)),
+                 "ready_year": training_record[1]}
+                for training_record in getattr(s, "training", [])],
             "one_trade_in_full": '{"cmd":"labour","trade":"smith"}',
             "how_to_grow_staff": {"scholars": s._staff_advice("scholars"),
                                   "artisans": s._staff_advice("artisans")},
@@ -1589,10 +1589,10 @@ def _cmd_hire(s, nodes, cmd, ended):
                 "error": "there is nobody left to take anyone on: the "
                          "founder is dead and no deputy remains to direct "
                          "the work"}
-    n, err = _qty(cmd, "n", 1)
+    quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, err = s.hire(cmd.get("trade"), n)
+    ok, err = s.hire(cmd.get("trade"), quantity)
     if not ok:
         return {"ok": False, "error": err}
     # HIRING AND LETTING GO ARE DECISIONS, not standing facts the way
@@ -1611,10 +1611,10 @@ def _cmd_hire(s, nodes, cmd, ended):
 
 
 def _cmd_fire(s, nodes, cmd, ended):
-    n, err = _qty(cmd, "n", 1)
+    quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, err = s.fire(cmd.get("trade"), n)
+    ok, err = s.fire(cmd.get("trade"), quantity)
     if not ok:
         return {"ok": False, "error": err}
     # Same reasoning as `hire` above: `err` here is fire()'s own success
@@ -1632,10 +1632,10 @@ def _cmd_fire(s, nodes, cmd, ended):
 def _cmd_train(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    n, err = _qty(cmd, "n", 1)
+    quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, msg = s.train(cmd.get("trade"), n, cmd.get("from"))
+    ok, msg = s.train(cmd.get("trade"), quantity, cmd.get("from"))
     if not ok:
         return {"ok": False, "error": msg}
     out = {"ok": True, "training": msg, "capital": round(s.capital, 1),
@@ -1775,14 +1775,14 @@ def _cmd_quote(s, nodes, cmd, ended):
         return {"ok": False,
                 "error": "you can quote a mine, a forest or people: "
                          "quote mine coal 500, quote forest 100, quote slaves 5"}
-    n, err = _qty(cmd, "n", 1)
+    quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
-    q = s.mine_quote(cmd.get("material"), n)
-    if q is None:
+    quote = s.mine_quote(cmd.get("material"), quantity)
+    if quote is None:
         return {"ok": False, "error": "no such material: %r. %s"
                 % (cmd.get("material"), s.mine_catalog_hint())}
-    return dict(ok=True, **q)
+    return dict(ok=True, **quote)
 
 
 
@@ -1826,16 +1826,16 @@ def _cmd_bribe(s, nodes, cmd, ended):
 def _cmd_open(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    k = cmd.get("id")
-    if not isinstance(k, str):
+    node_id = cmd.get("id")
+    if not isinstance(node_id, str):
         return {"ok": False, "error": 'give an id, e.g. {"cmd":"open","id":"fin_pawnshop"}'}
-    if k not in nodes:
+    if node_id not in nodes:
         # `why` on a mistyped id suggests; `open` answered "no such node"
         # and stopped. Same typo, same player, two different games.
-        near = _did_you_mean(k, nodes, s=s)
+        near = _did_you_mean(node_id, nodes, s=s)
         return {"ok": False,
                 "error": "no such thing as %r%s"
-                         % (k, (". did you mean: " + ", ".join(near))
+                         % (node_id, (". did you mean: " + ", ".join(near))
                             if near else "")}
     # UNITS: HOW A PLAYER FOUNDS A SECOND SCHOOL. See
     # ProjectsMixin.open_venture / _expand_institution (projects.py). A
@@ -1843,14 +1843,14 @@ def _cmd_open(s, nodes, cmd, ended):
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
         return {"ok": False, "error": "units must be a number"}
-    ok, msg = s.open_venture(k, units=_units)
+    ok, msg = s.open_venture(node_id, units=_units)
     if not ok:
         return {"ok": False, "error": msg}
     # The single rule `help` calls out as the one that catches everybody -
     # finishing something earns nothing until you open it - deserves a
     # line in the player's own history, not just in the reply to this one
     # command. open_venture itself stays silent; see its docstring.
-    s.log.append((s.year, "opened: %s (%s)" % (nodes[k]["name"], msg)))
+    s.log.append((s.year, "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
     return {"ok": True, "opened": msg, "capital": round(s.capital, 1),
             "revenue": round(s.revenue(), 1), "upkeep": round(s.upkeep(), 1)}
 
@@ -1859,11 +1859,11 @@ def _cmd_open(s, nodes, cmd, ended):
 def _cmd_ventures(s, nodes, cmd, ended):
     sch_free, art_free = s.venture_staff_free()
     running = sorted(s.operating)
-    idle = sorted(k for k in s.done
-                  if s.is_venture(k) and k not in s.operating)
+    idle = sorted(node_id for node_id in s.done
+                  if s.is_venture(node_id) and node_id not in s.operating)
 
     def _vrow(k):
-        n = nodes[k]
+        node = nodes[k]
         # AT THE FIGURE THE LEDGER USES. This printed the tree's raw
         # revenue, and the ledger applies the economy, the output factor,
         # this society's prices and the ramp - so a break tester measured
@@ -1879,11 +1879,11 @@ def _cmd_ventures(s, nodes, cmd, ended):
         # GOODS_CATEGORIES and for anything not yet open, so this changes
         # nothing for every other row. See that method's own comment.
         _mkt = s.goods_market_factor(k) if k in s.operating else 1.0
-        row = {"id": k, "name": n["name"],
-                "earns_a_year": round(n["rev"] * _scale
+        row = {"id": k, "name": node["name"],
+                "earns_a_year": round(node["rev"] * _scale
                                       * (s.venture_ramp(k) if k in s.operating
                                          else 1.0) * _mkt, 1),
-                "costs_a_year": round(n["up"] * s.price_index, 1),
+                "costs_a_year": round(node["up"] * s.price_index, 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
                 "specialist_foreman": (
@@ -1910,16 +1910,16 @@ def _cmd_ventures(s, nodes, cmd, ended):
     # ordinary earn/cost table invited exactly the misreading above; a
     # separate heading says outright that these are not evaluated the
     # same way.
-    _idle_ordinary = [k for k in idle if k not in s.CAPABILITY_INSTITUTIONS]
-    _idle_capability = [k for k in idle if k in s.CAPABILITY_INSTITUTIONS]
+    _idle_ordinary = [node_id for node_id in idle if node_id not in s.CAPABILITY_INSTITUTIONS]
+    _idle_capability = [node_id for node_id in idle if node_id in s.CAPABILITY_INSTITUTIONS]
     out = {"ok": True,
-           "running": [_vrow(k) for k in running] or "nothing",
+           "running": [_vrow(node_id) for node_id in running] or "nothing",
            "you_know_how_but_have_not_opened":
-               [dict(_vrow(k), to_open_it=round(s.venture_capex(k), 1))
-                for k in _idle_ordinary[:20]] or "nothing",
+               [dict(_vrow(node_id), to_open_it=round(s.venture_capex(node_id), 1))
+                for node_id in _idle_ordinary[:20]] or "nothing",
            "capabilities_you_know_how_to_run_but_have_not_opened":
-               [dict(_vrow(k), to_open_it=round(s.venture_capex(k), 1))
-                for k in _idle_capability] or "nothing",
+               [dict(_vrow(node_id), to_open_it=round(s.venture_capex(node_id), 1))
+                for node_id in _idle_capability] or "nothing",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
            # YOU ARE IN THAT COUNT. `ventures` said "1 scholars, 1
@@ -2129,7 +2129,7 @@ def _cmd_policy(s, nodes, cmd, ended):
 
 
 def _cmd_save(s, nodes, cmd, ended):
-    op = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
+    command = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
     path = cmd.get("file") or cmd.get("path")
     if not isinstance(path, str) or not path:
         return {"ok": False, "error": 'give a filename, e.g. {"cmd":"save","file":"mygame.json"}'}
@@ -2142,13 +2142,13 @@ def _cmd_save(s, nodes, cmd, ended):
     if bad:
         return {"ok": False, "error": bad}
     try:
-        if op == "save":
+        if command == "save":
             save_state(s, path)
             return {"ok": True, "saved": path, "year": s.year}
         load_state(s, path)
         return {"ok": True, "loaded": path, "year": s.year}
     except Exception as e:
-        return {"ok": False, "error": "could not %s %r: %s" % (op, path, e)}
+        return {"ok": False, "error": "could not %s %r: %s" % (command, path, e)}
 
 
 
@@ -2212,8 +2212,8 @@ def _cmd_step(s, nodes, cmd, ended):
             # reason: nothing cheaper tells you whether ANYTHING at all
             # is startable right now.
             _could_start = next(
-                (x for x in nodes if x not in s.done and x not in s.active
-                 and s.can_start(x)), None)
+                (node_id for node_id in nodes if node_id not in s.done and node_id not in s.active
+                 and s.can_start(node_id)), None)
             if _could_start:
                 # DOES IT ACTUALLY BANK? Checked against step()'s own
                 # code, not assumed: core.py's step() computes `pool`
@@ -2309,29 +2309,29 @@ def _cmd_step(s, nodes, cmd, ended):
         # own output impossible to diff. Caught by fingerprinting the
         # engine before and after being split into modules: every number
         # matched and this list did not.
-        for k in sorted(s.done - before_done):
+        for node_id in sorted(s.done - before_done):
             # YOURS OR THE SOCIETY'S. Anything in `granted` is this
             # civilisation's own work, credited free; printing it in the
             # same "COMPLETED" line as a project the player paid for and
             # waited three years on had a tester reading their first turn
             # as two finished buildings they had never started.
-            completed.append({"id": k, "name": nodes[k]["name"],
-                              "year": s.done_year.get(k),
-                              "granted": k in s.granted})
-        for k in sorted(before_done - s.done):
-            lost.append({"id": k, "name": nodes[k]["name"], "year": s.year,
-                         "can_be_restored": k in getattr(s, "mothballed", set())})
+            completed.append({"id": node_id, "name": nodes[node_id]["name"],
+                              "year": s.done_year.get(node_id),
+                              "granted": node_id in s.granted})
+        for node_id in sorted(before_done - s.done):
+            lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": s.year,
+                         "can_be_restored": node_id in getattr(s, "mothballed", set())})
         _this_year = s.log[before_log:]
-        for y, m in _this_year:
-            events.append({"year": y, "message": m})
-            if "founder dies" in m.lower():
-                _age = re.search(r"aged about (\d+)", m)
+        for year, message in _this_year:
+            events.append({"year": year, "message": message})
+            if "founder dies" in message.lower():
+                _age = re.search(r"aged about (\d+)", message)
                 _age_n = int(_age.group(1)) if _age else None
-                founder_died_this_step = {"year": y, "aged_about": _age_n}
+                founder_died_this_step = {"year": year, "aged_about": _age_n}
                 # SAVED, NOT ONLY LOGGED - see _founder_death_info's own
                 # comment on why the log alone cannot be trusted to
                 # survive a save and a resume.
-                s._founder_death_aged, s._founder_death_year = _age_n, y
+                s._founder_death_aged, s._founder_death_year = _age_n, year
         # AND STOP THE YEAR YOU WIN. Reaching the goal is no longer an
         # ending, so without this a `step 50` that crosses the finish line
         # would run on for another forty-nine years and mention it in
@@ -2342,8 +2342,8 @@ def _cmd_step(s, nodes, cmd, ended):
                              "have had a look around."
                              % (ran, years))
             break
-        if ran < years and any(mk.lower() in m.lower() for _, m in _this_year
-                               for mk in _STEP_STOP_MARKERS):
+        if ran < years and any(marker.lower() in message.lower() for _, message in _this_year
+                               for marker in _STEP_STOP_MARKERS):
             stopped_early = ("stopped after %d of the %d years you asked "
                              "for: something happened that you warned "
                              "yourself about and should see before more "
@@ -2480,9 +2480,9 @@ def _agent_dispatch_inner(s, nodes, cmd):
             _exact_here = NODE_NAME_NORM.get(_norm_name(cmd["id"]), ())
             _op_lc = cmd["cmd"].strip().lower()
             _name_cands = [
-                k for k in _name_cands
-                if s.is_visible(k, _memo=_name_memo)
-                or (k == _goal and _op_lc == "why" and k in _exact_here)]
+                node_id for node_id in _name_cands
+                if s.is_visible(node_id, _memo=_name_memo)
+                or (node_id == _goal and _op_lc == "why" and node_id in _exact_here)]
         if len(_name_cands) == 1:
             cmd = dict(cmd, id=_name_cands[0])
         elif len(_name_cands) > 1:
@@ -2490,8 +2490,8 @@ def _agent_dispatch_inner(s, nodes, cmd):
             return {"ok": False,
                     "error": ("more than one thing is called that; say which "
                               "by id: %s%s"
-                              % (", ".join("%s (%s)" % (k, nodes[k]["name"])
-                                           for k in _name_cands[:10]),
+                              % (", ".join("%s (%s)" % (node_id, nodes[node_id]["name"])
+                                           for node_id in _name_cands[:10]),
                                  " and %d more" % (len(_name_cands) - 10)
                                  if len(_name_cands) > 10 else ""))}
         # Otherwise: no match by name either. Fall through with cmd["id"]
@@ -2560,10 +2560,10 @@ def _agent_dispatch_inner(s, nodes, cmd):
                              "nothing tells you what lies beyond that.%s"
                              % ((" Among the things you DO know, did you mean: "
                                  + ", ".join(near)) if near else "")}
-    op = cmd.get("cmd")
+    command = cmd.get("cmd")
     ended = _agent_end_reason(s)
 
-    if op in ("help", "?", "commands"):
+    if command in ("help", "?", "commands"):
         return {"ok": True, "help": _agent_help(s, cmd.get("topic"))}
 
     # One central guard rather than five. A playtester sent {"id": {"a": 1}} and
@@ -2576,13 +2576,13 @@ def _agent_dispatch_inner(s, nodes, cmd):
                          % type(cmd["id"]).__name__}
 
     # NaN and Infinity, anywhere in the command, before anything is touched.
-    bad = sorted(k for k, value in cmd.items() if not _clean(value))
+    bad = sorted(field for field, value in cmd.items() if not _clean(value))
     if bad:
         return {"ok": False,
                 "error": "%s must be a real number; NaN and Infinity are not "
                          "quantities. Nothing was changed." % ", ".join(bad)}
 
-    _handler = _AGENT_DISPATCH_TABLE.get(op)
+    _handler = _AGENT_DISPATCH_TABLE.get(command)
     if _handler is not None:
         return _handler(s, nodes, cmd, ended)
 
@@ -2593,5 +2593,5 @@ def _agent_dispatch_inner(s, nodes, cmd):
     # A help message that is wrong is worse than none, because it is believed.
     return {"ok": False,
             "error": "unknown cmd %r. Use one of: %s. %s"
-                     % (op, ", ".join(KNOWN_COMMANDS),
+                     % (command, ", ".join(KNOWN_COMMANDS),
                         'Or {"cmd":"help"} for what each one does.')}

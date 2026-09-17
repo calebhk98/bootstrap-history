@@ -157,7 +157,7 @@ def _agent_help(s, topic=None):
                 'invocation carries on from exactly where it left off. '
                 'There is no need for a held-open pipe, a FIFO or tmux. '
                 'See {"cmd":"help","topic":"sittings"}.'),
-            "more": {t: '{"cmd":"help","topic":"%s"}' % t for t in HELP_TOPICS},
+            "more": {topic_name: '{"cmd":"help","topic":"%s"}' % topic_name for topic_name in HELP_TOPICS},
         }
 
     if topic in ("commands", "command", "all"):

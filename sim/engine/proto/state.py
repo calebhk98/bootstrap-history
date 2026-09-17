@@ -78,8 +78,8 @@ def _risk_without_the_essays(kr):
     ahead = out.get("known_hazards_ahead")
     if isinstance(ahead, list):
         out["known_hazards_ahead"] = [
-            {k: value for k, value in h.items() if k not in ("note", "what_you_can_do")}
-            for h in ahead if isinstance(h, dict)]
+            {key: value for key, value in hazard.items() if key not in ("note", "what_you_can_do")}
+            for hazard in ahead if isinstance(hazard, dict)]
         out["the_full_account_of_each"] = '{"cmd":"risk"}'
     return out
 
@@ -112,8 +112,8 @@ def _staff_fraction_note(s):
 
 def _waiting_on(s, nodes, k, st, bill):
     """What is ACTUALLY holding this project up, checked against today."""
-    n = nodes[k]
-    frac = min(1.0, 1.0 / max(1.0, n["yrs"]))
+    node = nodes[k]
+    frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
     # WHAT IS LEFT OF EACH TRADE'S TOTAL, not the flat annual figure the
     # project was once billed whether or not it was still owed. See
     # ProjectsMixin.lab_year_draw (projects.py): hired-labour hours are a
@@ -121,7 +121,7 @@ def _waiting_on(s, nodes, k, st, bill):
     # own balance the true ask is smaller than its nominal pace, and saying
     # "short" against the bigger, already-paid-down figure would name a
     # shortfall that no longer exists.
-    lab_left = st.get("lab_left") or n["lab"]
+    lab_left = st.get("lab_left") or node["lab"]
     # TWO DIFFERENT FACTS, NOT ONE. "this society can field 3.5 scribes" and
     # "the scribes here can supply 8,750 but your other work has them booked"
     # used to share one label, "nobody to do the work", and a player with
@@ -134,12 +134,12 @@ def _waiting_on(s, nodes, k, st, bill):
     staffing_short = []
     booked_short = []
     portfolio_demand = s.trade_demand_vs_supply()
-    for t, want in (n["lab"] or {}).items():
-        need = min(want / max(1.0, n["yrs"]), lab_left.get(t, want))
+    for trade, want in (node["lab"] or {}).items():
+        need = min(want / max(1.0, node["yrs"]), lab_left.get(trade, want))
         if need <= 0:
             continue
-        supply = s.hours_you_can_call_on(t)
-        total_demand = portfolio_demand.get(t, {}).get(
+        supply = s.hours_you_can_call_on(trade)
+        total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
         if supply < need or total_demand > supply + 1e-6:
             # The society's CAPACITY is the durable fact and the one a player
@@ -149,12 +149,12 @@ def _waiting_on(s, nodes, k, st, bill):
             if supply < need:
                 staffing_short.append(
                     "%s (wants %.0f hours a year; this society can "
-                    "field %.0f at most)" % (t, need, max(0.0, supply)))
+                    "field %.0f at most)" % (trade, need, max(0.0, supply)))
             elif total_demand > supply + 1e-6:
                 booked_short.append(
                     "%s (wants %.0f hours a year; the %ss here can "
                     "supply %.0f but your other work has them booked)"
-                    % (t, need, t, max(0.0, supply)))
+                    % (trade, need, trade, max(0.0, supply)))
     # BOTH, WHEN BOTH ARE TRUE, NOT JUST THE FIRST ONE FOUND. This loop already
     # knows every trade this project is short on; returning the moment
     # staffing_short had anything in it silently dropped booked_short even
@@ -252,7 +252,7 @@ def _goal_progress_count(s, nodes):
             need = s._goal_closure = closure(nodes, goal)
         except Exception:
             return None
-    return sum(1 for x in need if x in s.done)
+    return sum(1 for node_id in need if node_id in s.done)
 
 
 def _founder_death_info(s):
@@ -282,10 +282,10 @@ def _founder_death_info(s):
     cache = getattr(s, "_founder_death_cache", None)
     if cache is not None:
         return cache
-    for yr, msg in s.log:
+    for year, msg in s.log:
         if "founder dies" in msg.lower():
-            m = re.search(r"aged about (\d+)", msg)
-            cache = {"year": yr, "aged_about": int(m.group(1)) if m else None}
+            match = re.search(r"aged about (\d+)", msg)
+            cache = {"year": year, "aged_about": int(match.group(1)) if match else None}
             s._founder_death_cache = cache
             return cache
     return None
@@ -326,19 +326,19 @@ def _worth_knowing_early(s):
 
 def _agent_state(s, nodes, cmd=None):
     active = {}
-    for k, st in s.active.items():
-        n = nodes[k]
-        bill = st.get("cost_left")
-        _at_risk = st.get("stalled_years", 0)
+    for node_id, progress in s.active.items():
+        node = nodes[node_id]
+        bill = progress.get("cost_left")
+        _at_risk = progress.get("stalled_years", 0)
         if bill is None:
-            bill = max(0.0, s.project_cost(k) - st["spent"])
-        active[k] = {"name": n["name"], "founder_hours_left": round(st["ph_left"], 1),
-                     "founder_hours_total": n["ph"], "years_in_progress": st["yrs"],
-                     "spent": round(st["spent"], 1), "still_to_pay": round(bill, 1),
+            bill = max(0.0, s.project_cost(node_id) - progress["spent"])
+        active[node_id] = {"name": node["name"], "founder_hours_left": round(progress["ph_left"], 1),
+                     "founder_hours_total": node["ph"], "years_in_progress": progress["yrs"],
+                     "spent": round(progress["spent"], 1), "still_to_pay": round(bill, 1),
                      # THE COUNTDOWN, WHERE IT CAN BE SEEN. It ran silently for
                      # three years and then took everything spent.
                      **({"will_be_abandoned_in_years": 4 - _at_risk,
-                         "because_nobody_here_can": st.get("blocked_on_trades")}
+                         "because_nobody_here_can": progress.get("blocked_on_trades")}
                         if _at_risk else {}),
                      # A tester poured 1,200 hours into a project that was
                      # calendar-locked and could not use them, and only noticed by
@@ -354,14 +354,14 @@ def _agent_state(s, nodes, cmd=None):
                      # field three and a half scribes. Telling somebody to
                      # spend hours they cannot spend, for 275 years, is worse
                      # than saying nothing.
-                     "waiting_on": _waiting_on(s, nodes, k, st, bill),
+                     "waiting_on": _waiting_on(s, nodes, node_id, progress, bill),
                      # WHERE THIS YEAR'S HOURS WENT, for this project specifically.
                      # offered is what step() gave it a shot at; effective is
                      # how much of that actually came off founder_hours_left.
                      # The two differ when a trade or the money for it fell
                      # short - see hours_this_year for the whole year's picture.
-                     "hours_offered_this_year": st.get("hours_offered_this_year", 0.0),
-                     "hours_effective_this_year": st.get("hours_effective_this_year", 0.0),
+                     "hours_offered_this_year": progress.get("hours_offered_this_year", 0.0),
+                     "hours_effective_this_year": progress.get("hours_effective_this_year", 0.0),
                      # WHY THIS MUCH, READ BACK FROM THE ALLOCATOR ITSELF.
                      # core.py's step() (5. progress) writes these four onto
                      # the same st dict as it decides each project's share of
@@ -372,25 +372,25 @@ def _agent_state(s, nodes, cmd=None):
                      # agreement between two pieces of code that happen to
                      # compute it the same way. None before the first step()
                      # a fresh project has lived through.
-                     "pool_rank_this_year": st.get("pool_rank_this_year"),
+                     "pool_rank_this_year": progress.get("pool_rank_this_year"),
                      "pool_active_count_this_year":
-                         st.get("pool_active_count_this_year"),
-                     "pool_total_this_year": st.get("pool_total_this_year"),
+                         progress.get("pool_active_count_this_year"),
+                     "pool_total_this_year": progress.get("pool_total_this_year"),
                      "pool_remaining_before_this_year":
-                         st.get("pool_remaining_before_this_year"),
-                     "underfunded_this_year": st.get("underfunded_this_year", False),
+                         progress.get("pool_remaining_before_this_year"),
+                     "underfunded_this_year": progress.get("underfunded_this_year", False),
                      # Only present when it is underfunded, and it says why: a
                      # playtester in deep arrears saw hours offered and none
                      # effective, with nothing anywhere explaining the gap.
-                     "why_underfunded": st.get("why_underfunded"),
+                     "why_underfunded": progress.get("why_underfunded"),
                      # THE PLAYER'S OWN STANDING ORDER, READ BACK FROM THE
                      # SAME PLACE AS THE FOUR ABOVE - None when nothing was
                      # ever directed here, which keeps an undirected
                      # project's reply byte-for-byte what it always was.
                      # See `allocate` and core.py step()'s own comment on
                      # hour_allocations.
-                     "hours_directed_this_year": st.get("hours_directed_this_year"),
-                     "bountied": k in s.bountied}
+                     "hours_directed_this_year": progress.get("hours_directed_this_year"),
+                     "bountied": node_id in s.bountied}
     end_reason = _agent_end_reason(s)
     full = bool((cmd or {}).get("full"))
     end_year = getattr(s, "end_year", s.cfg["start_year"] + s.cfg["horizon_years"])
@@ -443,16 +443,16 @@ def _agent_state(s, nodes, cmd=None):
         "stuck": (None if _agent_end_reason(s) else s.stall_diagnosis()),
         "concerns_you_run": len(getattr(s, "operating", ())),
         "you_know_how_to_run_but_have_not_opened": sum(
-            1 for k in s.done if s.is_venture(k) and k not in s.operating),
+            1 for node_id in s.done if s.is_venture(node_id) and node_id not in s.operating),
         # WHAT THAT IS COSTING YOU, in money, on the main screen. A play tester
         # built twenty concerns, left them all shut for twenty-five years and
         # watched their income sit flat: the per-completion line saying "open
         # it" was one line in a log full of them, and a count of shut shops is
         # not a reason to act. A yearly figure is.
         "shut_concerns_would_earn_a_year": round(sum(
-            nodes[k]["rev"] - nodes[k]["up"] for k in s.done
-            if s.is_venture(k) and k not in s.operating
-            and nodes[k]["rev"] > nodes[k]["up"]), 0) or None,
+            nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in s.done
+            if s.is_venture(node_id) and node_id not in s.operating
+            and nodes[node_id]["rev"] > nodes[node_id]["up"]), 0) or None,
         # THE SAME GAP, for the handful of capabilities whose running()-gated
         # payout is not revenue at all - protection, standing, credit, a
         # staff ceiling - and so never showed up in shut_concerns above. This
@@ -675,7 +675,7 @@ def _agent_state(s, nodes, cmd=None):
             "artisans": s._staff_advice("artisans"),
         },
         "where_the_money_comes_from": s.revenue_sources(),
-        "employees": {t: round(value, 2) for t, value in sorted(s.employees.items()) if value > 0.005},
+        "employees": {trade: round(value, 2) for trade, value in sorted(s.employees.items()) if value > 0.005},
         "employees_total": round(sum(s.employees.values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
             % (s.headcount(), s.headcount() + max(0.0, s.household_room())),
@@ -765,7 +765,7 @@ def _agent_state(s, nodes, cmd=None):
                 and s.scandal < s.cfg["suspicion_danger"]) else None),
         "resource_throttle": round(s.throttle, 3), "throttle_binding": s.binding,
         "forest_ha": round(s.forest_ha, 1),
-        "mine_capacity": {m: round(value, 1) for m, value in s.mine_capacity.items()},
+        "mine_capacity": {material: round(value, 1) for material, value in s.mine_capacity.items()},
         "slaves": s.slaves, "freedmen": s.freedmen,
         "scholars_including_you": round(s.effective_scholars(), 2),
         "founder_ages": not s.cfg.get("immortal", True),
@@ -802,14 +802,14 @@ def _agent_state(s, nodes, cmd=None):
         for field, where in moved.items():
             if field in out:
                 if field == "knowledge_risk":
-                    kr = out[field]
-                    haz = [h["name"] for h in kr.get("known_hazards_ahead", [])
-                           if h.get("in_progress")]
+                    knowledge_risk = out[field]
+                    haz = [hazard["name"] for hazard in knowledge_risk.get("known_hazards_ahead", [])
+                           if hazard.get("in_progress")]
                     out["at_risk"] = {
-                        "technologies_you_could_lose": kr.get("technologies_at_risk"),
-                        "hedged_by": kr.get("hedged_by"),
+                        "technologies_you_could_lose": knowledge_risk.get("technologies_at_risk"),
+                        "hedged_by": knowledge_risk.get("hedged_by"),
                         "happening_now": haz or None,
-                        "hazards_still_ahead": len(kr.get("known_hazards_ahead", [])),
+                        "hazards_still_ahead": len(knowledge_risk.get("known_hazards_ahead", [])),
                         "in_full": '{"cmd":"risk"}'}
                 elif field == "training_pending" and out[field]:
                     out["in_training"] = len(out[field])
@@ -867,12 +867,12 @@ def _log_scrub(s, text):
     if not getattr(s, "fog", False) or not text:
         return text
     memo = {}
-    for k, n in s.nodes.items():
-        nm = n.get("name")
-        if nm and nm in text and not s.is_visible(k, _memo=memo):
+    for node_id, node in s.nodes.items():
+        node_name = node.get("name")
+        if node_name and node_name in text and not s.is_visible(node_id, _memo=memo):
             text = text.replace(
-                nm, "something you have since forgotten"
-                    if k in (getattr(s, "forgotten", None) or {}) else
+                node_name, "something you have since forgotten"
+                    if node_id in (getattr(s, "forgotten", None) or {}) else
                     "something you have not heard of")
     return text
 
@@ -926,18 +926,18 @@ def _agent_log(s, cmd=None):
 
     rows = list(enumerate(log))
     if since is not None:
-        rows = [r for r in rows if r[1][0] >= since]
+        rows = [row for row in rows if row[1][0] >= since]
     if before is not None:
-        rows = [r for r in rows if r[1][0] <= before]
+        rows = [row for row in rows if row[1][0] <= before]
     if only_fail:
-        rows = [r for r in rows if _is_failure_line(r[1][1])]
+        rows = [row for row in rows if _is_failure_line(row[1][1])]
     if find:
         # CHEAP FIRST, then confirmed against what fog actually lets the
         # player see. A search that only matched a name fog is about to
         # redact would otherwise report "3 lines mention X" as proof
         # something called X exists, which is the same leak the visibility
         # guard on `why` exists to close, reached from a different command.
-        rows = [r for r in rows if find in r[1][1].lower()]
+        rows = [row for row in rows if find in row[1][1].lower()]
         if getattr(s, "fog", False):
             # THE RECHECK IS THE EXPENSIVE HALF, one node sweep per candidate
             # line, so a common word over a run's whole history could be
@@ -946,12 +946,12 @@ def _agent_log(s, cmd=None):
             # matches more than this has to narrow the word, the same as a
             # search with no fog concern at all would still have to page.
             _cap = rows[-2000:] if order != "oldest" else rows[:2000]
-            rows = [r for r in _cap if find in _log_scrub(s, r[1][1]).lower()]
+            rows = [row for row in _cap if find in _log_scrub(s, row[1][1]).lower()]
 
     total = len(rows)
     ordered = list(reversed(rows)) if order == "newest" else rows
     page = ordered[offset:offset + limit]
-    entries = [{"year": yr, "what": _log_scrub(s, msg)} for _idx, (yr, msg) in page]
+    entries = [{"year": year, "what": _log_scrub(s, msg)} for _idx, (year, msg) in page]
 
     out = {"ok": True, "count": total,
            "showing": ("nothing" if not entries else
