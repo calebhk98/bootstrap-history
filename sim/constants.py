@@ -84,6 +84,24 @@ _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPOSITORY_ROOT not in sys.path:
     sys.path.insert(0, _REPOSITORY_ROOT)
 
+# ALSO root at sim/ itself, not only the repository. _import_declaring_modules()
+# below lists engine files by their sim/-rooted dotted name (`engine.data`,
+# `engine.economy`) because that is the name the engine itself uses internally
+# (engine/economy.py does `from constants import declare`, a bare, sim/-rooted
+# import - see this file's own REGISTRY comment for why the engine and
+# sim/world/ use two different roots). `python3 sim/constants.py` gets this
+# for free: Python auto-prepends a script's own directory to sys.path. A
+# caller that instead does `from sim import constants` after only rooting at
+# the REPOSITORY (sim/tests/test_constants_burndown.py's own clean-subprocess
+# check does exactly this) does NOT get sim/ on sys.path any other way, so
+# `engine.data`/`engine.economy` silently fail to import there - invisible
+# for as long as `engine.data` declared nothing, and a real undercount the
+# moment a module that declares something (`engine.economy`) is added to the
+# list without this line.
+_SIM_ROOT = os.path.dirname(os.path.abspath(__file__))
+if _SIM_ROOT not in sys.path:
+    sys.path.insert(0, _SIM_ROOT)
+
 # name -> metadata. Declaration order is preserved, which makes the report
 # stable across runs and diffable.
 # ONE REGISTRY, HOWEVER MANY TIMES THIS FILE IS LOADED.
@@ -232,6 +250,7 @@ def _import_declaring_modules():
     # The rule when you add a module that calls declare(): add it here in the
     # same commit, or your numbers do not exist as far as the burndown knows.
     for module in ("engine.data",
+                   "engine.economy",
                    "sim.world.agriculture",
                    "sim.world.demography",
                    "sim.world.transport",
