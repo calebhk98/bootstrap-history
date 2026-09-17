@@ -32,11 +32,35 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
 
-## Confidence
+## Confidence, and what it is actually measuring
 
-- **A** - well attested
-- **B** - probable, scholarly consensus, contested in detail
-- **C** - author's estimate or inference
+`conf` grades **how well the numbers are evidenced**, not how sure you feel.
+It is a provenance scale inherited from `data/prices.json`, and it is about
+where a figure came from.
+
+There is a fourth grade, `D`, because the first round of authoring needed one
+and did not have it. Three agents independently used `C` for two
+incompatible things: "this is my estimate of a real quantity" and "this entry
+should not exist, the thing it describes is not a material." A reader cannot
+tell those apart, and they call for opposite responses - refine the first,
+delete the second.
+
+- **A** - well attested. A measured figure, or one that follows from
+  stoichiometry and physical constants with nothing assumed.
+- **B** - probable. Scholarly consensus, contested in the detail. Or derived,
+  but resting on one stated assumption a reasonable person might set
+  differently - a kiln efficiency, an ore grade.
+- **C** - the author's estimate or inference. Order of magnitude. Honest, and
+  common; most of this data is C and should be.
+- **D** - **placeholder. The entry is wrong in KIND, not merely uncertain in
+  degree.** The thing it describes is not a material, or has no mass, or is a
+  person. The numbers are there to hold the slot and must not be trusted or
+  refined - the entry wants deleting once whatever consumes it is fixed. See
+  `Complaints/28-material-keys-that-are-not-materials.md`.
+
+A `D` is not a worse `C`. It is a different statement: a `C` says *I do not
+know this number well*, a `D` says *this number should not exist*. Refining a
+`D` is wasted work.
 
 ## Worked examples
 

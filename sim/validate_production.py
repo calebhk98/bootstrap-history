@@ -117,8 +117,8 @@ def check(entries, known_materials, known_trades):
                             "reason. Say where the numbers come from in "
                             "physical terms." % where)
 
-        if entry.get("conf") not in ("A", "B", "C"):
-            problems.append("%s: conf must be A, B or C, not %r"
+        if entry.get("conf") not in ("A", "B", "C", "D"):
+            problems.append("%s: conf must be A, B, C or D, not %r"
                             % (where, entry.get("conf")))
 
         for key in outputs:
@@ -220,6 +220,22 @@ def main(argv=None):
     problems = check(entries, known_materials, known_trades) + duplicates
     for problem in problems:
         print("  %s" % problem)
+
+    # conf D IS A DELETION QUEUE, NOT A REFINEMENT QUEUE. It marks an entry
+    # that is wrong in kind - the thing it describes is not a material, has no
+    # mass, or is a person - rather than one whose number is merely uncertain.
+    # Listed separately because the two call for opposite responses and the
+    # first round of authoring had no way to say which it meant.
+    placeholders = sorted(name for name, entry in entries.items()
+                          if entry.get("conf") == "D")
+    if placeholders:
+        print()
+        print("%d entry(s) marked conf D - PLACEHOLDERS, wrong in kind rather "
+              "than uncertain in degree." % len(placeholders))
+        print("These want DELETING once whatever consumes them is fixed, not "
+              "refining:")
+        for name in placeholders:
+            print("   %s" % name)
 
     covered = sum(count for name, count in consumed.items() if name in entries)
     total = sum(consumed.values())

@@ -21,7 +21,7 @@
    "extracted_from": "the slave market (a labour-market institution, not a manufacturing process)",
    "basis": "per skilled slave acquired",
    "yield_basis": "THIS IS A PERSON. This entry deliberately refuses to write a production recipe for a human being - there is no yield_basis in physical-process terms because a trained adult is not smelted or grown on a hectare, and pretending otherwise would put a human life in the same file as pig iron. What sets this price in the societies this simulator models is a LABOUR MARKET: the going rate for slave_unskilled, plus a training premium for the specific skill, plus whatever an owner has already sunk in years of feeding and risk (mortality, escape, manumission, revolt), plus supply shocks this recipe format cannot represent - a war's captives or a famine's debt-bondage move this price far more than any input quantity would. Recorded with empty inputs and extracted_from naming the institution that supplies them, exactly as ore comes from a deposit, purely so the validator has something to check rather than because this is really an extraction. FLAG FOR THE PROJECT (per the task brief): slave_skilled and slave_unskilled belong in a labour-supply/labour-market model - wages, coercion, manumission, natural increase - sitting alongside free labour, not in the materials-and-recipes system that prices iron bars and cloth. Marking personhood 'conf C, author's estimate' is itself the honest signal that this entry should not really live in this file.",
-   "conf": "C"
+   "conf": "D"
   },
   "wheat_kg": {
    "outputs": {
