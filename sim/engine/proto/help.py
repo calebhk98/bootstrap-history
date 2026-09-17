@@ -162,6 +162,18 @@ def _agent_help(s, topic=None):
 
     if topic in ("commands", "command", "all"):
         return {"commands": {
+            "json / compact": "add the word 'json' to almost any command "
+                "(or \"json\":true in a JSON command) to get its reply as "
+                "the raw structured object the game already computes, "
+                "instead of the rendered screen - the same fields, prose "
+                "explanations included, nothing removed. Add 'compact' "
+                "instead (it implies 'json') on 'why', 'state' or 'stuck' "
+                "and those three also gain a small extra set of fields - "
+                "'blocked'/'blocked_by'/'explanation' on 'why', "
+                "'blocked_projects' on 'state', 'blockers' on 'stuck' - "
+                "that say the same thing every one of the plain fields "
+                "already does, just in one shape shared across all three. "
+                "'why loom compact', 'state compact', 'stuck compact'",
             "state": "where you stand; add full:true for every field",
             "available": "what you could begin today, summarised by subject; "
                          "add subject, find, afford, limit/offset, or all:true; "

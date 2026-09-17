@@ -2434,10 +2434,151 @@ assert set(KNOWN_COMMANDS) - {"help"} <= set(_AGENT_DISPATCH_TABLE), (
     % sorted(set(KNOWN_COMMANDS) - {"help"} - set(_AGENT_DISPATCH_TABLE)))
 
 
+# --- COMPACT MODE. See Complaints/35 section 1 and typed.py's own long
+# comment on 'json' vs 'compact' for the shape of the request and why they
+# are two different fields. This is the "compact" half: for the handful of
+# commands whose whole job is explaining why something is blocked, fold
+# their existing reasoning fields - already there, already prose, already
+# read by render.py - into one small, IDENTICALLY SHAPED set of extra keys,
+# so an agent asking "what is blocking me" gets the same answer shape
+# whether it asked `why`, `state` or `stuck`. NOTHING IS REMOVED: every
+# field the plain reply already carried is still there under its original
+# name: `note` for the player narration and `start_blocked_reason` (etc.)
+# for the reasons feed straight into these, alongside them, not instead.
+
+def _flatten_reason_dict(pairs):
+    """{node_id: explanation, ...} -> [{"id":, "explanation":}, ...].
+
+    A handful of replies (`stuck`'s "each_waiting_on" and
+    "each_why_underfunded") key their per-project reasons by node id, which
+    is valid JSON but forces a reader to already know the ids to iterate it.
+    A list an agent can walk without first inspecting the keys costs nothing
+    to also provide - the original dict stays exactly where it was.
+    """
+    if not isinstance(pairs, dict):
+        return []
+    return [{"id": node_id, "explanation": explanation}
+            for node_id, explanation in sorted(pairs.items())]
+
+
+def _compact_why(out):
+    """`why`'s existing fields, plus the one normalised shape a script can
+    check without knowing which of `done`/`active`/`can_start_now` this
+    particular node happened to set.
+    """
+    if not isinstance(out, dict) or not out.get("ok", True):
+        return out
+    status = ("done" if out.get("done") else
+             "active" if out.get("active") else
+             "startable" if out.get("can_start_now") else "blocked")
+    # THE SAME PRIORITY render_why READS IN, top to bottom: the blocked
+    # sentence already covers missing prerequisites (see its own comment in
+    # render.py on why a second "MISSING PREREQUISITES" line is redundant
+    # once it fires), then what an ACTIVE project is waiting on, then why
+    # it is underfunded specifically.
+    explanation = (out.get("start_blocked_reason") or out.get("waiting_on")
+                  or out.get("why_underfunded"))
+    compact = dict(out, status=status, blocked=(status == "blocked"),
+                  blocked_by=out.get("missing_prerequisites") or [])
+    if explanation is not None:
+        compact["explanation"] = explanation
+    return compact
+
+
+def _compact_state(out):
+    """`state`'s (and `step`'s, which is a state reply plus what happened)
+    existing per-project fields, consolidated into one list of what is
+    blocked and why - the same "id/name/explanation" shape `why` and
+    `stuck` also use under compact mode.
+    """
+    if not isinstance(out, dict) or not out.get("ok", True):
+        return out
+    blocked_projects = []
+    for node_id, project in sorted((out.get("active") or {}).items()):
+        if not isinstance(project, dict):
+            continue
+        explanation = project.get("why_underfunded") or project.get("waiting_on")
+        if project.get("will_be_abandoned_in_years") is not None:
+            because = project.get("because_nobody_here_can")
+            abandon_note = ("will be abandoned in %s more year(s): nobody "
+                           "here can %s"
+                           % (project["will_be_abandoned_in_years"],
+                              ", ".join(because) if because else "do this"))
+            explanation = ("%s (%s)" % (explanation, abandon_note)
+                          if explanation else abandon_note)
+        if explanation:
+            blocked_projects.append({"id": node_id, "name": project.get("name"),
+                                    "explanation": explanation})
+    compact = dict(out)
+    if blocked_projects:
+        compact["blocked_projects"] = blocked_projects
+    stall = out.get("stuck")
+    if isinstance(stall, dict) and stall.get("you_are_stuck"):
+        compact["explanation"] = stall["you_are_stuck"]
+    return compact
+
+
+def _compact_stuck(out):
+    """`stuck`'s own list of reasons, normalised the same way `why` and
+    `state` are: one "reason"/"explanation" pair per entry, with the two
+    id-keyed sub-dicts (`each_waiting_on`, `each_why_underfunded`) also
+    offered as lists under "projects" - see _flatten_reason_dict.
+    """
+    if not isinstance(out, dict) or not out.get("ok", True):
+        return out
+    reasons = out.get("what_is_holding_you_up")
+    if not isinstance(reasons, list):
+        return out
+    blockers = []
+    for reason in reasons:
+        if not isinstance(reason, dict):
+            continue
+        entry = {"reason": reason.get("what")}
+        if reason.get("why") is not None:
+            entry["explanation"] = reason["why"]
+        if isinstance(reason.get("each_waiting_on"), dict):
+            projects = _flatten_reason_dict(reason["each_waiting_on"])
+            underfunded = reason.get("each_why_underfunded") or {}
+            for project in projects:
+                if project["id"] in underfunded:
+                    project["also_why_underfunded"] = underfunded[project["id"]]
+            entry["projects"] = projects
+        if reason.get("the_nearest_few") is not None:
+            entry["nearest"] = reason["the_nearest_few"]
+        blockers.append(entry)
+    return dict(out, blockers=blockers)
+
+
+# One table, so a command that has never asked for compact treatment falls
+# through untouched rather than by an accidental omission somewhere below.
+_COMPACT_ENRICHERS = {
+    "why": _compact_why,
+    "state": _compact_state,
+    "step": _compact_state,
+    "stuck": _compact_stuck,
+}
+
+
+def _add_compact_fields(command, out):
+    enrich = _COMPACT_ENRICHERS.get(command)
+    return enrich(out) if enrich else out
+
+
 def _agent_dispatch(s, nodes, cmd):
     """Every reply, in the money of the place you are standing in."""
     _out = _localise_money(_agent_dispatch_inner(s, nodes, cmd), money_word(s.civ))
-    return _localise_words(_out, ((s.civ.get("local_words") or {}).get("pairs")))
+    _out = _localise_words(_out, ((s.civ.get("local_words") or {}).get("pairs")))
+    # COMPACT MODE IS OPT-IN AND ADDITIVE ONLY - see typed.py's own long
+    # comment on the 'compact' word for why it is a field distinct from
+    # 'json'. Applied LAST, after both localisations, so anything it copies
+    # out of the reply (a sentence, a list of ids) already carries the
+    # civilisation's own money word and vocabulary rather than needing a
+    # second pass. Absent, or false, this line does nothing at all, which is
+    # the whole of the byte-identical guarantee for the mode being off - see
+    # sim/tests/test_compact_mode.py.
+    if isinstance(cmd, dict) and cmd.get("compact"):
+        _out = _add_compact_fields(cmd.get("cmd"), _out)
+    return _out
 
 
 def _agent_dispatch_inner(s, nodes, cmd):

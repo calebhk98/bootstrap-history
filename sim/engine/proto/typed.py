@@ -120,6 +120,96 @@ def _absorb_key_colons(rest, flag_keys, value_keys):
     return out
 
 
+# THE AGENT-ORIENTED COMPACT MODE. See Complaints/35 section 1: a player of
+# this game who is itself an AI agent asked for "an explicit agent-oriented
+# compact mode that can return highly structured state without losing the
+# human-readable explanations... I wouldn't rush to remove the prose."
+#
+# THE MACHINERY ALREADY EXISTED, for three commands. `state json`, `risk
+# json` and `portfolio json` each hand-rolled their own scan of the typed
+# words for the literal token "json" and set a "json" field on the command
+# dict; cli.py's own reply loop already reads that field GENERICALLY - "if
+# cmd.get('json'): dump the raw reply; else: render it" - for every command,
+# not just those three, and does so whether the field arrived typed or as a
+# raw {"cmd":...,"json":true} pasted straight from the JSON protocol the
+# game's help text already documents. So typing '{"cmd":"available",
+# "json":true}' at the very same prompt already worked. What was missing was
+# the typed shortcut for everything else: a player (or agent) typing plain
+# words had no way to ask for it on 'available', 'why', 'stuck', 'log', or
+# any of the other twenty-odd read commands without already knowing to hand
+# write JSON.
+#
+# MOST OF THE REPLY ITSELF NEEDED NO CHANGE. Every reply already IS the
+# structured dict the protocol returns - `why`'s "start_blocked_reason",
+# "waiting_on" and "missing_prerequisites", `state`'s "stuck" and
+# "why_underfunded", `stuck`'s own "each_waiting_on" - the reasoning was
+# always a field on the same dict the numbers live on, never a second,
+# separate explanation that only render.py knew how to produce. The one
+# thing render.py does that the raw reply cannot is loop and pad it into a
+# fixed-width table; asking for "json" skips exactly that step and nothing
+# else, so a project cost, its reason for being blocked, and the sentence
+# explaining that reason arrive in the same object, on demand, from a
+# command an agent already knew how to send. 'compact' (see below) goes one
+# step further, for the handful of commands whose whole reason to exist is
+# explaining a block, and gives them all the same small shape for it.
+#
+# 'json' AND 'compact' ARE TWO DIFFERENT THINGS, not one word spelled two
+# ways, because they answer two different questions:
+#
+#   'json'    - a PRESENTATION switch only. It has always meant "show me the
+#               reply this command already computes, raw, instead of
+#               rendering it into the screen" - the reply's own fields are
+#               untouched either way. This is what `state json`, `risk json`
+#               and `portfolio json` already did; it is now every command's
+#               to ask for, not just those three.
+#   'compact' - a CONTENT switch, new. It asks the small set of commands
+#               whose whole job is explaining why something is blocked
+#               ('why', 'state', 'stuck') to ALSO fold their existing
+#               reasoning fields into one small, identically-shaped
+#               "blockers" list - see dispatch.py's _add_compact_fields.
+#               Nothing is removed to make room for it: every field the
+#               plain reply already had is still there, so asking for
+#               'compact' costs nothing if you only wanted 'json'.
+#
+# 'compact' IMPLIES 'json' - an enriched dict is only worth asking for if it
+# is not then immediately flattened back into a table that does not know
+# the new fields exist - so typing 'compact' alone is enough; you do not
+# also have to type 'compact json'.
+_JSON_WORDS = ("json",)
+_COMPACT_WORDS = ("compact",)
+
+
+def _split_json_flag(rest):
+    """rest with any bare 'json'/'compact' token removed, and (want_json,
+    want_compact) for what was found - checked and stripped ONCE, for every
+    command, before that command's own parser ever sees `rest`. Without
+    this, a player typing either documented word in the wrong place lands
+    exactly on the bug _absorb_key_colons was written to stop happening a
+    fourth time: 'available json' has no case above that recognises the bare
+    word "json", so it fell through to the last branch - "a bare word is a
+    subject" - and became a search for a subject literally spelled "json",
+    matching nothing, with no hint that the word had been understood as
+    anything other than mistyped noise. Filtering both out up front, once,
+    means every command's own parser goes on reading exactly the words it
+    always has.
+    """
+    want_json = False
+    want_compact = False
+    kept = []
+    for token in rest:
+        low = str(token).strip().lower()
+        if low in _JSON_WORDS:
+            want_json = True
+            continue
+        if low in _COMPACT_WORDS:
+            want_compact = True
+            continue
+        kept.append(token)
+    if want_compact:
+        want_json = True          # see the block comment just above
+    return kept, want_json, want_compact
+
+
 def parse_typed(line):
     """One typed line -> (command dict, None), or (None, a refusal to show).
 
@@ -159,9 +249,42 @@ def parse_typed(line):
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 
+    # THE OUTPUT-MODE WORDS, STRIPPED ONCE, FOR EVERY COMMAND - see
+    # _split_json_flag's own comment for why this has to happen here, before
+    # any command's own parser reads `rest`, rather than inside each one.
+    rest, want_json, want_compact = _split_json_flag(rest)
     words = [word for word in rest if _typed_number(word) is None]
     nums = [_typed_number(word) for word in rest if _typed_number(word) is not None]
 
+    out, err = _parse_command_body(command, rest, words, nums, want_json)
+    # ONE PLACE BOTH FLAGS ARE APPLIED, for every command this parser has not
+    # already given its own opinion about. `state`, `risk` and `portfolio`
+    # set "json" themselves, always, true or false, because a player reading
+    # their own typed command back (or a test asserting on it) has always
+    # been able to see which way it went; every other command has never
+    # carried the key at all when nobody asked for it, and this preserves
+    # that - "json" only appears here when it is True, so a command with no
+    # json opinion of its own is unaffected byte-for-byte when the word was
+    # never typed. "compact" is never set by any individual command's own
+    # branch, so it is always added here, and only when asked for.
+    if err is None and isinstance(out, dict):
+        if want_json and "json" not in out:
+            out = dict(out, json=True)
+        if want_compact:
+            out = dict(out, compact=True)
+    return out, err
+
+
+def _parse_command_body(command, rest, words, nums, want_json):
+    """The command-specific parsing `parse_typed` delegates to, once the line
+    has been split into a resolved command name, the words, the numbers, and
+    whether 'json' was typed (or implied by 'compact') and already stripped
+    out of `rest`.
+
+    Broken out so that stripping the output-mode words can happen exactly
+    once, upstream of every branch below, instead of duplicated (or missed)
+    in each one - see _split_json_flag.
+    """
     if command in ("money", "values", "materials", "quit", "score"):
         return {"cmd": command}, None
 
@@ -171,10 +294,12 @@ def parse_typed(line):
         return {"cmd": "sell", "material": words[0].lower(), "n": nums[0]}, None
 
     if command == "risk":
-        # 'risk json' prints the raw reply - see 'portfolio json' and
-        # 'state json' just below for the same fix in the same family.
-        return {"cmd": "risk",
-               "json": "json" in [word.lower() for word in words]}, None
+        # 'risk json' (or 'risk compact') prints the raw reply - see
+        # 'portfolio json' and 'state json' just below for the same fix in
+        # the same family. want_json is already the answer: _split_json_flag
+        # stripped the word out of `rest` (and so out of `words`) before
+        # this function was even called.
+        return {"cmd": "risk", "json": want_json}, None
 
     if command == "rush":
         # 'rush' alone starts everything you could begin today; 'rush 5',
@@ -220,16 +345,14 @@ def parse_typed(line):
     if command == "state":
         # 'state full' and 'state full:true' both mean the same thing, and a
         # player who has read the JSON docs will type the second. 'state
-        # json' (in any position, 'state full json' included) prints the
-        # raw reply instead of the rendered screen: every player of this
-        # game is an AI agent parsing text, and several have lost runs to
-        # parsing prose that was never meant to be machine-readable.
+        # json' (in any position, 'state full json' included, and now 'state
+        # compact' too - see _split_json_flag) prints the raw reply instead
+        # of the rendered screen: every player of this game is an AI agent
+        # parsing text, and several have lost runs to parsing prose that was
+        # never meant to be machine-readable.
         low_rest = [word.lower() for word in rest]
         want_full = bool(rest) and low_rest[0].split(":")[0] == "full"
-        out = {"cmd": "state", "full": want_full}
-        if "json" in low_rest:
-            out["json"] = True
-        return out, None
+        return {"cmd": "state", "full": want_full, "json": want_json}, None
 
     if command == "available":
         # 'available' alone is the digest. The rest are the same narrowings the
@@ -413,15 +536,14 @@ def parse_typed(line):
         return {"cmd": "capacity"}, None
 
     if command == "portfolio":
-        # 'portfolio json' prints the raw reply instead of the rendered
-        # table - see _absorb_key_colons's own family of fixes for why this
-        # is scanned across all of `words`, not just rest[0]: a player typing
-        # 'portfolio json' after reading the JSON docs should not have that
-        # silently ignored the way 'state full' once would have been had it
-        # come second. Every player of this game is an AI agent parsing
-        # text, and prose is not a stable interface to parse.
-        return {"cmd": "portfolio",
-               "json": "json" in [word.lower() for word in words]}, None
+        # 'portfolio json' (or 'portfolio compact') prints the raw reply
+        # instead of the rendered table. A player typing that after reading
+        # the JSON docs should not have it silently ignored the way 'state
+        # full' once would have been had it come second - every player of
+        # this game is an AI agent parsing text, and prose is not a stable
+        # interface to parse. want_json is scanned across the whole line
+        # (not just rest[0]) by _split_json_flag, upstream of this function.
+        return {"cmd": "portfolio", "json": want_json}, None
 
     if command == "economy":
         return {"cmd": "economy", "full": "full" in [word.lower() for word in words]}, None

@@ -75,6 +75,11 @@ TOPICS = [
     "complaints_09_16",
     "complaint_13_specialist_supervision",
     "complaints_17_24",
+    # sim/engine/proto/: the agent-oriented compact output mode asked for in
+    # Complaints/35 section 1 - structured state WITHOUT losing the
+    # reason-carrying prose. Includes the byte-identical proof that the
+    # mode-off path is unchanged.
+    "compact_mode",
     "dynamic_wages",
     "economic_levers_inventory",
     "explicit_starting_techs",
