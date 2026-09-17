@@ -311,9 +311,9 @@ check("...while a project with nothing sunk into it gets no discount "
 # somebody. Said now, in the same breath as the figure it qualifies, right
 # when opening is the moment that starts the clock.
 s_ow = sim(capital=1_000_000.0)
-s_ow.done.add("fin_pawnshop")
+s_ow.done.add("fin_restaurant")
 s_ow._done_changed()
-_ow_ok, _ow_msg = s_ow.open_venture("fin_pawnshop")
+_ow_ok, _ow_msg = s_ow.open_venture("fin_restaurant")
 check("opening a revenue-earning concern says it ramps up over time, in "
       "the same success message that quotes the mature figure",
       _ow_ok and str(s_ow.cfg["revenue_ramp_years"]) in _ow_msg
@@ -392,7 +392,7 @@ if _ln2_k:
 # denarii against an opening purse of 400, and a break tester followed the
 # game's own headline advice into CREDIT EXHAUSTED by year 106. The advice is
 # right; the reader needs to know which of it they can act on this year.
-_rav, _, _ = proto([{"cmd": "available", "limit": 4, "offset": 200},
+_rav, _, _ = proto([{"cmd": "available", "limit": 4, "sort": "price", "reverse": True},
                     {"cmd": "available"}])
 check("available says what you could raise for a project",
       _rav[0].get("you_could_raise_for_a_project") is not None

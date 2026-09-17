@@ -614,11 +614,15 @@ check("...while a first-ever settlement, with nothing to extend, says "
 # was lying about what kind of number it was.
 s_nr = sim(capital=100000.0)
 _net_before = S._agent_dispatch(s_nr, NODES, {"cmd": "state"}).get("net_per_year")
+_capital_before_work = s_nr.capital
 _pay_nr, _ = s_nr.work_for_wages("scholar", 1500)
 check("set-up: selling founder-hours for wages actually registers as this "
       "year's wage_hours_this_year",
       s_nr.wage_hours_this_year > 0 and _pay_nr > 0,
       (s_nr.wage_hours_this_year, _pay_nr))
+# Restore cash so this assertion isolates the transient hours counter from
+# the separate, intentional wealth-dependent living-cost calculation.
+s_nr.capital = _capital_before_work
 _after = S._agent_dispatch(s_nr, NODES, {"cmd": "state"})
 check("net_per_year (the 'recurring' figure) does not swing just because "
       "this year's hours were sold for wages",
@@ -633,7 +637,9 @@ check("...while net_after_project_spend - explicitly THIS year's figure - "
 # bug (protocol.py: "THE SAME FIGURE `state` PRINTS").
 s_nr2 = sim(capital=100000.0)
 _money_before = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
+_capital_before_work2 = s_nr2.capital
 s_nr2.work_for_wages("scholar", 1500)
+s_nr2.capital = _capital_before_work2
 _money_after = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
 check("`money`'s net_per_year is insulated from the same one-year swing, "
       "matching `state`'s",

@@ -401,6 +401,10 @@ def _agent_state(s, nodes, cmd=None):
     # pays nothing for a mechanism that has not fired yet - same pattern as
     # _worth_knowing_early just below.
     _wd = s.world_diffusion_report()
+    _standing_revenue = s.revenue_capacity()
+    _standing_upkeep = s.upkeep()
+    _standing_living = s.living_cost(
+        _rev=_standing_revenue, _upkeep=_standing_upkeep)
     out = {
         "year": s.year,
         # HOW MUCH TIME IS LEFT. A weird-play tester ran to the end of a
@@ -497,8 +501,9 @@ def _agent_state(s, nodes, cmd=None):
         # its own docstring ("a lender does not cut your line because you
         # took a job this year") - and this field claimed to be the same
         # kind of number without actually being computed as one.
-        "net_per_year": round(s.revenue_capacity() - s.upkeep() - s.living_cost()
-                              + min(s.living_cost(),
+        "net_per_year": round(_standing_revenue - _standing_upkeep
+                              - _standing_living
+                              + min(_standing_living,
                                     getattr(s, "wages_prepaid", 0.0))
                               - s.mine_operating_cost()
                               - max(0.0, -s.capital) * s.debt_interest_rate(), 1),

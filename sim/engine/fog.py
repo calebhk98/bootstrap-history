@@ -372,17 +372,14 @@ class FogMixin:
         _soon = [r for r in upcoming
                  if r.get("in_progress") or (r["years"][0] - self.year) <= 120]
         _later = [r for r in upcoming if r not in _soon]
-        if _later:
-            for r in _later:
-                r.pop("note", None)
-                r.pop("what_you_can_do", None)
-        upcoming = _soon[:6] + _later
-        if len(_soon) > 6:
-            upcoming = _soon[:6]
-            for r in _soon[6:] + _later:
-                r.pop("note", None)
-                r.pop("what_you_can_do", None)
-                upcoming.append(r)
+        # Full hazard records are large (advice plus historical prose). Keep
+        # only the four nearest actionable records and reduce every later one
+        # to the two fields needed to find it in the chronology.
+        _full = _soon[:4]
+        _compact = _soon[4:] + _later
+        upcoming = _full + [{"name": r["name"], "years": r["years"],
+                             "sacks_a_site": r.get("sacks_a_site", False)}
+                            for r in _compact]
         # Norse hazards do not sack anything, and a playtester watched this
         # advertise a loss risk and recommend a hedge for a full 500 year run in
         # which no sacking could ever occur. Risk you cannot face is not risk.

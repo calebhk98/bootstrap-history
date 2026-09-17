@@ -262,21 +262,21 @@ check("every automatic behaviour has a switch",
 # --- naive B/C: there must be a way to shed the upkeep of a finished work
 s = sim(capital=200000.0)
 s.hire("artisan", 2)
-s.done.add("fin_pawnshop")
+s.done.add("fin_restaurant")
 s._done_changed()
 # OPEN IT FIRST. Upkeep follows what you RUN, not what you know, so a node
 # sitting in `done` has no running cost to stop until you open its doors.
-_ok_open, _why_open = s.open_venture("fin_pawnshop")
+_ok_open, _why_open = s.open_venture("fin_restaurant")
 up_before = s.upkeep()
-ok_mb, _ = s.mothball_work("fin_pawnshop")
+ok_mb, _ = s.mothball_work("fin_restaurant")
 check("a finished work can be shut down to stop its upkeep",
       _ok_open and ok_mb and up_before > 0 and s.upkeep() < up_before,
       "open %s (%s), upkeep %.0f -> %.0f"
       % (_ok_open, _why_open, up_before, s.upkeep()))
 check("shutting a concern down does not make you forget how it worked",
-      "fin_pawnshop" in s.done and "fin_pawnshop" not in s.operating,
-      "done %s operating %s" % ("fin_pawnshop" in s.done,
-                                "fin_pawnshop" in s.operating))
+      "fin_restaurant" in s.done and "fin_restaurant" not in s.operating,
+      "done %s operating %s" % ("fin_restaurant" in s.done,
+                                "fin_restaurant" in s.operating))
 
 # --- the user: hazards must be answerable with technology
 s = sim()
@@ -306,10 +306,11 @@ check("the tree still has a real military branch to test against",
       len(_MIL_NODES) >= 100, len(_MIL_NODES))
 
 s = sim()
+_FOUNDER_MIL_NODES = [k for k in _MIL_NODES if k not in s.granted]
 lev0 = s.military_leverage()
-s.done.add(_MIL_NODES[0])
+s.done.add(_FOUNDER_MIL_NODES[0])
 lev1 = s.military_leverage()
-for k in _MIL_NODES[:25]:
+for k in _FOUNDER_MIL_NODES[:25]:
     s.done.add(k)
 lev25 = s.military_leverage()
 for k in _MIL_NODES:

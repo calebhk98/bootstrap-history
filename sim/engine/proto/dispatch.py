@@ -1009,6 +1009,14 @@ def _cmd_money(s, nodes, cmd, ended):
     _prepaid = min(s.living_cost(), getattr(s, "wages_prepaid", 0.0))
     fixed = (s.upkeep() + s.living_cost() - _prepaid
              + s.mine_operating_cost())
+    _standing_revenue = s.revenue_capacity()
+    _standing_upkeep = s.upkeep()
+    _standing_living = s.living_cost(
+        _rev=_standing_revenue, _upkeep=_standing_upkeep)
+    _standing_prepaid = min(
+        _standing_living, getattr(s, "wages_prepaid", 0.0))
+    _standing_fixed = (_standing_upkeep + _standing_living
+                       - _standing_prepaid + s.mine_operating_cost())
     _ramp, _prac = s.still_ramping(), s.practice_note()
     _mkt = s.goods_market_summary()
     # A PLAYER MUST SEE IT (rome/data/review/COMMODITY_DYNAMISM.md):
@@ -1052,7 +1060,7 @@ def _cmd_money(s, nodes, cmd, ended):
             # swing to -193/yr for exactly one year and back, which is
             # not what "recurring" means.
             "net_per_year": round(
-                s.revenue_capacity() - fixed
+                _standing_revenue - _standing_fixed
                 - max(0.0, -s.capital) * s.debt_interest_rate(), 1),
             "spent_on_projects_last_year": round(getattr(s, "spend_last_year", 0.0), 1),
             # THE SAME FIGURE `state` PRINTS. A break tester read `state`

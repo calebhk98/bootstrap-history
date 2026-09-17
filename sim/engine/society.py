@@ -61,17 +61,18 @@ class SocietyMixin:
         Sqrt-scaled and capped at 1.0, the same shape standing_floor() uses
         for earned work: the FIRST working gun matters enormously to a patron
         shopping for an edge over his rivals, the fortieth barely adds
-        anything he does not already have. Counts DONE, not merely operating
-        - see `has` vs `running` in projects.py - because a fortification
-        design or a powder formula is something a patron's arsenal keeps
-        knowing whether or not you personally still run a workshop on it.
+        anything he does not already have. Counts founder-built DONE nodes,
+        not merely operating nodes or the society's inherited grants. A
+        fortification design or powder formula remains useful after its
+        workshop closes, but Rome's existing army is not the founder's work.
         Reaches 1.0 at 25 nodes, a little over a fifth of the tree's military
         branch, so this cannot be maxed by a token gesture, and cannot be
         maxed by "build everything military" either - both would make the
         branch a strategy unto itself, which the other ~2,700 nodes on the
         way to a transistor should not have to compete with.
         """
-        n = sum(1 for k in self.done if "military" in self.nodes[k].get("traits", ()))
+        n = sum(1 for k in self.done - self.granted
+                if "military" in self.nodes[k].get("traits", ()))
         if n <= 0:
             return 0.0
         return min(1.0, math.sqrt(n / 25.0))
@@ -1384,7 +1385,7 @@ class SocietyMixin:
         return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
 
     def _category_diffusion_index(self, cat):
-        """Plain average of civ_diffusion() across every DONE node in `cat` -
+        """Plain average across every founder-built DONE node in `cat` -
         not revenue-weighted like diffusion_index(): a food category with
         one fully-spread crop and one just-introduced one is honestly "half
         spread", not "mostly spread because the old one earns more" (most
@@ -1392,7 +1393,12 @@ class SocietyMixin:
         determinism reason every other float sum over a set in this file
         uses it.
         """
-        ids = [k for k in self._diffusible_ids(cat) if k in self.done]
+        # Opening-state knowledge is already part of this society; it is not
+        # a founder innovation waiting to diffuse from the household.  Counting
+        # newly explicit inherited grants here both diluted later projects and
+        # treated those grants as if the founder had introduced them.
+        ids = [k for k in self._diffusible_ids(cat)
+               if k in self.done and k not in self.granted]
         if not ids:
             return 0.0
         return sum(self.civ_diffusion(k) for k in sorted(ids)) / len(ids)

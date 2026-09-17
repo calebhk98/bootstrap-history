@@ -68,6 +68,9 @@ TOPICS = [
     "economic_levers_inventory",
     "explicit_starting_techs",
     "realism_part02",
+    "realism_part03",
+    "realism_part04",
+    "realism_part05",
 ]
 
 

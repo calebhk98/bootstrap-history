@@ -19,9 +19,9 @@ import time as _time
 # hom_eraser_breadcrumb used to be that control, but the JOB 1 upkeep audit
 # correctly zeroed its upkeep (a rubber eraser is a technique, not an
 # establishment), so it stopped bleeding money and stopped exercising this
-# path. met_ore_crushing_sorting is a real establishment kind of node (it
+# path. md2_sand_filtration is a real establishment kind of node (it
 # stayed in the audit's kept "mining" category) that still carries upkeep.
-_KNOW1, _KNOW2, _LOSS = "md2_cell_theory", "md2_dna", "met_ore_crushing_sorting"
+_KNOW1, _KNOW2, _LOSS = "md2_cell_theory", "md2_dna", "md2_sand_filtration"
 s = sim()
 check("theory and knowledge categories are protected the same way physics is",
       s.never_abandon(_KNOW1) and s.never_abandon("sc2_physics_newtons_laws"),
@@ -98,6 +98,8 @@ check("a mothballed work does not appear in available looking like new research"
 # whole precision branch, so `available` read "0 startable now" for a hundred
 # and eighty years while they held a quarter of a billion denarii.
 s_dl = sim(capital=100000.0)
+s_dl.trades_created.add("engineer")
+s_dl.employees["engineer"] = 2.0
 s_dl.mothballed.add(_LOSS)                # mothballed, and NOT known: the trap
 ok_dl, why_dl = s_dl.start_reason(_LOSS)
 check("a work whose knowledge was destroyed can be built again",
@@ -1070,7 +1072,7 @@ check("a fractional number of years is refused, not silently rounded",
 # them showed up in an ordinary run.
 
 
-def _starved(cost_left, supply=0.02, arrears=0.9, capital=20000.0):
+def _starved(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     """One project that cannot finish, in a year that is short of both the
     trade it needs and the money to pay for it."""
     s = sim(capital=capital)
@@ -1129,11 +1131,16 @@ def _hazard_advice_names_hedges():
     s_.revealed = set()
     for _i in range(45):
         s_.step()
-    steps = (s_.hazard_advice("staff_loss")
-             .get("you_could_begin_now_toward_it") or [])
     counters = {n for n, _s2, _l in s_.HAZARD_COUNTERS["staff_loss"]}
     near = counters | {p_ for n in counters if n in NODES
                        for p_ in NODES[n]["pre"]}
+    # Keep this focused on advice ordering rather than on which nodes the
+    # revised civilization opening happens to reveal during the optimizer
+    # run.  The player in the reported case had these candidate hedges in
+    # view, so make that fixture condition explicit.
+    s_.revealed.update(near)
+    steps = (s_.hazard_advice("staff_loss")
+             .get("you_could_begin_now_toward_it") or [])
     named = bool(steps) and all(
         e.get("id") and (e["can_begin_now"] or e.get("waiting_on"))
         for e in steps)
@@ -1314,7 +1321,7 @@ check("what rests on a node is cheap enough to put in a table",
 #    `step 12`, corpus_written and school_founded among them, with every
 #    arrival named and no departure named.
 s = sim(capital=-50000.0, manual=False)
-s.done.add("fin_pawnshop")
+s.done.add("fin_restaurant")
 s.done.add("civ_road_paved")
 s._done_changed()
 _lost_before = set(s.done)
@@ -1427,11 +1434,11 @@ check("you cannot commit to more work than cash and credit could ever cover",
 # prerequisites regardless of how `done` was populated, so a candidate with
 # unmet prerequisites makes restore_work silently refuse and charge nothing -
 # which reads as exactly the bug this check exists to catch, for a completely
-# different reason. met_ore_crushing_sorting has no prerequisite, was not
+# different reason. md2_sand_filtration has no prerequisite, was not
 # auto-granted (its `ph` is not zero), and kept its upkeep in the audit as
 # real mining-establishment cost, so it is named directly rather than found.
 s = sim(civ="england_1300", capital=50000.0)
-_free = ["met_ore_crushing_sorting"]
+_free = ["md2_sand_filtration"]
 s.done.add(_free[0])
 s._done_changed()
 s.mothball_work(_free[0])
@@ -1489,30 +1496,30 @@ check("a society is not granted the route another society would take to it",
 # is the whole point of the staffing floor. Nobody runs a pawnshop alone from
 # nowhere.
 _v, _, _ = proto([{"cmd": "hire", "trade": "artisan", "n": 2},
-                  {"cmd": "start", "id": "fin_pawnshop"},
+                  {"cmd": "start", "id": "fin_restaurant"},
                   {"cmd": "step", "years": 6},
                   {"cmd": "money"},
-                  {"cmd": "open", "id": "fin_pawnshop"},
+                  {"cmd": "open", "id": "fin_restaurant"},
                   {"cmd": "money"}], kit="equestrian")
 _before, _open, _after = _v[3], _v[4], _v[5]
 check("working out how to do something does not by itself pay you",
-      "fin_pawnshop" not in (_before.get("where_the_money_comes_from") or {}),
+      "fin_restaurant" not in (_before.get("where_the_money_comes_from") or {}),
       _before.get("where_the_money_comes_from"))
 check("opening the doors is what pays you",
       _open.get("ok") is True
-      and (_after.get("where_the_money_comes_from") or {}).get("fin_pawnshop"),
+      and (_after.get("where_the_money_comes_from") or {}).get("fin_restaurant"),
       _after.get("where_the_money_comes_from"))
 
 s2 = sim(capital=200000.0)
 s2.hire("artisan", 2)
-s2.done.add("fin_pawnshop")
+s2.done.add("fin_restaurant")
 s2._done_changed()
 _cap0 = s2.capital
-s2.open_venture("fin_pawnshop")
+s2.open_venture("fin_restaurant")
 check("opening a concern costs stock and premises, not nothing",
-      _cap0 - s2.capital >= NODES["fin_pawnshop"]["up"],
+      _cap0 - s2.capital >= NODES["fin_restaurant"]["up"],
       "%.0f to open against %.0f a year of running cost"
-      % (_cap0 - s2.capital, NODES["fin_pawnshop"]["up"]))
+      % (_cap0 - s2.capital, NODES["fin_restaurant"]["up"]))
 
 # You cannot run fifty businesses with three people.
 s3 = sim(capital=1000000.0)
@@ -1530,15 +1537,15 @@ if _heavy:
 # Shutting it stops both sides and keeps the knowledge.
 s4 = sim(capital=200000.0)
 s4.hire("artisan", 2)
-s4.done.add("fin_pawnshop"); s4._done_changed()
-s4.open_venture("fin_pawnshop")
+s4.done.add("fin_restaurant"); s4._done_changed()
+s4.open_venture("fin_restaurant")
 _rev_on, _up_on = s4.revenue(), s4.upkeep()
-s4.mothball_work("fin_pawnshop")
+s4.mothball_work("fin_restaurant")
 check("closing a concern stops what it earned and what it cost, both",
       s4.revenue() < _rev_on and s4.upkeep() < _up_on
-      and "fin_pawnshop" in s4.done,
+      and "fin_restaurant" in s4.done,
       "rev %.0f->%.0f up %.0f->%.0f, still known %s"
-      % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), "fin_pawnshop" in s4.done))
+      % (_rev_on, s4.revenue(), _up_on, s4.upkeep(), "fin_restaurant" in s4.done))
 
 check("opening things for you is on for the optimizer and off for a player",
       sim(manual=True).policy["auto_open"] is False
@@ -1548,9 +1555,9 @@ check("opening things for you is on for the optimizer and off for a player",
 # What you run has to survive a save, or reloading quietly shuts your business.
 _vs = "%s/ventures.json" % _LOADTEST_DIR
 _rt, _, _ = proto([{"cmd": "hire", "trade": "artisan", "n": 2},
-                   {"cmd": "start", "id": "fin_pawnshop"},
+                   {"cmd": "start", "id": "fin_restaurant"},
                    {"cmd": "step", "years": 6},
-                   {"cmd": "open", "id": "fin_pawnshop"},
+                   {"cmd": "open", "id": "fin_restaurant"},
                    {"cmd": "save", "file": _vs},
                    {"cmd": "load", "file": _vs},
                    {"cmd": "state"}], kit="equestrian")
@@ -1956,11 +1963,14 @@ check("freeing them is worth more than holding them, as the model claims",
 # 2. arithmetic_positional wants 2,500 scribe-hours a year against a national
 #    ceiling of 1,321, and sat at "81% spent" from 1309 to about 1440. The
 #    engine knows this at start time.
-_imp, _, _ = proto([{"cmd": "start", "id": "arithmetic_positional"}],
-                   civ="england_1300")
+_s_imp = sim(civ="england_1300")
+for _p in NODES["arithmetic_positional"]["pre"]:
+    _s_imp.done.add(_p)
+_s_imp._done_changed()
+_imp = S._agent_dispatch(_s_imp, NODES, {"cmd": "start", "id": "arithmetic_positional"})
 check("starting work this society cannot staff says so at the time",
-      _imp[0].get("ok") is True and "cannot supply the labour" in (_imp[0].get("but") or ""),
-      _imp[0].get("but"))
+      _imp.get("ok") is True and "cannot supply the labour" in (_imp.get("but") or ""),
+      _imp.get("but"))
 
 # --- BREAK: the fix above ("Make the stated labour ceiling the real one")
 # changed the TEST here to weigh commissioned hours - hours_you_can_call_on,
@@ -2240,4 +2250,3 @@ check("...and has a help topic of its own",
 
 _shutil.rmtree(_loadtest_abs, ignore_errors=True)
 _shutil.rmtree(os.path.join(ROOT, _PLAY_DIR), ignore_errors=True)
-

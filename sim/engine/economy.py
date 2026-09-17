@@ -694,7 +694,11 @@ class EconomyMixin:
         # too - both were reading plain revenue() and calling themselves
         # the standing figure, which is exactly what revenue_capacity()
         # exists to be instead.
-        net = (self.revenue_capacity() - self.upkeep() - self.living_cost()
+        standing_revenue = self.revenue_capacity()
+        standing_upkeep = self.upkeep()
+        standing_living = self.living_cost(
+            _rev=standing_revenue, _upkeep=standing_upkeep)
+        net = (standing_revenue - standing_upkeep - standing_living
                - self.mine_operating_cost() - interest)
         if net >= 0:
             return None

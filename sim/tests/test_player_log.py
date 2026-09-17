@@ -131,6 +131,7 @@ s_lm.done.add("tex_power_loom")
 s_lm.done_year["tex_power_loom"] = 100
 s_lm._done_changed()
 s_lm.artisans = s_lm.scholars = 80.0
+s_lm.employees["carpenter"] = 1.0
 s_lm.year = 100
 _ok_lm, _msg_lm = s_lm.open_venture("tex_power_loom")
 check("a power loom can be opened, to exercise what it then earns",
@@ -162,6 +163,7 @@ s_nt.done.add("tex_horizontal_loom")
 s_nt.done_year["tex_horizontal_loom"] = 100
 s_nt._done_changed()
 s_nt.artisans = s_nt.scholars = 20.0
+s_nt.employees["carpenter"] = 1.0
 s_nt.year = 100
 s_nt.open_venture("tex_horizontal_loom")
 s_nt.year = 400
@@ -205,6 +207,7 @@ s_ld.done.add("tex_power_loom")
 s_ld.done_year["tex_power_loom"] = 100
 s_ld._done_changed()
 s_ld.artisans = s_ld.scholars = 80.0
+s_ld.employees["carpenter"] = 1.0
 s_ld.year = 100
 s_ld.open_venture("tex_power_loom")
 s_ld.year = 300
@@ -223,6 +226,7 @@ s_small.done.add("tex_power_loom")
 s_small.done_year["tex_power_loom"] = 100
 s_small._done_changed()
 s_small.artisans = s_small.scholars = 80.0
+s_small.employees["carpenter"] = 1.0
 s_small.year = 100
 s_small.open_venture("tex_power_loom")
 s_small.year = 110      # ten years in - before EITHER market is fully saturated

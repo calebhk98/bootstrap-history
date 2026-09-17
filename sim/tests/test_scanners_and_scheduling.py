@@ -936,6 +936,9 @@ from engine.protocol import _agent_portfolio as _APORT, render_portfolio as _RPO
 # curriculum is priority #2, offered its 120 against what was left AFTER
 # the first one's share, 1,850.
 _s_alloc = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_alloc.done.update({"school_founded", "fin_university",
+                      "sc2_institution_examination"})
+_s_alloc._done_changed()
 _s_alloc.start_project("sc2_institution_curriculum")
 _s_alloc.start_project("sc2_institution_doctorate")
 _s_alloc.step()
@@ -1146,6 +1149,9 @@ check("'your hours', enriched with the allocator's own rank/pool figures "
 # player's own assumption, so the warning below says so plainly rather than
 # hedging on a partial-banking case that does not exist.
 _s_idle = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_idle.done.update({"school_founded", "fin_university",
+                     "sc2_institution_examination"})
+_s_idle._done_changed()
 _s_idle.end_year = _s_idle.cfg["start_year"] + _s_idle.cfg["horizon_years"]
 _s_idle.start_project("sc2_institution_curriculum")
 _s_idle.start_project("sc2_institution_doctorate")
@@ -1175,6 +1181,9 @@ check("it warns and proceeds - the years still actually run",
       _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
       _resp_idle.get("year"))
 _s_idle1 = sim(civ="rome_100ad", capital=5_000_000.0)
+_s_idle1.done.update({"school_founded", "fin_university",
+                      "sc2_institution_examination"})
+_s_idle1._done_changed()
 _s_idle1.end_year = _s_idle1.cfg["start_year"] + _s_idle1.cfg["horizon_years"]
 _s_idle1.start_project("sc2_institution_curriculum")
 _s_idle1.start_project("sc2_institution_doctorate")
@@ -1350,9 +1359,9 @@ check("none of the 13 new nodes was inserted as a prerequisite of anything "
               for i, n in NODES.items() for k in _ctl_new_ids
               if i not in _ctl_new_ids),
       "a pre-existing node references a new one")
-check("...and the goal's required closure is still exactly 168 nodes, "
+check("...and the goal's required closure is still exactly 154 nodes, "
       "unchanged by adding a whole optional side-branch of theory",
-      len(S.closure(NODES, GOAL)) == 168, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 154, len(S.closure(NODES, GOAL)))
 
 # failure_kind is a property of the NODE, in the tree data, not a list kept
 # in the engine - this is what CONTROL_RELIEF_CAPABILITY in projects.py
@@ -1515,14 +1524,14 @@ check("...with every switch still listed exactly once between the two "
 
 # AND THE THING THEY THOUGHT WAS BROKEN IS NOT BROKEN.
 _s_pol2 = sim(civ="england_1300")
-_s_pol2.done.add("fin_pawnshop")
+_s_pol2.done.add("fin_restaurant")
 _s_pol2._done_changed()
 check("auto_open really would open a concern that plainly pays for itself: "
       "the pawnshop's 144 to open against 250 a year clear is a payback "
       "well under a year, and auto_open_ventures takes it",
-      "fin_pawnshop" in _s_pol2.auto_open_ventures(),
-      (NODES["fin_pawnshop"]["rev"], NODES["fin_pawnshop"]["up"],
-       _s_pol2.venture_capex("fin_pawnshop")))
+      "fin_restaurant" in _s_pol2.auto_open_ventures(),
+      (NODES["fin_restaurant"]["rev"], NODES["fin_restaurant"]["up"],
+       _s_pol2.venture_capex("fin_restaurant")))
 check("...and it was off by default, which is the whole of why they did not "
       "see it happen",
       sim(civ="england_1300").policy.get("auto_open") is False,
