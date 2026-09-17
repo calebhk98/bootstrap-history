@@ -1341,8 +1341,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # the ACTUAL civilization's own home ground instead.
 
     def step(self):
-        c = self.cfg
-        yr = self.year
+        cfg = self.cfg
+        year = self.year
         # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED. `state` prints the
         # chance of being denounced from the CURRENT scandal, and scandal moves
         # DURING the step - so a break tester read "scandal 21.9 ... 0% chance
@@ -1418,15 +1418,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # version was tuned against; no single person is ever a third of a
         # casualty.
         _lost = {}
-        for t in sorted(self.household.employees):
-            head = int(round(self.household.employees[t]))
+        for trade_id in sorted(self.household.employees):
+            head = int(round(self.household.employees[trade_id]))
             survivors = sum(1 for _ in range(head) if self.rng.random() >= ATTRITION)
             if head - survivors > 0:
-                _lost[t] = head - survivors
+                _lost[trade_id] = head - survivors
             if survivors > 0:
-                self.household.employees[t] = float(survivors)
+                self.household.employees[trade_id] = float(survivors)
             else:
-                self.household.employees.pop(t)
+                self.household.employees.pop(trade_id)
         # AND SAY SO. Now that a death is a whole person rather than three
         # hundredths of one, it is a thing that HAPPENED, and it was happening
         # in complete silence. A break tester hired five scholars, stepped five
@@ -1436,7 +1436,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # The rate is right (measured at 0.825 survival over five years against
         # 0.837 expected, across forty seeds); the reporting was missing.
         if _lost:
-            self.household.log.append((yr, "you lose %s to death and to better offers"
+            self.household.log.append((year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (n, t, "" if n == 1 else "s")
                                          for t, n in sorted(_lost.items()))))
         self._resync_pools()
@@ -1488,10 +1488,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             short = payroll - can_pay
             gone = 0.0
             # shed, dearest first, until the wages you are left with fit
-            for t in sorted(self.household.employees, key=lambda t: -self.annual_wage(t)):
+            for trade_id in sorted(self.household.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
                     break
-                wage = self.annual_wage(t)
+                wage = self.annual_wage(trade_id)
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
@@ -1501,19 +1501,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # paid. Rounding up sheds one whole person too many at worst,
                 # which is the safe direction for a household that genuinely
                 # cannot make payroll.
-                cut = min(self.household.employees[t], math.ceil(short / wage - 1e-9))
-                self.household.employees[t] -= cut
+                cut = min(self.household.employees[trade_id], math.ceil(short / wage - 1e-9))
+                self.household.employees[trade_id] -= cut
                 short -= cut * wage
                 gone += cut
-                if self.household.employees[t] < 0.5:
-                    self.household.employees.pop(t)
+                if self.household.employees[trade_id] < 0.5:
+                    self.household.employees.pop(trade_id)
             self._resync_pools()
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
             # is more consequential than any of the flavour events that do get
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.household.log.append((yr, "you cannot pay everyone: %.1f of your staff "
+                self.household.log.append((year, "you cannot pay everyone: %.1f of your staff "
                                      "leave for work that pays" % gone))
         # NOT `capital > 0`. This is the same catch-22 auto_open_ventures was
         # already caught by and had fixed: a household in arrears could never
@@ -1623,15 +1623,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # precision_three_plate: not that machinists were never taught, but
             # that the last one died and the top-up had already forgotten they
             # existed.
-            for t in sorted(set(self.household.employees) | set(self.household.trades_created)):
-                if t in ("artisan", "scholar"):
+            for trade_id in sorted(set(self.household.employees) | set(self.household.trades_created)):
+                if trade_id in ("artisan", "scholar"):
                     continue
-                have = self.household.employees.get(t, 0.0)
-                want = max(have, 2.0 if t in self.household.trades_created else 0.0)
+                have = self.household.employees.get(trade_id, 0.0)
+                want = max(have, 2.0 if trade_id in self.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.household.capital > self.annual_wage(t) * 6:
-                    self.household.employees[t] = have + short
-                    self.household.capital -= short * self.annual_wage(t)
+                if short > 0.02 and self.household.capital > self.annual_wage(trade_id) * 6:
+                    self.household.employees[trade_id] = have + short
+                    self.household.capital -= short * self.annual_wage(trade_id)
             self._resync_pools()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY.
         # Letting contracted craftsmen count toward a project's staff
@@ -1655,7 +1655,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _whole = int(self.household.directors_extra)
         if _whole > int(getattr(self.household, "_said_deputies", 0)):
             self.household._said_deputies = _whole
-            self.household.log.append((yr, "you now have %d deput%s directing work in "
+            self.household.log.append((year, "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
@@ -1664,20 +1664,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         # 2. money
         self.economy = self.economy_index()
-        lc = self.living_cost()
+        living_cost = self.living_cost()
         # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN. `hire` takes a
         # finder's fee and the first year's wages up front, and living_cost()
         # carries the whole payroll, so a smith at 281 a year cost 566 in his
         # first year: the advance, then the identical year again at the next
         # step. A break tester found hire-then-fire in one turn burned the
         # advance for no work at all.
-        prepaid = min(lc, self.household.wages_prepaid)
-        lc -= prepaid
+        prepaid = min(living_cost, self.household.wages_prepaid)
+        living_cost -= prepaid
         self.household.wages_prepaid = 0.0
-        self.living_cost_paid += lc
-        mo = self.mine_operating_cost()
-        self.household.mine_cost_paid += mo
-        self.household.capital += self.revenue() - self.upkeep() - lc - mo
+        self.living_cost_paid += living_cost
+        mine_cost = self.mine_operating_cost()
+        self.household.mine_cost_paid += mine_cost
+        self.household.capital += self.revenue() - self.upkeep() - living_cost - mine_cost
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
@@ -1698,17 +1698,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # short and closed again. See reopen_restaffed_ventures's own
         # docstring for why this is not gated by auto_open - three
         # playtesters spent most of a run on the treadmill this closes.
-        self.reopen_restaffed_ventures(yr)
-        self.close_unstaffed_ventures(yr)
+        self.reopen_restaffed_ventures(year)
+        self.close_unstaffed_ventures(year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
         if self.policy.get("auto_open", not self.manual):
             self.auto_open_ventures()
-        self.charge_interest(yr)
+        self.charge_interest(year)
         if self.policy.get("auto_shed", True):
-            self.shed_loss_makers(yr)
-        self.warn_near_the_limit(yr)
-        self.enforce_credit_limit(yr)
+            self.shed_loss_makers(year)
+        self.warn_near_the_limit(year)
+        self.enforce_credit_limit(year)
 
         # INSOLVENCY. A playtester ran to minus 4.12 million denarii over eighty
         # years and nothing whatever happened: no event, no block, no attrition.
@@ -1749,7 +1749,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 self.household.artisans = max(3.0, self.household.artisans * (1.0 - bleed))
                 self.household.scholars = max(1.0, self.household.scholars * (1.0 - bleed * 0.6))
                 if self.household.insolvent_years in (3, 6, 12, 25):
-                    self.household.log.append((yr, "IN ARREARS for %d years: staff are leaving "
+                    self.household.log.append((year, "IN ARREARS for %d years: staff are leaving "
                                          "because you cannot pay them" % self.household.insolvent_years))
                 # ABANDONMENT, and this is what makes insolvency survivable.
                 # The failed Norse run carried 3,920 denarii of upkeep against
@@ -1777,11 +1777,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                      and not self.never_abandon(k)),
                                     key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
                     shed = []
-                    for k in burden:
+                    for node_id in burden:
                         if net >= 0:
                             break
-                        n = self.nodes[k]
-                        net += n["up"] - n["rev"]
+                        node = self.nodes[node_id]
+                        net += node["up"] - node["rev"]
                         # CLOSE IT, DO NOT UNLEARN IT - and above all do not do
                         # both. Discarding from `done` while adding to
                         # `mothballed` produced a state no verb could clear: a
@@ -1794,15 +1794,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                         # they sat on a quarter of a billion denarii. The same
                         # pair of lines was fixed in enforce_credit_limit and in
                         # shed_loss_makers and survived here.
-                        self.household.operating.discard(k)
-                        self.household.mothballed.add(k)   # you can buy it back
-                        shed.append(k)
+                        self.household.operating.discard(node_id)
+                        self.household.mothballed.add(node_id)   # you can buy it back
+                        shed.append(node_id)
                     if shed:
                         # NAME THEM, for the same reason as shed_loss_makers and
                         # the creditors' seizure below: a bare count does not
                         # tell a player what they lost or why it later
                         # reappeared mothballed rather than gone for good.
-                        self.household.log.append((yr, "ABANDONED %d works you could no longer "
+                        self.household.log.append((year, "ABANDONED %d works you could no longer "
                                              "maintain; they have fallen into disrepair: %s"
                                              % (len(shed), ", ".join(shed))))
         else:
@@ -1820,12 +1820,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             if self.household.capital > 6000 and self.household.artisans < 12 and self.running("workshop_first"):
                 got = self.buy_slaves(min(6, int(self.household.capital // 1500)))
                 if got:
-                    self.household.log.append((yr, "bought %d people for the workshop" % got))
+                    self.household.log.append((year, "bought %d people for the workshop" % got))
         if self.policy.get("auto_manumit", not self.manual) and self.household.slaves:
             if self.rng.random() < 0.25:
                 freed = self.manumit(max(1, self.household.slaves // 4))
                 if freed:
-                    self.household.log.append((yr, "freed %d people" % freed))
+                    self.household.log.append((year, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
         if self.output_factor < 1.0:
@@ -1847,14 +1847,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
         # to add a fresh deficit - see _demographic_recovery for why.
-        self._demographic_recovery(yr)
+        self._demographic_recovery(year)
         # Literacy and taught-trade naturalisation move on the same kind of
         # slow, generational clock as population above - see
         # SocietyMixin.advance_society (society.py) for the mechanism. Run
         # here, before 4a2's auto_train reads literate_capacity() below, so
         # a year's schooling gain is visible to this same year's teaching
         # decisions rather than lagging a full step behind them.
-        self.advance_society(yr)
+        self.advance_society(year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
         # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
         # using one) is never built - start_reason refuses it outright -
@@ -1863,11 +1863,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # same measurement usually depends on has moved for the year, so a
         # threshold crossed this year is seen this year rather than lagging
         # a full step behind it.
-        self._check_win_conditions(yr)
+        self._check_win_conditions(year)
 
         # 3. dated shocks
         if self.events:
-            self._shocks(yr)
+            self._shocks(year)
             if self.dead_reason:
                 return
 
@@ -1900,10 +1900,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
-            for k in self.household.active:
-                for t in self.nodes[k]["lab"]:
-                    if _market_supply(t) <= 0.0:
-                        want[t] = want.get(t, 0) + 500
+            for node_id in self.household.active:
+                for trade_id in self.nodes[node_id]["lab"]:
+                    if _market_supply(trade_id) <= 0.0:
+                        want[trade_id] = want.get(trade_id, 0) + 500
             # WORK THE PLAYER COULD START TODAY, not the whole tree. The old
             # test was "direct prerequisites satisfied", which is not "wanted":
             # it looked past cost, staff, state approval and every OTHER trade
@@ -1964,17 +1964,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                         or (_market_supply(t) <= 0.0
                             and self._trade_headcount_pending(t) <= 0.0))
                 return value
-            for k in self.order:
-                if k in self.household.done or k in self.household.active:
+            for node_id in self.order:
+                if node_id in self.household.done or node_id in self.household.active:
                     continue
-                n = self.nodes[k]
+                node = self.nodes[node_id]
                 if not any(_is_gone(t) for t in n["lab"]):
                     continue
-                if not self.start_reason(k, ignore_trade=True)[0]:
+                if not self.start_reason(node_id, ignore_trade=True)[0]:
                     continue
-                for t in n["lab"]:
-                    if _is_gone(t):
-                        want[t] = want.get(t, 0) + 1
+                for trade_id in node["lab"]:
+                    if _is_gone(trade_id):
+                        want[trade_id] = want.get(trade_id, 0) + 1
             # NOT EVERY YEAR. Teaching two of a trade costs about nine hundred
             # of the founder's two thousand hours plus their keep, and once
             # re-teaching a lost trade was possible at all the loop did it
@@ -2002,25 +2002,25 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # A trade for something you might start one day has to come out of
             # what you are actually clearing.
             _spare_tr = self.revenue() - self.upkeep() - self.living_cost()
-            for t, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * self.annual_wage(t)
+            for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
+                _wages = 2.0 * self.annual_wage(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
                     continue
-                _first = t not in self.household.trades_created
-                ok, _msg = self.train(t, 2)
+                _first = trade_id not in self.household.trades_created
+                ok, _msg = self.train(trade_id, 2)
                 # THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
                 # attempt meant a refusal - no room in the household, no hours
                 # left, nobody to teach from - burned the trade's whole
                 # twenty-five years, so the run went on needing machinists and
                 # never asked again.
                 if ok:
-                    _taught[t] = yr
-                    self.household.log.append((yr, "you begin teaching the first %ss this "
-                                         "world has ever had" % t if _first else
+                    _taught[trade_id] = year
+                    self.household.log.append((year, "you begin teaching the first %ss this "
+                                         "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
-                                     "more" % t))
+                                     "more" % trade_id))
 
         # 4a(ii). THE STANDING "WORK" DIRECTIVE. `work` (protocol.py) sells
         # hours for wages the moment a player types it; `allocate` lets them
@@ -2058,7 +2058,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # either went unsold or went somewhere the player never
                 # chose.
                 if _wd - (_already + _got) > 1.0:
-                    self.household.log.append((yr, "DIRECTED HOURS UNUSED: your standing "
+                    self.household.log.append((year, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
                                          "'allocate' changes or clears it"
@@ -2085,7 +2085,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # human or a script. Everything below this block (materials, staff,
         # money, hazards, the calendar) is untouched by `manual` and keeps
         # running exactly as before.
-        if not self.manual and yr >= self.household.credit_frozen_until:
+        if not self.manual and year >= self.household.credit_frozen_until:
             # More directors means more things in hand at once, and a big trained staff
             # lets routine work proceed without the founder watching it.
             # How many things can be in hand at once. I tried doubling this on
@@ -2146,12 +2146,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # tracked count can move, and it is computed once up front
             # (O(active), not O(order)) rather than every iteration.
             _non_bountied_active = len(self.household.active) - len(self.household.bountied & set(self.household.active))
-            for k in candidates:
+            for node_id in candidates:
                 if _non_bountied_active >= max_active:
                     break
-                if not self.can_start(k):
+                if not self.can_start(node_id):
                     continue
-                n = self.nodes[k]
+                node = self.nodes[node_id]
                 # do not start something we cannot plausibly fund this decade.
                 # material_cost_factor is geography.json's contribution: a
                 # located material (mat_gutta_percha and the like) costs more
@@ -2180,9 +2180,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # identical number, rather than risking the two quietly
                 # drifting apart.
                 room = self.funding_capacity() - self.committed_spend()
-                if self.project_cost(k) > room:
+                if self.project_cost(node_id) > room:
                     continue
-                if k in self.bounty_set and self.bounty_eligible(k) and self.post_bounty(k):
+                if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
                     # post_bounty() just added k to both self.household.active and
                     # self.household.bountied - the count of NON-bountied active
                     # projects is unchanged.
@@ -2191,9 +2191,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # start_project (projects.py) sets it at creation rather than
                 # leaving lab_year_draw to guess it from ph_left the first
                 # time it runs - see the comment there.
-                self.household.active[k] = dict(ph_left=float(n["ph"]), yrs=0.0, spent=0.0,
-                                      cost_left=self.project_cost(k),
-                                      lab_left=dict(n["lab"]))
+                self.household.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
+                                      cost_left=self.project_cost(node_id),
+                                      lab_left=dict(node["lab"]))
                 _non_bountied_active += 1
 
         # 4c. materials. Buy the woodland and dig the beds BEFORE the shortage
@@ -2291,7 +2291,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 spend = min(self.household.capital * 0.05, 2000)
                 self.household.capital -= spend
                 self.household.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
-                self.household.log.append((yr, "laid down %d square metres of nitre bed "
+                self.household.log.append((year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
         if thr < 0.6 and self.household.binding:
@@ -2299,7 +2299,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # work at 5% of plan" for thirty years and could not find out what
             # saltpetre was for, who wanted it, or what would fix it. A number
             # that low with no remedy attached reads as the game being stuck.
-            self.household.log.append((yr, "SHORT OF %s: work running at %d%% of plan. %s"
+            self.household.log.append((year, "SHORT OF %s: work running at %d%% of plan. %s"
                              % (self.household.binding.upper(), thr * 100,
                                 self.shortage_remedy(self.household.binding))))
 
@@ -2333,10 +2333,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _active_left = set(self.household.active)
         rank = {}
         if _active_left:
-            for i, k in enumerate(self.order):
-                if k in _active_left:
-                    rank[k] = i
-                    _active_left.discard(k)
+            for i, node_id in enumerate(self.order):
+                if node_id in _active_left:
+                    rank[node_id] = i
+                    _active_left.discard(node_id)
                     if not _active_left:
                         break
         # A STANDING ALLOCATION IS A PROMISE, NOT A PRIORITY BID. Without
@@ -2398,13 +2398,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # what this loop actually handed out.
         _pool_total_this_year = pool
         _pool_active_count_this_year = len(active_sorted)
-        for _pool_rank, k in enumerate(active_sorted, start=1):
-                st = self.household.active[k]
-                n = self.nodes[k]
-                st["pool_total_this_year"] = _pool_total_this_year
-                st["pool_active_count_this_year"] = _pool_active_count_this_year
-                st["pool_rank_this_year"] = _pool_rank
-                st["pool_remaining_before_this_year"] = round(remaining, 1)
+        for _pool_rank, node_id in enumerate(active_sorted, start=1):
+                project_state = self.household.active[node_id]
+                node = self.nodes[node_id]
+                project_state["pool_total_this_year"] = _pool_total_this_year
+                project_state["pool_active_count_this_year"] = _pool_active_count_this_year
+                project_state["pool_rank_this_year"] = _pool_rank
+                project_state["pool_remaining_before_this_year"] = round(remaining, 1)
                 # IS THERE ANYBODY TO DO THE WORK? If a trade this project needs
                 # has vanished since it started (the machinists you taught died
                 # out, say), nothing can be done on it this year, and your own
@@ -2432,42 +2432,42 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # lab_left made this trade a non-issue. Two places answering
                 # "does this project still need this trade" differently; this
                 # makes the stall check agree with the one that draws the hours.
-                _lab_left = st.get("lab_left")
+                _lab_left = project_state.get("lab_left")
                 if _lab_left is None:
-                    _lab_left = n["lab"]
+                    _lab_left = node["lab"]
                 blocked = [t for t, want in n["lab"].items()
                            if want > 0 and _lab_left.get(t, want) > 0
                            and self.market_supply(t) <= 0.0]
                 if blocked:
-                    st["stalled_years"] = st.get("stalled_years", 0) + 1
-                    st["blocked_on_trades"] = blocked
-                    if st["stalled_years"] >= 4:
-                        self.household.log.append((yr, "HALTED %s: there is nobody here who can "
+                    project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
+                    project_state["blocked_on_trades"] = blocked
+                    if project_state["stalled_years"] >= 4:
+                        self.household.log.append((year, "HALTED %s: there is nobody here who can "
                                              "do this work (%s). What you spent is lost"
-                                         % (k, ", ".join(blocked[:2]))))
-                        self.household.active.pop(k, None)
-                        self.household.bountied.discard(k)
+                                         % (node_id, ", ".join(blocked[:2]))))
+                        self.household.active.pop(node_id, None)
+                        self.household.bountied.discard(node_id)
                     else:
                         # WARN BEFORE THE MONEY GOES. Six projects were wiped in
                         # one year for a play tester who had no way to list what
                         # was at risk: the countdown ran silently for three years
                         # and then took everything spent. Say it each year, with
                         # the number of years left and what would fix it.
-                        _left = 4 - st["stalled_years"]
-                        self.household.log.append((yr, "%s cannot go on: no %s here. It has "
+                        _left = 4 - project_state["stalled_years"]
+                        self.household.log.append((year, "%s cannot go on: no %s here. It has "
                                              "%d year%s before it is abandoned and "
                                              "what you spent on it is lost. Teach "
                                              "the trade, or 'stop %s' now and keep "
                                              "your hours"
-                                         % (k, " or ".join(blocked[:2]), _left,
-                                            "" if _left == 1 else "s", k)))
+                                         % (node_id, " or ".join(blocked[:2]), _left,
+                                            "" if _left == 1 else "s", node_id)))
                         # Nothing happened here this year - say so, rather than
                         # leaving last year's hours_offered/effective sitting on
                         # the entry looking like they still applied.
-                        st["hours_offered_this_year"] = 0.0
-                        st["hours_effective_this_year"] = 0.0
+                        project_state["hours_offered_this_year"] = 0.0
+                        project_state["hours_effective_this_year"] = 0.0
                     continue
-                st["stalled_years"] = 0
+                project_state["stalled_years"] = 0
                 # project_hour_pace (projects.py) is this same formula, read
                 # rather than re-derived, so 'work's own pre-sale warning
                 # about starving an active project can never disagree with
@@ -2483,9 +2483,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # (active_sorted, above) and that an undirected project
                 # never crowds this one out of the share the player asked
                 # for it to have.
-                _dir_hours = self.household.hour_allocations.get(k)
-                _pace_cap = self.project_hour_pace(k)
-                _project_throttle = self.project_resource_throttle(k)
+                _dir_hours = self.household.hour_allocations.get(node_id)
+                _pace_cap = self.project_hour_pace(node_id)
+                _project_throttle = self.project_resource_throttle(node_id)
                 if _dir_hours and _dir_hours > 0:
                     per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
                 else:
@@ -2502,8 +2502,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # progress bar reading "-67% of your hours spent", with
                 # founder_hours_left larger than founder_hours_total. You cannot
                 # be refunded work you never did.
-                spent_hours = min(per, st["ph_left"])
-                st["ph_left"] = max(0.0, st["ph_left"] - per)
+                spent_hours = min(per, project_state["ph_left"])
+                project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
                 self.director_hours_spent_founder += per if self.founder_alive else 0
                 # Hours OFFERED this year vs hours that actually did anything.
                 # `refunded` tracks the difference: hours credited back to
@@ -2513,13 +2513,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # "confusing and feels artificial" - it was: nothing told them
                 # `per` had been offered in full and half of it handed straight
                 # back. See hours_this_year in `state`.
-                st["hours_offered_this_year"] = round(per, 1)
+                project_state["hours_offered_this_year"] = round(per, 1)
                 # WHAT THE PLAYER ACTUALLY ASKED FOR, READ BACK AT THE END OF
                 # THE YEAR - `portfolio` and `why` print this field verbatim,
                 # same reasoning as pool_total_this_year and its neighbours
                 # just above: never recompute a number a player is told,
                 # always read the one this loop actually used.
-                st["hours_directed_this_year"] = (round(_dir_hours, 1)
+                project_state["hours_directed_this_year"] = (round(_dir_hours, 1)
                                                   if _dir_hours else None)
                 # SAY SO WHEN THE PROMISE ITSELF WAS NOT KEPT, before any
                 # trade or money shortfall even has a chance to bite further
@@ -2533,31 +2533,31 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
                     if (_project_throttle < 0.98 and self.household.binding
                             and _pace_cap >= _dir_hours - 0.5):
-                        _directed_hours_unused.append((k, round(_dir_hours - per, 0),
+                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                             "a shortage of %s has every project (this one "
                             "included) running at %d%% of the pace its "
                             "hours alone would allow"
                             % (self.household.binding, round(_project_throttle * 100))))
                     elif _pace_cap * _project_throttle < _dir_hours - 0.5:
-                        _directed_hours_unused.append((k, round(_dir_hours - per, 0),
+                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                             "its own pace this year - at most %s hours, set "
                             "by how much of it is left to do or its "
                             "calendar floor, not by your hours - could not "
                             "use the rest" % "{:,.0f}".format(
                                 _pace_cap * _project_throttle)))
                     else:
-                        _directed_hours_unused.append((k, round(_dir_hours - per, 0),
+                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                             "your other standing allocations and active "
                             "work already claimed the rest of this year's "
                             "%s hours before this one's turn came"
                             % "{:,.0f}".format(_pool_total_this_year)))
                 refunded = 0.0
-                st["yrs"] += 1
-                frac = min(1.0, 1.0 / max(1.0, n["yrs"]))
+                project_state["yrs"] += 1
+                frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
                 # Diagnostic callers can construct active-project dictionaries
                 # directly, so initialise an omitted bill defensively.
-                if st.get("cost_left") is None:
-                    st["cost_left"] = max(0.0, self.project_cost(k) - st["spent"])
+                if project_state.get("cost_left") is None:
+                    project_state["cost_left"] = max(0.0, self.project_cost(node_id) - project_state["spent"])
                 # LABOUR BY TRADE. The old model pooled every trade into one
                 # bucket of hired hours, so 450 hours of engineer and 450 hours
                 # of labourer were the same resource. They are not, and the wage
@@ -2568,11 +2568,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # See ProjectsMixin.lab_year_draw (projects.py) for the finding
                 # that forced this and the reasoning behind the new shape; this
                 # call site only has to act on what it returns.
-                hh, worst, frac, _abandon = self.lab_year_draw(k, st, frac, hired_left)
+                hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
                 if _abandon:
-                    self.household.log.append((yr, "ABANDONED %s: %s" % (k, _abandon)))
-                    self.household.active.pop(k, None)
-                    self.household.bountied.discard(k)
+                    self.household.log.append((year, "ABANDONED %s: %s" % (node_id, _abandon)))
+                    self.household.active.pop(node_id, None)
+                    self.household.bountied.discard(node_id)
                     continue
                 if worst < 1.0:
                     # NEVER ALL OF IT. The refund says "hours offered but not
@@ -2591,7 +2591,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     give_back = min(spent_hours - refunded,
                                     per * 0.4 * (1.0 - worst),
                                     spent_hours * (1.0 - worst))
-                    st["ph_left"] += max(0.0, give_back)
+                    project_state["ph_left"] += max(0.0, give_back)
                     refunded += max(0.0, give_back)
                     # Remember it. A tester sat on 696,350 denarii watching three
                     # projects report waiting_on "money" with 2.3, 84 and 158
@@ -2601,9 +2601,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # mechanic was right and the label was a lie. (short_of_trade
                     # itself is now set inside lab_year_draw, against the same
                     # pace this comment describes.)
-                if hh > hired_left:
-                    frac *= hired_left / max(hh, 1e-9)
-                    hh = hired_left
+                if hired_hours > hired_left:
+                    frac *= hired_left / max(hired_hours, 1e-9)
+                    hired_hours = hired_left
                 # THE INSTALMENT IS WHAT A CONSTRAINED YEAR CAN DO; THE BILL IS
                 # WHAT IS LEFT. This used to work the payment out first and then
                 # multiply it by each shortage in turn, so once the remaining
@@ -2615,8 +2615,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # twenty-five years with cash in hand and no idea why. Working
                 # it out from the already-scaled `frac` means a shortage sets
                 # how FAST you can pay and never stops the last payment landing.
-                money = min(st["cost_left"], self.project_cost(k) * frac)
-                hired_left -= hh
+                money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
+                hired_left -= hired_hours
                 # You may spend into debt, up to what someone will lend you, and
                 # no further. Beyond that the work simply does not get paid for
                 # this year, and a year nobody was paid for is a year of little
@@ -2676,9 +2676,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # above. See spent_hours: you cannot be refunded work you
                     # never did, and you cannot be refunded the same hour twice.
                     give_back = min(spent_hours - refunded, per * (1.0 - funded_frac))
-                    st["ph_left"] += max(0.0, give_back)
+                    project_state["ph_left"] += max(0.0, give_back)
                     refunded += max(0.0, give_back)
-                    st["underfunded_this_year"] = True
+                    project_state["underfunded_this_year"] = True
                     # WHY, not just that. A playtester ran deep into debt and
                     # watched every project report hours "offered" and none
                     # "effective", with nothing in help, why, money or risk
@@ -2686,7 +2686,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # may draw on is what you hold plus part of your credit,
                     # less what your fixed costs need, and in arrears that is
                     # nothing at all.
-                    st["why_underfunded"] = (
+                    project_state["why_underfunded"] = (
                         "in arrears: after fixed costs there is nothing left to "
                         "draw on, so the hours offered this year did almost "
                         "nothing" if self.household.capital < 0 else
@@ -2699,14 +2699,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # arrears case, only if it actually cost real hours) and
                     # logged once below, after the loop.
                     if self.household.capital < 0 and give_back > 1.0:
-                        _arrears_hours_lost.append((k, round(give_back, 0)))
+                        _arrears_hours_lost.append((node_id, round(give_back, 0)))
                 else:
-                    st.pop("underfunded_this_year", None)
-                    st.pop("why_underfunded", None)
+                    project_state.pop("underfunded_this_year", None)
+                    project_state.pop("why_underfunded", None)
                 self.household.capital -= money
                 self.household.total_spend += money
-                st["spent"] += money
-                st["cost_left"] = max(0.0, st["cost_left"] - money)
+                project_state["spent"] += money
+                project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
                 # spent_hours, NOT per. `per` is what was OFFERED, and it is
                 # allowed to exceed the hours the project actually had left; the
                 # refunds above are capped at spent_hours for exactly that
@@ -2715,8 +2715,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # a year for four consecutive years while founder_hours_left sat
                 # unchanged at 112.8 - work reported that provably did not
                 # happen, about the one resource the whole game is built on.
-                st["hours_effective_this_year"] = round(max(0.0, spent_hours - refunded), 1)
-                hours_effective_total += st["hours_effective_this_year"]
+                project_state["hours_effective_this_year"] = round(max(0.0, spent_hours - refunded), 1)
+                hours_effective_total += project_state["hours_effective_this_year"]
                 # THE SECOND WAY A DIRECTIVE GOES UNHONOURED: OFFERED, THEN
                 # HANDED BACK. Unlike the check above this one, it must NOT
                 # fire just because spent_hours fell short of `per` - a
@@ -2728,7 +2728,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # above ever write - so this can only ever name a real
                 # shortfall, never mistake "it finished" for one.
                 if _dir_hours and _dir_hours > 0:
-                    _inner_gap = st["hours_offered_this_year"] - st["hours_effective_this_year"]
+                    _inner_gap = project_state["hours_offered_this_year"] - project_state["hours_effective_this_year"]
                     # DEEP ARREARS ALREADY GETS ITS OWN LINE, BELOW - "IN
                     # ARREARS: ... did almost nothing this year" - and it is
                     # the sharper warning of the two. Saying the same
@@ -2738,13 +2738,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     # purse-can-only-absorb-so-much-a-year pace, which is
                     # real money trouble without capital actually being
                     # negative).
-                    if _inner_gap > 1.0 and st.get("why_underfunded") and self.household.capital >= 0:
+                    if _inner_gap > 1.0 and project_state.get("why_underfunded") and self.household.capital >= 0:
                         _directed_hours_unused.append(
-                            (k, round(_inner_gap, 0), st["why_underfunded"]))
-                    elif _inner_gap > 1.0 and st.get("short_of_trade"):
-                        _directed_hours_unused.append((k, round(_inner_gap, 0),
+                            (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
+                    elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
+                        _directed_hours_unused.append((node_id, round(_inner_gap, 0),
                             "trade hours already booked: " + ", ".join(
-                                sorted(st["short_of_trade"])[:2])))
+                                sorted(project_state["short_of_trade"])[:2])))
                 # Count it HERE, after the hired-hours scaling and the
                 # affordability clamp, not before them. Accumulating the
                 # notional figure made project_spend_last_year disagree with
@@ -2755,7 +2755,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # expected_calendar_years (projects.py) needs the identical
                 # figure to project retries honestly, and a rule living in
                 # two places is how this kind of arithmetic drifts apart.
-                floor = self.calendar_floor(k)
+                floor = self.calendar_floor(node_id)
                 # THE BILL HAS TO BE PAID. Hours done and years elapsed are not
                 # enough; if the money never arrived, the thing was never built.
                 # HALF AN HOUR IS NOTHING LEFT TO DO. The give-back hands back a
@@ -2766,12 +2766,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # sense except the comparison. The bill already had this exact
                 # fix and this exact reason (see `money` just above, and
                 # cost_left <= 0.5 on the same line); hours never got it.
-                if st["ph_left"] < 0.5:
-                    st["ph_left"] = 0.0
-                if st["ph_left"] <= 0 and st["yrs"] >= floor and st["cost_left"] <= 0.5:
-                    self._complete(k)
-                elif st["ph_left"] <= 0 and st["yrs"] >= floor and st["cost_left"] > 0.5:
-                    st["waiting_on_money"] = True
+                if project_state["ph_left"] < 0.5:
+                    project_state["ph_left"] = 0.0
+                if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
+                    self._complete(node_id)
+                elif project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] > 0.5:
+                    project_state["waiting_on_money"] = True
 
         # ARREARS COSTS YOU THE YEAR'S HOURS, NOT JUST THE MONEY - SAY SO. This
         # is the Rome playtester's sharpest complaint: "the arrears mechanic
@@ -2788,7 +2788,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _total_lost = sum(h for _, h in _arrears_hours_lost)
             _names = ", ".join("%s (%s hr)" % (k, "{:,.0f}".format(h))
                                 for k, h in _arrears_hours_lost)
-            self.household.log.append((yr, "IN ARREARS: %s founder-hours meant for %s did "
+            self.household.log.append((year, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
                                  "- that time does not come back, arrears or not. "
                                  "'work' sells idle hours for wages instead of "
@@ -2806,7 +2806,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # several projects can be cut short in the same year.
         if _directed_hours_unused:
             for _node_id, _hr, _why in sorted(_directed_hours_unused):
-                self.household.log.append((yr, "DIRECTED HOURS UNUSED: you allocated hours "
+                self.household.log.append((year, "DIRECTED HOURS UNUSED: you allocated hours "
                                      "to %s this year that it could not use - "
                                      "%s of them went begging because %s. "
                                      "'portfolio' shows the rest; 'allocate' "
@@ -2918,7 +2918,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _band = int(self.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
                 self.household._said_eminence = _band
-                self.household.log.append((yr, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.household.log.append((year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
@@ -2936,7 +2936,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # causes and the eminence-driven one further down are never
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
-        self._state_pressure(yr)
+        self._state_pressure(year)
         self.household.scandal *= 0.90
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot
@@ -2959,12 +2959,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # same screen where eminence carefully explains that it is "dangerous
         # above 26 ... 0% chance the run ENDS this year". Two hazards of the
         # same shape, one of them legible.
-        _sd = c["suspicion_danger"]
+        _sd = cfg["suspicion_danger"]
         if self.household.scandal > _sd * 0.75:
             _band = int(self.household.scandal / max(1.0, _sd * 0.15))
             if _band > int(getattr(self.household, "_said_scandal", 0)):
                 self.household._said_scandal = _band
-                self.household.log.append((yr, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+                self.household.log.append((year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
@@ -2974,31 +2974,31 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                     100.0 * max(0.0, (self.household.scandal - _sd) / 60.0))))
         elif self.household.scandal < _sd * 0.5:
             self.household._said_scandal = 0
-        if self.events and self.household.scandal > c["suspicion_danger"]:
-            p = (self.household.scandal - c["suspicion_danger"]) / 60.0
-            if self.rng.random() < p:
+        if self.events and self.household.scandal > cfg["suspicion_danger"]:
+            probability = (self.household.scandal - cfg["suspicion_danger"]) / 60.0
+            if self.rng.random() < probability:
                 self._catastrophe("denounced: %s" % ("as a sorcerer" if self.w["w_magic_fear"] > 0.5
                                                      else "as a subversive"))
         # The eminence hazard is separate and unbribable. Its usual outcome is a
         # bad year rather than a death: a confiscation, a patron destroyed in
         # someone else's quarrel, a forced withdrawal from public life.
-        if self.events and self.household.eminence > c["eminence_danger"]:
-            p = (self.household.eminence - c["eminence_danger"]) / 90.0
-            if self.rng.random() < p:
+        if self.events and self.household.eminence > cfg["eminence_danger"]:
+            probability = (self.household.eminence - cfg["eminence_danger"]) / 90.0
+            if self.rng.random() < probability:
                 roll = self.rng.random()
                 if roll < 0.45:
                     take = self.household.capital * 0.55
                     self.household.capital -= take
                     self.household.reputation = max(0.0, self.household.reputation - 18)
                     self.household.eminence *= 0.45
-                    self.household.log.append((yr, "PROMINENCE: property confiscated, %d den lost, "
+                    self.household.log.append((year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < 0.80:
                     for pat in ("patron_imperial", "patron_senatorial"):
                         if pat in self.household.done:
                             self.household.done.discard(pat)
                             self._done_changed()
-                            self.household.log.append((yr, "PROMINENCE: your patron is destroyed in "
+                            self.household.log.append((year, "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
                     self.household.eminence *= 0.5
@@ -3020,7 +3020,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             if self.household.bondage_years_left <= 0:
                 self.household.bondage_years_left = 0.0
                 self.household.bondage_debt = 0.0
-                self.household.log.append((yr, "your term is served and the debt is discharged; "
+                self.household.log.append((year, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
         # 7. founder mortality
@@ -3040,8 +3040,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # and with none the programme dissolves over twelve years - but
                 # nothing ever told the player either half of that.
                 _dep = self.household.directors_extra
-                self.household.log.append((yr, "THE FOUNDER DIES, aged about %d. %s"
-                                 % (self.cfg["founder_arrival_age"] + yr
+                self.household.log.append((year, "THE FOUNDER DIES, aged about %d. %s"
+                                 % (self.cfg["founder_arrival_age"] + year
                                     - self.cfg["start_year"],
                                     ("Your %.1f deputies direct the work in your "
                                      "name and the programme goes on without you: "
@@ -3065,16 +3065,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # invocation. Every figure this project has reported was, strictly,
                 # unreproducible.
                 if losable:
-                    for k in self.rng.sample(losable, max(1, len(losable) // 6)):
-                        self.household.operating.discard(k)
-                        self.household.done.discard(k)
+                    for node_id in self.rng.sample(losable, max(1, len(losable) // 6)):
+                        self.household.operating.discard(node_id)
+                        self.household.done.discard(node_id)
                         self._done_changed()
             # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT. Twelve years of a
             # dissolving programme passed with nothing said but the shedding
             # itself, so a tester read the losses as unexplained and the run as
             # merely unlucky rather than finished.
             if self.household.stalled in (3, 6, 9, 11):
-                self.household.log.append((yr, "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                self.household.log.append((year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
                                      "since the founder died with no deputy to "
                                      "take over. What you built is being "
                                      "forgotten. The run ends at twelve."
@@ -3087,7 +3087,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         # 8. random events
         if self.events and not self.dead_reason:
-            self._random_events(yr)
+            self._random_events(year)
 
         self.year += 1
 

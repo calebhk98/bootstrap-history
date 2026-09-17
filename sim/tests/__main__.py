@@ -95,6 +95,9 @@ TOPICS = [
     # for why, and sim/world/__init__.py for the package as a whole. Also
     # unittest.TestCase-style.
     "demography",
+    # Guards the two silent bugs that made --burndown print "0 numbers
+    # declared" while 32 were declared, which left milestone 1 unmeasurable.
+    "constants_burndown",
     # Pins Complaints/31: the price solver's resolvability pass refuses
     # every recipe cycle, including the axe/iron example its own docstring
     # uses. Written as assertions on the CURRENT wrong behaviour so the

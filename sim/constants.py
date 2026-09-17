@@ -69,7 +69,19 @@ that is the most important thing to know about it.
 """
 import argparse
 import collections
+import os
 import sys
+
+# Root the imports at the REPOSITORY, not at sim/, so a module that calls
+# declare() can be reached by its full dotted name (sim.world.agriculture)
+# regardless of how this file was invoked. Same rooting, and the same reason,
+# as sim/tests/__main__.py: `sim` is a PEP 420 namespace package, so this
+# works from any directory under any checkout name with no packaging
+# metadata. Without it, _import_declaring_modules() below silently fails
+# every import and the burndown reports zero.
+_REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPOSITORY_ROOT not in sys.path:
+    sys.path.insert(0, _REPOSITORY_ROOT)
 
 # name -> metadata. Declaration order is preserved, which makes the report
 # stable across runs and diffable.
@@ -139,6 +151,35 @@ def burndown():
             "outstanding": heuristics}
 
 
+def _adopt_the_canonical_registry():
+    """Make this module share `sim.constants`'s REGISTRY, not its own copy.
+
+    THE BUG THIS EXISTS FOR. Running `python3 sim/constants.py` loads this
+    file as `__main__`. The modules it then imports do `from sim.constants
+    import declare`, which loads the SAME FILE AGAIN under the name
+    `sim.constants` - a second, separate module object with a second, separate
+    REGISTRY dict. Their declarations filled that one; the report printed this
+    one; it said "0 numbers declared" while 32 sat in the other copy.
+
+    Nothing looked broken. There was no traceback and no warning, and zero had
+    been the correct answer on the day the tool was written, so the number
+    stayed believable for as long as nobody checked it against the source.
+    That is the same shape as the other silent successes on this branch: the
+    tool reported, the report was wrong, and the wrongness was invisible
+    because it agreed with what you expected.
+
+    The fix is to point this module's REGISTRY at the canonical module's, so
+    both names refer to one dict and it does not matter which copy anything
+    declared into.
+    """
+    global REGISTRY
+    canonical = sys.modules.get("sim.constants")
+    if canonical is not None and canonical is not sys.modules.get("__main__"):
+        if canonical.REGISTRY is not REGISTRY:
+            canonical.REGISTRY.update(REGISTRY)
+            REGISTRY = canonical.REGISTRY
+
+
 def _import_declaring_modules():
     """Import the modules that declare constants, so the registry fills.
 
@@ -147,7 +188,21 @@ def _import_declaring_modules():
     every import in the project working, and this tool should keep running
     when something else is broken.
     """
-    for module in ("engine.data",):
+    # HOW THIS BROKE, AND WHY IT MATTERED MORE THAN IT LOOKED. This list read
+    # ("engine.data",) alone, and engine/data.py declares nothing at all. So
+    # --burndown printed "0 numbers declared" while sim/world/ had 32 of them,
+    # 9 marked temporary_heuristic. Zero was the right answer on the day this
+    # was written and stayed the printed answer afterwards, which is the whole
+    # failure mode: a scoreboard that cannot tell progress from no progress is
+    # worse than no scoreboard, because it is quietly believed. Milestone 1 is
+    # "provenance and a burndown" and it was unmeasurable for exactly as long
+    # as this list was one module long.
+    #
+    # Still an explicit list rather than a directory walk, for the reason
+    # above: this tool should keep reporting when something else is broken.
+    # The rule when you add a module that calls declare(): add it here in the
+    # same commit, or your numbers do not exist as far as the burndown knows.
+    for module in ("engine.data", "sim.world.agriculture", "sim.world.demography"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001
@@ -162,6 +217,7 @@ def main(argv=None):
     arguments = parser.parse_args(argv)
 
     _import_declaring_modules()
+    _adopt_the_canonical_registry()
 
     if arguments.burndown:
         result = burndown()
