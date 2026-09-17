@@ -1566,14 +1566,28 @@ def marginal_product_of_labour_kg_per_hour(land, labour_hours,
     """Extra kilograms of grain the NEXT hour of labour on `land` would add,
     at the current `labour_hours` already applied.
 
-    Closed form rather than a finite difference: for
-    harvest = TFP * H^(1-a) * L^a * (other multipliers), d(harvest)/dL =
-    a * TFP * H^(1-a) * L^(a-1) * (...) = a * harvest / L. This still holds
-    with the harvest-window cap in `gross_harvest_kg`, PROVIDED the extra
-    hour does not itself push `labour_hours` past the point where more
-    worker-equivalents would unlock more reapable land (i.e. `H` - the
-    EFFECTIVE hectares - is being held fixed for this derivative, exactly
-    as `land.hectares` used to be). That is the ordinary calculus
+    Closed form rather than a finite difference. The harvest is
+    Cobb-Douglas in effective hectares and labour hours:
+
+        harvest = productivity
+                * effective_hectares ** (1 - labour_elasticity)
+                * labour_hours ** labour_elasticity
+                * (other multipliers)
+
+    Differentiating with respect to labour_hours, everything that does not
+    depend on it survives untouched, and the power rule turns the labour
+    term into labour_elasticity times itself over labour_hours. So the
+    whole expression collapses to
+
+        extra harvest per extra hour
+            = labour_elasticity * harvest / labour_hours
+
+    which needs no separate evaluation of the production function. This
+    still holds with the harvest-window cap in `gross_harvest_kg`, PROVIDED
+    the extra hour does not itself push `labour_hours` past the point where
+    more worker-equivalents would unlock more reapable land - that is,
+    EFFECTIVE HECTARES is being held fixed for this derivative, exactly as
+    `land.hectares` used to be. That is the ordinary calculus
     approximation this closed form always made; it is now conditioned on
     the window not being the very thing about to change, which is true for
     any actual next hour (an infinitesimal addition to a large pool does

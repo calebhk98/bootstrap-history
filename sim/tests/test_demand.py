@@ -16,10 +16,14 @@ tolerance tight enough to tempt anyone into retuning a marginal budget
 share or the Gini coefficient to close it.
 """
 import ast
+import glob
+import io
 import json
 import os
+import re
 import subprocess
 import sys
+import tokenize
 import unittest
 
 from sim.world import demand
@@ -480,6 +484,252 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
 
     def _labourer_wage(self):
         return self.book_prices["wage_rates_denarii_per_hour"]["labourer"]["rate"]
+
+
+_GREEK_LETTER_NAMES = (
+    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta",
+    "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "rho", "sigma",
+    "tau", "upsilon", "phi", "chi", "psi", "omega",
+)
+_GREEK_LETTER_ALTERNATION = "|".join(_GREEK_LETTER_NAMES)
+
+# CATEGORY 1: subscript notation - a single letter OR a Greek letter's name,
+# immediately followed by an underscore and exactly one more letter or
+# digit, as a whole standalone word (`\b` on both ends). This is what
+# `q_i`, `p_j`, `gamma_i`, `beta_i`, `tau_k` all look like, and it is
+# extremely hard to produce by accident: `\b` never fires next to an
+# underscore (underscore is a "word" character to the regex engine, exactly
+# like a letter), so this can ONLY match when the single letter/Greek name
+# is not already glued to a longer identifier on the left, and the
+# character after the underscore is not glued to more text on the right.
+# `num_bins`, `income_bin`, `co_names` and every real snake_case identifier
+# this project actually uses are therefore structurally unable to match -
+# not because they were special-cased, but because none of them is a
+# single letter (or Greek name) plus exactly one more character.
+_SUBSCRIPT_NOTATION_RE = re.compile(
+    r"\b(?:[A-Za-z]|" + _GREEK_LETTER_ALTERNATION + r")_[A-Za-z0-9]\b",
+    re.IGNORECASE)
+
+# CATEGORY 2: a bare Greek letter's name used as if it were a quantity,
+# recognised specifically by sitting directly against a comparison or
+# equality operator with no other word between them - `gamma=0`, `beta>1`,
+# `tau<=2`. This is the shorthand a textbook uses to state a condition on a
+# symbol, and it is what made the original violation ("a good with gamma=0
+# ... a good with gamma>0") diagnosable at all: prose ordinarily never
+# writes a bare word flush against `=`, `<` or `>`.
+_GREEK_LETTER_AGAINST_OPERATOR_RE = re.compile(
+    r"\b(?:" + _GREEK_LETTER_ALTERNATION + r")(?=[=<>])"
+    r"|(?<=[=<>])(?:" + _GREEK_LETTER_ALTERNATION + r")\b",
+    re.IGNORECASE)
+
+# CATEGORY 3: a single letter used as an algebraic symbol, recognised by
+# sitting next to `=` or `^` (optionally with one space either side) - the
+# `p = B/(Q-A)` shape CLAUDE.md now names directly. Deliberately narrower
+# than "any operator": `*` and `/` are excluded here because this
+# project's prose uses them constantly for non-algebraic reasons a scanner
+# cannot tell apart from algebra without deep context - `/` inside a unit
+# ratio (`kg/t`, `h/ha`) and `*` as a bullet marker both live in this same
+# codebase's comments, and a rule that fired on either would be exactly
+# the "broad and noisy" check CLAUDE.md warns gets deleted. `i`, `x`, `y`
+# (CLAUDE.md's own permanently-allowed short names), `n` (an ordinary-
+# English count: "the top n bins") and `a`/`e` (the English article and
+# the common abbreviation-adjacent letter in "e.g.") are excluded by
+# letter, not by position, so "n = 5 income bins" still would not trip
+# this - see NoLoneLetterMathsNotationTests.test_allows_* below for the
+# concrete false-positive cases this was checked against.
+_EXCLUDED_SINGLE_LETTERS = frozenset("ixyniae")
+_STANDALONE_LETTER_RE = re.compile(r"\b[A-Za-z]\b")
+
+
+def _find_lone_letter_maths_notation(text, *, check_single_letter_operators):
+    """Every offending snippet in `text` (one line of a comment or
+    docstring), as a list of (category, snippet) pairs. `text` is scanned
+    as plain prose, never as Python source - see
+    NoLoneLetterMathsNotationTests for why only comments and docstrings
+    are ever handed to this function.
+    """
+    hits = []
+    for match in _SUBSCRIPT_NOTATION_RE.finditer(text):
+        hits.append(("subscript notation", match.group(0)))
+    for match in _GREEK_LETTER_AGAINST_OPERATOR_RE.finditer(text):
+        hits.append(("bare Greek letter against an operator", match.group(0)))
+    if check_single_letter_operators:
+        for match in _STANDALONE_LETTER_RE.finditer(text):
+            letter = match.group(0)
+            if letter.lower() in _EXCLUDED_SINGLE_LETTERS:
+                continue
+            start, end = match.span()
+            before, after = text[:start], text[end:]
+            # A letter immediately after `/` is a UNIT DENOMINATOR, not
+            # algebra: "0.01 ha/h = 5.04 ha" is arithmetic in hectares per
+            # hour, and agriculture.py says that sort of thing constantly.
+            # Without this the check fires on its own repository's correct
+            # prose, which is how a guard gets switched off.
+            if before.rstrip().endswith("/"):
+                continue
+            if re.search(r"[=^]\s?$", before) or re.search(r"^\s?[=^]", after):
+                snippet = text[max(0, start - 6):end + 6]
+                hits.append(("single letter against an operator", snippet.strip()))
+    return hits
+
+
+def _comments_and_docstrings(path):
+    """Every comment and docstring in the Python source at `path`, as a
+    list of (line_number, text) pairs - one entry per physical line, so a
+    multi-line docstring reports the line the offending sentence is
+    actually on rather than the line the docstring starts on.
+    """
+    with open(path) as handle:
+        source = handle.read()
+    blocks = []
+    for token in tokenize.generate_tokens(io.StringIO(source).readline):
+        if token.type == tokenize.COMMENT:
+            blocks.append((token.start[0], token.string))
+    tree = ast.parse(source, filename=path)
+    docstring_owners = [tree] + [
+        node for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+    for node in docstring_owners:
+        docstring = ast.get_docstring(node, clean=False)
+        if not docstring:
+            continue
+        first_line = node.body[0].lineno
+        for offset, line in enumerate(docstring.split("\n")):
+            blocks.append((first_line + offset, line))
+    return blocks
+
+
+class NoLoneLetterMathsNotationTests(unittest.TestCase):
+    """The regression test for the stakeholder's own complaint ("Tell me
+    how someone with no context is supposed to know what that is? Is that
+    about radiation?") that prompted the CLAUDE.md SS7 rewrite this file's
+    own history is now the worked example for. Scans every sim/world/*.py
+    module's COMMENTS and DOCSTRINGS - never its code, where `i`, `x`, `y`
+    and short parameter names are a separate, already-covered concern (see
+    CLAUDE.md SS7's naming sweep) - for the three shapes of lone-letter
+    maths notation CLAUDE.md names: a subscript form (`p_i`), a bare Greek
+    letter's name used as a quantity (`gamma=0`), and a single letter used
+    as an algebraic symbol (`p = B/(Q-A)`).
+
+    WHY sim/world/demand.py alone GETS THE STRICTEST CHECK (all three
+    categories) WHILE THE REST OF sim/world/ GETS ONLY THE FIRST TWO.
+    Categories 1 and 2 (subscript notation, bare Greek letters against an
+    operator) currently match NOTHING anywhere in sim/world/ - checked
+    directly, not assumed - so applying them to the whole package adds
+    real protection for free. Category 3 (a single letter against `=` or
+    `^`) does NOT currently match anything in demand.py either, but DOES
+    match pre-existing, out-of-scope notation this task was never asked to
+    touch: sim/world/agriculture.py's `harvest = TFP * H^(1-a) * L^a`
+    (Cobb-Douglas notation, itself introduced by name a few lines above)
+    and sim/world/transport.py's `C = (team_pull / GRAVITY - T * g) / (r +
+    g) - V` (introduced by "writing V for vehicle mass, C for cargo
+    mass..." immediately above it). Those two modules are not this task's
+    to fix, and CLAUDE.md's own instruction is to prefer a narrow, certain
+    check over a broad, noisy one that gets disabled - so category 3 is
+    enforced only where this task actually did the naming work, and the
+    other two modules are left for whoever next reads THEIR docstrings
+    against this same standard.
+
+    WHAT THIS DELIBERATELY DOES NOT CATCH. A single letter or Greek name
+    used as a plain English word with no operator or subscript touching it
+    (sim/world/demography.py's "(tau derived from how long England took to
+    regain its pre-Black-Death population)" is exactly this shape) is not
+    flagged - CLAUDE.md's own instruction is that naming the textbook form
+    is FINE as a pointer, and a scanner cannot tell "used as a pointer"
+    from "used as the explanation" without an operator or a subscript to
+    go on. That is a real, known gap, not an oversight: making it narrower
+    than that is what keeps this check from also firing on ordinary prose
+    that happens to contain a Greek word, a citation, or a chemical
+    formula - see the false-positive tests below for the specific cases
+    checked.
+    """
+
+    def test_catches_subscript_notation(self):
+        hits = _find_lone_letter_maths_notation(
+            "the closed-form solution is q_i = gamma_i + (beta_i / p_i) * y",
+            check_single_letter_operators=False)
+        found = {snippet for _, snippet in hits}
+        self.assertEqual(found, {"q_i", "gamma_i", "beta_i", "p_i"})
+
+    def test_catches_bare_greek_letter_against_operator(self):
+        hits = _find_lone_letter_maths_notation(
+            "a good with gamma=0 behaves differently from beta>1",
+            check_single_letter_operators=False)
+        found = {snippet for _, snippet in hits}
+        self.assertEqual(found, {"gamma", "beta"})
+
+    def test_catches_single_letter_against_operator_when_enabled(self):
+        hits = _find_lone_letter_maths_notation(
+            "the closed form is p = B/(Q-A) for a fixed supply",
+            check_single_letter_operators=True)
+        categories = {category for category, _ in hits}
+        self.assertIn("single letter against an operator", categories)
+
+    def test_single_letter_category_is_opt_in(self):
+        # The same sentence with the category-3 check turned off (as this
+        # module runs it for every file except demand.py) reports nothing,
+        # because "B/(Q-A)" is exactly the division/unit-ratio shape that
+        # category 3 exists to stay away from without that flag.
+        hits = _find_lone_letter_maths_notation(
+            "the closed form is p = B/(Q-A) for a fixed supply",
+            check_single_letter_operators=False)
+        self.assertEqual(hits, [])
+
+    def test_allows_loop_index_and_coordinate_letters(self):
+        for sentence in ("for i in range(n): pass",
+                          "a point at x, y on the grid",
+                          "iterate i from 0 to n"):
+            hits = _find_lone_letter_maths_notation(
+                sentence, check_single_letter_operators=True)
+            self.assertEqual(hits, [], sentence)
+
+    def test_allows_ordinary_count_and_article(self):
+        hits = _find_lone_letter_maths_notation(
+            "a household spends n labour-hours a year, the top n bins",
+            check_single_letter_operators=True)
+        self.assertEqual(hits, [])
+
+    def test_allows_chemical_formulae(self):
+        hits = _find_lone_letter_maths_notation(
+            "the ore is mostly Al2O3 with some Fe2O3 impurity",
+            check_single_letter_operators=True)
+        self.assertEqual(hits, [])
+
+    def test_allows_citations(self):
+        hits = _find_lone_letter_maths_notation(
+            "attested at CIL XIV 4569 and again in ILS 6675",
+            check_single_letter_operators=True)
+        self.assertEqual(hits, [])
+
+    def test_allows_named_single_letter_notation_used_as_a_pointer(self):
+        # Naming the textbook form is explicitly FINE per CLAUDE.md - a
+        # bare mention with no operator or subscript touching it is not
+        # this category's target (see this class's own docstring for why).
+        hits = _find_lone_letter_maths_notation(
+            "a fixed exponential clock (tau derived from how long England "
+            "took to regain its population)",
+            check_single_letter_operators=True)
+        self.assertEqual(hits, [])
+
+    def test_no_offending_notation_in_any_shipped_sim_world_module(self):
+        world_dir = os.path.join(_REPO_ROOT, "sim", "world")
+        offenders = []
+        for path in sorted(glob.glob(os.path.join(world_dir, "*.py"))):
+            # STRICT EVERYWHERE, as of the commit that widened this. It was
+            # demand.py only when written, because agriculture.py and
+            # transport.py each carried one pre-existing algebra block the
+            # rename task had no mandate to touch. Both were rewritten in
+            # words immediately afterwards, so the exemption had nothing
+            # left to exempt - and an exemption nobody needs is how a check
+            # quietly stops covering the thing it was built for.
+            strict = True
+            for line_number, text in _comments_and_docstrings(path):
+                for category, snippet in _find_lone_letter_maths_notation(
+                        text, check_single_letter_operators=strict):
+                    offenders.append("%s:%d: [%s] %r in %r" % (
+                        os.path.relpath(path, _REPO_ROOT), line_number,
+                        category, snippet, text.strip()))
+        self.assertEqual(offenders, [])
 
 
 class ModuleRunsCleanlyTests(unittest.TestCase):

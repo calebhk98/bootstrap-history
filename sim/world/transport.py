@@ -844,15 +844,19 @@ def max_cargo_mass_kg(animal, team_size, vehicle, surface, grade_fraction=0.0):
     cargo AND the team's own bodies) exactly equals what the team can
     sustain all day.
 
-    Solved directly rather than iterated: writing V for vehicle mass, C for
-    cargo mass, T for team mass, r for the surface's coefficient and g for
-    grade_fraction, the balance is
+    Solved directly rather than iterated. The balance is
 
-        team_pull = GRAVITY * [ (V + C) * (r + g) + T * g ]
+        team_pull = GRAVITY
+                  * ( (vehicle_mass + cargo_mass)
+                        * (rolling_resistance + grade_fraction)
+                      + team_mass * grade_fraction )
 
-    which rearranges to
+    which rearranges to give the cargo the team can actually haul:
 
-        C = (team_pull / GRAVITY - T * g) / (r + g) - V
+        cargo_mass = ( team_pull / GRAVITY
+                       - team_mass * grade_fraction )
+                     / (rolling_resistance + grade_fraction)
+                     - vehicle_mass
 
     Clamped at zero: a team that cannot even move its OWN empty vehicle at
     this grade and surface (a steep-enough mountain grade against a cart's

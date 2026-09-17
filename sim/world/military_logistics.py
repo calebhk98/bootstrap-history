@@ -382,18 +382,20 @@ def pack_animal_max_one_way_days(delivered_fraction=0.0):
     carries its own fodder for the whole round trip delivers no more than
     `delivered_fraction` of its rated load capacity as actual cargo.
 
-    THE DERIVATION. Let C be the animal's load capacity (kg) and F its
-    daily fodder need (kg/day). A round trip of `days` days out and `days`
-    days back costs the animal 2*days*F kg of fodder, which - since it is
-    not foraging and carries everything itself - comes out of the same C kg
-    it is capable of carrying. What is left over is deliverable cargo:
+    THE DERIVATION. A round trip of `days` days out and `days` days back
+    costs the animal two days' fodder for every day travelled, and - since
+    it is not foraging and carries everything itself - that fodder comes
+    out of the very load it is capable of carrying. What is left over is
+    deliverable cargo:
 
-        delivered_cargo_kg = C - 2 * days * F
+        delivered_cargo_kg = load_capacity_kg
+                           - 2 * days * daily_fodder_need_kg
 
-    Solving for the `days` at which delivered_cargo_kg falls to
-    `delivered_fraction * C` gives:
+    Solving for the `days` at which delivered cargo falls to a chosen
+    fraction of capacity gives:
 
-        days = C * (1 - delivered_fraction) / (2 * F)
+        days = load_capacity_kg * (1 - delivered_fraction)
+               / (2 * daily_fodder_need_kg)
 
     At `delivered_fraction=0.0` (the default) this is the outer physical
     bound: the distance beyond which the column cannot even complete the

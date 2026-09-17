@@ -31,13 +31,14 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 def _make_deposit(name, metal="test_metal", material_moved="ore",
                    ore_grade_kg_per_tonne=10.0, depth_class="surface",
                    hardness_class="medium", quantity_tonnes_per_year=100.0,
-                   note=""):
+                   note="", byproducts=()):
     return deposits.Deposit(
         name=name, metal=metal, region="nowhere",
         material_moved=material_moved,
         ore_grade_kg_per_tonne=ore_grade_kg_per_tonne,
         depth_class=depth_class, hardness_class=hardness_class,
-        quantity_tonnes_per_year=quantity_tonnes_per_year, note=note)
+        quantity_tonnes_per_year=quantity_tonnes_per_year, note=note,
+        byproducts=byproducts)
 
 
 class ExtractionCostMechanicsTests(unittest.TestCase):
@@ -248,7 +249,12 @@ class MarginalDepositRentTests(unittest.TestCase):
 
 class DepletionMechanismTests(unittest.TestCase):
     """DepositState and simulate_depletion: a deposit that runs out forces
-    the margin to a costlier one, with no change in demand at all.
+    the margin to a costlier one, with no change in demand at all - the
+    EXTENSIVE margin. Since the intensive margin (declining grade within a
+    deposit) was added, price no longer sits flat between exhaustion
+    events either - see IntensiveMarginTests for that mechanism checked in
+    isolation, and this class's own test_price_rises_once_... for the two
+    effects told apart within a single simulation.
     """
 
     def setUp(self):
@@ -259,15 +265,29 @@ class DepletionMechanismTests(unittest.TestCase):
 
     def test_price_rises_once_the_cheap_deposit_is_exhausted(self):
         # Demand of 10/yr, entirely from `cheap`, whose reserve (working
-        # life 3 years x 10/yr = 30 t) runs out after year 3.
+        # life 3 years x 10/yr = 30 t) runs out after year 3. Within years
+        # 1-3 price already creeps up (the intensive margin: cheap's own
+        # grade falling as it is worked down), but the JUMP at exhaustion
+        # (to `dear`'s cost at ITS OWN untouched, virgin grade) dwarfs that
+        # gentle creep - this is what tells "a deposit is running low"
+        # apart from "a deposit just ran out" in the reported price.
         outcomes = deposits.simulate_depletion(
             [self.cheap, self.dear], quantity_demanded_tonnes_per_year=10.0,
             years=6, working_life_years=3.0)
         early_prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes[:3]]
         late_prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes[3:]]
-        self.assertTrue(all(p == early_prices[0] for p in early_prices))
-        self.assertTrue(all(p == late_prices[0] for p in late_prices))
-        self.assertGreater(late_prices[0], early_prices[0])
+        # Each block rises on its own (the intensive margin, live within
+        # both `cheap`'s and then `dear`'s own working life)...
+        self.assertEqual(early_prices, sorted(early_prices))
+        self.assertLess(early_prices[0], early_prices[-1])
+        self.assertEqual(late_prices, sorted(late_prices))
+        self.assertLess(late_prices[0], late_prices[-1])
+        # ...but the jump AT exhaustion is far bigger than either block's
+        # own intra-deposit creep: `dear`'s virgin cost (8/1=8.0) against
+        # `cheap`'s own most-depleted cost (8/33.33=0.24) is a jump over
+        # 30x, dwarfing the roughly 3x the intensive margin alone produces
+        # within either block.
+        self.assertGreater(late_prices[0] / early_prices[-1], 10.0)
         self.assertIn("cheap", outcomes[2].exhausted_this_year)
 
     def test_prices_are_non_decreasing_while_any_deposit_still_supplies(self):
@@ -318,6 +338,323 @@ class DepletionMechanismTests(unittest.TestCase):
         self.assertEqual(by_name["a_expensive"].remaining_reserve_tonnes_metal, 10.0)
         self.assertEqual(by_name["c_middle"].remaining_reserve_tonnes_metal, 10.0)
         del states  # constructed only to document the "before" reserves above
+
+
+class SinkingCostTests(unittest.TestCase):
+    """sinking_cost_labour_hours, amortized_sinking_cost_labour_hours_per_kg
+    and total_cost_labour_hours_per_kg - the stakeholder's first
+    observation: a fixed, one-time cost to open a deposit, independent of
+    what is down there, additive with the recurring per-tonne cost.
+    """
+
+    def test_surface_and_hand_alluvial_have_zero_fixed_cost(self):
+        surface = _make_deposit("s", depth_class="surface")
+        alluvial = _make_deposit("a", material_moved="gravel",
+                                  depth_class="alluvial", hardness_class=None)
+        self.assertEqual(deposits.sinking_cost_labour_hours(surface), 0.0)
+        self.assertEqual(deposits.sinking_cost_labour_hours(alluvial), 0.0)
+
+    def test_shaft_and_aqueduct_classes_have_positive_fixed_cost(self):
+        shallow = _make_deposit("sh", depth_class="shallow_vein")
+        deep = _make_deposit("d", depth_class="deep_vein")
+        hydraulic = _make_deposit("h", material_moved="gravel",
+                                   depth_class="alluvial_hydraulic",
+                                   hardness_class=None)
+        self.assertGreater(deposits.sinking_cost_labour_hours(shallow), 0.0)
+        self.assertGreater(deposits.sinking_cost_labour_hours(deep), 0.0)
+        self.assertGreater(deposits.sinking_cost_labour_hours(hydraulic), 0.0)
+        # A deep shaft (dewatering battery included) costs more to open
+        # than a shallow one - the same DIRECTION as the recurring haulage
+        # multiplier already asserts for these two classes.
+        self.assertGreater(deposits.sinking_cost_labour_hours(deep),
+                            deposits.sinking_cost_labour_hours(shallow))
+
+    def test_zero_fixed_cost_leaves_total_cost_equal_to_extraction_cost(self):
+        # Surface deposits pay no fixed cost at all, whatever their size -
+        # this is what keeps every EXISTING test in this file (all built on
+        # depth_class="surface" deposits) valid unchanged now that
+        # total_cost_labour_hours_per_kg, not extraction_cost_labour_
+        # hours_per_kg, is what supply_curve and find_marginal_deposit
+        # actually sort and price by.
+        deposit = _make_deposit("s", depth_class="surface",
+                                 ore_grade_kg_per_tonne=25.0)
+        self.assertEqual(
+            deposits.total_cost_labour_hours_per_kg(deposit),
+            deposits.extraction_cost_labour_hours_per_kg(deposit))
+
+    def test_fixed_cost_is_independent_of_grade(self):
+        # The stakeholder's own claim: a shaft of a given depth through
+        # given rock costs what it costs, whatever the ore grade behind it.
+        lean = _make_deposit("lean", depth_class="deep_vein",
+                              ore_grade_kg_per_tonne=1.0)
+        rich = _make_deposit("rich", depth_class="deep_vein",
+                              ore_grade_kg_per_tonne=1000.0)
+        self.assertEqual(deposits.sinking_cost_labour_hours(lean),
+                          deposits.sinking_cost_labour_hours(rich))
+
+    def test_larger_reserve_amortizes_the_fixed_cost_more_thinly(self):
+        # "The same cost to make a mine regardless of if there is 1 ton of
+        # gold in there, or 500 billion tons" - a bigger assumed lifetime
+        # output spreads the SAME fixed shaft cost over more kilograms, so
+        # the amortised charge per kilogram falls.
+        small = _make_deposit("small", depth_class="deep_vein",
+                               quantity_tonnes_per_year=1.0)
+        large = _make_deposit("large", depth_class="deep_vein",
+                               quantity_tonnes_per_year=1000.0)
+        self.assertGreater(
+            deposits.amortized_sinking_cost_labour_hours_per_kg(small),
+            deposits.amortized_sinking_cost_labour_hours_per_kg(large))
+
+    def test_total_cost_is_extraction_plus_amortized_sinking(self):
+        deposit = _make_deposit("d", depth_class="shallow_vein")
+        expected = (deposits.extraction_cost_labour_hours_per_kg(deposit)
+                    + deposits.amortized_sinking_cost_labour_hours_per_kg(deposit))
+        self.assertAlmostEqual(
+            deposits.total_cost_labour_hours_per_kg(deposit), expected)
+
+    def test_a_poor_deposit_can_be_pushed_out_by_its_shaft_cost_alone(self):
+        # A rich but deep (expensive shaft) small deposit can cost MORE
+        # overall than a poorer but surface (free shaft) deposit with a
+        # bigger assumed reserve - the whole point of a fixed cost: it is
+        # not always dominated by the per-tonne term.
+        rich_but_tiny_deep = _make_deposit(
+            "rich_tiny_deep", depth_class="deep_vein",
+            ore_grade_kg_per_tonne=1000.0, quantity_tonnes_per_year=0.001)
+        poor_but_ample_surface = _make_deposit(
+            "poor_ample_surface", depth_class="surface",
+            ore_grade_kg_per_tonne=1.0, quantity_tonnes_per_year=1000.0)
+        self.assertGreater(
+            deposits.total_cost_labour_hours_per_kg(rich_but_tiny_deep),
+            deposits.total_cost_labour_hours_per_kg(poor_but_ample_surface))
+
+
+class IntensiveMarginTests(unittest.TestCase):
+    """current_ore_grade_kg_per_tonne and current_extraction_cost_labour_
+    hours_per_kg - the stakeholder's second observation, checked on a
+    single deposit in isolation from any exhaustion event at all.
+    """
+
+    def setUp(self):
+        self.deposit = _make_deposit("d", ore_grade_kg_per_tonne=40.0)
+
+    def test_fraction_zero_is_the_deposit_own_stated_grade(self):
+        self.assertEqual(
+            deposits.current_ore_grade_kg_per_tonne(self.deposit, 0.0), 40.0)
+
+    def test_fraction_one_is_zero_grade(self):
+        self.assertEqual(
+            deposits.current_ore_grade_kg_per_tonne(self.deposit, 1.0), 0.0)
+
+    def test_grade_falls_monotonically_with_fraction_extracted(self):
+        grades = [deposits.current_ore_grade_kg_per_tonne(self.deposit, f)
+                  for f in (0.0, 0.25, 0.5, 0.75, 1.0)]
+        self.assertEqual(grades, sorted(grades, reverse=True))
+        self.assertGreater(grades[0], grades[-1])
+
+    def test_fraction_out_of_range_is_rejected(self):
+        with self.assertRaises(ValueError):
+            deposits.current_ore_grade_kg_per_tonne(self.deposit, -0.01)
+        with self.assertRaises(ValueError):
+            deposits.current_ore_grade_kg_per_tonne(self.deposit, 1.01)
+
+    def test_extraction_cost_rises_as_fraction_extracted_rises(self):
+        # "Effort per tonne of rock is roughly constant; what changes is
+        # the metal per tonne of rock" - the stakeholder's own intuition,
+        # checked directly: cost at fraction 0.5 exceeds cost at 0.0,
+        # purely from grade falling, with hardness_class/depth_class (and
+        # therefore effort per tonne of ROCK) never touched.
+        cost = deposits.current_extraction_cost_labour_hours_per_kg
+        self.assertLess(cost(self.deposit, 0.0), cost(self.deposit, 0.5))
+        self.assertLess(cost(self.deposit, 0.5), cost(self.deposit, 0.9))
+
+    def test_extraction_cost_at_fraction_zero_matches_the_ordinary_function(self):
+        # An untouched deposit's intensive-margin cost must agree exactly
+        # with the plain (grade-oblivious) extraction_cost_labour_hours_
+        # per_kg - fraction_extracted=0 is supposed to mean "as if nothing
+        # about depletion existed yet".
+        self.assertAlmostEqual(
+            deposits.current_extraction_cost_labour_hours_per_kg(self.deposit, 0.0),
+            deposits.extraction_cost_labour_hours_per_kg(self.deposit))
+
+    def test_extraction_cost_at_fraction_one_is_infinite(self):
+        self.assertEqual(
+            deposits.current_extraction_cost_labour_hours_per_kg(self.deposit, 1.0),
+            float("inf"))
+
+    def test_deposit_state_tracks_its_own_fraction_extracted(self):
+        state = deposits.DepositState(self.deposit, remaining_reserve_tonnes_metal=100.0)
+        self.assertEqual(state.fraction_extracted, 0.0)
+        state.extract(25.0)
+        self.assertAlmostEqual(state.fraction_extracted, 0.25)
+        self.assertLess(state.current_grade_kg_per_tonne(),
+                         self.deposit.ore_grade_kg_per_tonne)
+        state.extract(75.0)
+        self.assertEqual(state.fraction_extracted, 1.0)
+        self.assertEqual(state.current_grade_kg_per_tonne(), 0.0)
+
+    def test_deposit_as_worked_only_replaces_the_grade(self):
+        state = deposits.DepositState(self.deposit, remaining_reserve_tonnes_metal=100.0)
+        state.extract(50.0)
+        worked = state.deposit_as_worked()
+        self.assertEqual(worked.ore_grade_kg_per_tonne,
+                          state.current_grade_kg_per_tonne())
+        self.assertEqual(worked.depth_class, self.deposit.depth_class)
+        self.assertEqual(worked.hardness_class, self.deposit.hardness_class)
+        self.assertEqual(worked.quantity_tonnes_per_year,
+                          self.deposit.quantity_tonnes_per_year)
+
+    def test_a_single_deposit_far_from_exhaustion_still_gets_costlier_over_time(self):
+        # The intensive margin alone, with no extensive-margin exhaustion
+        # anywhere in sight: one deposit, demand well below its annual
+        # capacity so it is never at risk of running dry within the
+        # simulated years, and yet its own reported price still climbs
+        # every single year, purely because the grade being worked falls.
+        deposit = _make_deposit("lone", ore_grade_kg_per_tonne=50.0,
+                                 quantity_tonnes_per_year=100.0)
+        outcomes = deposits.simulate_depletion(
+            [deposit], quantity_demanded_tonnes_per_year=10.0,
+            years=5, working_life_years=100.0)
+        prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes]
+        self.assertEqual(prices, sorted(prices))
+        self.assertLess(prices[0], prices[-1])
+        self.assertEqual(
+            [o.exhausted_this_year for o in outcomes], [[]] * 5,
+            "this deposit should not be anywhere near exhaustion yet")
+
+
+class WasteRockTests(unittest.TestCase):
+    """material_moved_tonnes_per_kg_metal, waste_tonnes_per_kg_metal and
+    annual_waste_rock_tonnes - the stakeholder's third observation, made an
+    explicit, queryable number rather than left implicit inside the cost
+    arithmetic.
+    """
+
+    def test_material_moved_is_the_inverse_of_grade(self):
+        deposit = _make_deposit("d", ore_grade_kg_per_tonne=25.0)
+        self.assertAlmostEqual(
+            deposits.material_moved_tonnes_per_kg_metal(deposit), 1.0 / 25.0)
+
+    def test_waste_is_almost_all_the_material_moved_at_low_grade(self):
+        # At a placer-gold-grade deposit, essentially everything raised is
+        # waste - the 99%-of-what-you-lift figure the task itself named.
+        deposit = _make_deposit("placer", ore_grade_kg_per_tonne=0.0003)
+        material_moved = deposits.material_moved_tonnes_per_kg_metal(deposit)
+        waste = deposits.waste_tonnes_per_kg_metal(deposit)
+        self.assertGreater(waste / material_moved, 0.999)
+
+    def test_leaner_deposits_produce_more_waste_per_kilogram(self):
+        lean = _make_deposit("lean", ore_grade_kg_per_tonne=1.0)
+        rich = _make_deposit("rich", ore_grade_kg_per_tonne=100.0)
+        self.assertGreater(
+            deposits.waste_tonnes_per_kg_metal(lean),
+            deposits.waste_tonnes_per_kg_metal(rich))
+
+    def test_annual_waste_scales_with_annual_metal_output(self):
+        small = _make_deposit("small", ore_grade_kg_per_tonne=10.0,
+                               quantity_tonnes_per_year=1.0)
+        large = _make_deposit("large", ore_grade_kg_per_tonne=10.0,
+                               quantity_tonnes_per_year=100.0)
+        self.assertAlmostEqual(
+            deposits.annual_waste_rock_tonnes(large)
+            / deposits.annual_waste_rock_tonnes(small),
+            100.0, places=3)
+
+    def test_every_named_deposit_has_finite_positive_waste(self):
+        for metal in deposits.METALS:
+            for deposit in deposits.load_deposits(metal):
+                waste = deposits.waste_tonnes_per_kg_metal(deposit)
+                self.assertGreater(waste, 0.0, deposit.name)
+                self.assertLess(waste, float("inf"), deposit.name)
+
+
+class PolymetallicByproductTests(unittest.TestCase):
+    """ByproductSpec, byproduct_quantities_tonnes_per_year and
+    joint_output_quantities_kg - the stakeholder's fourth observation: a
+    deposit that carries several metals at their own grades, so opening it
+    for one yields the others as a by-product fixed by geology.
+    """
+
+    def test_most_deposits_carry_no_byproducts(self):
+        deposit = _make_deposit("d")
+        self.assertEqual(deposit.byproducts, ())
+        self.assertEqual(deposits.byproduct_quantities_tonnes_per_year(deposit), {})
+
+    def test_britannia_lead_carries_a_silver_byproduct(self):
+        # This module's own worked example - see data/world/deposits.json's
+        # britannia_lead entry and the module docstring's POLYMETALLIC
+        # DEPOSITS section for why this one and not a new load_deposits
+        # ('silver') entry.
+        lead_deposits = {d.name: d for d in deposits.load_deposits("lead")}
+        britannia_lead = lead_deposits["britannia_lead"]
+        self.assertEqual(len(britannia_lead.byproducts), 1)
+        byproduct = britannia_lead.byproducts[0]
+        self.assertEqual(byproduct.metal, "silver")
+        self.assertEqual(byproduct.material_key, "silver_kg")
+        self.assertGreater(byproduct.ore_grade_kg_per_tonne, 0.0)
+        # Every OTHER named lead deposit carries none - this is a worked
+        # example on one deposit, not a blanket assumption.
+        for name, deposit in lead_deposits.items():
+            if name != "britannia_lead":
+                self.assertEqual(deposit.byproducts, (), name)
+
+    def test_byproduct_quantity_is_fixed_by_the_grade_ratio_not_chosen(self):
+        primary = _make_deposit(
+            "primary", metal="lead", ore_grade_kg_per_tonne=150.0,
+            quantity_tonnes_per_year=1500.0,
+            byproducts=(deposits.ByproductSpec(
+                metal="silver", material_key="silver_kg",
+                ore_grade_kg_per_tonne=0.5),))
+        # rock moved/year = 1500 t metal/yr * 1000 kg/t / 150 kg/t = 10,000
+        # t rock/yr; silver riding along = 10,000 * 0.5 / 1000 = 5 t/yr.
+        byproducts = deposits.byproduct_quantities_tonnes_per_year(primary)
+        self.assertAlmostEqual(byproducts["silver"], 5.0)
+
+    def test_doubling_the_primary_grade_halves_the_byproduct_for_the_same_output(self):
+        # Geology, not a choice: raising the same tonnes/year of metal from
+        # richer ore means moving less rock, and therefore less of
+        # whatever byproduct rides along with each tonne of that rock.
+        spec = (deposits.ByproductSpec(
+            metal="silver", material_key="silver_kg",
+            ore_grade_kg_per_tonne=0.5),)
+        lean = _make_deposit("lean", metal="lead", ore_grade_kg_per_tonne=75.0,
+                              quantity_tonnes_per_year=1500.0, byproducts=spec)
+        rich = _make_deposit("rich", metal="lead", ore_grade_kg_per_tonne=150.0,
+                              quantity_tonnes_per_year=1500.0, byproducts=spec)
+        lean_silver = deposits.byproduct_quantities_tonnes_per_year(lean)["silver"]
+        rich_silver = deposits.byproduct_quantities_tonnes_per_year(rich)["silver"]
+        self.assertAlmostEqual(lean_silver / rich_silver, 2.0)
+
+    def test_joint_output_quantities_kg_matches_sim_world_demand_shape(self):
+        # {material_key: quantity} - see sim.world.demand's own
+        # joint_output_mass_shares/joint_output_value_shares (not imported
+        # here - see the module docstring's STANDALONE section). Checked
+        # structurally rather than by importing that module, which is
+        # being edited concurrently by another agent.
+        lead_deposits = {d.name: d for d in deposits.load_deposits("lead")}
+        britannia_lead = lead_deposits["britannia_lead"]
+        joint = deposits.joint_output_quantities_kg(britannia_lead)
+        self.assertIn("lead_kg", joint)
+        self.assertIn("silver_kg", joint)
+        for key, value in joint.items():
+            self.assertIsInstance(key, str)
+            self.assertTrue(key.endswith("_kg"), key)
+            self.assertGreater(value, 0.0, key)
+        # The primary metal's own quantity, in kilograms.
+        self.assertAlmostEqual(
+            joint["lead_kg"], britannia_lead.quantity_tonnes_per_year * 1000.0)
+
+    def test_byproduct_grade_is_declared_with_provenance(self):
+        from sim import constants
+        deposits.load_deposits("lead")   # forces the declare(), if not
+                                          # already run at import time
+        matches = [name for name in constants.REGISTRY
+                   if "BYPRODUCT" in name and "SILVER" in name
+                   and "BRITANNIA_LEAD" in name]
+        self.assertEqual(len(matches), 1, matches)
+        entry = constants.REGISTRY[matches[0]]
+        self.assertIn(entry["kind"],
+                       ("engineering_estimate", "temporary_heuristic"))
+        self.assertTrue(entry["why"])
 
 
 class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
