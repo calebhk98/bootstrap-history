@@ -10,6 +10,7 @@ from collections import defaultdict
 from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, WAGES, hard_pre, trade_family)
 from . import commodities as _commod
+from constants import declare
 
 
 class _InvalidatingSet(set):
@@ -122,6 +123,121 @@ class _InvalidatingSet(set):
         return result
 
 
+# ---- REPUTATION/STANDING: a scoreboard, not yet a social mechanism --------
+#
+# None of the numbers below are measured facts about anything; they are a
+# hand-tuned scoring function for "how well known and well regarded are you",
+# invented because no lower-level model of patronage, gossip or audience
+# reach exists yet. A real mechanism would derive standing from who actually
+# knows what you have done and how far that spreads through a real social
+# network (patrons, students, guild membership, literacy and travel time all
+# bound how far reputation can propagate) - no such mechanism exists
+# anywhere in this project yet, including ENDOGENOUS_COSTS_AND_DOMAINS.md,
+# whose Part 2 covers production-cost pricing, not social propagation.
+# Until a real one exists, every constant here is temporary_heuristic.
+STANDING_BASE_FLOOR = declare(
+    "STANDING_BASE_FLOOR", 0.5, kind="temporary_heuristic",
+    unit="reputation points (dimensionless)", source=None, confidence="D",
+    why="The reputation floor of someone who has founded and finished "
+        "nothing yet - not zero, because arriving with a plan and a "
+        "household is itself a small, visible fact. A real mechanism would "
+        "derive this from how a stranger is actually perceived on arrival "
+        "in a given society, not assign a flat starting score.")
+STANDING_PER_SQRT_EARNED = declare(
+    "STANDING_PER_SQRT_EARNED", 0.55, kind="temporary_heuristic",
+    unit="reputation points per sqrt(finished works)", source=None,
+    confidence="D",
+    why="How much each additional finished, ungranted work adds to standing, "
+        "on a sqrt curve so the first few matter far more than the "
+        "hundredth. The sqrt SHAPE is a real claim (reputation saturates, it "
+        "does not accumulate linearly); the 0.55 coefficient is simply "
+        "tuned until the early game felt right. A real mechanism needs a "
+        "model of who hears about a given work and how impressed they are.")
+STANDING_CORPUS_WRITTEN = declare(
+    "STANDING_CORPUS_WRITTEN", 3.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Flat bonus for having written a corpus of your own knowledge down "
+        "at all, before it has spread anywhere. Invented game balance; a "
+        "real figure would follow from how rare and how legible written "
+        "work is in this society.")
+STANDING_CORPUS_DISPERSED = declare(
+    "STANDING_CORPUS_DISPERSED", 6.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Further bonus once that corpus is actually copied into other "
+        "libraries - twice the written-only bonus because now other people, "
+        "not just you, hold the proof of what you know. Tuned, not derived.")
+STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT = declare(
+    "STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT", 4.0, kind="temporary_heuristic",
+    unit="reputation points per sqrt(school units)", source=None,
+    confidence="D",
+    why="Founding a school buys standing mostly by having founded one at "
+        "all, not by its size - sqrt so a third schoolhouse does not make "
+        "you three times as well known as the first. The curve shape is "
+        "reasoned; the coefficient is tuned until playtests felt right.")
+STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT = declare(
+    "STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT", 10.0,
+    kind="temporary_heuristic", unit="reputation points per sqrt(network units)",
+    source=None, confidence="D",
+    why="Same sqrt-saturating shape as the school bonus, larger because an "
+        "academy network is a bigger, later institution. No independent "
+        "source; picked to feel roughly proportionate to the school figure.")
+STANDING_PATRON_SENATORIAL = declare(
+    "STANDING_PATRON_SENATORIAL", 3.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Flat standing from having a senatorial-tier patron's name attached "
+        "to you. A real figure would follow from how visible that patron's "
+        "own standing is in this specific society, not a flat constant "
+        "reused across every civilisation in the game.")
+STANDING_PATRON_IMPERIAL = declare(
+    "STANDING_PATRON_IMPERIAL", 8.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="As STANDING_PATRON_SENATORIAL, for the imperial tier - larger "
+        "because that patron is more visible, tuned rather than derived.")
+STANDING_IDENTITY_COVER = declare(
+    "STANDING_IDENTITY_COVER", 1.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Small standing bonus for having a respectable cover identity at "
+        "all. Invented game balance, smallest of this group because a cover "
+        "identity is a starting requirement, not an achievement.")
+STANDING_SCANDAL_PENALTY_PER_POINT = declare(
+    "STANDING_SCANDAL_PENALTY_PER_POINT", 0.5, kind="temporary_heuristic",
+    unit="reputation points lost per point of household.scandal",
+    source=None, confidence="D",
+    why="How much a point of scandal erodes standing, one-for-one at half "
+        "weight. Scandal itself has no source model (who spreads it, how "
+        "fast, whether it fades) so this coefficient is a placeholder for "
+        "that whole missing mechanism, not a measured rate of anything.")
+REPUTATION_EASE_SCALE = declare(
+    "REPUTATION_EASE_SCALE", 120.0, kind="temporary_heuristic",
+    unit="reputation points per unit of ease (dimensionless denominator)",
+    source=None, confidence="D",
+    why="How much reputation it takes to make everything else roughly "
+        "twice as easy (rep_factor = 1 + reputation/120). No independent "
+        "source; a real figure needs a model of what reputation actually "
+        "buys (lower prices, faster favours, less friction) instead of one "
+        "shared multiplier standing in for all of them at once.")
+ECONOMY_INDEX_PER_DIFFUSED_NODE = declare(
+    "ECONOMY_INDEX_PER_DIFFUSED_NODE", 0.055,
+    kind="temporary_heuristic", unit="fraction of output per diffused technology",
+    source=None, confidence="D",
+    why="How much each technology that has spread beyond your own workshop "
+        "(corpus_dispersed) raises output economy-wide, standing in for the "
+        "real mechanism - diffusion of a specific technology through a "
+        "specific population over time - that nothing in this project "
+        "computes yet; ENDOGENOUS_COSTS_AND_DOMAINS.md Part 2 gets closer "
+        "to a real production-cost price than this flat index does, but "
+        "does not model diffusion speed either.")
+ECONOMY_INDEX_PER_LOCKED_NODE = declare(
+    "ECONOMY_INDEX_PER_LOCKED_NODE", 0.030,
+    kind="temporary_heuristic", unit="fraction of output per undispersed technology",
+    source=None, confidence="D",
+    why="Same mechanism as ECONOMY_INDEX_PER_DIFFUSED_NODE, at roughly "
+        "half strength, for a technology that exists only in your own "
+        "workshop and has not been copied out - knowledge locked in one "
+        "place should spread its economic benefit more slowly, not not at "
+        "all. Both figures are tuned, not measured.")
+
+
 class EconomyMixin:
     def standing_floor(self):
         """The reputation you keep for what you have built, whatever else happens.
@@ -130,28 +246,28 @@ class EconomyMixin:
         senator who will receive you do not.
         """
         earned = len(self.household.done) - len(self.household.granted)
-        standing = 0.5 + 0.55 * math.sqrt(max(0, earned))
-        if self.running("corpus_written"):     standing += 3.0
-        if self.running("corpus_dispersed"):   standing += 6.0
+        standing = STANDING_BASE_FLOOR + STANDING_PER_SQRT_EARNED * math.sqrt(max(0, earned))
+        if self.running("corpus_written"):     standing += STANDING_CORPUS_WRITTEN
+        if self.running("corpus_dispersed"):   standing += STANDING_CORPUS_DISPERSED
         # SQRT, NOT LINEAR. A third schoolhouse does not make you three times
         # as well known as the first one did - the standing a school buys is
         # mostly in having founded one at all, not in its size - so further
         # units add less each time, the same curve `earned` above already
         # uses for the same reason.
         if self.running("school_founded"):
-            standing += 4.0 * self.institution_units("school_founded") ** 0.5
+            standing += STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT * self.institution_units("school_founded") ** 0.5
         if self.running("academy_network"):
-            standing += 10.0 * self.institution_units("academy_network") ** 0.5
-        if self.running("patron_senatorial"):  standing += 3.0
-        if self.running("patron_imperial"):    standing += 8.0
-        if self.running("identity_cover"):     standing += 1.0
+            standing += STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT * self.institution_units("academy_network") ** 0.5
+        if self.running("patron_senatorial"):  standing += STANDING_PATRON_SENATORIAL
+        if self.running("patron_imperial"):    standing += STANDING_PATRON_IMPERIAL
+        if self.running("identity_cover"):     standing += STANDING_IDENTITY_COVER
         # Scandal is the one thing that eats into standing rather than sitting
         # alongside it: being notorious is not the same as being unknown.
-        return max(0.0, standing - 0.5 * self.household.scandal)
+        return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.household.scandal)
 
     def rep_factor(self):
         """How much easier reputation makes everything. 1.0 at zero reputation."""
-        return 1.0 + self.household.reputation / 120.0
+        return 1.0 + self.household.reputation / REPUTATION_EASE_SCALE
 
     def economy_index(self):
         """Diffused technology enriches the whole Empire, not only your workshop.
@@ -163,16 +279,133 @@ class EconomyMixin:
         is false is that the revolution funds itself.
         """
         diffused = len(self.household.done - self.household.granted)
-        index = 1.0 + 0.055 * diffused
+        index = 1.0 + ECONOMY_INDEX_PER_DIFFUSED_NODE * diffused
         if not self.running("corpus_dispersed"):
-            index = 1.0 + 0.030 * diffused      # knowledge locked in one workshop spreads slowly
+            index = 1.0 + ECONOMY_INDEX_PER_LOCKED_NODE * diffused      # knowledge locked in one workshop spreads slowly
         return index
+
+    STATE_FUNDING_BASE = declare(
+        "STATE_FUNDING_BASE", 2500.0, kind="temporary_heuristic",
+        unit="denarii/year at economy=1, state_capacity=1, pop_scale=1",
+        source=None, confidence="D",
+        why="What an imperial patron is worth in direct funding at a "
+            "reference civilisation size and state capacity. No fiscal "
+            "record backs this figure; a real answer needs a state budget "
+            "model - tax revenue, the fiscus's own spending priorities - "
+            "that this engine does not have, per CLAUDE.md 3.1's ban on "
+            "asserting a state revenue outright.")
+    STATE_FUNDING_POP_SCALE_EXPONENT = declare(
+        "STATE_FUNDING_POP_SCALE_EXPONENT", 0.4, kind="temporary_heuristic",
+        unit="dimensionless exponent on pop_scale", source=None,
+        confidence="D",
+        why="How much faster a larger population's state can fund you, on "
+            "a sub-linear curve so state funding does not simply track "
+            "population one-for-one. Shape is plausible (bigger states have "
+            "more surplus but not proportionally more to spare on one "
+            "founder); the exponent itself is tuned, not fitted to any "
+            "fiscal data.")
+    STATE_FUNDING_GOV_QUALITY_SCALE = declare(
+        "STATE_FUNDING_GOV_QUALITY_SCALE", 25.0, kind="temporary_heuristic",
+        unit="household.gov points per +100% funding", source=None,
+        confidence="D",
+        why="How much a better-governed household multiplies its own state "
+            "funding. household.gov has no independent calibration of its "
+            "own scale, so this denominator is picked to make the term feel "
+            "proportionate rather than derived from anything.")
 
     def state_funding(self):
         if not self.running("patron_imperial"):
             return 0.0
-        return (2500.0 * self.economy * self.state_capacity * self.pop_scale ** 0.4
-                * (1.0 + max(0.0, self.household.gov) / 25.0) * self.rep_factor())
+        return (self.STATE_FUNDING_BASE * self.economy * self.state_capacity
+                * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
+                * (1.0 + max(0.0, self.household.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
+                * self.rep_factor())
+
+    CREDIT_LINE_EARNING_MULTIPLE = declare(
+        "CREDIT_LINE_EARNING_MULTIPLE", 0.5, kind="temporary_heuristic",
+        unit="denarii of credit per denarii of standing yearly earning",
+        source=None, confidence="D",
+        why="How many years of standing income a lender extends to a "
+            "complete stranger with nothing else vouching for them. No "
+            "attested Roman credit-scoring source; a real figure needs a "
+            "model of what a moneylender could actually observe and enforce "
+            "against a given borrower's income, which this engine does not "
+            "have.")
+    CREDIT_LINE_IDENTITY_COVER = declare(
+        "CREDIT_LINE_IDENTITY_COVER", 400.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Extra credit a respectable cover identity is worth. Tuned so "
+            "the opening decision (reach a cover identity or not) is a real "
+            "one; not sourced to any attested figure.")
+    CREDIT_LINE_PATRON_LOCAL = declare(
+        "CREDIT_LINE_PATRON_LOCAL", 3000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Extra credit a local patron's name is worth. Game-balance "
+            "figure, not a sourced credit line.")
+    CREDIT_LINE_PATRON_SENATORIAL = declare(
+        "CREDIT_LINE_PATRON_SENATORIAL", 15000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Extra credit a senatorial patron's name is worth. Scaled up "
+            "from the local-patron figure by feel, not by any attested "
+            "ratio of patron wealth or standing.")
+    CREDIT_LINE_PATRON_IMPERIAL = declare(
+        "CREDIT_LINE_PATRON_IMPERIAL", 60000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Extra credit an imperial patron's name is worth. As with the "
+            "other patron tiers, a tuned step up rather than a sourced "
+            "figure - see the CREDIT_LINE_SERVICEABLE bound below for the "
+            "mechanism that stops this alone turning into an unpayable "
+            "trap.")
+    CREDIT_LINE_PER_COLLEGIUM_UNIT = declare(
+        "CREDIT_LINE_PER_COLLEGIUM_UNIT", 4000.0, kind="temporary_heuristic",
+        unit="denarii per licensed collegium unit", source=None,
+        confidence="D",
+        why="Credit value of one licensed collegium, linear rather than "
+            "sqrt because this is collateral (a real, seizable asset) "
+            "rather than fame - see the comment this replaces for that "
+            "reasoning. The rate itself is tuned, not appraised.")
+    CREDIT_LINE_ENDOWMENT_LAND = declare(
+        "CREDIT_LINE_ENDOWMENT_LAND", 30000.0, kind="temporary_heuristic",
+        unit="denarii", source=None, confidence="D",
+        why="Credit value of an endowment of land, treated as real "
+            "collateral. No land valuation model backs this figure; it is "
+            "a flat, tuned amount.")
+    CREDIT_LINE_PER_REPUTATION_POINT = declare(
+        "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
+        unit="denarii of credit per reputation point", source=None,
+        confidence="D",
+        why="How much a point of reputation (itself a heuristic score, see "
+            "STANDING_* above) is worth in raw borrowing power. Doubly "
+            "removed from any measurement: reputation is invented and this "
+            "conversion rate is invented on top of it.")
+    CREDIT_LINE_PER_FOREST_HA = declare(
+        "CREDIT_LINE_PER_FOREST_HA", 120.0, kind="temporary_heuristic",
+        unit="denarii of credit per hectare of owned forest", source=None,
+        confidence="D",
+        why="Forest is real collateral, so it counts toward credit the way "
+            "FOREST_COST_PER_HA says it cost to buy; the per-hectare figure "
+            "here is not tied back to that purchase price by any explicit "
+            "loan-to-value ratio, just a plausible-feeling fraction of it.")
+    CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE = declare(
+        "CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE", 0.5, kind="temporary_heuristic",
+        unit="fraction of upkeep added to the running-tab floor",
+        source=None, confidence="D",
+        why="Extra headroom above bare living costs that ordinary "
+            "tradesmen and landlords will still carry you for, on top of "
+            "living_cost() itself - large enough that the floor does not "
+            "sit exactly on the edge of insolvency, tuned rather than "
+            "derived from any attested trade-credit practice.")
+    CREDIT_SURPLUS_YEARS_MULTIPLE = declare(
+        "CREDIT_SURPLUS_YEARS_MULTIPLE", 5.0,
+        kind="temporary_heuristic", unit="years of income/surplus",
+        source=None, confidence="D",
+        why="How many years of turnover (here) or of net surplus "
+            "(funding_capacity(), below) a lender is willing to advance "
+            "against - the bound that stops a large patron-name credit line "
+            "turning into unpayable debt for a household with modest "
+            "income. Chosen, per the comment this replaces, to leave the "
+            "game's own opening decision unaffected, not fitted to any "
+            "lending data.")
 
     def credit_limit(self, _rev=None, _upkeep=None):
         """How far into arrears anyone will actually let you go.
@@ -215,19 +448,19 @@ class EconomyMixin:
         # SETTLED ... reputation -6.6": owing 628 was safe and owing nothing
         # was ruin.
         earning = self.revenue_capacity()
-        base = earning * 0.5
-        if self.running("identity_cover"):     base += 400.0
-        if self.running("patron_local"):       base += 3000.0
-        if self.running("patron_senatorial"):  base += 15000.0
-        if self.running("patron_imperial"):    base += 60000.0
+        base = earning * self.CREDIT_LINE_EARNING_MULTIPLE
+        if self.running("identity_cover"):     base += self.CREDIT_LINE_IDENTITY_COVER
+        if self.running("patron_local"):       base += self.CREDIT_LINE_PATRON_LOCAL
+        if self.running("patron_senatorial"):  base += self.CREDIT_LINE_PATRON_SENATORIAL
+        if self.running("patron_imperial"):    base += self.CREDIT_LINE_PATRON_IMPERIAL
         # LINEAR, NOT SQRT: a licensed collegium's credit is collateral, not
         # fame, and three of them really do stand behind three times the
         # borrowing the first one did.
         if self.running("collegium_licensed"):
-            base += 4000.0 * self.institution_units("collegium_licensed")
-        if self.running("endowment_land"):     base += 30000.0      # real collateral
-        base += max(0.0, self.household.reputation) * 250.0
-        base += self.household.forest_ha * 120.0                           # also collateral
+            base += self.CREDIT_LINE_PER_COLLEGIUM_UNIT * self.institution_units("collegium_licensed")
+        if self.running("endowment_land"):     base += self.CREDIT_LINE_ENDOWMENT_LAND      # real collateral
+        base += max(0.0, self.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
+        base += self.household.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
         # A FLOOR of one year's running costs, because everyone everywhere has
         # always been able to run a tab. The baker, the landlord and the smith
         # all carry you for a season; what they will not do is advance you cash.
@@ -244,7 +477,7 @@ class EconomyMixin:
         # of the same calls rather than silently repeating them. See
         # living_cost's own docstring on why those arguments exist.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
-        floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * 0.5
+        floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
         # AND BOUNDED BY WHAT YOU CAN SERVICE. A senatorial patron adds fifteen
         # thousand to the line whoever you are, so a household with 1,800 of
         # revenue could owe 23,000 - about 1,500 a year in interest against
@@ -261,7 +494,7 @@ class EconomyMixin:
         # chosen to leave the OPENING where it was: a founder with a practice
         # and nothing else could always just reach a respectable cover
         # identity, and that is the first real decision in the game.
-        serviceable = floor + max(0.0, earning) * 5.0
+        serviceable = floor + max(0.0, earning) * self.CREDIT_SURPLUS_YEARS_MULTIPLE
         return max(min(base, serviceable), floor) * self.price_index
 
     def committed_spend(self):
@@ -317,8 +550,8 @@ class EconomyMixin:
                  + self.mine_operating_cost()
                  + max(0.0, -self.household.capital) * self.debt_interest_rate())
         return (max(0.0, self.household.capital)
-                + self.credit_limit(_rev=rev, _upkeep=upkeep_amount) * 0.5
-                + max(0.0, rev - fixed) * 5.0)
+                + self.credit_limit(_rev=rev, _upkeep=upkeep_amount) * self.SPENDING_DRAW_SHARE_ORDINARY
+                + max(0.0, rev - fixed) * self.CREDIT_SURPLUS_YEARS_MULTIPLE)
 
     def shed_loss_makers(self, yr):
         """In arrears, stop maintaining anything that costs more than it returns.
@@ -399,6 +632,79 @@ class EconomyMixin:
                              % (len(shed), "" if len(shed) == 1 else "s",
                                 ", ".join(shed))))
 
+    DEBT_BASE_RATE = declare(
+        "DEBT_BASE_RATE", 0.12, kind="temporary_heuristic",
+        unit="fraction of arrears charged per year", source=
+        "The Roman legal maximum on ordinary loans (centesimae usurae, "
+        "literally 'hundredths', i.e. 1%/month) was twelve per cent a year; "
+        "widely attested as the respectable-lending ceiling of the period "
+        "this scenario starts in.",
+        confidence="B",
+        why="What an ordinary, unsecured borrower with no patron pays on "
+            "arrears - a real attested legal ceiling for Rome specifically, "
+            "not a guess, but used here as a flat PRICE OF MONEY asserted "
+            "from the historical record rather than a rate this model "
+            "derives from capital scarcity, expected default and lending "
+            "risk the way CLAUDE.md SS3.1 asks a price to be derived. It is "
+            "also the one figure every OTHER civilisation in this game "
+            "reuses as its own starting rate (nothing here varies it by "
+            "civ), which a real mechanism would have to. Flagged as the "
+            "clearest SS3.1 candidate in this file: a historical number "
+            "standing in for a market this project has not yet built - see "
+            "ENDOGENOUS_COSTS_AND_DOMAINS.md's wage/price solver for the "
+            "kind of mechanism a real interest rate would fall out of.")
+    DEBT_RATE_DISCOUNT_PATRON_LOCAL = declare(
+        "DEBT_RATE_DISCOUNT_PATRON_LOCAL", 0.015, kind="temporary_heuristic",
+        unit="fraction off the base annual rate", source=None,
+        confidence="D",
+        why="How much cheaper a local patron's name makes borrowing. No "
+            "source ties a specific rate discount to a specific patronage "
+            "tier; a real figure needs a model of how a lender actually "
+            "prices counterparty risk in a patronage economy.")
+    DEBT_RATE_DISCOUNT_PATRON_SENATORIAL = declare(
+        "DEBT_RATE_DISCOUNT_PATRON_SENATORIAL", 0.03, kind="temporary_heuristic",
+        unit="fraction off the base annual rate", source=None,
+        confidence="D",
+        why="As DEBT_RATE_DISCOUNT_PATRON_LOCAL, larger tier - tuned to "
+            "feel proportionate, not derived from lending data.")
+    DEBT_RATE_DISCOUNT_PATRON_IMPERIAL = declare(
+        "DEBT_RATE_DISCOUNT_PATRON_IMPERIAL", 0.03, kind="temporary_heuristic",
+        unit="fraction off the base annual rate", source=None,
+        confidence="D",
+        why="As DEBT_RATE_DISCOUNT_PATRON_SENATORIAL - the imperial and "
+            "senatorial tiers happen to carry the same discount here, which "
+            "is itself an unexamined choice rather than a considered one.")
+    DEBT_RATE_DISCOUNT_ENDOWMENT_LAND = declare(
+        "DEBT_RATE_DISCOUNT_ENDOWMENT_LAND", 0.02, kind="temporary_heuristic",
+        unit="fraction off the base annual rate", source=None,
+        confidence="D",
+        why="Secured lending against land collateral is cheaper than "
+            "personal credit in general, which is a real effect; the "
+            "specific two-point discount is tuned, not taken from an "
+            "attested Roman secured-loan rate.")
+    DEBT_RATE_DISCOUNT_BANKER = declare(
+        "DEBT_RATE_DISCOUNT_BANKER", 0.01, kind="temporary_heuristic",
+        unit="fraction off the base annual rate", source=None,
+        confidence="D",
+        why="A banker you know (fin_argentarii) shaves a little off the "
+            "rate through a personal relationship - plausible in kind, "
+            "invented in size.")
+    DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
+        "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
+        unit="fraction off the base annual rate (maximum)", source=None,
+        confidence="D",
+        why="Ceiling on how much sheer personal reputation, independent of "
+            "any named patron, can cheapen credit. Tuned so reputation "
+            "alone cannot out-discount every patronage tier combined.")
+    DEBT_RATE_REPUTATION_SCALE = declare(
+        "DEBT_RATE_REPUTATION_SCALE", 3000.0, kind="temporary_heuristic",
+        unit="reputation points per percentage point of discount",
+        source=None, confidence="D",
+        why="How fast reputation converts into a cheaper interest rate, "
+            "against DEBT_RATE_REPUTATION_DISCOUNT_CAP above. Reputation's "
+            "own scale is itself invented (see STANDING_* above), so this "
+            "is a heuristic layered on a heuristic.")
+
     def debt_interest_rate(self):
         """What arrears cost you a year.
 
@@ -409,13 +715,14 @@ class EconomyMixin:
         is the same rule as everything else in this model: patronage is the
         currency underneath the currency.
         """
-        rate = 0.12
-        if self.running("patron_local"):        rate -= 0.015
-        if self.running("patron_senatorial"):   rate -= 0.03
-        if self.running("patron_imperial"):     rate -= 0.03
-        if self.running("endowment_land"):      rate -= 0.02          # secured, not personal
-        if self.running("fin_argentarii"):      rate -= 0.01          # a banker you know
-        rate -= min(0.03, max(0.0, self.household.reputation) / 3000.0)
+        rate = self.DEBT_BASE_RATE
+        if self.running("patron_local"):        rate -= self.DEBT_RATE_DISCOUNT_PATRON_LOCAL
+        if self.running("patron_senatorial"):   rate -= self.DEBT_RATE_DISCOUNT_PATRON_SENATORIAL
+        if self.running("patron_imperial"):     rate -= self.DEBT_RATE_DISCOUNT_PATRON_IMPERIAL
+        if self.running("endowment_land"):      rate -= self.DEBT_RATE_DISCOUNT_ENDOWMENT_LAND          # secured, not personal
+        if self.running("fin_argentarii"):      rate -= self.DEBT_RATE_DISCOUNT_BANKER          # a banker you know
+        rate -= min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
+                    max(0.0, self.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
         return max(0.0, rate)
 
     def charge_interest(self, yr):
@@ -471,6 +778,78 @@ class EconomyMixin:
                          % ("{:,.0f}".format(-self.household.capital),
                             "{:,.0f}".format(limit), used * 100)))
 
+    CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
+        "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="How long nobody will fund new work after projects are halted "
+            "for exhausted credit. A real figure needs a model of how "
+            "quickly a specific lending community forgives a specific "
+            "default; this is a tuned, round number chosen to feel like a "
+            "real but recoverable setback.")
+    CREDITOR_SEIZURE_VALUE_MULTIPLE = declare(
+        "CREDITOR_SEIZURE_VALUE_MULTIPLE", 2.0, kind="temporary_heuristic",
+        unit="years of upkeep recovered per concern seized", source=None,
+        confidence="D",
+        why="What creditors recover, in cash, for seizing and selling a "
+            "concern that costs more than it earns - valued at twice its "
+            "annual upkeep rather than any appraised resale value, because "
+            "this model has no market for used capital goods. A real "
+            "figure needs one.")
+    HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION = declare(
+        "HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION", 0.4, kind="temporary_heuristic",
+        unit="fraction of artisans kept after the household disperses",
+        source=None, confidence="D",
+        why="How many trained artisans stay with a ruined household after "
+            "the rest are freed or sold - some core of skilled people is "
+            "plausible, but the specific 40% retained is tuned game "
+            "balance, not derived from any account of how a Roman household "
+            "actually broke up under debt.")
+    HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR = declare(
+        "HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR", 3.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D",
+        why="The minimum artisan headcount a dispersed household keeps, so "
+            "a small household does not round to zero and become unable to "
+            "ever recover. Chosen so recovery stays possible, not measured.")
+    DEBT_BONDAGE_DEFAULT_TERM_YEARS = declare(
+        "DEBT_BONDAGE_DEFAULT_TERM_YEARS", 10.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Fallback term of debt bondage/service for a civilisation whose "
+            "own data does not specify one (civ.get('bondage_years', ...)). "
+            "Historical debt-service terms across the systems this method's "
+            "own docstring names (Han, Norse, Mexica) varied by circumstance "
+            "rather than clustering on a single figure, so this is a round "
+            "placeholder, not a citation.")
+    SETTLEMENT_MIN_INTERVAL_YEARS = declare(
+        "SETTLEMENT_MIN_INTERVAL_YEARS", 10.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="Minimum gap between one insolvency write-off and the next, so "
+            "settling is a once-in-a-life humiliation rather than an annual "
+            "accounting entry (see the comment this replaces for the bug "
+            "this fixed). The specific gap is a game-balance choice.")
+    SETTLEMENT_CAPITAL_RETAINED_FRACTION = declare(
+        "SETTLEMENT_CAPITAL_RETAINED_FRACTION", 0.35, kind="temporary_heuristic",
+        unit="fraction of the credit limit still owed after settlement",
+        source=None, confidence="D",
+        why="How much debt survives an insolvency write-off, as a fraction "
+            "of the credit limit rather than of the actual arrears - so "
+            "settlement always leaves you owing something (a real write-off "
+            "rarely erases a debt entirely) without the residue growing "
+            "without bound. Tuned, not modelled on any attested bankruptcy "
+            "practice.")
+    SETTLEMENT_REPUTATION_HIT = declare(
+        "SETTLEMENT_REPUTATION_HIT", 12.0, kind="temporary_heuristic",
+        unit="reputation points", source=None, confidence="D",
+        why="How much standing an insolvency write-off costs. Reputation's "
+            "own scale is already invented (STANDING_* above); this is a "
+            "further tuned penalty on top of it.")
+    SETTLEMENT_CREDIT_FREEZE_YEARS = declare(
+        "SETTLEMENT_CREDIT_FREEZE_YEARS", 12, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="How long nobody extends fresh credit after a write-off - "
+            "longer than CREDIT_FREEZE_YEARS_AFTER_HALT because an actual "
+            "default is worse than a temporary halt, but the specific "
+            "figure is tuned game feel, not a lending-market estimate.")
+
     def enforce_credit_limit(self, yr):
         """Nobody lends past the limit, so past the limit you simply stop.
 
@@ -503,7 +882,7 @@ class EconomyMixin:
                     _paid[node_id] = _paid.get(node_id, 0.0) + max(0.0, state.get("spent", 0.0))
                     _kept += max(0.0, state.get("spent", 0.0))
                 self.household.bountied.discard(node_id)
-            self.household.credit_frozen_until = yr + 5
+            self.household.credit_frozen_until = yr + self.CREDIT_FREEZE_YEARS_AFTER_HALT
             self.household.log.append((yr, "CREDIT EXHAUSTED: %d project%s stopped, "
                                  "unfinished: %s. The %s denarii already paid "
                                  "stands to your credit and comes off the "
@@ -512,7 +891,7 @@ class EconomyMixin:
                              % (len(dropped), "" if len(dropped) == 1 else "s",
                                 ", ".join(dropped[:4])
                                 + (" and others" if len(dropped) > 4 else ""),
-                                "{:,.0f}".format(_kept), yr + 5)))
+                                "{:,.0f}".format(_kept), yr + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if self.household.capital < -limit:
             self.mothball_mines()
@@ -543,7 +922,7 @@ class EconomyMixin:
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
                 self.household.operating.discard(node_id)
-                self.household.capital += self.nodes[node_id]["up"] * 2.0
+                self.household.capital += self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE
                 # MOTHBALLED, not merely discarded - see the identical comment
                 # in shed_loss_makers. Without this a work creditors took stood
                 # indistinguishable from research never begun, and `restore`
@@ -572,7 +951,8 @@ class EconomyMixin:
             freed = self.household.slaves + self.household.freedmen
             self.manumit(self.household.slaves)          # you do not sell them on
             self.household.freedmen = 0
-            self.household.artisans = max(3.0, self.household.artisans * 0.4)
+            self.household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
+                                          self.household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
             self.household.log.append((yr, "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed))
 
@@ -591,7 +971,7 @@ class EconomyMixin:
         # it ends, and it ends sooner if the work is worth something.
         if (self.household.capital < -limit and self.civ.get("debt_bondage")
                 and not self.household.bondage_years_left):
-            term = float(self.civ.get("bondage_years", 10))
+            term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
             self.household.bondage_years_left = term
             self.household.bondage_debt = -self.household.capital
             self.household.capital = 0.0
@@ -610,21 +990,21 @@ class EconomyMixin:
         # dramatic event five hundred times. A write-off is a once-in-a-life
         # humiliation, not an annual accounting entry, and between them you are
         # simply in arrears, which already has consequences of its own.
-        if self.household.capital < -limit and yr - getattr(self.household, "last_settlement", -999) >= 10:
+        if self.household.capital < -limit and yr - getattr(self.household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             self.household.last_settlement = yr
-            self.household.capital = -limit * 0.35
+            self.household.capital = -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED. Two settlements
             # each said "reputation -12" against a reputation of 4.9, and the
             # second did nothing at all - a break tester checked, and was right
             # that a penalty which cannot be paid should not be quoted.
-            _rep_hit = min(12.0, max(0.0, self.household.reputation))
-            self.household.reputation = max(0.0, self.household.reputation - 12)
+            _rep_hit = min(self.SETTLEMENT_REPUTATION_HIT, max(0.0, self.household.reputation))
+            self.household.reputation = max(0.0, self.household.reputation - self.SETTLEMENT_REPUTATION_HIT)
             # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
             # from a debt cost a little standing and nothing else, and standing
             # grows back. A person who has just been written off does not get
             # a fresh line of credit the following morning.
             _frozen_before = getattr(self.household, "credit_frozen_until", 0)
-            self.household.credit_frozen_until = max(_frozen_before, yr + 12)
+            self.household.credit_frozen_until = max(_frozen_before, yr + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
             # SAY WHAT ACTUALLY HAPPENED. "The debt is written off" while
             # leaving the player owing a third of their credit line is a
             # sentence that contradicts the number on the next line, and a
@@ -651,7 +1031,7 @@ class EconomyMixin:
                                  "off and you still owe about %s denarii. Your "
                                  "name is worth less for it (reputation %s), and "
                                  "you keep your knowledge and your practice%s"
-                                 % ("{:,.0f}".format(limit * 0.35),
+                                 % ("{:,.0f}".format(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION),
                                     "-%.1f" % _rep_hit if _rep_hit > 0.05
                                     else "already at nothing, so no further",
                                     (". Settling again while still frozen out "
@@ -660,6 +1040,24 @@ class EconomyMixin:
                                      "with every settlement, not just the first"
                                      % (_frozen_before, self.household.credit_frozen_until))
                                     if _moved else "")))
+
+    WAGE_REPUTATION_BONUS_CAP = declare(
+        "WAGE_REPUTATION_BONUS_CAP", 0.5, kind="temporary_heuristic",
+        unit="multiple on wage income (maximum bonus)", source=None,
+        confidence="D",
+        why="Ceiling on how much personal reputation can raise what "
+            "working for wages pays, in the stall-diagnosis advice shown "
+            "to a stuck player. A defensive cap on an already-invented "
+            "reputation scale (see STANDING_* above), not derived from any "
+            "attested wage-premium-for-reputation relationship.")
+    WAGE_REPUTATION_BONUS_SCALE = declare(
+        "WAGE_REPUTATION_BONUS_SCALE", 200.0, kind="temporary_heuristic",
+        unit="reputation points per 100% of the bonus cap", source=None,
+        confidence="D",
+        why="How fast reputation converts into a wage-work bonus, against "
+            "WAGE_REPUTATION_BONUS_CAP above. Reputation's own scale is "
+            "itself invented, so this is a heuristic layered on a "
+            "heuristic, the same shape as DEBT_RATE_REPUTATION_SCALE.")
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what
@@ -719,12 +1117,13 @@ class EconomyMixin:
             # so this cost you 50". Advice that does not say which job to take
             # is advice that can be followed into a loss.
             trades = [trade for trade in WAGES if self.trade_available(trade)]
-            best_t = max(trades, key=lambda t: ANNUAL_WAGE.get(t, 375.0),
+            best_t = max(trades, key=lambda t: ANNUAL_WAGE.get(t, self.DEFAULT_ANNUAL_WAGE_FALLBACK),
                          default=None)
             if best_t:
                 rate = ANNUAL_WAGE[best_t] / self.HOURS_PER_PERSON_YEAR
                 would_earn = (pool * rate * self.price_index * self.wage_index
-                              * (1.0 + min(0.5, self.household.reputation / 200.0)))
+                              * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
+                                           self.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
                 # What those same hours are already earning in the practice.
                 practice = sum(self.nodes[node_id]["rev"] for node_id in self._practice_set())
                 would_cost = (practice * self.PRACTICE_SHARE
@@ -782,9 +1181,20 @@ class EconomyMixin:
     # whole line and `hire` and `buy` may draw half of it. `quote` counted
     # neither, which was simply wrong: it is the command whose entire job is
     # to tell you what you can pay for.
+    SPENDING_DRAW_SHARE_ORDINARY = declare(
+        "SPENDING_DRAW_SHARE_ORDINARY", 0.5, kind="temporary_heuristic",
+        unit="fraction of the credit line drawable for buy/hire", source=None,
+        confidence="D",
+        why="A lender advances against unfinished WORK (a `start`) more "
+            "readily than against a payroll or a purchase that leaves "
+            "nothing half-built to point at - a real distinction, per this "
+            "method's own docstring - but the specific half-vs-whole split "
+            "is a tuned game-balance choice, not derived from any lending "
+            "practice.")
+
     def spending_power(self, kind="buy"):
         """What you could actually raise, by what you mean to spend it on."""
-        share = 1.0 if kind == "start" else 0.5
+        share = 1.0 if kind == "start" else self.SPENDING_DRAW_SHARE_ORDINARY
         # THE DEBT YOU ALREADY CARRY COUNTS AGAINST YOU. This read
         # max(0.0, self.household.capital) + credit_limit() * share, which floored the
         # capital term and so ignored arrears entirely: a household 500 into
@@ -838,9 +1248,19 @@ class EconomyMixin:
         """
         return float(self.price_index)
 
+    OPPOSITION_COST_PER_UNIT = declare(
+        "OPPOSITION_COST_PER_UNIT", 0.25, kind="temporary_heuristic",
+        unit="fraction of cost added per unit of state opposition",
+        source=None, confidence="D",
+        why="How much bribes, delay and working through a front man add to "
+            "a project's cost per unit of state_interest() opposition. "
+            "state_interest() itself has no independent calibration against "
+            "attested bribery or delay costs, so this conversion rate is "
+            "tuned to feel like a real friction, not measured from one.")
+
     def opposition_factor(self, k):
         """Opposed work costs more: bribes, delay, a provincial site, a front man."""
-        return 1.0 + 0.25 * max(0.0, -self.state_interest(self.nodes[k]))
+        return 1.0 + self.OPPOSITION_COST_PER_UNIT * max(0.0, -self.state_interest(self.nodes[k]))
 
     def project_cost(self, k):
         """What this project will actually cost in money, all factors applied.
@@ -1121,20 +1541,255 @@ class EconomyMixin:
     # category except processing; textiles is left discretionary too,
     # deliberately - clothing is not modelled as a nutritional necessity
     # here, only food is, matching the brief's own worked example exactly.
+    GOODS_ETA_TEXTILES = declare(
+        "GOODS_ETA_TEXTILES", 0.65, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source="Apparel-demand studies typically put clothing's own-price elasticity in the 0.6-1.0 range, moderately elastic, neither staple nor luxury; picked at the inelastic end so the early revenue erosion the brief asks for is actually visible.",
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_TEXTILES = declare(
+        "GOODS_FLOOR_TEXTILES", 0.4, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Cloth's own floor in commodities.json (0.35), nudged to 0.40 after measuring this against 700-year Monte Carlo runs (see the class comment above for which civilisation's outcome that nudge protected).",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_TEXTILES = declare(
+        "GOODS_TAU_TEXTILES", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Britain's handloom weavers went from the dominant technology to a shrinking minority over roughly thirty to forty years, the 1810s to the 1850s; taken at the slower end of that range after the same Monte Carlo calibration.",
+        confidence='C',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_PROCESSING = declare(
+        "GOODS_ETA_PROCESSING", 0.35, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='USDA Economic Research Service estimates put most packaged-food demand elasticities around 0.2-0.6; people keep eating whether or not processed food gets cheaper.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_PROCESSING = declare(
+        "GOODS_FLOOR_PROCESSING", 0.55, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source='Preserved food has a harder real cost floor than cloth (a tin and the heat to seal it cost what they cost); started at 0.45, nudged to 0.55 after the same Monte Carlo calibration as textiles.',
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_PROCESSING = declare(
+        "GOODS_TAU_PROCESSING", 40.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="No diffusion-speed citation exists for food-processing technology specifically; a longer, explicitly illustrative period than textiles' cited figure stands in for one.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_PRINTING = declare(
+        "GOODS_ETA_PRINTING", 0.8, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Discretionary but not a luxury in the pre-mass-media world these nodes describe; picked close to, but under, unit elastic.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_PRINTING = declare(
+        "GOODS_FLOOR_PRINTING", 0.4, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source='Same cloth-anchored floor family as textiles (0.35 nudged to 0.40); printed matter has no independently cited floor of its own.',
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_PRINTING = declare(
+        "GOODS_TAU_PRINTING", 40.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source='No diffusion-speed citation for print technology specifically; the same illustrative 40-year figure as processing stands in for one.',
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_PHOTOGRAPHY = declare(
+        "GOODS_ETA_PHOTOGRAPHY", 1.6, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Camera and film equipment is squarely a luxury good throughout the period this applies to; luxury-goods demand studies commonly cite elasticities above 1.5.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_PHOTOGRAPHY = declare(
+        "GOODS_FLOOR_PHOTOGRAPHY", 0.55, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Coffee's own floor in commodities.json (0.5), the other luxury good that file prices, nudged to 0.55 after the same calibration pass.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_PHOTOGRAPHY = declare(
+        "GOODS_TAU_PHOTOGRAPHY", 40.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source='No diffusion-speed citation for camera technology specifically; the same illustrative 40-year figure as processing stands in for one.',
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_FERMENTATION = declare(
+        "GOODS_ETA_FERMENTATION", 0.55, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Alcohol demand studies commonly cite elasticities of roughly 0.3-0.9 - a consumption habit, not a nutritional necessity, but not as freely substitutable as a camera either.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_FERMENTATION = declare(
+        "GOODS_FLOOR_FERMENTATION", 0.45, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Follows processing's 'real cost floor' reasoning as the closest existing anchor, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_FERMENTATION = declare(
+        "GOODS_TAU_FERMENTATION", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_LEISURE = declare(
+        "GOODS_ETA_LEISURE", 1.1, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source="Hobby and entertainment goods are usually cited above unit elasticity but below photography's fine-goods range.",
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_LEISURE = declare(
+        "GOODS_FLOOR_LEISURE", 0.45, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Follows processing's cost-floor reasoning as the closest existing anchor, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_LEISURE = declare(
+        "GOODS_TAU_LEISURE", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_SOUND = declare(
+        "GOODS_ETA_SOUND", 1.3, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='A luxury technology good, the same reasoning as photography but slightly less extreme - audio reached a mass market somewhat faster, historically, than the camera did.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_SOUND = declare(
+        "GOODS_FLOOR_SOUND", 0.5, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Between photography's and the entertainment bucket's floors, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_SOUND = declare(
+        "GOODS_TAU_SOUND", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_MEDIA = declare(
+        "GOODS_ETA_MEDIA", 0.85, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source="An information good, close to printing's own 0.80 elasticity, without its own independent citation.",
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_MEDIA = declare(
+        "GOODS_FLOOR_MEDIA", 0.4, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source='Same cloth-anchored floor family as textiles and printing, without its own independent citation.',
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_MEDIA = declare(
+        "GOODS_TAU_MEDIA", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_COMMERCE = declare(
+        "GOODS_ETA_COMMERCE", 1.0, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Unit-elastic hospitality and retail demand is commonly cited in the 0.8-1.3 range.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_COMMERCE = declare(
+        "GOODS_FLOOR_COMMERCE", 0.45, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Follows processing's cost-floor reasoning as the closest existing anchor, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_COMMERCE = declare(
+        "GOODS_TAU_COMMERCE", 30.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Shorter than the other categories' tau because a service business's custom is understood to shift faster than a manufacturing good's - a reasoned but not separately cited adjustment.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_LUXURY = declare(
+        "GOODS_ETA_LUXURY", 1.8, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='The single most discretionary bucket this file prices, above photography, matching how elastic gambling and spectator-entertainment demand is usually cited to be (this category covers gambling, lotteries, theatre, professional sport and racecourses).',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_LUXURY = declare(
+        "GOODS_FLOOR_LUXURY", 0.5, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Between photography's and the entertainment bucket's floors, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_LUXURY = declare(
+        "GOODS_TAU_LUXURY", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_SPECTACLE = declare(
+        "GOODS_ETA_SPECTACLE", 1.8, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Same entertainment-bucket reasoning as `luxury` above - this file splits the same real-world bucket (gambling, theatre, sport) across three `cat` values the tree happens to use.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_SPECTACLE = declare(
+        "GOODS_FLOOR_SPECTACLE", 0.5, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source='Same as `luxury` above.',
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_SPECTACLE = declare(
+        "GOODS_TAU_SPECTACLE", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source='Same as `luxury` above.',
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_LAW = declare(
+        "GOODS_ETA_LAW", 1.8, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Same entertainment-bucket reasoning as `luxury` above.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_LAW = declare(
+        "GOODS_FLOOR_LAW", 0.5, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source='Same as `luxury` above.',
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_LAW = declare(
+        "GOODS_TAU_LAW", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source='Same as `luxury` above.',
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+    GOODS_ETA_PERSONAL = declare(
+        "GOODS_ETA_PERSONAL", 1.1, kind="temporary_heuristic",
+        unit="price elasticity of demand (dimensionless)",
+        source='Ordinary personal-luxury demand (perfume, cosmetics, toiletries), the same order as `leisure`.',
+        confidence="C",
+        why="How much buying of this category's goods responds to price - the price elasticity of demand in a constant-elasticity curve. A real figure needs actual buyers in THIS simulated economy, with budgets and substitutes, competing for this good - a real DEMAND side, which ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2 does not yet cover (it solves the cost/production side of pricing; nothing in this project yet models a buyer's budget or preferences) - rather than a point value borrowed from an unrelated real-world market and a real-world period.")
+    GOODS_FLOOR_PERSONAL = declare(
+        "GOODS_FLOOR_PERSONAL", 0.45, kind="temporary_heuristic",
+        unit="fraction of day-one price (dimensionless)",
+        source="Follows processing's cost-floor reasoning as the closest existing anchor, without its own independent citation.",
+        confidence="D",
+        why="The price this market's good never falls below, however saturated - the floor of a constant-elasticity demand curve. Real cost floors exist (a good cannot sell below its own production cost forever) but this file has no production-cost model behind any of these categories, so the number is asserted rather than computed from one, and nudged, on top of that, to keep an existing game outcome from flipping (see the class comment above).")
+    GOODS_TAU_PERSONAL = declare(
+        "GOODS_TAU_PERSONAL", 35.0, kind="temporary_heuristic",
+        unit="years to visibly re-equilibrate",
+        source="Follows textiles' cited diffusion pace as the closest existing anchor, without its own independent citation.",
+        confidence='D',
+        why="Years for this category's market to visibly respond to a new supply - how fast a shared category saturates. Diffusion speed is a real, measurable social phenomenon (see the textiles citation) but most categories here have no citation of their own and reuse textiles' or processing's number by analogy, which is a placeholder for a real technology-diffusion model, not a finding about this specific good.")
+
     GOODS_CATEGORIES = {
-        "textiles":      {"eta": 0.65, "floor": 0.40, "tau": 35.0},
-        "processing":    {"eta": 0.35, "floor": 0.55, "tau": 40.0, "essential": True},
-        "printing":      {"eta": 0.80, "floor": 0.40, "tau": 40.0},
-        "photography":   {"eta": 1.60, "floor": 0.55, "tau": 40.0},
-        "fermentation":  {"eta": 0.55, "floor": 0.45, "tau": 35.0},
-        "leisure":       {"eta": 1.10, "floor": 0.45, "tau": 35.0},
-        "sound":         {"eta": 1.30, "floor": 0.50, "tau": 35.0},
-        "media":         {"eta": 0.85, "floor": 0.40, "tau": 35.0},
-        "commerce":      {"eta": 1.00, "floor": 0.45, "tau": 30.0},
-        "luxury":        {"eta": 1.80, "floor": 0.50, "tau": 35.0},
-        "spectacle":     {"eta": 1.80, "floor": 0.50, "tau": 35.0},
-        "law":           {"eta": 1.80, "floor": 0.50, "tau": 35.0},
-        "personal":      {"eta": 1.10, "floor": 0.45, "tau": 35.0},
+        "textiles": {"eta": GOODS_ETA_TEXTILES, "floor": GOODS_FLOOR_TEXTILES, "tau": GOODS_TAU_TEXTILES},
+        "processing": {"eta": GOODS_ETA_PROCESSING, "floor": GOODS_FLOOR_PROCESSING, "tau": GOODS_TAU_PROCESSING, "essential": True},
+        "printing": {"eta": GOODS_ETA_PRINTING, "floor": GOODS_FLOOR_PRINTING, "tau": GOODS_TAU_PRINTING},
+        "photography": {"eta": GOODS_ETA_PHOTOGRAPHY, "floor": GOODS_FLOOR_PHOTOGRAPHY, "tau": GOODS_TAU_PHOTOGRAPHY},
+        "fermentation": {"eta": GOODS_ETA_FERMENTATION, "floor": GOODS_FLOOR_FERMENTATION, "tau": GOODS_TAU_FERMENTATION},
+        "leisure": {"eta": GOODS_ETA_LEISURE, "floor": GOODS_FLOOR_LEISURE, "tau": GOODS_TAU_LEISURE},
+        "sound": {"eta": GOODS_ETA_SOUND, "floor": GOODS_FLOOR_SOUND, "tau": GOODS_TAU_SOUND},
+        "media": {"eta": GOODS_ETA_MEDIA, "floor": GOODS_FLOOR_MEDIA, "tau": GOODS_TAU_MEDIA},
+        "commerce": {"eta": GOODS_ETA_COMMERCE, "floor": GOODS_FLOOR_COMMERCE, "tau": GOODS_TAU_COMMERCE},
+        "luxury": {"eta": GOODS_ETA_LUXURY, "floor": GOODS_FLOOR_LUXURY, "tau": GOODS_TAU_LUXURY},
+        "spectacle": {"eta": GOODS_ETA_SPECTACLE, "floor": GOODS_FLOOR_SPECTACLE, "tau": GOODS_TAU_SPECTACLE},
+        "law": {"eta": GOODS_ETA_LAW, "floor": GOODS_FLOOR_LAW, "tau": GOODS_TAU_LAW},
+        "personal": {"eta": GOODS_ETA_PERSONAL, "floor": GOODS_FLOOR_PERSONAL, "tau": GOODS_TAU_PERSONAL},
     }
     # Which of the categories above are necessities, for income_factor()
     # below. Kept as its own set rather than scattering an `essential`
@@ -1159,13 +1814,59 @@ class EconomyMixin:
         not multiply into an implausible number.
         """
         reach = 1.0
-        if self.has("citizenship"):                reach *= 1.15
-        if self.running("patron_senatorial"):      reach *= 1.3
-        if self.running("patron_imperial"):        reach *= 1.6
-        if self.running("exp_trade_route_extend"): reach *= 1.3
-        if self.running("railway"):                reach *= 1.35
-        if self.running("telegraph_electric"):      reach *= 1.15
-        return min(reach, 3.0)
+        if self.has("citizenship"):                reach *= self.REACH_CITIZENSHIP
+        if self.running("patron_senatorial"):      reach *= self.REACH_PATRON_SENATORIAL
+        if self.running("patron_imperial"):        reach *= self.REACH_PATRON_IMPERIAL
+        if self.running("exp_trade_route_extend"): reach *= self.REACH_TRADE_ROUTE_EXTENDED
+        if self.running("railway"):                reach *= self.REACH_RAILWAY
+        if self.running("telegraph_electric"):      reach *= self.REACH_TELEGRAPH
+        return min(reach, self.REACH_CEILING)
+
+    REACH_CITIZENSHIP = declare(
+        "REACH_CITIZENSHIP", 1.15, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="How much further citizenship extends a goods market's reach. "
+            "Reuses the same flag _material_market_tonnes() already reads "
+            "for the buying side, but the specific multiplier here is a "
+            "separate, tuned guess, not derived from any attested trade "
+            "network model.")
+    REACH_PATRON_SENATORIAL = declare(
+        "REACH_PATRON_SENATORIAL", 1.3, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="As REACH_CITIZENSHIP, for a senatorial patron's network. "
+            "Tuned, not derived.")
+    REACH_PATRON_IMPERIAL = declare(
+        "REACH_PATRON_IMPERIAL", 1.6, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="As REACH_PATRON_SENATORIAL, for the imperial tier. Tuned, not "
+            "derived.")
+    REACH_TRADE_ROUTE_EXTENDED = declare(
+        "REACH_TRADE_ROUTE_EXTENDED", 1.3, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="What an extended trade route is worth to how far finished "
+            "goods can travel to buyers. Tuned, not derived.")
+    REACH_RAILWAY = declare(
+        "REACH_RAILWAY", 1.35, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="What a railway is worth to market reach for goods, mirroring "
+            "the same flag's cost-side effect in mining_tech(). A real "
+            "figure would come from actual freight-cost and travel-time "
+            "reductions a railway buys, which this file does not model.")
+    REACH_TELEGRAPH = declare(
+        "REACH_TELEGRAPH", 1.15, kind="temporary_heuristic",
+        unit="multiple on market reach", source=None, confidence="D",
+        why="What the electric telegraph is worth to market reach - "
+            "information about demand and price travelling faster than "
+            "goods themselves, a real effect with an invented size here.")
+    REACH_CEILING = declare(
+        "REACH_CEILING", 3.0, kind="temporary_heuristic",
+        unit="multiple on market reach (maximum)", source=None,
+        confidence="D",
+        why="Cap on how far compounding every reach flag together can "
+            "extend a market, so five flags at once do not multiply into an "
+            "implausible number - the same defensive-cap pattern MARKET_SHARE "
+            "and material_price_factor use elsewhere in this file. The cap's "
+            "own value is picked for plausibility, not derived.")
 
     def _goods_category_state(self, cat):
         """(n_active, world_age, cfg) for a goods category: every one of
@@ -1298,6 +1999,23 @@ class EconomyMixin:
             self._nodes_by_cat_cache = cache
         return cache.get(cat, ())
 
+    GOODS_TAU_POP_SCALE_EXPONENT = declare(
+        "GOODS_TAU_POP_SCALE_EXPONENT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless exponent on pop_scale", source=None,
+        confidence="D",
+        why="How much faster a goods market re-equilibrates in a larger "
+            "civilisation - a bigger market plausibly absorbs and adapts "
+            "to new supply faster, but this specific sub-linear exponent "
+            "is tuned rather than fitted to any market-size-versus-"
+            "diffusion-speed data.")
+    GOODS_TAU_ECONOMY_EXPONENT = declare(
+        "GOODS_TAU_ECONOMY_EXPONENT", 0.25, kind="temporary_heuristic",
+        unit="dimensionless exponent on self.economy", source=None,
+        confidence="D",
+        why="As GOODS_TAU_POP_SCALE_EXPONENT, for how much a more "
+            "developed economy speeds a goods market's re-equilibration - "
+            "plausible in direction, tuned in size.")
+
     def _goods_category_ratios(self, cat, extra=0):
         """(price_ratio, qty_ratio, n_active) for a whole category, shared
         by every concern that sells into it - the actual mechanism
@@ -1329,8 +2047,8 @@ class EconomyMixin:
         n_active, world_age, cfg = category_state
         n_active += extra
         reach = self.goods_reach_factor()
-        tau = max(1.0, cfg["tau"] * (self.pop_scale ** 0.5)
-                  * (self.economy ** 0.25) / reach)
+        tau = max(1.0, cfg["tau"] * (self.pop_scale ** self.GOODS_TAU_POP_SCALE_EXPONENT)
+                  * (self.economy ** self.GOODS_TAU_ECONOMY_EXPONENT) / reach)
         world_supply = 1.0 + world_age / tau
         total_supply = world_supply * n_active
         eta = cfg["eta"]
@@ -1371,12 +2089,53 @@ class EconomyMixin:
         # concern exists. Diminishing returns reach the same 0.55 floor as the
         # established food market rather than making subsistence free.
         farm_ha = max(0.0, getattr(self.household, "farm_hectares", 0.0))
-        farm_ratio = max(0.55, 1.0 / (1.0 + farm_ha / 120.0))
+        farm_ratio = max(self.HOUSEHOLD_FARM_PRICE_RATIO_FLOOR,
+                         1.0 / (1.0 + farm_ha / self.HOUSEHOLD_FARM_HECTARES_HALF_EFFECT))
         return min(market_ratio, farm_ratio)
 
-    FARM_COST_PER_HA = 75.0
-    HOUSING_COST_PER_PLACE = 600.0
-    TRADE_SCHOOL_COST_PER_SEAT = 1200.0
+    HOUSEHOLD_FARM_PRICE_RATIO_FLOOR = declare(
+        "HOUSEHOLD_FARM_PRICE_RATIO_FLOOR", 0.55, kind="temporary_heuristic",
+        unit="fraction of day-one staple price (dimensionless)", source=None,
+        confidence="D",
+        why="Floor on how cheap household-grown staples can make food, "
+            "deliberately matched to the processing category's own "
+            "GOODS_FLOOR_PROCESSING so a household's own farm and the "
+            "established food market saturate toward the same floor rather "
+            "than making subsistence free. Same honest limit as that "
+            "floor's own declaration: asserted, not computed from a "
+            "production-cost model.")
+    HOUSEHOLD_FARM_HECTARES_HALF_EFFECT = declare(
+        "HOUSEHOLD_FARM_HECTARES_HALF_EFFECT", 120.0, kind="temporary_heuristic",
+        unit="hectares of household farmland for half the price effect",
+        source=None, confidence="D",
+        why="How many hectares of household-owned farmland it takes to "
+            "roughly halve the household's own staple price, on a "
+            "diminishing-returns curve. Tuned game balance, not derived "
+            "from an actual yield-per-hectare model - contrast with "
+            "sim/world/agriculture.py, which derives an equivalent number "
+            "from seed rate, fold return and labour instead of asserting "
+            "one.")
+
+    FARM_COST_PER_HA = declare(
+        "FARM_COST_PER_HA", 75.0, kind="temporary_heuristic",
+        unit="denarii/hectare", source=None, confidence="D",
+        why="Purchase price of one hectare of productive farmland for the "
+            "household's own staple supply. Not tied to FOREST_COST_PER_HA "
+            "or to any attested land price; an independent, invented "
+            "figure for a different land use.")
+    HOUSING_COST_PER_PLACE = declare(
+        "HOUSING_COST_PER_PLACE", 600.0, kind="temporary_heuristic",
+        unit="denarii/place", source=None, confidence="D",
+        why="Cost to build one place of durable worker housing. Not "
+            "sourced to any attested construction cost; an invented figure "
+            "sized to make the lever meaningful without being free.")
+    TRADE_SCHOOL_COST_PER_SEAT = declare(
+        "TRADE_SCHOOL_COST_PER_SEAT", 1200.0, kind="temporary_heuristic",
+        unit="denarii/seat", source=None, confidence="D",
+        why="Cost to found one seat of a named trade school (see "
+            "labour.py's consumer of this figure, outside this file's "
+            "scope). Not sourced to any attested cost of pre-industrial "
+            "vocational training.")
 
     def invest_farm(self, hectares):
         """Buy productive farmland that lowers the household staple price."""
@@ -1398,15 +2157,23 @@ class EconomyMixin:
         self.household.worker_housing_places = getattr(self.household, "worker_housing_places", 0.0) + places
         return places
 
-    # How much a fully-saturated essential's cheapness (price_ratio at its
-    # own floor) can move discretionary spending. 1.0 means "as much extra
-    # spending power as the essential's own price drop, one-for-one" -
-    # deliberately modest (not the >1 multiplier a strict income-effect
-    # model of Engel curves would license) because this model can only see
-    # ONE essential category's price moving, not a whole household budget,
-    # and overstating it would let a single cannery understate how much
-    # this simplification is worth trusting. [C]
-    INCOME_ELASTICITY = 1.0
+    INCOME_ELASTICITY = declare(
+        "INCOME_ELASTICITY", 1.0, kind="temporary_heuristic",
+        unit="fraction of an essential's price drop passed through as extra "
+             "discretionary spending power (dimensionless)",
+        source=None, confidence="C",
+        why="How much a fully-saturated essential's cheapness (price_ratio "
+            "at its own floor) can move discretionary spending. 1.0 means "
+            "'as much extra spending power as the essential's own price "
+            "drop, one-for-one' - deliberately modest (not the >1 "
+            "multiplier a strict income-effect model of Engel curves would "
+            "license) because this model can only see ONE essential "
+            "category's price moving, not a whole household budget. A real "
+            "figure needs an actual household budget with several goods in "
+            "it and real demand curves, which nothing in this project - "
+            "including ENDOGENOUS_COSTS_AND_DOMAINS.md's Part 2, which "
+            "covers production-cost pricing rather than consumer demand - "
+            "yet models.")
 
     def income_factor(self):
         """How much extra (or, in principle, less) a population has to
@@ -1430,7 +2197,27 @@ class EconomyMixin:
         clamp never actually binds (1.0 + 1.0*(1-0.55) = 1.45).
         """
         ratio = self.essential_price_ratio()
-        return max(0.7, min(1.8, 1.0 + self.INCOME_ELASTICITY * (1.0 - ratio)))
+        return max(self.INCOME_FACTOR_FLOOR, min(self.INCOME_FACTOR_CEILING,
+                   1.0 + self.INCOME_ELASTICITY * (1.0 - ratio)))
+
+    INCOME_FACTOR_FLOOR = declare(
+        "INCOME_FACTOR_FLOOR", 0.7, kind="temporary_heuristic",
+        unit="multiple on discretionary revenue (minimum)", source=None,
+        confidence="D",
+        why="Defensive floor on the income effect if essentials ever get "
+            "more expensive than day one, so a bad harvest cannot be read "
+            "as crashing every discretionary business to nothing. Not "
+            "reached under today's single essential category, per this "
+            "method's own docstring; a placeholder bound rather than a "
+            "measured one.")
+    INCOME_FACTOR_CEILING = declare(
+        "INCOME_FACTOR_CEILING", 1.8, kind="temporary_heuristic",
+        unit="multiple on discretionary revenue (maximum)", source=None,
+        confidence="D",
+        why="Defensive ceiling on the income effect in case "
+            "ESSENTIAL_CATEGORIES ever grows and several ratios compound - "
+            "see this method's own docstring. Not reached today; a "
+            "placeholder bound, not a measured one.")
 
     def goods_market_factor(self, k):
         """How a goods-producing concern's revenue has moved, relative to
@@ -1714,7 +2501,18 @@ class EconomyMixin:
     # tester read `why` at 500 a year, saw 166.7 in the ledger, and could find
     # nothing anywhere that explained the difference or said whether it would
     # ever close. It will not. It is not a ramp; it is the size of your practice.
-    PRACTICE_SHARE = 1.0 / 3.0
+    PRACTICE_SHARE = declare(
+        "PRACTICE_SHARE", 1.0 / 3.0, kind="temporary_heuristic",
+        unit="fraction of the tree's quoted trade revenue", source=None,
+        confidence="D",
+        why="What a lone practitioner working out of a rented room, with "
+            "no partners and no staff, actually takes home against what "
+            "the tree quotes for the trade as an organised going concern. "
+            "Per the comment above, this number was reached by ACCIDENT "
+            "(a revenue-ramp bug that happened to land on a defensible "
+            "fraction) and then kept because the whole opening of the game "
+            "is now calibrated around it - moving it requires re-tuning "
+            "the early game, not just picking a better number.")
 
     def practice_attention(self):
         """How much of your practice you are actually there to run.
@@ -1820,25 +2618,106 @@ class EconomyMixin:
         # to work: a staff with no workshop is an expense, which is exactly why
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
-        gross = total_revenue * (self.economy ** 0.75)
-        ceiling = 900000.0 * self.pop_scale * (self.economy ** 0.75) * self.price_index
+        gross = total_revenue * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+        ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
+            * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
         return (gross + self.state_funding()) * self.output_factor
+
+    ECONOMY_OUTPUT_SCALING_EXPONENT = declare(
+        "ECONOMY_OUTPUT_SCALING_EXPONENT", 0.75, kind="temporary_heuristic",
+        unit="dimensionless exponent on self.economy", source=None,
+        confidence="D",
+        why="How sub-linearly overall output grows with the `economy` "
+            "index (economy_index(), itself already a temporary_heuristic "
+            "curve - see ECONOMY_INDEX_PER_DIFFUSED_NODE above), used "
+            "everywhere gross revenue is scaled by it in this file. The "
+            "sub-linear SHAPE reflects real diminishing returns to a single "
+            "aggregate multiplier; the specific 0.75 exponent is tuned "
+            "against playtests, not fitted to any output data.")
+    REVENUE_CEILING_PER_POP_SCALE = declare(
+        "REVENUE_CEILING_PER_POP_SCALE", 900000.0, kind="temporary_heuristic",
+        unit="denarii/year at pop_scale=1, economy=1", source=None,
+        confidence="D",
+        why="The saturating ceiling on how much revenue a single founder's "
+            "ventures can pull out of one civilisation's whole market - "
+            "invented specifically to stop a run compounding into billions "
+            "against an empire whose own annual product is not separately "
+            "modelled (see this method's own comment on the tester who held "
+            "three billion denarii). A real ceiling needs an actual GDP "
+            "figure for the civilisation to compare against, which this "
+            "engine does not compute.")
+
+    SLAVE_LABOUR_PRODUCTIVITY_SHARE = declare(
+        "SLAVE_LABOUR_PRODUCTIVITY_SHARE", 0.7, kind="temporary_heuristic",
+        unit="fraction of a free worker's output credited per enslaved worker",
+        source=None, confidence="D",
+        why="How much of a free craft worker's output one enslaved worker "
+            "in the household is credited with producing, reused for both "
+            "headcount and wage-bill purposes. A real figure needs actual "
+            "evidence on relative productivity under coercion versus free "
+            "labour for the specific tasks involved, which varied hugely "
+            "by trade and is not modelled here; 0.7 is a plausible-feeling "
+            "discount, not a measurement.")
+    DEFAULT_ANNUAL_WAGE_FALLBACK = declare(
+        "DEFAULT_ANNUAL_WAGE_FALLBACK", 375.0, kind="temporary_heuristic",
+        unit="denarii/year", source=None, confidence="D",
+        why="Stand-in annual wage for a craft trade that ANNUAL_WAGE (see "
+            "labour.py, outside this file's scope) has no entry for, so a "
+            "missing trade does not crash the workshop-output or "
+            "stall-diagnosis wage sums. A round, plausible mid-table wage, "
+            "not sourced to any specific trade.")
+    DEFAULT_ARTISAN_WAGE_FALLBACK = declare(
+        "DEFAULT_ARTISAN_WAGE_FALLBACK", 250.0, kind="temporary_heuristic",
+        unit="denarii/year", source=None, confidence="D",
+        why="As DEFAULT_ANNUAL_WAGE_FALLBACK, specifically for the generic "
+            "'artisan' trade freedmen and slaves are costed against - lower "
+            "than the craft fallback because 'artisan' is treated as the "
+            "least skilled craft tier. Not sourced to any attested wage.")
+    WORKSHOP_WAGE_MARKUP_BASE = declare(
+        "WORKSHOP_WAGE_MARKUP_BASE", 1.55, kind="temporary_heuristic",
+        unit="output denarii per denarius of craft wages", source=None,
+        confidence="D",
+        why="How much a workshop's output is worth relative to what it "
+            "pays its craft staff - deliberately more than a bare 1x wage "
+            "pass-through (a workshop has to sell its output for more than "
+            "labour cost alone or it could never cover materials, rent or "
+            "profit) and, per the comment above, deliberately less than a "
+            "2x markup. Chosen to make the mechanism function at all, not "
+            "measured against any real workshop's margins.")
+    WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS = declare(
+        "WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS", 0.35,
+        kind="temporary_heuristic", unit="extra output denarii per denarius of wages",
+        source=None, confidence="D",
+        why="How much interchangeable parts (a real productivity-raising "
+            "technology) raises the workshop markup. The DIRECTION is a "
+            "real historical claim; the SIZE is tuned game feel, not "
+            "derived from any attested productivity gain from "
+            "interchangeability specifically.")
+    WORKSHOP_MARKUP_BONUS_POWER_GRID = declare(
+        "WORKSHOP_MARKUP_BONUS_POWER_GRID", 0.45, kind="temporary_heuristic",
+        unit="extra output denarii per denarius of wages", source=None,
+        confidence="D",
+        why="As WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS, for electrical "
+            "power - larger because electrification is judged the bigger "
+            "productivity jump of the two, a judgement call rather than a "
+            "measurement.")
 
     def workshop_output(self):
         """What your standing staff produces and sells, over and above projects."""
         if not (self.running("workshop_first") or self.running("school_founded")):
             return 0.0
         craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
-        craft += self.household.freedmen + self.household.slaves * 0.7
+        craft += self.household.freedmen + self.household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
         wage = 0.0
         for trade, count in self.household.employees.items():
             if trade_family(trade) == "craft":
-                wage += count * ANNUAL_WAGE.get(trade, 375.0)
-        wage += (self.household.freedmen + self.household.slaves * 0.7) * ANNUAL_WAGE.get("artisan", 250.0)
-        mark = 1.55
-        if self.running("interchangeable_parts"):  mark += 0.35
-        if self.running("power_grid"):             mark += 0.45
+                wage += count * ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK)
+        wage += ((self.household.freedmen + self.household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
+                 * ANNUAL_WAGE.get("artisan", self.DEFAULT_ARTISAN_WAGE_FALLBACK))
+        mark = self.WORKSHOP_WAGE_MARKUP_BASE
+        if self.running("interchangeable_parts"):  mark += self.WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS
+        if self.running("power_grid"):             mark += self.WORKSHOP_MARKUP_BONUS_POWER_GRID
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
         # capability actually shows up.
         #
@@ -1897,10 +2776,32 @@ class EconomyMixin:
             if node["rev"] <= 0:
                 continue
             weight += node["rev"]
-        # 40,000 of tier-weighted method roughly doubles what a workshop makes.
-        result = 1.0 + 2.0 * (weight / (weight + 40000.0))
+        result = 1.0 + self.CAPABILITY_FACTOR_CEILING_BONUS * (
+            weight / (weight + self.CAPABILITY_FACTOR_HALF_SATURATION_REV))
         self.household._cap_factor = result
         return result
+
+    CAPABILITY_FACTOR_CEILING_BONUS = declare(
+        "CAPABILITY_FACTOR_CEILING_BONUS", 2.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on workshop output (asymptote)",
+        source=None, confidence="D",
+        why="The most that accumulated, unused method can ever multiply a "
+            "workshop's output by, as the weighted total saturates. A "
+            "tripling-or-more from pure technique with no new workshop or "
+            "worker would be implausible; 2x (a doubling) is a tuned "
+            "ceiling, not derived from any output-per-technology "
+            "measurement.")
+    CAPABILITY_FACTOR_HALF_SATURATION_REV = declare(
+        "CAPABILITY_FACTOR_HALF_SATURATION_REV", 40000.0,
+        kind="temporary_heuristic", unit="denarii of tier-weighted revenue "
+        "at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
+        confidence="D",
+        why="How much accumulated tier-weighted method it takes to reach "
+            "half the maximum capability bonus - the saturating curve's "
+            "own scale. Tuned against playtests (see the comment this "
+            "replaces: '40,000 of tier-weighted method roughly doubles "
+            "what a workshop makes'), not fitted to any measured "
+            "productivity data.")
 
     def revenue_sources(self):
         """Where the money actually comes from, itemised.
@@ -1925,7 +2826,7 @@ class EconomyMixin:
                 ramp = self.PRACTICE_SHARE
             else:
                 ramp = self.venture_ramp(node_id)
-            amt = (node["rev"] * ramp * (self.economy ** 0.75) * self.output_factor
+            amt = (node["rev"] * ramp * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor
                    * self.price_index)
             if practice:
                 amt *= self.practice_attention()
@@ -1947,7 +2848,7 @@ class EconomyMixin:
         rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
             out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
-        workshop_total = self.workshop_output() * (self.economy ** 0.75) * self.output_factor
+        workshop_total = self.workshop_output() * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
         if self.state_funding() > 0.5:
@@ -2026,7 +2927,7 @@ class EconomyMixin:
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
         scale = (self.PRACTICE_SHARE * self.practice_attention()
-                 * (self.economy ** 0.75) * self.output_factor)
+                 * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor)
         prac = sorted(node_id for node_id in self._practice_set()
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
@@ -2151,9 +3052,17 @@ class EconomyMixin:
                    for node_id in self._revenue_upkeep_candidates()
                    if node_id in self.household.operating or node_id in practice_set)
 
-    # What a school costs on the day you found it, as a share of what it costs
-    # once it is full: the building, the lease, and one teacher.
-    INSTITUTION_FLOOR = 0.20
+    INSTITUTION_FLOOR = declare(
+        "INSTITUTION_FLOOR", 0.20, kind="temporary_heuristic",
+        unit="fraction of full upkeep charged with zero enrolment",
+        source=None, confidence="D",
+        why="What a school costs on the day you found it, as a share of "
+            "what it costs once it is full: the building, the lease, and "
+            "one teacher, before any scholars arrive. A real figure needs "
+            "an itemised fixed-versus-variable cost breakdown for each "
+            "capability institution (building/lease/core staff versus "
+            "per-head cost), which this file does not have; 20% is a "
+            "round, plausible fixed share, not derived from one.")
 
     def institution_upkeep(self, k):
         """What this concern actually costs to keep open THIS year.
@@ -2198,6 +3107,98 @@ class EconomyMixin:
         return upkeep_amount * (self.INSTITUTION_FLOOR
                      + (1.0 - self.INSTITUTION_FLOOR) * used)
 
+    _INSTITUTION_PLACES_WHY = (
+        "Roughly how many people one unit of this institution is built "
+        "to support, for institution_upkeep()'s enrolment-scaled "
+        "billing. Read off labour.py's STAFF_CAPACITY_SOURCES table "
+        "(outside this file's scope) by hand, mostly as that row's "
+        "'sc'+'ar' staffing columns - not a strict, checked formula, so "
+        "the two tables can drift apart if one changes without the "
+        "other; a real fix would derive institution_places() FROM "
+        "STAFF_CAPACITY_SOURCES directly instead of copying a number "
+        "read off it.")
+    INSTITUTION_PLACES_WORKSHOP_FIRST = declare(
+        "INSTITUTION_PLACES_WORKSHOP_FIRST", 12.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_SCHOOL_FOUNDED = declare(
+        "INSTITUTION_PLACES_SCHOOL_FOUNDED", 34.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_ACADEMY_NETWORK = declare(
+        "INSTITUTION_PLACES_ACADEMY_NETWORK", 120.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_FREEDMAN_STAFF = declare(
+        "INSTITUTION_PLACES_FREEDMAN_STAFF", 10.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_COLLEGIUM_LICENSED = declare(
+        "INSTITUTION_PLACES_COLLEGIUM_LICENSED", 3.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_PATRON_SENATORIAL = declare(
+        "INSTITUTION_PLACES_PATRON_SENATORIAL", 10.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_PATRON_IMPERIAL = declare(
+        "INSTITUTION_PLACES_PATRON_IMPERIAL", 64.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_ENDOWMENT_LAND = declare(
+        "INSTITUTION_PLACES_ENDOWMENT_LAND", 14.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_CORPUS_DISPERSED = declare(
+        "INSTITUTION_PLACES_CORPUS_DISPERSED", 8.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_INTERCHANGEABLE_PARTS = declare(
+        "INSTITUTION_PLACES_INTERCHANGEABLE_PARTS", 44.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
+    # Read off STAFF_CAPACITY_SOURCES (labour.py) the same way
+    # every other row here is: a unit's ar+di, so a chain store
+    # with three people in it is not billed as though every
+    # branch were already fully staffed.
+    INSTITUTION_PLACES_FIN_COMPANY_TOWN = declare(
+        "INSTITUTION_PLACES_FIN_COMPANY_TOWN", 20.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source="labour.py STAFF_CAPACITY_SOURCES row for "
+               "fin_company_town: ar=20.0, di=0.0.",
+        confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES_FIN_CHAIN_STORE = declare(
+        "INSTITUTION_PLACES_FIN_CHAIN_STORE", 34.0,
+        kind="temporary_heuristic", unit="people per unit",
+        source="labour.py STAFF_CAPACITY_SOURCES row for "
+               "fin_chain_store: ar=30.0, di=4.0.",
+        confidence="D", why=_INSTITUTION_PLACES_WHY)
+    INSTITUTION_PLACES = {
+        'workshop_first': INSTITUTION_PLACES_WORKSHOP_FIRST,
+        'school_founded': INSTITUTION_PLACES_SCHOOL_FOUNDED,
+        'academy_network': INSTITUTION_PLACES_ACADEMY_NETWORK,
+        'freedman_staff': INSTITUTION_PLACES_FREEDMAN_STAFF,
+        'collegium_licensed': INSTITUTION_PLACES_COLLEGIUM_LICENSED,
+        'patron_senatorial': INSTITUTION_PLACES_PATRON_SENATORIAL,
+        'patron_imperial': INSTITUTION_PLACES_PATRON_IMPERIAL,
+        'endowment_land': INSTITUTION_PLACES_ENDOWMENT_LAND,
+        'corpus_dispersed': INSTITUTION_PLACES_CORPUS_DISPERSED,
+        'interchangeable_parts': INSTITUTION_PLACES_INTERCHANGEABLE_PARTS,
+        'fin_company_town': INSTITUTION_PLACES_FIN_COMPANY_TOWN,
+        'fin_chain_store': INSTITUTION_PLACES_FIN_CHAIN_STORE,
+    }
+    INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
+        "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
+        kind="temporary_heuristic", unit="denarii of upkeep per head",
+        source=None, confidence="D",
+        why="For an institution not in INSTITUTION_PLACES, how many "
+            "denarii of upkeep one person's worth of capacity is assumed "
+            "to cost, so an arbitrary institution still scales with "
+            "headcount instead of defaulting to zero places. 'About a "
+            "wage a head' per the comment this replaces - the right ORDER "
+            "of magnitude for a building whose cost is its people, not a "
+            "specific attested wage.")
+
     def institution_places(self, k):
         """Roughly how many people ONE UNIT of this establishment is built to
         support - see institution_upkeep, which multiplies this by
@@ -2209,22 +3210,24 @@ class EconomyMixin:
         apart. Anything absent is sized by its own upkeep at about a wage a
         head, the right order for a building whose cost is its people.
         """
-        PLACES = {"workshop_first": 12.0, "school_founded": 34.0,
-                  "academy_network": 120.0, "freedman_staff": 10.0,
-                  "collegium_licensed": 3.0, "patron_senatorial": 10.0,
-                  "patron_imperial": 64.0, "endowment_land": 14.0,
-                  "corpus_dispersed": 8.0, "interchangeable_parts": 44.0,
-                  # Read off STAFF_CAPACITY_SOURCES (labour.py) the same way
-                  # every other row here is: a unit's ar+di, so a chain store
-                  # with three people in it is not billed as though every
-                  # branch were already fully staffed.
-                  "fin_company_town": 20.0, "fin_chain_store": 34.0}
-        if k in PLACES:
-            return PLACES[k]
-        return max(1.0, self.nodes[k]["up"] / 250.0)
+        if k in self.INSTITUTION_PLACES:
+            return self.INSTITUTION_PLACES[k]
+        return max(1.0, self.nodes[k]["up"] / self.INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD)
 
     # ---- raw material supply ------------------------------------------------
-    CHARCOAL_PER_HA = 0.75          # tonnes per hectare per year, sustainable
+    CHARCOAL_PER_HA = declare(
+        "CHARCOAL_PER_HA", 0.75, kind="engineering_estimate",
+        unit="tonnes charcoal/hectare/year, sustainable coppice yield",
+        source="Order-of-magnitude figure for a sustainably managed "
+               "coppice under traditional charcoal-burning practice; the "
+               "same figure this module's own resource_throttle() "
+               "docstring cites ('a hectare of coppice yields about 0.75 "
+               "tonnes of charcoal a year').",
+        confidence="C",
+        why="Converts hectares of owned woodland into tonnes/year of "
+            "charcoal - the single binding constraint that decides whether "
+            "a blast furnace can run at all, per this file's own charcoal "
+            "commentary.")
     # How much of the empire's annual output you can actually BUY. This is not
     # one number: charcoal is bulky, crumbles when carted, and is therefore a
     # LOCAL commodity no matter how much of it the empire makes in total, while
@@ -2233,9 +3236,80 @@ class EconomyMixin:
     # (market_share, already reasoned there against the same imperial-mint
     # scarcity that makes MARKET_SHARE["silver"] this low), so the two files
     # agree on how tightly a private buyer can get at the metalla's gold.
-    MARKET_SHARE = {"charcoal": 0.002, "iron": 0.03, "copper": 0.03, "lead": 0.03,
-                    "tin": 0.05, "silver": 0.01, "coal": 0.50, "saltpetre": 0.0,
-                    "gold": 0.01}
+    _MARKET_SHARE_WHY = (
+        "What fraction of the empire's whole annual national output of "
+        "this material an ordinary buyer with no special standing can "
+        "actually reach, before patronage multipliers (see "
+        "_material_market_tonnes) apply. Bulk, transportability and how "
+        "concentrated ownership of the resource is (imperial mints and "
+        "metalla versus an ordinary quarry) all matter physically, but no "
+        "attested Roman market-share figure exists for any of these "
+        "materials; each is reasoned by hand from those physical "
+        "properties, not measured.")
+    MARKET_SHARE_CHARCOAL = declare(
+        "MARKET_SHARE_CHARCOAL", 0.002, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D",
+        why=_MARKET_SHARE_WHY + " Charcoal specifically is bulky and "
+            "crumbles when carted, so it is treated as almost entirely "
+            "a local commodity regardless of total empire-wide output.")
+    MARKET_SHARE_IRON = declare(
+        "MARKET_SHARE_IRON", 0.03, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D", why=_MARKET_SHARE_WHY)
+    MARKET_SHARE_COPPER = declare(
+        "MARKET_SHARE_COPPER", 0.03, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D", why=_MARKET_SHARE_WHY)
+    MARKET_SHARE_LEAD = declare(
+        "MARKET_SHARE_LEAD", 0.03, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D", why=_MARKET_SHARE_WHY)
+    MARKET_SHARE_TIN = declare(
+        "MARKET_SHARE_TIN", 0.05, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D", why=_MARKET_SHARE_WHY)
+    MARKET_SHARE_SILVER = declare(
+        "MARKET_SHARE_SILVER", 0.01, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D",
+        why=_MARKET_SHARE_WHY + " Held low specifically because "
+            "silver mining was heavily imperial-mint property, which "
+            "MARKET_SHARE_GOLD's own sourced figure also reflects.")
+    MARKET_SHARE_COAL = declare(
+        "MARKET_SHARE_COAL", 0.50, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D",
+        why=_MARKET_SHARE_WHY + " Held high specifically because coal "
+            "was barely used by anyone in this period, so almost all "
+            "of the (small) national output is available to a buyer.")
+    MARKET_SHARE_SALTPETRE = declare(
+        "MARKET_SHARE_SALTPETRE", 0.0, kind="temporary_heuristic",
+        unit="fraction of national output", source=None,
+        confidence="D",
+        why=_MARKET_SHARE_WHY + " Zero specifically because there is "
+            "no open saltpetre market at all in this period; it is "
+            "made in nitre beds, not bought (see build_nitre).")
+    MARKET_SHARE_GOLD = declare(
+        "MARKET_SHARE_GOLD", 0.01, kind="temporary_heuristic",
+        unit="fraction of national output",
+        source="commodities.json's own gold entry (market_share), "
+               "already reasoned there against imperial-mint scarcity - "
+               "reused here rather than re-guessed so the two files "
+               "agree on how tightly a private buyer can reach the "
+               "metalla's gold.",
+        confidence="C", why=_MARKET_SHARE_WHY)
+    MARKET_SHARE = {
+        'charcoal': MARKET_SHARE_CHARCOAL,
+        'iron': MARKET_SHARE_IRON,
+        'copper': MARKET_SHARE_COPPER,
+        'lead': MARKET_SHARE_LEAD,
+        'tin': MARKET_SHARE_TIN,
+        'silver': MARKET_SHARE_SILVER,
+        'coal': MARKET_SHARE_COAL,
+        'saltpetre': MARKET_SHARE_SALTPETRE,
+        'gold': MARKET_SHARE_GOLD,
+    }
 
     # ---- GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES --------------------
     #
@@ -2266,10 +3340,44 @@ class EconomyMixin:
     # This is exactly the standard COMMODITY_DYNAMISM.md sets: "a commodity
     # nobody anticipated must behave correctly because the mechanism is
     # supply and demand, not because somebody wrote a rule for it."
-    GENERIC_OUTPUT_ANCHOR_T_PER_YR = 82500.0
-    GENERIC_OUTPUT_PRICE_EXPONENT = 1.1
-    GENERIC_OUTPUT_FLOOR_T_PER_YR = 5.0
-    GENERIC_OUTPUT_CEILING_T_PER_YR = 400000.0
+    GENERIC_OUTPUT_ANCHOR_T_PER_YR = declare(
+        "GENERIC_OUTPUT_ANCHOR_T_PER_YR", 82500.0, kind="engineering_estimate",
+        unit="tonnes/year at price=1 denarius/kg", source=
+        "Fitted (log-log regression) from resources.json's own curated "
+        "empire outputs for iron (1.0 den/kg -> 82,500 t/yr), copper "
+        "(4.0 -> 15,000 t/yr) and gold (3,440 -> 9 t/yr) - see the class "
+        "comment above for the fit and its cross-check against gold's own "
+        "number, which the fit never saw.",
+        confidence="C",
+        why="The anchor point of a fitted output-vs-price curve used to "
+            "guess national output for any of the 149 material keys this "
+            "file has no curated resources.json figure for. A real answer "
+            "needs an actual output figure per material, which is exactly "
+            "what data/production/'s coverage work is building toward "
+            "replacing this fallback with.")
+    GENERIC_OUTPUT_PRICE_EXPONENT = declare(
+        "GENERIC_OUTPUT_PRICE_EXPONENT", 1.1, kind="engineering_estimate",
+        unit="dimensionless exponent on price", source=
+        "Same three-point log-log fit as GENERIC_OUTPUT_ANCHOR_T_PER_YR.",
+        confidence="C",
+        why="How fast national output falls as a material's own book price "
+            "rises, in the fitted fallback curve - scarcity and price "
+            "moving together is a real, general economic regularity; this "
+            "specific exponent is fitted to three commodities and "
+            "extrapolated to every other material, which is the honest "
+            "limit of what three points can support.")
+    GENERIC_OUTPUT_FLOOR_T_PER_YR = declare(
+        "GENERIC_OUTPUT_FLOOR_T_PER_YR", 5.0, kind="temporary_heuristic",
+        unit="tonnes/year (minimum)", source=None, confidence="D",
+        why="Safety floor so an extremely expensive material's fitted "
+            "output never rounds to a market that supplies literally "
+            "nothing. Not fitted; a defensive bound on the formula above.")
+    GENERIC_OUTPUT_CEILING_T_PER_YR = declare(
+        "GENERIC_OUTPUT_CEILING_T_PER_YR", 400000.0, kind="temporary_heuristic",
+        unit="tonnes/year (maximum)", source=None, confidence="D",
+        why="Safety ceiling so an extremely cheap material's fitted output "
+            "never runs away to an implausible national output. Not "
+            "fitted; a defensive bound on the formula above.")
 
     def _commodity_ledger(self):
         """The 9 curated commodities from commodities.json, as a
@@ -2396,11 +3504,66 @@ class EconomyMixin:
         specific claim."""
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
-            return float(ledger.commodities[tag].get("market_share", 0.03))
+            return float(ledger.commodities[tag].get(
+                "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
         price = self._book_price_per_kg(tag)
         if price is None or price <= 0:
-            return 0.20
-        return max(0.01, min(0.35, 0.08 / (max(price, 0.01) ** 0.4)))
+            return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
+        return max(self.GENERIC_MARKET_SHARE_FLOOR,
+                   min(self.GENERIC_MARKET_SHARE_CEILING,
+                       self.GENERIC_MARKET_SHARE_SCALE
+                       / (max(price, 0.01) ** self.GENERIC_MARKET_SHARE_PRICE_EXPONENT)))
+
+    GENERIC_MARKET_SHARE_LEDGER_FALLBACK = declare(
+        "GENERIC_MARKET_SHARE_LEDGER_FALLBACK", 0.03, kind="temporary_heuristic",
+        unit="fraction of national output", source=None, confidence="D",
+        why="Fallback market share for a curated commodities.json commodity "
+            "that names no market_share field of its own - a middling, "
+            "unremarkable buyable fraction picked so a missing field does "
+            "not silently become 'unbuyable' or 'unlimited'.")
+    GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK = declare(
+        "GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK", 0.20, kind="temporary_heuristic",
+        unit="fraction of national output", source=None, confidence="D",
+        why="Fallback market share for a material this file cannot even "
+            "price at all - deliberately generous (wide open) since a "
+            "material with no price data has no basis for restricting it "
+            "either; a placeholder rather than a reasoned figure.")
+    GENERIC_MARKET_SHARE_SCALE = declare(
+        "GENERIC_MARKET_SHARE_SCALE", 0.08, kind="engineering_estimate",
+        unit="dimensionless scale on the price-fitted market-share curve",
+        source="Fitted the same way GENERIC_OUTPUT_ANCHOR_T_PER_YR was, "
+               "against the curated MARKET_SHARE figures for gold/silver "
+               "(0.01, rare and dear) and coal (0.50, cheap and open).",
+        confidence="C",
+        why="Scale of the price-fitted curve giving a generic material's "
+            "market share when nothing more specific is known. Same honest "
+            "limit as the output fit: three curated points fitted and "
+            "extrapolated, not a measurement for any specific material.")
+    GENERIC_MARKET_SHARE_PRICE_EXPONENT = declare(
+        "GENERIC_MARKET_SHARE_PRICE_EXPONENT", 0.4, kind="engineering_estimate",
+        unit="dimensionless exponent on price", source=
+        "Same three-point fit as GENERIC_MARKET_SHARE_SCALE.",
+        confidence="C",
+        why="How fast a generic material's buyable share shrinks as its "
+            "price rises - rarer, dearer materials are held closer by "
+            "whoever controls them, a real and general pattern; the "
+            "specific exponent is fitted to three commodities.")
+    GENERIC_MARKET_SHARE_FLOOR = declare(
+        "GENERIC_MARKET_SHARE_FLOOR", 0.01, kind="temporary_heuristic",
+        unit="fraction of national output (minimum)", source=None,
+        confidence="D",
+        why="Clamp so the fitted generic market-share curve never reaches "
+            "a literal zero for an ordinary buyer, however dear the "
+            "material - a defensive bound, not a reasoned floor.")
+    GENERIC_MARKET_SHARE_CEILING = declare(
+        "GENERIC_MARKET_SHARE_CEILING", 0.35, kind="temporary_heuristic",
+        unit="fraction of national output (maximum)", source=None,
+        confidence="D",
+        why="Clamp so the fitted generic market-share curve stays well "
+            "inside the observed range of the curated figures it was "
+            "fitted from, per this method's own docstring ('a default for "
+            "a material nobody has separately reasoned about, not a "
+            "specific claim') - a defensive bound, not a reasoned ceiling.")
 
     def _normalize_material_name(self, mat):
         """Accept either spelling when a player names a material: the
@@ -2427,7 +3590,20 @@ class EconomyMixin:
     # of coal. Switching fuel therefore MOVES the demand to a different material
     # at 0.85 of the mass, and that is the whole reason coke mattered: not that
     # it is better fuel, but that coal is dug and charcoal has to be grown.
-    COKE_PER_CHARCOAL = 0.85
+    COKE_PER_CHARCOAL = declare(
+        "COKE_PER_CHARCOAL", 0.85, kind="engineering_estimate",
+        unit="kg coal-equivalent demand per kg of charcoal it replaces",
+        source="Blast-furnace fuel consumption ratios: roughly 3 kg "
+               "charcoal per kg of iron by the charcoal route, versus "
+               "roughly 1.6 kg coke (itself roughly 1.6 kg of coal) per kg "
+               "of iron by the coke route - see the comment above for the "
+               "arithmetic (2.56 kg coal / 3 kg charcoal is approximately "
+               "0.85).",
+        confidence="C",
+        why="Converts a node's charcoal demand into the equivalent coal "
+            "demand when coke is the chosen fuel - the actual substitution "
+            "that decided whether an industrialising civilisation is bound "
+            "by grown fuel or dug fuel.")
 
     def chosen_fuel(self, k):
         """Which fuel this node would actually burn, given what you have.
@@ -2473,10 +3649,27 @@ class EconomyMixin:
             coke = self.chosen_fuel(node_id) == "coke"
             for material, quantity in node["mat"].items():
                 if coke and material in ("charcoal_kg", "firewood_kg"):
-                    demand["coal_kg"] += 0.5 * float(quantity) * self.COKE_PER_CHARCOAL / span / 1000.0
+                    demand["coal_kg"] += (self.STANDING_MATERIAL_DRAW_SHARE * float(quantity)
+                                           * self.COKE_PER_CHARCOAL / span / 1000.0)
                     continue
-                demand[material] += 0.5 * float(quantity) / span / 1000.0
+                demand[material] += self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / 1000.0
         return demand
+
+    STANDING_MATERIAL_DRAW_SHARE = declare(
+        "STANDING_MATERIAL_DRAW_SHARE", 0.5, kind="temporary_heuristic",
+        unit="fraction of a node's build-time material draw rate, per year "
+             "of standing operation", source=None, confidence="D",
+        why="A finished, running installation - a furnace, a workshop - "
+            "goes on consuming its listed material every year it operates, "
+            "not only while being built (see the comment above: 'a furnace "
+            "does not eat charcoal only while it is being built'). This is "
+            "the ongoing rate as a fraction of the build-time rate, reused "
+            "identically for electrical demand in _electricity_demand_kw() "
+            "and _node_annual_tonnes() below. The DIRECTION is a real "
+            "physical claim (standing operation consumes fuel/electricity "
+            "continuously); the specific half-rate is an invented "
+            "placeholder - a real figure needs a per-process duty cycle or "
+            "throughput figure this tree does not carry.")
 
     # Which raw material keys (as they appear in a node's `mat` dict) draw on
     # which tracked commodity, and how "your own supply of it" is computed.
@@ -2523,6 +3716,20 @@ class EconomyMixin:
         "nitre_kg":    ("saltpetre", "nitre"),
     }
 
+    FIREWOOD_PER_CHARCOAL_MASS_RATIO = declare(
+        "FIREWOOD_PER_CHARCOAL_MASS_RATIO", 4.0, kind="engineering_estimate",
+        unit="kg raw firewood per kg-equivalent of charcoal (dimensionless)",
+        source="Traditional charcoal-burning loses most of the wood's mass "
+               "as volatiles and water during carbonisation; a roughly "
+               "four-to-one wood-to-charcoal mass ratio is the commonly "
+               "cited order of magnitude for earth-kiln and pit methods.",
+        confidence="C",
+        why="A hectare of coppice yields several times more mass as raw, "
+            "unconverted firewood (the 'forest4' tag, firewood_kg's supply) "
+            "than it does as charcoal (the 'forest1' tag) from the SAME "
+            "wood, because charcoal-making itself consumes most of the "
+            "mass. This is the ratio between those two yields.")
+
     def _own_material_supply(self, tag):
         """Tonnes a year of a tracked commodity you supply yourself, not
         bought from anyone: mines you sank, woodland you bought, nitre beds
@@ -2530,9 +3737,9 @@ class EconomyMixin:
         if tag == "forest1":
             return self.household.forest_ha * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return self.household.forest_ha * self.CHARCOAL_PER_HA * 4
+            return self.household.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
         if tag == "nitre":
-            return self.household.nitre_bed_m2 * 0.0008
+            return self.household.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
@@ -2576,10 +3783,10 @@ class EconomyMixin:
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
         if emp_key != "charcoal":
-            if self.running("patron_imperial"):     share *= 6.0
-            elif self.running("patron_senatorial"): share *= 2.5
-            elif self.has("citizenship"):       share *= 1.4
-            share = min(share, 0.60)
+            if self.running("patron_imperial"):     share *= self.MARKET_STANDING_PATRON_IMPERIAL
+            elif self.running("patron_senatorial"): share *= self.MARKET_STANDING_PATRON_SENATORIAL
+            elif self.has("citizenship"):       share *= self.MARKET_STANDING_CITIZENSHIP
+            share = min(share, self.MARKET_STANDING_SHARE_CEILING)
         # GEOLOGY, NOT DEMOGRAPHY. This used to be `* self.pop_scale`:
         # mineral availability scaled by population, so Norse Scandinavia
         # got 2.3% of Rome's coal because it has 2.3% of the people, and
@@ -2596,8 +3803,54 @@ class EconomyMixin:
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
         if emp_key == "saltpetre" and self.running("exp_trade_route_extend"):
-            market += 60.0
+            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
+
+    MARKET_STANDING_PATRON_IMPERIAL = declare(
+        "MARKET_STANDING_PATRON_IMPERIAL", 6.0, kind="temporary_heuristic",
+        unit="multiple on buyable market share", source=None,
+        confidence="D",
+        why="How much further an imperial patron's standing opens the "
+            "market for a tracked material, on the reasoning that the "
+            "fiscus itself becomes a supplier and the metalla were largely "
+            "imperial property. The direction is a real institutional "
+            "fact; the sixfold size is tuned game balance, not derived "
+            "from any attested imperial-supply share.")
+    MARKET_STANDING_PATRON_SENATORIAL = declare(
+        "MARKET_STANDING_PATRON_SENATORIAL", 2.5, kind="temporary_heuristic",
+        unit="multiple on buyable market share", source=None,
+        confidence="D",
+        why="As MARKET_STANDING_PATRON_IMPERIAL, for a senatorial patron - "
+            "buying through their agents rather than the fiscus itself. "
+            "Tuned, not derived.")
+    MARKET_STANDING_CITIZENSHIP = declare(
+        "MARKET_STANDING_CITIZENSHIP", 1.4, kind="temporary_heuristic",
+        unit="multiple on buyable market share", source=None,
+        confidence="D",
+        why="What plain citizenship, with no patron at all, is worth over "
+            "a stranger buying at the margin. Tuned, not derived.")
+    MARKET_STANDING_SHARE_CEILING = declare(
+        "MARKET_STANDING_SHARE_CEILING", 0.60, kind="temporary_heuristic",
+        unit="fraction of national output (maximum, any buyer)",
+        source=None, confidence="D",
+        why="However much standing multiplies a buyer's reach, nobody but "
+            "the state itself commands the whole national market for a "
+            "material - this caps even an imperial patron's buyer well "
+            "short of monopolising it. The cap's own level is a plausible "
+            "round number, not derived from an attested ceiling.")
+    SALTPETRE_TRADE_ROUTE_TONNES_PER_YR = declare(
+        "SALTPETRE_TRADE_ROUTE_TONNES_PER_YR", 60.0, kind="temporary_heuristic",
+        unit="tonnes/year", source=
+        "geography.json's Bengal saltpetre sea-route entry, reused here as "
+        "'the single most useful thing in the geography file' per the "
+        "comment above - the ROUTE'S existence is a geography fact, but "
+        "this file has no independent attested annual tonnage for it.",
+        confidence="D",
+        why="How much extra saltpetre a year an extended trade route to "
+            "Bengal makes available, on top of the ordinary market. The "
+            "route is real; the specific tonnage is an invented, plausible "
+            "figure standing in for an actual historical trade-volume "
+            "record.")
 
     def _demand_by_supply_tag(self, demand):
         """Group MATERIAL_CHECKS demand by (emp_key, tag) -- i.e. by which
@@ -2725,6 +3978,15 @@ class EconomyMixin:
         """
         return self._material_stock().get(emp_key, 0.0)
 
+    MATERIAL_TRADE_SELL_SHARE_OF_BUY = declare(
+        "MATERIAL_TRADE_SELL_SHARE_OF_BUY", 0.80, kind="temporary_heuristic",
+        unit="fraction of the buy price (dimensionless)", source=None,
+        confidence="D",
+        why="The bid-ask spread on trading a raw material back to the "
+            "market - a merchant's margin, real in kind (nobody buys and "
+            "sells at the identical price) but not sized against any "
+            "attested pre-industrial commodity spread.")
+
     def material_trade_quote(self, material):
         """Current buy/sell quote for one tonne of a material commodity."""
         material = str(material or "").strip().lower()
@@ -2733,7 +3995,7 @@ class EconomyMixin:
             return None
         buy = per_kg * 1000.0 * self.price_index * self.material_price_factor(material)
         return {"material": material, "buy_per_tonne": buy,
-                "sell_per_tonne": buy * 0.80,
+                "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
                 "market_available_tonnes_per_year": self._material_market_tonnes(material)}
 
     def buy_material_stock(self, material, tonnes):
@@ -2953,15 +4215,49 @@ class EconomyMixin:
     # product mass a specific-energy figure could be applied to
     # defensibly. Each falls back to GENERIC_ELECTRIC_LOAD_KW rather than a
     # number invented to look more precise than the data supports.
-    HOURS_PER_YEAR = 8760.0
+    HOURS_PER_YEAR = declare(
+        "HOURS_PER_YEAR", 8760.0, kind="physical_constant",
+        unit="hours/year (365-day year)", source="365 days x 24 hours.",
+        confidence="A",
+        why="Converts an average continuous kilowatt draw into an annual "
+            "energy total (and back), the same role HOURS_PER_DAY plays in "
+            "sim/world/agriculture.py. Deliberately the plain 365-day "
+            "figure, not 365.25: this file has no use for leap-year "
+            "precision at kilowatt-scale estimates.")
 
+    _POWER_ANCHOR_WHY = (
+        "Turns the tech tree's own prose description of a generation "
+        "node's scale ('tens of kW', 'kW scale', 'hundreds of kW', 'MW "
+        "scale' - see tech_tree.json) into an actual kilowatt figure "
+        "resource_throttle() can compare demand against. Each is the "
+        "geometric-ish midpoint of the decade the tree's own note names - "
+        "a judgement call made explicitly, per the class comment above, "
+        "rather than a specific rated capacity for any specific machine.")
+    POWER_ANCHOR_KW_WATER = declare(
+        "POWER_ANCHOR_KW_WATER", 30.0, kind="temporary_heuristic",
+        unit="kW", source="tech_tree.json note: 'tens of kW on one shaft'.",
+        confidence="D", why=_POWER_ANCHOR_WHY)
+    POWER_ANCHOR_KW_ELECTRIC = declare(
+        "POWER_ANCHOR_KW_ELECTRIC", 10.0, kind="temporary_heuristic",
+        unit="kW", source="tech_tree.json note: 'kW scale' - smaller "
+               "than cap_power_water's own because this node is one "
+               "dynamo diverting a slice of an existing shaft's output, "
+               "not the shaft's whole output turned electrical (see "
+               "the class comment above).",
+        confidence="D", why=_POWER_ANCHOR_WHY)
+    POWER_ANCHOR_KW_STEAM = declare(
+        "POWER_ANCHOR_KW_STEAM", 300.0, kind="temporary_heuristic",
+        unit="kW", source="tech_tree.json note: 'portable, hundreds of kW'.",
+        confidence="D", why=_POWER_ANCHOR_WHY)
+    POWER_ANCHOR_KW_GRID = declare(
+        "POWER_ANCHOR_KW_GRID", 3000.0, kind="temporary_heuristic",
+        unit="kW", source="tech_tree.json note: 'MW scale'.",
+        confidence="D", why=_POWER_ANCHOR_WHY)
     POWER_ANCHOR_KW = {
-        "cap_power_water": 30.0,     # note: "tens of kW on one shaft"
-        "cap_power_electric": 10.0,  # note: "kW scale" (see the class
-                                      # comment above for why this is
-                                      # smaller than cap_power_water's own)
-        "cap_power_steam": 300.0,    # note: "portable, hundreds of kW"
-        "cap_power_grid": 3000.0,    # note: "MW scale"
+        'cap_power_water': POWER_ANCHOR_KW_WATER,
+        'cap_power_electric': POWER_ANCHOR_KW_ELECTRIC,
+        'cap_power_steam': POWER_ANCHOR_KW_STEAM,
+        'cap_power_grid': POWER_ANCHOR_KW_GRID,
     }
 
     # Standalone local generators: each an actual, distinct machine, so
@@ -3033,8 +4329,27 @@ class EconomyMixin:
     # process losses vary); 4.5 (the midpoint) is used, so the constant
     # below is kWh per kg of BAUXITE (electrolysis_industrial's own `mat`
     # key), not per kg of aluminium the tree never states a mass for.
-    ALUMINIUM_KWH_PER_KG = 15.0
-    BAUXITE_PER_ALUMINIUM_KG = 4.5
+    ALUMINIUM_KWH_PER_KG = declare(
+        "ALUMINIUM_KWH_PER_KG", 15.0, kind="engineering_estimate",
+        unit="kWh/kg aluminium",
+        source="Hall-Heroult aluminium electrolysis: 13-17 kWh/kg is the "
+               "historical-to-modern range; taken at the midpoint.",
+        confidence="B",
+        why="Specific energy of electrolytic aluminium production, applied "
+            "to electrolysis_industrial's own bauxite draw via "
+            "BAUXITE_PER_ALUMINIUM_KG to give electrical demand per kg of "
+            "bauxite, the tree's own material key for this node.")
+    BAUXITE_PER_ALUMINIUM_KG = declare(
+        "BAUXITE_PER_ALUMINIUM_KG", 4.5, kind="engineering_estimate",
+        unit="kg bauxite per kg aluminium",
+        source="Bayer process bauxite yield is roughly 4-5 t bauxite per t "
+               "aluminium, varying with ore grade and process losses; "
+               "taken at the midpoint.",
+        confidence="B",
+        why="Converts aluminium's own specific energy (ALUMINIUM_KWH_PER_KG) "
+            "into energy per kg of BAUXITE, since electrolysis_industrial's "
+            "own `mat` dict draws bauxite_kg, not an aluminium mass the "
+            "tree never states.")
     # Submerged-arc ferroalloy/carbide furnaces: several thousand kWh per
     # tonne of product is the real range for this FAMILY of processes
     # (ferrosilicon, ferrochrome, calcium carbide - all listed in
@@ -3044,14 +4359,34 @@ class EconomyMixin:
     # node's own iron_ore_kg draw at a simplifying 1:1 ore-to-product mass
     # assumption - the one approximation in this pair, disclosed because the
     # tree carries no separate output-mass field for this node.
-    FERROALLOY_KWH_PER_KG_ORE = 5.0
+    FERROALLOY_KWH_PER_KG_ORE = declare(
+        "FERROALLOY_KWH_PER_KG_ORE", 5.0, kind="engineering_estimate",
+        unit="kWh/kg ore (1:1 ore-to-product mass assumed)",
+        source="Submerged-arc ferroalloy/carbide furnaces run several "
+               "thousand kWh per tonne of product for this process FAMILY "
+               "(ferrosilicon, ferrochrome, calcium carbide); several "
+               "thousand kWh/t is roughly several kWh/kg.",
+        confidence="C",
+        why="Specific energy for arc_furnace_ferroalloys, applied to its "
+            "own iron_ore_kg draw at a simplifying 1:1 ore-to-product mass "
+            "assumption - the disclosed approximation in this pair, since "
+            "the tree carries no separate output-mass field for this node.")
     # Anything else gated on cap_power_electric/cap_power_grid/power_grid
     # that this file cannot characterise individually - a modest generic
     # workshop load, the same order of magnitude as cap_power_electric's own
     # anchor and a full order of magnitude under the two curated heavy loads
     # above, so an uncharacterised node's demand is present but never
     # dominant.
-    GENERIC_ELECTRIC_LOAD_KW = 15.0
+    GENERIC_ELECTRIC_LOAD_KW = declare(
+        "GENERIC_ELECTRIC_LOAD_KW", 15.0, kind="temporary_heuristic",
+        unit="kW", source=None, confidence="D",
+        why="Flat electrical demand assumed for any node gated on "
+            "generated electricity that this file cannot characterise "
+            "individually (see ELECTRICAL_PROCESSES for the two that are). "
+            "Deliberately modest - the same order as cap_power_electric's "
+            "own anchor, a full order of magnitude under the two curated "
+            "heavy loads - so an uncharacterised node's demand is present "
+            "but never dominant. Not measured for any specific process.")
 
     ELECTRICAL_PROCESSES = {
         "electrolysis_industrial": ("bauxite_kg",
@@ -3145,7 +4480,7 @@ class EconomyMixin:
         if k in self.household.active:
             return quantity / span / 1000.0
         if k in self.household.done and float(node.get("up") or 0) > 0:
-            return 0.5 * quantity / span / 1000.0
+            return self.STANDING_MATERIAL_DRAW_SHARE * quantity / span / 1000.0
         return 0.0
 
     def _electricity_demand_kw(self):
@@ -3173,8 +4508,19 @@ class EconomyMixin:
                 # that costs nothing to keep is not an installation humming
                 # away in the background, and one that is built but shut draws
                 # nothing either.
-                total += 0.5 * self.GENERIC_ELECTRIC_LOAD_KW
+                total += self.STANDING_MATERIAL_DRAW_SHARE * self.GENERIC_ELECTRIC_LOAD_KW
         return total
+
+    RESOURCE_THROTTLE_FLOOR = declare(
+        "RESOURCE_THROTTLE_FLOOR", 0.05, kind="temporary_heuristic",
+        unit="fraction of full pace (minimum)", source=None,
+        confidence="D",
+        why="A material or electricity shortfall slows work rather than "
+            "stopping it dead - a shortage is a real cost, not a wall a "
+            "player cannot work around at all. The floor's own level (work "
+            "always creeps forward at at least 5% pace) is a game-design "
+            "choice, not derived from any real bound on how slow "
+            "under-resourced work can go.")
 
     def resource_throttle(self):
         """How much of this year's planned work the materials will actually support.
@@ -3232,8 +4578,11 @@ class EconomyMixin:
             self.household.throttle, self.household.binding = self.household._stock_throttle_cache
             return self.household.throttle
         worst, who = 1.0, None
+        # RESOURCE_THROTTLE_FLOOR (declared below): work never fully stops
+        # for a shortage - a shortfall slows a project instead of halting
+        # it dead, so a bottleneck is a real cost rather than a stuck game.
         if elec_need > 1e-9 and elec_have < elec_need:
-            fraction = max(0.05, elec_have / elec_need)
+            fraction = max(self.RESOURCE_THROTTLE_FLOOR, elec_have / elec_need)
             if fraction < worst:
                 worst, who = fraction, "electricity"
         all_tags = set(industrial) | set(lab) | self._own_production_tags()
@@ -3262,7 +4611,7 @@ class EconomyMixin:
             consumed_ind = 0.0
             if ind_need > 1e-12:
                 if have < ind_need:
-                    fraction = max(0.05, have / ind_need)
+                    fraction = max(self.RESOURCE_THROTTLE_FLOOR, have / ind_need)
                     if fraction < worst:
                         worst, who = fraction, emp_key
                     consumed_ind = have
@@ -3421,9 +4770,30 @@ class EconomyMixin:
             if need <= 0:
                 continue
             supply = max(1e-9, self._own_material_supply(tag) + market)
-            share = min(1.5, need / supply)
-            worst = max(worst, 1.0 + 0.9 * share * share)
+            share = min(self.MATERIAL_PRICE_DEMAND_SHARE_CAP, need / supply)
+            worst = max(worst, 1.0 + self.MATERIAL_PRICE_PRESSURE_SCALE * share * share)
         return worst
+
+    MATERIAL_PRICE_DEMAND_SHARE_CAP = declare(
+        "MATERIAL_PRICE_DEMAND_SHARE_CAP", 1.5, kind="temporary_heuristic",
+        unit="dimensionless (demand / available supply, maximum)",
+        source=None, confidence="D",
+        why="Ceiling on how far demand-over-supply can push the price "
+            "pressure curve below, so a wildly oversubscribed material "
+            "does not blow the price multiplier up without bound. A "
+            "defensive cap, not a market-clearing figure.")
+    MATERIAL_PRICE_PRESSURE_SCALE = declare(
+        "MATERIAL_PRICE_PRESSURE_SCALE", 0.9, kind="temporary_heuristic",
+        unit="dimensionless coefficient on (demand share)^2", source=None,
+        confidence="D",
+        why="How hard buying near or above the market's available supply "
+            "of a material pushes its price up - a quadratic curve, per "
+            "this method's own docstring, 'negligible at a fifth of the "
+            "ceiling, roughly double at the whole of it'. The quadratic "
+            "SHAPE is a real modelling choice (price pressure should "
+            "accelerate near scarcity); the coefficient is tuned to hit "
+            "that 'roughly double' target, not derived from an observed "
+            "price-response curve for any real material market.")
 
     def _demand_by_emp_key(self):
         """_cached_demand_by_tag(), grouped by emp_key - the grouping
@@ -3554,13 +4924,104 @@ class EconomyMixin:
     # by having less silver in it, a man who digs his own metal is not ruined with
     # it. Roman gold (Dacia, Las Medulas) was mined at enormous cost and that is
     # what the capex says.
-    MINE_CAPEX_PER_T_YR = {"coal": 9.0, "iron": 60.0, "copper": 240.0,
-                           "lead": 80.0, "tin": 420.0, "silver": 9000.0,
-                           "gold": 160000.0}
-    MINE_OPEX_PER_T     = {"coal": 1.5, "iron": 12.0, "copper": 55.0,
-                           "lead": 18.0, "tin": 95.0, "silver": 2200.0,
-                           "gold": 42000.0}
-    MINE_LEAD_YEARS = 3.0        # sinking, drainage, roads, and hiring
+    MINE_CAPEX_PER_T_YR_COAL = declare(
+        "MINE_CAPEX_PER_T_YR_COAL", 9.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="The base figure this file derives explicitly: a Roman coal hewer working a shallow drift wins on the order of a tonne a day (~250 t/yr/man); at a miner's wage of 0.09 denarii/hour over 2000 hours/year (180 den/yr), that is roughly 0.7 den/tonne in wages before haulage, doubled here for haulage, timbering and overseers.",
+        confidence='B', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_IRON = declare(
+        "MINE_CAPEX_PER_T_YR_IRON", 60.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="Scaled up from coal's derived figure for ore grade and smelting, cross-checked against iron's own book price (the GENERIC_MINE_CAPEX_MULTIPLE comment below notes iron's capex is close to 60x its book price, the same multiple the generic fallback for every other material now uses).",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_COPPER = declare(
+        "MINE_CAPEX_PER_T_YR_COPPER", 240.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="As iron, scaled for copper's own ore grade and smelting; close to 60x copper's own book price.",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_LEAD = declare(
+        "MINE_CAPEX_PER_T_YR_LEAD", 80.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="As iron, scaled for lead's own ore grade and smelting.",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_TIN = declare(
+        "MINE_CAPEX_PER_T_YR_TIN", 420.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="As iron, scaled for tin's own ore grade and smelting; close to 42x tin's own book price.",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_SILVER = declare(
+        "MINE_CAPEX_PER_T_YR_SILVER", 9000.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="As iron, scaled for silver's much higher ore value and smelting/refining cost; close to 28x silver's own book price.",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR_GOLD = declare(
+        "MINE_CAPEX_PER_T_YR_GOLD", 160000.0, kind="engineering_estimate",
+        unit="denarii per tonne/year of capacity sunk",
+        source="Attested Roman gold workings (Dacia, Las Medulas) were mined at enormous cost, reflected here; close to 46x gold's own book price. Included specifically so debasement has an escape valve - a founder who mines their own gold is not ruined by a debased currency the way one holding cash is.",
+        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
+    MINE_CAPEX_PER_T_YR = {
+        'coal': MINE_CAPEX_PER_T_YR_COAL,
+        'iron': MINE_CAPEX_PER_T_YR_IRON,
+        'copper': MINE_CAPEX_PER_T_YR_COPPER,
+        'lead': MINE_CAPEX_PER_T_YR_LEAD,
+        'tin': MINE_CAPEX_PER_T_YR_TIN,
+        'silver': MINE_CAPEX_PER_T_YR_SILVER,
+        'gold': MINE_CAPEX_PER_T_YR_GOLD,
+    }
+    MINE_OPEX_PER_T_COAL = declare(
+        "MINE_OPEX_PER_T_COAL", 1.5, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="Derived alongside MINE_CAPEX_PER_T_YR's own coal figure from the same wage evidence.",
+        confidence='B', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_IRON = declare(
+        "MINE_OPEX_PER_T_IRON", 12.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of iron's own capex (12/60 = 0.20), the ratio GENERIC_MINE_OPEX_SHARE below generalises.",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_COPPER = declare(
+        "MINE_OPEX_PER_T_COPPER", 55.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of copper's own capex (55/240 = 0.229).",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_LEAD = declare(
+        "MINE_OPEX_PER_T_LEAD", 18.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of lead's own capex (18/80 = 0.225).",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_TIN = declare(
+        "MINE_OPEX_PER_T_TIN", 95.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of tin's own capex (95/420 = 0.226).",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_SILVER = declare(
+        "MINE_OPEX_PER_T_SILVER", 2200.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of silver's own capex (2200/9000 = 0.244).",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T_GOLD = declare(
+        "MINE_OPEX_PER_T_GOLD", 42000.0, kind="engineering_estimate",
+        unit="denarii per tonne extracted",
+        source="About a fifth of gold's own capex (42000/160000 = 0.2625).",
+        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+    MINE_OPEX_PER_T = {
+        'coal': MINE_OPEX_PER_T_COAL,
+        'iron': MINE_OPEX_PER_T_IRON,
+        'copper': MINE_OPEX_PER_T_COPPER,
+        'lead': MINE_OPEX_PER_T_LEAD,
+        'tin': MINE_OPEX_PER_T_TIN,
+        'silver': MINE_OPEX_PER_T_SILVER,
+        'gold': MINE_OPEX_PER_T_GOLD,
+    }
+    MINE_LEAD_YEARS = declare(
+        "MINE_LEAD_YEARS", 3.0, kind="engineering_estimate",
+        unit="years", source="Sinking a shaft, arranging drainage, "
+             "building access roads and hiring a crew for a pre-modern "
+             "working plausibly takes on this order of time; not tied to "
+             "an attested figure for a specific Roman mine.",
+        confidence="C",
+        why="How long a new mining tranche takes to come into production "
+            "after capital is committed - the delay that stopped a "
+            "playtester from treating mine investment as instantaneous.")
 
     # ---- A GENERIC PRODUCTION LEVER FOR ANY MATERIAL, NOT ONLY THESE SEVEN ---
     #
@@ -3585,10 +5046,45 @@ class EconomyMixin:
     # capex. This is a real, general production lever - sink capital, wait
     # out MINE_LEAD_YEARS, pay to keep it standing - for whatever material
     # an unanticipated recipe needs, not a rule written for aluminium by name.
-    GENERIC_MINE_CAPEX_MULTIPLE = 50.0
-    GENERIC_MINE_OPEX_SHARE = 0.22
-    GENERIC_MINE_CAPEX_FLOOR = 5.0
-    GENERIC_MINE_CAPEX_CEILING = 400000.0
+    GENERIC_MINE_CAPEX_MULTIPLE = declare(
+        "GENERIC_MINE_CAPEX_MULTIPLE", 50.0, kind="engineering_estimate",
+        unit="denarii capex per denarius/kg of book price", source=
+        "Fitted from the seven curated MINE_CAPEX_PER_T_YR figures against "
+        "their own book prices: iron ~60x, copper ~60x, tin ~42x, silver "
+        "~28x, gold ~46x - a 30-60x band across four decades of price; 50, "
+        "the middle of that band, is used for any material without a "
+        "curated figure.",
+        confidence="C",
+        why="Lets open_mine() offer standing production capacity for ANY "
+            "priceable material, not only the seven hand-curated metals - "
+            "the fix for the aluminium gap COMMODITY_DYNAMISM.md's audit "
+            "found ('no mine, no supply lever of any kind for it'). Fitted "
+            "to seven points and extrapolated, the same honest limit as "
+            "GENERIC_OUTPUT_ANCHOR_T_PER_YR above.")
+    GENERIC_MINE_OPEX_SHARE = declare(
+        "GENERIC_MINE_OPEX_SHARE", 0.22, kind="engineering_estimate",
+        unit="dimensionless (opex/capex)", source=
+        "Running cost tracks capex at close to a fifth across the seven "
+        "curated materials (0.20-0.26 across coal/iron/copper/lead/tin/"
+        "silver/gold); 0.22 is the representative figure used generically.",
+        confidence="C",
+        why="Converts a generic material's fitted capex into its ongoing "
+            "operating cost, for the same materials GENERIC_MINE_CAPEX_"
+            "MULTIPLE covers.")
+    GENERIC_MINE_CAPEX_FLOOR = declare(
+        "GENERIC_MINE_CAPEX_FLOOR", 5.0, kind="temporary_heuristic",
+        unit="denarii per tonne/year (minimum)", source=None,
+        confidence="D",
+        why="Safety floor so an extremely cheap material's fitted mine "
+            "capex never rounds to effectively free capacity. A defensive "
+            "bound, not a reasoned floor.")
+    GENERIC_MINE_CAPEX_CEILING = declare(
+        "GENERIC_MINE_CAPEX_CEILING", 400000.0, kind="temporary_heuristic",
+        unit="denarii per tonne/year (maximum)", source=None,
+        confidence="D",
+        why="Safety ceiling so an extremely dear material's fitted mine "
+            "capex never runs away to an implausible figure. A defensive "
+            "bound, not a reasoned ceiling.")
 
     def _mine_capex_opex(self, mat):
         """(capex per t/yr to sink, opex per t/yr to run) for standing
@@ -3660,6 +5156,19 @@ class EconomyMixin:
     # 1.0-1.2 for every metal but saltpetre (it controls most of its own
     # ore-bearing provinces); Mexica sits at 0.10-0.17 for iron and coal
     # (Mesoamerica genuinely worked neither) and 0.47 for copper (it did).
+    STATE_CAPACITY_DEFAULT_FALLBACK = declare(
+        "STATE_CAPACITY_DEFAULT_FALLBACK", 0.5, kind="initial_condition",
+        unit="dimensionless state-capacity index (0-1 scale), fallback",
+        source=None, confidence="D",
+        why="Fallback state_capacity for a civilisation whose own data "
+            "does not specify one - a middling value on the 0-1 scale "
+            "civ.get('state_capacity', ...) otherwise reads from each "
+            "civilisation's own file, used here for both the mine and "
+            "forest land ceilings. Every shipped civilisation defines its "
+            "own state_capacity (out of this file's scope); this is only "
+            "the default a missing or hand-authored one would fall back "
+            "to, not a claim about any specific society.")
+
     def mine_land_ceiling(self, mat):
         """The largest standing capacity of this material you could ever
         organise, in tonnes/yr: how big an enterprise your standing and
@@ -3668,15 +5177,81 @@ class EconomyMixin:
         given deposit (mining_tech()'s own yield multiplier -- see its
         comment for why a pump or a railway belongs on THIS side of the
         ledger and not only on cost)."""
-        state_capacity = float(self.civ.get("state_capacity", 0.5))
-        if self.running("patron_imperial"):     base = 20000.0 + 60000.0 * state_capacity
-        elif self.running("patron_senatorial"): base = 9000.0 + 20000.0 * state_capacity
-        elif self.has("citizenship"):       base = 6000.0 + 8000.0 * state_capacity
-        else:                               base = 3000.0 + 4000.0 * state_capacity
-        base *= 1.0 + min(5.0, max(0.0, self.revenue()) / 60000.0)
+        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
+        if self.running("patron_imperial"):     base = self.MINE_CEILING_BASE_IMPERIAL + self.MINE_CEILING_STATE_SCALE_IMPERIAL * state_capacity
+        elif self.running("patron_senatorial"): base = self.MINE_CEILING_BASE_SENATORIAL + self.MINE_CEILING_STATE_SCALE_SENATORIAL * state_capacity
+        elif self.has("citizenship"):       base = self.MINE_CEILING_BASE_CITIZEN + self.MINE_CEILING_STATE_SCALE_CITIZEN * state_capacity
+        else:                               base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
+        base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
         geo = self.mineral_scale(mat)
         yld, _cost = self.mining_tech(mat)
         return base * geo * yld
+
+    MINE_CEILING_BASE_IMPERIAL = declare(
+        "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
+        unit="tonnes/year (base, before state capacity and revenue scale)",
+        source=None, confidence="D",
+        why="Base standing-mine ceiling for an imperial patron before "
+            "state capacity, geology and mining technology are applied. "
+            "No fiscal or organisational-capacity data backs this figure; "
+            "it is a tuned starting point for the four patronage tiers "
+            "this method distinguishes.")
+    MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
+        "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
+        unit="tonnes/year per unit of state_capacity", source=None,
+        confidence="D",
+        why="How much further a more capable state extends the imperial-"
+            "tier ceiling. Tuned, not derived from any state-capacity "
+            "output relationship.")
+    MINE_CEILING_BASE_SENATORIAL = declare(
+        "MINE_CEILING_BASE_SENATORIAL", 9000.0, kind="temporary_heuristic",
+        unit="tonnes/year (base)", source=None, confidence="D",
+        why="As MINE_CEILING_BASE_IMPERIAL, for the senatorial-patron tier.")
+    MINE_CEILING_STATE_SCALE_SENATORIAL = declare(
+        "MINE_CEILING_STATE_SCALE_SENATORIAL", 20000.0, kind="temporary_heuristic",
+        unit="tonnes/year per unit of state_capacity", source=None,
+        confidence="D",
+        why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the senatorial tier.")
+    MINE_CEILING_BASE_CITIZEN = declare(
+        "MINE_CEILING_BASE_CITIZEN", 6000.0, kind="temporary_heuristic",
+        unit="tonnes/year (base)", source=None, confidence="D",
+        why="As MINE_CEILING_BASE_IMPERIAL, for a citizen with no patron.")
+    MINE_CEILING_STATE_SCALE_CITIZEN = declare(
+        "MINE_CEILING_STATE_SCALE_CITIZEN", 8000.0, kind="temporary_heuristic",
+        unit="tonnes/year per unit of state_capacity", source=None,
+        confidence="D",
+        why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the citizen tier.")
+    MINE_CEILING_BASE_STRANGER = declare(
+        "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
+        unit="tonnes/year (base)", source=None, confidence="D",
+        why="As MINE_CEILING_BASE_IMPERIAL, for a stranger with no "
+            "citizenship or patron - still a real production ceiling, per "
+            "this method's own docstring, so an unpatronised founder is "
+            "never simply shut out of mining.")
+    MINE_CEILING_STATE_SCALE_STRANGER = declare(
+        "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
+        unit="tonnes/year per unit of state_capacity", source=None,
+        confidence="D",
+        why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
+    REVENUE_SCALE_CAP_MULTIPLE = declare(
+        "REVENUE_SCALE_CAP_MULTIPLE", 5.0, kind="temporary_heuristic",
+        unit="multiple on the base ceiling (maximum)", source=None,
+        confidence="D",
+        why="How much a household's own revenue can multiply a standing "
+            "ceiling (mine land or forest land) beyond its patronage-tier "
+            "base, capped so a very rich household still cannot organise "
+            "an unbounded enterprise from revenue alone. Reused identically "
+            "for forest_land_ceiling() below. Tuned, not derived from any "
+            "attested relationship between income and organisational "
+            "capacity.")
+    REVENUE_SCALE_DENARII = declare(
+        "REVENUE_SCALE_DENARII", 60000.0, kind="temporary_heuristic",
+        unit="denarii/year of revenue for +100% ceiling", source=None,
+        confidence="D",
+        why="How much annual revenue it takes to double a standing "
+            "ceiling via REVENUE_SCALE_CAP_MULTIPLE, reused identically in "
+            "forest_land_ceiling() below. Tuned, not derived from any "
+            "attested income-to-capacity relationship.")
 
     # ---- DEPLETION: the easy seam runs out ---------------------------
     #
@@ -3704,8 +5279,32 @@ class EconomyMixin:
     # relative to what the ground can support -- and slower once technology
     # (mining_tech(), below) raises that support, which is the whole of
     # "make depletion something you can fight."
-    DEPLETION_HALF_LIFE_YRS = 120.0
-    DEPLETION_FLOOR = 0.5
+    DEPLETION_HALF_LIFE_YRS = declare(
+        "DEPLETION_HALF_LIFE_YRS", 120.0, kind="temporary_heuristic",
+        unit="intensity-years for yield to fall from 1.0 toward the floor",
+        source="Order-of-magnitude anchor: real long-worked Old World "
+               "deposits (Rio Tinto, Laurion's near-surface ore) went from "
+               "rich to markedly poorer and needed new technique over "
+               "several human generations, not one and not a thousand.",
+        confidence="C",
+        why="How many intensity-years of mining at full land-ceiling "
+            "pace it takes a deposit's yield to visibly decline - see the "
+            "class comment above for why this is INTENSITY-years (working "
+            "hard relative to what the ground supports) rather than "
+            "calendar years. Deliberately round rather than fitted to any "
+            "single citation, per that comment.")
+    DEPLETION_FLOOR = declare(
+        "DEPLETION_FLOOR", 0.5, kind="temporary_heuristic",
+        unit="fraction of day-one yield (minimum)", source=None,
+        confidence="D",
+        why="However worked-out a deposit gets, a working never falls "
+            "below half its original yield - the easy half of a deposit "
+            "running out does not mean the hard half is worthless. "
+            "Deliberately never zero: see the class comment above for why "
+            "a floor reaching zero would be the abolished 'unobtainable' "
+            "category returning under a new name. The specific half-yield "
+            "floor is chosen for that reason, not measured from any real "
+            "deposit's long-run decline curve.")
 
     # ---- A WORKING IS A THING, NOT AN ENTRY IN A MATERIAL-KEYED DICT -------
     #
@@ -3801,42 +5400,105 @@ class EconomyMixin:
     # same pattern best_multiplier() in commodities.py uses for gold's
     # pump-times-cyanidation ~20x, because pumping and blasting and a
     # railway are independent improvements, not alternatives.
+    # Mechanical (water-wheel or animal) mine drainage - the first tier of the
+    # pumping problem the class comment describes.
+    MINING_TECH_YIELD_MET_MINE_PUMPING = declare(
+        "MINING_TECH_YIELD_MET_MINE_PUMPING", 1.4, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_MET_MINE_PUMPING = declare(
+        "MINING_TECH_COST_MET_MINE_PUMPING", 0.85, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # The Newcomen atmospheric engine, built specifically to drain flooding coal
+    # and tin workings - a later, stronger tier on the same drainage problem as
+    # met_mine_pumping, compounding with it.
+    MINING_TECH_YIELD_STEAM_ATMOSPHERIC = declare(
+        "MINING_TECH_YIELD_STEAM_ATMOSPHERIC", 1.6, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_STEAM_ATMOSPHERIC = declare(
+        "MINING_TECH_COST_STEAM_ATMOSPHERIC", 0.65, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # Black-powder blasting breaks rock faster per man-hour; it does not put new
+    # ore in the ground, so cost only, no yield term.
+    MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING = declare(
+        "MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING", 1.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_MET_BLACK_POWDER_BLASTING = declare(
+        "MINING_TECH_COST_MET_BLACK_POWDER_BLASTING", 0.85, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # Dynamite blasting, a stronger version of the same black-powder effect; cost
+    # only, no yield term.
+    MINING_TECH_YIELD_MET_DYNAMITE_BLASTING = declare(
+        "MINING_TECH_YIELD_MET_DYNAMITE_BLASTING", 1.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_MET_DYNAMITE_BLASTING = declare(
+        "MINING_TECH_COST_MET_DYNAMITE_BLASTING", 0.65, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # Rotary drilling speeds face advance; cost only, no yield term, the same
+    # reasoning as blasting.
+    MINING_TECH_YIELD_PWR_ROTARY_DRILLING = declare(
+        "MINING_TECH_YIELD_PWR_ROTARY_DRILLING", 1.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_PWR_ROTARY_DRILLING = declare(
+        "MINING_TECH_COST_PWR_ROTARY_DRILLING", 0.8, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # A railway creates REACH, not extraction efficiency: ore too far from a
+    # market to be worth carting becomes worth lifting once a railway can move it
+    # - a yield (economically-reachable tonnage) effect, not a per-tonne cost
+    # effect, reused from goods_reach_factor()'s own self.running("railway")
+    # check.
+    MINING_TECH_YIELD_RAILWAY = declare(
+        "MINING_TECH_YIELD_RAILWAY", 1.3, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_COST_RAILWAY = declare(
+        "MINING_TECH_COST_RAILWAY", 1.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     MINING_TECH = {
-        # Drainage. A flooded shaft simply stops, whatever is below the
-        # water table; a pump makes that ore reachable at all (a land-
-        # ceiling effect) and removes the single largest recurring cost of
-        # a deep working, bailing by hand or beast (a cost effect).
-        # met_mine_pumping is any mechanical lift (water-wheel or animal);
-        # steam_atmospheric IS the Newcomen engine, built specifically to
-        # drain flooding coal and tin workings, so it is both a later tier
-        # and a stronger effect on the same problem, and the two compound.
-        "met_mine_pumping":          {"yield": 1.4, "cost": 0.85},
-        "steam_atmospheric":         {"yield": 1.6, "cost": 0.65},
-        # Blasting and drilling break rock faster per man-hour. They do not
-        # put new ore in the ground, so cost only, no yield term.
-        "met_black_powder_blasting": {"yield": 1.0, "cost": 0.85},
-        "met_dynamite_blasting":     {"yield": 1.0, "cost": 0.65},
-        "pwr_rotary_drilling":       {"yield": 1.0, "cost": 0.80},
-        # A railway does not create ore, it creates REACH: ore too far from
-        # a market to be worth carting becomes worth lifting once a railway
-        # can move it, which is a yield (economically-reachable tonnage)
-        # effect, not a per-tonne extraction-cost effect. Reused from
-        # goods_reach_factor()'s own self.running("railway") check.
-        "railway":                   {"yield": 1.3, "cost": 1.0},
+        'met_mine_pumping': {"yield": MINING_TECH_YIELD_MET_MINE_PUMPING, "cost": MINING_TECH_COST_MET_MINE_PUMPING},
+        'steam_atmospheric': {"yield": MINING_TECH_YIELD_STEAM_ATMOSPHERIC, "cost": MINING_TECH_COST_STEAM_ATMOSPHERIC},
+        'met_black_powder_blasting': {"yield": MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING, "cost": MINING_TECH_COST_MET_BLACK_POWDER_BLASTING},
+        'met_dynamite_blasting': {"yield": MINING_TECH_YIELD_MET_DYNAMITE_BLASTING, "cost": MINING_TECH_COST_MET_DYNAMITE_BLASTING},
+        'pwr_rotary_drilling': {"yield": MINING_TECH_YIELD_PWR_ROTARY_DRILLING, "cost": MINING_TECH_COST_PWR_ROTARY_DRILLING},
+        'railway': {"yield": MINING_TECH_YIELD_RAILWAY, "cost": MINING_TECH_COST_RAILWAY},
     }
-    # Iron and coal only. For iron this is the specific historical claim
-    # the job is about: cheap steel did not change how ore comes out of the
-    # ground, it changed whether digging LOW-GRADE ore was worth doing at
-    # all. For coal the link runs the other way -- a cheap-steel industry
-    # is a coking-coal customer large enough to justify the pit, drainage
-    # and rail spur that a smaller demand would not -- but the direction of
-    # the effect (more worth digging, cheaper to sink) is the same, so it
-    # is applied the same way rather than invented as a second mechanism.
-    # blast_furnace and mat_bulk_steel (Bessemer/open-hearth) are the two
-    # real steps of that in the tree, each further from ore than the last.
+    # The first step of cheap steel making low-grade ore worth digging - iron did
+    # not change how ore comes out of the ground, it changed whether digging it
+    # was worth doing at all (see the class comment above); for coal, the same
+    # entry represents a cheap-steel industry becoming a coking-coal customer
+    # large enough to justify the pit, drainage and rail spur a smaller demand
+    # would not.
+    MINING_TECH_STEEL_YIELD_BLAST_FURNACE = declare(
+        "MINING_TECH_STEEL_YIELD_BLAST_FURNACE", 1.3, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_STEEL_COST_BLAST_FURNACE = declare(
+        "MINING_TECH_STEEL_COST_BLAST_FURNACE", 0.85, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    # Bessemer/open-hearth bulk steel, the second and further step of the same
+    # effect as blast_furnace, further from ore than the last.
+    MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL = declare(
+        "MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL", 1.3, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
+    MINING_TECH_STEEL_COST_MAT_BULK_STEEL = declare(
+        "MINING_TECH_STEEL_COST_MAT_BULK_STEEL", 0.75, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year",
+        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     MINING_TECH_STEEL = {
-        "blast_furnace":  {"yield": 1.3, "cost": 0.85},
-        "mat_bulk_steel": {"yield": 1.3, "cost": 0.75},
+        'blast_furnace': {"yield": MINING_TECH_STEEL_YIELD_BLAST_FURNACE, "cost": MINING_TECH_STEEL_COST_BLAST_FURNACE},
+        'mat_bulk_steel': {"yield": MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL, "cost": MINING_TECH_STEEL_COST_MAT_BULK_STEEL},
     }
 
     def mining_tech(self, mat):
@@ -3855,7 +5517,25 @@ class EconomyMixin:
             if self.running(node):
                 yield_mult *= techs[node]["yield"]
                 cost_mult *= techs[node]["cost"]
-        return min(yield_mult, 3.0), max(0.35, cost_mult)
+        return min(yield_mult, self.MINING_TECH_YIELD_CEILING), max(self.MINING_TECH_COST_FLOOR, cost_mult)
+
+    MINING_TECH_YIELD_CEILING = declare(
+        "MINING_TECH_YIELD_CEILING", 3.0, kind="temporary_heuristic",
+        unit="dimensionless multiple on extractable tonnage (maximum)",
+        source=None, confidence="D",
+        why="Cap on how far compounding every mining technology together "
+            "can raise a deposit's yield - a mine at three times book "
+            "yield is a real historical claim, per this method's own "
+            "docstring; the specific ceiling is a defensive bound against "
+            "the abolished 'unobtainable' category's mirror image, not a "
+            "derived limit.")
+    MINING_TECH_COST_FLOOR = declare(
+        "MINING_TECH_COST_FLOOR", 0.35, kind="temporary_heuristic",
+        unit="dimensionless multiple on cost per tonne/year (minimum)",
+        source=None, confidence="D",
+        why="Floor on how far compounding technology can cheapen mining - "
+            "technology helps, but extraction is never free. A defensive "
+            "bound, not a derived limit.")
 
     def mining_cost_scale(self, mat):
         """What sinking or running a tonne/yr of this material costs THIS
@@ -3870,7 +5550,8 @@ class EconomyMixin:
         infinite), and full mining technology on a fresh deposit costs no
         less than 0.4x (not free)."""
         _year, cost = self.mining_tech(mat)
-        return max(0.4, min(2.5, cost / self.mine_depletion_factor(mat)))
+        return max(self.MINING_COST_SCALE_FLOOR,
+                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor(mat)))
 
     def mining_cost_scale_for(self, working):
         """Same as mining_cost_scale(), but for what running THIS working
@@ -3880,7 +5561,29 @@ class EconomyMixin:
         material-level figure could not say because it had no idea which
         working was which."""
         _year, cost = self.mining_tech(working["material"])
-        return max(0.4, min(2.5, cost / self.mine_depletion_factor_for(working)))
+        return max(self.MINING_COST_SCALE_FLOOR,
+                   min(self.MINING_COST_SCALE_CEILING, cost / self.mine_depletion_factor_for(working)))
+
+    MINING_COST_SCALE_FLOOR = declare(
+        "MINING_COST_SCALE_FLOOR", 0.4, kind="temporary_heuristic",
+        unit="dimensionless multiple on book capex/opex (minimum)",
+        source=None, confidence="D",
+        why="However much mining technology cheapens a fresh deposit, it "
+            "never costs less than 0.4x book, per this method's own "
+            "docstring ('not free'). A defensive bound to keep the "
+            "technology-versus-depletion tension a real decision rather "
+            "than a runaway, not a derived limit.")
+    MINING_COST_SCALE_CEILING = declare(
+        "MINING_COST_SCALE_CEILING", 2.5, kind="temporary_heuristic",
+        unit="dimensionless multiple on book capex/opex (maximum)",
+        source=None, confidence="D",
+        why="However depleted and untooled a working is, it never costs "
+            "more than this multiple of book price, so a fully worked-out "
+            "deposit is a real cost penalty rather than an effectively "
+            "infinite one. A defensive bound, not a derived limit (this "
+            "method's own docstring quotes 'at most 2x book' for the "
+            "fully-depleted case, which is a description of the typical "
+            "outcome, not this literal ceiling).")
 
     def mine_yield_t_for(self, working):
         """Tonnes a year THIS working actually raises this year, after ITS
@@ -4137,6 +5840,17 @@ class EconomyMixin:
         # call site of its own.
         self._advance_mine_depletion()
 
+    MOTHBALL_CUT_SHARE = declare(
+        "MOTHBALL_CUT_SHARE", 0.5, kind="temporary_heuristic",
+        unit="fraction of capacity cut per mothballing pass", source=None,
+        confidence="D",
+        why="How much of a worst-value material's workings are cut in one "
+            "mothballing pass, so the survivors keep their own real "
+            "commissioning year and depletion clock rather than whole "
+            "workings being arbitrarily chosen to survive or not (see this "
+            "method's own docstring). A round fraction chosen for that "
+            "property, not derived from any real decommissioning practice.")
+
     def mothball_mines(self):
         """Stop working what you cannot pay for, worst value first.
 
@@ -4153,7 +5867,7 @@ class EconomyMixin:
                 break
             kept = []
             for working in self._workings_of(material):
-                cut = working["capacity"] * 0.5
+                cut = working["capacity"] * self.MOTHBALL_CUT_SHARE
                 self.household.capital += cut * self._mine_opex(material) * self.price_index
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
@@ -4186,7 +5900,13 @@ class EconomyMixin:
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
     # purchase itself cannot drift apart: a break tester spent 68% of their
     # capital on coppice with no way to ask the price first.
-    FOREST_COST_PER_HA = 250.0
+    FOREST_COST_PER_HA = declare(
+        "FOREST_COST_PER_HA", 250.0, kind="temporary_heuristic",
+        unit="denarii/hectare", source=None, confidence="D",
+        why="Purchase price of a hectare of coppice woodland. No attested "
+            "Roman land-price figure backs this; it exists mainly so "
+            "`quote forest` and the purchase itself agree on a real price "
+            "at all, per the comment above.")
     # Land bounds woodland too, not only mines. geography.json carries no
     # per-region forest figure to read the way minerals has one, so this is
     # built from the signal that IS there: how much territory you actually
@@ -4202,16 +5922,38 @@ class EconomyMixin:
     # around 190,000 ha even at full revenue-driven scale-up, comfortably
     # under that -- no private holding should rival the entire empire's own
     # managed woodland.
-    FOREST_HA_PER_REGION_BASE   = 1500.0
-    FOREST_HA_PER_REGION_PER_SC = 3500.0
+    FOREST_HA_PER_REGION_BASE = declare(
+        "FOREST_HA_PER_REGION_BASE", 1500.0, kind="engineering_estimate",
+        unit="hectares/region (base, before state capacity)", source=
+        "Sized, per the comment above, against resources.json's "
+        "empire-wide 500,000 t/yr of charcoal - implying roughly 667,000 "
+        "ha under management across the whole Roman world at "
+        "CHARCOAL_PER_HA=0.75 t/ha/yr - so Rome's own ceiling stays "
+        "comfortably under that total even at full revenue-driven scale-up.",
+        confidence="C",
+        why="Base standing-woodland ceiling per home region before state "
+            "capacity is applied. geography.json carries no per-region "
+            "forest figure the way it does for minerals, so this is built "
+            "from a proxy (region count) and checked against the one real "
+            "empire-wide anchor available, not measured region by region.")
+    FOREST_HA_PER_REGION_PER_SC = declare(
+        "FOREST_HA_PER_REGION_PER_SC", 3500.0, kind="engineering_estimate",
+        unit="hectares/region per unit of state_capacity", source=
+        "Same empire-wide charcoal anchor as FOREST_HA_PER_REGION_BASE.",
+        confidence="C",
+        why="How much a more capable state (able to hold woodland tenure "
+            "at scale) extends the per-region woodland ceiling - checked "
+            "against the same empire-wide total as the base figure, not "
+            "independently measured.")
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
         n_regions = max(1, len(self.civ.get("home_regions") or ()))
-        state_capacity = float(self.civ.get("state_capacity", 0.5))
+        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
         base = ((self.FOREST_HA_PER_REGION_BASE
                  + self.FOREST_HA_PER_REGION_PER_SC * state_capacity) * n_regions)
-        return base * (1.0 + min(5.0, max(0.0, self.revenue()) / 60000.0))
+        return base * (1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE,
+                                  max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII))
 
     def buy_forest(self, ha):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
@@ -4241,8 +5983,25 @@ class EconomyMixin:
     # heap of dung, straw and ash turned for two years; it is cheap to lay and
     # slow to yield, which is exactly why nobody builds one until they are
     # already short.
-    NITRE_COST_PER_M2 = 2.0
-    NITRE_YIELD_T_PER_M2 = 0.0008
+    NITRE_COST_PER_M2 = declare(
+        "NITRE_COST_PER_M2", 2.0, kind="temporary_heuristic",
+        unit="denarii/square metre", source=
+        "The figure step() used before this was given a proper `quote` "
+        "path (spend / 2.0), carried forward unchanged so buying a bed the "
+        "new way costs exactly what the old automatic policy always paid.",
+        confidence="D",
+        why="Cost to lay one square metre of nitre bed. Not sourced to any "
+            "attested saltpetre-works price; a carried-forward implementation "
+            "constant.")
+    NITRE_YIELD_T_PER_M2 = declare(
+        "NITRE_YIELD_T_PER_M2", 0.0008, kind="temporary_heuristic",
+        unit="tonnes saltpetre/square metre/year", source=None,
+        confidence="D",
+        why="How much saltpetre one square metre of nitre bed yields a "
+            "year. No attested nitre-bed yield figure backs this; it is "
+            "sized only to be 'cheap to lay and slow to yield' (see the "
+            "comment above), a qualitative target rather than a measured "
+            "rate.")
 
     def build_nitre(self, m2):
         """Lay down nitre beds. Saltpetre is not dug and not grown; it is made.
@@ -4262,6 +6021,16 @@ class EconomyMixin:
         self.household.capital -= cost
         self.household.nitre_bed_m2 += m2
         return m2
+
+    NITRE_SHORTAGE_SAFETY_BUFFER = declare(
+        "NITRE_SHORTAGE_SAFETY_BUFFER", 1.20, kind="temporary_heuristic",
+        unit="multiple on the bare tonnage deficit", source=None,
+        confidence="D",
+        why="Extra bed recommended over the bare measured deficit, so a "
+            "tiny later change in the portfolio does not put the player "
+            "straight back into shortage. Twenty per cent is a round, "
+            "plausible safety margin, not derived from how much the "
+            "portfolio typically moves.")
 
     def shortage_remedy(self, binding):
         """One sentence on what would end this shortage, in things you can type.
@@ -4293,7 +6062,8 @@ class EconomyMixin:
             # putting the player straight back into shortage, without turning a
             # one-tonne deficit into the old fixed sixteen-tonne recommendation.
             square_meters = max(100, int(math.ceil(
-                deficit * 1.20 / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
+                deficit * self.NITRE_SHORTAGE_SAFETY_BUFFER
+                / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
             return ("Saltpetre is made in nitre beds, not mined: you are about "
                     "%.2f tonnes/year short. With a 20%% safety buffer, 'buy "
                     "nitre %d' lays enough bed at %.4f tonnes per square metre "
@@ -4372,14 +6142,16 @@ class EconomyMixin:
         # three of those calls. See PERFORMANCE.md.
         rev = self.revenue() if _rev is None else _rev
         wages = self.wage_bill()
-        base = 120.0 * price_index                             # bare subsistence, one person
-        household = 90.0 * price_index * (1 + self.household.freedmen * 0.5 + self.household.slaves * 0.35)
-        tax = max(0.0, rev) * 0.06                     # portoria, vicesima, local dues
+        base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
+        household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index
+                     * (1 + self.household.freedmen * self.LIVING_COST_FREEDMAN_SHARE
+                        + self.household.slaves * self.LIVING_COST_SLAVE_SHARE))
+        tax = max(0.0, rev) * self.LIVING_COST_TAX_RATE                # portoria, vicesima, local dues
         status = 0.0
-        if self.has("citizenship"):        status += 200 * price_index
-        if self.running("patron_senatorial"):  status += 900 * price_index
-        if self.running("patron_imperial"):    status += 2500 * price_index
-        status += max(0.0, self.household.capital) * 0.015      # you cannot look poor and rich
+        if self.has("citizenship"):        status += self.LIVING_COST_STATUS_CITIZENSHIP * price_index
+        if self.running("patron_senatorial"):  status += self.LIVING_COST_STATUS_PATRON_SENATORIAL * price_index
+        if self.running("patron_imperial"):    status += self.LIVING_COST_STATUS_PATRON_IMPERIAL * price_index
+        status += max(0.0, self.household.capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES. This was unconditional and
         # there was no way to shed it: a Rome run sat at 1,343 of revenue
         # against 1,391 of living costs, of which 1,100 was the standing upkeep
@@ -4394,7 +6166,103 @@ class EconomyMixin:
         # themselves starve you.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         room = max(0.0, rev - base - household - tax - upkeep_amount - wages)
-        status = min(status, room * 0.75 + max(0.0, self.household.capital) * 0.015)
+        status = min(status, room * self.LIVING_COST_APPEARANCES_SHARE_OF_ROOM
+                     + max(0.0, self.household.capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
-    HOURS_PER_PERSON_YEAR = 2000.0   # prices.json: a 10-hour day, 250 days, less feasts
+    LIVING_COST_BASE_SUBSISTENCE = declare(
+        "LIVING_COST_BASE_SUBSISTENCE", 120.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=1", source=None, confidence="D",
+        why="Bare subsistence cost for one person (food, the plainest "
+            "shelter, nothing else) at this society's reference prices. No "
+            "attested Roman subsistence-basket figure backs this exact "
+            "number; a real figure needs the same physical grounding "
+            "sim/world/agriculture.py gives food (CALORIES_PER_PERSON_DAY, "
+            "a real crop and price), not a flat denarii figure.")
+    LIVING_COST_HOUSEHOLD_BASE = declare(
+        "LIVING_COST_HOUSEHOLD_BASE", 90.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=1, one dependant-equivalent",
+        source=None, confidence="D",
+        why="Cost of keeping one household dependant beyond bare personal "
+            "subsistence - rent, ordinary household goods, the plain cost "
+            "of a household rather than a single person camping. Not "
+            "sourced to an attested figure.")
+    LIVING_COST_FREEDMAN_SHARE = declare(
+        "LIVING_COST_FREEDMAN_SHARE", 0.5, kind="temporary_heuristic",
+        unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per freedman",
+        source=None, confidence="D",
+        why="How much one freedman adds to household living costs, "
+            "relative to the base household-dependant figure. Tuned, not "
+            "measured against any attested household-maintenance record.")
+    LIVING_COST_SLAVE_SHARE = declare(
+        "LIVING_COST_SLAVE_SHARE", 0.35, kind="temporary_heuristic",
+        unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per slave",
+        source=None, confidence="D",
+        why="As LIVING_COST_FREEDMAN_SHARE, for an enslaved household "
+            "member - lower, reflecting a bare rather than a dignified "
+            "standard of upkeep. Tuned, not measured.")
+    LIVING_COST_TAX_RATE = declare(
+        "LIVING_COST_TAX_RATE", 0.06, kind="temporary_heuristic",
+        unit="fraction of revenue", source=
+        "Named after real Roman levies - portoria (customs dues, "
+        "typically a few per cent), the vicesima (a nominal 5% on certain "
+        "transactions) and local dues - but combined into one flat rate "
+        "rather than modelling any of them as its own mechanism.",
+        confidence="C",
+        why="What fraction of revenue goes to tax and local dues each "
+            "year. The NAMED taxes are real; this file has no separate "
+            "customs, transaction or local-dues mechanism, so their "
+            "combined bite is approximated as one flat share of revenue "
+            "rather than computed from an actual fiscal structure. A "
+            "second SS3.1 candidate alongside DEBT_BASE_RATE: this stands "
+            "in for state revenue extraction, which CLAUDE.md SS3.1 asks "
+            "to fall out of trade volume, customs enforcement and imperial "
+            "administrative reach rather than being asserted as one number "
+            "reused unchanged by every civilisation this game starts.")
+    LIVING_COST_STATUS_CITIZENSHIP = declare(
+        "LIVING_COST_STATUS_CITIZENSHIP", 200.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=1", source=None, confidence="D",
+        why="Standing upkeep of maintaining the appearance citizenship "
+            "expects - clothes, hospitality, being seen. Tuned game "
+            "balance, not an attested figure.")
+    LIVING_COST_STATUS_PATRON_SENATORIAL = declare(
+        "LIVING_COST_STATUS_PATRON_SENATORIAL", 900.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=1", source=None, confidence="D",
+        why="As LIVING_COST_STATUS_CITIZENSHIP, for a senatorial patron's "
+            "expectations of you. Tuned, not attested.")
+    LIVING_COST_STATUS_PATRON_IMPERIAL = declare(
+        "LIVING_COST_STATUS_PATRON_IMPERIAL", 2500.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=1", source=None, confidence="D",
+        why="As LIVING_COST_STATUS_PATRON_SENATORIAL, for the imperial "
+            "tier. Tuned, not attested.")
+    LIVING_COST_STATUS_PER_CAPITAL = declare(
+        "LIVING_COST_STATUS_PER_CAPITAL", 0.015, kind="temporary_heuristic",
+        unit="fraction of capital spent on appearances per year",
+        source=None, confidence="D",
+        why="'You cannot look poor and rich': how much of a wealthy "
+            "household's own capital its visible standard of living must "
+            "track, reused as both the raw status cost and the ceiling on "
+            "how far the appearances budget can be trimmed. A real figure "
+            "needs an actual model of conspicuous consumption in a "
+            "patronage society, not a flat share of capital.")
+    LIVING_COST_APPEARANCES_SHARE_OF_ROOM = declare(
+        "LIVING_COST_APPEARANCES_SHARE_OF_ROOM", 0.75, kind="temporary_heuristic",
+        unit="fraction of remaining income", source=None, confidence="D",
+        why="How much of what is left after eating, tax, upkeep and wages "
+            "a household will spend on keeping up appearances, so status "
+            "spending draws down what is left rather than starving the "
+            "household outright - see the comment above for the ruined-"
+            "household bug this fixed. The specific three-quarters share "
+            "is tuned game balance, not derived from any household-budget "
+            "study.")
+
+    HOURS_PER_PERSON_YEAR = declare(
+        "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
+        unit="hours/person/year", source=
+        "prices.json: a 10-hour day, 250 working days a year, less feasts "
+        "and holidays.",
+        confidence="B",
+        why="Converts an annual wage into an hourly rate (stall_diagnosis' "
+            "own wage-comparison arithmetic) and back - the same working-"
+            "year convention prices.json itself uses, so the two stay "
+            "consistent.")
