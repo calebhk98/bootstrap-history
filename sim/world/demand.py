@@ -200,7 +200,7 @@ def production_data():
 # - via a Pareto Type I distribution, the standard textbook distribution for
 # the upper tail of an income distribution and the one whose Lorenz curve
 # has a closed-form relationship to the Gini coefficient (see
-# _pareto_alpha_from_gini). Handing this ONE number to `income_bins` below
+# _pareto_shape_parameter_from_gini). Handing this ONE number to `income_bins` below
 # produces as many income classes as asked for, each with its own
 # analytically-exact mean income - not an assumed "rich" and "poor" split.
 #
