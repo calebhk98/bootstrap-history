@@ -111,16 +111,28 @@ their number is a real lower bound on cost (the batch really did cost that
 much to run) but not a real relative price, and treating it as one would be
 worse than saying plainly that this round cannot separate it out.
 
-CYCLES ARE EXPECTED. Iron needs charcoal; charcoal needs timber and labour;
-an axe needs an iron edge. That is a cycle in the recipe graph and the
-fixed-point iteration handles it the same way it handles everything else -
-by converging to the prices where the equations agree, not by requiring the
-graph to be acyclic. What the iteration CANNOT do is resolve a material whose
-every path back through its own inputs never bottoms out at something with no
-inputs (an extracted material, ultimately just labour and zero rent) - that
-is a genuine hole in the data, not a cycle, and this script finds it with a
-separate graph pass before it ever starts iterating numerically. See
-`compute_resolvable_materials` below.
+CYCLES ARE EXPECTED BY THE ITERATION AND REFUSED BY THE PASS IN FRONT OF IT,
+WHICH IS A DEFECT - see Complaints/31 and sim/tests/test_price_solver_cycles.py.
+Iron needs charcoal; charcoal needs timber and labour; an axe needs an iron
+edge. The damped fixed-point iteration below handles that the same way it
+handles everything else, by converging to the prices where the equations
+agree rather than requiring an acyclic graph. What the iteration CANNOT do is
+resolve a material whose every path back through its own inputs never bottoms
+out at something with no inputs (an extracted material, ultimately just
+labour and zero rent) - a genuine hole in the data - and
+`compute_resolvable_materials` below is the separate graph pass that finds
+those before any numeric work starts.
+
+That pass is currently STRICTER THAN IT SHOULD BE. It adds a recipe's outputs
+only once every input is already resolvable, which is a topological ordering,
+so it refuses every genuine cycle too - the axe-and-iron example in the
+paragraph above included, and a material listing itself among its inputs
+(seed corn) worst of all, since that takes everything downstream with it. The
+right test is productiveness (spectral radius under 1 / Hawkins-Simon), not
+reachability. This is latent rather than active: the dataset is acyclic today
+and the solver reports no unresolved material. It is written down here
+because the fix for it is a prerequisite for capital goods and for seed corn,
+not because it is breaking anything now.
 """
 import argparse
 import collections

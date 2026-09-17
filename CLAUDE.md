@@ -117,8 +117,9 @@ records what every process consumes and nothing about what anything produces,
 which - not the existence of `prices.json` - is why every cost bottomed out in
 a book value: there was no physical structure to compute one from.
 
-`data/production/` covers **99.1% of consumption sites** (154 of 162
-materials). Read `data/production/_SCHEMA.md` before adding to it. The rule
+`data/production/` covers **99.7% of consumption sites** (156 of 159
+materials; re-measured after three `conf: D` entries were deleted rather
+than kept). Read `data/production/_SCHEMA.md` before adding to it. The rule
 that governs every number there: a yield is a physical fact - ore grade times
 recovery, reaction stoichiometry, latent heat - and is NEVER derived from what
 the material sells for, nor tuned so a computed price matches `prices.json`.
@@ -129,9 +130,12 @@ replace them.
     python3 sim/validate_production.py --todo   what is still missing
     python3 sim/audit_costs.py                  where the cost base is
 
-The remaining 0.9% is deliberate and recorded: four explosives precursors,
-two trace metals with no independent ore, and `coal_tar_kg`, which is covered
-as a joint output without a key of its own.
+The remaining 0.3% is deliberate and recorded, and is now exactly the joint
+byproducts: `germanium_g` and `indium_g`, two trace metals with no
+independent ore, and `coal_tar_kg`. All three come out of another process and
+have no key of their own, which is the same underdetermination
+`Complaints/29` records - they cannot be priced from the cost side at all,
+so an entry for them would be an invention, not a gap.
 
 **Nothing reads this data yet.** The price solver described in
 `ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 2 is the next piece, and until it

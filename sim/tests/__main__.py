@@ -86,6 +86,20 @@ TOPICS = [
     # _run_topic handles both. It had never run: unregistered here, and unable
     # to import under the old rome.sim.tests rooting even if it had been.
     "tierless_schema",
+    # sim/world/agriculture.py: land, labour, technique and weather into
+    # food, standalone and with no import of sim/engine/ - see that
+    # module's own docstring for why. Also unittest.TestCase-style.
+    "agriculture",
+    # sim/world/demography.py: age-cohort population dynamics, standalone
+    # and with no import of sim/engine/ - see that module's own docstring
+    # for why, and sim/world/__init__.py for the package as a whole. Also
+    # unittest.TestCase-style.
+    "demography",
+    # Pins Complaints/31: the price solver's resolvability pass refuses
+    # every recipe cycle, including the axe/iron example its own docstring
+    # uses. Written as assertions on the CURRENT wrong behaviour so the
+    # suite stays green and the defect stays impossible to miss.
+    "price_solver_cycles",
     # Guards the id()-reuse hazard that made the simulation non-deterministic;
     # structural, so it catches the class rather than the one instance.
     "determinism",
