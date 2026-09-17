@@ -12,8 +12,8 @@ data/prices.json - the CALIBRATION TARGETS demand.py's own docstring
 promises are read only by tests, never by the module's own functions (see
 sim/world/agriculture.py's and sim/world/deposits.py's own precedent for
 the same discipline). It reports the disagreement; it never asserts a
-tolerance tight enough to tempt anyone into retuning a beta share or the
-Gini coefficient to close it.
+tolerance tight enough to tempt anyone into retuning a marginal budget
+share or the Gini coefficient to close it.
 """
 import ast
 import json
@@ -53,10 +53,10 @@ class IncomeDistributionTests(unittest.TestCase):
 
     def test_bins_are_sorted_richest_first_and_strictly_decreasing(self):
         bins = demand.income_bins(1000.0, 500.0, gini=0.4, num_bins=10)
-        incomes = [b.income_per_capita_per_year for b in bins]
+        incomes = [income_bin.income_per_capita_per_year for income_bin in bins]
         self.assertEqual(incomes, sorted(incomes, reverse=True))
-        for a, b in zip(incomes, incomes[1:]):
-            self.assertGreater(a, b)
+        for richer_income, poorer_income in zip(incomes, incomes[1:]):
+            self.assertGreater(richer_income, poorer_income)
 
     def test_more_inequality_makes_the_top_bin_richer(self):
         equal_ish = demand.income_bins(1000.0, 500.0, gini=0.15, num_bins=10)
@@ -82,10 +82,11 @@ class IncomeDistributionTests(unittest.TestCase):
 
 class HouseholdDemandShapeTests(unittest.TestCase):
     """The Stone-Geary properties the task itself asks for: demand falls
-    as price rises, and a necessity (gamma>0) falls LESS than a luxury
-    (gamma=0) for the same price change - see demand.py's own HOUSEHOLD
-    DEMAND section for why this falls out of the algebra rather than
-    being asserted with two different elasticities.
+    as price rises, and a necessity (positive subsistence floor) falls
+    LESS than a luxury (subsistence floor of zero) for the same price
+    change - see demand.py's own HOUSEHOLD DEMAND section for why this
+    falls out of the algebra rather than being asserted with two
+    different elasticities.
     """
 
     def setUp(self):
@@ -93,7 +94,7 @@ class HouseholdDemandShapeTests(unittest.TestCase):
         self.income = 1000.0
 
     def _quantity(self, good, price, other_price=1.0):
-        prices = {g.name: other_price for g in self.basket}
+        prices = {basket_good.name: other_price for basket_good in self.basket}
         prices[good.name] = price
         return demand.household_quantity_demanded_per_capita(
             good, prices, self.income, self.basket)
@@ -106,22 +107,24 @@ class HouseholdDemandShapeTests(unittest.TestCase):
 
     def test_necessity_is_less_elastic_than_luxury(self):
         # Percentage fall in quantity for the same percentage rise in
-        # price, food (gamma>0) against silver (gamma=0) at the same
-        # income and same starting price.
+        # price, food (positive subsistence floor) against silver
+        # (subsistence floor of zero) at the same income and same
+        # starting price.
         def pct_fall(good):
-            q1 = self._quantity(good, 1.0)
-            q2 = self._quantity(good, 1.5)
-            return (q1 - q2) / q1
+            quantity_before = self._quantity(good, 1.0)
+            quantity_after = self._quantity(good, 1.5)
+            return (quantity_before - quantity_after) / quantity_before
 
         food_fall = pct_fall(demand.FOOD)
         silver_fall = pct_fall(demand.SILVER)
         self.assertLess(food_fall, silver_fall)
 
     def test_silver_demand_is_unit_elastic_in_expenditure(self):
-        # gamma=0 goods spend a CONSTANT surplus expenditure share
-        # regardless of price - p*q should be invariant to price for
-        # SILVER specifically (see market_clearing_price's own docstring
-        # for the closed form this is a special case of).
+        # A good with a subsistence floor of zero spends a CONSTANT
+        # surplus expenditure share regardless of price - price times
+        # quantity should be invariant to price for SILVER specifically
+        # (see market_clearing_price's own docstring for the closed form
+        # this is a special case of).
         expenditure_at = [price * self._quantity(demand.SILVER, price)
                            for price in (0.5, 1.0, 3.0, 10.0)]
         for value in expenditure_at[1:]:
@@ -129,7 +132,7 @@ class HouseholdDemandShapeTests(unittest.TestCase):
 
     def test_below_subsistence_household_gets_scaled_down_floor_not_negative(self):
         basket = demand.DEFAULT_BASKET
-        prices = {g.name: 10.0 for g in basket}
+        prices = {basket_good.name: 10.0 for basket_good in basket}
         # income far below what even the food floor costs at this price
         poor_income = 1.0
         quantity = demand.household_quantity_demanded_per_capita(
@@ -137,10 +140,10 @@ class HouseholdDemandShapeTests(unittest.TestCase):
         self.assertGreaterEqual(quantity, 0.0)
         self.assertLess(quantity, demand.FOOD.subsistence_quantity_per_capita_per_year)
 
-    def test_basket_must_sum_betas_to_one(self):
+    def test_basket_must_sum_shares_to_one(self):
         bad_basket = (
-            demand.Good("a", 0.0, 0.5),
-            demand.Good("b", 0.0, 0.6),
+            demand.Good("first_good", 0.0, 0.5),
+            demand.Good("second_good", 0.0, 0.6),
         )
         with self.assertRaises(ValueError):
             demand.validate_basket(bad_basket)
@@ -170,10 +173,12 @@ class AggregateDemandAndInequalityTests(unittest.TestCase):
         # only the distribution's SHAPE changes. This is a real, slightly
         # counter-intuitive property of the linear (Stone-Geary) demand
         # system, not a bug: as long as every bin's surplus stays
-        # positive, aggregate demand for a gamma=0 good depends only on
-        # TOTAL income and TOTAL population (see market_clearing_price's
-        # own closed-form derivation, A + B/p, where B is built from
-        # totals alone) - inequality changes WHO holds the surplus, which
+        # positive, aggregate demand for a good with no subsistence floor
+        # depends only on TOTAL income and TOTAL population (see
+        # market_clearing_price's own closed-form derivation,
+        # floor_quantity + surplus_income_available / price, where
+        # surplus_income_available is built from totals alone) -
+        # inequality changes WHO holds the surplus, which
         # test_top_bin_buys_far_more_silver_per_capita_than_bottom_bin
         # above is what actually isolates, but not how much AGGREGATE
         # surplus exists to chase a fixed quantity of silver at the
@@ -217,8 +222,10 @@ class ClosedFormMatchesDirectSummationTests(unittest.TestCase):
     def test_raises_when_quantity_is_below_the_price_insensitive_floor(self):
         bins = demand.income_bins(1000.0, 500.0, gini=0.4)
         other_prices = {"manufactures": 1.0, "silver_kg": 1.0}
-        # FOOD has gamma>0, so it has a positive floor at (1-beta)*gamma*N;
-        # asking for less than that floor cannot be cleared by demand.
+        # FOOD has a positive subsistence floor, so it has a positive
+        # floor quantity (population times its subsistence floor times
+        # (1 minus its marginal budget share)); asking for less than that
+        # floor cannot be cleared by demand.
         with self.assertRaises(ValueError):
             demand.market_clearing_price(
                 demand.FOOD, 1.0, other_prices, bins, demand.DEFAULT_BASKET)
@@ -275,8 +282,8 @@ class DerivedDemandTests(unittest.TestCase):
         consumers = demand.consumers_of("lead_kg")
         self.assertIn("zinc_electrolytic_kg", consumers)
         self.assertIn("sulfuric_acid_kg", consumers)
-        modest_plan = {c: 1000.0 for c in consumers}
-        larger_plan = {c: 100_000.0 for c in consumers}
+        modest_plan = {consumer: 1000.0 for consumer in consumers}
+        larger_plan = {consumer: 100_000.0 for consumer in consumers}
         modest_demand, _ = demand.derived_intermediate_demand("lead_kg", modest_plan)
         larger_demand, breakdown = demand.derived_intermediate_demand(
             "lead_kg", larger_plan)
@@ -359,10 +366,10 @@ class NoBookPriceHardcodeTests(unittest.TestCase):
         # docstring prose says about it - a subscript check on top of the
         # opened-files check would only be checking the same fact twice.
 
-    def test_betas_are_declared_as_temporary_heuristic_not_calibrated(self):
+    def test_surplus_budget_shares_are_declared_as_temporary_heuristic_not_calibrated(self):
         from sim import constants
-        for name in ("BETA_FOOD_SURPLUS_SHARE", "BETA_MANUFACTURES_SURPLUS_SHARE",
-                     "BETA_SILVER_SURPLUS_SHARE", "GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN"):
+        for name in ("FOOD_SURPLUS_BUDGET_SHARE", "MANUFACTURES_SURPLUS_BUDGET_SHARE",
+                     "SILVER_SURPLUS_BUDGET_SHARE", "GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN"):
             self.assertEqual(constants.REGISTRY[name]["kind"], "temporary_heuristic", name)
 
 
@@ -401,8 +408,8 @@ class StandaloneImportTests(unittest.TestCase):
 class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
     """The only class in this file that reads data/prices.json - both
     CALIBRATION TARGETS demand.py's own docstring names, read here to
-    REPORT the disagreement and never fed back into demand.py's beta
-    shares or Gini coefficient to close it. See demand.py's own __main__
+    REPORT the disagreement and never fed back into demand.py's marginal
+    budget shares or Gini coefficient to close it. See demand.py's own __main__
     block for the same computation with printed intermediate steps.
     """
 

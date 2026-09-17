@@ -38,17 +38,18 @@ budgets and needs rather than a table of "what things are worth":
 
   HOUSEHOLDS spend a budget across a small basket of goods using a
   Stone-Geary / Linear Expenditure System (LES): each good has a
-  subsistence quantity (`gamma`, a PHYSICAL floor - it does not fall to
-  zero just because the price rises, within the range this model is valid
-  over) and a marginal budget share (`beta`, what fraction of whatever
-  income is left AFTER every good's subsistence floor is paid for goes to
-  this good). This is not a house style invented for this task: it is the
-  standard textbook demand system built exactly to produce Engel's law
-  (food's SHARE of the budget falls as income rises) without asserting it
-  as a separate rule - see HOUSEHOLD DEMAND below for why the algebra does
-  this on its own. A good with gamma=0 (silver: nobody eats it, nobody has
-  a minimum physical requirement for it) behaves completely differently
-  from a good with gamma>0 (food) at the SAME beta, which is the mechanism
+  subsistence floor (a PHYSICAL floor - it does not fall to zero just
+  because the price rises, within the range this model is valid over)
+  and a marginal budget share (what fraction of whatever income is left
+  AFTER every good's subsistence floor is paid for goes to this good).
+  This is not a house style invented for this task: it is the standard
+  textbook demand system built exactly to produce Engel's law (food's
+  SHARE of the budget falls as income rises) without asserting it as a
+  separate rule - see HOUSEHOLD DEMAND below for why the algebra does
+  this on its own. A good with a subsistence floor of zero (silver:
+  nobody eats it, nobody has a minimum physical requirement for it)
+  behaves completely differently from a good with a positive subsistence
+  floor (food) at the SAME marginal budget share, which is the mechanism
   that makes a famine dear and a luxury slack - see
   `household_quantity_demanded_per_capita`.
 
@@ -205,9 +206,10 @@ def production_data():
 #
 # WHAT INEQUALITY ACTUALLY CHANGES, STATED PLAINLY. In this linear (Stone-
 # Geary) demand system, as long as every bin's own surplus stays positive,
-# a market's AGGREGATE demand for a gamma=0 good (see market_clearing_
-# price's closed form) depends only on TOTAL population and TOTAL income -
-# not on how unequally that income is shared. Inequality's real effect
+# a market's AGGREGATE demand for a good with no subsistence floor (see
+# market_clearing_price's closed form) depends only on TOTAL population
+# and TOTAL income - not on how unequally that income is shared.
+# Inequality's real effect
 # here is on WHO holds the surplus (see the per-capita checks in sim/
 # tests/test_demand.py's AggregateDemandAndInequalityTests) and, once
 # severe enough to push a bin below its own subsistence floor, on how
@@ -250,11 +252,13 @@ DEFAULT_NUM_INCOME_BINS = 20
 # conditional mean, only how many of them there are.
 
 
-def _pareto_alpha_from_gini(gini):
+def _pareto_shape_parameter_from_gini(gini):
     """Pareto Type I's shape parameter from its Gini coefficient. For a
-    Pareto distribution the two are related in closed form, G = 1/(2a-1),
-    which inverts to this. Larger alpha is a THINNER tail (more equal);
-    alpha must exceed 1 for the distribution to have a finite mean at all
+    Pareto distribution the two are related in closed form - the Gini
+    coefficient equals one over the quantity (two times the shape
+    parameter minus one) - which inverts to the formula below. A larger
+    shape parameter is a THINNER tail (more equal); the shape parameter
+    must exceed 1 for the distribution to have a finite mean at all
     (income_bins raises if it does not).
     """
     if not (0.0 < gini < 1.0):
@@ -262,30 +266,40 @@ def _pareto_alpha_from_gini(gini):
     return (1.0 + gini) / (2.0 * gini)
 
 
-def _pareto_bin_mean_multiple_of_scale(u_low, u_high, alpha):
-    """E[X / x_m | X in the population's upper-tail-probability interval
-    (u_low, u_high)] for a Pareto Type I distribution with shape `alpha`,
-    where u is measured as a SURVIVAL probability (u=0 is the very richest
-    household, u=1 is everyone). x_m is the distribution's scale (its
-    minimum possible value); dividing it out here is what lets this
-    function depend on `alpha` alone.
+def _pareto_bin_mean_multiple_of_scale(
+        survival_probability_low, survival_probability_high, pareto_shape_parameter):
+    """The mean value, measured as a multiple of the distribution's scale,
+    of a Pareto Type I distribution with the given shape parameter, over
+    the population's upper-tail-probability interval running from
+    `survival_probability_low` to `survival_probability_high`. A survival
+    probability of 0 is the very richest household and 1 is everyone; the
+    distribution's scale is its minimum possible value, and dividing it
+    out here is what lets this function depend on the shape parameter
+    alone.
 
-    Closed form: the Pareto quantile function at survival probability u is
-    x(u) = x_m * u^(-1/alpha), so the conditional mean over an interval is
-    the integral of that divided by the interval's width - integrable in
-    closed form because u^(-1/alpha) is a plain power.
+    Closed form: at survival probability s, the Pareto quantile (the
+    income level above which exactly that fraction s of the population
+    sits) equals the scale times s raised to the power (-1 / shape
+    parameter). The conditional mean over an interval is the integral of
+    that quantile function divided by the interval's width - integrable
+    in closed form because a power of s is a plain power.
     """
-    if not (0.0 <= u_low < u_high <= 1.0):
-        raise ValueError("need 0 <= u_low < u_high <= 1, got %r, %r" % (u_low, u_high))
-    exponent = 1.0 - 1.0 / alpha
-    integral = (u_high ** exponent - u_low ** exponent) / exponent
-    return integral / (u_high - u_low)
+    if not (0.0 <= survival_probability_low < survival_probability_high <= 1.0):
+        raise ValueError(
+            "need 0 <= survival_probability_low < survival_probability_high "
+            "<= 1, got %r, %r" % (survival_probability_low, survival_probability_high))
+    exponent = 1.0 - 1.0 / pareto_shape_parameter
+    integral = (survival_probability_high ** exponent
+                - survival_probability_low ** exponent) / exponent
+    return integral / (survival_probability_high - survival_probability_low)
 
 
 IncomeBin = collections.namedtuple("IncomeBin", [
     "population",
     "income_per_capita_per_year",
-    "population_percentile_from_top",   # (u_low, u_high), 0.0=richest edge
+    "population_percentile_from_top",   # (survival_probability_low,
+                                         # survival_probability_high),
+                                         # 0.0=richest edge
 ])
 
 
@@ -314,85 +328,100 @@ def income_bins(population, mean_income_per_capita_per_year,
     if num_bins < 1:
         raise ValueError("need at least one income bin, got %r" % (num_bins,))
 
-    alpha = _pareto_alpha_from_gini(gini)
-    if alpha <= 1.0:
+    pareto_shape_parameter = _pareto_shape_parameter_from_gini(gini)
+    if pareto_shape_parameter <= 1.0:
         raise ValueError(
             "gini %.4f implies a Pareto shape parameter of %.4f <= 1, "
             "which has no finite mean - this distribution cannot be built "
-            "at this inequality level" % (gini, alpha))
-    scale_multiple = (alpha - 1.0) / alpha           # x_m = mean * this
+            "at this inequality level" % (gini, pareto_shape_parameter))
+    # the distribution's scale (its minimum possible value) as a multiple
+    # of the mean, for this shape parameter
+    scale_multiple = (pareto_shape_parameter - 1.0) / pareto_shape_parameter
     scale = mean_income_per_capita_per_year * scale_multiple
 
     bins = []
     for index in range(num_bins):
-        u_low = index / num_bins
-        u_high = (index + 1) / num_bins
-        mean_multiple = _pareto_bin_mean_multiple_of_scale(u_low, u_high, alpha)
+        survival_probability_low = index / num_bins
+        survival_probability_high = (index + 1) / num_bins
+        mean_multiple = _pareto_bin_mean_multiple_of_scale(
+            survival_probability_low, survival_probability_high, pareto_shape_parameter)
         bins.append(IncomeBin(
             population=population / num_bins,
             income_per_capita_per_year=scale * mean_multiple,
-            population_percentile_from_top=(u_low, u_high)))
+            population_percentile_from_top=(survival_probability_low,
+                                             survival_probability_high)))
     return bins
 
 
 def total_population(bins):
-    return sum(b.population for b in bins)
+    return sum(income_bin.population for income_bin in bins)
 
 
 def total_income(bins):
-    return sum(b.population * b.income_per_capita_per_year for b in bins)
+    return sum(income_bin.population * income_bin.income_per_capita_per_year
+               for income_bin in bins)
 
 
 # ============================================================================
 # HOUSEHOLD DEMAND - STONE-GEARY / LINEAR EXPENDITURE SYSTEM
 # ============================================================================
-# One household with income Y, facing prices p_i for a basket of goods each
-# with a subsistence quantity gamma_i (a PHYSICAL floor - calories a person
-# needs, not a preference) and a marginal budget share beta_i (sum_i beta_i
-# = 1), maximises sum_i beta_i * ln(q_i - gamma_i) subject to sum_i p_i*q_i
-# = Y. The closed-form solution is
+# One household with a total income, facing a price for every good in a
+# basket, where each good has a subsistence floor (a PHYSICAL floor -
+# calories a person needs, not a preference) and a marginal budget share
+# (the marginal budget shares across the whole basket sum to 1), maximises
+# the sum, over every good, of that good's marginal budget share times the
+# logarithm of (the quantity bought minus that good's subsistence floor),
+# subject to spending exactly its income across every good's price times
+# quantity bought. The closed-form solution is
 #
-#     q_i = gamma_i + (beta_i / p_i) * (Y - sum_j p_j * gamma_j)
+#     quantity_of(good) = subsistence_floor_of(good)
+#                       + marginal_budget_share_of(good) / price_of(good)
+#                         * (income - cost_of_all_subsistence_floors)
 #
-# i.e. pay for every good's subsistence floor first (sum_j p_j*gamma_j, the
-# COMMITTED expenditure), then split whatever is left (the SURPLUS) across
-# every good in its fixed beta_i share, spent at that good's own price.
+# i.e. pay for every good's subsistence floor first
+# (cost_of_all_subsistence_floors - each good's price times its own
+# subsistence floor, summed across the whole basket; the COMMITTED
+# expenditure), then split whatever is left (the SURPLUS) across every
+# good in its own fixed marginal budget share, spent at that good's own
+# price.
 #
 # WHY THIS SPECIFIC FORM AND NOT A BARE ELASTICITY. A single price
 # elasticity per good is a description of behaviour near one point, not a
 # mechanism - it cannot say WHY a famine (food scarce) behaves differently
 # from a silver shortage (silver scarce) without being told to, by two
 # different numbers picked to match the story. Stone-Geary needs only ONE
-# extra fact per good (gamma, a physical quantity) to make that difference
-# fall out of the algebra: a good with gamma=0 has ALL of its demand come
-# from the elastic surplus term, so raising its price bites immediately
-# (elasticity approaches -1 as gamma/q -> 0, the constant-expenditure-share
-# case); a good with gamma large relative to what people actually buy has
-# most of its demand INSENSITIVE to price by construction, because the
-# floor is bought first regardless of what it costs, right up to the point
-# income cannot cover it at all (see the below-subsistence branch below).
-# Silver (gamma=0) and food (gamma>0) therefore behave differently here
-# because one is a biological requirement and the other is not - not
+# extra fact per good (its subsistence floor, a physical quantity) to make
+# that difference fall out of the algebra: a good with a subsistence floor
+# of zero has ALL of its demand come from the elastic surplus term, so
+# raising its price bites immediately (elasticity approaches -1 as the
+# ratio of subsistence floor to quantity bought approaches 0, the
+# constant-expenditure-share case); a good with a subsistence floor large
+# relative to what people actually buy has most of its demand INSENSITIVE
+# to price by construction, because the floor is bought first regardless
+# of what it costs, right up to the point income cannot cover it at all
+# (see the below-subsistence branch below). Silver (subsistence floor
+# zero) and food (subsistence floor positive) therefore behave differently
+# here because one is a biological requirement and the other is not - not
 # because two different elasticities were chosen to make them differ.
 
 Good = collections.namedtuple("Good", [
     "name",
-    "subsistence_quantity_per_capita_per_year",   # gamma - a PHYSICAL floor
-    "marginal_budget_share",                      # beta - share of SURPLUS
+    "subsistence_quantity_per_capita_per_year",   # the PHYSICAL floor
+    "marginal_budget_share",                      # share of SURPLUS spending
 ])
 
 
 def validate_basket(basket):
-    """basket's beta values must sum to 1 - Stone-Geary's own constraint,
-    not a house convention. Raises rather than silently renormalising,
-    because a caller whose betas do not sum to 1 has made an error worth
-    seeing, not one worth quietly correcting.
+    """basket's marginal budget shares must sum to 1 - Stone-Geary's own
+    constraint, not a house convention. Raises rather than silently
+    renormalising, because a caller whose shares do not sum to 1 has made
+    an error worth seeing, not one worth quietly correcting.
     """
-    total_beta = sum(good.marginal_budget_share for good in basket)
-    if abs(total_beta - 1.0) > 1e-9:
+    total_share = sum(good.marginal_budget_share for good in basket)
+    if abs(total_share - 1.0) > 1e-9:
         raise ValueError(
             "basket's marginal_budget_share values must sum to 1.0, "
-            "got %.9f across %s" % (total_beta, [g.name for g in basket]))
+            "got %.9f across %s" % (total_share, [good.name for good in basket]))
 
 
 def household_quantity_demanded_per_capita(good, prices, income_per_capita, basket):
@@ -404,7 +433,8 @@ def household_quantity_demanded_per_capita(good, prices, income_per_capita, bask
     `income_per_capita` is measured in.
 
     BELOW-SUBSISTENCE HOUSEHOLDS. If income cannot even cover the
-    committed basket (income_per_capita < sum_j p_j*gamma_j), the Stone-
+    committed basket (income_per_capita less than the cost of every
+    good's own subsistence floor, summed across the basket), the Stone-
     Geary formula above goes negative, which is not a quantity. This
     function instead scales every committed quantity down proportionally
     to what income actually covers - a starvation regime this module
@@ -416,7 +446,8 @@ def household_quantity_demanded_per_capita(good, prices, income_per_capita, bask
     module's own STANDALONE section.
     """
     committed_per_capita = sum(
-        prices[g.name] * g.subsistence_quantity_per_capita_per_year for g in basket)
+        prices[basket_good.name] * basket_good.subsistence_quantity_per_capita_per_year
+        for basket_good in basket)
     surplus_per_capita = income_per_capita - committed_per_capita
     if surplus_per_capita < 0.0:
         if committed_per_capita <= 0.0:
@@ -434,9 +465,9 @@ def aggregate_household_demand(good, prices, bins, basket):
     same basket at the same prices.
     """
     return sum(
-        b.population * household_quantity_demanded_per_capita(
-            good, prices, b.income_per_capita_per_year, basket)
-        for b in bins)
+        income_bin.population * household_quantity_demanded_per_capita(
+            good, prices, income_bin.income_per_capita_per_year, basket)
+        for income_bin in bins)
 
 
 def aggregate_household_demand_all_goods(prices, bins, basket):
@@ -455,8 +486,9 @@ def household_budget_share(good, prices, bins, basket):
     except that test - see CALIBRATION TARGETS below.
     """
     total_spending = sum(
-        prices[g.name] * aggregate_household_demand(g, prices, bins, basket)
-        for g in basket)
+        prices[basket_good.name] * aggregate_household_demand(
+            basket_good, prices, bins, basket)
+        for basket_good in basket)
     if total_spending <= 0.0:
         return 0.0
     return (prices[good.name] * aggregate_household_demand(good, prices, bins, basket)
@@ -495,9 +527,9 @@ HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY = declare(
            "sim/world/ modules is exactly the wiring none of them do yet.",
     confidence="B",
     why="Converts a person's physical food requirement into a quantity of "
-        "wheat, which is what FOOD's subsistence floor (gamma) actually "
-        "is - the one number in this basket that is a biological fact "
-        "rather than a preference.")
+        "wheat, which is what FOOD's subsistence floor actually is - the "
+        "one number in this basket that is a biological fact rather than "
+        "a preference.")
 
 WHEAT_ENERGY_KCAL_PER_KG = declare(
     "WHEAT_ENERGY_KCAL_PER_KG", 3400.0,
@@ -516,8 +548,8 @@ FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR = (
 # fact of its own, matching agriculture.py's own convention for
 # GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA.
 
-BETA_FOOD_SURPLUS_SHARE = declare(
-    "BETA_FOOD_SURPLUS_SHARE", 0.30,
+FOOD_SURPLUS_BUDGET_SHARE = declare(
+    "FOOD_SURPLUS_BUDGET_SHARE", 0.30,
     kind="temporary_heuristic",
     unit="fraction of surplus (post-subsistence) household spending "
          "(dimensionless)",
@@ -532,8 +564,8 @@ BETA_FOOD_SURPLUS_SHARE = declare(
         "pre-industrial economy) would replace this number rather than "
         "this module inventing a second one for a specific study.")
 
-BETA_MANUFACTURES_SURPLUS_SHARE = declare(
-    "BETA_MANUFACTURES_SURPLUS_SHARE", 0.65,
+MANUFACTURES_SURPLUS_BUDGET_SHARE = declare(
+    "MANUFACTURES_SURPLUS_BUDGET_SHARE", 0.65,
     kind="temporary_heuristic",
     unit="fraction of surplus household spending (dimensionless)",
     source=None,
@@ -543,11 +575,11 @@ BETA_MANUFACTURES_SURPLUS_SHARE = declare(
         "artisan-made goods broadly (cloth, tools, pottery, furniture, "
         "housing) rather than on precious metals specifically - ordinary "
         "consumption, not hoarding. Same caveat as "
-        "BETA_FOOD_SURPLUS_SHARE: a real historical consumption survey "
+        "FOOD_SURPLUS_BUDGET_SHARE: a real historical consumption survey "
         "would derive this, not this module.")
 
-BETA_SILVER_SURPLUS_SHARE = declare(
-    "BETA_SILVER_SURPLUS_SHARE", 0.05,
+SILVER_SURPLUS_BUDGET_SHARE = declare(
+    "SILVER_SURPLUS_BUDGET_SHARE", 0.05,
     kind="temporary_heuristic",
     unit="fraction of surplus household spending (dimensionless)",
     source=None,
@@ -570,9 +602,9 @@ BETA_SILVER_SURPLUS_SHARE = declare(
         "pre-industrial economy, which this project does not have.")
 
 FOOD = Good("wheat_kg", FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
-            BETA_FOOD_SURPLUS_SHARE)
-MANUFACTURES = Good("manufactures", 0.0, BETA_MANUFACTURES_SURPLUS_SHARE)
-SILVER = Good("silver_kg", 0.0, BETA_SILVER_SURPLUS_SHARE)
+            FOOD_SURPLUS_BUDGET_SHARE)
+MANUFACTURES = Good("manufactures", 0.0, MANUFACTURES_SURPLUS_BUDGET_SHARE)
+SILVER = Good("silver_kg", 0.0, SILVER_SURPLUS_BUDGET_SHARE)
 
 DEFAULT_BASKET = (FOOD, MANUFACTURES, SILVER)
 validate_basket(DEFAULT_BASKET)
@@ -592,21 +624,28 @@ validate_basket(DEFAULT_BASKET)
 #
 # THIS HAS A CLOSED FORM, and it is worth showing why rather than reaching
 # for a numerical solver. Fix every OTHER good's price. Household demand
-# for good i, aggregated over every income bin, is (summing the per-bin
-# Stone-Geary formula, and noting that gamma_j and every OTHER good's price
-# are the SAME for every bin - only income varies by bin):
+# for this good, aggregated over every income bin, is (summing the per-bin
+# Stone-Geary formula, and noting that every OTHER good's subsistence
+# floor and price are the SAME for every bin - only income varies by
+# bin):
 #
-#     Q_i(p_i) = N * gamma_i * (1 - beta_i) + beta_i * (Y_total - N * C) / p_i
+#     quantity_demanded(price) = floor_quantity
+#                              + surplus_income_available / price
 #
-# where N is total population, Y_total is total income across every bin,
-# and C = sum_{j != i} p_j * gamma_j (the OTHER goods' committed spending
-# per capita - independent of p_i because those prices are already fixed).
-# That is exactly the form A + B/p_i, monotonically DECREASING in p_i
-# (assuming positive surplus), so it has exactly one root for any target
-# quantity above the floor A - see `market_clearing_price` for A and B
-# named directly and sim/tests/test_demand.py's ClosedFormMatchesDirect
-# SummationTests for the check that this formula and a plain per-bin sum
-# agree to floating-point precision.
+# where floor_quantity is total population times this good's subsistence
+# floor times (1 - this good's marginal budget share), and
+# surplus_income_available is this good's marginal budget share times
+# (total income across every bin, minus total population times the OTHER
+# goods' committed spending per capita - each other good's price times
+# its own subsistence floor, summed across the basket; independent of
+# this good's own price because those other prices are already fixed).
+# That is exactly the form floor_quantity + surplus_income_available /
+# price, monotonically DECREASING in price (assuming positive surplus),
+# so it has exactly one root for any target quantity above floor_quantity
+# - see `market_clearing_price` for floor_quantity and
+# surplus_income_available computed directly and sim/tests/test_demand.py's
+# ClosedFormMatchesDirectSummationTests for the check that this formula
+# and a plain per-bin sum agree to floating-point precision.
 
 def market_clearing_price(good, quantity_supplied, other_prices, bins, basket):
     """The price of `good` at which AGGREGATE HOUSEHOLD demand (see this
@@ -618,14 +657,16 @@ def market_clearing_price(good, quantity_supplied, other_prices, bins, basket):
 
     Raises ValueError if `quantity_supplied` is at or below the quantity
     this population would still demand even at an infinite price (its
-    Stone-Geary floor, scaled by (1 - beta) - see the module docstring's
-    HOUSEHOLD DEMAND section for why that floor is not simply `gamma`
-    itself) - demand alone cannot price a good that scarce; something
-    other than a household budget is rationing it.
+    Stone-Geary floor, scaled by (1 minus this good's marginal budget
+    share) - see the module docstring's HOUSEHOLD DEMAND section for why
+    that floor is not simply the subsistence floor by itself) - demand
+    alone cannot price a good that scarce; something other than a
+    household budget is rationing it.
     """
     validate_basket(basket)
-    other_goods = [g for g in basket if g.name != good.name]
-    missing = [g.name for g in other_goods if g.name not in other_prices]
+    other_goods = [basket_good for basket_good in basket if basket_good.name != good.name]
+    missing = [basket_good.name for basket_good in other_goods
+               if basket_good.name not in other_prices]
     if missing:
         raise KeyError(
             "market_clearing_price needs a price for every other basket "
@@ -634,8 +675,8 @@ def market_clearing_price(good, quantity_supplied, other_prices, bins, basket):
     population = total_population(bins)
     income = total_income(bins)
     committed_other_per_capita = sum(
-        other_prices[g.name] * g.subsistence_quantity_per_capita_per_year
-        for g in other_goods)
+        other_prices[basket_good.name] * basket_good.subsistence_quantity_per_capita_per_year
+        for basket_good in other_goods)
 
     floor_quantity = (population * good.subsistence_quantity_per_capita_per_year
                        * (1.0 - good.marginal_budget_share))
@@ -994,10 +1035,10 @@ if __name__ == "__main__":
              ILLUSTRATIVE_MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR,
              GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, DEFAULT_NUM_INCOME_BINS))
     print("\nincome by decile-ish bin (richest first), labour-hours/capita/year:")
-    for b in bins[:5]:
+    for income_bin in bins[:5]:
         print("  bin %-12s population=%12.0f  income/capita=%9.2f"
-              % (str(b.population_percentile_from_top), b.population,
-                 b.income_per_capita_per_year))
+              % (str(income_bin.population_percentile_from_top), income_bin.population,
+                 income_bin.income_per_capita_per_year))
     print("  ... (%d bins total, poorest: income/capita=%.2f)"
           % (len(bins), bins[-1].income_per_capita_per_year))
 
@@ -1056,7 +1097,8 @@ if __name__ == "__main__":
     print("recipe outputs (per %s): %s" % (lead_entry["basis"][:40] + "...", outputs))
     mass_shares = joint_output_mass_shares(outputs)
     print("mass shares:  " + ", ".join(
-        "%s=%.4f%%" % (k, 100.0 * v) for k, v in mass_shares.items()))
+        "%s=%.4f%%" % (material, 100.0 * share)
+        for material, share in mass_shares.items()))
     print("illustrative lead price (recursive labour content): %.4f h/kg"
           % illustrative_lead_price)
     print("stated Roman lead output: %.4g kg/yr -> lead-byproduct silver at "
@@ -1072,7 +1114,8 @@ if __name__ == "__main__":
     value_shares = joint_output_value_shares(
         outputs, {"lead_kg": illustrative_lead_price, "silver_kg": silver_price})
     print("value shares: " + ", ".join(
-        "%s=%.4f%%" % (k, 100.0 * v) for k, v in value_shares.items()))
+        "%s=%.4f%%" % (material, 100.0 * share)
+        for material, share in value_shares.items()))
 
     print("\n" + "=" * 72)
     print("DERIVED DEMAND: who actually consumes lead_kg as an input")
