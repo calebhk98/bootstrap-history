@@ -125,20 +125,37 @@ will report a flattering number.
 
 ## 2.1 The mechanism
 
-Take the classical linear production system. For a vector of prices `p`, an
-input-output matrix `A` (how much of each good each process consumes per unit
-of output), a labour-input vector `l` (hours per unit), and a wage `w`:
+Take the classical linear production system. In the textbooks it is written
+`p = A'p + wl + r`, which is four letters standing for four things nobody can
+recover without the textbook. Written out, the price of any good is:
 
 ```text
-p = A'p + w·l + rents
+price_of(good) =   sum over each input of
+                       quantity_consumed_per_unit(good, input) * price_of(input)
+                 + sum over each trade of
+                       hours_per_unit(good, trade) * wage_of(trade)
+                 + rent_per_unit(good)        # land, ore deposits: not produced
 ```
 
-Solve for the fixed point. Prices of production fall out of the physical
-structure of the economy and nothing else. This is exactly the thing the
-stakeholder asked for, phrased as a solver rather than as a rule: *do not tell
-me a soldier costs 100 denarii, work it back out.*
+A good's price is what it takes to make one of it: the inputs at their own
+prices, the labour at its wage, and rent on anything nature supplied rather
+than a process. Every one of those prices is defined the same way, so this is
+a system of equations rather than a lookup, and you solve it for the fixed
+point where every price is consistent with every other.
 
-`A` is `mat`. `l` is `lab`. Both already exist.
+That is exactly what the stakeholder asked for, phrased as a solver rather
+than as a rule: *do not tell me a soldier costs 100 denarii, work it back
+out.*
+
+The two hard parts are already in the repository.
+`quantity_consumed_per_unit` is the tree's `mat` field, in kilograms.
+`hours_per_unit` is its `lab` field, in hours by trade.
+
+Code written against this should spell the names out. `prices_by_good`,
+`input_quantities`, `hours_by_trade`, `wage_by_trade`, `rent_by_good` - not
+`p`, `A`, `l`, `w`, `r`. The compression is a convention of printed economics
+papers with a symbol table on page one, and it has no place in a codebase that
+several agents and one human have to keep straight between them.
 
 The system needs four things the repository does not yet have:
 
@@ -297,6 +314,22 @@ heuristic, derived. **Coefficients count**: `0.9`, `eta`, the wage split.
 Ship a script that answers "what fraction of this run's output still depends on
 a temporary heuristic". Today that number is close to 100% for anything
 involving money. It is the only way to tell progress from rearrangement.
+
+### The agents do the tagging once; the measuring is a script
+
+Worth stating because it is a natural thing to get wrong. Deciding that
+`0.9` in `1 + 0.9 * share**2` is a temporary heuristic while `2000 kcal/day`
+is a biological parameter takes judgement, so it is done by agents, once, per
+parameter, and the answer is written into the source next to the number.
+
+Reading those tags back and printing a percentage is arithmetic. It is a
+script, like `sim/audit_costs.py`, and it runs in a second with no agents
+involved. Nothing in this project should ever need a fleet of agents to
+answer the same question twice - if a measurement is worth having, it gets
+committed as a script the first time somebody works it out, and after that
+anyone can run it. That is the whole reason `audit_costs.py` exists rather
+than a paragraph in a document saying what its numbers were on the day
+someone looked.
 
 ## Milestone 2 - The synthetic world
 

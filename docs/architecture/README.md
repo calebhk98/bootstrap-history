@@ -9,6 +9,9 @@ is now. None of this is an approved plan yet.
 | `CURRENT_CODE_ARCHITECTURE_REVIEW.md` | This repository measured against that target, recommending in-place expansion over a rewrite. | External design review, saved verbatim |
 | `PM_ASSESSMENT.md` | What we actually think, with the codebase measured rather than described. Agrees with most of the review, disagrees with it on five specific points, and names the requirement conflict that had to be resolved before any phase plan meant anything. | Ours |
 | `ENDOGENOUS_COSTS_AND_DOMAINS.md` | The plan. How a price gets calculated rather than looked up, which domains produce prices and which only consume them, and the milestones. Supersedes `PM_ASSESSMENT.md` §3.5 and §5. | Ours |
+| `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/engine/actors/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
+| `SIM_STATE_INVENTORY.md` | Every `Sim` instance attribute, measured, classified household / world / scenario / internal. The input to the extraction. | Ours |
+| `NAMING_PLAN.md` | The 3,813 short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan;
 `PM_ASSESSMENT.md` is the reasoning that led to it; the two external documents

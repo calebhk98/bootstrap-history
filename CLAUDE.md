@@ -157,7 +157,35 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 
 ---
 
-## 7. Working habits this repo expects
+## 7. Naming
+
+An AST scan counts **3,813 bindings of identifiers two characters or shorter,
+across 332 distinct names and 83 files**: `k` alone is 568 bindings in 53
+files, `s` is 264, `n` is 198, `r` is 197. That is the single biggest
+obstacle to anyone reading this code, and it gets worse every time someone
+adds to it.
+
+**The rule for new and edited code:** spell names out. The only acceptable
+short names are `i` as a loop index, and `x`/`y` as coordinates, and only
+inside a scope short enough to see whole. Everything else gets a word:
+`node`, `node_id`, `sim`, `trade`, `material`, `rate`, `key`, `total`.
+
+This applies to prose and design documents too. `p = A'p + w·l + rents` is
+four letters standing for four things nobody can recover without the
+textbook - write `price_of(good)`, `hours_per_unit`, `wage_of(trade)`.
+
+A sweep of the existing 3,813 is planned; see
+`docs/architecture/NAMING_PLAN.md` for the tiering and the tooling. Purely
+local variables are safe to rename mechanically. The tech-tree DATA schema
+fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`, `sch`, `art`, `sus`, `gov`,
+`conf`, `pre`, `yrs`, `kb`) are a separate and much harder problem: they are
+in 2,864 nodes of JSON, in save files, and in the protocol, so changing them
+is a data migration with a compatibility shim, not a refactor. Do not start
+it casually.
+
+---
+
+## 8. Working habits this repo expects
 
 - Every discovered bug becomes a regression test with the smallest scenario
   that reproduces it. See `Complaints/` and `sim/tests/`.
