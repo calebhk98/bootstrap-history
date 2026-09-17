@@ -51,21 +51,76 @@ is not "no answer" - it is the honest lower bound: whatever the true price is,
 it is at least the labour it takes, and this is that floor. Tag: HEURISTIC,
 not a physical fact, tracked against Milestone 1's provenance ledger.
 
-ENERGY_MJ IS NOT PRICED. Ten entries in data/production/ carry a nonzero
-`energy_mj` - process heat or mechanical work not already paid for by a fuel
-in `inputs` (electrolytic aluminium is the biggest, at 46,000 MJ per tonne,
-which is the real DC energy cost of Hall-Heroult reduction and is why the
-metal stayed a curiosity until cheap hydroelectricity existed). Neither the
-design doc's formula nor data/production/_SCHEMA.md's own "how the price
-falls out" section gives energy a price - both name only inputs, labour and
-rent - and inventing a denarii-per-megajoule conversion (say, by pegging it to
-coal's calorific value) would be exactly the kind of tuned heuristic this
-project is trying to stop adding, with no physical anchor for which fuel and
-which efficiency to assume. So this script leaves `energy_mj` uncosted and
-reports which materials it affects, rather than folding in a number nobody
-asked for. Every price for those ten materials is consequently a LOWER BOUND,
-understating the true cost by whatever that energy would add. Tag: GAP, not a
-heuristic - there is no stand-in value being used, the term is simply absent.
+ENERGY IS NOW PRICED, AS TWO MARKETS NOT ONE (Complaints/32's third gap).
+Nine of the ten entries that used to carry a nonzero, uncosted `energy_mj`
+now carry `thermal_mj` or `mechanical_mj` instead, and both are real inputs
+this script prices through `data/production/70_energy.json` - four new
+entries that are TECHNIQUES for supplying one of the two carriers, priced
+and chosen exactly like any other multi-recipe material (see CHOICE OF
+TECHNIQUE below). The split itself is the physics, not a modelling
+convenience: a kilogram of charcoal and a turning water wheel are not
+substitutes for each other (you cannot smelt with a shaft, or draw wire
+with a fire), so a single undifferentiated `energy_mj` would let whichever
+carrier happened to be cheaper silently stand in for both, hiding exactly
+the constraint - which technology can reach which TEMPERATURE, and which
+can deliver which kind of WORK - that this file's own instructions from
+CLAUDE.md name as the point of the exercise.
+
+    thermal_mj      heat, from burning an ordinary solid fuel. Priced via
+                    thermal_mj_charcoal or thermal_mj_coal, whichever the
+                    solved prices make cheaper - a real choice of technique,
+                    not an assumption about which fuel a process "should"
+                    use. Both are costed the same way: a fuel's calorific
+                    value (taken at ~29 MJ/kg for both charcoal and coal,
+                    deliberately the SAME figure for both, since real values
+                    for the two overlap - the choice between them here turns
+                    on which is cheaper to PRODUCE, not on an invented
+                    energy-density gap) times a furnace efficiency (25%,
+                    bracketed by this file's own lime-kiln 20% and
+                    brine-boiling-pan 30% figures) sets how much fuel one
+                    usable megajoule needs.
+
+    mechanical_mj   shaft work, INCLUDING work delivered as electricity
+                    through a dynamo. Electricity is a CARRIER, not a
+                    source - aluminium's 46,000 MJ/tonne has to bottom out
+                    in whatever actually turns the dynamo, and pricing it as
+                    though electricity were primary would hide exactly the
+                    constraint that matters (see aluminium_kg's own
+                    capital_basis for why this is what kept the metal a
+                    laboratory curiosity for a century). Priced via
+                    mechanical_mj_waterwheel (a water wheel's amortised
+                    build, using the `capital` mechanism below, at the
+                    typical output data/world/resources.json's water_power
+                    constraint gives) or mechanical_mj_human_muscle (a
+                    labourer's own sustained output, from that same file's
+                    human_power constraint) - whichever the solved prices
+                    make cheaper. For every material this round flags, water
+                    wins by roughly three orders of magnitude (a few
+                    kilowatts continuous beats 75 W of muscle every time),
+                    which is the supply curve, not an assumption: nothing
+                    forces the choice, the arithmetic does.
+
+WHAT THIS DOES NOT MODEL, LABELLED RATHER THAN HIDDEN. The water-wheel
+technique assumes continuous year-round operation (a real wheel is idled by
+drought, ice and repair) and treats the SITE - the head and flow of a
+particular stretch of river - as free, under the same RENT_IS_ZERO rule as
+every other extracted material; a genuine site-scarcity rent, the way
+`sim/world/deposits.py` now derives one for ore, would raise this price at
+large scale and is future work, not this round's. Ox-muscle mechanical work
+is omitted entirely: this file has no priced fodder material (only
+wheat_kg, a poor stand-in for a working animal's mostly-hay ration), and
+since water already beats human muscle by three orders of magnitude for
+every material this round touches, an ox at roughly five times a human's
+sustained output would not change which source sets the margin for any of
+them - it would only add a segment of the curve nothing here currently
+needs. `quartz_tube_kg` keeps its `energy_mj` rather than being folded into
+either market: its oxy-hydrogen flame needs 1700-2000 C, above what a
+charcoal or coal fire reaches, and this file does not yet price hydrogen
+production (no material, no electrolysis efficiency) to derive what
+generating that flame's gas would actually cost - see that entry's own
+yield_basis. Every price for that one material is consequently still a
+LOWER BOUND. Tag: GAP, not a heuristic, exactly as before - narrower now
+that the other nine are closed.
 
 CAPITAL IS NOW PRICED (Complaints/32). `data/production/_SCHEMA.md`'s
 `capital` field lists the fixed plant a process runs IN - a furnace, a mill,
@@ -253,14 +308,20 @@ def _dependency_materials(entry):
     """Every material one recipe's price computation needs a price FOR:
     its ordinary process `inputs`, plus, now that capital is wired in (see
     the module docstring's CAPITAL section), every capital good's own
-    `build_materials`. Resolvability has to see both, or a capital-only
-    cycle - `iron_bar_kg` priced partly in `iron_bar_kg`, via its own finery
-    hammer's iron fittings - would never appear in the graph that decides
+    `build_materials`, plus, now that energy is wired in (see ENERGY),
+    `thermal_mj` and/or `mechanical_mj` themselves whenever the entry needs
+    a nonzero amount of either. Resolvability has to see all three, or a
+    capital-only cycle - `iron_bar_kg` priced partly in `iron_bar_kg`, via
+    its own finery hammer's iron fittings - or an energy dependency that
+    happened not to resolve, would never appear in the graph that decides
     whether a price exists at all.
     """
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
         dependencies.update((capital_good.get("build_materials") or {}).keys())
+    for energy_key in ("thermal_mj", "mechanical_mj"):
+        if entry.get(energy_key):
+            dependencies.add(energy_key)
     return dependencies
 
 
@@ -564,8 +625,9 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
     or None if some input has no price yet (should not happen for a
     resolvable recipe fed resolvable inputs, but the caller does not assume
-    that - see the module docstring on why energy_mj and rent are handled the
-    way they are).
+    that - see the module docstring on why rent is fixed at zero, why
+    `thermal_mj`/`mechanical_mj` are priced through the energy market in
+    data/production/70_energy.json, and why `energy_mj` still is not).
 
     The split is net-realisable-value allocation: each output's share of the
     batch's total cost is its own current value (quantity times current
@@ -633,8 +695,25 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
         lifetime_output = capital_good["service_life_years"] * capital_good["annual_output_at_basis"]
         capital_cost_hours += build_cost_hours / lifetime_output
 
+    # ENERGY (Complaints/32's third gap, now closed for THERMAL and
+    # MECHANICAL/ELECTRICAL energy - see ENERGY in the module docstring).
+    # Both are BATCH-level quantities, exactly like `inputs` and
+    # `labour_hours` above (the MJ figure is already stated against this
+    # same batch's basis output) - NOT a per-unit-of-output charge the way
+    # `capital` is, so unlike capital_cost_hours neither term here gets
+    # multiplied by batch_output_quantity.
+    energy_cost_hours = 0.0
+    for energy_key in ("thermal_mj", "mechanical_mj"):
+        energy_quantity_per_batch = entry.get(energy_key) or 0.0
+        if energy_quantity_per_batch:
+            energy_price = current_prices.get(energy_key)
+            if energy_price is None:
+                return None
+            energy_cost_hours += energy_quantity_per_batch * energy_price
+
     total_process_cost_hours = (material_cost_hours + labour_cost_hours + rent_hours
-                                + capital_cost_hours * batch_output_quantity)
+                                + capital_cost_hours * batch_output_quantity
+                                + energy_cost_hours)
 
     total_batch_value = sum(quantity * current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
                             for material, quantity in outputs.items())
@@ -860,13 +939,28 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                   % (pad, capital_good.get("good", "?"), format_hours(build_cost),
                      lifetime_output, format_hours(charge), share_text))
 
-    energy_mj = entry.get("energy_mj") or 0.0
-    if energy_mj:
-        print("%s  ENERGY NOT PRICED: this recipe also needs %.4g MJ of "
-              "process heat/work that no fuel in `inputs` accounts for. "
-              "The price above is a LOWER BOUND by that much - see "
-              "ENERGY_MJ IS NOT PRICED in this file's module docstring."
-              % (pad, energy_mj))
+    energy_labels = {"thermal_mj": "thermal (combustion) energy",
+                     "mechanical_mj": "mechanical/electrical (shaft) energy"}
+    for energy_key, label in energy_labels.items():
+        energy_quantity = entry.get(energy_key) or 0.0
+        if not energy_quantity:
+            continue
+        energy_price = prices.get(energy_key)
+        cost = energy_quantity * energy_price if energy_price is not None else None
+        share_text = ("%.1f%% of process cost" % (100.0 * cost / total_process_cost)
+                     if cost is not None and total_process_cost > 0 else "n/a")
+        print("%s  %-24s x %10.4g MJ @ %10s h/MJ = %10s h  (%s)" % (
+            pad, label, energy_quantity,
+            format_hours(energy_price) if energy_price is not None else "NO PRICE",
+            format_hours(cost) if cost is not None else "?", share_text))
+
+    residual_energy_mj = entry.get("energy_mj") or 0.0
+    if residual_energy_mj:
+        print("%s  ENERGY GAP: this recipe also needs %.4g MJ that neither "
+              "the thermal nor the mechanical energy market prices (a "
+              "technology this file cannot yet cost - see ENERGY in this "
+              "file's module docstring). The price above is a LOWER BOUND "
+              "by that much." % (pad, residual_energy_mj))
 
     if other_outputs:
         print("%s  this output's value share of the batch: %.1f%%  ->  "
@@ -888,7 +982,9 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
               % (pad, format_hours(total_process_cost), output_quantity, format_hours(price)))
 
     next_ancestors = ancestors + (material,)
-    for input_material in sorted(inputs):
+    energy_dependencies = [energy_key for energy_key in ("thermal_mj", "mechanical_mj")
+                          if entry.get(energy_key)]
+    for input_material in sorted(inputs) + energy_dependencies:
         print()
         print_why(input_material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,
@@ -988,8 +1084,9 @@ def main(argv=None):
     # Default: every material's price, in labour-hours.
     print("PRICE SOLVER - numeraire is one hour of unskilled (%r trade) "
           "labour. Rent on extracted materials is fixed at 0.0 this round "
-          "(RENT_IS_ZERO); energy_mj is not priced (see module docstring)."
-          % NUMERAIRE_TRADE)
+          "(RENT_IS_ZERO); thermal_mj and mechanical_mj are priced via the "
+          "energy market in data/production/70_energy.json; energy_mj is "
+          "still not priced (see module docstring)." % NUMERAIRE_TRADE)
     print()
     print("convergence: %s after %d iteration(s), final max relative change "
           "%.3e (tolerance %.0e, damping %.2f)"
@@ -1020,16 +1117,32 @@ def main(argv=None):
         for message in unproductive_cycles:
             print("   %s" % message)
 
+    energy_priced = sorted(
+        material for recipe_id, entry in production_entries.items()
+        for material in (entry.get("outputs") or {})
+        if (entry.get("thermal_mj") or entry.get("mechanical_mj"))
+        and material in resolvable_materials)
+    if energy_priced:
+        print()
+        print("%d material(s) draw on the energy market (thermal_mj and/or "
+              "mechanical_mj, priced via data/production/70_energy.json - "
+              "see ENERGY in the module docstring) - their price above "
+              "already includes it: %s"
+              % (len(energy_priced), ", ".join(energy_priced)))
+
     energy_affected = sorted(
         material for recipe_id, entry in production_entries.items()
         for material in (entry.get("outputs") or {})
         if entry.get("energy_mj") and material in resolvable_materials)
     if energy_affected:
         print()
-        print("%d material(s) are UNDERPRICED because their recipe needs "
-              "energy_mj this script does not cost (a real lower bound, not "
-              "a wrong answer - see the module docstring): %s"
-              % (len(energy_affected), ", ".join(energy_affected)))
+        print("%d material(s) are still UNDERPRICED because their recipe "
+              "needs energy_mj that neither energy market can supply - a "
+              "technology this script cannot yet cost, not the general gap "
+              "the other %d materials above just closed (a real lower "
+              "bound, not a wrong answer - see ENERGY in the module "
+              "docstring): %s"
+              % (len(energy_affected), len(energy_priced), ", ".join(energy_affected)))
 
     if unanchored_byproducts:
         print()

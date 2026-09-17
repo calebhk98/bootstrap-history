@@ -276,7 +276,8 @@
    "labour_hours": {
     "smith": 60.0
    },
-   "energy_mj": 150.0,
+   "energy_mj": 0.0,
+   "mechanical_mj": 150.0,
    "capital": [
     {
      "good": "water-powered wire-drawing bench and dies",
@@ -297,7 +298,7 @@
     }
    ],
    "basis": "per tonne of cold-drawn iron wire, forged down to rod and then drawn through a series of dies",
-   "yield_basis": "Bar is first forged down to rod (a small scale loss, folded into the 5% input figure), then drawn cold through dies of progressively smaller bore - a mechanical, not thermal, process, and nearly lossless in mass since no metal is oxidised or cut away, only reshaped. What limits it is the metal's own work-hardening: iron can only take about 20-30% reduction in cross-section per draw before it cracks, so fine wire needs many passes with an intermediate annealing heat between them to restore ductility. The energy_mj figure is the mechanical work of that plastic deformation (redundant deformation plus die friction), estimated in the low hundreds of kJ per kg for a multi-pass draw of iron wire, i.e. on the order of 150 MJ per tonne - a real cost distinct from any fuel already counted as an input, which is why it is carried separately rather than folded into a fuel quantity.",
+   "yield_basis": "Bar is first forged down to rod (a small scale loss, folded into the 5% input figure), then drawn cold through dies of progressively smaller bore - a mechanical, not thermal, process, and nearly lossless in mass since no metal is oxidised or cut away, only reshaped. What limits it is the metal's own work-hardening: iron can only take about 20-30% reduction in cross-section per draw before it cracks, so fine wire needs many passes with an intermediate annealing heat between them to restore ductility. The mechanical_mj figure is the mechanical work of that plastic deformation (redundant deformation plus die friction), estimated in the low hundreds of kJ per kg for a multi-pass draw of iron wire, i.e. on the order of 150 MJ per tonne - a real cost distinct from any fuel already counted as an input, which is why it is carried separately rather than folded into a fuel quantity. It is MECHANICAL rather than thermal (see ENERGY in sim/solve_prices.py's module docstring): a draw-bench delivers shaft work directly, priced through data/production/70_energy.json's mechanical energy market (water wheel or human muscle), never through a fuel's calorific value.",
    "conf": "C"
   },
   "flue_dust_kg": {

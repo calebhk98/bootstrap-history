@@ -27,6 +27,10 @@ WHAT IT CHECKS, and why each one is here rather than left to review:
     iron is FINE and normal - the price system solves that as a system of
     equations. What is not fine is a material that is its own only input, which
     is an authoring slip rather than an economy.
+  * `thermal_mj`, `mechanical_mj` and `energy_mj`, if present, are
+    non-negative numbers. See data/production/70_energy.json and ENERGY in
+    sim/solve_prices.py's module docstring for what the first two are priced
+    against, and why the third stays deliberately uncosted.
   * `capital`, if present, is held to the same standard as everything else:
     every `build_materials` key is a real material, every `build_labour_hours`
     trade is in the wage table, a capital good is built from SOMETHING (not
@@ -117,6 +121,21 @@ def check(entries, known_materials, known_trades):
             if not isinstance(hours, (int, float)) or hours < 0:
                 problems.append("%s: trade '%s' has %r hours"
                                 % (where, trade, hours))
+
+        # ENERGY. thermal_mj and mechanical_mj are priced, through
+        # sim/solve_prices.py's energy market (data/production/70_energy.json)
+        # - a typo turning one into a string or a negative number would
+        # silently vanish into `or 0.0` there exactly like a bad `inputs`
+        # quantity would. energy_mj is the residual field for a genuine gap
+        # (a technology neither energy market reaches, e.g. quartz_tube_kg's
+        # oxy-hydrogen flame temperature) and gets the same type check even
+        # though solve_prices.py deliberately leaves it uncosted.
+        for energy_field in ("thermal_mj", "mechanical_mj", "energy_mj"):
+            if energy_field in entry:
+                value = entry[energy_field]
+                if not isinstance(value, (int, float)) or value < 0:
+                    problems.append("%s: '%s' must be a non-negative number, "
+                                    "not %r" % (where, energy_field, value))
 
         # CAPITAL, if present. Same standard as everything else in this file:
         # real material keys, real trades, a positive physical service life
@@ -281,7 +300,19 @@ def main(argv=None):
     entries, duplicates = load_production()
     consumed = materials_the_tree_consumes(nodes)
     known_trades = set(prices.get("wage_rates_denarii_per_hour") or {})
-    known_materials = set(consumed) | set(entries)
+    # A material is known if the tree consumes it, if some entry's own key
+    # names it (true for most single-technique materials), OR if some
+    # entry's `outputs` produces it - the case a recipe-id-vs-material-key
+    # split (salt_solar_kg -> salt_kg, zinc_electrolytic_kg -> zinc_kg) had
+    # been getting right only by accident, because those materials also
+    # happen to be tree-consumed. data/production/70_energy.json's
+    # thermal_mj and mechanical_mj are produced by entries keyed
+    # thermal_mj_charcoal/_coal and mechanical_mj_waterwheel/_human_muscle,
+    # consumed only by OTHER production entries rather than by the tree, so
+    # they need the `outputs` half of this union to be seen as known at all.
+    known_materials = (set(consumed) | set(entries)
+                      | {output for entry in entries.values()
+                         for output in (entry.get("outputs") or {})})
 
     for duplicate in duplicates:
         print("  DUPLICATE %s" % duplicate)

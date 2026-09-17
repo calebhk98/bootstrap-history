@@ -1,0 +1,84 @@
+{
+ "_note": "THE ENERGY MARKET (Complaints/32's third gap). `thermal_mj` and `mechanical_mj` are not tree materials - nothing in data/tech_tree.json consumes them - they are the two energy CARRIERS every other entry in this directory can draw on once it needs process heat or shaft work beyond what a fuel already listed in its own `inputs` supplies. Splitting one field into two is the schema change sim/solve_prices.py's module docstring calls for: a kilogram of charcoal and a kilowatt-hour off a water wheel are not substitutes for each other (you cannot smelt with a turning shaft, and you cannot draw wire with a fire), so pricing them as one undifferentiated 'energy' would let the cheaper of the two silently stand in for both. Each of the four entries below is a TECHNIQUE for supplying one of the two carriers, exactly like salt_kg's solar-pan and brine-boiling entries are two techniques for salt - sim/solve_prices.py picks whichever is cheaper at current prices, so the choice between muscle and water, or between charcoal and coal, is an OUTPUT of the solve, not an input to it. See ENERGY in that file's module docstring for the full reasoning, and Complaints/32 for why this was the last of the three gaps.",
+ "materials": {
+
+  "thermal_mj_charcoal": {
+   "outputs": {
+    "thermal_mj": 1000.0
+   },
+   "inputs": {
+    "charcoal_kg": 137.93
+   },
+   "labour_hours": {},
+   "energy_mj": 0.0,
+   "basis": "per 1000 MJ of usable process heat delivered to a charge, burning charcoal in an ordinary open or simply-enclosed furnace",
+   "yield_basis": "Two physical facts, chained: charcoal's calorific value (dry lump charcoal, being nearly pure carbon with its water and volatiles already driven off in the burn, releases on the order of 29 MJ per kg on combustion - the same order of magnitude as bituminous coal, and taken at the same 29 MJ/kg this file already uses for coal's calorific value in lime_kg's and the activated-carbon steam note's yield_basis, since both are predominantly-carbon solid fuels and the choice between them here should turn on which is CHEAPER to produce, not on an invented energy-density gap between them); and how much of that heat actually reaches the material rather than going up the flue or through the furnace wall, which this file's own lime_kg entry puts at a documented 20% for a simple kiln and its brine-boiling salt_kg entry puts at 30% for an open pan - an enclosed process furnace of the kind that needs this generic thermal_mj entry (a still, a carbonating tower, a calciner) sits between those two, taken here at a round 25%. 29 * 0.25 = 7.25 usable MJ per kg of charcoal burned, so 1000 usable MJ needs 1000 / 7.25 = 137.93 kg of charcoal. No labour is charged here beyond the charcoal's own price - fire-tending labour belongs to whichever consuming recipe needs the heat (see e.g. salt_brine_kg's own 'fuel-gathering labour belongs to firewood_kg's own entry, not this one', the same separation of concerns applied to a shared input two entries up its own supply chain), not to this shared fuel-to-heat conversion step, or it would be counted twice.",
+   "conf": "C"
+  },
+
+  "thermal_mj_coal": {
+   "outputs": {
+    "thermal_mj": 1000.0
+   },
+   "inputs": {
+    "coal_kg": 137.93
+   },
+   "labour_hours": {},
+   "energy_mj": 0.0,
+   "basis": "per 1000 MJ of usable process heat delivered to a charge, burning coal in an ordinary open or simply-enclosed furnace",
+   "yield_basis": "Identical physics to thermal_mj_charcoal, and deliberately kept at the SAME calorific value (29 MJ/kg) and the SAME 25% furnace efficiency, so that whichever fuel sim/solve_prices.py actually picks for a given material is decided purely by charcoal_kg's price against coal_kg's price at the solved fixed point - both of which already carry their own real cost of production (charcoal's felling-plus-clamp-burn labour and the 4:1 wood ratio; coal's hewing labour and shaft-timbering capital) - rather than by an assumed difference in how hot the two fuels burn. This is the choice of technique the module docstring's own worked example (data/world/resources.json's iron_blast_furnace_coke note: 'coke decouples iron output from forest area... that decoupling is what makes an iron age into an industrial one') describes in prose; here it is the same choice, made by the solver instead of stated as history.",
+   "conf": "C"
+  },
+
+  "mechanical_mj_human_muscle": {
+   "outputs": {
+    "mechanical_mj": 0.27
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "energy_mj": 0.0,
+   "extracted_from": "human muscular effort (a treadmill, capstan, crank or hand-mill)",
+   "basis": "per hour of one labourer's sustained muscular effort at a treadmill, capstan or crank",
+   "yield_basis": "data/world/resources.json's constraints.human_power gives a sustained human mechanical power output of 75 W (conf B there) - the standard engineering figure for continuous, all-day muscular work (well below a short sprint's peak output). 75 J/s * 3600 s = 270,000 J = 0.27 MJ of USEFUL shaft work per hour. No separate feed cost is added: the labourer's wage (this script's own numeraire - see NUMERAIRE above) already prices their subsistence, the same reasoning that lets any other labour_hours entry in this file skip a feed input for the worker doing it. This is therefore a pure unit conversion (W to MJ/hour) plus the wage this file already has a price for, not a new physical assumption - the only judgement call is treating resources.json's w_sustained as already a NET external output figure rather than a gross metabolic intake, which is the ordinary reading of a 'sustained power' figure in the draught-animal and human-factors literature (contrast sim/world/transport.py's draught animals, whose feed IS metabolic intake and therefore does need the extra MUSCULAR_EFFICIENCY_OF_DRAUGHT_WORK discount - a human paid a wage rather than fed a ration does not need that second step here).",
+   "conf": "B"
+  },
+
+  "mechanical_mj_waterwheel": {
+   "outputs": {
+    "mechanical_mj": 126144.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "millwright": 40.0
+   },
+   "energy_mj": 0.0,
+   "extracted_from": "the kinetic energy of a river or stream (an existing head and flow; the SITE is a natural endowment exactly like an ore deposit, and this round fixes its rent at zero along with every other extracted material's - see RENT_IS_ZERO in this file's own module docstring)",
+   "capital": [
+    {
+     "good": "water wheel (undershot or overshot), timber wheel and frame, iron axle and gearing, leat and sluice masonry",
+     "build_materials": {
+      "timber_m3": 12.0,
+      "iron_bar_kg": 400.0,
+      "stone_kg": 8000.0
+     },
+     "build_labour_hours": {
+      "millwright": 300.0,
+      "carpenter": 250.0,
+      "mason": 150.0,
+      "labourer": 300.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 126144.0,
+     "capital_basis": "Power, then build bill, then life - three separate physical facts. POWER: data/world/resources.json's constraints.water_power gives a typical wheel at 4.0 kW continuous (conf C there; 'a good Roman overshot wheel is a few kilowatts', bracketed by Barbegal's 16 wheels totalling 30-60 kW). 4000 W * 31,536,000 s/year = 1.26144e11 J = 126,144 MJ/year, taken here as running continuously - a real wheel is idled by drought, ice, flood and repair, so this is an upper bound on annual output and therefore, once divided into the build cost, a LOWER bound on the price of mechanical_mj from this route; a duty-cycle factor belongs on the list of things to tighten, not a number invented to fill it now. BUILD BILL: timber for the wheel, buckets and frame; iron for the axle, gearing and bearings; stone for the leat and sluice masonry - the same three materials and the same rough order of magnitude as this file's other water-powered plant (iron_bar_kg's finery hearth and hammer; wire_drawn_kg's draw-bench), scaled for a free-standing wheel with its own leat rather than one bolted onto an existing forge. LIFE: fifteen years follows iron_bar_kg's own precedent for a capital entry mixing components of different endurance - blend them under one service life set by the FASTEST-wearing part, which here is the submerged timber wheel and frame (the masonry leat and the iron gearing both easily outlast it).",
+     "conf": "C"
+    }
+   ],
+   "basis": "per year of continuous operation of one typical water wheel (data/world/resources.json's water_power.kw_per_wheel_typical)",
+   "yield_basis": "The annual output figure IS the power-to-energy conversion described in this entry's own capital_basis above (4 kW sustained, continuous operation assumed and flagged as an upper bound) - restated here as the recipe's own basis output so that recipe_cost_and_allocation's per-unit capital charge (build cost / (service_life_years * annual_output_at_basis)) lands on the same footing as every other unit in this file. The only running cost beyond the wheel's own amortised build is a millwright's periodic attention - checking gearing, clearing the leat, working the sluice - taken at a modest 40 hours a year for a single wheel, distinct from the one-off build labour above.",
+   "conf": "C"
+  }
+
+ }
+}
