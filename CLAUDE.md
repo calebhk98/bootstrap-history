@@ -83,6 +83,22 @@ get a bespoke outcome branch.
 allowed while the deeper mechanism does not exist. Unlabelled ones are not.
 Tag them so the migration queue is measurable.
 
+**3.5 There is no save-format migration, ever. Stop designing for one.**
+A decision, not an oversight. A game is about half an hour, nobody is forced
+to update, and anyone running one stays on the version they started on. A save
+written by an old build does not have to load in a new one.
+
+So: rename a persisted field, drop one, change its units, restructure the
+whole save. No shim, no version stamp, no upgrade path, no `if "old_key" in
+data`. Every agent that has looked at this has independently invented a
+migration plan for a problem this project does not have; do not be the next
+one.
+
+What this does NOT excuse: save/load still has to work *within* a build. The
+suite exercises it hard, and with `--session` every single command is a save
+followed by a load, so a field that fails to round-trip breaks the game in
+normal play. `SAVE_FIELDS` still matters. Its *history* does not.
+
 ---
 
 ## 4. Architecture direction
@@ -114,12 +130,12 @@ python3 sim/simulator.py validate          # after EVERY edit to data/
 python3 sim/test_regressions.py            # full suite (~68s)
 python3 sim/test_regressions.py --list     # topic names
 python3 sim/test_regressions.py --only mines,demographics
-python3 sim/perf_fingerprint.py record before.json   # SEE THE WARNING IN 6
+python3 sim/perf_fingerprint.py record before.json   # proves behaviour unchanged
 python3 sim/perf_fingerprint.py check before.json
 python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
-python3 sim/repro_nondeterminism.py        # the determinism bug, in ten seconds
+python3 sim/repro_nondeterminism.py        # the determinism bug; now passes, kept as a probe
 python3 sim/prove_rename_safe.py HEAD      # prove a rename changed nothing but names
 ```
 
@@ -133,17 +149,25 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages, not on the simulation being the same simulation.
-  `perf_fingerprint.py` is supposed to cover that, and it does not cover
-  `protocol.py`, where a third of the code lives.
-- **The simulation is not deterministic, and `perf_fingerprint.py` therefore
-  proves nothing.** The same scenario, same seed, run four times in one
-  process, gives more than one answer; the difference is 1.3e-12 in a float
-  and it compounds over two centuries. Reproduce it in ten seconds with
-  `python3 sim/repro_nondeterminism.py`. Until it is fixed, **a clean
-  `check` proves nothing and a dirty one accuses nothing** - do not start a
-  refactor of the simulation loop behind it. Everything ruled out so far is
-  in `Complaints/27-nondeterministic-simulation.md`; read it before
-  investigating, several obvious hypotheses are already dead.
+  `perf_fingerprint.py` covers that, and it works again as of this branch -
+  a record and a check against the same checkout come back byte-identical on
+  all nine scenarios. It still does not cover `protocol.py`, where a third of
+  the code lives.
+- **`id()` is an address, not an identity, and this project has already lost
+  a day to that.** Two caches keyed on `id(demand)` made the whole simulation
+  non-deterministic: CPython hands a freed object's address to the next
+  same-sized allocation, so a later tick's Counter landed where a dead one had
+  and the cache replayed a stale answer under a fresh year. An `id()` may be a
+  dict key for speed; the entry must then hold the object itself and confirm
+  the hit with `is`. `sim/tests/test_determinism.py` fails if anyone
+  reintroduces the shape. Fixed and verified - the full story, including which
+  hypotheses were wrong and why one probe produced a false negative, is in
+  `Complaints/27-nondeterministic-simulation.md`.
+- **When you instrument a bug, the instrument is part of the experiment.**
+  The probe that cleared the guilty cache built a comparison tuple on every
+  call; its own allocations were exactly what stopped addresses being
+  recycled, so it suppressed the effect it was measuring and reported the
+  absence as evidence.
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.

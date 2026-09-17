@@ -282,9 +282,24 @@ _DESC_CACHE = {}
 
 def descendants(nodes):
     """{id: bitmask of everything downstream of it}, plus the index it uses."""
-    key = id(nodes)
-    hit = _DESC_CACHE.get(key)
-    if hit is not None and hit[0] == len(nodes):
+    # KEYED ON id(nodes) BUT VALIDATED BY IDENTITY, not by len(nodes).
+    #
+    # id() is only unique among objects that are alive at the same moment. A
+    # freed dict's address goes to the next same-sized allocation, so a cache
+    # that trusts a bare id() will hand a brand-new tree the index built for a
+    # dead one. Validating on len(nodes) narrows that to "a different dict
+    # that happens to have the same number of keys", which in a suite that
+    # builds small synthetic node dicts by the hundred is not narrow at all.
+    #
+    # This exact hazard, in the sibling cache in economy.py, is what made the
+    # simulation non-deterministic - see
+    # Complaints/27-nondeterministic-simulation.md. Holding `nodes` itself in
+    # the entry keeps that dict alive for as long as the entry can be compared
+    # against it, so its address cannot be recycled into a false hit while the
+    # entry lives. sim/engine/proto/nodes.py makes the same argument at length
+    # for the same shape of cache.
+    hit = _DESC_CACHE.get(id(nodes))
+    if hit is not None and hit[0] is nodes:
         return hit[1], hit[2]
     index = {k: i for i, k in enumerate(sorted(nodes))}
     kids = {k: [] for k in nodes}
@@ -315,7 +330,7 @@ def descendants(nodes):
             for c in kids[k]:
                 if c not in masks:
                     stack.append((c, False))
-    _DESC_CACHE[key] = (len(nodes), masks, index)
+    _DESC_CACHE[id(nodes)] = (nodes, masks, index)
     return masks, index
 
 

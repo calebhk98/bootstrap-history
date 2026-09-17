@@ -315,6 +315,72 @@ Ship a script that answers "what fraction of this run's output still depends on
 a temporary heuristic". Today that number is close to 100% for anything
 involving money. It is the only way to tell progress from rearrangement.
 
+### One place for every number, split by where the number came from
+
+Tagging numbers where they sit was the original plan. Collecting them into one
+place is better, and it is better for a reason worth stating: **you cannot see
+a pattern in 1,465 numbers scattered across 29 files.** If somebody wants to
+change what a person eats in a day, they should not have to find every place
+that decided it. And the project's central question - what here is a
+fundamental fact and what is a guess we intend to replace - is unanswerable
+while the two are mixed together in the same expressions.
+
+Measured, so the job is sized: **98 named module-level constants** and
+**1,367 inline numeric literals** (excluding 0, 1, 2, 0.5, 10, 100, 1000 and
+other structural values), across 29 files. `economy.py` alone has 257,
+`society.py` 180, `labour.py` 160.
+
+```text
+sim/constants/
+    physical.py      densities, melting points, energy content of fuels,
+                     thermodynamic limits. Facts about the universe.
+    biological.py    calories per person per day, draft animal feed, crop
+                     growth times, gestation. Facts about living things.
+    engineering.py   process efficiencies, smelting recovery rates, machine
+                     throughput. Measured facts about technique.
+    heuristics.py    every coefficient we invented because the mechanism that
+                     would derive it does not exist yet.
+```
+
+**The split is by provenance, not by domain**, and that is the whole point.
+Split by domain and you get `agriculture.py` and `metallurgy.py`, each mixing
+hard facts with guesses, and you are exactly where you started. Split by
+provenance and the question answers itself by looking at the file list.
+`heuristics.py` is the project's progress bar, and the goal is for it to shrink
+to nothing.
+
+Each number declares itself:
+
+```python
+CALORIES_PER_PERSON_DAY = declare(
+    "CALORIES_PER_PERSON_DAY", 2200.0,
+    kind="biological_parameter",
+    unit="kcal/person/day",
+    source="FAO minimum dietary energy requirement, adult average",
+    confidence="B",
+    why="Sets how much grain a population must eat before anything else "
+        "can happen with its labour. Not a tuning knob: move it and you are "
+        "claiming something about human metabolism.")
+```
+
+`declare` returns a plain float, so arithmetic and performance are unchanged,
+and records the metadata in a registry the burndown script reads. Passing the
+name looks redundant and earns its keep: a check asserts every declared name
+matches the attribute it is actually bound to, so the registry cannot drift
+from the code.
+
+Two boundaries, both deliberate:
+
+**Only numbers that change a simulated outcome.** Column widths, "show the top
+5 slowest", retry counts and buffer sizes are not model parameters and moving
+them away from the code that uses them makes that code worse, not better.
+
+**The explanation moves with the number, and is not optional.** The risk in
+centralising is that `0.9` loses the paragraph next to it explaining why it is
+0.9. That is what `why=` is for, and a heuristic with an empty `why` should
+fail the check - if nobody can say why a number is that number, that is the
+most important thing to know about it.
+
 ### The agents do the tagging once; the measuring is a script
 
 Worth stating because it is a natural thing to get wrong. Deciding that

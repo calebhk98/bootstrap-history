@@ -86,6 +86,9 @@ TOPICS = [
     # _run_topic handles both. It had never run: unregistered here, and unable
     # to import under the old rome.sim.tests rooting even if it had been.
     "tierless_schema",
+    # Guards the id()-reuse hazard that made the simulation non-deterministic;
+    # structural, so it catches the class rather than the one instance.
+    "determinism",
     # The tool that makes the naming sweep affordable; verified here because a
     # verification tool nobody verified is a rubber stamp.
     "rename_prover",

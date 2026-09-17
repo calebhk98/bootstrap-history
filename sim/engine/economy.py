@@ -2107,13 +2107,36 @@ class EconomyMixin:
         """
         seq = self.done_in_order()
         practice_set = self._practice_set()
-        key = (id(seq), getattr(self, "_operating_ver", 0), id(practice_set))
+        # STRONG REFERENCES AND `is`, NOT BARE id() INTEGERS, for the reason
+        # _cached_demand_by_tag() below now spells out at length: a freed
+        # object's address is handed straight to the next same-sized
+        # allocation, so two different objects compare equal by id() often
+        # enough to matter, and the cache replays a stale answer under a fresh
+        # one. That is what made this simulation non-deterministic, in the
+        # sibling cache rather than this one.
+        #
+        # This one had not been shown to be firing. It had been PROBED and
+        # come back clean - 0 stale answers in 64,157 calls - and that probe
+        # was worthless, because it allocated a comparison list on every call
+        # and allocation is precisely what decides whether an address gets
+        # recycled. It suppressed the effect it was measuring. The same false
+        # negative cleared the cache that turned out to be guilty.
+        #
+        # So this is not a fix for an observed bug. It is the removal of a
+        # hazard that cannot be cheaply observed, in the one shape known to
+        # have already cost this project a day, by the defence
+        # sim/engine/proto/nodes.py chose for the identical reason. Holding
+        # seq and practice_set alive for as long as the entry may be compared
+        # against them makes the collision structurally impossible rather than
+        # merely unmeasured.
+        operating_version = getattr(self, "_operating_ver", 0)
         cached = getattr(self, "_rev_up_candidates_cache", None)
-        if cached is not None and cached[0] == key:
-            return cached[1]
+        if (cached is not None and cached[0] is seq
+                and cached[1] is practice_set and cached[2] == operating_version):
+            return cached[3]
         operating = self.operating
         cands = [k for k in seq if k in operating or k in practice_set]
-        self._rev_up_candidates_cache = (key, cands)
+        self._rev_up_candidates_cache = (seq, practice_set, operating_version, cands)
         return cands
 
     def upkeep(self):
@@ -3314,14 +3337,37 @@ class EconomyMixin:
         identity so a new tick (a new annual_material_demand() result)
         invalidates it automatically rather than by a second flag that
         could drift out of step with the first.
+
+        THE CACHE ENTRY HOLDS `demand` ITSELF, NOT JUST `id(demand)` - the
+        same defence `sim/engine/proto/nodes.py`'s own id()-keyed cache
+        documents and takes, for the identical reason. `id()` is only
+        unique among objects that are still alive: annual_material_demand()
+        returns a brand-new Counter every call, the OLD one is dropped as
+        soon as resource_throttle() overwrites self._material_demand_cache
+        with the next year's, and CPython hands a freed small object's
+        address to the very next same-sized allocation often enough that a
+        later tick's Counter regularly landed at the exact address an
+        earlier tick's had. `cached[0] == id(demand)` then read as true for
+        two DIFFERENT ticks' demand, and this cache quietly replayed a
+        stale grouping under a fresh year - the fourth `done_in_order()`-
+        class bug (see that method's own docstring for the first three),
+        found by bisecting `sim/repro_nondeterminism.py` back from a
+        project's ph_left through project_cost() and material_market_factor()
+        to material_price_factor() reading exactly this. Comparing `is
+        demand` against a STRONG REFERENCE kept alongside the cached
+        result, instead of comparing two bare integers, keeps that old
+        Counter alive for as long as this cache entry might still be
+        checked against it, so its address cannot be recycled into a false
+        match while the entry is live - the collision is structurally
+        impossible, not just unlikely, exactly as the nodes.py comment
+        argues for the same shape of cache.
         """
         demand = self._cached_material_demand()
-        key = id(demand)
         cached = getattr(self, "_demand_by_tag_cache", None)
-        if cached is not None and cached[0] == key:
+        if cached is not None and cached[0] is demand:
             return cached[1]
         by_tag = self._demand_by_supply_tag(demand)
-        self._demand_by_tag_cache = (key, by_tag)
+        self._demand_by_tag_cache = (demand, by_tag)
         return by_tag
 
     def material_price_factor(self, emp_key):
@@ -3382,19 +3428,23 @@ class EconomyMixin:
     def _demand_by_emp_key(self):
         """_cached_demand_by_tag(), grouped by emp_key - the grouping
         material_price_factor() actually wants. Cached the same tick-
-        scoped way _cached_demand_by_tag() itself is (see that method's
-        own comment for why keying on the demand dict's identity is safe
-        invalidation): a new tick produces a new annual_material_demand()
+        scoped way _cached_demand_by_tag() itself is, INCLUDING keeping a
+        strong reference to `demand` in the cache entry rather than
+        comparing bare `id()` integers - see that method's own comment for
+        why a bare id() is not safe here (a freed Counter's address gets
+        reused often enough that two different ticks compared equal by
+        allocator luck alone, which is what made this pair of caches the
+        fourth `done_in_order()`-class non-determinism bug, not a
+        hypothetical one). A new tick produces a new annual_material_demand()
         result, which invalidates both caches together automatically."""
         demand = self._cached_material_demand()
-        key = id(demand)
         cached = getattr(self, "_demand_by_emp_key_cache", None)
-        if cached is not None and cached[0] == key:
+        if cached is not None and cached[0] is demand:
             return cached[1]
         grouped = {}
         for (ek, tag), need in self._cached_demand_by_tag().items():
             grouped.setdefault(ek, []).append((tag, need))
-        self._demand_by_emp_key_cache = (key, grouped)
+        self._demand_by_emp_key_cache = (demand, grouped)
         return grouped
 
     def material_market_factor(self, k):

@@ -2,6 +2,14 @@
 
 **Type:** Correctness / determinism
 **Priority:** Blocking
+**Status:** FIXED. Root cause and fix are at the bottom of this file.
+
+Everything between here and `# RESOLVED` is kept exactly as it was written
+during the investigation, wrong guesses included - the `## Ruled out` entry
+that cleared the very cache responsible, and the `## Expected behavior`
+section predicting the fix would be "whatever makes the order deterministic",
+which is not what it was. How this went wrong is worth more than the fix, and
+editing it into hindsight would throw that away.
 
 ## The concern
 
@@ -120,3 +128,82 @@ same process or a different one, whatever has run before it. When it does,
 The fix is whatever makes the order deterministic at the offending site -
 sorting before summing, or iterating a list rather than a set - matching what
 `done_in_order()` already does for the three sites found previously.
+
+
+---
+
+# RESOLVED
+
+## What it was
+
+An `id()`-reuse hazard, in the second of the two caches this file's
+`## Ruled out` section had dismissed.
+
+`_cached_demand_by_tag()` and `_demand_by_emp_key()` in `sim/engine/economy.py`
+both cached their result keyed on `id(demand)`, where `demand` is the Counter
+`annual_material_demand()` returns. That Counter is a brand-new object every
+call, and the old one is dropped the moment `resource_throttle()` overwrites
+`self._material_demand_cache` with next year's. CPython hands a freed small
+object's address to the very next same-sized allocation often enough that a
+later tick's Counter regularly landed at the exact address an earlier tick's
+had. `cached[0] == id(demand)` then read true for two genuinely different
+ticks, and the cache replayed a stale material-demand grouping under a fresh
+year.
+
+That path is hot: `material_price_factor()` -> `material_market_factor()` ->
+`project_cost()`, which is what sets a project's `ph_left`. Hence the symptom -
+last-bit float differences in `ph_left`, sporadic, because whether the address
+gets recycled depends on the process's entire allocation history rather than on
+anything in the simulation.
+
+## The fix
+
+The defence `sim/engine/proto/nodes.py` already documents for the identical
+hazard: hold a **strong reference** to the object in the cache entry and
+compare with `is`, rather than comparing two bare integers. Keeping the old
+Counter alive for as long as the entry might be checked against it means its
+address cannot be recycled into a false match. The collision becomes
+structurally impossible rather than unlikely.
+
+Two call sites in `sim/engine/economy.py`. No arithmetic changed.
+
+A version-counter fix was tried first - a monotonic `_material_demand_ver`
+bumped inside `annual_material_demand()`, by analogy with `_operating_ver`. It
+also removed the non-determinism and was rejected because it broke
+`sim/tests/test_literacy_market_pricing.py`, whose two pinned-demand checks
+deliberately assign `s._material_demand_cache = {...}` directly. A version
+counter cannot see that write; a fresh dict literal is a fresh object, so the
+`is` comparison handles it correctly.
+
+## Why the investigation went wrong, which is worth more than the fix
+
+This file's `## Ruled out` section confidently cleared
+`_demand_by_tag_cache` on the grounds that it "hits three times in four
+80-year runs. It is not a hot enough path to matter."
+
+That measurement was produced by a probe that built a signature tuple of the
+whole demand dict on every call. The probe's own allocations were exactly what
+stopped addresses being recycled - so it suppressed the effect it was measuring
+and then reported the absence as evidence. The three hits it saw were the
+legitimate ones; the false hits it existed to find could not occur while it was
+watching.
+
+The caveat was written down at the time ("both probes allocate, and allocation
+is exactly what the suspected hazard depends on, so neither is a clean bill of
+health") and then not acted on. Recording it plainly because the lesson
+generalises: **when instrumenting a bug whose mechanism is allocation, the
+instrument is part of the experiment.**
+
+The test that did settle it allocates nothing extra: `del sim; gc.collect()`
+before building the next `Sim` made two otherwise-diverging runs agree. Nothing
+but an `id()` collision explains that.
+
+## Verification
+
+- `python3 sim/repro_nondeterminism.py --runs 15`, five separate processes:
+  75 runs, zero divergence. Before the fix, four runs usually diverged.
+- `python3 sim/perf_fingerprint.py record` then `check` against the same
+  checkout: all nine reference scenarios identical. This is the property that
+  was failing two of nine.
+- Full suite green; `validate` clean.
+- `sim/tests/test_determinism.py` now fails if it returns.
