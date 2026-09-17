@@ -112,6 +112,12 @@ TOPICS = [
     # docstring for why and Complaints/32 for the gap it closes. Also
     # unittest.TestCase-style.
     "deposits",
+    # sim/world/demand.py: households with budgets and a Stone-Geary/LES
+    # demand system, plus derived (producer) demand read straight from
+    # data/production/*.json - standalone and with no import of sim/engine/
+    # or any other sim/world/ module - see that module's own docstring for
+    # why. Also unittest.TestCase-style.
+    "demand",
     # Guards the two silent bugs that made --burndown print "0 numbers
     # declared" while 32 were declared, which left milestone 1 unmeasurable.
     "constants_burndown",

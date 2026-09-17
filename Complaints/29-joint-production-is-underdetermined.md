@@ -76,3 +76,63 @@ project will meet that again in agriculture (grain and straw), in livestock
 The livestock case is already flagged in `data/production/40_organics.json`,
 where hide, bone, fat and bristles carry no share of the animal's grazing
 cost, for the same reason.
+
+---
+
+## Resolved, by the route this file predicted
+
+This complaint said the answer "genuinely is not in the cost side. It is in
+demand, and demand is not modelled." `sim/world/demand.py` now models it,
+and the lead/silver case comes out:
+
+```
+recipe outputs: lead_kg 1000.0, silver_kg 0.46
+mass shares:    lead_kg 99.9540%   silver_kg  0.0460%
+value shares:   lead_kg  0.8213%   silver_kg 99.1787%
+```
+
+A complete reversal. Silver is 0.046% of the batch by mass and carries 99.2%
+of its value, which is the whole point: no fact about smelting galena could
+ever have produced that, and a mass split never will.
+
+## How the circularity was broken
+
+The complaint's own objection was that net-realisable-value allocation needs
+the prices, which are what we are solving for. The escape is that **a joint
+by-product's quantity is fixed for the period** - you get 0.46 kg of silver
+per tonne of lead whatever you think silver is worth. That is Marshall's
+market-day case, and with supply vertical the price that clears aggregate
+household demand against it has a closed form. It is demand-determined and
+owes nothing to what lead "should" cost, so there is no loop to close.
+
+The value share then falls out as price times quantity, normalised.
+
+## The number is still wrong, and the decomposition says where
+
+Derived silver:lead ratio is 262,515x against the ~100x this project used as
+its target. Do not read that as the mechanism failing; read the two halves:
+
+    silver   36,513 h/kg derived   vs  4,227 h/kg book-implied   ~8.6x high
+    lead      0.1391 h/kg derived  vs      8.0 h/kg book-implied  ~57x low
+
+A demand-only mechanism landing within an order of magnitude of silver's
+real price is a good result. Almost the entire ratio error is LEAD being too
+cheap, which is the missing land rent `Complaints/32` already diagnosed on
+the cost side - not a defect in this mechanism.
+
+## And the target itself is not a clean comparator
+
+`silver_kg`'s book price is DEFINITIONAL: one denarius was 3.15 g of fine
+silver, so the book number is the definition of the currency rather than an
+observed price. Validating a derived silver price against it is close to
+circular, and the book's own implied ratio is 528x, not the ~100x the target
+states. Both numbers deserve less weight than they were being given.
+
+## What stays true from the original complaint
+
+The two things it warned against are still wrong and are still not done:
+anchoring silver to its book price, and splitting by a hand-written weight.
+Neither was needed. The solver's `(*)` marking for unanchored minor
+byproducts should stay until demand is wired into `sim/solve_prices.py`,
+which has not happened - `demand.py` is standalone, like everything else
+under `sim/world/`.
