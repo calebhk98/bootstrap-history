@@ -29,8 +29,8 @@ TREE = os.path.join(DATA, "tech_tree.json")
 def load_trades():
     """Read the trade list from prices.json rather than hardcoding it, so adding
     a trade to the price file is enough to make it usable."""
-    p = json.load(open(os.path.join(DATA, "prices.json")))
-    return set(k for k in p["wage_rates_denarii_per_hour"] if not k.startswith("_"))
+    prices = json.load(open(os.path.join(DATA, "prices.json")))
+    return set(trade for trade in prices["wage_rates_denarii_per_hour"] if not trade.startswith("_"))
 
 # Schema v2. `yrs`, `sus` and `gov` are v1 and are backfilled, not demanded.
 # Only these are genuinely required. Everything else has a sane default, because
@@ -46,31 +46,31 @@ def _num(v, d=0.0):
     '200-400'. Coerce rather than crash, and fall back to the default."""
     if isinstance(v, (int, float)): return float(v)
     if isinstance(v, str):
-        m = re.findall(r"-?\d+(?:\.\d+)?", v)
-        if m: return float(m[0])
+        match = re.findall(r"-?\d+(?:\.\d+)?", v)
+        if match: return float(match[0])
     return float(d)
 
 
 def normalise_v2(n):
-    for k, value in DEFAULTS.items():
-        n.setdefault(k, json.loads(json.dumps(value)))
-    for k, d in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
+    for field, value in DEFAULTS.items():
+        n.setdefault(field, json.loads(json.dumps(value)))
+    for field, default in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
                  ("sch",0),("art",1)):
-        n[k] = _num(n.get(k), d)
+        n[field] = _num(n.get(field), default)
     n["risk"] = min(0.95, max(0.0, n["risk"]))
     for fld in ("lab","mat"):
         if not isinstance(n.get(fld), dict): n[fld] = {}
-        else: n[fld] = {k: _num(value, 0) for k, value in n[fld].items()}
+        else: n[fld] = {code: _num(value, 0) for code, value in n[fld].items()}
     if not isinstance(n.get("pre"), list): n["pre"] = []
     if not isinstance(n.get("traits"), list): n["traits"] = []
     """Accept either schema and leave the node in v2 shape with v1 fields
     backfilled, so the simulator and the audit keep working during the change."""
     if "build_yrs" not in n and "yrs" in n:
-        y = float(n.get("yrs", 0) or 0)
-        if y >= 5:
-            n["build_yrs"], n["adopt_yrs"] = min(3.0, y / 3.0), y
+        years = float(n.get("yrs", 0) or 0)
+        if years >= 5:
+            n["build_yrs"], n["adopt_yrs"] = min(3.0, years / 3.0), years
         else:
-            n["build_yrs"], n["adopt_yrs"] = y, 0.0
+            n["build_yrs"], n["adopt_yrs"] = years, 0.0
     n.setdefault("build_yrs", 0.0); n.setdefault("adopt_yrs", 0.0)
     n["yrs"] = max(float(n["build_yrs"]), float(n["adopt_yrs"]))
     n.setdefault("req_any", []); n.setdefault("traits", [])
@@ -81,16 +81,16 @@ def normalise_v2(n):
 
 # ---------------------------------------------------------------- MERGE
 def load_aliases():
-    f = os.path.join(BR, "ALIASES.json")
-    if not os.path.exists(f):
+    path = os.path.join(BR, "ALIASES.json")
+    if not os.path.exists(path):
         return {}, set()
-    a = json.load(open(f))
-    return a.get("alias", {}), set(a.get("drop", []))
+    aliases = json.load(open(path))
+    return aliases.get("alias", {}), set(aliases.get("drop", []))
 
 
 def load_prices():
-    p = json.load(open(os.path.join(DATA, "prices.json")))
-    return set(k for k in p["purchase_prices_denarii"] if not k.startswith("_"))
+    prices = json.load(open(os.path.join(DATA, "prices.json")))
+    return set(material for material in prices["purchase_prices_denarii"] if not material.startswith("_"))
 
 
 def cmd_merge(a):
@@ -102,21 +102,21 @@ def cmd_merge(a):
     # of a technology that two authors invented independently, so without this
     # the next merge silently resurrects every duplicate.
     retired = base.get("meta", {}).get("merged_duplicate_ids", {})
-    nodes = {n["id"]: normalise_v2(n) for n in base["nodes"]}
-    for n in nodes.values():
-        n.setdefault("_src", "core")
+    nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
+    for node in nodes.values():
+        node.setdefault("_src", "core")
     errs, warns, added = [], [], 0
 
-    for fn in sorted(os.listdir(BR)):
-        if not fn.endswith(".json") or fn == "ALIASES.json":
+    for filename in sorted(os.listdir(BR)):
+        if not filename.endswith(".json") or filename == "ALIASES.json":
             continue
         try:
-            batch = json.load(open(os.path.join(BR, fn)))
+            batch = json.load(open(os.path.join(BR, filename)))
         except Exception as e:
-            errs.append("%s: unparseable JSON: %s" % (fn, e))
+            errs.append("%s: unparseable JSON: %s" % (filename, e))
             continue
         if not isinstance(batch, list):
-            errs.append("%s: top level is not a list" % fn)
+            errs.append("%s: top level is not a list" % filename)
             continue
 
         # Branch authors routinely refer to their OWN nodes without the file's
@@ -124,101 +124,101 @@ def cmd_merge(a):
         # "ag2_coulter". Left alone the prereq resolver below silently drops
         # those edges, which makes the technology look cheaper and earlier than
         # it is. Repair them here, but only where the fix is unambiguous.
-        own = {n["id"] for n in batch if isinstance(n, dict) and "id" in n}
+        own = {node["id"] for node in batch if isinstance(node, dict) and "id" in node}
         prefixes = set()
-        for i in own:
-            if "_" in i:
-                prefixes.add(i.split("_", 1)[0] + "_")
-        for n in batch:
-            if not isinstance(n, dict):
+        for node_id in own:
+            if "_" in node_id:
+                prefixes.add(node_id.split("_", 1)[0] + "_")
+        for node in batch:
+            if not isinstance(node, dict):
                 continue
             fixed = []
-            for p in n.get("pre", []):
-                if p in own or p in nodes:
-                    fixed.append(p)
+            for prereq in node.get("pre", []):
+                if prereq in own or prereq in nodes:
+                    fixed.append(prereq)
                     continue
-                cands = {pf + p for pf in prefixes if pf + p in own}
+                cands = {prefix + prereq for prefix in prefixes if prefix + prereq in own}
                 if len(cands) == 1:
                     q = cands.pop()
                     fixed.append(q)
-                    warns.append("%s: %s self-ref '%s' -> '%s'" % (fn, n.get("id", "?"), p, q))
+                    warns.append("%s: %s self-ref '%s' -> '%s'" % (filename, node.get("id", "?"), prereq, q))
                 else:
-                    fixed.append(p)
-            if "pre" in n:
-                n["pre"] = fixed
+                    fixed.append(prereq)
+            if "pre" in node:
+                node["pre"] = fixed
 
-        for n in batch:
-            missing = [k for k in REQUIRED if k not in n]
+        for node in batch:
+            missing = [field for field in REQUIRED if field not in node]
             if missing:
-                errs.append("%s: %s missing fields %s" % (fn, n.get("id", "?"), missing))
+                errs.append("%s: %s missing fields %s" % (filename, node.get("id", "?"), missing))
                 continue
-            if n["id"] in retired:
+            if node["id"] in retired:
                 warns.append("%s: %s was merged into %s, skipping"
-                             % (fn, n["id"], retired[n["id"]]))
+                             % (filename, node["id"], retired[node["id"]]))
                 continue
-            if n["id"] in nodes:
-                warns.append("%s: duplicate id %s, keeping the first" % (fn, n["id"]))
+            if node["id"] in nodes:
+                warns.append("%s: duplicate id %s, keeping the first" % (filename, node["id"]))
                 continue
             # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
             # is unobtainable, only elsewhere. A new branch reintroduced it on
-            normalise_v2(n)
+            normalise_v2(node)
             # resolve trade aliases rather than silently dropping the labour,
             # which would make the technology look cheaper than it is
             lab = {}
-            for t, h in n["lab"].items():
-                t2 = alias.get(t, t)
-                if t2 in TRADES:
-                    lab[t2] = lab.get(t2, 0) + h
+            for trade, hours in node["lab"].items():
+                resolved_trade = alias.get(trade, trade)
+                if resolved_trade in TRADES:
+                    lab[resolved_trade] = lab.get(resolved_trade, 0) + hours
                 else:
-                    warns.append("%s: %s unknown trade '%s', dropped" % (fn, n["id"], t))
-            n["lab"] = lab
-            mm = {}
-            for m, q in n["mat"].items():
-                m2 = alias.get(m, m)
-                if m2 not in goods:
+                    warns.append("%s: %s unknown trade '%s', dropped" % (filename, node["id"], trade))
+            node["lab"] = lab
+            materials = {}
+            for material, q in node["mat"].items():
+                resolved_material = alias.get(material, material)
+                if resolved_material not in goods:
                     # generic fallbacks for the shapes authors actually write:
                     # "mat_beeswax" -> "beeswax_kg", "plaster" -> "plaster_kg"
-                    for cand in (m2[4:] + "_kg" if m2.startswith("mat_") else None,
-                                 m2 + "_kg", m2.replace("mat_", "")):
+                    for cand in (resolved_material[4:] + "_kg" if resolved_material.startswith("mat_") else None,
+                                 resolved_material + "_kg", resolved_material.replace("mat_", "")):
                         if cand and cand in goods:
-                            m2 = cand
+                            resolved_material = cand
                             break
-                if m2 in dropset or m in dropset:
-                    warns.append("%s: %s '%s' is a technology not a material, dropped" % (fn, n["id"], m))
+                if resolved_material in dropset or material in dropset:
+                    warns.append("%s: %s '%s' is a technology not a material, dropped" % (filename, node["id"], material))
                     continue
-                if m2 in goods:
-                    mm[m2] = mm.get(m2, 0) + q
+                if resolved_material in goods:
+                    materials[resolved_material] = materials.get(resolved_material, 0) + q
                 else:
-                    warns.append("%s: %s UNPRICED material '%s', dropped" % (fn, n["id"], m))
-            n["mat"] = mm
+                    warns.append("%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material))
+            node["mat"] = materials
             # Branch authors keep writing the RECIPE PROSE into the kb link
             # field. Left alone it reports as a broken link to a file whose
             # name is a sentence. Move it to note where note is empty and
             # clear the field, so it reports as an honest documentation gap.
-            kb = str(n.get("kb", "")).strip()
+            kb = str(node.get("kb", "")).strip()
             if kb and not re.match(r"^\d\d_[A-Za-z0-9_]+\.md(#|$)", kb):
-                if not str(n.get("note", "")).strip():
-                    n["note"] = kb
+                if not str(node.get("note", "")).strip():
+                    node["note"] = kb
                 kb = ""
-            n["kb"] = kb
-            n["_src"] = fn
-            nodes[n["id"]] = n
+            node["kb"] = kb
+            node["_src"] = filename
+            nodes[node["id"]] = node
             added += 1
 
     # resolve prerequisites
     dangling = collections.Counter()
-    for n in nodes.values():
-        n["pre"] = [retired.get(p, p) for p in n["pre"]]
-        for gp in n.get("req_any", []):
-            gp["options"] = {retired.get(o, o): q for o, q in gp.get("options", {}).items()}
+    for node in nodes.values():
+        node["pre"] = [retired.get(prereq, prereq) for prereq in node["pre"]]
+        for group in node.get("req_any", []):
+            group["options"] = {retired.get(option, option): quantity for option, quantity in group.get("options", {}).items()}
         keep = []
-        for p in n["pre"]:
-            if p in nodes:
-                keep.append(p)
+        for prereq in node["pre"]:
+            if prereq in nodes:
+                keep.append(prereq)
             else:
-                dangling[p] += 1
-                warns.append("%s: dropped unresolvable prereq '%s'" % (n["id"], p))
-        n["pre"] = keep
+                dangling[prereq] += 1
+                warns.append("%s: dropped unresolvable prereq '%s'" % (node["id"], prereq))
+        node["pre"] = keep
 
     # break any cycles by dropping the back edge, reporting each one
     order, state = [], {}
@@ -227,18 +227,18 @@ def cmd_merge(a):
             return
         if state.get(i) == 1:
             back = stack[-1]
-            nodes[back]["pre"] = [p for p in nodes[back]["pre"] if p != i]
+            nodes[back]["pre"] = [prereq for prereq in nodes[back]["pre"] if prereq != i]
             errs.append("CYCLE broken: removed %s -> %s" % (back, i))
             return
         state[i] = 1
-        for p in list(nodes[i]["pre"]):
-            dfs(p, stack + [i])
+        for prereq in list(nodes[i]["pre"]):
+            dfs(prereq, stack + [i])
         state[i] = 2
         order.append(i)
-    for i in list(nodes):
-        dfs(i, [])
+    for node_id in list(nodes):
+        dfs(node_id, [])
 
-    base["nodes"] = [nodes[i] for i in sorted(nodes)]
+    base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
     _write_json(base, TREE, a)
 
@@ -247,14 +247,14 @@ def cmd_merge(a):
     for e in errs[:40]:
         print("   " + e)
     print("warnings: %d" % len(warns))
-    for w in warns[:25]:
-        print("   " + w)
+    for warning in warns[:25]:
+        print("   " + warning)
     if len(warns) > 25:
         print("   ... %d more" % (len(warns) - 25))
     if dangling:
         print("\nmost-wanted unresolved prereq ids (candidates for new nodes):")
-        for k, value in dangling.most_common(20):
-            print("   %-40s wanted by %d nodes" % (k, value))
+        for prereq_id, value in dangling.most_common(20):
+            print("   %-40s wanted by %d nodes" % (prereq_id, value))
     return 0
 
 
@@ -286,82 +286,82 @@ ELEC_WORDS = ("dynamo","electric motor","electrolysis","electroplat","arc lamp",
 def closure(nodes, k):
     seen, stack = set(), [k]
     while stack:
-        c = stack.pop()
-        if c in seen:
+        ancestor_id = stack.pop()
+        if ancestor_id in seen:
             continue
-        seen.add(c)
-        stack.extend(nodes[c]["pre"])
+        seen.add(ancestor_id)
+        stack.extend(nodes[ancestor_id]["pre"])
     return seen
 
 
 def judge_node(n, nodes, stats):
     """Score one technology using its declared graph and category, not a rank."""
-    d = []
+    defects = []
     if n["cat"] in ABSTRACT_CATS:
         if len(n["note"]) < 60:
-            d.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
+            defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
         if n["conf"] not in ("A", "B", "C"):
-            d.append(("NO-CONF", "confidence not stated"))
-        return max(0, 100 - len(d) * 12), d
+            defects.append(("NO-CONF", "confidence not stated"))
+        return max(0, 100 - len(defects) * 12), defects
 
-    cl = closure(nodes, n["id"])
-    caps = {c for c in cl if c.startswith(CAP_PREFIX)}
+    ancestry = closure(nodes, n["id"])
+    caps = {node_id for node_id in ancestry if node_id.startswith(CAP_PREFIX)}
     text = (n["name"] + " " + n["note"]).lower()
-    unob = [c for c in cl if nodes[c]["cat"] == "unobtainable"]
+    unob = [node_id for node_id in ancestry if nodes[node_id]["cat"] == "unobtainable"]
     physical = bool(n.get("mat")) or n.get("cap", 0) >= 200
-    if not caps and physical and len(cl) >= 3 and n["cat"] not in (
+    if not caps and physical and len(ancestry) >= 3 and n["cat"] not in (
             "social", "institution", "mathematics", "physics", "foundation",
             "information", "capability"):
-        d.append(("CAP-NONE", "physical work with no capability rung in its chain "
+        defects.append(("CAP-NONE", "physical work with no capability rung in its chain "
                               "(furnace, tolerance, vacuum, purity, or power)"))
 
     def want(words, prefix, label):
-        if any(w in text for w in words) and not any(c.startswith(prefix) for c in caps):
-            d.append(("CAP-" + label, "reads as needing a %s rung but none appears "
+        if any(word in text for word in words) and not any(cap_id.startswith(prefix) for cap_id in caps):
+            defects.append(("CAP-" + label, "reads as needing a %s rung but none appears "
                                       "in its prerequisite chain" % label.lower()))
     want(HEAT_WORDS, "cap_heat_", "HEAT")
     want(TOL_WORDS, "cap_tol_", "TOL")
     want(VAC_WORDS, "cap_vac_", "VAC")
     want(PUR_WORDS, "cap_pure_", "PURITY")
-    if any(w in text for w in ELEC_WORDS) and not any(c.startswith("cap_power_") for c in caps):
-        d.append(("CAP-POWER", "electrical work with no power rung in its chain"))
+    if any(word in text for word in ELEC_WORDS) and not any(cap_id.startswith("cap_power_") for cap_id in caps):
+        defects.append(("CAP-POWER", "electrical work with no power rung in its chain"))
 
-    if len(n["pre"]) < 2 and 10 <= len(cl) < 25:
-        d.append(("SHALLOW", "%d direct prerequisite(s) and an ancestry only %d nodes deep"
-                             % (len(n["pre"]), len(cl))))
+    if len(n["pre"]) < 2 and 10 <= len(ancestry) < 25:
+        defects.append(("SHALLOW", "%d direct prerequisite(s) and an ancestry only %d nodes deep"
+                             % (len(n["pre"]), len(ancestry))))
     if unob and n["cat"] != "unobtainable":
-        d.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
+        defects.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
                              % ", ".join(sorted(unob)[:3])))
 
     category = n["cat"]
     med_cost = stats["cost"].get(category, 1)
     cost = n["_total_cost"]
     if med_cost > 0 and cost > med_cost * 25:
-        d.append(("COST-HIGH", "costs %s den, about %.0fx the median for category %s"
+        defects.append(("COST-HIGH", "costs %s den, about %.0fx the median for category %s"
                                % (f"{cost:,.0f}", cost / med_cost, category)))
     if n["ph"] > 2000:
-        d.append(("HOURS-HIGH", "%s founder-hours, which is %.1f%% of a working life"
+        defects.append(("HOURS-HIGH", "%s founder-hours, which is %.1f%% of a working life"
                                 % (f"{n['ph']:,}", 100.0 * n["ph"] / 72000)))
-    if len(cl) >= 3 and n["ph"] == 0 and n["cat"] not in ("capability", "material"):
-        d.append(("HOURS-ZERO", "non-foundational work costs the founder no hours"))
+    if len(ancestry) >= 3 and n["ph"] == 0 and n["cat"] not in ("capability", "material"):
+        defects.append(("HOURS-ZERO", "non-foundational work costs the founder no hours"))
     if n.get("adopt_yrs", 0) >= 5 and n["yrs"] < 1:
-        d.append(("NO-FLOOR", "long adoption has a calendar floor under a year"))
+        defects.append(("NO-FLOOR", "long adoption has a calendar floor under a year"))
     if len(n["note"]) < 60:
-        d.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
+        defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
     if not n.get("kb") and n["cat"] not in ("capability", "material", "unobtainable"):
-        d.append(("NO-RECIPE", "no knowledge-base link"))
+        defects.append(("NO-RECIPE", "no knowledge-base link"))
     if n["conf"] not in ("A", "B", "C"):
-        d.append(("NO-CONF", "confidence not stated"))
-    if len(cl) >= 3 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
+        defects.append(("NO-CONF", "confidence not stated"))
+    if len(ancestry) >= 3 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
             and n["cat"] not in ("capability", "material", "unobtainable", "mathematics", "physics"):
-        d.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus"))
+        defects.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus"))
 
     weights = {"NO-RECIPE": 1, "CAP-NONE": 3, "CAP-HEAT": 2, "CAP-TOL": 2,
                "CAP-VAC": 2, "CAP-PURITY": 2, "CAP-POWER": 2, "SHALLOW": 3,
                "BLOCKED": 3, "COST-HIGH": 1, "HOURS-HIGH": 1, "HOURS-ZERO": 1,
                "NO-FLOOR": 1, "NOTE-THIN": 2, "NO-CONF": 1, "SOCIAL-FLAT": 1}
-    penalty = sum(weights.get(code, 1) for code, _ in d)
-    return max(0, int(round(100 - penalty * 6))), d
+    penalty = sum(weights.get(code, 1) for code, _ in defects)
+    return max(0, int(round(100 - penalty * 6))), defects
 
 def grade(s):
     return "A" if s >= 90 else "B" if s >= 78 else "C" if s >= 64 else "D" if s >= 50 else "F"
@@ -371,80 +371,80 @@ def cmd_judge(a):
     tree = json.load(open(TREE))
     nodes = {n["id"]: n for n in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
-    wages = {k: value["rate"] for k, value in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
-    goods = {k: value["p"] for k, value in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
-    for n in nodes.values():
-        n["_total_cost"] = (sum(wages.get(t, 0) * h for t, h in n["lab"].items())
-                            + sum(goods.get(m, 0) * q for m, q in n["mat"].items()) + n["cap"])
+    wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
+    goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
+    for node in nodes.values():
+        node["_total_cost"] = (sum(wages.get(trade, 0) * hours for trade, hours in node["lab"].items())
+                            + sum(goods.get(material, 0) * quantity for material, quantity in node["mat"].items()) + node["cap"])
 
     by_category_cost = collections.defaultdict(list)
-    for n in nodes.values():
-        by_category_cost[n["cat"]].append(n["_total_cost"])
+    for node in nodes.values():
+        by_category_cost[node["cat"]].append(node["_total_cost"])
     stats = {"cost": {cat: statistics.median(value)
                       for cat, value in by_category_cost.items()}}
 
     results = {}
-    for k, n in nodes.items():
-        results[k] = judge_node(n, nodes, stats)
+    for node_id, node in nodes.items():
+        results[node_id] = judge_node(node, nodes, stats)
 
     if a.id:
         if a.id not in nodes:
-            near = [x for x in nodes if a.id.lower() in x.lower()]
+            near = [node_id for node_id in nodes if a.id.lower() in node_id.lower()]
             raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:10]) or "none"))
-        n, (s, d) = nodes[a.id], results[a.id]
-        print("%s  [%s]" % (n["name"], n["id"]))
+        node, (score, node_defects) = nodes[a.id], results[a.id]
+        print("%s  [%s]" % (node["name"], node["id"]))
         print("=" * 78)
         print("grade %s (%d/100)   %s   confidence %s"
-              % (grade(s), s, n["cat"], n["conf"]))
+              % (grade(score), score, node["cat"], node["conf"]))
         print("direct prerequisites : %d   full ancestry : %d nodes"
-              % (len(n["pre"]), len(closure(nodes, a.id)) - 1))
+              % (len(node["pre"]), len(closure(nodes, a.id)) - 1))
         print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
-              % (f"{n['_total_cost']:,.0f}", f"{n['ph']:,}", n["yrs"], 100 * n["risk"]))
-        caps = sorted(c for c in closure(nodes, a.id) if c.startswith("cap_"))
+              % (f"{node['_total_cost']:,.0f}", f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
+        caps = sorted(cap_id for cap_id in closure(nodes, a.id) if cap_id.startswith("cap_"))
         print("capability rungs in its chain: %s" % (", ".join(caps) if caps else "NONE"))
-        print("\n%s\n" % n["note"])
-        if d:
+        print("\n%s\n" % node["note"])
+        if node_defects:
             print("DEFECTS")
-            for c, msg in d:
-                print("  [%s] %s" % (c, msg))
+            for code, msg in node_defects:
+                print("  [%s] %s" % (code, msg))
         else:
             print("No defects found by the automated checks.")
         return 0
 
-    dist = collections.Counter(grade(s) for s, _ in results.values())
+    dist = collections.Counter(grade(score) for score, _ in results.values())
     defects = collections.Counter()
-    for s, d in results.values():
-        for c, _ in d:
-            defects[c] += 1
+    for score, node_defects in results.values():
+        for code, _ in node_defects:
+            defects[code] += 1
 
     print("PER-TECHNOLOGY AUDIT: every node judged on its own, not on the end date")
     print("=" * 78)
     print("nodes judged : %d" % len(nodes))
-    print("mean score   : %.1f/100" % statistics.mean(s for s, _ in results.values()))
-    print("grades       : " + "  ".join("%s %d (%.0f%%)" % (g, dist[g], 100.0 * dist[g] / len(nodes))
-                                        for g in "ABCDF"))
+    print("mean score   : %.1f/100" % statistics.mean(score for score, _ in results.values()))
+    print("grades       : " + "  ".join("%s %d (%.0f%%)" % (grade_letter, dist[grade_letter], 100.0 * dist[grade_letter] / len(nodes))
+                                        for grade_letter in "ABCDF"))
     print("\nDEFECTS BY FREQUENCY")
-    for c, value in defects.most_common():
-        print("   %-12s %4d  (%.0f%% of nodes)" % (c, value, 100.0 * value / len(nodes)))
+    for code, value in defects.most_common():
+        print("   %-12s %4d  (%.0f%% of nodes)" % (code, value, 100.0 * value / len(nodes)))
     print("\nWORST NODES")
     worst = sorted(results.items(), key=lambda x: x[1][0])[:20]
-    for k, (s, d) in worst:
-        print("   %-34s %3d %s  %s" % (k[:34], s, grade(s), ", ".join(c for c, _ in d[:4])))
+    for node_id, (score, node_defects) in worst:
+        print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects[:4])))
     if a.grade:
         floor = "FDCBA".index(a.grade.upper())
         print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
-        for k, (s, d) in sorted(results.items(), key=lambda x: x[1][0]):
-            if "FDCBA".index(grade(s)) <= floor:
-                print("   %-34s %3d %s  %s" % (k[:34], s, grade(s), ", ".join(c for c, _ in d)))
+        for node_id, (score, node_defects) in sorted(results.items(), key=lambda x: x[1][0]):
+            if "FDCBA".index(grade(score)) <= floor:
+                print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects)))
     if a.full:
         print("\nFULL REPORT")
-        for k, (s, d) in sorted(results.items(), key=lambda x: x[1][0]):
-            if d:
-                print("\n%s  %d %s" % (k, s, grade(s)))
-                for c, m in d:
-                    print("    [%s] %s" % (c, m))
-    _write_json({k: {"score": s, "grade": grade(s), "defects": [c for c, _ in d]}
-                 for k, (s, d) in results.items()},
+        for node_id, (score, node_defects) in sorted(results.items(), key=lambda x: x[1][0]):
+            if node_defects:
+                print("\n%s  %d %s" % (node_id, score, grade(score)))
+                for code, message in node_defects:
+                    print("    [%s] %s" % (code, message))
+    _write_json({node_id: {"score": score, "grade": grade(score), "defects": [code for code, _ in node_defects]}
+                 for node_id, (score, node_defects) in results.items()},
                 os.path.join(DATA, "judgement.json"), a)
     if not getattr(a, "dry_run", False):
         print("\nwrote data/judgement.json")
@@ -501,75 +501,75 @@ def cmd_repair(a):
     tree = json.load(open(TREE))
     nodes = {n["id"]: n for n in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
-    wages = {k: value["rate"] for k, value in prices["wage_rates_denarii_per_hour"].items() if not k.startswith("_")}
-    goods = {k: value["p"] for k, value in prices["purchase_prices_denarii"].items() if not k.startswith("_")}
-    for n in nodes.values():
-        n["_total_cost"] = (sum(wages.get(t,0)*h for t,h in n["lab"].items())
-                            + sum(goods.get(m,0)*q for m,q in n["mat"].items()) + n["cap"])
+    wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
+    goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
+    for node in nodes.values():
+        node["_total_cost"] = (sum(wages.get(trade,0)*hours for trade,hours in node["lab"].items())
+                            + sum(goods.get(material,0)*quantity for material,quantity in node["mat"].items()) + node["cap"])
     by_category_cost = collections.defaultdict(list)
-    for n in nodes.values():
-        by_category_cost[n["cat"]].append(n["_total_cost"])
+    for node in nodes.values():
+        by_category_cost[node["cat"]].append(node["_total_cost"])
     stats = {"cost": {cat: statistics.median(value)
                       for cat, value in by_category_cost.items()}}
 
     counts = collections.Counter()
-    for k, n in list(nodes.items()):
-        if n["cat"] in ABSTRACT_CATS:
+    for ident, node in list(nodes.items()):
+        if node["cat"] in ABSTRACT_CATS:
             continue
-        score, defects = judge_node(n, nodes, stats)
-        codes = {c for c, _ in defects}
+        score, defects = judge_node(node, nodes, stats)
+        codes = {code for code, _ in defects}
         added = []
         def add(cap_id):
             # NEVER create a cycle. cap_heat_1100 depends on refractory_fireclay, so
             # giving refractory_fireclay a furnace rung (its note is full of furnace
             # words) makes the graph eat itself. An earlier version did exactly that.
-            if not cap_id or cap_id in nodes and cap_id in n["pre"]:
+            if not cap_id or cap_id in nodes and cap_id in node["pre"]:
                 return
             if cap_id not in nodes:
                 return
-            if n["id"] in closure(nodes, cap_id):
+            if node["id"] in closure(nodes, cap_id):
                 counts["cycle-forming edges refused"] += 1
                 return
-            n["pre"].append(cap_id); added.append(cap_id)
+            node["pre"].append(cap_id); added.append(cap_id)
         # Capability gaps remain visible for human review. A prose keyword
         # heuristic cannot safely infer engineering prerequisites.
         if codes & {"CAP-NONE", "CAP-HEAT", "CAP-TOL", "CAP-VAC", "CAP-PURITY", "CAP-POWER"}:
             counts["capability gaps LEFT VISIBLE (not guessed at)"] += 1
         if added:
             counts["capability edges inferred"] += len(added)
-            n["note"] = n["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
+            node["note"] = node["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
                 "inferred by sim/treetool.py repair, not stated by the author. Treat "
                 "them as a floor, not a specification.]" % ", ".join(added))
         # documentation level
-        if not n.get("kb"):
-            if k.startswith("com_"):
-                mod = ("94_computing.md" if any(w in k for w in COMPUTING_WORDS)
+        if not node.get("kb"):
+            if ident.startswith("com_"):
+                mod = ("94_computing.md" if any(word in ident for word in COMPUTING_WORDS)
                        else "50_electricity.md")
             else:
-                mod = next((value for pre, value in PREFIX_MODULE.items() if k.startswith(pre)), None)
+                mod = next((value for pre, value in PREFIX_MODULE.items() if ident.startswith(pre)), None)
             if mod:
-                n["kb"] = mod; n["kb_level"] = "module"; counts["module-level doc links"] += 1
+                node["kb"] = mod; node["kb_level"] = "module"; counts["module-level doc links"] += 1
             else:
-                n["kb_level"] = "none"; counts["still undocumented"] += 1
+                node["kb_level"] = "none"; counts["still undocumented"] += 1
         else:
-            n["kb_level"] = "recipe" if "#" in n["kb"] else "module"
+            node["kb_level"] = "recipe" if "#" in node["kb"] else "module"
         # social model
         if "SOCIAL-FLAT" in codes:
-            hay = (n["cat"] + " " + k).lower()
-            for key, (g, su) in SOCIAL_DEFAULT.items():
+            hay = (node["cat"] + " " + ident).lower()
+            for key, (gov_default, sus_default) in SOCIAL_DEFAULT.items():
                 if key in hay:
-                    n["gov"], n["sus"] = g, su
+                    node["gov"], node["sus"] = gov_default, sus_default
                     counts["social defaults applied"] += 1
-                    n["note"] = n["note"].rstrip() + (" [AUDIT: State interest and suspicion "
+                    node["note"] = node["note"].rstrip() + (" [AUDIT: State interest and suspicion "
                         "were unset and have been defaulted from the category.]")
                     break
         if "NO-FLOOR" in codes:
-            n["yrs"] = max(n["yrs"], 2.0); counts["calendar floors raised"] += 1
-    tree["nodes"] = [nodes[i] for i in sorted(nodes)]
+            node["yrs"] = max(node["yrs"], 2.0); counts["calendar floors raised"] += 1
+    tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     _write_json(tree, TREE, a)
     print("REPAIR PASS")
-    for k, value in counts.most_common():
-        print("   %-32s %d" % (k, value))
+    for ident, value in counts.most_common():
+        print("   %-32s %d" % (ident, value))
     return 0
 
 
@@ -583,14 +583,14 @@ def cmd_apply_caps(a):
     """
     import glob
     tree = json.load(open(TREE))
-    nodes = {n["id"]: n for n in tree["nodes"]}
+    nodes = {node["id"]: node for node in tree["nodes"]}
     applied = refused = empty = unknown = 0
     reasons = {}
-    for f in sorted(glob.glob(os.path.join(DATA, "review", "caps_fix_*.json"))):
+    for path in sorted(glob.glob(os.path.join(DATA, "review", "caps_fix_*.json"))):
         try:
-            fixes = json.load(open(f))
+            fixes = json.load(open(path))
         except Exception as e:
-            print("unparseable: %s (%s)" % (os.path.basename(f), e))
+            print("unparseable: %s (%s)" % (os.path.basename(path), e))
             continue
         for nid, fix in fixes.items():
             if nid not in nodes:
@@ -600,26 +600,26 @@ def cmd_apply_caps(a):
             if not add:
                 empty += 1
                 continue
-            n = nodes[nid]
+            node = nodes[nid]
             got = []
             for cap in add:
                 if cap not in nodes:
                     refused += 1
                     continue
-                if cap in n["pre"]:
+                if cap in node["pre"]:
                     continue
                 if nid in closure(nodes, cap):
                     refused += 1          # would make the graph eat itself
                     continue
-                n["pre"].append(cap)
+                node["pre"].append(cap)
                 got.append(cap)
                 applied += 1
             if got:
                 reasons[nid] = (got, fix.get("reason", ""))
-                n["note"] = n["note"].rstrip() + (
+                node["note"] = node["note"].rstrip() + (
                     " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
-    tree["nodes"] = [nodes[i] for i in sorted(nodes)]
+    tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     _write_json(tree, TREE, a)
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
@@ -654,28 +654,28 @@ def _write_json(obj, path, a, indent=1):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("merge")
-    sub.add_parser("apply-caps")
-    q = sub.add_parser("repair")
-    q.add_argument("--infer-caps", action="store_true",
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    subparsers = parser.add_subparsers(dest="cmd", required=True)
+    subparsers.add_parser("merge")
+    subparsers.add_parser("apply-caps")
+    subparser = subparsers.add_parser("repair")
+    subparser.add_argument("--infer-caps", action="store_true",
                    help="guess missing capability rungs from keywords. OFF BY DEFAULT: an "
                         "independent review found a 100 percent error rate on the edges this "
                         "produced. Every edge it adds must be reviewed by hand.")
-    q = sub.add_parser("judge")
-    q.add_argument("--full", action="store_true")
-    q.add_argument("--id")
-    q.add_argument("--grade")
+    subparser = subparsers.add_parser("judge")
+    subparser.add_argument("--full", action="store_true")
+    subparser.add_argument("--id")
+    subparser.add_argument("--grade")
     # ON EVERY SUBCOMMAND, not only the ones that look dangerous: all four
     # write a committed data file, and which ones those are is exactly the
     # thing a person running this for the first time does not know.
-    for _sp in sub.choices.values():
-        _sp.add_argument("--dry-run", action="store_true",
+    for command_parser in subparsers.choices.values():
+        command_parser.add_argument("--dry-run", action="store_true",
                          help="say what would be written, write nothing")
-    a = p.parse_args()
+    args = parser.parse_args()
     return {"merge": cmd_merge, "judge": cmd_judge, "repair": cmd_repair,
-            "apply-caps": cmd_apply_caps}[a.cmd](a)
+            "apply-caps": cmd_apply_caps}[args.cmd](args)
 
 
 if __name__ == "__main__":

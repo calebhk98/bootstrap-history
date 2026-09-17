@@ -37,37 +37,37 @@ def github_slug(heading):
     heading whose real anchor is "#zinc_metal---zinc-metal-by-downward-distillation".
     Every link in the generated index was silently broken.
     """
-    s = heading.strip().lower()
-    s = re.sub(r"[`*]", "", s)
-    s = re.sub(r"[^\w\s-]", "", s)
-    return re.sub(r"\s+", "-", s).strip("-")
+    slug = heading.strip().lower()
+    slug = re.sub(r"[`*]", "", slug)
+    slug = re.sub(r"[^\w\s-]", "", slug)
+    return re.sub(r"\s+", "-", slug).strip("-")
 
 
 def main():
     tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
     nodes = tree["nodes"]
     slugs = {}          # file -> {tech_id: github anchor slug for the whole heading}
-    anchors, files = {}, sorted(f for f in os.listdir(KB)
-                                if f.endswith(".md") and not f.startswith("_")
-                                and f != "README.md")
-    for f in files:
-        txt = open(os.path.join(KB, f)).read()
-        anchors[f], slugs[f] = set(), {}
+    anchors, files = {}, sorted(filename for filename in os.listdir(KB)
+                                if filename.endswith(".md") and not filename.startswith("_")
+                                and filename != "README.md")
+    for filename in files:
+        txt = open(os.path.join(KB, filename)).read()
+        anchors[filename], slugs[filename] = set(), {}
         for line in txt.splitlines():
-            m = re.match(r"^##\#?\s+`?([A-Za-z0-9_]+)`?(?=\s*[-:,])", line)
-            if not m:
+            match = re.match(r"^##\#?\s+`?([A-Za-z0-9_]+)`?(?=\s*[-:,])", line)
+            if not match:
                 continue
-            tid = m.group(1)
-            anchors[f].add(tid)
+            tid = match.group(1)
+            anchors[filename].add(tid)
             slug = github_slug(line.lstrip("#").strip())
-            slugs[f][tid] = slug
+            slugs[filename][tid] = slug
             # A heading may name SEVERAL ids before the dash, as
             # "### a, b, c - Name". Register them all against the same anchor,
             # otherwise everything after the first comma reports as undocumented.
             head = line.lstrip("#").split(" - ")[0]
             for extra in re.findall(r"[A-Za-z][A-Za-z0-9_]{2,}", head):
-                anchors[f].add(extra)
-                slugs[f].setdefault(extra, slug)
+                anchors[filename].add(extra)
+                slugs[filename].setdefault(extra, slug)
             cur = tid
         # A module section covers a CLUSTER of nodes, not one. The heading names
         # a representative and an "Also covers:" line names the rest. Without
@@ -75,40 +75,40 @@ def main():
         # because their id was not a heading.
         cur = None
         for line in txt.splitlines():
-            m = re.match(r"^##\#?\s+`?([A-Za-z0-9_]+)`?(?=\s*[-:])", line)
-            if m:
-                cur = m.group(1)
+            match = re.match(r"^##\#?\s+`?([A-Za-z0-9_]+)`?(?=\s*[-:])", line)
+            if match:
+                cur = match.group(1)
                 continue
             a = re.match(r"^\s*(?:\*\*)?Also covers:?(?:\*\*)?\s*(.+)$", line, re.I)
             if a and cur:
                 for tid in re.findall(r"[A-Za-z][A-Za-z0-9_]{2,}", a.group(1)):
-                    anchors[f].add(tid)
-                    slugs[f].setdefault(tid, slugs[f].get(cur, cur))
+                    anchors[filename].add(tid)
+                    slugs[filename].setdefault(tid, slugs[filename].get(cur, cur))
 
     # Some nodes are institutional or political rather than technical, and their
     # "how to" lives in the top-level prose files rather than in a recipe module.
-    parent_files = {f for f in os.listdir(ROOT) if f.endswith(".md")}
+    parent_files = {filename for filename in os.listdir(ROOT) if filename.endswith(".md")}
 
     by_file = collections.defaultdict(list)
     broken_file, broken_anchor, prose = [], [], []
     bydesign, gap = [], []
-    for n in nodes:
-        f, _, a = n["kb"].partition("#")
-        f = os.path.basename(f)
-        if not f:
+    for node in nodes:
+        filename, _, a = node["kb"].partition("#")
+        filename = os.path.basename(filename)
+        if not filename:
             # Capability rungs, materials and unobtainables are DEFINED by the
             # tree itself and need no separate recipe. Anything else with no
             # link is a genuine documentation gap and is reported as one.
-            (bydesign if n["cat"] in ("capability", "material", "unobtainable")
-             else gap).append(n["id"])
-        elif f in parent_files:
-            prose.append((n, f, a))
-        elif f in anchors:
-            by_file[f].append((n, a))
-            if a and a not in anchors[f]:
-                broken_anchor.append((n["id"], n["kb"]))
+            (bydesign if node["cat"] in ("capability", "material", "unobtainable")
+             else gap).append(node["id"])
+        elif filename in parent_files:
+            prose.append((node, filename, a))
+        elif filename in anchors:
+            by_file[filename].append((node, a))
+            if a and a not in anchors[filename]:
+                broken_anchor.append((node["id"], node["kb"]))
         else:
-            broken_file.append((n["id"], n["kb"]))
+            broken_file.append((node["id"], node["kb"]))
 
     out = ["# knowledge/ - the how-to library",
            "",
@@ -132,9 +132,9 @@ def main():
            "",
            "| Module | Subject | Entries | Tree nodes it documents |",
            "|---|---|---:|---:|"]
-    for f in files:
+    for filename in files:
         out.append("| [`%s`](%s) | %s | %d | %d |"
-                   % (f, f, TITLES.get(f, ""), len(anchors[f]), len(by_file.get(f, []))))
+                   % (filename, filename, TITLES.get(filename, ""), len(anchors[filename]), len(by_file.get(filename, []))))
     out += ["",
             "### Nodes documented in the top-level prose files",
             "",
@@ -142,50 +142,50 @@ def main():
             "strategy, not a procedure, so it lives outside the recipe library.",
             "",
             "| Node | Your hours | Documented in |", "|---|---:|---|"]
-    for n, f, a in sorted(prose, key=lambda x: (x[0]["id"], x[0]["ph"])):
+    for node, filename, a in sorted(prose, key=lambda x: (x[0]["id"], x[0]["ph"])):
         out.append("| `%s` | %s | [`%s`](../%s) |" %
-                   (n["id"], f"{n['ph']:,}", f, f))
+                   (node["id"], f"{node['ph']:,}", filename, filename))
 
     out += ["",
             "## Every tech-tree node, and where its recipe lives",
             "",
             "Sorted by module, then by node id.",
             ""]
-    for f in files:
-        if not by_file.get(f):
+    for filename in files:
+        if not by_file.get(filename):
             continue
-        out += ["### %s" % f, "",
+        out += ["### %s" % filename, "",
                 "| Node | Your hours | Recipe |", "|---|---:|---|"]
-        for n, a in sorted(by_file[f], key=lambda x: (x[0]["id"], x[0]["ph"])):
-            link = ("[`%s`](%s#%s)" % (a, f, slugs[f].get(a, a))) if a else "_(module has no anchor)_"
-            mark = "" if (not a or a in anchors[f]) else " **BROKEN**"
+        for node, a in sorted(by_file[filename], key=lambda x: (x[0]["id"], x[0]["ph"])):
+            link = ("[`%s`](%s#%s)" % (a, filename, slugs[filename].get(a, a))) if a else "_(module has no anchor)_"
+            mark = "" if (not a or a in anchors[filename]) else " **BROKEN**"
             out.append("| `%s` | %s | %s%s |" %
-                       (n["id"], f"{n['ph']:,}", link, mark))
+                       (node["id"], f"{node['ph']:,}", link, mark))
         out.append("")
 
     # Inline cross-references written inside the modules themselves. Nothing
     # validated these before, and 7 of them were broken.
-    parent_md = {f for f in os.listdir(ROOT) if f.endswith(".md")}
+    parent_md = {filename for filename in os.listdir(ROOT) if filename.endswith(".md")}
     inline_bad = []
-    for f in files:
-        txt = open(os.path.join(KB, f)).read()
-        for m in re.finditer(r"([0-9A-Za-z_]+\.md)#([A-Za-z0-9_]+)", txt):
-            fn, an = m.group(1), m.group(2)
-            if fn in anchors:
-                if an not in anchors[fn]:
-                    inline_bad.append((f, fn + "#" + an, "no such entry"))
-            elif fn not in parent_md:
-                inline_bad.append((f, fn + "#" + an, "no such file"))
+    for filename in files:
+        txt = open(os.path.join(KB, filename)).read()
+        for match in re.finditer(r"([0-9A-Za-z_]+\.md)#([A-Za-z0-9_]+)", txt):
+            linked_file, linked_anchor = match.group(1), match.group(2)
+            if linked_file in anchors:
+                if linked_anchor not in anchors[linked_file]:
+                    inline_bad.append((filename, linked_file + "#" + linked_anchor, "no such entry"))
+            elif linked_file not in parent_md:
+                inline_bad.append((filename, linked_file + "#" + linked_anchor, "no such file"))
     if inline_bad:
         out += ["## Broken cross-references inside the modules", ""]
-        for a_, b_, c_ in inline_bad:
-            out.append("- `%s` links to `%s`: %s" % (a_, b_, c_))
+        for source_file, target_ref, reason in inline_bad:
+            out.append("- `%s` links to `%s`: %s" % (source_file, target_ref, reason))
         out.append("")
 
     out += ["## Documentation coverage", "",
             "| status | nodes |", "|---|---:|",
-            "| linked to a specific recipe entry | %d |" % sum(1 for f in files for n, a in by_file.get(f, []) if a),
-            "| linked to a domain module, no specific entry | %d |" % sum(1 for f in files for n, a in by_file.get(f, []) if not a),
+            "| linked to a specific recipe entry | %d |" % sum(1 for filename in files for node, a in by_file.get(filename, []) if a),
+            "| linked to a domain module, no specific entry | %d |" % sum(1 for filename in files for node, a in by_file.get(filename, []) if not a),
             "| documented in a top-level prose file | %d |" % len(prose),
             "| no link BY DESIGN (capability rungs, materials, unobtainables) | %d |" % len(bydesign),
             "| **undocumented, a real gap** | **%d** |" % len(gap), ""]
@@ -195,10 +195,10 @@ def main():
 
     if broken_file or broken_anchor:
         out += ["## Broken links", ""]
-        for i, k in broken_file:
-            out.append("- `%s` points at `%s`, which does not exist" % (i, k))
-        for i, k in broken_anchor:
-            out.append("- `%s` points at `%s`, but that module has no such `###` entry" % (i, k))
+        for node_id, kb_link in broken_file:
+            out.append("- `%s` points at `%s`, which does not exist" % (node_id, kb_link))
+        for node_id, kb_link in broken_anchor:
+            out.append("- `%s` points at `%s`, but that module has no such `###` entry" % (node_id, kb_link))
         out.append("")
 
     open(os.path.join(KB, "README.md"), "w").write("\n".join(out) + "\n")
@@ -211,10 +211,10 @@ def main():
     print("  broken files    : %d" % len(broken_file))
     print("  broken anchors  : %d" % len(broken_anchor))
     print("  broken inline   : %d" % len(inline_bad))
-    for a_, b_, c_ in inline_bad:
-        print("     %-28s -> %-44s %s" % (a_, b_, c_))
-    for i, k in broken_file + broken_anchor:
-        print("     %-32s -> %s" % (i, k))
+    for source_file, target_ref, reason in inline_bad:
+        print("     %-28s -> %-44s %s" % (source_file, target_ref, reason))
+    for node_id, kb_link in broken_file + broken_anchor:
+        print("     %-32s -> %s" % (node_id, kb_link))
     return 1 if (broken_file or broken_anchor or inline_bad) else 0
 
 if __name__ == "__main__":

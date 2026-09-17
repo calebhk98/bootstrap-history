@@ -113,27 +113,27 @@ def cpm(nodes, need):
     """
     order = topo_order(nodes, need)
     es, ef = {}, {}
-    for k in order:
-        n = nodes[k]
-        pred_ef = [ef[p] for p in n["pre"] if p in need]
-        es[k] = max(pred_ef) if pred_ef else 0.0
-        ef[k] = es[k] + duration(n)
+    for node_id in order:
+        node = nodes[node_id]
+        pred_ef = [ef[prereq] for prereq in node["pre"] if prereq in need]
+        es[node_id] = max(pred_ef) if pred_ef else 0.0
+        ef[node_id] = es[node_id] + duration(node)
     total = max(ef.values()) if ef else 0.0
     # Dependants WITHIN `need`, computed once rather than rescanning every
     # node for every k - closure(nodes, goal) is an ANCESTOR set, so every
     # member other than the goal itself has at least one dependant also in
     # `need` (that is how it was reached in the first place).
-    deps = {k: [] for k in need}
-    for m in need:
-        for p in nodes[m]["pre"]:
-            if p in need:
-                deps[p].append(m)
+    deps = {node_id: [] for node_id in need}
+    for dependant_id in need:
+        for prereq in nodes[dependant_id]["pre"]:
+            if prereq in need:
+                deps[prereq].append(dependant_id)
     ls, lf, slack = {}, {}, {}
-    for k in reversed(order):
-        dep_ls = [ls[m] for m in deps[k]]
-        lf[k] = min(dep_ls) if dep_ls else total
-        ls[k] = lf[k] - duration(nodes[k])
-        slack[k] = ls[k] - es[k]
+    for node_id in reversed(order):
+        dep_ls = [ls[dependant_id] for dependant_id in deps[node_id]]
+        lf[node_id] = min(dep_ls) if dep_ls else total
+        ls[node_id] = lf[node_id] - duration(nodes[node_id])
+        slack[node_id] = ls[node_id] - es[node_id]
     return {"es": es, "ef": ef, "ls": ls, "lf": lf, "slack": slack, "total": total}
 
 
@@ -226,19 +226,19 @@ def pick_side_branches(nodes, need, s, limit):
     the one of the three tried that regresses neither civilisation.
     """
     cands = []
-    for k, n in nodes.items():
-        if k in need or k in s.done or k in s.granted:
+    for node_id, node in nodes.items():
+        if node_id in need or node_id in s.done or node_id in s.granted:
             continue
-        if n["cat"] == "unobtainable":
+        if node["cat"] == "unobtainable":
             continue
-        if s._is_foreign_only(k):
+        if s._is_foreign_only(node_id):
             continue
-        net = n["rev"] - n["up"]
+        net = node["rev"] - node["up"]
         if net <= 0:
             continue
-        cands.append(((net / max(1.0, n["_total_cost"])), k))
+        cands.append(((net / max(1.0, node["_total_cost"])), node_id))
     cands.sort(key=lambda x: (-x[0], nodes[x[1]]["_total_cost"], x[1]))
-    return [k for _, k in cands[:limit]]
+    return [node_id for _, node_id in cands[:limit]]
 
 
 def pick_staffing(nodes, need, s):
@@ -269,8 +269,8 @@ def pick_staffing(nodes, need, s):
     doubles it.
     """
     want = []
-    for key, sc, ar, _di, _scaled, _run in Sim.STAFF_CAPACITY_SOURCES:
-        if sc <= 0 and ar <= 0:
+    for key, scholars_needed, artisans_needed, _di, _scaled, _run in Sim.STAFF_CAPACITY_SOURCES:
+        if scholars_needed <= 0 and artisans_needed <= 0:
             continue
         if key not in nodes or key in need or key in s.done or key in s.granted:
             continue
@@ -309,8 +309,8 @@ def interleave(order, extras, every=8):
     if not extras:
         return list(order)
     out, ei = [], 0
-    for i, k in enumerate(order):
-        out.append(k)
+    for i, node_id in enumerate(order):
+        out.append(node_id)
         if ei < len(extras) and (i + 1) % every == 0:
             out.append(extras[ei])
             ei += 1
@@ -359,11 +359,11 @@ def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
     failed.
     """
     need = closure(nodes, goal)
-    c = cpm(nodes, need)
-    seed_rank = {k: i for i, k in enumerate(seed_order or ())}
-    dc = {k: downstream_count(nodes, k) for k in need}
+    cpm_result = cpm(nodes, need)
+    seed_rank = {node_id: i for i, node_id in enumerate(seed_order or ())}
+    downstream = {node_id: downstream_count(nodes, node_id) for node_id in need}
     def key(k):
-        return (round(c["slack"][k], 3), -dc[k], round(c["es"][k], 3),
+        return (round(cpm_result["slack"][k], 3), -downstream[k], round(cpm_result["es"][k], 3),
                 seed_rank.get(k, 10 ** 9), nodes[k]["_total_cost"], k)
     order = sorted(need, key=key)
     extras = pick_side_branches(nodes, need, s, side_branches) if side_branches else []
@@ -390,7 +390,7 @@ def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
     # these to found, and when, is a judgement about a specific run's income
     # that a structural pass over the tech tree has no standing to make.
     staffing = pick_staffing(nodes, need, s)
-    return order, c, extras, staffing
+    return order, cpm_result, extras, staffing
 
 
 def _capture_winner_order(nodes, goal, need, results):
@@ -403,11 +403,11 @@ def _capture_winner_order(nodes, goal, need, results):
     embedded in cmd_run and works from parsed argparse args, not a bare list
     of Sim results; the RULE is what has to match, not the plumbing.
     """
-    won = [r for r in results if r.goal_year]
+    won = [run for run in results if run.goal_year]
     if not won:
         return None, None
     best = min(won, key=lambda r: r.goal_year)
-    seq = sorted((k for k in best.done if k in need and k not in best.granted),
+    seq = sorted((node_id for node_id in best.done if node_id in need and node_id not in best.granted),
                  key=lambda k: (best.done_year.get(k, 0), k))
     return seq, best
 
@@ -426,9 +426,9 @@ def _repaired(nodes, goal, order):
     second time, which is exactly the kind of duplication this module's other
     comments already argue against.
     """
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as fh:
-        json.dump({"label": "internal", "rationale": [], "order": order}, fh)
-        path = fh.name
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as handle:
+        json.dump({"label": "internal", "rationale": [], "order": order}, handle)
+        path = handle.name
     try:
         _label, full, _bounties = load_strategy(path, nodes, goal)
     finally:
@@ -496,18 +496,18 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
 def load_seed(path, nodes):
     if not path:
         return None
-    p = path
-    if not os.path.exists(p):
-        p = os.path.join(STRATS, path + ".json")
-    with open(p) as fh:
-        blob = json.load(fh)
-    return [k for k in blob.get("order", []) if k in nodes]
+    resolved_path = path
+    if not os.path.exists(resolved_path):
+        resolved_path = os.path.join(STRATS, path + ".json")
+    with open(resolved_path) as handle:
+        blob = json.load(handle)
+    return [node_id for node_id in blob.get("order", []) if node_id in nodes]
 
 
 def write_strategy(path, label, rationale, order):
     out = {"label": label, "rationale": rationale, "order": order}
-    with open(path, "w") as fh:
-        json.dump(out, fh, indent=1)
+    with open(path, "w") as handle:
+        json.dump(out, handle, indent=1)
     return path
 
 
@@ -522,25 +522,25 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
     """
     tree, prices, nodes, wages, goods = load()
     goal = resolve_goal(tree, nodes, goal)
-    s = Sim(nodes, [], random.Random(seed), events=False, civ=load_civ(civ))
+    sim = Sim(nodes, [], random.Random(seed), events=False, civ=load_civ(civ))
     seed_order = load_seed(seed_strategy, nodes)
-    order, c, extras, staffing = backward_plan(nodes, goal, s, seed_order,
+    order, cpm_result, extras, staffing = backward_plan(nodes, goal, sim, seed_order,
                                                side_branches,
                                                side_branch_every)
     score = None
     if refine_rounds:
-        order, extras, score = refine(nodes, goal, s, order, extras, civ, mc,
+        order, extras, score = refine(nodes, goal, sim, order, extras, civ, mc,
                                       horizon, seed, refine_rounds,
                                       side_branch_every, log)
     need = closure(nodes, goal)
-    crit = sum(1 for k in need if c["slack"].get(k, 0) <= 1e-6)
+    crit = sum(1 for k in need if cpm_result["slack"].get(k, 0) <= 1e-6)
     rationale = [
         "Computed backward from the goal by critical-path method (CPM) over "
         "its %d-node prerequisite closure, not observed from a lucky run: "
         "%d of those nodes have zero slack (%.1f years of critical-path "
         "floor total) and are ordered first; everything else is ordered by "
         "how much room it has to wait without delaying the goal."
-        % (len(need), crit, c["total"]),
+        % (len(need), crit, cpm_result["total"]),
     ]
     if seed_order:
         rationale.append(
@@ -549,8 +549,8 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "override the CPM ordering of two nodes at different slack."
             % (seed_strategy, len(seed_order)))
     if staffing:
-        peak_sc = max((nodes[k]["sch"] for k in need), default=0.0)
-        peak_ar = max((nodes[k]["art"] for k in need), default=0.0)
+        peak_scholars = max((nodes[k]["sch"] for k in need), default=0.0)
+        peak_artisans = max((nodes[k]["art"] for k in need), default=0.0)
         rationale.append(
             "NOT ORDERED HERE, BUT IN THE WAY: this road wants %.0f trained "
             "scholars and %.0f trained artisans at its heaviest, and %s "
@@ -564,7 +564,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "better. When and whether to found them is a judgement about a "
             "particular run's income, which a structural pass over the tech "
             "tree cannot make."
-            % (peak_sc, peak_ar, civ, len(staffing), ", ".join(staffing),
+            % (peak_scholars, peak_artisans, civ, len(staffing), ", ".join(staffing),
                "{:,.0f}".format(sum(nodes[k]["_total_cost"] for k in staffing))))
     if extras:
         rationale.append(
@@ -582,38 +582,38 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "order was fed back as the next round's tie-break seed. Final "
             "round: %d/%d trials reached the goal."
             % (refine_rounds, mc, horizon, seed, score[0], mc))
-    return order, rationale, c
+    return order, rationale, cpm_result
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
+    parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--civ", default="rome_100ad")
-    ap.add_argument("--goal", default=None)
-    ap.add_argument("--out", required=True, help="strategy file to write")
-    ap.add_argument("--seed-strategy", default=None,
+    parser.add_argument("--civ", default="rome_100ad")
+    parser.add_argument("--goal", default=None)
+    parser.add_argument("--out", required=True, help="strategy file to write")
+    parser.add_argument("--seed-strategy", default=None,
                     help="a strategy name or path (e.g. captured_han_386, or "
                          "a previous plan) to seed ties with")
-    ap.add_argument("--side-branches", type=int, default=12)
-    ap.add_argument("--side-branch-every", type=int, default=8)
-    ap.add_argument("--refine-rounds", type=int, default=0,
+    parser.add_argument("--side-branches", type=int, default=12)
+    parser.add_argument("--side-branch-every", type=int, default=8)
+    parser.add_argument("--refine-rounds", type=int, default=0,
                     help="plan, run --mc trials, capture the winner, re-plan; "
                          "repeat this many times. 0 (default) skips it and "
                          "stays purely structural/instant.")
-    ap.add_argument("--mc", type=int, default=12)
-    ap.add_argument("--horizon", type=int, default=700)
-    ap.add_argument("--seed", type=int, default=1)
-    a = ap.parse_args()
-    order, rationale, c = plan(a.civ, a.goal, a.seed_strategy, a.side_branches,
-                               a.side_branch_every, a.refine_rounds, a.mc,
-                               a.horizon, a.seed)
+    parser.add_argument("--mc", type=int, default=12)
+    parser.add_argument("--horizon", type=int, default=700)
+    parser.add_argument("--seed", type=int, default=1)
+    args = parser.parse_args()
+    order, rationale, cpm_result = plan(args.civ, args.goal, args.seed_strategy, args.side_branches,
+                               args.side_branch_every, args.refine_rounds, args.mc,
+                               args.horizon, args.seed)
     tree, _p, nodes, _w, _g = load()
-    goal = resolve_goal(tree, nodes, a.goal)
+    goal = resolve_goal(tree, nodes, args.goal)
     label = ("PLANNED (CPM): backward-chained from %s over its prerequisite "
-            "closure for %s%s" % (goal, a.civ,
-                                  ", refined against real trials" if a.refine_rounds else ""))
-    write_strategy(a.out, label, rationale, order)
-    print("wrote %d nodes to %s" % (len(order), a.out))
+            "closure for %s%s" % (goal, args.civ,
+                                  ", refined against real trials" if args.refine_rounds else ""))
+    write_strategy(args.out, label, rationale, order)
+    print("wrote %d nodes to %s" % (len(order), args.out))
     for line in rationale:
         print("  - " + line)
 
