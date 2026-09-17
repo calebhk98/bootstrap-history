@@ -282,6 +282,40 @@ building a combat minigame with invented numbers.
 
 Each is a thing that either works or does not, with a stated measurement.
 
+**STATUS, measured rather than remembered.** Bring this table up to date when
+a milestone moves; it is the first thing anyone reads.
+
+| | milestone | state |
+|---|---|---|
+| 0 | the production side | **done.** 99.7% of consumption sites; `sim/validate_production.py` |
+| 1 | provenance and a burndown | **mechanism built, nothing migrated.** `sim/constants.py`; 98 named constants and 1,367 inline literals still to move |
+| 2 | the synthetic world | not started. See the note under it - it may no longer be needed in the form described |
+| 3 | the household extraction | **done.** `sim/engine/actors/household.py`; all 9 fingerprint scenarios byte-identical |
+| 4 | food and people | **in progress.** Demography and agriculture being built as standalone modules under `sim/world/` |
+| 5 | the wage, and the price solve | **half done.** `sim/solve_prices.py` converges and prices every material in labour-hours. The WAGE half waits on 4 |
+| 6+ | transport, settlements, state finance, war | not started |
+
+Two things that were not obvious when this plan was written and are now:
+
+**Milestone 2 may be unnecessary in the form described.** The toy world was
+proposed because developing market clearing inside a 4,350-line `economy.py`
+guarded by 1,600 assertions about book prices looked like a way to fail
+slowly. What actually happened is that the production data, the solver, the
+demographic model and the agricultural model all got built as standalone
+modules beside the engine, tested on their own terms, and wired in
+afterwards. That is the same isolation the toy world was for, obtained
+without building a second world to maintain. Reconsider before building it.
+
+**Doing 5 before 4 turned out to be right, and not for the reason expected.**
+The plan says the wage gates everything. It does, but the MATERIAL half of
+the price system does not need the wage - it needs a numeraire, and one hour
+of unskilled labour is a perfectly good one. Solving in labour-hours produced
+a complete, arguable price for all 182 materials with the wage still unknown,
+and it surfaced two findings (the missing capital field, joint-production
+underdetermination) that would otherwise have been found later and tangled
+with demography. Where a system can be solved in a unit rather than in money,
+do that first.
+
 ## Milestone 0 - Build the production side
 
 **Done, in part:** `sim/audit_costs.py` now measures the gap and will keep
@@ -426,6 +460,28 @@ Acceptance: a food shortage raises mortality and wages through the ordinary
 machinery, with no famine modifier anywhere.
 
 ## Milestone 5 - The wage, and the price solve
+
+**The material half is done.** `sim/solve_prices.py` solves the system in
+Part 2 and converges: 1,076 iterations, residual 0.0, all 182 materials
+priced in labour-hours, none unreachable. `--why` gives a recursive cost
+breakdown, which matters more than the headline number because it is what
+makes a computed price arguable.
+
+What it computes is **prime cost** - inputs plus labour - and the schema now
+records the size of that gap. Iron bar comes out at 71 denarii a tonne
+against a book 1,000. Four things are missing and one has no field at all:
+
+    capital     NO FIELD IN THE SCHEMA. The tree carries it as `cap`, 23.5%
+                of its cost base, and none of it has crossed over
+    rent        marked by extracted_from, fixed at zero this round
+    energy      energy_mj exists on 61 entries; nothing prices it
+    transport, margin, risk - not modelled
+
+Adding capital to `data/production/` is now the highest-value single piece of
+work in this document. Do not close the gap with a coefficient.
+
+The WAGE half still waits on Milestone 4, and that is the remaining half of
+this milestone.
 
 The labour market closes the system. At this point costs are calculated.
 
