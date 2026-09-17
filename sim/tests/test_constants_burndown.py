@@ -1,5 +1,7 @@
 """Guards the two bugs that made `python3 sim/constants.py --burndown` print
-"0 numbers declared" while 32 numbers were declared.
+"0 numbers declared" while 32 numbers were declared, and (in
+`HardcodedHistoricalOutcomeTests`) the separate `hardcoded_historical_outcome`
+kind Complaints/36 asked for.
 
 Milestone 1 in docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md is
 "provenance and a burndown". The mechanism was built and then the scoreboard
@@ -21,6 +23,7 @@ fail if either returns.
 unittest.TestCase style, like test_agriculture.py and test_demography.py, so
 it can exercise the tool in a subprocess without dragging in the engine.
 """
+import json
 import os
 import subprocess
 import sys
@@ -196,6 +199,103 @@ class OneRegistryAcrossBothImportRootsTests(unittest.TestCase):
             "repository. An engine module is probably importing something as "
             "`sim.X`; rooted at sim/ the name `sim` does not exist. Use the "
             "bare spelling in engine files.\n%s" % result.stderr[-600:])
+
+
+class HardcodedHistoricalOutcomeTests(unittest.TestCase):
+    """Complaints/36: `temporary_heuristic` conflated two unlike things -
+    honest scaffolding CLAUDE.md SS3.1 allows ("no mechanism exists yet"),
+    and a hardcoded historical outcome SS3.1 forbids outright ("this IS the
+    answer, copied from the record"). `hardcoded_historical_outcome` is the
+    kind that separates them.
+
+    Unlike `temporary_heuristic`, which will always have a tail, this kind
+    is expected to reach ZERO. These tests guard the mechanism (the kind
+    exists, `declare()` accepts it, `--burndown` reports it separately and
+    names the zero target) rather than any specific count, so they do not
+    become stale as entries are fixed and the count drops.
+    """
+
+    def _run_burndown(self):
+        result = subprocess.run(
+            [sys.executable, os.path.join("sim", "constants.py"), "--burndown"],
+            cwd=_REPOSITORY_ROOT, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout, result.stderr
+
+    def test_hardcoded_historical_outcome_is_a_registered_kind(self):
+        sys.path.insert(0, _REPOSITORY_ROOT)
+        try:
+            from sim import constants
+        finally:
+            sys.path.remove(_REPOSITORY_ROOT)
+        self.assertIn("hardcoded_historical_outcome", constants.KINDS)
+
+    def test_declare_accepts_the_new_kind(self):
+        # A clean subprocess, like this file's other declare()-exercising
+        # checks, so a throwaway probe constant never pollutes the shared
+        # REGISTRY any other test in this process might read.
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "from sim import constants\n"
+            "value = constants.declare(\n"
+            "    '_PROBE_HARDCODED_HISTORICAL_OUTCOME', 1.0,\n"
+            "    kind='hardcoded_historical_outcome', unit='test',\n"
+            "    why='Exercises the new kind end to end; not a real "
+            "declaration read by any production code.')\n"
+            "print(value)\n" % _REPOSITORY_ROOT)
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=_REPOSITORY_ROOT, capture_output=True,
+                                text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "1.0")
+
+    def test_burndown_reports_historical_outcomes_as_their_own_list(self):
+        script = (
+            "import sys, json; sys.path.insert(0, %r)\n"
+            "from sim import constants\n"
+            "constants._import_declaring_modules()\n"
+            "constants._adopt_the_canonical_registry()\n"
+            "result = constants.burndown()\n"
+            "print(json.dumps({\n"
+            "    'outcome_names': [e['name'] for e in "
+            "result['historical_outcomes']],\n"
+            "    'heuristic_names': [e['name'] for e in "
+            "result['outstanding']],\n"
+            "}))\n" % _REPOSITORY_ROOT)
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=_REPOSITORY_ROOT, capture_output=True,
+                                text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout.strip())
+        # Complaints/36 named these two explicitly. If sim/engine/economy.py
+        # is ever dropped from _import_declaring_modules(), or either
+        # reclassification is quietly reverted, this fails loudly instead
+        # of the count just silently reading zero - the exact failure mode
+        # Complaints/36 exists to prevent one level up.
+        self.assertIn("DEBT_BASE_RATE", payload["outcome_names"])
+        self.assertIn("LIVING_COST_TAX_RATE", payload["outcome_names"])
+        # And they must not ALSO count as temporary_heuristic - one entry,
+        # one kind, which is the whole point of separating the bucket.
+        self.assertNotIn("DEBT_BASE_RATE", payload["heuristic_names"])
+        self.assertNotIn("LIVING_COST_TAX_RATE", payload["heuristic_names"])
+
+    def test_cli_burndown_names_the_kind_and_states_the_zero_target(self):
+        stdout, _stderr = self._run_burndown()
+        self.assertIn("HARDCODED HISTORICAL OUTCOME", stdout)
+        self.assertIn("ZERO", stdout)
+        self.assertIn("DEBT_BASE_RATE", stdout)
+        self.assertIn("LIVING_COST_TAX_RATE", stdout)
+
+    def test_cli_still_reports_declared_count_first(self):
+        # The new, loud section must not break the existing contract this
+        # file's OTHER tests (and anyone scripting the tool) rely on: the
+        # first line of stdout is still "<N> numbers declared, ...", with
+        # N as the first whitespace-separated token.
+        stdout, _stderr = self._run_burndown()
+        first_line = stdout.splitlines()[0]
+        self.assertIn("numbers declared", first_line)
+        declared = int(stdout.split()[0])
+        self.assertGreater(declared, 0)
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ one place to LIVE.
 `declare` returns a plain float, so arithmetic and speed are unchanged and
 nothing downstream needs to know this module exists.
 
-THE KINDS, and the only one that matters
+THE KINDS, and the two that matter for different reasons
 
     physical_constant        facts about the universe. Densities, melting
                              points, latent heats, Faraday's constant.
@@ -53,10 +53,25 @@ THE KINDS, and the only one that matters
                              input to it.
     temporary_heuristic      a number we invented because the mechanism that
                              would derive it does not exist yet.
+    hardcoded_historical_outcome
+                             a number that IS the answer to something the
+                             simulation is supposed to compute - a price, a
+                             wage, an interest rate, a tax rate - copied in
+                             from the historical record instead. CLAUDE.md
+                             SS3.1 forbids this outright. See Complaints/36.
 
-`temporary_heuristic` is the project's progress bar. Every one of them is a
-promise to replace it, and `--burndown` counts how many promises are
-outstanding. The others are legitimate inputs under CLAUDE.md 3.1 and are not
+`temporary_heuristic` is the project's progress bar: every one of them is a
+promise to replace it, and it will always have a tail, because "no mechanism
+exists yet" is a permanent feature of an unfinished migration, not a bug.
+`hardcoded_historical_outcome` is a DIFFERENT progress bar with a different
+target: it is small today (two entries, both in sim/engine/economy.py) and
+`--burndown` expects it to reach EXACTLY ZERO, because unlike an un-derived
+heuristic, a live SS3.1 violation is not something this project tolerates
+having a tail of. Complaints/36 records why these two kinds used to be the
+same bucket and why that made the second, much smaller and much more urgent
+one invisible.
+
+The remaining kinds are legitimate inputs under CLAUDE.md 3.1 and are not
 expected to go away.
 
 WHAT DOES NOT BELONG HERE. Numbers that do not change a simulated outcome.
@@ -141,6 +156,7 @@ KINDS = (
     "initial_condition",
     "calibration_target",
     "temporary_heuristic",
+    "hardcoded_historical_outcome",
 )
 
 CONFIDENCES = ("A", "B", "C", "D")
@@ -189,13 +205,23 @@ def by_kind():
 
 
 def burndown():
-    """What fraction of declared numbers are promises we have not kept."""
+    """What fraction of declared numbers are promises we have not kept.
+
+    Reports two separate counts, because they are two separate promises with
+    two separate expected endings - see this module's THE KINDS section.
+    `temporary_heuristics` will always have a tail; `historical_outcomes` is
+    expected to hit zero, and until it does it is the more important of the
+    two numbers, so callers should look at it FIRST.
+    """
     total = len(REGISTRY)
     heuristics = [e for e in REGISTRY.values()
                   if e["kind"] == "temporary_heuristic"]
+    historical_outcomes = [e for e in REGISTRY.values()
+                            if e["kind"] == "hardcoded_historical_outcome"]
     return {"declared": total, "temporary_heuristics": len(heuristics),
             "share": (len(heuristics) / total) if total else 0.0,
-            "outstanding": heuristics}
+            "outstanding": heuristics,
+            "historical_outcomes": historical_outcomes}
 
 
 def _adopt_the_canonical_registry():
@@ -251,11 +277,13 @@ def _import_declaring_modules():
     # same commit, or your numbers do not exist as far as the burndown knows.
     for module in ("engine.data",
                    "engine.economy",
+                   "engine.cli",
                    "sim.world.agriculture",
                    "sim.world.demography",
                    "sim.world.transport",
                    "sim.world.military_logistics",
-                   "sim.world.deposits"):
+                   "sim.world.deposits",
+                   "sim.world.demand"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001
@@ -274,9 +302,36 @@ def main(argv=None):
 
     if arguments.burndown:
         result = burndown()
+        outcomes = result["historical_outcomes"]
+        # This first line is a stable contract: sim/tests/test_constants_
+        # burndown.py's own subprocess checks read stdout.split()[0] as the
+        # total declared count, and that must keep working. The HARDCODED
+        # HISTORICAL OUTCOME section below it is reported separately and
+        # loudly, not first, so both stay true at once.
         print("%d numbers declared, %d are temporary heuristics (%.1f%%)"
               % (result["declared"], result["temporary_heuristics"],
                  100.0 * result["share"]))
+        print()
+        # SEPARATE FROM temporary_heuristic, ON PURPOSE, AND REPORTED LOUDLY.
+        # See Complaints/36: the two used to be the same bucket, and a queue
+        # where "invent a better elasticity eventually" and "a SS3.1
+        # violation is live in the shipping model" sorted identically was
+        # not measurable in the way that matters. Unlike temporary_heuristic
+        # above - which will always have a tail - THIS COUNT IS EXPECTED TO
+        # REACH ZERO. It is a defect list, not a progress bar.
+        print("=" * 72)
+        print("%d HARDCODED HISTORICAL OUTCOME%s (CLAUDE.md SS3.1 forbids "
+              "these outright)"
+              % (len(outcomes), "" if len(outcomes) == 1 else "S"))
+        print("Expected count: ZERO. Every one of these is a live SS3.1 "
+              "violation, not scaffolding.")
+        if outcomes:
+            for entry in outcomes:
+                print("   %-34s %-16s %s" % (entry["name"], entry["unit"],
+                                             entry["declared_in"]))
+        else:
+            print("   (none currently declared)")
+        print("=" * 72)
         if result["outstanding"]:
             print()
             print("Outstanding promises - each of these is a number we invented")

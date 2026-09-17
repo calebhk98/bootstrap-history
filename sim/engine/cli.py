@@ -17,6 +17,7 @@ from .protocol import (
     _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
     _agent_state, _node_explain, civ_of_save, goal_of_save, final_report,
     load_state, parse_typed, render_final, render_pretty, save_state)
+from constants import declare
 
 
 # ----------------------------------------------------------------------------
@@ -326,6 +327,46 @@ def topo_stable(nodes, preference, already=()):
 # Commands
 # ----------------------------------------------------------------------------
 
+# HOW LONG THE `validate --deep` REACHABILITY PROBE RUNS, per goal. Longer
+# than the structural critical-path floor because a probe with no search-
+# rounds relaxation (see cmd_validate's own comment on this) needs slack to
+# actually reach a goal it structurally can, but capped because this runs one
+# real Sim trial per goal per civilisation and a menu-adjacent command has to
+# stay fast. Balances thoroughness against runtime; not derived from
+# anything about the tree or the civilisations it probes.
+VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR", 2.5,
+    kind="temporary_heuristic", unit="probe years per critical-path floor year",
+    source=None, confidence="D",
+    why="How much slack over the structural critical-path floor the "
+        "reachability probe gets before it is declared 'not reached'. A "
+        "real trial needs more calendar time than the floor (which assumes "
+        "every roll goes right and no year is ever spent short of money, "
+        "people or material - see critical_path's own docstring), and 2.5x "
+        "was picked to give a CPM-ordered, dice-free trial room to actually "
+        "finish without the probe running long. A real mechanism would "
+        "measure how much slack a CPM order typically needs over its floor, "
+        "goal by goal, instead of applying one ratio to all of them.")
+VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS", 50, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Floor under the scaled probe horizon above, for a goal whose "
+        "critical path is very short - so a five-year-floor lifetime goal "
+        "still gets a probe window long enough to build anything around it, "
+        "rather than being cut off almost immediately. Picked to feel "
+        "sufficient, not measured against how long the shortest goals "
+        "actually take under real play.")
+VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS", 350, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Ceiling on the scaled probe horizon above, so a goal with a long "
+        "critical-path floor (the transistor's own structural floor runs "
+        "well past a century) does not turn this structural-checks command "
+        "into a multi-minute run - see this command's own comment on why "
+        "--deep is opt-in at all. Picked for speed, not because 350 years "
+        "is a meaningful ceiling on what a real trial might need.")
+
+
 def cmd_validate(a):
     tree, prices, nodes, wages, goods = load()
     errs, warns = [], []
@@ -410,7 +451,9 @@ def cmd_validate(a):
         civ_ids = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                          if filename.endswith(".json") and not filename.startswith("_"))
         for goal, node, need, yrs, chain in goal_rows:
-            probe_horizon = min(350, max(50, int(math.ceil(yrs * 2.5))))
+            probe_horizon = min(VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS,
+                                max(VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS,
+                                    int(math.ceil(yrs * VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR))))
             cells = []
             for civ in civ_ids:
                 probe_sim = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
@@ -427,6 +470,36 @@ def cmd_validate(a):
         print("OK: tree is a valid DAG, fully priced, every selectable goal's "
               "closure and critical path compute cleanly.")
     return 1 if errs else 0
+
+
+# A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say how big a
+# number is, never to gate anything a player can actually do. FLAGGED: this
+# does NOT match the "2000/yr for 30 yrs: 60,000" figure printed two lines
+# above its own use in cmd_path, below. DEFAULTS["founder_hours_per_year"]
+# (data.py) is 2,000 specifically because an earlier version used 2,400 "with
+# no illness, no travel, no administration and no bad weather" (see that
+# field's own comment) - and 2,400 * 30 = 72,000 exactly, while 2,000 * 30 =
+# 60,000. This constant looks like a leftover from the 2,400/yr era that was
+# never updated when the per-year figure changed; the honest value under
+# today's model is 60,000, not this. Left AT ITS SOURCE VALUE here (migrating
+# a literal into declare() must not also silently fix what it says - see
+# CLAUDE.md 3.4's neighbour, "this is not a refactor of the logic"); flagged
+# for whoever picks up the burndown to reconcile against the 60,000 figure
+# instead of computing it fresh from DEFAULTS.
+FOUNDER_LIFETIME_HOURS = declare(
+    "FOUNDER_LIFETIME_HOURS", 72000, kind="temporary_heuristic",
+    unit="founder-hours", source=None, confidence="D",
+    why="How many hours a founder's whole working life is treated as "
+        "holding, for two purely informational uses: what percentage of a "
+        "life a node's founder-hours requirement costs (cmd_why), and "
+        "whether a path's total founder-hours demand could conceivably be "
+        "done by one person alone (cmd_path). Neither use gates anything a "
+        "player can do - the game does not stop you starting a project past "
+        "this many hours - so this is a claim made TO the player, not a rule "
+        "enforced on them. See the discrepancy noted above: this value "
+        "appears to be stale against the founder_hours_per_year DEFAULTS "
+        "actually uses, which is exactly the kind of drift a single "
+        "declared name existing only here cannot yet prevent.")
 
 
 def cmd_path(a):
@@ -453,7 +526,7 @@ def cmd_path(a):
     print("\nFounder-hours available in one lifetime at 2000/yr for 30 yrs: 60,000")
     print("Founder-hours demanded by this path                          : %s" % f"{cum_ph:,.0f}")
     print("=> %s" % ("feasible alone in principle, but not with the calendar floors"
-                     if cum_ph < 72000 else
+                     if cum_ph < FOUNDER_LIFETIME_HOURS else
                      "IMPOSSIBLE for one person. You must convert your hours into other people's hours."))
 
 
@@ -1208,6 +1281,22 @@ def cmd_play(a):
     return 0
 
 
+# THE SAME FLOOR core.py's Sim.__init__ APPLIES AT YEAR ZERO (see
+# _ingame_options below, "THE SAME DRAW core.py's Sim.__init__ makes"), kept
+# as its own declared name because core.py has not migrated its own copy to
+# declare() yet - two independent literals with the same value, not one
+# shared source, so a change to one will not reach the other.
+INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS = declare(
+    "INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Floor under the gaussian draw for a founder's remaining lifespan, "
+        "so a bad roll (or a mean/sd combination that puts real weight below "
+        "zero) cannot hand a newly-mortal founder a negative or "
+        "vanishingly short life. Not derived from any mortality curve; "
+        "picked to guarantee a few years of remaining play regardless of "
+        "the draw.")
+
+
 def _ingame_options(s, session):
     """The 'options' command, typed mid-game. Returns the session path to use
     from here on (unchanged, unless 'move this save' was used).
@@ -1339,7 +1428,8 @@ def _ingame_options(s, session):
                 mean = s.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
                 std_dev = s.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
                 s.cfg["immortal"] = False
-                s.life_left = max(5, s.rng.gauss(mean, std_dev))
+                s.life_left = max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS,
+                                  s.rng.gauss(mean, std_dev))
                 s.founder_alive = True
                 print("   -- done. Mortality is on from %d AD." % s.year)
             else:
@@ -1945,6 +2035,71 @@ def cmd_search(a):
     return 0
 
 
+# FOUR NUMBERS `cmd_why` PRINTS TO DESCRIBE MECHANICS IT DOES NOT ITSELF RUN -
+# every one of these is a duplicate of a value computed for real elsewhere in
+# the engine, kept here only so a player can see the consequence of a choice
+# before making it. Declaring them does not remove the duplication (the real
+# fix is cli.py reading the engine's own values instead of repeating them),
+# but it does mean a `why` on it can say plainly which duplicate this is and
+# what happens if the two ever disagree.
+WHY_FAILURE_LOSS_FRACTION = declare(
+    "WHY_FAILURE_LOSS_FRACTION", 0.4, kind="temporary_heuristic",
+    unit="fraction of cost and hours lost on a failed attempt", source=None,
+    confidence="C",
+    why="What `why` tells a player a failed attempt at a risky node would "
+        "cost them, in money and in hours - duplicating the 0.4 that "
+        "engine/projects.py actually charges when a project fails "
+        "(ph_left set to node['ph']*0.4, and the money loss computed as "
+        "node['_total_cost']*0.4*cost_money_factor() - see that file's own "
+        "'40, NOT 60' comment). Declared here, at the same value, because "
+        "this file does not import projects.py's ProjectsMixin and so has "
+        "no name to import instead; if that 0.4 is ever retuned there this "
+        "line will go stale silently until someone notices the two numbers "
+        "disagree.")
+WHY_BOUNTY_PRICE_MULTIPLE = declare(
+    "WHY_BOUNTY_PRICE_MULTIPLE", 2.5, kind="temporary_heuristic",
+    unit="multiple of build cost", source=None, confidence="C",
+    why="The 'about how much a public bounty would cost' estimate `why` "
+        "prints, duplicating the 2.5x engine/projects.py's post_bounty() "
+        "actually charges (see that function's own comment on a playtester "
+        "who found `why` and `bounty` quoting different figures for the "
+        "same node before this line existed at all). This estimate omits "
+        "civ_cost_factor() and material_cost_factor(), which the real "
+        "charge applies and this preview does not, so it is already an "
+        "approximation even before considering the two multipliers might "
+        "drift apart.")
+WHY_OPPOSITION_COST_PCT = declare(
+    "WHY_OPPOSITION_COST_PCT", 25, kind="temporary_heuristic",
+    unit="percent added per unit of state opposition (-gov)", source=None,
+    confidence="C",
+    why="The 'costs X% more' a `why` screen quotes for an opposed node - 100 "
+        "times engine/economy.py's own declared OPPOSITION_COST_PER_UNIT "
+        "(0.25), which opposition_factor() actually applies to project cost. "
+        "Declared separately, at the matching value, because this file has "
+        "no live Sim to read that constant off of in cmd_why (no Sim object "
+        "is constructed here at all - this command works from tree data "
+        "alone) and gov, the node's raw -3..+3 trait, is not the same "
+        "quantity opposition_factor() multiplies by (state_interest(), a "
+        "continuous function of gov and other factors) - so this is already "
+        "an approximation of what an opposed build will actually cost, not "
+        "an exact preview of it.")
+WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
+    "WHY_OPPOSITION_SUSPICION_PER_UNIT", 3, kind="temporary_heuristic",
+    unit="suspicion points per unit of state opposition (-gov)", source=None,
+    confidence="D",
+    why="The '+X extra suspicion' a `why` screen quotes for an opposed node. "
+        "FLAGGED: engine/projects.py's own post_bounty() comment says "
+        "publicity 'used to also add to a suspicion scalar that nothing "
+        "ever read' before scandal/eminence replaced it - which suggests "
+        "the mechanic this line describes may no longer exist in the engine "
+        "at all, and this could be describing a consequence that does not "
+        "happen. Left at its source value rather than silently removed or "
+        "changed (see FOUNDER_LIFETIME_HOURS's own comment on why a literal "
+        "migration must not also fix what it says); worth an actual read of "
+        "whether 'sus' still does anything before the next hand touches "
+        "this line.")
+
+
 def cmd_why(a):
     """Explain one node: what it needs, what needs it, and what it costs."""
     tree, prices, nodes, wages, goods = load()
@@ -1958,7 +2113,7 @@ def cmd_why(a):
     print(node_record["note"])
     print()
     print("Recipe          : knowledge/%s" % node_record["kb"])
-    print("Your hours      : %s   (%.1f%% of a 72,000-hour life)" % (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / 72000))
+    print("Your hours      : %s   (%.1f%% of a 72,000-hour life)" % (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / FOUNDER_LIFETIME_HOURS))
     print("Hired labour    : %s" % (", ".join("%s %s h" % (trade, f"{hours:,}") for trade, hours in node_record["lab"].items()) or "none"))
     print("Materials       : %s" % (", ".join("%s %s" % (material, f"{quantity:,}") for material, quantity in node_record["mat"].items()) or "none"))
     print("Cost            : %s den labour + %s materials + %s capital = %s TOTAL"
@@ -1975,20 +2130,22 @@ def cmd_why(a):
     if node_record["risk"]:
         print("Failure risk    : %.0f%% per attempt - a failure costs %s (40%%) "
               "and %s of your hours to do again"
-              % (100 * node_record["risk"], f"{node_record['_total_cost'] * 0.4:,.0f}",
-                 f"{node_record['ph'] * 0.4:,.0f}"))
+              % (100 * node_record["risk"],
+                 f"{node_record['_total_cost'] * WHY_FAILURE_LOSS_FRACTION:,.0f}",
+                 f"{node_record['ph'] * WHY_FAILURE_LOSS_FRACTION:,.0f}"))
     else:
         print("Failure risk    : none")
     print("Staff needed    : %d trained scholars, %d trained artisans" % (node_record["sch"], node_record["art"]))
     print("Suspicion       : %+d       State interest: %+d%s" % (node_record.get("sus", 0), node_record.get("gov", 0),
           ("  <- OPPOSED. Costs %d%% more, +%d extra suspicion, needs %s"
-           % (25 * -node_record.get("gov", 0), 3 * -node_record.get("gov", 0),
+           % (WHY_OPPOSITION_COST_PCT * -node_record.get("gov", 0),
+              WHY_OPPOSITION_SUSPICION_PER_UNIT * -node_record.get("gov", 0),
               "senatorial patronage" if node_record.get("gov", 0) <= -2 else "a patron"))
           if node_record.get("gov", 0) < 0 else ""))
     eligible = (node_record["cat"] in ("glass_optics", "metallurgy", "precision",
                 "power", "agriculture", "information", "instruments"))
     print("Bounty          : %s" % ("YES, can be bought as a public prize for about %s den"
-                                    % f"{node_record['_total_cost'] * 2.5:,.0f}" if eligible else
+                                    % f"{node_record['_total_cost'] * WHY_BOUNTY_PRICE_MULTIPLE:,.0f}" if eligible else
                                     "no, a local craftsman could not recognise success"))
     print()
     print("DIRECT PREREQUISITES")
@@ -2018,6 +2175,31 @@ def cmd_why(a):
         print("   INCLUDING THE GOAL. This node is on the critical path.")
 
 
+# THE MORTALITY SWEEP'S OWN STANDARD DEVIATION, NOT DEFAULTS'. cmd_sweep's
+# "mortality" axis sweeps founder_life_mean and needs a spread to draw around
+# each mean point, and this value does NOT match
+# DEFAULTS["founder_life_sd"] (data.py: 8.0) that every ordinary game and
+# every other place in this engine that turns mortality on actually uses
+# (see core.py's own founder-lifespan draw and this file's own
+# _ingame_options, which both read DEFAULTS rather than hardcoding a
+# figure). A sweep meant to show how the OUTCOME moves as the mean lifespan
+# moves is, right now, doing so under half the lifespan variance a real game
+# would have - narrower variance means a narrower spread of outcomes at
+# every point on this sweep than an actual playthrough would show. FLAGGED,
+# not changed: fixing which number is right is a behaviour change outside
+# this migration's scope (see FOUNDER_LIFETIME_HOURS's own comment on why a
+# literal's value is preserved exactly, discrepancy and all).
+SWEEP_MORTALITY_FOUNDER_LIFE_SD = declare(
+    "SWEEP_MORTALITY_FOUNDER_LIFE_SD", 4.0, kind="temporary_heuristic",
+    unit="years (std dev of founder lifespan)", source=None, confidence="D",
+    why="Standard deviation used only inside cmd_sweep's 'mortality' axis, "
+        "so each swept mean lifespan has SOME spread to show a distribution "
+        "of outcomes rather than one deterministic year per point. Picked "
+        "for this sweep specifically, apparently without reference to "
+        "DEFAULTS['founder_life_sd'] (8.0) that governs every other mortal "
+        "run in the game - see the discrepancy noted above.")
+
+
 def cmd_sweep(a):
     """Sweep a starting condition and show how the outcome and the FAILURE MODE move.
 
@@ -2045,7 +2227,8 @@ def cmd_sweep(a):
     for value in values:
         cfg, life = {}, None
         if key == "founder_life_mean":
-            cfg = {"immortal": False, "founder_life_mean": value, "founder_life_sd": 4.0}
+            cfg = {"immortal": False, "founder_life_mean": value,
+                   "founder_life_sd": SWEEP_MORTALITY_FOUNDER_LIFE_SD}
         elif key == "founder_life":
             life = value
         else:
@@ -2132,6 +2315,24 @@ def cmd_goals(a):
     return 0
 
 
+# THE SAME DEFAULT engine/society.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
+# (0.5) - kept as its own name because this file has no Sim/SocietyMixin
+# instance to read that constant from (cmd_civs works from the raw civ JSON
+# files directly, before any game has started), same shape as
+# INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS just above.
+CIVS_EMINENCE_DANGER_DEFAULT = declare(
+    "CIVS_EMINENCE_DANGER_DEFAULT", 0.5, kind="temporary_heuristic",
+    unit="dimensionless weight", source=None, confidence="D",
+    why="What this screen shows for 'eminence is dangerous' when a "
+        "civilisation's own JSON does not set w_eminence_danger - a mid-scale "
+        "default rather than a claim about any specific civilisation. "
+        "Matches engine/society.py's EMINENCE_DANGER_WEIGHT_DEFAULT, which "
+        "is the value actually used if a live game hits the same missing "
+        "field; declared separately here so the two can be told apart if "
+        "they are ever retuned independently, and so a reader of this file "
+        "alone can see this number is not invented for display.")
+
+
 def cmd_civs(a):
     """List the civilizations you can play, and what makes each one different.
 
@@ -2166,7 +2367,7 @@ def cmd_civs(a):
               % (value["w_magic_fear"], value["w_religious_rigidity"], value["w_labour_saving"],
                  value["bribability"], value["adaptation_rate"]))
         print("   eminence is dangerous %.2f  (how much prominence ITSELF endangers you)"
-              % value.get("w_eminence_danger", 0.5))
+              % value.get("w_eminence_danger", CIVS_EMINENCE_DANGER_DEFAULT))
         mults = civ_data.get("cost_multipliers") or {}
         if mults:
             easy = sorted((cost_pair for cost_pair in mults.items() if cost_pair[1] < 1.0), key=lambda x: x[1])[:4]
