@@ -217,8 +217,8 @@ def load_strategy(name, nodes, goal):
     if not os.path.exists(path) and os.path.exists(str(name)):
         path = str(name)
     if os.path.exists(path):
-        s = json.load(open(path))
-        order = [k for k in s["order"] if k in nodes]
+        strategy_data = json.load(open(path))
+        order = [node_id for node_id in strategy_data["order"] if node_id in nodes]
         # Everything the strategy did not name gets a sensible default ordering:
         # things the goal needs first, then cheapest first. Falling
         # back to alphabetical order made the simulation spend a century acquiring
@@ -229,7 +229,7 @@ def load_strategy(name, nodes, goal):
         # node is worth would have gone on ranking against the old one for ever,
         # silently and with nothing failing.
         need = closure(nodes, goal)
-        rest = [k for k in nodes if k not in order]
+        rest = [node_id for node_id in nodes if node_id not in order]
         rest.sort(key=lambda k: (k not in need, nodes[k]["_total_cost"], k))
         # STABILISE THE WHOLE THING TOGETHER, not the two halves separately.
         # Sorting `rest` on its own left 681 places where a node preceded its
@@ -239,12 +239,12 @@ def load_strategy(name, nodes, goal):
         # which it needs). One pass over the concatenation keeps the strategy's
         # preference wherever it is legal and repairs it where it is not.
         full = topo_stable(nodes, order + rest)
-        return s.get("label", name), full, set(s.get("bounties", []))
+        return strategy_data.get("label", name), full, set(strategy_data.get("bounties", []))
     if name == "topo":
         need = closure(nodes, goal)
         order = topo_order(nodes, need)
         return ("bare topological order to the goal",
-                order + [k for k in topo_order(nodes) if k not in need], set())
+                order + [node_id for node_id in topo_order(nodes) if node_id not in need], set())
     if name == "cheapest":
         order = sorted(nodes, key=lambda k: nodes[k]["_total_cost"])
         return "cheapest first", topo_stable(nodes, order), set()
@@ -282,43 +282,43 @@ def topo_stable(nodes, preference, already=()):
     # that work going nowhere: mat_manganese was correctly required, and came
     # out of here at index 187 behind the mat_bulk_steel at index 65 that
     # cannot be built without it.
-    hp = {k: hard_pre(nodes, k) for k in pref}
+    hard_pre_by_node = {node_id: hard_pre(nodes, node_id) for node_id in pref}
     # Index the dependants so each placement only revisits what it could free,
     # rather than rescanning the whole list: the old loop was O(n^2) with a
     # list.remove() inside it, over 2,700 nodes.
     waiting = {}
     ready = []
-    for k in pref:
-        missing = sum(1 for p in hp[k] if p not in placed)
-        waiting[k] = missing
+    for node_id in pref:
+        missing = sum(1 for prereq_id in hard_pre_by_node[node_id] if prereq_id not in placed)
+        waiting[node_id] = missing
         if not missing:
-            ready.append(k)
+            ready.append(node_id)
     dependants = {}
     inset = set(pref)
-    for k in pref:
-        for p in hp[k]:
-            if p in inset:
-                dependants.setdefault(p, []).append(k)
-    rank = {k: i for i, k in enumerate(pref)}
+    for node_id in pref:
+        for prereq_id in hard_pre_by_node[node_id]:
+            if prereq_id in inset:
+                dependants.setdefault(prereq_id, []).append(node_id)
+    rank = {node_id: i for i, node_id in enumerate(pref)}
     import heapq
-    heap = [(rank[k], k) for k in ready]
+    heap = [(rank[node_id], node_id) for node_id in ready]
     heapq.heapify(heap)
     seen = set()
     while heap:
-        _r, k = heapq.heappop(heap)
-        if k in seen:
+        _rank, node_id = heapq.heappop(heap)
+        if node_id in seen:
             continue
-        seen.add(k)
-        out.append(k)
-        placed.add(k)
-        for m in dependants.get(k, ()):
-            waiting[m] -= 1
-            if waiting[m] == 0 and m not in seen:
-                heapq.heappush(heap, (rank[m], m))
+        seen.add(node_id)
+        out.append(node_id)
+        placed.add(node_id)
+        for dependent_id in dependants.get(node_id, ()):
+            waiting[dependent_id] -= 1
+            if waiting[dependent_id] == 0 and dependent_id not in seen:
+                heapq.heappush(heap, (rank[dependent_id], dependent_id))
     # Anything genuinely unreachable (a prerequisite outside both lists) keeps
     # its preferred order rather than being dropped.
     if len(out) < len(pref):
-        out.extend(k for k in pref if k not in seen)
+        out.extend(node_id for node_id in pref if node_id not in seen)
     return out
 
 
@@ -329,22 +329,22 @@ def topo_stable(nodes, preference, already=()):
 def cmd_validate(a):
     tree, prices, nodes, wages, goods = load()
     errs, warns = [], []
-    for k, n in nodes.items():
-        for p in n["pre"]:
-            if p not in nodes: errs.append("%s: unknown prereq %s" % (k, p))
-        for m in n["mat"]:
-            if m not in goods: errs.append("%s: unpriced material %s" % (k, m))
-        for t in n["lab"]:
-            if t not in wages: errs.append("%s: unknown trade %s" % (k, t))
-        if not 0 <= n["risk"] <= 1: errs.append("%s: risk out of range" % k)
-        if n["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (k, n["conf"]))
+    for node_id, node_record in nodes.items():
+        for prereq_id in node_record["pre"]:
+            if prereq_id not in nodes: errs.append("%s: unknown prereq %s" % (node_id, prereq_id))
+        for material_id in node_record["mat"]:
+            if material_id not in goods: errs.append("%s: unpriced material %s" % (node_id, material_id))
+        for trade_id in node_record["lab"]:
+            if trade_id not in wages: errs.append("%s: unknown trade %s" % (node_id, trade_id))
+        if not 0 <= node_record["risk"] <= 1: errs.append("%s: risk out of range" % node_id)
+        if node_record["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (node_id, node_record["conf"]))
         # A `why` on seven hand-written nodes killed the process with KeyError
         # 'sus' because I added them without the v1 scalars the explain path
         # still reads. Catch a missing field here, where it is a warning, rather
         # than in a player's session, where it is the end of their game.
-        for f in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
-            if f not in n:
-                errs.append("%s: missing required field '%s'" % (k, f))
+        for field_name in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
+            if field_name not in node_record:
+                errs.append("%s: missing required field '%s'" % (node_id, field_name))
     try:
         topo_order(nodes)
     except RuntimeError as e:
@@ -361,32 +361,32 @@ def cmd_validate(a):
         errs.append("meta.goal_node %r does not exist" % default_goal)
     catalog = goal_catalog(tree)
     goal_rows = []
-    for g in catalog:
-        node = g.get("node")
+    for goal in catalog:
+        node = goal.get("node")
         if node not in nodes:
             errs.append("meta.goals: %r names a node that does not exist" % node)
             continue
         need = closure(nodes, node)
         yrs, chain = critical_path(nodes, node)
-        goal_rows.append((g, node, need, yrs, chain))
+        goal_rows.append((goal, node, need, yrs, chain))
 
     print("nodes            : %d" % len(nodes))
-    print("edges            : %d" % sum(len(n["pre"]) for n in nodes.values()))
-    print("total capital     : %s den across all %d nodes" % (f"{sum(n['_total_cost'] for n in nodes.values()):,.0f}", len(nodes)))
-    print("total founder hrs : %s" % f"{sum(n['ph'] for n in nodes.values()):,}")
+    print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
+    print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
+    print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))
     print("-" * 90)
-    for g, node, need, yrs, chain in goal_rows:
+    for goal, node, need, yrs, chain in goal_rows:
         print("%-34s %9d %10.1f  %s%s"
-              % (g.get("name", node)[:34], len(need), yrs, node,
+              % (goal.get("name", node)[:34], len(need), yrs, node,
                  "  <- DEFAULT" if node == default_goal else ""))
     print()
     if errs:
-        print("ERRORS:"); [print("  " + e) for e in errs]
+        print("ERRORS:"); [print("  " + message) for message in errs]
     if warns:
-        print("WARNINGS:"); [print("  " + w) for w in warns]
+        print("WARNINGS:"); [print("  " + message) for message in warns]
 
     # REACHABILITY, PER CIVILISATION - opt in with --deep, because this runs
     # a real dice-free Sim (see path_search.deterministic_sim) once per
@@ -407,20 +407,20 @@ def cmd_validate(a):
             sys.path.insert(0, _simdir)
         import planner as _planner
         from path_search import deterministic_sim
-        civ_ids = sorted(x[:-5] for x in os.listdir(CIVDIR)
-                         if x.endswith(".json") and not x.startswith("_"))
-        for g, node, need, yrs, chain in goal_rows:
+        civ_ids = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
+                         if filename.endswith(".json") and not filename.startswith("_"))
+        for goal, node, need, yrs, chain in goal_rows:
             probe_horizon = min(350, max(50, int(math.ceil(yrs * 2.5))))
             cells = []
             for civ in civ_ids:
-                s0 = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
-                order, c, extras, staffing = _planner.backward_plan(
-                    nodes, node, s0, side_branches=12, side_branch_every=8)
+                probe_sim = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
+                order, cost, extras, staffing = _planner.backward_plan(
+                    nodes, node, probe_sim, side_branches=12, side_branch_every=8)
                 full = _planner._repaired(nodes, node, order)
-                s = deterministic_sim(nodes, full, node, civ, probe_horizon)
-                cells.append("%s: %s" % (civ, ("%d AD" % s.goal_year) if s.goal_year
+                probe_result = deterministic_sim(nodes, full, node, civ, probe_horizon)
+                cells.append("%s: %s" % (civ, ("%d AD" % probe_result.goal_year) if probe_result.goal_year
                                          else "not within %dy" % probe_horizon))
-            print("  %-30s %s" % (g.get("name", node)[:30], "  |  ".join(cells)))
+            print("  %-30s %s" % (goal.get("name", node)[:30], "  |  ".join(cells)))
 
     if not errs:
         print()
@@ -438,18 +438,18 @@ def cmd_path(a):
     print("%-4s %-39s %8s %9s %6s %5s %5s" %
           ("#", "node", "yourhrs", "cost(den)", "years", "risk", "conf"))
     print("-" * 88)
-    for i, k in enumerate(order, 1):
-        n = nodes[k]
-        cum_cost += n["_total_cost"]; cum_ph += n["ph"]
+    for i, node_id in enumerate(order, 1):
+        node_record = nodes[node_id]
+        cum_cost += node_record["_total_cost"]; cum_ph += node_record["ph"]
         print("%-4d %-39s %8d %9s %6.1f %5.2f %5s" %
-              (i, k[:39], n["ph"], f"{n['_total_cost']:,.0f}", n["yrs"], n["risk"], n["conf"]))
+              (i, node_id[:39], node_record["ph"], f"{node_record['_total_cost']:,.0f}", node_record["yrs"], node_record["risk"], node_record["conf"]))
     print("-" * 88)
     print("TOTAL  %d nodes   %s founder-hours   %s denarii" %
           (len(order), f"{cum_ph:,.0f}", f"{cum_cost:,.0f}"))
     yrs, chain = critical_path(nodes, goal)
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
-    for k in chain:
-        print("   -> %s  (%.1f yr floor, %d your-hrs)" % (k, nodes[k]["yrs"], nodes[k]["ph"]))
+    for node_id in chain:
+        print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
     print("\nFounder-hours available in one lifetime at 2000/yr for 30 yrs: 60,000")
     print("Founder-hours demanded by this path                          : %s" % f"{cum_ph:,.0f}")
     print("=> %s" % ("feasible alone in principle, but not with the calendar floors"
@@ -462,16 +462,16 @@ def cmd_costs(a):
     rows = sorted(nodes.values(), key=lambda n: -n["_total_cost"])[:a.top]
     print("%-34s %10s %10s %10s %8s %6s" % ("node", "labour", "materials", "capital", "TOTAL", "rev/yr"))
     print("-" * 84)
-    for n in rows:
+    for node_record in rows:
         print("%-34s %10s %10s %10s %8s %6s" % (
-            n["id"][:34], f"{n['_labour_cost']:,.0f}", f"{n['_material_cost']:,.0f}",
-            f"{n['cap']:,.0f}", f"{n['_total_cost']:,.0f}", f"{n['rev']:,}"))
+            node_record["id"][:34], f"{node_record['_labour_cost']:,.0f}", f"{node_record['_material_cost']:,.0f}",
+            f"{node_record['cap']:,.0f}", f"{node_record['_total_cost']:,.0f}", f"{node_record['rev']:,}"))
     print()
-    prof = sorted([n for n in nodes.values() if n["rev"]], key=lambda n: -(n["rev"] / max(n["_total_cost"], 1)))
+    prof = sorted([node_record for node_record in nodes.values() if node_record["rev"]], key=lambda n: -(n["rev"] / max(n["_total_cost"], 1)))
     print("Best return on capital (revenue per denarius of setup cost):")
-    for n in prof[:12]:
+    for node_record in prof[:12]:
         print("  %-32s %6.2f  (rev %s / cost %s)" %
-              (n["id"][:32], n["rev"] / max(n["_total_cost"], 1), f"{n['rev']:,}", f"{n['_total_cost']:,.0f}"))
+              (node_record["id"][:32], node_record["rev"] / max(node_record["_total_cost"], 1), f"{node_record['rev']:,}", f"{node_record['_total_cost']:,.0f}"))
 
 
 _Z95 = 1.959963984540054  # two-sided 95% normal quantile, to stdlib float precision
@@ -494,14 +494,14 @@ def _wilson_interval(successes, n, z=_Z95):
     """
     if n <= 0:
         return (0.0, 1.0)
-    p = successes / n
-    z2 = z * z
-    denom = 1.0 + z2 / n
-    centre = p + z2 / (2 * n)
-    margin = z * math.sqrt((p * (1.0 - p) + z2 / (4 * n)) / n)
-    lo = (centre - margin) / denom
-    hi = (centre + margin) / denom
-    return (max(0.0, lo), min(1.0, hi))
+    rate = successes / n
+    z_squared = z * z
+    denom = 1.0 + z_squared / n
+    centre = rate + z_squared / (2 * n)
+    margin = z * math.sqrt((rate * (1.0 - rate) + z_squared / (4 * n)) / n)
+    lower = (centre - margin) / denom
+    upper = (centre + margin) / denom
+    return (max(0.0, lower), min(1.0, upper))
 
 
 def _fmt_rate_ci(successes, n):
@@ -509,10 +509,10 @@ def _fmt_rate_ci(successes, n):
     anywhere in this file's output. A bare percentage from a few dozen
     Monte Carlo trials invites a reader to treat it as a measurement with no
     error bar, which is exactly the failure this function exists to close."""
-    lo, hi = _wilson_interval(successes, n)
+    lower, upper = _wilson_interval(successes, n)
     rate = 100.0 * successes / n if n else 0.0
     return ("%d/%d (%.1f%%)  95%% CI [%.1f%%, %.1f%%] (Wilson score)"
-            % (successes, n, rate, 100.0 * lo, 100.0 * hi))
+            % (successes, n, rate, 100.0 * lower, 100.0 * upper))
 
 
 # How few successes is too few to trust a median/quartile year-to-goal? There
@@ -525,11 +525,11 @@ _MIN_SUCCESSES_FOR_QUANTILES = 10
 
 
 def _summarise(results, label):
-    n = len(results)
-    ok = [r for r in results if r.goal_year]
-    k = len(ok)
+    run_count = len(results)
+    finished = [run for run in results if run.goal_year]
+    success_count = len(finished)
     print("\n=== %s ===" % label)
-    print("runs                : %d" % n)
+    print("runs                : %d" % run_count)
     # WHAT THIS COMMAND ACTUALLY MEASURES, SAID ONCE, UP FRONT, BEFORE ANY
     # NUMBER. `--mc N` re-rolls ONE FIXED strategy order against N different
     # random event sequences and reports how that order coped; it has never
@@ -543,7 +543,7 @@ def _summarise(results, label):
           "choose or improve the order. 'plan' (critical-path method) and "
           "'search' (dice-free, relaxed against the binding constraint) are "
           "the commands that do that."
-          % (n, "" if n == 1 else "s"))
+          % (run_count, "" if run_count == 1 else "s"))
     # AGGREGATE PROGRESS, LEADING - not the success rate. A batch this small
     # against a multi-century, near-certain-to-fail-or-succeed goal can be a
     # ~1% event either way (this project's own default invocation has
@@ -551,25 +551,25 @@ def _summarise(results, label):
     # reading it as "the" result instead of one thing among several this
     # batch can actually support saying. How far every run got - not only
     # the ones that finished - is informative at any N, including this one.
-    tech = sorted(len(r.done) for r in results)
-    q = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
+    tech = sorted(len(run.done) for run in results)
+    quantile_of = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
     print()
     print("technologies completed (whole tree, across all %d run%s):"
-          % (n, "" if n == 1 else "s"))
+          % (run_count, "" if run_count == 1 else "s"))
     print("   worst %d | p25 %d | median %d | p75 %d | best %d"
-          % (tech[0], q(tech, .25), q(tech, .5), q(tech, .75), tech[-1]))
+          % (tech[0], quantile_of(tech, .25), quantile_of(tech, .5), quantile_of(tech, .75), tech[-1]))
     need = closure(results[0].nodes, results[0].goal)
-    tot = len(need)
-    prog = sorted(len(need & r.done) for r in results)
+    needed_count = len(need)
+    progress = sorted(len(need & run.done) for run in results)
     print("goal's own closure completed (%d node%s needed):"
-          % (tot, "" if tot == 1 else "s"))
+          % (needed_count, "" if needed_count == 1 else "s"))
     print("   worst %d/%d | p25 %d | median %d | p75 %d | best %d/%d"
-          % (prog[0], tot, q(prog, .25), q(prog, .5), q(prog, .75),
-             prog[-1], tot))
+          % (progress[0], needed_count, quantile_of(progress, .25), quantile_of(progress, .5), quantile_of(progress, .75),
+             progress[-1], needed_count))
     causes = defaultdict(int)
-    for r in results:
-        if r.dead_reason: causes[r.dead_reason.split(":")[0]] += 1
-        elif not r.goal_year: causes["ran out of horizon"] += 1
+    for run in results:
+        if run.dead_reason: causes[run.dead_reason.split(":")[0]] += 1
+        elif not run.goal_year: causes["ran out of horizon"] += 1
     if causes:
         print("failure modes       :")
         for cause, value in sorted(causes.items(), key=lambda x: -x[1]):
@@ -580,15 +580,15 @@ def _summarise(results, label):
     # itself often is - see the rate section below for that distinction said
     # out loud where a reader is looking at both numbers side by side.
     stuck = defaultdict(int)
-    for r in results:
-        if not r.goal_year:
-            rneed = closure(r.nodes, r.goal)
-            miss = [kk for kk in topo_order(r.nodes, rneed) if kk not in r.done]
-            if miss: stuck[miss[0]] += 1
+    for run in results:
+        if not run.goal_year:
+            run_need = closure(run.nodes, run.goal)
+            missing_nodes = [node_id for node_id in topo_order(run.nodes, run_need) if node_id not in run.done]
+            if missing_nodes: stuck[missing_nodes[0]] += 1
     if stuck:
         print("first blocked node  :")
-        for kk, value in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
-            print("   %-58s %3d" % (kk, value))
+        for node_id, value in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
+            print("   %-58s %3d" % (node_id, value))
     # THE SUCCESS RATE, BELOW THE FOLD, NOT AS THE HEADLINE - see the "what
     # this measures" line above for why, and this project's own diagnosis
     # (planner.py's docstring) for the number that made the point concrete:
@@ -599,20 +599,20 @@ def _summarise(results, label):
     # explain either fact. The progress tables above already say how far
     # those same trials got; this says how many of them finished.
     print()
-    if k == 0:
+    if success_count == 0:
         # DO NOT SILENTLY PRINT A TABLE OF ZEROS. Zero successes out of N is
         # a statement about THIS ORDER's luck under THIS horizon, not a
         # verdict on the goal - recommended.json scores exactly this at a
         # 500-700 year horizon while a computed order has reached 100%, same
         # tree, same civilisation. Re-running this same order with a
         # different --seed will not change that; a different ORDER might.
-        print("*** ZERO of %d trials reached the goal under this order. ***" % n)
+        print("*** ZERO of %d trials reached the goal under this order. ***" % run_count)
         print("    Before reading anything below as a verdict on the GOAL: this is a")
         print("    known losing order at this horizon, not evidence the goal is out of")
         print("    reach. 'plan' (critical-path method) or 'search' (dice-free, relaxed")
         print("    against the binding constraint) compute a different order instead of")
         print("    re-testing this one against more luck.")
-    print("reached the goal    : %s" % _fmt_rate_ci(k, n))
+    print("reached the goal    : %s" % _fmt_rate_ci(success_count, run_count))
     # --no-events IS NOT A NOISE-FREE BASELINE. See the --no-events help text
     # for the full explanation; this is the one-line reminder at the point
     # where a reader is actually looking at numbers from such a run.
@@ -625,35 +625,35 @@ def _summarise(results, label):
         print("                      batch still has real seed-to-seed variance - it is")
         print("                      reproducible for one seed, not noise-free. See")
         print("                      --deterministic for a run where that is also true.")
-    if "[deterministic]" in label and n > 1:
+    if "[deterministic]" in label and run_count > 1:
         print("                      NOTE: '--deterministic' replaces the rng with one")
         print("                      that always rolls the side that never fails, so")
         print("                      every one of these %d trials is identical - there"
-              % n)
+              % run_count)
         print("                      is no luck left for more trials to re-roll. This")
         print("                      is the order's single dice-free outcome, repeated.")
-    if k == 0:
+    if success_count == 0:
         pass  # already said above, plainly, before the rate line itself
-    elif k < _MIN_SUCCESSES_FOR_QUANTILES:
-        ys = sorted(r.goal_year for r in ok)
+    elif success_count < _MIN_SUCCESSES_FOR_QUANTILES:
+        years_reached = sorted(run.goal_year for run in finished)
         print("year reached        : only %d success%s in %d trials - too few for a"
-              % (k, "" if k == 1 else "es", n))
+              % (success_count, "" if success_count == 1 else "es", run_count))
         print("                      median/quartiles; that would just relabel a")
         print("                      handful of individual runs as a distribution.")
         print("                      observed year%s: %s"
-              % ("" if k == 1 else "s", ", ".join(str(y) for y in ys)))
+              % ("" if success_count == 1 else "s", ", ".join(str(year) for year in years_reached)))
         print("                      trust the CI on the rate above instead.")
     else:
-        ys = sorted(r.goal_year for r in ok)
-        qy = lambda p: ys[min(len(ys) - 1, int(p * len(ys)))]
+        years_reached = sorted(run.goal_year for run in finished)
+        year_at_percentile = lambda p: years_reached[min(len(years_reached) - 1, int(p * len(years_reached)))]
         print("year reached        : best %d | p25 %d | median %d | p75 %d | worst %d"
-              % (ys[0], qy(.25), qy(.5), qy(.75), ys[-1]))
+              % (years_reached[0], year_at_percentile(.25), year_at_percentile(.5), year_at_percentile(.75), years_reached[-1]))
         start = results[0].cfg["start_year"]
-        print("elapsed from %d AD  : median %d years" % (start, qy(.5) - start))
-    sh = collections.Counter()
-    for r in results:
-        sh.update(r.shortages)
-    if sh:
+        print("elapsed from %d AD  : median %d years" % (start, year_at_percentile(.5) - start))
+    shortage_counter = collections.Counter()
+    for run in results:
+        shortage_counter.update(run.shortages)
+    if shortage_counter:
         # RELABELLED, NOT RECOMPUTED. This used to print the same summed
         # Counter under the label "(median run)" - it is a SUM across every
         # run, not a median of anything. A true per-material median across
@@ -662,16 +662,16 @@ def _summarise(results, label):
         # key, which is a real change to what gets computed, not just what
         # gets printed - out of scope here. Relabelling the existing number
         # honestly is the fix that belongs in a "what gets printed" pass.
-        print("years spent short of a raw material (SUM across %d runs, not a median):" % n)
-        for mat, value in sh.most_common(5):
-            print("   %-12s %d run-years" % (mat, value))
-    fh = sorted(r.forest_ha for r in results)
-    print("coppice woodland owned: median %.0f hectares" % fh[len(fh) // 2])
-    rep = sorted(r.reputation for r in results)
-    print("final reputation    : median %.0f/100" % rep[len(rep) // 2])
-    b = [r.bounties_paid for r in results]
-    if any(b):
-        print("bounties posted     : mean %.1f per run" % (sum(b) / len(b)))
+        print("years spent short of a raw material (SUM across %d runs, not a median):" % run_count)
+        for material, value in shortage_counter.most_common(5):
+            print("   %-12s %d run-years" % (material, value))
+    forest_hectares = sorted(run.forest_ha for run in results)
+    print("coppice woodland owned: median %.0f hectares" % forest_hectares[len(forest_hectares) // 2])
+    reputations = sorted(run.reputation for run in results)
+    print("final reputation    : median %.0f/100" % reputations[len(reputations) // 2])
+    bounty_payments = [run.bounties_paid for run in results]
+    if any(bounty_payments):
+        print("bounties posted     : mean %.1f per run" % (sum(bounty_payments) / len(bounty_payments)))
 
 
 def cmd_run(a):
@@ -682,12 +682,12 @@ def cmd_run(a):
     res = []
     for i in range(a.mc):
         rng = DetRNG(a.seed + i) if deterministic else random.Random(a.seed + i)
-        s = Sim(nodes, order, rng, events=not a.no_events,
+        run_result = Sim(nodes, order, rng, events=not a.no_events,
                 cfg={"immortal": not a.mortal,
                      "start_capital": STARTING_KITS[a.kit]["den"]},
                 civ=load_civ(a.civ),
                 bounty_set=(set() if a.no_bounties else bounties)).run(goal, a.horizon)
-        res.append(s)
+        res.append(run_result)
     _summarise(res, "%s%s%s" % (label,
                                 "  [events disabled]" if a.no_events else "",
                                 "  [deterministic]" if deterministic else ""))
@@ -704,7 +704,7 @@ def cmd_run(a):
     # are not choices anybody made, and ties within a year are broken by id so
     # the file is reproducible.
     if getattr(a, "save_winner", None):
-        won = [s for s in res if s.goal_year]
+        won = [run_result for run_result in res if run_result.goal_year]
         if not won:
             sys.stderr.write("no trial reached the goal, so there is no winning "
                              "order to save\n")
@@ -719,8 +719,8 @@ def cmd_run(a):
             # The 149 nodes of the goal's closure, in the order a run that won
             # actually completed them, is.
             _need = closure(nodes, goal)
-            seq = sorted((k for k in best.done
-                          if k in _need and k not in best.granted),
+            seq = sorted((node_id for node_id in best.done
+                          if node_id in _need and node_id not in best.granted),
                          key=lambda k: (best.done_year.get(k, 0), k))
             out = {"label": "CAPTURED: the order a run that reached the goal in "
                             "%d AD actually finished its work in" % best.goal_year,
@@ -740,10 +740,10 @@ def cmd_run(a):
             sys.stderr.write("saved the winning order (%d nodes, goal in %d AD) "
                              "to %s\n" % (len(seq), best.goal_year, a.save_winner))
     if a.trace:
-        s = res[0]
+        run_result = res[0]
         print("\n--- trace of run 0 ---")
-        for y, m in s.log:
-            print("  %4d  %s" % (y, m))
+        for year, message in run_result.log:
+            print("  %4d  %s" % (year, message))
 
 
 def cmd_compare(a):
@@ -854,9 +854,9 @@ def _resolve_horizon(a, session):
     """
     if session and not _horizon_explicit():
         meta = settings.load_session_meta(session)
-        h = meta.get("horizon_years")
-        if isinstance(h, (int, float)) and h > 0:
-            return int(h)
+        horizon_years = meta.get("horizon_years")
+        if isinstance(horizon_years, (int, float)) and horizon_years > 0:
+            return int(horizon_years)
     return a.horizon
 
 

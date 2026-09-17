@@ -40,7 +40,7 @@ class LabourMixin:
         return float(whole)
 
     def director_pool(self):
-        h = 0.0
+        total_hours = 0.0
         if self.founder_alive:
             own = self.cfg["founder_hours_per_year"]
             # In bondage most of your hours are owed to somebody else. Not all
@@ -48,9 +48,9 @@ class LabourMixin:
             # where the work gets done. This is the cost, and it is temporary.
             if self.household.bondage_years_left > 0:
                 own *= 0.25
-            h += own
-        h += self.household.directors_extra * self.cfg["director_hours_per_year"]
-        return h
+            total_hours += own
+        total_hours += self.household.directors_extra * self.cfg["director_hours_per_year"]
+        return total_hours
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -254,15 +254,15 @@ class LabourMixin:
         rec = rec.get(trade) if rec else None
         if not rec:
             return 0.0
-        hours, yr = rec
-        age = max(0.0, self.year - yr)
+        hours, year = rec
+        age = max(0.0, self.year - year)
         return hours * (0.6 ** age)
 
     def _add_labour_pressure(self, trade, hours):
-        d = getattr(self.household, "_labour_pressure", None)
-        if d is None:
-            d = self.household._labour_pressure = {}
-        d[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
+        pressures = getattr(self.household, "_labour_pressure", None)
+        if pressures is None:
+            pressures = self.household._labour_pressure = {}
+        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
 
     def _labour_price_factor_from(self, pressure, supply):
         """The one curve behind labour_price_factor - split out so a forecast
