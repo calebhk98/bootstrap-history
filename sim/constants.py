@@ -71,6 +71,7 @@ import argparse
 import collections
 import os
 import sys
+import types
 
 # Root the imports at the REPOSITORY, not at sim/, so a module that calls
 # declare() can be reached by its full dotted name (sim.world.agriculture)
@@ -85,7 +86,35 @@ if _REPOSITORY_ROOT not in sys.path:
 
 # name -> metadata. Declaration order is preserved, which makes the report
 # stable across runs and diffable.
-REGISTRY = collections.OrderedDict()
+# ONE REGISTRY, HOWEVER MANY TIMES THIS FILE IS LOADED.
+#
+# This repository has TWO import roots and this file sits in both. The engine
+# is imported rooted at sim/, so it reaches this file as `constants`. The
+# sim/world/ modules and the test runner are rooted at the REPOSITORY, so they
+# reach the same file as `sim.constants`. Running it as a script makes a third,
+# `__main__`. Each of those is a separate module object with its own globals,
+# so a plain `REGISTRY = OrderedDict()` gives each one its own empty dict - the
+# declarations land in one and the report reads another, and --burndown prints
+# a number that is quietly too low.
+#
+# That already happened once, cost a real debugging session, and is written up
+# in sim/tests/test_constants_burndown.py. It was fixed then for the __main__
+# case specifically, which was the only one that existed; the engine's
+# migration to declare() adds the `constants` spelling and would have brought
+# it straight back.
+#
+# Stashing the dict in sys.modules under a name nothing else can claim makes
+# every copy of this module share one object, whatever it is imported as. This
+# is not a compatibility shim of the kind CLAUDE.md 3.5 forbids - it is not
+# about old data, it is about one dict having one home.
+_REGISTRY_HOME_KEY = "_bootstrap_history_constants_registry"
+if _REGISTRY_HOME_KEY in sys.modules:
+    REGISTRY = sys.modules[_REGISTRY_HOME_KEY].REGISTRY
+else:
+    _registry_home = types.ModuleType(_REGISTRY_HOME_KEY)
+    _registry_home.REGISTRY = collections.OrderedDict()
+    sys.modules[_REGISTRY_HOME_KEY] = _registry_home
+    REGISTRY = _registry_home.REGISTRY
 
 KINDS = (
     "physical_constant",
