@@ -317,7 +317,7 @@ check("the corpus-bug fixture this check borrows is the exact file another "
       "fixture changed underneath this check and it is reading the wrong "
       "thing",
       _corpus_sha_before ==
-      "186ffd77368b12f305146e46ddf3ef944672ad96b055b2d773b7b51065af3970",
+      "60052a5183f1b887a501a0c1d45e2eef543e435dc074865908d144f21bda648f",
       _corpus_sha_before)
 _corpus_ckpt_dir = tempfile.mkdtemp()
 # A FRESH COPY, NAMED LIKE A MILESTONE - the fixture itself is never opened
@@ -354,4 +354,3 @@ check("...and the original fixture file itself was never opened for writing "
       hashlib.sha256(open(_corpus_fixture, "rb").read()).hexdigest()
       == _corpus_sha_before,
       _corpus_fixture)
-

@@ -3,11 +3,11 @@ from .harness import *  # noqa: F401,F403
 
 
 _expected_grants = {
-    "rome_100ad": 217,
-    "han_china_100ad": 106,
-    "norse_900ad": 92,
-    "england_1300": 114,
-    "mexica_1500": 33,
+    "rome_100ad": 223,
+    "han_china_100ad": 107,
+    "norse_900ad": 148,
+    "england_1300": 202,
+    "mexica_1500": 34,
 }
 for _civ, _count in _expected_grants.items():
     _start = sim(civ=_civ)

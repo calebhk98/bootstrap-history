@@ -6554,7 +6554,7 @@
    "note": "A wooden box with a powerful fan at one end and a test section. Measurement is done with a water manometer: a bent tube of glass half-filled with water, showing pressure difference as height difference. You can test aerofoil shapes, measure lift and drag without dying. This is the tool that transforms flight from experiment to engineering. Build it first, use it to learn, then design based on data.",
    "ph": 150.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "cap_tol_1mm",
     "mat_cast_iron"
    ],
@@ -7815,15 +7815,49 @@
    "dev_people": null,
    "dev_years": null,
    "gov": 0,
+   "id": "cap_power_human",
+   "kb": "",
+   "kind": "CAPABILITY",
+   "lab": {},
+   "mat": {},
+   "name": "Human muscle power",
+   "note": "People can supply continuous hand, foot, treadwheel, capstan, or hauling power; one adult sustains roughly 75 W. This universal capability does not imply oxen, horses, wheeled traction, or any other draught-animal system.",
+   "ph": 0.0,
+   "pre": [],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [
+    "infrastructure"
+   ],
+   "up": 0.0,
+   "yrs": 0.0
+  },
+  {
+   "_src": "00_capabilities.json",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "capability",
+   "conf": "A",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
    "id": "cap_power_muscle",
    "kb": "",
    "kind": "CAPABILITY",
    "lab": {},
    "mat": {},
-   "name": "Muscle and animal power",
-   "note": "A man sustains roughly 75 W; an ox perhaps 400 W. Free everywhere humans and draught animals exist, and the reason pre-industrial industry is shaped the way it is.",
+   "name": "Draught-animal muscle power",
+   "note": "Oxen, horses, mules, or comparable domesticated draught animals can supply sustained traction and rotary power; an ox can provide roughly 400 W. This capability is not universal human muscle power and is absent where suitable working animals and harness traditions do not exist.",
    "ph": 0.0,
-   "pre": [],
+   "pre": [
+    "cap_power_human"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.0,
@@ -7891,7 +7925,7 @@
    "note": "Already available and barely used for anything but grinding grain, wherever a water wheel turns (Rome's Barbegal runs 16 overshot wheels and still mostly grinds grain). The technology gap is imagination, not engineering.",
    "ph": 0.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "water_power_scale"
    ],
    "req_any": [],
@@ -16206,6 +16240,39 @@
    "_total_cost": 0.0,
    "adopt_yrs": 0.0,
    "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "buildings",
+   "conf": "A",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "civ_circus_racecourse",
+   "kb": "85_transport_civil.md",
+   "kb_level": "module",
+   "kind": "ENGINEERING",
+   "lab": {},
+   "mat": {},
+   "name": "Circus and horse-racing venue",
+   "note": "A long U-shaped racing venue with starting gates, a central spina, turning posts, tiered spectator seating, and space for chariot or horse races. Roman circuses are racing venues, structurally and institutionally distinct from amphitheatres used for arena spectacles.",
+   "ph": 0.0,
+   "pre": [
+    "civ_arch_roman"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 0.0
+  },
+  {
+   "_src": "22_civil.json",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
    "build_yrs": 2.0,
    "cap": 3000.0,
    "cat": "water",
@@ -16745,7 +16812,7 @@
    "pre": [
     "civ_arch_roman",
     "mat_pozzolana",
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -18467,6 +18534,39 @@
    "yrs": 0.5
   },
   {
+   "_src": "core",
+   "_total_cost": 0.0,
+   "adopt_yrs": 0.0,
+   "art": 0.0,
+   "build_yrs": 0.0,
+   "cap": 0.0,
+   "cat": "precision",
+   "conf": "B",
+   "dev_people": null,
+   "dev_years": null,
+   "gov": 0,
+   "id": "clock_mechanical_escapement",
+   "kb": "40_power_precision.md#clockwork_escapement",
+   "kb_level": "recipe",
+   "kind": "ENGINEERING",
+   "lab": {},
+   "mat": {},
+   "name": "Weight-driven mechanical clock with verge escapement",
+   "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. This inherited medieval mechanism is the causal predecessor of later pendulum regulation.",
+   "ph": 0.0,
+   "pre": [
+    "cap_tol_1mm"
+   ],
+   "req_any": [],
+   "rev": 0.0,
+   "risk": 0.0,
+   "sch": 0.0,
+   "sus": 0,
+   "traits": [],
+   "up": 0.0,
+   "yrs": 0.0
+  },
+  {
    "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: escapement and clock wheels require 0.1mm tolerance work]",
    "_src": "core",
    "_total_cost": 4316.0,
@@ -18492,10 +18592,11 @@
     "iron_bar_kg": 150.0,
     "steel_noric_kg": 25.0
    },
-   "name": "Pendulum clock and later the balance spring",
-   "note": "Fine gear-cutting is already good enough wherever a bronze- or iron-age precision tradition has reached this level (the Antikythera mechanism shows the Mediterranean world had it by 100 BC); what is missing is the escapement and the pendulum's isochronism. Accurate time gives navigation, longitude, physics, and later electrical measurement. Also a superb luxury product.",
+   "name": "Pendulum-regulated clock",
+   "note": "Replace a mechanical clock’s foliot regulator with a pendulum whose near-isochronous swing provides much steadier timekeeping. The project includes the escapement geometry and fine gearing needed to exploit that regulator; balance springs are a separate portable-watch development. This is a seventeenth-century advance, not inherited medieval clockwork.",
    "ph": 500.0,
    "pre": [
+    "clock_mechanical_escapement",
     "cap_tol_100um",
     "case_hardening",
     "master_screw"
@@ -18772,7 +18873,7 @@
    "note": "Mechanical advantage equals number of rope parts under load. Rope must not slip on sheaves. Friction in blocks reduces actual advantage by 10-20 percent.",
    "ph": 30.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 80.0,
@@ -19279,7 +19380,7 @@
    "note": "Large wooden drum turned by men inside a hamster wheel. Could lift tens of tonnes. Documented in Vitruvius; used to build the aqueducts and temples. Survives in medieval and Renaissance construction accounts.",
    "ph": 55.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "mat_wrought_iron"
    ],
    "req_any": [],
@@ -20125,7 +20226,7 @@
    "note": "Weight and drop height determine driving force. Pile compresses ground, packing it. As ground gets denser, driving becomes harder; each drop achieves less penetration.",
    "ph": 40.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 140.0,
@@ -21262,7 +21363,7 @@
    "note": "Soil density increases with each pass, but benefit decreases. Optimal moisture content exists; too wet or too dry, soil resists compaction.",
    "ph": 70.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 300.0,
@@ -36618,7 +36719,7 @@
    "note": "Winch or pump drive with ten or more people. Power output is constant, not pulsed like a crank.",
    "ph": 20.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 25.3,
@@ -39453,7 +39554,7 @@
     "timber_m3": 300.0
    },
    "name": "Hotel and commercial lodging",
-   "note": "Establishment renting rooms to travellers by the night. Includes meals and services. Operates on thin margins but benefits from steady customer flow.",
+   "note": "A larger urban lodging house rents multiple rooms and coordinates meals, servants, storage, and longer stays under one proprietor. Roman hospitia and substantial medieval hostelries distinguish this from the smaller tavern-inn; the commercial practice can be inherited even though an individual establishment still requires capital.",
    "ph": 120.0,
    "pre": [],
    "req_any": [],
@@ -39491,7 +39592,7 @@
     "timber_m3": 200.0
    },
    "name": "Inn and coaching house",
-   "note": "Smaller than hotel, often also a tavern. Provides room and food to travellers and locals alike. Profits from food, drink, and accommodation.",
+   "note": "A small commercial lodging house sells travellers a bed, food, drink, and often stabling. Roman cauponae and tabernae, Norse roadside or port hospitality, and later medieval inns differ in law and architecture but share this inherited operating practice; an individual premises still requires ordinary capital.",
    "ph": 100.0,
    "pre": [],
    "req_any": [],
@@ -39848,10 +39949,12 @@
    },
    "mat": {},
    "name": "Marine insurance",
-   "note": "Insurance against ship loss. The holder pays a premium and receives compensation if the cargo or vessel is lost. Insurance is not a bet: it is the sale of variance, allowing risk-averse merchants to transfer risk to professional risk-takers.",
+   "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders.",
    "ph": 200.0,
    "pre": [
-    "fin_maritime_loan"
+    "fin_maritime_loan",
+    "fin_contract_law",
+    "fin_argentarii"
    ],
    "req_any": [],
    "rev": 800.0,
@@ -40389,7 +40492,7 @@
    },
    "mat": {},
    "name": "Plantation and large estate agriculture",
-   "note": "Large estate specialising in a single commercial crop, worked by many labourers. Often worked by enslaved or semi-enslaved labour. Extremely profitable for the owner, extremely brutal for the labourers.",
+   "note": "A large market-oriented estate coordinates specialised crop production and a substantial tenant, bound, enslaved, or wage workforce. Roman latifundia and medieval demesnes are inherited forms; later colonial plantations are more specialised and coercive variants, not the invention of large-estate management.",
    "ph": 200.0,
    "pre": [],
    "req_any": [],
@@ -40466,10 +40569,12 @@
     "timber_m3": 100.0
    },
    "name": "Postal service as paid business",
-   "note": "Regular delivery of letters and small packages for a fee. Requires stations, horses, and staff. Profitable because merchants will pay to guarantee delivery.",
+   "note": "A private, paid relay for letters and small parcels, adapted from an existing courier network. Contracts define custody and liability; inns provide public staging points, while scheduled riders, replacement horses, route agents, and delivery records make service reliable enough for merchants to buy.",
    "ph": 180.0,
    "pre": [
-    "fin_contract_law"
+    "fin_contract_law",
+    "lnd_cursus_publicus",
+    "fin_inn"
    ],
    "req_any": [],
    "rev": 400.0,
@@ -40659,10 +40764,10 @@
     "timber_m3": 100.0
    },
    "name": "Racecourse and pari-mutuel betting",
-   "note": "Track where horses race and spectators place bets. Betters pool money and results are divided. House takes a percentage. Expensive to operate but attracts wealthy betters.",
+   "note": "Operate pooled betting at an existing horse-racing circus. Stakes on each outcome form a pool; after the operator takes a published percentage, winning tickets divide the balance. The project establishes tickets, closing rules, accounting, settlement, and controls against altered entries rather than pretending to invent Roman racing.",
    "ph": 130.0,
    "pre": [
-    "civ_amphitheatre",
+    "civ_circus_racecourse",
     "fin_argentarii"
    ],
    "req_any": [],
@@ -41361,10 +41466,11 @@
     "timber_m3": 300.0
    },
    "name": "Theatre as business",
-   "note": "Owner builds theatre and sells admission. Profits from ticket sales, concessions, and occasionally gambling. Attracts crowds and creates employment.",
+   "note": "Turn an existing theatre tradition into a regular admission-charging business. The project establishes performance contracts, ticketing, scheduled programmes, concessions, and accounts; it changes a patronage- and festival-led institution into a repeat commercial operation. A theatre, not an amphitheatre, is the relevant venue.",
    "ph": 150.0,
    "pre": [
-    "civ_amphitheatre"
+    "prn_theatre_pantomime",
+    "fin_contract_law"
    ],
    "req_any": [],
    "rev": 600.0,
@@ -44256,7 +44362,7 @@
    "ph": 150.0,
    "pre": [
     "ag2_threshing_machine",
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 200.0,
@@ -49964,7 +50070,7 @@
     "iron_bar_kg": 6.0
    },
    "name": "Frequency modulation",
-   "note": "Audio signal varies the frequency of the RF carrier instead of the amplitude. A 100 MHz carrier modulated with 1 kHz audio swings \u00b175 kHz. FM is immune to amplitude noise (static, ignition noise), so reception is much quieter. Bandwidth is about 10x wider than AM (200 kHz for 15 kHz audio), requiring wider channel spacing. Requires sophisticated receivers (discriminators, limiters). Adopted late (1940s in consumer radio) due to infrastructure cost, but ultimately superior.",
+   "note": "Audio signal varies the frequency of the RF carrier instead of the amplitude. A 100 MHz carrier modulated with 1 kHz audio swings ±75 kHz. FM is immune to amplitude noise (static, ignition noise), so reception is much quieter. Bandwidth is about 10x wider than AM (200 kHz for 15 kHz audio), requiring wider channel spacing. Requires sophisticated receivers (discriminators, limiters). Adopted late (1940s in consumer radio) due to infrastructure cost, but ultimately superior.",
    "ph": 180.0,
    "pre": [
     "if_triode_oscillator",
@@ -51345,7 +51451,7 @@
    "note": "Screen must hold fabric taut. Register sprockets prevent misalignment. 200 copies max before wear.",
    "ph": 140.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "if_typewriter",
     "mat_nitrocellulose"
    ],
@@ -53329,7 +53435,7 @@
    "mat": {
     "brass_kg": 8.0
    },
-   "name": "Geiger-M\u00fcller counter: proportional region",
+   "name": "Geiger-Müller counter: proportional region",
    "note": "Pulse output independent of input energy (above threshold); excellent counting efficiency. Dead time 100-300 microseconds limits count rate.",
    "ph": 110.0,
    "pre": [
@@ -53648,7 +53754,7 @@
    "mat": {
     "silver_kg": 2.0
    },
-   "name": "Interferometer: Fabry-P\u00e9rot etalon",
+   "name": "Interferometer: Fabry-Pérot etalon",
    "note": "Multiple reflections enhance sharpness; useful for spectral lines separated by nanometers. Parallelism and surface flatness required to better than 0.1 wavelength.",
    "ph": 130.0,
    "pre": [
@@ -68140,7 +68246,7 @@
     "timber_m3": 2.0
    },
    "name": "Annealing and recrystallization",
-   "note": "Heat work-hardened metal to a dull red and cool slowly. Atoms rearrange into stress-free grains and the metal becomes soft and ductile again. Must not overheat or grains grow coarse and the metal becomes brittle. The window is narrow\u2014a difference of 50 degrees C makes the difference between a good anneal and scrap. Requires experience to recognize the right color.",
+   "note": "Heat work-hardened metal to a dull red and cool slowly. Atoms rearrange into stress-free grains and the metal becomes soft and ductile again. Must not overheat or grains grow coarse and the metal becomes brittle. The window is narrow—a difference of 50 degrees C makes the difference between a good anneal and scrap. Requires experience to recognize the right color.",
    "ph": 100.0,
    "pre": [
     "cap_heat_1100",
@@ -68395,7 +68501,7 @@
     "limestone_kg": 20.0
    },
    "name": "Converter furnace for steel",
-   "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
+   "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid—if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
    "ph": 180.0,
    "pre": [
     "cap_heat_1600",
@@ -68488,7 +68594,7 @@
     "steel_plate_kg": 100.0
    },
    "name": "Deep drawing and pressing dies",
-   "note": "Press a flat metal sheet with a die into a deep cup shape in a single stroke. The metal must be annealed and soaped to prevent sticking and tearing. Multiple draws with annealing between are needed for very deep cups. The challenge is uniform thickness\u2014the metal flows unevenly and thin spots tear or wrinkle. Needs precision dies and pressure control.",
+   "note": "Press a flat metal sheet with a die into a deep cup shape in a single stroke. The metal must be annealed and soaped to prevent sticking and tearing. Multiple draws with annealing between are needed for very deep cups. The challenge is uniform thickness—the metal flows unevenly and thin spots tear or wrinkle. Needs precision dies and pressure control.",
    "ph": 350.0,
    "pre": [
     "cap_tol_100um",
@@ -68533,7 +68639,7 @@
     "timber_m3": 50.0
    },
    "name": "Deep shaft sinking techniques",
-   "note": "Going deeper than 200 meters requires support sets (timber or steel frames), continuous pumping of inflow water, adequate ventilation at depth, and precise control of powder charges to avoid enlarding the hole. The pressure of overlying rock increases shear stress on timbering. Major collapses are common. The time to sink a shaft grows non-linearly with depth\u2014doubling depth more than quadruples time.",
+   "note": "Going deeper than 200 meters requires support sets (timber or steel frames), continuous pumping of inflow water, adequate ventilation at depth, and precise control of powder charges to avoid enlarding the hole. The pressure of overlying rock increases shear stress on timbering. Major collapses are common. The time to sink a shaft grows non-linearly with depth—doubling depth more than quadruples time.",
    "ph": 240.0,
    "pre": [
     "met_mine_pumping",
@@ -68576,7 +68682,7 @@
     "zinc_kg": 100.0
    },
    "name": "Die casting and hot chamber casting",
-   "note": "Inject molten zinc or aluminum into a hardened steel die at high speed under high pressure. Cool rapidly and eject. Produces dimensionally consistent parts at high volume. The die cost is enormous and only amortizes over thousands of parts. Porosity from trapped gas is the chronic defect\u2014degassing the metal before injection is essential.",
+   "note": "Inject molten zinc or aluminum into a hardened steel die at high speed under high pressure. Cool rapidly and eject. Produces dimensionally consistent parts at high volume. The die cost is enormous and only amortizes over thousands of parts. Porosity from trapped gas is the chronic defect—degassing the metal before injection is essential.",
    "ph": 180.0,
    "pre": [
     "cap_heat_1300",
@@ -68674,7 +68780,7 @@
    "pre": [
     "cap_power_water",
     "case_hardening",
-    "cap_power_muscle",
+    "cap_power_human",
     "mat_cast_iron"
    ],
    "req_any": [],
@@ -69126,7 +69232,7 @@
     "nickel_kg": 20.0
    },
    "name": "Hardenability and alloy steel design",
-   "note": "Adding chromium, nickel, molybdenum, or vanadium increases the depth to which a steel can be hardened. Thick bars that quench-harden only to the surface need alloy addition to harden through. Hardenability is separate from hardness\u2014a hard steel is not necessarily hardenable to depth. Engineers design alloys to achieve both the hardness and the through-hardening needed for large bearings and gears.",
+   "note": "Adding chromium, nickel, molybdenum, or vanadium increases the depth to which a steel can be hardened. Thick bars that quench-harden only to the surface need alloy addition to harden through. Hardenability is separate from hardness—a hard steel is not necessarily hardenable to depth. Engineers design alloys to achieve both the hardness and the through-hardening needed for large bearings and gears.",
    "ph": 280.0,
    "pre": [
     "atomic_theory",
@@ -69314,7 +69420,7 @@
     "timber_m3": 3.0
    },
    "name": "Jigging and gravity separation",
-   "note": "Shake crushed ore in a slurry in a funnel-bottomed box; dense ore sinks, waste rock suspends and overflows. The real work is tuning the shake frequency and water flow\u2014too fast and you lose ore, too slow and waste carries through. This becomes faster and cheaper than hand sorting at scale.",
+   "note": "Shake crushed ore in a slurry in a funnel-bottomed box; dense ore sinks, waste rock suspends and overflows. The real work is tuning the shake frequency and water flow—too fast and you lose ore, too slow and waste carries through. This becomes faster and cheaper than hand sorting at scale.",
    "ph": 80.0,
    "pre": [
     "cap_measure_len",
@@ -69396,7 +69502,7 @@
     "sulfuric_acid_kg": 3.0
    },
    "name": "Metallography: polishing, etching and microscopy",
-   "note": "Polish a section of steel to mirror smoothness, etch with dilute acid to reveal grain boundaries and phases, look through a microscope. The microstructure tells you if the heat treatment worked, if the segregation is acceptable, if cracks are present. This single instrument\u2014the microscope\u2014transformed metallurgy from craft to science. No expensive equipment needed: a microscope and an etchant are sufficient.",
+   "note": "Polish a section of steel to mirror smoothness, etch with dilute acid to reveal grain boundaries and phases, look through a microscope. The microstructure tells you if the heat treatment worked, if the segregation is acceptable, if cracks are present. This single instrument—the microscope—transformed metallurgy from craft to science. No expensive equipment needed: a microscope and an etchant are sufficient.",
    "ph": 200.0,
    "pre": [
     "analytical_chemistry",
@@ -69450,7 +69556,7 @@
     "timber_m3": 12.0
    },
    "name": "Mine pumping systems",
-   "note": "Use water power to drive a Cornish engine or a Newcomen atmospheric engine, then a force pump lifts water from the lowest level. Deep mines fill with water faster than hand bailing can remove it. The pumping plant is the largest single capital expense of a deep mine\u2014without it, you cannot go deeper than about 100 meters. The pump must run constantly during operations.",
+   "note": "Use water power to drive a Cornish engine or a Newcomen atmospheric engine, then a force pump lifts water from the lowest level. Deep mines fill with water faster than hand bailing can remove it. The pumping plant is the largest single capital expense of a deep mine—without it, you cannot go deeper than about 100 meters. The pump must run constantly during operations.",
    "ph": 180.0,
    "pre": [
     "cap_power_water"
@@ -69853,7 +69959,7 @@
     "timber_m3": 5.0
    },
    "name": "Reverberatory furnace",
-   "note": "The charge sits on the hearth, flames from a separate firebox bounce off an arched roof and melt the metal. Fuel never touches the charge\u2014this is the crucial difference from a blast furnace. Enables puddling and copper refining because slag does not contaminate with coke ash. The roof must be shaped right or it cracks under thermal shock.",
+   "note": "The charge sits on the hearth, flames from a separate firebox bounce off an arched roof and melt the metal. Fuel never touches the charge—this is the crucial difference from a blast furnace. Enables puddling and copper refining because slag does not contaminate with coke ash. The roof must be shaped right or it cracks under thermal shock.",
    "ph": 200.0,
    "pre": [
     "cap_heat_1300",
@@ -70365,7 +70471,7 @@
     "timber_m3": 6.0
    },
    "name": "Two-high rolling mill",
-   "note": "Two iron rolls, one fixed, one movable, crush hot steel bar between them. The bar emerges thinner and longer. Needs rolls of sufficient hardness and a power source that does not stall under load\u2014cast iron rolls are barely adequate and shatter under shock; hardened steel rolls are better but hard to make. The steel must be hot enough to flow without cracking. Getting the temperature, roll gap, and feed speed in balance is an art.",
+   "note": "Two iron rolls, one fixed, one movable, crush hot steel bar between them. The bar emerges thinner and longer. Needs rolls of sufficient hardness and a power source that does not stall under load—cast iron rolls are barely adequate and shatter under shock; hardened steel rolls are better but hard to make. The steel must be hot enough to flow without cracking. Getting the temperature, roll gap, and feed speed in balance is an art.",
    "ph": 280.0,
    "pre": [
     "cap_heat_1300",
@@ -70496,7 +70602,7 @@
     "timber_m3": 4.0
    },
    "name": "Wire rod rolling mill",
-   "note": "A series of small oval and round rolls progressively thins a bar into coiled wire rod, which is then drawn to final size. The wire emerges hot and coils as it cools. The speed is high\u2014modern mills run at meters per second\u2014so you need strong power and excellent roll material or the rolls will crack and scatter pieces. A single roll failure at speed can cause line shutdown for a day.",
+   "note": "A series of small oval and round rolls progressively thins a bar into coiled wire rod, which is then drawn to final size. The wire emerges hot and coils as it cools. The speed is high—modern mills run at meters per second—so you need strong power and excellent roll material or the rolls will crack and scatter pieces. A single roll failure at speed can cause line shutdown for a day.",
    "ph": 160.0,
    "pre": [
     "cap_power_steam",
@@ -72006,7 +72112,7 @@
    "note": "An engine lathe NEEDS cap_tol_10um to build itself (lead screw, spindle bearings). Once built, it MAKES cap_tol_100um easily and cap_tol_10um with care. The spindle is the constraint: runout comes from bearing play and spindle sag.",
    "ph": 300.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "cap_tol_10um",
     "screw_lathe"
    ],
@@ -74534,7 +74640,7 @@
    "note": "NEEDS cap_tol_100um (blade tension, guide precision). MAKES no precision requirement. The saw must not deflect or wander. A dull blade generates heat and burns the cut.",
    "ph": 250.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "mat_bulk_steel"
    ],
    "req_any": [
@@ -80982,8 +81088,8 @@
    "mat": {
     "mercury_kg": 100.0
    },
-   "name": "Amalgamation: extracting precious metals with mercury",
-   "note": "Mercury dissolves gold and silver; panning, shaking table, or mill rotors coat ore with Hg. Later heating drives off Hg and recovers metal. Spanish New World silver (Potosi) relied on this for 300 years. Toxic and inefficient on low-grade ore, displaced by cyanide.",
+   "name": "Gold amalgamation with mercury",
+   "note": "Mercury takes up fine gold and the amalgam can be squeezed and gently heated to recover the metal, with serious toxic exposure and mercury loss. This inherited ancient gold-working practice is not the later patio process for treating low-grade silver ore, which would require a separate chemical and industrial chain.",
    "ph": 80.0,
    "pre": [
     "mat_mercury"
@@ -84125,7 +84231,7 @@
    },
    "mat": {},
    "name": "Pneumatic rock drill: compressed air powered percussion",
-   "note": "Sim\u00e9on and Sommeiller (1860s) developed air drill for Alpine tunnels. Hand hammers then competed. Air compressor (steam-driven or water-turbine) provides 6-10 bar. Speeds tunneling 10x. Mine development accelerated post-1870s.",
+   "note": "Siméon and Sommeiller (1860s) developed air drill for Alpine tunnels. Hand hammers then competed. Air compressor (steam-driven or water-turbine) provides 6-10 bar. Speeds tunneling 10x. Mine development accelerated post-1870s.",
    "ph": 140.0,
    "pre": [
     "cap_gas_o2h2",
@@ -84435,13 +84541,14 @@
     "lead_kg": 500.0,
     "tin_kg": 500.0
    },
-   "name": "Solder: lead-tin for joining metals by melting",
-   "note": "50-50 lead-tin (eutectic at 183C, flows freely). Earlier solders higher tin (expensive) or higher lead (weak). Eutectic composition discovery ~1800; enabled consistent joints. Tin-only (lead-free) solder came much later due to brittleness.",
+   "name": "Eutectic lead-tin solder composition control",
+   "note": "Ancient soft soldering is a separate inherited craft. This project standardises the near-eutectic alloy at about 61.9% tin and 38.1% lead, whose 183 C melting point and narrow freezing behaviour give consistent flow. Controlled weighing and shop trials distinguish it from ordinary, variable lead-tin solder.",
    "ph": 100.0,
    "pre": [
-    "cap_heat_0700",
+    "mfg_soft_solder",
     "mat_lead",
-    "mat_tin"
+    "mat_tin",
+    "units_standards"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -84926,7 +85033,7 @@
    "note": "Wooden posts, beams, and lagging hold back rock. Design depends on strata and span. Decay, compression, and crushing require replacement and inspection. European timber mining developed detailed standards (16th-18th centuries). Replaceable without stopping production.",
    "ph": 80.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -90939,7 +91046,7 @@
    "note": "The flywheel stores kinetic energy from foot pedal, giving continuous cutting rather than reciprocating bow drive. One person can now hold and feed work. Enables cam operation and steady-speed cutting.",
    "ph": 80.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "cap_tol_1mm",
     "crank_conrod"
    ],
@@ -93485,7 +93592,7 @@
    "note": "Force pumps lift water by mechanical displacement, not by suction alone, wherever this technique is already known (Rome's are well documented). Critical for aqueducts and mines; requires a slave, servant or animal to operate.",
    "ph": 0.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -93526,7 +93633,7 @@
     "sulfuric_acid_kg": 5.0
    },
    "name": "Fuel cell (hydrogen-oxygen)",
-   "note": "Hydrogen and oxygen react at separate electrodes in an electrolyte, producing DC directly. Efficient, silent, no heat loss, but hydrogen is expensive to produce. Grove and Sch\u00f6nbein discovered it in the 1840s; Grove built a telegraph powered by fuel cells.",
+   "note": "Hydrogen and oxygen react at separate electrodes in an electrolyte, producing DC directly. Efficient, silent, no heat loss, but hydrogen is expensive to produce. Grove and Schönbein discovered it in the 1840s; Grove built a telegraph powered by fuel cells.",
    "ph": 300.0,
    "pre": [
     "cap_gas_o2h2",
@@ -94242,7 +94349,7 @@
    "note": "The screw and nut multiply force: oil, wine, coins. Wherever precise screw threads are already cut (Rome's are as good as any), this is a force multiplier, not power generation.",
    "ph": 0.0,
    "pre": [
-    "cap_power_muscle"
+    "cap_power_human"
    ],
    "req_any": [],
    "rev": 0.0,
@@ -94985,7 +95092,7 @@
    },
    "mat": {},
    "name": "Binomial theorem and binomial expansion",
-   "note": "Newton discovered this; Pascal's triangle gives coefficients. Teaching: why does (x+y)\u00b2 = x\u00b2 + 2xy + y\u00b2? Draw a square divided into four. Why does (x+y)\u00b3 work the same way? Induction proof follows. Adoption: fast, because it saves multiplication.",
+   "note": "Newton discovered this; Pascal's triangle gives coefficients. Teaching: why does (x+y)² = x² + 2xy + y²? Draw a square divided into four. Why does (x+y)³ work the same way? Induction proof follows. Adoption: fast, because it saves multiplication.",
    "ph": 90.0,
    "pre": [
     "algebra_symbolic"
@@ -95021,7 +95128,7 @@
     "scribe": 200.0
    },
    "mat": {},
-   "name": "Complex numbers: a + bi where i\u00b2 = -1",
+   "name": "Complex numbers: a + bi where i² = -1",
    "note": "Cardano's cubic formula forced complex intermediate steps. Teaching: geometry (rotation and scaling in the plane) makes it tangible. Adoption: fast in AC electricity and physics.",
    "ph": 110.0,
    "pre": [
@@ -95203,7 +95310,7 @@
     "scribe": 140.0
    },
    "mat": {},
-   "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
+   "name": "Logarithm as inverse exponent: log₁₀(1000) = 3",
    "note": "Napier invented this to replace multiplication with addition: multiply by looking up logs, adding, looking up antilog. Teaching: understand exponent rules first. Then log is just naming the exponent. The product rule is obvious once you see it.",
    "ph": 70.0,
    "pre": [
@@ -95350,7 +95457,7 @@
    },
    "mat": {},
    "name": "The quadratic equation and solution formula",
-   "note": "Babylonians completed the square geometrically. Al-Khwarizmi had the method. Descartes proved it algebraically. Teaching: deriving the formula from completing the square takes an hour and feels like discovery. The \u00b1 notation is key.",
+   "note": "Babylonians completed the square geometrically. Al-Khwarizmi had the method. Descartes proved it algebraically. Teaching: deriving the formula from completing the square takes an hour and feels like discovery. The ± notation is key.",
    "ph": 80.0,
    "pre": [
     "algebra_symbolic"
@@ -95720,7 +95827,7 @@
    },
    "mat": {},
    "name": "Partial differential equations",
-   "note": "d\u00b2u/dt\u00b2 = c\u00b2 d\u00b2u/dx\u00b2 (wave equation); solutions require boundary conditions. Teaching is hard; Fourier series helps. Adoption is by mathematical physicists first.",
+   "note": "d²u/dt² = c² d²u/dx² (wave equation); solutions require boundary conditions. Teaching is hard; Fourier series helps. Adoption is by mathematical physicists first.",
    "ph": 200.0,
    "pre": [
     "calculus",
@@ -96921,7 +97028,7 @@
    },
    "mat": {},
    "name": "Operator symbols: +, -, *, /",
-   "note": "Germany adopted + and - in 15th c. for accounting. Multiplication: earlier \u00d7 (Oughtred) and \u00b7 (Leibniz) both persist. Division: \u00f7 (Obelus) is late 17th c. Adoption is printing-driven.",
+   "note": "Germany adopted + and - in 15th c. for accounting. Multiplication: earlier × (Oughtred) and · (Leibniz) both persist. Division: ÷ (Obelus) is late 17th c. Adoption is printing-driven.",
    "ph": 35.0,
    "pre": [
     "arithmetic_positional"
@@ -96991,7 +97098,7 @@
    },
    "mat": {},
    "name": "Root symbols and radical notation",
-   "note": "Medieval \u221a is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing.",
+   "note": "Medieval √ is a stylized r for radix. Alternative: fractional exponents (1/2 power). Teaching competing notations until one wins printing.",
    "ph": 40.0,
    "pre": [
     "algebra_symbolic"
@@ -97871,7 +97978,7 @@
    },
    "mat": {},
    "name": "Nuclear fission and chain reaction",
-   "note": "Meitner and Frisch (1938-1939); Manhattan Project (1942-1945). Teaching: Einstein's E = mc\u00b2, mass defect, reaction rates. Adoption: immediate military application (bomb and reactor).",
+   "note": "Meitner and Frisch (1938-1939); Manhattan Project (1942-1945). Teaching: Einstein's E = mc², mass defect, reaction rates. Adoption: immediate military application (bomb and reactor).",
    "ph": 140.0,
    "pre": [
     "sc2_physics_wave_mechanics",
@@ -98240,8 +98347,8 @@
     "scribe": 320.0
    },
    "mat": {},
-   "name": "Wave mechanics and Schr\u00f6dinger equation",
-   "note": "Schr\u00f6dinger (1926). Teaching is technically hard and philosophically confusing (wave vs particle). Adoption: slow but now universal in quantum chemistry.",
+   "name": "Wave mechanics and Schrödinger equation",
+   "note": "Schrödinger (1926). Teaching is technically hard and philosophically confusing (wave vs particle). Adoption: slow but now universal in quantum chemistry.",
    "ph": 180.0,
    "pre": [
     "sc2_calculus_pde",
@@ -99973,7 +100080,7 @@
     "timber_m3": 40.0
    },
    "name": "Deeper keel for improved windward sailing",
-   "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship\u2019s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
+   "note": "A deeper keel increases lateral resistance and reduces leeway, improving an existing ship’s ability to make progress to windward. Ancient square-rigged ships already sailed obliquely upwind; this is an improvement, not a binary invention.",
    "ph": 100.0,
    "pre": [
     "sea_square_sail"
@@ -107991,7 +108098,7 @@
    "note": "Adapt the inherited force pump to a ship with strainers, non-return valves, accessible maintenance, and a discharge above the waterline.",
    "ph": 50.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "pwr_force_pump",
     "sea_merchant_ships_large"
    ],
@@ -108311,7 +108418,7 @@
    "note": "Capstan has a vertical axle on a sturdy base; rope is wrapped and sailors push bars to rotate it. Mechanical advantage is excellent: one turn around the capstan multiplies force. The kernel is that rope can slip if tension is uneven; capstan bars must be moved by sailors in synchronized rhythm, or the rope loosens.",
    "ph": 80.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "finery_puddling"
    ],
    "req_any": [],
@@ -111574,7 +111681,7 @@
    "note": "Windlass has gears reducing speed and increasing torque. Necessary for hauling heavy anchors against water pressure. The kernel is that gear reduction is essential: without it, even muscle power cannot raise an anchor in deep water. Early windlasses were hand-crank; later versions used steam power.",
    "ph": 100.0,
    "pre": [
-    "cap_power_muscle",
+    "cap_power_human",
     "finery_puddling"
    ],
    "req_any": [],
@@ -117422,9 +117529,11 @@
     "gold_kg": 5.0
    },
    "name": "Watch case: portable timepiece housing",
-   "note": "Protective case for pocket watch, brass with decorative engraving or gold cases, industrial production emerges in 1800s",
+   "note": "A fitted protective housing for an already-built portable watch, with hinged cover, stem opening, crystal seat, and access for winding and service. The case is meaningless before a pocket-watch movement exists; decorative brass, silver, or gold work follows the working timepiece.",
    "ph": 80.0,
-   "pre": [],
+   "pre": [
+    "hom_pocket_watch"
+   ],
    "req_any": [],
    "rev": 0.0,
    "risk": 0.15,
@@ -117798,8 +117907,8 @@
     "iron_bar_kg": 600.0,
     "timber_m3": 90.0
    },
-   "name": "Overshot wheels, millponds, leats, line shafting",
-   "note": "This scale of water power is already achieved wherever a strong multi-wheel complex exists (Rome's 16-wheel Barbegal complex is the standing example). What is missing is applying it to anything other than grinding grain. Put the bellows, the stamps, the paper mill, the boring mill and the lathe on the same shaft.",
+   "name": "Large watermill system: overshot wheels, millponds and leats",
+   "note": "Build and manage a substantial watermill site: impound water, control it through leats, and drive one or more overshot wheels at useful power. Medieval England inherits this civil and hydraulic capability. General-purpose line shafts that distribute power among unrelated industrial machines are not included.",
    "ph": 450.0,
    "pre": [
     "crank_conrod"

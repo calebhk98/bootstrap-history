@@ -181,6 +181,7 @@ check("...but WITH a patron, and enough time, it genuinely has - the "
 # apply_tech_effects' own small instant population queue (see that
 # mechanism's own regression checks elsewhere in this file).
 s_food = sim(civ="rome_100ad")
+s_food.granted.discard(_FOOD_NODE)
 s_food.done.add(_FOOD_NODE); s_food.done_year[_FOOD_NODE] = s_food.year
 _base0 = s_food._pop_scale_base
 for i in range(1, 81):
@@ -197,6 +198,7 @@ check("...and it is told in the log, not only in a state variable",
       [m for _, m in s_food.log if "no longer only on your own land" in m])
 
 s_food_far = sim(civ="rome_100ad")
+s_food_far.granted.discard(_FOOD_NODE)
 s_food_far.done.add(_FOOD_NODE); s_food_far.done_year[_FOOD_NODE] = s_food_far.year
 for i in range(1, 601):
     s_food_far.year += 1

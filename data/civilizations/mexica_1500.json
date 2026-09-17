@@ -319,6 +319,7 @@
  "price_index": 0.8,
  "starting_techs": [
   "cap_heat_0700",
+  "cap_power_human",
   "cap_tol_1mm",
   "civ_monumental_stone",
   "fin_auction",

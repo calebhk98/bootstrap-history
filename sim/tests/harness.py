@@ -266,12 +266,20 @@ def _mk_loom_sim(n_looms, age_years):
     chosen = cand[:n_looms]
     s = sim(civ="rome_100ad", capital=5_000_000.0)
     s.artisans = s.scholars = 100.0 * n_looms
+    # These fixtures exercise goods-market arithmetic, not labour scarcity.
+    # Supply every qualified trade so each selected historical concern can
+    # obtain both its workers and its specialist foreman.
+    for trade in S.WAGES:
+        s.employees[trade] = 100.0 * n_looms
     s.year = 100
     for k in chosen:
         s.done.add(k)
         s.done_year[k] = 100
     s._done_changed()
     for k in chosen:
+        for trade, required in NODES[k].get("lab", {}).get("trades", {}).items():
+            s.employees[trade] = max(s.employees.get(trade, 0.0),
+                                     float(required) * n_looms)
         ok, msg = s.open_venture(k)
         assert ok, (k, msg)
     s.year = 100 + age_years

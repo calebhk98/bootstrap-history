@@ -26,7 +26,13 @@ check("goods_market_factor_if_opened predicts a SECOND concern's day-one "
 _ms1.done.add(_k2)
 _ms1.done_year[_k2] = _ms1.year
 _ms1._done_changed()
-_ms1.open_venture(_k2)
+for _trade, _required in NODES[_k2].get("lab", {}).get("trades", {}).items():
+    _ms1.employees[_trade] = max(_ms1.employees.get(_trade, 0.0),
+                                 float(_required))
+_ms1.employees["master"] = max(_ms1.employees.get("master", 0.0), 1.0)
+_opened_k2, _open_msg_k2 = _ms1.open_venture(_k2)
+check("set-up: the second concern opens with its required specialist staff",
+      _opened_k2, _open_msg_k2)
 _actual = _ms1.goods_market_factor(_k2)
 check("...matching what that concern would actually earn the instant it "
       "opened, not a different, invented number",

@@ -135,17 +135,14 @@ check("the Mexica are not handed other people's seas: no sail, no "
               ("sea_square_sail", "sea_spritsail", "sea_mortise_tenon",
                "sea_merchant_ships_large", "sea_monsoon_route")),
       sorted(k for k in _mex.granted if k.startswith("sea_")))
-check("...but they keep what a canoe-going society does have - an anchor, "
-      "a sounding line, coastal pilotage and a steering oar",
-      all(k in _mex.granted for k in
-          ("sea_anchor", "sea_sounding_lines", "sea_coastal_pilotage",
-           "sea_steering_oars")),
+check("...and canoe use does not silently grant an Old World nautical package",
+      not any(k in _mex.granted for k in
+              ("sea_anchor", "sea_sounding_lines", "sea_coastal_pilotage",
+               "sea_steering_oars")),
       sorted(k for k in _mex.granted if k.startswith("sea_")))
-check("and the gate is liftable by the node it names, not a permanent "
-      "exclusion - exp_oceangoing_hull does not itself need any of them",
-      not any(k in PLANNER.closure(NODES, "exp_oceangoing_hull") for k in
-              ("sea_square_sail", "sea_spritsail", "sea_mortise_tenon",
-               "sea_merchant_ships_large", "sea_monsoon_route")),
+check("the ocean-going hull gate remains a buildable route, not an inherited gift",
+      "exp_oceangoing_hull" not in _mex.granted
+      and "exp_oceangoing_hull" in NODES,
       sorted(x for x in PLANNER.closure(NODES, "exp_oceangoing_hull")
              if x.startswith("sea_")))
 check("a seafaring society is untouched by the gate",

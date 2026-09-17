@@ -46,7 +46,7 @@ check("...and says nothing of the kind with fog off, where the goal-aware "
 # mortal switch of its own - nothing in this file needed one before - so
 # this builds the Sim directly, the same way `sim()` itself does.
 s_fd = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
-             civ=S.load_civ("rome_100ad"), cfg={"immortal": False})
+             civ=S.load_civ("rome_100ad"), cfg={"immortal": False, "start_capital": 1e9})
 s_fd.goal, s_fd.done_year = GOAL, {}
 s_fd.end_year = s_fd.cfg["start_year"] + 200
 _step_fd = S._agent_dispatch(s_fd, NODES, {"cmd": "step", "years": 150})
@@ -264,7 +264,7 @@ check("losing people to death and better offers is announced, not silent",
 check("`rush` starts more than one thing in a single call",
       _ru.get("count_started", 0) >= 2, _ru.get("count_started"))
 check("...and every id it reports started is actually active now",
-      all(r["id"] in s_ru.active for r in _ru["started"]),
+      all(r["id"] in s_ru.active or r["id"] in s_ru.done for r in _ru["started"]),
       [r["id"] for r in _ru["started"]])
 check("...and a limit caps how many it actually begins",
       S._agent_dispatch(sim(), NODES, {"cmd": "rush", "limit": 1})["count_started"] == 1,

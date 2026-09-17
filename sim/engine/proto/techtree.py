@@ -560,10 +560,13 @@ def _agent_available(s, nodes, cmd=None):
     # exists to find them.
     _lev_all = sorted(ok, key=lambda k: (-downstream_count(nodes, k),
                                          s.project_cost(k)))
-    leverage = _lev_all[:5]
+    # Keep the default reply below its readability budget. Five leverage rows
+    # and six cheap rows crept over 6 KB as the explicit opening states grew;
+    # four and five still expose both rankings without making the digest a page.
+    leverage = _lev_all[:4]
     cheap = [k for k in sorted(ok, key=lambda k: s.project_cost(k))
-             if k not in leverage][:6]
-    # AND THE SIX MOST RESTS ON. A normal-play tester found that the spine of
+             if k not in leverage][:5]
+    # AND THE FOUR MOST RESTS ON. A normal-play tester found that the spine of
     # the whole game is a handful of cheap, zero-revenue, tier-0 nodes -
     # units_standards, identity_cover, patron_local, workshop_first - and that
     # the only way to find them was to script a `why` call for every startable

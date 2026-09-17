@@ -239,9 +239,10 @@ def _validate_save(blob, s):
                 "got %s" % type(blob).__name__)
     missing = [f for f in REQUIRED_SAVE_FIELDS if f not in blob]
     if missing:
-        return ("this is not a save from this game: missing %s. A save this "
-                "game writes always has all of: %s"
-                % (", ".join(missing), ", ".join(REQUIRED_SAVE_FIELDS)))
+        shown = ", ".join(missing[:8])
+        if len(missing) > 8:
+            shown += ", and %d more required fields" % (len(missing) - 8)
+        return "this is not a save from this game: missing %s" % shown
     if not isinstance(blob.get("_version"), int):
         return "this save is corrupt: '_version' should be a whole number"
     if blob["_version"] != SAVE_VERSION:

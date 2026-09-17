@@ -75,6 +75,8 @@ check("...and, once a project has actually taken spend, also shows the "
 # the screen a player checking on one stalled project by name would reach
 # for.
 _s_thr = sim(civ="han_china_100ad", capital=5000000.0)
+_s_thr.done.update(NODES["sc2_method_negative_result"].get("pre", ()))
+_s_thr._done_changed()
 _ok_thr, _ = _s_thr.start_project("sc2_method_negative_result")
 _s_thr.step()
 _wr_thr = S._agent_dispatch(_s_thr, NODES, {"cmd": "why", "id": "sc2_method_negative_result"})
@@ -287,10 +289,10 @@ check("...while single_crystal is still mandatory for the goal itself - "
       "concept, is where single-crystal growth belongs",
       "single_crystal" in NODES["junction_transistor"]["pre"],
       NODES["junction_transistor"]["pre"])
-check("...and the goal's required closure is unchanged at 168 nodes - "
+check("...and the goal's required closure is unchanged at 154 nodes - "
       "loosening the contradictory gate did not also loosen what the "
       "goal actually needs",
-      len(S.closure(NODES, GOAL)) == 168, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 154, len(S.closure(NODES, GOAL)))
 
 # THE BUG CLASS, not just the one instance: a node's own note disclaiming a
 # prerequisite ("no X and no Y, neither of which existed yet", "X had not
@@ -450,12 +452,11 @@ _s_mex4 = sim(civ="mexica_1500")
 check("the wheel concept itself, human-powered wheeled transport, and "
       "water/human-turned machinery are NOT swept into the same gate - "
       "only the animal-drawn vehicles were the bug",
-      _s_mex4.can_start("lnd_wheel_spoked") is False
-      and "lnd_wheel_spoked" in _s_mex4.done  # already granted, not gated
-      and "lnd_litter" in _s_mex4.done
-      and "cap_power_muscle" in _s_mex4.done,
+      _s_mex4.needs_first("lnd_wheel_spoked")[0] is None
+      and _s_mex4.needs_first("lnd_litter")[0] is None
+      and "cap_power_human" in _s_mex4.done
+      and "cap_power_muscle" not in _s_mex4.done,
       (_s_mex4.can_start("lnd_wheel_spoked"),
        "lnd_wheel_spoked" in _s_mex4.done,
        "lnd_litter" in _s_mex4.done,
        "cap_power_muscle" in _s_mex4.done))
-

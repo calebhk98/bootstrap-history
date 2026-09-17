@@ -75,6 +75,8 @@ check("...framed as a warning the player can act on, not a refusal",
 # only makes sense once more than one thing is drawing on the same purse,
 # and on_credit above already answers the single-project case on its own.
 s = sim(capital=50.0)
+s.done.add("sc2_notation_positional")
+s._done_changed()
 r_one = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "arithmetic_positional"})
 check("a single active project never gets the aggregate warning - on_credit "
       "already answers for it alone",
@@ -101,4 +103,3 @@ check("available's leverage list carries the stacking caution the first "
 _av2 = S._agent_dispatch(s, NODES, {"cmd": "available"})
 check("...and never repeats it on a later call - said once, not nagged",
       "stacking_several_is_the_trap" not in _av2, _av2)
-

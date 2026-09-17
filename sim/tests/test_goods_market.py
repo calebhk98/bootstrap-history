@@ -24,6 +24,9 @@ def _mk_loom_sim(n_looms, age_years):
     chosen = cand[:n_looms]
     s = sim(civ="rome_100ad", capital=5_000_000.0)
     s.artisans = s.scholars = 100.0 * n_looms
+    for k in chosen:
+        for trade in NODES[k].get("lab", {}):
+            s.employees[trade] = max(s.employees.get(trade, 0.0), 10.0)
     s.year = 100
     for k in chosen:
         s.done.add(k)
@@ -98,7 +101,7 @@ check("fin_gambling_house is a real, revenue-bearing tree node - not a "
       and NODES[_ENT_NODE].get("cat") == "luxury", NODES[_ENT_NODE])
 
 def _mk_income_sim(with_cheap_food):
-    s = sim(civ="rome_100ad", capital=5_000_000.0)
+    s = sim(civ="han_china_100ad", capital=5_000_000.0)
     s.artisans = s.scholars = 200.0
     if with_cheap_food:
         s.done.add(_PROC_NODE)
@@ -163,7 +166,7 @@ def _goods_snapshot(seed_env):
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
-         "s.artisans = s.scholars = 500.0; s.year = 100; "
+         "s.artisans = s.scholars = 500.0; s.employees = {t: 10.0 for t in W}; s.done_year = {}; s.year = 100; "
          "cand = sorted(k for k,n in N.items() if n.get('cat')=='textiles' and n.get('rev'))[:5]; "
          "[s.done.add(k) or s.done_year.__setitem__(k, 100) for k in cand]; "
          "s._done_changed(); "

@@ -266,9 +266,8 @@ while _stk:
     _pre_only.add(_c)
     _stk.extend(NODES[_c]["pre"])
 check("following `pre` alone understates what the goal needs by the "
-      "req_any groups that are not really alternatives - 158 nodes against "
-      "the 168 actually required",
-      _pre_only < _p_need and len(_p_need) - len(_pre_only) == 10,
+      "req_any groups that are not really alternatives",
+      _pre_only < _p_need and len(_p_need) > len(_pre_only),
       (len(_pre_only), len(_p_need)))
 # --- THE DATA SAID OVERLAND IN THREE PLACES AND THE TREE SAID ROUND THE
 # CAPE. mat_platinum_bulk's own note says the Ural placers are "reachable

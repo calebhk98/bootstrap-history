@@ -142,7 +142,7 @@ check("auto_open says why the best concern is still shut",
 # further 1,800) by year 117 and then sat on it, unopened, for roughly 850
 # years for exactly this reason: sunk capex earning nothing, ever.
 s_deep = sim(capital=-50000.0)
-_short = "hom_lamp_argand"      # rev 400, up 8, capex ~31: weeks, not years
+_short = "hom_button"      # rev 400, up 8, capex ~31: weeks, not years
 assert NODES[_short]["rev"] > NODES[_short]["up"], _short
 s_deep.done.add(_short); s_deep._done_changed()
 _cl_deep = s_deep.credit_limit()
