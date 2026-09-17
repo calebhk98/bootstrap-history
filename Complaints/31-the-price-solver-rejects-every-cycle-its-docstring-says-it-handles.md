@@ -99,3 +99,46 @@ as the current pass reports a missing path.
 `sim/tests/test_price_solver_cycles.py` asserts both cases above. It fails
 today, which is the point - see its own docstring for why it is written as an
 expected failure that must be converted, not deleted, when the pass is fixed.
+
+
+---
+
+## FIXED
+
+`compute_resolvable_materials` now runs the topological pass first, then
+decomposes whatever it could not reach into strongly connected components
+and tests each one for PRODUCTIVENESS rather than reachability: it runs the
+real damped-Jacobi machinery restricted to the component, with external
+materials pinned, and accepts the component only if that iteration
+contracts. Pinning the externals at a placeholder is valid because the
+contraction of an affine map does not depend on its constant term.
+
+The strict half survives, which was the requirement. A component whose
+prices grow without bound is refused and NAMED, and so is one with no
+anchor - no path to labour or to an already-resolved material. Both are
+reported under "UNPRODUCTIVE CYCLES" rather than silently dropped.
+
+On this file's own two reproductions:
+
+    axe/iron/timber      {'timber_m3'}  ->  {'timber_m3', 'iron_kg', 'axe_each'}
+    seed corn + bread    set()          ->  {'wheat_kg', 'bread_kg'}
+
+`sim/tests/test_price_solver_cycles.py` was inverted rather than deleted, as
+its own docstring instructed, and gained two cases for the refusals that
+must still happen: a recipe consuming 1.5 kg of itself per kg produced
+(spectral radius at or above 1), and a pure self-loop with no labour and no
+external input.
+
+## The prediction in this file came true within the hour
+
+It said fixing this was a prerequisite for capital, because `iron_bar_kg`'s
+capital entry lists iron bar among its build materials and `pig_iron_kg`'s
+lining lists iron bar while iron bar is made from pig iron. When capital was
+wired into the solver, feeding `build_materials` into the resolvability
+graph exposed exactly that two-cycle. It resolves cleanly, no diagnostic
+fires, and the run still reports 179 of 179 priced.
+
+Seed corn remains netted out in `data/production/40_organics.json` for now.
+The blocker is gone, so writing it as the physical input it is - gross yield
+742.5 kg/ha with 165 kg/ha of wheat among its own inputs - is now possible
+and is a separate, behaviour-changing commit.

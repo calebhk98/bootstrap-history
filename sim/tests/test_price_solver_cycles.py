@@ -1,13 +1,17 @@
-"""Pins the defect in Complaints/31: `sim/solve_prices.py` refuses every
-recipe cycle, although its own module docstring says cycles are expected and
-uses one as its worked example.
+"""Checks the fix for Complaints/31: `sim/solve_prices.py` used to refuse
+every recipe cycle, although its own module docstring said cycles were
+expected and used one as its worked example. `compute_resolvable_materials`
+now runs a strongly-connected-component productiveness test (Hawkins-Simon)
+on whatever the plain topological pass cannot reach, instead of refusing it
+outright - see the module docstring's CYCLES section and
+`_component_is_productive`.
 
-WRITTEN AS A PIN ON THE WRONG BEHAVIOUR, NOT AS A FAILING TEST, deliberately.
-A red suite gets ignored; a green suite with an explicit statement of what is
-currently wrong does not. Each assertion below says what the code does today
-AND what the right answer is, so whoever fixes `compute_resolvable_materials`
-finds this file immediately, flips the assertion, and cannot mistake the fix
-for a regression. Do not delete these when the pass is fixed - invert them.
+INVERTED FROM THE ORIGINAL PIN ON PURPOSE. This file used to assert the
+WRONG answer deliberately, with instructions to flip each assertion once the
+pass was fixed rather than delete the test - a red suite gets ignored, a
+green one pinning a known defect does not. The pass is fixed now, so these
+assert the right answer instead, and stay here as regression coverage for
+the same two reproductions.
 
 Written as unittest.TestCase rather than the flat check()-at-import style,
 like test_agriculture.py and test_demography.py, so it can exercise
@@ -19,13 +23,13 @@ import unittest
 from sim import solve_prices
 
 
-class ResolvabilityRejectsCyclesTests(unittest.TestCase):
+class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
 
-    def test_the_docstrings_own_axe_and_iron_example_is_refused(self):
+    def test_the_docstrings_own_axe_and_iron_example_resolves(self):
         # Timber is extracted (no inputs, labour only), so this system does
         # bottom out. Iron needs a little axe; an axe needs iron. A tiny
         # circulating share like this is productive and the damped iteration
-        # already in solve_prices.py would converge on it.
+        # already in solve_prices.py converges on it.
         entries = {
             "timber": {"outputs": {"timber_m3": 1.0}, "inputs": {},
                        "labour_hours": {"labourer": 2.0}},
@@ -38,20 +42,16 @@ class ResolvabilityRejectsCyclesTests(unittest.TestCase):
         resolvable = solve_prices.compute_resolvable_materials(
             entries, solve_prices.build_producers_index(entries))
 
-        # WRONG, and pinned as wrong: the right answer is all three.
         self.assertEqual(
-            resolvable, {"timber_m3"},
-            "solve_prices.compute_resolvable_materials no longer refuses the "
-            "axe/iron cycle. If that is because someone fixed it - see "
-            "Complaints/31 - this assertion should now read {'timber_m3', "
-            "'iron_kg', 'axe_each'}, and the two below should be inverted "
-            "too. Do not delete them.")
+            resolvable, {"timber_m3", "iron_kg", "axe_each"},
+            "compute_resolvable_materials refuses the axe/iron cycle again - "
+            "see Complaints/31 and _component_is_productive.")
 
-    def test_a_self_input_is_refused_and_takes_its_consumers_with_it(self):
+    def test_a_self_input_resolves_and_so_does_its_consumer(self):
         # Seed corn: the physically correct wheat entry lists wheat among its
-        # own inputs and outputs the GROSS yield. The pass refuses it, and
-        # because bread needs wheat, bread goes unresolvable too - a single
-        # self-loop silently removes an entire downstream branch.
+        # own inputs and outputs the GROSS yield. 165 of 742.5 is a
+        # circulating share of 22%, comfortably productive, and bread
+        # downstream of it should resolve too.
         entries = {
             "wheat": {"outputs": {"wheat_kg": 742.5},
                       "inputs": {"wheat_kg": 165.0},
@@ -62,12 +62,43 @@ class ResolvabilityRejectsCyclesTests(unittest.TestCase):
         resolvable = solve_prices.compute_resolvable_materials(
             entries, solve_prices.build_producers_index(entries))
 
-        # WRONG, and pinned as wrong: the right answer is both materials.
-        # 165 of 742.5 is a circulating share of 22%, comfortably productive.
         self.assertEqual(
-            resolvable, set(),
-            "a self-input no longer poisons its whole downstream - see "
+            resolvable, {"wheat_kg", "bread_kg"},
+            "a self-input poisons its whole downstream again - see "
             "Complaints/31 and the note in this file's docstring.")
+
+    def test_a_cycle_that_consumes_more_than_it_yields_is_still_refused(self):
+        # The strict pass exists for a reason: a cycle whose spectral radius
+        # is at or above 1 has no fixed point and must still be named and
+        # refused, not handed a floating-point number that looks real.
+        entries = {
+            "bad": {"outputs": {"bad_kg": 1.0}, "inputs": {"bad_kg": 1.5},
+                    "labour_hours": {"labourer": 1.0}},
+        }
+        diagnostics = []
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries),
+            diagnostics=diagnostics)
+
+        self.assertEqual(resolvable, set())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertIn("bad_kg", diagnostics[0])
+
+    def test_a_cycle_with_no_labour_or_extracted_anchor_is_refused(self):
+        # A self-loop with nothing else in it at all - no labour, no
+        # external material - never bottoms out, so there is nothing to
+        # price it from regardless of whether the share is small.
+        entries = {
+            "ghost": {"outputs": {"ghost_kg": 1.0}, "inputs": {"ghost_kg": 0.5}},
+        }
+        diagnostics = []
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries),
+            diagnostics=diagnostics)
+
+        self.assertEqual(resolvable, set())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertIn("ghost_kg", diagnostics[0])
 
     def test_the_netted_out_form_the_data_actually_uses_does_resolve(self):
         # This is why the defect is latent rather than breaking the solver

@@ -91,13 +91,18 @@ floor by the validator: say where the build bill, the service life and the
 annual output come from, in terms a millwright or a mason would recognise,
 not in terms a banker would.
 
-**What this does NOT yet do.** `sim/solve_prices.py` does not read this field
-- it still computes prime cost only, exactly as `energy_mj` sits in the
-schema unpriced. `capital` exists, is populated, and is validated; wiring the
-amortisation formula above into the solver is the next step, and is
-deliberately left to it rather than done here by hand-adding the amortised
-figure into `inputs`, which would hide the capital cost as an ordinary
-material flow instead of naming it.
+**This is now wired in.** `sim/solve_prices.py` reads `capital` and adds the
+amortisation formula above to a recipe's cost alongside its ordinary inputs,
+labour and rent - see the CAPITAL section of that file's module docstring
+and `recipe_cost_and_allocation`. It was deliberately never hand-added to
+`inputs` instead, which would have hidden the capital cost as an ordinary
+material flow rather than naming it. Two of the entries above are genuine
+recipe cycles once this is read - `iron_bar_kg`'s own hammer fittings are
+800 kg of `iron_bar_kg`, and `pig_iron_kg`'s hearth lining is 3,000 kg of
+`iron_bar_kg` while `iron_bar_kg` is made from `pig_iron_kg` - and both
+resolve correctly because `sim/solve_prices.py`'s resolvability pass now
+tests cycles for productiveness instead of refusing every one outright; see
+Complaints/31 and Complaints/32.
 
 ## WHICH MATERIALS GOT CAPITAL, AND WHICH WERE LEFT CAPITAL-LIGHT ON PURPOSE
 
@@ -157,34 +162,35 @@ structural rather than a matter of precision:
 
 | missing | status |
 |---|---|
-| **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates; not yet read by `sim/solve_prices.py` |
+| **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/solve_prices.py` |
 | rent | `extracted_from` marks it; the solver fixes it at zero this round |
 | energy | `energy_mj` exists; nothing prices it yet |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 
 Capital was the big one and the only one with no field at all - it has one
-now. Every entry here still says what a process eats and, for most of them,
-nothing about what it is done *in*; the `capital` field says that for the
-materials where it was judged to matter. The tech tree carries the whole
-thing as `cap`, which is 23.5% of its whole cost base, and only the ~13
-entries listed under WHICH MATERIALS GOT CAPITAL above have any of it
-reflected here yet - most of the tree's `cap` share still has not crossed
-into this directory, and none of what has crossed is read by the solver yet
-either.
+now, and it is read. Every entry here still says what a process eats and,
+for most of them, nothing about what it is done *in*; the `capital` field
+says that for the materials where it was judged to matter. The tech tree
+carries the whole thing as `cap`, which is 23.5% of its whole cost base, and
+only the ~13 entries listed under WHICH MATERIALS GOT CAPITAL above have any
+of it reflected here yet - most of the tree's `cap` share still has not
+crossed into this directory, though what has crossed now feeds the solver.
 
 The size of the hole, measured rather than guessed: a kilogram of iron bar
-comes out at **0.95 labour-hours**, which at the book unskilled wage is 71
-denarii a tonne against a book price of 1,000. Fourteen times. Put the other
-way round, the computed number says an unskilled labourer could buy a kilo of
-iron with about an hour's work - which is roughly true today and was nowhere
-near true in Rome, where iron was dear.
+comes out at **0.96 labour-hours** with capital counted (0.95 without it -
+see Complaints/32 on how small the capital charge turns out to be), which at
+the book unskilled wage is about 72 denarii a tonne against a book price of
+1,000 - still nearly fourteen times. Put the other way round, the computed
+number says an unskilled labourer could buy a kilo of iron with about an
+hour's work - which is roughly true today and was nowhere near true in Rome,
+where iron was dear. Capital was not the gap; see Complaints/32 for what is
+(rent on extracted materials, fixed at zero, is the largest single term).
 
 So the solver's numbers are an **honest lower bound**, and knowing precisely
-which four things are missing is worth more than a closer number would be.
-Do not add a fudge factor to close the gap. Add capital - which now has data
-behind it for the heaviest materials; wiring it into `sim/solve_prices.py` so
-the solver actually reads it is the next step, not this one.
+which things are missing is worth more than a closer number would be. Do not
+add a fudge factor to close the gap. Capital is now read; rent and energy are
+next, in the order Complaints/32 sets out.
 
 ## Confidence, and what it is actually measuring
 
