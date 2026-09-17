@@ -125,6 +125,33 @@ def check(entries, known_materials, known_trades):
             if key in inputs and len(inputs) == 1:
                 problems.append("%s: its only input is its own output" % where)
 
+        # CONSERVATION OF MASS, where the units allow it to be checked.
+        #
+        # Matter does not appear. A manufactured entry cannot yield more
+        # kilograms than the kilograms it consumes - not "should not", cannot.
+        # The reverse is normal and expected: most of the input mass leaves as
+        # slag, as CO2, as water, as scale, and a smelt that turns 50 tonnes of
+        # ore into one tonne of metal is doing exactly what it should.
+        #
+        # Only checked where every output and at least one input is quoted in
+        # kilograms, because this file also carries cubic metres of timber,
+        # grams of platinum, thousands of bricks and an iugerum of land, and
+        # adding those together would be arithmetic about nothing. An entry
+        # that fails this has either an inverted ratio or a unit slip, and both
+        # are invisible on a read-through: the numbers look like numbers.
+        kilogram_inputs = sum(quantity for key, quantity in inputs.items()
+                              if key.endswith("_kg")
+                              and isinstance(quantity, (int, float)))
+        if (inputs and kilogram_inputs > 0
+                and outputs and all(key.endswith("_kg") for key in outputs)):
+            kilogram_outputs = sum(q for q in outputs.values()
+                                   if isinstance(q, (int, float)))
+            if kilogram_outputs > kilogram_inputs:
+                problems.append(
+                    "%s: yields %.0f kg from %.0f kg of inputs. Matter does "
+                    "not appear - check for an inverted ratio or a unit slip."
+                    % (where, kilogram_outputs, kilogram_inputs))
+
     return problems
 
 
