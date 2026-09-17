@@ -522,6 +522,57 @@ bytecode changes.**
   nobody would pick in isolation. Treat this as the default case for any
   captured local, not as an exception.
 
+- **THE COUNTS IN A.1 OVERSTATE THE RENAMEABLE SURFACE, BY A LOT.** A
+  name inventory that does not separate a function-local from a module-level
+  binding counts both, and only the first is renameable by this method. A
+  module-level assignment compiles to `STORE_NAME`, not `STORE_FAST`, so
+  renaming it moves `co_names` on the `<module>` code object and the prover
+  refuses it correctly as a global change. Most of this repository's test
+  topics are flat scripts - `from .harness import *` followed by top-level
+  `check(...)` calls - so most of their short names live at module scope.
+  Re-measured across `sim/`:
+
+        Tier-1 locals, inside a def/lambda/comprehension     234
+        module-level globals, out of scope for a local sweep 352
+
+  Round 4 hit this repeatedly: `test_literacy_market_pricing.py` was sized at
+  19 and had 2 real locals; `test_mines.py` 14 and 6; `test_names_and_fog.py`
+  16 and 6. Two agents diagnosed it independently. Size a naming round by
+  walking `compile()`'s nested code objects and reading `co_varnames` minus
+  parameters, which is exactly what the prover checks, rather than by
+  counting identifiers in the source.
+
+- **A NEW NAME CAN COLLIDE WITH A STAR-IMPORTED GLOBAL, and this one nearly
+  went into the guidance as advice.** The test topics do `from .harness
+  import *`, which brings harness's own `sim(civ=..., capital=...)` FACTORY
+  FUNCTION into the module namespace. A nested `def` that does `s = sim(...)`
+  therefore cannot rename `s` to `sim`: Python decides locals statically, so
+  `sim` becomes a local for the whole function and the right-hand side of
+  that very line raises `UnboundLocalError`. This is the captured-outer-name
+  hazard again, reached through a star import instead of a closure. Use a
+  contextual name - `starved_sim`, `hazard_sim`, `tree_sim` - and grep the
+  module's star-imported names before choosing any new name at all.
+
+- **`audit_costs.py`'s `report()` has a second documented shared slot**,
+  alongside `treetool.py`'s `q`: `c` is a per-field count in one half of the
+  function and the price-confidence dict in the other. Left alone
+  deliberately. Recorded so the next reader does not "fix" it.
+
+**A NOTE ON THE FORCED-WORSE-NAME LIST ABOVE.** Round 4 was carried out
+against a PINNED copy of the prover from before the slot-split work landed,
+so its agents were still constrained by hazards 1 to 4. The prover now
+proves slot splits, cellvar reorders, comprehension-scope renames and nested
+`def` renames. Every name in that list is worth re-attempting - among them
+`q` in `cmd_merge`, `ys` in `_summarise`, `m` in `materials_report`, `a` in
+`_room_advice`, and `yr` in `_plague_line2`, which wanted `hazard_year` and
+got `years_started` because its cellvar siblings are parameters.
+
+**WORTH BUILDING NEXT, from round 4's own evidence:** a mode that answers
+"is this target a cellvar, and what are its alphabetical neighbours" BEFORE
+a rename is attempted. Every cellvar case in three rounds was found by
+trial and error through `--check-params`, and the information needed to
+pick a safe name the first time is sitting in `co_cellvars`.
+
   The cheap pre-check that avoids both: before renaming a local, ask whether
   it is referenced inside a nested `def`/`lambda`/comprehension body. Being a
   comprehension's outermost iterable does NOT force capture. Round 2's other

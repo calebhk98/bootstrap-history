@@ -798,8 +798,8 @@ _help_front = S._agent_dispatch(_s_hc, NODES, {"cmd": "help"})["help"]
 check("the no-topic help screen names `help commands` and `log` outright, "
       "not only inside the 'more topics' map a player has to already "
       "suspect exists",
-      any("help" in str(topic).lower() or "log" in str(content).lower()
-          for topic, content in _help_front.items()
+      any("help" in str(topic).lower() or "log" in str(value).lower()
+          for topic, value in _help_front.items()
           if "command index" in str(topic).lower() or "exact history" in str(topic).lower()),
       list(_help_front.keys()))
 check("...and the text itself actually says 'help' topic 'commands' and "
