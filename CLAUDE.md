@@ -119,6 +119,7 @@ python3 sim/perf_fingerprint.py check before.json
 python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
+python3 sim/repro_nondeterminism.py        # the determinism bug, in ten seconds
 ```
 
 The suite runs from a checkout of any name, in any directory. If you find
@@ -133,14 +134,15 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   outputs and messages, not on the simulation being the same simulation.
   `perf_fingerprint.py` is supposed to cover that, and it does not cover
   `protocol.py`, where a third of the code lives.
-- **`perf_fingerprint.py` does not currently reproduce its own recording.** A
-  pristine checkout of `origin/main`, recorded and then checked against
-  itself, reports two of nine scenarios diverged, at different years each
-  time. A single scenario run alone in a fresh process is stable across runs
-  and across hash seeds, so the suspicion is state shared between scenarios
-  inside one process. Until this is fixed, **a clean `check` proves nothing
-  and a dirty one accuses nothing.** Do not start a refactor of the
-  simulation loop behind it.
+- **The simulation is not deterministic, and `perf_fingerprint.py` therefore
+  proves nothing.** The same scenario, same seed, run four times in one
+  process, gives more than one answer; the difference is 1.3e-12 in a float
+  and it compounds over two centuries. Reproduce it in ten seconds with
+  `python3 sim/repro_nondeterminism.py`. Until it is fixed, **a clean
+  `check` proves nothing and a dirty one accuses nothing** - do not start a
+  refactor of the simulation loop behind it. Everything ruled out so far is
+  in `Complaints/27-nondeterministic-simulation.md`; read it before
+  investigating, several obvious hypotheses are already dead.
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.

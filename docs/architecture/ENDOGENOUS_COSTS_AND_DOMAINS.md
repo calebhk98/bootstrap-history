@@ -387,17 +387,32 @@ Recorded so the next person does not repeat it:
   evidence, not a clean bill of health, and `_DESC_CACHE` in `data.py` around
   line 285 - validated only by `len(nodes)` - remains unexamined.)
 
-### What is still open
+### It now reproduces in ten seconds
 
-Whether the divergence accumulates within a process as scenarios run, or
-whether each process is internally consistent and something process-global
-differs between them. The experiment is one run of the reference sequence
-twice in the same process, comparing the two passes.
+`python3 sim/repro_nondeterminism.py`. One scenario, four runs, one process,
+same seed, nothing changed in between, and they disagree. Which run is the odd
+one out varies between invocations, so it is sporadic rather than ordered -
+"the first run is different" is the obvious guess and it is wrong.
 
-This deserves its own focused session. It is a correctness question about the
-simulation, not only about the test tool: something in this engine returns a
-different answer for the same inputs, and a simulator whose costs are supposed
-to be calculated cannot afford that.
+`--bisect` names the damage: rome_100ad/seed1 first differs at year index 18,
+in `potash_soda.ph_left`, `152.51383869514427` against `152.51383869514555`.
+1.3e-12, in the last bits of a float. That is the signature of the same sum
+taken in a different order, and `done_in_order()`'s own docstring describes
+the identical failure - it was found and fixed in three places already. This
+is a fourth, somewhere else.
+
+The only cross-`Sim` state found is three class-level caches on
+`EconomyMixin`. Clearing them between runs changes the answer, so they are
+implicated; they are also built deterministically from JSON and never
+mutated, so they cannot be changing a sum directly. The likeliest reading is
+that constructing them perturbs allocation and something downstream is
+sensitive to that.
+
+Full write-up, including everything ruled out, in
+`Complaints/27-nondeterministic-simulation.md`. It deserves its own focused
+session, and it is a correctness question about the simulation rather than
+only about the test tool: a simulator whose costs are supposed to be
+calculated cannot have arithmetic that depends on the memory allocator.
 
 **The test suite has never run to the end.** Fixed on this branch - see the
 previous commit - but worth remembering as a prior on the rest of the
