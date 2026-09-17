@@ -35,10 +35,10 @@ class ProjectsMixin:
     def is_venture(self, k):
         """Is this something you could run as a going concern, as opposed to a
         piece of knowledge that simply changes what you can do?"""
-        n = self.nodes.get(k)
-        if n is None or k in self.household.granted:
+        node = self.nodes.get(k)
+        if node is None or k in self.household.granted:
             return False
-        return n["rev"] > 0 or n["up"] > 0
+        return node["rev"] > 0 or node["up"] > 0
 
     # Concerns whose whole point is what they let you DO - scholars a school
     # supports, household places a workshop adds, credit a patron's name
@@ -133,19 +133,19 @@ class ProjectsMixin:
         be a false alarm.
         """
         out = []
-        for k in sorted(self.NOT_OPERATING_BENEFIT):
-            if k not in self.nodes or not self.has(k) or self.running(k):
+        for node_id in sorted(self.NOT_OPERATING_BENEFIT):
+            if node_id not in self.nodes or not self.has(node_id) or self.running(node_id):
                 continue
-            if k == "fin_university" and self.running("school_founded"):
+            if node_id == "fin_university" and self.running("school_founded"):
                 continue
-            benefit = self.NOT_OPERATING_BENEFIT[k]
+            benefit = self.NOT_OPERATING_BENEFIT[node_id]
             out.append({
-                "id": k,
+                "id": node_id,
                 "benefit_switched_off": benefit,
                 "warning": ("Critical capability completed but not "
                            "operating: %s. %s is currently inactive."
-                           % (k, benefit)),
-                "fix": "open %s" % k,
+                           % (node_id, benefit)),
+                "fix": "open %s" % node_id,
             })
         return out
 
@@ -257,10 +257,10 @@ class ProjectsMixin:
         the original single unit pays exactly what it always paid.
         """
         base = self.venture_capex(k)
-        c = self.INSTITUTION_EXPANSION_CONVEXITY
+        convexity = self.INSTITUTION_EXPANSION_CONVEXITY
 
         def f(u):
-            return u + c * 0.5 * max(0.0, u - 1.0) ** 2
+            return u + convexity * 0.5 * max(0.0, u - 1.0) ** 2
         return base * max(0.0, f(have_units + add_units) - f(have_units))
 
     # ---- BUILT, versus BUILT AND STILL RUNNING ----------------------------
@@ -325,8 +325,8 @@ class ProjectsMixin:
         the work itself cost, and never less than a year of its running cost,
         so that a thing which is cheap to invent and expensive to run cannot
         be opened for nothing."""
-        n = self.nodes[k]
-        return max(self.project_cost(k) * 0.15, n["up"] * 1.0)
+        node = self.nodes[k]
+        return max(self.project_cost(k) * 0.15, node["up"] * 1.0)
 
     # SUPERVISION, NOT OPERATION. A node's sch/art figures are what it takes to
     # BUILD the thing, and its upkeep already pays the people who run it once
@@ -352,7 +352,7 @@ class ProjectsMixin:
 
     def venture_hands(self, k):
         """(scholars, craftsmen) of your own that running this ties up."""
-        n = self.nodes[k]
+        node = self.nodes[k]
         # A SCHOOL DOES NOT COST YOU SCHOLARS. What these establishments take
         # is money - a patron's cultivation, a school's stipends - and what
         # they hand back is exactly the people every other concern is
@@ -363,11 +363,11 @@ class ProjectsMixin:
         # the school and the staffing rule shut it the same turn, for ever.
         # Only the ones that lose money qualify: a blast furnace is in this set
         # too, and a blast furnace certainly needs somebody watching it.
-        if (k in self.CAPABILITY_INSTITUTIONS and n["rev"] <= n["up"]):
+        if (k in self.CAPABILITY_INSTITUTIONS and node["rev"] <= node["up"]):
             return 0.0, 0.0
-        f = self.VENTURE_SUPERVISION
-        by_size = max(0.0, n["rev"]) / self.VENTURE_HANDS_PER_REVENUE
-        return n["sch"] * f, max(n["art"] * f, by_size)
+        supervision_share = self.VENTURE_SUPERVISION
+        by_size = max(0.0, node["rev"]) / self.VENTURE_HANDS_PER_REVENUE
+        return node["sch"] * supervision_share, max(node["art"] * supervision_share, by_size)
 
     VENTURE_FOREMAN_SHARE = 0.25
 
@@ -381,9 +381,9 @@ class ProjectsMixin:
         generic concerns and knowledge/capability institutions keep the older
         scholar/craftsman rule.
         """
-        n = self.nodes[k]
-        lab = n.get("lab") or {}
-        if (k in self.CAPABILITY_INSTITUTIONS or n.get("rev", 0) <= 0
+        node = self.nodes[k]
+        lab = node.get("lab") or {}
+        if (k in self.CAPABILITY_INSTITUTIONS or node.get("rev", 0) <= 0
                 or lab.get("artisan", 0) <= 0):
             return None, 0.0
         skilled = [(hours, trade) for trade, hours in lab.items()
@@ -420,13 +420,13 @@ class ProjectsMixin:
         to close.
         """
         rows = []
-        for k in sorted(self.household.operating):
-            if k not in self.nodes:
+        for node_id in sorted(self.household.operating):
+            if node_id not in self.nodes:
                 continue
-            a, b = self.venture_hands(k)
-            if a > 0.005 or b > 0.005:
-                rows.append({"id": k, "scholars": round(a, 2),
-                             "craftsmen": round(b, 2)})
+            scholars, craftsmen = self.venture_hands(node_id)
+            if scholars > 0.005 or craftsmen > 0.005:
+                rows.append({"id": node_id, "scholars": round(scholars, 2),
+                             "craftsmen": round(craftsmen, 2)})
         rows.sort(key=lambda r: -(r["scholars"] + r["craftsmen"]))
         return rows
 
@@ -439,12 +439,12 @@ class ProjectsMixin:
         # capital; PYTHONHASHSEED=0 made all three identical. Every float sum
         # over `operating` or `done` has to fix its order.
         sch = art = 0.0
-        for k in sorted(self.household.operating):
-            if k not in self.nodes:
+        for node_id in sorted(self.household.operating):
+            if node_id not in self.nodes:
                 continue
-            a, b = self.venture_hands(k)
-            sch += a
-            art += b
+            scholars, craftsmen = self.venture_hands(node_id)
+            sch += scholars
+            art += craftsmen
         return sch, art
 
     # YOU ARE A PAIR OF HANDS TOO. Requiring staff for every concern, however
@@ -508,7 +508,7 @@ class ProjectsMixin:
             if k in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(k, float(units), pay)
             return False, "you are already running that"
-        n = self.nodes[k]
+        node = self.nodes[k]
         scalable = k in self.SCALABLE_INSTITUTIONS
         # A STARTER FOUNDING IS STILL A FOUNDING, NOT A TOY. Below a fifth of
         # the ordinary size there would be nothing left standing between "a
@@ -519,16 +519,16 @@ class ProjectsMixin:
         # closed school does not un-build the extra wings it grew before it
         # shut; only `units` explicitly asked for here changes the size.
         if scalable and units is not None:
-            u = max(0.2, float(units))
+            unit_count = max(0.2, float(units))
         elif scalable:
-            u = getattr(self.household, "inst_units", {}).get(k, 1.0)
+            unit_count = getattr(self.household, "inst_units", {}).get(k, 1.0)
         else:
-            u = 1.0
+            unit_count = 1.0
         sch_free, art_free = self.venture_staff_free()
         need_sch, need_art = self.venture_hands(k)
-        need_sch, need_art = need_sch * u, need_art * u
+        need_sch, need_art = need_sch * unit_count, need_art * unit_count
         foreman_trade, foreman_fte = self.venture_foreman(k)
-        foreman_fte *= u
+        foreman_fte *= unit_count
         # A HUNDREDTH OF A PERSON IS NOBODY. The comparison was exact and the
         # message rounded to one decimal, so a break tester read "it needs 0.0
         # craftsmen to supervise, and you have 0.0" - a refusal that
@@ -551,7 +551,7 @@ class ProjectsMixin:
                            % (foreman_fte, foreman_trade,
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
-        fee = self.venture_capex(k) * (u if scalable else 1.0)
+        fee = self.venture_capex(k) * (unit_count if scalable else 1.0)
         # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN.
         # Staff attrition runs at 3.5% a year, so a household sitting near the
         # supervision line loses a concern most years and pays the full stock
@@ -585,10 +585,10 @@ class ProjectsMixin:
         _shut.pop(k, None)
         self.household.shut_for_staff = _shut
         if scalable:
-            iu = getattr(self.household, "inst_units", None)
-            if iu is None:
-                iu = self.household.inst_units = {}
-            iu[k] = u
+            inst_units = getattr(self.household, "inst_units", None)
+            if inst_units is None:
+                inst_units = self.household.inst_units = {}
+            inst_units[k] = unit_count
         # WHEN THE DOORS OPENED, which is when custom starts to find you. See
         # venture_ramp: this used to read the year you worked the thing OUT, so
         # opening late skipped the ramp entirely. Reopening something you had
@@ -597,7 +597,7 @@ class ProjectsMixin:
         if _oy is None:
             _oy = self.household.opened_year = {}
         _oy.setdefault(k, self.year)
-        rev_now, up_now = n["rev"] * u, n["up"] * u
+        rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
         # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE. A newly opened
         # concern takes revenue_ramp_years to reach the figure just quoted -
         # custom takes time to find the shop - and the only place this was
@@ -628,7 +628,7 @@ class ProjectsMixin:
             else "")
         return True, ("%s open%s: it earns %s a year and costs %s a year to "
                       "run.%s%s"
-                      % (k, "" if u == 1.0 else " at %.2f of a full founding" % u,
+                      % (k, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now),
                          _ramp_note, _loss_note))
 
@@ -652,7 +652,7 @@ class ProjectsMixin:
                            "literacy says is not needed on the land)"
                            % (k, ceiling))
         add_units = min(add_units, room)
-        n = self.nodes[k]
+        node = self.nodes[k]
         sch_free, art_free = self.venture_staff_free()
         need_sch, need_art = self.venture_hands(k)
         need_sch, need_art = need_sch * add_units, need_art * add_units
@@ -672,14 +672,14 @@ class ProjectsMixin:
                                   "{:,.0f}".format(self.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
             self.household.capital -= fee
-        iu = getattr(self.household, "inst_units", None)
-        if iu is None:
-            iu = self.household.inst_units = {}
-        iu[k] = have + add_units
-        rev_now, up_now = n["rev"] * iu[k], n["up"] * iu[k]
+        inst_units = getattr(self.household, "inst_units", None)
+        if inst_units is None:
+            inst_units = self.household.inst_units = {}
+        inst_units[k] = have + add_units
+        rev_now, up_now = node["rev"] * inst_units[k], node["up"] * inst_units[k]
         return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
                       "now earns about %s a year and costs about %s to run"
-                      % (k, have, iu[k], "{:,.0f}".format(fee),
+                      % (k, have, inst_units[k], "{:,.0f}".format(fee),
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now)))
 
     def close_venture(self, k):
@@ -689,9 +689,9 @@ class ProjectsMixin:
             return False, "you are not running that"
         self.household.operating.discard(k)
         self.household.mothballed.add(k)
-        n = self.nodes[k]
+        node = self.nodes[k]
         return True, ("%s closed: you stop paying %s a year and stop earning %s"
-                      % (k, "{:,.0f}".format(n["up"]), "{:,.0f}".format(n["rev"])))
+                      % (k, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))
 
     # Years a shop stands with its stock and its lease while you find somebody
     # to keep an eye on it. Past that it really has been given up.
@@ -743,10 +743,10 @@ class ProjectsMixin:
             # and an imperial patron on the same turn had all three shut by
             # the staffing rule on the next one. You cannot answer a shortage
             # of craftsmen by closing something no craftsman was watching.
-            _holders = [k for k in sorted(self.household.operating)
-                        if self.venture_hands(k)[1] > 0.005
-                        or self.venture_hands(k)[0] > 0.005
-                        or self.venture_foreman(k)[1] > 0.005]
+            _holders = [node_id for node_id in sorted(self.household.operating)
+                        if self.venture_hands(node_id)[1] > 0.005
+                        or self.venture_hands(node_id)[0] > 0.005
+                        or self.venture_foreman(node_id)[1] > 0.005]
             if not _holders:
                 break
             worst = min(_holders,
@@ -793,8 +793,8 @@ class ProjectsMixin:
         `mothball` never reappears on its own - that is still their call.
         """
         _shut = getattr(self.household, "shut_for_staff", {})
-        cands = [k for k in sorted(_shut)
-                 if k in self.household.mothballed and k in self.household.done and k in self.nodes]
+        cands = [node_id for node_id in sorted(_shut)
+                 if node_id in self.household.mothballed and node_id in self.household.done and node_id in self.nodes]
         if not cands:
             return []
         # BEST-EARNING FIRST, same idea as auto_open_ventures: when only some
@@ -804,14 +804,14 @@ class ProjectsMixin:
         cands.sort(key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
                                    / max(0.01, sum(self.venture_hands(k)))))
         reopened = []
-        for k in cands:
-            need_sch, need_art = self.venture_hands(k)
+        for node_id in cands:
+            need_sch, need_art = self.venture_hands(node_id)
             sch_free, art_free = self.venture_staff_free()
             if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
                 continue
-            ok, _msg = self.open_venture(k)
+            ok, _msg = self.open_venture(node_id)
             if ok:
-                reopened.append(k)
+                reopened.append(node_id)
         if reopened:
             self.household.log.append((yr, "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
@@ -880,9 +880,9 @@ class ProjectsMixin:
         art_room = self.household.artisans + own + SLACK - art_used
         if sch_room > self.STAFFING_WARNING_BAND and art_room > self.STAFFING_WARNING_BAND:
             return []
-        _holders = [k for k in sorted(self.household.operating)
-                    if self.venture_hands(k)[1] > 0.005
-                    or self.venture_hands(k)[0] > 0.005]
+        _holders = [node_id for node_id in sorted(self.household.operating)
+                    if self.venture_hands(node_id)[1] > 0.005
+                    or self.venture_hands(node_id)[0] > 0.005]
         if not _holders:
             return []
         # SAME ORDER close_unstaffed_ventures would close in - dearest to
@@ -893,8 +893,8 @@ class ProjectsMixin:
                                        / max(0.01, self.venture_hands(k)[1]),
                                        -self.venture_hands(k)[1]))
         out = []
-        for k in ranked:
-            sch_need, art_need = self.venture_hands(k)
+        for node_id in ranked:
+            sch_need, art_need = self.venture_hands(node_id)
             candidates = []
             if sch_need > 0.005:
                 candidates.append(("scholars", sch_room))
@@ -910,12 +910,12 @@ class ProjectsMixin:
             word, room = min(candidates, key=lambda c: c[1])
             if room > self.STAFFING_WARNING_BAND:
                 continue
-            name = self.nodes[k]["name"]
+            name = self.nodes[node_id]["name"]
             # WHAT IT COSTS TO LOSE, in the same recurring den/yr the player
             # already judges every concern by (rev - up, the same figure
             # `ventures` and the ranking above use) - not just that it would
             # close, but whether closing it is worth reacting to.
-            net = max(0.0, self.nodes[k]["rev"] - self.nodes[k]["up"])
+            net = max(0.0, self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
             cost = "{:,.0f}".format(net)
             # THE COMMAND THAT FIXES IT, named, not left for the player to
             # infer from "craftsmen"/"scholars" alone - hire is always
@@ -958,7 +958,7 @@ class ProjectsMixin:
                 headline = ("%s has %s spare %s before it closes"
                             % (name, ("%.1f" % room).rstrip("0").rstrip("."),
                                word))
-            out.append({"id": k, "name": name, "within": round(max(0.0, room), 1),
+            out.append({"id": node_id, "name": name, "within": round(max(0.0, room), 1),
                        "of": word, "headline": headline,
                        "recurring_income_at_risk": round(net, 1),
                        "one_loss_closes_it": one_loss_closes,
@@ -978,9 +978,9 @@ class ProjectsMixin:
         # a 3,200-a-year works you cannot afford at all.
         # sorted() is stable, so ties keep the order of the input - and the
         # input was a generator over a set. sorted(self.household.done) first.
-        cands = sorted((k for k in sorted(self.household.done)
-                        if self.is_venture(k) and k not in self.household.operating
-                        and self.nodes[k]["rev"] > self.nodes[k]["up"]),
+        cands = sorted((node_id for node_id in sorted(self.household.done)
+                        if self.is_venture(node_id) and node_id not in self.household.operating
+                        and self.nodes[node_id]["rev"] > self.nodes[node_id]["up"]),
                        key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
                                        / max(1.0, self.venture_capex(k))))
         # DEEP IN ARREARS IS NOT "IN ARREARS". Removing the old `capital <= 0`
@@ -1043,10 +1043,10 @@ class ProjectsMixin:
         # the case the ABANDONED-206 history above warns about, and nothing in
         # this paragraph is the bug this change is for.
         caps = [] if _deep_arrears else sorted(
-                      (k for k in sorted(self.household.done)
-                       if k in self.CAPABILITY_INSTITUTIONS
-                       and k not in self.household.operating and self.is_venture(k)
-                       and self.nodes[k]["rev"] <= self.nodes[k]["up"]),
+                      (node_id for node_id in sorted(self.household.done)
+                       if node_id in self.CAPABILITY_INSTITUTIONS
+                       and node_id not in self.household.operating and self.is_venture(node_id)
+                       and self.nodes[node_id]["rev"] <= self.nodes[node_id]["up"]),
                       key=lambda k: (self.nodes[k]["up"] - self.nodes[k]["rev"],
                                      self.venture_capex(k), k))
         # WHAT IS LEFT AFTER EVERYTHING YOU ARE ALREADY COMMITTED TO. Opening
@@ -1074,12 +1074,12 @@ class ProjectsMixin:
         _line = self.credit_limit()
         _deep = self.household.capital < 0 and -self.household.capital > _line * 0.75
         _bleed_room = max(0.0, _surplus) * 0.5 + (0.0 if _deep else _line * 0.10)
-        for k in caps:
-            _bleed = self.institution_upkeep(k) - self.nodes[k]["rev"]
+        for node_id in caps:
+            _bleed = self.institution_upkeep(node_id) - self.nodes[node_id]["rev"]
             if _bleed <= _bleed_room:
-                ok, _w = self.open_venture(k)
+                ok, _message = self.open_venture(node_id)
                 if ok:
-                    opened.append(k)
+                    opened.append(node_id)
                     _surplus -= _bleed
                     _bleed_room -= _bleed
                 continue
@@ -1090,14 +1090,14 @@ class ProjectsMixin:
             # for four and a half centuries straight. A place you can only
             # afford a fifth of is still a place; institution_units below
             # 1.0 is what open_venture calls a starter founding.
-            if k not in self.SCALABLE_INSTITUTIONS or _bleed <= 0:
+            if node_id not in self.SCALABLE_INSTITUTIONS or _bleed <= 0:
                 continue
             starter = max(0.0, min(1.0, _bleed_room / _bleed))
             if starter < 0.2:
                 continue
-            ok, _w = self.open_venture(k, units=starter)
+            ok, _message = self.open_venture(node_id, units=starter)
             if ok:
-                opened.append(k)
+                opened.append(node_id)
                 _spent = _bleed * starter
                 _surplus -= _spent
                 _bleed_room -= _spent
@@ -1118,18 +1118,18 @@ class ProjectsMixin:
         # 14 people is not short of a 12-place workshop, whatever it can
         # technically still borrow.
         if _surplus > 0.01 and not _deep_arrears:
-            for k in sorted(self.SCALABLE_INSTITUTIONS):
-                if k not in self.household.operating or _surplus <= 0.01:
+            for node_id in sorted(self.SCALABLE_INSTITUTIONS):
+                if node_id not in self.household.operating or _surplus <= 0.01:
                     continue
-                have = self.institution_units(k)
-                ceiling = self.institution_unit_ceiling(k)
+                have = self.institution_units(node_id)
+                ceiling = self.institution_unit_ceiling(node_id)
                 room = ceiling - have
                 if room < 0.05:
                     continue
-                places_now = self.institution_places(k) * have
+                places_now = self.institution_places(node_id) * have
                 if self.headcount() < places_now * 0.85:
                     continue        # not full enough yet to be worth more
-                per_unit = self.nodes[k]["up"] - self.nodes[k]["rev"]
+                per_unit = self.nodes[node_id]["up"] - self.nodes[node_id]["rev"]
                 # AT MOST A QUARTER OF THIS YEAR'S REAL SURPLUS, and at most
                 # one further unit a year - growth, not a second bootstrap.
                 afford_room = _surplus * 0.25
@@ -1137,9 +1137,9 @@ class ProjectsMixin:
                     max(0.0, min(1.0, room, afford_room / per_unit))
                 if step < 0.1:
                     continue
-                ok, _w = self.open_venture(k, units=step)
+                ok, _message = self.open_venture(node_id, units=step)
                 if ok:
-                    opened.append(k)
+                    opened.append(node_id)
                     _spent = max(0.0, per_unit) * step
                     _surplus -= _spent
         # A CONCERN THAT PAYS FOR ITS OWN DOOR WITHIN A SEASON OR TWO IS NOT
@@ -1155,7 +1155,7 @@ class ProjectsMixin:
         # to it while the household is deep in arrears.
         PAYBACK_LIMIT_YEARS = 3.0
         blocked = None
-        for k in cands:
+        for node_id in cands:
             # NO SECOND, STRICTER GATE. This broke out the moment capital went
             # negative, so a household in arrears could never open anything -
             # and opening a concern is the only way to stop being in arrears.
@@ -1167,11 +1167,11 @@ class ProjectsMixin:
             # raise, and a lender will advance against a shop with stock in it
             # as readily as against half-built work.
             if _deep_arrears:
-                n = self.nodes[k]
-                _payback = self.venture_capex(k) / max(0.01, n["rev"] - n["up"])
+                node = self.nodes[node_id]
+                _payback = self.venture_capex(node_id) / max(0.01, node["rev"] - node["up"])
                 if _payback > PAYBACK_LIMIT_YEARS:
                     if blocked is None:
-                        blocked = (k, ("it would take %.1f years to pay for its "
+                        blocked = (node_id, ("it would take %.1f years to pay for its "
                                        "own doors, and nothing slower than %.0f "
                                        "opens while you are this deep in arrears; "
                                        "clear enough debt to cross half your "
@@ -1179,27 +1179,27 @@ class ProjectsMixin:
                                        "quicker against what you can raise"
                                        % (_payback, PAYBACK_LIMIT_YEARS)))
                     continue
-            ok, why = self.open_venture(k)
+            ok, why = self.open_venture(node_id)
             if ok:
-                opened.append(k)
+                opened.append(node_id)
             elif blocked is None:
-                blocked = (k, why)
+                blocked = (node_id, why)
         # SAY WHY THE BEST ONE STAYED SHUT. A break tester watched a concern
         # earning 150 a year against 15 of upkeep sit closed for six years with
         # the policy switched on, because auto_open threw away every refusal
         # open_venture handed it. A policy that silently declines is
         # indistinguishable from a policy that is broken.
         if blocked and not opened:
-            k, why = blocked
+            node_id, why = blocked
             said = getattr(self.household, "_said_autoopen", {})
-            if self.year - said.get(k, -99) >= 10:
-                said[k] = self.year
+            if self.year - said.get(node_id, -99) >= 10:
+                said[node_id] = self.year
                 self.household._said_autoopen = said
                 self.household.log.append((self.year,
                                  "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
-                                 % (k, "{:,.0f}".format(self.nodes[k]["rev"]),
-                                    "{:,.0f}".format(self.nodes[k]["up"]),
+                                 % (node_id, "{:,.0f}".format(self.nodes[node_id]["rev"]),
+                                    "{:,.0f}".format(self.nodes[node_id]["up"]),
                                     why or "something is in the way")))
         return opened
 
@@ -1295,7 +1295,7 @@ class ProjectsMixin:
             return False, ('you no longer know how to do that, so there is '
                            'nothing to reopen: build it again with '
                            '{"cmd":"start","id":"%s"}' % k)
-        n = self.nodes[k]
+        node = self.nodes[k]
         # A FLOOR FROM THE UPKEEP, not only a share of the build cost. Thirty
         # per cent of nothing is nothing, and a node that costs nothing to build
         # while costing 20 a year to keep could be shut down and brought back
@@ -1306,7 +1306,7 @@ class ProjectsMixin:
         # because the shaft floods and the crew disperses - so the asymmetry
         # was an oversight rather than a decision. Two years of the upkeep you
         # avoided is what it costs to find the people and the plant again.
-        fee = max(self.project_cost(k) * 0.3, n["up"] * 2.0)
+        fee = max(self.project_cost(k) * 0.3, node["up"] * 2.0)
         # THE SAME GRACE `open` GIVES. A concern the staffing rule shut is a
         # shop whose keeper you lost, not a work you abandoned: open_venture
         # charges a tenth to reopen one within a few years and says so in the
@@ -1347,9 +1347,9 @@ class ProjectsMixin:
                               ("; " + _grace_note) if _grace_note else "",
                               "{:,.0f}".format(self.household.capital),
                               "{:,.0f}".format(self.spending_power("buy"))))
-        if any(p not in self.household.done for p in n["pre"]):
+        if any(prereq_id not in self.household.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
-                           + ", ".join(p for p in n["pre"] if p not in self.household.done))
+                           + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done))
         self.household.capital -= fee
         self.household.done.add(k)
         self._done_changed()

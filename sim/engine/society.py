@@ -13,12 +13,12 @@ from .data import (TECH_EFFECTS, TRADES_ABSENT, closure, critical_path)
 
 class SocietyMixin:
     def state_interest(self, n):
-        w = self.w
-        m = dict(self.STATE_WEIGHTS)
-        m.update({"military": w["w_military"], "labour_saving": w["w_labour_saving"],
-                  "information": w["w_information"], "commerce": w["w_commerce"],
-                  "religious_adjacent": -0.9 * w["w_religious_rigidity"]})
-        return sum(m.get(t, 0.0) for t in n.get("traits", []))
+        weights = self.w
+        state_weights = dict(self.STATE_WEIGHTS)
+        state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
+                  "information": weights["w_information"], "commerce": weights["w_commerce"],
+                  "religious_adjacent": -0.9 * weights["w_religious_rigidity"]})
+        return sum(state_weights.get(trait, 0.0) for trait in n.get("traits", []))
 
     def alarm_of(self, n):
         """How alarming this technology is TO THIS CIVILIZATION, before defences.
@@ -26,24 +26,24 @@ class SocietyMixin:
         Note what is NOT in here: speed, and money. Building fast does not make
         you a sorcerer. Producing an effect a society has no category for does.
         """
-        w = self.w
-        a = 0.0
-        for t in n.get("traits", []):
-            if   t == "inexplicable":        a += 10.0 * w["w_magic_fear"]
-            elif t == "spectacle":           a += 4.0  * w["w_magic_fear"]
-            elif t == "religious_adjacent":  a += 9.0  * w["w_religious_rigidity"]
-            elif t == "status_threatening":  a += 5.0
-            elif t == "weapon_democratising":a += 6.0
-            elif t == "labour_saving":       a += 4.0  * max(0.0, -w["w_labour_saving"])
-        a *= (1.0 + max(0.0, -w["w_novelty"]))
-        a *= max(0.12, 1.0 - self.household.familiarity)      # people habituate, fast
-        a *= max(0.15, 1.0 - self.household.protection)       # patrons, office, money
+        weights = self.w
+        alarm = 0.0
+        for trait in n.get("traits", []):
+            if   trait == "inexplicable":        alarm += 10.0 * weights["w_magic_fear"]
+            elif trait == "spectacle":           alarm += 4.0  * weights["w_magic_fear"]
+            elif trait == "religious_adjacent":  alarm += 9.0  * weights["w_religious_rigidity"]
+            elif trait == "status_threatening":  alarm += 5.0
+            elif trait == "weapon_democratising":alarm += 6.0
+            elif trait == "labour_saving":       alarm += 4.0  * max(0.0, -weights["w_labour_saving"])
+        alarm *= (1.0 + max(0.0, -weights["w_novelty"]))
+        alarm *= max(0.12, 1.0 - self.household.familiarity)      # people habituate, fast
+        alarm *= max(0.15, 1.0 - self.household.protection)       # patrons, office, money
         # A recognised scholar doing something strange is a scholar; a stranger
         # doing the same thing is a sorcerer. This is the persona working, and
         # it is what the node has always said it does.
         if self.running("identity_cover"):
-            a *= 0.75
-        return a
+            alarm *= 0.75
+        return alarm
 
     def military_leverage(self):
         """How much of the military branch this founder can put in a patron's
@@ -71,21 +71,21 @@ class SocietyMixin:
         branch a strategy unto itself, which the other ~2,700 nodes on the
         way to a transistor should not have to compete with.
         """
-        n = sum(1 for k in self.household.done - self.household.granted
-                if "military" in self.nodes[k].get("traits", ()))
-        if n <= 0:
+        military_node_count = sum(1 for node_id in self.household.done - self.household.granted
+                if "military" in self.nodes[node_id].get("traits", ()))
+        if military_node_count <= 0:
             return 0.0
-        return min(1.0, math.sqrt(n / 25.0))
+        return min(1.0, math.sqrt(military_node_count / 25.0))
 
     def update_protection(self):
         """Standing, office and MONEY all protect. The old model had money only
         endangering you, which is backwards: wealth buys advocates, priesthoods,
         magistracies and, in a society with a bribability of 0.55, verdicts."""
-        p = 0.0
-        w = self.w
-        if self.running("patron_local"):        p += 0.18 * w["patronage_weight"]
-        if self.running("patron_senatorial"):   p += 0.26 * w["patronage_weight"]
-        if self.running("patron_imperial"):     p += 0.32 * w["patronage_weight"]
+        protection = 0.0
+        weights = self.w
+        if self.running("patron_local"):        protection += 0.18 * weights["patronage_weight"]
+        if self.running("patron_senatorial"):   protection += 0.26 * weights["patronage_weight"]
+        if self.running("patron_imperial"):     protection += 0.32 * weights["patronage_weight"]
         # AN ARMOURER IS PROTECTED DIFFERENTLY FROM A PHILOSOPHER, AND ONLY
         # WHEN SOMEBODY WANTS WHAT HE MAKES. Sejanus's people were safe until
         # they no longer had anything Tiberius needed, and the same logic
@@ -98,7 +98,7 @@ class SocietyMixin:
         # term already charges you for and this does NOT cancel.
         if (self.running("patron_local") or self.running("patron_senatorial")
                 or self.running("patron_imperial")):
-            p += 0.09 * w["patronage_weight"] * self.military_leverage()
+            protection += 0.09 * weights["patronage_weight"] * self.military_leverage()
         # IT SAYS "REDUCES ALL FUTURE SUSPICION" AND IT DID NOTHING OF THE KIND.
         # identity_cover's entire implementation was +1.0 to the reputation
         # floor and +400 to the credit limit, and the suspicion it promised to
@@ -108,11 +108,11 @@ class SocietyMixin:
         # a persona: books, a house, clothes, a secretary and a reputation for
         # piety. What that buys is that an inexplicable effect coming out of
         # YOUR workshop is read as learning rather than as sorcery.
-        if self.running("identity_cover"):      p += 0.12
-        if self.has("citizenship"):         p += 0.10
-        if self.running("collegium_licensed"):  p += 0.10
-        if self.running("endowment_land"):      p += 0.08   # conspicuous benefaction
-        if self.running("fin_university") or self.running("school_founded"): p += 0.06
+        if self.running("identity_cover"):      protection += 0.12
+        if self.has("citizenship"):         protection += 0.10
+        if self.running("collegium_licensed"):  protection += 0.10
+        if self.running("endowment_land"):      protection += 0.08   # conspicuous benefaction
+        if self.running("fin_university") or self.running("school_founded"): protection += 0.06
         # BOTH A BURDEN AND A SHIELD. Once this household is large enough for
         # the state to press a civic office on it (state_notice() past
         # STATE_NOTICE_THRESHOLD - see office_report(), _state_pressure()),
@@ -123,12 +123,12 @@ class SocietyMixin:
         # - which is the whole point: "the version you do not get to decline
         # cheaply".
         if self.state_notice() > self.STATE_NOTICE_THRESHOLD:
-            p += 0.10
-        p += min(0.30, self.household.reputation / 260.0)
+            protection += 0.10
+        protection += min(0.30, self.household.reputation / 260.0)
         # BRIBERY, ADVOCACY AND PIETY: an explicit, spendable defence.
         income = max(1.0, self.revenue())
-        p += min(0.30, (self.household.bribes_ytd / (income * 0.6)) * w["bribability"])
-        self.household.protection = min(0.92, p)
+        protection += min(0.30, (self.household.bribes_ytd / (income * 0.6)) * weights["bribability"])
+        self.household.protection = min(0.92, protection)
 
     WITHDRAW_EVERY = 12          # years; being seen to retire twice is not retiring
 
@@ -195,13 +195,13 @@ class SocietyMixin:
 
     def eminence_report(self):
         """Where you stand against the one danger no patron can protect you from."""
-        c = self.cfg
-        danger = c["eminence_danger"]
+        cfg = self.cfg
+        danger = cfg["eminence_danger"]
         yearly = self.prominence_hazard()
         # eminence decays 0.93 a year and gains `yearly`, so this is where it
         # settles if nothing changes.
         settles = yearly / 0.07
-        p = max(0.0, (self.household.eminence - danger) / 90.0)
+        probability = max(0.0, (self.household.eminence - danger) / 90.0)
         helps = []
         if not self.running("academy_network"):
             helps.append("a wide, dispersed institution is harder to destroy than "
@@ -215,10 +215,10 @@ class SocietyMixin:
         # in it that meant "get smaller", and died. It is `withdraw`.
         _last = getattr(self.household, "last_withdrawal", None)
         if _last is not None and self.year - _last < self.WITHDRAW_EVERY:
-            _w = ("you stepped back in %d; again no sooner than %d"
+            _lever_note = ("you stepped back in %d; again no sooner than %d"
                   % (_last, _last + self.WITHDRAW_EVERY))
         else:
-            _w = ("'withdraw' halves this now and gives up half the reputation "
+            _lever_note = ("'withdraw' halves this now and gives up half the reputation "
                   "you hold above what your work alone is worth (%.1f). That is "
                   "a real price - reputation is your credit, your protection, "
                   "your wages and the pace of your projects - and it is the only "
@@ -227,7 +227,7 @@ class SocietyMixin:
         return {"now": round(self.household.eminence, 2),
                 "dangerous_above": danger,
                 "settles_at_if_nothing_changes": round(settles, 1),
-                "chance_of_ruin_this_year": round(p, 4),
+                "chance_of_ruin_this_year": round(probability, 4),
                 # WHICH OUTCOME. A play tester survived two confiscations and
                 # was then ended by a third roll, with "7% chance of ruin this
                 # year" shown before all three, and had no way to know the rolls
@@ -238,8 +238,8 @@ class SocietyMixin:
                     "property confiscated and a forced retirement": 0.45,
                     "your patron destroyed in someone else's quarrel": 0.35,
                     "the end of the run": 0.20},
-                "chance_the_run_ENDS_this_year": round(p * 0.20, 4),
-                "the_one_lever": _w,
+                "chance_the_run_ENDS_this_year": round(probability * 0.20, 4),
+                "the_one_lever": _lever_note,
                 "what_would_change_it": helps,
                 "note": "This is prominence, not scandal. It cannot be bribed "
                         "away, and every defence that makes you safer from "
@@ -266,15 +266,15 @@ class SocietyMixin:
         It feeds scandal rather than killing you outright, because the usual
         outcome is a bad year, a confiscation or a lost patron, not a death.
         """
-        w = self.w
+        weights = self.w
         rep = max(0.0, self.household.reputation) / 100.0
         wealth = min(1.0, max(0.0, self.household.capital) / 250000.0)
-        h = 2.2 * w.get("w_eminence_danger", 0.5) * (0.70 * rep * rep + 0.30 * wealth)
+        hazard = 2.2 * weights.get("w_eminence_danger", 0.5) * (0.70 * rep * rep + 0.30 * wealth)
         if self.running("patron_imperial"):
-            h *= 1.5          # nearest the throne, most exposed to its turnover
+            hazard *= 1.5          # nearest the throne, most exposed to its turnover
         # A wide, dispersed institution is harder to destroy than one great man.
         if self.running("academy_network"):
-            h *= 0.65
+            hazard *= 0.65
         # AND A CITY GETS USED TO YOU. familiarity is the model's own measure of
         # how unsurprising you have become - it already decays the alarm your
         # work causes - and it was the one defence prominence ignored. Two play
@@ -293,8 +293,8 @@ class SocietyMixin:
         # for ninety years settles just under the danger line and a man who has
         # also got himself next to the throne settles well over it, which is
         # the shape the whole mechanic is about.
-        h *= (1.0 - 0.15 * self.household.familiarity)
-        return h
+        hazard *= (1.0 - 0.15 * self.household.familiarity)
+        return hazard
 
     # ---- THE STATE NOTICES YOU ----------------------------------------------
     # A player who had already won the game - 691 employees, 1.1 billion
@@ -435,10 +435,10 @@ class SocietyMixin:
         `settles_at` use for "starts at nothing right at the line and closes
         in on its ceiling", not a cliff the year the line is crossed.
         """
-        n = self.state_notice()
-        if n <= threshold:
+        notice = self.state_notice()
+        if notice <= threshold:
             return 0.0
-        return min(1.0, (n - threshold) / (1.0 - threshold))
+        return min(1.0, (notice - threshold) / (1.0 - threshold))
 
     def requisition_report(self):
         """(share of this year's revenue, [why it is smaller than listed])
@@ -454,8 +454,8 @@ class SocietyMixin:
         """
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, []
-        sp = self.civ.get("state_pressure") or {}
-        base = float(sp.get("requisition_base_share", 0.15))
+        state_pressure_cfg = self.civ.get("state_pressure") or {}
+        base = float(state_pressure_cfg.get("requisition_base_share", 0.15))
         share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
         why = []
         if self.household.protection > 0:
@@ -478,10 +478,10 @@ class SocietyMixin:
         """
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, None
-        sp = self.civ.get("state_pressure") or {}
-        base = float(sp.get("office_base_share", 0.05))
+        state_pressure_cfg = self.civ.get("state_pressure") or {}
+        base = float(state_pressure_cfg.get("office_base_share", 0.05))
         share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
-        return max(0.0, share), sp.get("office_name", "a civic office")
+        return max(0.0, share), state_pressure_cfg.get("office_name", "a civic office")
 
     def military_demand_eligible(self):
         """Is this household both militarily useful and visible enough that
@@ -519,7 +519,7 @@ class SocietyMixin:
         over = self._notice_over(self.STATE_NOTICE_THRESHOLD_CONFISCATION)
         if over <= 0.0:
             return 0.0, []
-        p = self.CONFISCATION_MAX_RATE * over
+        probability = self.CONFISCATION_MAX_RATE * over
         mitig, why = 1.0, []
         if self.household.protection > 0:
             mitig *= (1.0 - 0.5 * self.household.protection)
@@ -536,7 +536,7 @@ class SocietyMixin:
         if lev > 0:
             mitig *= (1.0 - 0.4 * lev)
             why.append("too useful to the state to strip clean")
-        return p * mitig, why
+        return probability * mitig, why
 
     def state_pressure_report(self):
         """What `risk`/`state` shows BEFORE any of this bites - the same
@@ -554,7 +554,7 @@ class SocietyMixin:
         req_share, _req_why = self.requisition_report()
         off_share, off_name = self.office_report()
         conf_p, conf_why = self.confiscation_risk()
-        sp = self.civ.get("state_pressure") or {}
+        state_pressure_cfg = self.civ.get("state_pressure") or {}
         # NULL, NOT A SENTENCE, WHEN DORMANT. `state full` has a measured
         # 9,000-byte readability budget (test_regressions.py's own "state
         # full stays readable") that the densest civilisation files already
@@ -569,7 +569,7 @@ class SocietyMixin:
                "confiscation_risk_above": self.STATE_NOTICE_THRESHOLD_CONFISCATION}
         if req_share > 0.0005:
             out["requisition"] = ("%s takes about %d%% of this year's revenue"
-                                  % (sp.get("requisition_name", "the state"),
+                                  % (state_pressure_cfg.get("requisition_name", "the state"),
                                      round(req_share * 100)))
         if off_share > 0.0005 and off_name:
             out["office"] = ("%s costs about %d%% of revenue a year, and "
@@ -577,7 +577,7 @@ class SocietyMixin:
         if self.military_demand_eligible():
             out["military_supply"] = ("%s may demand your output; refusing a "
                                       "state that can still fight is not free"
-                                      % sp.get("military_name", "the arsenal"))
+                                      % state_pressure_cfg.get("military_name", "the arsenal"))
         if conf_p > 0:
             out["confiscation_chance_this_year"] = round(conf_p, 4)
             out["confiscation_reduced_by"] = conf_why
@@ -593,7 +593,7 @@ class SocietyMixin:
         """
         notice = self.state_notice()
         rev = max(0.0, self.revenue())
-        sp = self.civ.get("state_pressure") or {}
+        state_pressure_cfg = self.civ.get("state_pressure") or {}
 
         req_share, req_why = self.requisition_report()
         off_share, off_name = self.office_report()
@@ -604,7 +604,7 @@ class SocietyMixin:
             if yr - last >= 15:
                 self.household._said_requisition = yr
                 bits = ["%s takes %s this year" % (
-                    sp.get("requisition_name", "the state"),
+                    state_pressure_cfg.get("requisition_name", "the state"),
                     "{:,.0f}".format(req_share * rev))]
                 if req_why:
                     bits.append("; ".join(req_why))
@@ -639,7 +639,7 @@ class SocietyMixin:
                 take = rev * (0.10 + 0.10 * lev) * (1.0 - 0.4 * self.household.protection)
                 take = max(0.0, take)
                 self.household.capital -= take
-                name = sp.get("military_name", "the arsenal")
+                name = state_pressure_cfg.get("military_name", "the arsenal")
                 self.household.log.append((yr, "%s asks for your output: %s handed over "
                                      "in powder, iron or finished pieces. "
                                      "Refusing a state that can still fight "
@@ -647,9 +647,9 @@ class SocietyMixin:
                                      "choice"
                                  % (name, "{:,.0f}".format(take))))
 
-        p, conf_why = self.confiscation_risk()
-        if p > 0.0:
-            band = int(p / 0.05)
+        probability, conf_why = self.confiscation_risk()
+        if probability > 0.0:
+            band = int(probability / 0.05)
             last_band = self.household._said_confiscation_band
             if band > last_band:
                 self.household._said_confiscation_band = band
@@ -658,17 +658,17 @@ class SocietyMixin:
                                      "confiscation, against a scale that "
                                      "only keeps climbing while this "
                                      "household grows. %s"
-                                 % (round(p * 100),
+                                 % (round(probability * 100),
                                     ("Held off by: " + "; ".join(conf_why))
                                     if conf_why else
                                     "Nothing you have built is holding it "
                                     "off yet")))
-            if self.events and self.rng.random() < p:
+            if self.events and self.rng.random() < probability:
                 had = max(0.0, self.household.capital)
                 self.lose_capital(self.CONFISCATION_CAPITAL_LOSS)
                 lost = had - max(0.0, self.household.capital)
                 self.household.reputation = max(0.0, self.household.reputation - 6)
-                name = sp.get("confiscation_name", "confiscation")
+                name = state_pressure_cfg.get("confiscation_name", "confiscation")
                 self.household.log.append((yr, "%s: the state takes what it judges a "
                                      "fortune too large to go on merely "
                                      "taxing - %s gone"
@@ -824,14 +824,14 @@ class SocietyMixin:
         rather than with the rest of agriculture, and a tractor is exactly
         what the user asked for by name.
         """
-        n = self.nodes.get(k)
-        if not n:
+        node = self.nodes.get(k)
+        if not node:
             return False
         if k == "tl_tractor":
             return True
-        if "labour_saving" not in (n.get("traits") or ()):
+        if "labour_saving" not in (node.get("traits") or ()):
             return False
-        return n.get("cat") in self.AGRI_MECHANISATION_CATS or "food" in n["traits"]
+        return node.get("cat") in self.AGRI_MECHANISATION_CATS or "food" in node["traits"]
 
     # Reaches full effect at 18 of the 40 matching nodes done (see
     # _is_agri_mechanisation): a little under half, "substantially
@@ -873,11 +873,11 @@ class SocietyMixin:
         ids = self.__dict__.get("_agri_mechanisation_ids")
         if ids is None:
             ids = self._agri_mechanisation_ids = tuple(
-                sorted(k for k in self.nodes if self._is_agri_mechanisation(k)))
-        n = sum(1 for k in ids if k in self.household.done)
-        if n <= 0:
+                sorted(node_id for node_id in self.nodes if self._is_agri_mechanisation(node_id)))
+        mechanised_count = sum(1 for node_id in ids if node_id in self.household.done)
+        if mechanised_count <= 0:
             return 0.0
-        return min(1.0, math.sqrt(n / self.AGRI_MECHANISATION_SATURATES_AT))
+        return min(1.0, math.sqrt(mechanised_count / self.AGRI_MECHANISATION_SATURATES_AT))
 
     # What a pre-industrial society can reach on schooling and urban/clerical
     # literacy alone, with farming still entirely by hand: a merchant class,
@@ -1068,10 +1068,10 @@ class SocietyMixin:
     TRADE_DIFFUSION_APPROACH_RATE = 0.05
 
     def _advance_trade_absorption(self, yr):
-        for t in sorted(TRADES_ABSENT):
-            if t not in self.household.trades_created:
+        for trade in sorted(TRADES_ABSENT):
+            if trade not in self.household.trades_created:
                 continue          # never taught here; nothing to naturalise
-            intro = self.household.trade_introduced_year.get(t)
+            intro = self.household.trade_introduced_year.get(trade)
             if intro is None:
                 # First year this function has ever seen the trade in
                 # trades_created. Recorded now rather than back-dated,
@@ -1080,16 +1080,16 @@ class SocietyMixin:
                 # at worst one step later than the true year, which cannot
                 # matter against a minimum absorption time measured in
                 # decades.
-                self.household.trade_introduced_year[t] = yr
+                self.household.trade_introduced_year[trade] = yr
                 continue
-            if t in self.household.trades_endemic:
-                self._grow_endemic_trade(t)
+            if trade in self.household.trades_endemic:
+                self._grow_endemic_trade(trade)
                 continue
             flow = self._schooling_flow()
             if flow <= 0.0:
                 continue
             if yr - intro >= self._trade_absorption_years(flow):
-                self.household.trades_endemic.add(t)
+                self.household.trades_endemic.add(trade)
                 # IN-WORLD, NOT A CHANGE-LOG. This narrates a census fact -
                 # the trade is no longer one household's secret - the same
                 # way every other log line in this file narrates an event
@@ -1099,7 +1099,7 @@ class SocietyMixin:
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
                                  "%ss now, the way it always had smiths"
-                                 % (t, t)))
+                                 % (trade, trade)))
 
     def _grow_endemic_trade(self, t):
         """Let a naturalised trade's own headcount drift toward the same
@@ -1206,8 +1206,8 @@ class SocietyMixin:
         """
         if k not in self.household.operating:
             return 0.0
-        n = self.nodes.get(k)
-        if not n or n.get("rev", 0) <= 0:
+        node = self.nodes.get(k)
+        if not node or node.get("rev", 0) <= 0:
             return 0.0
         started = self.household.opened_year.get(k, self.household.done_year.get(k, self.year))
         age = max(0.0, self.year - started)
@@ -1232,15 +1232,15 @@ class SocietyMixin:
         exactly the same reasoning revenue() itself already weights by each
         node's own `rev` figure.
         """
-        ops = sorted(k for k in self.household.operating
-                     if self.nodes.get(k, {}).get("rev", 0) > 0)
+        ops = sorted(node_id for node_id in self.household.operating
+                     if self.nodes.get(node_id, {}).get("rev", 0) > 0)
         if not ops:
             return 0.0
         tot_w = tot = 0.0
-        for k in ops:
-            w = self.nodes[k]["rev"]
-            tot_w += w
-            tot += w * self.diffusion_share(k)
+        for node_id in ops:
+            weight = self.nodes[node_id]["rev"]
+            tot_w += weight
+            tot += weight * self.diffusion_share(node_id)
         return tot / tot_w if tot_w > 0 else 0.0
 
     # ---- THE COUNTRY CHANGES TOO, NOT ONLY YOUR OWN EXPOSURE TO IT ---------
@@ -1294,9 +1294,9 @@ class SocietyMixin:
 
     def _diffusion_category(self, n):
         traits = n.get("traits") or ()
-        for t in self.DIFFUSION_TRAIT_PRIORITY:
-            if t in traits:
-                return t
+        for trait in self.DIFFUSION_TRAIT_PRIORITY:
+            if trait in traits:
+                return trait
         return None
 
     def _diffusible_ids(self, cat):
@@ -1305,12 +1305,12 @@ class SocietyMixin:
         recomputing once built, however large self.household.done grows."""
         cache = self.__dict__.get("_diffusible_ids_cache")
         if cache is None:
-            cache = {c: [] for c in self.DIFFUSION_TRAIT_PRIORITY}
-            for k, n in self.nodes.items():
-                c = self._diffusion_category(n)
-                if c:
-                    cache[c].append(k)
-            cache = {c: tuple(sorted(value)) for c, value in cache.items()}
+            cache = {category: [] for category in self.DIFFUSION_TRAIT_PRIORITY}
+            for node_id, node in self.nodes.items():
+                category = self._diffusion_category(node)
+                if category:
+                    cache[category].append(node_id)
+            cache = {category: tuple(sorted(value)) for category, value in cache.items()}
             self._diffusible_ids_cache = cache
         return cache.get(cat, ())
 
@@ -1371,10 +1371,10 @@ class SocietyMixin:
         """
         if k not in self.household.done:
             return 0.0
-        n = self.nodes.get(k)
-        if not n:
+        node = self.nodes.get(k)
+        if not node:
             return 0.0
-        cat = self._diffusion_category(n)
+        cat = self._diffusion_category(node)
         if cat is None:
             return 0.0
         if cat == "military" and not self._state_has_a_patron():
@@ -1397,11 +1397,11 @@ class SocietyMixin:
         # a founder innovation waiting to diffuse from the household.  Counting
         # newly explicit inherited grants here both diluted later projects and
         # treated those grants as if the founder had introduced them.
-        ids = [k for k in self._diffusible_ids(cat)
-               if k in self.household.done and k not in self.household.granted]
+        ids = [node_id for node_id in self._diffusible_ids(cat)
+               if node_id in self.household.done and node_id not in self.household.granted]
         if not ids:
             return 0.0
-        return sum(self.civ_diffusion(k) for k in sorted(ids)) / len(ids)
+        return sum(self.civ_diffusion(node_id) for node_id in sorted(ids)) / len(ids)
 
     def food_diffusion_index(self):
         return self._category_diffusion_index("food")
@@ -1562,7 +1562,7 @@ class SocietyMixin:
         value = cache.get(k)
         if value is None:
             hay = (k + " " + self.nodes[k].get("name", "")).lower()
-            value = any(m in hay for m in self.FOREIGN_MARKERS)
+            value = any(marker in hay for marker in self.FOREIGN_MARKERS)
             cache[k] = value
         return value
 
@@ -1578,7 +1578,7 @@ class SocietyMixin:
         value = cache.get(k)
         if value is None:
             hay = (k + " " + self.nodes[k].get("name", "")).lower()
-            value = any(m in hay for m in self.FOREIGN_INSTITUTIONS)
+            value = any(marker in hay for marker in self.FOREIGN_INSTITUTIONS)
             cache[k] = value
         return value
 
@@ -1632,14 +1632,14 @@ class SocietyMixin:
         # They were right. The feature existed only as data and as a claim in a
         # commit message.
         rem = self.civ.get("handicap_remedies") or {}
-        n = self.nodes[k]
+        node = self.nodes[k]
 
         def mult(key):
-            m = float(mults[key])
-            r = rem.get(key)
-            if isinstance(r, dict) and r.get("node") in self.household.done:
-                m = float(r.get("residual", 1.0))
-            return m
+            multiplier = float(mults[key])
+            remedy = rem.get(key)
+            if isinstance(remedy, dict) and remedy.get("node") in self.household.done:
+                multiplier = float(remedy.get("residual", 1.0))
+            return multiplier
 
         # THE CATEGORY IS THE CRAFT; THE TRAITS ARE WHAT IT IS FOR, and treating
         # them as equals inverted the whole system. Every matching key used to be
@@ -1654,17 +1654,17 @@ class SocietyMixin:
         # What a thing takes to build is its craft. What it is used for should
         # colour that, not overwhelm it, so traits apply at a damped exponent
         # when the craft is known and at full weight when it is not.
-        cat = n.get("cat")
-        traits = [t for t in (n.get("traits") or ()) if t in mults]
+        cat = node.get("cat")
+        traits = [trait for trait in (node.get("traits") or ()) if trait in mults]
         if cat in mults:
-            f = mult(cat)
-            for t in traits:
-                f *= mult(t) ** 0.25
-            return f
-        f = 1.0
-        for t in traits:
-            f *= mult(t)
-        return f
+            factor = mult(cat)
+            for trait in traits:
+                factor *= mult(trait) ** 0.25
+            return factor
+        factor = 1.0
+        for trait in traits:
+            factor *= mult(trait)
+        return factor
 
     def hazard_relief(self, kind):
         """How much of one kind of harm the things you have built take off.
@@ -1685,16 +1685,16 @@ class SocietyMixin:
                 mult *= (1.0 - share)
                 why.append(label)
         if kind == "output_factor":
-            m, reason = self._military_war_relief()
+            war_relief, reason = self._military_war_relief()
             if reason:
-                mult *= m
+                mult *= war_relief
                 why.append(reason)
             # THE STATE'S OWN ARMIES, NOT ONLY THE FOUNDER'S WORKSHOP - see
             # "WAR: A STATE THAT IS ACTUALLY ARMED" above.
-            m2, reason2 = self._state_military_diffusion_relief(
+            state_relief, reason2 = self._state_military_diffusion_relief(
                 self.STATE_MIL_RELIEF_CAP_OUTPUT)
             if reason2:
-                mult *= m2
+                mult *= state_relief
                 why.append(reason2)
         elif kind == "sack_chance":
             # The founder's own walls and guns already sit in
@@ -1703,10 +1703,10 @@ class SocietyMixin:
             # the Roman government cannons and it is not being sacked by
             # tribes" is a claim about the STATE's army, which diffuses in
             # slowly and only once there is a patron to hand it to.
-            m2, reason2 = self._state_military_diffusion_relief(
+            state_relief, reason2 = self._state_military_diffusion_relief(
                 self.STATE_MIL_RELIEF_CAP_SACK)
             if reason2:
-                mult *= m2
+                mult *= state_relief
                 why.append(reason2)
         return mult, why
 
@@ -1772,8 +1772,8 @@ class SocietyMixin:
         if goal not in self.nodes:
             return None
         _total, chain = critical_path(self.nodes, goal)
-        remaining = sum(max(self.nodes[k]["yrs"], self.nodes[k]["ph"] / 2000.0)
-                        for k in chain if k not in self.household.done)
+        remaining = sum(max(self.nodes[node_id]["yrs"], self.nodes[node_id]["ph"] / 2000.0)
+                        for node_id in chain if node_id not in self.household.done)
         return round(remaining, 1)
 
     def hazard_advice(self, kind):
@@ -1821,11 +1821,11 @@ class SocietyMixin:
             # not), and the range is the honest shape of the answer: some of
             # this is fast, and the slowest part is not.
             floors = sorted(
-                f for node, _share, _label in self.HAZARD_COUNTERS.get(kind, ())
+                floor_years for node, _share, _label in self.HAZARD_COUNTERS.get(kind, ())
                 if not node.startswith("_") and node in self.nodes
                 and not self.has(node)
-                for f in [self._calendar_floor_remaining(node)]
-                if f is not None)
+                for floor_years in [self._calendar_floor_remaining(node)]
+                if floor_years is not None)
             if floors:
                 out["even_started_today_the_real_hedges_here_take_years"] = (
                     {"quickest": floors[0], "slowest": floors[-1]}
@@ -1867,16 +1867,16 @@ class SocietyMixin:
                     leads_to.setdefault(pre, "a step toward %s" % label)
         memo = {}
         seen, out = set(), []
-        for d, k in sorted(want):
-            if k in seen:
+        for distance, node_id in sorted(want):
+            if node_id in seen:
                 continue
-            seen.add(k)
-            if getattr(self, "fog", False) and not self.is_visible(k, _memo=memo):
+            seen.add(node_id)
+            if getattr(self, "fog", False) and not self.is_visible(node_id, _memo=memo):
                 continue
-            ok, why = self.start_reason(k)
-            entry = {"id": k, "name": self.nodes[k]["name"],
-                     "cost": round(self.project_cost(k), 1),
-                     "because_it_gives_you": leads_to.get(k),
+            ok, why = self.start_reason(node_id)
+            entry = {"id": node_id, "name": self.nodes[node_id]["name"],
+                     "cost": round(self.project_cost(node_id), 1),
+                     "because_it_gives_you": leads_to.get(node_id),
                      "can_begin_now": bool(ok),
                      "waiting_on": None if ok else why}
             # THE WHOLE ROAD, not just this one node's own calendar floor. A
@@ -1885,8 +1885,8 @@ class SocietyMixin:
             # this is often the LAST of several such steps, each looking
             # equally beginnable, with a total the size of a human generation
             # behind it. See _calendar_floor_remaining.
-            if k in counters:
-                floor = self._calendar_floor_remaining(k)
+            if node_id in counters:
+                floor = self._calendar_floor_remaining(node_id)
                 if floor is not None:
                     entry["years_even_if_you_start_today"] = floor
             out.append(entry)
@@ -1975,20 +1975,20 @@ class SocietyMixin:
         actually has to escalate.
         """
         rows = []
-        for h in (self.civ.get("hazards") or []):
-            yrs = h.get("years") or []
+        for hazard in (self.civ.get("hazards") or []):
+            yrs = hazard.get("years") or []
             if not yrs:
                 continue
-            y0 = yrs[0]
-            y1 = yrs[1] if len(yrs) > 1 else yrs[0]
-            if self.year > y1:
+            year_start = yrs[0]
+            year_end = yrs[1] if len(yrs) > 1 else yrs[0]
+            if self.year > year_end:
                 continue                      # already survived, or missed
-            in_progress = y0 <= self.year <= y1
-            years_until = 0 if in_progress else (y0 - self.year)
-            name = h.get("name", "hazard")
-            kinds = [kd for kd in
+            in_progress = year_start <= self.year <= year_end
+            years_until = 0 if in_progress else (year_start - self.year)
+            name = hazard.get("name", "hazard")
+            kinds = [hazard_kind for hazard_kind in
                      ("staff_loss", "sack_chance", "output_factor", "real_erosion")
-                     if kd in h]
+                     if hazard_kind in hazard]
             if not kinds:
                 continue
             # THE LEAST-DEFENDED SIDE OF IT, not an average, and its OWN
@@ -2010,19 +2010,19 @@ class SocietyMixin:
             # has time for a partial answer after it is already too late for
             # the one that actually carries the largest share of the relief.
             worst_mult, quick_hedge, strong_hedge = 0.0, None, None
-            for kd in kinds:
-                mult, _why = self.hazard_relief(kd)
+            for hazard_kind in kinds:
+                mult, _why = self.hazard_relief(hazard_kind)
                 if mult <= worst_mult:
                     continue
                 worst_mult = mult
                 quick_hedge = strong_hedge = None
                 if mult > 0.75:
-                    advice = self.hazard_advice(kd)
-                    fl = advice.get("even_started_today_the_real_hedges_here_take_years")
-                    if isinstance(fl, dict):
-                        quick_hedge, strong_hedge = fl.get("quickest"), fl.get("slowest")
-                    elif isinstance(fl, (int, float)):
-                        quick_hedge = strong_hedge = fl
+                    advice = self.hazard_advice(hazard_kind)
+                    hedge_floor = advice.get("even_started_today_the_real_hedges_here_take_years")
+                    if isinstance(hedge_floor, dict):
+                        quick_hedge, strong_hedge = hedge_floor.get("quickest"), hedge_floor.get("slowest")
+                    elif isinstance(hedge_floor, (int, float)):
+                        quick_hedge = strong_hedge = hedge_floor
             hedged = worst_mult <= 0.75
             _yu = self._yr_words(years_until)
             if in_progress:
@@ -2074,11 +2074,11 @@ class SocietyMixin:
         # entry keeps its sentence regardless, so the reply always orients
         # on at least one real sentence even in a run where everything left
         # is calm.
-        for i, r in enumerate(rows):
-            if i == 0 or r["urgency"] in self.HAZARD_TIMELINE_WARN_TAGS:
+        for i, row in enumerate(rows):
+            if i == 0 or row["urgency"] in self.HAZARD_TIMELINE_WARN_TAGS:
                 continue
-            r.pop("headline", None)
-            r.pop("in_progress", None)
+            row.pop("headline", None)
+            row.pop("in_progress", None)
         return rows
 
     def lose_capital(self, fraction):
@@ -2147,7 +2147,7 @@ class SocietyMixin:
             return h
         field = cond.get("field")
         need = cond.get("requires_all") or []
-        met = all(self.has(n) for n in need)
+        met = all(self.has(tech_id) for tech_id in need)
         if yr == a:
             said = self._said_condition
             key = h.get("name", "hazard")
@@ -2158,17 +2158,17 @@ class SocietyMixin:
                     self.household.log.append((yr, msg))
         if not met or field not in h:
             return h
-        h2 = dict(h)
+        adjusted = dict(h)
         outcome = cond.get("outcome")
         scale = cond.get("alter_scale", 1.0)
         if outcome == "avert":
-            del h2[field]
+            del adjusted[field]
         elif outcome == "alter":
             if field == "output_factor":
-                h2[field] = 1.0 - (1.0 - h[field]) * scale
+                adjusted[field] = 1.0 - (1.0 - h[field]) * scale
             else:
-                h2[field] = h[field] * scale
-        return h2
+                adjusted[field] = h[field] * scale
+        return adjusted
 
     def _shocks(self, yr):
         """Dated catastrophes, read from the CIVILIZATION file.
@@ -2178,21 +2178,21 @@ class SocietyMixin:
         epidemics, which are the most severe hazard in the whole directory and
         are not a fair fight. None of it is hardcoded here any more.
         """
-        r = self.rng
+        rng = self.rng
         prep = self.running("plague_preparedness")
-        for h in self.civ.get("hazards", []):
-            a, b = h.get("years", [0, 0])
-            if not (a <= yr <= b):
+        for hazard in self.civ.get("hazards", []):
+            hazard_start, hazard_end = hazard.get("years", [0, 0])
+            if not (hazard_start <= yr <= hazard_end):
                 continue
-            h = self._resolve_hazard_condition(h, yr, a)
-            if "staff_loss" in h and r.random() < 0.32:
+            hazard = self._resolve_hazard_condition(hazard, yr, hazard_start)
+            if "staff_loss" in hazard and rng.random() < 0.32:
                 relief, why = self.hazard_relief("staff_loss")
-                loss = h["staff_loss"] * relief
+                loss = hazard["staff_loss"] * relief
                 _people_before = (self.household.scholars + self.household.artisans
                                   + sum(self.household.employees.values()))
                 self.household.scholars *= (1 - loss); self.household.artisans *= (1 - loss)
-                for t in list(self.household.employees):
-                    self.household.employees[t] *= (1 - loss)
+                for trade in list(self.household.employees):
+                    self.household.employees[trade] *= (1 - loss)
                 self.household.directors_extra *= (1 - loss)
                 # THE MONEY GOES TOO, and the log never said so. A weird-play
                 # tester watched the Black Death take 12,676 denarii down to
@@ -2233,7 +2233,7 @@ class SocietyMixin:
                 # Death becomes a minor period of some sickness" - answered
                 # here, against the empire-wide figure, never against
                 # `loss`.
-                historical = h["staff_loss"]
+                historical = hazard["staff_loss"]
                 med_relief = self.medical_diffusion_relief()
                 raw = historical * (1.0 - med_relief)
                 self.pop_deficit = 1.0 - (1.0 - self.pop_deficit) * (1.0 - raw)
@@ -2271,7 +2271,7 @@ class SocietyMixin:
                                 % "{:,.0f}".format(cash))
                 if not _hit:
                     _hit.append("you had nothing it could take")
-                msg = "%s: %s" % (h.get("name", "hazard"), ", ".join(_hit))
+                msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
                 # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
                 # and your own hedges do not change that: the quarantine you
                 # built protects your people, not everyone else's labour
@@ -2305,13 +2305,13 @@ class SocietyMixin:
                             "registers"
                             % round(historical * 100))
                 self.household.log.append((yr, msg))
-            if "sack_chance" in h:
+            if "sack_chance" in hazard:
                 relief, why = self.hazard_relief("sack_chance")
-                p = h["sack_chance"] * relief
-                if why and r.random() < h["sack_chance"] - p:
+                probability = hazard["sack_chance"] * relief
+                if why and rng.random() < hazard["sack_chance"] - probability:
                     self.household.log.append((yr, "%s: an attack comes to nothing (%s)"
-                                     % (h.get("name", "crisis"), "; ".join(why[:3]))))
-                if r.random() < p:
+                                     % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
+                if rng.random() < probability:
                     # SAY WHAT IT TOOK FROM YOU. This printed "a site is
                     # sacked" and nothing else while removing 62% of a
                     # weird-play tester's money, restarting every project they
@@ -2340,12 +2340,12 @@ class SocietyMixin:
                     _act0 = len(self.household.active)
                     self.lose_capital(0.60)
                     self.household.artisans *= 0.55; self.household.scholars *= 0.55
-                    for t in list(self.household.employees):
-                        self.household.employees[t] *= 0.55
+                    for trade in list(self.household.employees):
+                        self.household.employees[trade] *= 0.55
                     self.household.directors_extra *= 0.65
-                    for k in sorted(self.household.active):
-                        self.household.active[k]["ph_left"] = self.nodes[k]["ph"]
-                        self.household.active[k]["yrs"] = 0.0
+                    for node_id in sorted(self.household.active):
+                        self.household.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
+                        self.household.active[node_id]["yrs"] = 0.0
                     _people_after = (self.household.artisans + self.household.scholars
                                      + sum(self.household.employees.values()))
                     _took = []
@@ -2359,7 +2359,7 @@ class SocietyMixin:
                         _took.append("%d project%s back to the beginning"
                                      % (_act0, "" if _act0 == 1 else "s"))
                     self.household.log.append((yr, "%s: a site is sacked - %s"
-                                     % (h.get("name", "crisis"),
+                                     % (hazard.get("name", "crisis"),
                                         ", ".join(_took)
                                         or "you had nothing it could take")))
                     # Sim.corpus_hedge (core.py) is the one place this is
@@ -2367,8 +2367,8 @@ class SocietyMixin:
                     # own comment for why this used to quote `running()`
                     # and tell a player, in `risk`, that they had a hedge
                     # `running()` said had already lapsed.
-                    pl, frac, _hedge_before = self.corpus_hedge()
-                    if r.random() < pl:
+                    corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
+                    if rng.random() < corpus_loss_probability:
                         # sorted() matters: self.household.done is a SET and iterates in an
                         # order that depends on PYTHONHASHSEED, so feeding it
                         # unsorted to rng.sample made the same --seed give a
@@ -2384,20 +2384,20 @@ class SocietyMixin:
                         # about a SACK specifically - mothballing or
                         # abandoning the corpus yourself is a different
                         # mechanism and still applies.
-                        losable = sorted(k for k in self.household.done
-                                         if k not in self.household.granted
-                                         and k != "corpus_dispersed")
+                        losable = sorted(node_id for node_id in self.household.done
+                                         if node_id not in self.household.granted
+                                         and node_id != "corpus_dispersed")
                         if losable:
-                            drop = r.sample(losable, max(1, int(len(losable) * frac)))
+                            drop = rng.sample(losable, max(1, int(len(losable) * frac)))
                             _lost = self.household.forgotten
-                            for k in drop:
-                                self.household.operating.discard(k)
-                                self.household.done.discard(k)
-                                self.household.mothballed.discard(k)
+                            for node_id in drop:
+                                self.household.operating.discard(node_id)
+                                self.household.done.discard(node_id)
+                                self.household.mothballed.discard(node_id)
                                 # KEPT, so `risk` can list what you have to
                                 # build again. Otherwise the only record is a
                                 # log line a century back.
-                                _lost[k] = yr
+                                _lost[node_id] = yr
                             self._done_changed()
                             # NAME THEM. A play tester discovered a loss decades
                             # later, when `start X` said "missing prerequisites:
@@ -2405,9 +2405,9 @@ class SocietyMixin:
                             # rebuilt the chain one refusal at a time. A bare
                             # count is not a report of what happened to you.
                             _named = sorted(drop)
-                            _corpus = [c for c in ("corpus_written",
+                            _corpus = [tech_id for tech_id in ("corpus_written",
                                                    "corpus_dispersed")
-                                       if c in drop]
+                                       if tech_id in drop]
                             # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON.
                             # Naming the lost ids was the first fix; a Rome
                             # player with a real goal set still found out the
@@ -2426,7 +2426,7 @@ class SocietyMixin:
                                     if _gc is None:
                                         _gc = self._goal_closure = closure(
                                             self.nodes, _goal)
-                                    _on_road = sum(1 for x in drop if x in _gc)
+                                    _on_road = sum(1 for tech_id in drop if tech_id in _gc)
                                 except Exception:
                                     _on_road = 0
                             self.household.log.append((yr, "KNOWLEDGE LOST: %d technolog%s "
@@ -2457,12 +2457,12 @@ class SocietyMixin:
                                     "moment ago - 'path' will show the rebuilt "
                                     "shape of it" % _on_road)
                                    if _on_road else "")))
-            if "output_factor" in h:
+            if "output_factor" in hazard:
                 relief, why = self.hazard_relief("output_factor")
                 # relief moves the floor back toward 1.0 rather than scaling the
                 # damage: self-sufficiency means less of your income was ever
                 # coming through the thing the war cut.
-                floor = 1.0 - (1.0 - h["output_factor"]) * relief
+                floor = 1.0 - (1.0 - hazard["output_factor"]) * relief
                 before = self.output_factor
                 self.output_factor = min(self.output_factor, floor)
                 # ONCE, AND THEN A REMINDER, not every year of a hundred-year
@@ -2473,7 +2473,7 @@ class SocietyMixin:
                 # reading the log, which is the real cost: a message repeated
                 # until it is noise has stopped being a message.
                 said = getattr(self, "_said_output", {})
-                key = h.get("name", "crisis")
+                key = hazard.get("name", "crisis")
                 if before > self.output_factor and yr - said.get(key, -99) >= 20:
                     said[key] = yr
                     self._said_output = said
@@ -2489,10 +2489,10 @@ class SocietyMixin:
                                      % (key, self.output_factor * 100,
                                         " (your own strength holds off worse: %s)"
                                         % "; ".join(why[:3]) if why else "")))
-            if "real_erosion" in h:
+            if "real_erosion" in hazard:
                 relief, why = self.hazard_relief("real_erosion")
-                self.money_real *= (1 - h["real_erosion"])
-                bite = h["real_erosion"] * 0.85 * relief
+                self.money_real *= (1 - hazard["real_erosion"])
+                bite = hazard["real_erosion"] * 0.85 * relief
                 had = max(0.0, self.household.capital)
                 self.lose_capital(bite)
                 lost = had - max(0.0, self.household.capital)
@@ -2512,7 +2512,7 @@ class SocietyMixin:
                                          "really takes to make, so they do not "
                                          "move; what debases is the money in "
                                          "your chest, and this year it took %s%s"
-                                     % (h.get("name", "debasement"),
+                                     % (hazard.get("name", "debasement"),
                                         (1 - self.money_real) * 100,
                                         "; you feel less of it (%s)" % "; ".join(why)
                                         if why else "",
@@ -2520,7 +2520,7 @@ class SocietyMixin:
                                         if lost > 0.5 else "nothing, because you "
                                         "were holding none",
                                         " denarii" if lost > 0.5 else "")))
-            if "values" in h:
+            if "values" in hazard:
                 # A hazard can kill your people, burn a site, or make you
                 # poorer, and that used to be the whole vocabulary. Norse
                 # Christianisation is none of those: its real effect is on
@@ -2535,9 +2535,9 @@ class SocietyMixin:
                 # year, for N years, is what "gradual" means here; a single
                 # jump on the first year would be exactly the fake
                 # instantaneous conversion this mechanism exists to avoid.
-                span = max(1, int(b) - int(a) + 1)
+                span = max(1, int(hazard_end) - int(hazard_start) + 1)
                 changed = {}
-                for field, total_delta in h["values"].items():
+                for field, total_delta in hazard["values"].items():
                     if field.startswith("_") or not isinstance(total_delta, (int, float)):
                         continue
                     if field not in self.w:
@@ -2554,14 +2554,14 @@ class SocietyMixin:
                 # is throttled to the first year, the last, and every tenth
                 # in between -- the same spirit as the debasement throttle
                 # just above, which exists for the same reason.
-                if changed and (yr == a or yr == b or (yr - a) % 10 == 0):
+                if changed and (yr == hazard_start or yr == hazard_end or (yr - hazard_start) % 10 == 0):
                     self.household.log.append((yr, "%s: the society's values are shifting (%s)"
-                                     % (h.get("name", "hazard"),
-                                        ", ".join("%s now %.2f" % (f, value)
-                                                  for f, value in sorted(changed.items())))))
+                                     % (hazard.get("name", "hazard"),
+                                        ", ".join("%s now %.2f" % (field, value)
+                                                  for field, value in sorted(changed.items())))))
 
     def _random_events(self, yr):
-        r = self.rng
+        rng = self.rng
         # A patron dies ONCE and then you have courted his heir. The old model
         # rolled 4% every year forever, so a long run logged the same line six
         # times, which is not how having a patron works.
@@ -2570,7 +2570,7 @@ class SocietyMixin:
         # this comment describes never applied to anything: the roll came up
         # five per cent a year for ever, which is precisely the behaviour the
         # fix was written to stop. (The save list carried the unread name too.)
-        if (r.random() < 0.05 and self.running("patron_local")
+        if (rng.random() < 0.05 and self.running("patron_local")
                 and yr - getattr(self, "last_patron_death", -99) > 25):
             self.last_patron_death = yr
             self.household.scandal += 4
@@ -2598,7 +2598,7 @@ class SocietyMixin:
                        "to %d%% and scandal rises by 4"
                        % (was * 100, self.household.protection * 100))
             self.household.log.append((yr, msg))
-        if r.random() < 0.03:
+        if rng.random() < 0.03:
             had = max(0.0, self.household.capital)
             self.lose_capital(0.18)
             # An insula is a Roman tenement block, and a tester playing Han China
@@ -2607,7 +2607,7 @@ class SocietyMixin:
             self.household.log.append((yr, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
-        if r.random() < 0.02:
+        if rng.random() < 0.02:
             had = max(0.0, self.household.capital)
             self.lose_capital(0.10)
             self.household.log.append((yr, "banditry or a frontier war disrupts supply: "

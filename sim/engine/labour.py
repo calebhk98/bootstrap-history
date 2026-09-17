@@ -386,13 +386,13 @@ class LabourMixin:
         # either. A player who hit the ceiling it had been holding up was
         # told to build endowment_land or court an imperial patron instead of
         # simply reopening what they already owned.
-        reopen = [(k, add) for k, add in self.ROOM_SOURCES
-                  if k in self.household.done and k in self.nodes and k not in self.household.operating
-                  and self.is_venture(k)]
+        reopen = [(node_id, add) for node_id, add in self.ROOM_SOURCES
+                  if node_id in self.household.done and node_id in self.nodes and node_id not in self.household.operating
+                  and self.is_venture(node_id)]
         reopen.sort(key=lambda kv: -kv[1])
-        want = [(k, add) for k, add in self.ROOM_SOURCES
-                if k not in self.household.done and k in self.nodes
-                and self.is_visible(k)]
+        want = [(node_id, add) for node_id, add in self.ROOM_SOURCES
+                if node_id not in self.household.done and node_id in self.nodes
+                and self.is_visible(node_id)]
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
@@ -403,7 +403,7 @@ class LabourMixin:
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
              "building anything else. "
-             % (" and ".join("%s (+%d)" % (k, a) for k, a in reopen[:2]),
+             % (" and ".join("%s (+%d)" % (node_id, places) for node_id, places in reopen[:2]),
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
         if not want:
@@ -414,11 +414,11 @@ class LabourMixin:
             return ("Room comes from institutions and heavy industry, and you "
                     "have every one of them this society offers; what is left "
                     "grows on its own as they run.")
-        _now = [(k, a) for k, a in want if self.start_reason(k)[0]]
+        _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id)[0]]
         return ("Room is not bought, it is built: %s%s. Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
                 % (_reopen_bit,
-                   "; ".join("%s (+%d places)" % (k, a) for k, a in want[:3]),
+                   "; ".join("%s (+%d places)" % (node_id, places) for node_id, places in want[:3]),
                    "" if _now else " None is startable today; they are listed "
                                    "nearest first, so the first is what to work "
                                    "towards."))
@@ -565,7 +565,7 @@ class LabourMixin:
         # is a thing you do rather than a staff of four you are handed on
         # arrival and never asked for.
         base_sc, base_ar = 0.0, 0.0
-        sc = ar = di = 0.0
+        scholars = artisans = directors = 0.0
         # A SECOND SCHOOL TRAINS A SECOND SCHOOL'S WORTH OF SCHOLARS. Linear in
         # institution_units, which is 1.0 for a run that never founds more than
         # the original single unit - exactly the constants below, unchanged -
@@ -584,10 +584,10 @@ class LabourMixin:
         for key, _sc, _ar, _di, scaled, must_run in self.STAFF_CAPACITY_SOURCES:
             if not (self.running(key) if must_run else self.has(key)):
                 continue
-            u = self.institution_units(key) if scaled else 1.0
-            sc += _sc * u
-            ar += _ar * u
-            di += _di * u
+            units = self.institution_units(key) if scaled else 1.0
+            scholars += _sc * units
+            artisans += _ar * units
+            directors += _di * units
         # LITERACY BOUNDS THE SCHOLAR CEILING. A school, an academy or an
         # imperial patron can only produce as many scholars as this society
         # has literate, propertied people to draw them from (literacy_factor
@@ -597,7 +597,7 @@ class LabourMixin:
         # printing, schools and libraries raise literacy_elite
         # (apply_tech_effects, society.py) and widen it again as a run goes
         # on, which is the entire point of building them.
-        sc *= self.literacy_factor("scholar")
+        scholars *= self.literacy_factor("scholar")
         # you cannot keep staff you cannot pay
         # a famous school attracts students and patrons it did not have to pay for
         # WAGES ARE A REAL CHARGE NOW (see wage_bill), so this ceiling is no
@@ -641,7 +641,7 @@ class LabourMixin:
         # bondage ten steps later. The whole careful affordability calculation
         # above was undone by the floor beneath it: "grow the staff toward what
         # you can house and pay" has to be able to mean nobody.
-        scale = min(1.0, afford / max(1.0, sc + ar + extra * 1.35))
+        scale = min(1.0, afford / max(1.0, scholars + artisans + extra * 1.35))
         self.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
@@ -651,8 +651,8 @@ class LabourMixin:
         # programme, it just has to grow into it. Making that impossible was a
         # modelling error, not a finding.
         pop = 0.45 + 0.55 * min(1.0, self.pop_scale ** 0.35)
-        return (base_sc + sc * scale * pop, base_ar + ar * scale * pop,
-                di * min(1.0, scale * 1.3) * pop)
+        return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
+                directors * min(1.0, scale * 1.3) * pop)
 
     def supervision_room(self):
         """People you can direct and pay BEYOND what your institutions train.
@@ -820,9 +820,9 @@ class LabourMixin:
                 # Asked DIRECTLY of the node's own requirement, never through
                 # start_reason - which calls this function, so the obvious
                 # version of this test recurses until the stack gives out.
-                _n = self.nodes[node]
-                _short = (_n["art"] > self.household.artisans + 1e-9 if kind == "artisans"
-                          else _n["sch"] > self.effective_scholars() + 1e-9)
+                _node = self.nodes[node]
+                _short = (_node["art"] > self.household.artisans + 1e-9 if kind == "artisans"
+                          else _node["sch"] > self.effective_scholars() + 1e-9)
                 if _short:
                     bits.append("build %s eventually (%s) - but it is itself "
                                 "waiting on %s, so hire or commission first"
@@ -852,9 +852,9 @@ class LabourMixin:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        w = WAGES.get(trade)
-        if w is None:
-            here = sorted(t for t in WAGES if self.trade_available(t))
+        wage_rate = WAGES.get(trade)
+        if wage_rate is None:
+            here = sorted(candidate_trade for candidate_trade in WAGES if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR.
         # A break tester earned wages as a chemist, an electrician and an
@@ -930,12 +930,12 @@ class LabourMixin:
         _wanted = self.active_hours_still_wanted()
         if _wanted:
             _after = max(0.0, self.director_pool() - self.director_hours_committed())
-            _short = {kk: vv for kk, vv in _wanted.items() if vv > _after + 0.5}
+            _short = {trade_id: hours_wanted for trade_id, hours_wanted in _wanted.items() if hours_wanted > _after + 0.5}
             if _short:
                 _named = sorted(_short.items(), key=lambda kv: -kv[1])[:2]
                 _more = len(_short) - len(_named)
                 _bits = ["%s (wants about %.0f more of your hours this year)"
-                        % (kk, vv) for kk, vv in _named]
+                        % (trade_id, hours_wanted) for trade_id, hours_wanted in _named]
                 _starve = (
                     "this leaves only %.0f of your own hours for the rest of "
                     "the year, and %s: %s%s. Nothing is lost - what it does "
@@ -952,12 +952,12 @@ class LabourMixin:
             # THE THREE NUMBERS HAVE TO SUBTRACT. Rounding each separately gave
             # "you earned 128 ... was worth 234 ... so this cost you 105", and
             # a break tester did the subtraction. Round first, then subtract.
-            _p, _l = round(pay), round(lost)
+            _paid, _lost = round(pay), round(lost)
             _msg = ("you earned %s, and the practice those hours were "
                     "running was worth %s a year - so this cost you %s. "
                     "Wage work is for when you have no practice to lose."
-                    % ("{:,.0f}".format(_p), "{:,.0f}".format(_l),
-                       "{:,.0f}".format(_l - _p)))
+                    % ("{:,.0f}".format(_paid), "{:,.0f}".format(_lost),
+                       "{:,.0f}".format(_lost - _paid)))
             if _starve:
                 _msg += " Also: " + _starve
             return pay, _msg
@@ -978,8 +978,8 @@ class LabourMixin:
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for t, n in self.household.employees.items():
-            total += n * self.annual_wage(t)
+        for trade, count in self.household.employees.items():
+            total += count * self.annual_wage(trade)
         return total
 
     # Materials a worker must replace to remain in their trade. These are not
@@ -1028,7 +1028,7 @@ class LabourMixin:
         # real places are occupied; adding housing/capacity lowers it again.
         housing = 1.0 + 0.4 * max(0.0, min(1.0, (occupancy - 0.75) / 0.25))
         basket = self.TRADE_TOOL_BASKETS.get(trade, ())
-        tools = (sum(self.material_price_factor(m) for m in basket) / len(basket)
+        tools = (sum(self.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
@@ -1339,13 +1339,13 @@ class LabourMixin:
         pop = reference_pop * scale_from_baseline
         urban_frac = float(self.civ.get("urban_fraction", 0.0))
         trades = []
-        for t in sorted(WAGES):
-            national = self.national_trade_population(t)
-            reach = self.reachable_trade_population(t) if self.trade_available(t) else 0.0
-            have = self.household.employees.get(t, 0.0)
+        for trade in sorted(WAGES):
+            national = self.national_trade_population(trade)
+            reach = self.reachable_trade_population(trade) if self.trade_available(trade) else 0.0
+            have = self.household.employees.get(trade, 0.0)
             trades.append({
-                "trade": t,
-                "exists_here": self.trade_available(t),
+                "trade": trade,
+                "exists_here": self.trade_available(trade),
                 "estimated_in_the_country": round(national, 1),
                 "within_your_reach": round(reach, 2),
                 "you_employ": round(have, 2),
@@ -1477,8 +1477,8 @@ class LabourMixin:
         why each figure is what it is.
         """
         bonus = 0.0
-        for node, tr, add in self.LABOUR_PRODUCTIVITY_SOURCES:
-            if tr == trade and node in self.household.done:
+        for node, row_trade, add in self.LABOUR_PRODUCTIVITY_SOURCES:
+            if row_trade == trade and node in self.household.done:
                 bonus += add
         return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
 
@@ -1682,8 +1682,8 @@ class LabourMixin:
         """
         trade = str(trade or "").strip().lower()
         have = self.household.employees.get(trade, 0.0)
-        pending = sum(r[3] for r in self.household.training
-                      if len(r) > 3 and r[2] == trade)
+        pending = sum(record[3] for record in self.household.training
+                      if len(record) > 3 and record[2] == trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
         n = float(n)
@@ -1707,14 +1707,14 @@ class LabourMixin:
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if n > 0 and pending > 0:
             stopped, still = 0.0, []
-            for r in self.household.training:
-                if len(r) > 3 and r[2] == trade and n > 0:
-                    take = min(n, r[3])
-                    r[3] -= take
+            for record in self.household.training:
+                if len(record) > 3 and record[2] == trade and n > 0:
+                    take = min(n, record[3])
+                    record[3] -= take
                     n -= take
                     stopped += take
-                if len(r) <= 3 or r[3] > 1e-9:
-                    still.append(r)
+                if len(record) <= 3 or record[3] > 1e-9:
+                    still.append(record)
             self.household.training = still
             if stopped > 0:
                 note = ((note + "; " if note else "")
@@ -1854,35 +1854,35 @@ class LabourMixin:
             except Exception:
                 need = self._goal_closure = set()
         seen = 0
-        for k in self.order:
+        for node_id in self.order:
             if seen >= look:
                 break
-            if k in self.household.done or k in self.household.active or k not in need:
+            if node_id in self.household.done or node_id in self.household.active or node_id not in need:
                 continue
-            n = self.nodes[k]
-            if any(p not in self.household.done for p in n["pre"]):
+            node = self.nodes[node_id]
+            if any(prereq_id not in self.household.done for prereq_id in node["pre"]):
                 continue
             seen += 1
-            short = n["art"] - self.craft_hands_available()
-            if short <= 0 or n["sch"] > self.effective_scholars():
+            short = node["art"] - self.craft_hands_available()
+            if short <= 0 or node["sch"] > self.effective_scholars():
                 continue
             hours = short * self.HOURS_PER_PERSON_YEAR
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
             best = None
-            for t in sorted(WAGES):
-                if trade_family(t) != "craft" or not self.trade_available(t):
+            for trade in sorted(WAGES):
+                if trade_family(trade) != "craft" or not self.trade_available(trade):
                     continue
-                spare = self.market_supply(t) - self.household.contract_hours.get(t, 0.0)
+                spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
                 if spare < hours:
                     continue
-                if best is None or WAGES[t] < WAGES[best]:
-                    best = t
+                if best is None or WAGES[trade] < WAGES[best]:
+                    best = trade
             if best is None:
                 continue
             ok, _why = self.commission(best, hours)
             if ok:
-                return (k, best, hours)
+                return (node_id, best, hours)
         return None
 
     def craft_hands_available(self):
@@ -1893,8 +1893,8 @@ class LabourMixin:
         year of a carpenter's time IS a carpenter, for the purposes of whether
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
-        contracted = sum(h for t, h in getattr(self.household, "contract_hours", {}).items()
-                         if trade_family(t) == "craft")
+        contracted = sum(hours for trade, hours in getattr(self.household, "contract_hours", {}).items()
+                         if trade_family(trade) == "craft")
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -1976,11 +1976,11 @@ class LabourMixin:
         trained scholars, you have 1.0" - the pivot node, built and paid for,
         doing nothing at all.
         """
-        g = getattr(self.household, "granted_staff", None)
-        if g is None:
-            g = self.household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
-        g["scholars"] = g.get("scholars", 0.0) + scholars
-        g["artisans"] = g.get("artisans", 0.0) + artisans
+        granted = getattr(self.household, "granted_staff", None)
+        if granted is None:
+            granted = self.household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
+        granted["scholars"] = granted.get("scholars", 0.0) + scholars
+        granted["artisans"] = granted.get("artisans", 0.0) + artisans
         self.household.scholars += scholars
         self.household.artisans += artisans
 
@@ -2015,7 +2015,7 @@ class LabourMixin:
         self.household.artisans what they are, so it is the one place that has to add
         the grant back rather than let it be overwritten out of existence.
         """
-        craft = sum(n for t, n in self.household.employees.items() if trade_family(t) == "craft")
+        craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
         schol = self.household.employees.get("scholar", 0.0)
         granted = getattr(self.household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. Two things were wrong
@@ -2073,10 +2073,10 @@ class LabourMixin:
         # slices, which is why slicing still saved about a fifth. Now the nth
         # head costs what the nth head costs however you group them.
         already = getattr(self.household, "market_pressure", 0.0)
-        n = float(n_people)
-        e = 1.85                       # 1 + 0.85
-        integral = (((already + n) ** e) - (already ** e)) / (e * (depth ** 0.85))
-        return 300.0 * (n + integral) * self.price_index
+        people_count = float(n_people)
+        exponent = 1.85                       # 1 + 0.85
+        integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** 0.85))
+        return 300.0 * (people_count + integral) * self.price_index
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

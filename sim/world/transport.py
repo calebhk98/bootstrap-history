@@ -232,7 +232,7 @@ Animal = collections.namedtuple(
      "pack_load_fraction_of_bodyweight", "walking_speed_km_per_hour",
      "working_hours_per_day"])
 
-_OX_BODY_MASS_KG = declare(
+OX_BODY_MASS_KG = declare(
     "OX_BODY_MASS_KG", 550.0,
     kind="engineering_estimate",
     unit="kg",
@@ -244,7 +244,7 @@ _OX_BODY_MASS_KG = declare(
         "share of gradient-climbing work, and its sustained pull in "
         "absolute newtons together with the fraction below.")
 
-_OX_SUSTAINED_PULL_FRACTION = declare(
+OX_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT = declare(
     "OX_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT", 0.11,
     kind="engineering_estimate",
     unit="fraction of body weight (dimensionless)",
@@ -260,7 +260,7 @@ _OX_SUSTAINED_PULL_FRACTION = declare(
         "generate all day, which is what MAX_CARGO_MASS_KG below is "
         "solved against.")
 
-_OX_PACK_LOAD_FRACTION = declare(
+OX_PACK_LOAD_FRACTION_OF_BODYWEIGHT = declare(
     "OX_PACK_LOAD_FRACTION_OF_BODYWEIGHT", 0.15,
     kind="temporary_heuristic",
     unit="fraction of body weight (dimensionless)",
@@ -275,7 +275,7 @@ _OX_PACK_LOAD_FRACTION = declare(
         "rather than engineering_estimate for exactly that reason. Not "
         "exercised by this module's own headline comparisons.")
 
-_OX_WALKING_SPEED_KM_PER_HOUR = declare(
+OX_WALKING_SPEED_KM_PER_HOUR = declare(
     "OX_WALKING_SPEED_KM_PER_HOUR", 3.0,
     kind="engineering_estimate",
     unit="km/hour",
@@ -286,7 +286,7 @@ _OX_WALKING_SPEED_KM_PER_HOUR = declare(
         "factor, alongside working hours per day, that turns a per-day "
         "cargo mass into a per-day tonne-km figure.")
 
-_OX_WORKING_HOURS_PER_DAY = declare(
+OX_WORKING_HOURS_PER_DAY = declare(
     "OX_WORKING_HOURS_PER_DAY", 6.0,
     kind="engineering_estimate",
     unit="hours/day",
@@ -302,13 +302,13 @@ _OX_WORKING_HOURS_PER_DAY = declare(
 
 OX = Animal(
     name="ox",
-    body_mass_kg=_OX_BODY_MASS_KG,
-    sustained_pull_fraction_of_bodyweight=_OX_SUSTAINED_PULL_FRACTION,
-    pack_load_fraction_of_bodyweight=_OX_PACK_LOAD_FRACTION,
-    walking_speed_km_per_hour=_OX_WALKING_SPEED_KM_PER_HOUR,
-    working_hours_per_day=_OX_WORKING_HOURS_PER_DAY)
+    body_mass_kg=OX_BODY_MASS_KG,
+    sustained_pull_fraction_of_bodyweight=OX_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT,
+    pack_load_fraction_of_bodyweight=OX_PACK_LOAD_FRACTION_OF_BODYWEIGHT,
+    walking_speed_km_per_hour=OX_WALKING_SPEED_KM_PER_HOUR,
+    working_hours_per_day=OX_WORKING_HOURS_PER_DAY)
 
-_HORSE_BODY_MASS_KG = declare(
+HORSE_BODY_MASS_KG = declare(
     "HORSE_BODY_MASS_KG", 450.0,
     kind="engineering_estimate",
     unit="kg",
@@ -323,7 +323,7 @@ _HORSE_BODY_MASS_KG = declare(
     why="Same role as the ox's body mass: drives maintenance feed and "
         "gradient work.")
 
-_HORSE_SUSTAINED_PULL_FRACTION = declare(
+HORSE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT = declare(
     "HORSE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT", 0.10,
     kind="engineering_estimate",
     unit="fraction of body weight (dimensionless)",
@@ -336,7 +336,7 @@ _HORSE_SUSTAINED_PULL_FRACTION = declare(
     why="Same role as OX_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT, for the "
         "horse.")
 
-_HORSE_PACK_LOAD_FRACTION = declare(
+HORSE_PACK_LOAD_FRACTION_OF_BODYWEIGHT = declare(
     "HORSE_PACK_LOAD_FRACTION_OF_BODYWEIGHT", 0.20,
     kind="engineering_estimate",
     unit="fraction of body weight (dimensionless)",
@@ -350,7 +350,7 @@ _HORSE_PACK_LOAD_FRACTION = declare(
         "it - the number PACK transport is solved against, with no "
         "vehicle, no wheels and no rolling-resistance surface at all.")
 
-_HORSE_WALKING_SPEED_KM_PER_HOUR = declare(
+HORSE_WALKING_SPEED_KM_PER_HOUR = declare(
     "HORSE_WALKING_SPEED_KM_PER_HOUR", 4.5,
     kind="engineering_estimate",
     unit="km/hour",
@@ -359,7 +359,7 @@ _HORSE_WALKING_SPEED_KM_PER_HOUR = declare(
     confidence="C",
     why="Same role as the ox's walking speed.")
 
-_HORSE_WORKING_HOURS_PER_DAY = declare(
+HORSE_WORKING_HOURS_PER_DAY = declare(
     "HORSE_WORKING_HOURS_PER_DAY", 8.0,
     kind="engineering_estimate",
     unit="hours/day",
@@ -372,13 +372,13 @@ _HORSE_WORKING_HOURS_PER_DAY = declare(
 
 HORSE = Animal(
     name="horse",
-    body_mass_kg=_HORSE_BODY_MASS_KG,
-    sustained_pull_fraction_of_bodyweight=_HORSE_SUSTAINED_PULL_FRACTION,
-    pack_load_fraction_of_bodyweight=_HORSE_PACK_LOAD_FRACTION,
-    walking_speed_km_per_hour=_HORSE_WALKING_SPEED_KM_PER_HOUR,
-    working_hours_per_day=_HORSE_WORKING_HOURS_PER_DAY)
+    body_mass_kg=HORSE_BODY_MASS_KG,
+    sustained_pull_fraction_of_bodyweight=HORSE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT,
+    pack_load_fraction_of_bodyweight=HORSE_PACK_LOAD_FRACTION_OF_BODYWEIGHT,
+    walking_speed_km_per_hour=HORSE_WALKING_SPEED_KM_PER_HOUR,
+    working_hours_per_day=HORSE_WORKING_HOURS_PER_DAY)
 
-_MULE_BODY_MASS_KG = declare(
+MULE_BODY_MASS_KG = declare(
     "MULE_BODY_MASS_KG", 350.0,
     kind="engineering_estimate",
     unit="kg",
@@ -387,7 +387,7 @@ _MULE_BODY_MASS_KG = declare(
     confidence="C",
     why="Same role as the other animals' body mass.")
 
-_MULE_SUSTAINED_PULL_FRACTION = declare(
+MULE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT = declare(
     "MULE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT", 0.11,
     kind="engineering_estimate",
     unit="fraction of body weight (dimensionless)",
@@ -401,7 +401,7 @@ _MULE_SUSTAINED_PULL_FRACTION = declare(
         "is the mule's documented strength (see MULE_PACK_LOAD_FRACTION_"
         "OF_BODYWEIGHT) and is what this module actually uses it for.")
 
-_MULE_PACK_LOAD_FRACTION = declare(
+MULE_PACK_LOAD_FRACTION_OF_BODYWEIGHT = declare(
     "MULE_PACK_LOAD_FRACTION_OF_BODYWEIGHT", 0.25,
     kind="engineering_estimate",
     unit="fraction of body weight (dimensionless)",
@@ -416,7 +416,7 @@ _MULE_PACK_LOAD_FRACTION = declare(
         "no wheels, no rolling-resistance surface at all, and the highest "
         "carrying fraction of the three animals this module tables.")
 
-_MULE_WALKING_SPEED_KM_PER_HOUR = declare(
+MULE_WALKING_SPEED_KM_PER_HOUR = declare(
     "MULE_WALKING_SPEED_KM_PER_HOUR", 4.0,
     kind="engineering_estimate",
     unit="km/hour",
@@ -425,7 +425,7 @@ _MULE_WALKING_SPEED_KM_PER_HOUR = declare(
     confidence="C",
     why="Same role as the other animals' walking speed.")
 
-_MULE_WORKING_HOURS_PER_DAY = declare(
+MULE_WORKING_HOURS_PER_DAY = declare(
     "MULE_WORKING_HOURS_PER_DAY", 8.0,
     kind="engineering_estimate",
     unit="hours/day",
@@ -436,11 +436,11 @@ _MULE_WORKING_HOURS_PER_DAY = declare(
 
 MULE = Animal(
     name="mule",
-    body_mass_kg=_MULE_BODY_MASS_KG,
-    sustained_pull_fraction_of_bodyweight=_MULE_SUSTAINED_PULL_FRACTION,
-    pack_load_fraction_of_bodyweight=_MULE_PACK_LOAD_FRACTION,
-    walking_speed_km_per_hour=_MULE_WALKING_SPEED_KM_PER_HOUR,
-    working_hours_per_day=_MULE_WORKING_HOURS_PER_DAY)
+    body_mass_kg=MULE_BODY_MASS_KG,
+    sustained_pull_fraction_of_bodyweight=MULE_SUSTAINED_PULL_FRACTION_OF_BODYWEIGHT,
+    pack_load_fraction_of_bodyweight=MULE_PACK_LOAD_FRACTION_OF_BODYWEIGHT,
+    walking_speed_km_per_hour=MULE_WALKING_SPEED_KM_PER_HOUR,
+    working_hours_per_day=MULE_WORKING_HOURS_PER_DAY)
 
 DEFAULT_DRAUGHT_ANIMAL = OX
 DEFAULT_PACK_ANIMAL = MULE
@@ -461,7 +461,7 @@ DEFAULT_PACK_ANIMAL = MULE
 Vehicle = collections.namedtuple(
     "Vehicle", ["name", "self_mass_kg", "service_life_km"])
 
-_PACK_SADDLE_MASS_KG = declare(
+PACK_SADDLE_MASS_KG = declare(
     "PACK_SADDLE_MASS_KG", 15.0,
     kind="engineering_estimate",
     unit="kg",
@@ -474,7 +474,7 @@ _PACK_SADDLE_MASS_KG = declare(
         "same way a cart's self-weight is subtracted from what a team can "
         "pull.")
 
-_PACK_SADDLE_SERVICE_LIFE_KM = declare(
+PACK_SADDLE_SERVICE_LIFE_KM = declare(
     "PACK_SADDLE_SERVICE_LIFE_KM", 8000.0,
     kind="temporary_heuristic",
     unit="km before the rig needs substantial rebuilding",
@@ -487,10 +487,10 @@ _PACK_SADDLE_SERVICE_LIFE_KM = declare(
         "estimate like the saddle's mass.")
 
 PACK_SADDLE = Vehicle(
-    name="pack saddle", self_mass_kg=_PACK_SADDLE_MASS_KG,
-    service_life_km=_PACK_SADDLE_SERVICE_LIFE_KM)
+    name="pack saddle", self_mass_kg=PACK_SADDLE_MASS_KG,
+    service_life_km=PACK_SADDLE_SERVICE_LIFE_KM)
 
-_CART_SELF_MASS_KG = declare(
+CART_SELF_MASS_KG = declare(
     "CART_SELF_MASS_KG", 200.0,
     kind="engineering_estimate",
     unit="kg",
@@ -502,7 +502,7 @@ _CART_SELF_MASS_KG = declare(
         "same tractive-force balance as the cargo itself - see "
         "max_cargo_mass_kg.")
 
-_CART_SERVICE_LIFE_KM = declare(
+CART_SERVICE_LIFE_KM = declare(
     "CART_SERVICE_LIFE_KM", 4000.0,
     kind="temporary_heuristic",
     unit="km before major repair (wheel or axle replacement)",
@@ -515,10 +515,10 @@ _CART_SERVICE_LIFE_KM = declare(
         "kilometre figure this module could use instead.")
 
 CART = Vehicle(
-    name="two-wheeled cart", self_mass_kg=_CART_SELF_MASS_KG,
-    service_life_km=_CART_SERVICE_LIFE_KM)
+    name="two-wheeled cart", self_mass_kg=CART_SELF_MASS_KG,
+    service_life_km=CART_SERVICE_LIFE_KM)
 
-_WAGON_SELF_MASS_KG = declare(
+WAGON_SELF_MASS_KG = declare(
     "WAGON_SELF_MASS_KG", 500.0,
     kind="engineering_estimate",
     unit="kg",
@@ -540,7 +540,7 @@ _WAGON_SELF_MASS_KG = declare(
         "finding CLAUDE.md SS3.2 asks this project to write down instead "
         "of paper over.")
 
-_WAGON_SERVICE_LIFE_KM = declare(
+WAGON_SERVICE_LIFE_KM = declare(
     "WAGON_SERVICE_LIFE_KM", 5000.0,
     kind="temporary_heuristic",
     unit="km before major repair",
@@ -551,10 +551,10 @@ _WAGON_SERVICE_LIFE_KM = declare(
         "that a wagon's heavier construction is also a sturdier one.")
 
 WAGON = Vehicle(
-    name="four-wheeled wagon", self_mass_kg=_WAGON_SELF_MASS_KG,
-    service_life_km=_WAGON_SERVICE_LIFE_KM)
+    name="four-wheeled wagon", self_mass_kg=WAGON_SELF_MASS_KG,
+    service_life_km=WAGON_SERVICE_LIFE_KM)
 
-_BARGE_SELF_MASS_KG = declare(
+BARGE_SELF_MASS_KG = declare(
     "BARGE_SELF_MASS_KG", 3000.0,
     kind="engineering_estimate",
     unit="kg",
@@ -569,7 +569,7 @@ _BARGE_SELF_MASS_KG = declare(
         "so it only matters here through the resistance it adds, not "
         "through the animal having to lift it.")
 
-_BARGE_SERVICE_LIFE_KM = declare(
+BARGE_SERVICE_LIFE_KM = declare(
     "BARGE_SERVICE_LIFE_KM", 15000.0,
     kind="temporary_heuristic",
     unit="km before major repair",
@@ -582,8 +582,8 @@ _BARGE_SERVICE_LIFE_KM = declare(
         "rot-rate model would replace this.")
 
 BARGE = Vehicle(
-    name="towed barge", self_mass_kg=_BARGE_SELF_MASS_KG,
-    service_life_km=_BARGE_SERVICE_LIFE_KM)
+    name="towed barge", self_mass_kg=BARGE_SELF_MASS_KG,
+    service_life_km=BARGE_SERVICE_LIFE_KM)
 
 # ============================================================================
 # SURFACE TABLE: rolling resistance, the thing that makes a road a road
@@ -599,7 +599,7 @@ BARGE = Vehicle(
 Surface = collections.namedtuple(
     "Surface", ["name", "rolling_resistance_coefficient"])
 
-_PAVED_ROAD_COEFFICIENT = declare(
+PAVED_ROAD_ROLLING_RESISTANCE_COEFFICIENT = declare(
     "PAVED_ROAD_ROLLING_RESISTANCE_COEFFICIENT", 0.025,
     kind="engineering_estimate",
     unit="dimensionless (resisting force / weight on the wheel)",
@@ -614,7 +614,7 @@ _PAVED_ROAD_COEFFICIENT = declare(
         "less cargo on the dirt-track figure below, purely from the "
         "surface changing.")
 
-_DIRT_TRACK_COEFFICIENT = declare(
+DIRT_TRACK_ROLLING_RESISTANCE_COEFFICIENT = declare(
     "DIRT_TRACK_ROLLING_RESISTANCE_COEFFICIENT", 0.08,
     kind="engineering_estimate",
     unit="dimensionless (resisting force / weight on the wheel)",
@@ -626,7 +626,7 @@ _DIRT_TRACK_COEFFICIENT = declare(
         "actually moved over - most of the network was this, not "
         "PAVED_ROAD_ROLLING_RESISTANCE_COEFFICIENT's figure.")
 
-_MUD_COEFFICIENT = declare(
+MUD_ROLLING_RESISTANCE_COEFFICIENT = declare(
     "MUD_ROLLING_RESISTANCE_COEFFICIENT", 0.30,
     kind="engineering_estimate",
     unit="dimensionless (resisting force / weight on the wheel)",
@@ -644,10 +644,10 @@ _MUD_COEFFICIENT = declare(
         "wet.")
 
 PAVED_ROAD = Surface(
-    name="paved road", rolling_resistance_coefficient=_PAVED_ROAD_COEFFICIENT)
+    name="paved road", rolling_resistance_coefficient=PAVED_ROAD_ROLLING_RESISTANCE_COEFFICIENT)
 DIRT_TRACK = Surface(
-    name="dirt track", rolling_resistance_coefficient=_DIRT_TRACK_COEFFICIENT)
-MUD = Surface(name="mud", rolling_resistance_coefficient=_MUD_COEFFICIENT)
+    name="dirt track", rolling_resistance_coefficient=DIRT_TRACK_ROLLING_RESISTANCE_COEFFICIENT)
+MUD = Surface(name="mud", rolling_resistance_coefficient=MUD_ROLLING_RESISTANCE_COEFFICIENT)
 
 WATER_TRANSPORT_RESISTANCE_COEFFICIENT_AT_TOW_SPEED = declare(
     "WATER_TRANSPORT_RESISTANCE_COEFFICIENT_AT_TOW_SPEED", 0.004,

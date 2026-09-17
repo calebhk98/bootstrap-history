@@ -34,7 +34,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # re-sorting all ~2,849 node ids from scratch every year to reach
         # the handful that actually carry a win_condition.
         self._win_condition_keys = sorted(
-            k for k, n in nodes.items() if n.get("win_condition"))
+            node_id for node_id, node in nodes.items() if node.get("win_condition"))
         self.order = list(order)
         self.rng = rng
         self.events = events
@@ -78,7 +78,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # later, not the day a latrine opens.
         self._pop_tech_pending = []
         self.year = self.cfg["start_year"]
-        c = self.cfg
+        config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
         # as its own object rather than eighty-odd attributes of this one. See
         # sim/engine/actors/household.py for what it holds and
@@ -105,7 +105,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # own docstring for why the callback travels this way instead of the
         # household reaching back up for it.
         self.household = Household(
-            starting_capital=float(c["start_capital"]) * self.price_index,
+            starting_capital=float(config["start_capital"]) * self.price_index,
             operating_changed=self._operating_changed)
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
@@ -226,19 +226,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # cost that follows from it. All of the below depends only on the
         # civ file and the (static) geography file, so it is computed once.
         self.geo = load_geography()
-        self._regions = {k: value for k, value in (self.geo.get("regions") or {}).items()
-                          if not k.startswith("_")}
+        self._regions = {region_id: value for region_id, value in (self.geo.get("regions") or {}).items()
+                          if not region_id.startswith("_")}
         self._home_centroid = self._compute_home_centroid()
         # node id -> located_materials key. Lets material_cost_factor() find
         # the geography entry for a location-gated tech node (mat_gutta_percha,
         # mat_natural_rubber, ...) without the tech tree needing to know
         # anything about geography itself.
         self._mat_unlock = {}
-        for mk, md in (self.geo.get("located_materials") or {}).items():
-            if mk.startswith("_"):
+        for material_key, material_data in (self.geo.get("located_materials") or {}).items():
+            if material_key.startswith("_"):
                 continue
-            for nid in (md.get("unlocks") or []):
-                self._mat_unlock[nid] = mk
+            for nid in (material_data.get("unlocks") or []):
+                self._mat_unlock[nid] = material_key
         # Mineral market access used to be `self.pop_scale`, i.e. "how much
         # coal can you buy" scaled by HOW MANY PEOPLE YOU HAVE. That is wrong
         # in both directions: Norse Scandinavia got 2.3% of Rome's coal
@@ -247,8 +247,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # not demography. See _compute_mineral_scale() for the replacement.
         # It depends only on home_regions and reach, neither of which change
         # during a run, so it is computed once here rather than every year.
-        self._mineral_scale = {m: self._compute_mineral_scale(m)
-                                for m in ("iron", "coal", "copper", "lead",
+        self._mineral_scale = {material: self._compute_mineral_scale(material)
+                                for material in ("iron", "coal", "copper", "lead",
                                           "tin", "silver", "saltpetre")}
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned. A playtester pointed out that these were being
@@ -263,17 +263,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
         starting_techs = self.civ["starting_techs"]
-        missing = sorted(k for k in starting_techs if k not in self.nodes)
+        missing = sorted(tech_id for tech_id in starting_techs if tech_id not in self.nodes)
         if missing:
             # Refuse a corrupt opening rather than merely warning and running a
             # different scenario. Eight ids were once silently dropped across
             # three civilizations, including four of the Mexica's five.
             raise ValueError("civilization %r lists unknown starting technologies: %s"
                              % (self.civ.get("id", "?"), ", ".join(missing)))
-        for k in starting_techs:
-            self.household.done.add(k)
+        for tech_id in starting_techs:
+            self.household.done.add(tech_id)
             self._done_changed()
-            self.household.granted.add(k)
+            self.household.granted.add(tech_id)
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
@@ -1437,8 +1437,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # 0.837 expected, across forty seeds); the reporting was missing.
         if _lost:
             self.household.log.append((year, "you lose %s to death and to better offers"
-                             % ", ".join("%d %s%s" % (n, t, "" if n == 1 else "s")
-                                         for t, n in sorted(_lost.items()))))
+                             % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
+                                         for trade_id, count in sorted(_lost.items()))))
         self._resync_pools()
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
@@ -1558,8 +1558,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # for you are generic craftsmen and scribes, and that is all they are.
             craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * 0.7)
             generic = self.household.employees.get("artisan", 0.0)
-            specials = sum(value for t, value in self.household.employees.items()
-                           if t not in ("artisan", "scholar") and trade_family(t) == "craft")
+            specials = sum(value for trade_id, value in self.household.employees.items()
+                           if trade_id not in ("artisan", "scholar") and trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS. The generic bucket was
             # the remainder after every taught trade had taken its share, so
             # once the top-up kept five specialist trades at two apiece the
@@ -1771,10 +1771,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # it whether or not auto_shed was switched off, in a game whose
                 # own help says "every one of them is a switch you control".
                 if net < 0 and self.policy.get("auto_shed", True):
-                    burden = sorted((k for k in self.household.done
-                                     if self.nodes[k]["up"] > self.nodes[k]["rev"]
-                                     and k not in self.household.granted
-                                     and not self.never_abandon(k)),
+                    burden = sorted((node_id for node_id in self.household.done
+                                     if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
+                                     and node_id not in self.household.granted
+                                     and not self.never_abandon(node_id)),
                                     key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
                     shed = []
                     for node_id in burden:
@@ -1968,7 +1968,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if node_id in self.household.done or node_id in self.household.active:
                     continue
                 node = self.nodes[node_id]
-                if not any(_is_gone(t) for t in n["lab"]):
+                if not any(_is_gone(trade_id) for trade_id in node["lab"]):
                     continue
                 if not self.start_reason(node_id, ignore_trade=True)[0]:
                     continue
@@ -1983,8 +1983,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # a teaching treadmill. A trade is worth restoring; it is not worth
             # half of every year for ever.
             _taught = self.household.last_taught
-            want = {t: value for t, value in want.items()
-                    if yr - _taught.get(t, -999) >= self.RETEACH_EVERY}
+            want = {trade_id: value for trade_id, value in want.items()
+                    if year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
             # AND ONLY IF YOU CAN PAY THEM. train() checked hours, literacy and
             # household room and never once looked at money - so a Rome
             # household earning 1,232 a year taught itself two engineers at
@@ -2107,8 +2107,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             fixed0 = self.upkeep() + self.living_cost() + self.mine_operating_cost()
             candidates = self.order
             if self.revenue() - fixed0 < max(400.0, fixed0 * 0.25):
-                earners = [k for k in self.order
-                           if self.nodes[k]["rev"] - self.nodes[k]["up"] > 0]
+                earners = [node_id for node_id in self.order
+                           if self.nodes[node_id]["rev"] - self.nodes[node_id]["up"] > 0]
                 earners.sort(key=lambda k: self.project_cost(k)
                              / max(1.0, self.nodes[k]["rev"] - self.nodes[k]["up"]))
                 # `set(earners)` HOISTED OUT OF THE COMPREHENSION. Written
@@ -2122,7 +2122,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # equivalent of an extra multi-hundred-thousand-item pass.
                 # See PERFORMANCE.md.
                 _earner_set = set(earners)
-                candidates = earners + [k for k in self.order if k not in _earner_set]
+                candidates = earners + [node_id for node_id in self.order if node_id not in _earner_set]
             # INCREMENTAL COUNT, NOT A SET REBUILT PER ITERATION. Written as
             # `len(self.household.active) - len(self.household.bountied & set(self.household.active))`
             # inside the loop below, this rebuilt `set(self.household.active)` from
@@ -2254,10 +2254,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # and the regression suite could not catch it because no check
                 # runs a long enough optimizer game to make gold bind.
                 # sorted(), because this feeds a float sum.
-                keys = tuple(sorted(kk for kk, (bucket, _tag)
+                keys = tuple(sorted(material for material, (bucket, _tag)
                                     in self.MATERIAL_CHECKS.items()
                                     if bucket == self.household.binding))
-                short = sum(dem.get(kk, 0.0) for kk in keys)
+                short = sum(dem.get(material, 0.0) for material in keys)
                 want = max(0.0, short - self.mine_capacity.get(self.household.binding, 0.0))
                 self.open_mine(self.household.binding, min(want, self.household.capital * 0.25
                                                  / max(1.0, self.MINE_CAPEX_PER_T_YR[self.household.binding])))
@@ -2435,9 +2435,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 _lab_left = project_state.get("lab_left")
                 if _lab_left is None:
                     _lab_left = node["lab"]
-                blocked = [t for t, want in n["lab"].items()
-                           if want > 0 and _lab_left.get(t, want) > 0
-                           and self.market_supply(t) <= 0.0]
+                blocked = [trade_id for trade_id, want in node["lab"].items()
+                           if want > 0 and _lab_left.get(trade_id, want) > 0
+                           and self.market_supply(trade_id) <= 0.0]
                 if blocked:
                     project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
                     project_state["blocked_on_trades"] = blocked
@@ -2785,9 +2785,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # all. Named per project, so 'why <id>' and this line never disagree
         # about which project or how much.
         if _arrears_hours_lost:
-            _total_lost = sum(h for _, h in _arrears_hours_lost)
-            _names = ", ".join("%s (%s hr)" % (k, "{:,.0f}".format(h))
-                                for k, h in _arrears_hours_lost)
+            _total_lost = sum(hours for _, hours in _arrears_hours_lost)
+            _names = ", ".join("%s (%s hr)" % (node_id, "{:,.0f}".format(hours))
+                                for node_id, hours in _arrears_hours_lost)
             self.household.log.append((year, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
                                  "- that time does not come back, arrears or not. "
@@ -2870,8 +2870,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.household.reputation = floor + (self.household.reputation - floor) * 0.97
         # ADAPTATION. Every year the world has known you, and every visible thing
         # you have already done, makes the next one less astonishing.
-        pub = sum(1 for k in self.household.done
-                  if set(self.nodes[k].get("traits", [])) & {"spectacle", "inexplicable"})
+        pub = sum(1 for node_id in self.household.done
+                  if set(self.nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
         self.household.familiarity = min(0.9, 1.0 - math.exp(-self.w["adaptation_rate"] *
                                                    (0.5 * pub + 0.25 * (self.year - 100))))
         # WHERE THE YEAR'S HOURS WENT. Four projects each showed exactly half
@@ -3058,7 +3058,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         if not self.founder_alive and self.household.directors_extra < 0.5:
             self.household.stalled += 1
             if self.household.stalled >= 3:
-                losable = sorted(k for k in self.household.done if k not in self.household.granted)
+                losable = sorted(node_id for node_id in self.household.done if node_id not in self.household.granted)
                 # sorted() matters: self.household.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every
@@ -3136,22 +3136,22 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         win_condition at all - pure self time (`sorted` and dict-get, both
         C-level, nothing further to profile under it).
         """
-        for k in self._win_condition_keys:
-            if k in self.household.done:
+        for node_id in self._win_condition_keys:
+            if node_id in self.household.done:
                 continue
-            wc = self.nodes[k]["win_condition"]
-            if not wc:
+            win_condition = self.nodes[node_id]["win_condition"]
+            if not win_condition:
                 continue
-            val = self._win_condition_value(wc["metric"])
-            op, target = wc["op"], wc["value"]
-            met = (val >= target) if op == ">=" else (val <= target) if op == "<=" else False
+            val = self._win_condition_value(win_condition["metric"])
+            comparison_op, target = win_condition["op"], win_condition["value"]
+            met = (val >= target) if comparison_op == ">=" else (val <= target) if comparison_op == "<=" else False
             if not met:
                 continue
-            self.household.done.add(k)
+            self.household.done.add(node_id)
             self._done_changed()
-            self.household.done_year[k] = yr
-            self.household.log.append((yr, "achieved: " + self.nodes[k]["name"]))
-            if k == self.goal and self.household.goal_year is None:
+            self.household.done_year[node_id] = yr
+            self.household.log.append((yr, "achieved: " + self.nodes[node_id]["name"]))
+            if node_id == self.goal and self.household.goal_year is None:
                 self.household.goal_year = yr
 
     def run(self, goal, horizon=None):
