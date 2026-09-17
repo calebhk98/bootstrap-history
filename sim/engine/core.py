@@ -1273,7 +1273,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "convention for defining 'recovered', not itself a free "
             "parameter of the demographic model.")
     WAGE_SCARCITY_ELASTICITY = declare(
-        "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_historical_outcome",
+        "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_outcome",
         unit="dimensionless (wage premium per unit of population deficit)",
         source="Phelps Brown and Hopkins' English real-wage index shows "
              "roughly a doubling across the century after 1348.",

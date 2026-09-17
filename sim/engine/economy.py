@@ -633,7 +633,7 @@ class EconomyMixin:
                                 ", ".join(shed))))
 
     DEBT_BASE_RATE = declare(
-        "DEBT_BASE_RATE", 0.12, kind="hardcoded_historical_outcome",
+        "DEBT_BASE_RATE", 0.12, kind="hardcoded_outcome",
         unit="fraction of arrears charged per year", source=
         "The Roman legal maximum on ordinary loans (centesimae usurae, "
         "literally 'hundredths', i.e. 1%/month) was twelve per cent a year; "
@@ -649,7 +649,7 @@ class EconomyMixin:
             "also the one figure every OTHER civilisation in this game "
             "reuses as its own starting rate (nothing here varies it by "
             "civ), which a real mechanism would have to. Reclassified from "
-            "temporary_heuristic to hardcoded_historical_outcome (see "
+            "temporary_heuristic to hardcoded_outcome (see "
             "Complaints/36 and Complaints/37): this is not scaffolding "
             "waiting on a mechanism that has simply not been written yet, "
             "it is a historical number standing in for a market this "
@@ -3359,7 +3359,7 @@ class EconomyMixin:
             "what data/production/'s coverage work is building toward "
             "replacing this fallback with.")
     GENERIC_OUTPUT_PRICE_EXPONENT = declare(
-        "GENERIC_OUTPUT_PRICE_EXPONENT", 1.1, kind="hardcoded_historical_outcome",
+        "GENERIC_OUTPUT_PRICE_EXPONENT", 1.1, kind="hardcoded_outcome",
         unit="dimensionless exponent on price", source=
         "Same three-point log-log fit as GENERIC_OUTPUT_ANCHOR_T_PER_YR.",
         confidence="C",
@@ -4933,12 +4933,12 @@ class EconomyMixin:
         source="The base figure this file derives explicitly: a Roman coal hewer working a shallow drift wins on the order of a tonne a day (~250 t/yr/man); at a miner's wage of 0.09 denarii/hour over 2000 hours/year (180 den/yr), that is roughly 0.7 den/tonne in wages before haulage, doubled here for haulage, timbering and overseers.",
         confidence='B', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
     MINE_CAPEX_PER_T_YR_IRON = declare(
-        "MINE_CAPEX_PER_T_YR_IRON", 60.0, kind="hardcoded_historical_outcome",
+        "MINE_CAPEX_PER_T_YR_IRON", 60.0, kind="hardcoded_outcome",
         unit="denarii per tonne/year of capacity sunk",
         source="Scaled up from coal's derived figure for ore grade and smelting, cross-checked against iron's own book price (the GENERIC_MINE_CAPEX_MULTIPLE comment below notes iron's capex is close to 60x its book price, the same multiple the generic fallback for every other material now uses).",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
     MINE_CAPEX_PER_T_YR_COPPER = declare(
-        "MINE_CAPEX_PER_T_YR_COPPER", 240.0, kind="hardcoded_historical_outcome",
+        "MINE_CAPEX_PER_T_YR_COPPER", 240.0, kind="hardcoded_outcome",
         unit="denarii per tonne/year of capacity sunk",
         source="As iron, scaled for copper's own ore grade and smelting; close to 60x copper's own book price.",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
@@ -4948,17 +4948,17 @@ class EconomyMixin:
         source="As iron, scaled for lead's own ore grade and smelting.",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
     MINE_CAPEX_PER_T_YR_TIN = declare(
-        "MINE_CAPEX_PER_T_YR_TIN", 420.0, kind="hardcoded_historical_outcome",
+        "MINE_CAPEX_PER_T_YR_TIN", 420.0, kind="hardcoded_outcome",
         unit="denarii per tonne/year of capacity sunk",
         source="As iron, scaled for tin's own ore grade and smelting; close to 42x tin's own book price.",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
     MINE_CAPEX_PER_T_YR_SILVER = declare(
-        "MINE_CAPEX_PER_T_YR_SILVER", 9000.0, kind="hardcoded_historical_outcome",
+        "MINE_CAPEX_PER_T_YR_SILVER", 9000.0, kind="hardcoded_outcome",
         unit="denarii per tonne/year of capacity sunk",
         source="As iron, scaled for silver's much higher ore value and smelting/refining cost; close to 28x silver's own book price.",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
     MINE_CAPEX_PER_T_YR_GOLD = declare(
-        "MINE_CAPEX_PER_T_YR_GOLD", 160000.0, kind="hardcoded_historical_outcome",
+        "MINE_CAPEX_PER_T_YR_GOLD", 160000.0, kind="hardcoded_outcome",
         unit="denarii per tonne/year of capacity sunk",
         source="Attested Roman gold workings (Dacia, Las Medulas) were mined at enormous cost, reflected here; close to 46x gold's own book price. Included specifically so debasement has an escape valve - a founder who mines their own gold is not ruined by a debased currency the way one holding cash is.",
         confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
@@ -5050,7 +5050,7 @@ class EconomyMixin:
     # out MINE_LEAD_YEARS, pay to keep it standing - for whatever material
     # an unanticipated recipe needs, not a rule written for aluminium by name.
     GENERIC_MINE_CAPEX_MULTIPLE = declare(
-        "GENERIC_MINE_CAPEX_MULTIPLE", 50.0, kind="hardcoded_historical_outcome",
+        "GENERIC_MINE_CAPEX_MULTIPLE", 50.0, kind="hardcoded_outcome",
         unit="denarii capex per denarius/kg of book price", source=
         "Fitted from the seven curated MINE_CAPEX_PER_T_YR figures against "
         "their own book prices: iron ~60x, copper ~60x, tin ~42x, silver "
@@ -6205,7 +6205,7 @@ class EconomyMixin:
             "member - lower, reflecting a bare rather than a dignified "
             "standard of upkeep. Tuned, not measured.")
     LIVING_COST_TAX_RATE = declare(
-        "LIVING_COST_TAX_RATE", 0.06, kind="hardcoded_historical_outcome",
+        "LIVING_COST_TAX_RATE", 0.06, kind="hardcoded_outcome",
         unit="fraction of revenue", source=
         "Named after real Roman levies - portoria (customs dues, "
         "typically a few per cent), the vicesima (a nominal 5% on certain "
@@ -6218,7 +6218,7 @@ class EconomyMixin:
             "combined bite is approximated as one flat share of revenue "
             "rather than computed from an actual fiscal structure. "
             "Reclassified from temporary_heuristic to "
-            "hardcoded_historical_outcome (see Complaints/36 and "
+            "hardcoded_outcome (see Complaints/36 and "
             "Complaints/37), alongside DEBT_BASE_RATE: this stands "
             "in for state revenue extraction, which CLAUDE.md SS3.1 asks "
             "to fall out of trade volume, customs enforcement and imperial "

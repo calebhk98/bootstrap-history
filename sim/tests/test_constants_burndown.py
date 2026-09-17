@@ -1,6 +1,6 @@
 """Guards the two bugs that made `python3 sim/constants.py --burndown` print
 "0 numbers declared" while 32 numbers were declared, and (in
-`HardcodedHistoricalOutcomeTests`) the separate `hardcoded_historical_outcome`
+`HardcodedHistoricalOutcomeTests`) the separate `hardcoded_outcome`
 kind Complaints/36 asked for.
 
 Milestone 1 in docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md is
@@ -205,7 +205,7 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
     """Complaints/36: `temporary_heuristic` conflated two unlike things -
     honest scaffolding CLAUDE.md SS3.1 allows ("no mechanism exists yet"),
     and a hardcoded historical outcome SS3.1 forbids outright ("this IS the
-    answer, copied from the record"). `hardcoded_historical_outcome` is the
+    answer, copied from the record"). `hardcoded_outcome` is the
     kind that separates them.
 
     Unlike `temporary_heuristic`, which will always have a tail, this kind
@@ -222,13 +222,13 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout, result.stderr
 
-    def test_hardcoded_historical_outcome_is_a_registered_kind(self):
+    def test_hardcoded_outcome_is_a_registered_kind(self):
         sys.path.insert(0, _REPOSITORY_ROOT)
         try:
             from sim import constants
         finally:
             sys.path.remove(_REPOSITORY_ROOT)
-        self.assertIn("hardcoded_historical_outcome", constants.KINDS)
+        self.assertIn("hardcoded_outcome", constants.KINDS)
 
     def test_declare_accepts_the_new_kind(self):
         # A clean subprocess, like this file's other declare()-exercising
@@ -239,7 +239,7 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
             "from sim import constants\n"
             "value = constants.declare(\n"
             "    '_PROBE_HARDCODED_HISTORICAL_OUTCOME', 1.0,\n"
-            "    kind='hardcoded_historical_outcome', unit='test',\n"
+            "    kind='hardcoded_outcome', unit='test',\n"
             "    why='Exercises the new kind end to end; not a real "
             "declaration read by any production code.')\n"
             "print(value)\n" % _REPOSITORY_ROOT)
@@ -281,7 +281,7 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
 
     def test_cli_burndown_names_the_kind_and_states_the_zero_target(self):
         stdout, _stderr = self._run_burndown()
-        self.assertIn("HARDCODED HISTORICAL OUTCOME", stdout)
+        self.assertIn("HARDCODED OUTCOME", stdout)
         self.assertIn("ZERO", stdout)
         self.assertIn("DEBT_BASE_RATE", stdout)
         self.assertIn("LIVING_COST_TAX_RATE", stdout)

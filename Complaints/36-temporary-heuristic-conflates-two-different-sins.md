@@ -55,7 +55,7 @@ hardcoded historical outcomes are left?" without a manual read.
 
 ## Suggested fix, not applied
 
-A seventh kind, `hardcoded_historical_outcome`, or a boolean flag beside the
+A seventh kind, `hardcoded_outcome`, or a boolean flag beside the
 kind. Either way `--burndown` should report it separately and loudly, and
 the count should be expected to reach zero, unlike `temporary_heuristic`
 which will always have a tail.

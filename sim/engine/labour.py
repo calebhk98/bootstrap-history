@@ -2978,7 +2978,7 @@ class LabourMixin:
             "closed), not derived from an observed price-quantity curve "
             "for any real slave market.")
     SLAVE_BASE_PRICE_DENARII = declare(
-        "SLAVE_BASE_PRICE_DENARII", 300.0, kind="temporary_heuristic",
+        "SLAVE_BASE_PRICE_DENARII", 300.0, kind="hardcoded_outcome",
         unit="denarii, at price_index=1 and zero market pressure",
         source=None, confidence="D",
         why="The list price of one person before any congestion surcharge "
@@ -2987,10 +2987,16 @@ class LabourMixin:
             "CLAUDE.md 3.1 asks a price to be derived. §3.1 CANDIDATE: "
             "this is exactly the shape the Roman-soldier example in "
             "CLAUDE.md warns about (a person's price stated outright "
-            "rather than computed from the underlying scarcity), though "
-            "unlike DEBT_BASE_RATE it is not itself an attested historical "
-            "figure - it is simply a plausible-looking round number picked "
-            "by the author. A real mechanism would price a person the way "
+            "rather than computed from the underlying scarcity), and "
+            "RECLASSIFIED as hardcoded_outcome on that basis. The agent that "
+            "declared it argued the opposite - that unlike DEBT_BASE_RATE "
+            "this is not an attested historical figure, just a "
+            "plausible-looking round number - which is true and is the "
+            "wrong axis: an INVENTED price is worse than a copied one, "
+            "because at least the copied one is right about the world. "
+            "What the kind tests is whether the quantity is an OUTPUT "
+            "this simulation should compute, not where the number came "
+            "from. A real mechanism would price a person the way "
             "labour.py now prices free labour: from local supply, risk "
             "and what the buyer can actually enforce.")
 

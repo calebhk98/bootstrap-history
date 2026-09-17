@@ -53,7 +53,7 @@ THE KINDS, and the two that matter for different reasons
                              input to it.
     temporary_heuristic      a number we invented because the mechanism that
                              would derive it does not exist yet.
-    hardcoded_historical_outcome
+    hardcoded_outcome
                              a number that IS the answer to something the
                              simulation is supposed to compute - a price, a
                              wage, an interest rate, a tax rate - copied in
@@ -63,7 +63,7 @@ THE KINDS, and the two that matter for different reasons
 `temporary_heuristic` is the project's progress bar: every one of them is a
 promise to replace it, and it will always have a tail, because "no mechanism
 exists yet" is a permanent feature of an unfinished migration, not a bug.
-`hardcoded_historical_outcome` is a DIFFERENT progress bar with a different
+`hardcoded_outcome` is a DIFFERENT progress bar with a different
 target: it is small today (two entries, both in sim/engine/economy.py) and
 `--burndown` expects it to reach EXACTLY ZERO, because unlike an un-derived
 heuristic, a live SS3.1 violation is not something this project tolerates
@@ -156,7 +156,25 @@ KINDS = (
     "initial_condition",
     "calibration_target",
     "temporary_heuristic",
-    "hardcoded_historical_outcome",
+    # THE TEST IS NOT PROVENANCE, IT IS WHETHER THE QUANTITY IS AN OUTPUT.
+    # This kind was first called `hardcoded_historical_outcome`, and the name
+    # misled the first agent to meet it: asked to classify a flat 300-denarii
+    # list price for a human being, it reasoned that the number was invented
+    # rather than copied from any source, and therefore left it as ordinary
+    # scaffolding. True, and the wrong axis. An INVENTED price is worse than
+    # a copied one, because at least the copied one is right about the world.
+    #
+    # Ask instead: is this quantity something the simulation is supposed to
+    # COMPUTE? A price, a wage, a rent, an interest rate, a city size, a
+    # recovery time - CLAUDE.md §3.1's own headline example is what a Roman
+    # soldier costs. Those are outputs, and asserting one is the violation
+    # however defensible the number. An elasticity, a decay rate, a curve
+    # shape are inputs: nobody expects the model to derive them from
+    # anything, so they are temporary_heuristic and always will be.
+    #
+    # Renamed to `hardcoded_outcome` for that reason. A label narrower than
+    # its own test is worse than no label, because it reads as permission.
+    "hardcoded_outcome",
 )
 
 CONFIDENCES = ("A", "B", "C", "D")
@@ -217,7 +235,7 @@ def burndown():
     heuristics = [e for e in REGISTRY.values()
                   if e["kind"] == "temporary_heuristic"]
     historical_outcomes = [e for e in REGISTRY.values()
-                            if e["kind"] == "hardcoded_historical_outcome"]
+                            if e["kind"] == "hardcoded_outcome"]
     return {"declared": total, "temporary_heuristics": len(heuristics),
             "share": (len(heuristics) / total) if total else 0.0,
             "outstanding": heuristics,
@@ -324,7 +342,7 @@ def main(argv=None):
         # above - which will always have a tail - THIS COUNT IS EXPECTED TO
         # REACH ZERO. It is a defect list, not a progress bar.
         print("=" * 72)
-        print("%d HARDCODED HISTORICAL OUTCOME%s (CLAUDE.md SS3.1 forbids "
+        print("%d HARDCODED OUTCOME%s (CLAUDE.md SS3.1 forbids "
               "these outright)"
               % (len(outcomes), "" if len(outcomes) == 1 else "S"))
         print("Expected count: ZERO. Every one of these is a live SS3.1 "

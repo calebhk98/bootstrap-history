@@ -3083,7 +3083,7 @@ class SocietyMixin:
             "make the cash loss proportionate to the staff loss, not "
             "measured against any attested plague-year revenue collapse.")
     PLAGUE_RECOVERY_YEARS_REFERENCE = declare(
-        "PLAGUE_RECOVERY_YEARS_REFERENCE", 150.0, kind="hardcoded_historical_outcome",
+        "PLAGUE_RECOVERY_YEARS_REFERENCE", 150.0, kind="hardcoded_outcome",
         unit="years", source="Broadberry et al., British Economic Growth, "
              "2015: England's population took roughly 150 years to regain "
              "its pre-Black-Death level.",
@@ -3104,7 +3104,7 @@ class SocietyMixin:
             "is genuine, and the number is still the answer, not an input "
             "to a demographic model that does not exist yet.")
     PLAGUE_RECOVERY_REFERENCE_SEVERITY = declare(
-        "PLAGUE_RECOVERY_REFERENCE_SEVERITY", 0.45, kind="hardcoded_historical_outcome",
+        "PLAGUE_RECOVERY_REFERENCE_SEVERITY", 0.45, kind="hardcoded_outcome",
         unit="dimensionless (staff_loss fraction)", source=
         "england_1300.json's own Black Death entry (staff_loss 0.45).",
         confidence="B",
