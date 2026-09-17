@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Worked demonstration of the commodity framework in
 sim/engine/commodities.py, against the exact cases the brief named. Read
-rome/data/world/COMMODITIES.md for the design; this script is proof it
+data/world/COMMODITIES.md for the design; this script is proof it
 runs, not the documentation.
 
-    python3 rome/sim/demo_commodities.py
+    python3 sim/demo_commodities.py
 
 Sections 1-6 have no dependency on Sim, a civilization, or a running game:
 the standalone framework working on the tech tree and commodities.json
@@ -19,7 +19,7 @@ import os
 import random
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))         # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))         # sim
 ROOT = os.path.dirname(HERE)                               # rome
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "engine"))
@@ -165,8 +165,8 @@ def main():
     print("   mineral_scale) for the actual civilization in play, not a second guess.")
 
     rule("DONE")
-    print("See rome/data/world/COMMODITIES.md for the design, and")
-    print("rome/sim/test_regressions.py for the same claims as enforced checks.")
+    print("See data/world/COMMODITIES.md for the design, and")
+    print("sim/test_regressions.py for the same claims as enforced checks.")
 
 
 if __name__ == "__main__":

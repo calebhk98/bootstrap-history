@@ -356,7 +356,7 @@ check("`state` reports how much of what you run has diffused to competitors",
 # game will still sell it at a flat book price - so you could build an
 # aluminium monoplane in Rome 100AD with no grid, no generator, no
 # electrolysis cell, buying the metal at 6 denarii a kilo. This pins the 24
-# materials audited and fixed for that gap (see rome/data/review/
+# materials audited and fixed for that gap (see data/review/
 # MATERIAL_GATING.md for the full audit, including the ~69 materials judged
 # genuinely purchasable in antiquity - iron, copper, wool, clay, timber,
 # salt and the like - where no gate is correct).

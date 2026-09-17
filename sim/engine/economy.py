@@ -1045,7 +1045,7 @@ class EconomyMixin:
     #       one, and the same 700-year-horizon finding argued for slower
     #       rather than faster.
     #
-    # EXTENDED, rome/data/review/COMMODITY_DYNAMISM.md's second and third
+    # EXTENDED, data/review/COMMODITY_DYNAMISM.md's second and third
     # findings. Two gaps in the original four categories, both measured
     # directly against a live Sim:
     #
@@ -2216,7 +2216,7 @@ class EconomyMixin:
 
     # ---- GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES --------------------
     #
-    # rome/data/review/COMMODITY_DYNAMISM.md, an audit run directly against
+    # data/review/COMMODITY_DYNAMISM.md, an audit run directly against
     # this engine: 149 of the 162 distinct material keys the tech tree uses
     # (about 92%) had a price read once from prices.json at load time and
     # never revisited for scarcity, surplus or anything else, because
@@ -2465,7 +2465,7 @@ class EconomyMixin:
     # hom_piano, en_rotary_converter...) drew drawn copper wire and none of it
     # ever competed with copper_kg for the same finite copper supply. This is
     # precisely the gap COMMODITIES.md section 7 names as "the real test":
-    # wire is copper, drawn, and rome/data/world/commodities.json's own
+    # wire is copper, drawn, and data/world/commodities.json's own
     # copper_wire recipe (a 5% drawing loss) already says so -- see
     # wire_chain_report() below, which asks that exact question against this
     # civilisation's real copper numbers via commodities.py's

@@ -5,7 +5,7 @@ Moving contiguous blocks verbatim: no check below was reformatted, reworded or o
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
-# TWO LOOMS COMPETE: rome/data/review/COMMODITY_DYNAMISM.md's central goods-
+# TWO LOOMS COMPETE: data/review/COMMODITY_DYNAMISM.md's central goods-
 # market finding, measured directly against a live Sim before this pass:
 # "One loom at age 20 earns factor 0.7840. With a second identical loom
 # running: 0.7840. With ten: 0.7840... a time curve wearing a market's

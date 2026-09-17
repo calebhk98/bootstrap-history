@@ -9,7 +9,7 @@ throttle) -- handed THIS CIVILISATION'S ACTUAL copper numbers via
 `commodities.json` would otherwise guess. `core.py` still does not import
 this module and `Sim` still has no inventory (`Ledger`, the stock-tracking
 class below, is exercised by the demo and the regression suite only): see
-`rome/data/world/COMMODITIES.md` section "What was decided" for why a full
+`data/world/COMMODITIES.md` section "What was decided" for why a full
 swap of `resource_throttle()`/`MARKET_SHARE`/`material_price_factor()` for
 this module's OWN (separately-sourced) price/national-output machinery was
 rejected, and what was taken instead.
@@ -29,8 +29,8 @@ import math
 import os
 import random
 
-HERE = os.path.dirname(os.path.abspath(__file__))        # rome/sim/engine
-SIMDIR = os.path.dirname(HERE)                            # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))        # sim/engine
+SIMDIR = os.path.dirname(HERE)                            # sim
 ROOT = os.path.dirname(SIMDIR)                            # rome
 COMMODITIES_FILE = os.path.join(ROOT, "data", "world", "commodities.json")
 

@@ -302,14 +302,14 @@ check("...accepting starts a genuinely new game through the same wizard, "
       os.listdir(_sess7_saves))
 
 # --- THE SAME FREEZE PROPERTY, AGAIN, AGAINST A REAL CAMPAIGN SAVE - not a
-# few years of synthetic play. rome/playtest/fixtures/rome_380_corpus_bug.json
+# few years of synthetic play. playtest/fixtures/rome_380_corpus_bug.json
 # is another agent's regression fixture for a different bug (a real 380 AD
 # Rome save); it is read here, never written to, and its own sha256 is
 # checked below precisely so a future edit to this file notices immediately
 # if it ever became something this test touches instead of merely reads.
 import hashlib
 import shutil
-_corpus_fixture = os.path.join(ROOT, "rome", "playtest", "fixtures",
+_corpus_fixture = os.path.join(ROOT, "playtest", "fixtures",
                                "rome_380_corpus_bug.json")
 _corpus_sha_before = hashlib.sha256(open(_corpus_fixture, "rb").read()).hexdigest()
 check("the corpus-bug fixture this check borrows is the exact file another "

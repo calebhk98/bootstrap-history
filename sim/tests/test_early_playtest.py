@@ -509,11 +509,11 @@ for (civ, first_year), p in zip(_civ_year_pairs,
           first_year in p.stdout and "Ended %s" % first_year not in p.stdout,
           p.stdout[-120:])
 
-civ_files = [f for f in os.listdir(os.path.join(ROOT, "rome", "data", "civilizations"))
+civ_files = [f for f in os.listdir(os.path.join(ROOT, "data", "civilizations"))
              if f.endswith(".json") and not f.startswith("_")]
 missing_lore = []
 for f in civ_files:
-    d = json.load(open(os.path.join(ROOT, "rome", "data", "civilizations", f)))
+    d = json.load(open(os.path.join(ROOT, "data", "civilizations", f)))
     op = d.get("opening") or {}
     if not all(op.get(k) for k in ("arrival", "what_you_can_see",
                                    "what_is_missing", "what_is_coming")):

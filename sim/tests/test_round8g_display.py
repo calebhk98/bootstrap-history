@@ -252,7 +252,7 @@ check("...and an ordinary business closing carries no such warning",
 # --- naive14: AN OUTSIDE PLAYER WON BLIND AS LATER HAN WITH FOG ON AND AN
 # IMMORTAL FOUNDER (grown and alloy junction transistors, 575 AD, 168/168
 # required nodes) and reported what nearly cost them the run anyway. See
-# rome/playtest/naive14/EXTERNAL_TOP_PROBLEMS.md and
+# playtest/naive14/EXTERNAL_TOP_PROBLEMS.md and
 # EXTERNAL_BLIND_PLAYTHROUGH.md.
 #
 # TOP_PROBLEMS #1, rated most damaging: point_contact_transistor's own note
@@ -392,7 +392,7 @@ check("no located_material node rolls a near-certain failure every year - "
 
 # --- TOP_PROBLEMS #12, generalised beyond the one platinum instance
 # already named there: a data file (as opposed to the `kb` field's
-# deliberate rome/knowledge/*.md citations, shown to the player on every
+# deliberate knowledge/*.md citations, shown to the player on every
 # `why` screen as an in-fiction "recipe" reference) is not something a
 # player's own note should ever send them to read.
 _geo_leaks = [k for k, n in NODES.items() if "data/world/" in (n.get("note") or "")]

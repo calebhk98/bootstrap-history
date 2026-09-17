@@ -1,8 +1,8 @@
 """Shared fixtures, imports and check-recording machinery for the split
-test suite (see rome/sim/tests/__main__.py for the runner).
+test suite (see sim/tests/__main__.py for the runner).
 
 This is test_regressions.py's own former preamble (import block, TREE/NODES/
-ORDER/GOAL, check()/slow_check()/proto()/sim()/run_it()/_par_map(), the
+ORDER/GOAL, check()/slow_check()/proto()sim()/run_it()/_par_map(), the
 subprocess-timing patch and the --jobs parsing), moved here VERBATIM so every
 topic module in this package can do `from .harness import *` and see exactly
 what the old flat script saw at the top of the file. Every topic module is
@@ -24,13 +24,29 @@ its own verbatim copy too (harmless - it simply shadows the harness-provided
 name with an identical one within that module's own namespace, exactly
 reproducing the original file's behaviour there).
 """
-import collections, copy, glob, json, os, random, re, subprocess, sys, time
+import atexit, collections, copy, glob, json, os, random, re, shutil, subprocess, sys, time
 import concurrent.futures as _concurrent_futures
 import threading
 import tempfile
 
+# HERE is this repository's sim/ directory; ROOT is the repository itself.
+#
+# ROOT USED TO BE THE REPOSITORY'S PARENT, and the suite only ran at all if
+# that parent happened to contain a directory literally named `rome`. Two
+# things came of that, both bad. Every scratch file the suite writes
+# (_loadtest_tmp, _playtest_tmp, and every subprocess run with cwd=ROOT)
+# landed OUTSIDE the checkout, in whatever directory the checkout happened to
+# sit in. And a check that globbed os.path.join(ROOT, "data", ...) - the
+# natural spelling, and the one build_index.py already used - silently matched
+# nothing, so ten assertions about the civilization files' event coverage ran
+# zero times for as long as they existed without anyone noticing, because a
+# for-loop over an empty glob does not fail, it just says nothing.
+#
+# ROOT is now the repository, so `os.path.join(ROOT, "data", ...)` means what
+# it reads as, scratch files stay inside the checkout where .gitignore can see
+# them, and nothing anywhere depends on what the checkout is called.
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import simulator as S
 import planner as PLANNER
@@ -227,7 +243,7 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
 # it) exactly reproduces the original behaviour everywhere.
 # ============================================================================
 
-# --- from rome/sim/test_regressions.py's old "load/save" block (originally
+# --- from sim/test_regressions.py's old "load/save" block (originally
 # introduced around its own robustness-checks section): every save/load path
 # used by the tests lives under one relative scratch directory, so that a
 # real player's own relative save path is what's being exercised.
@@ -244,6 +260,28 @@ def _rel(name):
 # session files for `play`-driven checks live under, elsewhere reused far
 # past that section (e.g. the fog/rewind checks later on).
 _PLAY_DIR = "_playtest_tmp"
+
+
+# A GREEN RUN LEAVES NOTHING BEHIND; A RED ONE LEAVES THE EVIDENCE.
+#
+# Both scratch directories are created relative to ROOT, and ROOT is now the
+# repository, so they sit inside the checkout where they are visible (and
+# .gitignore'd) rather than being dropped in whatever directory the checkout
+# happened to live in. Visible means they have to be tidied, and `--only`
+# runs never reach the one topic module that used to rmtree _playtest_tmp on
+# its way past. Doing it at interpreter exit covers every entry point and
+# every topic selection.
+#
+# Only on a clean run, though. When a check fails, the save file or session
+# transcript that failed it is usually the fastest way to see why, and
+# deleting it on the way out would be the sort of helpfulness that costs an
+# hour later.
+@atexit.register
+def _remove_scratch_dirs_if_green():
+    if FAILURES:
+        return
+    for _d in (_LOADTEST_DIR, _PLAY_DIR):
+        shutil.rmtree(os.path.join(ROOT, _d), ignore_errors=True)
 
 
 # --- from the old "HISTORICAL EVENTS ANSWER TO WHAT WAS ACTUALLY BUILT"

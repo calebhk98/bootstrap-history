@@ -563,7 +563,7 @@ def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
     grown = [h for h in history if h["grow_supply_tried"]]
     kept = [t["institution"] for h in grown for t in h["grow_supply_tried"] if t["kept"]]
     rationale = [
-        "Deterministic search (rome/sim/path_search.py): CPM order, then up "
+        "Deterministic search (sim/path_search.py): CPM order, then up "
         "to %d rounds of diagnosing the binding constraint against a "
         "dice-free trial (no events, no project failures, immortal founder) "
         "and relaxing it, keeping whichever round scored best." % rounds,

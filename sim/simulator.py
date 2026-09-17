@@ -6,22 +6,22 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
   a TOOL   : run, compare, sweep     Monte-Carlo a strategy, find where it breaks
   a GAME   : play, agent             step through it yourself, or let a script play
 
-    python3 rome/sim/simulator.py validate
-    python3 rome/sim/simulator.py civs                       who you can play
-    python3 rome/sim/simulator.py play --manual               free choice, no autopilot
-    python3 rome/sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py validate
+    python3 sim/simulator.py civs                       who you can play
+    python3 sim/simulator.py play --manual               free choice, no autopilot
+    python3 sim/simulator.py agent --civ rome_100ad --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
 no protocol document to read, on purpose.
 
 No third-party dependencies. Python 3.8+.
-Design notes and the full protocol: rome/sim/PROTOCOL.md
+Design notes and the full protocol: sim/PROTOCOL.md
 
 THIS FILE IS THE FRONT DOOR, not the engine. The engine was one 5,600-line
-module; it is now rome/sim/engine/, split by subject. Everything that was
+module; it is now sim/engine/, split by subject. Everything that was
 importable from `simulator` still is, because every playtest note, every test
-and every instruction anyone has ever been given says `rome/sim/simulator.py`,
+and every instruction anyone has ever been given says `sim/simulator.py`,
 and that must not stop being true because the inside was tidied.
 """
 import os

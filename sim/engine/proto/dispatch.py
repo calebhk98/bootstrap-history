@@ -1019,7 +1019,7 @@ def _cmd_money(s, nodes, cmd, ended):
                        - _standing_prepaid + s.mine_operating_cost())
     _ramp, _prac = s.still_ramping(), s.practice_note()
     _mkt = s.goods_market_summary()
-    # A PLAYER MUST SEE IT (rome/data/review/COMMODITY_DYNAMISM.md):
+    # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() now responds for every material a node
     # buys, not just the 9 originally tracked commodities, so what it
     # is doing to costs needs a line here too, not only inside one

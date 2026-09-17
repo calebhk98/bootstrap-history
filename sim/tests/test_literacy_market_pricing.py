@@ -160,7 +160,7 @@ check("...and stops once your own supply covers the need",
       s.resource_throttle() > 0.99, s.resource_throttle())
 
 # =============================================================================
-# GENERALISED PRICING: rome/data/review/COMMODITY_DYNAMISM.md's central
+# GENERALISED PRICING: data/review/COMMODITY_DYNAMISM.md's central
 # finding, verified against a live Sim. 149 of the tree's 162 distinct
 # material keys had a price read once from prices.json and never revisited,
 # because MATERIAL_CHECKS/MARKET_SHARE above only ever named 13. The user's
@@ -262,8 +262,8 @@ check("...but still refuses a genuinely unpriced name, with a hint rather "
       _r_bad[0].get("ok") is False and "aluminium_kg" in _r_bad[0].get("error", ""),
       _r_bad[0])
 
-# --- COMMODITY FRAMEWORK (rome/data/world/COMMODITIES.md,
-# rome/sim/engine/commodities.py). Standalone from Sim, so these checks
+# --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,
+# sim/engine/commodities.py). Standalone from Sim, so these checks
 # build a CommodityLedger directly off commodities.json and the tech tree's
 # NODES rather than going through `sim()`/`proto()`. See the design doc for
 # what each claim below is meant to prove and why.

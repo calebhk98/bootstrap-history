@@ -6,9 +6,9 @@ game. This records a hash of the ENTIRE simulation state after every single
 year of a set of reference runs - several civilisations, several seeds, fog
 on and off, optimiser and manual - and writes them to a JSON file.
 
-    python3 rome/sim/perf_fingerprint.py record baseline.json
+    python3 sim/perf_fingerprint.py record baseline.json
     ...make a change...
-    python3 rome/sim/perf_fingerprint.py check baseline.json
+    python3 sim/perf_fingerprint.py check baseline.json
 
 `check` re-runs the same scenarios and reports the FIRST year at which any
 run diverges, and which fields differ. A year-by-year hash rather than a

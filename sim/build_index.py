@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate rome/knowledge/README.md: the index that links every tech-tree node
+"""Generate knowledge/README.md: the index that links every tech-tree node
 to the entry in the knowledge library that tells you how to actually do it.
 
 Run after editing either the tree or any knowledge module:
-    python3 rome/sim/build_index.py
+    python3 sim/build_index.py
 It also reports broken links, which is the point of generating it rather than
 maintaining it by hand.
 """
@@ -112,7 +112,7 @@ def main():
 
     out = ["# knowledge/ - the how-to library",
            "",
-           "**This file is generated. Do not edit it.** Run `python3 rome/sim/build_index.py`.",
+           "**This file is generated. Do not edit it.** Run `python3 sim/build_index.py`.",
            "",
            "A tech tree that says *microscope requires glass* is useless to someone who does",
            "not already know that one melted bead of glass gives 250x. The tree in",

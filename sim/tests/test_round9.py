@@ -262,7 +262,7 @@ check("...and, since the corpus really is still dispersed, the line does "
       _f2_msgs)
 
 # --- PROVED ON A REAL PLAYER'S SAVE, not just constructed abstractly.
-# rome/playtest/fixtures/rome_380_corpus_bug.json is the fixture a player
+# playtest/fixtures/rome_380_corpus_bug.json is the fixture a player
 # actually reached: Rome at 380 AD, fog on, immortal, 2,049 done, 309
 # million denarii, with BOTH corpus_written and corpus_dispersed done and
 # NEITHER one operating - a household that wrote the corpus, dispersed it,
@@ -280,7 +280,7 @@ check("...and, since the corpus really is still dispersed, the line does "
 # commit message for the exact before-fix log line this save produces);
 # this check runs only the fixed code, deterministically, and would fail
 # the moment `risk` and the sack disagree about this save again.
-_FIXTURE_380 = os.path.join(ROOT, "rome", "playtest", "fixtures",
+_FIXTURE_380 = os.path.join(ROOT, "playtest", "fixtures",
                             "rome_380_corpus_bug.json")
 s_fix = sim(capital=1.0)
 S.load_state(s_fix, _FIXTURE_380)
@@ -556,7 +556,7 @@ slow_check("the same seed gives the same run, twice in one process",
 #       121 or 196 depending which seed was tried, and did not diverge at
 #       ALL within 200 years for 3 of 6 seeds tried - a coin flip, for the
 #       one thing it exists to catch.
-#   rome/sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
+#   sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
 #       five civilisations, hashing the FULL save-file state every year):
 #       diverged within 1-7 years on ALL NINE scenarios, every time.
 #

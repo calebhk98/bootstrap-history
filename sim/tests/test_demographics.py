@@ -136,24 +136,29 @@ check("...and it still says the thing it was built to say, that every limit "
       "is one household's reach into one town",
       "ONE town's labour market" in _pop_note, _pop_note[:160])
 
-print("=" * 72)
-print("%d checks, %d failures, %.0fs%s"
-      % (len(CHECKS_RUN), len(FAILURES), sum(t for _, t in CHECKS_RUN),
-         ("   (%d slow checks skipped: run with --slow)" % len(SKIPPED))
-         if SKIPPED else ""))
-slow = sorted(CHECKS_RUN, key=lambda r: -r[1])[:5]
-if slow and slow[0][1] >= 5.0:
-    print("slowest:")
-    for nm, t in slow:
-        if t >= 5.0:
-            print("   %5.0fs  %s" % (t, nm))
-for f in FAILURES:
-    print("   FAILED:", f)
-print("subprocess spawns: %d calls, %.0fs waiting on child processes"
-      % (_SUBPROC_CALLS[0], _SUBPROC_TIME[0]))
-if _PROFILE_OUT:
-    with open(_PROFILE_OUT, "w") as _pf:
-        json.dump({"checks": CHECKS_RUN, "subproc_time": _SUBPROC_TIME[0],
-                   "subproc_calls": _SUBPROC_CALLS[0],
-                   "total_wall": sum(t for _, t in CHECKS_RUN)}, _pf)
-sys.exit(1 if FAILURES else 0)
+# NOTHING FOLLOWS. What used to follow was the RUNNER'S EPILOGUE - the ===
+# banner, the "N checks, N failures" summary, the slowest-five table, the
+# FAILED list, the subprocess tally, the --profile dump, and `sys.exit(1 if
+# FAILURES else 0)`.
+#
+# That is the tail of the original flat test_regressions.py, and when the flat
+# script was split into this package it landed in this topic module rather than
+# in the runner, because this module happens to hold the checks that used to be
+# at the bottom of the file. The runner in sim/tests/__main__.py prints all of
+# it already. What the duplicate added was the sys.exit: a full-suite run
+# reached this module, printed a plausible summary, and TERMINATED, so the ten
+# topics listed after "demographics" in __main__.TOPICS never ran. Ninety-three
+# checks - every complaints_* module, dynamic_wages, economic_levers_inventory,
+# explicit_starting_techs and all four realism_part modules - had never once
+# executed in a full-suite run, and the run said "0 failures" on its way out.
+#
+# The failure mode is worth naming because it is not "the tests fail". It is
+# "the tests report success for work they did not do", which is the only kind
+# of test failure that gets more dangerous the longer it survives. The TOPICS
+# list even carries a comment about an EARLIER round of the same bug, where
+# those modules existed on disk but were not registered; registering them fixed
+# nothing, because the run still stopped here.
+#
+# A topic module must only run checks. Printing and exiting belong to the
+# runner, and sim/tests/test_suite_portability.py now fails if any topic module
+# calls sys.exit at import time.

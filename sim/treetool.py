@@ -12,11 +12,11 @@ proportionate, could someone holding only its prerequisites really build it.
 
 `judge` scores every node in isolation and reports the defects by name.
 
-    python3 rome/sim/treetool.py merge          # branches -> tech_tree.json
-    python3 rome/sim/treetool.py judge          # score every node, summary
-    python3 rome/sim/treetool.py judge --full   # every defect, node by node
-    python3 rome/sim/treetool.py judge --id X   # one node's report card
-    python3 rome/sim/treetool.py judge --grade D  # only nodes at or below D
+    python3 sim/treetool.py merge          # branches -> tech_tree.json
+    python3 sim/treetool.py judge          # score every node, summary
+    python3 sim/treetool.py judge --full   # every defect, node by node
+    python3 sim/treetool.py judge --id X   # one node's report card
+    python3 sim/treetool.py judge --grade D  # only nodes at or below D
 """
 import argparse, json, os, re, sys, collections, statistics
 
@@ -538,7 +538,7 @@ def cmd_repair(a):
         if added:
             counts["capability edges inferred"] += len(added)
             n["note"] = n["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
-                "inferred by rome/sim/treetool.py repair, not stated by the author. Treat "
+                "inferred by sim/treetool.py repair, not stated by the author. Treat "
                 "them as a floor, not a specification.]" % ", ".join(added))
         # documentation level
         if not n.get("kb"):

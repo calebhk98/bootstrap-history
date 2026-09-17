@@ -159,7 +159,7 @@ check("the advice on how to get scholars never points at a different trade "
 # exploit exactly: "since `load` restores the game but not the player's
 # memory, a player can save, build a node, look at what appeared in
 # `available`, load back, and keep the knowledge. Fog of war is one command
-# away from being off" (rome/playtest/AUDIT_rounds_1_6.md, C1), and reproduced
+# away from being off" (playtest/AUDIT_rounds_1_6.md, C1), and reproduced
 # it live: save at year 1300, step to 1350, load the 1300 save, and the fifty
 # years of frontier that had opened up in `available` cost nothing at all,
 # because the ledger went back to 1300 and the knowledge did not. The fix
@@ -238,7 +238,7 @@ check("a command's progress is saved even when the reply that describes it "
 # too complex: planner.py works backward from the goal by critical-path
 # method (CPM) over its prerequisite closure, instead of walking a
 # hand-written list. These checks pin the structural properties the measured
-# comparison (rome/playtest or the session report) depends on actually
+# comparison (playtest or the session report) depends on actually
 # holding, not just the one run that happened to be timed.
 _p_s = sim(civ="rome_100ad")
 _p_order, _p_c, _p_extras, _p_staff = PLANNER.backward_plan(NODES, GOAL, _p_s, side_branches=0)
@@ -323,7 +323,7 @@ check("saltpetre still cannot simply be bought - the beds are the answer, "
 # carried a DIFFERENT one - "[FIXED after independent audit: ...]" - which an
 # outside player then found in a furnace description and reported as
 # immersion-breaking. The markers are worth keeping; `note` is not where they
-# belong. `_internal` is read by nothing in rome/sim/engine.
+# belong. `_internal` is read by nothing in sim/engine.
 #
 # This check is deliberately about the SHAPE rather than a list of phrases,
 # because the thing that failed twice was a phrase list.

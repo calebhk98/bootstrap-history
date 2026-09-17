@@ -152,7 +152,7 @@ def _agent_help(s, topic=None):
                 'file after every command and read back when you start '
                 'again. So a script or an agent may run one command per '
                 'invocation and throw the process away: `echo state | '
-                'python3 rome/sim/simulator.py play --session game.json` '
+                'python3 sim/simulator.py play --session game.json` '
                 'prints the readable screen and exits, and the next '
                 'invocation carries on from exactly where it left off. '
                 'There is no need for a held-open pipe, a FIFO or tmux. '
@@ -377,9 +377,9 @@ def _agent_help(s, topic=None):
                 "and it needs no pipe held open, no FIFO and no tmux. Send "
                 "one command on standard input, read the reply, let the "
                 "process exit, and run it again for the next command:\n"
-                "    echo state | python3 rome/sim/simulator.py play "
+                "    echo state | python3 sim/simulator.py play "
                 "--session game.json\n"
-                "    echo 'step 5' | python3 rome/sim/simulator.py play "
+                "    echo 'step 5' | python3 sim/simulator.py play "
                 "--session game.json\n"
                 "The second invocation resumes exactly where the first "
                 "stopped. `play` gives you the readable screen; `agent` "

@@ -114,7 +114,7 @@ def ensure_fixed_hash_seed(seed="0"):
 # Measured with every stroke of luck removed - no events, no project
 # failures, an immortal founder, the game's own planner doing the ordering -
 # reaching the current goal has taken about 451 years from Han China and
-# about 1,019 from Rome (see rome/data/review/PATH_SEARCH.md section 6 for
+# about 1,019 from Rome (see data/review/PATH_SEARCH.md section 6 for
 # the method and the full tables). A 500-year Standard is generous for the
 # one and short of reachable for the other, and a menu that offers both
 # civilisations and both horizons with nothing connecting them is offering a
@@ -129,7 +129,7 @@ def ensure_fixed_hash_seed(seed="0"):
 # does not climb back out of for roughly 850 years) and section 4.4 proves,
 # by direct ablation, that no reordering of the strategy file - which is
 # the entire space planner.py/path_search.py can search - changes it. A
-# real, far stronger playthrough (rome/playtest/fixtures/
+# real, far stronger playthrough (playtest/fixtures/
 # rome_434_goal_startable.json) reaches the SAME goal in 334 years, three
 # times faster, by playing manually rather than by any order this table's
 # own instrument can express. Do not read 1,019 as "Rome cannot be won
@@ -163,7 +163,7 @@ DICE_FREE_FLOOR_YEARS = {
 # at DICE_FREE_FLOOR_YEARS above. Every word of that was true about the
 # instrument and false as advice: a player reading it concludes Rome cannot be
 # won in 400 years, and a player has since reached the same Rome goal's
-# startable point in 334 years (rome/playtest/fixtures/
+# startable point in 334 years (playtest/fixtures/
 # rome_434_goal_startable.json) under fog, on a second attempt, with the
 # point-contact transistor failing six times in a row. 1,019 is not a floor
 # under play, it is one policy's ceiling - see DICE_FREE_FLOOR_YEARS' own
@@ -1204,7 +1204,7 @@ def cmd_play(a):
     print("Ended %d AD. %s" % (s.year, _agent_end_reason(s) or "stopped"))
     if session:
         print("Saved to %s. Come back with:" % session)
-        print("   python3 rome/sim/simulator.py play --session %s" % session)
+        print("   python3 sim/simulator.py play --session %s" % session)
     return 0
 
 
@@ -1380,7 +1380,7 @@ def _ingame_options(s, session):
                 pass
             print("   -- moved. This game now saves to %s" % session)
             print("   Come back to it with:")
-            print("      python3 rome/sim/simulator.py play --session %s" % session)
+            print("      python3 sim/simulator.py play --session %s" % session)
 
         else:
             print("   -- not a choice right now.")
@@ -1809,7 +1809,7 @@ def cmd_plan(a):
     goal's prerequisite closure, instead of either hand-writing a guess
     (recommended.json, 0% on Rome at a 700-year horizon) or capturing
     whatever a lucky trial happened to do (captured_han_386.json - a floor,
-    not a method). See rome/sim/planner.py for the reasoning in full; this is
+    not a method). See sim/planner.py for the reasoning in full; this is
     a thin CLI wrapper, the same relationship `cmd_run` has to `Sim.run`.
 
     NEVER REACHED FROM `play` OR `agent`. Both of those are how a fogged
@@ -1840,7 +1840,7 @@ def cmd_plan(a):
         for line in rationale:
             print("  - " + line)
         return 0
-    # SOLVE THE DICE-FREE PROBLEM FIRST (see rome/sim/path_search.py):
+    # SOLVE THE DICE-FREE PROBLEM FIRST (see sim/path_search.py):
     # diagnose the binding constraint against a trial with the dice removed
     # entirely and relax it, round by round, and USE that order directly -
     # not merely as a --seed-strategy tie-break for a fresh CPM pass, which
@@ -1917,7 +1917,7 @@ def cmd_search(a):
     this file's own docstring: "does the current plan even get there with
     the dice off?", asked on its own, at path_search.py's own standalone
     defaults, without also having to think about CPM seeding or refinement.
-    See rome/sim/path_search.py for the full reasoning - the scarce named
+    See sim/path_search.py for the full reasoning - the scarce named
     trades, the capital trap, and the three moves (pull, resequence, grow
     supply) this measures against a real Sim with the dice removed rather
     than guesses at.
@@ -1957,7 +1957,7 @@ def cmd_why(a):
     print("=" * 78)
     print(n["note"])
     print()
-    print("Recipe          : rome/knowledge/%s" % n["kb"])
+    print("Recipe          : knowledge/%s" % n["kb"])
     print("Your hours      : %s   (%.1f%% of a 72,000-hour life)" % (f"{n['ph']:,}", 100.0 * n["ph"] / 72000))
     print("Hired labour    : %s" % (", ".join("%s %s h" % (t, f"{h:,}") for t, h in n["lab"].items()) or "none"))
     print("Materials       : %s" % (", ".join("%s %s" % (m, f"{q:,}") for m, q in n["mat"].items()) or "none"))
@@ -2494,7 +2494,7 @@ def _new_game(civs, cfg):
     # THE ONE HONEST THING A MODE MENU CAN SAY HERE: the same number of years
     # is a completely different offer depending which civilisation it is
     # attached to - see DICE_FREE_FLOOR_YEARS's own comment for the measurement
-    # and rome/data/review/PATH_SEARCH.md for the method. Said to the player
+    # and data/review/PATH_SEARCH.md for the method. Said to the player
     # NOW, about the civilisation they just picked, rather than left for them
     # to discover by overshooting a horizon that was never going to be enough.
     # THE FLOOR OF THE GOAL YOU JUST PICKED, not of the default one. This said
@@ -2631,7 +2631,7 @@ def _new_game(civs, cfg):
         "so you can stop any time - close the terminal, anything - and come "
         "back to exactly where you left off with:"))
     print()
-    print("      python3 rome/sim/simulator.py play --session %s" % session)
+    print("      python3 sim/simulator.py play --session %s" % session)
     print()
 
     class Args:
@@ -3131,7 +3131,7 @@ def main():
                                     "closure (critical-path method) and write a strategy "
                                     "file, instead of hand-writing one or gambling on a "
                                     "Monte Carlo run until one happens to win. See "
-                                    "rome/sim/planner.py. A developer/optimizer tool, "
+                                    "sim/planner.py. A developer/optimizer tool, "
                                     "like compare/sweep/sensitivity - never reached from "
                                     "play or agent.")
     q.add_argument("--civ", default="rome_100ad")
@@ -3155,7 +3155,7 @@ def main():
     q.add_argument("--horizon", type=int, default=700)
     q.add_argument("--seed", type=int, default=1)
     # DETERMINISTIC SEARCH: solve the dice-free problem first (see
-    # rome/sim/path_search.py), instead of only computing one structural CPM
+    # sim/path_search.py), instead of only computing one structural CPM
     # pass. --search-rounds 0 (the default) leaves `plan` exactly as it was;
     # a nonzero value diagnoses the binding constraint against a dice-free
     # trial of the CPM order (no events, no project failures, immortal
@@ -3185,7 +3185,7 @@ def main():
                                       "pipeline. Answers 'does this order even get "
                                       "there with the dice off' and relaxes the "
                                       "binding constraint it finds, round by round. "
-                                      "See rome/sim/path_search.py. A developer/"
+                                      "See sim/path_search.py. A developer/"
                                       "optimizer tool, like plan/compare/sweep/"
                                       "sensitivity - never reached from play or agent.")
     q.add_argument("--civ", default="rome_100ad")

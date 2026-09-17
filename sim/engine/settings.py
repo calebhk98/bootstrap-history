@@ -9,7 +9,7 @@ Two different things share this file, and the difference matters:
 
   2. PER-SESSION META - a couple of fields (right now, just the horizon) that
      belong to one save file but are not part of the save format the engine
-     itself owns (rome/sim/engine/protocol.py: SAVE_FIELDS, save_state,
+     itself owns (sim/engine/protocol.py: SAVE_FIELDS, save_state,
      load_state). That file is rewritten from a fixed field list after every
      single command, so anything written here is not preserved there. It
      gets a small sidecar of its own instead.
@@ -82,14 +82,14 @@ save location" list is "language", and it is not here: this codebase has no
 internationalisation to switch on. _localise_words/_localise_money in
 protocol.py swap the NAME of the currency per civilisation (denarii,
 hacksilver, beans, pence) - flavour, not translation - and the many
-thousands of words of node notes (rome/data/tech_tree.json) and the
-rome/knowledge/ corpus exist in English only. A menu entry offering
+thousands of words of node notes (data/tech_tree.json) and the
+knowledge/ corpus exist in English only. A menu entry offering
 "language" with nothing behind it would be worse than no entry: a setting
 that silently does nothing. Real language support would mean translating
 every node note and every rendered sentence in protocol.py/cli.py (not a
 small rewrite - protocol.py alone is thousands of lines of prose, generated
 sentence by sentence from game state) and deciding what happens to
-rome/knowledge/, which is English prose no translation layer touches
+knowledge/, which is English prose no translation layer touches
 automatically. That is a project of its own, not a field in this file.
 """
 import json

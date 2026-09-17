@@ -7,17 +7,17 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
   a TOOL   : run, compare, sweep     Monte-Carlo a strategy, find where it breaks
   a GAME   : play, agent             step through it yourself, or let a script play
 
-    python3 rome/sim/simulator.py validate
-    python3 rome/sim/simulator.py civs                       who you can play
-    python3 rome/sim/simulator.py play --manual               free choice, no autopilot
-    python3 rome/sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py validate
+    python3 sim/simulator.py civs                       who you can play
+    python3 sim/simulator.py play --manual               free choice, no autopilot
+    python3 sim/simulator.py agent --civ rome_100ad --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
 no protocol document to read, on purpose.
 
 No third-party dependencies. Python 3.8+.
-Design notes and the full protocol: rome/sim/PROTOCOL.md
+Design notes and the full protocol: sim/PROTOCOL.md
 """
 
 import argparse, json, math, os, random, sys
@@ -25,15 +25,15 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import defaultdict, deque
 
-# This file lives in rome/sim/engine/, one level deeper than simulator.py used
+# This file lives in sim/engine/, one level deeper than simulator.py used
 # to, so the data directory is two parents up rather than one. Everything that
 # reads a path reads it from here.
-HERE = os.path.dirname(os.path.abspath(__file__))          # rome/sim/engine
-SIMDIR = os.path.dirname(HERE)                             # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))          # sim/engine
+SIMDIR = os.path.dirname(HERE)                             # sim
 ROOT = os.path.dirname(SIMDIR)                             # rome
 TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
-STRATS = os.path.join(SIMDIR, "strategies")   # rome/sim/strategies, beside simulator.py
+STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 
 # ----------------------------------------------------------------------------
 # Loading and derived economics

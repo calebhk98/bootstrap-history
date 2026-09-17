@@ -348,7 +348,7 @@ def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
     within a slack band toward the node that unblocks the most OTHER work,
     not merely the one with the least room to wait. This is the one piece
     of the 434 AD player's own account of how they actually played
-    (rome/playtest/fixtures/rome_434_goal_startable.json; see
+    (playtest/fixtures/rome_434_goal_startable.json; see
     PATH_SEARCH.md section 7) that is purely structural - "a cheap isolated
     node is less valuable early than a 2-year node unlocking fifteen
     branches" - and costs nothing to add regardless of whether it moves

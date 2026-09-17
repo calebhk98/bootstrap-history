@@ -1006,7 +1006,17 @@ class LabourMixin:
         jobs. Forty-five percent is subsistence food, twenty percent housing,
         ten percent tools/consumables, and twenty-five percent that fixed
         skill/difficulty premium. At neutral prices the weighted factor is
-        exactly 1.0, preserving the calibrated starting economy.
+        1.0 to within about a part in a million, preserving the calibrated
+        starting economy.
+
+        It is not EXACTLY 1.0, and the difference is the model working. The
+        tools term reads real market factors, and a society does not start
+        with an empty market: Rome's 223 inherited technologies already burn
+        charcoal, so charcoal opens the game carrying 5.0 t/yr of demand and
+        prices a hair above neutral. The smith's wage carries that hair. This
+        docstring claimed "exactly" for a long time, and the one check that
+        would have caught it happened to sit behind a stray sys.exit in
+        another test module and had never run.
         """
         food = self.essential_price_ratio()
         # Use structural places, not household_room(): that method includes

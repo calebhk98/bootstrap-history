@@ -38,10 +38,10 @@ _JARGON = ("w_magic_fear", "w_eminence_danger", "w_religious_rigidity",
            "w_labour_saving", "w_commerce", "w_information", "w_novelty",
            "w_military", "adaptation_rate", "patronage_weight", "bribability")
 _dirty = []
-for _f in sorted(os.listdir(os.path.join(ROOT, "rome/data/civilizations"))):
+for _f in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
     if not _f.endswith(".json") or _f.startswith("_"):
         continue
-    _civ = json.load(open(os.path.join(ROOT, "rome/data/civilizations", _f)))
+    _civ = json.load(open(os.path.join(ROOT, "data/civilizations", _f)))
     for _h in _civ.get("hazards", []):
         _txt = " ".join(str(_h.get(x, "")) for x in ("name", "note"))
         _dirty += [(_f, _h.get("name"), _j) for _j in _JARGON if _j in _txt]
@@ -549,10 +549,10 @@ _rom = sim(civ="rome_100ad")
 check("a society that HAS horses is not gated at all (the control case)",
       _rom.needs_first(_HORSE)[0] is None, _rom.needs_first(_HORSE))
 # Every gate has to be liftable, or it is a wall rather than a handicap.
-for _cf in sorted(os.listdir(os.path.join(ROOT, "rome/data/civilizations"))):
+for _cf in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
     if not _cf.endswith(".json") or _cf.startswith("_"):
         continue
-    _cv = json.load(open(os.path.join(ROOT, "rome/data/civilizations", _cf)))
+    _cv = json.load(open(os.path.join(ROOT, "data/civilizations", _cf)))
     for _lbl, _ent in (_cv.get("needs_first") or {}).items():
         if _lbl.startswith("_"):
             continue

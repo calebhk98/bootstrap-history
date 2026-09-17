@@ -113,3 +113,9 @@ scratch/
 .local/
 working/
 work/
+
+# Test-suite scratch directories. The suite exercises real relative save
+# paths, so it writes these under the repository root while it runs and
+# removes them at the end; they exist only if a run was interrupted.
+_loadtest_tmp/
+_playtest_tmp/
