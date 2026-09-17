@@ -479,6 +479,49 @@ bytecode changes.**
   `_did_you_mean` needed `x` to become `result_id` rather than `node_id`,
   purely so the captured names kept their original alphabetical order.
 
+- **A NEW name that collides with a captured OUTER name turns a read into a
+  crash.** Round 3, `cli.py:1751` inside `cmd_sensitivity`'s nested
+  `trial()`:
+
+        trimmed_order = [node_id for node_id in order if node_id != drop]
+
+  `order` is a free variable captured from the enclosing function. The
+  natural name for the left-hand side was `order`, and using it would have
+  made `order` a LOCAL of `trial()`, so the comprehension's own iterable
+  `order` becomes an unbound local and the function raises
+  `UnboundLocalError`. This one fails loudly rather than silently, which is
+  luck rather than design - rearrange the statement and the same mistake
+  reads the wrong binding instead. Before giving a local a new name, grep the
+  enclosing function for that name, including names it captures from
+  further out.
+
+- **A regex renamer cannot tell an identifier from a printf placeholder.**
+  `\bs\b -> sim` rewrote `"%s: %s" % (...)` into `"%sim: %sim" % (...)`,
+  because `%s` contains an isolated word `s`. Same for `%d`, `%r`, `%f`.
+  This repo's engine files are dense with format strings, so a line-based
+  rename will hit it. Two defences: rename from `ast.Name` node positions
+  rather than by pattern, which never touches literal text at all; and grep
+  the diff for `%[a-zA-Z_]{2,}` afterwards regardless.
+
+- **An AST renamer that ignores lexical scope is the other half of the same
+  trap.** Renaming every `ast.Name` whose `id` matches, within a line range,
+  will also rewrite the name inside a nested `lambda`, comprehension or
+  `def` that has its OWN binding of it. Where the nested binding is that
+  scope's own local or parameter, the result is harmless but is a PARAMETER
+  rename, which `prove_rename_safe.py` reports separately and does not
+  cover. Where the nested use is a free variable, it changes which binding
+  is read. Resolve each name through a real scope analysis - libcst's
+  `ScopeProvider` was used successfully for `proto/` in round 2 - rather
+  than matching ids.
+
+- **THE CELL-VARIABLE ORDERING HAZARD BIT THREE OF THE FOUR AGENTS IN ROUND
+  3**, on different files, each initially suspecting the prover. In
+  `cli.py`'s `_summarise` the captured `ys` could not become `goal_years` or
+  `success_years`, because both sort before its cellvar sibling `need` and
+  would have shifted every cellvar index; it became `years_reached`, a name
+  nobody would pick in isolation. Treat this as the default case for any
+  captured local, not as an exception.
+
   The cheap pre-check that avoids both: before renaming a local, ask whether
   it is referenced inside a nested `def`/`lambda`/comprehension body. Being a
   comprehension's outermost iterable does NOT force capture. Round 2's other
