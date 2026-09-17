@@ -231,9 +231,35 @@ short names are `i` as a loop index, and `x`/`y` as coordinates, and only
 inside a scope short enough to see whole. Everything else gets a word:
 `node`, `node_id`, `sim`, `trade`, `material`, `rate`, `key`, `total`.
 
-This applies to prose and design documents too. `p = A'p + w·l + rents` is
-four letters standing for four things nobody can recover without the
-textbook - write `price_of(good)`, `hours_per_unit`, `wage_of(trade)`.
+**This applies to prose, docstrings and design documents, and it is the rule
+most often broken.** `p = A'p + w.l + rents` is four letters standing for
+four things nobody can recover without the textbook. So is
+
+    q_i = gamma_i + (beta_i / p_i) * (Y - sum_j p_j * gamma_j)
+
+which is a real line that went into `sim/world/demand.py`, past a PM who
+quoted it back approvingly, in the same week this paragraph was written. A
+reader with no economics has no way to tell that from a radiation equation.
+Write it out:
+
+    quantity_of(good) = subsistence_floor_of(good)
+                      + marginal_budget_share_of(good) / price_of(good)
+                        * (income - cost_of_all_subsistence_floors)
+
+Longer, and it can be read once by someone who has never seen a demand
+system. If the standard name for a thing is a Greek letter, say what it
+means in words on first use and then use the words. Citing the textbook
+name is fine - "this is the Stone-Geary form" - as a POINTER, never as the
+explanation.
+
+**Fix bad names you pass through, where it is cheap.** If you are editing a
+function and it has a one-letter local whose meaning you have just had to
+work out, rename it while you are there - you have already paid the
+expensive part, which is understanding it. Two limits: never rename in a
+commit whose diff you need someone to read for a different reason, and
+never rename a parameter without checking every call site by hand, because
+`prove_rename_safe.py` cannot cover those. If it is not cheap, leave it and
+say so.
 
 A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
 the per-name meanings and the tooling. **72.4% is Tier 1** - purely local
