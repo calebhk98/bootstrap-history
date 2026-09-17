@@ -27,6 +27,13 @@ WHAT IT CHECKS, and why each one is here rather than left to review:
     iron is FINE and normal - the price system solves that as a system of
     equations. What is not fine is a material that is its own only input, which
     is an authoring slip rather than an economy.
+  * `capital`, if present, is held to the same standard as everything else:
+    every `build_materials` key is a real material, every `build_labour_hours`
+    trade is in the wage table, a capital good is built from SOMETHING (not
+    nothing), `service_life_years` and `annual_output_at_basis` are positive
+    physical facts rather than absent or zero, and `capital_basis` says why -
+    fifty characters minimum, same bar as `yield_basis`. See
+    data/production/_SCHEMA.md's CAPITAL section for the field's shape.
 """
 import argparse
 import collections
@@ -110,6 +117,88 @@ def check(entries, known_materials, known_trades):
             if not isinstance(hours, (int, float)) or hours < 0:
                 problems.append("%s: trade '%s' has %r hours"
                                 % (where, trade, hours))
+
+        # CAPITAL, if present. Same standard as everything else in this file:
+        # real material keys, real trades, a positive physical service life
+        # and annual output rather than a bookkeeping placeholder, and a
+        # stated reason - build bills that are silently free or silently
+        # eternal are exactly as invisible as a free input would be.
+        capital_goods = entry.get("capital")
+        if capital_goods is not None:
+            if not isinstance(capital_goods, list) or not capital_goods:
+                problems.append(
+                    "%s: capital is present but is not a non-empty list - "
+                    "remove the field entirely if there is nothing to "
+                    "capitalise here" % where)
+            else:
+                for index, good in enumerate(capital_goods):
+                    good_where = "%s: capital[%d]" % (where, index)
+                    if not isinstance(good, dict):
+                        problems.append("%s is not an object" % good_where)
+                        continue
+
+                    if not (good.get("good") or "").strip():
+                        problems.append(
+                            "%s: 'good' is missing or empty - say what the "
+                            "capital good IS (a furnace, a mill, a pan)"
+                            % good_where)
+
+                    build_materials = good.get("build_materials") or {}
+                    for key, quantity in build_materials.items():
+                        if key not in known_materials:
+                            problems.append(
+                                "%s: build_materials '%s' is not a known "
+                                "material - a typo here reads as 'this "
+                                "capital good is free'" % (good_where, key))
+                        if not isinstance(quantity, (int, float)) or quantity < 0:
+                            problems.append(
+                                "%s: build_materials '%s' has quantity %r"
+                                % (good_where, key, quantity))
+
+                    build_labour = good.get("build_labour_hours") or {}
+                    for trade, hours in build_labour.items():
+                        if trade not in known_trades:
+                            problems.append(
+                                "%s: trade '%s' is not in the wage table"
+                                % (good_where, trade))
+                        if not isinstance(hours, (int, float)) or hours < 0:
+                            problems.append(
+                                "%s: trade '%s' has %r hours"
+                                % (good_where, trade, hours))
+
+                    if not build_materials and not build_labour:
+                        problems.append(
+                            "%s: no build_materials and no "
+                            "build_labour_hours - this capital good is built "
+                            "from nothing" % good_where)
+
+                    service_life = good.get("service_life_years")
+                    if not isinstance(service_life, (int, float)) or service_life <= 0:
+                        problems.append(
+                            "%s: service_life_years must be a positive "
+                            "number of years, not %r - it is a physical fact "
+                            "about wear (how long before it is rebuilt or "
+                            "relined), not a bookkeeping convention"
+                            % (good_where, service_life))
+
+                    annual_output = good.get("annual_output_at_basis")
+                    if not isinstance(annual_output, (int, float)) or annual_output <= 0:
+                        problems.append(
+                            "%s: annual_output_at_basis must be a positive "
+                            "number, not %r" % (good_where, annual_output))
+
+                    capital_basis = (good.get("capital_basis") or "").strip()
+                    if len(capital_basis) < 50:
+                        problems.append(
+                            "%s: capital_basis is missing or too short to be "
+                            "a reason. Say where the build bill, service "
+                            "life and annual output come from in physical "
+                            "terms." % good_where)
+
+                    if good.get("conf") not in ("A", "B", "C", "D"):
+                        problems.append(
+                            "%s: conf must be A, B, C or D, not %r"
+                            % (good_where, good.get("conf")))
 
         basis = (entry.get("yield_basis") or "").strip()
         if len(basis) < 50:

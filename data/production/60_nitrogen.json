@@ -1,5 +1,5 @@
 {
- "_note": "Saltpetre and the nitrogen chain. Written at COST-STRUCTURE level only - what a process consumes and how much comes out - because that is what the price solver needs and it is all it needs. No procedure, no conditions, no operating detail. The economically interesting fact here is a calendar, not a recipe. Also carries steam_kg, which is here only to be labelled - see its conf D.",
+ "_note": "Saltpetre and the nitrogen chain. Written at COST-STRUCTURE level only - what a process consumes and how much comes out - because that is what the price solver needs and it is all it needs. No procedure, no conditions, no operating detail. The economically interesting fact here is a calendar, not a recipe.",
  "materials": {
   "nitre_kg": {
    "outputs": {
@@ -66,21 +66,6 @@
    "basis": "per tonne of product",
    "yield_basis": "COST STRUCTURE ONLY, on the same pattern as nitrocellulose and for the same reason. Glycerol comes from fat as a by-product of soap making, so the organic input is cheap and abundant wherever soap is made; the acids dominate, and the nitric acid among them, so the cost again traces back through saltpetre to a two-year bed. The one economically distinctive fact is the handling: the product cannot be stored or carried like an ordinary industrial chemical, so its delivered cost carries a transport and loss penalty that the ordinary freight model will understate. Flagged here rather than modelled. No procedure, conditions or operating detail is recorded, deliberately.",
    "conf": "C"
-  },
-  "steam_kg": {
-   "outputs": {
-    "steam_kg": 1000.0
-   },
-   "inputs": {
-    "water_kg": 1000.0,
-    "firewood_kg": 180.0
-   },
-   "labour_hours": {
-    "labourer": 2.0
-   },
-   "basis": "per tonne of steam raised, nominally",
-   "yield_basis": "PLACEHOLDER, conf D: steam is not a material and should not be in any node's material list. It is water in a state, raised on the spot by burning something under a boiler, never procured, stored or traded. Pricing a kilogram of it double-counts the fuel the consuming node already pays for, and the numbers above exist only so the entry is labelled rather than silently missing - water plus roughly the latent heat at a boiler efficiency. What the one node consuming this actually needs is a boiler and the fuel to run it. Delete this entry when that node is fixed; do not refine it. See Complaints/28-material-keys-that-are-not-materials.md.",
-   "conf": "D"
   }
  }
 }

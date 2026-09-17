@@ -30,7 +30,121 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
+| `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
+
+## CAPITAL
+
+`inputs` and `labour_hours` say what a batch eats. Neither says what it is
+made IN. A blast furnace does not appear in iron's `inputs` - nothing about
+the furnace is consumed making one tonne of pig iron - but the furnace cost
+something to build and it wears out, and both of those are real costs that
+belong in the price of what comes out of it.
+
+Each item in the `capital` list is one capital good:
+
+```
+{
+ "good": "blast furnace stack, structural masonry",
+ "build_materials": {"stone_kg": 400000.0},
+ "build_labour_hours": {"mason": 3000.0, "labourer": 1500.0},
+ "service_life_years": 40,
+ "annual_output_at_basis": 400000.0,
+ "capital_basis": "why these four numbers, in physical terms",
+ "conf": "C"
+}
+```
+
+`build_materials` and `build_labour_hours` are the physical bill to build ONE
+such capital good, given in exactly the same shape as this file's own
+`inputs` and `labour_hours` - not a lump of currency. This is the whole
+design: a furnace is so much brick, so much iron and so much mason's labour,
+each of which this file already knows how to price, so capitalising it stays
+inside the same solved system instead of reintroducing a book number wearing
+a new field's name. A furnace priced in bricks is a furnace whose cost falls
+when bricks get cheaper, and a lump-sum "cap_cost_denarii" field would not do
+that - it would just be `prices.json` again, one field over.
+
+`service_life_years` and `annual_output_at_basis` turn a build bill into a
+cost per basis-unit: `(cost of build_materials + cost of build_labour_hours)
+/ (service_life_years * annual_output_at_basis)`. Both are PHYSICAL FACTS
+about the thing - how many years before the lining spalls apart or the
+timbering rots, how many tonnes a campaign actually turns out in a year -
+never a financial depreciation convention (there is no straight-line vs.
+declining-balance choice to make here, because nothing here is amortising a
+purchase price; it is amortising a build bill that is itself computed from
+physical quantities). If you would have to look up an accounting standard to
+answer either field, you are answering the wrong question.
+
+`capital` is a LIST rather than one object because a real plant is not one
+lifetime. A blast furnace's stone stack stands for decades; the firebrick
+lining inside it spalls from thermal shock and slag attack and gets rebuilt
+every few years; a water-wheel's timber frame rots faster than either. Averaging
+those into a single blended service life would hide exactly the fact that
+matters - that the lining is rebuilt many times over the stack's one lifetime
+- so an entry with parts that wear at different rates gets one list item per
+part, each with its own build bill and its own life, rather than one number
+that quietly assumes they wear together.
+
+`capital_basis` is `yield_basis`'s counterpart, held to the same 50-character
+floor by the validator: say where the build bill, the service life and the
+annual output come from, in terms a millwright or a mason would recognise,
+not in terms a banker would.
+
+**What this does NOT yet do.** `sim/solve_prices.py` does not read this field
+- it still computes prime cost only, exactly as `energy_mj` sits in the
+schema unpriced. `capital` exists, is populated, and is validated; wiring the
+amortisation formula above into the solver is the next step, and is
+deliberately left to it rather than done here by hand-adding the amortised
+figure into `inputs`, which would hide the capital cost as an ordinary
+material flow instead of naming it.
+
+## WHICH MATERIALS GOT CAPITAL, AND WHICH WERE LEFT CAPITAL-LIGHT ON PURPOSE
+
+Capital was added where it plausibly dominates - heavy, campaign-run
+apparatus that stands for years and is expensive to build - not everywhere.
+Judgement, not coverage, is the point; see the milestone note in
+`docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md`.
+
+**Given capital:** `pig_iron_kg` (blast furnace stack, separately from its
+shorter-lived hearth lining and bellows drive), `iron_bar_kg` (finery hearth
+and water-powered hammer), `tool_steel_kg` and `steel_plate_kg` (cementation
+furnace; `steel_plate_kg` also a rolling mill), `wire_drawn_kg` (water-powered
+draw-bench and dies), `copper_kg` (a small shaft furnace, added to
+`00_examples.json` as the worked example of the field's shape), `lead_kg`
+(smelting hearth and cupellation furnace), `zinc_electrolytic_kg` and
+`aluminium_kg` (the reduction cell itself only - the generating plant behind
+their `energy_mj` is excluded for the same reason `energy_mj` is not priced:
+pricing it would mean assuming a fuel and a generating technology, which is
+exactly the invented conversion this project is trying to avoid), `glass_raw_kg`
+(pot furnace, relined nearly every campaign), `coal_kg` (shaft timbering and
+winding gear - real capital that is easy to forget because extraction entries
+otherwise carry only labour), `sulfuric_acid_kg` (the lead chamber itself -
+sheet lead is not cheap and the chamber's whole cost is lead and labour, which
+this file already prices), and `salt_solar_kg` (pan levees and sluices - added
+specifically because it is the CHEAP case: a saltern's works are real but
+modest, unlike a furnace, and showing that contrast is worth more than only
+showing the expensive examples).
+
+**Left capital-light on purpose**, meaning judged genuinely small relative to
+labour and materials rather than merely not-yet-done: `charcoal_kg` and
+`brick_1000` (an earth clamp or a brick scove kiln is built from the very
+material being fired and a day's digging - there is no separate lasting
+structure to amortise); `lime_kg` (same reasoning - a simple stone-lined pit
+kiln); bloomery-route steel (`iron_bloom_kg`, `steel_noric_kg`) and
+`cast_iron_kg` (a small clay-and-turf bloomery shaft was historically rebuilt
+for each smelt or every few smelts, so its build cost is already closer to a
+per-batch material than a multi-year asset, and `cast_iron_kg`'s own furnace
+cost is already carried by the `pig_iron_kg` it is cast from); ore and quarry
+extraction generally (hand tools, not a structure); `ammonia_kg` (its
+capital - a coking plant - is already flagged in its own `yield_basis` as an
+unresolved joint-costing problem; capitalising it now would bury that problem
+rather than fix it); and the remaining crucible-scale nonferrous alloys
+(`bronze_kg`, `brass_kg`, `tin_kg`, `silver_kg`'s patio process) and modern
+electric-furnace minor metals (`tungsten_kg`, `chromium_kg`, `manganese_kg`,
+`nickel_kg`, `molybdenum_kg`), which are real gaps rather than considered
+zeroes - they were simply lower priority than the entries above by
+consumption count and are left for the next pass rather than guessed at here.
 
 ## WHAT THIS SCHEMA DOES NOT MODEL, AND THE SIZE OF THE HOLE
 
@@ -43,16 +157,21 @@ structural rather than a matter of precision:
 
 | missing | status |
 |---|---|
-| **capital** | **no field exists.** A furnace, a forge, a mill, a ship |
+| **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates; not yet read by `sim/solve_prices.py` |
 | rent | `extracted_from` marks it; the solver fixes it at zero this round |
 | energy | `energy_mj` exists; nothing prices it yet |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 
-Capital is the big one and the only one with no field at all. Every entry
-here says what a process eats and nothing about what it is done *in*. The
-tech tree carries that as `cap`, which is 23.5% of its whole cost base, and
-none of it has crossed into this directory.
+Capital was the big one and the only one with no field at all - it has one
+now. Every entry here still says what a process eats and, for most of them,
+nothing about what it is done *in*; the `capital` field says that for the
+materials where it was judged to matter. The tech tree carries the whole
+thing as `cap`, which is 23.5% of its whole cost base, and only the ~13
+entries listed under WHICH MATERIALS GOT CAPITAL above have any of it
+reflected here yet - most of the tree's `cap` share still has not crossed
+into this directory, and none of what has crossed is read by the solver yet
+either.
 
 The size of the hole, measured rather than guessed: a kilogram of iron bar
 comes out at **0.95 labour-hours**, which at the book unskilled wage is 71
@@ -63,7 +182,9 @@ near true in Rome, where iron was dear.
 
 So the solver's numbers are an **honest lower bound**, and knowing precisely
 which four things are missing is worth more than a closer number would be.
-Do not add a fudge factor to close the gap. Add capital.
+Do not add a fudge factor to close the gap. Add capital - which now has data
+behind it for the heaviest materials; wiring it into `sim/solve_prices.py` so
+the solver actually reads it is the next step, not this one.
 
 ## Confidence, and what it is actually measuring
 
@@ -98,7 +219,8 @@ know this number well*, a `D` says *this number should not exist*. Refining a
 ## Worked examples
 
 `00_examples.json` holds one entry of each shape - extracted,
-smelted, harvested. Copy the shape, not the numbers.
+smelted, harvested - plus `copper_kg` now also carrying a `capital` entry, as
+the worked example of that field's shape. Copy the shape, not the numbers.
 
 Run `python3 sim/validate_production.py` after every edit, and
 `--todo` to see what is still missing, worst first.

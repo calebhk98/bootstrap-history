@@ -50,6 +50,23 @@
     "miner": 9.0,
     "labourer": 4.0
    },
+   "capital": [
+    {
+     "good": "shaft timbering, headgear and winding gear",
+     "build_materials": {
+      "timber_m3": 200.0,
+      "iron_bar_kg": 500.0
+     },
+     "build_labour_hours": {
+      "carpenter": 300.0,
+      "labourer": 200.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 8000000.0,
+     "capital_basis": "coal_kg's own entry is EXTRACTED and otherwise carries only labour, which understates a real pit: working a seam below the shallowest bell-pits needs shaft timbering to hold back loose ground, a headgear over the shaft, and a hand or horse windlass (later a steam winder) to raise coal and water - real, if modest by furnace standards, fixed capital that is easy to omit precisely because extraction entries elsewhere in this file correctly carry none. Timber is the dominant cost because pit timber rots and must be replaced on a roughly decade cycle underground, independent of how much coal is drawn; iron covers the headgear and winding-gear fittings. Annual output (order 8,000 t/yr) is representative of a single modest pre-mechanised shaft pit rather than a large 19th-century colliery.",
+     "conf": "C"
+    }
+   ],
    "extracted_from": "coal seam",
    "basis": "per tonne of run-of-mine coal at the pit head",
    "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry.",
@@ -447,6 +464,23 @@
     "furnaceman": 20.0,
     "glassblower": 5.0
    },
+   "capital": [
+    {
+     "good": "glass melting furnace (pot furnace and refractory)",
+     "build_materials": {
+      "brick_1000": 15.0,
+      "clay_kg": 4000.0
+     },
+     "build_labour_hours": {
+      "mason": 300.0,
+      "potter": 100.0
+     },
+     "service_life_years": 3,
+     "annual_output_at_basis": 80000.0,
+     "capital_basis": "A pre-modern glass furnace holds several clay melting pots inside a brick-and-clay firebox run continuously at the 1000-1300 C glass_raw_kg's own yield_basis describes; both the furnace refractory and the pots themselves are well documented as needing frequent rebuilding because molten glass attacks refractory clay chemically at that temperature (a pot 'going' mid-campaign, ruining its batch, is a recorded hazard of the trade), which is why the service life here (3 years) is markedly shorter than the stone-built furnaces above rather than an oversight. Potter labour is the pot-making itself, a skilled trade distinct from the mason's furnace brickwork. Annual output reflects a small multi-pot furnace campaigning much of the working year.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of melted and fined raw glass ('metal'), before working into objects",
    "yield_basis": "WHY this recipe is what it is: silica alone does not melt at any furnace this era can build (quartz softens above 1700 C), so soda-lime glass adds an alkali flux (here natron, the historically dominant source in Egypt and Rome) to break up the silica network and pull the working temperature down to a reachable 1000-1300 C, with lime added to keep the glass chemically stable (unfluxed alkali glass is water-soluble). Sand contributes ~100% of its mass to the melt since it is already the stable oxide; lime, taken here as the already-calcined lime_kg, likewise contributes essentially all its mass. Natron does not: it is a hydrated, part-carbonate mineral, and melting the batch drives off both its water of crystallisation and (like limestone) the CO2 from its carbonate fraction, so only roughly 45% of the raw natron's mass ends up in the glass - this fraction is this author's estimate combining decarbonation stoichiometry with natron's typical impurity content, and is the least certain number in the entry. Working backward from a target 70:20:10-ish sand:soda:lime melt composition through that loss gives the input quantities above. Fuel: wood-fired glasshouses were notorious for consuming forests even faster than iron did, because open pot furnaces lose most of their heat rather than delivering it to the melt; 4 kg of wood per kg of glass reflects that documented historical ratio rather than a theoretical minimum, which would be an order of magnitude lower.",
    "conf": "C"

@@ -30,6 +30,23 @@
     "chemist": 8.0
    },
    "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "lead chamber (sheet lead lining and timber framing)",
+     "build_materials": {
+      "lead_kg": 15000.0,
+      "timber_m3": 80.0
+     },
+     "build_labour_hours": {
+      "plumber": 600.0,
+      "carpenter": 200.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 300000.0,
+     "capital_basis": "The lead chamber process this entry's own yield_basis describes is named for its capital good: a large chamber lined in sheet lead, chosen specifically because lead resists sulphuric acid attack better than other cheap metals of the era, run inside a timber frame housing. This is close to a pure case of capital expressed as a material the system already prices - the chamber is, physically, mostly lead, priced by this file's own lead_kg entry, and 'plumber' (from plumbum, lead) is the historically exact trade name for the workers who made and maintained sheet-lead chambers, which the wage table already carries. Lead's acid resistance is real but not infinite, and chambers are documented as needing periodic re-sheeting rather than lasting indefinitely; 15 years reflects that lead is the most durable of this file's capital linings even though it is also the most expensive by mass. Annual output reflects a substantial 19th-century works rather than a small workshop-scale operation.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of lead-chamber sulphuric acid at commercial chamber strength, ~65% H2SO4 by mass",
    "yield_basis": "THE INDUSTRIAL ROUTE (Roebuck, 1746 onward), stoichiometric net reaction S + 3/2 O2 + H2O -> H2SO4. H2SO4 is 98.08 g/mol, sulphur 32.07 g/mol, so pure sulphur needed is 32.7% of the pure-acid mass produced; at 65% acid strength a tonne of output contains 650 kg pure H2SO4, needing 212.6 kg sulphur stoichiometrically. Real chamber conversion runs on the order of 85% efficient (gas leakage past the lead seams, incomplete nitrous-gas catalysis), giving the 250 kg figure. Nitre (saltpetre) is not consumed by the acid-forming reaction itself - it supplies the NO/NO2 that catalyses SO2+O2+H2O -> H2SO4 - but real chambers lose nitrogen oxides out the stack faster than the sulphur dioxide, so continuous make-up nitre on the order of 7-10% of the sulphur burned (taken at 8%) was a standard historical consumption figure, not a stoichiometric one. Water covers the ~120 kg chemically combined in the H2SO4 itself (18.02/98.08 g water per g acid, scaled to 650 kg acid), the roughly 350 kg of plain dilution water that brings the theoretical ~78% chamber-strength acid down to the commercial 65% grade, and a further margin for the continuous water spray real Gay-Lussac/Glover towers ran (most recirculated, but not all - some genuinely leaves as vapour carried out with the vented gas stream) - a generous single-pass figure rather than a figure that assumes a recycling loop this entry cannot verify. Note also that the reaction gains mass from atmospheric oxygen (S + O2 -> SO2 -> SO3, absorbing roughly 1.5 kg of O2 per kg of sulphur burned) exactly the way rust or any oxidation does; that oxygen is free, untracked air, which is why the tracked inputs by mass do not have to sum to the full output mass on their own. Sulphur combustion is exothermic and the chambers are close to self-heating; the small charcoal figure is only for cold-weather start-up and auxiliary steam, not the main reaction. nitre_kg has no production entry in this file - out of scope by instruction - so this entry treats it as a purchased input, which is exactly how a chamber-acid works fed on saltpetre bought from a nitre bed.",
    "conf": "C"
@@ -73,6 +90,23 @@
    "labour_hours": {
     "labourer": 15.0
    },
+   "capital": [
+    {
+     "good": "pan levees, puddled-clay lining and sluices",
+     "build_materials": {
+      "clay_kg": 20000.0,
+      "timber_m3": 10.0
+     },
+     "build_labour_hours": {
+      "labourer": 400.0,
+      "carpenter": 60.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 200000.0,
+     "capital_basis": "Added deliberately as the CHEAP case, in contrast with the furnaces above: salt_solar_kg's own yield_basis says the process is climate- and land-limited, needing no furnace and essentially no fuel, but a working saltern is still not free of capital - earthen levees dividing the pans, a puddled-clay lining to stop the brine draining into the ground before it concentrates, and timber sluice gates to move water between pans as it concentrates are all real, physical works, just modest ones next to a blast furnace. Ten years is the physical fact that earthen embankments and clay linings erode under wave and weather action and need periodic renewal, not a financial convention; it is markedly longer than any furnace lining above precisely because nothing here is exposed to thermal cycling or chemical attack, only weather. Annual output is representative of a working saltern of a few hectares.",
+     "conf": "C"
+    }
+   ],
    "extracted_from": "coastal saltern (seawater concentrated by sun and wind)",
    "basis": "per tonne of salt raked from solar evaporation pans",
    "yield_basis": "EXTRACTED, and CLIMATE- AND LAND-LIMITED rather than fuel-limited - the opposite constraint from salt_brine_kg below. Seawater averages ~3.5% dissolved salt by mass; solar pans do the entire concentration and crystallisation with sun and wind as the only energy input, so no fuel and essentially no chemistry appears in this entry at all. What actually limits a saltern is evaporation rate and pond area, which is a geography fact (insolation, wind, humidity, coastline available) rather than a production recipe - exactly why Mediterranean coasts exported salt and northern European ones taxed it instead. That land/climate scarcity belongs in the rent this file's extracted_from mechanism already provides, the same way an ore deposit's grade sets its rent, rather than in an invented hectare-yield number this entry has no good way to defend. Labour is raking crystallised salt off the pan floor and maintaining the levees and sluices - genuinely light work, since the sun does the work a furnace would otherwise need fuel for.",
@@ -570,19 +604,6 @@
    "basis": "per 1000 normal cubic metres of inert/reducing furnace or lamp-fill gas, priced via the cheaper of the two named alternatives",
    "yield_basis": "DATA-CATEGORISATION FLAG, worth raising rather than quietly working around: this key conflates two chemically unrelated gases (argon and hydrogen) that can serve the same functional role - an inert or reducing atmosphere for a furnace, lamp or bulb - under one material. Argon (0.93% of air by volume) is only recoverable as a side-fraction of the same cryogenic air-separation plant that this file's oxygen_m3 entry describes, a technology that postdates argon's own 1894 discovery (Rayleigh and Ramsay) and was historically both later-arriving and more expensive than the alternative. Hydrogen, by contrast, is available far earlier and more cheaply by the same iron-and-acid reaction as this file's own hydrogen_m3 entry. Since a generic material key should be priced at its cheapest available source rather than an arbitrary one, this entry simply reuses hydrogen_m3's identical stoichiometry and figures rather than re-deriving them. Recommend to the project that this key be split into its two real materials once anything needs to distinguish them - an application that specifically needs an inert (non-flammable) atmosphere cannot actually substitute hydrogen for argon, and this entry cannot express that constraint.",
    "conf": "C"
-  },
-  "monochromatic_light_kg": {
-   "outputs": {
-    "monochromatic_light_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "optician": 5.0
-   },
-   "extracted_from": "NOT APPLICABLE - this is not a physical material; see yield_basis",
-   "basis": "per unit of instrument operation, recorded as '1 kg' only because the tree's schema filed it under materials",
-   "yield_basis": "DATA DEFECT, flagged rather than priced as if it were real: monochromatic (single-wavelength) light - from a sodium-vapour lamp, a laser, or a spectroscope's slit and prism - is an INSTRUMENT CAPABILITY, not a substance with mass, a yield, or a recipe. It cannot be extracted, smelted, grown or manufactured in kilograms because it has no kilograms to have. The tree's mat_* schema mistakenly lists it as a consumed material for some optical or scientific-instrument node, when what that node actually needs is amortised access to an instrument (a monochromator, a sodium lamp, a spectroscope) and the operating time of whoever runs it. This entry exists only so the validator has something to check, in the same spirit as slave_skilled in 40_organics.json refusing to pretend a person is smelted - the honest content of this entry is the flag itself, not the number. The nominal labour figure (an optician's time operating such an instrument for one recorded 'unit') is a placeholder, not a costed recipe. RECOMMEND TO THE PROJECT: this key should be removed from whichever node's mat_* list uses it and replaced with an equipment/capability cost, not a material.",
-   "conf": "D"
   }
  }
 }

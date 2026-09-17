@@ -29,6 +29,24 @@
     "smith": 15.0
    },
    "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "lead smelting hearth and cupellation furnace",
+     "build_materials": {
+      "stone_kg": 10000.0,
+      "clay_kg": 3000.0,
+      "iron_bar_kg": 200.0
+     },
+     "build_labour_hours": {
+      "mason": 250.0,
+      "smith": 80.0
+     },
+     "service_life_years": 8,
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "Lead's low melting point (327 C, per lead_kg's own yield_basis) means a much lighter hearth than an iron or copper furnace needs - a stone-and-clay hearth with a small iron cupel/test frame for the silver-recovery step, rather than a tall masonry stack. Stone and clay figures are an order-of-magnitude estimate for a hearth at this scale; the iron figure is the cupellation apparatus (test, bone-ash cupel frame, tuyere) rather than a major structural component. Eight years reflects a lighter structure than the blast-furnace and cementation entries above, still cycling through many smelts a year at a moderate district-scale output.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of refined lead metal smelted and cupelled from argentiferous galena",
    "yield_basis": "JOINT PRODUCTION - smelting galena for lead and pulling silver out of the same bullion are one process, not two, and pretending otherwise misprices both. PbS (239.3 g/mol) is 86.6% lead by mass; at 75% PbS the ore assays ~65% Pb. Roast-reduction smelting recovers on the order of 90% of that, and a further small loss is taken across the cupellation + litharge-reduction cycle described below, giving an overall ~87% ore-to-metal recovery, hence 1770 kg of ore per tonne of lead. Lead's low melting point (327 C) and easy reducibility mean far less fuel than copper needs - 320 kg charcoal per tonne against copper's 4000. Silver content of galena is wildly variable by deposit - some ores are essentially silver-free, others (the reason Athens fought over Laurion, and Rome prized Spanish lead) run rich. 0.5 kg Ag per tonne of contained lead (500 g/t) is a middling figure for a historically-worked silver-lead district, not a universal constant; treat it as the single least certain number in this entry. Cupellation - blowing air across molten bullion so lead oxidises to litharge (PbO) while silver, which does not oxidise under these conditions, stays behind as a bright bead - recovers about 92% of that silver. The litharge is not lost: it is re-smelted with charcoal back to metallic lead, which is why the lead output is not decimated by the cupellation step and why one entry can honestly report both outputs from one recipe.",
    "conf": "C"
@@ -209,6 +227,25 @@
     "labourer": 10.0
    },
    "energy_mj": 10500.0,
+   "capital": [
+    {
+     "good": "electrolytic cell house (lead-lined cells, busbars, roast/leach plant)",
+     "build_materials": {
+      "lead_kg": 8000.0,
+      "iron_bar_kg": 5000.0,
+      "brick_1000": 20.0
+     },
+     "build_labour_hours": {
+      "plumber": 400.0,
+      "machinist": 300.0,
+      "mason": 300.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 2000000.0,
+     "capital_basis": "A roast-leach-electrowin zinc plant needs lead-lined leaching vessels and cell tanks (lead resists the sulphuric acid electrolyte, the same property this file's sulfuric_acid_kg entry relies on for the lead chamber), plus the iron/copper busbars and structural steel of a cell house, plus a roasting furnace (brick). This capital line covers the process plant only, not the generating station behind the 10,500 MJ/tonne this recipe's energy_mj already carries as unpriced - capitalising a powerhouse would require assuming a fuel and a generating technology, which is exactly the invented conversion energy_mj is deliberately left uncosted to avoid, per solve_prices.py's own module docstring. Annual output is set at a modern industrial cell-house scale, since this is inherently a modern (post-1900) continuous-process technology with no pre-industrial analogue to scale down from.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of electrolytic zinc from roasted, leached sulphide ore",
    "yield_basis": "Modern route (roast-leach-electrowin, ~90% of world production): roast sphalerite to ZnO, leach with sulphuric acid (ZnO + H2SO4 -> ZnSO4 + H2O, 1.5 kg acid per kg Zn stoichiometric, taken here at 1.6 kg to allow for excess/pH control), then electrowin Zn2+ + 2e- -> Zn from solution. Overall ore-to-metal recovery ~90% gives 2020 kg concentrate per tonne. Electrical energy is a Faraday's-law calculation, not a guess: one tonne of zinc is 15,290 mol, needing 2 electrons each, i.e. 2.95x10^9 coulombs (15,290 x 2 x 96,485 C/mol); at an industrial cell voltage of ~3.4 V (theoretical decomposition ~2.35 V plus real overpotential and IR drop) that is ~10,000 MJ/tonne, matching the commonly cited industrial figure of roughly 3,300 kWh/tonne (11,880 MJ) reasonably closely once realistic (not 100%) current efficiency is allowed for. Labour is low per unit output because this is a continuous plant process, not hand-fired batches - electricity is substituting for labour here, the same substitution the aluminium pair makes explicit. Germanium and indium are genuine sphalerite by-products with no independent ore of their own anywhere - both figures are order-of-magnitude representative only; actual content varies by well over an order of magnitude between deposits (a handful of unusually enriched ore bodies supply most of the world's indium and germanium), so these two numbers are the least confident in this file.",
    "conf": "C"
@@ -242,6 +279,24 @@
     "chemist": 23.0
    },
    "energy_mj": 46000.0,
+   "capital": [
+    {
+     "good": "Hall-Heroult reduction pot (steel shell, carbon lining, busbars)",
+     "build_materials": {
+      "iron_bar_kg": 3000.0,
+      "carbon_kg": 8000.0,
+      "copper_wire_kg": 500.0
+     },
+     "build_labour_hours": {
+      "machinist": 300.0,
+      "smith": 100.0
+     },
+     "service_life_years": 5,
+     "annual_output_at_basis": 400000.0,
+     "capital_basis": "A Hall-Heroult reduction cell is a steel shell lined with carbon (which also serves as the cathode) carrying heavy copper busbars for the very large DC current aluminium_kg's own yield_basis derives from Faraday's law. Carbon lining is consumed by the same electrolysis and cryolite-bath attack that erodes the carbon anodes already priced in this entry's inputs, and pot relining on the order of a few years is a well-documented feature of real Hall-Heroult operation, distinct from and shorter than a structural steel building's own life. As with zinc_electrolytic_kg above, this line prices the pot itself only, explicitly excluding the hydroelectric or thermal generating plant behind the 46,000 MJ/tonne of energy_mj this recipe needs - see that field's note in solve_prices.py for why energy is deliberately left unpriced, which extends to not capitalising the plant that generates it either.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of electrolytic aluminium (Hall-Heroult process), via Bayer alumina refining from bauxite",
    "yield_basis": "THE clearest case in this file of a price that should fall out of physics rather than be looked up. This entry folds two real industrial steps together: Bayer refining of bauxite to alumina, then Hall-Heroult electrolysis of the alumina to metal - alumina (Al2O3) is NOT tracked as its own intermediate here because the material key 'aluminum_oxide_kg' is already defined elsewhere in data/production/ for a different, natural-corundum abrasive-grade sourcing that this file must not duplicate or edit. Bayer digests bauxite in hot caustic soda, precipitates aluminium hydroxide and calcines it to Al2O3 at ~95% recovery of a 50%-Al2O3 ore (see bauxite_kg); the net cell reaction 2Al2O3 + 3C -> 4Al + 3CO2 needs 1.89 kg stoichiometric Al2O3 per kg Al (101.96/53.96), and the electrolysis itself recovers roughly a further 97% of the alumina it is fed. Chaining both losses back to raw bauxite: 1.89 / (0.50 x 0.95 x 0.97) = 4.10, rounded here to 4.02 tonnes of bauxite per tonne of aluminium. Coal covers the Bayer digestion and calcination heat; the caustic-soda reagent loop (mostly recycled, only losses replaced) is a chemical input this file does not yet track a material for and is folded into the added chemist/labourer hours as a labelled simplification. Stoichiometric carbon-anode consumption for the cell is 0.33 kg C per kg Al (36.03/107.92); real anodes burn faster than stoichiometry from air oxidation, giving the widely reported industrial figure of ~400-450 kg carbon per tonne Al (420 kg used here). Cryolite (Na3AlF6) dissolves the alumina and carries the current; the bath itself is largely closed-loop, and only make-up losses to volatilisation/entrainment need replacing, on the order of 15-25 kg per tonne Al in real smelters (20 kg here). ELECTRICAL ENERGY, the number that actually explains the historical price collapse: by Faraday's law, one tonne of aluminium is 37,065 mol, needing 3 electrons each, i.e. 1.073x10^10 coulombs; at a typical industrial cell voltage of 4.3 V (theoretical back-EMF ~1.2 V plus real overpotential and bath resistance) that is 4.61x10^10 J = 46,000 MJ = ~12.8 MWh per tonne, matching the well-known real-world figure for efficient Hall-Heroult cells (commonly cited ~13 MWh/t) almost exactly. This is a derivation from first principles (Faraday's law + a realistic, independently documented cell voltage), not a number backed into from a price - and it is why aluminium only became cheap once cheap bulk electricity did (Niagara Falls, 1890s), a century after the metal itself was isolated. See aluminium_sodium_reduction_kg for the same metal before that electricity existed.",
    "conf": "B"

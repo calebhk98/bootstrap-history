@@ -28,6 +28,23 @@
     "smith": 40.0
    },
    "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "copper smelting shaft furnace (clay and stone)",
+     "build_materials": {
+      "clay_kg": 5000.0,
+      "stone_kg": 8000.0
+     },
+     "build_labour_hours": {
+      "mason": 200.0,
+      "labourer": 100.0
+     },
+     "service_life_years": 6,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "A small ancient/medieval copper shaft furnace is a clay-lined stone stack a couple of metres tall - far smaller than an iron blast furnace because copper melts and reduces at a much lower temperature and campaign scale. Clay and stone quantities are an order-of-magnitude estimate for a structure that size, not a survey of a specific excavated furnace. Service life is set by how long the clay lining survives repeated firing to smelting heat before it cracks and must be relaid - years rather than decades, because unlike a blast furnace's masonry stack there is no separate structural shell outlasting the lining; taken at 6 years as a single blended figure for that reason. Annual output assumes the furnace campaigns for a large fraction of the working year at the batch scale implied by copper_kg's own recipe.",
+     "conf": "C"
+    }
+   ],
    "basis": "per tonne of fire-refined copper",
    "yield_basis": "SMELTED, so the yield is grade times recovery. Cyprus and Rio Tinto sulphide ores run 2-4% copper; roast-and-reduction in a shaft furnace recovers on the order of 80% of it, the rest going to slag and flue. One tonne of metal therefore needs 30-60 t of ore, taken here at 50 t. Charcoal is set by the reduction chemistry plus the heat to hold 1200 C through several roasts, about 4 kg per kg of metal, which is why a smelter is sited by a forest rather than by the mine. None of these numbers is derived from the price of copper.",
    "conf": "C"
