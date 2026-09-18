@@ -3,11 +3,39 @@
 Split out of sim/engine/core.py, which was the last engine file over its
 1,000-code-line target (docs/architecture/SIM_DECOMPOSITION_REVISITED.md,
 Stage 1's follow-on). These are properties of Sim; they live in a mixin
-only so this one mechanically near-identical block - 107 one-line forwards,
-about 976 lines - can sit in a file of its own instead of pushing every
-other reader of core.py past all of them to reach anything else. Behaviour
-is unchanged and verified byte-identical: every property below, its
-setter, and every comment explaining it, is moved VERBATIM out of core.py.
+only so this one mechanically near-identical block can sit in a file of
+its own instead of pushing every other reader of core.py past all of them
+to reach anything else. Behaviour is unchanged and verified byte-identical:
+every property below, its setter, and every comment explaining it, is
+moved VERBATIM out of core.py.
+
+THE COUNT: this held 107 one-line forwards when it was split out of
+core.py. It now holds 87 (`grep -c "^    @property"` on this file). The
+missing 20 were deleted, not moved: item 11 of the stakeholder's cleanup
+list (docs/architecture/HOUSEHOLD_EXTRACTION.md) measured every property's
+call sites across the whole repository - engine-internal reads that had
+already been rewritten to `self.household.x` directly, reads through the
+`Sim` surface from proto/cli/simulator.py/tests, `SAVE_FIELDS`
+(sim/engine/proto/saveload.py), and dynamic reach by field list
+(sim/perf_fingerprint.py's `state_of`) - and found 20 of the 107 with ZERO
+call sites outside this file: nothing but the property's own body and, for
+some, one internal cache read/write already going through
+`self.household.x` directly. A property nothing outside the engine reads
+and nothing inside the engine reaches THROUGH is pure dead weight; deleting
+it changes no behaviour because nothing ever called it. The 20:
+`_cap_factor`, `_done_seq`, `_said_confiscation_band`, `_said_eminence`,
+`_said_notice_approach`, `_said_requisition`, `_spend_this_year`,
+`_staff_scale`, `contract_projects`, `last_military_demand`,
+`_demand_by_emp_key_cache`, `_demand_by_tag_cache`, `_goods_cat_state_cache`,
+`_labour_pressure`, `_last_subst_gap`, `_operating_ver`, `_practice_cache`,
+`_rev_up_candidates_cache`, `_stock_throttle_cache`, `_stock_throttle_sig`.
+`contract_projects` had no call site anywhere at all, inside the engine or
+out - set once in `Household.__init__` and never read or written again
+(confirmed against `docs/architecture/SIM_STATE_INVENTORY.md`'s own count
+for it). The other 87 all have at least one call site through the `Sim`
+surface, in `SAVE_FIELDS`, or both, and stay for a later slice that rewrites
+those call sites - see this file's own git history for the full 107-row
+count.
 
 Two properties that LOOK like they belong here stayed in core.py instead,
 on purpose: `pop_scale` and `wage_index` are not one-line forwards - each
@@ -64,70 +92,6 @@ class ForwardingPropertiesMixin:
     # sim/ARCHITECTURE.md for the one time promoting a lazily-created field
     # to a real attribute passed the whole suite while silently breaking
     # this exact contract.
-
-    @property
-    def _cap_factor(self):
-        return self.household._cap_factor
-
-    @_cap_factor.setter
-    def _cap_factor(self, value):
-        self.household._cap_factor = value
-
-    @property
-    def _done_seq(self):
-        return self.household._done_seq
-
-    @_done_seq.setter
-    def _done_seq(self, value):
-        self.household._done_seq = value
-
-    @property
-    def _said_confiscation_band(self):
-        return self.household._said_confiscation_band
-
-    @_said_confiscation_band.setter
-    def _said_confiscation_band(self, value):
-        self.household._said_confiscation_band = value
-
-    @property
-    def _said_eminence(self):
-        return self.household._said_eminence
-
-    @_said_eminence.setter
-    def _said_eminence(self, value):
-        self.household._said_eminence = value
-
-    @property
-    def _said_notice_approach(self):
-        return self.household._said_notice_approach
-
-    @_said_notice_approach.setter
-    def _said_notice_approach(self, value):
-        self.household._said_notice_approach = value
-
-    @property
-    def _said_requisition(self):
-        return self.household._said_requisition
-
-    @_said_requisition.setter
-    def _said_requisition(self, value):
-        self.household._said_requisition = value
-
-    @property
-    def _spend_this_year(self):
-        return self.household._spend_this_year
-
-    @_spend_this_year.setter
-    def _spend_this_year(self, value):
-        self.household._spend_this_year = value
-
-    @property
-    def _staff_scale(self):
-        return self.household._staff_scale
-
-    @_staff_scale.setter
-    def _staff_scale(self, value):
-        self.household._staff_scale = value
 
     @property
     def active(self):
@@ -224,14 +188,6 @@ class ForwardingPropertiesMixin:
     @contract_hours.setter
     def contract_hours(self, value):
         self.household.contract_hours = value
-
-    @property
-    def contract_projects(self):
-        return self.household.contract_projects
-
-    @contract_projects.setter
-    def contract_projects(self, value):
-        self.household.contract_projects = value
 
     @property
     def credit_frozen_until(self):
@@ -344,14 +300,6 @@ class ForwardingPropertiesMixin:
     @hour_allocations.setter
     def hour_allocations(self, value):
         self.household.hour_allocations = value
-
-    @property
-    def last_military_demand(self):
-        return self.household.last_military_demand
-
-    @last_military_demand.setter
-    def last_military_demand(self, value):
-        self.household.last_military_demand = value
 
     @property
     def last_settlement(self):
@@ -630,46 +578,6 @@ class ForwardingPropertiesMixin:
         self.household._dashboard_history = value
 
     @property
-    def _demand_by_emp_key_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._demand_by_emp_key_cache
-
-    @_demand_by_emp_key_cache.setter
-    def _demand_by_emp_key_cache(self, value):
-        self.household._demand_by_emp_key_cache = value
-
-    @property
-    def _demand_by_tag_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._demand_by_tag_cache
-
-    @_demand_by_tag_cache.setter
-    def _demand_by_tag_cache(self, value):
-        self.household._demand_by_tag_cache = value
-
-    @property
-    def _goods_cat_state_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._goods_cat_state_cache
-
-    @_goods_cat_state_cache.setter
-    def _goods_cat_state_cache(self, value):
-        self.household._goods_cat_state_cache = value
-
-    @property
-    def _labour_pressure(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._labour_pressure
-
-    @_labour_pressure.setter
-    def _labour_pressure(self, value):
-        self.household._labour_pressure = value
-
-    @property
     def _last_buy_refusal(self):
         # LAZY: absence is meaningful (see the section comment above).
         # Do not add a default here.
@@ -678,16 +586,6 @@ class ForwardingPropertiesMixin:
     @_last_buy_refusal.setter
     def _last_buy_refusal(self, value):
         self.household._last_buy_refusal = value
-
-    @property
-    def _last_subst_gap(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._last_subst_gap
-
-    @_last_subst_gap.setter
-    def _last_subst_gap(self, value):
-        self.household._last_subst_gap = value
 
     @property
     def _material_demand_cache(self):
@@ -708,36 +606,6 @@ class ForwardingPropertiesMixin:
     @_material_stock_ledger.setter
     def _material_stock_ledger(self, value):
         self.household._material_stock_ledger = value
-
-    @property
-    def _operating_ver(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._operating_ver
-
-    @_operating_ver.setter
-    def _operating_ver(self, value):
-        self.household._operating_ver = value
-
-    @property
-    def _practice_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._practice_cache
-
-    @_practice_cache.setter
-    def _practice_cache(self, value):
-        self.household._practice_cache = value
-
-    @property
-    def _rev_up_candidates_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._rev_up_candidates_cache
-
-    @_rev_up_candidates_cache.setter
-    def _rev_up_candidates_cache(self, value):
-        self.household._rev_up_candidates_cache = value
 
     @property
     def _said_autoopen(self):
@@ -798,26 +666,6 @@ class ForwardingPropertiesMixin:
     @_said_stack_caution.setter
     def _said_stack_caution(self, value):
         self.household._said_stack_caution = value
-
-    @property
-    def _stock_throttle_cache(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._stock_throttle_cache
-
-    @_stock_throttle_cache.setter
-    def _stock_throttle_cache(self, value):
-        self.household._stock_throttle_cache = value
-
-    @property
-    def _stock_throttle_sig(self):
-        # LAZY: absence is meaningful (see the section comment above).
-        # Do not add a default here.
-        return self.household._stock_throttle_sig
-
-    @_stock_throttle_sig.setter
-    def _stock_throttle_sig(self, value):
-        self.household._stock_throttle_sig = value
 
     @property
     def done_year(self):

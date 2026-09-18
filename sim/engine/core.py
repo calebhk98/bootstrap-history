@@ -113,6 +113,109 @@ def _cell_chordal_position_km(lat_degrees, lon_degrees):
             _EARTH_RADIUS_KM * math.sin(lat_radians))
 
 
+def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
+    """A Z-order (Morton) code for a lat/lon point. Used only by
+    `Sim._cap_pooled_farm_weather_cells` to get a deterministic ordering
+    that keeps geographically close cells close together in a 1-D
+    sequence, so a contiguous run of that sequence is a genuine spatial
+    neighbourhood rather than an arbitrary batch.
+
+    Quantises latitude and longitude to `bits`-bit unsigned integers
+    (65,536 steps each by default - about 0.0027 degrees, tens of metres,
+    far finer than `land_tiles`' own 150,000 km2 cells, so this
+    quantisation is not the limiting factor on locality) and interleaves
+    their bits, the standard Z-order construction: reading the interleaved
+    bits back out recovers alternating lat/lon bits from most to least
+    significant, so two points near each other in BOTH lat and lon share
+    long common high-bit prefixes and land near each other in the sorted
+    1-D ordering.
+
+    NOT a distance metric, and not used as one anywhere else in this file.
+    `_compute_farm_weather_correlation_cholesky` still uses the real
+    chordal distance (`_cell_chordal_position_km`) for every correlation
+    value; this code only decides which raw cells get MERGED together
+    before that calculation ever runs, when there are more of them than
+    `FARM_WEATHER_POOLED_CELL_CAP` allows.
+    """
+    lat_fraction = (lat_degrees + 90.0) / 180.0
+    lon_fraction = (lon_degrees + 180.0) / 360.0
+    scale = 1 << bits
+    lat_int = min(scale - 1, max(0, int(lat_fraction * scale)))
+    lon_int = min(scale - 1, max(0, int(lon_fraction * scale)))
+    code = 0
+    for bit_index in range(bits):
+        code |= ((lat_int >> bit_index) & 1) << (2 * bit_index)
+        code |= ((lon_int >> bit_index) & 1) << (2 * bit_index + 1)
+    return code
+
+
+# STAKEHOLDER ITEM 7 ("the weather is currently O(n^3) initialization and
+# O(n^2) per year to run... we currently are not able to go up to a 10k
+# tile system, because of the weather"). Full measurement and the option
+# comparison this constant implements are in docs/architecture/
+# MAP_AND_WEATHER.md section 4.2 - "cap the number of pooled weather cells
+# independently of how fine the map is", the document's own recommended
+# option (4.6's comparison table: removes the O(n^3) exponent entirely,
+# changes the answer only marginally and defensibly, violates no §3.1
+# rule, needs no new dependency).
+#
+# WHY THIS IS SAFE ON THE MODEL'S OWN TERMS, NOT JUST A PERFORMANCE DODGE.
+# `land_tiles` cells are already, at today's 150,000 km2 target size,
+# well inside one GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM (600 km)
+# of most of their neighbours - MAP_AND_WEATHER.md section 3.4 measures a
+# 115 km side length for a hypothetical 10,000-tile grid over the same
+# land area, and exp(-115/600) = 0.83, i.e. two such cells would draw
+# ALMOST the same weather anyway. A finer grid than the cap resolves
+# detail the correlation kernel has no physical basis to treat as
+# independent; capping cell count removes compute cost the model was
+# never using for anything the kernel could tell apart.
+#
+# WHY 100, NOT A DERIVED FIGURE. A fully derived cap would come from a
+# civilisation's own geographic extent divided by the decorrelation
+# length (how many roughly-600-km-separated patches does this territory
+# actually span), which needs a per-civilisation footprint measure this
+# file does not compute today. That mechanism does not exist yet, so per
+# CLAUDE.md section 3.4 this is labelled as what it is: a round number
+# chosen to sit just above the largest cell count this project ships
+# today - rome_100ad resolves to 88 land_tiles cells across its 7 home
+# regions (sim/tests/test_growing_season_weather_correlation.py's own
+# test_romes_seven_regions_resolve_to_88_land_tiles_cells), the largest
+# of the five shipped civilisations (han_china_100ad 69, mexica_1500 32,
+# norse_900ad 14, england_1300 13) - so every civilisation this project
+# ships today keeps its EXACT current cell count and weather draw
+# unchanged (100 >= 88), while a future finer `land_tiles` grid, or a
+# civilisation with a larger territory than Rome's, is bounded rather
+# than left to grow cubically. Not tuned to reproduce any price or
+# population figure; tuned only to today's largest MEASURED cell count.
+FARM_WEATHER_POOLED_CELL_CAP = declare(
+    "FARM_WEATHER_POOLED_CELL_CAP", 100,
+    kind="temporary_heuristic",
+    unit="count (pooled growing-season weather cells per civilisation, an "
+         "upper bound independent of land_tiles resolution)",
+    source="Not a measured or published figure. Anchored to rome_100ad's "
+           "own measured cell count today (88, the largest of the five "
+           "shipped civilisations - see the comment above this "
+           "declaration for the exact figures and the test that pins "
+           "them) plus headroom, not derived from a formula relating cell "
+           "count to GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM.",
+    confidence="D",
+    why="Bounds the O(cell_count**3) one-time Cholesky factorisation in "
+        "_compute_farm_weather_correlation_cholesky and the "
+        "O(cell_count**2) per-simulated-year matrix-vector product in "
+        "_pooled_farm_weather_multiplier to a constant cost regardless of "
+        "how many land_tiles cells a civilisation's home_regions map to - "
+        "the fix for stakeholder item 7 (a 10,000-tile map was otherwise "
+        "unaffordable: measured directly, Rome's own cell count would "
+        "grow from 88 to about 773 at that resolution, costing about "
+        "3.5-4 seconds of factorisation per Sim() construction, and a "
+        "default --mc 200 Monte Carlo run builds 200 of them, so roughly "
+        "twelve minutes of pure matrix setup for one ordinary `run` "
+        "invocation). At or under the cap nothing changes; above it, "
+        "cells are MERGED (not dropped) into cap-many spatially-coherent "
+        "pooled cells, each weighted by the summed arable land area of "
+        "its members - see _cap_pooled_farm_weather_cells.")
+
+
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ForwardingPropertiesMixin,
           StepPhasesMixin):
@@ -910,12 +1013,101 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     lon=region_record.get("lon", 0.0), weight=arable_km2))
         if not raw_cells:
             return []
+        # STAKEHOLDER ITEM 7: cap cell count independently of how finely
+        # land_tiles divides this civilisation's home_regions, BEFORE the
+        # weight normalisation below - see FARM_WEATHER_POOLED_CELL_CAP's
+        # own declaration (top of this file) for why, and
+        # _cap_pooled_farm_weather_cells for how. A no-op whenever
+        # len(raw_cells) is already at or under the cap, which is true for
+        # every civilisation this project ships today.
+        raw_cells = self._cap_pooled_farm_weather_cells(raw_cells)
         total_weight = sum(cell.weight for cell in raw_cells)
         if total_weight > 0.0:
             return [cell._replace(weight=cell.weight / total_weight)
                     for cell in raw_cells]
         equal_weight = 1.0 / len(raw_cells)
         return [cell._replace(weight=equal_weight) for cell in raw_cells]
+
+    def _cap_pooled_farm_weather_cells(self, cells):
+        """`cells`, unchanged if there are `FARM_WEATHER_POOLED_CELL_CAP`
+        or fewer of them; otherwise merged down to exactly that many, so
+        the cubic/quadratic cost below stops being a function of how
+        finely `land_tiles` divides a civilisation's territory. See
+        `FARM_WEATHER_POOLED_CELL_CAP`'s own declaration for the
+        stakeholder item this exists for and why that number.
+
+        WHY MERGE, NOT DROP. Each cell's `weight` here is still its own
+        raw arable land area in km2 (this runs BEFORE the sum-to-1.0
+        normalisation in `_compute_farm_weather_cells`). Simply keeping
+        the `FARM_WEATHER_POOLED_CELL_CAP` largest-weight cells and
+        discarding the rest would throw away real arable-weighted mass
+        this civilisation actually has, and would also concentrate the
+        survivors wherever the single largest cells happen to sit (see
+        `_compute_farm_weather_cells`'s own docstring: `north_africa`
+        alone supplies 47 of Rome's 88 raw cells by area) rather than
+        representing the civilisation's full territory. Merging instead
+        preserves every unit of arable land at coarser spatial grain, only
+        where finer grain would exceed the cap - the same weighting
+        principle `_compute_farm_weather_cells` already uses (arable km2),
+        just applied to decide what gets pooled together rather than how
+        much each pooled cell counts for.
+
+        HOW "NEARBY" IS DECIDED, DETERMINISTICALLY. Cells are ordered
+        along a Z-order (Morton) space-filling curve over their lat/lon
+        (`_cell_morton_code`, module level) and split into
+        `FARM_WEATHER_POOLED_CELL_CAP`-many contiguous runs of that
+        ordering - a standard technique for linearising 2-D points while
+        keeping the result in the same neighbourhood, so a contiguous run
+        is a genuine spatial cluster rather than an arbitrary batch. Fully
+        deterministic: same `cells` in (itself deterministic - see
+        `_compute_farm_weather_cells`), same groups out, nothing here
+        reads `self.rng` or constructs a `random.Random` - required by
+        CLAUDE.md section 6's determinism rule and
+        `sim/tests/test_determinism.py`.
+
+        Each merged cell's `lat`/`lon` is the arable-weight-weighted
+        centroid of its group (so `_compute_farm_weather_correlation_
+        cholesky`'s kernel sees a position representative of where that
+        group's arable land actually sits, not an unweighted midpoint);
+        its `weight` is the group's summed arable km2 (so the total
+        arable-weighted mass across all pooled cells is exactly what it
+        was pre-merge - this changes spatial RESOLUTION, never the
+        physical quantity being pooled); its `cell_id` is
+        `"pooled_<group index>"`, deterministic given the deterministic
+        ordering above, which is all `_farm_year_weather_seed` needs from
+        it (see `_WeatherCell`'s own comment on why any unique string
+        works there).
+        """
+        cap = int(FARM_WEATHER_POOLED_CELL_CAP)
+        if len(cells) <= cap:
+            return cells
+        ordered = sorted(cells, key=lambda cell: _cell_morton_code(cell.lat, cell.lon))
+        cell_count = len(ordered)
+        merged = []
+        start = 0
+        for group_index in range(cap):
+            # The remainder (cell_count % cap) is distributed as one extra
+            # member each to the FIRST that-many groups, deterministically,
+            # rather than left to pile onto whichever group floor-division
+            # happens to process last.
+            group_size = cell_count // cap + (1 if group_index < cell_count % cap else 0)
+            group = ordered[start:start + group_size]
+            start += group_size
+            total_weight = sum(cell.weight for cell in group)
+            if total_weight > 0.0:
+                lat = sum(cell.lat * cell.weight for cell in group) / total_weight
+                lon = sum(cell.lon * cell.weight for cell in group) / total_weight
+            else:
+                # Every member of this group happened to carry zero arable
+                # weight - fall back to an unweighted centroid so the group
+                # still gets a real position instead of pulling toward
+                # (0.0, 0.0) for no physical reason.
+                lat = sum(cell.lat for cell in group) / len(group)
+                lon = sum(cell.lon for cell in group) / len(group)
+            merged.append(Sim._WeatherCell(
+                cell_id="pooled_%04d" % group_index, lat=lat, lon=lon,
+                weight=total_weight))
+        return merged
 
     def _compute_farm_weather_correlation_cholesky(self, cells):
         """The lower-triangular Cholesky factor `matrix_low` of this
@@ -970,9 +1162,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         unless `cells` is non-empty in the first place.
 
         COST: O(len(cells) ** 3) FLOPs, paid ONCE per `Sim.__init__` (see
-        that method's own comment on why), not per year. The largest civ
-        this project ships (rome_100ad, 7 home regions) resolves to 88
-        cells - under 700,000 elementary operations, not a measurable cost
+        that method's own comment on why), not per year. `cells` here is
+        `self._farm_weather_cells`, which `_compute_farm_weather_cells`
+        already ran through `_cap_pooled_farm_weather_cells`, so
+        `len(cells)` never exceeds `FARM_WEATHER_POOLED_CELL_CAP`
+        regardless of how many `land_tiles` cells this civilisation's
+        home_regions actually map to (stakeholder item 7 - see that
+        constant's own declaration). The largest civ this project ships
+        (rome_100ad, 7 home regions) resolves to 88 cells, under the
+        cap - under 700,000 elementary operations, not a measurable cost
         against everything else `Sim.__init__` already does.
         """
         cell_count = len(cells)
