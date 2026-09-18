@@ -299,6 +299,7 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
 import collections
 import json
 import os
+from typing import Any, Dict, List, NotRequired, Optional, TypedDict
 
 from sim.constants import declare
 from sim.world.shared_constants import (
@@ -368,9 +369,10 @@ REFERENCE_WHEAT_YIELD_KG_PER_HECTARE = declare(
         "construction rather than by estimate - see the module docstring.")
 
 
-def reference_yield_kg_per_iugerum(fertility_quality_multiplier,
-                                   kg_per_hectare_at_quality_1=None,
-                                   iugerum_hectares=None):
+def reference_yield_kg_per_iugerum(
+        fertility_quality_multiplier: float,
+        kg_per_hectare_at_quality_1: Optional[float] = None,
+        iugerum_hectares: Optional[float] = None) -> float:
     """Kilograms of grain-equivalent one iugerum at this fertility produces
     in a season, net of seed - the physical quantity every rent
     calculation in this module bottoms out in. Takes both reference
@@ -458,7 +460,7 @@ DIET_DIVERSITY_LAND_MULTIPLIER = declare(
         "agriculture.py's job, not this module's.")
 
 
-def quantity_demanded_kg_grain_equivalent(population):
+def quantity_demanded_kg_grain_equivalent(population: float) -> float:
     """How much grain-equivalent output a population of this size needs
     from its own land in a year - the quantity find_margin_of_cultivation
     fills from the best available region-parcel down. See the module
@@ -606,8 +608,9 @@ LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA = (
 # LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER alone is confidence C.
 
 
-def labour_hours_applied_per_iugerum(population, total_arable_iugera_held,
-                                     annual_farm_labour_hours_per_capita=None):
+def labour_hours_applied_per_iugerum(
+        population: float, total_arable_iugera_held: float,
+        annual_farm_labour_hours_per_capita: Optional[float] = None) -> float:
     """How many labour-hours a civilization's own population applies, on
     average, to each iugerum of arable land it HOLDS - its whole endowment
     across every home region, not only the iugera `find_margin_of_
@@ -642,12 +645,13 @@ def labour_hours_applied_per_iugerum(population, total_arable_iugera_held,
             / total_arable_iugera_held)
 
 
-def yield_kg_per_iugerum_at_intensity(fertility_quality_multiplier,
-                                      labour_hours_per_iugerum,
-                                      kg_per_hectare_at_quality_1=None,
-                                      iugerum_hectares=None,
-                                      reference_labour_hours_per_hectare=None,
-                                      labour_output_elasticity=None):
+def yield_kg_per_iugerum_at_intensity(
+        fertility_quality_multiplier: float,
+        labour_hours_per_iugerum: float,
+        kg_per_hectare_at_quality_1: Optional[float] = None,
+        iugerum_hectares: Optional[float] = None,
+        reference_labour_hours_per_hectare: Optional[float] = None,
+        labour_output_elasticity: Optional[float] = None) -> float:
     """Kilograms of grain-equivalent one iugerum at this fertility produces
     in a season, at `labour_hours_per_iugerum` of labour applied to it -
     `reference_yield_kg_per_iugerum`'s own flat figure, generalised to
@@ -691,10 +695,11 @@ def yield_kg_per_iugerum_at_intensity(fertility_quality_multiplier,
 
 
 def intensive_rent_kg_grain_equivalent_per_iugerum(
-        fertility_quality_multiplier, labour_hours_per_iugerum,
-        kg_per_hectare_at_quality_1=None, iugerum_hectares=None,
-        reference_labour_hours_per_hectare=None,
-        labour_output_elasticity=None):
+        fertility_quality_multiplier: float, labour_hours_per_iugerum: float,
+        kg_per_hectare_at_quality_1: Optional[float] = None,
+        iugerum_hectares: Optional[float] = None,
+        reference_labour_hours_per_hectare: Optional[float] = None,
+        labour_output_elasticity: Optional[float] = None) -> float:
     """The INTENSIVE margin's own contribution to one iugerum's rent: the
     Cobb-Douglas LAND share of what that iugerum produces at
     `labour_hours_per_iugerum` - see this section's own WHAT LAND EARNS
@@ -739,15 +744,27 @@ RegionLand = collections.namedtuple("RegionLand", [
 _KM2_TO_HECTARES = 100.0
 
 
-def _load_json(path):
+class LandBlock(TypedDict):
+    """The `land` block data/world/geography.json carries for one region -
+    the known shape `_declare_land_area`, `_declare_arable_fraction` and
+    `_declare_fertility` all read from, named so the dictionary schema is
+    checked rather than assumed at each `land_entry["..."]` lookup."""
+    land_area_km2: float
+    arable_fraction: float
+    fertility_quality_multiplier: float
+    conf: NotRequired[str]
+    source: NotRequired[Optional[str]]
+
+
+def _load_json(path: str) -> Any:
     with open(path, "r") as handle:
         return json.load(handle)
 
 
-_LAND_DECLARED = set()
+_LAND_DECLARED: set[str] = set()
 
 
-def _declare_land_area(region_key, land_entry):
+def _declare_land_area(region_key: str, land_entry: LandBlock) -> float:
     """data/world/geography.json's own land_area_km2 for one region, run
     through declare() with that entry's own conf/source - the same
     discipline sim/world/deposits.py's own _declare_grade applies to an
@@ -768,7 +785,7 @@ def _declare_land_area(region_key, land_entry):
             "%r region." % region_key)
 
 
-def _declare_arable_fraction(region_key, land_entry):
+def _declare_arable_fraction(region_key: str, land_entry: LandBlock) -> float:
     name = "REGION_ARABLE_FRACTION_%s" % region_key.upper()
     if name in _LAND_DECLARED:
         return land_entry["arable_fraction"]
@@ -786,7 +803,7 @@ def _declare_arable_fraction(region_key, land_entry):
             "data/world/geography.json's %r region." % region_key)
 
 
-def _declare_fertility(region_key, land_entry):
+def _declare_fertility(region_key: str, land_entry: LandBlock) -> float:
     name = "REGION_FERTILITY_QUALITY_MULTIPLIER_%s" % region_key.upper()
     if name in _LAND_DECLARED:
         return land_entry["fertility_quality_multiplier"]
@@ -805,7 +822,7 @@ def _declare_fertility(region_key, land_entry):
             "geography.json's %r region." % region_key)
 
 
-def load_region_lands(geography=None):
+def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
     """{region_key: RegionLand}, for every region data/world/geography.json
     carries a `land` block for. `geography` defaults to loading the file
     fresh, accepted as an argument purely so a caller that already has it
@@ -839,7 +856,9 @@ def load_region_lands(geography=None):
 # TERRITORY - per civilization, changeable, per the module docstring
 # ============================================================================
 
-def _load_civilization(civilization_id, civilizations=None):
+def _load_civilization(
+        civilization_id: str,
+        civilizations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if civilizations is not None and civilization_id in civilizations:
         return civilizations[civilization_id]
     path = os.path.join(CIVILIZATIONS_DIR, "%s.json" % civilization_id)
@@ -852,8 +871,9 @@ def _load_civilization(civilization_id, civilizations=None):
     return _load_json(path)
 
 
-def cultivable_land_for_civilization(civilization_id, geography=None,
-                                     civilizations=None):
+def cultivable_land_for_civilization(
+        civilization_id: str, geography: Optional[Dict[str, Any]] = None,
+        civilizations: Optional[Dict[str, Any]] = None) -> List[RegionLand]:
     """This civilization's own list of RegionLand parcels - the sum over
     the regions named in its `home_regions`, read fresh every call. See
     the module docstring's WHAT A LATER CONQUEST MECHANISM WOULD HAVE TO
@@ -915,9 +935,10 @@ MarginOutcome = collections.namedtuple("MarginOutcome", [
 ], defaults=(None,))
 
 
-def find_margin_of_cultivation(region_lands, quantity_demanded_kg,
-                               kg_per_hectare_at_quality_1=None,
-                               iugerum_hectares=None):
+def find_margin_of_cultivation(
+        region_lands: List[RegionLand], quantity_demanded_kg: float,
+        kg_per_hectare_at_quality_1: Optional[float] = None,
+        iugerum_hectares: Optional[float] = None) -> "MarginOutcome":
     """The Ricardian margin of cultivation over `region_lands`: which
     parcel is the worst one actually needed to meet `quantity_demanded_kg`
     of grain-equivalent output, and what each parcel earns above it.
@@ -998,11 +1019,12 @@ def find_margin_of_cultivation(region_lands, quantity_demanded_kg,
         price_kg_grain_equivalent_per_iugerum=price_per_iugerum)
 
 
-def margin_outcome_for_civilization(civilization_id, geography=None,
-                                    civilizations=None,
-                                    kg_per_hectare_at_quality_1=None,
-                                    iugerum_hectares=None,
-                                    annual_farm_labour_hours_per_capita=None):
+def margin_outcome_for_civilization(
+        civilization_id: str, geography: Optional[Dict[str, Any]] = None,
+        civilizations: Optional[Dict[str, Any]] = None,
+        kg_per_hectare_at_quality_1: Optional[float] = None,
+        iugerum_hectares: Optional[float] = None,
+        annual_farm_labour_hours_per_capita: Optional[float] = None) -> "MarginOutcome":
     """find_margin_of_cultivation's own EXTENSIVE-margin outcome, for one
     civilization's own territory and population, with the INTENSIVE
     margin's own rent (see the LABOUR INTENSITY section above) added on

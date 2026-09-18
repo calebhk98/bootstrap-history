@@ -208,26 +208,46 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   `docs/architecture/SIM_STATE_INVENTORY.md`, never scripted, so nobody can
   re-derive today's true figure from it. Treat 165 as unverifiable; do not
   quote it as current, and do not invent a replacement by arithmetic on it.
-  What IS current and scripted: `Sim.__init__` assigns **44** instance
-  attributes, and `Sim` and its six mixins have **524** methods between
-  them, all talking through `self`. `sim/ARCHITECTURE.md`'s same section
-  gives the script for both numbers, right next to where it quotes them.
-  The 524 supersedes the ~314 this line carried until 2026-09-18; its
-  breakdown is `Sim` 232, EconomyMixin 121, SocietyMixin 61, LabourMixin 50,
-  ProjectsMixin 46, FogMixin 8, GeographyMixin 6 (same script). A full
-  decomposition has been considered and rejected with reasons in
-  `sim/ARCHITECTURE.md`. Do not silently restart it.
+  What IS current and scripted: `Sim.__init__` still assigns **44** instance
+  attributes - unchanged by the 2026-09-18 split below, which touched
+  `step()`, not `__init__` - and `Sim` and its mixins now have **538**
+  methods between them, all talking through `self`.
+  `sim/ARCHITECTURE.md`'s same section gives the script for both numbers,
+  right next to where it quotes them. The 538 supersedes the 524 this line
+  carried until 2026-09-18: `economy.py` (6,570 lines) split into a 598-line
+  `EconomyMixin` composition point over `MarketMixin`, `CreditMixin`,
+  `MiningMixin` and `ProductionMixin` in their own files, and `society.py`
+  (3,802 lines) split the same way into a 45-line `SocietyMixin` over
+  `HazardsMixin`, `StatePressureMixin`, `AdoptionMixin` and `DiffusionMixin`.
+  `Sim`'s own base list in `core.py` did not change - see
+  "the composition-point pattern" in `sim/ARCHITECTURE.md` for why that was
+  the point. Breakdown: `Sim` 246, `EconomyMixin`-and-its-four 121,
+  `SocietyMixin`-and-its-four 61, `LabourMixin` 50, `ProjectsMixin` 46,
+  `FogMixin` 8, `GeographyMixin` 6 (same script, updated to walk into the
+  sub-mixins - the old script, unmodified, now silently undercounts at 366,
+  because it cannot see methods a composition point inherits rather than
+  defines). The whole +14 over 524 is `Sim`'s own: `step()` was a
+  1,760-line method and is now a 42-line dispatcher over 14 `_step_*` phase
+  methods. A full decomposition of the god object itself has been
+  considered and rejected with reasons in `sim/ARCHITECTURE.md`. Do not
+  silently restart it.
 - **Much of the engine is majority comment, and the comments are
   load-bearing.** They are how agents hand each other the reason a thing is
   the way it is. Do not strip them to "clean up". (The old "five of eight"
   figure was stale and, worse, unreproducible - it never recorded whether a
   docstring counted as comment or code. Re-measured 2026-09-18 with BOTH
   rules scripted: it is **one of eight** counting docstrings as
-  documentation - core.py at 54% - and **zero of eight** counting them as
-  code. That supersedes the four-and-one this line carried, and the
-  direction matters: the engine added far more code than prose, so the
-  files got denser rather than better documented. `sim/ARCHITECTURE.md`
-  states both rules and gives the script for each.)
+  documentation - core.py, now 55% (was 54% before the split; core.py grew
+  from 4,577 to 4,929 lines, the growth mostly comments explaining what the
+  `step()` split moved and why) - and **zero of eight** counting them as
+  code. The "eight" is no longer the same eight files: `economy.py` and
+  `society.py` shrank to composition-point shims and dropped out, replaced
+  in the comparison by the largest files that now exist, `economy_market.py`
+  and `cli_interactive.py` among them - see `sim/ARCHITECTURE.md` for the
+  full successor list and why it is the fair comparison. That supersedes
+  the four-and-one this line carried, and the direction matters: the files
+  that stayed large got denser, not better documented.
+  `sim/ARCHITECTURE.md` states both rules and gives the script for each.)
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 

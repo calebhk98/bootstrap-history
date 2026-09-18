@@ -98,6 +98,7 @@ comparison and the reading of where this module's numbers land relative to
 each.
 """
 import collections
+from typing import Optional
 
 from sim.constants import declare
 
@@ -785,7 +786,7 @@ HISTORICAL_MAX_ECONOMIC_LAND_HAUL_KM_HIGH = declare(
 # THE PHYSICS
 # ============================================================================
 
-def maintenance_kcal_per_day(animal):
+def maintenance_kcal_per_day(animal: "Animal") -> float:
     """What `animal` needs to eat to simply exist for a day, doing no
     harnessed work at all - Kleiber's law scaled up from a resting basal
     rate to a real animal standing in a field. See FIELD_METABOLIC_RATE_
@@ -797,7 +798,7 @@ def maintenance_kcal_per_day(animal):
     return basal * FIELD_METABOLIC_RATE_MULTIPLIER_OVER_BMR
 
 
-def sustained_pull_newtons(animal, team_size=1):
+def sustained_pull_newtons(animal: "Animal", team_size: int = 1) -> float:
     """The tractive force a team of `team_size` animals can be relied on to
     generate for a full working day - not a peak or a burst figure. Linear
     in team size, which ignores real losses from animals in a team not
@@ -812,10 +813,11 @@ def sustained_pull_newtons(animal, team_size=1):
             * animal.sustained_pull_fraction_of_bodyweight)
 
 
-def required_tractive_force_newtons(mass_experiencing_resistance_kg,
-                                     rolling_resistance_coefficient,
-                                     mass_experiencing_gradient_kg,
-                                     grade_fraction=0.0):
+def required_tractive_force_newtons(
+        mass_experiencing_resistance_kg: float,
+        rolling_resistance_coefficient: float,
+        mass_experiencing_gradient_kg: float,
+        grade_fraction: float = 0.0) -> float:
     """The force a team has to generate to keep a load moving at a steady
     pace: a rolling-resistance term (coefficient times the weight actually
     pressed onto the wheels - vehicle plus cargo, not the animals, whose
@@ -836,7 +838,9 @@ def required_tractive_force_newtons(mass_experiencing_resistance_kg,
     return rolling_force + gradient_force
 
 
-def max_cargo_mass_kg(animal, team_size, vehicle, surface, grade_fraction=0.0):
+def max_cargo_mass_kg(
+        animal: "Animal", team_size: int, vehicle: "Vehicle", surface: "Surface",
+        grade_fraction: float = 0.0) -> float:
     """How much cargo a team can haul, sustained, on `surface` at
     `grade_fraction` - the balance point where required tractive force
     (rolling resistance on vehicle-plus-cargo, plus gradient on vehicle,
@@ -881,7 +885,7 @@ def max_cargo_mass_kg(animal, team_size, vehicle, surface, grade_fraction=0.0):
     return max(0.0, vehicle_and_cargo_mass_kg - vehicle.self_mass_kg)
 
 
-def max_pack_load_kg(animal, team_size=1):
+def max_pack_load_kg(animal: "Animal", team_size: int = 1) -> float:
     """How much cargo a string of `team_size` pack animals can carry on
     their own backs. No vehicle, no wheels, no rolling-resistance surface
     at all - a pack animal's route is limited by grade (see
@@ -895,7 +899,8 @@ def max_pack_load_kg(animal, team_size=1):
     return team_size * animal.body_mass_kg * animal.pack_load_fraction_of_bodyweight
 
 
-def distance_per_day_km(animal, ground_speed_km_per_hour=None):
+def distance_per_day_km(
+        animal: "Animal", ground_speed_km_per_hour: Optional[float] = None) -> float:
     """How far `animal` covers in one working day, at its own walking pace
     unless a different GROUND speed is supplied - see barge_freight_
     physical_inputs for why a towed boat's ground speed differs from the
@@ -913,14 +918,15 @@ FreightPhysicalInputs = collections.namedtuple(
      "vehicle_wear_fraction_per_tonne_km"])
 
 
-def _feed_kg_from_work_and_maintenance(maintenance_kcal, work_joules):
+def _feed_kg_from_work_and_maintenance(maintenance_kcal: float, work_joules: float) -> float:
     work_kcal_equivalent = work_joules / JOULES_PER_KCAL
     feed_kcal_for_work = work_kcal_equivalent / MUSCULAR_EFFICIENCY_OF_DRAUGHT_WORK
     return (maintenance_kcal + feed_kcal_for_work) / FEED_ENERGY_DENSITY_KCAL_PER_KG
 
 
-def draught_freight_physical_inputs(animal, team_size, vehicle, surface,
-                                     grade_fraction=0.0, load_fraction=1.0):
+def draught_freight_physical_inputs(
+        animal: "Animal", team_size: int, vehicle: "Vehicle", surface: "Surface",
+        grade_fraction: float = 0.0, load_fraction: float = 1.0) -> "FreightPhysicalInputs":
     """Physical inputs per tonne-km for a wheeled vehicle (CART or WAGON)
     hauled by `team_size` of `animal` over `surface` at `grade_fraction`,
     loaded to `load_fraction` of what the team can sustain (see
@@ -969,8 +975,9 @@ def draught_freight_physical_inputs(animal, team_size, vehicle, surface,
             1.0 / (vehicle.service_life_km * cargo_tonnes)))
 
 
-def pack_climb_work_joules_per_day(animal, team_size, cargo_kg, grade_fraction,
-                                    distance_km):
+def pack_climb_work_joules_per_day(
+        animal: "Animal", team_size: int, cargo_kg: float, grade_fraction: float,
+        distance_km: float) -> float:
     """Extra mechanical work `team_size` pack animals do climbing, carrying
     `cargo_kg` total, over `distance_km` at `grade_fraction`. Genuine
     physics (lifting a mass against gravity costs mass * g * height, exact,
@@ -995,8 +1002,9 @@ def pack_climb_work_joules_per_day(animal, team_size, cargo_kg, grade_fraction,
     return total_mass_kg * GRAVITATIONAL_ACCELERATION_M_PER_S2 * vertical_rise_m
 
 
-def pack_freight_physical_inputs(animal, team_size, vehicle=PACK_SADDLE,
-                                  grade_fraction=0.0, load_fraction=1.0):
+def pack_freight_physical_inputs(
+        animal: "Animal", team_size: int, vehicle: "Vehicle" = PACK_SADDLE,
+        grade_fraction: float = 0.0, load_fraction: float = 1.0) -> "FreightPhysicalInputs":
     """Physical inputs per tonne-km for a string of `team_size` pack
     animals, loaded to `load_fraction` of max_pack_load_kg, over a route at
     `grade_fraction`. No `surface` parameter at all - see max_pack_load_kg
@@ -1036,9 +1044,10 @@ def pack_freight_physical_inputs(animal, team_size, vehicle=PACK_SADDLE,
             team_size / (vehicle.service_life_km * cargo_tonnes)))
 
 
-def barge_freight_physical_inputs(animal, team_size, vehicle=BARGE,
-                                   surface=CALM_WATER, current_km_per_hour=0.0,
-                                   load_fraction=1.0):
+def barge_freight_physical_inputs(
+        animal: "Animal", team_size: int, vehicle: "Vehicle" = BARGE,
+        surface: "Surface" = CALM_WATER, current_km_per_hour: float = 0.0,
+        load_fraction: float = 1.0) -> "FreightPhysicalInputs":
     """Physical inputs per tonne-km for a barge towed by `team_size` of
     `animal` walking a towpath at their own walking pace, on water offering
     `surface`'s resistance coefficient (CALM_WATER by default - see
@@ -1115,7 +1124,8 @@ def barge_freight_physical_inputs(animal, team_size, vehicle=BARGE,
 
 
 def maximum_one_way_range_before_self_defeating_km(
-        animal, team_size, vehicle, surface, grade_fraction=0.0):
+        animal: "Animal", team_size: int, vehicle: "Vehicle", surface: "Surface",
+        grade_fraction: float = 0.0) -> float:
     """The one-way distance at which a fully-laden team, carrying its OWN
     feed for the whole trip instead of finding fodder along the way, has
     exactly zero cargo capacity left over - the physical origin of pre-

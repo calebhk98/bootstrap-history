@@ -151,6 +151,7 @@ to discover:
       documented Roman ration.
 """
 import collections
+from typing import Optional
 
 from sim.constants import declare
 
@@ -247,7 +248,7 @@ DESERT_HEAT_WATER_MULTIPLIER = declare(
         "range from a well or river.")
 
 
-def soldier_campaign_energy_requirement_kcal_per_day():
+def soldier_campaign_energy_requirement_kcal_per_day() -> float:
     """A soldier's energy need at campaign exertion: the sedentary baseline
     scaled by the marching activity-level multiplier. Not a `declare()` of
     its own - arithmetic on two already-declared numbers, the same
@@ -257,7 +258,7 @@ def soldier_campaign_energy_requirement_kcal_per_day():
             * MARCHING_PHYSICAL_ACTIVITY_LEVEL_MULTIPLIER)
 
 
-def ration_kg_grain_per_day():
+def ration_kg_grain_per_day() -> float:
     """A soldier's daily food need, in kilograms of grain, at campaign
     exertion.
 
@@ -292,7 +293,7 @@ def ration_kg_grain_per_day():
     return soldier_campaign_energy_requirement_kcal_per_day() / GRAIN_ENERGY_KCAL_PER_KG
 
 
-def water_requirement_liters_per_day(desert=False):
+def water_requirement_liters_per_day(desert: bool = False) -> float:
     """A soldier's daily water need. `desert=True` applies the desert-heat
     multiplier; the temperate figure otherwise. See the module docstring's
     THE POINT paragraph for why this function, not the grain ration, is the
@@ -384,19 +385,19 @@ ARMY_MARCH_RATE_KM_PER_DAY = declare(
         "its resupply column alike.")
 
 
-def pack_animal_daily_fodder_kg():
+def pack_animal_daily_fodder_kg() -> float:
     """One pack animal's own daily fodder claim, in kilograms. Arithmetic
     on two already-declared numbers, not its own declaration."""
     return PACK_ANIMAL_LIVE_MASS_KG * PACK_ANIMAL_DAILY_FORAGE_FRACTION_OF_BODY_MASS
 
 
-def pack_animal_load_capacity_kg():
+def pack_animal_load_capacity_kg() -> float:
     """One pack animal's total carrying capacity, in kilograms. Arithmetic,
     not its own declaration."""
     return PACK_ANIMAL_LIVE_MASS_KG * PACK_ANIMAL_LOAD_CAPACITY_FRACTION_OF_BODY_MASS
 
 
-def pack_animal_max_one_way_days(delivered_fraction=0.0):
+def pack_animal_max_one_way_days(delivered_fraction: float = 0.0) -> float:
     """The maximum one-way travel time, in days, before a pack animal that
     carries its own fodder for the whole round trip delivers no more than
     `delivered_fraction` of its rated load capacity as actual cargo.
@@ -442,7 +443,9 @@ def pack_animal_max_one_way_days(delivered_fraction=0.0):
     return capacity * (1.0 - delivered_fraction) / (2.0 * fodder)
 
 
-def pack_animal_max_one_way_range_km(delivered_fraction=0.0, march_rate_km_per_day=None):
+def pack_animal_max_one_way_range_km(
+        delivered_fraction: float = 0.0,
+        march_rate_km_per_day: Optional[float] = None) -> float:
     """`pack_animal_max_one_way_days()` converted to kilometres at
     `march_rate_km_per_day` (default ARMY_MARCH_RATE_KM_PER_DAY)."""
     march_rate = (ARMY_MARCH_RATE_KM_PER_DAY if march_rate_km_per_day is None
@@ -450,7 +453,9 @@ def pack_animal_max_one_way_range_km(delivered_fraction=0.0, march_rate_km_per_d
     return march_rate * pack_animal_max_one_way_days(delivered_fraction)
 
 
-def pack_animal_net_deliverable_cargo_kg(one_way_distance_km, march_rate_km_per_day=None):
+def pack_animal_net_deliverable_cargo_kg(
+        one_way_distance_km: float,
+        march_rate_km_per_day: Optional[float] = None) -> float:
     """How much cargo, net of the animal's own round-trip fodder, a single
     pack animal actually delivers over a given one-way distance. Floored at
     zero: beyond pack_animal_max_one_way_range_km(0.0), the animal cannot
@@ -469,8 +474,9 @@ def pack_animal_net_deliverable_cargo_kg(one_way_distance_km, march_rate_km_per_
     return max(0.0, capacity - 2.0 * days_one_way * fodder)
 
 
-def pack_animals_required_for_daily_delivery(daily_requirement_kg, one_way_distance_km,
-                                              march_rate_km_per_day=None):
+def pack_animals_required_for_daily_delivery(
+        daily_requirement_kg: float, one_way_distance_km: float,
+        march_rate_km_per_day: Optional[float] = None) -> float:
     """How many pack animals a column needs, in a continuous rotation, to
     deliver `daily_requirement_kg` of net cargo every day to a force
     stationed `one_way_distance_km` from base.
@@ -529,7 +535,7 @@ FORAGING_CORRIDOR_HALF_WIDTH_TO_MARCH_RATE_RATIO = declare(
         "day instead of many.")
 
 
-def foraging_corridor_width_km(march_rate_km_per_day=None):
+def foraging_corridor_width_km(march_rate_km_per_day: Optional[float] = None) -> float:
     """The total width of ground (both sides of the line of march) an
     army's foragers can reach and return from within one day - see
     FORAGING_CORRIDOR_HALF_WIDTH_TO_MARCH_RATE_RATIO's declaration for the
@@ -539,9 +545,11 @@ def foraging_corridor_width_km(march_rate_km_per_day=None):
     return 2.0 * FORAGING_CORRIDOR_HALF_WIDTH_TO_MARCH_RATE_RATIO * march_rate
 
 
-def sustainable_foraging_army_size(surplus_kg_per_square_km, march_rate_km_per_day=None,
-                                    corridor_width_km=None,
-                                    ration_kg_per_soldier_per_day=None):
+def sustainable_foraging_army_size(
+        surplus_kg_per_square_km: float,
+        march_rate_km_per_day: Optional[float] = None,
+        corridor_width_km: Optional[float] = None,
+        ration_kg_per_soldier_per_day: Optional[float] = None) -> float:
     """How many soldiers a foraging army (no baggage train for food at all)
     can sustain indefinitely, given the agricultural surplus of the land it
     is crossing.
@@ -634,7 +642,7 @@ ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION = declare(
         "wrong default.")
 
 
-def annual_iron_replacement_kg_per_soldier():
+def annual_iron_replacement_kg_per_soldier() -> float:
     """The continuing annual iron claim one equipped soldier represents, on
     top of the one-off IRON_KG_PER_EQUIPPED_SOLDIER outfitting cost.
     Arithmetic on two declared numbers, not its own declaration."""
@@ -772,21 +780,22 @@ MODERN_SERVICE_RIFLE = Firearm(
 # does not yet have a use for.
 
 
-def ammunition_mass_kg_per_soldier_per_engagement(firearm):
+def ammunition_mass_kg_per_soldier_per_engagement(firearm: "Firearm") -> float:
     """One soldier's ammunition mass burden for one engagement, in
     kilograms - the same MASS the baggage-train functions above have to
     move, whichever Firearm is passed in."""
     return firearm.consumable_mass_g_per_shot * firearm.rounds_per_engagement / 1000.0
 
 
-def maintenance_items_per_soldier_per_engagement(firearm):
+def maintenance_items_per_soldier_per_engagement(firearm: "Firearm") -> float:
     """How many of the firearm's per-shot maintenance item (flints, for the
     musket; none, for the modern cartridge rifle) one engagement consumes
     per soldier."""
     return firearm.maintenance_items_per_shot * firearm.rounds_per_engagement
 
 
-def annual_iron_and_ammunition_burden_kg_per_soldier(firearm=None, engagements_per_year=0.0):
+def annual_iron_and_ammunition_burden_kg_per_soldier(
+        firearm: Optional["Firearm"] = None, engagements_per_year: float = 0.0) -> float:
     """One equipped soldier's total continuing ANNUAL physical claim, in
     kilograms: the iron upkeep every equipped soldier represents
     (annual_iron_replacement_kg_per_soldier(), always present) plus, if
@@ -827,8 +836,9 @@ DailySupplyRequirement = collections.namedtuple(
     ["army_size", "grain_kg", "water_kg", "ammunition_kg", "total_kg"])
 
 
-def daily_supply_requirement_kg(army_size, desert=False, firearm=None,
-                                 engagements_per_day=0.0):
+def daily_supply_requirement_kg(
+        army_size: float, desert: bool = False, firearm: Optional["Firearm"] = None,
+        engagements_per_day: float = 0.0) -> "DailySupplyRequirement":
     """The total mass an army of `army_size` soldiers needs delivered (or
     foraged) in one day: grain at `ration_kg_grain_per_day()`, water at
     `water_requirement_liters_per_day()` (1 litre of water masses 1 kg -

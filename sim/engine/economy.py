@@ -22,7 +22,10 @@ from constants import declare
 # from here, so this needs no sys.path setup of its own.
 from world import transport as freight_physics
 
-from .economy_market import MarketMixin
+from .economy_goods import GoodsMixin
+from .economy_materials import MaterialSupplyMixin
+from .economy_electricity import ElectricityMixin
+from .economy_freight import FreightMixin
 from .economy_mining import MiningMixin
 from .economy_credit import CreditMixin
 from .economy_production import ProductionMixin
@@ -253,36 +256,66 @@ ECONOMY_INDEX_PER_LOCKED_NODE = declare(
         "all. Both figures are tuned, not measured.")
 
 
-class EconomyMixin(MarketMixin, MiningMixin, CreditMixin, ProductionMixin):
+class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMixin,
+                    MiningMixin, CreditMixin, ProductionMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     This file used to hold all ~6,570 lines and 121 methods of
     EconomyMixin directly - the largest file in the repo, and one
     several agents could not edit at once. The methods were grouped by
-    subject (goods/materials/electricity/freight pricing in
-    economy_market.py, ore and land in economy_mining.py, debt and
-    affordability in economy_credit.py, revenue and workshops in
-    economy_production.py - see each module's own docstring for the
-    detailed grouping and evidence) and moved verbatim into sibling
-    modules as their own mixin classes, which EconomyMixin composes
-    back into one name so core.py's `class Sim(EconomyMixin, ...)`
-    does not have to change.
+    subject (ore and land in economy_mining.py, debt and affordability
+    in economy_credit.py, revenue and workshops in economy_production.py
+    - see each module's own docstring for the detailed grouping and
+    evidence) and moved verbatim into sibling modules as their own mixin
+    classes, which EconomyMixin composes back into one name so core.py's
+    `class Sim(EconomyMixin, ...)` does not have to change.
+
+    A first pass grouped the pricing side of that split - goods,
+    materials, electricity and freight - into one economy_market.py
+    file. At 3,171 lines and 55 methods that file was itself too large
+    for the same reason economy.py had been, so it was split again, by
+    the same subject lines its own banner comments already used:
+    goods-producing concerns (economy_goods.py, GoodsMixin), raw
+    material supply (economy_materials.py, MaterialSupplyMixin),
+    electricity as a physical quantity (economy_electricity.py,
+    ElectricityMixin) and freight (economy_freight.py, FreightMixin).
+    One deviation from that banner order, made on the call graph rather
+    than on where the code happened to sit: _cached_material_demand()
+    and _cached_demand_by_tag() were textually the last two methods
+    before the freight banner, reading at a glance like part of
+    electricity, but every real caller of either is in
+    economy_freight.py, so that is where they moved - see that file's
+    own docstring for the fuller account.
+
+    CLASS-LEVEL CACHES, RENAMED DELIBERATELY. Three methods in
+    economy_materials.py and one in economy_freight.py cache their
+    answer on their own bare class object rather than on self, because
+    what they cache (a CommodityLedger, a material-to-commodity-id map,
+    prices.json's own figures, and the ox-cart-and-dirt-track physical
+    inputs freight pricing reuses) does not differ between one Sim
+    instance and the next in the same process. That identifier is
+    exactly what stopped resolving, invisibly to import and to
+    `validate`, the last time these methods moved and the class-object
+    reference at each cache site was not updated to match - see each
+    file's own CLASS-LEVEL CACHE note for which methods, which cache
+    names, and why each one now points at the class actually holding
+    it.
 
     What is defined directly on EconomyMixin, below, is what did not
-    fit cleanly into any one of those four subjects: standing/
-    reputation (standing_floor/rep_factor/economy_index), the generic
-    cost of a project (cost_money_factor/opposition_factor/
-    project_cost), the `done`/`operating` set-identity and ordering
-    plumbing every sub-mixin reads through self
+    fit cleanly into any one of those subjects: standing/reputation
+    (standing_floor/rep_factor/economy_index), the generic cost of a
+    project (cost_money_factor/opposition_factor/project_cost), the
+    `done`/`operating` set-identity and ordering plumbing every
+    sub-mixin reads through self
     (done_in_order/_done_changed/_operating_changed/_reset_operating,
     alongside _InvalidatingSet above, which the last two use), and a
     handful of constants (PRACTICE_SHARE, DEFAULT_ANNUAL_WAGE_FALLBACK,
     MINE_CAPEX_PER_T_YR and its per-material entries, FOREST_COST_PER_HA)
-    that are genuinely read from more than one of the four sub-mixins,
-    so moving any one of them into a single sub-mixin would leave the
-    others reaching across module boundaries for a constant that isn't
-    theirs - they stay here, on the composition point all of them
-    inherit from, instead.
+    that are genuinely read from more than one sub-mixin, so moving any
+    one of them into a single sub-mixin would leave the others reaching
+    across module boundaries for a constant that isn't theirs - they
+    stay here, on the composition point all of them inherit from,
+    instead.
     """
 
     def standing_floor(self):

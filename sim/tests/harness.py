@@ -180,8 +180,14 @@ def run_it(s, *keys):
 SLOW = "--slow" in sys.argv or os.environ.get("ROME_SLOW_TESTS")
 
 
-def slow_check(name, fn, detail_fn=None):
-    """Run an expensive check only when asked; otherwise say it was skipped."""
+def slow_check(name, fn):
+    """Run an expensive check only when asked; otherwise say it was skipped.
+
+    `fn` returns `(ok, detail)`, so the detail comes back with the result and
+    is only built when the check actually runs. This used to take a third
+    `detail_fn` argument that nothing read: no caller ever passed one, and a
+    caller who did would have watched their detail vanish. Found by vulture.
+    """
     if not SLOW:
         SKIPPED.append(name)
         return

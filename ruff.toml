@@ -1,0 +1,43 @@
+# Static checks for this repository, chosen for what they actually caught here
+# rather than for tidiness.
+#
+# THE RULE THAT PAYS FOR THE REST IS F821, undefined-name. When
+# sim/engine/economy.py was split, six call sites went on using the bare class
+# object `EconomyMixin` as a process-wide cache slot, from a module that no
+# longer had that name in scope. `python3 -c "import simulator"` succeeded,
+# `simulator.py validate` passed, every module compiled, and the failure
+# surfaced only when the first protocol command executed that line. F821 finds
+# it by reading the file. See sim/tests/test_static_checks.py, which runs it as
+# part of the suite so a future split cannot reintroduce that shape.
+#
+# Line length is deliberately not enforced. This codebase is roughly a third
+# to a half prose by line, the comments are how agents hand each other the
+# reason a thing is the way it is, and a formatter that reflows them would do
+# more damage than the inconsistency costs.
+
+target-version = "py311"
+line-length = 100
+
+exclude = [".git", "__pycache__"]
+
+[lint]
+select = [
+    "F",      # pyflakes: undefined names, unused imports, redefinitions
+]
+ignore = [
+    # `from harness import *` is the established idiom in sim/tests/, where a
+    # topic module is meant to open with the whole harness in scope. Until
+    # that changes these two rules report 4,318 findings that are all one
+    # decision, and they drown everything worth reading.
+    "F403",   # star import used
+    "F405",   # name may be undefined, or defined from a star import
+]
+
+[lint.per-file-ignores]
+# sim/simulator.py is the documented front door. Its imports exist to re-export
+# names so that `import simulator` keeps giving callers what it always gave
+# them, so an "unused" import there is the file doing its job.
+"sim/simulator.py" = ["F401"]
+# sim/engine/protocol.py is a re-export shim for the engine/proto/ package
+# split. All 178 of its imports are its public surface.
+"sim/engine/protocol.py" = ["F401"]

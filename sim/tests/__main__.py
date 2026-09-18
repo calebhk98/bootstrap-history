@@ -299,6 +299,7 @@ TOPICS = [
     # this topic checks that it does so from a checkout of any name,
     # in any directory. It is last because it re-runs one cheap topic
     # in a child process.
+    "static_checks",
     "suite_portability",
 ]
 
