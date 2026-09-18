@@ -97,7 +97,7 @@ added; count it yourself rather than trust a number here:
 ```bash
 python3 -c "import json,collections
 nodes = json.load(open('data/tech_tree.json'))['nodes']
-prefix = collections.Counter(n.split('_')[0] if n.startswith(('cap_','mat_')) else 'tech' for n in nodes)
+prefix = collections.Counter(n['id'].split('_')[0] if n['id'].startswith(('cap_','mat_')) else 'tech' for n in nodes)
 print('cap_*:', prefix['cap'], ' mat_*:', prefix['mat'], ' everything else:', prefix['tech'])"
 ```
 
@@ -118,29 +118,42 @@ The right test is not "what year does the simulation reach a transistor". It is
 actually build it?"** That is what `treetool.py judge` asks, node by node.
 
 ```bash
-python3 sim/treetool.py judge              # score all 2,833, summary
-python3 sim/treetool.py judge --full       # every defect, node by node
-python3 sim/treetool.py judge --id zinc_metal   # one report card
-python3 sim/treetool.py judge --grade C    # everything at C or worse
+# judge, judge --full and judge --grade all write data/judgement.json; add
+# --dry-run to any of them if you only want to look. judge --id does not
+# write anything - it reports on one node and stops.
+python3 sim/treetool.py judge --dry-run              # score every node, summary
+python3 sim/treetool.py judge --dry-run --full       # every defect, node by node
+python3 sim/treetool.py judge --id zinc_metal        # one report card
+python3 sim/treetool.py judge --dry-run --grade C    # everything at C or worse
 ```
 
-Defect classes it names: `CAP-NONE` and `CAP-HEAT/TOL/VAC/PURITY/POWER` (needs a
-capability rung it does not declare), `SHALLOW` and `THIN-CHAIN` (narrow at the
-top AND shallow all the way down), `BLOCKED` (depends on something
-unobtainable), `COST-HIGH` / `HOURS-ZERO` (out of proportion for its category or graph
-position), `NO-FLOOR` (long adoption with no diffusion time), `NOTE-THIN`,
-`NO-RECIPE`, `SOCIAL-FLAT`.
+Defect classes it names: `CAP-NONE` and `CAP-HEAT`/`CAP-TOL`/`CAP-VAC`/
+`CAP-PURITY`/`CAP-POWER` (needs a capability rung it does not declare),
+`SHALLOW` (narrow at the top and shallow all the way down), `BLOCKED`
+(depends on something marked unobtainable - currently dormant, since nothing
+in the tree is marked that way any more), `COST-HIGH` / `HOURS-HIGH` /
+`HOURS-ZERO` (out of proportion for its category or graph position),
+`NO-FLOOR` (long adoption with no diffusion time), `NOTE-THIN`, `NO-CONF`,
+`NO-RECIPE`, `SOCIAL-FLAT`. The full, current list is the `defects.append(...)`
+calls in `sim/treetool.py`'s `judge_node`; treat the list above as a reading
+aid, not the authority.
 
-**Read the score with suspicion.** `treetool.py repair` then fixes mechanically
-what it can, and the mean score rises from 80.8 to 98.0. A large part of that is
-my own checker being satisfied by my own repair, which is exactly the trap this
-project is supposed to avoid. Every edge the repair inferred is stamped into the
-node's `_internal` field as `[AUDIT: capability prerequisite(s) ... were
-inferred ... Treat them as a floor, not a specification.]`, so you can find and
-discount all 398 of them. `_internal` is read by nothing in `sim/engine`,
-which is the point: these markers once lived in `note`, the field a player
-reads, and a first-time tester found one in the win condition itself. The trustworthy check is `data/review/INDEPENDENT_AUDIT.md`, where a separate
-reviewer went through a random sample of 70 nodes without seeing my heuristics.
+**Read the score with suspicion.** As of this writing `judge --dry-run`
+reports a mean of 96.0/100 across all nodes (2,294 A, 473 B, 93 C, 4 D, 0 F -
+rerun the command above for the current figures). `treetool.py repair`
+(`--dry-run` first) does not guess at capability prerequisites: it leaves
+gaps visible for a human to review rather than inferring them, because an
+earlier version of this same pass inferred capability floors and an
+independent reviewer who checked a sample of its output by hand found every
+one of them wrong. That reviewer's findings are in
+`data/review/INDEPENDENT_AUDIT.md`, a random sample of 70 nodes checked
+without seeing the tree's own heuristics, and it is the more trustworthy
+read of tree quality than the score above. 398 nodes still carry a
+`[AUDIT: capability prerequisite(s) ... were inferred ... Treat them as a
+floor, not a specification.]` marker in their `_internal` field from before
+that inference was turned off; `_internal` is for auditors, not players -
+`note` is what a player reads, and these markers once lived there instead,
+which is how a first-time tester found one inside the win condition itself.
 
 ## Simulator changes
 
@@ -162,14 +175,21 @@ matter most:
 
 | Field | Meaning |
 |---|---|
-| `ph` | **Your own hours.** The scarce resource. You have about 72,000, ever. |
+| `ph` | **Your own hours.** The scarce resource. Total available in one lifetime, printed by `python3 sim/simulator.py path <any node>` as "Founder-hours available in one lifetime" (currently 56,000). |
 | `lab` | Hired hours by trade, priced from `prices.json` |
-| `yrs` | **Calendar floor.** Curing, growing, maturing, or a generation of economic diffusion. Money cannot buy this down, and this is what sets the 142-year critical path. |
+| `yrs` | **Calendar floor.** Curing, growing, maturing, or a generation of economic diffusion. Money cannot buy this down; `python3 sim/simulator.py path junction_transistor` shows what floor a given goal adds up to (currently 142.2 years for the transistor). |
 | `risk` | Probability an attempt fails outright and must be retried at 40% of cost |
 | `sus` | Suspicion delta. Rome executes magicians and your chemistry looks like magic. |
 | `gov` | State interest, -3 (will suppress) to +3 (will fund and demand) |
 | `sch` / `art` | Trained people required. This is what the greedy strategy runs out of. |
 | `conf` | A well attested, B probable, C the author's estimate |
+
+`sus` and `gov` are contested. Both are present on all nodes and are still
+read (see `sim/engine/cli.py`'s `why` display), but `data/branches/
+CONTRACT_V2.md` §4 is the place to check before relying on them further -
+it carries the authors' current view of where these two fields are headed,
+and that view is more likely to move than this table is to be updated in
+step with it.
 
 ## Confidence, stated plainly
 
