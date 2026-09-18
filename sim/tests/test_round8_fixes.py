@@ -307,31 +307,39 @@ _before_price = s_db.project_cost("horse_collar")
 while s_db.year < 210:
     s_db.step()
 check("debasement does not move a real price quote (the model is real terms)",
-      # TOLERANCE RESHAPED BY WIRING MILESTONE 4, AND MEASURED RATHER THAN
-      # GUESSED. This window (100-210 AD, events=True) runs the Antonine
-      # plague's staff_loss hazard through several annual waves, and
-      # self.population - the age-cohort model that replaced the old scalar
-      # pop_deficit - recovers between waves only through ordinary births
-      # and deaths, with no separate exponential decay clock. Two waves a
-      # few years apart therefore compound onto a slightly larger surviving
-      # shortfall than the old arithmetic left, wage_index follows, and
-      # horse_collar's residual labour sensitivity carries a little of that
-      # into its quote.
+      # TOLERANCE RESHAPED TWICE NOW BY WIRING MILESTONE 4, EACH TIME
+      # MEASURED RATHER THAN GUESSED - see docs/architecture/
+      # WIRING_MILESTONE_4.md. This window (100-210 AD, events=True) runs
+      # the Antonine plague's staff_loss hazard through several annual
+      # waves, and self.population (the age-cohort model) recovers between
+      # waves only through ordinary births and deaths, with no separate
+      # exponential decay clock, so wage_index carries a little of that
+      # into horse_collar's quote through its residual labour sensitivity.
       #
-      # Measured, and identical on three consecutive runs (the simulation is
-      # deterministic): 709.41000062578 -> 709.4100052577509, which is
-      # 4.63e-06 absolute and 6.53e-09 RELATIVE.
+      # FIRST RESHAPE (demography wired in): 709.41000062578 ->
+      # 709.4100052577509, 6.53e-09 relative. Tolerance set to 1e-7 (15x
+      # headroom).
       #
-      # RELATIVE, not absolute. The old 1e-6 was an absolute bound on a
-      # ~709-denarius quote, so its real strictness was 1.4e-09 relative and
-      # would have drifted silently the moment horse_collar's cost changed
-      # magnitude for any unrelated reason. 1e-7 relative keeps 15x headroom
-      # over the measured residual and is still roughly six orders of
-      # magnitude below a real debasement-scale move - Rome's own
-      # real_erosion is 0.06, which on this quote would be ~42 denarii. The
-      # check's actual point is covered at full strength by the two checks
-      # below, which read the log's own words.
-      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 1e-7,
+      # SECOND RESHAPE (agriculture wired in): self.population now also
+      # gets a REAL, weather-driven food supply every year
+      # (Sim._demographic_recovery, agriculture.Storage.step) instead of a
+      # stand-in that always closed exactly at nutrition_ratio == 1.0 -
+      # every year, not only a hazard year, now moves population.total by a
+      # small amount on its own, and that is expected to widen this exact
+      # residual (see WIRING_MILESTONE_4.md SS5's own prediction that
+      # divergence would no longer be confined to hazard years). Measured,
+      # deterministic across repeated runs: 709.41000062578 ->
+      # 709.4101708277744, 2.40e-07 relative - about 37x the first
+      # reshape's residual, still nothing a player could see as a price
+      # move. Tolerance raised to 3e-6, keeping ~12x headroom over this
+      # measurement and still four orders of magnitude below a real
+      # debasement-scale move (Rome's own real_erosion is 0.06, ~42
+      # denarii on this quote). RELATIVE, not absolute, for the same
+      # reason as before: an absolute bound's real strictness silently
+      # changes if horse_collar's own cost magnitude ever does. The check's
+      # actual point is covered at full strength by the two checks below,
+      # which read the log's own words.
+      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 3e-6,
       (_before_price, s_db.project_cost("horse_collar")))
 _dbm = [message for _, message in s_db.log if "coin is worth" in message]
 check("...and the announcement says so, rather than leaving it to be found",
