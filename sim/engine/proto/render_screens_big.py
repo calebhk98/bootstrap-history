@@ -27,13 +27,16 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 # this file either - the string "trade_family" that appears below is a dict
 # key, not this name.
 
-def render_state(out):
-    """A position, not a dict: year, money, what is running and what each
-    thing is waiting on, who you employ, what is about to happen to you.
+# render_state is split into one function per screen section - the header,
+# the money block, the founder/hours block, the running-projects block, the
+# stuck block, the concerns block, the employ block, the standing block, the
+# at-risk block, the goal block, the completed/events head (which prepends
+# rather than appends, so it takes the lines built so far and returns the
+# merged list), and the trailing "more" block - moved verbatim, in the same
+# order they always ran in, with render_state itself left as the assembler
+# that decides nothing the pieces did not already decide.
 
-    Works on both the short state() and state(full=true), and on step()'s
-    reply, which is this same shape with completed/events stitched on front.
-    """
+def _state_header(out):
     lines = []
     year = out.get("year")
     lines.append("=" * 60)
@@ -48,7 +51,11 @@ def render_state(out):
     if out.get("ended"):
         lines.append("")
         lines.append("*** THE RUN HAS ENDED: %s ***" % out.get("end_reason"))
+    return lines
 
+
+def _state_money(out):
+    lines = []
     lines.append("")
     net_after = out.get("net_after_project_spend")
     net_plain = out.get("net_per_year")
@@ -83,7 +90,11 @@ def render_state(out):
     if out.get("in_bondage_for_debt"):
         lines.append("IN DEBT BONDAGE: %s years left owing %s den"
                  % (_fmt_num(out["in_bondage_for_debt"]), _fmt_num(out.get("debt_still_to_work_off"))))
+    return lines
 
+
+def _state_founder(out):
+    lines = []
     # WHETHER YOU AGE IS A FACT ABOUT THE GAME YOU ARE PLAYING, and the human
     # rendering did not carry it: a mortal run and an immortal one looked
     # identical here, though the menu asks you to choose between them and one
@@ -119,7 +130,11 @@ def render_state(out):
         lines.append(_wrap("  " + out["worth_knowing_early"]))
     if out.get("free_hours_going_unused"):
         lines.append(_wrap("  " + out["free_hours_going_unused"]))
+    return lines
 
+
+def _state_running(out):
+    lines = []
     active = out.get("active") or {}
     lines.append("")
     lines.append("RUNNING (%d):" % len(active) if active else "RUNNING: nothing")
@@ -152,7 +167,11 @@ def render_state(out):
                         "" if progress["will_be_abandoned_in_years"] == 1 else "S",
                         "an" if _tr[0][0] in "aeiou" else "a",
                         " or ".join(_tr), node_id))
+    return lines
 
+
+def _state_stuck(out):
+    lines = []
     stuck = out.get("stuck")
     if stuck:
         lines.append("")
@@ -160,7 +179,11 @@ def render_state(out):
         lines.append(_wrap(stuck["this_is_not_the_end_of_the_run"], indent="   "))
         for suggestion in stuck["what_would_change_it"]:
             lines.append(_wrap("- " + suggestion, indent="   "))
+    return lines
 
+
+def _state_concerns(out):
+    lines = []
     idle_v = out.get("you_know_how_to_run_but_have_not_opened")
     if out.get("concerns_you_run") or idle_v:
         lines.append("")
@@ -171,7 +194,11 @@ def render_state(out):
             lines.append("  those shut concerns would clear %s den/yr between them, "
                      "and earn nothing while they are shut"
                      % _fmt_num(out["shut_concerns_would_earn_a_year"]))
+    return lines
 
+
+def _state_employ(out):
+    lines = []
     employees = out.get("employees") or {}
     lines.append("")
     _house = (out.get("slaves") or 0) + (out.get("freedmen") or 0)
@@ -192,7 +219,11 @@ def render_state(out):
         lines.append(_wrap(out["what_you_can_field"], indent="  "))
     if out.get("staff_are_fractional_because"):
         lines.append(_wrap(out["staff_are_fractional_because"], indent="  "))
+    return lines
 
+
+def _state_standing(out):
+    lines = []
     lines.append("")
     # PROTECTION BELONGS HERE. It is what bribes, patrons and standing actually
     # buy, and what decides whether a strange result out of your workshop is
@@ -241,7 +272,11 @@ def render_state(out):
     lines.append("  technologies: %s built by you, %s granted for free (%s total)"
              % (_fmt_num(out.get("done_earned")), _fmt_num(out.get("done_granted")),
                 _fmt_num(out.get("done_count"))))
+    return lines
 
+
+def _state_at_risk(out):
+    lines = []
     at_risk = out.get("at_risk")
     knowledge_risk = out.get("knowledge_risk")
     lines.append("")
@@ -264,7 +299,11 @@ def render_state(out):
             yrs = hazard.get("years") or [0, 0]
             tag = "IN PROGRESS" if hazard.get("in_progress") else "%s-%s" % (yrs[0], yrs[-1])
             lines.append("  [%s] %s" % (tag, hazard.get("name")))
+    return lines
 
+
+def _state_goal(out):
+    lines = []
     if out.get("fog_of_war"):
         lines.append("")
         lines.append("Fog of war is on: you see the next step, never the road. "
@@ -283,13 +322,21 @@ def render_state(out):
         lines.append("")
         lines.append("Goal: %s%s" % (out["goal"],
                  ("  -- REACHED in %s AD" % out.get("goal_year")) if out.get("goal_reached") else ""))
+    return lines
 
+
+def _state_completed_head_lines(out):
+    """The loudest lines in the reply, built but not yet merged in front of
+    the rest of the screen - split out of _state_completed_head so that
+    function's own complexity is just the merge, not the four kinds of
+    thing that can appear here.
+    """
     completed = out.get("completed")
     events = out.get("events")
     lost = out.get("lost")
     fdts = out.get("the_founder_died_this_step")
+    head = []
     if completed or events or lost or fdts:
-        head = []
         # THE LOUDEST LINE IN THE REPLY, not one more EVENT line among sixty.
         # See _founder_death_info and the step handler's own comment on why
         # a multi-year step stops here rather than running on past it.
@@ -320,14 +367,50 @@ def render_state(out):
             head.append("  DURING %s: %s" % (event.get("year"), event.get("message")))
         if out.get("stopped_early"):
             head.append("  " + out["stopped_early"])
-        lines = head + [""] + lines if head else lines
+    return head
 
+
+def _state_completed_head(out, lines):
+    """Not a section to append - the loudest lines in the reply, which go
+    in FRONT of everything else. Takes the lines already built by the
+    other sections and returns the merged list, exactly as the original
+    inline `lines = head + [""] + lines if head else lines` did.
+    """
+    head = _state_completed_head_lines(out)
+    lines = head + [""] + lines if head else lines
+    return lines
+
+
+def _state_also(out):
+    lines = []
     also = out.get("also_available")
     if also:
         lines.append("")
         lines.append("more: " + "; ".join(also))
-    return "\n".join(lines)
+    return lines
 
+
+def render_state(out):
+    """A position, not a dict: year, money, what is running and what each
+    thing is waiting on, who you employ, what is about to happen to you.
+
+    Works on both the short state() and state(full=true), and on step()'s
+    reply, which is this same shape with completed/events stitched on front.
+    """
+    lines = []
+    lines += _state_header(out)
+    lines += _state_money(out)
+    lines += _state_founder(out)
+    lines += _state_running(out)
+    lines += _state_stuck(out)
+    lines += _state_concerns(out)
+    lines += _state_employ(out)
+    lines += _state_standing(out)
+    lines += _state_at_risk(out)
+    lines += _state_goal(out)
+    lines = _state_completed_head(out, lines)
+    lines += _state_also(out)
+    return "\n".join(lines)
 
 # The short forms of the bands, so the column stays a column.
 
@@ -389,9 +472,16 @@ def _available_row(e, w=None, purse=None):
         staff, rests)
 
 
-def render_available(out):
-    """A scannable table: every column aligned, sorted cheapest-first so the
-    same eye scan works whether you are looking for a bargain or a subject.
+# render_available is split the same way: the header/width setup, then one
+# function per mutually exclusive content branch (the subject digest, the
+# empty-search message, the full list) - render_available itself keeps the
+# original if/elif/elif choosing which one to call, so exactly one of them
+# ever runs, exactly as before - then the legend and the trailing notes.
+
+def _available_top(out):
+    """The count/showing/sorted-by lines, the purse, and the column header
+    string every branch below needs - computed once, the same way it was
+    computed once at the top of the original function.
     """
     lines = ["AVAILABLE: %s startable now" % _fmt_num(out.get("count"))]
     if out.get("showing"):
@@ -409,46 +499,62 @@ def render_available(out):
               % (_width, "ID", "NAME", "COST", "HOURS", "YEARS", "RISK", "EARNS/YR",
                  "UPKEEP", "STAFF", "RESTS"))
 
-    if "subjects" in out:
-        lines.append("%-24s %8s %10s %10s %10s" % ("SUBJECT", "THINGS", "CHEAPEST", "DEAREST", "AFFORD"))
-        for summary_row in out["subjects"]:
-            lines.append("%-24s %8s %10s %10s %10s" % (
-                summary_row["subject"][:24], _fmt_num(summary_row["things"]), _fmt_num(summary_row["cheapest"]),
-                _fmt_num(summary_row["dearest"]), _fmt_num(summary_row["you_could_pay_for"])))
-        lines.append("")
-        lines.append("CHEAPEST SIX RIGHT NOW, sorted by cost:")
-        lines.append(header)
-        for entry in sorted(out.get("cheapest_six") or [], key=lambda e: e.get("cost", 0)):
-            lines.append(_available_row(entry, _width, _purse))
-        if out.get("most_rests_on_these"):
-            lines.append("")
-            lines.append("MOST RESTS ON THESE, of what you could begin today:")
-            lines.append(header)
-            for entry in out["most_rests_on_these"]:
-                lines.append(_available_row(entry, _width, _purse))
-        lines.append("")
-        for label, value in (out.get("to_see_more") or {}).items():
-            lines.append("  %s: %s" % (label, value))
-    elif "available" in out and not out["available"]:
-        # No column headings over no rows. A play tester read "1-0 matching
-        # 'furnace'" above an empty table and could not tell whether the
-        # search had failed or the game had.
-        lines.append(out.get("nothing_matched")
-                 or "Nothing you could begin today matches that.")
-    elif "available" in out:
-        lines.append(header)
-        # IN THE ORDER THE REPLY GAVE IT, not re-sorted by cost here. A player
-        # who asked for {"sort":"risk"} got a JSON list in risk order and a
-        # printed table back in cost order underneath it - the JSON and the
-        # words describing the same reply disagreeing about what "sorted"
-        # meant. _agent_available already sorts the page exactly the way it
-        # was asked to; the one thing this renderer must not do is undo that.
-        for entry in out["available"]:
-            lines.append(_available_row(entry, _width, _purse))
-        if out.get("more"):
-            lines.append("")
-            lines.append(out["more"])
+    return lines, _purse, _width, header
 
+
+def _available_subjects_block(out, header, _width, _purse):
+    lines = []
+    lines.append("%-24s %8s %10s %10s %10s" % ("SUBJECT", "THINGS", "CHEAPEST", "DEAREST", "AFFORD"))
+    for summary_row in out["subjects"]:
+        lines.append("%-24s %8s %10s %10s %10s" % (
+            summary_row["subject"][:24], _fmt_num(summary_row["things"]), _fmt_num(summary_row["cheapest"]),
+            _fmt_num(summary_row["dearest"]), _fmt_num(summary_row["you_could_pay_for"])))
+    lines.append("")
+    lines.append("CHEAPEST SIX RIGHT NOW, sorted by cost:")
+    lines.append(header)
+    for entry in sorted(out.get("cheapest_six") or [], key=lambda e: e.get("cost", 0)):
+        lines.append(_available_row(entry, _width, _purse))
+    if out.get("most_rests_on_these"):
+        lines.append("")
+        lines.append("MOST RESTS ON THESE, of what you could begin today:")
+        lines.append(header)
+        for entry in out["most_rests_on_these"]:
+            lines.append(_available_row(entry, _width, _purse))
+    lines.append("")
+    for label, value in (out.get("to_see_more") or {}).items():
+        lines.append("  %s: %s" % (label, value))
+    return lines
+
+
+def _available_empty_block(out):
+    lines = []
+    # No column headings over no rows. A play tester read "1-0 matching
+    # 'furnace'" above an empty table and could not tell whether the
+    # search had failed or the game had.
+    lines.append(out.get("nothing_matched")
+             or "Nothing you could begin today matches that.")
+    return lines
+
+
+def _available_list_block(out, header, _width, _purse):
+    lines = []
+    lines.append(header)
+    # IN THE ORDER THE REPLY GAVE IT, not re-sorted by cost here. A player
+    # who asked for {"sort":"risk"} got a JSON list in risk order and a
+    # printed table back in cost order underneath it - the JSON and the
+    # words describing the same reply disagreeing about what "sorted"
+    # meant. _agent_available already sorts the page exactly the way it
+    # was asked to; the one thing this renderer must not do is undo that.
+    for entry in out["available"]:
+        lines.append(_available_row(entry, _width, _purse))
+    if out.get("more"):
+        lines.append("")
+        lines.append(out["more"])
+    return lines
+
+
+def _available_legend_block(out, _purse):
+    lines = []
     # LEGEND, once, and only when a table was actually printed. "1a*" means
     # nothing to a reader who has not been told; the column exists to be read
     # at a glance and a glance does not include guessing.
@@ -466,7 +572,11 @@ def render_available(out):
             lines.append("  A * after COST means you could not raise it today: "
                      "between cash and credit you can put %s into a project."
                      % _fmt_num(_purse))
+    return lines
 
+
+def _available_trailing_block(out):
+    lines = []
     heard = out.get("heard_of_but_cannot_begin")
     if heard:
         lines.append("")
@@ -481,13 +591,34 @@ def render_available(out):
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"]))
+    return lines
+
+
+def render_available(out):
+    """A scannable table: every column aligned, sorted cheapest-first so the
+    same eye scan works whether you are looking for a bargain or a subject.
+    """
+    lines, _purse, _width, header = _available_top(out)
+    if "subjects" in out:
+        lines += _available_subjects_block(out, header, _width, _purse)
+    elif "available" in out and not out["available"]:
+        lines += _available_empty_block(out)
+    elif "available" in out:
+        lines += _available_list_block(out, header, _width, _purse)
+
+    lines += _available_legend_block(out, _purse)
+    lines += _available_trailing_block(out)
     return "\n".join(lines)
 
 
-def render_why(out):
-    """A page about one thing: what it needs, what it costs, what depends
-    on it, and whether you could start it today.
-    """
+# render_why is split the same way: one function per report section -
+# header, cost, hours/risk, staff needed, staff to keep it open, labour and
+# materials, upkeep and revenue, status, chain size, unlocks and downstream,
+# and the trailing bounty/trades notes - each returning its own lines,
+# moved verbatim, with render_why left as the assembler that concatenates
+# them in the same order the fields always appeared in.
+
+def _why_header(out):
     lines = []
     title = "%s  [%s]" % (out.get("name"), out.get("id"))
     lines.append(title)
@@ -502,7 +633,11 @@ def render_why(out):
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"]))
+    return lines
 
+
+def _why_cost(out):
+    lines = []
     lines.append("")
     cost = out.get("cost") or {}
     # EVERY FACTOR THAT IS MULTIPLIED IN. opposition_factor - bribes, delay, a
@@ -527,6 +662,11 @@ def render_why(out):
                  "'start' would actually charge %s den, not the total "
                  "above" % (_fmt_num(cost["already_paid_towards_this"]),
                             _fmt_num(cost.get("what_start_would_actually_charge"))))
+    return lines
+
+
+def _why_hours_risk(out):
+    lines = []
     lines.append("YOUR HOURS: %s     CALENDAR FLOOR: %s years     FAILURE RISK: %s"
              % (_fmt_num(out.get("founder_hours")), _fmt_num(out.get("calendar_floor_years")),
                 _pct(out.get("risk"))))
@@ -542,6 +682,11 @@ def render_why(out):
                  "hours to do again. It can fail more than once."
                  % (_fmt_num(out.get("failure_costs")),
                     _fmt_num(out.get("failure_costs_hours"))))
+    return lines
+
+
+def _why_staff_needed(out):
+    lines = []
     staff, have = out.get("staff_needed") or {}, out.get("you_have") or {}
     lines.append("STAFF NEEDED: %s scholars, %s artisans   (you have %s, %s%s)"
              % (_fmt_num(staff.get("scholars")), _fmt_num(staff.get("artisans")),
@@ -551,6 +696,11 @@ def render_why(out):
                     "more_craftsmen_than_your_household_can_hold"):
         if out.get(_k_warn):
             lines.append(_wrap("  !! " + out[_k_warn], indent="     "))
+    return lines
+
+
+def _why_staff_keep_open(out):
+    lines = []
     # A SECOND, SEPARATE STAFF FIGURE. Not shown at all until `open` refused
     # somebody on it, which is the exact complaint three play testers filed.
     # See staff_to_keep_it_open_means for why this is not the line above.
@@ -568,12 +718,22 @@ def render_why(out):
         if out.get("these_are_a_share_of_their_year_not_a_headcount"):
             lines.append(_wrap("  " + out["these_are_a_share_of_their_year_not_a_headcount"],
                             indent="     "))
+    return lines
+
+
+def _why_labour_materials(out):
+    lines = []
     lab = out.get("hired_labour") or {}
     if lab:
         lines.append("HIRED LABOUR: " + ", ".join("%s %sh" % (trade, _fmt_num(hours)) for trade, hours in lab.items()))
     mat = out.get("materials") or {}
     if mat:
         lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in mat.items()))
+    return lines
+
+
+def _why_upkeep_revenue(out):
+    lines = []
     if out.get("upkeep") or out.get("revenue"):
         # A RANGE READS AS A RANGE, NOT AS TWO NUMBERS GLUED TOGETHER. See
         # _fog_revenue_estimate: under fog, on a thing nobody here has ever
@@ -595,7 +755,11 @@ def render_why(out):
     if out.get("this_is_a_capability_you_must_keep_open"):
         lines.append(_wrap("  KEEP THIS OPEN: " + out["this_is_a_capability_you_must_keep_open"],
                        indent="    "))
+    return lines
 
+
+def _why_status(out):
+    lines = []
     lines.append("")
     status = ("DONE" if out.get("done") else
               "ACTIVE" if out.get("active") else
@@ -640,7 +804,11 @@ def render_why(out):
     if out.get("missing_prerequisites"):
         lines.append("  (a prerequisite has to be FINISHED, not merely started, "
                  "and it stays finished: you need not keep it running.)")
+    return lines
 
+
+def _why_chain(out):
+    lines = []
     if out.get("chain_size") is not None:
         lines.append("")
         lines.append("STILL TO BUILD BEHIND IT: %s of %s nodes, %s of your hours, %s den, %s-year serial floor"
@@ -648,7 +816,11 @@ def render_why(out):
                     _fmt_num(out.get("chain_size_counting_what_you_have_built")),
                     _fmt_num(out.get("chain_founder_hours")),
                     _fmt_num(out.get("chain_cost")), _fmt_num(out.get("critical_path_years"))))
+    return lines
 
+
+def _why_unlocks_downstream(out):
+    lines = []
     unlocks = out.get("unlocks")
     if unlocks:
         lines.append("")
@@ -659,7 +831,11 @@ def render_why(out):
                  % (_fmt_num(downstream_count), " -- INCLUDING THE GOAL" if out.get("on_goal_path") else ""))
     elif out.get("how_much_rests_on_this"):
         lines.append("HOW MUCH RESTS ON THIS: %s" % out["how_much_rests_on_this"])
+    return lines
 
+
+def _why_trailing(out):
+    lines = []
     if out.get("bounty_eligible_by_type"):
         lines.append("")
         lines.append("BOUNTY: yes, could be posted as a public prize")
@@ -674,6 +850,25 @@ def render_why(out):
         lines.append(_wrap(out.get("trades_taught_but_nobody_here_means") or ""))
     if out.get("staff_needed_means"):
         lines.append(_wrap(out["staff_needed_means"]))
+    return lines
+
+
+def render_why(out):
+    """A page about one thing: what it needs, what it costs, what depends
+    on it, and whether you could start it today.
+    """
+    lines = []
+    lines += _why_header(out)
+    lines += _why_cost(out)
+    lines += _why_hours_risk(out)
+    lines += _why_staff_needed(out)
+    lines += _why_staff_keep_open(out)
+    lines += _why_labour_materials(out)
+    lines += _why_upkeep_revenue(out)
+    lines += _why_status(out)
+    lines += _why_chain(out)
+    lines += _why_unlocks_downstream(out)
+    lines += _why_trailing(out)
     return "\n".join(lines)
 
 
