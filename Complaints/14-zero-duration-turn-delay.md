@@ -2,6 +2,7 @@
 
 **Type:** Interaction/timing mismatch  
 **Priority:** Low
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `start_project` (`sim/engine/projects.py`) now completes a project immediately (`self._complete(k)`) when hours, calendar floor, cost and risk are all genuinely zero, instead of waiting for the next annual tick. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

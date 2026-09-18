@@ -2,6 +2,7 @@
 
 **Type:** Tooltip/state clarity  
 **Priority:** Medium
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `sim/engine/proto/techtree.py` now returns explicit `permanent_on_completion` and `only_while_open` fields, replacing the single ambiguous "KEEP THIS OPEN" line - the exact two-group split suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

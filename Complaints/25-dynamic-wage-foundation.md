@@ -2,6 +2,7 @@
 
 **Type:** Economic-demographic simulation depth  
 **Priority:** High
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `wage_cost_factors()` (`sim/engine/labour.py`) now builds a wage from food/housing/tool-input price factors plus a fixed skill-and-difficulty share ("forty-five percent is subsistence food, twenty percent housing, ten percent tools/consumables, and twenty-five percent that fixed skill/difficulty premium") - exactly the structure requested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player concern
 

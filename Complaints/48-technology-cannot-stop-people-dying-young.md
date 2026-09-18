@@ -1,5 +1,14 @@
 # The game cannot express the most important thing it simulates
 
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified - but in an
+UNCOMMITTED working-tree change at the time of this audit.** `_disease_burden()`
+(`sim/engine/core.py`) is defined and is passed into
+`self.population.step(..., disease_burden=self._disease_burden())`. This
+wiring was present in the live working tree (another agent's in-progress
+edit, one of several running concurrently in this checkout) but had not yet
+been committed. Re-check that it has actually landed before relying on it.
+See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+
 Found by the stakeholder, who put the whole argument in one paragraph:
 
 > We have been building the demographics based on historical society. But

@@ -2,6 +2,7 @@
 
 **Type:** Search bug  
 **Priority:** High
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `matches_find()` (`sim/engine/proto/techtree.py`) now matches every query word against id, name, doc anchor and aliases. Checked directly: `prc_lapping_plate`'s name ("Lapping with cast-iron plate and abrasive compound") now matches a `"lapping plate"` query. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

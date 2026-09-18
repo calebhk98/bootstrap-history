@@ -1,5 +1,12 @@
 # Every civilisation holds a technology whose prerequisites it lacks
 
+**Status (project-wide audit, 2026-09-18): PINNED, not fixed - by design,
+and that is the correct state.** `sim/tests/test_civilisation_prerequisites.py`
+still holds the count at exactly the 17 violations named below; the file
+deliberately declines to referee which side (tree or civilisation file) is
+wrong for each one. Not the same as OPEN or RESOLVED. See
+`docs/architecture/STATE_OF_THE_PROJECT.md`.
+
 Found by the technique-to-node join, and cheap to find once anything pointed
 at the tree at all: `starting_techs` has never been checked against the
 prerequisite graph it draws its ids from.

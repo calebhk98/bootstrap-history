@@ -2,6 +2,7 @@
 
 **Type:** UI/model consistency  
 **Priority:** High
+**Status (project-wide audit, 2026-09-18): PARTLY RESOLVED / LIKELY.** Population is now real simulated state (the age-cohort model, Milestone 4), not a cosmetic constant, and is refreshed immediately on a hazard via the same `_refresh_demographic_indexes()` call `Complaints/17` names. The `population` command's exact display text after a live plague was not independently re-run this session. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

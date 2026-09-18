@@ -2,6 +2,7 @@
 
 **Type:** Simulation bug  
 **Priority:** Critical
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `project_resource_throttle(k)` (`sim/engine/economy.py`) now scopes the throttle to projects whose own materials share the actually-binding tag, per its own docstring: "paper research does not become short of saltpetre because a gunpowder project is." See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

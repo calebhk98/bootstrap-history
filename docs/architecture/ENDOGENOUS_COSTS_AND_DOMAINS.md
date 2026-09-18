@@ -1,6 +1,10 @@
 # Plan: calculated costs, and the domains that make them calculable
 
 **Status:** proposed plan. Supersedes the sequencing sketch in `PM_ASSESSMENT.md` §5.
+**For "is this done yet":** `docs/architecture/STATE_OF_THE_PROJECT.md` holds
+the re-measured milestone table, every `Complaints/` file's real status, and
+an ordered next-steps list - read it alongside Part 4 below, which is the
+short version of the same thing.
 **Settled with the stakeholder:** the historical record must be a *plausible*
 outcome, not the only one, and not one produced by feeding history back in. The
 baseline is allowed to get worse while the mechanisms that will make it good
@@ -283,63 +287,71 @@ building a combat minigame with invented numbers.
 Each is a thing that either works or does not, with a stated measurement.
 
 **STATUS, measured rather than remembered.** Bring this table up to date when
-a milestone moves; it is the first thing anyone reads.
+a milestone moves; it is the first thing anyone reads. **`docs/architecture/
+STATE_OF_THE_PROJECT.md` is now the fuller version of this same question** -
+every complaint's status, the same commands re-run with their full output,
+and an ordered next-steps list with reasoning. Read it alongside this table;
+this table stays the short version.
 
-| | milestone | state |
+| | milestone | state, re-measured 2026-09-18 |
 |---|---|---|
-| 0 | the production side | **done.** 99.7% of consumption sites; `sim/validate_production.py` |
-| 1 | provenance and a burndown | **under way, and it works.** `sim/constants.py`; the burndown reported 0 of 32 for its whole life until the two bugs behind that were fixed. Re-measured: **859 numbers declared, 685 of them temporary heuristics (79.7%), and 11 hardcoded outcomes** that CLAUDE.md §3.1 forbids outright and that are now named individually rather than counted. Six of the eleven are mine-capex figures, which `sim/world/deposits.py`'s sinking-cost model should be able to derive away |
-| 2 | the synthetic world | not started, and probably unnecessary - see the note below |
-| 3 | the household extraction | **done.** `sim/engine/actors/household.py`; all 9 fingerprint scenarios byte-identical |
-| 4 | food and people | **demography WIRED; agriculture still inert.** `Sim` holds a real `Population`; the scalar `pop_deficit` and its exponential recovery clock are deleted, and a hazard's mortality now falls unevenly across age cohorts. All 9 fingerprint scenarios diverged at year 0, as `WIRING_MILESTONE_4.md` predicted. `agriculture.py` is NOT wired: `_demographic_recovery` feeds `Population.step` a labelled stand-in for food, so no famine can happen yet |
-| 5 | the wage, and the price solve | **material half done, wage half blocked.** Every material priced in labour-hours; capital wired in (~1% effect); energy priced as three carriers with a conversion graph. Rent is still 0.0 and the solver says so on every run. The WAGE waits on 4 |
-| 5b | when a technique exists | **new, and not in the original plan.** The solver had no notion of WHEN, so a 100 AD scenario priced its electricity off a photovoltaic panel (`Complaints/39`). `requires_node` joins each recipe to the tree node that unlocks it - 187 of 196 entries, 95.4% - and `--civ rome_100ad` solves only what that society can run. Measured: 0.371 s a solve, and only 82 of 2,864 nodes are gates, so the engine can cache on the gate set and re-solve a few dozen times a game rather than every turn |
-| 6+ | transport, settlements, state finance, war | **partly built, none wired.** `sim/world/transport.py` (freight from animal metabolism), `military_logistics.py` (an army's consumption and its supply range) exist standalone |
+| 0 | the production side | **done.** 98.1% of materials individually, 99.7% weighted by consumption site; `sim/validate_production.py`. The remaining 3 (germanium_g, coal_tar_kg, indium_g) are the deliberate joint-byproduct gaps CLAUDE.md §4 already names |
+| 1 | provenance and a burndown | **under way, and it works, and the count is still growing on purpose.** `sim/constants.py --burndown`: **877 numbers declared, 697 temporary heuristics (79.5%), 11 hardcoded outcomes**. Two more than the 9 known when `Complaints/37` was written (`SLAVE_BASE_PRICE_DENARII`, `WAGE_SCARCITY_ELASTICITY`) - the audit mechanism catching more as `core.py`/`labour.py`/`society.py` get declared, not a regression. Six of the eleven are still the mine-capex family, still fixable the same way: derive them from `sim/world/deposits.py`'s own sinking-cost figures instead of a multiple of book price |
+| 2 | the synthetic world | not started, and the "probably unnecessary" reasoning holds up better than when it was written - see the note below |
+| 3 | the household extraction | **done.** `sim/engine/actors/household.py`; unchanged this round |
+| 4 | food and people | **wired, and further than this table used to say.** Agriculture and demography are connected through `Sim._demographic_recovery`: a real land+labour+weather harvest, a persistent granary (`farm_stock_kg`, confirmed in `SAVE_FIELDS`), weather pooled per home region rather than one draw for a whole civilisation (confirmed wired, not merely written - see `STATE_OF_THE_PROJECT.md`'s note on how the first pass of this same audit briefly got that backwards), and a disease-burden axis distinct from nutrition. An unshocked `rome_100ad` century now GROWS to ~107.6% of its starting population, against a 78% collapse before any of this milestone landed. Labour does NOT yet move between trades in response to a famine - see Milestone 6+'s `labour_market.py` note |
+| 5 | the wage, and the price solve | **both halves have a real mechanism now; the engine's live price table still doesn't use either by default.** Material side: every material priced in labour-hours; capital and energy wired; rent landed for 6 ore metals and (both margins) for land. Wage side: `sim/engine/labour.py`'s `wage_cost_factors()` already builds the wage every game actually charges from food/housing/tool-input scarcity - this is live now, independent of the price solver. `sim/engine/data.py`'s `use_solved_prices` switch is confirmed still `False` by default; provenance for `rome_100ad` measured directly today: 103 solved (57.2%), 68 gated (37.8%), 9 no_recipe (5.0%) of 180 |
+| 5b | when a technique exists | **built and exercised on every provenance call**, not merely "new." `requires_node` coverage is now 205 of 215 entries (95.3%), 91 needing no technology - essentially unchanged in percentage since the total grew alongside the count. The three energy-carrier mislabellings this milestone's own docstring warned about are fixed, and technique choice now also respects the temperature a process needs (`Complaints/44`) |
+| 6+ | transport, settlements, state finance, war | **transport is wired now** - `sim/engine/economy.py` imports `sim/world/transport.py` for freight cost, which was standalone when this table last said "none wired." `military_logistics.py` remains standalone. `sim/world/labour_market.py` (built since this table was last accurate) is also standalone and unwired - it is the piece Milestone 4's own remaining gap needs. Settlements, state finance and war have no dedicated module yet |
 
-**THE PATTERN THIS TABLE NOW SHOWS, and it is the thing to act on.** Five
-standalone modules under `sim/world/` - agriculture, demography, transport,
-deposits, military logistics - were built, tested and inert. One of the five,
-demography, is now wired, which is the first movement on this pattern since
-it was named. Measured the blunt way, by asking which of them `sim/engine/`
-imports at all:
+**THE PATTERN THIS TABLE SHOWED HAS MOVED, MEASURED THE SAME BLUNT WAY -
+asking which of `sim/world/`'s modules `sim/engine/` imports at all:**
 
-    transport              nothing
-    military_logistics     nothing
-    deposits               nothing
-    agriculture            nothing
-    demand                 nothing
-    demography             sim/engine/core.py
+    agriculture.py          imported by sim/engine/core.py
+    demography.py           imported by sim/engine/core.py
+    land.py                 imported by sim/engine/core.py
+    transport.py            imported by sim/engine/economy.py (as freight_physics)
+    military_logistics.py   imported by sim/engine/society.py
+    deposits.py             imported ONLY by sim/solve_prices.py - reaches the
+                             engine only through the (currently off) solved-price path
+    demand.py               imported by NOTHING under sim/engine/ or sim/solve_prices.py
+    labour_market.py        imported by NOTHING under sim/engine/
 
-So the pattern still holds for five of six, and wiring is still worth more
-than another module. CLAUDE.md §4 says "coverage is not the same as being wired
-in" about `data/production/`; it applies here with more force, because a
-module that nothing calls cannot even be wrong yet.
+Five of eight wired directly, one reachable only through a switch that
+defaults off, two wired into nothing. When this table last said "five
+standalone, one wired," that one was demography alone; it is now five, and
+the two that remain unwired (`demand.py`, `labour_market.py`) are also the
+two newest modules, so the ratio of building-to-wiring has clearly turned
+around rather than merely improved on one module. CLAUDE.md §4's "coverage
+is not the same as being wired in" still applies to exactly two modules now
+instead of five, and both are named directly in `STATE_OF_THE_PROJECT.md`
+Part 3 with what wiring each one would take.
 
-Building standalone was right and should continue - it is what let each of
-these be tested on its own terms rather than through a 4,000-line engine
-guarded by assertions about book prices. But the ratio has tipped. The next
-round's most valuable work is wiring, not another module.
+**WHAT IS ACTUALLY BLOCKING THE HEADLINE GOAL, updated.** Rent (ore and
+land) and capital are in; the gap barely moved where the margin is not
+forced - mercury stays ~1,440x below book, attributed to an unmodelled
+state monopoly rather than a missing mechanism. `sim/world/demand.py` now
+exists and, in isolation, reverses the silver/lead joint-byproduct result
+exactly as predicted - but it is not imported by `sim/solve_prices.py`,
+so the solver's production code path still uses a plain mass split. Wiring
+`demand.py` into the solver is therefore now the single most direct way to
+close `Complaints/29` and move the needle described in this paragraph,
+ahead of any further supply-side data.
 
-**WHAT IS ACTUALLY BLOCKING THE HEADLINE GOAL.** `Complaints/32` measured
-it: with rent zero, energy unpriced and capital unread, every price in this
-model was exactly the labour embodied in the good. Capital and rent are now
-in and energy is in flight, and the gap barely moved for the materials where
-the margin is not forced - mercury stays ~1,440x below book. The remaining
-lever is DEMAND, which is also the shared root of `Complaints/29` (joint
-production cannot be split from the cost side) and of the aggregate-demand
-disagreement recorded in `Complaints/35`. That is why a demand module is
-being built now rather than more supply-side data.
+Two things that were not obvious when this plan was written and are still
+true, one of them more so:
 
-Two things that were not obvious when this plan was written and are now:
-
-**Milestone 2 may be unnecessary in the form described.** The toy world was
-proposed because developing market clearing inside a 4,350-line `economy.py`
-guarded by 1,600 assertions about book prices looked like a way to fail
-slowly. What actually happened is that the production data, the solver, the
-demographic model and the agricultural model all got built as standalone
-modules beside the engine, tested on their own terms, and wired in
-afterwards. That is the same isolation the toy world was for, obtained
-without building a second world to maintain. Reconsider before building it.
+**Milestone 2 may be unnecessary in the form described - now with three more
+data points agreeing.** The toy world was proposed because developing market
+clearing inside a 4,350-line `economy.py` guarded by 1,600 assertions about
+book prices looked like a way to fail slowly. Agriculture, land, demand and
+labour_market were all added to the standalone-first pattern since this note
+was written, and every one of them was built and tested on its own terms
+before (or instead of, for the two still unwired) touching the engine. That
+is the same isolation the toy world was for, obtained without building a
+second world to maintain, now demonstrated five more times than when this
+note was first written. Nothing that has happened since argues for building
+it.
 
 **Doing 5 before 4 turned out to be right, and not for the reason expected.**
 The plan says the wage gates everything. It does, but the MATERIAL half of

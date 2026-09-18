@@ -2,6 +2,7 @@
 
 **Type:** Tech-tree realism defect  
 **Priority:** High
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `en_gas_turbine`'s prerequisites in `data/tech_tree.json` now include `mat_nickel`, `mat_tool_steel_hss`, `thermodynamics_theory` and `air_jet_engine_concept`, closing the gap named here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

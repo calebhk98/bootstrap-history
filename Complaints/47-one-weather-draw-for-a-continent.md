@@ -1,5 +1,18 @@
 # Rome's harvest in Britain and Egypt are the same coin flip
 
+**Status (project-wide audit, 2026-09-18): RESOLVED, verified against the
+live source, with a correction worth recording.** `_compute_farm_region_weights()`
+and `_pooled_farm_weather_multiplier()` (`sim/engine/core.py`) are both
+defined AND called: `_demographic_recovery`'s `farm_storage.step(...)` call
+passes `weather_multiplier=self._pooled_farm_weather_multiplier(yr)`. An
+earlier pass of this same audit briefly concluded the opposite - that the
+mechanism was written but never wired in - because it searched `git log -p`'s
+diff hunks for the call site and found only earlier, pre-wiring versions of
+the surrounding code. Reading the current file directly (rather than a
+historical diff) showed the call site does exist. Recorded as a general
+caution: a diff hunk shows what one commit added, not what the file contains
+now. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+
 The unshocked century ends at 76% of starting population. The stakeholder
 said "with 0 large events, you shouldn't have a population decline over a
 century - something is wrong there", and they were right, but it is not the
