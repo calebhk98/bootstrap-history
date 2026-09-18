@@ -253,28 +253,205 @@ class WorkforceStepDirectionTests(unittest.TestCase):
 
 
 class WorkforceStepMobilityBoundTests(unittest.TestCase):
+    """`Workforce.step` no longer has ONE mobility rate - it has a steady-
+    state rate, a gap-responsive gain on top of it, and a hard ceiling (see
+    labour_market.py's THE FRICTION section). These tests check the
+    CEILING (never exceeded, whatever the gap or the base rate), and that
+    the rate genuinely moves with the two things it is now supposed to
+    respond to: the SIZE of the gap (stakeholder points 3 and 4) and the
+    base rate itself, in the regime where the ceiling is not yet binding.
+    """
 
-    def test_outflow_never_exceeds_the_mobility_rate_times_the_trades_own_size(self):
+    def test_outflow_never_exceeds_the_ceiling_rate_times_the_trades_own_size(self):
         workforce = labour_market.Workforce({"potter": 10_000.0, "smith": 100.0})
         flows = workforce.step({"potter": 0.0, "smith": 1_000_000.0},
                                mobility_rate_per_year=0.05)
-        self.assertLessEqual(flows["potter"].hours_moved_out, 10_000.0 * 0.05 + 1e-9)
+        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
+        self.assertLessEqual(flows["potter"].hours_moved_out, 10_000.0 * ceiling + 1e-6)
 
-    def test_inflow_never_exceeds_the_mobility_rate_times_the_trades_own_size(self):
+    def test_inflow_never_exceeds_the_ceiling_rate_times_the_trades_own_size(self):
+        # smith's own shortage (999,900h) dwarfs its own size (100h), so its
+        # gap-responsive rate saturates at the ceiling - this is exactly the
+        # regime OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR exists for.
         workforce = labour_market.Workforce({"potter": 10_000.0, "smith": 100.0})
         flows = workforce.step({"potter": 0.0, "smith": 1_000_000.0},
                                mobility_rate_per_year=0.05)
-        self.assertLessEqual(flows["smith"].hours_moved_in, 100.0 * 0.05 + 1e-9)
+        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
+        self.assertLessEqual(flows["smith"].hours_moved_in, 100.0 * ceiling + 1e-6)
+        self.assertAlmostEqual(flows["smith"].hours_moved_in, 100.0 * ceiling)
 
-    def test_a_higher_mobility_rate_moves_more_in_one_step(self):
-        slow = labour_market.Workforce({"potter": 10_000.0, "smith": 100.0})
-        fast = labour_market.Workforce({"potter": 10_000.0, "smith": 100.0})
-        slow_flows = slow.step({"potter": 5_000.0, "smith": 5_000.0},
-                               mobility_rate_per_year=0.02)
-        fast_flows = fast.step({"potter": 5_000.0, "smith": 5_000.0},
-                               mobility_rate_per_year=0.20)
-        self.assertGreater(fast_flows["smith"].hours_moved_in,
-                           slow_flows["smith"].hours_moved_in)
+    def test_a_bigger_relative_gap_moves_more_in_one_step_same_base_rate(self):
+        # The stakeholder's points 3 and 4, stated as a monotonicity check
+        # rather than a specific number of years: doubling a trade's own
+        # size (a 100% gap) pulls harder than nudging it 10%, holding the
+        # trade's own size and the base rate fixed. `potter` is a large,
+        # non-binding surplus source in both cases so `smith`'s own
+        # gap-responsive ceiling is what is actually being measured.
+        def moved_in(required_smith):
+            workforce = labour_market.Workforce({"smith": 1000.0, "potter": 1_000_000.0})
+            flows = workforce.step({"smith": required_smith, "potter": 0.0})
+            return flows["smith"].hours_moved_in
+
+        small_relative_gap = moved_in(1100.0)     # +10% of smith's own size
+        large_relative_gap = moved_in(5000.0)     # +400% of smith's own size
+        self.assertGreater(large_relative_gap, small_relative_gap)
+
+    def test_a_higher_base_rate_moves_at_least_as_much_when_the_gap_is_small(self):
+        def moved_in(base_rate):
+            workforce = labour_market.Workforce({"smith": 1000.0, "potter": 1_000_000.0})
+            flows = workforce.step({"smith": 1050.0, "potter": 0.0},
+                                   mobility_rate_per_year=base_rate)
+            return flows["smith"].hours_moved_in
+
+        self.assertGreater(moved_in(0.20), moved_in(0.02))
+
+    def test_a_base_rate_above_the_default_ceiling_is_never_capped_below_itself(self):
+        # A caller passing mobility_rate_per_year=1.0 (sim.tests.test_
+        # labour_market.py's own WorkforceStepProportionalSplitExact
+        # ArithmeticTests does exactly this, to make mobility itself a
+        # non-binding constraint) must get AT LEAST that rate's worth of
+        # ceiling, never the module's own smaller default ceiling instead -
+        # see _gap_responsive_mobility_rate's own docstring for why the
+        # effective ceiling is max(rate_ceiling, base_rate).
+        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR, 1.0)
+        rate = labour_market._gap_responsive_mobility_rate(1.0, 5.0)
+        self.assertAlmostEqual(rate, 1.0)
+
+
+class GapResponsiveMobilityRateTests(unittest.TestCase):
+    """Direct, hand-checkable coverage of the two pure functions THE
+    FRICTION section's rate schedule is built from - see labour_market.py's
+    own `_relative_gap_size` and `_gap_responsive_mobility_rate`."""
+
+    def test_relative_gap_size_is_the_plain_ratio_when_basis_is_positive(self):
+        self.assertAlmostEqual(labour_market._relative_gap_size(-50.0, 100.0), 0.5)
+        self.assertAlmostEqual(labour_market._relative_gap_size(300.0, 100.0), 3.0)
+
+    def test_relative_gap_size_is_zero_when_there_is_no_gap(self):
+        self.assertEqual(labour_market._relative_gap_size(0.0, 0.0), 0.0)
+        self.assertEqual(labour_market._relative_gap_size(0.0, 500.0), 0.0)
+
+    def test_relative_gap_size_is_infinite_when_basis_is_zero_and_a_gap_exists(self):
+        self.assertEqual(labour_market._relative_gap_size(50.0, 0.0), float("inf"))
+
+    def test_zero_relative_gap_returns_exactly_the_base_rate(self):
+        self.assertAlmostEqual(
+            labour_market._gap_responsive_mobility_rate(0.05, 0.0), 0.05)
+
+    def test_rate_rises_monotonically_with_relative_gap_up_to_the_ceiling(self):
+        rate_at_small_gap = labour_market._gap_responsive_mobility_rate(0.05, 0.1)
+        rate_at_large_gap = labour_market._gap_responsive_mobility_rate(0.05, 10.0)
+        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
+        self.assertGreater(rate_at_large_gap, rate_at_small_gap)
+        self.assertLessEqual(rate_at_large_gap, ceiling)
+        self.assertAlmostEqual(rate_at_large_gap, ceiling)
+
+    def test_infinite_relative_gap_returns_exactly_the_ceiling(self):
+        self.assertAlmostEqual(
+            labour_market._gap_responsive_mobility_rate(0.05, float("inf")),
+            labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR)
+
+
+class WalkableTradeSeedingTests(unittest.TestCase):
+    """Stakeholder point 5: 'monster towers suddenly appeared, this also
+    says 0 people will become adventurers'. A trade in `walkable_trades`
+    can grow from exactly zero because it draws its mobility ceiling from
+    `WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS` of the WHOLE economy
+    instead of a share of its own (absent) size; a trade that is not
+    walkable still cannot, which is this module's own documented,
+    unchanged behaviour for a trade that needs a master (WHAT THIS DOES
+    NOT MODEL item 2) - both are exercised side by side here so neither
+    passing is an accident of the other's absence.
+    """
+
+    def _economy(self):
+        # `labourer` carries a real surplus (120,000h have against 100,000h
+        # need) so there is something in this fixture for either new trade
+        # to draw on under this module's strict conservation of hours -
+        # see Workforce.step's own docstring, step 5.
+        return labour_market.Workforce(
+            {"labourer": 120_000.0, "adventurer": 0.0, "optician": 0.0})
+
+    def test_a_walkable_trade_at_zero_hours_moves(self):
+        workforce = self._economy()
+        flows = workforce.step(
+            {"labourer": 100_000.0, "adventurer": 50_000.0, "optician": 0.0},
+            walkable_trades=labour_market.WALKABLE_TRADES | {"adventurer"})
+        self.assertGreater(flows["adventurer"].hours_moved_in, 0.0)
+        self.assertGreater(workforce.hours_by_trade["adventurer"], 0.0)
+
+    def test_a_non_walkable_trade_at_zero_hours_still_does_not_move(self):
+        workforce = self._economy()
+        flows = workforce.step(
+            {"labourer": 100_000.0, "adventurer": 0.0, "optician": 50_000.0},
+            walkable_trades=labour_market.WALKABLE_TRADES | {"adventurer"})
+        self.assertEqual(flows["optician"].hours_moved_in, 0.0)
+        self.assertEqual(workforce.hours_by_trade["optician"], 0.0)
+
+    def test_default_walkable_trades_are_exactly_labourer_and_miner(self):
+        self.assertEqual(labour_market.WALKABLE_TRADES, frozenset({"labourer", "miner"}))
+
+    def test_a_walkable_trades_own_growth_is_still_bounded_not_instant(self):
+        # It moves, but it does not close a huge shortage in a single year -
+        # this module is still a step process (see the module docstring's
+        # WHY THIS IS A STEP PROCESS section), even for a walkable trade.
+        workforce = self._economy()
+        flows = workforce.step(
+            {"labourer": 100_000.0, "adventurer": 50_000.0, "optician": 0.0},
+            walkable_trades=labour_market.WALKABLE_TRADES | {"adventurer"})
+        self.assertLess(flows["adventurer"].hours_after, 50_000.0)
+
+
+class SkillFamilyProximityTests(unittest.TestCase):
+    """Stakeholder point 6: 'it thinks you can't ever teach yourself a
+    skill, and nothing transfers'. A single surplus trade whose outflow
+    cannot fill BOTH of two shortage trades' full requirement should
+    favour the skill-close one - see TRADE_SKILL_FAMILY and
+    `_flow_proximity`."""
+
+    def test_same_family_destination_is_never_discounted(self):
+        self.assertEqual(labour_market.trade_skill_family("furnaceman"), "metal")
+        self.assertEqual(labour_market.trade_skill_family("smith"), "metal")
+        self.assertEqual(
+            labour_market._flow_proximity("furnaceman", "smith", destination_is_walkable=False),
+            1.0)
+
+    def test_cross_family_destination_is_discounted_by_the_stated_constant(self):
+        self.assertEqual(labour_market.trade_skill_family("scribe"), "technical")
+        self.assertEqual(
+            labour_market._flow_proximity("furnaceman", "scribe", destination_is_walkable=False),
+            labour_market.CROSS_FAMILY_PROXIMITY)
+
+    def test_a_walkable_destination_is_never_discounted_regardless_of_family(self):
+        self.assertEqual(
+            labour_market._flow_proximity("scribe", "labourer", destination_is_walkable=True),
+            1.0)
+
+    def test_proximity_is_asymmetric_moving_down_into_unskilled_work_is_easier(self):
+        # smith -> labourer (destination walkable): full proximity.
+        # labourer -> smith (destination is a skilled, cross-family trade):
+        # discounted - the same pair, opposite direction, different answer.
+        down = labour_market._flow_proximity("smith", "labourer", destination_is_walkable=True)
+        up = labour_market._flow_proximity("labourer", "smith", destination_is_walkable=False)
+        self.assertEqual(down, 1.0)
+        self.assertLess(up, down)
+
+    def test_a_skill_close_shortage_trade_is_favoured_over_a_distant_one(self):
+        # furnaceman (metal) is the only surplus trade; smith (metal, same
+        # family) and scribe (technical, different family) both want more
+        # than furnaceman's capped outflow can supply between them, so the
+        # skill-close one should come out ahead.
+        workforce = labour_market.Workforce(
+            {"furnaceman": 10_000.0, "smith": 1_000.0, "scribe": 1_000.0})
+        flows = workforce.step(
+            {"furnaceman": 10_000.0 - 2_000.0, "smith": 1_000.0 + 2_000.0,
+             "scribe": 1_000.0 + 2_000.0},
+            mobility_rate_per_year=1.0)
+        self.assertGreater(flows["smith"].hours_moved_in, flows["scribe"].hours_moved_in)
+        # Conservation still holds across the two-destination split.
+        self.assertAlmostEqual(
+            flows["smith"].hours_moved_in + flows["scribe"].hours_moved_in,
+            flows["furnaceman"].hours_moved_out)
 
 
 class WorkforceStepProportionalSplitExactArithmeticTests(unittest.TestCase):
@@ -312,48 +489,129 @@ class WorkforceStepProportionalSplitExactArithmeticTests(unittest.TestCase):
 # ============================================================================
 
 class SolveToStableAllocationTests(unittest.TestCase):
+    """`solve_to_stable_allocation` now ALWAYS returns a `LabourMarketOutcome`
+    - see the module docstring's WHY DEMAND EXCEEDING SUPPLY DOES NOT MEAN A
+    FAILED SOLVE. `stabilized` answers "has the allocation stopped moving",
+    which is true both when every gap closes and when the trades with slack
+    have already given up everything they can - `unmet_demand_by_trade` is
+    what tells the two apart, and these tests check both regimes."""
 
     def test_converges_for_a_solvable_gap_within_available_slack(self):
         initial = {"potter": 10_000.0, "smith": 1_000.0}
         required = {"potter": 9_500.0, "smith": 1_500.0}
-        workforce, periods, converged, history = labour_market.solve_to_stable_allocation(
+        outcome = labour_market.solve_to_stable_allocation(
             initial, required, tolerance_hours=1e-3)
-        self.assertTrue(converged)
-        self.assertGreater(periods, 1)   # friction means it is not instant
-        self.assertAlmostEqual(workforce.hours_by_trade["smith"], 1_500.0, places=1)
-        self.assertAlmostEqual(workforce.hours_by_trade["potter"], 9_500.0, places=1)
+        self.assertTrue(outcome.stabilized)
+        self.assertGreater(outcome.periods_used, 1)   # friction means it is not instant
+        self.assertAlmostEqual(outcome.workforce.hours_by_trade["smith"], 1_500.0, places=1)
+        self.assertAlmostEqual(outcome.workforce.hours_by_trade["potter"], 9_500.0, places=1)
+        self.assertEqual(outcome.unmet_demand_by_trade, {})
 
-    def test_reports_unconverged_when_total_required_exceeds_total_available(self):
+    def test_a_demand_vector_exceeding_total_supply_still_stabilizes_with_unmet_demand_named(self):
+        # THE STAKEHOLDER'S OWN POINTS 1 AND 2: "even though my request
+        # hours are more than the supply of labour hours, it should still
+        # stabilize" and "supply can't match demand, but that's basically
+        # 90% of society IRL. It still stabilizes." `potter` has nothing to
+        # give (it is exactly at its own requirement), so `smith` cannot
+        # grow AT ALL from this starting point - the honest "reallocation
+        # of the EXISTING workforce cannot solve this" answer, now
+        # returned as `stabilized=True` (the allocation truly has stopped
+        # moving) with the shortfall named in `unmet_demand_by_trade`,
+        # NEVER as a bare `False` that reads like a search failure.
         initial = {"potter": 100.0, "smith": 100.0}
         required = {"potter": 100.0, "smith": 100_000.0}
-        workforce, periods, converged, history = labour_market.solve_to_stable_allocation(
+        outcome = labour_market.solve_to_stable_allocation(
             initial, required, maximum_periods=50)
-        self.assertFalse(converged)
-        self.assertEqual(periods, 50)
-        self.assertEqual(len(history), 50)
-        # potter has nothing to give (it is exactly at its own
-        # requirement), so smith cannot grow AT ALL from this starting
-        # point - the honest "reallocation cannot solve this" answer.
-        self.assertAlmostEqual(workforce.hours_by_trade["smith"], 100.0)
+        self.assertTrue(outcome.stabilized)
+        self.assertLess(outcome.periods_used, 50)   # settles long before the ceiling
+        self.assertAlmostEqual(outcome.workforce.hours_by_trade["smith"], 100.0)
+        self.assertAlmostEqual(outcome.unmet_demand_by_trade["smith"], 99_900.0)
+        self.assertNotIn("potter", outcome.unmet_demand_by_trade)
 
     def test_a_demand_vector_already_met_converges_on_the_first_period(self):
         initial = {"potter": 5_000.0, "smith": 500.0}
         required = dict(initial)
-        workforce, periods, converged, history = labour_market.solve_to_stable_allocation(
-            initial, required)
-        self.assertTrue(converged)
-        self.assertEqual(periods, 1)
+        outcome = labour_market.solve_to_stable_allocation(initial, required)
+        self.assertTrue(outcome.stabilized)
+        self.assertEqual(outcome.periods_used, 1)
+        self.assertEqual(outcome.unmet_demand_by_trade, {})
 
     def test_history_length_matches_periods_used(self):
         initial = {"potter": 10_000.0, "smith": 1_000.0}
         required = {"potter": 9_000.0, "smith": 2_000.0}
-        _, periods, _, history = labour_market.solve_to_stable_allocation(
+        outcome = labour_market.solve_to_stable_allocation(
             initial, required, tolerance_hours=1e-3)
-        self.assertEqual(len(history), periods)
+        self.assertEqual(len(outcome.history), outcome.periods_used)
+
+    def test_a_previously_unreachable_shortage_now_settles_far_faster(self):
+        # The exact fixture the old flat-rate mechanism took 500 periods
+        # (the old MAXIMUM_REALLOCATION_PERIODS) to fail to converge on -
+        # a war-sized shock a small trade cannot fully absorb from a tiny
+        # surplus pool - now stabilizes in a handful of years, because the
+        # surplus side's own gap-responsive rate drains its slack quickly
+        # rather than trickling it out at a flat 5%/year forever.
+        initial = {"potter": 12_000.0, "smith": 1_000.0}
+        required = {"potter": 10_000.0, "smith": 3_000.0}
+        outcome = labour_market.solve_to_stable_allocation(
+            initial, required, tolerance_hours=1.0, maximum_periods=500)
+        self.assertTrue(outcome.stabilized)
+        self.assertLess(outcome.periods_used, 30)
+
+    def test_walkable_trades_and_other_step_kwargs_pass_through(self):
+        initial = {"labourer": 120_000.0, "adventurer": 0.0}
+        required = {"labourer": 100_000.0, "adventurer": 20_000.0}
+        outcome = labour_market.solve_to_stable_allocation(
+            initial, required, tolerance_hours=1.0, maximum_periods=200,
+            walkable_trades=labour_market.WALKABLE_TRADES | {"adventurer"})
+        self.assertGreater(outcome.workforce.hours_by_trade["adventurer"], 0.0)
 
 
 # ============================================================================
-# THE CONSTANT
+# WHAT WAS NOT MET, AND HAVE VERSUS NEED
+# ============================================================================
+
+class UnmetDemandByTradeTests(unittest.TestCase):
+
+    def test_only_positive_shortfalls_are_reported(self):
+        result = labour_market.unmet_demand_by_trade(
+            {"smith": 100.0, "potter": 500.0}, {"smith": 150.0, "potter": 400.0})
+        self.assertEqual(result, {"smith": 50.0})
+        self.assertNotIn("potter", result)
+
+    def test_a_fully_met_allocation_reports_an_empty_dict(self):
+        self.assertEqual(
+            labour_market.unmet_demand_by_trade({"smith": 100.0}, {"smith": 100.0}), {})
+
+    def test_a_trade_required_but_entirely_absent_is_its_own_full_shortfall(self):
+        result = labour_market.unmet_demand_by_trade({}, {"electrician": 40.0})
+        self.assertEqual(result, {"electrician": 40.0})
+
+
+class HaveVersusNeedTests(unittest.TestCase):
+    """The module docstring's central reframe, made callable - see `have_
+    versus_need`'s own docstring for the stakeholder quotation it answers."""
+
+    def test_reports_both_numbers_and_their_gap_for_every_named_trade(self):
+        result = labour_market.have_versus_need(
+            {"smith": 800.0}, {"smith": 1_000.0, "potter": 200.0})
+        self.assertEqual(result["smith"].hours_have, 800.0)
+        self.assertEqual(result["smith"].hours_need, 1_000.0)
+        self.assertEqual(result["smith"].gap, 200.0)
+        self.assertEqual(result["potter"].hours_have, 0.0)
+        self.assertEqual(result["potter"].hours_need, 200.0)
+
+    def test_a_negative_gap_means_have_exceeds_need(self):
+        result = labour_market.have_versus_need({"smith": 1_200.0}, {"smith": 1_000.0})
+        self.assertEqual(result["smith"].gap, -200.0)
+        self.assertLess(result["smith"].tightness_ratio, 1.0)
+
+    def test_tightness_ratio_is_infinite_when_have_is_zero_and_need_is_not(self):
+        result = labour_market.have_versus_need({}, {"electrician": 40.0})
+        self.assertEqual(result["electrician"].tightness_ratio, float("inf"))
+
+
+# ============================================================================
+# THE FRICTION CONSTANTS
 # ============================================================================
 
 class OccupationalMobilityRateTests(unittest.TestCase):
@@ -368,6 +626,43 @@ class OccupationalMobilityRateTests(unittest.TestCase):
         self.assertEqual(entry["kind"], "temporary_heuristic")
         self.assertTrue(entry["why"])
         self.assertTrue(entry["source"])
+
+
+class MobilityFrictionConstantsTests(unittest.TestCase):
+    """The three constants THE FRICTION section added alongside the
+    original steady-state rate, each labelled per CLAUDE.md SS3.4."""
+
+    def test_gap_response_gain_is_positive_and_labelled(self):
+        from sim import constants
+        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN, 0.0)
+        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN"]
+        self.assertEqual(entry["kind"], "temporary_heuristic")
+        self.assertTrue(entry["why"])
+
+    def test_rate_ceiling_is_above_the_steady_state_rate_and_below_one(self):
+        from sim import constants
+        self.assertGreater(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
+                           labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR)
+        self.assertLess(labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR, 1.0)
+        entry = constants.REGISTRY["OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR"]
+        self.assertEqual(entry["kind"], "temporary_heuristic")
+        self.assertTrue(entry["why"])
+
+    def test_walkable_seed_share_is_a_small_positive_fraction(self):
+        from sim import constants
+        self.assertGreater(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 0.0)
+        self.assertLess(labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS, 1.0)
+        entry = constants.REGISTRY["WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS"]
+        self.assertEqual(entry["kind"], "temporary_heuristic")
+        self.assertTrue(entry["why"])
+
+    def test_cross_family_proximity_is_a_fraction_strictly_between_zero_and_one(self):
+        from sim import constants
+        self.assertGreater(labour_market.CROSS_FAMILY_PROXIMITY, 0.0)
+        self.assertLess(labour_market.CROSS_FAMILY_PROXIMITY, 1.0)
+        entry = constants.REGISTRY["CROSS_FAMILY_PROXIMITY"]
+        self.assertEqual(entry["kind"], "temporary_heuristic")
+        self.assertTrue(entry["why"])
 
 
 # ============================================================================
