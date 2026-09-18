@@ -505,27 +505,46 @@ class GrowthCeilingTests(unittest.TestCase):
         # sufficiently large multiple of subsistence food gives the same
         # result - 1000x is used to make that saturation explicit rather
         # than relying on a ratio that merely happens to be "big enough".
+        #
+        # SCENARIO NOTE: this is unlimited food at the DEFAULT (pre-
+        # industrial) disease burden, so it is a different case from
+        # DiseaseBurdenTests' unlimited-food-AND-no-disease scenario and
+        # lands in a different place - about 2.2%/year here against about
+        # 5.7% there. Both are checked against the same 9.06%/year
+        # biological ceiling because that ceiling is a property of human
+        # reproduction, not of either scenario.
         population = demography.Population.stationary(65_000_000.0, seed=1)
-        start = population.total
+        previous_total = population.total
+        annual_growth_rates = []
         for _year in range(100):
             population.step(population._subsistence_food() * 1000.0,
                              jitter=False)
-        end = population.total
-        annual_growth_rate = (end / start) ** (1.0 / 100.0) - 1.0
+            annual_growth_rates.append(population.total / previous_total - 1.0)
+            previous_total = population.total
+
+        # PER YEAR, not averaged over the century. The ceiling is an
+        # instantaneous biological limit, so the year that comes closest to
+        # it is the one that has to be checked - and it is not the average:
+        # this scenario peaks at 2.8190% in year one while its century mean
+        # is 2.2090%, because the run starts from a stationary age
+        # structure and takes decades to settle.
+        worst_year = min(annual_growth_rates)
+        best_year = max(annual_growth_rates)
 
         self.assertGreater(
-            annual_growth_rate, 0.0,
-            "unlimited food should not produce population decline")
+            worst_year, 0.0,
+            "unlimited food should not produce population decline in any year")
         ceiling_growth_rate = self._biological_growth_ceiling() - 1.0
         self.assertLess(
-            annual_growth_rate, ceiling_growth_rate,
+            best_year, ceiling_growth_rate,
             "growth under unlimited food exceeded the biological ceiling")
         # "Well under": FERTILITY_SURPLUS_CEILING_MULTIPLIER was checked
         # against this same bound and comes in around 2-3%/year on its own
         # (see that constant's declaration) - a regression that pushed
         # this well past that, toward the ~9%/year ceiling, would mean the
-        # ramp is no longer doing what it was checked to do.
-        self.assertLess(annual_growth_rate, 0.05)
+        # ramp is no longer doing what it was checked to do. Applied to the
+        # best year rather than the mean, for the reason above.
+        self.assertLess(best_year, 0.05)
 
     def test_famine_still_raises_mortality_and_still_hits_children_and_elderly_harder(self):
         # The fertility ramp above subsistence must not come at the cost of
@@ -916,30 +935,68 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
         self.assertAlmostEqual(annual_growth_rate, 0.022, delta=0.01)
 
-    def test_unlimited_food_and_fully_modern_disease_lands_between_hutterite_floor_and_biological_ceiling(self):
-        # The corrected calibration frame (this task's report): ~4.1%/year
-        # (Eaton & Mayer 1953's Hutterite colonies) is the highest REAL
-        # natural increase ever sustained, but it was achieved WITH land,
-        # food and ordinary-for-its-era infectious mortality still binding
-        # - a floor for the unconstrained case, not a ceiling. 9.06%/year
-        # (GrowthCeilingTests._biological_growth_ceiling - zero mortality
-        # of any kind, a birth every year from every woman 18-40) is the
-        # impossible upper bound the same class already pins. Unlimited
-        # food AND fully modern disease control (still leaving senescence,
-        # accident and residual maternal mortality in place - see
-        # DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE/_ELDERLY, both
-        # bounded well above zero) belongs strictly between the two.
+    def test_unlimited_food_and_fully_modern_disease_stays_between_the_bounds_EVERY_year(self):
+        # THE BOUNDS ARE PER YEAR, SO THE TEST IS PER YEAR. This used to
+        # run a century and assert on the geometric mean, which is a
+        # different quantity and a weaker one: the stakeholder's 4% and
+        # 9.06% are both statements about an ANNUAL rate, and averaging a
+        # hundred of them hides any single year that breaks either bound.
+        # Measured, the gap is not small - starting from a stationary age
+        # structure this scenario runs 7.0872% in year one, dips to
+        # 5.4560%, and settles at 5.6693%, against a century mean of
+        # 5.6609%. The peak year is 25% above the number the old assertion
+        # looked at, so a regression could lift it a long way before the
+        # mean moved enough to fail.
+        #
+        # THE TWO BOUNDS ARE NOT THE SAME KIND OF CLAIM, and scoping them
+        # correctly means treating them differently:
+        #
+        #   The CEILING (9.06%/year, GrowthCeilingTests._biological_growth_
+        #   ceiling - zero mortality of any kind, a birth every year from
+        #   every woman 18-40) is an instantaneous biological limit. NO
+        #   single year may exceed it, transient or not, so it is asserted
+        #   against the maximum.
+        #
+        #   The FLOOR (~4.1%/year, Eaton & Mayer 1953's Hutterite colonies)
+        #   is the highest natural increase ever really SUSTAINED, and it
+        #   was achieved with land, food and ordinary-for-its-era
+        #   infectious mortality all still binding. With those removed the
+        #   model must beat it and keep beating it, so it is asserted
+        #   against the minimum and against the settled rate, not against
+        #   an average a bad decade could hide inside.
         population = demography.Population.stationary(65_000_000.0, seed=12)
-        start = population.total
-        for _year in range(100):
+        previous_total = population.total
+        annual_growth_rates = []
+        for _year in range(300):
             population.step(population._subsistence_food() * 1000.0,
                              jitter=False,
                              disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
-        annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
+            annual_growth_rates.append(population.total / previous_total - 1.0)
+            previous_total = population.total
+
         hutterite_floor = 0.041
         biological_ceiling = GrowthCeilingTests._biological_growth_ceiling() - 1.0
-        self.assertGreater(annual_growth_rate, hutterite_floor)
-        self.assertLess(annual_growth_rate, biological_ceiling)
+
+        worst_year = min(annual_growth_rates)
+        best_year = max(annual_growth_rates)
+        self.assertLess(
+            best_year, biological_ceiling,
+            "a single year exceeded the biological ceiling: %.4f%% in year "
+            "%d. The ceiling assumes no deaths at all and a birth every "
+            "year from every woman 18-40, so no year can pass it."
+            % (100.0 * best_year, annual_growth_rates.index(best_year) + 1))
+        self.assertGreater(
+            worst_year, hutterite_floor,
+            "a year fell below the Hutterite floor: %.4f%%. The Hutterites "
+            "achieved ~4.1%%/year WITH finite land, finite food and real "
+            "infectious mortality; with all three removed no year should "
+            "be worse." % (100.0 * worst_year))
+
+        # The settled rate, once the age structure has finished converging
+        # away from the stationary distribution it started in. Pinned
+        # separately from the transient because they are different facts
+        # and a test that quotes one number cannot tell you which it moved.
+        self.assertAlmostEqual(annual_growth_rates[-1], 0.0567, delta=0.002)
 
     def test_famine_still_kills_and_still_hits_children_and_elderly_harder_under_modern_disease(self):
         # The famine mechanism (STARVATION_VULNERABILITY_*) must survive
