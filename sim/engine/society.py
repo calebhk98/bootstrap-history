@@ -4,7 +4,7 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 
-This file grew to 3,809 lines and 61 methods on its own, at which point it
+This file grew to 3,802 lines and 61 methods on its own, at which point it
 became the same problem simulator.py was: one file nobody could edit
 without colliding with everyone else touching Sim's social mechanics. It is
 now a pure composition point. The 61 methods live in four sibling modules,

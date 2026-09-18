@@ -55,8 +55,41 @@ of a guess.
 """
 import collections
 from collections import defaultdict
+from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
+                     Optional, Set, Tuple, TypedDict)
 
 from ..economy import _InvalidatingSet
+
+
+class MineWorking(TypedDict):
+    """One entry of `self.mines`, below - a single owned mining operation.
+    Fixed at exactly these five fields: the only place any of these dicts is
+    built is `commission_mines()` (economy_mining.py), which always writes
+    all five, and every read site across economy_mining.py reads only
+    `material`, `capacity` and `intensity_yrs` (`opened_year` and
+    `capex_paid` exist for save/display, not for the mining arithmetic
+    itself) - none of them, in that file or anywhere else, adds a sixth
+    key. Contrast `ActiveProjectState` below, which stays a plain mapping
+    because ITS dicts genuinely do grow new keys at runtime."""
+    material: str
+    capacity: float
+    opened_year: int
+    capex_paid: float
+    intensity_yrs: float
+
+
+# `self.active[node_id]`'s value type. NOT a TypedDict, on purpose, unlike
+# `MineWorking` just above: `core_step_phases.py` alone (not owned by this
+# task) writes more than a dozen additional keys into one of these over a
+# project's life - `pool_total_this_year`, `blocked_on_trades`,
+# `stalled_years`, `waiting_on_money`, `cost_left`, and others - none of
+# them present at creation (`dict(ph_left=..., yrs=0.0, spent=0.0)` in
+# `projects_starting.py`). A TypedDict would either have to declare all of
+# them NotRequired (in which case it says nothing a plain mapping does not
+# already say) or would be lying about which keys are actually there at any
+# given moment. This is exactly the "open and data-driven" case the task's
+# own instructions distinguish from `MineWorking`'s fixed one.
+ActiveProjectState = Dict[str, Any]
 
 
 class Household:
@@ -86,7 +119,8 @@ class Household:
     sees the field's true, possibly-absent, state.
     """
 
-    def __init__(self, starting_capital, operating_changed):
+    def __init__(self, starting_capital: float,
+                 operating_changed: Callable[[], None]) -> None:
         """`starting_capital`: this household's opening purse, in the
         civilisation's own currency and price level - computed by the
         caller (today, `Sim.__init__`, from `cfg["start_capital"]` and
@@ -114,31 +148,37 @@ class Household:
         # See the fuller comment this line used to carry in Sim.__init__
         # (core.py, git blame) for why a kit is priced where you are rather
         # than at a single global rate.
-        self.capital = float(starting_capital)
-        self.done = set()
-        self._done_seq = None
-        self._cap_factor = None   # capability_factor()'s cache; see economy.py
-        self.training = []        # [[artisan_capacity, year_it_matures], ...]
+        self.capital: float = float(starting_capital)
+        self.done: Set[str] = set()
+        self._done_seq: Optional[List[str]] = None
+        self._cap_factor: Optional[float] = None   # capability_factor()'s cache; see economy.py
+        # [[artisan_capacity, year_it_matures], ...] usually, but
+        # `labour_training.py` (not owned by this task) also appends a
+        # 4-element [progress, year, trade, count] row for taught-trade
+        # training, so a row's own length and field meanings vary by who
+        # wrote it - genuinely heterogeneous, not a fixed record this pass
+        # can name honestly.
+        self.training: List[List[Any]] = []
         # Held because the SOCIETY has it, not because this household built
         # it. See the module docstring above for the `granted` fork this
         # inventory flags for whenever a second actor exists to force the
         # question of whether it should be shared rather than duplicated.
-        self.granted = set()
-        self.active = {}          # id -> dict(ph_left, years_elapsed, spent)
-        self.failed_attempts = defaultdict(int)
+        self.granted: Set[str] = set()
+        self.active: Dict[str, ActiveProjectState] = {}          # id -> dict(ph_left, years_elapsed, spent)
+        self.failed_attempts: DefaultDict[str, int] = defaultdict(int)
         # YOU ARRIVE ALONE. No employees, no slaves, no household: you stepped
         # out of the future into a street in a city where nobody knows you, and
         # the three artisans the model used to hand you on arrival were never
         # hired by anybody. You are your own only scholar (see
         # effective_scholars) and everyone else has to be found, paid, taught or
         # bought, by you, on purpose.
-        self.scholars = 0.0
-        self.artisans = 0.0
-        self.directors_extra = 0.0
+        self.scholars: float = 0.0
+        self.artisans: float = 0.0
+        self.directors_extra: float = 0.0
         # Standing staff BY TRADE, which is what makes a smith not a scribe.
-        self.employees = {}
+        self.employees: Dict[str, float] = {}
         # Trades this society does not have and you have taught into existence.
-        self.trades_created = set()
+        self.trades_created: Set[str] = set()
         # WHEN a taught trade was first taught, and which taught trades this
         # society has since gone on to naturalise on its own - see
         # SocietyMixin.advance_society (society.py) for what moves these and
@@ -146,13 +186,13 @@ class Household:
         # this be hired at all", which stays true for ever once taught, while
         # these two answer "since when" and "does the society now supply its
         # own", which trades_created alone cannot say.
-        self.trade_introduced_year = {}
-        self.trades_endemic = set()
-        self.contract_projects = set()   # projects staffed by the job, not by employees
-        self.wages_paid = 0.0
-        self.contract_hours = {}         # trade -> hours bought this year, by the job
-        self.commissioned = {}           # trade -> hours bought this year, cumulative log
-        self.teaching_hours_this_year = 0.0
+        self.trade_introduced_year: Dict[str, int] = {}
+        self.trades_endemic: Set[str] = set()
+        self.contract_projects: Set[str] = set()   # projects staffed by the job, not by employees
+        self.wages_paid: float = 0.0
+        self.contract_hours: Dict[str, float] = {}         # trade -> hours bought this year, by the job
+        self.commissioned: Dict[str, float] = {}           # trade -> hours bought this year, cumulative log
+        self.teaching_hours_this_year: float = 0.0
         # A STANDING INSTRUCTION, NOT A ONE-TURN COMMAND. {project id: hours
         # a year} for every project the player has told step() to give a
         # fixed share of their own hours to, every year, without having to
@@ -168,19 +208,19 @@ class Household:
         # directed are untouched by this and keep being shared out by
         # priority exactly as before - a player who never calls `allocate`
         # sees no change at all.
-        self.hour_allocations = {}
+        self.hour_allocations: Dict[str, float] = {}
         # WHICH TRADE "work" IN hour_allocations SELLS HOURS AS. A STANDING
         # hour-allocation for wages has to name one, the same way the `work`
         # command itself takes a trade argument every time it is typed; this
         # is that argument, remembered.
-        self.work_trade = None
-        self.trade_hours_used = {}       # trade -> hours consumed by projects this year
-        self.mothballed = set()          # completed works you shut down on purpose
-        self.forgotten = {}              # {node: year} destroyed by a sacking
-        self.opened_year = {}            # {node: year} the doors first opened
-        self.paid_towards = {}           # {node: denarii} sunk before it stopped
-        self.last_taught = {}            # {trade: year} auto_train last taught it
-        self.wages_prepaid = 0.0         # first-year wages `hire` already took
+        self.work_trade: Optional[str] = None
+        self.trade_hours_used: Dict[str, float] = {}       # trade -> hours consumed by projects this year
+        self.mothballed: Set[str] = set()          # completed works you shut down on purpose
+        self.forgotten: Dict[str, int] = {}              # {node: year} destroyed by a sacking
+        self.opened_year: Dict[str, int] = {}            # {node: year} the doors first opened
+        self.paid_towards: Dict[str, float] = {}         # {node: denarii} sunk before it stopped
+        self.last_taught: Dict[str, int] = {}            # {trade: year} auto_train last taught it
+        self.wages_prepaid: float = 0.0         # first-year wages `hire` already took
         # WHAT YOU ACTUALLY RUN, as opposed to what you know how to do. Revenue
         # and upkeep follow this set and nothing else does. See is_venture and
         # open_venture in projects.py: completing the research used to start
@@ -192,10 +232,10 @@ class Household:
         # economy.py for why this is a set subclass and not a property, and
         # this class's own __init__ docstring, above, for why the callback
         # is a constructor argument rather than a lookup on `self`.
-        self.operating = _InvalidatingSet(on_change=operating_changed)
-        self.bondage_years_left = 0.0    # years of service still owed for a debt
-        self.bondage_debt = 0.0
-        self.credit_frozen_until = 0     # year until which nobody will fund new work
+        self.operating: _InvalidatingSet = _InvalidatingSet(on_change=operating_changed)
+        self.bondage_years_left: float = 0.0    # years of service still owed for a debt
+        self.bondage_debt: float = 0.0
+        self.credit_frozen_until: int = 0     # year until which nobody will fund new work
         # -- A HANDFUL OF "LAST TIME I SAID/DID X" TRACKERS, GIVEN A REAL
         #    STARTING VALUE HERE INSTEAD OF SPRINGING INTO EXISTENCE ON FIRST
         #    USE -----------------------------------------------------------
@@ -218,54 +258,54 @@ class Household:
         # `_said_parallelism`) are deliberately left OUT of this constructor
         # and still read through `getattr(self.household, name, default)` at
         # every call site, unchanged.
-        self._staff_scale = 1.0            # labour.py's staff_capacity() sets the real value every step before core.py reads it; this is only the pre-first-step default
-        self._spend_this_year = 0.0        # denarii spent this year; reset to 0.0 at the end of every step() (spend_last_year, the field that IS saved, always gets a real value from this every step)
-        self._said_eminence = -999         # last eminence "band" warned about; -999 guarantees the first qualifying band always warns
-        self._said_requisition = -999      # last year a state-requisition note was printed
-        self._said_notice_approach = 0     # last state-notice "band" warned about
-        self.last_military_demand = -999   # last year this household was subject to a military levy
-        self._said_confiscation_band = -1  # last confiscation-risk "band" warned about
-        self.gov = 0.0
-        self.log = []
-        self.goal_year = None
-        self.stalled = 0
-        self.last_settlement = -999
-        self.bounties_paid = 0
-        self.bountied = set()
-        self.total_spend = 0.0
+        self._staff_scale: float = 1.0            # labour.py's staff_capacity() sets the real value every step before core.py reads it; this is only the pre-first-step default
+        self._spend_this_year: float = 0.0        # denarii spent this year; reset to 0.0 at the end of every step() (spend_last_year, the field that IS saved, always gets a real value from this every step)
+        self._said_eminence: int = -999         # last eminence "band" warned about; -999 guarantees the first qualifying band always warns
+        self._said_requisition: int = -999      # last year a state-requisition note was printed
+        self._said_notice_approach: int = 0     # last state-notice "band" warned about
+        self.last_military_demand: int = -999   # last year this household was subject to a military levy
+        self._said_confiscation_band: int = -1  # last confiscation-risk "band" warned about
+        self.gov: float = 0.0
+        self.log: List[Tuple[Any, str]] = []
+        self.goal_year: Optional[int] = None
+        self.stalled: int = 0
+        self.last_settlement: int = -999
+        self.bounties_paid: int = 0
+        self.bountied: Set[str] = set()
+        self.total_spend: float = 0.0
         # REPUTATION: your ability to be believed and followed. Distinct from money
         # and from political protection. A man with a great reputation gets his
         # ideas adopted; a man without one gets them ignored however right he is.
-        self.reputation = 5.0
+        self.reputation: float = 5.0
         # SCANDAL replaces the old scalar "suspicion". Doing something a society
         # cannot explain is alarming; doing a lot of ordinary things over decades
         # is not. The old model conflated speed with sorcery, which is wrong: the
         # iPhone was astonishing in 2007 and boring by 2012.
-        self.scandal = 0.0
-        self.eminence = 0.0
-        self.familiarity = 0.0      # how used to you the world has become
-        self.protection = 0.0       # patrons, office, citizenship, priesthood
-        self.bribes_ytd = 0.0
-        self.slaves = 0
-        self.freedmen = 0
-        self.manumitted_total = 0
-        self.atrocity = 0           # counted, never scored as a benefit
+        self.scandal: float = 0.0
+        self.eminence: float = 0.0
+        self.familiarity: float = 0.0      # how used to you the world has become
+        self.protection: float = 0.0       # patrons, office, citizenship, priesthood
+        self.bribes_ytd: float = 0.0
+        self.slaves: int = 0
+        self.freedmen: int = 0
+        self.manumitted_total: int = 0
+        self.atrocity: int = 0           # counted, never scored as a benefit
         # -- RAW MATERIAL QUANTITIES AND PLANT THIS HOUSEHOLD OWNS ---------
-        self.forest_ha = 0.0        # coppice you own, in hectares
-        self.nitre_bed_m2 = 0.0
-        self.market_pressure = 0.0  # how hard you have recently leaned on the slave market
+        self.forest_ha: float = 0.0        # coppice you own, in hectares
+        self.nitre_bed_m2: float = 0.0
+        self.market_pressure: float = 0.0  # how hard you have recently leaned on the slave market
         # A WORKING IS A THING: material, rated capacity, the year it was
         # commissioned, what it cost to sink, and its own depletion clock -
         # see economy.py's class comment above _workings_of(). mine_capacity
         # is now a property computed from this list (economy.py), not a
         # second number kept in sync by hand.
-        self.mines = []             # your OWN workings - see EconomyMixin
-        self.mine_pending = {}      # sunk but not yet producing
-        self.mine_ready = {}        # material -> year it comes on stream
-        self.mine_cost_paid = 0.0
-        self.shortages = collections.Counter()
-        self.throttle = 1.0
-        self.binding = None
+        self.mines: List[MineWorking] = []             # your OWN workings - see EconomyMixin
+        self.mine_pending: Dict[str, float] = {}      # sunk but not yet producing
+        self.mine_ready: Dict[str, int] = {}        # material -> year it comes on stream
+        self.mine_cost_paid: float = 0.0
+        self.shortages: "collections.Counter[str]" = collections.Counter()
+        self.throttle: float = 1.0
+        self.binding: Optional[str] = None
         # NOTE: `done`/`granted` are populated from `civ["starting_techs"]`
         # by the CALLER (Sim.__init__), not here - the loop that does it also
         # has to raise ValueError on an unknown starting technology, which
@@ -284,11 +324,11 @@ class Household:
     # about every future caller: assigning a smaller set here only ever
     # grows what is already known, never shrinks it.
     @property
-    def revealed(self):
+    def revealed(self) -> Set[str]:
         return self.__dict__.get("_revealed", set())
 
     @revealed.setter
-    def revealed(self, value):
+    def revealed(self, value: Iterable[str]) -> None:
         cur = self.__dict__.get("_revealed")
         self.__dict__["_revealed"] = (set(value) if cur is None
                                       else set(cur) | set(value))

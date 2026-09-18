@@ -1,6 +1,6 @@
 """How a population takes up what the founder has built.
 
-Split out of sim/engine/society.py, which had grown to 3,809 lines holding
+Split out of sim/engine/society.py, which had grown to 3,802 lines holding
 one SocietyMixin with 61 methods. This piece is the domestic side of
 adoption: applying a DONE node's one-off effects on the wider civilisation
 (apply_tech_effects), the agrarian slack that mechanisation frees up

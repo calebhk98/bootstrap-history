@@ -38,35 +38,45 @@ def _capacity_resources(out):
     return lines
 
 
-def _capacity_power(out):
-    power = out.get("power") or {}
-    lines = ["", "  POWER"]
+def _capacity_power_tiers(power):
+    lines = []
     tiers = power.get("power_tiers_you_have_discovered")
     if isinstance(tiers, list) and tiers:
         for tier in tiers:
             lines.append("    [%s] %s" % ("x" if tier["built"] else " ", tier["capability"]))
     else:
         lines.append("    nothing discovered yet")
+    return lines
+
+
+def _capacity_power_generation(power):
+    lines = []
     gen = power.get("generation_kw")
-    if gen:
-        lines.append("    generation: %s kW local + %s kW grid = %s kW total"
-                 % (_fmt_num(gen["local_workshop_scale"]), _fmt_num(gen["grid_scale"]),
-                    _fmt_num(gen["total"])))
-        lines.append("    demand: %s kW" % _fmt_num(power.get("demand_kw")))
-        reserve_margin = power.get("reserve_margin")
-        lines.append("    reserve margin: %s"
-                 % ("no demand yet" if reserve_margin is None else _pct(reserve_margin) if reserve_margin >= 0
-                    else "SHORT by " + _pct(-reserve_margin)))
-        if power.get("transmission_capacity_kw"):
-            lines.append("    grid transmission capacity: %s kW"
-                     % _fmt_num(power["transmission_capacity_kw"]))
-        if power.get("mechanical_shaft_power_kw"):
-            lines.append("    mechanical shaft power available: "
-                     + ", ".join("%s %s kW" % (mechanism, _fmt_num(value))
-                                 for mechanism, value in power["mechanical_shaft_power_kw"].items()))
-        if power.get("electricity_is_the_binding_constraint"):
-            lines.append("    ELECTRICITY IS THE BINDING CONSTRAINT this year "
-                     "(throttle %s)" % _pct(power.get("throttle")))
+    if not gen:
+        return lines
+    lines.append("    generation: %s kW local + %s kW grid = %s kW total"
+             % (_fmt_num(gen["local_workshop_scale"]), _fmt_num(gen["grid_scale"]),
+                _fmt_num(gen["total"])))
+    lines.append("    demand: %s kW" % _fmt_num(power.get("demand_kw")))
+    reserve_margin = power.get("reserve_margin")
+    lines.append("    reserve margin: %s"
+             % ("no demand yet" if reserve_margin is None else _pct(reserve_margin) if reserve_margin >= 0
+                else "SHORT by " + _pct(-reserve_margin)))
+    if power.get("transmission_capacity_kw"):
+        lines.append("    grid transmission capacity: %s kW"
+                 % _fmt_num(power["transmission_capacity_kw"]))
+    if power.get("mechanical_shaft_power_kw"):
+        lines.append("    mechanical shaft power available: "
+                 + ", ".join("%s %s kW" % (mechanism, _fmt_num(value))
+                             for mechanism, value in power["mechanical_shaft_power_kw"].items()))
+    if power.get("electricity_is_the_binding_constraint"):
+        lines.append("    ELECTRICITY IS THE BINDING CONSTRAINT this year "
+                 "(throttle %s)" % _pct(power.get("throttle")))
+    return lines
+
+
+def _capacity_power_waiting(power):
+    lines = []
     if power.get("waiting_on_workshop_scale_power"):
         lines.append("    waiting on workshop-scale power: "
                  + ", ".join(power["waiting_on_workshop_scale_power"]))
@@ -74,6 +84,15 @@ def _capacity_power(out):
         lines.append("    waiting on the grid: " + ", ".join(power["waiting_on_grid_scale_power"]))
     if power.get("note"):
         lines.append(_wrap(power["note"], indent="    "))
+    return lines
+
+
+def _capacity_power(out):
+    power = out.get("power") or {}
+    lines = ["", "  POWER"]
+    lines += _capacity_power_tiers(power)
+    lines += _capacity_power_generation(power)
+    lines += _capacity_power_waiting(power)
     return lines
 
 
@@ -296,52 +315,83 @@ def render_changes(out):
     return "\n".join(lines)
 
 
-def render_money(out):
-    lines = ["LEDGER"]
-    lines.append("Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue"))))
+# render_money is split into one function per section, same reasoning and
+# same order as render_capacity above.
+
+def _money_header_line(out):
+    return ["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
+
+
+def _money_from_block(out):
     src = out.get("where_the_money_comes_from") or {}
-    if src:
-        lines.append("  from:")
-        for raw_key, value in sorted(src.items(),
-                           key=lambda kv: -(kv[1] if isinstance(kv[1], (int, float)) else 0)):
-            # The engine's own rows are node ids and must stay verbatim; the
-            # aggregate lines are marked with a leading underscore so they sort
-            # and read as what they are rather than as technologies.
-            label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
-            lines.append("    %-38s %s" % (label, _fmt_num(value)))
-        lines.append("    %-38s %s" % ("(these add up to the revenue above)", ""))
-        if out.get("still_building_up_custom"):
-            lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
-                           indent="    "))
-        if out.get("about_your_own_practice"):
-            lines.append(_wrap("YOUR PRACTICE: " + out["about_your_own_practice"],
-                           indent="    "))
-        if out.get("the_market_you_sell_into"):
-            lines.append(_wrap("THE MARKET: " + out["the_market_you_sell_into"],
-                           indent="    "))
+    lines = []
+    if not src:
+        return lines
+    lines.append("  from:")
+    for raw_key, value in sorted(src.items(),
+                       key=lambda kv: -(kv[1] if isinstance(kv[1], (int, float)) else 0)):
+        # The engine's own rows are node ids and must stay verbatim; the
+        # aggregate lines are marked with a leading underscore so they sort
+        # and read as what they are rather than as technologies.
+        label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
+        lines.append("    %-38s %s" % (label, _fmt_num(value)))
+    lines.append("    %-38s %s" % ("(these add up to the revenue above)", ""))
+    if out.get("still_building_up_custom"):
+        lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
+                       indent="    "))
+    if out.get("about_your_own_practice"):
+        lines.append(_wrap("YOUR PRACTICE: " + out["about_your_own_practice"],
+                       indent="    "))
+    if out.get("the_market_you_sell_into"):
+        lines.append(_wrap("THE MARKET: " + out["the_market_you_sell_into"],
+                       indent="    "))
+    return lines
+
+
+def _money_costs_block(out):
     costs = out.get("what_it_costs_you") or {}
-    if costs:
-        lines.append("Costs:")
-        for raw_key, value in costs.items():
-            if value is None:
-                continue
-            lines.append("  %-30s %s"
-                     % (raw_key.lstrip("_").replace("_", " "), _fmt_num(value)))
-    lines.append("Net/yr before the work in hand: %s   (recurring - `state` "
+    lines = []
+    if not costs:
+        return lines
+    lines.append("Costs:")
+    for raw_key, value in costs.items():
+        if value is None:
+            continue
+        lines.append("  %-30s %s"
+                 % (raw_key.lstrip("_").replace("_", " "), _fmt_num(value)))
+    return lines
+
+
+def _money_net_lines(out):
+    lines = ["Net/yr before the work in hand: %s   (recurring - `state` "
              "prints this same figure)     spent on projects last step: %s"
              % (_fmt_num(out.get("net_per_year")),
-                _fmt_num(out.get("spent_on_projects_last_year"))))
+                _fmt_num(out.get("spent_on_projects_last_year")))]
     if out.get("net_after_project_spend") is not None:
         lines.append("Net/yr after it: %s   (one-off; `state` prints this too, "
                  "alongside the recurring figure above)"
                  % _fmt_num(out.get("net_after_project_spend")))
-    lines.append("Credit limit: %s (%s used)     interest on arrears: %s     paid so far: %s"
+    return lines
+
+
+def _money_credit_lines(out):
+    lines = ["Credit limit: %s (%s used)     interest on arrears: %s     paid so far: %s"
              % (_fmt_num(out.get("credit_limit")),
                 out.get("of_that_limit_you_have_used") or "none",
                 _pct(out.get("interest_rate_on_arrears")),
-                _fmt_num(out.get("interest_paid_in_total"))))
+                _fmt_num(out.get("interest_paid_in_total")))]
     if out.get("still_owed_on_work_in_hand"):
         lines.append("Still owed on work in hand: %s" % _fmt_num(out["still_owed_on_work_in_hand"]))
+    return lines
+
+
+def render_money(out):
+    lines = ["LEDGER"]
+    lines += _money_header_line(out)
+    lines += _money_from_block(out)
+    lines += _money_costs_block(out)
+    lines += _money_net_lines(out)
+    lines += _money_credit_lines(out)
     return "\n".join(lines)
 
 
@@ -383,64 +433,73 @@ def render_mines(out):
     return "\n".join(lines)
 
 
-def render_labour(out):
-    if isinstance(out.get("trade"), dict):
-        trade_detail = out["trade"]
-        lines = ["TRADE: %s (%s)" % (trade_detail.get("trade"), trade_detail.get("kind"))]
-        lines.append("exists here: %s" % trade_detail.get("exists_here"))
-        lines.append("a year of one: %s den     wage: %s den/hr" % (_fmt_num(trade_detail.get("a_year_of_one")), _fmt_num(trade_detail.get("wage_per_hour"))))
-        # THE HIRE YOU ARE CONTEMPLATING, NOT THE PRICE ABOVE. That price is
-        # the market as it stands; hiring moves it, and wage_bill then
-        # charges the new price to everyone of this trade you have, not
-        # only the one you are adding.
-        if trade_detail.get("hiring_moves_the_price"):
-            lines.append("%ss ARE SCARCE ENOUGH HERE THAT HIRING ONE MOVES THE "
-                     "PRICE: once hired, every %s you have costs %s den/yr, "
-                     "not %s - so with %s on staff already, your wage bill "
-                     "for %ss would go from %s to %s den/yr the moment you "
-                     "do this, not just the new hire's share of it."
-                     % (trade_detail.get("trade"), trade_detail.get("trade"),
-                        _fmt_num(trade_detail.get("a_year_of_one_after_you_hire_one")),
-                        _fmt_num(trade_detail.get("a_year_of_one")), _fmt_num(trade_detail.get("you_employ")),
-                        trade_detail.get("trade"), _fmt_num(trade_detail.get("wage_bill_for_this_trade_now")),
-                        _fmt_num(trade_detail.get("wage_bill_for_this_trade_after_hiring_one_more"))))
-        elif trade_detail.get("a_year_of_one_after_you_hire_one") is not None:
-            # QUIET WHEN THE MOVE IS ORDINARY. Hiring one more of almost any
-            # trade nudges its price a little; this says so plainly but
-            # without a banner, so the loud warning above stays meaningful
-            # when it does appear.
-            lines.append("hiring one more would make it %s den/yr"
-                     % _fmt_num(trade_detail.get("a_year_of_one_after_you_hire_one")))
-        lines.append("you employ: %s     the town can supply: %s hours"
-                 % (_fmt_num(trade_detail.get("you_employ")),
-                    _fmt_num(trade_detail.get("hours_the_market_can_supply"))))
-        if trade_detail.get("you_employ_is_fractional_because"):
-            lines.append(_wrap("  " + trade_detail["you_employ_is_fractional_because"], indent="     "))
-        if trade_detail.get("hours_your_own_people_add"):
-            lines.append("your own %ss add %s" % (trade_detail.get("trade"),
-                                              _fmt_num(trade_detail.get("hours_your_own_people_add"))))
-        if trade_detail.get("hours_you_could_still_commission"):
-            lines.append("and an outside shop would take on %s more hours at a "
-                     "premium ('commission'); you have bought %s"
-                     % (_fmt_num(trade_detail.get("hours_you_could_still_commission")),
-                        _fmt_num(trade_detail.get("hours_you_have_commissioned"))))
-        lines.append("so %s hours a year are available to you in all"
-                 % _fmt_num(trade_detail.get("hours_available_to_you_in_all")))
-        if trade_detail.get("most_this_society_can_ever_supply") is not None:
-            lines.append("HEADCOUNT CEILING: %s %ss in total, ever, at any price - "
-                     "you have or are teaching %s"
-                     % (_fmt_num(trade_detail["most_this_society_can_ever_supply"]),
-                        trade_detail.get("trade"), _fmt_num(trade_detail.get("you_have_or_are_teaching"))))
-            lines.append(_wrap("what widens it: " + str(trade_detail.get("what_widens_it") or ""),
-                           indent="  "))
-        if trade_detail.get("note"):
-            lines.append(_wrap(trade_detail["note"]))
-        return "\n".join(lines)
-    lines = ["LABOUR", "ON YOUR STAFF:"]
+# render_labour has two entirely separate screens behind one command - the
+# one-trade detail view and the household overview - selected by whether
+# `trade` is present, never both, so they are split into their own
+# functions with nothing shared between them; render_labour itself only
+# dispatches. The overview is then split further, one function per section,
+# same reasoning and order as render_capacity above.
+
+def _render_labour_trade(out):
+    trade_detail = out["trade"]
+    lines = ["TRADE: %s (%s)" % (trade_detail.get("trade"), trade_detail.get("kind"))]
+    lines.append("exists here: %s" % trade_detail.get("exists_here"))
+    lines.append("a year of one: %s den     wage: %s den/hr" % (_fmt_num(trade_detail.get("a_year_of_one")), _fmt_num(trade_detail.get("wage_per_hour"))))
+    # THE HIRE YOU ARE CONTEMPLATING, NOT THE PRICE ABOVE. That price is
+    # the market as it stands; hiring moves it, and wage_bill then
+    # charges the new price to everyone of this trade you have, not
+    # only the one you are adding.
+    if trade_detail.get("hiring_moves_the_price"):
+        lines.append("%ss ARE SCARCE ENOUGH HERE THAT HIRING ONE MOVES THE "
+                 "PRICE: once hired, every %s you have costs %s den/yr, "
+                 "not %s - so with %s on staff already, your wage bill "
+                 "for %ss would go from %s to %s den/yr the moment you "
+                 "do this, not just the new hire's share of it."
+                 % (trade_detail.get("trade"), trade_detail.get("trade"),
+                    _fmt_num(trade_detail.get("a_year_of_one_after_you_hire_one")),
+                    _fmt_num(trade_detail.get("a_year_of_one")), _fmt_num(trade_detail.get("you_employ")),
+                    trade_detail.get("trade"), _fmt_num(trade_detail.get("wage_bill_for_this_trade_now")),
+                    _fmt_num(trade_detail.get("wage_bill_for_this_trade_after_hiring_one_more"))))
+    elif trade_detail.get("a_year_of_one_after_you_hire_one") is not None:
+        # QUIET WHEN THE MOVE IS ORDINARY. Hiring one more of almost any
+        # trade nudges its price a little; this says so plainly but
+        # without a banner, so the loud warning above stays meaningful
+        # when it does appear.
+        lines.append("hiring one more would make it %s den/yr"
+                 % _fmt_num(trade_detail.get("a_year_of_one_after_you_hire_one")))
+    lines.append("you employ: %s     the town can supply: %s hours"
+             % (_fmt_num(trade_detail.get("you_employ")),
+                _fmt_num(trade_detail.get("hours_the_market_can_supply"))))
+    if trade_detail.get("you_employ_is_fractional_because"):
+        lines.append(_wrap("  " + trade_detail["you_employ_is_fractional_because"], indent="     "))
+    if trade_detail.get("hours_your_own_people_add"):
+        lines.append("your own %ss add %s" % (trade_detail.get("trade"),
+                                          _fmt_num(trade_detail.get("hours_your_own_people_add"))))
+    if trade_detail.get("hours_you_could_still_commission"):
+        lines.append("and an outside shop would take on %s more hours at a "
+                 "premium ('commission'); you have bought %s"
+                 % (_fmt_num(trade_detail.get("hours_you_could_still_commission")),
+                    _fmt_num(trade_detail.get("hours_you_have_commissioned"))))
+    lines.append("so %s hours a year are available to you in all"
+             % _fmt_num(trade_detail.get("hours_available_to_you_in_all")))
+    if trade_detail.get("most_this_society_can_ever_supply") is not None:
+        lines.append("HEADCOUNT CEILING: %s %ss in total, ever, at any price - "
+                 "you have or are teaching %s"
+                 % (_fmt_num(trade_detail["most_this_society_can_ever_supply"]),
+                    trade_detail.get("trade"), _fmt_num(trade_detail.get("you_have_or_are_teaching"))))
+        lines.append(_wrap("what widens it: " + str(trade_detail.get("what_widens_it") or ""),
+                       indent="  "))
+    if trade_detail.get("note"):
+        lines.append(_wrap(trade_detail["note"]))
+    return "\n".join(lines)
+
+
+def _labour_staff_block(out):
+    lines = ["ON YOUR STAFF:"]
     staff = out.get("on_your_staff")
-    _shown = False
+    shown = False
     if isinstance(staff, list) and staff:
-        _shown = True
+        shown = True
         for row in staff:
             lines.append("  %-16s %8s   %s den/yr each%s"
                      % (row["trade"], _fmt_num(row["you_employ"]),
@@ -454,15 +513,20 @@ def render_labour(out):
     # lost track of their household. It had not; it was only showing one third
     # of it.
     if out.get("slaves"):
-        _shown = True
+        shown = True
         lines.append("  %-16s %8s   held, not paid a wage"
                  % ("people you own", _fmt_num(out.get("slaves"))))
     if out.get("freedmen"):
-        _shown = True
+        shown = True
         lines.append("  %-16s %8s   freed, and worth more for it"
                  % ("freedmen", _fmt_num(out.get("freedmen"))))
-    if not _shown:
+    if not shown:
         lines.append("  nobody")
+    return lines
+
+
+def _labour_household_block(out):
+    lines = []
     if out.get("household_places_in_all") is not None:
         lines.append("")
         lines.append("HOUSEHOLD PLACES: %s of %s used, room for %s more"
@@ -479,28 +543,55 @@ def render_labour(out):
             lines.append(_wrap("  the lettered trades: "
                            + out["and_how_many_of_the_lettered_trades_this_society_supplies"],
                            indent="  "))
-    lines.append("")
-    lines.append("YOU COULD HIRE: " + (", ".join(out.get("you_could_hire_here") or []) or "nobody new"))
+    return lines
+
+
+def _labour_hire_block(out):
+    lines = ["", "YOU COULD HIRE: " + (", ".join(out.get("you_could_hire_here") or []) or "nobody new")]
     if out.get("only_the_ones_you_taught"):
         lines.append("EXISTS ONLY BECAUSE YOU TAUGHT IT: "
                  + ", ".join(out["only_the_ones_you_taught"])
                  + "   (no market; teach more, or they come only from your own)")
     lines.append("MUST BE TAUGHT: " + (", ".join(out.get("do_not_exist_here") or []) or "none"))
+    return lines
+
+
+def _labour_training_block(out):
+    lines = []
     training = out.get("in_training")
     if training:
         lines.append("")
         lines.append("IN TRAINING:")
         for row in training:
             lines.append("  %s x%s, ready %s" % (row.get("trade"), _fmt_num(row.get("people")), row.get("ready_year")))
-    lines.append("")
-    lines.append("Total employed: %s     annual wage bill: %s den"
-             % (_fmt_num(out.get("you_employ_in_total")), _fmt_num(out.get("annual_wage_bill"))))
+    return lines
+
+
+def _labour_totals_block(out):
+    lines = ["", "Total employed: %s     annual wage bill: %s den"
+             % (_fmt_num(out.get("you_employ_in_total")), _fmt_num(out.get("annual_wage_bill")))]
     if out.get("staff_are_fractional_because"):
         lines.append(_wrap(out["staff_are_fractional_because"], indent="  "))
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"]))
+    return lines
+
+
+def _render_labour_overview(out):
+    lines = ["LABOUR"]
+    lines += _labour_staff_block(out)
+    lines += _labour_household_block(out)
+    lines += _labour_hire_block(out)
+    lines += _labour_training_block(out)
+    lines += _labour_totals_block(out)
     return "\n".join(lines)
+
+
+def render_labour(out):
+    if isinstance(out.get("trade"), dict):
+        return _render_labour_trade(out)
+    return _render_labour_overview(out)
 
 
 def render_population(out):
@@ -532,12 +623,11 @@ def render_population(out):
     return "\n".join(lines)
 
 
-def render_ventures(out):
-    """What you run and what you could. This fell through to the generic
-    key/value dump, which prints a list of dicts as raw Python - a tester
-    reported "ventures dumps raw Python dicts" and they were reading exactly
-    that."""
-    lines = ["CONCERNS"]
+# render_ventures is split into one function per section, same reasoning
+# and same order as render_capacity above.
+
+def _ventures_summary(out):
+    lines = []
     free = out.get("people_free_to_run_something_new") or {}
     lines.append("free to put behind something new: %s scholars, %s craftsmen%s"
              % (_fmt_num(free.get("scholars")), _fmt_num(free.get("craftsmen")),
@@ -550,13 +640,23 @@ def render_ventures(out):
                  "them are watching a concern"
                  % (_fmt_num(_hi.get("scholars")), _fmt_num(_hi.get("craftsmen")),
                     _fmt_num(_hh.get("scholars")), _fmt_num(_hh.get("craftsmen"))))
-    _holders = out.get("and_these_concerns_are_holding_the_rest")
-    if isinstance(_holders, list) and _holders:
+    return lines
+
+
+def _ventures_held_by_block(out):
+    lines = []
+    holders = out.get("and_these_concerns_are_holding_the_rest")
+    if isinstance(holders, list) and holders:
         lines.append("")
         lines.append("  %-34s %10s %10s" % ("HELD BY", "SCHOLARS", "CRAFTSMEN"))
-        for row in _holders:
+        for row in holders:
             lines.append("  %-34s %10s %10s"
                      % (row["id"], _fmt_num(row["scholars"]), _fmt_num(row["craftsmen"])))
+    return lines
+
+
+def _ventures_scope_notes_block(out):
+    lines = []
     if out.get("these_are_not_interchangeable"):
         lines.append("")
         lines.append(_wrap(out["these_are_not_interchangeable"], indent="  "))
@@ -564,9 +664,12 @@ def render_ventures(out):
         lines.append("")
         lines.append(_wrap(out["these_are_a_share_of_their_year_not_a_headcount"],
                        indent="  "))
-    lines.append("")
+    return lines
+
+
+def _ventures_running_block(out):
+    lines = ["", "RUNNING"]
     run = out.get("running")
-    lines.append("RUNNING")
     if isinstance(run, list) and run:
         lines.append("  %-34s %10s %10s %8s" % ("ID", "EARNS/YR", "COSTS/YR", "NEEDS"))
         for row in run:
@@ -582,9 +685,12 @@ def render_ventures(out):
                          % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
     else:
         lines.append("  nothing")
+    return lines
+
+
+def _ventures_idle_block(out):
+    lines = ["", "YOU KNOW HOW, AND HAVE NOT OPENED  (ordinary earn/cost businesses)"]
     idle = out.get("you_know_how_but_have_not_opened")
-    lines.append("")
-    lines.append("YOU KNOW HOW, AND HAVE NOT OPENED  (ordinary earn/cost businesses)")
     if isinstance(idle, list) and idle:
         lines.append("  %-34s %10s %10s %10s" % ("ID", "EARNS/YR", "COSTS/YR", "TO OPEN"))
         for row in idle:
@@ -599,11 +705,17 @@ def render_ventures(out):
         lines.append("  nothing")
     if out.get("and_more_you_could_open"):
         lines.append("  ...and %s more" % _fmt_num(out["and_more_you_could_open"]))
-    # CAPABILITIES ARE NOT EARN/COST DECISIONS, and a table that scored them
-    # as one is exactly what put identity_cover and patron_local in the same
-    # row a Rome player could not tell apart. A separate heading, with money
-    # figures still shown for reference but a standing warning that money is
-    # not the whole story here.
+    return lines
+
+
+def _ventures_capabilities_block(out):
+    """CAPABILITIES ARE NOT EARN/COST DECISIONS, and a table that scored them
+    as one is exactly what put identity_cover and patron_local in the same
+    row a Rome player could not tell apart. A separate heading, with money
+    figures still shown for reference but a standing warning that money is
+    not the whole story here.
+    """
+    lines = []
     cap_idle = out.get("capabilities_you_know_how_to_run_but_have_not_opened")
     if isinstance(cap_idle, list) and cap_idle:
         lines.append("")
@@ -614,6 +726,11 @@ def render_ventures(out):
             lines.append("  %-34s %10s %10s %10s"
                      % (row.get("id"), _fmt_num(row.get("earns_a_year")),
                         _fmt_num(row.get("costs_a_year")), _fmt_num(row.get("to_open_it"))))
+    return lines
+
+
+def _ventures_practice_block(out):
+    lines = []
     if out.get("your_practice_is_not_a_venture"):
         lines.append("")
         lines.append(_wrap("YOUR PRACTICE (not a concern, and not listed above): "
@@ -621,4 +738,20 @@ def render_ventures(out):
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"]))
+    return lines
+
+
+def render_ventures(out):
+    """What you run and what you could. This fell through to the generic
+    key/value dump, which prints a list of dicts as raw Python - a tester
+    reported "ventures dumps raw Python dicts" and they were reading exactly
+    that."""
+    lines = ["CONCERNS"]
+    lines += _ventures_summary(out)
+    lines += _ventures_held_by_block(out)
+    lines += _ventures_scope_notes_block(out)
+    lines += _ventures_running_block(out)
+    lines += _ventures_idle_block(out)
+    lines += _ventures_capabilities_block(out)
+    lines += _ventures_practice_block(out)
     return "\n".join(lines)

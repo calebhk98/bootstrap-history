@@ -1,6 +1,6 @@
 """What you built does not stay yours: diffusion across ventures and civilisations.
 
-Split out of sim/engine/society.py, which had grown to 3,809 lines holding
+Split out of sim/engine/society.py, which had grown to 3,802 lines holding
 one SocietyMixin with 61 methods. This piece is diffusion in both of the
 senses the tree needs: how much of one venture's own edge has leaked to
 imitators who watched the founder run it (diffusion_share, diffusion_index),

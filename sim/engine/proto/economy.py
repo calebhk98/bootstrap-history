@@ -860,7 +860,7 @@ def _changes_tech_events(hist, cutoff):
 
 
 def _changes_notable_events(s, cutoff):
-    """A handful of words, not the whole log. Anything the engine already
+    """A HANDFUL OF WORDS, NOT THE WHOLE LOG. Anything the engine already
     logged as happening TO this player over the window, filtered to the
     kind of thing a player would call a political event rather than
     ordinary bookkeeping ("hired a smith"). The log itself is already

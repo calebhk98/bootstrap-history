@@ -5,10 +5,69 @@ methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
 
-from .data import (haversine_km)
+from typing import cast, Dict, NotRequired, Tuple, TypedDict
+
+from .data import (haversine_km, JSONDict)
+
+
+class MineralShares(TypedDict):
+    """One region's rough share of each mineral's total output
+    (geography.json's per-region `minerals` block). Fixed at exactly the
+    seven minerals this simulation ever computes a `mineral_scale` for -
+    see core.py's own `("iron", "coal", "copper", "lead", "tin", "silver",
+    "saltpetre")` tuple, the only place that set is spelled out, and
+    `_compute_mineral_scale` below, the only reader of this dict. Marked
+    NotRequired rather than required outright because `_compute_mineral_scale`
+    already reads every one of them through `.get(material, 0.0)`, i.e. the
+    code was already written to tolerate a region omitting one - even
+    though every region in data/world/geography.json today happens to
+    state all seven explicitly."""
+    iron: NotRequired[float]
+    coal: NotRequired[float]
+    copper: NotRequired[float]
+    lead: NotRequired[float]
+    tin: NotRequired[float]
+    silver: NotRequired[float]
+    saltpetre: NotRequired[float]
+
+
+class RegionRecord(TypedDict):
+    """One entry of geography.json's `regions` block - the shape every
+    method below reads via `self._regions[region_id]`. `land` is read only
+    by sim/world/land.py (a different file, out of this task's ownership),
+    never by this one, so it stays a plain mapping here rather than
+    importing that module's own `LandBlock` TypedDict for a field this
+    file never opens. `note` is the only key genuinely absent on some
+    regions (17 of 21 in data/world/geography.json); every other key here
+    is present on all 21."""
+    name: str
+    land: JSONDict
+    lat: float
+    lon: float
+    coastal: bool
+    route_difficulty: float
+    reach_from_italia: int
+    minerals: MineralShares
+    note: NotRequired[str]
+
 
 class GeographyMixin:
-    def _compute_home_centroid(self):
+    # -- ATTRIBUTES THIS MIXIN READS BUT DOES NOT OWN ----------------------
+    # Set by Sim.__init__ (core.py, not owned by this task - see the
+    # top-level instructions' file list) before any method below runs.
+    # Declared here, type-only (a bare annotation with no assignment binds
+    # nothing at runtime - it only populates GeographyMixin.__annotations__),
+    # purely so mypy knows the shape of every `self.x` this mixin reads
+    # that core.py, not this file, assigns.
+    civ: JSONDict
+    geo: JSONDict
+    _regions: Dict[str, RegionRecord]
+    _home_centroid: Tuple[float, float]
+    _mat_unlock: Dict[str, str]
+    _mineral_scale: Dict[str, float]
+    pop_scale: float
+
+    def _compute_home_centroid(self) -> Tuple[float, float]:
         """Average lat/lon of this civilization's own home_regions.
 
         A crude centroid, not a capital city, but that matches the rest of
@@ -45,7 +104,7 @@ class GeographyMixin:
     # the far side of the planet as next door no matter how good its ships.
     REACH_SPEED_COEF = 0.22
 
-    def region_reach(self, region_id):
+    def region_reach(self, region_id: str) -> int:
         """How hard `region_id` is to reach, FOR THIS CIVILIZATION, 0-6.
 
         Three things determine it, none of which the old model had:
@@ -98,7 +157,7 @@ class GeographyMixin:
     # than cutting off: nothing in this model is a wall, only a price.
     TRADE_ACCESS_BY_REACH = {0: 1.0, 1: 0.5, 2: 0.3, 3: 0.15, 4: 0.08, 5: 0.04, 6: 0.02}
 
-    def material_reach(self, material_key):
+    def material_reach(self, material_key: str) -> Tuple[int, float]:
         """Reach and cost multiplier for `material_key`, FOR THIS CIVILIZATION.
 
         Looks the material up in geography.json's located_materials, picks
@@ -156,7 +215,7 @@ class GeographyMixin:
         # defensible, and the ceiling stays only as a backstop.
         return civ_r, min(raw ** 0.6, 45.0)
 
-    def material_cost_factor(self, k):
+    def material_cost_factor(self, k: str) -> float:
         """Cost multiplier a located-material tech node picks up from
         geography, for the civilization in play.
 
@@ -175,7 +234,7 @@ class GeographyMixin:
         _, mult = self.material_reach(mk)
         return mult
 
-    def _compute_mineral_scale(self, material):
+    def _compute_mineral_scale(self, material: str) -> float:
         """Fraction of a mined mineral's reference output this civilization
         can draw on: geology and reach, not population.
 
@@ -200,7 +259,15 @@ class GeographyMixin:
         home = set(self.civ.get("home_regions") or [])
         total = 0.0
         for rid, reg in self._regions.items():
-            ab = float((reg.get("minerals") or {}).get(material, 0.0))
+            # MineralShares's own fields are typed float, but looking one
+            # up by a variable key (`material` is not a string literal
+            # mypy can match against a specific field) only lets mypy infer
+            # `object` for the result, not `float`, even though every
+            # field really is one - see MineralShares's own docstring.
+            # `cast` here changes nothing at runtime, same as `float()`
+            # itself already did on the line below before this pass.
+            minerals: MineralShares = reg.get("minerals") or {}
+            ab = float(cast(float, minerals.get(material, 0.0)))
             if ab <= 0:
                 continue
             if rid in home:
@@ -209,7 +276,7 @@ class GeographyMixin:
                 total += ab * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
         return max(0.05, total)
 
-    def mineral_scale(self, material):
+    def mineral_scale(self, material: str) -> float:
         """Cached result of _compute_mineral_scale(). Geology and reach do
         not change during a run, so this is computed once in __init__
         rather than recomputed every simulated year."""

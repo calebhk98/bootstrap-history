@@ -173,6 +173,39 @@ default in `sim/engine/data.py`.
 """
 import os
 import sys
+from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple
+
+# TYPE ALIASES.
+#
+# Prices: a {material: price} table, in EITHER unit this module handles -
+# labour-hours (solve_prices.py's own numeraire) or denarii
+# (prices.json's/economy.py's) - see LABOUR-HOURS TO DENARII in the module
+# docstring above for the conversion between them. The unit is never part
+# of the type, the same way it is never part of a plain `float`; each
+# function's own docstring says which one it is holding.
+Prices = Dict[str, float]
+
+# One entry of `data/production/*.json`'s own `materials` block, as
+# `validate_production.load_production` hands it back (merged, but
+# otherwise unchanged from the JSON). Left as `Dict[str, Any]` rather than
+# a TypedDict: `data/production/_SCHEMA.md` documents a genuinely
+# per-process-shape schema (a smelting entry and a synthesis entry do not
+# share a field list), and this module only ever passes these entries
+# through to `solve_prices.py` and `validate_production.py` (both
+# unannotated, out of this task's scope) without reading their fields
+# itself - the one exception, `entry.get("requires_node")` /
+# `entry.get("outputs")` in `all_gate_nodes`/`priced_goods_table`, reads
+# exactly the two fields every entry shares regardless of process shape.
+ProductionEntries = Dict[str, Any]
+
+# {material: "solved" | "gated" | "no_recipe"} - see priced_goods_table's
+# own docstring for what the three strings mean. A plain Dict[str, str]
+# rather than a Literal-keyed TypedDict: the KEYS are material ids, open
+# and data-driven, exactly the case CLAUDE.md's TypedDict guidance carves
+# out for a plain mapping - the fixed part is the three VALUES, which are
+# documented in prose at every function that produces or reads one rather
+# than re-declared as a type this small module has no other user of.
+Provenance = Dict[str, str]
 
 HERE = os.path.dirname(os.path.abspath(__file__))              # sim/engine
 SIMDIR = os.path.dirname(HERE)                                  # sim
@@ -210,9 +243,11 @@ class SolvedPrices(object):
                 "chosen_recipe_by_material", "converged", "iterations_run",
                 "gate_nodes_held", "civilization_id")
 
-    def __init__(self, prices_in_labour_hours, resolvable_materials,
-                chosen_recipe_by_material, converged, iterations_run,
-                gate_nodes_held, civilization_id):
+    def __init__(self, prices_in_labour_hours: Prices,
+                resolvable_materials: Set[str],
+                chosen_recipe_by_material: Dict[str, Any],
+                converged: bool, iterations_run: int,
+                gate_nodes_held: FrozenSet[str], civilization_id: str) -> None:
         self.prices_in_labour_hours = prices_in_labour_hours
         self.resolvable_materials = resolvable_materials
         self.chosen_recipe_by_material = chosen_recipe_by_material
@@ -229,7 +264,7 @@ class SolvedPrices(object):
 # this ONE object. Sharing the object, not just the data, is what lets the
 # cache below use `is` rather than re-hashing the whole dict on every lookup
 # - see WHAT INVALIDATES THE CACHE above.
-_DEFAULT_PRODUCTION_ENTRIES = None
+_DEFAULT_PRODUCTION_ENTRIES: Optional[ProductionEntries] = None
 
 # {(frozenset(gate_node_ids_held), civilization_id): (production_entries_object, SolvedPrices)}
 # The production_entries object is held here, alongside the result, purely
@@ -240,10 +275,10 @@ _DEFAULT_PRODUCTION_ENTRIES = None
 # CIVILIZATION in the module docstring gives: land rent depends on which
 # civilization's own territory is being priced, and two civilizations can
 # hold an identical gate-node set while holding entirely different regions.
-_SOLVE_CACHE = {}
+_SOLVE_CACHE: Dict[Tuple[FrozenSet[str], str], Tuple[ProductionEntries, SolvedPrices]] = {}
 
 
-def _default_production_entries():
+def _default_production_entries() -> ProductionEntries:
     global _DEFAULT_PRODUCTION_ENTRIES
     if _DEFAULT_PRODUCTION_ENTRIES is None:
         entries, duplicates = load_production()
@@ -260,7 +295,7 @@ def _default_production_entries():
     return _DEFAULT_PRODUCTION_ENTRIES
 
 
-def reset_caches_for_tests():
+def reset_caches_for_tests() -> None:
     """Clear both module-level caches.
 
     Only tests should call this: it exists because several tests build
@@ -274,7 +309,7 @@ def reset_caches_for_tests():
     _SOLVE_CACHE.clear()
 
 
-def all_gate_nodes(production_entries=None):
+def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> FrozenSet[str]:
     """Every distinct tech-tree node id that gates at least one technique.
 
     A technique's `requires_node` is a gate only when it names an actual
@@ -295,7 +330,7 @@ def all_gate_nodes(production_entries=None):
         if entry.get("requires_node") is not None)
 
 
-def denarii_per_labour_hour(prices_json):
+def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
     """Denarii one hour of unskilled (`labourer`) labour is worth, read from
     `prices.json`'s own wage table - the one number LABOUR-HOURS TO DENARII
     in the module docstring needs, read in exactly one place so there is
@@ -304,7 +339,7 @@ def denarii_per_labour_hour(prices_json):
             [solve_prices.NUMERAIRE_TRADE]["rate"])
 
 
-def hours_to_denarii(price_in_labour_hours, prices_json):
+def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) -> float:
     """`price_hours * labourer_denarii_per_hour` - see LABOUR-HOURS TO
     DENARII in the module docstring for why multiplication, not division, is
     the correct direction and why the labourer rate specifically is the
@@ -312,8 +347,10 @@ def hours_to_denarii(price_in_labour_hours, prices_json):
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 
-def solved_prices(held_technology_ids, prices_json, production_entries=None,
-                  civilization_id=None):
+def solved_prices(held_technology_ids: Iterable[str],
+                  prices_json: Dict[str, Any],
+                  production_entries: Optional[ProductionEntries] = None,
+                  civilization_id: Optional[str] = None) -> SolvedPrices:
     """A `SolvedPrices` for this held-technology set, solving on a cache
     miss and returning the cached vector on a hit. See CACHE KEY in the
     module docstring: the cache is keyed on the intersection of
@@ -385,8 +422,12 @@ def solved_prices(held_technology_ids, prices_json, production_entries=None,
     return result
 
 
-def priced_goods_table(held_technology_ids, book_goods_denarii, prices_json,
-                       production_entries=None, civilization_id=None):
+def priced_goods_table(held_technology_ids: Iterable[str],
+                       book_goods_denarii: Prices,
+                       prices_json: Dict[str, Any],
+                       production_entries: Optional[ProductionEntries] = None,
+                       civilization_id: Optional[str] = None
+                       ) -> Tuple[Prices, Provenance]:
     """(goods_denarii, provenance) - the book's own goods table with a
     solved price substituted wherever the solver can produce one for a
     material this held-technology set already prices in the book, and

@@ -1,6 +1,6 @@
 """Hazards, their timelines, and the losses they cause.
 
-Split out of sim/engine/society.py, which had grown to 3,809 lines holding
+Split out of sim/engine/society.py, which had grown to 3,802 lines holding
 one SocietyMixin with 61 methods. This piece is everything about a dated
 hazard once it is a live threat rather than a source of state pressure:
 what built defences take off it (hazard_relief, _military_war_relief), how
@@ -8,11 +8,16 @@ long a hedge has left to be built (_calendar_floor_remaining, hazard_advice,
 hedge_first_steps), when it lands (_yr_words, hazard_timeline), what a loss
 does to the household (lose_capital, _resolve_hazard_condition, _shocks,
 _random_events, _loss_words), and the one path out of a run
-(_catastrophe). `_shocks` is 395 lines and is called every year from
-Sim.step(); it is left undecomposed here, as instructed, for someone else
-to take on separately. These are methods of Sim; they are a mixin only so
-that they can live in a file of their own. Behaviour is unchanged and
-verified byte-identical.
+(_catastrophe). `_shocks` was a single 395-line, cyclomatic-complexity-68
+method called every year from Sim.step() - the worst remaining function in
+the engine once the parser, availability query and node report had been
+split - and has since been decomposed into a thin dispatcher plus one
+method per hazard kind (_shock_staff_loss, _shock_sack_chance,
+_shock_output_factor, _shock_real_erosion, _shock_values), each moved
+verbatim out of the original body so self.rng draws stay in the exact
+order _shocks always made them in (see each one's own docstring). These
+are methods of Sim; they are a mixin only so that they can live in a file
+of their own. Behaviour is unchanged and verified byte-identical.
 """
 from constants import declare
 from .data import (closure, critical_path)

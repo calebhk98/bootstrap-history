@@ -84,8 +84,8 @@ class ElectricityMixin:
     # `cat` names a prime mover or an electrical generator (water_prime,
     # steam_prime, electrical_gen, wind_prime, power_station, grid_operations,
     # plus the dynamo/alternator family by name) - a closed, enumerable set
-    # today the way the 162 material keys MATERIAL_CHECKS started against
-    # never was, so curating it by hand here costs the same one line per
+    # today the way the tech tree's material keys (159 today) MATERIAL_CHECKS
+    # started against never was, so curating it by hand here costs the same one line per
     # future generation node that MATERIAL_CHECKS already costs per future
     # tracked commodity. Deliberately EXCLUDED from that set: dynamo/
     # alternator WINDING VARIANTS (el2_dynamo_series/shunt/compound_wound,
@@ -127,7 +127,9 @@ class ElectricityMixin:
     # curate-the-important-cases-and-generalise-the-rest shape
     # _generic_market_share/_generic_national_output_t_per_yr already use
     # for materials, chosen so this file does not re-acquire the "13 hand-
-    # named commodities out of 162" gap COMMODITY_DYNAMISM.md measured, in a
+    # named commodities out of 162" gap COMMODITY_DYNAMISM.md measured (159
+    # material keys today - see economy_materials.py's own GENERALISING
+    # BEYOND THE 9 HAND-NAMED COMMODITIES comment for the re-count), in a
     # new unit.
     #
     # NOTES TOO VAGUE TO USE, NAMED HONESTLY: no node anywhere in the tree

@@ -1,6 +1,6 @@
 """How society and the state notice, fear, and lean on a growing household.
 
-Split out of sim/engine/society.py, which had grown to 3,809 lines holding
+Split out of sim/engine/society.py, which had grown to 3,802 lines holding
 one SocietyMixin with 61 methods. This piece is the throughline from a
 single technology being alarming (alarm_of, state_interest) through what
 defends the founder against that alarm (update_protection,
