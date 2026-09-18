@@ -363,35 +363,6 @@
   "note": "Metal foot-loops hanging from saddle revolutionise horseback riding. Rider can brace legs, rise from seat, and deliver force in combat or work. This is as much a military technology as a transport one."
  },
  {
-  "id": "lnd_whippletree",
-  "name": "Whippletree",
-  "cat": "transport",
-  "pre": [
-   "horse_collar"
-  ],
-  "kb": "",
-  "ph": 50,
-  "lab": {
-   "carpenter": 120,
-   "smith": 40
-  },
-  "mat": {
-   "timber_m3": 0.5,
-   "iron_bar_kg": 3
-  },
-  "cap": 150,
-  "up": 20,
-  "yrs": 0.5,
-  "risk": 0.1,
-  "sus": 0,
-  "gov": 0,
-  "rev": 80,
-  "sch": 0,
-  "art": 0,
-  "conf": "B",
-  "note": "The whippletree, or evener, is a pivoting bar that distributes pull evenly between two horses, preventing one from shirking. Without it, tandem teams do not work."
- },
- {
   "id": "lnd_coach",
   "name": "Coach",
   "cat": "transport",

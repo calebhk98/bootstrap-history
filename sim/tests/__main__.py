@@ -174,6 +174,18 @@ TOPICS = [
     # iron blast-furnace/bloomery fallback --civ rome_100ad actually
     # exercises.
     "price_solver_rent",
+    # The last of the five standalone sim/world/ modules to be wired.
+    # military_logistics.py derives what a soldier's iron and ammunition
+    # cost to keep supplied, in KILOGRAMS - deliberately never converted to
+    # money, because a mass-to-currency conversion would need a price this
+    # crossing has no business inventing.
+    "military_logistics_wiring",
+    # Complaints/30 stage 3: a branch edit to an EXISTING tech-tree node was
+    # silently discarded, so data/branches/ was decorative for every id the
+    # tree already carried. Pins the field-by-field overlay, the fixed point
+    # (no edits means byte-identical output), and the new rule that an id
+    # defined in two branch files is an error naming both sides.
+    "branch_merge_authority",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology

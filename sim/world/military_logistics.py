@@ -17,14 +17,33 @@ it go before the supply train is eating more than it delivers. That distance
 early-modern warfare was actually bounded by, which is why campaigns hugged
 rivers and coasts and sieges starved besiegers as often as the besieged.
 
-STANDALONE ON PURPOSE, LIKE ITS SIBLINGS. Nothing here imports from
-sim/engine/, sim/world/agriculture.py or sim/world/transport.py, and nothing
-in those modules imports this. See sim/world/__init__.py for the shared
-reason: other agents are editing sim/engine/, sim/world/agriculture.py,
-sim/world/transport.py, sim/treetool.py and sim/constants.py concurrently
-with this file's construction, and a module with no dependency on those
-paths cannot be broken by their edits or break their tests, whichever lands
-first. Where this module needs a number agriculture.py already owns (the
+BUILT STANDALONE; NOW WIRED IN, ONE CROSSING ONLY. Nothing here imports
+from sim/engine/, sim/world/agriculture.py or sim/world/transport.py, and
+that remains true - this module still has no engine dependency in this
+direction, for the reason below. But sim/engine/society.py now imports
+THIS module (military_equipment_burden_kg_per_soldier_per_year(), which
+calls annual_iron_and_ammunition_burden_kg_per_soldier() below), the one
+crossing chosen out of the candidates the task that wired this in laid out
+- see society.py's own comment at that call site for which two candidates
+were rejected and why (in short: the engine has no army size, location or
+campaign to hang a supply-range or campaign-feasibility check on, so
+neither of those two ran through "normal rules" without inventing the very
+state CLAUDE.md SS3.1 says not to invent; the cost of fielding and feeding
+a soldier is the one figure this module produces from nothing but its own
+declared constants). Editing this module can therefore now change what
+society.py reports - see that function's own docstring before changing
+IRON_KG_PER_EQUIPPED_SOLDIER, ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or
+either Firearm's numbers.
+
+STILL STANDALONE FROM sim/world/agriculture.py AND sim/world/transport.py,
+FOR THE SAME REASON AS BEFORE. Other agents are editing sim/engine/core.py,
+sim/engine/economy.py, sim/world/agriculture.py, sim/world/transport.py,
+sim/treetool.py and sim/constants.py concurrently with this crossing's
+construction; a module that does not import those paths cannot be broken
+by their edits or break their tests, whichever lands first. society.py
+importing this module is a one-way dependency this module does not return
+- nothing above imports sim.engine of any kind. Where this module needs a
+number agriculture.py already owns (the
 energy content of grain, a human's baseline caloric need), it redeclares
 that number under its own name rather than importing it - the same choice
 agriculture.py made relative to demography.py, and for the identical reason:
@@ -765,6 +784,38 @@ def maintenance_items_per_soldier_per_engagement(firearm):
     musket; none, for the modern cartridge rifle) one engagement consumes
     per soldier."""
     return firearm.maintenance_items_per_shot * firearm.rounds_per_engagement
+
+
+def annual_iron_and_ammunition_burden_kg_per_soldier(firearm=None, engagements_per_year=0.0):
+    """One equipped soldier's total continuing ANNUAL physical claim, in
+    kilograms: the iron upkeep every equipped soldier represents
+    (annual_iron_replacement_kg_per_soldier(), always present) plus, if
+    `firearm` is given, that firearm's ammunition mass at
+    `engagements_per_year` engagements a year.
+
+    WHY THIS EXISTS, AND WHY IT TAKES A TEMPO AS A PARAMETER RATHER THAN
+    DECLARING ONE. sim/engine/society.py is the first caller outside this
+    module's own tests, wiring this module in per the task that asked for
+    it (see sim/engine/society.py's own MILITARY_EQUIPMENT_ERA_CAMPAIGN_
+    TEMPO_ENGAGEMENTS_PER_YEAR for what it passes and why). This function
+    exists so that caller does not have to reach past this module's public
+    functions to combine IRON_KG_PER_EQUIPPED_SOLDIER-derived upkeep with
+    ammunition_mass_kg_per_soldier_per_engagement() by hand. It does NOT
+    invent an engagements-per-year figure of its own: this module has no
+    campaign-tempo model (see the module docstring's WHERE THIS MODEL IS
+    WRONG (d), and daily_supply_requirement_kg()'s identical choice for
+    engagements_per_day) - a caller who wants an annual figure supplies the
+    tempo, exactly as one supplies engagements_per_day there.
+
+    `firearm=None, engagements_per_year=0.0` (the defaults) give the
+    melee-only case: a soldier's iron upkeep with no firearm and therefore
+    no ammunition claim at all - the baseline this module's caller compares
+    a firearm-equipped soldier's burden against."""
+    kilograms = annual_iron_replacement_kg_per_soldier()
+    if firearm is not None and engagements_per_year:
+        kilograms += (engagements_per_year
+                      * ammunition_mass_kg_per_soldier_per_engagement(firearm))
+    return kilograms
 
 
 # ============================================================================

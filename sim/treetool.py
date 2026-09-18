@@ -105,7 +105,22 @@ def cmd_merge(a):
     nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
     for node in nodes.values():
         node.setdefault("_src", "core")
-    errs, warns, added = [], [], 0
+    errs, warns, added, updated = [], [], 0, 0
+    # STAGE 3 (Complaints/30): which branch file, if any, has already supplied
+    # THIS RUN'S definition of an id. Seeding `nodes` from the current tree
+    # above means every id starts present, so `node["id"] in nodes` cannot
+    # tell a genuine edit (branch redefines an id the TREE carried over) apart
+    # from a real collision (two branch files redefine the same id). This
+    # dict is the difference: it only ever holds ids a BRANCH FILE, in THIS
+    # run, has claimed, so a second claim by a different file is unambiguous.
+    branch_origin = {}
+    # Cross-branch-file collisions: sim/validate_production.py already treats
+    # a key defined in two files of data/production/ as an ERROR naming both
+    # sides rather than a silent "first one wins" (see its load_production).
+    # Complaints/30 asks for the identical rule here. Collected separately
+    # from `errs` so the merge can refuse to write while still reporting
+    # everything else it found.
+    collisions = []
 
     for filename in sorted(os.listdir(BR)):
         if not filename.endswith(".json") or filename == "ALIASES.json":
@@ -156,9 +171,26 @@ def cmd_merge(a):
                 warns.append("%s: %s was merged into %s, skipping"
                              % (filename, node["id"], retired[node["id"]]))
                 continue
-            if node["id"] in nodes:
-                warns.append("%s: duplicate id %s, keeping the first" % (filename, node["id"]))
+            if node["id"] in branch_origin:
+                # Two branch definitions claim the same id this run - either
+                # the same file lists it twice, or two DIFFERENT files do.
+                # Unlike the tree-vs-branch case below, there is no
+                # source-of-truth rule that resolves this automatically: it is
+                # either two authors who independently invented the same id,
+                # or one author trying to "correct" a node by adding a second
+                # definition in a new file instead of editing the original.
+                # Guessing which is which is exactly the kind of silent
+                # decision that ate branch edits in the first place, so this
+                # is an ERROR naming both sides (sim/validate_production.py's
+                # load_production already applies the identical rule to
+                # data/production/), not a warning, and the first definition
+                # encountered is kept unchanged rather than overwritten.
+                first = branch_origin[node["id"]]
+                collisions.append(("%s is defined twice in %s" % (node["id"], filename))
+                                  if first == filename else
+                                  ("%s is defined in both %s and %s" % (node["id"], first, filename)))
                 continue
+            existed_in_tree = node["id"] in nodes and node["id"] not in branch_origin
             # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
             # is unobtainable, only elsewhere. A new branch reintroduced it on
             normalise_v2(node)
@@ -202,8 +234,51 @@ def cmd_merge(a):
                 kb_field = ""
             node["kb"] = kb_field
             node["_src"] = filename
-            nodes[node["id"]] = node
-            added += 1
+            # STAGE 3 (Complaints/30): a branch node that names an id already
+            # present from the tree OVERWRITES it field by field, instead of
+            # being silently dropped - the whole point of this fix. It is a
+            # field-level overlay, not a wholesale replacement, because the
+            # tree carries fields no branch schema has ever had a key for -
+            # `kind`, `kb_level`, `_total_cost`, `_internal` - written by
+            # `judge`/`repair`/`apply-caps`, which read and rewrite
+            # tech_tree.json directly and were never meant to round-trip
+            # through branches (see this file's module docstring and the
+            # REPAIR PASS comment on cmd_repair). A replacement would silently
+            # erase every one of those on every node a branch edit touches;
+            # measured on the real tree, that is thousands of fields lost for
+            # reasons that have nothing to do with what the branch author
+            # wrote. `normalise_v2` only ever sets the keys in `DEFAULTS`
+            # (plus the handful of v1/v2 scalars it backfills), so `node`
+            # here never carries those repair-only keys unless a branch file
+            # explicitly set them - meaning the tree's copy survives untouched
+            # for every id whose branch definition doesn't mention it, exactly
+            # like a normal git-free field merge.
+            if existed_in_tree:
+                nodes[node["id"]] = {**nodes[node["id"]], **node}
+                updated += 1
+            else:
+                nodes[node["id"]] = node
+                added += 1
+            branch_origin[node["id"]] = filename
+
+    # A collision names an id whose correct content is genuinely undecided -
+    # neither the "first file wins" nor the "last file wins" reading is a fix,
+    # both are the same silent guess the branch-edit bug already made once.
+    # Refuse to write 2.8 MB of data over an unresolved disagreement between
+    # two branch files; report everything found first, then say why nothing
+    # was written, matching how sim/validate_production.py surfaces the same
+    # rule (it has nothing to write, so it can report and exit; this does).
+    if collisions:
+        print("errors  : %d" % len(errs))
+        for e in errs[:40]:
+            print("   " + e)
+        print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
+        for c in collisions:
+            print("   COLLISION " + c)
+        print("\nFix the branch files so each id has exactly one definition (rename one "
+              "side, delete a stale duplicate, or fold them into a single node), then "
+              "re-run merge. Nothing was written.")
+        return 1
 
     # resolve prerequisites
     dangling = collections.Counter()
@@ -242,7 +317,8 @@ def cmd_merge(a):
     base["meta"]["goal_node"] = "point_contact_transistor"
     _write_json(base, TREE, a)
 
-    print("merged  : %d nodes (%d added from branches)" % (len(nodes), added))
+    print("merged  : %d nodes (%d added from branches, %d updated from branches)"
+          % (len(nodes), added, updated))
     print("errors  : %d" % len(errs))
     for e in errs[:40]:
         print("   " + e)

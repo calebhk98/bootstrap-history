@@ -11,6 +11,8 @@ from constants import declare
 from .data import *          # the shared tables and loaders
 from .data import (TECH_EFFECTS, TRADES_ABSENT, closure, critical_path)
 
+from world import military_logistics
+
 
 STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT = declare(
     "STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT", -0.9, kind="temporary_heuristic",
@@ -179,6 +181,118 @@ class SocietyMixin:
             "leverage cannot be maxed by a token gesture nor by treating "
             "the whole military branch as a strategy unto itself. Not "
             "measured against any historical count of decisive weapons.")
+
+    def military_equipment_burden_kg_per_soldier_per_year(self):
+        """WHAT AN ARMY COSTS TO FIELD AND KEEP FED - THE ONE CROSSING TO
+        sim/world/military_logistics.py THIS ENGINE WIRES IN, chosen out of
+        that module's own ranked candidates (see its module docstring and
+        this task's own brief) and everything else rejected. Reasons below.
+
+        WHAT THIS RETURNS: the continuing annual physical claim - kilograms
+        of worked iron and ammunition, NOT money - one equipped soldier
+        represents at this founder's current military_leverage(), a
+        straight-line interpolation between two points military_logistics.py
+        computes from its own declared constants alone:
+
+          leverage 0.0: a soldier equipped with cold steel only -
+                        military_logistics.annual_iron_and_ammunition_burden_
+                        kg_per_soldier() with no firearm - iron upkeep alone.
+          leverage 1.0: a soldier equipped to MODERN_SERVICE_RIFLE standard,
+                        firing MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_
+                        ENGAGEMENTS_PER_YEAR engagements a year (declared
+                        below) - iron upkeep plus that many engagements'
+                        worth of cartridges.
+
+        This is THE stakeholder's own example run through the numbers: hand
+        Rome a modern rifle and the physical claim equipping one soldier
+        places on the state - not a battle outcome, not territory, just what
+        the state has to keep supplying - is roughly an order of magnitude
+        higher than equipping him with a sword, because a cartridge weapon
+        burns mass in ammunition every engagement that a sword's occasional
+        replacement does not. That is a genuine finding of military_
+        logistics.py's own declared figures, not asserted here.
+
+        WHY LEVERAGE, LINEARLY. military_leverage() is this engine's ONLY
+        existing measure of how far up the military branch a founder has
+        climbed, already used the same way (as a plain multiplier) by
+        update_protection() and hazard_relief("output_factor"). Nothing in
+        the tech-tree schema currently tags a node "this is specifically a
+        firearm" versus "this is military generally" (see this task's own
+        report for the measurement), so there is no cleaner signal to read
+        military_equipment_era_burden's two endpoints against. Interpolating
+        LINEARLY, rather than at some discrete leverage threshold, is this
+        function's own labelled choice, not a reading of anything: a real
+        replacement would key off which specific nodes are done (bow and
+        armour traits at the low end, cartridge-firearm traits at the high
+        end) rather than treating the whole branch as one dial.
+        TRANSITIONAL HEURISTIC (CLAUDE.md SS3.4) for exactly that reason.
+
+        WHAT THIS DOES NOT DO, AND WHY THOSE WERE REJECTED. The task ranked
+        three candidates: this cost-to-field-and-feed figure; how far a
+        force can project from home; whether a campaign is even feasible.
+        The other two both need state this engine does not have and this
+        crossing does not invent, per CLAUDE.md SS3.1's own instruction to
+        say so plainly rather than manufacture a fake army to multiply:
+
+          - PROJECTION RANGE (pack_animal_max_one_way_range_km()) needs a
+            supply base and a distance from it - real coordinates and a
+            campaign location - which live in sim/engine/geography.py
+            (region_reach() and friends), a file this crossing is not
+            permitted to touch and which has no notion of a military
+            campaign either. The range figure itself does not vary with
+            anything this engine tracks (it is a fixed property of one pack
+            animal's mass and appetite, not of the founder's technology),
+            so reporting it here would be a static fact bolted on, not a
+            crossing that responds to play.
+          - CAMPAIGN FEASIBILITY (sustainable_foraging_army_size()) needs a
+            surplus-per-square-kilometre figure that is sim/world/
+            agriculture.py's domain, a file this crossing is also not
+            permitted to touch (and importing it would recreate exactly the
+            cross-module coupling both modules' own docstrings refuse, for
+            the same concurrent-editing reason). This engine also has no
+            standing army size or location to test feasibility FOR: every
+            civilisation's population (self.civ["population"]) is in the
+            millions, so any population-derived force size this crossing
+            could invent would clear a feasibility floor trivially and
+            report nothing that ever varies - the "manufactured number with
+            nothing to attach to" this task's brief explicitly warns against.
+
+        WHY NOT MONEY. This function returns kilograms, and stays in
+        kilograms all the way to where it is used (state_pressure_report()
+        below) rather than being converted to a share of revenue. Turning a
+        mass into currency needs a price, and grain/iron/ammunition prices
+        are sim/engine/economy.py's domain - a file this crossing is not
+        permitted to touch. Inventing a conversion rate here would be
+        exactly the kind of unjustified constant CLAUDE.md SS3.1 rules out,
+        dressed up as physics. The existing MILITARY_DEMAND_BASE_SHARE/
+        MILITARY_DEMAND_LEVERAGE_SHARE monetary mechanic below is therefore
+        left untouched by this crossing - see state_pressure_report()'s own
+        comment at the point this function's result is used.
+        """
+        melee_kg = military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
+        rifle_kg = military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier(
+            firearm=military_logistics.MODERN_SERVICE_RIFLE,
+            engagements_per_year=self.MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR)
+        leverage = self.military_leverage()
+        return melee_kg + leverage * (rifle_kg - melee_kg)
+
+    MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR = declare(
+        "MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR", 6.0,
+        kind="temporary_heuristic",
+        unit="engagements/year", source=None, confidence="D",
+        why="sim/world/military_logistics.py deliberately has no campaign-"
+            "tempo model of its own (see its module docstring's WHERE THIS "
+            "MODEL IS WRONG (d) and daily_supply_requirement_kg()'s "
+            "engagements_per_day parameter) and takes one as a plain "
+            "argument for exactly that reason; this is society.py's own "
+            "placeholder for 'a modest campaigning season', standing in "
+            "for the campaign-calendar mechanism (marches, sieges, battles "
+            "at different intensities) that would derive a real figure. "
+            "Six is an order-of-magnitude guess at 'a few real engagements "
+            "a year, not one a week and not one a decade', with no source "
+            "behind it - moving it changes military_equipment_burden_kg_"
+            "per_soldier_per_year()'s reported number at full leverage but "
+            "not its direction or its melee-tier floor.")
 
     PATRON_PROTECTION_LOCAL = declare(
         "PATRON_PROTECTION_LOCAL", 0.18, kind="temporary_heuristic",
@@ -1133,9 +1247,23 @@ class SocietyMixin:
             out["office"] = ("%s costs about %d%% of revenue a year, and "
                              "buys protection in return" % (off_name, round(off_share * 100)))
         if self.military_demand_eligible():
+            # THE ONE CROSSING TO sim/world/military_logistics.py. See
+            # military_equipment_burden_kg_per_soldier_per_year()'s own
+            # docstring for what this number is, why leverage alone drives
+            # it, and why supply RANGE and campaign FEASIBILITY - the other
+            # two candidates that module supports - are not wired in here.
+            # Kilograms only, never converted to money: see that docstring's
+            # WHY NOT MONEY. This changes only the TEXT of an already-
+            # existing, already-gated notice, not the MILITARY_DEMAND_*
+            # share/probability arithmetic below, which is unchanged.
+            burden_kg = self.military_equipment_burden_kg_per_soldier_per_year()
             out["military_supply"] = ("%s may demand your output; refusing a "
-                                      "state that can still fight is not free"
-                                      % state_pressure_cfg.get("military_name", "the arsenal"))
+                                      "state that can still fight is not free "
+                                      "(equipping one soldier your way costs "
+                                      "it about %.1f kg of iron and "
+                                      "ammunition a year)"
+                                      % (state_pressure_cfg.get("military_name", "the arsenal"),
+                                         burden_kg))
         if conf_p > 0:
             out["confiscation_chance_this_year"] = round(conf_p, 4)
             out["confiscation_reduced_by"] = conf_why

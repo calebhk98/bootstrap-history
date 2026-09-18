@@ -175,3 +175,80 @@ is the other accident this complaint warned about.
 whichever it reads first and says so on line 3,205. Under the "an id in two
 files is an ERROR naming both sides" rule this section proposes, that is the
 first thing it would catch.
+
+---
+
+## Stage 3 and the collision rule: done
+
+`cmd_merge` now does both things this section asked for.
+
+**Existing-node edits take effect.** A branch node whose id the tree already
+carries now overwrites that node, FIELD BY FIELD, rather than being skipped.
+It is a field-level overlay (`{**tree_node, **branch_node}`), not a wholesale
+replace, for a reason discovered while building this: the tree carries keys
+no branch schema has ever had a slot for - `kind`, `kb_level`, `_total_cost`,
+`_internal` - written straight onto `tech_tree.json` by `judge`/`repair`/
+`apply-caps`, which read and rewrite the tree directly and were never meant
+to round-trip through branches. A wholesale replace was the first design
+tried; measured against the real tree it erased `kind` on 2,695 nodes,
+`kb_level` on 1,990 and `_total_cost` on 2,207 - entirely as a side effect of
+fixing something else. The field-level overlay leaves every one of those
+alone unless a branch file explicitly sets it, exactly as before this fix,
+while a genuinely branch-authored field (`cap`, `ph`, `pre`, `mat`, `lab`,
+`up`, `note`, `kb`, ...) now updates when its branch source does. The merge
+summary now reports `added` and `updated` separately.
+
+**The collision rule is implemented as proposed, option 2.** An id defined by
+two different branch files (or twice in one file) in the same run is now an
+ERROR naming both sides, and the merge REFUSES TO WRITE at all rather than
+guess a winner - guessing is the exact silent decision that caused this
+complaint. `sim/tests/test_branch_merge_authority.py` pins this, plus the
+field-level-overlay behaviour, plus that a `meta.merged_duplicate_ids`-retired
+id in two files is still just the existing "was merged into X, skipping"
+warning, not a new collision to referee.
+
+**`lnd_whippletree` turned out to already be resolved, differently than
+expected.** Re-checking before touching anything (as the top of this file
+asks): `meta.merged_duplicate_ids` already contains `"lnd_whippletree":
+"tl_whippletree"` in the currently committed tree - added by other work
+sometime after this section was written, unrelated to this fix. Both branch
+definitions were therefore ALREADY hitting the "was merged into ..., skipping"
+path on every merge, never the "duplicate id" path this section describes;
+the collision this section demonstrates no longer occurs in the real corpus
+today. What's left was housekeeping, not a decision: both definitions were
+permanently dead (the id is retired project-wide, same as the 243 
+branch-only retired ids this file already declined to resurrect), so both
+were deleted from `14_land_transport.json` and `55_realism_part02.json`.
+Checked, not argued: a merge dry-run before and after the deletion produces
+byte-identical output - same node count, same ids, `lnd_whippletree` itself
+unchanged (it is a zombie node with no active branch source at all; its tree
+copy is what a reader still sees; that is a separate, pre-existing oddity -
+a retired id's NODE isn't deleted from the tree by retirement, only its
+incoming prerequisite edges are redirected - and is not this complaint's job
+to fix).
+
+**The full 2,864-node corpus was deliberately NOT re-merged for real.**
+`python3 sim/treetool.py merge --dry-run` against the live tree and branches
+now applies the fix in memory; comparing that result field-by-field against
+the committed tree shows 2,834 of 2,864 nodes (99%) would change, dominated
+by `kb` (2,605 nodes - mostly repair's module-level doc-link fallback,
+restorable by re-running `repair` afterward, not lost), `pre` (1,204),
+`up` (1,152, matching this file's own earlier drift count almost exactly),
+`traits` (853), `note` (310, mostly repair's `[AUDIT: ...]` markers, same
+restorable case as `kb`). This is the ~1,970-field drift this file already
+measured and already decided to hold, now simply confirmed to still be
+present at close to the same size, PLUS it surfaced three cycles in raw
+branch `pre` data that the broken merge had been silently containing for
+years (`mat_bulk_steel`, `cap_gas_o2h2` and `tl_electric_starter` each list
+themselves as their own prerequisite; `sim/treetool.py`'s existing
+cycle-breaker still catches these safely, they are noted here as a newly
+visible authoring defect, not something this fix attempts to correct).
+Applying this for real is still the "read a sample for AUTHOR INTENT" work
+this file's own "Decision" section called for and never did - the mechanism
+being correct is not the same thing as the backlog being reviewed - and
+running the full `merge` → `repair` → `apply-caps` pipeline together, not
+`merge` alone, is also part of doing that properly (running `merge` alone
+against production and stopping there would look like data loss in `kb`,
+`note` and `pre` until `repair` is re-run). `data/tech_tree.json` was left
+byte-for-byte as committed by this work; only `sim/treetool.py` and the two
+branch files with the resolved collision were changed.

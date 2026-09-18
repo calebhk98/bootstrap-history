@@ -297,38 +297,6 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
-  "id": "lnd_whippletree",
-  "kb": "",
-  "lab": {
-   "artisan": 200.0
-  },
-  "mat": {},
-  "name": "Whippletree draft equaliser",
-  "note": "A pivoted transverse bar equalises pull between traces and prevents side loads from rubbing the animal; test geometry separately from the collar.",
-  "ph": 80.0,
-  "pre": [
-   "horse_collar"
-  ],
-  "req_any": [],
-  "rev": 0.0,
-  "risk": 0.2,
-  "sch": 0.0,
-  "sus": 0,
-  "traits": [
-   "infrastructure"
-  ],
-  "up": 20.0
- },
- {
-  "adopt_yrs": 1,
-  "art": 1.0,
-  "build_yrs": 0.5,
-  "cap": 200.0,
-  "cat": "access",
-  "conf": "C",
-  "dev_people": null,
-  "dev_years": null,
-  "gov": 0,
   "id": "lnd_nailed_horseshoe",
   "kb": "",
   "lab": {
