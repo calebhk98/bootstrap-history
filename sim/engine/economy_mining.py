@@ -3,8 +3,8 @@
 Split out of economy.py (see that file's own docstring for why): every
 method here answers "how much of a raw material could you physically
 pull out of the ground (or the woodland) this year, and at what cost",
-as opposed to economy_market.py's "what does the market charge for it
-now" - the two halves of raw-material economics COMMODITY_DYNAMISM.md
+as opposed to economy_materials.py's "what does the market charge for
+it now" - the two halves of raw-material economics COMMODITY_DYNAMISM.md
 and MATERIAL_GATING.md describe. Four subjects, in the order they
 appear below:
 

@@ -3,7 +3,7 @@
 Split out of economy.py (see that file's own docstring for why): every
 method here answers "what does the household actually take in this
 year, and what does it cost to keep that running", as opposed to
-economy_market.py's question of what a unit of output sells for once
+economy_goods.py's question of what a unit of output sells for once
 made. Covers: state_funding() (an imperial patron's direct funding) and
 venture_ramp() (how a concern's takings ramp up after it opens);
 practice_attention(), revenue_capacity(), revenue() and
