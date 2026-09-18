@@ -51,11 +51,27 @@ report for exactly what is stubbed) is expected to hand `step()` a number of
 calories available per day, and this module treats that as an exogenous
 input, the same way it currently treats immigration and emigration. It also
 does not track sex explicitly (see FEMALE_SHARE_OF_WORKING_AGE_POPULATION's
-declaration for what that costs), regions, or disease as a distinct state -
-disease is presently folded into the mortality-vs-nutrition relationship
-exactly as docs/architecture/CURRENT_CODE_ARCHITECTURE_REVIEW.md SS6.6
-describes as the "minimal first version", i.e. wrong in the specific way that
-document says is acceptable for now.
+declaration for what that costs), or regions.
+
+DISEASE AND SANITATION ARE NOW A SECOND, SEPARATE AXIS, DISTINCT FROM
+NUTRITION - no longer folded into the mortality-vs-nutrition relationship the
+way docs/architecture/CURRENT_CODE_ARCHITECTURE_REVIEW.md SS6.6 once
+described as an acceptable "minimal first version". The stakeholder's own
+diagnosis (see this task's report) was exact: with only a nutrition axis,
+mortality could only ever rise above its pre-industrial baseline, and
+SURVIVAL_TO_WORKING_AGE was a plain constant that unlimited food could never
+move - a model that cannot express clean water, sewered sanitation, germ
+theory or vaccination doing what they actually did. `step()` and
+`Population.stationary()` now also take a `disease_burden` argument, 1.0
+(the default - today's full pre-industrial infectious-disease environment,
+identical to this module's behaviour before this change) down to 0.0 (clean
+water and sanitation, germ theory-informed hygiene and quarantine, and
+vaccination all fully present). See `_disease_mortality_multiplier`,
+`_fertility_ceiling_for_disease_burden` and `child_survival_fraction` below
+for the mechanism, and this task's own report for exactly what the engine
+would have to compute from `data/civilizations/_TECH_EFFECTS.json`'s medical
+entries to drive it - this module still does not import the engine or the
+tech tree, and takes disease burden only as a plain float handed to it.
 """
 import collections
 import math
@@ -597,6 +613,265 @@ NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
 
 
 # ============================================================================
+# DISEASE AND SANITATION: a second axis, distinct from nutrition, that can
+# take mortality below the pre-industrial baseline and child survival above
+# its pre-industrial 0.5
+# ============================================================================
+# `disease_burden` is a plain float, 1.0 to 0.0, that a caller hands to
+# `step()`/`stationary()` alongside the nutrition ratio. It is NOT read from
+# the tech tree or the engine by this module - see the module docstring and
+# this task's own report for what the engine would have to compute to
+# produce one.
+#
+#   1.0  today's default. The full pre-industrial infectious-disease
+#        environment that SURVIVAL_TO_WORKING_AGE and the three
+#        BASELINE_ANNUAL_MORTALITY_RATE_* figures above already describe.
+#        Every scenario that never sets this argument (every test and
+#        engine call site that predates this change) behaves EXACTLY as
+#        before - this axis is additive, not a replacement for the
+#        nutrition one.
+#   0.0  clean water and sewered sanitation, germ theory-informed hygiene
+#        and quarantine, and vaccination all fully present.
+#
+# WHY THIS IS A SEPARATE MULTIPLICATIVE CHANNEL FROM NUTRITION, NOT A
+# REPLACEMENT FOR IT. `_excess_mortality_multiplier` (nutrition) is
+# deliberately floored at 1.0 - see its own docstring for the literature
+# search (Antonovsky's social-class mortality differentials, the British
+# peerage's own mortality record) that found no sourced nutrition-only
+# mortality benefit below the historical baseline, and that conclusion is
+# UNCHANGED and still correct: better-fed pre-industrial populations did not
+# reliably outlive worse-fed ones by much, because nutrition alone was never
+# what was holding pre-industrial mortality up. Disease is a different,
+# independently and extensively documented channel: the historical
+# mortality decline that took crude death rates from the 30-40/1000 this
+# module's baseline describes down toward modern rates under 10/1000 is
+# attributed by the historical-demography literature overwhelmingly to
+# infectious-disease control specifically, not to better diets - Omran's
+# epidemiologic transition (Omran, "The Epidemiologic Transition: A Theory
+# of the Epidemiology of Population Change", Milbank Memorial Fund
+# Quarterly, 1971) names exactly this shift ("age of pestilence and famine"
+# to "age of receding pandemics") as the mechanism, and Preston's
+# decomposition of 20th-century life expectancy gains (Preston, "The
+# Changing Relation between Mortality and Level of Economic Development",
+# Population Studies, 1975) and Cutler & Miller's study of clean water
+# technology in early-20th-century American cities (Cutler & Miller, "The
+# Role of Public Health Improvements in Health Advances: The Twentieth-
+# Century United States", Demography, 2005 - finding clean water alone
+# responsible for roughly half of the total urban mortality decline they
+# studied, and nearly all of the child-mortality share of it) both find the
+# same thing from different data. That is why THIS channel, unlike the
+# nutrition one, is allowed to take mortality below the pre-industrial
+# baseline - it is a different, sourced mechanism, not the same one applied
+# more generously.
+
+MODERN_SURVIVAL_TO_WORKING_AGE_CEILING = declare(
+    "MODERN_SURVIVAL_TO_WORKING_AGE_CEILING", 0.95,
+    kind="biological_parameter",
+    unit="fraction of live births",
+    source="World Bank / UNICEF-WHO-UN IGME under-5 mortality estimates for "
+           "the two countries this task's own brief names as today's "
+           "fastest-growing real populations - Niger (under-5 mortality on "
+           "the order of 75-80 per 1,000 live births in recent UN IGME "
+           "estimates, i.e. roughly 92-93% survival to age 5) and Uganda "
+           "(on the order of 40-45 per 1,000, i.e. roughly 95-96% survival "
+           "to age 5) - both already running under modern, if imperfect, "
+           "germ theory-informed medicine, sanitation and vaccination "
+           "coverage, and both without a food constraint (that is what "
+           "makes their growth rate this task's own upper anchor). "
+           "Surviving from age 5 to age 15 costs a little further mortality "
+           "in any real population (UN model life tables), so 0.95 sits "
+           "inside, not above, the age-5 range these two real populations "
+           "show - used here as an estimate of where survival-to-15 lands "
+           "under a fully modern disease-and-sanitation regime, not a "
+           "figure read directly off either country's own age-15 table "
+           "(neither source publishes one at the resolution this needed).",
+    confidence="C",
+    why="The disease-free endpoint of the child band's disease-response "
+        "curve, paired with SURVIVAL_TO_WORKING_AGE (the pre-industrial "
+        "endpoint, disease_burden==1.0) exactly the way SUBSISTENCE_"
+        "CALORIES... and STARVATION_FLOOR_CALORIES... anchor the nutrition "
+        "response: two sourced points, one invented interpolation between "
+        "them (see _disease_mortality_multiplier).")
+
+# Same log-hazard transform BASELINE_ANNUAL_MORTALITY_RATE_CHILD was built
+# with, run on the modern endpoint instead of the pre-industrial one. NO
+# DOUBLE_COUNT_CORRECTION_FACTOR here: that correction is specifically about
+# a property of the WRIGLEY & SCHOFIELD ENGLISH SERIES SURVIVAL_TO_WORKING_
+# AGE and BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE are drawn from (see
+# that constant's own declaration) - a multi-century average that may
+# already contain some of the harvest-driven mortality this module's own
+# nutrition mechanism separately adds. MODERN_SURVIVAL_TO_WORKING_AGE_
+# CEILING is sourced from present-day UN IGME national estimates, an
+# entirely different data-collection method with no shared provenance and
+# no reason to carry that specific bias.
+MODERN_ANNUAL_MORTALITY_RATE_CHILD_FLOOR = (
+    -math.log(MODERN_SURVIVAL_TO_WORKING_AGE_CEILING) / CHILD_BAND_WIDTH_YEARS)
+
+# The child band's disease floor multiplier is DERIVED, not declared: it is
+# the ratio of two already-sourced hazards (the modern one just above, the
+# pre-industrial one at the top of this file), not a new invented number of
+# its own.
+DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD = (
+    MODERN_ANNUAL_MORTALITY_RATE_CHILD_FLOOR
+    / BASELINE_ANNUAL_MORTALITY_RATE_CHILD)
+
+# The two endpoints of the disease_burden SCALE ITSELF. These are
+# definitional, not sourced empirical facts (unlike everything declare()d
+# above and below), so they are plain floats rather than declare()d: there
+# is nothing to cite for "1.0 is the top of the scale and 0.0 is the
+# bottom", only a choice of which end means which regime, made once here
+# and used everywhere else in this module.
+PRE_INDUSTRIAL_DISEASE_BURDEN = 1.0
+FULLY_MODERN_DISEASE_BURDEN = 0.0
+
+DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE = declare(
+    "DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE", 0.35,
+    kind="temporary_heuristic",
+    unit="multiple of pre-industrial baseline mortality",
+    source=None,
+    confidence="D",
+    why="No single study isolates the exact share of pre-industrial "
+        "working-age mortality that was infectious in origin, the way "
+        "MODERN_SURVIVAL_TO_WORKING_AGE_CEILING lets the child band's floor "
+        "be DERIVED rather than guessed. What the historical-demography "
+        "literature does establish directionally and repeatedly - Riley, "
+        "\"Rising Life Expectancy: A Global History\" (2001); Omran 1971 "
+        "above - is that tuberculosis, typhoid/enteric fever and dysentery "
+        "were the leading killers of 15-49-year-olds specifically in "
+        "pre-transition Europe (TB alone was called \"the Captain of the "
+        "Men of Death\" and its 19th-century mortality peaked at ages "
+        "20-40), all three squarely addressed by clean water, sanitation "
+        "and germ theory-informed hygiene, alongside a real but smaller "
+        "non-infectious residual this axis does NOT reach (accidents, "
+        "violence, non-infectious degenerative disease, obstetric "
+        "haemorrhage as opposed to obstetric SEPSIS - see med_obstetric_"
+        "antisepsis below). 0.35 (a roughly two-thirds reduction) is the "
+        "invented point that reflects 'most, not all, of pre-industrial "
+        "working-age mortality was infectious', deliberately less extreme "
+        "than the child band's ~13x reduction (DISEASE_MORTALITY_FLOOR_"
+        "MULTIPLIER_CHILD), because every source above agrees the "
+        "epidemiologic transition's mortality decline was concentrated "
+        "far more in infancy and childhood than in adulthood. Replace with "
+        "a derived figure if a source ever splits pre-transition adult "
+        "cause-of-death the way UN IGME splits child cause-of-death.")
+
+DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY = declare(
+    "DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY", 0.45,
+    kind="temporary_heuristic",
+    unit="multiple of pre-industrial baseline mortality",
+    source=None,
+    confidence="D",
+    why="Same status and reasoning as DISEASE_MORTALITY_FLOOR_MULTIPLIER_"
+        "WORKING_AGE, set slightly higher (a smaller disease-driven "
+        "reduction) for the same reason STARVATION_VULNERABILITY_ELDERLY "
+        "differs from _WORKING_AGE elsewhere in this file: pre-antibiotic "
+        "pneumonia and influenza were real, infection-driven killers of the "
+        "elderly (the historical aphorism that 'pneumonia is the old man's "
+        "friend' is about exactly this), which clean water and germ "
+        "theory-informed hygiene do not reach as directly as they reach "
+        "diarrhoeal and typhoid mortality, and degenerative disease's share "
+        "of elderly mortality was already larger pre-transition than at "
+        "working age, leaving less room for a disease-and-sanitation axis "
+        "to close. Not separately sourced beyond the qualitative direction "
+        "above; the specific value is this module's own invented point "
+        "between the child and working-age floors.")
+
+
+def _disease_mortality_multiplier(disease_burden, floor_multiplier):
+    """How much a band's baseline mortality hazard is scaled by, given the
+    disease-and-sanitation environment - the disease-axis counterpart to
+    `_excess_mortality_multiplier`'s nutrition axis, and the mechanism that
+    lets `Population.step` take mortality below the pre-industrial baseline
+    (see the section docstring above for why that is allowed here and not
+    on the nutrition axis).
+
+    Linear between two endpoints exactly the way `_excess_mortality_
+    multiplier` is linear between subsistence and the starvation floor: 1.0
+    at disease_burden==1.0 (by construction - this axis changes nothing
+    when nobody sets it), `floor_multiplier` at disease_burden==0.0 (sourced
+    per band at each call site above). The two endpoints are real; the
+    straight line between them is the same kind of invented interpolation
+    as the nutrition axis's, not a claim about the actual shape of a real
+    disease-elimination trajectory.
+    """
+    disease_burden = max(0.0, min(1.0, disease_burden))
+    return floor_multiplier + (1.0 - floor_multiplier) * disease_burden
+
+
+DISEASE_FERTILITY_CEILING_UPLIFT_FRACTION = declare(
+    "DISEASE_FERTILITY_CEILING_UPLIFT_FRACTION", 0.30,
+    kind="temporary_heuristic",
+    unit="fraction by which the nutrition-driven fertility ceiling rises "
+         "as disease_burden falls from 1.0 to 0.0",
+    source="Frank, \"Infertility in Sub-Saharan Africa: Estimates and "
+           "Implications\", Population and Development Review, 1983, and "
+           "Bongaarts, Frank & Lesthaeghe, \"The Proximate Determinants of "
+           "Fertility in Sub-Saharan Africa\", Population and Development "
+           "Review, 1984: the historically documented sub-Saharan "
+           "'infertility belt', where sexually-transmitted-infection-driven "
+           "pathological sterility (chiefly tubal damage from untreated "
+           "gonococcal and chlamydial infection) measurably depressed total "
+           "fertility rates in affected regions by roughly 20-40% relative "
+           "to disease-free natural-fertility populations under the same "
+           "nutritional and breastfeeding regime. 0.30 is that range's "
+           "midpoint, not its high or low end - unlike every point-within-"
+           "range choice earlier in this file, there is no reason here to "
+           "lean conservative in either direction (the earlier convention "
+           "leaned toward not overstating growth; that same conservatism "
+           "left FERTILITY_SURPLUS_CEILING_MULTIPLIER anchored to the "
+           "Hutterites' own REALIZED rate under real, non-zero disease "
+           "burden, which is the mistake this task's report corrects).",
+    confidence="D",
+    why="FERTILITY_SURPLUS_CEILING_MULTIPLIER (1.8x baseline fertility) is "
+        "sourced to the Hutterites - Eaton & Mayer 1953 - the best-"
+        "documented natural-fertility population, but the stakeholder's "
+        "correction to this task (see this task's own report) is that "
+        "Hutterite colonies farmed finite land and lived through the "
+        "pre-antibiotic era's ORDINARY infectious mortality: their 9-11 "
+        "births/woman is fertility ACHIEVED under a real, non-zero disease "
+        "burden, not a disease-free ceiling. A single flat "
+        "FERTILITY_SURPLUS_CEILING_MULTIPLIER cannot be both 'the ceiling "
+        "reached under today's default pre-industrial disease_burden==1.0' "
+        "(which the exactly-subsistence and pre-industrial-unlimited-food "
+        "acceptance targets require to stay unchanged) AND 'a ceiling that "
+        "rises once disease is removed' at the same time - so this fraction "
+        "makes the CEILING ITSELF a second, separate function of "
+        "disease_burden (see _fertility_ceiling_for_disease_burden), "
+        "exactly mirroring how mortality got a second, separate disease "
+        "axis rather than a change to its existing nutrition-only "
+        "response. Directionally this is the fertility side of the same "
+        "well-documented phenomenon _disease_mortality_multiplier's own "
+        "docstring cites for mortality - disease suppressing a vital rate "
+        "below what nutrition and behaviour alone would produce - via a "
+        "different, but real and specifically sourced, biological pathway "
+        "(pathological sterility rather than mortality).")
+
+
+def _fertility_ceiling_for_disease_burden(disease_burden):
+    """The fertility ramp's ceiling (see `_fertility_multiplier`) as a
+    function of the disease-and-sanitation environment, not a fixed number.
+
+    At disease_burden==1.0 (today's default) this returns exactly
+    FERTILITY_SURPLUS_CEILING_MULTIPLIER, unchanged - every scenario that
+    never sets disease_burden gets the identical ceiling this module has
+    always used, so the exactly-subsistence and pre-industrial-disease/
+    unlimited-food acceptance targets are untouched by this function's
+    existence. As disease_burden falls toward 0.0 the ceiling rises toward
+    FERTILITY_SURPLUS_CEILING_MULTIPLIER * (1 + DISEASE_FERTILITY_CEILING_
+    UPLIFT_FRACTION) - see that constant's own declaration for why the
+    ceiling needs a second, disease-driven degree of freedom rather than
+    just being raised outright.
+    """
+    disease_burden = max(0.0, min(1.0, disease_burden))
+    disease_free_ceiling = (
+        FERTILITY_SURPLUS_CEILING_MULTIPLIER
+        * (1.0 + DISEASE_FERTILITY_CEILING_UPLIFT_FRACTION))
+    return (FERTILITY_SURPLUS_CEILING_MULTIPLIER
+            + (disease_free_ceiling - FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+            * (1.0 - disease_burden))
+
+
+# ============================================================================
 # THE FOOD-TO-VITAL-RATES MECHANISM
 # ============================================================================
 
@@ -721,8 +996,17 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     return 1.0 + excess * vulnerability
 
 
-def _fertility_multiplier(nutrition_ratio):
+def _fertility_multiplier(nutrition_ratio,
+                           fertility_ceiling=FERTILITY_SURPLUS_CEILING_MULTIPLIER):
     """How much baseline fertility is scaled by, given nutrition.
+
+    `fertility_ceiling` defaults to FERTILITY_SURPLUS_CEILING_MULTIPLIER, so
+    every existing caller of this function (including the tests that call
+    it directly rather than through `step()`) is unaffected. `step()`
+    itself now passes `_fertility_ceiling_for_disease_burden(disease_burden)`
+    instead of relying on the default - see that function's own declaration
+    for why the ceiling needs to move with the disease-and-sanitation
+    environment as well as with nutrition.
 
     Below subsistence: linear in the ratio itself, down to 0 at zero food.
     This is a deliberately simplified stand-in for the qualitative
@@ -787,10 +1071,10 @@ def _fertility_multiplier(nutrition_ratio):
     abundance_ceiling_calories = (
         SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY + span)
     if calories >= abundance_ceiling_calories:
-        return FERTILITY_SURPLUS_CEILING_MULTIPLIER
+        return fertility_ceiling
     fraction_of_span = (
         (calories - SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY) / span)
-    surplus = (FERTILITY_SURPLUS_CEILING_MULTIPLIER - 1.0) * fraction_of_span
+    surplus = (fertility_ceiling - 1.0) * fraction_of_span
     return 1.0 + surplus
 
 
@@ -886,7 +1170,8 @@ class Population(object):
         return max(0.0, ratio)
 
     def step(self, food_available_calories_per_day, immigration=0.0,
-             emigration=0.0, jitter=False):
+             emigration=0.0, jitter=False,
+             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -899,10 +1184,16 @@ class Population(object):
              population that has to be fed this year is the one that exists
              at the start of it, not one already thinned by this year's own
              deaths.
-          2. Deaths per band, from starting counts and that ratio.
-          3. Births, from the starting working-age count and that ratio -
-             also computed against the start-of-year count, for the same
-             reason as (1).
+          2. Deaths per band, from starting counts, that ratio, AND
+             `disease_burden` - see the "DISEASE AND SANITATION" section
+             above `_disease_mortality_multiplier` for what this argument
+             means and why it is a second axis rather than a change to the
+             nutrition one.
+          3. Births, from the starting working-age count, that ratio, and
+             `disease_burden` (which also moves the fertility ramp's
+             ceiling - see `_fertility_ceiling_for_disease_burden`) - also
+             computed against the start-of-year count, for the same reason
+             as (1).
           4. Survivors age (children into working-age, working-age into
              elderly) at a rate of 1/(band width), the standard way to turn
              a coarse band into an annual transition without tracking
@@ -922,6 +1213,13 @@ class Population(object):
         (False), since it is looking for the model's noise-free fixed
         point.
 
+        `disease_burden` defaults to PRE_INDUSTRIAL_DISEASE_BURDEN (1.0):
+        every existing caller, including the engine's own call site in
+        sim/engine/core.py, does not pass this argument and so is completely
+        unaffected by this parameter's existence - see the module docstring
+        and this task's own report for exactly what a caller would need to
+        compute to pass in something other than the default.
+
         The identity `start_total + births + immigration - deaths -
         emigration == end_total` holds exactly (see
         test_demography.py's accounting-closure check) because every term
@@ -933,18 +1231,26 @@ class Population(object):
         start_total = self.total
         ratio = self.nutrition_ratio(food_available_calories_per_day, jitter=jitter)
 
-        deaths_children = self.children * min(1.0, BASELINE_ANNUAL_MORTALITY_RATE_CHILD
-                                              * _excess_mortality_multiplier(
-                                                  ratio, STARVATION_VULNERABILITY_CHILD))
+        deaths_children = self.children * min(
+            1.0, BASELINE_ANNUAL_MORTALITY_RATE_CHILD
+            * _disease_mortality_multiplier(
+                disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD)
+            * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_CHILD))
         deaths_working_age = self.working_age * min(
             1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+            * _disease_mortality_multiplier(
+                disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_WORKING_AGE))
         deaths_elderly = self.elderly * min(
             1.0, BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY
+            * _disease_mortality_multiplier(
+                disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_ELDERLY))
 
         births = (self.working_age * FEMALE_SHARE_OF_WORKING_AGE_POPULATION
-                  * ANNUAL_FERTILITY_RATE_PER_WOMAN * _fertility_multiplier(ratio))
+                  * ANNUAL_FERTILITY_RATE_PER_WOMAN
+                  * _fertility_multiplier(
+                      ratio, _fertility_ceiling_for_disease_burden(disease_burden)))
 
         survivors_children = self.children - deaths_children
         survivors_working_age = self.working_age - deaths_working_age
@@ -968,7 +1274,8 @@ class Population(object):
             deaths_elderly=deaths_elderly)
 
     @classmethod
-    def stationary(cls, total_population, seed=0, years=400):
+    def stationary(cls, total_population, seed=0, years=400,
+                    disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
         """A Population of the given total, with an age structure that is
         the model's OWN stable answer to "what age structure does a
         population fed at exactly subsistence, forever, settle into" -
@@ -992,11 +1299,17 @@ class Population(object):
         transients (which move on the timescale of one to two generations)
         to have died out; it is a convergence budget, not a modelling claim,
         so it is not `declare()`d.
+
+        `disease_burden` defaults to PRE_INDUSTRIAL_DISEASE_BURDEN, matching
+        every existing caller (a civilisation's starting age structure is a
+        pre-industrial one unless a caller explicitly asks for the stable
+        structure a disease-free population would settle into instead).
         """
         probe = cls(total_population / 3.0, total_population / 3.0,
                     total_population / 3.0, seed=seed)
         for _ in range(years):
-            probe.step(probe._subsistence_food(), jitter=False)
+            probe.step(probe._subsistence_food(), jitter=False,
+                       disease_burden=disease_burden)
         scale = total_population / probe.total
         return cls(probe.children * scale, probe.working_age * scale,
                     probe.elderly * scale, seed=seed)
@@ -1010,3 +1323,35 @@ class Population(object):
             + self.working_age * 1.0
             + self.elderly * ELDERLY_CALORIE_EQUIVALENT)
         return adult_equivalent_population * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
+
+
+def child_survival_fraction(nutrition_ratio=1.0,
+                             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+    """The fraction of children who reach working age, if `nutrition_ratio`
+    and `disease_burden` were both held constant for an entire CHILD_BAND_
+    WIDTH_YEARS-year childhood - the closed-form inverse of the transform
+    SURVIVAL_TO_WORKING_AGE and MODERN_SURVIVAL_TO_WORKING_AGE_CEILING were
+    each turned into a hazard with, run forward instead of backward.
+
+    This is not used by `step()` itself (which works in annual hazards
+    applied to a continuous cohort, not in "a child's fate", and a real
+    child's nutrition and disease exposure both vary year to year rather
+    than sitting fixed for fifteen years) - it exists so a caller, a test,
+    or this task's own report can ask the question the stakeholder actually
+    asked ("what does survival to working age DO as disease and nutrition
+    change") directly, rather than reading it off indirectly through a
+    century of simulated cohort flows.
+
+    At disease_burden==PRE_INDUSTRIAL_DISEASE_BURDEN and nutrition_ratio==
+    1.0 this returns a little over SURVIVAL_TO_WORKING_AGE (0.50) itself -
+    slightly above because of DOUBLE_COUNT_CORRECTION_FACTOR, exactly as
+    BASELINE_ANNUAL_MORTALITY_RATE_CHILD's own declaration explains. At
+    disease_burden==FULLY_MODERN_DISEASE_BURDEN and nutrition_ratio==1.0 it
+    returns exactly MODERN_SURVIVAL_TO_WORKING_AGE_CEILING (0.95), by
+    construction (see that constant's own declaration).
+    """
+    hazard = (BASELINE_ANNUAL_MORTALITY_RATE_CHILD
+              * _disease_mortality_multiplier(
+                  disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD)
+              * _excess_mortality_multiplier(nutrition_ratio, STARVATION_VULNERABILITY_CHILD))
+    return math.exp(-hazard * CHILD_BAND_WIDTH_YEARS)

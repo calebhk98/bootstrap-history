@@ -796,5 +796,227 @@ class DeterminismTests(unittest.TestCase):
         self.assertEqual(first.elderly, second.elderly)
 
 
+class DiseaseAndSanitationTests(unittest.TestCase):
+    """The gap this class exists to close: the stakeholder's own diagnosis
+    (see this task's report) that this module could raise mortality above
+    its pre-industrial baseline but never below it, and that
+    SURVIVAL_TO_WORKING_AGE was a plain constant unlimited food could never
+    move. `disease_burden` (default PRE_INDUSTRIAL_DISEASE_BURDEN == 1.0,
+    identical to this module's behaviour before this class existed) is the
+    second, independent axis that fixes both, without touching the
+    nutrition mechanism the earlier classes above already pin.
+    """
+
+    def test_default_disease_burden_changes_nothing(self):
+        # Every existing call site - every test above this class, and the
+        # engine's own sim/engine/core.py - calls step()/stationary()
+        # without disease_burden. This is the one test whose entire job is
+        # to confirm that omitting it is IDENTICAL to passing
+        # PRE_INDUSTRIAL_DISEASE_BURDEN explicitly, not merely close to it.
+        left = demography.Population(500_000.0, 700_000.0, 300_000.0, seed=3)
+        right = demography.Population(500_000.0, 700_000.0, 300_000.0, seed=3)
+        left_flows = left.step(left._subsistence_food() * 0.7)
+        right_flows = right.step(
+            right._subsistence_food() * 0.7,
+            disease_burden=demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
+        self.assertEqual(left_flows, right_flows)
+        self.assertEqual(left.children, right.children)
+        self.assertEqual(left.working_age, right.working_age)
+        self.assertEqual(left.elderly, right.elderly)
+
+    def test_child_survival_is_near_one_half_under_pre_industrial_disease(self):
+        # SURVIVAL_TO_WORKING_AGE's own historically-sourced figure (0.50),
+        # reproduced as an OUTPUT of the hazard machinery rather than read
+        # back as the same input number - see child_survival_fraction's own
+        # docstring for why it comes out a shade above 0.50 exactly
+        # (DOUBLE_COUNT_CORRECTION_FACTOR).
+        survival = demography.child_survival_fraction(
+            nutrition_ratio=1.0,
+            disease_burden=demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
+        self.assertAlmostEqual(survival, 0.50, delta=0.02)
+
+    def test_child_survival_rises_to_about_ninety_five_percent_under_full_disease_control(self):
+        # MODERN_SURVIVAL_TO_WORKING_AGE_CEILING's own target, reproduced
+        # exactly (child_survival_fraction is built as this constant's own
+        # inverse transform, so this is a construction check, not an
+        # independent measurement - the independent claim is that 0.95 is
+        # itself a real, sourced figure; see that constant's declaration).
+        survival = demography.child_survival_fraction(
+            nutrition_ratio=1.0,
+            disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
+        self.assertAlmostEqual(survival, 0.95, places=6)
+
+    def test_child_survival_rises_monotonically_as_disease_burden_falls(self):
+        survivals = [
+            demography.child_survival_fraction(1.0, disease_burden=burden)
+            for burden in (1.0, 0.75, 0.5, 0.25, 0.0)
+        ]
+        self.assertEqual(survivals, sorted(survivals))
+        self.assertLess(survivals[0], survivals[-1])
+
+    def test_mortality_can_fall_below_the_pre_industrial_baseline(self):
+        # The specific failure the stakeholder named: with only a nutrition
+        # axis, a band's hazard could never go below its baseline. Direct
+        # check on the mechanism function, independent of the cohort
+        # bookkeeping in step().
+        for baseline_hazard, floor in (
+                (demography.BASELINE_ANNUAL_MORTALITY_RATE_CHILD,
+                 demography.DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD),
+                (demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE,
+                 demography.DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE),
+                (demography.BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY,
+                 demography.DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY)):
+            pre_industrial = baseline_hazard * demography._disease_mortality_multiplier(
+                demography.PRE_INDUSTRIAL_DISEASE_BURDEN, floor)
+            modern = baseline_hazard * demography._disease_mortality_multiplier(
+                demography.FULLY_MODERN_DISEASE_BURDEN, floor)
+            self.assertAlmostEqual(pre_industrial, baseline_hazard)
+            self.assertLess(modern, pre_industrial)
+
+    def test_disease_mortality_multiplier_is_monotonic_and_bounded(self):
+        for floor in (0.1, 0.35, 0.5, 0.9):
+            values = [
+                demography._disease_mortality_multiplier(burden, floor)
+                for burden in (0.0, 0.25, 0.5, 0.75, 1.0)
+            ]
+            self.assertEqual(values, sorted(values))
+            self.assertAlmostEqual(values[0], floor)
+            self.assertAlmostEqual(values[-1], 1.0)
+
+    def test_nutrition_only_mortality_floor_is_unchanged(self):
+        # The earlier investigation's conclusion (see
+        # _excess_mortality_multiplier's own docstring: no sourced
+        # nutrition-only mortality benefit below baseline was found) is NOT
+        # what this task revisits, and this pins that it still is not:
+        # holding disease_burden fixed, extra nutrition alone still cannot
+        # push a band's hazard below its (disease-adjusted) baseline.
+        self.assertEqual(
+            demography._excess_mortality_multiplier(
+                1.0, demography.STARVATION_VULNERABILITY_WORKING_AGE),
+            1.0)
+        self.assertEqual(
+            demography._excess_mortality_multiplier(
+                5.0, demography.STARVATION_VULNERABILITY_WORKING_AGE),
+            1.0)
+
+    def test_unlimited_food_and_pre_industrial_disease_stays_near_two_point_two_percent(self):
+        # The acceptance target this task's own report is measured against:
+        # this scenario is UNCHANGED by this class's whole mechanism (it is
+        # the identical scenario GrowthCeilingTests.
+        # test_unlimited_food_growth_is_positive_and_well_under_the_ceiling
+        # already exercises, since PRE_INDUSTRIAL_DISEASE_BURDEN is the
+        # default), reproduced here under this class's own name for the
+        # disease-vs-nutrition contrast with the test right below it.
+        population = demography.Population.stationary(65_000_000.0, seed=11)
+        start = population.total
+        for _year in range(100):
+            population.step(population._subsistence_food() * 1000.0,
+                             jitter=False,
+                             disease_burden=demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
+        annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
+        self.assertAlmostEqual(annual_growth_rate, 0.022, delta=0.01)
+
+    def test_unlimited_food_and_fully_modern_disease_lands_between_hutterite_floor_and_biological_ceiling(self):
+        # The corrected calibration frame (this task's report): ~4.1%/year
+        # (Eaton & Mayer 1953's Hutterite colonies) is the highest REAL
+        # natural increase ever sustained, but it was achieved WITH land,
+        # food and ordinary-for-its-era infectious mortality still binding
+        # - a floor for the unconstrained case, not a ceiling. 9.06%/year
+        # (GrowthCeilingTests._biological_growth_ceiling - zero mortality
+        # of any kind, a birth every year from every woman 18-40) is the
+        # impossible upper bound the same class already pins. Unlimited
+        # food AND fully modern disease control (still leaving senescence,
+        # accident and residual maternal mortality in place - see
+        # DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE/_ELDERLY, both
+        # bounded well above zero) belongs strictly between the two.
+        population = demography.Population.stationary(65_000_000.0, seed=12)
+        start = population.total
+        for _year in range(100):
+            population.step(population._subsistence_food() * 1000.0,
+                             jitter=False,
+                             disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
+        annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
+        hutterite_floor = 0.041
+        biological_ceiling = GrowthCeilingTests._biological_growth_ceiling() - 1.0
+        self.assertGreater(annual_growth_rate, hutterite_floor)
+        self.assertLess(annual_growth_rate, biological_ceiling)
+
+    def test_famine_still_kills_and_still_hits_children_and_elderly_harder_under_modern_disease(self):
+        # The famine mechanism (STARVATION_VULNERABILITY_*) must survive
+        # disease control exactly as it survived the fertility-ceiling
+        # change GrowthCeilingTests already pins for the nutrition-only
+        # case - a lower disease burden must not accidentally short-circuit
+        # the nutrition response.
+        population = demography.Population.stationary(
+            65_000_000.0, seed=13, disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
+        fed_flows = population.copy().step(
+            population._subsistence_food(),
+            disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
+        famine_flows = population.copy().step(
+            population._subsistence_food() * 0.5,
+            disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
+
+        self.assertGreater(famine_flows.deaths, fed_flows.deaths)
+        self.assertLess(famine_flows.births, fed_flows.births)
+
+        child_mortality_rate = famine_flows.deaths_children / population.children
+        working_age_mortality_rate = famine_flows.deaths_working_age / population.working_age
+        elderly_mortality_rate = famine_flows.deaths_elderly / population.elderly
+        self.assertGreater(child_mortality_rate, working_age_mortality_rate)
+        self.assertGreater(elderly_mortality_rate, working_age_mortality_rate)
+
+    def test_exact_subsistence_pre_industrial_disease_stays_at_or_above_replacement(self):
+        # Do not undo the earlier fix: zero variance, exactly at
+        # subsistence, default (pre-industrial) disease burden must still
+        # land at or slightly above replacement, matching the +0.086%/year
+        # this module's own top-of-file comment records.
+        population = _stationary()
+        start = population.total
+        for _year in range(300):
+            population.step(population._subsistence_food(), jitter=False)
+        annual_growth_rate = (population.total / start) ** (1.0 / 300.0) - 1.0
+        self.assertGreaterEqual(annual_growth_rate, 0.0)
+        self.assertAlmostEqual(annual_growth_rate, 0.00086, delta=0.0005)
+
+    def test_fertility_ceiling_for_disease_burden_is_unchanged_at_pre_industrial_default(self):
+        self.assertEqual(
+            demography._fertility_ceiling_for_disease_burden(
+                demography.PRE_INDUSTRIAL_DISEASE_BURDEN),
+            demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+
+    def test_fertility_ceiling_rises_monotonically_as_disease_burden_falls(self):
+        ceilings = [
+            demography._fertility_ceiling_for_disease_burden(burden)
+            for burden in (1.0, 0.75, 0.5, 0.25, 0.0)
+        ]
+        self.assertEqual(ceilings, sorted(ceilings))
+        self.assertGreater(ceilings[-1], ceilings[0])
+
+    def test_module_stays_standalone(self):
+        # The hard constraint this task's own brief restates: this module
+        # must not import the engine or read the tech tree directly. Prose
+        # (the module docstring, this class's own declarations) is allowed
+        # to NAME _TECH_EFFECTS.json in explaining what the engine would
+        # have to compute - what must never appear is an actual import of
+        # the engine or a file open/read of the tree, so this checks
+        # `import`/`open(` statements specifically rather than banning the
+        # filename as a substring.
+        import ast
+        import inspect
+        source = inspect.getsource(demography)
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    self.assertNotIn("engine", alias.name)
+            elif isinstance(node, ast.ImportFrom):
+                module_name = node.module or ""
+                self.assertNotIn("engine", module_name)
+            elif isinstance(node, ast.Call):
+                callee = node.func
+                if isinstance(callee, ast.Name) and callee.id == "open":
+                    self.fail("demography.py must not read files directly")
+
+
 if __name__ == "__main__":
     unittest.main()
