@@ -243,6 +243,18 @@ TOPICS = [
     # million km2 of real home land, which also pins that the count cannot
     # come back: two territories of equal area get equal ceilings whatever
     # their region count.
+    # Complaints/48: technology could only ever make mortality WORSE - the
+    # child-survival rate was a constant, so a civilisation that learned germ
+    # theory buried exactly as many children as one that had not. The eight
+    # medical nodes now drive a disease burden read live from what is held,
+    # instead of queueing a scalar population bonus on a forty-year ramp.
+    "disease_burden_wiring",
+    # Complaints/47: one weather draw decided the harvest in Britain and in
+    # Egypt on the same coin flip. Weather is now drawn per home region and
+    # pooled by each region's share of the cultivable land, so holding spread
+    # -out territory is worth something - which is what the grain fleet was
+    # for. Pins that the seed stays a pure function of (civ, region, year).
+    "regional_weather_wiring",
     "complaint_46_forest_area_not_region_count",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in

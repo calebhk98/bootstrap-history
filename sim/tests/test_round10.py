@@ -593,14 +593,28 @@ check("...and the wage premium that cohort state drives is therefore ALSO "
       "intact after the round-trip, not silently reset to baseline",
       s7_fresh.wage_index > s7_fresh._wage_index_base * 1.2, s7_fresh.wage_index)
 
-# --- JOB 3: TECHNOLOGY RAISES THE POPULATION, SLOWLY. Sanitation,
-# antisepsis, crop rotation and the like should feed back into a bigger
-# labour market eventually, but a lower death rate shows up in the headcount
-# a generation later, not the day a latrine opens - so apply_tech_effects
-# must queue the gain rather than apply it the year the node completes.
+# --- JOB 3: A FOOD TECHNOLOGY RAISES THE POPULATION, SLOWLY. Crop
+# rotation, the three-field system, New World crops and the like should feed
+# back into a bigger labour market eventually, but more food shows up in the
+# headcount a generation later, not the season it is first sown - so
+# apply_tech_effects must queue the gain rather than apply it the year the
+# node completes.
+#
+# THE VEHICLE USED TO BE `sanitation_antisepsis`, AND THE SWAP IS THE POINT,
+# not a workaround. The eight DISEASE technologies (Sim.DISEASE_BURDEN_TECH_
+# IDS) no longer queue a scalar here at all: they drive `_disease_burden()`
+# live, and the generational lag this ramp was imitating now falls out of the
+# cohort model instead - people stop dying the year the latrine opens, and the
+# headcount answers over the following decades because that is how cohorts
+# work. The forty-year ramp was a hardcoded stand-in for a lag the simulation
+# can now produce (CLAUDE.md SS3.1), so for disease it is gone, and
+# test_disease_burden_wiring.py is what guards the mechanism that replaced it.
+# The five FOOD entries sharing the `population` field still queue exactly as
+# before, which is what this job tests. `crop_rotation` carries the same 0.02
+# weight `sanitation_antisepsis` did, so every number below is unchanged.
 s6 = sim(civ="rome_100ad")
 _base_pop = s6._pop_scale_base
-s6.apply_tech_effects("sanitation_antisepsis")
+s6.apply_tech_effects("crop_rotation")
 check("a population-raising technology does not move the population the "
       "instant it completes",
       s6._pop_scale_base == _base_pop, s6._pop_scale_base)
@@ -611,7 +625,7 @@ check("...but it has fully landed by the end of its forty-year ramp",
 check("...and the gain stops growing once it has landed, rather than "
       "compounding forever",
       not s6._pop_tech_pending, s6._pop_tech_pending)
-s6.apply_tech_effects("sanitation_antisepsis")
+s6.apply_tech_effects("crop_rotation")
 for _yr in range(140, 140 + 20):
     s6._demographic_recovery(_yr)
 check("halfway through a SECOND such technology's ramp, only half of its "

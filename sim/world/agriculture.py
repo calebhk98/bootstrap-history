@@ -1740,7 +1740,8 @@ class Storage(object):
     def step(self, land, labour_hours, population, technique_multiplier=1.0,
              hectares_next_year=None, crop=None, soil=None, rotation=None,
              toolkit=None, storage_technique=None, worker_count=None,
-             hours_per_worker_day=None, reserve_target_kg=None):
+             hours_per_worker_day=None, reserve_target_kg=None,
+             weather_multiplier=None):
         """Advance one year: sow, grow, harvest, eat, spoil, retain next
         year's seed, bank whatever is left. Mutates `self.stock_kg` and
         returns the exact flows that moved it.
@@ -1756,6 +1757,21 @@ class Storage(object):
         caller that knows its actual workforce should pass `worker_count`
         rather than let the harvest-window cap guess one back out of
         `labour_hours`.
+
+        `weather_multiplier` defaults to `None`, meaning "draw one from
+        `self._random` the way this method always has" (step 2 below). A
+        caller that passes a number instead (sim/engine/core.py's
+        `_pooled_farm_weather_multiplier`, Complaints/47-one-weather-draw-
+        for-a-continent.md) gets that number used AS this year's weather
+        multiplier verbatim, and `self._random`/`draw_weather_multiplier`
+        are not touched at all - this is what lets a caller that already
+        knows how to pool several independent regional draws into one
+        civilisation-wide multiplier (a land-share-weighted average, not a
+        single region's draw) hand the RESULT of that pooling to this
+        method instead of this method drawing its own single, un-pooled
+        multiplier internally. Every existing caller that does not pass
+        this argument is unaffected - this is an additional way IN, not a
+        change to the default path.
 
         ORDER OF OPERATIONS (fixed, so the same inputs always give the same
         answer regardless of what order someone might otherwise compute
@@ -1841,8 +1857,9 @@ class Storage(object):
         seed_sown_kg = crop.planting_material_kg_per_ha * land.hectares
         self.stock_kg -= seed_sown_kg
 
-        weather_multiplier = draw_weather_multiplier(
-            self._random, soil.weather_stdev_fraction)
+        if weather_multiplier is None:
+            weather_multiplier = draw_weather_multiplier(
+                self._random, soil.weather_stdev_fraction)
         harvest_kg = gross_harvest_kg(land, labour_hours, technique_multiplier,
                                       weather_multiplier, crop, toolkit, rotation,
                                       worker_count=worker_count,

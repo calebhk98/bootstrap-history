@@ -89,7 +89,19 @@ class VariesWithWeatherTests(unittest.TestCase):
         # constant stand-in would repeat ONE value literally every year,
         # which pstdev == 0 catches directly and a distinct-value count
         # would not (it would also fail a model that is correctly capped).
-        self.assertGreater(statistics.pstdev(ratios), 0.05, ratios)
+        # THE THRESHOLD WAS 0.05, AND IT WAS MEASURING ROME'S REGION COUNT
+        # rather than whether this model varies at all. Averaging N
+        # independent weather draws divides the spread by about sqrt(N),
+        # and weather is now drawn per home region and pooled by land share
+        # (Complaints/47) instead of once for the whole empire - Rome's
+        # seven unequal regions give an effective N near 5.6, so the same
+        # unchanged mechanism reports about 0.035 where it used to report
+        # 0.05-plus. Holding the old number would have asserted that a
+        # civilisation must be badly diversified. What this check is FOR is
+        # unchanged and is stated above: catching a constant stand-in, which
+        # repeats one value every year. This century runs 10 distinct values
+        # in 40 years.
+        self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
         # THE 1.0 CEILING IS GONE ON PURPOSE. This used to assert
         # max(ratios) <= 1.0, because Storage.step capped consumption at
@@ -165,10 +177,18 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # and not a demand that the no-carryover simplification's own cost
         # be zero.
         self.assertGreater(mean_ratio, 0.7, ratios)
-        # The MEAN stays at or below subsistence even though individual good
-        # years now exceed it: eating above subsistence draws only on grain
-        # already beyond the reserve, which is rare. Measured at about 0.995.
-        self.assertLessEqual(mean_ratio, 1.0, ratios)
+        # THE UPPER BOUND USED TO BE 1.0. It was wrong in principle and
+        # only passed by accident. A population that grows must on average
+        # be fed at or above subsistence - that is what growth is - so
+        # capping the mean at subsistence forbids the outcome the
+        # demographic milestone exists to produce. It passed because one
+        # weather draw covered the whole empire, which made a surviving
+        # surplus rare enough to round away. Weather is now drawn per home
+        # region and pooled by land share (Complaints/47), so ordinary good
+        # years reach the mean: measured 1.0042 over this century. The
+        # ceiling that actually binds eating is physical, not this number -
+        # MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, 1.75.
+        self.assertLess(mean_ratio, 1.1, ratios)
 
     def test_population_declines_but_does_not_run_away_to_extinction(self):
         test_sim = _rome_sim(events=False)

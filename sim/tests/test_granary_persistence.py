@@ -264,7 +264,20 @@ class CenturyMeasurementTests(unittest.TestCase):
             ratios.append(test_sim._last_demographic_step.nutrition_ratio)
         mean_ratio = statistics.fmean(ratios)
         self.assertGreater(mean_ratio, 0.9, ratios)
-        self.assertLessEqual(mean_ratio, 1.0 + 1e-9, ratios)
+        # THE UPPER BOUND USED TO BE 1.0, and that was a mistake worth
+        # naming rather than quietly widening. A population that grows
+        # must, on average, be fed at or above subsistence - that is what
+        # growth IS - so an assertion that the mean never exceeds
+        # subsistence forbids the outcome this whole milestone is for.
+        # It only ever passed because a single weather draw for the whole
+        # empire made surplus so rare it rounded away. With weather drawn
+        # per home region and pooled by land share (Complaints/47), good
+        # years survive often enough to show up in the mean, measured at
+        # 1.0042 over this century. The band is now what it should always
+        # have been: comfortably fed, not gorging - the physical ceiling
+        # on that is MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE (1.75), and a
+        # mean anywhere near it would mean the farm is badly oversized.
+        self.assertLess(mean_ratio, 1.1, ratios)
 
 
 class FarmWorkforceShareIsFixedTests(unittest.TestCase):

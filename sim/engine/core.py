@@ -32,6 +32,16 @@ from world import demography
 # land/labour/weather harvest model, imported the same bare, same-sys.path
 # way as demography just above.
 from world import agriculture
+# WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md): READ ONLY.
+# This file does not own sim/world/land.py (see this task's own brief) and
+# changes nothing in it - `cultivable_land_for_civilization` is called
+# exactly the way `demography`/`agriculture` above already are, as a
+# pre-existing module this engine reads from rather than a mechanism this
+# wiring invents. What it is used for: each home region's SHARE of this
+# civilisation's cultivable land, so a weather draw can be pooled across
+# regions weighted by how much land each one actually holds, rather than
+# by an unweighted headcount of regions (see _compute_farm_region_weights).
+from world import land
 
 
 from .economy import EconomyMixin
@@ -77,6 +87,27 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         why="Floor under pop_scale so a tiny starting civilisation "
             "population never divides a formula by something vanishingly "
             "small. Guard value, not a demographic claim.")
+
+    # WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-young.md):
+    # the eight _TECH_EFFECTS.json entries whose `population` weight is a
+    # DISEASE effect rather than a FOOD one, and so are the only entries
+    # `_disease_burden` below is allowed to sum. _TECH_EFFECTS.json also
+    # carries a `population` field on crop_rotation, fud_three_field_
+    # rotation, fud_seed_drill, mat_newworld_crops and ag2_canning - all
+    # five are calories reaching more mouths, not fewer infections, and
+    # summing them into a disease-burden calculation would be exactly the
+    # mistake the stakeholder's own brief warns against. This selection
+    # (which of _TECH_EFFECTS.json's `population` entries counts as
+    # "medical") is a classification a human made when writing that file,
+    # not something this engine derives - it is reused here, not invented.
+    # NOT a `declare()`d constant: it is a set of node ids, not a physical
+    # quantity or a tuned parameter.
+    DISEASE_BURDEN_TECH_IDS = (
+        "germ_theory", "sanitation_antisepsis", "med_aqueducts_latrines",
+        "med_quarantine_sanitation", "med_vector_control",
+        "med_obstetric_antisepsis", "med_asepsis_antisepsis",
+        "med_vaccination_progression",
+    )
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False):
@@ -194,6 +225,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # as missing mechanism (b), not something invented in this file.
         self.farm_land = agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population))
+        # WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md): each
+        # home region this civilisation holds gets its OWN weather draw
+        # (`_demographic_recovery` below), pooled weighted by that region's
+        # own share of the cultivable land - see `_compute_farm_region_
+        # weights`'s own docstring. Precomputed ONCE here, not every year:
+        # `home_regions` and each region's `arable_iugera` are both fixed
+        # for the life of a run (the same reasoning `farm_land` just above
+        # is precomputed for), so recomputing this every
+        # `_demographic_recovery` call would rebuild the identical list 100
+        # times over a century for nothing. Needs no SAVE_FIELDS entry for
+        # the same reason `farm_land` needs none: `Sim.__init__`
+        # reconstructs it identically, from `self.civ`'s own unchanging
+        # `home_regions`, on every construction, before `load_state` runs.
+        self._farm_region_weights = self._compute_farm_region_weights()
         # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md).
         # Started at zero, not at some invented reserve: this is an INITIAL
         # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
@@ -1599,35 +1644,157 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 + population.working_age
                 + population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
 
-    def _farm_year_weather_seed(self, yr):
+    def _farm_year_weather_seed(self, yr, region=None):
         """A deterministic seed for one year's harvest weather draw, a pure
-        function of this civilisation's id and the calendar year - NOT one
-        long-lived `random.Random` advanced sequentially year over year.
+        function of this civilisation's id, an optional region, and the
+        calendar year - NOT one long-lived `random.Random` advanced
+        sequentially year over year.
 
-        WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, YEAR) RATHER
-        THAN A STORED GENERATOR, EVEN NOW THAT THE GRANARY ITSELF DOES
-        PERSIST (see `_demographic_recovery` and `farm_stock_kg` below -
-        Complaints/45 is what made the stock persist; the weather draw
+        WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, REGION, YEAR)
+        RATHER THAN A STORED GENERATOR, EVEN NOW THAT THE GRANARY ITSELF
+        DOES PERSIST (see `_demographic_recovery` and `farm_stock_kg` below
+        - Complaints/45 is what made the stock persist; the weather draw
         never needed to). A seed computed fresh from `(civilisation id,
-        year)` has no sequential state to lose in the first place: year N's
-        harvest draws the same weather whether it is reached by one
-        unbroken run or by N separate `--session` commands, which is what
-        actually matters, and it costs nothing to guarantee - so there was
-        never a reason to give the weather generator itself a `SAVE_FIELDS`
-        slot, independent of whatever else about a year's harvest does or
-        does not round-trip. `self.farm_stock_kg` is the thing that
-        actually needed one, and now has it (see
+        region, year)` has no sequential state to lose in the first place:
+        year N's harvest draws the same weather whether it is reached by
+        one unbroken run or by N separate `--session` commands, which is
+        what actually matters, and it costs nothing to guarantee - so there
+        was never a reason to give the weather generator itself a
+        `SAVE_FIELDS` slot, independent of whatever else about a year's
+        harvest does or does not round-trip. `self.farm_stock_kg` is the
+        thing that actually needed one, and now has it (see
         `sim/engine/proto/saveload.py`'s `SAVE_FIELDS` tuple).
 
         Multiplier/offset are arbitrary mixing constants (not physical
-        facts), chosen only so two different years, or two civilisations
-        whose ids happen to share a common prefix, do not collide - the
-        same non-`declare()`d role `_population_seed`'s own formula plays
-        just above in `__init__`.
+        facts), chosen only so two different years, two regions, or two
+        civilisations whose ids happen to share a common prefix, do not
+        collide - the same non-`declare()`d role `_population_seed`'s own
+        formula plays just above in `__init__`.
+
+        WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md):
+        `region` defaults to `None`, reproducing the OLD (civilisation id,
+        year) seed bit for bit - every caller that predates per-region
+        weather (there are none left in this engine, but a test or a
+        future caller that wants "the" seed for a civilisation without
+        naming a region still gets a well-defined answer) is unaffected.
+        Passing a region name mixes it in as a THIRD independent
+        ingredient, not a substitute for the civilisation id - two
+        civilisations that happen to share a home region (a later
+        conquest/contested-territory mechanism) still draw DIFFERENT
+        weather for it, because the civilisation id is still in the mix.
         """
         civ_component = sum((index + 1) * ord(character) for index, character
                             in enumerate(str(self.civ.get("id", "civ"))))
-        return (civ_component * 1000003 + int(yr) * 97) % (2 ** 32)
+        region_component = 0 if region is None else sum(
+            (index + 1) * ord(character) for index, character
+            in enumerate(str(region)))
+        return (civ_component * 1000003 + region_component * 7919
+                + int(yr) * 97) % (2 ** 32)
+
+    def _compute_farm_region_weights(self):
+        """[(region_id, weight), ...] over this civilisation's own
+        `home_regions`, weight being that region's SHARE of the total
+        cultivable land (`arable_iugera`, sim/world/land.py) among the
+        regions this civilisation actually holds - Complaints/47's own
+        "a region's harvest should scale with that region's own share of
+        the cultivable land... or a tiny province counts as much as
+        Egypt" requirement, checked directly against the measured
+        arable-land figures rather than assumed equal.
+
+        READS sim/world/land.py, DOES NOT MODIFY IT (this task's own
+        ownership boundary) - `cultivable_land_for_civilization` is called
+        exactly the way `demography`/`agriculture` are already imported
+        and read from above, a pre-existing module this engine consumes.
+
+        USES THE EXISTING 21 `home_regions`, NOT THE 1,139 `land_tiles` -
+        see this method's own call site in `__init__` and this task's own
+        brief for why: civilisations still name `home_regions`, and
+        `economy.py`'s own `len(home_regions)` forest-ceiling scaling would
+        silently multiply about thirteenfold if this reached for tile
+        granularity instead. Tiles are a later change with their own
+        before-and-after measurement, not something to fold in here.
+
+        Falls back to an EQUAL split across `home_regions` if geography.json
+        carries no arable-land figure for any region this civilisation
+        holds (should not happen for any of the 21 shipped regions, all of
+        which carry a `land` block - see land.py's own module docstring -
+        but a future or test civilisation naming an unlisted region should
+        degrade rather than crash). A civilisation with no `home_regions`
+        at all gets an empty list, which `_pooled_farm_weather_multiplier`
+        below reads as "fall back to the old civilisation-wide draw".
+        """
+        home_regions = list(self.civ.get("home_regions") or [])
+        if not home_regions:
+            return []
+        civ_id = self.civ.get("id", "civ")
+        parcels = land.cultivable_land_for_civilization(
+            civ_id, civilizations={civ_id: self.civ})
+        arable_iugera_by_region = {
+            parcel.region: parcel.arable_iugera for parcel in parcels}
+        total_arable_iugera = sum(arable_iugera_by_region.values())
+        if total_arable_iugera > 0.0:
+            return [(region, arable_iugera_by_region[region] / total_arable_iugera)
+                    for region in home_regions if region in arable_iugera_by_region]
+        equal_weight = 1.0 / len(home_regions)
+        return [(region, equal_weight) for region in home_regions]
+
+    def _pooled_farm_weather_multiplier(self, yr, weather_stdev_fraction=None):
+        """This year's harvest weather multiplier, pooled across this
+        civilisation's own home regions instead of one draw for the whole
+        territory - Complaints/47-one-weather-draw-for-a-continent.md.
+
+        Each region in `self._farm_region_weights` draws its OWN
+        independent `agriculture.draw_weather_multiplier`, seeded from
+        `_farm_year_weather_seed(yr, region=...)` (still a pure function of
+        civilisation id, region and year - see that method's own docstring
+        on why this has to stay true for determinism), and the civilisation
+        as a whole gets the ARABLE-LAND-SHARE-WEIGHTED AVERAGE of those
+        draws, not an unweighted one - a tiny province's weather does not
+        get to count as much as Egypt's.
+
+        A civilisation with no region weights at all (empty `home_regions`,
+        or none of them carry land data - see `_compute_farm_region_
+        weights`) falls back to exactly the OLD behaviour: one draw, seeded
+        from `_farm_year_weather_seed(yr)` with no region, applied to the
+        whole territory. This is what keeps a civilisation file this
+        wiring was never meant to touch (one with no `home_regions` at all)
+        running exactly as before rather than silently losing its harvest
+        variance.
+
+        LABELLED APPROXIMATION (CLAUDE.md SS3.4): this treats every
+        region's weather draw as INDEPENDENT of every other region's. Real
+        regions do not draw independently - a drought over Italia is not
+        statistically unrelated to one over Greece, and neighbouring
+        regions genuinely do share weather systems. Averaging N
+        independent draws divides the effective standard deviation by
+        sqrt(N) (Complaints/47's own measurement table), which is the
+        correct answer for N independent regions and an OPTIMISTIC one for
+        N correlated, geographically compact regions - the real benefit of
+        holding a spread-out empire sits somewhere between "one draw" and
+        "N independent draws", closer to the independent end the more the
+        regions are climatically unrelated (Britannia and Mesopotamia)
+        and closer to the one-draw end the more they neighbour each other
+        (Gaul and Hispania). A distance-based correlation, sitting on
+        geography.json's own region centroids, is the fix Complaints/47
+        names and defers - not built here, so this number is real
+        directionally (pooling territory is a genuine, historically
+        attested risk-reducing mechanism - the Roman grain fleet existed
+        for exactly this reason) but somewhat too generous in magnitude
+        until that correlation exists.
+        """
+        soil = agriculture.DEFAULT_SOIL
+        stdev = (soil.weather_stdev_fraction if weather_stdev_fraction is None
+                 else weather_stdev_fraction)
+        weights = self._farm_region_weights
+        if not weights:
+            # No usable region weights - the old, single-draw behaviour,
+            # bit-identical to what this engine did before Complaints/47.
+            return agriculture.draw_weather_multiplier(
+                random.Random(self._farm_year_weather_seed(yr)), stdev)
+        return sum(
+            weight * agriculture.draw_weather_multiplier(
+                random.Random(self._farm_year_weather_seed(yr, region=region)), stdev)
+            for region, weight in weights)
 
     def _demographic_recovery(self, yr):
         """Advance `self.population` by one year, from a REAL harvest, and
@@ -1707,40 +1874,55 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         function's own docstring for what was checked and why it came up
         empty.
 
-        THAT FIX CANNOT ACTUALLY FIRE THROUGH THIS CALL SITE, MEASURED
-        RATHER THAN ASSUMED, AND THIS IS THE MORE IMPORTANT REMAINING FACT.
-        `agriculture.Storage.step` (agriculture.py, outside this task's
-        ownership) sets `consumption_kg = max(0.0, min(food_demand_kg,
-        self.stock_kg))` - consumption is capped at bare subsistence demand
-        NO MATTER HOW MUCH is banked in `self.farm_stock_kg`, so
-        `food_available_kcal_per_day` (and therefore the `nutrition_ratio`
-        `Population.step` receives below) can structurally never exceed
-        1.0 through this wiring, a granary surplus or no. Measured directly
-        (rome_100ad, events=False, 100 years): the maximum nutrition_ratio
-        observed across the run is exactly 1.0000, and the century-end
-        population is bit-identical whether demography.py's fertility ramp
-        above 1.0 is present or reverted to its old flat cap - the ramp is
-        real, sourced and correct in isolation, but it is dead code from
-        this engine's point of view until a population is ever ALLOWED to
-        eat above subsistence in a good year, which is a decision about
-        CONSUMPTION, not fertility, and belongs in agriculture.py's
-        `Storage.step`, not here. Flagged rather than worked around: this
-        task does not own agriculture.py, and inventing a second,
-        shadow consumption rule in this method to route around that
-        ownership boundary would create two disagreeing accounts of how
-        much a population eats, which is worse than leaving the boundary
-        visible.
+        UPDATE - THE PARAGRAPH THAT USED TO STAND HERE IS NOW WRONG, AND IS
+        REPLACED RATHER THAN LEFT TO MISLEAD THE NEXT READER (CLAUDE.md's
+        own rule that a comment stating a fixed bug in the past tense reads
+        as current unless it says plainly that it no longer is one). It used
+        to say `Storage.step` capped consumption at bare subsistence NO
+        MATTER HOW MUCH was banked, so nutrition_ratio could structurally
+        never exceed 1.0 and demography.py's own above-1.0 fertility ramp
+        was dead code from this call site's point of view. `agriculture.py`
+        (still not this task's ownership) has since grown exactly the
+        mechanism that claim said was missing: `reserve_target_kg`, passed
+        to `farm_storage.step` below, lets a population eat beyond
+        subsistence once its granary holds more than its own reserve
+        target - see that call's own comment for the mechanism. So
+        nutrition_ratio CAN and DOES exceed 1.0 now, in a good year with a
+        full granary, and the fertility ramp is live, not dead.
 
-        The unshocked century measured today (72.9% of starting
-        population, not Complaints/45's 75.0% - the codebase has moved on
-        agriculture.py/land.py since that figure was recorded, unrelated to
-        this change, which was confirmed to be a no-op on this number by
-        the same bit-identical-trajectory check above) is therefore still
-        explained the same way that complaint left it: a mean nutrition
-        ratio measurably below 1.0 (weather variance that can only ever
-        pull the ratio down, never push it up, given the consumption cap
-        above) feeding a mortality response that is real, sourced, and
-        correctly one-sided for the reason given above.
+        WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md) is
+        what makes this matter in practice rather than only in principle.
+        Under the OLD single civilisation-wide weather draw, a granary
+        rarely stayed above its reserve target for long: the next bad year
+        was drawn from the same wide (0.20 relative stdev) distribution
+        that emptied it in the first place, so "eating well" was real but
+        rare (measured before this wiring: nutrition_ratio's mean stayed at
+        or below 1.0 - see the now-updated sim/tests/test_agriculture_
+        wiring.py and sim/tests/test_granary_persistence.py comments for
+        the exact pre-wiring figures). Pooling weather across home regions
+        lowers the EFFECTIVE variance a granary actually experiences (see
+        `_pooled_farm_weather_multiplier`'s own docstring), so the granary
+        sits above its reserve far more of the time and "eating well"
+        stops being rare - this is the direct mechanism, not a side effect,
+        by which WIRING TWO raises the unshocked century's ending
+        population above its starting one: it is not only that catastrophic
+        province-wide famines become rarer, it is also that a pooled
+        empire's surplus years are now allowed to actually feed people.
+
+        THE UNSHOCKED CENTURY, MEASURED AT EACH STAGE (rome_100ad,
+        events=False, 100 years, starting population 65,000,000):
+        Complaints/47 measured 76.0% before the granary/reserve work above
+        existed; Complaints/48 measured 85.51% once it did, with disease
+        burden and per-region weather both still unwired; wiring
+        `_disease_burden` through (WIRING ONE) is a proven no-op on this
+        specific measurement, since Rome starts with none of the eight
+        medical technologies and this scenario completes no technology at
+        all (manual=True, no autopilot); wiring per-region pooled weather
+        through (WIRING TWO, this method) is what actually moves it, past
+        100% of starting population - see this task's own report for the
+        exact figure, which will drift slightly as the rest of the engine
+        (agriculture.py, land.py) continues to change and should be
+        re-measured rather than read off this comment.
 
         LABOUR AND LAND UNIT DECISIONS (WIRING_MILESTONE_4.md SS4.1/4.2),
         MADE HERE RATHER THAN LEFT IMPLICIT. The farm workforce is sized
@@ -1852,6 +2034,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # single word ("carried" rather than "constructed fresh") is the
         # entire fix, and `farm_stock_kg` in SAVE_FIELDS
         # (sim/engine/proto/saveload.py) for why it survives a save.
+        # `seed=` HERE IS NOW DEFENSIVE, NOT LOAD-BEARING: `farm_storage.
+        # step` below is always given an explicit `weather_multiplier`
+        # (WIRING TWO, Complaints/47), so `Storage`'s own internal
+        # `self._random`/`draw_weather_multiplier` path this seed feeds is
+        # never actually reached from this call site any more. Still
+        # passed, rather than left at the constructor's own `None` default,
+        # so this stays deterministic even if a future edit here ever stops
+        # passing `weather_multiplier` - the same "belt and braces" spirit
+        # as the civ-wide fallback inside `_pooled_farm_weather_multiplier`
+        # itself.
         farm_storage = agriculture.Storage(
             stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(yr))
         # `reserve_target_kg` is the SAME figure the carry-forward is capped
@@ -1867,10 +2059,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # have sat there and spoiled.
         reserve_target_kg = agriculture.granary_capacity_kg(
             adult_equivalent_population * agriculture.annual_food_demand_kg_per_person())
+        # WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md):
+        # THE PER-REGION WEATHER DRAW. `_pooled_farm_weather_multiplier`
+        # draws one independent weather multiplier per home region this
+        # civilisation holds and returns the arable-land-share-weighted
+        # average - see that method's own docstring for the mechanism, the
+        # independence approximation it flags, and the land.py functions it
+        # reads from (never modifies). Passed in explicitly rather than
+        # left for `Storage.step` to draw internally, which is what turns
+        # "one weather draw for a continent" into "N independent draws,
+        # pooled" without agriculture.py needing to know anything about
+        # civilisations, home regions or land shares at all - it just
+        # receives a number, exactly as it always has.
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
             worker_count=farm_workers_fte,
-            reserve_target_kg=reserve_target_kg)
+            reserve_target_kg=reserve_target_kg,
+            weather_multiplier=self._pooled_farm_weather_multiplier(yr))
         # CLOSE THE YEAR: write what this year's Storage call actually
         # leaves on hand back as next year's opening stock, capped at what
         # this civilisation's storage infrastructure can physically hold
@@ -1923,8 +2128,60 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # nutrition_ratio without re-deriving it from the cohort counts by
         # hand a second time.
         self._last_demographic_step = self.population.step(
-            farm_year.food_available_kcal_per_day, jitter=False)
+            farm_year.food_available_kcal_per_day, jitter=False,
+            disease_burden=self._disease_burden())
         self._refresh_demographic_indexes(yr)
+
+    def _disease_burden(self):
+        """WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-
+        young.md): this civilisation's CURRENT disease burden, 1.0 being
+        the full pre-industrial infectious environment sim/world/
+        demography.py already assumes by default, 0.0 being clean water,
+        sanitation, germ-theory hygiene and vaccination all present -
+        `demography.py`'s own module docstring names the derivation this
+        reuses rather than inventing: sum the `population` weights of
+        whichever of `DISEASE_BURDEN_TECH_IDS` (above) this civilisation
+        currently holds (`self.has`, which `starting_techs` and completed
+        nodes both feed - see Household.__init__'s own comment), and
+        express that as a fraction of ALL EIGHT unlocked (rather than
+        hardcoding the 0.15 those eight happen to sum to today, so this
+        stays correct if `_TECH_EFFECTS.json` ever reweights them):
+
+            disease_burden = 1.0 - unlocked_weight / total_weight
+
+        LIVE, NOT QUEUED: read fresh every call from `self.has(...)`
+        rather than accumulated into `_pop_tech_pending` the way these same
+        eight entries' `population` field used to be (see `apply_tech_
+        effects`, society.py) - a technology's disease effect is a
+        standing fact about this civilisation ("it now boils its water"),
+        not a one-off pulse that ramps in over POP_TECH_RAMP_YEARS and is
+        done. `apply_tech_effects` no longer feeds these eight into
+        `_pop_tech_pending` at all (see its own comment) specifically so
+        the same tree-author weight is not doing two jobs at once, one of
+        which (`_pop_tech_pending` draining into `_pop_scale_base`, which
+        WIRING_MILESTONE_4.md SS1.3 established is read by nothing) was
+        already known-inert. The five FOOD entries that also carry a
+        `population` field (crop_rotation, fud_three_field_rotation,
+        fud_seed_drill, mat_newworld_crops, ag2_canning) are calorie
+        effects, not disease ones, and are deliberately excluded by
+        construction: only `DISEASE_BURDEN_TECH_IDS`'s own eight ids are
+        ever summed here.
+
+        Clamped to [0, 1] defensively (a total of exactly 0.15 measured
+        directly against `_TECH_EFFECTS.json` today makes this unreachable
+        in practice, but a future edit to that file changing the eight
+        weights' sum should not be able to hand `demography.Population.
+        step` a burden outside the range it declares valid).
+        """
+        unlocked_weight = sum(
+            TECH_EFFECTS[tech_id].get("population", 0.0)
+            for tech_id in self.DISEASE_BURDEN_TECH_IDS if self.has(tech_id))
+        total_weight = sum(
+            TECH_EFFECTS[tech_id].get("population", 0.0)
+            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
+        if total_weight <= 0.0:
+            return demography.PRE_INDUSTRIAL_DISEASE_BURDEN
+        return max(0.0, min(1.0, 1.0 - unlocked_weight / total_weight))
 
     def _refresh_demographic_indexes(self, yr):
         """Say why the wage bill moved, if it moved enough to be worth

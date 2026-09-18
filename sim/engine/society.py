@@ -1512,8 +1512,29 @@ class SocietyMixin:
                 # this same cascade. `delta` is this technology's total,
                 # eventual addition to this civilization's baseline
                 # population, as a fraction of it.
-                self._pop_tech_pending.append(
-                    (delta / self.POP_TECH_RAMP_YEARS, self.POP_TECH_RAMP_YEARS))
+                #
+                # EXCEPT FOR THE EIGHT DISEASE/SANITATION TECHNOLOGIES
+                # (Sim.DISEASE_BURDEN_TECH_IDS, core.py), which WIRING ONE
+                # (Complaints/48-technology-cannot-stop-people-dying-young.
+                # md) gives a REAL, LIVE effect instead: core.py's own
+                # `_disease_burden` sums these same `population` weights
+                # straight off `self.has(...)` every year, which is a
+                # standing fact about a technology this civilisation holds
+                # ("it now boils its water"), not a one-off pulse that
+                # ramps in and then is done. Queuing them into
+                # `_pop_tech_pending` AS WELL would have the same tree-
+                # author weight doing two jobs at once, one of which
+                # (`_pop_tech_pending` draining into `_pop_scale_base`,
+                # which WIRING_MILESTONE_4.md SS1.3 already established is
+                # read by nothing) was already known-inert - so it is
+                # deliberately NOT queued for these eight; the five
+                # remaining FOOD-effect technologies that also carry a
+                # `population` field (crop_rotation, fud_three_field_
+                # rotation, fud_seed_drill, mat_newworld_crops, ag2_canning)
+                # are unaffected and still queue exactly as before.
+                if k not in self.DISEASE_BURDEN_TECH_IDS:
+                    self._pop_tech_pending.append(
+                        (delta / self.POP_TECH_RAMP_YEARS, self.POP_TECH_RAMP_YEARS))
                 changed.append(field)
         if changed:
             self.household.log.append((self.year, "%s changes the society: %s"
