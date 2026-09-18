@@ -1,21 +1,11 @@
 """Parsing what a person types at `play`'s prompt into the one JSON command dict the protocol already understands. A parser, not a second implementation - see its own module comment below."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import json
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+from ..data import load
 
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
-
-
-
 
 # ---------------------------------------------------------------------------
 # TYPED COMMANDS, for a person at a keyboard.

@@ -7,8 +7,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 import collections, json, math, os, random
 from collections import defaultdict
 
-from .data import *          # the shared tables and loaders
-from .data import (ANNUAL_WAGE, WAGES, hard_pre, trade_family)
+from .data import (ANNUAL_WAGE, hard_pre, haversine_km, trade_family, WAGES)
 from . import commodities as _commod
 from constants import declare
 

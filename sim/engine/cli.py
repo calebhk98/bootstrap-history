@@ -2,9 +2,9 @@
 import collections, json, math, os, random, time
 from collections import defaultdict
 
-from .data import *          # the shared tables and loaders
-from .data import (DEFAULTS, STARTING_KITS, closure, critical_path, load, load_civ,
-                   load_geography, topo_order)
+from .data import (CIVDIR, closure, critical_path, DEFAULTS, goal_catalog,
+                   hard_pre, load, load_civ, load_geography, resolve_goal,
+                   STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
 
 import argparse, sys

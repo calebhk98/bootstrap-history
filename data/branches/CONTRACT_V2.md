@@ -52,10 +52,16 @@ bronze, copper or wrought iron all work, worse. Encode that:
 and produces less. Use this wherever a real substitution exists. It is the
 single most important schema change in v2.
 
-**4. `gov` AND `sus` ARE GONE. Use `traits` instead.** How a society reacts is a
-property of the SOCIETY, not the technology. A printing press is subversive
-where a scribal elite controls literacy and unremarkable where it does not. So
-tag the technology and let the civilization file decide:
+**4. `traits` WAS ADDED. `gov` AND `sus` ARE STILL LIVE, not gone.** The
+direction is for how a society reacts to be a property of the SOCIETY, not
+the technology: a printing press is subversive where a scribal elite
+controls literacy and unremarkable where it does not. `traits` tags the
+technology so a civilization file can decide that later. That direction has
+not landed yet: `gov` and `sus` were never actually removed, both fields are
+present on every node in the merged tree today, and the engine still reads
+both. Set `traits` on new nodes, but keep setting `gov` and `sus` too until
+the engine stops reading them; dropping either now would break nodes the
+engine still scores by them.
 
 `traits`: any of `military`, `labour_saving`, `information`, `spectacle`,
 `inexplicable`, `medical`, `food`, `infrastructure`, `luxury`, `commerce`,

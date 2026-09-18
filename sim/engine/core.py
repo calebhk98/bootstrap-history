@@ -1,10 +1,9 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, json, math, os, random, sys
+import collections, math, os, random, sys
 
 from constants import declare
-from .data import *          # the shared tables and loaders
-from .data import (ANNUAL_WAGE, DEFAULTS, WAGES, load_civ, load_geography,
-                   load_resources, trade_family)
+from .data import (DEFAULTS, load_civ, load_geography, load_resources,
+                   TECH_EFFECTS, trade_family, WAGES)
 
 # sim/world/demography.py imports `sim.constants` fully-qualified (see that
 # module's own header), which only resolves if the REPOSITORY ROOT is on
@@ -88,8 +87,9 @@ def _cell_chordal_position_km(lat_degrees, lon_degrees):
     `Sim._compute_farm_weather_correlation_cholesky`.
 
     WHY THIS EXISTS ALONGSIDE `haversine_km` RATHER THAN JUST CALLING IT.
-    `haversine_km` (imported into this module via `from .data import *`,
-    see this file's own top) gives the GREAT-CIRCLE distance between two
+    `haversine_km` (defined in `engine/data.py`, and imported by the
+    geography and economy mixins rather than by this file) gives the
+    GREAT-CIRCLE distance between two
     lat/lon points - the right answer for `region_reach`/`material_reach`'s
     travel-time modelling, which is what it was built for. It is the WRONG
     choice for a spatial correlation kernel's distance argument: an
@@ -1903,7 +1903,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         distance between the two cells' lat/lon centroids projected onto a
         sphere of Earth's radius, DELIBERATELY NOT `haversine_km`'s
         great-circle distance despite that function already existing in
-        this file (`from .data import *`, used elsewhere in this class):
+        the codebase (`engine/data.py`, called by the geography and economy
+        mixins, never by this class):
         an isotropic exponential-family kernel of CHORDAL distance is
         guaranteed positive semi-definite for any configuration of points
         (it is an ordinary Euclidean-space Matern kernel, valid in any

@@ -20,10 +20,10 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import argparse, json, math, os, random, sys
+import json, math, os, sys
 sys.setrecursionlimit(20000)
 import collections
-from collections import defaultdict, deque
+from collections import deque
 
 # This file lives in sim/engine/, one level deeper than simulator.py used
 # to, so the data directory is two parents up rather than one. Everything that

@@ -8,8 +8,8 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from constants import declare
-from .data import *          # the shared tables and loaders
 from .data import (TECH_EFFECTS, TRADES_ABSENT, closure, critical_path)
+from .hazard_window import hazards_not_yet_past
 
 from world import military_logistics
 
@@ -3017,15 +3017,8 @@ class SocietyMixin:
         actually has to escalate.
         """
         rows = []
-        for hazard in (self.civ.get("hazards") or []):
-            yrs = hazard.get("years") or []
-            if not yrs:
-                continue
-            year_start = yrs[0]
-            year_end = yrs[1] if len(yrs) > 1 else yrs[0]
-            if self.year > year_end:
-                continue                      # already survived, or missed
-            in_progress = year_start <= self.year <= year_end
+        for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
+                self.civ, self.year):
             years_until = 0 if in_progress else (year_start - self.year)
             name = hazard.get("name", "hazard")
             kinds = [hazard_kind for hazard_kind in

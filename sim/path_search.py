@@ -137,8 +137,7 @@ from engine.core import Sim
 # docstring, now in engine/cli.py, for the fuller argument. This module
 # already imported `load_strategy`/`topo_stable` from there, so importing
 # these two the same way costs nothing new.
-from engine.cli import (load_strategy, topo_stable, DetRNG,
-                        ensure_fixed_hash_seed)
+from engine.cli import DetRNG, ensure_fixed_hash_seed
 
 import planner as _planner
 

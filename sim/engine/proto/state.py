@@ -1,16 +1,8 @@
 """The state/status screen and the event log: what has happened, what ended the run (or why it has not), and the small per-founder and per-goal accounting behind them."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import math, re
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
+from ..data import closure
 
 def _agent_end_reason(s):
     """None while the run is live; otherwise why it stopped, for state() and

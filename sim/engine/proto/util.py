@@ -1,18 +1,6 @@
 """Small, dependency-free helpers shared across the protocol package: command-argument parsing (_qty/_num/_clean/_flag), save-path safety, and money-word localisation."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
-
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
-
-
+import os, re
 
 # ----------------------------------------------------------------------------
 # A rendering for a person, alongside the JSON one, not instead of it.
@@ -26,7 +14,6 @@ from ..core import Sim
 # so what a person reads and what a script reads are guaranteed to agree -
 # there is only one source of truth for any number in here.
 # ----------------------------------------------------------------------------
-
 
 def _factor(v):
     """A multiplier, at the precision a player would need to reproduce a total.

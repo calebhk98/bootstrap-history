@@ -1,15 +1,8 @@
 """Turning a JSON reply into the readable text `--pretty` and `play` print. Pure presentation: every function here reads an already-built reply dict and returns text, never touching the live Sim - see ARCHITECTURE.md."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import json, re
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+from ..data import downstream_count, trade_family
 
 from .score import _score_lines
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
@@ -17,9 +10,6 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
 # time - see _wrap's own comment on this, in engine/proto/util.py.
-
-
-
 
 def render_values(out):
     lines = ["WHAT THIS SOCIETY BELIEVES"]

@@ -2,12 +2,12 @@
 
 ## Method
 
-I read every note file under `rome/playtest/naive/` through `rome/playtest/naive6/`
+I read every note file under `playtest/naive/` through `playtest/naive6/`
 (these rounds do not use a file literally named `NOTES.md`; the per-tester files
 are `*_PLAY.md` / `*_BREAK.md` / `*_WEIRD.md` or `PLAY_A.md` / `BREAK_B.md` /
 `WEIRD_C.md`), plus `FINDINGS.md`, `FINDINGS_SWEEP_naive12.md`,
 `FINDINGS_SWEEP_naive34.md`, `FINDINGS_SWEEP_reports.md`, and
-`rome/playtest/reports/*.md`, as instructed. I did not read any `transcript.txt`.
+`playtest/reports/*.md`, as instructed. I did not read any `transcript.txt`.
 
 Rounds 1–4 (`naive`, `naive2`, `naive3`, `naive4`) and the `reports/` round had
 already been swept and re-verified against the engine once, by three prior audit
@@ -23,7 +23,7 @@ of them — roughly 60 — were made after round 6 and before today, many with
 commit messages that are direct, explicit responses to a specific playtester's
 finding (several quote the tester's numbers verbatim in the commit message or
 a code comment). I used `git log` to find these, then re-ran the live simulator
-(`rome/sim/simulator.py agent` / `play`, JSON protocol, various civs and kits)
+(`sim/simulator.py agent` / `play`, JSON protocol, various civs and kits)
 to confirm or refute the highest-value findings directly against current
 behaviour, rather than trust commit messages alone. Every entry below says what
 evidence (a live repro today, a code comment, or neither) its verdict rests on.
@@ -45,7 +45,7 @@ re-confirmed in `FINDINGS_SWEEP_naive12.md` S1.
 leads', and since `load` restores the game but not the player's memory, a player
 can save, build a node, look at what appeared in `available`, load back, and keep
 the knowledge. Fog of war is one command away from being off."*
-**Engine:** `rome/sim/engine/protocol.py`, `save_state`/`load_state` (dispatch
+**Engine:** `sim/engine/protocol.py`, `save_state`/`load_state` (dispatch
 around the `save`/`load` ops).
 **Verdict: LIKELY STILL OPEN.** Reproduced today: `save` at year 1300, `step 50`
 to 1350, `load` the 1300 save — state cleanly returns to year 1300 with no
@@ -60,7 +60,7 @@ S15); `naive5/B/BREAK_B.md` Finding 17 ("the status line blamed founder hours I
 had 1,900 of"); `naive6/B/BREAK_B.md` Finding 27 (*"491.3 owed against 490,410
 held, and 2,000 free founder-hours against a project said to be waiting on my
 hours"*); `reports/rome_100ad_WIN.md` (`FINDINGS_SWEEP_reports.md` A8).
-**Engine:** `rome/sim/engine/protocol.py`, the `waiting_on` ladder (computed from
+**Engine:** `sim/engine/protocol.py`, the `waiting_on` ladder (computed from
 `ph_left`/bill before checking `why_underfunded`).
 **Verdict: CONFIRMED STILL OPEN.** Reproduced today with the exact repro from
 the reports sweep (fresh Rome, `start identity_cover`, step forward into
@@ -79,7 +79,7 @@ furnace nobody has yet built.' `why blast_furnace` in that same game: 'STATUS:
 DONE / THIS SOCIETY ALREADY HAS THIS... this is the biggest single technology
 gap you face.'"* Finding 22 adds: *"England 1300 is granted bronze but not
 copper, and the blast furnace but not the water-blown bellows."*
-**Engine/data:** `rome/data/civilizations/england_1300.json` (`starting_techs`).
+**Engine/data:** `data/civilizations/england_1300.json` (`starting_techs`).
 **Verdict: CONFIRMED STILL OPEN.** `starting_techs` in that file lists
 `blast_furnace` and `mat_cast_iron` explicitly (lines 236–237), and
 `{"cmd":"why","id":"blast_furnace"}` against `england_1300` today still returns
@@ -94,8 +94,8 @@ refuse"); isolated and re-confirmed in `FINDINGS_SWEEP_naive12.md` S3.
 **Quote:** *"`why` on `sea_skeleton_first` -> `'bounty_eligible_by_type': false`...
 `bounty` then accepts it... Two implementations of one rule; the explanatory
 one is the stale copy."*
-**Engine:** `rome/sim/engine/protocol.py` (`bounty_eligible_by_type`, a hard-coded
-category allow-list) vs. `rome/sim/engine/projects.py`, `Sim.bounty_eligible`
+**Engine:** `sim/engine/protocol.py` (`bounty_eligible_by_type`, a hard-coded
+category allow-list) vs. `sim/engine/projects.py`, `Sim.bounty_eligible`
 (the real, wider rule).
 **Verdict: UNCLEAR.** Not re-tested this round; no commit between round 6 and
 now has a title suggesting this specific field was touched. Carried forward
@@ -107,8 +107,8 @@ from the naive12 sweep as presumptively still present.
 **Quote:** *"the top-level summary said `resource_throttle: 1.0,
 throttle_binding: null` — i.e. 'nothing is limiting your work' while eight
 projects were frozen for lack of money."*
-**Engine:** `rome/sim/engine/protocol.py` (`throttle_binding` in `_agent_state`);
-set in `rome/sim/engine/core.py` in the material-throttle pass only, so it
+**Engine:** `sim/engine/protocol.py` (`throttle_binding` in `_agent_state`);
+set in `sim/engine/core.py` in the material-throttle pass only, so it
 never reflects a money shortfall.
 **Verdict: UNCLEAR.** Not specifically re-tested; several later commits touch
 adjacent reporting fields (`dc36b1f`, `fb7315b`) but none names this field by
@@ -120,7 +120,7 @@ audit's budget allowed.
 **Quote:** *"`bounty fin_employment_contract` -> posted... `state` -> 'Contract of
 employment 65% of your hours spent, 0 den still owed - waiting on your hours'.
 `help commands` says 'bounty <id>: pay someone else to solve it instead'."*
-**Engine:** `rome/sim/engine/projects.py` (bounty sets `ph_left = n["ph"]*0.35`,
+**Engine:** `sim/engine/projects.py` (bounty sets `ph_left = n["ph"]*0.35`,
 so the "hours" reported are notional, not the founder's).
 **Verdict: UNCLEAR.** Not re-tested this round; carried forward.
 
@@ -130,7 +130,7 @@ it needs 0.0 craftsmen and refuses because I have 0.0"*) and `naive6/B/BREAK_B.m
 Finding 5 (*"0.0 craftsmen in the listing, 0.3 craftsmen in the refusal. The
 screen whose job is to tell me what a venture needs rounds the requirement away
 to zero."*).
-**Engine:** `rome/sim/engine/labour.py` (supervision-need rounding in the
+**Engine:** `sim/engine/labour.py` (supervision-need rounding in the
 `ventures`/`open` refusal path — `needs` is rounded to 1 decimal for display
 while the refusal computes against the unrounded figure).
 **Verdict: UNCLEAR.** Spot-checked once today on a fresh England game and it did
@@ -145,7 +145,7 @@ staff loss after what you have built: 45%. Actual events... EVENT 1348/1349/1350
 Black Death: staff -45%... That is 0.55^3 = 83% of staff gone, not 45%."* against
 the Great Famine, a similarly-shaped 3-year window, which fired only once);
 `naive34` sweep did not cover this specific pair directly.
-**Engine:** `rome/sim/engine/society.py`, `_shocks()` — each hazard-year in the
+**Engine:** `sim/engine/society.py`, `_shocks()` — each hazard-year in the
 window independently rolls `r.random() < 0.32`, and when it lands, applies the
 *full* stated fraction multiplicatively to whatever staff remains, so two or
 three hits in one window compound.
@@ -163,7 +163,7 @@ says the figure can repeat.
 S18 (graded "mostly fixed; range checking is the gap").
 **Quote:** *"take a save the game wrote, set `capital` to 1e12 and `year` to 50,
 and load it into a `rome_100ad` session that starts in 100... loaded."*
-**Engine:** `rome/sim/engine/protocol.py`, `_validate_save`.
+**Engine:** `sim/engine/protocol.py`, `_validate_save`.
 **Verdict: UNCLEAR / LIKELY STILL OPEN, low severity.** Not re-tested this
 round; the sweep already confirmed structural validation (required fields,
 types, civ match) is solid and only range-plausibility checking is missing.
@@ -174,7 +174,7 @@ Only relevant to a player editing their own save file.
 **Quote:** *"`heard_of_but_cannot_begin` was empty, even though fog-of-war
 explicitly promises 'things you have heard of but cannot yet begin.' That
 stayed empty all through the opening."*
-**Engine:** `rome/sim/engine/protocol.py` (`available` summary vs. `all:true`
+**Engine:** `sim/engine/protocol.py` (`available` summary vs. `all:true`
 view).
 **Verdict: UNCLEAR.** Not re-tested. Given the amount of rendering work done on
 `available`'s summary view since (digest by subject, `RESTS` column, etc.),
@@ -189,7 +189,7 @@ Same word, opposite answers, one command apart... later a three-way collision:
 RUNNING (projects), RUNNING AS CONCERNS (opened), and ventures' 'running'.");
 `naive6/B/BREAK_B.md` Finding 1 (money paid by something `ventures` calls
 neither running nor openable) and the implicit collision throughout.
-**Engine:** `rome/sim/engine/protocol.py`/`cli.py` render three overlapping
+**Engine:** `sim/engine/protocol.py`/`cli.py` render three overlapping
 concepts (in-progress build, opened concern, founder's own unlisted practice)
 with the same English word.
 **Verdict: LIKELY IMPROVED, not fully resolved.** Re-checked today: the
@@ -216,8 +216,8 @@ den/yr... A first-time player will absolutely take the free one"); `naive6/A/
 PLAY_A.md` and `naive6/C/WEIRD_C.md` (independently flagged the same two nodes
 as traps in England); `reports/han_china_100ad_BREAK.md`/`WIN.md`
 (`FINDINGS_SWEEP_reports.md` A6, "still present as a narrow residual").
-**Engine/data:** `rome/sim/engine/fog.py` (`FOREIGN_MARKERS`, which still does
-not include `lnd_cursus_publicus` or `sea_pharos_lighthouse`); `rome/sim/engine/
+**Engine/data:** `sim/engine/fog.py` (`FOREIGN_MARKERS`, which still does
+not include `lnd_cursus_publicus` or `sea_pharos_lighthouse`); `sim/engine/
 society.py` (`_is_foreign_institution`).
 **Verdict: CONFIRMED STILL OPEN.** Re-checked today against England 1300:
 `why lnd_cursus_publicus` still returns Roman flavour text ("Rome's cursus
@@ -233,7 +233,7 @@ civilisation (England) not previously checked, so it is wider than reported.
 **Quote:** *"`sea_clinker_hull`, `sea_keel_deep` and `met_bloomery_bog_iron`...
 unlock nothing anywhere in the 2,828-node tech tree... against a civ blurb that
 calls the Norse 'the best shipwrights and among the best smiths in Europe.'"*
-**Engine/data:** `rome/data/tech_tree.json` (graph edges) and `rome/data/
+**Engine/data:** `data/tech_tree.json` (graph edges) and `data/
 civilizations/norse_900ad.json`.
 **Verdict: CONFIRMED STILL OPEN.** Re-checked today: `why sea_clinker_hull`
 under Norse still returns `"how_much_rests_on_this": "nothing else; this is
@@ -248,7 +248,7 @@ or whether anyone is using them. A man famous throughout the Later Han for a
 breadcrumb eraser that he has never once sold."*); corroborated in `naive6/A/
 PLAY_A.md` ("reputation jumped 5 -> 11.2... from building three ordinary
 things").
-**Engine:** `rome/sim/engine/core.py` / `society.py` (reputation gain on
+**Engine:** `sim/engine/core.py` / `society.py` (reputation gain on
 completion, independent of whether the thing is ever opened/used).
 **Verdict: CONFIRMED STILL OPEN.** Re-checked today: starting and completing
 two trivial, never-opened items (a safety pin and a button) in a single year
@@ -262,7 +262,7 @@ direction"); echoed throughout `naive5` and `naive6` (e.g. `naive5/B/BREAK_B.md`
 Finding 16: *"reputation is printed in the status bar of every single screen
 and the only measurable effect I could find is that it raises your annual
 expenses"*, about the manumission loop).
-**Engine:** `rome/sim/engine/labour.py` (`manumit`, `buy_slaves`,
+**Engine:** `sim/engine/labour.py` (`manumit`, `buy_slaves`,
 `annual_wage_bill` computation — freedmen never enter it).
 **Verdict: LARGELY FIXED as a correctness bug, but the underlying design choice
 remains a real balance/design concern.** The severe half — manumission minting
@@ -283,7 +283,7 @@ den, one year) ... is so cheap relative to hiring that I now think commission
 is strictly better than employment for project work, and staff only matter for
 supervising open concerns. If that is intended it is not signposted; if it is
 not intended it is an exploit."*).
-**Engine:** `rome/sim/engine/labour.py` (`commission` pricing vs. `hire` wage
+**Engine:** `sim/engine/labour.py` (`commission` pricing vs. `hire` wage
 table).
 **Verdict: UNCLEAR / LIKELY STILL OPEN.** Not directly re-tested at scale this
 round; no commit title suggests commission pricing itself was rebalanced
@@ -299,7 +299,7 @@ PLAY_A.md` (*"from about year 1325 the game stopped feeling like exploration
 and started feeling like spreadsheet optimisation"*); `naive2/norse_900ad_PLAY.md`
 (`FINDINGS_SWEEP_naive12.md` S28, "the single biggest balance problem in the
 game... the fix is not more hazards, it is making revenue nodes compete").
-**Engine:** `rome/sim/engine/economy.py` (venture revenue scaling with
+**Engine:** `sim/engine/economy.py` (venture revenue scaling with
 reputation, uncapped).
 **Verdict: LIKELY STILL OPEN.** This is a structural/balance property rather
 than a single bug, and the sweep for round 1–2 already confirmed the worst
@@ -359,7 +359,7 @@ tester to specifically the closed-stdout/SIGPIPE case); `naive6/C/WEIRD_C.md`
 12 years of play twice before I noticed, because I was piping output through
 `head`... 'Close the terminal, anything' is the specific thing that does not
 work."*).
-**Engine:** `rome/sim/simulator.py` / `rome/sim/engine/cli.py` (save-on-exit vs.
+**Engine:** `sim/simulator.py` / `sim/engine/cli.py` (save-on-exit vs.
 save-after-every-command).
 **Verdict: LIKELY STILL OPEN.** Not re-tested this round (reproducing a SIGPIPE
 mid-step reliably needs a harness I did not build), and I found no commit whose
@@ -407,7 +407,7 @@ because they sat at the bottom of the 'cheapest six' list looking like
 junk... This is my strongest single piece of feedback."*); `naive5/A/PLAY_A.md`
 §9 implicitly (measurement/tolerance/heat ladders discovered "by brute force,
 not reasoning", though not phrased as the cheapest-six complaint specifically).
-**Engine:** `rome/sim/engine/protocol.py` (`available` summary's "MOST RESTS ON
+**Engine:** `sim/engine/protocol.py` (`available` summary's "MOST RESTS ON
 THESE" / "cheapest six" selection logic).
 **Verdict: LIKELY FIXED.** Matched to commit `6830b7c "The most important nodes
 were hidden by being cheap"`. Not independently re-run at the exact scale of a

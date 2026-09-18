@@ -98,7 +98,6 @@ comparison and the reading of where this module's numbers land relative to
 each.
 """
 import collections
-import math
 
 from sim.constants import declare
 

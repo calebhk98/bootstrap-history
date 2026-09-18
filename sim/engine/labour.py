@@ -4,13 +4,10 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections, json, math, os, random
-from collections import defaultdict
+import math
 
-from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
 from constants import declare
-
 
 class LabourMixin:
     def _stochastic_round(self, x):

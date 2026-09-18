@@ -1,18 +1,8 @@
 """Reading and writing a save file, and validating one before it is trusted."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import collections, json, os, random
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
-
-
+from ..data import WAGES
 
 SAVE_VERSION = 2
 

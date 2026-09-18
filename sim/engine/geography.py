@@ -4,12 +4,8 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections, json, math, os, random
-from collections import defaultdict
 
-from .data import *          # the shared tables and loaders
 from .data import (haversine_km)
-
 
 class GeographyMixin:
     def _compute_home_centroid(self):

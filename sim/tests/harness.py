@@ -189,6 +189,43 @@ def slow_check(name, fn, detail_fn=None):
     check(name, ok, detail)
 
 
+# SAME FLAG, ONE LEVEL UP. slow_check() above opts one expensive CHECK out of
+# an otherwise-fast topic; SLOW_TOPICS opts a whole TOPIC MODULE out, because
+# in these five the expense is not one buried check but the module's normal
+# way of working - many full `proto()` subprocess sessions, or many checks
+# that each step a Sim over a century or two, one after another. A per-topic
+# timing run (see sim/tests/__main__.py, which is what actually reads this
+# set) found these five cost 52.7% of the suite's wall time between them:
+SLOW_TOPICS = {
+    # 21.65s, 19.9% of the suite - the single biggest topic file, and both
+    # kinds of expense at once: 37 real `proto()` subprocess sessions plus
+    # 17 separate loops that each run a Sim across a century or more of
+    # years, to see a policy or a hazard option actually play out long run
+    # rather than just accept in year one.
+    "round2_policy_hazards_options",
+    # 8.57s, 7.9% - round eight's fixes are checked by driving the real
+    # protocol end to end: 25 `proto()` subprocess sessions in this one file,
+    # and a subprocess spawn is not something this test file can make
+    # cheaper.
+    "round8_fixes",
+    # 8.39s, 7.7% - round nine's fixes are checked the same way: 11
+    # `proto()` subprocess sessions, most of them multi-command sessions
+    # rather than one-shot calls.
+    "round9",
+    # 8.18s, 7.5% - Complaints/47's fix (weather drawn per home region and
+    # pooled by cultivable-land share, not one draw for a whole civilisation)
+    # can only be told apart from the old single-draw behaviour by actually
+    # running enough years for a distribution to show up in, across every
+    # home region a civilisation holds.
+    "regional_weather_wiring",
+    # 7.15s, 6.6% - Complaints/50's fix (weather correlated across
+    # geography.json's land tiles by real distance, not by region label)
+    # needs enough tiles and enough sampled years for a correlation-by-
+    # -distance curve to mean anything; fewer years would just be noise.
+    "growing_season_weather_correlation",
+}
+
+
 def check(name, ok, detail=""):
     """Record a check, and how long the work before it took.
 

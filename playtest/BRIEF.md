@@ -7,7 +7,7 @@ You are playing a game. Read this whole file before your first command.
 **You may only interact with the game through the JSON protocol.**
 
 ```bash
-python3 rome/sim/simulator.py agent --civ <CIV> [--kit <KIT>] [--seed N]
+python3 sim/simulator.py agent --civ <CIV> [--kit <KIT>] [--seed N]
 ```
 
 It reads one JSON command per line on stdin and writes one JSON object per line
@@ -21,13 +21,13 @@ this without them:
   `costs`, `why` (the CLI one), or `treetool.py` in any form
 - importing `simulator` as a module and calling `load_strategy`, `Sim`, or
   anything else directly
-- reading `rome/data/strategies/`, or any file that encodes the optimizer's
+- reading `data/strategies/`, or any file that encodes the optimizer's
   chosen ordering
 - reading the tech tree JSON to plan. You may read it ONLY to check a
   specific claim after the game has told you something you doubt, and if you do,
   say so in your report
 
-Reading `rome/knowledge/` is allowed and encouraged. It is the in-world guide;
+Reading `knowledge/` is allowed and encouraged. It is the in-world guide;
 a real player would have it. Reading `ROME_BOOTSTRAP.md` is allowed.
 
 `path`, `why` and `available` ARE protocol commands and you should use them
@@ -61,7 +61,7 @@ already know how a steam engine works. Building is not. The goal node is
 
 ## Your report
 
-Write to `rome/playtest/reports/<CIV>_<ROLE>.md`. Structure it as:
+Write to `playtest/reports/<CIV>_<ROLE>.md`. Structure it as:
 
 ```
 # <CIV> / <ROLE>
@@ -90,7 +90,7 @@ A finding that the game got something RIGHT is worth reporting too, marked
 WORKS-WELL, especially if you tried hard to break it and could not.
 
 **Do not fix anything.** Do not edit any file outside
-`rome/playtest/reports/`. You are testing, not repairing. If you find a crash,
+`playtest/reports/`. You are testing, not repairing. If you find a crash,
 report it with the reproduction; someone else will fix it.
 
 ## Honesty

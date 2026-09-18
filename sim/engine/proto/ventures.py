@@ -1,19 +1,5 @@
 """What is shared about ongoing concerns/ventures across every screen that shows venture_hands() numbers: the one supervision-hours explanation, so it cannot disagree with itself from one screen to the next."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
-
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
-
-
-
 # WHY keeping a concern open can want "2.13 craftsmen" - and it is not a
 # body count either, for a different reason than _staff_fraction_note's.
 # venture_hands() (projects.py) is a continuous SHARE of a scholar's or

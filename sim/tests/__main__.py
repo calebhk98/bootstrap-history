@@ -386,9 +386,20 @@ def main(argv=None):
     # or via the test_regressions.py shim.
     from sim.tests import harness
 
+    # SLOW TOPICS ARE OPT-IN, THE SAME WAY SLOW CHECKS ARE: same --slow flag
+    # / ROME_SLOW_TESTS env var harness.py already reads, one grain coarser.
+    # Naming a topic with --only is itself an explicit request for it, so a
+    # topic in harness.SLOW_TOPICS still runs when the person asked for it by
+    # name - only the DEFAULT (no --only) run skips it. Nobody should have to
+    # pass --slow and --only together just to get a topic they already named.
+    skipped_slow_topics = ([slug for slug in selected
+                             if slug in harness.SLOW_TOPICS] if only is None and not harness.SLOW
+                            else [])
+    run_now = [slug for slug in selected if slug not in skipped_slow_topics]
+
     print("PLAYTEST REGRESSIONS\n" + "=" * 72)
     for slug in TOPICS:
-        if slug in selected:
+        if slug in run_now:
             _run_topic(slug, harness)
 
     print("=" * 72)
@@ -397,6 +408,14 @@ def main(argv=None):
              sum(t for _, t in harness.CHECKS_RUN),
              ("   (%d slow checks skipped: run with --slow)" % len(harness.SKIPPED))
              if harness.SKIPPED else ""))
+    if skipped_slow_topics:
+        # Same spirit as the skipped-CHECK line above: say plainly that this
+        # was not the full suite, how many topics were left out, which ones,
+        # and the exact flag that runs them, so nobody mistakes a fast run
+        # for a full one.
+        print("%d topic(s) skipped (slow): %s - run with --slow, or name one "
+              "with --only to run it anyway"
+              % (len(skipped_slow_topics), ", ".join(skipped_slow_topics)))
     slow = sorted(harness.CHECKS_RUN, key=lambda r: -r[1])[:5]
     if slow and slow[0][1] >= 5.0:
         print("slowest:")

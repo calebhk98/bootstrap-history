@@ -1,15 +1,9 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import hashlib
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
+from ..data import closure, critical_path, downstream_count, is_downstream
 from ..fog import strip_self_play_advice
-
-from ..core import Sim
 
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
@@ -18,9 +12,6 @@ from .ventures import _VENTURE_SUPERVISION_NOTE
 # engine.protocol.DEFAULT_AVAILABLE_LIMIT directly at runtime, so
 # _agent_available reads it through the protocol module itself, live -
 # see _wrap's own comment on the same pattern, in engine/proto/util.py.
-
-
-
 
 SUBJECTS = {
     "00": "the briefing", "01": "the world as it is", "03": "society and politics",

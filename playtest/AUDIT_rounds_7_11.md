@@ -24,7 +24,7 @@ an audit of a codebase that was being fixed in real time, not a sign the bugs
 were imaginary.
 
 **Method.** For each entry I either (a) reran the exact or an equivalent
-repro against the current build (`python3 rome/sim/simulator.py` or the
+repro against the current build (`python3 sim/simulator.py` or the
 `agent` JSON protocol, piping short scripts, mostly under 60s), or (b) read
 the responsible engine code and, where one exists, the commit that touched
 it. "CONFIRMED STILL OPEN" means I reproduced it just now. "LIKELY FIXED"
@@ -41,7 +41,7 @@ means I could not cheaply settle it either way.
 300-founder-hour project... then went bankrupt"); naive11b #27 ("I could
 still type `start`, and it accepted them").
 **Category:** CORRECTNESS.
-**File:** `rome/sim/engine/protocol.py` (`op == "start"`) / `rome/sim/engine/projects.py` (`start_project`/`start_reason`).
+**File:** `sim/engine/protocol.py` (`op == "start"`) / `sim/engine/projects.py` (`start_project`/`start_reason`).
 **Status: CONFIRMED STILL OPEN.** `hire` was fixed — it now refuses outright
 with "there is nobody left to take anyone on: the founder is dead and no
 deputy remains to direct the work" (verified live). `start` was not: with
@@ -60,7 +60,7 @@ year.' ... makes a player think the mine was free"); naive11c D17 (identical
 repro, "ready_year 103 ... mine_capacity {} ... close ... 'You stop paying 0
 a year'").
 **Category:** CORRECTNESS / DISCOVERABILITY.
-**File:** `rome/sim/engine/economy.py` (`close_mine`).
+**File:** `sim/engine/economy.py` (`close_mine`).
 **Status: CONFIRMED STILL OPEN.** `close_mine` computes the saved amount as
 `self.mine_capacity.get(mat, 0.0) * opex`; a mine still in `mine_tranches`
 (being sunk, not yet producing) has `mine_capacity[mat] == 0`, so the message
@@ -78,7 +78,7 @@ oddity).
 **Category:** CORRECTNESS (data/classification) — cosmetic but still a
 literal factual error in the game's own subject index.
 **File:** tech-tree data (subject field on `com_optical_codebook`,
-`com_signal_flags`), consumed by `rome/sim/engine/protocol.py` (`_subject_of`, `SUBJECTS`).
+`com_signal_flags`), consumed by `sim/engine/protocol.py` (`_subject_of`, `SUBJECTS`).
 **Status: CONFIRMED STILL OPEN.** Live repro today:
 ```
 available electricity
@@ -103,11 +103,11 @@ game's own recommended opening or needing a completely different strategy
 ("build cheap concerns first, ignore MOST RESTS ON THESE") to survive at
 all.
 **Category:** BALANCE / DESIGN.
-**File:** `rome/sim/engine/cli.py` (`STRATS`/`cmd_run`'s "recommended"
-strategy), `rome/sim/engine/data.py` (`STARTING_KITS`).
+**File:** `sim/engine/cli.py` (`STRATS`/`cmd_run`'s "recommended"
+strategy), `sim/engine/data.py` (`STARTING_KITS`).
 **Status: CONFIRMED STILL OPEN.** Reran today:
 ```
-python3 rome/sim/simulator.py run --mc 4 --civ rome_100ad
+python3 sim/simulator.py run --mc 4 --civ rome_100ad
 reached transistor  : 0  (0%)
 failure modes: ran out of horizon   4 (100%)
 first blocked node  : atomic_theory   4
@@ -134,8 +134,8 @@ was calendar"); echoed in naive7's PLAY_A ("Where it got tedious... once
 income outruns every price, the decision disappears") and naive9c F23 ("The
 economy has no ceiling").
 **Category:** DESIGN / BALANCE.
-**File:** whole-economy shape — `rome/sim/engine/economy.py` (no late-game
-money sink), `rome/sim/engine/projects.py` (calendar floors are the only
+**File:** whole-economy shape — `sim/engine/economy.py` (no late-game
+money sink), `sim/engine/projects.py` (calendar floors are the only
 late unlockable constraint).
 **Status: CONFIRMED STILL OPEN.** No commit in the session's history
 introduces a money sink, a concurrent-project cap, or a way to buy down a
@@ -152,7 +152,7 @@ or filter by revenue"); naive9c #34; naive11a #6 ("I ended up scraping the
 output with awk; a real player cannot"); naive11b #37; naive8a ("best
 returns available" required manually dumping `available all`).
 **Category:** DESIGN / DISCOVERABILITY.
-**File:** `rome/sim/engine/protocol.py` (the `available` handler sorts by
+**File:** `sim/engine/protocol.py` (the `available` handler sorts by
 `n["cost"]` only; no `sort`/`order` parameter exists).
 **Status: CONFIRMED STILL OPEN.** `grep` for a sort parameter in the
 `available` handler in `protocol.py` finds none, and several listed items
@@ -165,7 +165,7 @@ cost-sorted view (e.g. any upkeep-only textile node).
 workaround); naive9b #?, echoed by naive11c D4/D19's general complaint that
 the player has to hand-drive the tree at scale.
 **Category:** DESIGN (quality of life).
-**File:** `rome/sim/engine/protocol.py` (command dispatch has `start` for a
+**File:** `sim/engine/protocol.py` (command dispatch has `start` for a
 single id only; no `start path`/`start all`).
 **Status: CONFIRMED STILL OPEN.** No such command exists in `KNOWN_COMMANDS`
 at HEAD.
@@ -179,7 +179,7 @@ failures, and there is no feedback loop" — this half of the complaint, the
 lack of a stated cost-of-failure, not the probability-accuracy half, which
 checks out fine per naive9c's dedicated test).
 **Category:** DISCOVERABILITY / DESIGN.
-**File:** `rome/sim/engine/protocol.py` (`_node_explain`, the `why` renderer)
+**File:** `sim/engine/protocol.py` (`_node_explain`, the `why` renderer)
 — prints `risk` as a bare fraction with no stated monetary consequence.
 **Status: CONFIRMED STILL OPEN.** `why <id>` at HEAD still prints only
 `FAILURE RISK: NN%` with no "a failure costs about 40% of the price again"
@@ -198,8 +198,8 @@ naive11b #6/#28 ("'You: alive and ageing' - that is all. No age, no life
 expectancy... I had no way to plan the one decision the mode exists to
 force").
 **Category:** DISCOVERABILITY.
-**File:** `rome/sim/engine/protocol.py` (`_agent_state`/`render_state`;
-`founder_ages` is the only mortality field exposed) / `rome/sim/engine/core.py` (`life_left`, `cfg["founder_arrival_age"]` are tracked internally and never surfaced).
+**File:** `sim/engine/protocol.py` (`_agent_state`/`render_state`;
+`founder_ages` is the only mortality field exposed) / `sim/engine/core.py` (`life_left`, `cfg["founder_arrival_age"]` are tracked internally and never surfaced).
 **Status: CONFIRMED STILL OPEN.** Live repro today (`2\nn\npoor_scholar\ny\nstate\nquit\n`):
 ```
 You: alive and ageing, 2,000 founder-hours free this year
@@ -217,7 +217,7 @@ OPENED, and nothing says so"); naive10a #6; naive11b #7/#17.
 **Category:** DISCOVERABILITY. (The underlying mechanic is no longer
 inconsistent — see Appendix item A1 — this entry is about the *UI* not
 saying so, which is a narrower, still-live gap.)
-**File:** `rome/sim/engine/protocol.py` (`_node_explain` / `ventures`
+**File:** `sim/engine/protocol.py` (`_node_explain` / `ventures`
 renderer) — no field distinguishes "this concern's only value is a
 capability, not revenue."
 **Status: CONFIRMED STILL OPEN.** `why identity_cover` at HEAD still prints
@@ -232,8 +232,8 @@ field, which several testers did use successfully, but nothing says
 text never mentions [the supervision check]"); naive11c D5/D8 (same, with
 `auto_open on` and concerns still shut); naive10b #4.
 **Category:** DISCOVERABILITY.
-**File:** `rome/sim/engine/protocol.py` (the `policy` help text for
-`auto_open`) / `rome/sim/engine/core.py` (`auto_open_ventures`, which does
+**File:** `sim/engine/protocol.py` (the `policy` help text for
+`auto_open`) / `sim/engine/core.py` (`auto_open_ventures`, which does
 gate on supervision).
 **Status: CONFIRMED STILL OPEN.** The live `policy` text at HEAD still reads
 only: *"auto open: open concerns that plainly pay for themselves. It will
@@ -250,7 +250,7 @@ command, same-shaped requirement, opposite behaviour, no explanation").
 clearly does work now — see Appendix A2 — but the inconsistency in what the
 *refusal text itself says* for the two staff classes was not independently
 re-verified at HEAD).
-**File:** `rome/sim/engine/protocol.py` / `rome/sim/engine/labour.py` (the
+**File:** `sim/engine/protocol.py` / `sim/engine/labour.py` (the
 staff-shortfall message builder; scholars and craftsmen are rendered by
 different code paths).
 **Status: UNCLEAR.** `commission` itself was reworked this session (see
@@ -274,8 +274,8 @@ scandal/denunciation mechanic in five years from ordinary profitable
 `start`s). naive9b/naive10a also report moderate, survivable brushes with
 the line.
 **Category:** BALANCE.
-**File:** `rome/sim/engine/economy.py` (`eminence`/prominence formula),
-`rome/sim/engine/core.py` (the step() update).
+**File:** `sim/engine/economy.py` (`eminence`/prominence formula),
+`sim/engine/core.py` (the step() update).
 **Status: UNCLEAR / live tension, not cleanly "fixed" or "open."** One
 specific correctness complaint in this cluster (the scandal/denunciation
 version rounding to a literal "0% chance" the turn before it kills you) is
@@ -295,7 +295,7 @@ Flagging for a design decision rather than a fix.
 hours... Nothing before you type it tells you the price"); naive9a #30;
 naive11b (similar).
 **Category:** BALANCE / DISCOVERABILITY.
-**File:** `rome/sim/engine/labour.py` (`train`) / `rome/sim/engine/protocol.py` (`quote` — still only covers mines, forest/coppice, nitre beds and people; no `quote train`).
+**File:** `sim/engine/labour.py` (`train`) / `sim/engine/protocol.py` (`quote` — still only covers mines, forest/coppice, nitre beds and people; no `quote train`).
 **Status: CONFIRMED STILL OPEN.** `grep` of the `quote`/`price` handler in
 `protocol.py` shows branches for `mine`, `forest`/`coppice`, `nitre`, and
 `slaves`/`people`, but none for `train`. The hours-per-trainee cost is
@@ -372,7 +372,7 @@ at all before death — is resolved.
 
 ### A6. Rubber priced at 99,999 denarii/kg (and every rubber-using node with it)
 Reported by naive11c D13/TOP PROBLEM 11 ("For most of this session `why
-tx2_eraser` read 3,001,105... Someone changed `rome/data/prices.json` late
+tx2_eraser` read 3,001,105... Someone changed `data/prices.json` late
 in my session and it now reads 4,735"). **CONFIRMED FIXED**, and naive11c's
 own notes already confirm this happened mid-session (commit
 `e88a822 "data: rubber is elsewhere, not unobtainable"`). Verified still

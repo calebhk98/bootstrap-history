@@ -1,18 +1,9 @@
 """Node id and name resolution: looking a technology up by id or by name, and the small graph queries - what depends on it, what it unlocks - built directly on the loaded tree."""
 
-import collections, hashlib, json, math, os, random, re
+import re
 from collections import defaultdict
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
-
-
+from ..data import load
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
 # no Sim to ask and runs on every line a player types. One load(), not two -

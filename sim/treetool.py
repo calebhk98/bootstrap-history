@@ -93,6 +93,35 @@ def load_prices():
     return set(material for material in prices["purchase_prices_denarii"] if not material.startswith("_"))
 
 
+MERGED_DUPLICATE_IDS_FILE = "_MERGED_DUPLICATE_IDS.json"
+
+
+def load_merged_duplicate_ids():
+    """Read the dedup record from data/branches/, not from tech_tree.json.
+
+    This mapping is SOURCE, not output: it records a decision a human made
+    (these two branch ids name the same technology, keep this one) and the
+    merge cannot rederive it from the branch files themselves - the branch
+    files still contain both spellings. Before this function existed, the
+    mapping lived only in tech_tree.json's meta, which is generated; a
+    rebuild from branches alone would have had no way to know which ids were
+    duplicates and would have resurrected all of them. See the header in
+    that file for the full story.
+
+    A missing file means no ids have been deduped yet, not an error - the
+    same "absent means empty" reading load_aliases() already gives a missing
+    ALIASES.json. A branches/ directory built for a small fixture (a test,
+    or a from-scratch tree with nothing to dedup) is a legitimate state, and
+    refusing to merge just because nobody has ever recorded a duplicate
+    would make this file mandatory boilerplate rather than a record of an
+    actual decision.
+    """
+    path = os.path.join(BR, MERGED_DUPLICATE_IDS_FILE)
+    if not os.path.exists(path):
+        return {}
+    return json.load(open(path))["merged_duplicate_ids"]
+
+
 def cmd_merge(a):
     goods = load_prices()
     TRADES = load_trades()
@@ -100,8 +129,13 @@ def cmd_merge(a):
     base = json.load(open(TREE))
     # Ids retired by deduplication. Branch files still contain both spellings
     # of a technology that two authors invented independently, so without this
-    # the next merge silently resurrects every duplicate.
-    retired = base.get("meta", {}).get("merged_duplicate_ids", {})
+    # the next merge silently resurrects every duplicate. Read from source
+    # (data/branches/_MERGED_DUPLICATE_IDS.json), not from tech_tree.json's
+    # meta - that meta key is written BY this function, a few lines below the
+    # end of this one, so treating it as an input would make the merge read
+    # its own last output instead of the human decision it is supposed to
+    # represent.
+    retired = load_merged_duplicate_ids()
     nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
     for node in nodes.values():
         node.setdefault("_src", "core")
@@ -121,9 +155,17 @@ def cmd_merge(a):
     # from `errs` so the merge can refuse to write while still reporting
     # everything else it found.
     collisions = []
+    # Every event that DELETES something a branch author wrote: a labour
+    # trade prices.json has no rate for, a material with no price, a
+    # material that is really a technology, a prerequisite naming no node,
+    # or a back edge cut to break a cycle. Collected separately from `warns`
+    # (informational, does not lose data) so the merge can refuse to write
+    # unless the operator explicitly accepts the loss. See the refusal block
+    # below, after both loops that populate this list have run.
+    losses = []
 
     for filename in sorted(os.listdir(BR)):
-        if not filename.endswith(".json") or filename == "ALIASES.json":
+        if not filename.endswith(".json") or filename in ("ALIASES.json", MERGED_DUPLICATE_IDS_FILE):
             continue
         try:
             batch = json.load(open(os.path.join(BR, filename)))
@@ -202,7 +244,8 @@ def cmd_merge(a):
                 if resolved_trade in TRADES:
                     lab[resolved_trade] = lab.get(resolved_trade, 0) + hours
                 else:
-                    warns.append("%s: %s unknown trade '%s', dropped" % (filename, node["id"], trade))
+                    losses.append(("unknown_trade",
+                        "%s: %s unknown trade '%s', dropped" % (filename, node["id"], trade)))
             node["lab"] = lab
             materials = {}
             for material, q in node["mat"].items():
@@ -216,12 +259,14 @@ def cmd_merge(a):
                             resolved_material = cand
                             break
                 if resolved_material in dropset or material in dropset:
-                    warns.append("%s: %s '%s' is a technology not a material, dropped" % (filename, node["id"], material))
+                    losses.append(("material_is_technology",
+                        "%s: %s '%s' is a technology not a material, dropped" % (filename, node["id"], material)))
                     continue
                 if resolved_material in goods:
                     materials[resolved_material] = materials.get(resolved_material, 0) + q
                 else:
-                    warns.append("%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material))
+                    losses.append(("unpriced_material",
+                        "%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material)))
             node["mat"] = materials
             # Branch authors keep writing the RECIPE PROSE into the kb link
             # field. Left alone it reports as a broken link to a file whose
@@ -292,7 +337,8 @@ def cmd_merge(a):
                 keep.append(prereq)
             else:
                 dangling[prereq] += 1
-                warns.append("%s: dropped unresolvable prereq '%s'" % (node["id"], prereq))
+                losses.append(("unresolvable_prerequisite",
+                    "%s: dropped unresolvable prereq '%s'" % (node["id"], prereq)))
         node["pre"] = keep
 
     # break any cycles by dropping the back edge, reporting each one
@@ -303,7 +349,7 @@ def cmd_merge(a):
         if state.get(i) == 1:
             back = stack[-1]
             nodes[back]["pre"] = [prereq for prereq in nodes[back]["pre"] if prereq != i]
-            errs.append("CYCLE broken: removed %s -> %s" % (back, i))
+            losses.append(("dependency_cycle", "CYCLE broken: removed %s -> %s" % (back, i)))
             return
         state[i] = 1
         for prereq in list(nodes[i]["pre"]):
@@ -313,11 +359,43 @@ def cmd_merge(a):
     for node_id in list(nodes):
         dfs(node_id, [])
 
+    # `losses` now holds every event, from both loops above, that deleted
+    # something a branch author wrote rather than merely warning about it:
+    # an unknown labour trade, a material with no price, a material that is
+    # really a technology, a prerequisite naming no node, or a back edge cut
+    # to break a cycle. Print every one, grouped by kind - someone fixing
+    # the source data needs to see every problem in one pass, not the first
+    # 25 and a count of the rest. Refuse to write unless the operator passed
+    # --accept-data-loss: the same "collect everything, report, do not
+    # write" shape as the collision refusal above, because this merge
+    # already deletes data silently today, and that is the bug Task 1 of
+    # this pass exists to close.
+    if losses:
+        by_category = collections.defaultdict(list)
+        for category, message in losses:
+            by_category[category].append(message)
+        print("\n%d event(s) would delete data during this merge:" % len(losses))
+        for category in sorted(by_category):
+            print("\n  %s (%d)" % (category, len(by_category[category])))
+            for message in by_category[category]:
+                print("     " + message)
+        if not getattr(a, "accept_data_loss", False):
+            print("\nMERGE REFUSED: the %d event(s) listed above would each drop something a "
+                  "branch author wrote (an unpriced material, an unknown trade, a prerequisite "
+                  "naming no node, or a cycle-breaking edge deletion). Fix the source data - "
+                  "price the material, add the trade to prices.json, add the missing "
+                  "prerequisite node, or break the cycle by hand in the branch file - and "
+                  "re-run merge. If the loss is intended, re-run with --accept-data-loss to "
+                  "write anyway. Nothing was written." % len(losses))
+            return 1
+        print("\n--accept-data-loss was passed: writing despite the %d event(s) above." % len(losses))
+
     base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
+    base["meta"]["merged_duplicate_ids"] = retired
     _write_json(base, TREE, a)
 
-    print("merged  : %d nodes (%d added from branches, %d updated from branches)"
+    print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
           % (len(nodes), added, updated))
     print("errors  : %d" % len(errs))
     for e in errs[:40]:
@@ -732,7 +810,16 @@ def _write_json(obj, path, a, indent=1):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers(dest="cmd", required=True)
-    subparsers.add_parser("merge")
+    subparser = subparsers.add_parser("merge")
+    subparser.add_argument("--accept-data-loss", action="store_true",
+                   help="write the merge even though it will delete data: drop an unpriced "
+                        "material, drop a labour trade prices.json has no rate for, drop a "
+                        "material that is really a technology, drop a prerequisite that names "
+                        "no node, or delete a back edge to break a dependency cycle. Without "
+                        "this flag the merge lists every such event and refuses to write, so "
+                        "the default is to fix the source branch files instead. Pass this only "
+                        "once you have looked at the printed list and decided the loss is "
+                        "correct.")
     subparsers.add_parser("apply-caps")
     subparser = subparsers.add_parser("repair")
     subparser.add_argument("--infer-caps", action="store_true",

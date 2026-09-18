@@ -36,7 +36,8 @@ is how fast a modern capability frontier can be reached, and why.
 
 Three artefacts share one dataset:
 
-- `data/` - the tech tree (2,849 nodes), prices, civilisations, geography.
+- `data/` - the tech tree (2,864 nodes - `python3 sim/simulator.py validate`),
+  prices, civilisations, geography.
 - `knowledge/` - how to physically do each thing the tree names.
 - `sim/` - the engine, the CLI/JSON protocol, and the test suite.
 
@@ -195,15 +196,25 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
-- **`Sim` is one god object** - **165** instance attributes CARRIED
-  (re-measured; a scan of `__init__` misses 8 reached only as `s.X` from
-  `proto/` and 3 hidden behind `self.__dict__[...]`), **523** methods across
-  `Sim` and its six mixins, all talking through `self`. Say which count you
-  mean: `sim/ARCHITECTURE.md` quotes **43** attributes, which is what
-  `__init__` ASSIGNS, and both numbers are right - that file reconciles them
-  and gives the script for each. The 523 supersedes the ~314 this line
-  carried until 2026-09-18 (`Sim` 231, EconomyMixin 121, SocietyMixin 61,
-  LabourMixin 50, ProjectsMixin 46, FogMixin 8, GeographyMixin 6). A full
+- **`Sim` is one god object.** This line used to quote **165** instance
+  attributes CARRIED (a scan of `__init__` missing 8 reached only as `s.X`
+  from `proto/` and 3 hidden behind `self.__dict__[...]`). SUPERSEDED, and
+  deliberately not replaced with a corrected number:
+  `sim/ARCHITECTURE.md`'s "runtime graph is one god object" section states,
+  in its own voice, that the demography wiring deleted `pop_deficit` and
+  `_pop_recovery_years` and turned `pop_scale` and `wage_index` into
+  computed properties, which makes 165 stale, and that the counting method
+  behind 165 was only ever described in
+  `docs/architecture/SIM_STATE_INVENTORY.md`, never scripted, so nobody can
+  re-derive today's true figure from it. Treat 165 as unverifiable; do not
+  quote it as current, and do not invent a replacement by arithmetic on it.
+  What IS current and scripted: `Sim.__init__` assigns **44** instance
+  attributes, and `Sim` and its six mixins have **524** methods between
+  them, all talking through `self`. `sim/ARCHITECTURE.md`'s same section
+  gives the script for both numbers, right next to where it quotes them.
+  The 524 supersedes the ~314 this line carried until 2026-09-18; its
+  breakdown is `Sim` 232, EconomyMixin 121, SocietyMixin 61, LabourMixin 50,
+  ProjectsMixin 46, FogMixin 8, GeographyMixin 6 (same script). A full
   decomposition has been considered and rejected with reasons in
   `sim/ARCHITECTURE.md`. Do not silently restart it.
 - **Much of the engine is majority comment, and the comments are
@@ -232,6 +243,15 @@ in 72 of 83 files. `k` alone is 568 across 53 files.
 
 Quote the 4,972 when sizing the work and say which you mean, because the first
 two attempts at this number disagreed and both were right.
+
+None of the counts in this paragraph, nor the 72.4% Tier-1 share and the
+per-name breakdowns below, currently carry a command you can run in this
+checkout to reproduce them: `docs/architecture/NAMING_PLAN.md` says outright
+that its scanner "is not part of this repo; it is a throwaway analysis
+script, not a shipped tool." Treat them as measured-but-unverifiable until
+that scanner is committed and can be cited here as a command. See
+`docs/architecture/NAMING_PLAN.md`'s own section on how the scan was done
+for the counting method, such as it is.
 
 This is the single biggest obstacle to anyone reading this code, and it gets
 worse every time someone adds to it.
@@ -288,8 +308,12 @@ caller passing by keyword breaks invisibly - it reports those separately.
 
 The tech-tree DATA schema fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`,
 `sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`, `kb`) are a separate job,
-and a cheaper one than it looks. Measured: **739 read sites across 13 files**,
-plus the 2,864 nodes and the 41 `data/branches/*.json` sources. No save
+and a cheaper one than it looks. Measured: **739 read sites across 13 files**
+(no command reproduces this figure today; it is not scripted anywhere in the
+repo, so treat it the same as the naming counts above, unverifiable until
+someone commits the scan), plus the **2,864 nodes**
+(`python3 sim/simulator.py validate`) and the **39**
+`data/branches/*.json` sources (`ls data/branches/*.json | wc -l`). No save
 migration is needed at all - saves store node ids, never node records - and
 the JSON protocol already translates these to readable keys on the way out
 (`n["ph"]` becomes `"founder_hours_total"`), so nothing on the wire changes.
@@ -306,3 +330,12 @@ One real collision: `gov` is both a per-node field and a `Sim` attribute in
   simulator. Prose quotes the data; it never asserts it.
 - Claims about the codebase should be measured, not remembered. If you change
   the shape of the code, re-measure the counts in `sim/ARCHITECTURE.md`.
+- **Standing rule, added after the stakeholder flagged documentation going
+  stale silently: a number in prose carries the command or script that
+  produced it, right next to the number, or it does not go in.** This file
+  has already shipped wrong node counts and wrong file counts that nobody
+  caught because nothing next to the number said how to check it. Where a
+  command genuinely does not exist yet (a throwaway scan that was never
+  committed, for instance), say so explicitly in the same sentence instead
+  of leaving the number to look authoritative. A number with neither a
+  command nor an "unverifiable" label next to it is a bug in this file.

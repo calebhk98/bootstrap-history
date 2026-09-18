@@ -53,9 +53,15 @@ from unittest import mock
 from sim import treetool
 
 
-def _tree(nodes, merged_duplicate_ids=None):
+def _tree(nodes):
+    # merged_duplicate_ids is no longer read from tree meta - it is SOURCE,
+    # read from data/branches/_MERGED_DUPLICATE_IDS.json (see
+    # treetool.load_merged_duplicate_ids). The fixture tree still carries the
+    # key in meta because cmd_merge writes it back there every run; a test
+    # that cares about the retired-id mapping sets it up via
+    # BranchMergeAuthorityTests._write_merged_duplicate_ids instead of here.
     return {
-        "meta": {"merged_duplicate_ids": merged_duplicate_ids or {}},
+        "meta": {"merged_duplicate_ids": {}},
         "nodes": nodes,
     }
 
@@ -92,6 +98,18 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         for p in self.patches:
             p.start()
             self.addCleanup(p.stop)
+        # No _MERGED_DUPLICATE_IDS.json is written here on purpose: a
+        # fixture branches dir with no such file is exactly the "nobody has
+        # deduped anything yet" case, and treetool.load_merged_duplicate_ids
+        # must treat that as an empty mapping, not an error (see
+        # test_missing_merged_duplicate_ids_file_is_treated_as_empty below).
+        # Only a test that cares about a retired id calls
+        # _write_merged_duplicate_ids to give it one.
+
+    def _write_merged_duplicate_ids(self, mapping):
+        path = os.path.join(self.branches_dir, treetool.MERGED_DUPLICATE_IDS_FILE)
+        with open(path, "w") as f:
+            json.dump({"_readme": "fixture", "merged_duplicate_ids": mapping}, f)
 
     def _write_tree(self, tree):
         with open(self.tree_path, "w") as f:
@@ -105,10 +123,11 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         with open(self.tree_path) as f:
             return json.load(f)
 
-    def _merge(self, dry_run=False):
+    def _merge(self, dry_run=False, accept_data_loss=False):
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = treetool.cmd_merge(types.SimpleNamespace(dry_run=dry_run))
+            rc = treetool.cmd_merge(types.SimpleNamespace(
+                dry_run=dry_run, accept_data_loss=accept_data_loss))
         return rc, buf.getvalue()
 
     # ---- acceptance test 1: no branch edits -> byte-identical tree --------
@@ -260,8 +279,8 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         on its own, and it must not block the merge or overwrite anything."""
         surviving = _node("tl_survivor", cap=300)
         retired_zombie = _node("fx_retired", cap=111)
-        self._write_tree(_tree([surviving, retired_zombie],
-                               merged_duplicate_ids={"fx_retired": "tl_survivor"}))
+        self._write_tree(_tree([surviving, retired_zombie]))
+        self._write_merged_duplicate_ids({"fx_retired": "tl_survivor"})
         self._write_branch("10_first.json", [_node("fx_retired", cap=222)])
         self._write_branch("20_second.json", [_node("fx_retired", cap=333)])
 
@@ -283,6 +302,100 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.assertEqual(rc, 0)  # unrelated to the collision rule; unchanged behaviour
         self.assertIn("missing fields", out)
 
+    # ---- the dedup source file (Task 2) --------------------------------
+    def test_missing_merged_duplicate_ids_file_is_treated_as_empty(self):
+        """No data/branches/_MERGED_DUPLICATE_IDS.json at all - setUp never
+        writes one - must mean "nothing has been deduped", not a crash. A
+        from-scratch branches/ directory with no dedup history yet is a
+        legitimate state, not a malformed one."""
+        self._write_tree(_tree([]))
+        self._write_branch("10_fixture.json", [_node("fx_alpha")])
+        rc, out = self._merge()
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(treetool.load_merged_duplicate_ids(), {})
+
+    def test_merge_writes_dedup_mapping_from_source_into_tree_meta(self):
+        """Task 2: the merge reads merged_duplicate_ids from
+        data/branches/_MERGED_DUPLICATE_IDS.json and writes it into
+        tech_tree.json's meta, same as before - only the SOURCE of that
+        mapping moved, not where it ends up."""
+        surviving = _node("tl_survivor", cap=300)
+        self._write_tree(_tree([surviving]))
+        self._write_merged_duplicate_ids({"fx_retired": "tl_survivor"})
+        self._write_branch("10_fixture.json", [_node("fx_new")])
+        rc, out = self._merge()
+        self.assertEqual(rc, 0, out)
+        meta = self._read_tree()["meta"]
+        self.assertEqual(meta["merged_duplicate_ids"], {"fx_retired": "tl_survivor"})
+
+    # ---- the data-loss refusal (Task 1) --------------------------------
+    def test_unpriced_material_refuses_to_write_without_the_override(self):
+        self._write_tree(_tree([]))
+        with open(self.tree_path, "rb") as f:
+            tree_before = f.read()
+        self._write_branch("10_fixture.json", [
+            _node("fx_alpha", mat={"unobtainium_kg": 3}),
+        ])
+
+        rc, out = self._merge()
+
+        self.assertEqual(rc, 1)
+        self.assertIn("MERGE REFUSED", out)
+        self.assertIn("unpriced_material", out)
+        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("--accept-data-loss", out)
+        with open(self.tree_path, "rb") as f:
+            tree_after = f.read()
+        self.assertEqual(tree_before, tree_after,
+                         "a refused merge must not write the tree at all")
+
+    def test_accept_data_loss_writes_anyway_and_still_reports_every_event(self):
+        self._write_tree(_tree([]))
+        self._write_branch("10_fixture.json", [
+            _node("fx_alpha", mat={"unobtainium_kg": 3}, lab={"nonexistent_trade": 5}),
+        ])
+
+        rc, out = self._merge(accept_data_loss=True)
+
+        self.assertEqual(rc, 0)
+        self.assertNotIn("MERGE REFUSED", out)
+        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("unknown trade 'nonexistent_trade'", out)
+        nodes = {n["id"]: n for n in self._read_tree()["nodes"]}
+        self.assertIn("fx_alpha", nodes)
+        # the dropped material and trade are genuinely gone from the node,
+        # not merely warned about - --accept-data-loss accepts the loss, it
+        # does not make the unpriced material or unknown trade usable
+        self.assertEqual(nodes["fx_alpha"]["mat"], {})
+        self.assertEqual(nodes["fx_alpha"]["lab"], {})
+
+    def test_unresolvable_prerequisite_is_a_refused_data_loss_event(self):
+        self._write_tree(_tree([]))
+        self._write_branch("10_fixture.json", [
+            _node("fx_alpha", pre=["nonexistent_prereq"]),
+        ])
+
+        rc, out = self._merge()
+
+        self.assertEqual(rc, 1)
+        self.assertIn("MERGE REFUSED", out)
+        self.assertIn("unresolvable_prerequisite", out)
+        self.assertIn("dropped unresolvable prereq 'nonexistent_prereq'", out)
+
+    def test_dependency_cycle_is_a_refused_data_loss_event(self):
+        self._write_tree(_tree([]))
+        self._write_branch("10_fixture.json", [
+            _node("fx_alpha", pre=["fx_beta"]),
+            _node("fx_beta", pre=["fx_alpha"]),
+        ])
+
+        rc, out = self._merge()
+
+        self.assertEqual(rc, 1)
+        self.assertIn("MERGE REFUSED", out)
+        self.assertIn("dependency_cycle", out)
+        self.assertIn("CYCLE broken", out)
+
 
 class RealBranchCorpusHasNoUnresolvedCollisions(unittest.TestCase):
     """An integration-level smoke test against the REAL data/branches/*.json
@@ -292,11 +405,18 @@ class RealBranchCorpusHasNoUnresolvedCollisions(unittest.TestCase):
     other direction - fails the suite instead of being merged silently."""
 
     def test_real_merge_dry_run_finds_no_collisions(self):
+        # --accept-data-loss because the real branch corpus DOES currently
+        # trigger data-loss events (unpriced materials, unknown trades,
+        # unresolvable prerequisites - see Task 1 of the pass that added
+        # this flag) and refusing to write for THOSE is correct, working
+        # behaviour, not a collision. This test is only about collisions:
+        # an id claimed by two different branch files in the same run.
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = treetool.cmd_merge(types.SimpleNamespace(dry_run=True))
+            rc = treetool.cmd_merge(types.SimpleNamespace(dry_run=True, accept_data_loss=True))
         self.assertEqual(rc, 0, "the real branch corpus has an id defined in "
                                 "more than one file:\n" + buf.getvalue())
+        self.assertNotIn("COLLISION", buf.getvalue())
 
 
 if __name__ == "__main__":

@@ -4,12 +4,10 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections, json, math, os, random, re
-from collections import defaultdict
+import re
 
-from .data import *          # the shared tables and loaders
-from .data import (closure, load)
-
+from .data import closure
+from .hazard_window import hazards_not_yet_past
 
 # THE GAME TELLING YOU WHAT IS IMPORTANT IS THE GAME PLAYING ITSELF. A user
 # asked, about a different number entirely, "shouldn't the payback be
@@ -320,17 +318,11 @@ class FogMixin:
                         if node_id not in self.household.done),
                        key=lambda k: -(self.household.forgotten[k]))
         upcoming = []
-        for hazard in (self.civ.get("hazards") or []):
-            yrs = hazard.get("years") or []
-            if not yrs:
-                continue
-            year_start = yrs[0]
-            year_end = yrs[1] if len(yrs) > 1 else yrs[0]
-            if self.year > year_end:
-                continue                      # already survived, or missed
+        for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
+                self.civ, self.year):
             row = {"name": hazard.get("name", "hazard"),
                    "years": [year_start, year_end],
-                   "in_progress": year_start <= self.year <= year_end,
+                   "in_progress": in_progress,
                    "sacks_a_site": bool(hazard.get("sack_chance")),
                    "sack_chance_per_year": hazard.get("sack_chance"),
                    "staff_loss": hazard.get("staff_loss"),

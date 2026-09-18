@@ -1,20 +1,8 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
-
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+from ..data import ANNUAL_WAGE, WAGES, trade_family
 
 from .state import _agent_state
-
-
-
 
 # WHAT EACH TRAIT IN self.w ACTUALLY DOES, in the player's own words. Event
 # text has always named these fields directly - "corpus_dispersed changes

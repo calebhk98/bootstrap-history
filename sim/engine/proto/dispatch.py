@@ -1,15 +1,10 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import json, re
 
-from ..data import *          # the shared tables and loaders
 from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+                    downstream_count, load, money_word, topo_order,
+                    trade_family)
 
 from .economy import (_agent_capacity, _agent_changes, _agent_economy, _agent_mines, _agent_portfolio, _agent_values, _dashboard_snapshot)
 from .help import _agent_help
@@ -20,9 +15,6 @@ from .state import (_agent_end_reason, _agent_log, _agent_state, _staff_fraction
 from .techtree import _agent_available, _brief, _node_explain
 from .util import (_clean, _flag, _localise_money, _localise_words, _num, _qty, _unsafe_path)
 from .ventures import _VENTURE_SUPERVISION_NOTE
-
-
-
 
 # Every command the dispatcher answers to, in the order a player meets them.
 # Kept beside the dispatcher so that adding a command and forgetting to

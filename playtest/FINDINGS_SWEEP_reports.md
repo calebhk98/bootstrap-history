@@ -8,11 +8,11 @@ Source notes swept (all .md, in full):
 - `playtest/book_v5_comparison/technology_and_prerequisites.md`, `society_and_economy.md`,
   `narrative_and_pacing.md`
 
-Every entry below was re-checked against the **current** code in `rome/sim/engine/` and the
-current data in `rome/data/` (tech_tree.json, civilizations/, prices.json), and where possible by
-actually running `rome/sim/simulator.py agent|play`. Nothing in the repository was modified.
+Every entry below was re-checked against the **current** code in `sim/engine/` and the
+current data in `data/` (tech_tree.json, civilizations/, prices.json), and where possible by
+actually running `sim/simulator.py agent|play`. Nothing in the repository was modified.
 
-The engine has been split out of the single `simulator.py` into `rome/sim/engine/{data,geography,
+The engine has been split out of the single `simulator.py` into `sim/engine/{data,geography,
 economy,labour,society,fog,projects,core,protocol,cli}.py`, and most line numbers quoted in the
 notes no longer resolve. Verdicts are against behaviour, not line numbers.
 
@@ -36,7 +36,7 @@ never defects and are recorded only so they are not re-filed).
 - **Exact reproduction (verified today):**
   ```
   printf '{"cmd":"start","id":"identity_cover"}\n{"cmd":"step","years":1}\n{"cmd":"state","full":true}\n{"cmd":"step","years":1}\n{"cmd":"state","full":true}\n{"cmd":"step","years":1}\n{"cmd":"state","full":true}\n' \
-    | python3 rome/sim/simulator.py agent --civ rome_100ad --seed 1
+    | python3 sim/simulator.py agent --civ rome_100ad --seed 1
   ```
   Years 101, 102, 103, 104 all report, identically:
   ```
@@ -106,7 +106,7 @@ never defects and are recorded only so they are not re-filed).
 - **Status: STILL PRESENT.**
 - **Exact reproduction (verified today):**
   ```
-  printf '{"cmd":"why","id":"cap_heat_1300"}\n' | python3 rome/sim/simulator.py agent --civ han_china_100ad --seed 1
+  printf '{"cmd":"why","id":"cap_heat_1300"}\n' | python3 sim/simulator.py agent --civ han_china_100ad --seed 1
   -> {"id":"cap_heat_1300","done":true,
       "direct_prerequisites":["bellows_water_blown","cap_heat_1100"],
       "missing_prerequisites":["cap_heat_1100"],
@@ -279,7 +279,7 @@ never defects and are recorded only so they are not re-filed).
   `agent` silently did not, so the founder was immortal in every scripted or JSON-driven game*"),
   and mortality demonstrably works:
   ```
-  printf '{"cmd":"step","years":300}\n' | python3 rome/sim/simulator.py agent --civ rome_100ad --mortal --seed 3
+  printf '{"cmd":"step","years":300}\n' | python3 sim/simulator.py agent --civ rome_100ad --mortal --seed 3
   -> founder_alive false, year 140, ended true,
      events: "the founder dies, aged about 63",
              "RUN ENDS: the founder died without training successors; the school dispersed..."
@@ -578,7 +578,7 @@ Each of these was a genuine finding when written. All were re-tested today.
   risk of being forgotten."*
 
 - **C-AA. The "too eminent" death being an undocumented, unsignposted one-shot fail state.**
-  rome_100ad_WEIRD F3 (*"`grep -rn "eminen" rome/knowledge/ rome/*.md` returns nothing"*).
+  rome_100ad_WEIRD F3 (*"`grep -rn "eminen" knowledge/ rome/*.md` returns nothing"*).
   **FIXED** — every `state` now carries a `prominence` block: `{"now": 0.0, "dangerous_above":
   26.0, "settles_at_if_nothing_changes": 0.1, "chance_of_ruin_this_year": 0.0,
   "what_would_change_it": [...], "note": "This is prominence, not scandal. It cannot be bribed

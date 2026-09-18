@@ -1,21 +1,11 @@
 """Scoring the run, at any point or at the end: score_report, final_report, and the components behind them."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import math
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+from ..data import ANNUAL_WAGE, closure, critical_path, topo_order
 
 from .state import _agent_end_reason
 from .util import _fmt_num, _wrap
-
-
-
 
 def final_report(s, nodes):
     """The scoreboard, once the run is over.
