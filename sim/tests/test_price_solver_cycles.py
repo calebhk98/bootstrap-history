@@ -139,14 +139,14 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
 
 
 class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
-    """Complaints/32's third gap: `thermal_mj` and `mechanical_mj` are real
-    dependencies now (see `_dependency_materials` and ENERGY in
-    sim/solve_prices.py's module docstring), not a scalar the resolvability
-    pass could ignore the way it correctly ignores the still-uncosted
-    `energy_mj`. These two tests are the same shape as the capital-cycle
-    tests above, just for the newer field: a material that needs an energy
-    carrier with no producer must NOT get a price, and one where a producer
-    exists must.
+    """Complaints/32's third gap: `thermal_mj`, `mechanical_mj` and
+    `electrical_mj` are real dependencies now (see `_dependency_materials`
+    and ENERGY in sim/solve_prices.py's module docstring), not a scalar the
+    resolvability pass could ignore the way it correctly ignores the
+    still-uncosted `energy_mj`. These tests are the same shape as the
+    capital-cycle tests above, just for the energy fields: a material that
+    needs an energy carrier with no producer must NOT get a price, and one
+    where a producer exists must.
     """
 
     def test_a_material_needing_unpriced_mechanical_energy_has_no_path(self):
@@ -186,6 +186,77 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
         resolvable = solve_prices.compute_resolvable_materials(
             entries, solve_prices.build_producers_index(entries))
         self.assertEqual(resolvable, {"iron_bar_kg", "mechanical_mj", "wire_drawn_kg"})
+
+    def test_a_material_needing_unpriced_electrical_energy_has_no_path(self):
+        # Same shape as the mechanical_mj test above, for the third carrier
+        # this round added. aluminium_kg's own real dependency (see
+        # data/production/20_nonferrous.json) is exactly this shape now -
+        # electrical_mj, not mechanical_mj - which is the fix THE ALUMINIUM
+        # DEFECT (sim/solve_prices.py's module docstring) describes.
+        entries = {
+            "bauxite": {"outputs": {"bauxite_kg": 1.0}, "inputs": {},
+                       "labour_hours": {"labourer": 1.0}},
+            "aluminium": {"outputs": {"aluminium_kg": 1.0},
+                         "inputs": {"bauxite_kg": 4.0},
+                         "labour_hours": {"furnaceman": 0.1},
+                         "electrical_mj": 46.0},
+        }
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries))
+        self.assertEqual(
+            resolvable, {"bauxite_kg"},
+            "aluminium_kg resolved despite needing electrical_mj, which "
+            "nothing here produces - _dependency_materials has stopped "
+            "treating electrical_mj as a real dependency.")
+
+    def test_a_material_needing_priced_electrical_energy_resolves(self):
+        # Same recipe, but now a technique for electrical_mj exists (a
+        # trivial stand-in for electrical_mj_dynamo) - aluminium should
+        # resolve once its electrical dependency does.
+        entries = {
+            "bauxite": {"outputs": {"bauxite_kg": 1.0}, "inputs": {},
+                       "labour_hours": {"labourer": 1.0}},
+            "dynamo": {"outputs": {"electrical_mj": 1.0}, "inputs": {},
+                      "labour_hours": {"electrician": 0.01}},
+            "aluminium": {"outputs": {"aluminium_kg": 1.0},
+                         "inputs": {"bauxite_kg": 4.0},
+                         "labour_hours": {"furnaceman": 0.1},
+                         "electrical_mj": 46.0},
+        }
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries))
+        self.assertEqual(resolvable, {"bauxite_kg", "electrical_mj", "aluminium_kg"})
+
+    def test_a_conversion_chain_across_all_three_carriers_resolves(self):
+        # The graph this round's CONVERSIONS section describes - thermal to
+        # mechanical to electrical - chained two deep, using entries shaped
+        # exactly like mechanical_mj_heat_engine_* and electrical_mj_dynamo
+        # in data/production/70_energy.json. A recipe needing electrical_mj
+        # should resolve even though nothing here supplies it directly -
+        # only through two conversions from a fuel that IS priced.
+        entries = {
+            "charcoal": {"outputs": {"charcoal_kg": 1.0}, "inputs": {},
+                        "labour_hours": {"labourer": 1.0}},
+            "furnace": {"outputs": {"thermal_mj": 1.0},
+                       "inputs": {"charcoal_kg": 0.2},
+                       "labour_hours": {}},
+            "engine": {"outputs": {"mechanical_mj": 1.0}, "inputs": {},
+                      "labour_hours": {}, "thermal_mj": 10.0},
+            "dynamo": {"outputs": {"electrical_mj": 1.0}, "inputs": {},
+                      "labour_hours": {}, "mechanical_mj": 1.1},
+            "widget": {"outputs": {"widget_kg": 1.0}, "inputs": {},
+                      "labour_hours": {}, "electrical_mj": 5.0},
+        }
+        resolvable = solve_prices.compute_resolvable_materials(
+            entries, solve_prices.build_producers_index(entries))
+        self.assertEqual(
+            resolvable,
+            {"charcoal_kg", "thermal_mj", "mechanical_mj", "electrical_mj",
+             "widget_kg"},
+            "a two-deep conversion chain (thermal -> mechanical -> "
+            "electrical) failed to resolve a material that only reaches a "
+            "price through both conversions - see CONVERSIONS in "
+            "sim/solve_prices.py's module docstring.")
 
     def test_recipe_cost_and_allocation_prices_the_energy_terms(self):
         # The dependency graph seeing the edge is necessary but not

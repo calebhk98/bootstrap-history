@@ -27,10 +27,11 @@ WHAT IT CHECKS, and why each one is here rather than left to review:
     iron is FINE and normal - the price system solves that as a system of
     equations. What is not fine is a material that is its own only input, which
     is an authoring slip rather than an economy.
-  * `thermal_mj`, `mechanical_mj` and `energy_mj`, if present, are
-    non-negative numbers. See data/production/70_energy.json and ENERGY in
-    sim/solve_prices.py's module docstring for what the first two are priced
-    against, and why the third stays deliberately uncosted.
+  * `thermal_mj`, `mechanical_mj`, `electrical_mj` and `energy_mj`, if
+    present, are non-negative numbers. See data/production/70_energy.json
+    and ENERGY in sim/solve_prices.py's module docstring for what the first
+    three are priced against, and why the fourth stays deliberately
+    uncosted.
   * `capital`, if present, is held to the same standard as everything else:
     every `build_materials` key is a real material, every `build_labour_hours`
     trade is in the wage table, a capital good is built from SOMETHING (not
@@ -48,6 +49,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
+
+# The three energy carriers (see ENERGY in sim/solve_prices.py's module
+# docstring). Kept as a separate copy of the same tuple that file declares
+# as ENERGY_CARRIER_FIELDS, rather than imported from it, because
+# sim/solve_prices.py imports FROM this module - importing the other way
+# too would be circular.
+ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 sys.path.insert(0, HERE)
 import simulator
@@ -110,9 +118,19 @@ def check(entries, known_materials, known_trades):
                 problems.append("%s: input '%s' has quantity %r"
                                 % (where, key, quantity))
 
-        if not inputs and not entry.get("extracted_from"):
-            problems.append("%s: no inputs and no extracted_from - this "
-                            "material appears from nowhere" % where)
+        # A CONVERSION technique (data/production/70_energy.json's
+        # heat-engine, dynamo, motor, resistance/arc and friction entries)
+        # consumes a real physical input - another energy carrier - through
+        # one of the three energy sibling fields instead of `inputs`, which
+        # is exactly as real a consumption as an ordinary material and must
+        # count the same way here, or every conversion recipe would wrongly
+        # read as claiming its output appears from nothing.
+        draws_on_energy_carrier = any(
+            entry.get(energy_field) for energy_field in ENERGY_CARRIER_FIELDS)
+        if not inputs and not entry.get("extracted_from") and not draws_on_energy_carrier:
+            problems.append("%s: no inputs, no extracted_from and no energy "
+                            "carrier field - this material appears from "
+                            "nowhere" % where)
 
         for trade, hours in (entry.get("labour_hours") or {}).items():
             if trade not in known_trades:
@@ -122,15 +140,15 @@ def check(entries, known_materials, known_trades):
                 problems.append("%s: trade '%s' has %r hours"
                                 % (where, trade, hours))
 
-        # ENERGY. thermal_mj and mechanical_mj are priced, through
-        # sim/solve_prices.py's energy market (data/production/70_energy.json)
-        # - a typo turning one into a string or a negative number would
-        # silently vanish into `or 0.0` there exactly like a bad `inputs`
-        # quantity would. energy_mj is the residual field for a genuine gap
-        # (a technology neither energy market reaches, e.g. quartz_tube_kg's
-        # oxy-hydrogen flame temperature) and gets the same type check even
-        # though solve_prices.py deliberately leaves it uncosted.
-        for energy_field in ("thermal_mj", "mechanical_mj", "energy_mj"):
+        # ENERGY. thermal_mj, mechanical_mj and electrical_mj are all priced,
+        # through sim/solve_prices.py's three-way energy market
+        # (data/production/70_energy.json) - a typo turning one into a
+        # string or a negative number would silently vanish into `or 0.0`
+        # there exactly like a bad `inputs` quantity would. energy_mj is the
+        # residual field for a genuine gap (a technology none of the three
+        # energy markets reaches) and gets the same type check even though
+        # solve_prices.py deliberately leaves it uncosted.
+        for energy_field in ENERGY_CARRIER_FIELDS + ("energy_mj",):
             if energy_field in entry:
                 value = entry[energy_field]
                 if not isinstance(value, (int, float)) or value < 0:
@@ -306,10 +324,12 @@ def main(argv=None):
     # split (salt_solar_kg -> salt_kg, zinc_electrolytic_kg -> zinc_kg) had
     # been getting right only by accident, because those materials also
     # happen to be tree-consumed. data/production/70_energy.json's
-    # thermal_mj and mechanical_mj are produced by entries keyed
-    # thermal_mj_charcoal/_coal and mechanical_mj_waterwheel/_human_muscle,
-    # consumed only by OTHER production entries rather than by the tree, so
-    # they need the `outputs` half of this union to be seen as known at all.
+    # thermal_mj, mechanical_mj and electrical_mj are produced by entries
+    # keyed thermal_mj_charcoal/_coal/_electrical_resistance/_friction,
+    # mechanical_mj_waterwheel/_human_muscle/_motor/_heat_engine_* and
+    # electrical_mj_dynamo/_photovoltaic, consumed only by OTHER production
+    # entries rather than by the tree, so they need the `outputs` half of
+    # this union to be seen as known at all.
     known_materials = (set(consumed) | set(entries)
                       | {output for entry in entries.values()
                          for output in (entry.get("outputs") or {})})

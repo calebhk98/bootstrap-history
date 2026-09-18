@@ -51,54 +51,279 @@ is not "no answer" - it is the honest lower bound: whatever the true price is,
 it is at least the labour it takes, and this is that floor. Tag: HEURISTIC,
 not a physical fact, tracked against Milestone 1's provenance ledger.
 
-ENERGY IS NOW PRICED, AS TWO MARKETS NOT ONE (Complaints/32's third gap).
-Nine of the ten entries that used to carry a nonzero, uncosted `energy_mj`
-now carry `thermal_mj` or `mechanical_mj` instead, and both are real inputs
-this script prices through `data/production/70_energy.json` - four new
-entries that are TECHNIQUES for supplying one of the two carriers, priced
-and chosen exactly like any other multi-recipe material (see CHOICE OF
-TECHNIQUE below). The split itself is the physics, not a modelling
-convenience: a kilogram of charcoal and a turning water wheel are not
-substitutes for each other (you cannot smelt with a shaft, or draw wire
-with a fire), so a single undifferentiated `energy_mj` would let whichever
-carrier happened to be cheaper silently stand in for both, hiding exactly
-the constraint - which technology can reach which TEMPERATURE, and which
-can deliver which kind of WORK - that this file's own instructions from
-CLAUDE.md name as the point of the exercise.
+ENERGY IS NOW PRICED, AS THREE MARKETS - THERMAL, MECHANICAL AND ELECTRICAL -
+CONNECTED BY CONVERSION RECIPES, NOT TWO MARKETS WITH ELECTRICITY GLUED TO
+ONE OF THEM (Complaints/32's third gap, then a real defect the stakeholder
+found in how that gap was closed - see THE ALUMINIUM DEFECT below). Every
+entry that needs process heat or shaft work beyond what a fuel already
+listed in its `inputs` supplies draws on one of `thermal_mj`, `mechanical_mj`
+or `electrical_mj`, and all three are real inputs this script prices through
+`data/production/70_energy.json` - a handful of PRIMARY techniques (burn a
+fuel, turn a water wheel, catch photons) plus CONVERSION techniques that
+turn one carrier into another, priced and chosen exactly like any other
+multi-recipe material (see CHOICE OF TECHNIQUE below). The three-way split
+is still the physics, not a modelling convenience: a kilogram of charcoal, a
+turning shaft and a flow of electrons are three different things a process
+can be handed, and collapsing any two of them into one undifferentiated
+number would let whichever was cheaper silently stand in for the other,
+hiding exactly the constraint - which technology can reach which
+TEMPERATURE, and which can deliver which kind of WORK - that this file's own
+instructions from CLAUDE.md name as the point of the exercise.
 
-    thermal_mj      heat, from burning an ordinary solid fuel. Priced via
-                    thermal_mj_charcoal or thermal_mj_coal, whichever the
-                    solved prices make cheaper - a real choice of technique,
-                    not an assumption about which fuel a process "should"
-                    use. Both are costed the same way: a fuel's calorific
-                    value (taken at ~29 MJ/kg for both charcoal and coal,
-                    deliberately the SAME figure for both, since real values
-                    for the two overlap - the choice between them here turns
-                    on which is cheaper to PRODUCE, not on an invented
-                    energy-density gap) times a furnace efficiency (25%,
-                    bracketed by this file's own lime-kiln 20% and
-                    brine-boiling-pan 30% figures) sets how much fuel one
-                    usable megajoule needs.
+    thermal_mj      heat, from burning an ordinary solid fuel, OR from
+                    converting mechanical or electrical energy into heat
+                    (see CONVERSIONS below). Priced via whichever of
+                    thermal_mj_charcoal, thermal_mj_coal,
+                    thermal_mj_electrical_resistance or thermal_mj_friction
+                    the solved prices make cheapest - a real choice of
+                    technique, not an assumption about which fuel a process
+                    "should" use. The two combustion techniques are costed
+                    the same way: a fuel's calorific value (taken at ~29
+                    MJ/kg for both charcoal and coal, deliberately the SAME
+                    figure for both, since real values for the two overlap -
+                    the choice between them here turns on which is cheaper
+                    to PRODUCE, not on an invented energy-density gap) times
+                    a furnace efficiency (25%, bracketed by this file's own
+                    lime-kiln 20% and brine-boiling-pan 30% figures) sets how
+                    much fuel one usable megajoule needs.
 
-    mechanical_mj   shaft work, INCLUDING work delivered as electricity
-                    through a dynamo. Electricity is a CARRIER, not a
-                    source - aluminium's 46,000 MJ/tonne has to bottom out
-                    in whatever actually turns the dynamo, and pricing it as
-                    though electricity were primary would hide exactly the
-                    constraint that matters (see aluminium_kg's own
-                    capital_basis for why this is what kept the metal a
-                    laboratory curiosity for a century). Priced via
+    mechanical_mj   shaft work - a turning axle, nothing else. Priced via
                     mechanical_mj_waterwheel (a water wheel's amortised
                     build, using the `capital` mechanism below, at the
                     typical output data/world/resources.json's water_power
-                    constraint gives) or mechanical_mj_human_muscle (a
+                    constraint gives), mechanical_mj_human_muscle (a
                     labourer's own sustained output, from that same file's
-                    human_power constraint) - whichever the solved prices
-                    make cheaper. For every material this round flags, water
-                    wins by roughly three orders of magnitude (a few
-                    kilowatts continuous beats 75 W of muscle every time),
-                    which is the supply curve, not an assumption: nothing
-                    forces the choice, the arithmetic does.
+                    human_power constraint), mechanical_mj_motor (electrical
+                    energy through a motor - see CONVERSIONS) or one of the
+                    three mechanical_mj_heat_engine_* techniques (thermal
+                    energy through a heat engine) - whichever the solved
+                    prices make cheapest. Water beats muscle by roughly
+                    three orders of magnitude (a few kilowatts continuous
+                    beats 75 W every time) and every heat-engine technique
+                    too (see CONVERSIONS - a heat engine at efficiency e
+                    costs thermal_mj's own price divided by e per MJ of
+                    mechanical output, so even the 40%-efficient modern one
+                    needs a thermal_mj price under 40% of water's own
+                    mechanical_mj price to compete, and coal is nowhere
+                    near that cheap relative to water) - THAT part is the
+                    supply curve, not an
+                    assumption. Whether water also beats mechanical_mj_motor
+                    depends entirely on how electrical_mj itself resolves,
+                    which is a separate question this docstring's
+                    ELECTRICAL_MJ entry and THE ALUMINIUM DEFECT below
+                    answer honestly rather than assume: with this round's
+                    `electrical_mj_photovoltaic` included, the motor route
+                    currently wins, for reasons that entry explains and
+                    flags as resting on an admittedly incomplete cost.
+
+    electrical_mj   electricity - the one carrier with no shaft and no flame
+                    required to reach it at all (see THE ALUMINIUM DEFECT).
+                    Priced via electrical_mj_dynamo (mechanical energy
+                    through a dynamo) or electrical_mj_photovoltaic (photons,
+                    directly, through a solar panel's fixed capital and
+                    NOTHING ELSE) - whichever the solved prices make
+                    cheapest. Also consumed directly, as electrolysis
+                    current or as arc/resistance heat, by any recipe whose
+                    own `electrical_mj` field says it needs some (aluminium_kg
+                    and silicon_kg this round; see WHICH ENTRIES USE
+                    ELECTRICAL_mj DIRECTLY below).
+
+THE ALUMINIUM DEFECT (found by the stakeholder, fixed this round). The
+previous version of this file carried aluminium's 46,000 MJ/tonne of
+Hall-Heroult electrolysis current as `mechanical_mj`, on the reasoning
+"electricity is a carrier, not a source, so it must bottom out in whatever
+turns the dynamo." That reasoning is right for a waterwheel-and-dynamo
+civilisation and wrong in general: a photovoltaic cell makes electricity
+from photons with no shaft anywhere in the chain, and so does a
+thermoelectric couple, a battery or a fuel cell. Forcing every use of
+electricity through `mechanical_mj` made a civilisation with arbitrarily
+cheap solar panels structurally unable to ever make cheap aluminium, which
+is not a fact about aluminium - it is a fact about a schema that had only
+two carriers and picked the wrong one to call "electricity." Fixed by giving
+electricity its own carrier (`electrical_mj`) and letting `aluminium_kg`
+draw on THAT, with `mechanical_mj` reaching it only through the
+`electrical_mj_dynamo` conversion below, exactly like every other route
+would.
+
+THE CHECK, RUN HONESTLY RATHER THAN ASSUMED TO PASS. The expectation going
+in was that nothing should change except by a dynamo's own conversion loss,
+since this file has no combustion engine cheap enough to beat a water
+wheel (see mechanical_mj's own note above) and therefore no OTHER route to
+electricity worth considering. Excluding `electrical_mj_photovoltaic` and
+re-solving confirms exactly that: `electrical_mj` prices at 0.00388 h/MJ via
+`electrical_mj_dynamo` (against `mechanical_mj`'s own 0.00258 - a ~50%
+premium for the dynamo's conversion loss, its own labour and its own
+amortised build, all individually modest and all pointing the same
+direction), and aluminium_kg prices at roughly 15-16% more than before the
+fix (0.442 h/kg against the old 0.382), squarely "roughly what it is now
+plus a dynamo's losses." So the mechanism is right.
+
+But that is NOT what the DEFAULT solve above reports, and saying so is the
+point of this paragraph rather than something to quietly fix. With
+`electrical_mj_photovoltaic` included - which it should be, since removing
+it again would just be re-hiding the case this whole fix exists to show -
+the solver finds PHOTOVOLTAIC cheaper than the water-wheel-and-dynamo route
+for `electrical_mj`, and that cheap electricity then cascades: the solved
+`thermal_mj` and even `mechanical_mj` end up routed through
+`thermal_mj_electrical_resistance` and `mechanical_mj_motor` respectively,
+both ultimately rooted in the same panel. Aluminium's price actually FALLS
+relative to the old book-mechanical figure (0.319 h/kg, not up by a dynamo's
+loss), because the cheapest path skips the dynamo's conversion loss
+entirely - exactly the case THE ALUMINIUM DEFECT above says the old schema
+could never represent. This is the mechanism doing its job, not a defect,
+but the specific NUMBER behind it should not be over-read: `silicon_kg`'s
+own yield_basis is explicit that its cost omits crystal growth, wafer
+sawing, cell processing and module lamination - real, individually
+significant steps - so the panel's amortised cost, and therefore this
+entire cascade, is a LOWER BOUND that most likely understates real
+photovoltaic-grade silicon's true cost by a margin this file cannot yet
+quantify. Until that gap closes, treat "the solver's default technique for
+mechanical and thermal energy is now photovoltaic" as a demonstration that
+the mechanism CAN reach that conclusion, not as a settled claim that it
+should - see `--why aluminium_kg` for the worked numbers behind both
+figures (no Complaints/ entry was filed for this fix - that directory is
+outside this change's scope).
+
+CONVERSIONS - the graph that makes the three carriers into one connected
+market instead of three separate ones, each a TECHNIQUE exactly like a
+fuel-burning or water-wheel entry, living in `data/production/70_energy.json`
+and chosen by the same cheapest-technique rule as everything else:
+
+    thermal    -> mechanical   heat engine, Carnot-limited. THIS is the
+                                conversion whose improvement IS the
+                                industrial revolution, so it is not one
+                                number but three genuinely competing
+                                techniques spanning the historical range:
+                                mechanical_mj_heat_engine_atmospheric (~1%,
+                                a Newcomen-class atmospheric engine),
+                                mechanical_mj_heat_engine_compound (~10%, a
+                                good 19th-century compound engine) and
+                                mechanical_mj_heat_engine_modern_steam (~40%,
+                                a modern reheat steam cycle). None of the
+                                three ever wins the mechanical_mj comparison
+                                in this file - not against a water wheel,
+                                and not against mechanical_mj_motor either
+                                (see mechanical_mj above) - which is a
+                                finding the arithmetic produces, not a rule
+                                this file enforces.
+    mechanical -> electrical   electrical_mj_dynamo, ~92.5% (the stated
+                                90-95% range's midpoint).
+    electrical -> mechanical   mechanical_mj_motor, ~92.5% - the same
+                                machine as the dynamo above, run in reverse,
+                                and priced with the same build bill for
+                                exactly that reason.
+    electrical -> thermal      thermal_mj_electrical_resistance, ~98%.
+                                Resistance or arc heating reaches ANY
+                                temperature - there is no furnace-wall or
+                                flue loss the way a combustion route has,
+                                which is the whole reason arc furnaces exist
+                                - but it feeds the same UNDIFFERENTIATED
+                                `thermal_mj` pool as charcoal and coal do,
+                                so this technique only ever wins the generic
+                                pool's price on ordinary running cost, never
+                                on reaching a temperature the other two
+                                cannot: see TEMPERATURE, NOT MODELLED THIS
+                                ROUND below for why that matters and what it
+                                means for quartz_tube_kg.
+    mechanical -> thermal      thermal_mj_friction, ~98% efficient and
+                                MODELLED ANYWAY, because the stakeholder
+                                asked about this one specifically rather
+                                than take "obviously pointless" on faith.
+                                It is real (this is literally how a brake
+                                works) and it is never chosen: turning
+                                mechanical_mj into heat this way costs
+                                mechanical_mj's own price divided by 0.98,
+                                and mechanical_mj is already pricier per MJ
+                                than coal, so thermal_mj_friction can never
+                                undercut thermal_mj_coal for any material in
+                                this file. That "always loses" claim is the
+                                solver's own choice-of-technique output
+                                (`chosen_recipe_by_material["thermal_mj"]`),
+                                not an assumption baked in by leaving the
+                                technique out.
+    photons    -> electrical   electrical_mj_photovoltaic. No fuel, no
+                                shaft, no water wheel anywhere in the
+                                chain - a fixed panel (glass, an aluminium
+                                frame, copper wiring and a silicon cell,
+                                priced via the new `silicon_kg` entry) that
+                                turns sunlight into current for free running
+                                cost, for as long as the panel lasts. THE
+                                CASE THAT PROVES THE OLD MODEL WRONG: nothing
+                                about this technique can be expressed as
+                                shaft work at any efficiency, so a schema
+                                with only `thermal_mj` and `mechanical_mj`
+                                had no honest place to put it at all.
+                                `silicon_kg`'s own yield_basis is explicit
+                                that its electrical_mj figure covers only
+                                carbothermic reduction and Siemens-process
+                                purification - real crystal growth, wafer
+                                sawing, cell doping and module lamination are
+                                each individually energy-intensive and NONE
+                                of them are modelled here, so this
+                                technique's price is a LOWER BOUND by a
+                                margin this file cannot yet quantify. Tag:
+                                GAP, not a heuristic, per CLAUDE.md 3.4.
+
+TEMPERATURE, NOT MODELLED THIS ROUND - A DECISION, NOT AN OVERSIGHT. A
+megajoule of heat is not fungible across temperature: one MJ at 200 C
+cannot do what one MJ at 1600 C can, which is the whole reason a bloomery
+cannot melt iron however much charcoal is fed into it. This file's
+`thermal_mj` stays a single UNDIFFERENTIATED pool despite that - adding
+temperature grades (several thermal_mj_below_X materials, one per
+technology's reach, with every heat-needing recipe stating which grade it
+needs) would be more correct and is deliberately deferred, not silently
+skipped: it would mean touching every existing thermal_mj consumer's
+`inputs` to say what temperature it actually needs, which this round's
+scope does not reach, and doing it for one recipe only would look like
+progress while leaving every other one just as wrong. The consequence is
+concrete and is handled by NOT routing every high-temperature need through
+the shared pool: `quartz_tube_kg` needs 1700-2000 C, which
+thermal_mj_electrical_resistance's own conversion can genuinely reach but
+thermal_mj_coal and thermal_mj_charcoal cannot, and the shared `thermal_mj`
+PRICE is set by whichever technique is cheapest for the pool as a whole -
+today, coal. Folding quartz_tube_kg into `thermal_mj` would therefore have
+it pay coal's price while implicitly claiming coal's ~1000-1200 C fire can
+do what only the arc route can, which is exactly the bloomery-melts-iron
+mistake this section opened with, produced by the very mechanism meant to
+fix it. So quartz_tube_kg instead draws on `electrical_mj` DIRECTLY, the
+same way aluminium_kg and silicon_kg do, bypassing the temperature-blind
+pool entirely - see that entry's own yield_basis, and see WHICH ENTRIES USE
+ELECTRICAL_MJ DIRECTLY below for why this is a genuine fix, not a workaround
+with the same shape as `energy_mj` had. What full temperature grading would
+take: a `temperature_needed_c` (or equivalent) on every thermal_mj-consuming
+entry, one thermal_mj_below_X material per technology's actual reach
+(charcoal/coal topping out somewhere around 1200 C is itself an assumption
+nothing here currently states as a number), and a solver rule that a
+recipe may only draw on a grade whose ceiling is at or above what it needs -
+a real piece of future work, named here so it stays measurable rather than
+merely implied.
+
+WHICH ENTRIES USE ELECTRICAL_MJ DIRECTLY, RATHER THAN THROUGH A CONVERSION.
+`aluminium_kg` (Hall-Heroult electrolysis current), `silicon_kg` (arc-furnace
+reduction and Siemens-process purification current) and `quartz_tube_kg`
+(arc/resistance heat reaching a temperature no combustion route in this file
+reaches) all carry a nonzero `electrical_mj` field of their own, exactly the
+way a handful of pre-industrial entries carry a nonzero `thermal_mj` or
+`mechanical_mj` today. This is deliberate, not a shortcut: for all three,
+the physical requirement is specifically ELECTRICAL (a current, or heat
+above what any fuel reaches) rather than a level of energy that happens to
+be supplied electrically today, so pricing them straight off `electrical_mj`
+lets the CHOICE OF TECHNIQUE mechanism pick whichever route to that
+carrier - water wheel and a dynamo, or a solar panel, or (once one exists)
+something else - without the entry itself ever deciding. Found but left
+alone this round, flagged per CLAUDE.md 3.4 rather than silently fixed: several
+OTHER entries still carry a genuinely electrical need under the old
+`mechanical_mj` name for the same reason aluminium used to - zinc's
+electrolysis (`zinc_electrolytic_kg`), tungsten's induction/resistance
+sintering (`tungsten_kg`) and calcium carbide's electric-arc furnace
+(`calcium_carbide_kg`, whose own yield_basis already says outright "the arc
+furnace must reach roughly 2000 C, well above anything a combustion furnace
+reaches" while still being carried as `mechanical_mj`). `barium_kg`'s small
+`mechanical_mj` figure, by contrast, is a genuine vacuum pump - real shaft
+work - and is correctly named already. Reclassifying the three electrical
+ones is the same fix as aluminium's, done three more times; it is out of
+this round's scope (which named aluminium specifically) and is recorded here
+so it is not lost.
 
 WHAT THIS DOES NOT MODEL, LABELLED RATHER THAN HIDDEN. The water-wheel
 technique assumes continuous year-round operation (a real wheel is idled by
@@ -113,14 +338,13 @@ since water already beats human muscle by three orders of magnitude for
 every material this round touches, an ox at roughly five times a human's
 sustained output would not change which source sets the margin for any of
 them - it would only add a segment of the curve nothing here currently
-needs. `quartz_tube_kg` keeps its `energy_mj` rather than being folded into
-either market: its oxy-hydrogen flame needs 1700-2000 C, above what a
-charcoal or coal fire reaches, and this file does not yet price hydrogen
-production (no material, no electrolysis efficiency) to derive what
-generating that flame's gas would actually cost - see that entry's own
-yield_basis. Every price for that one material is consequently still a
-LOWER BOUND. Tag: GAP, not a heuristic, exactly as before - narrower now
-that the other nine are closed.
+needs. The photovoltaic technique's own insolation figure (a representative
+Mediterranean ~5 kWh/m2/day) belongs beside `water_power` and `human_power`
+in `data/world/resources.json`'s own constraints block for the same reason
+those two live there rather than being invented inline - that file is out
+of this round's scope, so the figure is cited directly in
+`electrical_mj_photovoltaic`'s own capital_basis instead, flagged there as
+where it should eventually move.
 
 CAPITAL IS NOW PRICED (Complaints/32). `data/production/_SCHEMA.md`'s
 `capital` field lists the fixed plant a process runs IN - a furnace, a mill,
@@ -243,6 +467,13 @@ from validate_production import load_production, materials_the_tree_consumes  # 
 
 NUMERAIRE_TRADE = "labourer"
 
+# The three energy carriers (see ENERGY in this module's docstring). Named
+# once here rather than spelled out at each of the three call sites that
+# used to hand-write the pair, so that adding `electrical_mj` this round
+# could not silently miss one of them - a real risk a bare tuple repeated
+# three times invites.
+ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
+
 # Damped Jacobi fixed-point iteration: every material's next price is a blend
 # of its old price and what the current round's cheapest technique implies,
 # so a technique flipping from one iteration to the next (a real possibility
@@ -319,7 +550,7 @@ def _dependency_materials(entry):
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
         dependencies.update((capital_good.get("build_materials") or {}).keys())
-    for energy_key in ("thermal_mj", "mechanical_mj"):
+    for energy_key in ENERGY_CARRIER_FIELDS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
     return dependencies
@@ -695,15 +926,15 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
         lifetime_output = capital_good["service_life_years"] * capital_good["annual_output_at_basis"]
         capital_cost_hours += build_cost_hours / lifetime_output
 
-    # ENERGY (Complaints/32's third gap, now closed for THERMAL and
-    # MECHANICAL/ELECTRICAL energy - see ENERGY in the module docstring).
-    # Both are BATCH-level quantities, exactly like `inputs` and
-    # `labour_hours` above (the MJ figure is already stated against this
-    # same batch's basis output) - NOT a per-unit-of-output charge the way
-    # `capital` is, so unlike capital_cost_hours neither term here gets
-    # multiplied by batch_output_quantity.
+    # ENERGY (Complaints/32's third gap, now closed for all THREE carriers -
+    # THERMAL, MECHANICAL and ELECTRICAL - see ENERGY in the module
+    # docstring). All three are BATCH-level quantities, exactly like
+    # `inputs` and `labour_hours` above (the MJ figure is already stated
+    # against this same batch's basis output) - NOT a per-unit-of-output
+    # charge the way `capital` is, so unlike capital_cost_hours none of
+    # these terms gets multiplied by batch_output_quantity.
     energy_cost_hours = 0.0
-    for energy_key in ("thermal_mj", "mechanical_mj"):
+    for energy_key in ENERGY_CARRIER_FIELDS:
         energy_quantity_per_batch = entry.get(energy_key) or 0.0
         if energy_quantity_per_batch:
             energy_price = current_prices.get(energy_key)
@@ -939,8 +1170,9 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                   % (pad, capital_good.get("good", "?"), format_hours(build_cost),
                      lifetime_output, format_hours(charge), share_text))
 
-    energy_labels = {"thermal_mj": "thermal (combustion) energy",
-                     "mechanical_mj": "mechanical/electrical (shaft) energy"}
+    energy_labels = {"thermal_mj": "thermal (heat) energy",
+                     "mechanical_mj": "mechanical (shaft) energy",
+                     "electrical_mj": "electrical energy"}
     for energy_key, label in energy_labels.items():
         energy_quantity = entry.get(energy_key) or 0.0
         if not energy_quantity:
@@ -982,7 +1214,7 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
               % (pad, format_hours(total_process_cost), output_quantity, format_hours(price)))
 
     next_ancestors = ancestors + (material,)
-    energy_dependencies = [energy_key for energy_key in ("thermal_mj", "mechanical_mj")
+    energy_dependencies = [energy_key for energy_key in ENERGY_CARRIER_FIELDS
                           if entry.get(energy_key)]
     for input_material in sorted(inputs) + energy_dependencies:
         print()
@@ -1084,9 +1316,10 @@ def main(argv=None):
     # Default: every material's price, in labour-hours.
     print("PRICE SOLVER - numeraire is one hour of unskilled (%r trade) "
           "labour. Rent on extracted materials is fixed at 0.0 this round "
-          "(RENT_IS_ZERO); thermal_mj and mechanical_mj are priced via the "
-          "energy market in data/production/70_energy.json; energy_mj is "
-          "still not priced (see module docstring)." % NUMERAIRE_TRADE)
+          "(RENT_IS_ZERO); thermal_mj, mechanical_mj and electrical_mj are "
+          "all priced via the three-way energy market and its conversion "
+          "recipes in data/production/70_energy.json; energy_mj is still "
+          "not priced (see module docstring)." % NUMERAIRE_TRADE)
     print()
     print("convergence: %s after %d iteration(s), final max relative change "
           "%.3e (tolerance %.0e, damping %.2f)"
@@ -1117,17 +1350,23 @@ def main(argv=None):
         for message in unproductive_cycles:
             print("   %s" % message)
 
-    energy_priced = sorted(
+    # A set, not a list: a CONVERSION recipe's own output can be one of the
+    # three carrier names themselves (mechanical_mj_motor outputs
+    # mechanical_mj while consuming electrical_mj to do it), and several
+    # conversion techniques compete for the same carrier, so without
+    # deduping this would print "mechanical_mj" once per competing
+    # technique rather than once.
+    energy_priced = sorted(set(
         material for recipe_id, entry in production_entries.items()
         for material in (entry.get("outputs") or {})
-        if (entry.get("thermal_mj") or entry.get("mechanical_mj"))
-        and material in resolvable_materials)
+        if any(entry.get(energy_key) for energy_key in ENERGY_CARRIER_FIELDS)
+        and material in resolvable_materials))
     if energy_priced:
         print()
-        print("%d material(s) draw on the energy market (thermal_mj and/or "
-              "mechanical_mj, priced via data/production/70_energy.json - "
-              "see ENERGY in the module docstring) - their price above "
-              "already includes it: %s"
+        print("%d material(s) draw on the energy market (thermal_mj, "
+              "mechanical_mj and/or electrical_mj, priced via "
+              "data/production/70_energy.json - see ENERGY in the module "
+              "docstring) - their price above already includes it: %s"
               % (len(energy_priced), ", ".join(energy_priced)))
 
     energy_affected = sorted(
@@ -1137,8 +1376,8 @@ def main(argv=None):
     if energy_affected:
         print()
         print("%d material(s) are still UNDERPRICED because their recipe "
-              "needs energy_mj that neither energy market can supply - a "
-              "technology this script cannot yet cost, not the general gap "
+              "needs energy_mj that none of the three energy markets can "
+              "supply - a technology this script cannot yet cost, not the general gap "
               "the other %d materials above just closed (a real lower "
               "bound, not a wrong answer - see ENERGY in the module "
               "docstring): %s"

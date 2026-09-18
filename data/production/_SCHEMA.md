@@ -26,9 +26,10 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `outputs` | {material_key: quantity}. Usually one key. More than one means genuine joint production - smelting galena yields lead AND silver, and pretending otherwise misprices both. |
 | `inputs` | {material_key: quantity} consumed to produce that output. Keys must be material keys the tree already uses, or new ones you also define an entry for. A material with no inputs is EXTRACTED rather than made: say so in extracted_from. |
 | `labour_hours` | {trade: hours} to produce one basis unit. Trades must exist in data/prices.json wage_rates_denarii_per_hour. |
-| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel. Priced by `sim/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal or coal, whichever is cheaper at solved prices). Usually 0 for pre-industrial processes, where the fuel IS the energy. |
-| `mechanical_mj` | Shaft work not already accounted for by `inputs` - INCLUDING work delivered as electricity, which is a carrier for shaft work rather than a source of its own (see ENERGY in `sim/solve_prices.py`'s module docstring). Priced through the same file's mechanical energy market (a water wheel's amortised build, or human muscle, whichever is cheaper). |
-| `energy_mj` | The residual: process heat or work needing a technology neither energy market above can supply (a temperature no priced fuel reaches, say). Left deliberately uncosted - see quartz_tube_kg for the one entry that still uses it, and ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. |
+| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel, OR by converting mechanical or electrical energy into heat. Priced by `sim/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal, coal, electrical resistance/arc, or mechanical friction - whichever is cheaper at solved prices; the last of these is real but never wins, see ENERGY in that file's module docstring). Usually 0 for pre-industrial processes, where the fuel IS the energy. Left UNDIFFERENTIATED by temperature this round - a decision, not an oversight; see TEMPERATURE in `sim/solve_prices.py`'s module docstring before pointing a high-temperature need at this field. |
+| `mechanical_mj` | Shaft work not already accounted for by `inputs` - a turning axle, nothing else. Priced through the same file's mechanical energy market (a water wheel's amortised build, human muscle, a heat engine converting thermal energy, or a motor converting electrical energy - whichever is cheaper). Electricity is NOT automatically shaft work (see ENERGY in `sim/solve_prices.py`'s module docstring, and THE ALUMINIUM DEFECT there for the bug this used to be) - a process that specifically needs a CURRENT, not a shaft, belongs in `electrical_mj` instead even where the current happens to come from a dynamo today. |
+| `electrical_mj` | Electrical energy not already accounted for by `inputs` - a current, or heat/work reached only because electricity supplies it (electrolysis; arc or resistance heating, which alone reaches temperatures no fuel here does; a motor). Priced through the same file's electrical energy market (a water wheel through a dynamo, a heat engine through a dynamo, or a photovoltaic panel with no shaft at all - whichever is cheaper). Use this, not `mechanical_mj`, for any process whose PHYSICAL requirement is electricity itself, so the choice-of-technique mechanism can pick photovoltaic over hydro-plus-dynamo once that route is actually cheaper, rather than that choice being foreclosed by which field an entry happened to use. |
+| `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
@@ -108,31 +109,68 @@ Complaints/31 and Complaints/32.
 
 ## ENERGY
 
-`thermal_mj` and `mechanical_mj` are the two carriers a process can draw on
-for heat or work beyond what a fuel already in its `inputs` supplies -
-never the same carrier: a kilogram of charcoal cannot turn a shaft, and a
-water wheel cannot melt an ore, so this file keeps the two separate rather
-than pricing one undifferentiated "energy" that would let the cheaper of
-the two silently stand in for both. Both are priced, not looked up: see
-`data/production/70_energy.json`, which defines each carrier as a MATERIAL
-with several TECHNIQUES for supplying it (a fuel-burning route for thermal;
-a water wheel or human muscle for mechanical), exactly like `salt_kg` has a
-solar-pan technique and a brine-boiling one - `sim/solve_prices.py` picks
-whichever technique is cheaper at the solved prices, so the choice of fuel
-or motive power is an OUTPUT of the solve, never a fact stated in advance.
-See ENERGY in that file's module docstring for the physics (calorific
-values, furnace efficiency, a water wheel's typical kilowatts from
-`data/world/resources.json`) and for what is deliberately NOT modelled yet
-(a site-scarcity rent on the best mill sites; an ox as well as a labourer
-turning the crank).
+`thermal_mj`, `mechanical_mj` and `electrical_mj` are the THREE carriers a
+process can draw on for heat, work or current beyond what a fuel already in
+its `inputs` supplies - never interchangeable by fiat: a kilogram of
+charcoal cannot turn a shaft, a water wheel cannot run an electrolysis cell,
+and (this round's fix) a shaft is not the only way to get a current either.
+All three are priced, not looked up: see `data/production/70_energy.json`,
+which defines each carrier as a MATERIAL with several TECHNIQUES for
+supplying it, exactly like `salt_kg` has a solar-pan technique and a
+brine-boiling one - `sim/solve_prices.py` picks whichever technique is
+cheaper at the solved prices, so the choice of fuel, motive power or
+generating route is an OUTPUT of the solve, never a fact stated in advance.
 
-`energy_mj` still exists for the rare case neither carrier reaches - a
-process needing a temperature or a technology this file cannot yet price a
-fuel path for. `quartz_tube_kg`'s oxy-hydrogen flame (1700-2000 C, hotter
-than any charcoal or coal fire) is the one entry that still uses it, and
-its own `yield_basis` explains why inventing a hydrogen-production number
-to close that last gap would be exactly the unearned precision the RULE
-THAT GOVERNS EVERY NUMBER above warns against.
+THE THREE CARRIERS ARE CONNECTED, NOT THREE SEPARATE MARKETS. Alongside the
+PRIMARY techniques (burn a fuel for thermal; a water wheel or human muscle
+for mechanical; a photovoltaic panel for electrical, with no shaft anywhere
+in that one's chain), `70_energy.json` also has CONVERSION techniques that
+turn one carrier into another - a heat engine (thermal to mechanical,
+Carnot-limited, modelled as a genuine historical RANGE of techniques rather
+than one number, because this is the conversion the industrial revolution
+actually is), a dynamo (mechanical to electrical) and a motor (electrical to
+mechanical, the same machine run the other way), resistance/arc heating
+(electrical to thermal - the only route here that reaches an arbitrary
+temperature), and friction (mechanical to thermal - real, and modelled, and
+never the market's cheapest route, which the solver's own choice-of-technique
+output demonstrates rather than assumes). A recipe that needs one carrier
+can therefore end up paying for a DIFFERENT one under the hood, through
+whichever chain of conversions is cheapest - see ENERGY in
+`sim/solve_prices.py`'s module docstring for the physics of each link
+(calorific values, furnace and conversion efficiencies, a water wheel's
+typical kilowatts from `data/world/resources.json`) and for what is
+deliberately NOT modelled yet (a site-scarcity rent on the best mill sites;
+an ox as well as a labourer turning the crank; TEMPERATURE GRADING within
+`thermal_mj` itself - see TEMPERATURE in that docstring for why that is a
+named, deferred decision rather than a silent gap).
+
+USE `electrical_mj`, NOT `mechanical_mj`, FOR A GENUINELY ELECTRICAL NEED.
+The previous version of this schema described `mechanical_mj` as including
+"work delivered as electricity... a carrier for shaft work rather than a
+source of its own" - reasoning that is right for a waterwheel-and-dynamo
+civilisation and wrong in general, since a photovoltaic cell or a fuel cell
+makes electricity with no shaft anywhere in the chain (see THE ALUMINIUM
+DEFECT in `sim/solve_prices.py`'s module docstring for the full story and
+`aluminium_kg`'s own yield_basis for the fix). A process that needs
+electrolysis current, or heat/work that is available ONLY because
+electricity supplies it (arc heating reaching a temperature no fuel here
+does; induction sintering), belongs in `electrical_mj`, letting the
+choice-of-technique mechanism decide whether that current comes from a
+dynamo or a solar panel rather than that choice being foreclosed by which
+field the entry happened to use. `mechanical_mj` is for a turning axle and
+nothing else now.
+
+`energy_mj` still exists for the rare case none of the three carriers
+reaches - a technology this file cannot yet price a path for. As of this
+round nothing in this directory uses it: `quartz_tube_kg`, the one entry
+that used to (its 1700-2000 C need is hotter than any charcoal or coal fire
+reaches), now draws on `electrical_mj` directly, because resistance/arc
+heating genuinely reaches that temperature - see that entry's own
+`yield_basis`, and TEMPERATURE in `sim/solve_prices.py`'s module docstring
+for why it draws on `electrical_mj` directly rather than through the shared,
+temperature-blind `thermal_mj` pool (routing it through that pool would let
+it silently pay coal's price while claiming coal's ~1000-1200 C fire can do
+what only the arc route can - the very mistake TEMPERATURE warns about).
 
 ## WHICH MATERIALS GOT CAPITAL, AND WHICH WERE LEFT CAPITAL-LIGHT ON PURPOSE
 
@@ -149,8 +187,9 @@ draw-bench and dies), `copper_kg` (a small shaft furnace, added to
 `00_examples.json` as the worked example of the field's shape), `lead_kg`
 (smelting hearth and cupellation furnace), `zinc_electrolytic_kg` and
 `aluminium_kg` (the reduction cell itself only - the generating plant behind
-their `mechanical_mj` is excluded from THIS capital list, but is no longer
-uncosted: it is priced separately, through the mechanical energy market in
+their electricity need, `mechanical_mj` for zinc and `electrical_mj` for
+aluminium as of this round's fix, is excluded from THIS capital list, but is
+no longer uncosted: it is priced separately, through the energy market in
 `data/production/70_energy.json` - see ENERGY above), `glass_raw_kg`
 (pot furnace, relined nearly every campaign), `coal_kg` (shaft timbering and
 winding gear - real capital that is easy to forget because extraction entries
@@ -194,7 +233,7 @@ structural rather than a matter of precision:
 |---|---|
 | **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/solve_prices.py` |
 | rent | `extracted_from` marks it; the solver fixes it at zero this round |
-| energy | **priced now.** `thermal_mj` and `mechanical_mj` are read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json` (see ENERGY in that file's module docstring); `energy_mj` remains for the one entry (quartz_tube_kg) needing a technology neither market reaches |
+| energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is a separately named, deliberately deferred gap - see TEMPERATURE in the solver's module docstring |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 
