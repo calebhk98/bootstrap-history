@@ -51,19 +51,49 @@ import simulator as S
 
 
 # A material key is a priced line item ("iron_bar_kg"), a node id is not
-# ("mat_iron_bar"). Stripping the unit suffix is how the two vocabularies are
-# related today - which is to say, by convention and nothing else. When the
-# production side is authored properly this guesswork should be replaced by an
-# explicit `produces` field on the producing node.
+# ("mat_iron_bar"). Stripping the unit suffix is how the two vocabularies WERE
+# related, by convention and nothing else, and this file used to say that when
+# the production side was authored properly the guesswork should be replaced
+# by an explicit declaration of what a thing produces.
+#
+# THAT DAY ARRIVED AND THIS TOOL DID NOT NOTICE. `data/production/` states
+# `outputs` explicitly for 196 recipes, and asking it is not a guess. Reading
+# the tree alone, this audit was reporting "no producer at all" for
+# iron_bar_kg, timber_m3, steel_plate_kg, wood_kg, glass_raw_kg and coal_kg -
+# every one of which `sim/solve_prices.py` prices from a real recipe, iron at
+# 0.96 labour-hours per kg. CLAUDE.md points agents here to see where the cost
+# base is, so a stale answer here is a stale answer for everyone.
+#
+# The node guess is KEPT rather than deleted, because the two questions are
+# different and both worth an answer: "does anything make this" is now settled
+# by the production data, while "does the TREE know which node makes this" is
+# still unsettled and still the thing that has to be true before a recipe can
+# be gated on a technology. The report prints both.
 _UNIT_SUFFIX = re.compile(r"_(kg|t|m3|m2|l|unit|units|ea|1000)$")
 
 
-def producer_of(material_key, nodes):
+def guessed_producer_node(material_key, nodes):
+    """The old suffix-stripping guess, kept for the tree-side question only."""
     base = _UNIT_SUFFIX.sub("", material_key)
     for candidate in (base, "mat_" + base):
         if candidate in nodes:
             return nodes[candidate]
     return None
+
+
+def recipes_by_output_material():
+    """{material_key: [recipe_id, ...]} straight from `data/production/`.
+
+    Not a guess. An entry's `outputs` says what it makes, which is exactly
+    the question, and this is the same index `sim/solve_prices.py` builds.
+    """
+    from validate_production import load_production
+    entries, _duplicates = load_production()
+    index = collections.defaultdict(list)
+    for recipe_id, entry in entries.items():
+        for material_key in (entry.get("outputs") or {}):
+            index[material_key].append(recipe_id)
+    return {key: sorted(value) for key, value in index.items()}
 
 
 def wage_table(prices):
@@ -93,12 +123,19 @@ def audit():
         for key in (node.get("mat") or {}):
             consumers[key] += 1
 
+    made_by = recipes_by_output_material()
+
     materials = []
     for key, used_by in consumers.most_common():
-        producer = producer_of(key, nodes)
+        producer = guessed_producer_node(key, nodes)
+        recipes = made_by.get(key) or []
         materials.append({
             "material": key,
             "consumed_by_nodes": used_by,
+            # What actually makes it, from data/production/ - the real answer.
+            "made_by_recipes": recipes,
+            # Whether the TREE names a node for it, which is a separate and
+            # still-open question; see the comment on guessed_producer_node.
             "producer": producer["id"] if producer else None,
             "producer_has_recipe": bool(producer and (producer.get("mat") or producer.get("lab"))),
             "producer_declares_output": bool(producer and producer.get("annual_output_t")),
@@ -157,24 +194,36 @@ def report(a, show_materials=False):
               % (field, unit, c, 100.0 * c / node_count, _bar(c / node_count)))
     print()
 
-    print("OUTPUT SIDE - what anything produces. This is the gap:")
+    print("OUTPUT SIDE - what anything produces:")
     mats = a["materials"]
-    with_producer = [material for material in mats if material["producer"]]
-    with_recipe = [material for material in with_producer if material["producer_has_recipe"]]
-    with_output = [material for material in with_producer if material["producer_declares_output"]]
+    made = [material for material in mats if material["made_by_recipes"]]
     print("  materials consumed somewhere in the tree      %5d" % len(mats))
-    print("  ...with a node that plausibly produces them   %5d  %5.1f%%"
-          % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))))
-    print("  ...where that node has a recipe of its own    %5d  %5.1f%%"
-          % (len(with_recipe), 100.0 * len(with_recipe) / max(1, len(mats))))
-    print("  ...where that node says how much it YIELDS    %5d  %5.1f%%"
-          % (len(with_output), 100.0 * len(with_output) / max(1, len(mats))))
+    print("  ...that data/production/ states a recipe for  %5d  %5.1f%%"
+          % (len(made), 100.0 * len(made) / max(1, len(mats))))
     print()
-    print("  A price cannot be solved out of a matrix with no outputs in it.")
-    print("  The most-consumed materials with no producer at all:")
-    for material in [material for material in mats if not material["producer"]][:6]:
-        print("      %-18s consumed by %4d nodes" % (material["material"],
-                                                     material["consumed_by_nodes"]))
+    print("  This used to read 'no producer at all' for iron, timber, coal and")
+    print("  most of the rest, because it asked the TREE, which records what a")
+    print("  node consumes and never what anything makes. data/production/ does")
+    print("  state it, so the question is now answered rather than guessed.")
+    print()
+    unmade = [material for material in mats if not material["made_by_recipes"]]
+    if unmade:
+        print("  Still nothing makes these, worst first:")
+        for material in unmade[:6]:
+            print("      %-18s consumed by %4d nodes" % (material["material"],
+                                                         material["consumed_by_nodes"]))
+        print()
+
+    # THE TREE-SIDE QUESTION, WHICH IS STILL OPEN AND IS NOT THE SAME ONE.
+    # Knowing that something makes iron does not say WHICH TECHNOLOGY lets you
+    # make it, and that is what a recipe has to be gated on - see
+    # Complaints/39 and `requires_node` in data/production/_SCHEMA.md.
+    with_producer = [material for material in mats if material["producer"]]
+    print("  Separately: does the TREE name a node for the material? This is")
+    print("  the suffix-stripping guess, and it is the link `requires_node`")
+    print("  now replaces with something explicit (Complaints/39).")
+    print("  ...a node id that plausibly matches the key   %5d  %5.1f%%"
+          % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))))
     print()
 
     print("STILL PRICED FROM A BOOK - where the denarii come from today:")
@@ -209,19 +258,18 @@ def report(a, show_materials=False):
     if show_materials:
         print("EVERY MATERIAL")
         print("-" * 72)
-        print("  %-22s %6s  %-22s %s" % ("material", "used", "producer", "state"))
+        print("  %-22s %6s  %-30s %s" % ("material", "used", "made by", "state"))
         for material in mats:
-            if not material["producer"]:
-                state = "NO PRODUCER"
-            elif not material["producer_has_recipe"]:
-                state = "producer is an empty marker"
-            elif not material["producer_declares_output"]:
-                state = "recipe but no yield"
+            recipes = material["made_by_recipes"]
+            if not recipes:
+                state = "NOTHING MAKES IT"
+            elif len(recipes) > 1:
+                state = "%d techniques compete" % len(recipes)
             else:
-                state = "complete"
-            print("  %-22s %6d  %-22s %s"
+                state = "one technique"
+            print("  %-22s %6d  %-30s %s"
                   % (material["material"], material["consumed_by_nodes"],
-                     material["producer"] or "-", state))
+                     ", ".join(recipes)[:30] or "-", state))
 
 
 def main(argv=None):

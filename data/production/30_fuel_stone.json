@@ -12,7 +12,8 @@
    "extracted_from": "forest",
    "basis": "per tonne of green roundwood, felled and hauled from woodland, not squared or seasoned",
    "yield_basis": "EXTRACTED, so labour is the physical work of felling and dragging logs rather than a recipe. This is raw feedstock wood (for charcoal-burning, distillation, pulping and the like), not the squared and seasoned construction timber already defined as timber_m3 - no squaring loss applies because nothing here needs precise faces. Air-dry mixed temperate wood runs roughly 550-650 kg per standing cubic metre, so a tonne is a little over 1.5 m3 of standing wood; felling, delimbing and hauling that much by axe and hand-cart is on the order of 8 hours, well under timber_m3's 9+3 hours because there is no squaring or precision cross-cutting to do.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "firewood_kg": {
    "outputs": {
@@ -25,7 +26,8 @@
    "extracted_from": "forest",
    "basis": "per tonne of cordwood, felled, cross-cut to stove length and split, air-dried",
    "yield_basis": "EXTRACTED and close kin to wood_kg, but cut short and split for burning rather than left as long roundwood - the extra hour over wood_kg's 8 is the splitting. Density and felling effort are the same physical wood; the difference is entirely in what happens to it after felling, which is why the two entries are nearly identical instead of unrelated.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "charcoal_kg": {
    "outputs": {
@@ -39,7 +41,8 @@
    },
    "basis": "per tonne of charcoal from an earth-clamp burn",
    "yield_basis": "THE classic yield, and one of the most consequential ratios in the whole dataset: a traditional earth-covered clamp (wood stacked, turfed over, lit and controlled by choking the air supply so it smoulders rather than flames) converts roughly 20-25% of the dry wood mass into charcoal, the rest leaving as smoke, water vapour and volatile tars. Taking 25% (the better-run end of that range) gives 4 kg of wood per kg of charcoal, i.e. 4000 kg wood_kg for a tonne of charcoal. No external fuel input is listed because the clamp is self-firing - part of the charge itself supplies the heat that pyrolyses the rest, which is exactly why the yield is capped in the 20-25% band rather than higher. This ratio is what makes charcoal iron a forest-eating industry: every tonne of charcoal a furnace burns stands for four tonnes of wood that had to grow somewhere first. Labour is a collier tending the clamp around the clock for several days per burn (building it, watching for blue smoke that signals a breach, breaking it open and sorting the product), amortised over the wood charged.",
-   "conf": "B"
+   "conf": "B",
+   "requires_node": null
   },
   "coal_kg": {
    "outputs": {
@@ -70,7 +73,8 @@
    "extracted_from": "coal seam",
    "basis": "per tonne of run-of-mine coal at the pit head",
    "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "wood_ash_kg": {
    "outputs": {
@@ -84,7 +88,8 @@
    },
    "basis": "per kg of ash from a controlled, complete open-air wood burn",
    "yield_basis": "Complete combustion of dry wood in the open (plenty of air, unlike a charcoal clamp) leaves mineral ash on the order of 1% of the wood's dry mass - clean hardwood runs a bit under that, bark-heavy or resinous fuel a bit over. Getting 1 kg of ash therefore means burning about 100 kg of wood essentially to nothing, which is why potash-burning was historically folded into land-clearing burns rather than run as its own industry: the wood cost dwarfs the labour of raking and sieving the cooled ash, which is all the labour figure covers.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "carbon_kg": {
    "outputs": {
@@ -99,7 +104,8 @@
    },
    "basis": "per tonne of coal carbonised (coked) in a byproduct coke oven",
    "yield_basis": "JOINT PRODUCTION: destructively distilling coal in a sealed oven at 1000-1100 C drives off its volatile matter, some of which is condensed rather than burned - a byproduct oven (as opposed to an open beehive oven that just burns the volatiles off) recovers coal tar and leaves a high-fixed-carbon solid residue (coke, called carbon_kg here since the tree uses it for electrodes, motor brushes and electrolysis anodes - applications that want a carbon block, not iron). Byproduct coking of bituminous coal is well-documented industrial chemistry: coke yield runs 65-75% of the coal charged (taken here at 70%), and tar condenses out at roughly 3-5% of the charge (taken at 3.5%); the remainder leaves as coal gas and ammonia liquor, which are not modelled as materials here. The furnaceman hours are the least certain number in the entry - a coking cycle runs 2-3 days but one crew tends many ovens charging and drawing in sequence, so the per-tonne figure is an amortised estimate, not a stopwatch reading.",
-   "conf": "B"
+   "conf": "B",
+   "requires_node": "coal_coke"
   },
   "graphite_kg": {
    "outputs": {
@@ -112,7 +118,8 @@
    "extracted_from": "graphite vein deposit",
    "basis": "per tonne of natural vein (flake or lump) graphite, hand-sorted and washed",
    "yield_basis": "EXTRACTED. The historically important deposits (Ceylon vein graphite, Cumberland lump graphite that made the first pencils) are metamorphic veins running to 90%+ carbon as mined, needing hand-sorting and washing to remove country rock rather than chemical beneficiation - a genuinely different mineral from the coal-derived carbon_kg above, not an alternative source of it. Labour is set a little above ordinary hard-rock ore mining (the copper_ore_kg entry's 18 h/t) because the vein is thin and irregular and much of the work is picking flake-bearing rock out from barren gangue by eye.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "lodestone_kg": {
    "outputs": {
@@ -125,7 +132,8 @@
    "extracted_from": "magnetite deposit",
    "basis": "per tonne of naturally-magnetised magnetite ore",
    "yield_basis": "EXTRACTED, and unusually labour-heavy for a mineral because only a small, unpredictable fraction of magnetite deposits is naturally magnetised (by a nearby lightning strike or geomagnetic anomaly) - most magnetite is not a lodestone at all. The labour figure folds in searching and testing candidate ore against iron filings or a suspended needle on top of ordinary ore-breaking effort, and is honestly a wide-uncertainty estimate: real cost is dominated by how lucky a given deposit is, which this single number cannot capture.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "fluorspar_kg": {
    "outputs": {
@@ -138,7 +146,8 @@
    "extracted_from": "fluorite vein deposit",
    "basis": "per tonne of fluorite (calcium fluoride) ore from a vein deposit",
    "yield_basis": "EXTRACTED. Fluorite veins are typically softer and more localised than metal ore bodies; the labour figure follows the same hard-rock breaking-and-hauling logic as the copper_ore_kg example, taken slightly below it because fluorite (Mohs 4) is much softer to break than sulphide ore in quartz gangue.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "diamond_g": {
    "outputs": {
@@ -151,7 +160,8 @@
    "extracted_from": "alluvial gravel deposit",
    "basis": "per gram of gem-quality rough diamond from hand-worked alluvial gravel",
    "yield_basis": "EXTRACTED, and the number that most obviously should be read as an order of magnitude rather than a fact. Alluvial (river-gravel) diamond ground, historically worked by hand in India and Brazil, concentrates diamonds by water action far above the grade of an average kimberlite pipe, but even the richest worked ground ran on the order of 0.1-0.5 carats (0.02-0.1 g) per cubic metre of gravel washed; taking about 0.04 g/m3 and roughly 10 labourer-hours to dig, carry and pan a cubic metre of gravel by hand gives on the order of 250 hours per gram. Real grade varies by well over an order of magnitude between deposits, which is exactly why this is marked C rather than defended further.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "agate_kg": {
    "outputs": {
@@ -164,7 +174,8 @@
    "extracted_from": "volcanic gravel deposit",
    "basis": "per tonne of agate/chalcedony nodules recovered from gravel or volcanic host rock",
    "yield_basis": "EXTRACTED. Agate occurs as nodules in volcanic rock or in the gravel weathered from it, found and dug out individually rather than blasted in bulk like building stone, which is why the labour per tonne sits well above ordinary quarrying - most of the tonnage moved is barren gravel or rock searched, not agate recovered.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "bitumen_kg": {
    "outputs": {
@@ -177,7 +188,8 @@
    "extracted_from": "bitumen seep",
    "basis": "per tonne of natural bitumen gathered from a seep or pitch deposit",
    "yield_basis": "EXTRACTED rather than refined - natural asphalt deposits (Dead Sea bitumen, Mesopotamian seeps, Trinidad's Pitch Lake) have supplied bitumen since the Bronze Age with no processing beyond digging or skimming the semi-solid tar and straining out water and debris, which is all the labour figure covers. A refining route from petroleum_refined_kg's heavy residue becomes physically available once distillation exists, but is not this entry's concern.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "oil_mineral_kg": {
    "outputs": {
@@ -190,7 +202,8 @@
    "extracted_from": "petroleum seep",
    "basis": "per tonne of crude petroleum skimmed from a natural surface seep",
    "yield_basis": "EXTRACTED. Before drilled wells, petroleum was gathered from surface seeps and shallow hand-dug pits (Pennsylvania, Burma, Mesopotamia all supplied oil this way) - a dilute, low-yield process compared to a drilled well, which the labour figure reflects; it is gathering effort, not a production process, since nothing here converts the crude into anything.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "petroleum_refined_kg": {
    "outputs": {
@@ -207,7 +220,8 @@
    "thermal_mj": 4000.0,
    "basis": "per tonne of refined distillate (a kerosene-weight cut) from batch distillation of crude",
    "yield_basis": "Fractional distillation in a simple batch still separates crude into naphtha, a kerosene-weight middle cut and heavier residues; early kerosene refineries (1860s Pennsylvania) typically recovered on the order of 50-60% of the crude's mass as usable lamp-oil distillate, taken here at 55%, so 1000/0.55 = 1820 kg of crude per tonne of product. The chemist hours are for controlling still temperature to cut the fractions correctly - get this wrong and the kerosene cut is contaminated with naphtha (too flammable) or heavy ends (too smoky) - with a labourer handling the fire and barrels. The still's heat is ordinary combustion (thermal_mj, priced through data/production/70_energy.json's thermal energy market - coal, by the 1860s), not shaft work, so it is carried as thermal rather than mechanical - see ENERGY in sim/solve_prices.py's module docstring.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_petroleum_refined"
   },
   "stone_kg": {
    "outputs": {
@@ -221,7 +235,8 @@
    "extracted_from": "quarry",
    "basis": "per tonne of rough-quarried building stone, broken free but not dressed to size",
    "yield_basis": "EXTRACTED. Freeing stone from bedrock with wedges, plugs-and-feathers or fire-setting and hauling it clear is comparable hard-rock effort to the copper_ore_kg example's 18 h/t, split here between a mason (who reads the rock's grain and places the wedges) and a labourer (who breaks and hauls). Dressing to a precise block is a separate, further step - see stone_blocks.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "stone_tons": {
    "outputs": {
@@ -234,7 +249,8 @@
    "extracted_from": "quarry",
    "basis": "per metric tonne of quarried rubble stone in bulk, for fill, riprap or foundations",
    "yield_basis": "EXTRACTED, and the same physical commodity as stone_kg, just consumed by some tree nodes as bulk tonnage rather than by the kilogram. No mason time is included because rubble for fill or foundations is used as it breaks, without the grain-reading and careful wedge placement that shaping stone for a visible face requires.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "stone_broken_tons": {
    "outputs": {
@@ -248,7 +264,8 @@
    },
    "basis": "per tonne of hand-broken stone aggregate (macadam-sized, roughly 40-70 mm)",
    "yield_basis": "MANUFACTURED from quarried stone by breaking it down further, not a second extraction - the quarrying labour is already paid for in the stone_kg it consumes. Reducing rock to macadam-sized aggregate by hand hammer was a real, brutally repetitive trade (the archetypal 'stone-breaker' of pre-mechanised road work); historical hand-breaking rates run on the order of a tonne or two per labourer per day, i.e. roughly 8 hours per tonne, with negligible mass loss since it is the same rock in smaller pieces.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "stone_blocks": {
    "outputs": {
@@ -263,7 +280,8 @@
    },
    "basis": "per dressed ashlar block, taken as roughly 0.3 x 0.3 x 0.6 m at 2600 kg/m3, i.e. about 140 kg finished",
    "yield_basis": "MANUFACTURED by dressing rough-quarried stone to precise, square faces. Cutting a block down to true faces from a rough-broken lump loses roughly a quarter of the mass as chips and spalls, so a 140 kg finished block needs about 190 kg of rough stone; 200 kg is used here to leave a small margin for a spoiled block. Ashlar dressing by hammer and chisel is slow, skilled work - a mason finishing one or two blocks a day is consistent with the historical record, hence 10 mason-hours per block.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "gravel_kg": {
    "outputs": {
@@ -276,7 +294,8 @@
    "extracted_from": "gravel pit",
    "basis": "per tonne of naturally-rounded gravel dug from a pit or riverbed",
    "yield_basis": "EXTRACTED, and much less labour than quarried stone because gravel is already loose and sized by water action - digging and screening unconsolidated material needs no wedging or blasting at all, closer to the effort of digging sand or clay than breaking bedrock.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "limestone_kg": {
    "outputs": {
@@ -289,7 +308,8 @@
    "extracted_from": "quarry",
    "basis": "per tonne of quarried limestone, broken to kiln-charge size",
    "yield_basis": "EXTRACTED. Limestone quarries and breaks somewhat more easily than granite or hard sulphide-bearing rock, but still needs wedging and hauling, so the labour sits close to the general stone_kg figure; no mason time is included because kiln-charge lumps need sizing, not a dressed face.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "lime_kg": {
    "outputs": {
@@ -305,7 +325,8 @@
    },
    "basis": "per tonne of quicklime (CaO) from calcined limestone",
    "yield_basis": "STOICHIOMETRY, not a guess: CaCO3 -> CaO + CO2 loses the CO2's mass, and by molar mass 56/100 = 56% of the calcium carbonate survives as lime, so the pure chemistry alone calls for about 1.79 t of limestone per tonne of lime; 1800 kg is that figure with a small margin for impurities and incompletely burned stone (underburnt lime, 'core', is a normal kiln loss). The fuel is set by the energy to hold the charge at roughly 900 C long enough to drive the reaction through: decomposition itself needs about 1.78 MJ per kg of CaCO3 (3.2 MJ per kg of lime once scaled by the 1.8:1 ratio), plus sensible heat to raise 1.8 t of stone by some 880 C (roughly 1.4 MJ/kg of lime), for a theoretical minimum near 4.6 MJ/kg. A simple pre-modern kiln loses most of its heat up the stack and through the kiln wall rather than into the stone - taking a rough 20% thermal efficiency (a real, if uncertain, kiln parameter, not a fitted one) scales that to about 23 MJ/kg, which at coal's ~29 MJ/kg calorific value is 0.45 kg of coal per kg of lime, given here as 450 kg per tonne. That efficiency factor is the softest number in the entry, which is why the entry as a whole is marked B rather than A despite the stoichiometry being exact.",
-   "conf": "B"
+   "conf": "B",
+   "requires_node": "mat_lime"
   },
   "chalk_kg": {
    "outputs": {
@@ -318,7 +339,8 @@
    "extracted_from": "chalk deposit",
    "basis": "per tonne of chalk (soft, pure calcium carbonate) dug from a chalk deposit",
    "yield_basis": "EXTRACTED. Chalk is a soft, friable limestone that a spade or pick can dig directly, with no wedging or blasting needed, so the labour is a fraction of ordinary quarrying - closer to digging clay than breaking rock.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "calcite_kg": {
    "outputs": {
@@ -331,7 +353,8 @@
    "extracted_from": "calcite vein deposit",
    "basis": "per tonne of clear crystalline calcite (Iceland spar) from a vein deposit",
    "yield_basis": "EXTRACTED. Ordinary limestone is calcite too, but the optically clear crystal form this entry means (used for polarising prisms once that need exists) occurs only in scattered veins and cavities and must be worked out carefully to avoid fracturing usable crystal, which costs more labour per tonne than bulk limestone quarrying even though it is mineralogically the same substance.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "dolomite_kg": {
    "outputs": {
@@ -344,7 +367,8 @@
    "extracted_from": "quarry",
    "basis": "per tonne of dolomite (calcium magnesium carbonate) rock, quarried",
    "yield_basis": "EXTRACTED. Dolomite rock quarries much like limestone - similar hardness, similar wedge-and-haul effort - so the labour figure is carried over from limestone_kg rather than re-derived.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "kieselguhr_kg": {
    "outputs": {
@@ -357,7 +381,8 @@
    "extracted_from": "diatomite deposit",
    "basis": "per tonne of kieselguhr (diatomaceous earth) dug and sun-dried",
    "yield_basis": "EXTRACTED. Diatomite is a soft, light, fossil sediment that digs easily with hand tools; the only real processing is drying it out (it is dug wet from old lakebeds) and a coarse screening, so labour sits below ordinary clay-pit digging despite the large volume moved per tonne, because the material itself is so low in bulk density and so easy to break loose.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "emery_kg": {
    "outputs": {
@@ -370,7 +395,8 @@
    "extracted_from": "emery deposit",
    "basis": "per tonne of emery (natural corundum-magnetite rock) mined and crushed to abrasive grit",
    "yield_basis": "EXTRACTED, with more labour than ordinary ore because emery (Mohs 9, nearly as hard as diamond) is punishing to break and then has to be crushed and graded into abrasive grit sizes rather than just hauled as rock - both steps cost more effort than working ordinary stone or metal ore of the same hardness class.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "aluminum_oxide_kg": {
    "outputs": {
@@ -383,7 +409,8 @@
    "extracted_from": "corundum deposit",
    "basis": "per tonne of natural corundum (aluminium oxide) ground to abrasive powder",
    "yield_basis": "EXTRACTED from natural corundum deposits - the same mineral family as emery but higher purity Al2O3 rather than the corundum-magnetite mixture emery is - crushed and ground to powder for abrasive and refractory use. Labour follows emery_kg's logic (very hard mineral, hard to break and grind) with a little more added for the extra grinding a purer abrasive grade needs.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "sand_kg": {
    "outputs": {
@@ -396,7 +423,8 @@
    "extracted_from": "sand pit",
    "basis": "per tonne of ordinary sand dug from a pit, riverbed or beach",
    "yield_basis": "EXTRACTED. Loose, unconsolidated and needing no breaking at all, sand is among the cheapest materials in this file to win - digging and hauling only.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "sand_quartz_kg": {
    "outputs": {
@@ -409,7 +437,8 @@
    "extracted_from": "quartz sand deposit",
    "basis": "per tonne of washed, high-silica quartz sand suitable for glassmaking",
    "yield_basis": "EXTRACTED, but not every sand deposit will do: glass wants sand that is overwhelmingly SiO2, because iron-bearing clay or mineral grains tint the melt green or brown. Getting a clean product means washing and screening out the iron-bearing fraction on top of ordinary digging, roughly doubling the labour of plain sand_kg for the same tonnage.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "clay_kg": {
    "outputs": {
@@ -422,7 +451,8 @@
    "extracted_from": "clay pit",
    "basis": "per tonne of plastic clay dug from a clay pit, at natural pit moisture",
    "yield_basis": "EXTRACTED. Digging clay is easier than breaking rock but harder than shifting loose sand, since it is cohesive and sticky rather than free-running; this entry stops at the pit gate, at natural moisture - drying and firing losses belong to whatever consumes this clay (brick_1000, ceramic_kg, porcelain_kg), because the same tonne of wet clay loses a different fraction depending on how hot and how long it is fired.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "natron_kg": {
    "outputs": {
@@ -435,7 +465,8 @@
    "extracted_from": "natron salt-pan deposit",
    "basis": "per tonne of natural natron (sodium carbonate/bicarbonate evaporite) raked from a salt pan",
    "yield_basis": "EXTRACTED. Natron forms as a crust on dry lake beds (the Wadi Natrun deposits that supplied Egypt and Rome are the type example) and is simply raked and shovelled up, no different in effort from harvesting salt from a saltern - there is no ore-breaking or digging involved, only collection.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "flux_kg": {
    "outputs": {
@@ -449,7 +480,8 @@
    },
    "basis": "per tonne of crushed, sized metallurgical flux",
    "yield_basis": "MANUFACTURED, but only by crushing - flux_kg is ordinary limestone (calcium carbonate), the cheapest and most widely used smelting flux across history, ground and sized so it feeds evenly into a furnace charge. It does its work by decomposing to CaO inside the furnace it fluxes, binding silica gangue into a flowable slag - but that decomposition is part of whatever process consumes flux_kg (as in the worked copper_kg example), not this one, which only crushes the stone. The 2% margin over 1:1 covers fines lost to dust and screening. A more aggressive, fluorine-chemistry flux (fluorspar) exists for processes that need it and is priced separately as fluorspar_kg.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": null
   },
   "glass_raw_kg": {
    "outputs": {
@@ -484,7 +516,8 @@
    ],
    "basis": "per tonne of melted and fined raw glass ('metal'), before working into objects",
    "yield_basis": "WHY this recipe is what it is: silica alone does not melt at any furnace this era can build (quartz softens above 1700 C), so soda-lime glass adds an alkali flux (here natron, the historically dominant source in Egypt and Rome) to break up the silica network and pull the working temperature down to a reachable 1000-1300 C, with lime added to keep the glass chemically stable (unfluxed alkali glass is water-soluble). Sand contributes ~100% of its mass to the melt since it is already the stable oxide; lime, taken here as the already-calcined lime_kg, likewise contributes essentially all its mass. Natron does not: it is a hydrated, part-carbonate mineral, and melting the batch drives off both its water of crystallisation and (like limestone) the CO2 from its carbonate fraction, so only roughly 45% of the raw natron's mass ends up in the glass - this fraction is this author's estimate combining decarbonation stoichiometry with natron's typical impurity content, and is the least certain number in the entry. Working backward from a target 70:20:10-ish sand:soda:lime melt composition through that loss gives the input quantities above. Fuel: wood-fired glasshouses were notorious for consuming forests even faster than iron did, because open pot furnaces lose most of their heat rather than delivering it to the melt; 4 kg of wood per kg of glass reflects that documented historical ratio rather than a theoretical minimum, which would be an order of magnitude lower.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_glass_soda"
   },
   "brick_1000": {
    "outputs": {
@@ -499,7 +532,8 @@
    },
    "basis": "per 1000 fired common bricks, each about 2.5 kg (1000 bricks = 2500 kg fired mass)",
    "yield_basis": "As-dug brick clay carries roughly 20-25% free water; drying removes most of it, and firing then drives off the clay minerals' chemically bound water and burns out any organic matter, together costing perhaps another 5-10% of the dried mass - overall the fired brick keeps roughly 78% of the wet clay's mass, so 2500 kg of fired brick needs about 3200 kg of pit clay. Firing a simple clamp or kiln to the 900-1000 C common brick needs, on commonly-cited pre-industrial efficiency figures, on the order of 0.2 kg of fuel per kg of fired brick - 500 kg of firewood for 2500 kg of brick. Labour covers hand-moulding (a moulder and off-bearer team historically set around 1000 bricks a day, hence roughly 10 hours per 1000 here) plus kiln setting, firing and drawing, amortised over a large kiln batch.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "cap_heat_0700"
   },
   "ceramic_kg": {
    "outputs": {
@@ -515,7 +549,8 @@
    },
    "basis": "per tonne of fired earthenware ceramic ware (pottery, tile and the like), low-fired around 900-1000 C",
    "yield_basis": "The same wet-clay-to-fired-mass logic as brick_1000 applies (roughly 1.3 kg of pit clay per kg of fired ware after drying and firing losses), fired to a similar temperature so given the same fuel intensity per kg. Shaping is where ceramic ware differs from brick: wheel-throwing, trimming and glazing a kilogram of ware is skilled work, taken here at roughly half an hour of potter's time per kg, with a labourer handling clay preparation (wedging, levigating out stones and grit) and kiln loading.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "cap_heat_0700"
   },
   "porcelain_kg": {
    "outputs": {
@@ -532,7 +567,8 @@
    },
    "basis": "per tonne of fired porcelain/high-fired stoneware body",
    "yield_basis": "HEURISTIC, flagged: a true porcelain body is kaolin plus feldspar plus quartz (per this tree's own note on mat_porcelain), but feldspar has no material entry of its own yet in this dataset, so its alkali-flux role is folded into extra sand_quartz_kg here rather than modelled correctly - this undercounts the flux chemistry that actually lowers a porcelain body's melting behaviour, and should be split out once a feldspar_kg entry exists. What is kept physical: kaolinite's dehydroxylation on firing (Al2Si2O5(OH)4 -> Al2Si2O7 + 2H2O) drives off close to 14% of the clay's own mass as water, giving an overall raw-to-fired mass ratio near 1.2:1, hence 1200 kg of clay+sand feedstock (split 75:25) per tonne of fired porcelain. Reaching and holding the roughly 1300 C porcelain wants (300-400 C above ordinary earthenware) costs much more fuel for the same physical reason a lime kiln costs more fuel than drying laundry: radiative loss grows steeply with temperature, so wood consumption is set well above ceramic_kg's rather than scaled linearly. Both the shaping and firing of fine, thin-walled, warp-prone ware are slow and skilled compared to coarse earthenware, hence the much higher potter and furnaceman hours per kg.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_porcelain"
   },
   "quartz_tube_kg": {
    "outputs": {
@@ -548,7 +584,8 @@
    "electrical_mj": 8000.0,
    "basis": "per tonne of fused-silica (fused quartz) tubing, lamp-worked to shape",
    "yield_basis": "Fused quartz keeps essentially all of the silica it is melted from (there is no flux to volatilise as there is in soda-lime glass_raw_kg - that is the whole point of using it where chemical purity matters), so the mass loss here is working scrap (offcuts and spoiled draws from shaping tube by hand at extreme temperature), taken at about 10%. Melting silica outright needs 1700-2000 C, far past a wood or coal fire's reach - a wood or coal fire tops out around 1000-1200 C even well-drafted. Furnaceman hours are the primary silica melt; glassblower hours are the lamp-working of tube from the melted stock, which is slow, high-temperature, one-piece-at-a-time work. REASSIGNED FROM energy_mj TO electrical_mj this round (see ENERGY, THE ALUMINIUM DEFECT and TEMPERATURE in sim/solve_prices.py's module docstring), the last of the ten entries that used to carry an uncosted energy_mj - now that data/production/70_energy.json has an electrical_mj_dynamo/electrical_mj_photovoltaic-fed electrical market, and resistance/arc heating (thermal_mj_electrical_resistance's own conversion) genuinely reaches this temperature where combustion cannot, this entry's heat is finally priceable. Historically this was an oxy-hydrogen flame, not an arc - but an electric-arc or resistance furnace reaches the same 1700-2000 C by a different, well-attested route (industrial fused-quartz and fused-silica furnaces are commonly electric-arc or resistance-heated today for exactly this reason), and this entry now assumes THAT route rather than gas combustion, which is why the field is electrical_mj rather than a fuel input. The 8000 MJ/tonne figure itself is UNCHANGED from the old energy_mj value - it is read as the usable heat that must reach the charge (the same convention thermal_mj_charcoal's own basis states explicitly), and resistance/arc heating couples electrical input to a charge at least as efficiently as any combustion route, so keeping the same number rather than inventing a new, more favourable one is the conservative choice. DELIBERATELY NOT FOLDED INTO THE SHARED, UNDIFFERENTIATED thermal_mj POOL, even though a technique that reaches this temperature (thermal_mj_electrical_resistance) now exists: that pool's PRICE is set by whichever technique is cheapest for it as a WHOLE, which today is coal - a fire that cannot reach 1700 C at all. Routing this entry through thermal_mj would have it pay coal's price while implicitly claiming coal's fire can do what only the arc route can, exactly the bloomery-cannot-melt-iron mistake TEMPERATURE in solve_prices.py's module docstring warns about; drawing on electrical_mj directly instead (the same pattern aluminium_kg and silicon_kg use) lets this entry's own choice of technique reach the temperature it actually needs without asserting anything about the temperature-blind pool. This is therefore no longer a LOWER BOUND the way the old energy_mj entry was - it is a real, priced number, subject only to the ordinary uncertainty every entry in this file carries.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "cap_heat_2000"
   },
   "concrete_reinforced_kg": {
    "outputs": {
@@ -569,7 +606,8 @@
    },
    "basis": "per tonne of cured, reinforced structural concrete in place",
    "yield_basis": "HEURISTIC, flagged: there is no cement_kg or clinker material in this dataset yet, so the binder is approximated here by lime_kg plus a modest clay_kg addition standing in for Portland cement clinker (limestone co-calcined with a smaller fraction of clay at around 1450 C, hotter than plain lime-burning, forming calcium silicate phases lime alone does not have) - this undercounts the real binder's fuel and energy intensity and should be replaced once a proper cement entry exists. Likewise iron_bar_kg stands in for reinforcing steel bar, a different alloy this dataset does not yet distinguish. What is kept physical: a typical structural mix by mass is roughly 14% binder, 3% clinker clay fraction, 28% sand, 55% coarse aggregate (gravel_kg here), which is where the 135/30/270/525 split per tonne comes from, and a moderate reinforcement ratio of about 100 kg of bar per cubic metre of 2400 kg concrete (~4%), giving 40 kg per tonne. Mixing water is not tracked as a priced material (it is not scarce) and is assumed to wash out as free water roughly offset by water chemically bound in hydration, so it drops out of the mass balance. Labour is bulk placement work - mixing and placing, formwork carpentry, finishing and tying the reinforcement cage - rather than the fine craft labour a stone_blocks or porcelain_kg entry needs.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_concrete_reinforced"
   }
  }
 }
