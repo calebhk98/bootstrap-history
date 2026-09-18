@@ -235,32 +235,43 @@ class StartingMixin:
             return 1.0, True
         quality = 1.0
         for group in groups:
-            best = 0.0
-            for opt, qual in (group.get("options") or {}).items():
-                if opt in self.household.done or opt in self.nodes.get(k, {}).get("mat", {}):
-                    best = max(best, float(qual))
-                elif opt not in self.nodes:
-                    best = max(best, float(qual) * self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)   # a purchasable commodity
+            best = self._substitution_group_best(k, group)
             if best <= 0:
-                # WHICH GROUP, AND WHAT WOULD SATISFY IT. "no viable option in a
-                # required substitution group (fuel, vessel, etc.)" was the one
-                # blocked-reason a play tester never decoded in a whole run: it
-                # names no candidate and no fix, and the parenthesis is a guess
-                # at what the group might be about rather than what it is.
-                # A GROUP KEY IS A SLUG, NOT PROSE. Surfacing it verbatim put
-                # "unknown_source" in front of a player, which is data, not
-                # English. Say it as words.
-                _gname = (group.get("name") or group.get("group") or "").replace("_", " ")
-                if _gname:
-                    _gname = ("an " if _gname[0] in "aeiou" else "a ") + _gname
-                self.household._last_subst_gap = (
-                    _gname or "one of the things it can be made from",
-                    sorted((group.get("options") or {}), key=lambda o:
-                           -float((group.get("options") or {})[o]))[:4])
+                self._record_substitution_gap(group)
                 return 0.0, False        # no option in this group is available
             quality *= best
         self.household._last_subst_gap = None
         return quality, True
+
+    def _substitution_group_best(self, k, group):
+        """The best quality any option in one `req_any` group actually offers."""
+        best = 0.0
+        for opt, qual in (group.get("options") or {}).items():
+            if opt in self.household.done or opt in self.nodes.get(k, {}).get("mat", {}):
+                best = max(best, float(qual))
+            elif opt not in self.nodes:
+                best = max(best, float(qual) * self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)   # a purchasable commodity
+        return best
+
+    def _record_substitution_gap(self, group):
+        """Record which group failed and what would have satisfied it.
+
+        WHICH GROUP, AND WHAT WOULD SATISFY IT. "no viable option in a
+        required substitution group (fuel, vessel, etc.)" was the one
+        blocked-reason a play tester never decoded in a whole run: it
+        names no candidate and no fix, and the parenthesis is a guess
+        at what the group might be about rather than what it is.
+        A GROUP KEY IS A SLUG, NOT PROSE. Surfacing it verbatim put
+        "unknown_source" in front of a player, which is data, not
+        English. Say it as words.
+        """
+        _gname = (group.get("name") or group.get("group") or "").replace("_", " ")
+        if _gname:
+            _gname = ("an " if _gname[0] in "aeiou" else "a ") + _gname
+        self.household._last_subst_gap = (
+            _gname or "one of the things it can be made from",
+            sorted((group.get("options") or {}), key=lambda o:
+                   -float((group.get("options") or {})[o]))[:4])
 
     ARREARS_GRACE_YEARS = declare(
         "ARREARS_GRACE_YEARS", 3, kind="temporary_heuristic",
@@ -368,10 +379,28 @@ class StartingMixin:
         flag (can_start, is_visible) for why they are the only two that may
         pass False - every other caller (why, available, stuck, path,
         bounty, the protocol layer) still wants the sentence and so keeps
-        the default."""
+        the default.
+
+        The body below is a fixed sequence of independent legality checks,
+        each in its own method (_check_win_condition,
+        _check_already_done, and the rest of _START_REASON_CHECKS below),
+        run in the exact order they always ran in. Each one returns either
+        None ("no verdict, ask the next check") or the (ok, message) tuple
+        this function should return right now - so the FIRST check with an
+        opinion wins, exactly as the old single `if`/`elif` chain did. See
+        _START_REASON_CHECKS's own comment for why the order is the one
+        contract this split cannot touch.
+        """
         if k not in self.nodes:
             return False, ("no such node" if _why else None)
         node = self.nodes[k]
+        for check in self._START_REASON_CHECKS:
+            verdict = check(self, k, node, ignore_trade, _memo, _why)
+            if verdict is not None:
+                return verdict
+        return True, None
+
+    def _check_win_condition(self, k, node, ignore_trade, _memo, _why):
         if node.get("win_condition"):
             # A THRESHOLD GOAL, NOT A PROJECT. This is measured, not built:
             # nobody ever spends hours or money on it, so it is never
@@ -388,6 +417,9 @@ class StartingMixin:
             return False, (("this is not something you build; it happens on "
                            "its own once %s" % win_condition_describe(node))
                            if _why else None)
+        return None
+
+    def _check_already_done(self, k, node, ignore_trade, _memo, _why):
         if k in self.household.done:
             # A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already
             # done" either: you know how, and the plant is gone. `restore` puts
@@ -405,8 +437,14 @@ class StartingMixin:
                                "about %.0f denarii"
                                % (k, self.project_cost(k) * self.RESTORE_COST_SHARE_OF_BUILD)) if _why else None)
             return False, ("already done" if _why else None)
+        return None
+
+    def _check_already_active(self, k, node, ignore_trade, _memo, _why):
         if k in self.household.active:
             return False, ("already active" if _why else None)
+        return None
+
+    def _check_needs_first(self, k, node, ignore_trade, _memo, _why):
         # NOT DEAR HERE, IMPOSSIBLE HERE. See SocietyMixin.needs_first.
         # needs_first() itself is always called: `_nf` IS the answer, not
         # just words about it. Only the sentence built from the two strings
@@ -415,6 +453,9 @@ class StartingMixin:
         if _nf:
             return False, (("%s. Build %s first and this opens with it"
                            % (_why_nf, _nf)) if _why else None)
+        return None
+
+    def _check_unobtainable(self, k, node, ignore_trade, _memo, _why):
         # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY, and it falls
         # through to the ordinary checks below. Refusing here and sending the
         # player to `restore` - which answers "you no longer know how" - was a
@@ -425,11 +466,17 @@ class StartingMixin:
         if node["cat"] == "unobtainable":
             return False, ("retired category: unobtainable in this tree"
                            if _why else None)
+        return None
+
+    def _check_foreign_only(self, k, node, ignore_trade, _memo, _why):
         if self._is_foreign_only(k):
             return False, (("that is an institution of a different society. %s has "
                            "no such thing, and it is not something you can build "
                            "here" % self.civ.get("name", "this society"))
                            if _why else None)
+        return None
+
+    def _check_missing_prereqs(self, k, node, ignore_trade, _memo, _why):
         missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done]
         if missing:
             # NAME ONLY WHAT YOU HAVE HEARD OF. A tester wrote a twenty-line
@@ -450,6 +497,9 @@ class StartingMixin:
             # above; only the message about which ones is skippable.
             return False, (self.missing_prereq_message(missing, _memo=_memo)
                            if _why else None)
+        return None
+
+    def _check_substitution(self, k, node, ignore_trade, _memo, _why):
         if not self.substitution_quality(k)[1]:
             # substitution_quality(k) ITSELF is always called, above - it is
             # not just words, it sets self.household._last_subst_gap as a side effect
@@ -471,41 +521,44 @@ class StartingMixin:
                               if _seen else
                               ", and none of them is anything you have heard "
                               "of yet"))
-        # A playtester hit a scholar wall that stopped ALL progress and reported
-        # that nothing in the protocol told them how to get more scholars. The
-        # refusal named the shortfall and not the remedy, which is the least
-        # useful half. Staff is not a technical prerequisite so it never appears
-        # in `path`, and the player had no way to discover the answer except by
-        # reading prose they had no reason to think was relevant.
-        # Arrears blocks NEW commitments, with two escape hatches, because
-        # without them this is a trap rather than a setback. A playtester went
-        # bankrupt, had a prerequisite abandoned out from under them, and then
-        # could not rebuild it: they sat softlocked for 470 years until the
-        # horizon. First hatch: creditors care about PERSISTENT insolvency, not
-        # one bad year. Second: anything you can fund from this year's income
-        # needs nobody's permission.
-        # "Cheap enough to need nobody's permission" means payable out of what
-        # is actually LEFT, not out of turnover. Measured against gross revenue
-        # it let a bankrupt household with 11,637 of income and 6,020 of upkeep
-        # start 11,000-denarius projects every year for two centuries, each one
-        # halted by the creditors a year later: 18 technologies in 200 years and
-        # a log that was nothing but CREDIT EXHAUSTED.
-        # COMPUTED ONLY WHEN IT CAN MATTER. revenue() walks every technology you
-        # have, and start_reason is called for every node in the tree, several
-        # times over, by can_start and by is_visible under fog. A 45-year
-        # fogged Mexica run made 335,276 calls to revenue() from here and spent
-        # 38 of its 100 seconds inside them - to compute a surplus that is only
-        # read when the household has been insolvent three years or more, which
-        # in most runs is never.
-        # A CREDIT FREEZE HAS TO APPLY TO THE PLAYER TOO. It was set when the
-        # creditors halted your work and then only ever checked in the
-        # optimizer's own start loop, so a person at a keyboard could default,
-        # be frozen out on paper, and carry on borrowing and starting things
-        # regardless. A weird-play tester found the consequence: creditors
-        # seize CONCERNS, so a player who opens none can default over and over
-        # for nothing but reputation, which regenerates - and building raises
-        # reputation, which raises the credit limit. They financed 22
-        # technologies with money that did not exist and kept all of it.
+        return None
+
+    # A playtester hit a scholar wall that stopped ALL progress and reported
+    # that nothing in the protocol told them how to get more scholars. The
+    # refusal named the shortfall and not the remedy, which is the least
+    # useful half. Staff is not a technical prerequisite so it never appears
+    # in `path`, and the player had no way to discover the answer except by
+    # reading prose they had no reason to think was relevant.
+    # Arrears blocks NEW commitments, with two escape hatches, because
+    # without them this is a trap rather than a setback. A playtester went
+    # bankrupt, had a prerequisite abandoned out from under them, and then
+    # could not rebuild it: they sat softlocked for 470 years until the
+    # horizon. First hatch: creditors care about PERSISTENT insolvency, not
+    # one bad year. Second: anything you can fund from this year's income
+    # needs nobody's permission.
+    # "Cheap enough to need nobody's permission" means payable out of what
+    # is actually LEFT, not out of turnover. Measured against gross revenue
+    # it let a bankrupt household with 11,637 of income and 6,020 of upkeep
+    # start 11,000-denarius projects every year for two centuries, each one
+    # halted by the creditors a year later: 18 technologies in 200 years and
+    # a log that was nothing but CREDIT EXHAUSTED.
+    # COMPUTED ONLY WHEN IT CAN MATTER. revenue() walks every technology you
+    # have, and start_reason is called for every node in the tree, several
+    # times over, by can_start and by is_visible under fog. A 45-year
+    # fogged Mexica run made 335,276 calls to revenue() from here and spent
+    # 38 of its 100 seconds inside them - to compute a surplus that is only
+    # read when the household has been insolvent three years or more, which
+    # in most runs is never.
+    # A CREDIT FREEZE HAS TO APPLY TO THE PLAYER TOO. It was set when the
+    # creditors halted your work and then only ever checked in the
+    # optimizer's own start loop, so a person at a keyboard could default,
+    # be frozen out on paper, and carry on borrowing and starting things
+    # regardless. A weird-play tester found the consequence: creditors
+    # seize CONCERNS, so a player who opens none can default over and over
+    # for nothing but reputation, which regenerates - and building raises
+    # reputation, which raises the credit limit. They financed 22
+    # technologies with money that did not exist and kept all of it.
+    def _check_credit_frozen(self, k, node, ignore_trade, _memo, _why):
         if self.year < getattr(self.household, "credit_frozen_until", 0):
             # SAY IF IT WILL NEVER LIFT IN TIME. A break tester was told credit
             # would return in 609 in a game whose horizon is 600, which is not
@@ -522,6 +575,9 @@ class StartingMixin:
                               "this run" % int(_end)
                               if self.household.credit_frozen_until > _end else ""))
                            if _why else None)
+        return None
+
+    def _check_arrears(self, k, node, ignore_trade, _memo, _why):
         if getattr(self.household, "insolvent_years", 0) >= self.ARREARS_GRACE_YEARS:
             surplus = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())
@@ -539,6 +595,9 @@ class StartingMixin:
                            "so is finishing or stopping what is running."
                            % (getattr(self.household, "insolvent_years", 0), -self.household.capital))
                            if _why else None)
+        return None
+
+    def _check_scholar_staff(self, k, node, ignore_trade, _memo, _why):
         # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
         # effective_scholars(), the standing headcount, so scholar hours you
         # had already bought and paid for could not satisfy the requirement,
@@ -561,6 +620,9 @@ class StartingMixin:
                            % (node["sch"], self.scholar_hands_available(),
                               self._staff_advice("scholars")))
                            if _why else None)
+        return None
+
+    def _check_craft_staff(self, k, node, ignore_trade, _memo, _why):
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
         # satisfy the requirement - and the refusal's own advice was to go and
@@ -592,6 +654,9 @@ class StartingMixin:
                            % (node["art"], self.craft_hands_available(),
                               self._staff_advice("artisans")))
                            if _why else None)
+        return None
+
+    def _check_absent_trades(self, k, node, ignore_trade, _memo, _why):
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
         # engineer: the wage table says so itself. You make one by teaching one.
@@ -603,6 +668,9 @@ class StartingMixin:
                            "(about 450 of your own hours each, two years)"
                            % (", ".join(trade_id + "s" for trade_id in absent), absent[0]))
                            if _why else None)
+        return None
+
+    def _check_none_left_trades(self, k, node, ignore_trade, _memo, _why):
         # AND SOMEBODY HAS TO BE LEFT. A trade you taught still counts as
         # existing after the last of them has died or been poached, so `why`
         # and `available` said CAN START NOW while the project, once begun,
@@ -623,6 +691,9 @@ class StartingMixin:
                            "more, or hire from your own if you have any"
                            % (", ".join(trade_id + "s" for trade_id in _none_left), _none_left[0]))
                            if _why else None)
+        return None
+
+    def _check_social_approval(self, k, node, ignore_trade, _memo, _why):
         # SOCIAL APPROVAL GATE. Some things the State does not want built, and no
         # amount of money substitutes for someone powerful being willing to be
         # associated with it. See 03_SOCIAL_POLITICS.md section 4.
@@ -672,7 +743,34 @@ class StartingMixin:
                               self.STATE_OPPOSITION_PROTECTION_OVERRIDE,
                               self.household.protection))
                            if _why else None)
-        return True, None
+        return None
+
+    # THE ORDER IS THE CONTRACT. start_reason reports the FIRST reason in
+    # this sequence that has an opinion, exactly as the single if/elif chain
+    # it replaced did line by line - a player choosing between two blockers
+    # reads only ever the one named here first, so re-ordering this tuple
+    # changes what a refusal says even when every check's own logic is
+    # untouched. Plain functions, not bound methods: referencing them by
+    # their bare class-body name (rather than through an instance) gets the
+    # underlying function object, which is why each call below passes `self`
+    # explicitly.
+    _START_REASON_CHECKS = (
+        _check_win_condition,
+        _check_already_done,
+        _check_already_active,
+        _check_needs_first,
+        _check_unobtainable,
+        _check_foreign_only,
+        _check_missing_prereqs,
+        _check_substitution,
+        _check_credit_frozen,
+        _check_arrears,
+        _check_scholar_staff,
+        _check_craft_staff,
+        _check_absent_trades,
+        _check_none_left_trades,
+        _check_social_approval,
+    )
 
     def _patron_advice(self, k, in_world):
         """What to tell a player who needs `k` before they may begin.
