@@ -144,6 +144,12 @@ TOPICS = [
     # uses. Written as assertions on the CURRENT wrong behaviour so the
     # suite stays green and the defect stays impossible to miss.
     "price_solver_cycles",
+    # Pins the technique-to-node link the price solver gates on. The tree
+    # records what a node CONSUMES and never what anything produces, so
+    # nothing joined a production recipe to the node that lets anyone run
+    # it, and the solve had no way to tell a Roman technique from a modern
+    # one. See Complaints/39 for the run that exposed it.
+    "price_solver_era_gate",
     # Guards the id()-reuse hazard that made the simulation non-deterministic;
     # structural, so it catches the class rather than the one instance.
     "determinism",
