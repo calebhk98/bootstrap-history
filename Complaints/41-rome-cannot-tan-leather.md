@@ -87,3 +87,78 @@ Note also that this only checks what a civilisation can PRODUCE. Silk shows
 why that is not the same as what it can OBTAIN: Rome trades for silk it
 cannot make, and `data/production/` has no way to say so. Availability by
 trade is a separate mechanism and this complaint does not cover it.
+
+## It is not Rome. Nobody can tan leather.
+
+The chemicals slice landed next and prompted the same sweep across all five
+civilisations, which is where this stops being a Rome problem:
+
+    england_1300     year=1300   starting_techs=202
+    rome_100ad       year=100    starting_techs=223
+    norse_900ad      year=900    starting_techs=148
+    han_china_100ad  year=100    starting_techs=107
+    mexica_1500      year=1500   starting_techs=34
+
+    tex_vegetable_tanning   held by: NOBODY
+    tx2_fulling             held by: NOBODY
+    distillation_alcohol    held by: NOBODY
+    prn_hand_papermaking    held by: NOBODY
+    coal_coke               held by: NOBODY
+    mat_paper               held by: england_1300, han_china_100ad
+
+Tanning and fulling are held by NO civilisation in the game. Every one of
+these five societies tanned hides and finished cloth; Han China in 100 AD had
+a textile industry good enough that Rome bought its output. A technology that
+every modelled society demonstrably had, and that none of them starts with,
+is not a judgement call about Rome - it is a hole.
+
+**England 1300 makes the fulling case worse, not better.** England in 1300 is
+the fulling economy. Carus-Wilson's "An Industrial Revolution of the
+Thirteenth Century" (1941) is specifically about English water-powered
+fulling mills, of which there were hundreds by that date, and the tree even
+has `tex_fulling_water` for exactly that. An England-1300 start that must
+research fulling is wrong in the most documented direction available.
+
+**Distillation is the same shape.** `distillation_alcohol` is held by nobody,
+which is right for Rome and Han in 100 AD and defensible for Norse 900, and
+wrong for England 1300: aqua vitae was medical currency by then, with Taddeo
+Alderotti describing fractional distillation of wine around 1280.
+
+The chemicals agent reported the identical availability pattern for England
+1300 and Rome 100 AD across all 39 of its entries and read that as design
+intent - industrial chemistry postdating even a 1300 start. That reasoning is
+sound for Leblanc (1791) and the lead chamber (1746) and wrong for
+distillation, which is medieval. An identical pattern between two
+civilisations 1200 years apart should have read as a symptom, not a design.
+
+**What is correctly modelled, and worth preserving in any fix:** paper. Both
+England 1300 and Han China hold `mat_paper` while nobody holds
+`prn_hand_papermaking`, so those two societies HAVE paper without being able
+to make it. That is the same production-versus-trade distinction Roman silk
+gets right, and it is the shape the tanning and fulling fix should NOT take -
+those two are things these societies made, not things they bought.
+
+**Unresolved, flagged not fixed:** `mexica_1500` holds 34 starting
+technologies against Rome's 223. Some of that gap is real - no iron, no
+wheeled transport, no draft animals - but 34 looks thin for a society with
+chinampa agriculture, monumental stone construction, cotton textiles,
+obsidian blade production and goldwork. Somebody who knows the period should
+look; this complaint only observes the number.
+
+## The tree is also missing nodes, not only the civilisations
+
+Two chemicals entries were left deliberately unlabelled because no node in
+the tree describes the process the recipe actually uses:
+
+  - `citric_acid_kg` is the pre-1919 route, lemon juice to lime precipitate
+    to sulfuric-acid regeneration. The tree's only citric node forces a
+    choice between chemical synthesis and mould fermentation, both later and
+    neither this.
+  - `chrome_salts_kg` is sodium dichromate from roasted chromite, the early
+    1800s chromate industry. The tree's chromium nodes are about
+    aluminothermic reduction to the METAL, a different output by a later
+    method.
+
+That is the correct outcome under the schema - an absent field is a counted
+gap, a wrong one is invisible - and it says the tree has holes of its own
+that only became visible once something tried to point at it.
