@@ -245,7 +245,7 @@ def load_civ(name="rome_100ad"):
     return civ
 
 
-def load(use_solved_prices=False, held_technology_ids=()):
+def load(use_solved_prices=False, held_technology_ids=(), civilization_id=None):
     """Load the tree and `prices.json`, and derive each node's cost.
 
     `use_solved_prices` is OFF BY DEFAULT and every existing call site calls
@@ -275,6 +275,14 @@ def load(use_solved_prices=False, held_technology_ids=()):
     source, independent of whether this switch is on - that report is the
     measurable burndown of `data/prices.json`, and it should be checkable
     without having to first flip the engine's own behaviour.
+
+    `civilization_id` matters only when `use_solved_prices` is True: it
+    decides whose held territory `iugerum_land` prices against (see
+    `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION). It defaults to
+    `None`, which `sim.engine.prices.priced_goods_table` resolves to Rome -
+    the same default the standalone `sim/solve_prices.py --civ`-less run
+    uses - so a caller pricing a NON-ROME civilization's goods table must
+    pass its id here explicitly, or its land is silently priced as Rome's.
     """
     with open(TREE) as source:
         tree = json.load(source)
@@ -288,7 +296,8 @@ def load(use_solved_prices=False, held_technology_ids=()):
     if use_solved_prices:
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, goods, prices)
+            held_technology_ids, goods, prices,
+            civilization_id=civilization_id)
     for node in nodes.values():
         node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
         node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())
@@ -297,14 +306,20 @@ def load(use_solved_prices=False, held_technology_ids=()):
     return tree, prices, nodes, wages, goods
 
 
-def goods_provenance(held_technology_ids=()):
-    """{material: "solved" | "book"} for every material `prices.json`
-    prices, from `sim.engine.prices.priced_goods_table` - the burndown that
-    measures "prices.json slowly deleted" one entry at a time (see that
-    module's docstring). This always asks the solver, regardless of
-    `load()`'s own `use_solved_prices` switch: the point is to be able to
+def goods_provenance(held_technology_ids=(), civilization_id=None):
+    """{material: "solved" | "gated" | "no_recipe"} for every material
+    `prices.json` prices, from `sim.engine.prices.priced_goods_table` - the
+    burndown that measures "prices.json slowly deleted" one entry at a time
+    (see that module's docstring). This always asks the solver, regardless
+    of `load()`'s own `use_solved_prices` switch: the point is to be able to
     measure the split BEFORE deciding to turn the engine's own prices over
     to it, not only after.
+
+    `civilization_id` should be the SAME civilization `held_technology_ids`
+    came from - see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION for
+    why land rent needs to know this and cannot infer it from
+    `held_technology_ids` alone. Left at `None` it prices land as Rome's,
+    which is silently wrong for any other civilization's report.
     """
     with open(PRICES) as source:
         prices = json.load(source)
@@ -312,7 +327,7 @@ def goods_provenance(held_technology_ids=()):
              if not key.startswith("_")}
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, prices)
+        held_technology_ids, goods, prices, civilization_id=civilization_id)
     return provenance
 
 

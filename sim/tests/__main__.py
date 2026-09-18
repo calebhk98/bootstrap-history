@@ -221,6 +221,12 @@ TOPICS = [
     # unit (fallow as a multiplier of 2.0 in one, a share of 0.5 in the
     # other). Also the net that catches a future re-duplication.
     "shared_constants",
+    # sim/engine/prices.py's own copy of the RENT_IS_ZERO bug: the function
+    # the engine switch calls was solving without the rent tables, so
+    # flipping it on would have discarded two rounds of rent work. Also
+    # pins that land rent is per-civilisation and cannot be shared between
+    # two civilisations holding the same technologies.
+    "engine_prices_civilization_rent",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology

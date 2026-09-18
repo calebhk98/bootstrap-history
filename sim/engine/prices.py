@@ -28,7 +28,9 @@ burndown the stakeholder asked for: as more of `data/production/` gets
 `requires_node` labels and more materials resolve, the "book" count in that
 dict falls, and that count is the whole point of this file existing.
 
-CACHE KEY: THE SET OF GATE NODES HELD, NOT THE FULL TECHNOLOGY SET.
+CACHE KEY: THE SET OF GATE NODES HELD, PLUS THE CIVILIZATION FOR LAND RENT.
+See RENT NEEDS A CIVILIZATION below for why a bare gate-node set stopped
+being enough. The gate-node reasoning that follows is otherwise unchanged.
 `solve_prices.py`'s own docstring measured this: a gated solve costs 0.371s,
 but only 82 of the tree's 2,864 nodes (2.9%) are ever named by a
 `requires_node` anywhere in `data/production/` - a GATE, in this file's
@@ -129,6 +131,45 @@ cares can already recover the distinction by re-running
 `solve_prices.minor_joint_byproducts_are_unanchored` against the same
 `SolvedPrices.chosen_recipe_by_material`, which is exposed for exactly that
 kind of downstream question.
+
+RENT WAS MISSING FROM THIS FILE UNTIL Complaints/43's follow-up (this
+round), AND THAT IS WORTH RECORDING BECAUSE IT WAS INVISIBLE FROM HERE.
+`sim/solve_prices.py`'s own `main()` computes
+`rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_iugerum` once
+per run and threads the result through `compute_resolvable_materials` and
+`solve` as `rent_hours_per_kg_by_material` - that is how `python3 sim/
+solve_prices.py` prints a nonzero `iugerum_land`. `solved_prices` below
+called the same two functions WITHOUT that argument, which defaults to
+`None` in both, which is exactly the RENT_IS_ZERO behaviour Complaints/43
+first complained about. So the switch this file guards was, until now,
+going to make land free the moment it was flipped, even though the CLI
+tool sitting right next to it had already fixed that - a second, silent
+copy of the exact bug the first update to that complaint fixed once. It is
+fixed below by calling the same two rent functions here, the same way
+`main()` does.
+
+RENT NEEDS A CIVILIZATION, THE CACHE KEY DID NOT HAVE ONE, SO IT WAS
+ADDED. `rent_hours_per_kg_by_ore_material` is safe to leave out of the
+cache key (see WHAT THIS DOES NOT HANDLE above for its Rome-anchored
+demand figure, which is not yet per-civilization either) but
+`land_rent_hours_per_iugerum` is genuinely per-civilization -
+`sim/world/land.py` prices the margin of cultivation over a
+CIVILIZATION'S OWN HELD REGIONS, and two civilizations can hold the exact
+same gate-node set while holding completely different territory. The old
+cache key (`gate_nodes_held` alone) could not distinguish them, so a
+second civilization asking this module for a price after a first one had
+already solved would have silently been handed the first civilization's
+land rent. `solved_prices` and `priced_goods_table` below therefore take
+an explicit `civilization_id` parameter and fold it into the cache key
+alongside `gate_nodes_held`. It defaults to `None`, which resolves to
+`solve_prices.DEFAULT_LAND_CIVILIZATION` (Rome) - the same default the CLI
+uses when `--civ` is omitted - so every existing call site (which never
+knew this parameter existed) keeps behaving exactly as it did with
+`use_solved_prices=False`, and a NEW call site that wants a different
+civilization's land priced correctly has to say so explicitly. This is a
+correctness fix, not a widening of the wiring's scope: no new material is
+priced, no new switch is flipped, `use_solved_prices` is still `False` by
+default in `sim/engine/data.py`.
 """
 import os
 import sys
@@ -159,20 +200,26 @@ class SolvedPrices(object):
     `resolvable_materials` is which materials have ANY path to a price under
     this held-technology set - the set `priced_goods_table` overlays onto
     the book, and everything outside it is where the book fallback matters.
+    `civilization_id` is the civilization `land_rent_hours_per_iugerum` was
+    solved against (see RENT NEEDS A CIVILIZATION in the module docstring) -
+    kept on the result so a caller inspecting a cache hit can see which
+    territory its land rent came from, rather than having to trust the
+    cache key blindly.
     """
     __slots__ = ("prices_in_labour_hours", "resolvable_materials",
                 "chosen_recipe_by_material", "converged", "iterations_run",
-                "gate_nodes_held")
+                "gate_nodes_held", "civilization_id")
 
     def __init__(self, prices_in_labour_hours, resolvable_materials,
                 chosen_recipe_by_material, converged, iterations_run,
-                gate_nodes_held):
+                gate_nodes_held, civilization_id):
         self.prices_in_labour_hours = prices_in_labour_hours
         self.resolvable_materials = resolvable_materials
         self.chosen_recipe_by_material = chosen_recipe_by_material
         self.converged = converged
         self.iterations_run = iterations_run
         self.gate_nodes_held = gate_nodes_held
+        self.civilization_id = civilization_id
 
 
 # `data/production/` is committed data: it does not change while a game is
@@ -184,11 +231,15 @@ class SolvedPrices(object):
 # - see WHAT INVALIDATES THE CACHE above.
 _DEFAULT_PRODUCTION_ENTRIES = None
 
-# {frozenset(gate_node_ids_held): (production_entries_object, SolvedPrices)}
+# {(frozenset(gate_node_ids_held), civilization_id): (production_entries_object, SolvedPrices)}
 # The production_entries object is held here, alongside the result, purely
 # so a lookup can confirm identity with `is` before trusting a hit - the
 # same id()-recycling guard `sim/engine/data.py`'s own `descendants()` uses,
-# for the same reason (CLAUDE.md section 6, Complaints/27).
+# for the same reason (CLAUDE.md section 6, Complaints/27). civilization_id
+# joined the key alongside the gate-node set for the reason RENT NEEDS A
+# CIVILIZATION in the module docstring gives: land rent depends on which
+# civilization's own territory is being priced, and two civilizations can
+# hold an identical gate-node set while holding entirely different regions.
 _SOLVE_CACHE = {}
 
 
@@ -261,20 +312,35 @@ def hours_to_denarii(price_in_labour_hours, prices_json):
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 
-def solved_prices(held_technology_ids, prices_json, production_entries=None):
+def solved_prices(held_technology_ids, prices_json, production_entries=None,
+                  civilization_id=None):
     """A `SolvedPrices` for this held-technology set, solving on a cache
     miss and returning the cached vector on a hit. See CACHE KEY in the
     module docstring: the cache is keyed on the intersection of
-    `held_technology_ids` with `all_gate_nodes`, not on the full set, which
-    is what keeps a whole game's worth of calls to a bound few dozen solves.
+    `held_technology_ids` with `all_gate_nodes`, together with
+    `civilization_id`, not on the full held-technology set, which is what
+    keeps a whole game's worth of calls to a bound few dozen solves.
+
+    `civilization_id` decides whose territory `land_rent_hours_per_iugerum`
+    prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
+    defaults to `None`, which resolves to `solve_prices.
+    DEFAULT_LAND_CIVILIZATION` (Rome), matching what the CLI does when
+    `--civ` is omitted. Passing `held_technology_ids` from a civilization's
+    `starting_techs` without ALSO passing that civilization's own id here
+    would silently price its land as Rome's - the parameter is separate
+    from `held_technology_ids` on purpose, so a caller cannot get this
+    right by accident and cannot get it wrong without a value showing up
+    somewhere to say so.
     """
     if production_entries is None:
         production_entries = _default_production_entries()
+    civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
+    cache_key = (gate_nodes_held, civilization_id)
 
-    cached = _SOLVE_CACHE.get(gate_nodes_held)
+    cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
         return cached[1]
 
@@ -286,12 +352,26 @@ def solved_prices(held_technology_ids, prices_json, production_entries=None):
     available_entries, _unreached, _unclassified = \
         solve_prices.techniques_available_to(production_entries, gate_nodes_held)
     producers_of = solve_prices.build_producers_index(available_entries)
-    resolvable_materials = solve_prices.compute_resolvable_materials(
-        available_entries, producers_of)
     wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
+
+    # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
+    # `main()` in sim/solve_prices.py computes exactly these two dicts and
+    # merges them the same way before ever calling `compute_resolvable_
+    # materials` or `solve` - this mirrors that, rather than re-deriving a
+    # third way to combine them.
+    rent_hours_per_kg_by_material = solve_prices.rent_hours_per_kg_by_ore_material(
+        available_entries, wage_by_trade)
+    rent_hours_per_kg_by_material.update(
+        solve_prices.land_rent_hours_per_iugerum(
+            available_entries, wage_by_trade, civilization_id=civilization_id))
+
+    resolvable_materials = solve_prices.compute_resolvable_materials(
+        available_entries, producers_of,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
     (prices_in_labour_hours, iterations_run, residual,
      chosen_recipe_by_material) = solve_prices.solve(
-        available_entries, producers_of, resolvable_materials, wage_by_trade)
+        available_entries, producers_of, resolvable_materials, wage_by_trade,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
 
     result = SolvedPrices(
         prices_in_labour_hours=prices_in_labour_hours,
@@ -299,13 +379,14 @@ def solved_prices(held_technology_ids, prices_json, production_entries=None):
         chosen_recipe_by_material=chosen_recipe_by_material,
         converged=residual < solve_prices.CONVERGENCE_TOLERANCE,
         iterations_run=iterations_run,
-        gate_nodes_held=gate_nodes_held)
-    _SOLVE_CACHE[gate_nodes_held] = (production_entries, result)
+        gate_nodes_held=gate_nodes_held,
+        civilization_id=civilization_id)
+    _SOLVE_CACHE[cache_key] = (production_entries, result)
     return result
 
 
 def priced_goods_table(held_technology_ids, book_goods_denarii, prices_json,
-                       production_entries=None):
+                       production_entries=None, civilization_id=None):
     """(goods_denarii, provenance) - the book's own goods table with a
     solved price substituted wherever the solver can produce one for a
     material this held-technology set already prices in the book, and
@@ -339,10 +420,13 @@ def priced_goods_table(held_technology_ids, book_goods_denarii, prices_json,
 
     See the module docstring for what this deliberately does not do (add
     new materials the book never had, or treat a minor joint byproduct any
-    differently).
+    differently). `civilization_id` is passed straight through to
+    `solved_prices` - see RENT NEEDS A CIVILIZATION in the module docstring
+    for why land rent needs it and what happens if it is left out.
     """
     solved = solved_prices(held_technology_ids, prices_json,
-                           production_entries=production_entries)
+                           production_entries=production_entries,
+                           civilization_id=civilization_id)
     rate = denarii_per_labour_hour(prices_json)
 
     # Everything any recipe anywhere can make, ignoring era entirely. This
