@@ -264,16 +264,39 @@ class NutritionResponseTests(unittest.TestCase):
 class MortalityDragDecompositionTests(unittest.TestCase):
     """The unshocked-century follow-up to Complaints/45-no-granary-so-the-
     baseline-collapses.md: with the granary and the above-subsistence
-    fertility ramp both in place, rome_100ad with events=False still settles
+    fertility ramp both in place, rome_100ad with events=False settled
     around 74% of its starting population over 100 years with no hazard of
-    any kind (measured directly against the real engine for this
-    investigation - see this task's report for the exact run). This class
-    answers WHY, and rules out one specific candidate explanation by
-    measuring it rather than asserting it: that
-    BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE and SURVIVAL_TO_WORKING_AGE
-    double-count bad years already baked into the historical series they
-    are sourced from. See _excess_mortality_multiplier's own docstring for
-    the literature this class's numbers are drawn from.
+    any kind (measured directly against the real engine). This class answers
+    WHY, and rules out one specific candidate explanation by measuring it
+    rather than asserting it: that BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+    and SURVIVAL_TO_WORKING_AGE double-count bad years already baked into the
+    historical series they are sourced from. See _excess_mortality_
+    multiplier's own docstring for the literature this class's numbers are
+    drawn from.
+
+    UPDATE (the decisive-measurement follow-up, see demography.py's own
+    DOUBLE_COUNT_CORRECTION_FACTOR and the long comment above SURVIVAL_TO_
+    WORKING_AGE): this class's own finding below - real in direction, an
+    order of magnitude too small to be the whole drag - is why the
+    correction it measures was, for a while, applied nowhere. The
+    stakeholder asked for it to be applied anyway, since "too small to
+    explain the century" is not "too small to matter over 500 years", and it
+    now IS applied (BASELINE_ANNUAL_MORTALITY_RATE_CHILD and _WORKING_AGE
+    both carry it - see demography.py). This test still measures the SAME
+    small bound correctly; `baseline_rate` below now reads the already-
+    corrected hazard, which understates "how much MORE correction was
+    available" by a wash's worth, not enough to change this class's
+    conclusion. The bulk of the unshocked-century gap this class was
+    investigating was a SEPARATE thing entirely - see ZeroVarianceSubsistence
+    Tests below, which is the test that actually catches it: at exactly
+    subsistence with zero variance (no Jensen's inequality possible at all)
+    the old rates still shrank the population, which no amount of double-
+    counting correction on its own could explain or fix. Re-measured after
+    both fixes: rome_100ad, events=False, 100 years, is now 83.8% of start
+    (was 74.0%) - better, and the remaining gap is agriculture.py's own
+    weather-variance Jensen's-inequality drag (this class's second test,
+    below), which is real, sourced as a mechanism rather than a number, and
+    outside this module's ownership to close further.
     """
 
     def test_a_fogel_sized_double_count_correction_is_far_smaller_than_the_measured_drag(self):
@@ -346,6 +369,80 @@ class MortalityDragDecompositionTests(unittest.TestCase):
         # Not a rounding error - a real, measurable divergence over a
         # century, from mean-preserving variance alone.
         self.assertLess(varying.total, steady.total * 0.95)
+
+
+class ZeroVarianceSubsistenceTests(unittest.TestCase):
+    """THE DECISIVE MEASUREMENT two earlier investigations missed, because
+    both studied variance effects (Jensen's inequality - see
+    MortalityDragDecompositionTests above) without first checking the
+    NO-variance baseline. Food held EXACTLY at subsistence, constant,
+    jitter=False, zero variance of any kind: there is nothing here for
+    Jensen's inequality to act on, so if the population still shrinks, the
+    baseline RATES THEMSELVES do not balance - a class named `stationary`
+    that is not actually stationary. Before this task's fix, 1,000,000
+    people fed exactly enough food, forever, became 970,422 over a century
+    (-0.030%/year) - a permanent, deterministic birth deficit (33,930.5
+    births against 34,230.7 deaths in a single such year), not sampling
+    noise. Fixed in demography.py by moving BASELINE_ANNUAL_MORTALITY_RATE_
+    WORKING_AGE off its cited range's harsh end and onto that range's own
+    midpoint (stacking three independently-uncertain "harsh end" choices
+    across SURVIVAL_TO_WORKING_AGE, this rate and TOTAL_FERTILITY_RATE was
+    itself the bug - see the long comment above SURVIVAL_TO_WORKING_AGE in
+    demography.py), plus the stakeholder-requested, Fogel-sourced
+    DOUBLE_COUNT_CORRECTION_FACTOR. These tests pin the fixed behaviour so
+    it cannot silently regress back to a shrinking "stationary" population.
+    """
+
+    def test_exactly_adequate_constant_food_does_not_shrink_the_population(self):
+        population = demography.Population.stationary(1_000_000.0, seed=1)
+        start = population.total
+        for _year in range(100):
+            population.step(population._subsistence_food(), jitter=False)
+        # The acceptance bar: flat or growing, never shrinking, with
+        # nothing bad happening and no variance for Jensen's inequality to
+        # exploit. Slow growth, not exact flatness, is what the historical
+        # record shows, so this is a floor rather than a pin.
+        self.assertGreaterEqual(population.total, start,
+                                 "constant, exactly-adequate food shrank "
+                                 "the population with zero variance")
+        # And bounded on the other side too - this is meant to be SLOW
+        # growth, not a population racing toward the biological ceiling
+        # just from sitting at subsistence.
+        annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
+        self.assertLess(annual_growth_rate, 0.005, annual_growth_rate)
+
+    def test_births_meet_or_exceed_deaths_at_the_stationary_fixed_point(self):
+        # The exact flows a single year at subsistence produces, from the
+        # model's own converged age structure - the arithmetic behind the
+        # class docstring's claim, checked directly rather than only via
+        # the 100-year compounded outcome above.
+        population = demography.Population.stationary(1_000_000.0, seed=1)
+        flows = population.step(population._subsistence_food())
+        self.assertGreaterEqual(flows.births, flows.deaths, flows)
+
+    def test_double_count_correction_factor_is_applied_to_child_and_working_age(self):
+        # DOUBLE_COUNT_CORRECTION_FACTOR must actually reach the two
+        # hazards it is documented as correcting (not just exist, unused),
+        # and must NOT be applied to the elderly hazard, which is sourced
+        # from a different literature body (Coale-Demeny model life
+        # tables) that the Fogel bound does not cover - see that
+        # constant's own declaration.
+        factor = demography.DOUBLE_COUNT_CORRECTION_FACTOR
+        self.assertLess(factor, 1.0)
+        self.assertGreater(factor, 0.99)  # small, per its Fogel-sourced bound
+
+        uncorrected_child = (
+            -math.log(demography.SURVIVAL_TO_WORKING_AGE)
+            / demography.CHILD_BAND_WIDTH_YEARS)
+        self.assertAlmostEqual(
+            demography.BASELINE_ANNUAL_MORTALITY_RATE_CHILD,
+            uncorrected_child * factor)
+
+        uncorrected_elderly = (
+            1.0 / demography.REMAINING_LIFE_EXPECTANCY_AT_WORKING_AGE_CEILING_YEARS)
+        self.assertAlmostEqual(
+            demography.BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY,
+            uncorrected_elderly)
 
 
 class GrowthCeilingTests(unittest.TestCase):

@@ -122,14 +122,81 @@ WORKING_AGE_BAND_WIDTH_YEARS = (
 # used to choose a point inside that range is a different, independently
 # documented fact (crude birth/death rates in the 30-40 per thousand range,
 # life expectancy at birth in the 20s-30s - CLAUDE.md SS3.2's own anchors)
-# rather than a specific dated outcome. Computed at these settings, by this
-# module (see sim/tests/test_demography.py's stationarity check, which
-# prints them): crude birth rate about 34/1000, crude death rate about
-# 34/1000, life expectancy at birth about 30 years, net drift over 300
-# years at subsistence under -0.1%. All three land inside CLAUDE.md SS3.2's
-# targets without any of them being one of this model's free parameters -
-# the only freedom used was where inside each already-sourced range the
-# three numbers sit relative to each other.
+# rather than a specific dated outcome.
+#
+# THIS CALIBRATION FAILED ITS OWN STATED TEST, AND WAS CAUGHT MEASURING IT
+# PROPERLY RATHER THAN BY EYE. With SURVIVAL_TO_WORKING_AGE at 0.50 (this
+# range's harsh end), the pre-correction BASELINE_ANNUAL_MORTALITY_RATE_
+# WORKING_AGE at 0.014 (its own range's harsh end) and TOTAL_FERTILITY_RATE
+# at 5.0, a population fed EXACTLY at subsistence forever - constant,
+# zero-variance, no jitter, nothing else in play - did not hold flat. It
+# shrank by 0.030%/year, every year, forever: 1,000,000 people became
+# 970,422 over an unshocked century (`sim/tests/test_demography.py`'s
+# `StationarityTests` computed births 33,930.5 against deaths 34,230.7 in a
+# single year at ratio 1.0 - a permanent net deficit, not sampling noise,
+# since nothing here varies). The old comment on this paragraph called the
+# drift "under -0.1%" and treated that as close enough; it is not - over the
+# 500 years this game plays, -0.03%/year compounds to a 14% loss with
+# nothing bad happening, which is not what a "roughly stationary" baseline
+# means and not what CLAUDE.md SS3.2 asks this model to produce.
+#
+# TWO THINGS WERE CHECKED AND RULED OUT before touching a rate. First,
+# whether `Population.stationary`'s cohort construction disagrees with
+# `step`'s own rates (i.e. seeds an age structure the model's own dynamics
+# would not settle into): it does not. The converged children:working-age
+# ratio `stationary()` finds (0.6714) and the elderly:working-age ratio it
+# finds (0.4956) both solve this module's own transition matrix's dominant-
+# eigenvalue equation to four decimal places - `stationary()` is correctly
+# finding this model's own fixed point, including its (small) built-in
+# decline, not seeding something the step rates then fight. Second, whether
+# jitter/weather variance is required for a decline at all (the mechanism
+# every earlier pass at this problem, including two prior investigations,
+# examined): it is not - the number above has jitter=False and constant
+# food, so Jensen's inequality (see _excess_mortality_multiplier's own
+# docstring, which is the real and separate mechanism behind the FULL
+# engine's larger, weather-driven decline) cannot be what is happening here.
+#
+# WHAT IS ACTUALLY HAPPENING: solving the exact continuous-age Lotka
+# renewal equation for these same three rates (no band coarsening at all -
+# a closed-form check, independent of this module's own 3-band mechanics)
+# gives a net reproduction ratio of 0.9946, not 1.0 - i.e. the three
+# harshest-defensible points from three independent literature ranges,
+# stacked together, describe a population that is genuinely, if barely,
+# sub-replacement even in principle, before this module's own 3-band
+# coarsening adds anything of its own. Reproducing the identical rates in
+# this module's 3-band transition matrix widens that to the measured
+# -0.030%/year (a coarse-cohort discretization cost, not a new biological
+# claim - see the paragraph below BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+# for why refining that discretization further was tried and rejected).
+# Stacking three separately-uncertain "toward the harsh end" choices is
+# itself the error the file's own prior comment did not check for: each of
+# the three individually stays inside its citation, but choosing the
+# pessimistic end of all three simultaneously describes a population more
+# extreme than any one citation supports on its own, and the file's own
+# stated goal for this joint choice - a self-replacing NRR near 1, per
+# CLAUDE.md SS3.2's own anchors - was not actually being met. Fixed by
+# moving BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE (below) off its range's
+# harsh end and onto its range's midpoint instead, plus a second, smaller
+# and independently sourced correction described there
+# (DOUBLE_COUNT_CORRECTION_FACTOR). SURVIVAL_TO_WORKING_AGE and
+# TOTAL_FERTILITY_RATE are UNCHANGED - only one of the three stacked harsh-
+# end choices needed to move to stop the stack, and moving the fewest
+# numbers keeps this auditable.
+#
+# Re-measured at these settings, by this module (see
+# sim/tests/test_demography.py's stationarity check, which prints them):
+# crude birth rate 34.0/1000, crude death rate 33.1/1000, life expectancy at
+# birth 30.3 years, net drift over 300 years at subsistence now +29.5%
+# (+0.086%/year) rather than the earlier, silently-wrong "under -0.1%" this
+# comment used to claim - all still land inside CLAUDE.md SS3.2's targets
+# (25-45/1000 for the crude rates, 18-35 years for e0), and the small
+# positive drift is deliberately far short of the ~9.06%/year biological
+# ceiling GrowthCeilingTests checks against (a population held exactly at
+# subsistence should be slow, not racing toward that ceiling - that ceiling
+# is for unlimited food, checked separately). None of these three numbers
+# is a free parameter chosen to hit this specific figure - the only freedom
+# used, both before and after this fix, is where inside each already-
+# sourced range the numbers sit relative to each other.
 
 SURVIVAL_TO_WORKING_AGE = declare(
     "SURVIVAL_TO_WORKING_AGE", 0.50,
@@ -152,31 +219,121 @@ SURVIVAL_TO_WORKING_AGE = declare(
         "reproduces this survival fraction. The real curve is front-loaded "
         "(infant mortality dwarfs mortality at age 10) rather than flat; "
         "flattening it across the band is the coarse-cohort trade-off "
-        "described in this module's docstring.")
+        "described in this module's docstring. LEFT AT THE HARSH END, NOT "
+        "MOVED: the joint-calibration failure described in the paragraph "
+        "above this declaration only needed one of the three stacked "
+        "harsh-end choices to move to stop being sub-replacement; moving "
+        "BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE instead (below) was "
+        "enough, and touching the fewest sourced numbers keeps this "
+        "auditable. If a future change needs more headroom, this is the "
+        "widest of the three ranges (45%-70%) and the next one to revisit.")
+
+DOUBLE_COUNT_CORRECTION_FACTOR = declare(
+    "DOUBLE_COUNT_CORRECTION_FACTOR", 0.995,
+    kind="biological_parameter",
+    unit="multiple applied to an annual mortality hazard",
+    source="Fogel's review of Wrigley & Schofield's own English mortality "
+           "series (the same series BASELINE_ANNUAL_MORTALITY_RATE_WORKING_"
+           "AGE is drawn from) bounds ALL crisis mortality - epidemic and "
+           "famine combined - at under 5% of total pre-1800 English deaths, "
+           "and attributes less than 10% of even that crisis share to "
+           "famine specifically (year-to-year mortality swings tracked "
+           "epidemic disease far more than food prices or harvests). The "
+           "most that ordinary harvest-driven mortality could already be "
+           "baked into a baseline rate estimated from that series is "
+           "therefore bounded above by 5% * 10% = 0.5% of it - stated here "
+           "as the surviving fraction, 1 - 0.005.",
+    confidence="C",
+    why="This module's own nutrition-ratio mechanism (see "
+        "_excess_mortality_multiplier) ALSO adds harvest-driven excess "
+        "mortality on top of the baseline whenever a real shortfall drops "
+        "the ratio below 1.0. To the extent the baseline historical series "
+        "already contains some of that same harvest-driven mortality "
+        "averaged in, applying the module's own response on top of it "
+        "double-counts that sliver - real but small, per the source above. "
+        "Applied to BASELINE_ANNUAL_MORTALITY_RATE_CHILD and _WORKING_AGE, "
+        "both ultimately traceable to the same English mortality "
+        "reconstructions; NOT applied to BASELINE_ANNUAL_MORTALITY_RATE_"
+        "ELDERLY, which is sourced from Coale-Demeny model life tables "
+        "(see REMAINING_LIFE_EXPECTANCY_AT_WORKING_AGE_CEILING_YEARS) "
+        "rather than this specific English series, so this specific bound "
+        "does not transfer to it. Requested directly by the stakeholder "
+        "(see this task's own report) after a prior investigation measured "
+        "this same bound and correctly found it, ALONE, more than an order "
+        "of magnitude smaller than the drag it was checked against "
+        "(MortalityDragDecompositionTests, unchanged and still passing) - "
+        "true, but 'too small to explain the whole gap' is not 'too small "
+        "to bother applying', and over the 500 years this game plays even "
+        "a fraction of a percent compounds.")
 
 # exp(mean_hazard * -width) == SURVIVAL_TO_WORKING_AGE, per band width, i.e.
 # a constant annual hazard that compounds to the sourced survival fraction
 # over CHILD_BAND_WIDTH_YEARS years - the standard way to turn a life-table
-# survivorship figure into a single-band exponential hazard.
+# survivorship figure into a single-band exponential hazard. The double-
+# count correction is applied on top, as a separate, explicit factor,
+# rather than folded into SURVIVAL_TO_WORKING_AGE itself, so the sourced
+# survival fraction stays legible on its own and the correction stays
+# auditable as its own line.
 BASELINE_ANNUAL_MORTALITY_RATE_CHILD = (
-    -math.log(SURVIVAL_TO_WORKING_AGE) / CHILD_BAND_WIDTH_YEARS)
+    -math.log(SURVIVAL_TO_WORKING_AGE) / CHILD_BAND_WIDTH_YEARS
+    * DOUBLE_COUNT_CORRECTION_FACTOR)
 
 BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE = declare(
-    "BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE", 0.014,
+    "BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE", 0.0125,
     kind="biological_parameter",
     unit="fraction of cohort per year",
     source="Wrigley & Schofield's reconstructed English mortality rates "
            "for ages 15-49 in the early-modern period run roughly "
-           "1.0-1.5% per year outside epidemic years; 1.4% sits near the "
-           "upper end of that range - see the paragraph above SURVIVAL_TO_"
-           "WORKING_AGE for why this range's upper end was used.",
+           "1.0-1.5% per year outside epidemic years. MOVED FROM 0.014 "
+           "(near this range's upper end) TO 0.0125, this range's own "
+           "midpoint. Not a new source: the range is the same one already "
+           "cited here. What changed is which point inside it is used, and "
+           "why - see the long comment above SURVIVAL_TO_WORKING_AGE for "
+           "the measurement that made this necessary: with SURVIVAL_TO_"
+           "WORKING_AGE and TOTAL_FERTILITY_RATE both left at their own "
+           "documented ranges' harsh ends (as they still are), stacking a "
+           "third independently-uncertain harsh-end choice on top of them "
+           "described a population more pessimistic than any one of the "
+           "three citations, on its own, supports - measured as a genuine, "
+           "zero-variance, exactly-at-subsistence decline of 0.030%/year, "
+           "not the near-replacement rate this module's own stated "
+           "calibration goal (the paragraph above SURVIVAL_TO_WORKING_AGE) "
+           "was supposed to produce. Moving this one rate to its own "
+           "range's midpoint - not to whatever point would exactly zero "
+           "the result, which was not chosen or searched for - stops the "
+           "three-way stack without touching either of the other two "
+           "sourced figures.",
     confidence="C",
     why="Adults are the survivors of the child band's much higher hazard, "
         "so their own baseline rate is far lower; this is what makes "
         "'kill 30% of the population' and 'more mouths than usual' hit the "
         "child and elderly bands harder than the working-age one, matching "
         "the real age pattern of famine and plague mortality (see "
-        "STARVATION_VULNERABILITY_CHILD / _ELDERLY below).")
+        "STARVATION_VULNERABILITY_CHILD / _ELDERLY below). A FINER-GRAINED "
+        "FIX WAS TRIED FIRST AND REJECTED: splitting the child and working-"
+        "age bands into several equal-width sub-stages (the 'linear chain "
+        "trick' - representing a fixed-width age band as a chain of "
+        "several exponential compartments instead of one, which is a "
+        "numerical-refinement technique, not a new curve, since every "
+        "sub-stage would still use this SAME flat rate) was checked "
+        "numerically against the exact continuous-age Lotka renewal "
+        "equation for these rates. It does not converge cleanly toward "
+        "that continuous answer as the stage count grows - the resulting "
+        "growth rate swung from -0.28%/year to +0.60%/year across "
+        "otherwise-reasonable stage counts, with no sourced basis for "
+        "preferring one stage count over another. That swing is bigger "
+        "than the deficit it would be used to fix, so picking a stage "
+        "count would just be this same forbidden move (tuning a free "
+        "parameter to make a number come out) wearing a numerical-methods "
+        "costume. Rejected for that reason, in favour of the smaller, "
+        "auditable, within-cited-range change actually made above.")
+# The double-count correction is applied here, on top of the declared
+# literature figure, for the same reason it is applied on top of
+# SURVIVAL_TO_WORKING_AGE above rather than folded into either sourced
+# number directly: the registry above records the literature midpoint
+# (0.0125) with its own citation; this line's own factor is the separately-
+# sourced adjustment on top of it (see DOUBLE_COUNT_CORRECTION_FACTOR).
+BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE *= DOUBLE_COUNT_CORRECTION_FACTOR
 
 REMAINING_LIFE_EXPECTANCY_AT_WORKING_AGE_CEILING_YEARS = declare(
     "REMAINING_LIFE_EXPECTANCY_AT_WORKING_AGE_CEILING_YEARS", 17.0,
