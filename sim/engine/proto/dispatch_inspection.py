@@ -433,6 +433,16 @@ def _stuck_credit_freeze(s):
     return None
 
 
+def _stuck_startable_and_afford(s, nodes, _fog):
+    _startable = [node_id for node_id in nodes
+                  if node_id not in s.done and node_id not in s.active
+                  and (not _fog or s.is_visible(node_id))
+                  and s.start_reason(node_id)[0]]
+    _afford = [node_id for node_id in _startable
+               if s.project_cost(node_id) <= s.spending_power("start")]
+    return _startable, _afford
+
+
 def _cmd_stuck(s, nodes, cmd, ended):
     # THE QUESTION EVERY TESTER ASKED, in different words. "There's no 'why
     # am I stuck?' view - three separate 90-250-year stalls, each caused by
@@ -440,46 +450,31 @@ def _cmd_stuck(s, nodes, cmd, ended):
     # guess." The pieces were all here; nothing put them in one place, and
     # stall_diagnosis only spoke after eight years of insolvency.
     _fog = getattr(s, "fog", False)
-    reasons = []
-    _startable = [node_id for node_id in nodes
-                  if node_id not in s.done and node_id not in s.active
-                  and (not _fog or s.is_visible(node_id))
-                  and s.start_reason(node_id)[0]]
-    _afford = [node_id for node_id in _startable
-               if s.project_cost(node_id) <= s.spending_power("start")]
-    # Every check below is independent, and GATHERS into `reasons`: each one
-    # that has something to say is appended, none of them stop the others
-    # from running. More than one usually applies at once, and a player
-    # deciding what to fix first needs to see all of them, not just
-    # whichever is checked first - see _compact_stuck in dispatch.py, which
-    # already assumes this list can hold several entries.
-    _work_reason = _stuck_work_in_hand(s, nodes)
-    if _work_reason:
-        reasons.append(_work_reason)
+    _startable, _afford = _stuck_startable_and_afford(s, nodes, _fog)
     _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(s, nodes, _fog)
-    if _goal_reason:
-        reasons.append(_goal_reason)
-    _started_nothing_reason = _stuck_started_nothing(s, _startable, _afford)
-    if _started_nothing_reason:
-        reasons.append(_started_nothing_reason)
-    _shut_reason = _stuck_shut_ventures(s, nodes)
-    if _shut_reason:
-        reasons.append(_shut_reason)
-    _availability_reason = _stuck_nothing_or_money(s, _startable, _afford)
-    if _availability_reason:
-        reasons.append(_availability_reason)
-    _material_reason = _stuck_raw_material(s)
-    if _material_reason:
-        reasons.append(_material_reason)
-    _room_reason = _stuck_room_for_people(s)
-    if _room_reason:
-        reasons.append(_room_reason)
-    _arrears_reason = _stuck_arrears(s)
-    if _arrears_reason:
-        reasons.append(_arrears_reason)
-    _freeze_reason = _stuck_credit_freeze(s)
-    if _freeze_reason:
-        reasons.append(_freeze_reason)
+    # Every check below is independent, and GATHERS into `reasons`: each one
+    # that has something to say is kept, none of them stop the others from
+    # running. More than one usually applies at once, and a player deciding
+    # what to fix first needs to see all of them, not just whichever is
+    # checked first - see _compact_stuck in dispatch.py, which already
+    # assumes this list can hold several entries. The order below is the
+    # order a player reads them in, and it is the same order the original,
+    # undecomposed version of this command produced them in: work in hand,
+    # the road to the goal, having started nothing, shut ventures, nothing
+    # startable or unaffordable, a binding raw material, no room for people,
+    # arrears, a credit freeze.
+    _checks = (
+        _stuck_work_in_hand(s, nodes),
+        _goal_reason,
+        _stuck_started_nothing(s, _startable, _afford),
+        _stuck_shut_ventures(s, nodes),
+        _stuck_nothing_or_money(s, _startable, _afford),
+        _stuck_raw_material(s),
+        _stuck_room_for_people(s),
+        _stuck_arrears(s),
+        _stuck_credit_freeze(s),
+    )
+    reasons = [reason for reason in _checks if reason]
     _stall = s.stall_diagnosis()
     out = {"ok": True,
            "you_could_begin": len(_startable),
