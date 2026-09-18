@@ -150,6 +150,10 @@ TOPICS = [
     # it, and the solve had no way to tell a Roman technique from a modern
     # one. See Complaints/39 for the run that exposed it.
     "price_solver_era_gate",
+    # Complaints/42: a civilisation holding a node whose own prerequisites it
+    # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
+    # both directions, so the count can only move deliberately.
+    "civilisation_prerequisites",
     # Guards the id()-reuse hazard that made the simulation non-deterministic;
     # structural, so it catches the class rather than the one instance.
     "determinism",

@@ -69,16 +69,26 @@ measurable per civilisation rather than only for Rome.
 
 ## Deliberately not fixed here
 
-Adding two ids to `rome_100ad`'s `starting_techs` would take a minute, and
-that is exactly why it is the wrong move on its own. A realism review already
-exists listing dozens of verdicts of this kind across the whole tree, and
-hand-patching the two that this week's labelling happened to illuminate would
-leave the other dozens untouched while making the list look tended.
+CORRECTION, and it changes what this complaint is asking for. An earlier
+draft of this section said the realism review's verdicts should be
+cross-checked against `starting_techs` "when someone takes it". That job was
+already taken and done - `aa5253a Make civilization tech starts explicit` and
+`2435ece Resolve part 02 tech-tree realism findings`, before which every
+civilisation held the same technologies give or take about five. The
+stakeholder pointed this out; the git history confirms it.
 
-The right job, when someone takes it: cross-check every MOVE TO START and
-ALREADY ROMAN verdict in the review documents against each civilisation's
-`starting_techs`, fix them together, and re-run the blocked-recipe sweep for
-all five civilisations as the acceptance test. The sweep is four lines of
+So this is not an un-started job. It is a finished one with a residue, which
+is a different and more useful thing to know: the differentiation pass got
+the civilisations genuinely apart from each other, and what it missed is a
+specific, small and now-measurable set. Tanning and fulling being held by
+NOBODY is the signature of a pass that worked civilisation by civilisation
+and never asked "is there a technology every single one of these societies
+should have and none does".
+
+Adding two ids to Rome would still be the wrong move on its own, for a
+different reason than the draft gave: the gap is not Rome-shaped. It is five
+civilisations wide, and the fix is one edit applied to all of them plus a
+check that stops the class recurring. The sweep is four lines of
 script and belongs in the suite once the labelling is complete, so that a
 civilisation which cannot make something it historically made fails a test
 rather than waiting for someone to notice.

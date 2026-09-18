@@ -494,6 +494,31 @@ hide something:
     tree's own prerequisite structure and the civilisation's own starting
     set, both of which are initial conditions rather than results.
 
+HOW EXPENSIVE IS THIS, ACTUALLY - MEASURED, BECAUSE IT DECIDES THE WIRING.
+The question that matters for putting this in the engine is not how long one
+solve takes but how OFTEN one is needed, and the answer is: far less often
+than "every turn", because almost nothing in the tree is a gate.
+
+    full ungated solve      0.673 s   1076 iterations   183 materials
+    gated solve (rome)      0.371 s   1076 iterations   107 materials
+    distinct nodes used as a gate   82 of 2864 in the tree, 2.9%
+
+Only 82 nodes can change the answer. Unlocking a node has about a 97% chance
+of not being a gate at all, so a year in which a hundred nodes complete will
+usually need NO re-solve, and can need at most as many as there are newly
+unlocked gates. Over an entire game the number of distinct solves is bounded
+by 82 and in practice is far below it.
+
+So the engine should key a cached price vector on the set of GATE nodes held
+- not on the full technology set, which changes constantly and would defeat
+the cache - and re-solve only when that set changes. Under that scheme the
+per-turn cost is a set comparison, and the 0.37 s is paid a few dozen times
+across a whole game rather than once a turn.
+
+The 1076 iterations are a separate matter and are not currently a problem.
+Damping is 0.5 against a 1e-10 tolerance, which is conservative; if the solve
+ever does become hot, that is the knob, not the architecture.
+
 WHAT A GATED SOLVE COSTS. Fewer techniques means fewer materials have any
 path to a price at all, so a gated run resolves strictly fewer materials
 than an ungated one and reports the difference. That is the correct answer
