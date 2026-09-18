@@ -141,7 +141,7 @@ proof matters more than the diff.
 
 **Step 2 cannot be done yet.** `perf_fingerprint.py` does not currently
 reproduce its own recording - see
-`Complaints/27-nondeterministic-simulation.md`. The determinism bug is being
+`Complaints/closed/27-nondeterministic-simulation.md`. The determinism bug is being
 fixed first, and this extraction does not land until a clean `check` means
 something. The suite alone is explicitly not a substitute; that is what
 `sim/ARCHITECTURE.md` says and it is why that warning exists.

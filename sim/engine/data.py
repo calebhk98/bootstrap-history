@@ -362,7 +362,7 @@ def descendants(nodes):
     #
     # This exact hazard, in the sibling cache in economy.py, is what made the
     # simulation non-deterministic - see
-    # Complaints/27-nondeterministic-simulation.md. Holding `nodes` itself in
+    # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
     # the entry keeps that dict alive for as long as the entry can be compared
     # against it, so its address cannot be recycled into a false hit while the
     # entry lives. sim/engine/proto/nodes.py makes the same argument at length

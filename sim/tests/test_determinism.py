@@ -5,7 +5,7 @@ For a long time it did not. `perf_fingerprint.py` - the tool
 not reproduce its own recording: a pristine checkout recorded and then checked
 against itself failed two of nine scenarios, at a different scenario and a
 different year each run. The whole story, including the wrong turns, is in
-`Complaints/27-nondeterministic-simulation.md`.
+`Complaints/closed/27-nondeterministic-simulation.md`.
 
 The cause was an `id()`-reuse hazard. `id()` is a memory address, and it is
 only unique among objects that are alive at the same moment; CPython hands a

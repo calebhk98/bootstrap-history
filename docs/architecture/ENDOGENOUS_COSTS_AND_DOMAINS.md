@@ -611,7 +611,7 @@ that constructing them perturbs allocation and something downstream is
 sensitive to that.
 
 Full write-up, including everything ruled out, in
-`Complaints/27-nondeterministic-simulation.md`. It deserves its own focused
+`Complaints/closed/27-nondeterministic-simulation.md`. It deserves its own focused
 session, and it is a correctness question about the simulation rather than
 only about the test tool: a simulator whose costs are supposed to be
 calculated cannot have arithmetic that depends on the memory allocator.

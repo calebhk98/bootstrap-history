@@ -186,7 +186,7 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   the hit with `is`. `sim/tests/test_determinism.py` fails if anyone
   reintroduces the shape. Fixed and verified - the full story, including which
   hypotheses were wrong and why one probe produced a false negative, is in
-  `Complaints/27-nondeterministic-simulation.md`.
+  `Complaints/closed/27-nondeterministic-simulation.md`.
 - **When you instrument a bug, the instrument is part of the experiment.**
   The probe that cleared the guilty cache built a comparison tuple on every
   call; its own allocations were exactly what stopped addresses being

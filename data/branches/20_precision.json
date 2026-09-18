@@ -1420,7 +1420,7 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "Thick glass plate ground flat within 0.2 microns. Monochromatic light creates Newton's rings: dark fringes show topography to 0.25 microns. Enables checking grinder wheel truing and lapping plate flatness. Only optical method for surface checking under 1 micron. Monochromatic light has no mass and was never a material to buy by the kilogram - it is an instrument capability (a sodium lamp, a spectroscope's slit and prism) that this node uses repeatedly rather than consumes, and this node's own prerequisites already name that instrument twice over: cap_measure_light (interferometric length by wavelengths of light) and arc_light_lamp, the light source it runs. Nothing further belongs in mat. See Complaints/28-material-keys-that-are-not-materials.md.",
+  "note": "Thick glass plate ground flat within 0.2 microns. Monochromatic light creates Newton's rings: dark fringes show topography to 0.25 microns. Enables checking grinder wheel truing and lapping plate flatness. Only optical method for surface checking under 1 micron. Monochromatic light has no mass and was never a material to buy by the kilogram - it is an instrument capability (a sodium lamp, a spectroscope's slit and prism) that this node uses repeatedly rather than consumes, and this node's own prerequisites already name that instrument twice over: cap_measure_light (interferometric length by wavelengths of light) and arc_light_lamp, the light source it runs. Nothing further belongs in mat. See Complaints/closed/28-material-keys-that-are-not-materials.md.",
   "traits": [
    "spectacle"
   ]
