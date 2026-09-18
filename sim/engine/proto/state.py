@@ -316,7 +316,13 @@ def _worth_knowing_early(s):
             "reading it all along.")
 
 
-def _agent_state(s, nodes, cmd=None):
+def _agent_state_active_projects(s, nodes):
+    """Every project currently in progress, keyed by node id: hours spent
+    and left, the bill, the abandonment countdown, what it is waiting on,
+    and this year's allocator bookkeeping. Moved out of _agent_state
+    unchanged - see that function's own docstring for why the assembly
+    was split this way.
+    """
     active = {}
     for node_id, progress in s.active.items():
         node = nodes[node_id]
@@ -383,21 +389,12 @@ def _agent_state(s, nodes, cmd=None):
                      # hour_allocations.
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
                      "bountied": node_id in s.bountied}
-    end_reason = _agent_end_reason(s)
-    full = bool((cmd or {}).get("full"))
-    end_year = getattr(s, "end_year", s.cfg["start_year"] + s.cfg["horizon_years"])
-    # WHAT YOU BUILT HAS CHANGED THE COUNTRY - see SocietyMixin.
-    # world_diffusion_report (society.py). Computed once here, gated to
-    # None while dormant, so a fresh game's `state full` reply (already the
-    # reply most often bumping the "state full stays readable" byte budget)
-    # pays nothing for a mechanism that has not fired yet - same pattern as
-    # _worth_knowing_early just below.
-    _wd = s.world_diffusion_report()
-    _standing_revenue = s.revenue_capacity()
-    _standing_upkeep = s.upkeep()
-    _standing_living = s.living_cost(
-        _rev=_standing_revenue, _upkeep=_standing_upkeep)
-    out = {
+    return active
+
+
+def _agent_state_headline_money(s, end_year):
+    """year, horizon, capital, and the standing income/upkeep lines."""
+    return {
         "year": s.year,
         # HOW MUCH TIME IS LEFT. A weird-play tester ran to the end of a
         # five-hundred-year game and wrote that "the hidden 1800 horizon is
@@ -424,6 +421,12 @@ def _agent_state(s, nodes, cmd=None):
         "living_cost": round(s.living_cost() - s.wage_bill(), 1),
         "wage_bill": round(s.wage_bill(), 1),
         "mine_operating_cost": round(s.mine_operating_cost(), 1),
+    }
+
+
+def _agent_state_operations(s, nodes):
+    """Whether the run has stalled, and what is sitting built but unrun."""
+    return {
         # Knowing how and running it are different, so say how many you know
         # how to run and have not opened. Without this the difference is
         # invisible until a player wonders why building things stopped paying.
@@ -452,6 +455,18 @@ def _agent_state(s, nodes, cmd=None):
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
         # split has to be loud: see ProjectsMixin.capability_gaps.
         "critical_capabilities_not_operating": s.capability_gaps() or None,
+    }
+
+
+def _agent_state_spend_and_net(s):
+    """This year's project spend, interest, and the two net-income figures
+    (this year's actual, and the standing ordinary-year one).
+    """
+    _standing_revenue = s.revenue_capacity()
+    _standing_upkeep = s.upkeep()
+    _standing_living = s.living_cost(
+        _rev=_standing_revenue, _upkeep=_standing_upkeep)
+    return {
         # net_per_year counts the STANDING flows only. It never counted what
         # projects consume, which is usually the largest outflow by far, so a
         # playtester watched it report a healthy positive number for eight
@@ -499,6 +514,15 @@ def _agent_state(s, nodes, cmd=None):
                                     getattr(s, "wages_prepaid", 0.0))
                               - s.mine_operating_cost()
                               - max(0.0, -s.capital) * s.debt_interest_rate(), 1),
+    }
+
+
+def _agent_state_training_and_hours(s, active, full):
+    """Where this year's founder-hours are going: training in the
+    pipeline, what is still free, the one-time command-index tip, and the
+    loud warning when hours are about to go to waste.
+    """
+    return {
         # Rows are [capacity, ready_year] for people bought and trained, and
         # [0, ready_year, trade, count] for a trade being taught, so read by
         # index. Unpacking two names off a four-wide row killed `state` outright
@@ -602,6 +626,14 @@ def _agent_state(s, nodes, cmd=None):
         # there. available is this year's fresh figure, not last year's -
         # read it alongside, not in place of, hours_this_year.
         "hours_this_year": getattr(s, "hours_this_year", None),
+    }
+
+
+def _agent_state_founder(s):
+    """Alive or not, and if not, when and how old - plus the two staff
+    headline counts that sit next to it on the same screen.
+    """
+    return {
         "founder_alive": s.founder_alive,
         # THE AGE ITSELF, AS A FIELD, not only inside a log sentence a script
         # would have to parse. See _founder_death_info.
@@ -609,6 +641,21 @@ def _agent_state(s, nodes, cmd=None):
         "founder_died_in": (_founder_death_info(s) or {}).get("year"),
         "scholars": round(s.scholars, 2), "artisans": round(s.artisans, 2),
         "directors_extra": round(s.directors_extra, 2),
+    }
+
+
+def _agent_state_standing(s):
+    """Reputation, scandal, eminence and the other soft-power gauges,
+    literacy and its ceilings, and how far what you built has diffused.
+    """
+    # WHAT YOU BUILT HAS CHANGED THE COUNTRY - see SocietyMixin.
+    # world_diffusion_report (society.py). Computed once here, gated to
+    # None while dormant, so a fresh game's `state full` reply (already the
+    # reply most often bumping the "state full stays readable" byte budget)
+    # pays nothing for a mechanism that has not fired yet - same pattern as
+    # _worth_knowing_early just below.
+    _wd = s.world_diffusion_report()
+    return {
         # NO "suspicion" FIELD. It was replaced by `scandal` (see core.py: "doing
         # something a society cannot explain is alarming; doing a lot of
         # ordinary things over decades is not"), and the attribute has been set
@@ -647,6 +694,14 @@ def _agent_state(s, nodes, cmd=None):
         # something the founder built has actually begun to spread - see
         # world_diffusion_report's own docstring for the None gate.
         **({"world_diffusion": _wd} if _wd else {}),
+    }
+
+
+def _agent_state_progress(s, active):
+    """What is done versus granted, the active projects themselves, staff
+    and trades, and the household and policy figures that go with them.
+    """
+    return {
         # A playtester could not tell the difference between technologies the
         # society already had and ones they had earned: about 140 nodes complete
         # in year one and appeared in done_count as if the player had built
@@ -705,6 +760,15 @@ def _agent_state(s, nodes, cmd=None):
         "policy": dict(s.policy),
         "in_bondage_for_debt": round(getattr(s, "bondage_years_left", 0.0), 1),
         "debt_still_to_work_off": round(getattr(s, "bondage_debt", 0.0), 1),
+    }
+
+
+def _agent_state_risk_and_pressure(s):
+    """The court's jealousy and the treasury's attention, credit and
+    debt, the knowledge-loss risk, the scandal clock, and the physical
+    resource figures (throttle, forest, mines, unfree labour).
+    """
+    return {
         # HOW CLOSE YOU ARE TO BEING DESTROYED FOR BEING TOO LARGE, and what
         # changes it. `eminence` was reported as a bare number with no threshold,
         # no trend and no lever, so a player sat at 24.9 against a danger line of
@@ -760,6 +824,14 @@ def _agent_state(s, nodes, cmd=None):
         "mine_capacity": {material: round(value, 1) for material, value in s.mine_capacity.items()},
         "slaves": s.slaves, "freedmen": s.freedmen,
         "scholars_including_you": round(s.effective_scholars(), 2),
+    }
+
+
+def _agent_state_goal(s, nodes, end_reason):
+    """The goal itself (fog-safe), whether and when it was reached, and
+    whether the run itself has ended.
+    """
+    return {
         "founder_ages": not s.cfg.get("immortal", True),
         "goal": None if getattr(s, "fog", False) else s.goal,
         # The NAME, not the id, so it survives fog without handing back the
@@ -781,6 +853,14 @@ def _agent_state(s, nodes, cmd=None):
         "fog_of_war": getattr(s, "fog", False),
         "manual": s.manual, "ended": end_reason is not None, "end_reason": end_reason,
     }
+
+
+def _agent_state_shorten(out, full):
+    """`full:false` (the default): fold the heaviest blocks down to a
+    pointer at the command that shows them in full, so an ordinary
+    `state` stays short. See the comment above for why - unchanged from
+    when this lived inline in _agent_state.
+    """
     # A SHORT REPLY BY DEFAULT. `state` had grown to 55 fields and four
     # kilobytes, two of them a hazard briefing repeated verbatim on every single
     # call, and a tester said reading it back "made me double-check arithmetic
@@ -815,6 +895,38 @@ def _agent_state(s, nodes, cmd=None):
         out["also_available"] = elided
         out["everything_at_once"] = '{"cmd":"state","full":true}'
     return out
+
+
+def _agent_state(s, nodes, cmd=None):
+    """The JSON state reply: the single most-used command in the
+    protocol, and the one an agent player reads every turn.
+
+    Split into one function per concern, the same pattern _node_explain
+    uses in techtree.py: each _agent_state_* helper returns its own
+    dict and decides nothing about any other section, and this function
+    only assembles their pieces, via out.update(), in the exact order
+    the fields used to appear in when this was one long dict literal.
+    """
+    active = _agent_state_active_projects(s, nodes)
+    end_reason = _agent_end_reason(s)
+    full = bool((cmd or {}).get("full"))
+    end_year = getattr(s, "end_year", s.cfg["start_year"] + s.cfg["horizon_years"])
+    out = {}
+    out.update(_agent_state_headline_money(s, end_year))
+    out.update(_agent_state_operations(s, nodes))
+    out.update(_agent_state_spend_and_net(s))
+    # free_hours_going_unused (among the rest of this section's fields) is
+    # produced by this call, inside _agent_state's own call graph, not by a
+    # screen-specific layer wrapped around 'state' alone - see
+    # test_parallelism_note.py's own check that `step`'s reply, which is
+    # built from this exact same _agent_state() call, gets it too.
+    out.update(_agent_state_training_and_hours(s, active, full))
+    out.update(_agent_state_founder(s))
+    out.update(_agent_state_standing(s))
+    out.update(_agent_state_progress(s, active))
+    out.update(_agent_state_risk_and_pressure(s))
+    out.update(_agent_state_goal(s, nodes, end_reason))
+    return _agent_state_shorten(out, full)
 
 
 # A LOG LINE A PLAYER WOULD CALL BAD NEWS. Eleven rounds of playtesting kept
@@ -869,22 +981,12 @@ def _log_scrub(s, text):
     return text
 
 
-def _agent_log(s, cmd=None):
-    """The player's own history: what they did, and what followed from it.
-
-    The commonest complaint across eleven rounds of playtesting was some
-    version of "failures are silent" - a project stalling, a concern closing
-    for want of staff, a hazard landing - none of it visible anywhere once
-    the turn it happened had scrolled past. The engine has always kept every
-    one of these in self.log; there was simply no command to read it back.
-
-    NEVER THE WHOLE THING. A run of any length runs to tens of thousands of
-    lines, more than an agent's whole context window, so this always pages
-    and defaults to a recent window - `limit` is hard-capped, not merely
-    suggested, and there is no `all:true` here the way `available` has one.
+def _agent_log_parse_filters(cmd):
+    """The which-lines filters from the raw cmd dict: whether to keep
+    only failure lines, a lowercase search term, and a since/before year
+    range. Garbage input is tolerated the same way the inline parsing
+    inside _agent_log always did - a bad since/before falls back to None.
     """
-    cmd = cmd or {}
-    log = list(getattr(s, "log", None) or [])
     only_fail = bool(cmd.get("failures")
                      or str(cmd.get("only") or "").strip().lower() in
                         ("failures", "failure", "fails", "fail"))
@@ -897,6 +999,14 @@ def _agent_log(s, cmd=None):
         before = int(cmd["before"]) if str(cmd.get("before", "")).strip() not in ("", "None") else None
     except (TypeError, ValueError):
         before = None
+    return only_fail, find, since, before
+
+
+def _agent_log_parse_paging(cmd):
+    """Sort order, page size and offset from the raw cmd dict, with the
+    hard cap on `limit` that keeps a single reply from ever dumping the
+    whole log.
+    """
     order = str(cmd.get("order") or "newest").strip().lower()
     if order not in ("newest", "oldest"):
         order = "newest"
@@ -915,7 +1025,13 @@ def _agent_log(s, cmd=None):
         offset = max(0, int(cmd.get("offset", 0)))
     except (TypeError, ValueError):
         offset = 0
+    return order, limit, offset
 
+
+def _agent_log_filter_rows(log, since, before, only_fail):
+    """The since/before year range and the failures-only filter, applied
+    in that order to every (index, (year, msg)) row of the log.
+    """
     rows = list(enumerate(log))
     if since is not None:
         rows = [row for row in rows if row[1][0] >= since]
@@ -923,6 +1039,14 @@ def _agent_log(s, cmd=None):
         rows = [row for row in rows if row[1][0] <= before]
     if only_fail:
         rows = [row for row in rows if _is_failure_line(row[1][1])]
+    return rows
+
+
+def _agent_log_search_rows(s, rows, find, order):
+    """The free-text search filter, confirmed against what fog actually
+    lets the player see. Split from _agent_log_filter_rows because this
+    filter alone needs the fog recheck below it - see its own comment.
+    """
     if find:
         # CHEAP FIRST, then confirmed against what fog actually lets the
         # player see. A search that only matched a name fog is about to
@@ -939,20 +1063,38 @@ def _agent_log(s, cmd=None):
             # search with no fog concern at all would still have to page.
             _cap = rows[-2000:] if order != "oldest" else rows[:2000]
             rows = [row for row in _cap if find in _log_scrub(s, row[1][1]).lower()]
+    return rows
 
+
+def _agent_log_page(s, rows, order, offset, limit):
+    """Order, then slice out the requested page, then scrub each
+    surviving line for fog. Returns the total row count (before paging)
+    and the page's own entries.
+    """
     total = len(rows)
     ordered = list(reversed(rows)) if order == "newest" else rows
     page = ordered[offset:offset + limit]
     entries = [{"year": year, "what": _log_scrub(s, msg)} for _idx, (year, msg) in page]
+    return total, entries
 
+
+def _agent_log_reply(log, total, offset, entries, find, only_fail, since, before, order):
+    """Assemble the JSON reply around one page of entries: the count,
+    the human-readable "showing" line, "more" when there is another
+    page, and a note when the log or the filtered result is empty.
+
+    len(entries) stands in for the original len(page): _agent_log_page
+    builds entries one-for-one from page, never dropping a row, so the
+    two lengths are always equal.
+    """
     out = {"ok": True, "count": total,
            "showing": ("nothing" if not entries else
                       "%d-%d of %d, %s first"
                       % (offset + 1, offset + len(entries), total, order)),
            "entries": entries}
-    if offset + len(page) < total:
+    if offset + len(entries) < total:
         out["more"] = ('%d more; ask again with "offset": %d'
-                       % (total - offset - len(page), offset + len(page)))
+                       % (total - offset - len(entries), offset + len(entries)))
     if not log:
         out["note"] = "nothing has happened yet"
     elif not entries and (find or only_fail or since is not None or before is not None):
@@ -965,3 +1107,27 @@ def _agent_log(s, cmd=None):
         "from the start instead of back from now, and 'offset' to page "
         "through to the end.")
     return out
+
+
+def _agent_log(s, cmd=None):
+    """The player's own history: what they did, and what followed from it.
+
+    The commonest complaint across eleven rounds of playtesting was some
+    version of "failures are silent" - a project stalling, a concern closing
+    for want of staff, a hazard landing - none of it visible anywhere once
+    the turn it happened had scrolled past. The engine has always kept every
+    one of these in self.log; there was simply no command to read it back.
+
+    NEVER THE WHOLE THING. A run of any length runs to tens of thousands of
+    lines, more than an agent's whole context window, so this always pages
+    and defaults to a recent window - `limit` is hard-capped, not merely
+    suggested, and there is no `all:true` here the way `available` has one.
+    """
+    cmd = cmd or {}
+    log = list(getattr(s, "log", None) or [])
+    only_fail, find, since, before = _agent_log_parse_filters(cmd)
+    order, limit, offset = _agent_log_parse_paging(cmd)
+    rows = _agent_log_filter_rows(log, since, before, only_fail)
+    rows = _agent_log_search_rows(s, rows, find, order)
+    total, entries = _agent_log_page(s, rows, order, offset, limit)
+    return _agent_log_reply(log, total, offset, entries, find, only_fail, since, before, order)

@@ -695,8 +695,20 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
     why="The other half of turning a calorie requirement into a kilogram "
         "quantity of the FOOD good's subsistence floor.")
 
+DAYS_PER_YEAR = declare(
+    "DAYS_PER_YEAR", 365.25,
+    kind="physical_constant",
+    unit="days/year",
+    source="Julian calendar year average, matching sim/world/agriculture.py's "
+           "own DAYS_PER_YEAR (declared independently here for the same "
+           "standalone reason - see this module's own STANDALONE section).",
+    confidence="A",
+    why="Converts the daily subsistence calorie requirement above into an "
+        "annual one, the unit FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_"
+        "YEAR is actually stated in.")
+
 FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR = (
-    HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY * 365.25 / WHEAT_ENERGY_KCAL_PER_KG)
+    HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY * DAYS_PER_YEAR / WHEAT_ENERGY_KCAL_PER_KG)
 # ~236.3 kg/person/year - arithmetic on two already-declared numbers, not a
 # fact of its own, matching agriculture.py's own convention for
 # GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA.

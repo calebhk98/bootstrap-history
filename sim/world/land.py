@@ -459,6 +459,22 @@ DIET_DIVERSITY_LAND_MULTIPLIER = declare(
         "placeholder pending a real multi-crop diet model, which is "
         "agriculture.py's job, not this module's.")
 
+LAND_CALENDAR_DAYS_PER_YEAR = declare(
+    "LAND_CALENDAR_DAYS_PER_YEAR", 365.0,
+    kind="physical_constant",
+    unit="days/year",
+    source="A plain calendar year, rounded to whole days - not the Julian "
+           "365.25 average sim/world/agriculture.py's own DAYS_PER_YEAR "
+           "and sim/world/demand.py's own DAYS_PER_YEAR use for the "
+           "identical conversion. Declared here at the value this module "
+           "already used rather than reconciled with those, because this "
+           "task extracts numbers, it does not tune them - see this "
+           "module's own STANDALONE section for why it does not simply "
+           "import agriculture.py's DAYS_PER_YEAR instead.",
+    confidence="C",
+    why="Converts the daily caloric need above into the annual grain mass "
+        "this function's own land-demand arithmetic runs on.")
+
 
 def quantity_demanded_kg_grain_equivalent(population: float) -> float:
     """How much grain-equivalent output a population of this size needs
@@ -469,7 +485,7 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
     """
     if population < 0:
         raise ValueError("population cannot be negative: %r" % (population,))
-    grain_kg_per_person = (LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY * 365.0
+    grain_kg_per_person = (LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY * LAND_CALENDAR_DAYS_PER_YEAR
                            / WHEAT_ENERGY_KCAL_PER_KG)
     return (population * grain_kg_per_person
             * FALLOW_HOLDING_MULTIPLIER * DIET_DIVERSITY_LAND_MULTIPLIER)
