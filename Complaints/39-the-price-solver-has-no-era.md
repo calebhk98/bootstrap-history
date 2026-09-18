@@ -84,3 +84,42 @@ law electrolysis), `tungsten_kg` (induction sintering), and
 `calcium_carbide_kg` - whose own `yield_basis` says outright that "the arc
 furnace must reach roughly 2000 C, well above anything a combustion furnace
 reaches" while still charging the heat as shaft work. One field each.
+
+## Follow-up: the three mislabelled entries are fixed
+
+Done as a separate commit from the era problem, which stays open. One field
+each moved from `mechanical_mj` to `electrical_mj`, plus the sentences in
+each `yield_basis` that asserted the now-wrong reason - two of the three
+argued explicitly that electricity *is* shaft work through a dynamo, so
+appending a correction without deleting the old claim would have left the
+reader two answers.
+
+Measured, same solve before and after:
+
+```
+                       before      after     change
+calcium_carbide_kg    0.15605    0.14607     -6.4%
+germanium_g            16.302     15.229     -6.6%   (*)
+indium_g               16.302     15.229     -6.6%   (*)
+tungsten_kg           0.27352    0.27114     -0.9%
+zinc_kg               0.32024    0.31943     -0.2%
+```
+
+All five fall, and they fall because `electrical_mj` (0.00122/MJ) is cheaper
+than `mechanical_mj` (0.00201/MJ) in this solve: shaft work is now made FROM
+electricity through a motor, so the old labelling charged an electrolysis
+cell for a conversion it never performs. The sizes track energy intensity -
+calcium carbide is 12,600 MJ per tonne and moves 6%, zinc's 10,500 MJ is a
+small share of a cost dominated by ore and acid and moves 0.2%.
+
+The numbers above come from the photovoltaic-rooted solve this complaint is
+about, so read them as a ratio between two labellings, not as prices.
+
+### The remaining `mechanical_mj` entries were checked and are correct
+
+Three non-energy entries still carry one: `oxygen_m3` (a Linde-process
+compressor), `barium_kg` (a vacuum pump on the aluminothermic reduction) and
+`wire_drawn_kg` (a drawbench). Each is a genuine rotating shaft that a belt
+from a waterwheel or a steam engine drives directly, with no electricity
+anywhere in the chain - which is the test. That makes the set complete;
+there is no fourth one waiting to be found.
