@@ -328,39 +328,79 @@ and chosen by the same cheapest-technique rule as everything else:
                                 margin this file cannot yet quantify. Tag:
                                 GAP, not a heuristic, per CLAUDE.md 3.4.
 
-TEMPERATURE, NOT MODELLED THIS ROUND - A DECISION, NOT AN OVERSIGHT. A
+TEMPERATURE - PARTIALLY MODELLED AS OF THIS ROUND (Complaints/44). A
 megajoule of heat is not fungible across temperature: one MJ at 200 C
 cannot do what one MJ at 1600 C can, which is the whole reason a bloomery
-cannot melt iron however much charcoal is fed into it. This file's
-`thermal_mj` stays a single UNDIFFERENTIATED pool despite that - adding
-temperature grades (several thermal_mj_below_X materials, one per
-technology's reach, with every heat-needing recipe stating which grade it
-needs) would be more correct and is deliberately deferred, not silently
-skipped: it would mean touching every existing thermal_mj consumer's
-`inputs` to say what temperature it actually needs, which this round's
-scope does not reach, and doing it for one recipe only would look like
-progress while leaving every other one just as wrong. The consequence is
-concrete and is handled by NOT routing every high-temperature need through
-the shared pool: `quartz_tube_kg` needs 1700-2000 C, which
-thermal_mj_electrical_resistance's own conversion can genuinely reach but
-thermal_mj_coal and thermal_mj_charcoal cannot, and the shared `thermal_mj`
-PRICE is set by whichever technique is cheapest for the pool as a whole -
-today, coal. Folding quartz_tube_kg into `thermal_mj` would therefore have
-it pay coal's price while implicitly claiming coal's ~1000-1200 C fire can
-do what only the arc route can, which is exactly the bloomery-melts-iron
-mistake this section opened with, produced by the very mechanism meant to
-fix it. So quartz_tube_kg instead draws on `electrical_mj` DIRECTLY, the
-same way aluminium_kg and silicon_kg do, bypassing the temperature-blind
-pool entirely - see that entry's own yield_basis, and see WHICH ENTRIES USE
-ELECTRICAL_MJ DIRECTLY below for why this is a genuine fix, not a workaround
-with the same shape as `energy_mj` had. What full temperature grading would
-take: a `temperature_needed_c` (or equivalent) on every thermal_mj-consuming
-entry, one thermal_mj_below_X material per technology's actual reach
-(charcoal/coal topping out somewhere around 1200 C is itself an assumption
-nothing here currently states as a number), and a solver rule that a
-recipe may only draw on a grade whose ceiling is at or above what it needs -
-a real piece of future work, named here so it stays measurable rather than
-merely implied.
+cannot melt iron however much charcoal is fed into it. That gap sat
+harmless in this file as long as no civilisation could turn a shaft for
+almost nothing - the moment England 1300 could (the water-wheel iron gate
+fix), `thermal_mj_friction` (mechanical heat, ~98% efficient, ALWAYS
+modelled but never meant to win - see CHOICE OF TECHNIQUE above) undercut
+charcoal on pure running cost and the solver picked it, pricing English
+process heat off a warm bearing. `thermal_mj_friction`'s own yield_basis
+predicted this could never happen; the reason it happened anyway is
+exactly the gap this section used to describe and now partly closes -
+see Complaints/44 for the full incident.
+
+`thermal_mj` still stays a single UNDIFFERENTIATED pool this round - full
+grading (several thermal_mj_below_X materials, one per technology's
+actual reach, with every heat-needing recipe restated to say which grade
+it needs) is still NOT done, for the same reason as before: it would mean
+touching every existing thermal_mj consumer's own entry, most of which
+`data/production/` other agents currently own, which is out of this
+round's scope. What IS done this round is narrower and does not need
+touching those files: every technique that supplies `thermal_mj` now
+states the temperature it can physically reach
+(`temperature_reached_c`), and a technique may no longer win the pool's
+choice-of-technique competition if that reach falls short of what
+"usable process heat" - as this file's own techniques already describe
+themselves (thermal_mj_charcoal's own yield_basis: "a still, a
+carbonating tower, a calciner") - actually needs. The floor for that
+comparison, `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C` below, is not
+invented: it is `data/tech_tree.json`'s own `cap_heat_0700` node - "Free
+starting capability... Glazes, bricks, lime, glass working", `pre: []` -
+the lowest sustained-heat rung the tree names and the one every
+civilisation this file prices for already has, so a technique that
+cannot even clear it is not delivering the same thing a kiln fire does,
+whatever its own energy efficiency. `CAPABILITY_CAP_FIELDS` also lets a
+SPECIFIC recipe raise that floor further by stating its own
+`temperature_needed_c` (this round's worked example: the three
+`mechanical_mj_heat_engine_*` entries below, which need a real boiler
+firebox, not merely boiling-point heat, regardless of engine class - see
+their own yield_basis) - an entry that states neither field keeps working
+exactly as before, unfiltered, which is why this is additive rather than
+a rewrite of the existing choice-of-technique mechanism (see `solve`'s own
+docstring and `CAPABILITY_CAP_FIELDS` for the mechanism itself).
+
+This is a real fix, not the bloomery-melts-iron mistake restated: it does
+not claim charcoal and coal can do what only an arc furnace can (see
+`quartz_tube_kg` below, still bypassing the pool entirely and unaffected
+by this round's change), and it does not single out friction by name -
+`thermal_mj_friction` loses because its OWN stated reach (100 C - the
+ordinary, sourced ceiling of a sustained, unpressurised mechanical
+friction heater; see that entry's own yield_basis for the citation) falls
+short of the SAME general floor every technique is checked against, the
+same way `thermal_mj_electrical_resistance` (3000 C) and
+`thermal_mj_charcoal`/`thermal_mj_coal` (1100 C each) clear it easily.
+What full temperature grading would still take, unchanged from before:
+one thermal_mj_below_X material per technology's actual reach, every
+thermal_mj-consuming entry (most of them outside this round's ownership)
+restated with its own `temperature_needed_c`, and a solver rule that a
+recipe may only draw on the SPECIFIC grade whose ceiling is at or above
+what it needs, rather than the single shared floor this round's narrower
+fix applies uniformly. A SECOND PHYSICAL LIMIT SLOTS IN THE SAME WAY,
+WITHOUT REDESIGN (the stakeholder's own example: a water wheel should not
+be able to deliver a torque of millions) - add a second entry to
+`CAPABILITY_CAP_FIELDS` keyed on `mechanical_mj`, e.g.
+`("torque_reached_nm", "torque_needed_nm", 0.0)`, give
+`mechanical_mj_waterwheel` and friends their own `torque_reached_nm`
+(a real figure: a wheel's torque is its power divided by its shaft's
+angular speed, both already physical facts this file or
+`data/world/resources.json` states), and give whichever recipe needs a
+torque floor its own `torque_needed_nm` - `capability_floor_by_carrier`
+and `_meets_capability_floor` do not know or care which physical
+dimension they are comparing, so nothing else changes. See this task's
+own report for the worked argument.
 
 WHICH ENTRIES USE ELECTRICAL_MJ DIRECTLY, RATHER THAN THROUGH A CONVERSION.
 `aluminium_kg` (Hall-Heroult electrolysis current), `silicon_kg` (arc-furnace
@@ -620,6 +660,94 @@ NUMERAIRE_TRADE = "labourer"
 # could not silently miss one of them - a real risk a bare tuple repeated
 # three times invites.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
+
+# PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
+# module's own docstring for the full defect and the reasoning behind the
+# number below). data/tech_tree.json's own `cap_heat_0700` node -
+# "Sustained 700 C (pottery kiln)... Already available wherever there is
+# an updraught pottery kiln, wood fired. Free starting capability. Glazes,
+# bricks, lime, glass working" - carries no prerequisite at all (`pre:
+# []`), so it is the lowest sustained-heat capability the tree considers
+# universal: every civilisation this file prices for, however primitive,
+# is assumed to already have SOME way to fire a pot or a brick. That is
+# the genuine physical floor for what this file's own thermal_mj
+# techniques already claim to be delivering (thermal_mj_charcoal's own
+# yield_basis: "a still, a carbonating tower, a calciner" - real furnace
+# apparatus, not ambient warmth), so it is reused here rather than an
+# invented number - exactly the tree's own vocabulary, per the task that
+# added this mechanism, instead of a parallel scale.
+THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C = 700.0
+
+# {carrier_material: (reached_field, needed_field, default_floor)}. A
+# technique that OUTPUTS an energy carrier may state, on itself, the
+# ceiling of some physical dimension it can reach (`temperature_reached_c`
+# today); a recipe that CONSUMES that carrier may state, on itself, the
+# floor it needs on the same dimension (`temperature_needed_c`). Both
+# fields are optional - an entry that states neither is unconstrained,
+# exactly as it was before this mechanism existed (see CAPABILITY_CAP
+# FIELDS' own use in `solve` and `capability_floor_by_carrier` below,
+# and TEMPERATURE in the module docstring for why this stays a single
+# shared floor per carrier rather than full per-consumer grading this
+# round). Keyed by carrier rather than hand-written at each call site for
+# the same reason ENERGY_CARRIER_FIELDS above is: so a second physical
+# dimension - torque, pressure, whatever a future stakeholder names next -
+# slots in as one more entry here, read by the same two functions, rather
+# than a second, parallel, hand-rolled comparison. See the module
+# docstring's TEMPERATURE section for the worked example (a torque cap on
+# mechanical_mj) and this task's own report for the argument in full.
+CAPABILITY_CAP_FIELDS = {
+    "thermal_mj": ("temperature_reached_c", "temperature_needed_c",
+                   THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C),
+}
+
+
+def capability_floor_by_carrier(production_entries):
+    """{carrier_material: required floor value}, one entry per carrier
+    named in CAPABILITY_CAP_FIELDS, for THIS solve's own (possibly
+    era-gated) `production_entries`.
+
+    The floor is the LARGER of the carrier's own default (the free,
+    universal minimum every technique claiming to supply it must clear -
+    see THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's own citation) and
+    whatever `needed_field` value any entry ACTUALLY DRAWING ON that
+    carrier in this era's own (possibly gated) production_entries states -
+    so a genuinely more demanding real consumer raises the bar for the
+    whole shared pool, which a single undifferentiated market price
+    requires (see TEMPERATURE in the module docstring for why the pool
+    stays undifferentiated, rather than split per consumer, this round).
+    An entry that draws on the carrier but states no `needed_field` at all
+    does not raise the floor - "no stated requirement" means exactly that,
+    not zero.
+    """
+    floor_by_carrier = {}
+    for carrier, (_reached_field, needed_field, default_floor) in CAPABILITY_CAP_FIELDS.items():
+        required = default_floor
+        for entry in production_entries.values():
+            if entry.get(carrier) and entry.get(needed_field) is not None:
+                required = max(required, entry[needed_field])
+        floor_by_carrier[carrier] = required
+    return floor_by_carrier
+
+
+def _meets_capability_floor(material, entry, floor_by_carrier):
+    """True unless `material` is a capability-capped carrier (see
+    CAPABILITY_CAP_FIELDS) and `entry`'s own stated reach on that
+    dimension falls short of this era's floor for it. An entry that
+    states no reach at all (most entries, including every material that
+    is not itself an energy-carrier-supplying technique) is treated as
+    unconstrained - the same "no stated value, no new behaviour" rule
+    this mechanism applies on the consuming side via
+    `capability_floor_by_carrier` above.
+    """
+    capped = CAPABILITY_CAP_FIELDS.get(material)
+    if capped is None:
+        return True
+    reached_field, _needed_field, _default_floor = capped
+    reached = entry.get(reached_field)
+    if reached is None:
+        return True
+    return reached >= floor_by_carrier[material]
+
 
 # Damped Jacobi fixed-point iteration: every material's next price is a blend
 # of its old price and what the current round's cheapest technique implies,
@@ -1405,10 +1533,23 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     drops below `tolerance`, or after `max_iterations`.
 
     Returns (prices, iterations_run, final_residual, chosen_recipe_by_material).
+
+    PHYSICAL CAPABILITY CAPS (Complaints/44; see CAPABILITY_CAP_FIELDS and
+    TEMPERATURE in the module docstring). Before the very first round, this
+    era's own floor for each capped carrier (thermal_mj's required
+    temperature today) is computed once from THIS solve's own
+    `production_entries` - exactly like `rent_hours_per_kg_by_ore_material`
+    is computed once, before the iteration starts, rather than every
+    round, because it does not depend on the price vector at all. Every
+    round after that, a candidate recipe is offered for a material only if
+    `_meets_capability_floor` says its own stated reach clears that floor -
+    a technique that states no reach is unaffected, exactly as before this
+    mechanism existed.
     """
     prices = {material: INITIAL_PRICE_GUESS_HOURS for material in resolvable_materials}
     chosen_recipe_by_material = {}
     recipe_ids_in_order = sorted(production_entries)  # stable order; see above
+    floor_by_carrier = capability_floor_by_carrier(production_entries)
 
     final_residual = float("inf")
     iterations_run = 0
@@ -1427,6 +1568,8 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
                 continue
             _total_cost, output_prices = result
             for material, price in output_prices.items():
+                if not _meets_capability_floor(material, entry, floor_by_carrier):
+                    continue
                 candidates_by_material[material].append((price, recipe_id))
 
         new_prices = {}
@@ -1554,8 +1697,27 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
 
     candidates = sorted(set(producers_of.get(material, [])) - {recipe_id})
     if candidates:
-        print("%s  other techniques considered and rejected as more "
-              "expensive at current prices: %s" % (pad, ", ".join(candidates)))
+        # Split rejections by REASON (Complaints/44) - a technique that
+        # cannot physically reach what this material needs is a different
+        # finding from one that merely costs more today, and conflating
+        # them is exactly how "thermal_mj_friction should never be chosen"
+        # stopped being verifiable as anything but a hope. See
+        # CAPABILITY_CAP_FIELDS and _meets_capability_floor above.
+        floor_by_carrier = capability_floor_by_carrier(production_entries)
+        capped = CAPABILITY_CAP_FIELDS.get(material)
+        notes = []
+        for candidate_id in candidates:
+            candidate_entry = production_entries[candidate_id]
+            if capped and not _meets_capability_floor(material, candidate_entry, floor_by_carrier):
+                reached_field, _needed_field, _default_floor = capped
+                notes.append("%s (reaches %s, this era needs >= %s - see "
+                             "CAPABILITY_CAP_FIELDS)" % (
+                             candidate_id, candidate_entry.get(reached_field),
+                             floor_by_carrier[material]))
+            else:
+                notes.append("%s (more expensive at current prices)" % candidate_id)
+        print("%s  other techniques considered and rejected: %s"
+              % (pad, ", ".join(notes)))
 
     if other_outputs:
         print("%s  joint output of this batch, also yielding: %s - cost "

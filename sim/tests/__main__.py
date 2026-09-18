@@ -203,6 +203,12 @@ TOPICS = [
     # blacksmith into the fields - mechanically yes, quantitatively almost
     # not at all.
     "labour_market",
+    # Complaints/44: England made process heat by FRICTION because a
+    # megajoule was a megajoule to the solver and you cannot forge with a
+    # warm bearing. A technique now states the temperature it reaches and a
+    # process the temperature it needs, using the tree's own cap_heat_*
+    # rungs, and choice of technique picks the cheapest one THAT WORKS.
+    "temperature_caps",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology
