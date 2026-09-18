@@ -197,6 +197,12 @@ TOPICS = [
     # that was hiding behind it, and the proof that the farm workforce share
     # does NOT respond to a famine.
     "granary_persistence",
+    # sim/world/labour_market.py: the fixed point over TRADE ALLOCATION that
+    # solve_prices.py is for material prices, in the same labour-hours
+    # numeraire and needing no wages. Answers whether a famine can pull a
+    # blacksmith into the fields - mechanically yes, quantitatively almost
+    # not at all.
+    "labour_market",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology

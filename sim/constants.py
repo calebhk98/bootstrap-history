@@ -306,7 +306,8 @@ def _import_declaring_modules():
                    "sim.world.military_logistics",
                    "sim.world.deposits",
                    "sim.world.land",
-                   "sim.world.demand"):
+                   "sim.world.demand",
+                   "sim.world.labour_market"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001
