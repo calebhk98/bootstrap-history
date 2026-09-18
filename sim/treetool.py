@@ -123,22 +123,7 @@ def load_merged_duplicate_ids():
 
 
 def cmd_merge(a):
-    goods = load_prices()
-    TRADES = load_trades()
-    alias, dropset = load_aliases()
-    base = json.load(open(TREE))
-    # Ids retired by deduplication. Branch files still contain both spellings
-    # of a technology that two authors invented independently, so without this
-    # the next merge silently resurrects every duplicate. Read from source
-    # (data/branches/_MERGED_DUPLICATE_IDS.json), not from tech_tree.json's
-    # meta - that meta key is written BY this function, a few lines below the
-    # end of this one, so treating it as an input would make the merge read
-    # its own last output instead of the human decision it is supposed to
-    # represent.
-    retired = load_merged_duplicate_ids()
-    nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
-    for node in nodes.values():
-        node.setdefault("_src", "core")
+    goods, TRADES, alias, dropset, base, retired, nodes = _merge_load_inputs()
     errs, warns, added, updated = [], [], 0, 0
     # STAGE 3 (Complaints/30): which branch file, if any, has already supplied
     # THIS RUN'S definition of an id. Seeding `nodes` from the current tree
@@ -167,144 +152,10 @@ def cmd_merge(a):
     for filename in sorted(os.listdir(BR)):
         if not filename.endswith(".json") or filename in ("ALIASES.json", MERGED_DUPLICATE_IDS_FILE):
             continue
-        try:
-            batch = json.load(open(os.path.join(BR, filename)))
-        except Exception as e:
-            errs.append("%s: unparseable JSON: %s" % (filename, e))
-            continue
-        if not isinstance(batch, list):
-            errs.append("%s: top level is not a list" % filename)
-            continue
-
-        # Branch authors routinely refer to their OWN nodes without the file's
-        # id prefix: a file of ag2_* nodes asks for "coulter" when it means
-        # "ag2_coulter". Left alone the prereq resolver below silently drops
-        # those edges, which makes the technology look cheaper and earlier than
-        # it is. Repair them here, but only where the fix is unambiguous.
-        own = {node["id"] for node in batch if isinstance(node, dict) and "id" in node}
-        prefixes = set()
-        for node_id in own:
-            if "_" in node_id:
-                prefixes.add(node_id.split("_", 1)[0] + "_")
-        for node in batch:
-            if not isinstance(node, dict):
-                continue
-            fixed = []
-            for prereq in node.get("pre", []):
-                if prereq in own or prereq in nodes:
-                    fixed.append(prereq)
-                    continue
-                cands = {prefix + prereq for prefix in prefixes if prefix + prereq in own}
-                if len(cands) == 1:
-                    q = cands.pop()
-                    fixed.append(q)
-                    warns.append("%s: %s self-ref '%s' -> '%s'" % (filename, node.get("id", "?"), prereq, q))
-                else:
-                    fixed.append(prereq)
-            if "pre" in node:
-                node["pre"] = fixed
-
-        for node in batch:
-            missing = [field for field in REQUIRED if field not in node]
-            if missing:
-                errs.append("%s: %s missing fields %s" % (filename, node.get("id", "?"), missing))
-                continue
-            if node["id"] in retired:
-                warns.append("%s: %s was merged into %s, skipping"
-                             % (filename, node["id"], retired[node["id"]]))
-                continue
-            if node["id"] in branch_origin:
-                # Two branch definitions claim the same id this run - either
-                # the same file lists it twice, or two DIFFERENT files do.
-                # Unlike the tree-vs-branch case below, there is no
-                # source-of-truth rule that resolves this automatically: it is
-                # either two authors who independently invented the same id,
-                # or one author trying to "correct" a node by adding a second
-                # definition in a new file instead of editing the original.
-                # Guessing which is which is exactly the kind of silent
-                # decision that ate branch edits in the first place, so this
-                # is an ERROR naming both sides (sim/validate_production.py's
-                # load_production already applies the identical rule to
-                # data/production/), not a warning, and the first definition
-                # encountered is kept unchanged rather than overwritten.
-                first = branch_origin[node["id"]]
-                collisions.append(("%s is defined twice in %s" % (node["id"], filename))
-                                  if first == filename else
-                                  ("%s is defined in both %s and %s" % (node["id"], first, filename)))
-                continue
-            existed_in_tree = node["id"] in nodes and node["id"] not in branch_origin
-            # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
-            # is unobtainable, only elsewhere. A new branch reintroduced it on
-            normalise_v2(node)
-            # resolve trade aliases rather than silently dropping the labour,
-            # which would make the technology look cheaper than it is
-            lab = {}
-            for trade, hours in node["lab"].items():
-                resolved_trade = alias.get(trade, trade)
-                if resolved_trade in TRADES:
-                    lab[resolved_trade] = lab.get(resolved_trade, 0) + hours
-                else:
-                    losses.append(("unknown_trade",
-                        "%s: %s unknown trade '%s', dropped" % (filename, node["id"], trade)))
-            node["lab"] = lab
-            materials = {}
-            for material, q in node["mat"].items():
-                resolved_material = alias.get(material, material)
-                if resolved_material not in goods:
-                    # generic fallbacks for the shapes authors actually write:
-                    # "mat_beeswax" -> "beeswax_kg", "plaster" -> "plaster_kg"
-                    for cand in (resolved_material[4:] + "_kg" if resolved_material.startswith("mat_") else None,
-                                 resolved_material + "_kg", resolved_material.replace("mat_", "")):
-                        if cand and cand in goods:
-                            resolved_material = cand
-                            break
-                if resolved_material in dropset or material in dropset:
-                    losses.append(("material_is_technology",
-                        "%s: %s '%s' is a technology not a material, dropped" % (filename, node["id"], material)))
-                    continue
-                if resolved_material in goods:
-                    materials[resolved_material] = materials.get(resolved_material, 0) + q
-                else:
-                    losses.append(("unpriced_material",
-                        "%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material)))
-            node["mat"] = materials
-            # Branch authors keep writing the RECIPE PROSE into the kb link
-            # field. Left alone it reports as a broken link to a file whose
-            # name is a sentence. Move it to note where note is empty and
-            # clear the field, so it reports as an honest documentation gap.
-            kb_field = str(node.get("kb", "")).strip()
-            if kb_field and not re.match(r"^\d\d_[A-Za-z0-9_]+\.md(#|$)", kb_field):
-                if not str(node.get("note", "")).strip():
-                    node["note"] = kb_field
-                kb_field = ""
-            node["kb"] = kb_field
-            node["_src"] = filename
-            # STAGE 3 (Complaints/30): a branch node that names an id already
-            # present from the tree OVERWRITES it field by field, instead of
-            # being silently dropped - the whole point of this fix. It is a
-            # field-level overlay, not a wholesale replacement, because the
-            # tree carries fields no branch schema has ever had a key for -
-            # `kind`, `kb_level`, `_total_cost`, `_internal` - written by
-            # `judge`/`repair`/`apply-caps`, which read and rewrite
-            # tech_tree.json directly and were never meant to round-trip
-            # through branches (see this file's module docstring and the
-            # REPAIR PASS comment on cmd_repair). A replacement would silently
-            # erase every one of those on every node a branch edit touches;
-            # measured on the real tree, that is thousands of fields lost for
-            # reasons that have nothing to do with what the branch author
-            # wrote. `normalise_v2` only ever sets the keys in `DEFAULTS`
-            # (plus the handful of v1/v2 scalars it backfills), so `node`
-            # here never carries those repair-only keys unless a branch file
-            # explicitly set them - meaning the tree's copy survives untouched
-            # for every id whose branch definition doesn't mention it, exactly
-            # like a normal git-free field merge.
-            if existed_in_tree:
-                nodes[node["id"]] = {**nodes[node["id"]], **node}
-                updated += 1
-            else:
-                nodes[node["id"]] = node
-                added += 1
-            branch_origin[node["id"]] = filename
+        file_added, file_updated = _merge_process_branch_file(
+            filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions)
+        added += file_added
+        updated += file_updated
 
     # A collision names an id whose correct content is genuinely undecided -
     # neither the "first file wins" nor the "last file wins" reading is a fix,
@@ -313,18 +164,243 @@ def cmd_merge(a):
     # two branch files; report everything found first, then say why nothing
     # was written, matching how sim/validate_production.py surfaces the same
     # rule (it has nothing to write, so it can report and exit; this does).
-    if collisions:
-        print("errors  : %d" % len(errs))
-        for e in errs[:40]:
-            print("   " + e)
-        print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
-        for collision in collisions:
-            print("   COLLISION " + collision)
-        print("\nFix the branch files so each id has exactly one definition (rename one "
-              "side, delete a stale duplicate, or fold them into a single node), then "
-              "re-run merge. Nothing was written.")
+    if _merge_report_collisions(errs, collisions):
         return 1
 
+    dangling = _merge_resolve_prerequisites(nodes, retired, losses)
+
+    _merge_break_cycles(nodes, losses)
+
+    # `losses` now holds every event, from both loops above, that deleted
+    # something a branch author wrote rather than merely warning about it:
+    # an unknown labour trade, a material with no price, a material that is
+    # really a technology, a prerequisite naming no node, or a back edge cut
+    # to break a cycle. Print every one, grouped by kind - someone fixing
+    # the source data needs to see every problem in one pass, not the first
+    # 25 and a count of the rest. Refuse to write unless the operator passed
+    # --accept-data-loss: the same "collect everything, report, do not
+    # write" shape as the collision refusal above, because this merge
+    # already deletes data silently today, and that is the bug Task 1 of
+    # this pass exists to close.
+    if _merge_report_losses(losses, getattr(a, "accept_data_loss", False)):
+        return 1
+
+    return _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, a)
+
+
+def _merge_load_inputs():
+    """The merge's read side: prices, aliases, the current tree, the dedup record, and
+    the seed `nodes` dict (current tree, normalised, with `_src` defaulted to "core")."""
+    goods = load_prices()
+    TRADES = load_trades()
+    alias, dropset = load_aliases()
+    base = json.load(open(TREE))
+    # Ids retired by deduplication. Branch files still contain both spellings
+    # of a technology that two authors invented independently, so without this
+    # the next merge silently resurrects every duplicate. Read from source
+    # (data/branches/_MERGED_DUPLICATE_IDS.json), not from tech_tree.json's
+    # meta - that meta key is written BY this function, a few lines below the
+    # end of this one, so treating it as an input would make the merge read
+    # its own last output instead of the human decision it is supposed to
+    # represent.
+    retired = load_merged_duplicate_ids()
+    nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
+    for node in nodes.values():
+        node.setdefault("_src", "core")
+    return goods, TRADES, alias, dropset, base, retired, nodes
+
+
+def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
+    # Branch authors routinely refer to their OWN nodes without the file's
+    # id prefix: a file of ag2_* nodes asks for "coulter" when it means
+    # "ag2_coulter". Left alone the prereq resolver below silently drops
+    # those edges, which makes the technology look cheaper and earlier than
+    # it is. Repair them here, but only where the fix is unambiguous.
+    own = {node["id"] for node in batch if isinstance(node, dict) and "id" in node}
+    prefixes = set()
+    for node_id in own:
+        if "_" in node_id:
+            prefixes.add(node_id.split("_", 1)[0] + "_")
+    for node in batch:
+        if not isinstance(node, dict):
+            continue
+        fixed = []
+        for prereq in node.get("pre", []):
+            if prereq in own or prereq in nodes:
+                fixed.append(prereq)
+                continue
+            cands = {prefix + prereq for prefix in prefixes if prefix + prereq in own}
+            if len(cands) == 1:
+                resolved_prereq_id = cands.pop()
+                fixed.append(resolved_prereq_id)
+                warns.append("%s: %s self-ref '%s' -> '%s'" % (filename, node.get("id", "?"), prereq, resolved_prereq_id))
+            else:
+                fixed.append(prereq)
+        if "pre" in node:
+            node["pre"] = fixed
+
+
+def _merge_resolve_labour(node, alias, TRADES, filename, losses):
+    # resolve trade aliases rather than silently dropping the labour,
+    # which would make the technology look cheaper than it is
+    lab = {}
+    for trade, hours in node["lab"].items():
+        resolved_trade = alias.get(trade, trade)
+        if resolved_trade in TRADES:
+            lab[resolved_trade] = lab.get(resolved_trade, 0) + hours
+        else:
+            losses.append(("unknown_trade",
+                "%s: %s unknown trade '%s', dropped" % (filename, node["id"], trade)))
+    return lab
+
+
+def _merge_resolve_materials(node, alias, dropset, goods, filename, losses):
+    materials = {}
+    for material, quantity in node["mat"].items():
+        resolved_material = alias.get(material, material)
+        if resolved_material not in goods:
+            # generic fallbacks for the shapes authors actually write:
+            # "mat_beeswax" -> "beeswax_kg", "plaster" -> "plaster_kg"
+            for cand in (resolved_material[4:] + "_kg" if resolved_material.startswith("mat_") else None,
+                         resolved_material + "_kg", resolved_material.replace("mat_", "")):
+                if cand and cand in goods:
+                    resolved_material = cand
+                    break
+        if resolved_material in dropset or material in dropset:
+            losses.append(("material_is_technology",
+                "%s: %s '%s' is a technology not a material, dropped" % (filename, node["id"], material)))
+            continue
+        if resolved_material in goods:
+            materials[resolved_material] = materials.get(resolved_material, 0) + quantity
+        else:
+            losses.append(("unpriced_material",
+                "%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material)))
+    return materials
+
+
+def _merge_relocate_kb_prose(node):
+    # Branch authors keep writing the RECIPE PROSE into the kb link
+    # field. Left alone it reports as a broken link to a file whose
+    # name is a sentence. Move it to note where note is empty and
+    # clear the field, so it reports as an honest documentation gap.
+    kb_field = str(node.get("kb", "")).strip()
+    if kb_field and not re.match(r"^\d\d_[A-Za-z0-9_]+\.md(#|$)", kb_field):
+        if not str(node.get("note", "")).strip():
+            node["note"] = kb_field
+        kb_field = ""
+    node["kb"] = kb_field
+
+
+def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions):
+    """Validate, normalise and fold ONE branch node into `nodes`. Returns "added",
+    "updated" or None (nothing ingested - a missing field, a retired id, or a
+    same-run collision, each already recorded in errs/warns/collisions)."""
+    missing = [field for field in REQUIRED if field not in node]
+    if missing:
+        errs.append("%s: %s missing fields %s" % (filename, node.get("id", "?"), missing))
+        return None
+    if node["id"] in retired:
+        warns.append("%s: %s was merged into %s, skipping"
+                     % (filename, node["id"], retired[node["id"]]))
+        return None
+    if node["id"] in branch_origin:
+        # Two branch definitions claim the same id this run - either
+        # the same file lists it twice, or two DIFFERENT files do.
+        # Unlike the tree-vs-branch case below, there is no
+        # source-of-truth rule that resolves this automatically: it is
+        # either two authors who independently invented the same id,
+        # or one author trying to "correct" a node by adding a second
+        # definition in a new file instead of editing the original.
+        # Guessing which is which is exactly the kind of silent
+        # decision that ate branch edits in the first place, so this
+        # is an ERROR naming both sides (sim/validate_production.py's
+        # load_production already applies the identical rule to
+        # data/production/), not a warning, and the first definition
+        # encountered is kept unchanged rather than overwritten.
+        first = branch_origin[node["id"]]
+        collisions.append(("%s is defined twice in %s" % (node["id"], filename))
+                          if first == filename else
+                          ("%s is defined in both %s and %s" % (node["id"], first, filename)))
+        return None
+    existed_in_tree = node["id"] in nodes and node["id"] not in branch_origin
+    # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
+    # is unobtainable, only elsewhere. A new branch reintroduced it on
+    normalise_v2(node)
+    node["lab"] = _merge_resolve_labour(node, alias, TRADES, filename, losses)
+    node["mat"] = _merge_resolve_materials(node, alias, dropset, goods, filename, losses)
+    _merge_relocate_kb_prose(node)
+    node["_src"] = filename
+    # STAGE 3 (Complaints/30): a branch node that names an id already
+    # present from the tree OVERWRITES it field by field, instead of
+    # being silently dropped - the whole point of this fix. It is a
+    # field-level overlay, not a wholesale replacement, because the
+    # tree carries fields no branch schema has ever had a key for -
+    # `kind`, `kb_level`, `_total_cost`, `_internal` - written by
+    # `judge`/`repair`/`apply-caps`, which read and rewrite
+    # tech_tree.json directly and were never meant to round-trip
+    # through branches (see this file's module docstring and the
+    # REPAIR PASS comment on cmd_repair). A replacement would silently
+    # erase every one of those on every node a branch edit touches;
+    # measured on the real tree, that is thousands of fields lost for
+    # reasons that have nothing to do with what the branch author
+    # wrote. `normalise_v2` only ever sets the keys in `DEFAULTS`
+    # (plus the handful of v1/v2 scalars it backfills), so `node`
+    # here never carries those repair-only keys unless a branch file
+    # explicitly set them - meaning the tree's copy survives untouched
+    # for every id whose branch definition doesn't mention it, exactly
+    # like a normal git-free field merge.
+    if existed_in_tree:
+        nodes[node["id"]] = {**nodes[node["id"]], **node}
+        status = "updated"
+    else:
+        nodes[node["id"]] = node
+        status = "added"
+    branch_origin[node["id"]] = filename
+    return status
+
+
+def _merge_process_branch_file(filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions):
+    """Parse one branches/*.json file, fix its self-referencing prereqs, and ingest
+    every node in it. Returns (added, updated) for this file alone."""
+    try:
+        batch = json.load(open(os.path.join(BR, filename)))
+    except Exception as e:
+        errs.append("%s: unparseable JSON: %s" % (filename, e))
+        return 0, 0
+    if not isinstance(batch, list):
+        errs.append("%s: top level is not a list" % filename)
+        return 0, 0
+
+    _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns)
+
+    added = updated = 0
+    for node in batch:
+        status = _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions)
+        if status == "added":
+            added += 1
+        elif status == "updated":
+            updated += 1
+    return added, updated
+
+
+def _merge_report_collisions(errs, collisions):
+    """Print the collision report if any id was defined twice this run. Returns True
+    (merge must refuse) when it printed one."""
+    if not collisions:
+        return False
+    print("errors  : %d" % len(errs))
+    for e in errs[:40]:
+        print("   " + e)
+    print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
+    for collision in collisions:
+        print("   COLLISION " + collision)
+    print("\nFix the branch files so each id has exactly one definition (rename one "
+          "side, delete a stale duplicate, or fold them into a single node), then "
+          "re-run merge. Nothing was written.")
+    return True
+
+
+def _merge_resolve_prerequisites(nodes, retired, losses):
     # resolve prerequisites
     dangling = collections.Counter()
     for node in nodes.values():
@@ -340,7 +416,10 @@ def cmd_merge(a):
                 losses.append(("unresolvable_prerequisite",
                     "%s: dropped unresolvable prereq '%s'" % (node["id"], prereq)))
         node["pre"] = keep
+    return dangling
 
+
+def _merge_break_cycles(nodes, losses):
     # break any cycles by dropping the back edge, reporting each one
     order, state = [], {}
     def dfs(i, stack):
@@ -359,37 +438,34 @@ def cmd_merge(a):
     for node_id in list(nodes):
         dfs(node_id, [])
 
-    # `losses` now holds every event, from both loops above, that deleted
-    # something a branch author wrote rather than merely warning about it:
-    # an unknown labour trade, a material with no price, a material that is
-    # really a technology, a prerequisite naming no node, or a back edge cut
-    # to break a cycle. Print every one, grouped by kind - someone fixing
-    # the source data needs to see every problem in one pass, not the first
-    # 25 and a count of the rest. Refuse to write unless the operator passed
-    # --accept-data-loss: the same "collect everything, report, do not
-    # write" shape as the collision refusal above, because this merge
-    # already deletes data silently today, and that is the bug Task 1 of
-    # this pass exists to close.
-    if losses:
-        by_category = collections.defaultdict(list)
-        for category, message in losses:
-            by_category[category].append(message)
-        print("\n%d event(s) would delete data during this merge:" % len(losses))
-        for category in sorted(by_category):
-            print("\n  %s (%d)" % (category, len(by_category[category])))
-            for message in by_category[category]:
-                print("     " + message)
-        if not getattr(a, "accept_data_loss", False):
-            print("\nMERGE REFUSED: the %d event(s) listed above would each drop something a "
-                  "branch author wrote (an unpriced material, an unknown trade, a prerequisite "
-                  "naming no node, or a cycle-breaking edge deletion). Fix the source data - "
-                  "price the material, add the trade to prices.json, add the missing "
-                  "prerequisite node, or break the cycle by hand in the branch file - and "
-                  "re-run merge. If the loss is intended, re-run with --accept-data-loss to "
-                  "write anyway. Nothing was written." % len(losses))
-            return 1
-        print("\n--accept-data-loss was passed: writing despite the %d event(s) above." % len(losses))
 
+def _merge_report_losses(losses, accept_data_loss):
+    """Print every data-loss event, grouped by category. Returns True (merge must
+    refuse) unless --accept-data-loss was passed."""
+    if not losses:
+        return False
+    by_category = collections.defaultdict(list)
+    for category, message in losses:
+        by_category[category].append(message)
+    print("\n%d event(s) would delete data during this merge:" % len(losses))
+    for category in sorted(by_category):
+        print("\n  %s (%d)" % (category, len(by_category[category])))
+        for message in by_category[category]:
+            print("     " + message)
+    if not accept_data_loss:
+        print("\nMERGE REFUSED: the %d event(s) listed above would each drop something a "
+              "branch author wrote (an unpriced material, an unknown trade, a prerequisite "
+              "naming no node, or a cycle-breaking edge deletion). Fix the source data - "
+              "price the material, add the trade to prices.json, add the missing "
+              "prerequisite node, or break the cycle by hand in the branch file - and "
+              "re-run merge. If the loss is intended, re-run with --accept-data-loss to "
+              "write anyway. Nothing was written." % len(losses))
+        return True
+    print("\n--accept-data-loss was passed: writing despite the %d event(s) above." % len(losses))
+    return False
+
+
+def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, a):
     base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
     base["meta"]["merged_duplicate_ids"] = retired
@@ -448,20 +524,19 @@ def closure(nodes, k):
     return seen
 
 
-def judge_node(n, nodes, stats):
-    """Score one technology using its declared graph and category, not a rank."""
+def _judge_abstract_defects(n):
+    """The abstract-category half of judge_node: only NOTE-THIN and NO-CONF apply."""
     defects = []
-    if n["cat"] in ABSTRACT_CATS:
-        if len(n["note"]) < 60:
-            defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
-        if n["conf"] not in ("A", "B", "C"):
-            defects.append(("NO-CONF", "confidence not stated"))
-        return max(0, 100 - len(defects) * 12), defects
+    if len(n["note"]) < 60:
+        defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
+    if n["conf"] not in ("A", "B", "C"):
+        defects.append(("NO-CONF", "confidence not stated"))
+    return defects
 
-    ancestry = closure(nodes, n["id"])
-    caps = {node_id for node_id in ancestry if node_id.startswith(CAP_PREFIX)}
-    text = (n["name"] + " " + n["note"]).lower()
-    unob = [node_id for node_id in ancestry if nodes[node_id]["cat"] == "unobtainable"]
+
+def _judge_capability_defects(n, caps, ancestry, text):
+    """CAP-NONE plus the per-word capability-rung checks (heat, tolerance, vacuum, purity, power)."""
+    defects = []
     physical = bool(n.get("mat")) or n.get("cap", 0) >= 200
     if not caps and physical and len(ancestry) >= 3 and n["cat"] not in (
             "social", "institution", "mathematics", "physics", "foundation",
@@ -479,14 +554,25 @@ def judge_node(n, nodes, stats):
     want(PUR_WORDS, "cap_pure_", "PURITY")
     if any(word in text for word in ELEC_WORDS) and not any(cap_id.startswith("cap_power_") for cap_id in caps):
         defects.append(("CAP-POWER", "electrical work with no power rung in its chain"))
+    return defects
 
+
+def _judge_structural_defects(n, ancestry, unob):
+    """SHALLOW (thin direct prerequisites under a deep ancestry) and BLOCKED (depends on
+    something marked unobtainable)."""
+    defects = []
     if len(n["pre"]) < 2 and 10 <= len(ancestry) < 25:
         defects.append(("SHALLOW", "%d direct prerequisite(s) and an ancestry only %d nodes deep"
                              % (len(n["pre"]), len(ancestry))))
     if unob and n["cat"] != "unobtainable":
         defects.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
                              % ", ".join(sorted(unob)[:3])))
+    return defects
 
+
+def _judge_cost_and_hours_defects(n, ancestry, stats):
+    """COST-HIGH, HOURS-HIGH, HOURS-ZERO and NO-FLOOR."""
+    defects = []
     category = n["cat"]
     med_cost = stats["cost"].get(category, 1)
     cost = n["_total_cost"]
@@ -500,6 +586,12 @@ def judge_node(n, nodes, stats):
         defects.append(("HOURS-ZERO", "non-foundational work costs the founder no hours"))
     if n.get("adopt_yrs", 0) >= 5 and n["yrs"] < 1:
         defects.append(("NO-FLOOR", "long adoption has a calendar floor under a year"))
+    return defects
+
+
+def _judge_documentation_and_social_defects(n, ancestry):
+    """NOTE-THIN, NO-RECIPE, NO-CONF and SOCIAL-FLAT."""
+    defects = []
     if len(n["note"]) < 60:
         defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
     if not n.get("kb") and n["cat"] not in ("capability", "material", "unobtainable"):
@@ -509,6 +601,25 @@ def judge_node(n, nodes, stats):
     if len(ancestry) >= 3 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
             and n["cat"] not in ("capability", "material", "unobtainable", "mathematics", "physics"):
         defects.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus"))
+    return defects
+
+
+def judge_node(n, nodes, stats):
+    """Score one technology using its declared graph and category, not a rank."""
+    if n["cat"] in ABSTRACT_CATS:
+        defects = _judge_abstract_defects(n)
+        return max(0, 100 - len(defects) * 12), defects
+
+    ancestry = closure(nodes, n["id"])
+    caps = {node_id for node_id in ancestry if node_id.startswith(CAP_PREFIX)}
+    text = (n["name"] + " " + n["note"]).lower()
+    unob = [node_id for node_id in ancestry if nodes[node_id]["cat"] == "unobtainable"]
+
+    defects = []
+    defects += _judge_capability_defects(n, caps, ancestry, text)
+    defects += _judge_structural_defects(n, ancestry, unob)
+    defects += _judge_cost_and_hours_defects(n, ancestry, stats)
+    defects += _judge_documentation_and_social_defects(n, ancestry)
 
     weights = {"NO-RECIPE": 1, "CAP-NONE": 3, "CAP-HEAT": 2, "CAP-TOL": 2,
                "CAP-VAC": 2, "CAP-PURITY": 2, "CAP-POWER": 2, "SHALLOW": 3,
@@ -521,16 +632,18 @@ def grade(s):
     return "A" if s >= 90 else "B" if s >= 78 else "C" if s >= 64 else "D" if s >= 50 else "F"
 
 
-def cmd_judge(a):
-    tree = json.load(open(TREE))
-    nodes = {node["id"]: node for node in tree["nodes"]}
-    prices = json.load(open(os.path.join(DATA, "prices.json")))
+def _judge_compute_costs(nodes, prices):
+    """Set node["_total_cost"] for every node from labour hours, materials and cap, in place."""
     wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
     goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
     for node in nodes.values():
         node["_total_cost"] = (sum(wages.get(trade, 0) * hours for trade, hours in node["lab"].items())
                             + sum(goods.get(material, 0) * quantity for material, quantity in node["mat"].items()) + node["cap"])
 
+
+def _judge_build_results(nodes, prices):
+    """Cost every node, work out the per-category median cost, then judge every node."""
+    _judge_compute_costs(nodes, prices)
     by_category_cost = collections.defaultdict(list)
     for node in nodes.values():
         by_category_cost[node["cat"]].append(node["_total_cost"])
@@ -540,31 +653,36 @@ def cmd_judge(a):
     results = {}
     for node_id, node in nodes.items():
         results[node_id] = judge_node(node, nodes, stats)
+    return results
 
-    if a.id:
-        if a.id not in nodes:
-            near = [node_id for node_id in nodes if a.id.lower() in node_id.lower()]
-            raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:10]) or "none"))
-        node, (score, node_defects) = nodes[a.id], results[a.id]
-        print("%s  [%s]" % (node["name"], node["id"]))
-        print("=" * 78)
-        print("grade %s (%d/100)   %s   confidence %s"
-              % (grade(score), score, node["cat"], node["conf"]))
-        print("direct prerequisites : %d   full ancestry : %d nodes"
-              % (len(node["pre"]), len(closure(nodes, a.id)) - 1))
-        print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
-              % (f"{node['_total_cost']:,.0f}", f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
-        caps = sorted(cap_id for cap_id in closure(nodes, a.id) if cap_id.startswith("cap_"))
-        print("capability rungs in its chain: %s" % (", ".join(caps) if caps else "NONE"))
-        print("\n%s\n" % node["note"])
-        if node_defects:
-            print("DEFECTS")
-            for code, msg in node_defects:
-                print("  [%s] %s" % (code, msg))
-        else:
-            print("No defects found by the automated checks.")
-        return 0
 
+def _judge_print_single_node_report(a, nodes, results):
+    """The `judge --id X` report card for one node."""
+    if a.id not in nodes:
+        near = [node_id for node_id in nodes if a.id.lower() in node_id.lower()]
+        raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:10]) or "none"))
+    node, (score, node_defects) = nodes[a.id], results[a.id]
+    print("%s  [%s]" % (node["name"], node["id"]))
+    print("=" * 78)
+    print("grade %s (%d/100)   %s   confidence %s"
+          % (grade(score), score, node["cat"], node["conf"]))
+    print("direct prerequisites : %d   full ancestry : %d nodes"
+          % (len(node["pre"]), len(closure(nodes, a.id)) - 1))
+    print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
+          % (f"{node['_total_cost']:,.0f}", f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
+    caps = sorted(cap_id for cap_id in closure(nodes, a.id) if cap_id.startswith("cap_"))
+    print("capability rungs in its chain: %s" % (", ".join(caps) if caps else "NONE"))
+    print("\n%s\n" % node["note"])
+    if node_defects:
+        print("DEFECTS")
+        for code, msg in node_defects:
+            print("  [%s] %s" % (code, msg))
+    else:
+        print("No defects found by the automated checks.")
+
+
+def _judge_print_summary(nodes, results):
+    """The header block: node count, mean score, grade distribution, defects by frequency."""
     dist = collections.Counter(grade(score) for score, _ in results.values())
     defects = collections.Counter()
     for score, node_defects in results.values():
@@ -580,28 +698,61 @@ def cmd_judge(a):
     print("\nDEFECTS BY FREQUENCY")
     for code, value in defects.most_common():
         print("   %-12s %4d  (%.0f%% of nodes)" % (code, value, 100.0 * value / len(nodes)))
+
+
+def _judge_print_worst_nodes(results):
     print("\nWORST NODES")
     worst = sorted(results.items(), key=lambda entry: entry[1][0])[:20]
     for node_id, (score, node_defects) in worst:
         print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects[:4])))
-    if a.grade:
-        floor = "FDCBA".index(a.grade.upper())
-        print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
-        for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
-            if "FDCBA".index(grade(score)) <= floor:
-                print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects)))
-    if a.full:
-        print("\nFULL REPORT")
-        for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
-            if node_defects:
-                print("\n%s  %d %s" % (node_id, score, grade(score)))
-                for code, message in node_defects:
-                    print("    [%s] %s" % (code, message))
+
+
+def _judge_print_grade_filter(a, results):
+    """`judge --grade X`: every node at or below that grade. No-op unless the flag was passed."""
+    if not a.grade:
+        return
+    floor = "FDCBA".index(a.grade.upper())
+    print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
+    for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
+        if "FDCBA".index(grade(score)) <= floor:
+            print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects)))
+
+
+def _judge_print_full_report(a, results):
+    """`judge --full`: every defect, node by node. No-op unless the flag was passed."""
+    if not a.full:
+        return
+    print("\nFULL REPORT")
+    for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
+        if node_defects:
+            print("\n%s  %d %s" % (node_id, score, grade(score)))
+            for code, message in node_defects:
+                print("    [%s] %s" % (code, message))
+
+
+def _judge_write_judgement(results, a):
     _write_json({node_id: {"score": score, "grade": grade(score), "defects": [code for code, _ in node_defects]}
                  for node_id, (score, node_defects) in results.items()},
                 os.path.join(DATA, "judgement.json"), a)
     if not getattr(a, "dry_run", False):
         print("\nwrote data/judgement.json")
+
+
+def cmd_judge(a):
+    tree = json.load(open(TREE))
+    nodes = {node["id"]: node for node in tree["nodes"]}
+    prices = json.load(open(os.path.join(DATA, "prices.json")))
+    results = _judge_build_results(nodes, prices)
+
+    if a.id:
+        _judge_print_single_node_report(a, nodes, results)
+        return 0
+
+    _judge_print_summary(nodes, results)
+    _judge_print_worst_nodes(results)
+    _judge_print_grade_filter(a, results)
+    _judge_print_full_report(a, results)
+    _judge_write_judgement(results, a)
     return 0
 
 
