@@ -247,20 +247,12 @@ _SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
 _SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
 
 
-def _validate_save(blob, s):
-    """None if `blob` looks like a save this game could have produced and can
-    be loaded into `s` as it stands right now; otherwise a short, plain
-    sentence saying why not.
-
-    `load` used to accept any JSON object at all: a typo'd filename, an
-    unrelated file, a save from a different civilisation, or a save that
-    refers to a node a later edit to the tech tree renamed or removed. Every
-    one of those went straight into setattr() - which either corrupted the
-    running game half-applied (fields earlier in SAVE_FIELDS take, the rest
-    do not, because the loop does not stop for a bad value) or surfaced as a
-    bare Python exception. This runs to completion BEFORE a single attribute
-    of `s` is touched, so a bad file costs exactly one clear sentence and
-    nothing else about the running game changes.
+def _check_save_shape(blob):
+    """None if `blob` is a JSON object carrying every field this build
+    requires; otherwise the refusal message. One of the checks
+    _validate_save runs in order, stopping at the first with an opinion -
+    see its own docstring for why the whole file is checked before a single
+    attribute of `s` is touched.
     """
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
@@ -271,12 +263,28 @@ def _validate_save(blob, s):
         if len(missing) > 8:
             shown += ", and %d more required fields" % (len(missing) - 8)
         return "this is not a save from this game: missing %s" % shown
+    return None
+
+
+def _check_save_version(blob):
+    """None if `blob`'s version stamp is a whole number matching the one this
+    build writes; otherwise the refusal message. See _check_save_shape.
+    """
     if not isinstance(blob.get("_version"), int):
         return "this save is corrupt: '_version' should be a whole number"
     if blob["_version"] != SAVE_VERSION:
         return ("this save uses format version %s; this build requires version %s. "
                 "Saved runs are not migrated; start a new run."
                 % (blob["_version"], SAVE_VERSION))
+    return None
+
+
+def _check_save_scalars(blob, s):
+    """None if the save's simple top-level fields - goal, civilisation-live
+    state, weights, random-number state, year, capital, and the
+    civilisation id itself - are shaped and valued the way the running game
+    `s` needs; otherwise the refusal message. See _check_save_shape.
+    """
     if blob["_goal"] not in s.nodes:
         return "this save's goal is not in the current technology tree"
     if not isinstance(blob["_civ_live"], dict) or not isinstance(blob["_weights"], dict):
@@ -298,7 +306,14 @@ def _validate_save(blob, s):
         return ("this save is from a different civilisation (%r); this game "
                 "is running %r. Start the agent with --civ %s to load it."
                 % (civ_id, have_civ, civ_id))
+    return None
 
+
+def _check_save_active(blob):
+    """None if `blob["active"]` is a well-formed mapping of node id to
+    in-progress state; otherwise the refusal message. See
+    _check_save_shape.
+    """
     active = blob.get("active")
     if not isinstance(active, dict):
         return "this save is corrupt: 'active' should be an object of id -> progress"
@@ -311,11 +326,26 @@ def _validate_save(blob, s):
                          "'%s'" % (node_id, field_name))
         if not isinstance(value.get("lab_left"), dict):
             return "this save is corrupt: active[%r] is missing 'lab_left'" % (node_id,)
+    return None
 
+
+def _check_save_done(blob):
+    """None if `blob["done"]` is shaped like a saved set of ids; otherwise
+    the refusal message. See _check_save_shape.
+    """
     done = blob.get("done")
     if not (isinstance(done, dict) and isinstance(done.get("__set__"), list)):
         return "this save is corrupt: 'done' should be a set of ids"
+    return None
 
+
+def _check_save_node_id_references(blob, s):
+    """The refusal message if any _SET_FIELDS_OF_NODE_IDS field is shaped
+    wrong; otherwise (None, the set of node ids the save refers to that the
+    currently loaded tree does not have - `active`'s ids included). See
+    _check_save_shape. The caller checks that returned set against the
+    trade-name fields' own outcome before deciding whether it is a refusal.
+    """
     # Every node id the save refers to must still exist in the tree we have
     # loaded right now.
     unknown = set()
@@ -325,9 +355,17 @@ def _validate_save(blob, s):
             continue
         ids = value.get("__set__") if isinstance(value, dict) else None
         if ids is None or not all(isinstance(node_id, str) for node_id in ids):
-            return "this save is corrupt: '%s' should be a set of id strings" % field_name
+            return "this save is corrupt: '%s' should be a set of id strings" % field_name, None
         unknown |= {node_id for node_id in ids if node_id not in s.nodes}
-    unknown |= {node_id for node_id in active if node_id not in s.nodes}
+    unknown |= {node_id for node_id in blob.get("active", {}) if node_id not in s.nodes}
+    return None, unknown
+
+
+def _check_save_trade_name_sets(blob):
+    """None if every _SET_FIELDS_OF_TRADE_NAMES field is shaped like a set of
+    strings and every one of those strings names a trade this game actually
+    has; otherwise the refusal message. See _check_save_shape.
+    """
     for field_name in _SET_FIELDS_OF_TRADE_NAMES:
         value = blob.get(field_name)
         if value is None:
@@ -339,6 +377,52 @@ def _validate_save(blob, s):
         if strange:
             return ("this save refers to trade(s) this game does not have: %s"
                     % ", ".join(sorted(strange)[:6]))
+    return None
+
+
+def _validate_save(blob, s):
+    """None if `blob` looks like a save this game could have produced and can
+    be loaded into `s` as it stands right now; otherwise a short, plain
+    sentence saying why not.
+
+    `load` used to accept any JSON object at all: a typo'd filename, an
+    unrelated file, a save from a different civilisation, or a save that
+    refers to a node a later edit to the tech tree renamed or removed. Every
+    one of those went straight into setattr() - which either corrupted the
+    running game half-applied (fields earlier in SAVE_FIELDS take, the rest
+    do not, because the loop does not stop for a bad value) or surfaced as a
+    bare Python exception. This runs to completion BEFORE a single attribute
+    of `s` is touched, so a bad file costs exactly one clear sentence and
+    nothing else about the running game changes.
+
+    Each of the checks below reports ONE reason, the way a player is told
+    one reason a save was refused: this function runs them in order and
+    returns the first one that has an opinion, the same start_reason shape
+    as StartingMixin.start_reason, not the concatenate-everything shape
+    validate_production's check uses - a save either loads or it does not,
+    there is no "everything wrong with this file" report to build.
+    """
+    message = _check_save_shape(blob)
+    if message:
+        return message
+    message = _check_save_version(blob)
+    if message:
+        return message
+    message = _check_save_scalars(blob, s)
+    if message:
+        return message
+    message = _check_save_active(blob)
+    if message:
+        return message
+    message = _check_save_done(blob)
+    if message:
+        return message
+    message, unknown = _check_save_node_id_references(blob, s)
+    if message:
+        return message
+    message = _check_save_trade_name_sets(blob)
+    if message:
+        return message
     if unknown:
         sample = ", ".join(sorted(unknown)[:6])
         more = "" if len(unknown) <= 6 else " and %d more" % (len(unknown) - 6)

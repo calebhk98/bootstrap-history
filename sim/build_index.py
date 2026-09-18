@@ -43,13 +43,14 @@ def github_slug(heading):
     return re.sub(r"\s+", "-", slug).strip("-")
 
 
-def main():
-    tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
-    nodes = tree["nodes"]
-    slugs = {}          # file -> {tech_id: github anchor slug for the whole heading}
-    anchors, files = {}, sorted(filename for filename in os.listdir(KB)
-                                if filename.endswith(".md") and not filename.startswith("_")
-                                and filename != "README.md")
+def _parse_kb_anchors(files):
+    """Read every knowledge module and record, per file, which tech-tree ids
+    it documents and the GitHub anchor slug for each one.
+
+    Returns (anchors, slugs): anchors maps file -> set of ids documented in
+    it, slugs maps file -> {tech_id: github anchor slug for the whole heading}.
+    """
+    anchors, slugs = {}, {}
     for filename in files:
         txt = open(os.path.join(KB, filename)).read()
         anchors[filename], slugs[filename] = set(), {}
@@ -84,11 +85,15 @@ def main():
                 for tid in re.findall(r"[A-Za-z][A-Za-z0-9_]{2,}", also_covers_match.group(1)):
                     anchors[filename].add(tid)
                     slugs[filename].setdefault(tid, slugs[filename].get(cur, cur))
+    return anchors, slugs
 
-    # Some nodes are institutional or political rather than technical, and their
-    # "how to" lives in the top-level prose files rather than in a recipe module.
-    parent_files = {filename for filename in os.listdir(ROOT) if filename.endswith(".md")}
 
+def _classify_nodes(nodes, anchors, parent_files):
+    """Sort every tech-tree node by where its recipe lives: a specific
+    module, a top-level prose file, no link by design, or a genuine gap.
+
+    Returns (by_file, broken_file, broken_anchor, prose, bydesign, gap).
+    """
     by_file = collections.defaultdict(list)
     broken_file, broken_anchor, prose = [], [], []
     bydesign, gap = [], []
@@ -109,7 +114,11 @@ def main():
                 broken_anchor.append((node["id"], node["kb"]))
         else:
             broken_file.append((node["id"], node["kb"]))
+    return by_file, broken_file, broken_anchor, prose, bydesign, gap
 
+
+def _render_header(files, anchors, by_file):
+    """Build the file's fixed preamble plus the per-module summary table."""
     out = ["# knowledge/ - the how-to library",
            "",
            "**This file is generated. Do not edit it.** Run `python3 sim/build_index.py`.",
@@ -135,7 +144,13 @@ def main():
     for filename in files:
         out.append("| [`%s`](%s) | %s | %d | %d |"
                    % (filename, filename, TITLES.get(filename, ""), len(anchors[filename]), len(by_file.get(filename, []))))
-    out += ["",
+    return out
+
+
+def _render_prose_table(prose):
+    """List the institutional and political nodes whose 'how to' lives in a
+    top-level prose file rather than in a recipe module."""
+    out = ["",
             "### Nodes documented in the top-level prose files",
             "",
             "These are institutional, political and economic nodes. Their 'how to' is a",
@@ -145,8 +160,13 @@ def main():
     for node, filename, anchor in sorted(prose, key=lambda entry: (entry[0]["id"], entry[0]["ph"])):
         out.append("| `%s` | %s | [`%s`](../%s) |" %
                    (node["id"], f"{node['ph']:,}", filename, filename))
+    return out
 
-    out += ["",
+
+def _render_node_tables(files, by_file, slugs, anchors):
+    """List every tree node with a module link, one table per module,
+    sorted by module then by node id."""
+    out = ["",
             "## Every tech-tree node, and where its recipe lives",
             "",
             "Sorted by module, then by node id.",
@@ -162,9 +182,12 @@ def main():
             out.append("| `%s` | %s | %s%s |" %
                        (node["id"], f"{node['ph']:,}", link, mark))
         out.append("")
+    return out
 
-    # Inline cross-references written inside the modules themselves. Nothing
-    # validated these before, and 7 of them were broken.
+
+def _find_inline_broken_refs(files, anchors):
+    """Check inline cross-references written inside the modules themselves.
+    Nothing validated these before, and 7 of them were broken."""
     parent_md = {filename for filename in os.listdir(ROOT) if filename.endswith(".md")}
     inline_bad = []
     for filename in files:
@@ -176,13 +199,21 @@ def main():
                     inline_bad.append((filename, linked_file + "#" + linked_anchor, "no such entry"))
             elif linked_file not in parent_md:
                 inline_bad.append((filename, linked_file + "#" + linked_anchor, "no such file"))
+    return inline_bad
+
+
+def _render_inline_broken_section(inline_bad):
+    out = []
     if inline_bad:
         out += ["## Broken cross-references inside the modules", ""]
         for source_file, target_ref, reason in inline_bad:
             out.append("- `%s` links to `%s`: %s" % (source_file, target_ref, reason))
         out.append("")
+    return out
 
-    out += ["## Documentation coverage", "",
+
+def _render_coverage_section(files, by_file, prose, bydesign, gap):
+    out = ["## Documentation coverage", "",
             "| status | nodes |", "|---|---:|",
             "| linked to a specific recipe entry | %d |" % sum(1 for filename in files for node, anchor in by_file.get(filename, []) if anchor),
             "| linked to a domain module, no specific entry | %d |" % sum(1 for filename in files for node, anchor in by_file.get(filename, []) if not anchor),
@@ -192,7 +223,11 @@ def main():
     if gap:
         out += ["The undocumented nodes, listed so the gap is visible rather than hidden:", "",
                 "`" + "`, `".join(sorted(gap)) + "`", ""]
+    return out
 
+
+def _render_broken_links_section(broken_file, broken_anchor):
+    out = []
     if broken_file or broken_anchor:
         out += ["## Broken links", ""]
         for node_id, kb_link in broken_file:
@@ -200,8 +235,10 @@ def main():
         for node_id, kb_link in broken_anchor:
             out.append("- `%s` points at `%s`, but that module has no such `###` entry" % (node_id, kb_link))
         out.append("")
+    return out
 
-    open(os.path.join(KB, "README.md"), "w").write("\n".join(out) + "\n")
+
+def _print_report(files, by_file, prose, bydesign, gap, broken_file, broken_anchor, inline_bad, nodes):
     print("wrote knowledge/README.md")
     print("  modules indexed : %d" % len(files))
     print("  nodes linked    : %d recipe + %d prose = %d of %d"
@@ -215,6 +252,35 @@ def main():
         print("     %-28s -> %-44s %s" % (source_file, target_ref, reason))
     for node_id, kb_link in broken_file + broken_anchor:
         print("     %-32s -> %s" % (node_id, kb_link))
+
+
+def main():
+    tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
+    nodes = tree["nodes"]
+    files = sorted(filename for filename in os.listdir(KB)
+                    if filename.endswith(".md") and not filename.startswith("_")
+                    and filename != "README.md")
+    anchors, slugs = _parse_kb_anchors(files)
+
+    # Some nodes are institutional or political rather than technical, and their
+    # "how to" lives in the top-level prose files rather than in a recipe module.
+    parent_files = {filename for filename in os.listdir(ROOT) if filename.endswith(".md")}
+    by_file, broken_file, broken_anchor, prose, bydesign, gap = _classify_nodes(nodes, anchors, parent_files)
+
+    out = _render_header(files, anchors, by_file)
+    out += _render_prose_table(prose)
+    out += _render_node_tables(files, by_file, slugs, anchors)
+
+    # Inline cross-references written inside the modules themselves. Nothing
+    # validated these before, and 7 of them were broken.
+    inline_bad = _find_inline_broken_refs(files, anchors)
+    out += _render_inline_broken_section(inline_bad)
+
+    out += _render_coverage_section(files, by_file, prose, bydesign, gap)
+    out += _render_broken_links_section(broken_file, broken_anchor)
+
+    open(os.path.join(KB, "README.md"), "w").write("\n".join(out) + "\n")
+    _print_report(files, by_file, prose, bydesign, gap, broken_file, broken_anchor, inline_bad, nodes)
     return 1 if (broken_file or broken_anchor or inline_bad) else 0
 
 if __name__ == "__main__":
