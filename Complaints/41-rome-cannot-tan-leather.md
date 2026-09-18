@@ -221,3 +221,37 @@ duplicated across branch files make the merge fight itself; this is the same
 failure in the node vocabulary rather than the material one. Flagged, not
 resolved - picking a winner is a tree edit, and the labelling deliberately
 does not make tree edits.
+
+## Fixed
+
+`tex_vegetable_tanning` added to all five civilisations, `tx2_fulling` to
+four. Not to `mexica_1500`: fulling is wool finishing, and the Mexica worked
+cotton and maguey. That distinction was the agent's own call and is the right
+one - "every society had it" was the finding, and a technology for a fibre a
+society did not use is not an instance of it.
+
+    england_1300     204  tanning=yes  fulling=yes
+    han_china_100ad  109  tanning=yes  fulling=yes
+    mexica_1500       35  tanning=yes  fulling=no
+    norse_900ad      150  tanning=yes  fulling=yes
+    rome_100ad       225  tanning=yes  fulling=yes
+
+No new prerequisite violation: `tex_vegetable_tanning` needs `mat_leather`,
+which all five already held, and `tx2_fulling` has no prerequisites at all.
+`Complaints/42`'s pin stays at exactly seventeen.
+
+The acceptance test is that the materials now have a price where they had
+none. They do, in both civilisations that were checked:
+
+    leather_kg    9.175 labour-hours per kg
+    cloth_kg     21.273 labour-hours per kg
+
+Soap is deliberately still missing, as recorded above: contested rather than
+wrong, and nobody has argued it either way yet.
+
+What remains open from this complaint is the general question rather than
+these two instances - whether any OTHER technology is missing from every
+civilisation at once. The sweep that found these two is four lines and is not
+yet in the suite, because it needs a judgement about what each society should
+have rather than a graph walk. `Complaints/42`'s test covers the structural
+half; this half still needs a historian.

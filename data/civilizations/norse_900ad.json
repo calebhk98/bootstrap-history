@@ -1,381 +1,383 @@
 {
- "_note_cost_multipliers": "The best shipwrights and among the best smiths in Europe, and no state at all. Anything that is a public work rather than a private one costs nearly twice what it costs Rome, because there is nobody to compel or fund it. Concrete is worse still: no pozzolana, no tradition of masonry at scale.",
- "_note_debt_bondage": "A man who could not pay became a skuldarmadr, a debt-thrall, and the law provided for working the debt off and going free.",
- "base_reach": 4,
- "blurb": "Small population, no state to speak of, superb shipbuilding and ironworking, and the best long-range mobility in Europe. The opposite problem from Rome: nobody will stop you, and nobody can fund you either.",
- "bondage_years": 10,
- "cost_multipliers": {
-  "alloys": 0.9,
-  "binders": 2.2,
-  "buildings": 1.6,
-  "civil": 1.8,
-  "commerce": 1.1,
-  "cutting": 0.85,
-  "foundations": 1.9,
-  "hull": 0.6,
-  "infrastructure": 1.8,
-  "marine": 0.65,
-  "metallurgy": 0.85,
-  "navigation": 0.7,
-  "ships": 0.6,
-  "structures": 1.7
- },
- "currency": "hacksilver by weight",
- "debt_bondage": true,
- "fire_quarter": "longhouses by the shore",
- "handicap_remedies": {
-  "_doc": "The Norse handicap is not skill, it is that there is no body able to compel or fund a public work. Charter one and it goes away.",
-  "binders": {
-   "node": "cn_portland_cement",
-   "residual": 1.0
+  "_note_cost_multipliers": "The best shipwrights and among the best smiths in Europe, and no state at all. Anything that is a public work rather than a private one costs nearly twice what it costs Rome, because there is nobody to compel or fund it. Concrete is worse still: no pozzolana, no tradition of masonry at scale.",
+  "_note_debt_bondage": "A man who could not pay became a skuldarmadr, a debt-thrall, and the law provided for working the debt off and going free.",
+  "base_reach": 4,
+  "blurb": "Small population, no state to speak of, superb shipbuilding and ironworking, and the best long-range mobility in Europe. The opposite problem from Rome: nobody will stop you, and nobody can fund you either.",
+  "bondage_years": 10,
+  "cost_multipliers": {
+    "alloys": 0.9,
+    "binders": 2.2,
+    "buildings": 1.6,
+    "civil": 1.8,
+    "commerce": 1.1,
+    "cutting": 0.85,
+    "foundations": 1.9,
+    "hull": 0.6,
+    "infrastructure": 1.8,
+    "marine": 0.65,
+    "metallurgy": 0.85,
+    "navigation": 0.7,
+    "ships": 0.6,
+    "structures": 1.7
   },
-  "buildings": {
-   "node": "collegium_licensed",
-   "residual": 1.15
+  "currency": "hacksilver by weight",
+  "debt_bondage": true,
+  "fire_quarter": "longhouses by the shore",
+  "handicap_remedies": {
+    "_doc": "The Norse handicap is not skill, it is that there is no body able to compel or fund a public work. Charter one and it goes away.",
+    "binders": {
+      "node": "cn_portland_cement",
+      "residual": 1.0
+    },
+    "buildings": {
+      "node": "collegium_licensed",
+      "residual": 1.15
+    },
+    "civil": {
+      "node": "collegium_licensed",
+      "residual": 1.2
+    },
+    "commerce": {
+      "node": "collegium_licensed",
+      "residual": 1.0
+    },
+    "foundations": {
+      "node": "collegium_licensed",
+      "residual": 1.2
+    },
+    "infrastructure": {
+      "node": "collegium_licensed",
+      "residual": 1.2
+    },
+    "structures": {
+      "node": "collegium_licensed",
+      "residual": 1.2
+    }
   },
-  "civil": {
-   "node": "collegium_licensed",
-   "residual": 1.2
+  "hazards": [
+    {
+      "name": "The settlement of Iceland and the founding of the Althing",
+      "note": "The settlement wave that began around 874 is essentially complete by 900, and in 930 the settlers founded the Althing at Thingvellir, a general assembly of free farmers with no king over it - the oldest continuously-referenced parliamentary institution in Europe. No damage fields: this is a new country and a working assembly appearing where there was nothing, and it is exactly the kind of thing the game had been silent about for the first century of play, which is why it is here rather than left to the Christianisation entry below to carry alone.",
+      "values": {
+        "w_commerce": 0.05,
+        "w_novelty": 0.05
+      },
+      "years": [
+        900,
+        930
+      ]
+    },
+    {
+      "name": "Christianisation and political consolidation",
+      "note": "The real effect of this is not mainly deaths but a change to the VALUES vector, applied gradually below: how much doctrine constrains what may be said and how readily an inexplicable effect is called sorcery both rise sharply as the old plural, no-doctrine seidr-tolerant religion gives way to a Church with a creed and an inquisition's ancestor -- what got you patronised in 950 gets you denounced in 1080. the fall in trade and output covers the physical, smaller half of the same event: temple-burnings, forced conversions and the kings' wars that came with them (Olaf Tryggvason's campaigns from 995, climaxing at the Battle of Stiklestad in 1030) visibly disrupted production and occasionally burned things down.",
+      "output_factor": 0.85,
+      "values": {
+        "w_religious_rigidity": 0.45,
+        "w_magic_fear": 0.35,
+        "w_novelty": -0.2
+      },
+      "years": [
+        995,
+        1100
+      ]
+    },
+    {
+      "name": "Norwegian civil war era",
+      "note": "Roughly a century of intermittent succession war between rival kings and the factions behind them (Baglers against Birkebeiner and their successors), settled only by the 1240 succession settlement under Hakon Hakonarson. Not a single campaign but a long run of raids, burnt farms and disputed levies -- dispersed damage across many farms and fjords rather than one capital worth besieging, which is why this is modelled as lost output rather than a sack: a decentralised assembly society has no single site whose fall ends the war.",
+      "output_factor": 0.8,
+      "years": [
+        1130,
+        1240
+      ]
+    },
+    {
+      "name": "Hakon Hakonarson's peace and the Landslov",
+      "note": "The 1240 succession settlement that ends the civil war era above is the start of Norway's medieval high point, not just the stopping of a war: Hakon Hakonarson's long reign (1217-1263) and his son Magnus Lagabote's Landslov of 1274, the first law code for the whole kingdom rather than a patchwork of regional things, are what a break tester's audit found nothing at all standing for between 1240 and the Little Ice Age entry sixty years later. Trade with the Hanseatic towns and Iceland's tribute in 1262-64 both belong to this same window of a kingdom that, briefly, works.",
+      "values": {
+        "w_commerce": 0.06,
+        "patronage_weight": -0.04
+      },
+      "years": [
+        1240,
+        1280
+      ]
+    },
+    {
+      "name": "The Kalmar Union",
+      "note": "Olaf Haakonsson inherited both the Norwegian and Danish crowns as a child in 1380, and after the 1397 Kalmar meeting Norway is a junior partner in a union crowned in Denmark, not a kingdom with its own court to be patronised by any more. Norway's own royal line dies out entirely with Olaf, which the Icelandic and Norwegian annals both mark as the moment there is no longer a king who is only theirs.",
+      "output_factor": 0.92,
+      "values": {
+        "patronage_weight": 0.08
+      },
+      "years": [
+        1397,
+        1450
+      ]
+    },
+    {
+      "name": "Black Death in Scandinavia",
+      "note": "Reached Norway in 1349 on an English ship putting in at Bergen and killed on a scale even worse than England's, by some estimates more than half the population; entire farms and valleys were abandoned and some were never resettled. Recurs at reduced severity through the late 14th century, same as everywhere else in Europe, but this is the first and worst wave.",
+      "staff_loss": 0.55,
+      "years": [
+        1349,
+        1351
+      ]
+    },
+    {
+      "name": "Little Ice Age onset in the North Atlantic",
+      "note": "Cooling sets in from around 1300, shortening growing seasons in Norway itself and slowly strangling the Greenland settlements' already marginal farming and their sea lane to Europe; the Eastern and Western Settlements are gone by the mid 15th century. A slow economic squeeze on the whole North Atlantic world, not a single event.",
+      "output_factor": 0.9,
+      "years": [
+        1300,
+        1400
+      ]
+    },
+    {
+      "name": "The Scandinavian Reformation",
+      "note": "Christian III imposed Lutheranism on Denmark-Norway by force after winning the Count's Feud in 1536, and the church ordinance of 1537 dissolved the Norwegian monasteries and put their land and rents in the crown's hands the same way Henry VIII's dissolution did in England a few years earlier. Norway's own archbishopric at Nidaros, the last independent Norwegian institution of any weight, ends with it. Unlike England's confessional whiplash this does not reverse: Denmark-Norway stays Lutheran, and stays one settled doctrine instead of the old plural, no-creed religion the Christianisation entry above describes replacing.",
+      "values": {
+        "w_religious_rigidity": 0.12,
+        "w_magic_fear": 0.05
+      },
+      "years": [
+        1536,
+        1560
+      ]
+    }
+  ],
+  "home_regions": [
+    "scandinavia"
+  ],
+  "id": "norse_900ad",
+  "institutions": {
+    "bank": false,
+    "charter": false,
+    "corporation": false,
+    "guild": false,
+    "note": "The thing is an assembly, not a state. No one can license you and no one can fund you.",
+    "partnership": "felag, a genuine joint venture",
+    "patent": false,
+    "testament": "weak"
   },
-  "commerce": {
-   "node": "collegium_licensed",
-   "residual": 1.0
+  "literacy_elite": 0.15,
+  "literacy_general": 0.02,
+  "name": "Scandinavia in the Viking age",
+  "notes": [
+    "Population is 1.5 million against Rome's 65 million. You will never assemble a large workforce, so every plan must be capital-light and skill-heavy.",
+    "Base reach 4: these ships already go to Greenland, the Caspian and Newfoundland. The Atlantic is not a barrier here, which flips the entire expedition branch."
+  ],
+  "opening": {
+    "arrival": "You come ashore somewhere on the Vestfold, in a country with no king worth the name, no cities, no coinage anybody trusts, and no state to ask permission from. There are perhaps a million and a half people in the whole of Scandinavia. Every one of them is somebody's neighbour, and the law is an assembly of free men who will hear you.",
+    "what_is_coming": "A century of Christianisation and consolidation. Kings, bishops, written law, taxes and towns. The freedom you are enjoying now is the thing that is about to end.",
+    "what_is_missing": "Everything that needs a state. There is no one to fund a public work, no city to concentrate a trade in, no bureaucracy to keep a record for longer than a man's memory. What Rome finds trivial, you will find nearly impossible. What Rome finds impossible, you can simply do, because nobody here can stop you.",
+    "what_you_can_see": "The best ships in the world. Clinker-built, sprung, shallow enough for a river and sound enough for an ocean, and the men who build them do it by eye. Iron smelted from bog ore in every valley. Wool, tar, timber, and a trade network that reaches Baghdad in one direction and Newfoundland in the other.",
+    "what_this_models": "You are one household, not all of Viking-age Scandinavia. There are perhaps a million and a half people in the whole region and barely one in thirty lives anywhere worth calling a town - about 45,000 people in all - so the single market your household actually reaches is smaller again: the order of 14,000. A trade this thin is not a bug in the game; it is Scandinavia. Type 'population' once you are playing to see the numbers for yourself."
   },
-  "foundations": {
-   "node": "collegium_licensed",
-   "residual": 1.2
+  "population": 1500000,
+  "price_index": 1.4,
+  "starting_techs": [
+    "ag2_composting",
+    "ag2_liming",
+    "ag2_malting",
+    "ag2_marling",
+    "ag2_oil_pressing",
+    "ag2_potash",
+    "ag2_refrigeration_ice",
+    "cap_heat_0700",
+    "cap_power_human",
+    "cap_power_muscle",
+    "cap_tol_1mm",
+    "civ_iron_wrought",
+    "cn_gypsum_plaster",
+    "cn_pile_driving",
+    "cn_post_lintel",
+    "cn_stone_polish",
+    "exp_openocean_navigation",
+    "fin_auction",
+    "fin_coined_money",
+    "fin_contract_law",
+    "fin_ferry",
+    "fin_gambling_house",
+    "fin_inn",
+    "fin_market",
+    "fin_testament",
+    "fin_trading_post",
+    "fin_wage",
+    "fud_fish_curing_and_smoking",
+    "fud_hay_making_storage",
+    "hom_board_games",
+    "hom_candle_beeswax",
+    "hom_candle_tallow",
+    "hom_furniture_wooden",
+    "hom_locks_keys",
+    "hom_mirror_bronze_polished",
+    "hom_musical_instruments",
+    "hom_oil_lamp_simple",
+    "lnd_axle_pivot_front",
+    "lnd_bridge",
+    "lnd_four_wheel_cart",
+    "lnd_harness_throat_girth",
+    "lnd_horse_saddle_basic",
+    "lnd_litter",
+    "lnd_mule_transport",
+    "lnd_ox_transport",
+    "lnd_two_wheel_cart",
+    "lnd_tyre_iron",
+    "lnd_wheel_spoked",
+    "mat_alum",
+    "mat_asbestos",
+    "mat_beeswax",
+    "mat_bitumen",
+    "mat_brass",
+    "mat_bronze",
+    "mat_calamine",
+    "mat_carbon_black",
+    "mat_charcoal",
+    "mat_emery",
+    "mat_galena",
+    "mat_glass_soda",
+    "mat_gold",
+    "mat_gypsum",
+    "mat_lead",
+    "mat_leather",
+    "mat_lime",
+    "mat_linen",
+    "mat_mercury",
+    "mat_obsidian_blade",
+    "mat_parchment",
+    "mat_pyrolusite",
+    "mat_salt",
+    "mat_silver",
+    "mat_sulfur",
+    "mat_tallow",
+    "mat_tin",
+    "mat_vitriols",
+    "mat_wrought_iron",
+    "med_obstetric_practice",
+    "med_trepanation",
+    "med_wound_suturing",
+    "met_bloomery_bog_iron",
+    "met_ore_crushing_sorting",
+    "mfg_cold_riveting",
+    "mfg_flux",
+    "mfg_hot_riveting",
+    "mfg_painting",
+    "mfg_soft_solder",
+    "mt2_earthenware",
+    "mt2_timbering_safety",
+    "opt_burning_glass",
+    "opt_metal_mirror_polished",
+    "opt_steelyards",
+    "opt_sundial",
+    "opt_water_globe_magnifier",
+    "prn_carbon_ink",
+    "prn_parchment_sheets",
+    "prn_scribal_copying",
+    "prn_sculpture",
+    "prn_seals_stamps",
+    "prn_wax_tablets",
+    "pwr_animal_treadmill",
+    "pwr_force_pump",
+    "pwr_screw_press_power",
+    "sea_anchor",
+    "sea_clinker_hull",
+    "sea_coastal_pilotage",
+    "sea_keel_deep",
+    "sea_merchant_ships_large",
+    "sea_sounding_lines",
+    "sea_square_sail",
+    "sea_steering_oars",
+    "tex_cotton_trade",
+    "tex_drop_spindle",
+    "tex_dye_madder",
+    "tex_dye_woad",
+    "tex_felting",
+    "tex_mordanting",
+    "tex_sailcloth",
+    "tex_silk_trade",
+    "tex_two_beam_loom",
+    "tex_vegetable_tanning",
+    "tex_warp_weighted_loom",
+    "tex_wool",
+    "tr_block_tackle",
+    "tr_reefing",
+    "tr_square_rig",
+    "tx2_alum_tanning",
+    "tx2_beam",
+    "tx2_bleaching_sun",
+    "tx2_bottle",
+    "tx2_comb",
+    "tx2_currying",
+    "tx2_doll",
+    "tx2_dyeing_fibre",
+    "tx2_dyeing_piece",
+    "tx2_dyeing_yarn",
+    "tx2_eye_pointed_needle",
+    "tx2_flax_fibre",
+    "tx2_fulling",
+    "tx2_heddle",
+    "tx2_hemp_fibre",
+    "tx2_needle",
+    "tx2_pin",
+    "tx2_retting",
+    "tx2_rope_lay",
+    "tx2_scouring",
+    "tx2_selvedge",
+    "tx2_shed",
+    "tx2_warp_sizing",
+    "tx2_wool_fibre"
+  ],
+  "state_capacity": 0.15,
+  "state_pressure": {
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With state_capacity this low, state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
+    "requisition_name": "what is owed at the thing",
+    "requisition_note": "There is no tax office in Viking-age Scandinavia. What a household owes is assessed and announced at the thing, the assembly of free men, as a levy toward a specific expedition, a hosting obligation (veizla) to a chieftain's retinue, or a fine set by the law-speaker. It is real, and it is also the weakest version of this pressure in the whole file, because there is barely a state to enforce it.",
+    "requisition_base_share": 0.09,
+    "office_name": "standing watch for the leidang",
+    "office_note": "A levy muster could call a household's own ship and crew to a king's or jarl's service; refusing a summons a chieftain could actually enforce cost standing at the next thing, not a fine collected by any office.",
+    "office_base_share": 0.03,
+    "military_name": "a chieftain's muster",
+    "military_note": "A household that can arm men well is a household a chieftain wants in his own following, not a rival's; good iron gets noticed long before any king could requisition it by law.",
+    "confiscation_name": "outlawry and the seizure of the estate",
+    "confiscation_note": "Outlawry (skoggangr) stripped a man of the law's protection and let anyone take his property without penalty - the one confiscation in this file that needs no state at all, only enough enemies at the thing."
   },
-  "infrastructure": {
-   "node": "collegium_licensed",
-   "residual": 1.2
+  "urban_fraction": 0.03,
+  "values": {
+    "_note": "Positive w_labour_saving because labour is scarce, not cheap: exactly the reverse of Rome, and the reason a labour-saving machine is welcome here and resented there. Very high w_commerce, high novelty tolerance, and seidr is feared but not prosecuted by a state, because there is no state.",
+    "_note_eminence": "No state, no court, nobody to denounce you to. The danger here is a feud, not a treason charge.",
+    "adaptation_rate": 0.2,
+    "bribability": 0.3,
+    "patronage_weight": 0.3,
+    "w_commerce": 0.8,
+    "w_eminence_danger": 0.2,
+    "w_information": 0.4,
+    "w_labour_saving": 0.3,
+    "w_magic_fear": 0.45,
+    "w_military": 1.0,
+    "w_novelty": 0.5,
+    "w_religious_rigidity": 0.1
   },
-  "structures": {
-   "node": "collegium_licensed",
-   "residual": 1.2
+  "wage_index": 0.6,
+  "year": 900,
+  "local_words": {
+    "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
+    "pairs": [
+      [
+        "in plain quantitative Greek and Latin",
+        "in plain quantitative Latin, and in runes for those who read no Latin"
+      ],
+      [
+        "Senatorial patronage",
+        "The patronage of a jarl"
+      ],
+      [
+        "Imperial patronage",
+        "The patronage of a king"
+      ],
+      [
+        "Licensed collegium of physicians and teachers",
+        "A recognised fellowship of healers and teachers"
+      ]
+    ]
   }
- },
- "hazards": [
-  {
-   "name": "The settlement of Iceland and the founding of the Althing",
-   "note": "The settlement wave that began around 874 is essentially complete by 900, and in 930 the settlers founded the Althing at Thingvellir, a general assembly of free farmers with no king over it - the oldest continuously-referenced parliamentary institution in Europe. No damage fields: this is a new country and a working assembly appearing where there was nothing, and it is exactly the kind of thing the game had been silent about for the first century of play, which is why it is here rather than left to the Christianisation entry below to carry alone.",
-   "values": {
-    "w_commerce": 0.05,
-    "w_novelty": 0.05
-   },
-   "years": [
-    900,
-    930
-   ]
-  },
-  {
-   "name": "Christianisation and political consolidation",
-   "note": "The real effect of this is not mainly deaths but a change to the VALUES vector, applied gradually below: how much doctrine constrains what may be said and how readily an inexplicable effect is called sorcery both rise sharply as the old plural, no-doctrine seidr-tolerant religion gives way to a Church with a creed and an inquisition's ancestor -- what got you patronised in 950 gets you denounced in 1080. the fall in trade and output covers the physical, smaller half of the same event: temple-burnings, forced conversions and the kings' wars that came with them (Olaf Tryggvason's campaigns from 995, climaxing at the Battle of Stiklestad in 1030) visibly disrupted production and occasionally burned things down.",
-   "output_factor": 0.85,
-   "values": {
-    "w_religious_rigidity": 0.45,
-    "w_magic_fear": 0.35,
-    "w_novelty": -0.2
-   },
-   "years": [
-    995,
-    1100
-   ]
-  },
-  {
-   "name": "Norwegian civil war era",
-   "note": "Roughly a century of intermittent succession war between rival kings and the factions behind them (Baglers against Birkebeiner and their successors), settled only by the 1240 succession settlement under Hakon Hakonarson. Not a single campaign but a long run of raids, burnt farms and disputed levies -- dispersed damage across many farms and fjords rather than one capital worth besieging, which is why this is modelled as lost output rather than a sack: a decentralised assembly society has no single site whose fall ends the war.",
-   "output_factor": 0.8,
-   "years": [
-    1130,
-    1240
-   ]
-  },
-  {
-   "name": "Hakon Hakonarson's peace and the Landslov",
-   "note": "The 1240 succession settlement that ends the civil war era above is the start of Norway's medieval high point, not just the stopping of a war: Hakon Hakonarson's long reign (1217-1263) and his son Magnus Lagabote's Landslov of 1274, the first law code for the whole kingdom rather than a patchwork of regional things, are what a break tester's audit found nothing at all standing for between 1240 and the Little Ice Age entry sixty years later. Trade with the Hanseatic towns and Iceland's tribute in 1262-64 both belong to this same window of a kingdom that, briefly, works.",
-   "values": {
-    "w_commerce": 0.06,
-    "patronage_weight": -0.04
-   },
-   "years": [
-    1240,
-    1280
-   ]
-  },
-  {
-   "name": "The Kalmar Union",
-   "note": "Olaf Haakonsson inherited both the Norwegian and Danish crowns as a child in 1380, and after the 1397 Kalmar meeting Norway is a junior partner in a union crowned in Denmark, not a kingdom with its own court to be patronised by any more. Norway's own royal line dies out entirely with Olaf, which the Icelandic and Norwegian annals both mark as the moment there is no longer a king who is only theirs.",
-   "output_factor": 0.92,
-   "values": {
-    "patronage_weight": 0.08
-   },
-   "years": [
-    1397,
-    1450
-   ]
-  },
-  {
-   "name": "Black Death in Scandinavia",
-   "note": "Reached Norway in 1349 on an English ship putting in at Bergen and killed on a scale even worse than England's, by some estimates more than half the population; entire farms and valleys were abandoned and some were never resettled. Recurs at reduced severity through the late 14th century, same as everywhere else in Europe, but this is the first and worst wave.",
-   "staff_loss": 0.55,
-   "years": [
-    1349,
-    1351
-   ]
-  },
-  {
-   "name": "Little Ice Age onset in the North Atlantic",
-   "note": "Cooling sets in from around 1300, shortening growing seasons in Norway itself and slowly strangling the Greenland settlements' already marginal farming and their sea lane to Europe; the Eastern and Western Settlements are gone by the mid 15th century. A slow economic squeeze on the whole North Atlantic world, not a single event.",
-   "output_factor": 0.9,
-   "years": [
-    1300,
-    1400
-   ]
-  },
-  {
-   "name": "The Scandinavian Reformation",
-   "note": "Christian III imposed Lutheranism on Denmark-Norway by force after winning the Count's Feud in 1536, and the church ordinance of 1537 dissolved the Norwegian monasteries and put their land and rents in the crown's hands the same way Henry VIII's dissolution did in England a few years earlier. Norway's own archbishopric at Nidaros, the last independent Norwegian institution of any weight, ends with it. Unlike England's confessional whiplash this does not reverse: Denmark-Norway stays Lutheran, and stays one settled doctrine instead of the old plural, no-creed religion the Christianisation entry above describes replacing.",
-   "values": {
-    "w_religious_rigidity": 0.12,
-    "w_magic_fear": 0.05
-   },
-   "years": [
-    1536,
-    1560
-   ]
-  }
- ],
- "home_regions": [
-  "scandinavia"
- ],
- "id": "norse_900ad",
- "institutions": {
-  "bank": false,
-  "charter": false,
-  "corporation": false,
-  "guild": false,
-  "note": "The thing is an assembly, not a state. No one can license you and no one can fund you.",
-  "partnership": "felag, a genuine joint venture",
-  "patent": false,
-  "testament": "weak"
- },
- "literacy_elite": 0.15,
- "literacy_general": 0.02,
- "name": "Scandinavia in the Viking age",
- "notes": [
-  "Population is 1.5 million against Rome's 65 million. You will never assemble a large workforce, so every plan must be capital-light and skill-heavy.",
-  "Base reach 4: these ships already go to Greenland, the Caspian and Newfoundland. The Atlantic is not a barrier here, which flips the entire expedition branch."
- ],
- "opening": {
-  "arrival": "You come ashore somewhere on the Vestfold, in a country with no king worth the name, no cities, no coinage anybody trusts, and no state to ask permission from. There are perhaps a million and a half people in the whole of Scandinavia. Every one of them is somebody's neighbour, and the law is an assembly of free men who will hear you.",
-  "what_is_coming": "A century of Christianisation and consolidation. Kings, bishops, written law, taxes and towns. The freedom you are enjoying now is the thing that is about to end.",
-  "what_is_missing": "Everything that needs a state. There is no one to fund a public work, no city to concentrate a trade in, no bureaucracy to keep a record for longer than a man's memory. What Rome finds trivial, you will find nearly impossible. What Rome finds impossible, you can simply do, because nobody here can stop you.",
-  "what_you_can_see": "The best ships in the world. Clinker-built, sprung, shallow enough for a river and sound enough for an ocean, and the men who build them do it by eye. Iron smelted from bog ore in every valley. Wool, tar, timber, and a trade network that reaches Baghdad in one direction and Newfoundland in the other.",
-  "what_this_models": "You are one household, not all of Viking-age Scandinavia. There are perhaps a million and a half people in the whole region and barely one in thirty lives anywhere worth calling a town - about 45,000 people in all - so the single market your household actually reaches is smaller again: the order of 14,000. A trade this thin is not a bug in the game; it is Scandinavia. Type 'population' once you are playing to see the numbers for yourself."
- },
- "population": 1500000,
- "price_index": 1.4,
- "starting_techs": [
-  "ag2_composting",
-  "ag2_liming",
-  "ag2_malting",
-  "ag2_marling",
-  "ag2_oil_pressing",
-  "ag2_potash",
-  "ag2_refrigeration_ice",
-  "cap_heat_0700",
-  "cap_power_human",
-  "cap_power_muscle",
-  "cap_tol_1mm",
-  "civ_iron_wrought",
-  "cn_gypsum_plaster",
-  "cn_pile_driving",
-  "cn_post_lintel",
-  "cn_stone_polish",
-  "exp_openocean_navigation",
-  "fin_auction",
-  "fin_coined_money",
-  "fin_contract_law",
-  "fin_ferry",
-  "fin_gambling_house",
-  "fin_inn",
-  "fin_market",
-  "fin_testament",
-  "fin_trading_post",
-  "fin_wage",
-  "fud_fish_curing_and_smoking",
-  "fud_hay_making_storage",
-  "hom_board_games",
-  "hom_candle_beeswax",
-  "hom_candle_tallow",
-  "hom_furniture_wooden",
-  "hom_locks_keys",
-  "hom_mirror_bronze_polished",
-  "hom_musical_instruments",
-  "hom_oil_lamp_simple",
-  "lnd_axle_pivot_front",
-  "lnd_bridge",
-  "lnd_four_wheel_cart",
-  "lnd_harness_throat_girth",
-  "lnd_horse_saddle_basic",
-  "lnd_litter",
-  "lnd_mule_transport",
-  "lnd_ox_transport",
-  "lnd_two_wheel_cart",
-  "lnd_tyre_iron",
-  "lnd_wheel_spoked",
-  "mat_alum",
-  "mat_asbestos",
-  "mat_beeswax",
-  "mat_bitumen",
-  "mat_brass",
-  "mat_bronze",
-  "mat_calamine",
-  "mat_carbon_black",
-  "mat_charcoal",
-  "mat_emery",
-  "mat_galena",
-  "mat_glass_soda",
-  "mat_gold",
-  "mat_gypsum",
-  "mat_lead",
-  "mat_leather",
-  "mat_lime",
-  "mat_linen",
-  "mat_mercury",
-  "mat_obsidian_blade",
-  "mat_parchment",
-  "mat_pyrolusite",
-  "mat_salt",
-  "mat_silver",
-  "mat_sulfur",
-  "mat_tallow",
-  "mat_tin",
-  "mat_vitriols",
-  "mat_wrought_iron",
-  "med_obstetric_practice",
-  "med_trepanation",
-  "med_wound_suturing",
-  "met_bloomery_bog_iron",
-  "met_ore_crushing_sorting",
-  "mfg_cold_riveting",
-  "mfg_flux",
-  "mfg_hot_riveting",
-  "mfg_painting",
-  "mfg_soft_solder",
-  "mt2_earthenware",
-  "mt2_timbering_safety",
-  "opt_burning_glass",
-  "opt_metal_mirror_polished",
-  "opt_steelyards",
-  "opt_sundial",
-  "opt_water_globe_magnifier",
-  "prn_carbon_ink",
-  "prn_parchment_sheets",
-  "prn_scribal_copying",
-  "prn_sculpture",
-  "prn_seals_stamps",
-  "prn_wax_tablets",
-  "pwr_animal_treadmill",
-  "pwr_force_pump",
-  "pwr_screw_press_power",
-  "sea_anchor",
-  "sea_clinker_hull",
-  "sea_coastal_pilotage",
-  "sea_keel_deep",
-  "sea_merchant_ships_large",
-  "sea_sounding_lines",
-  "sea_square_sail",
-  "sea_steering_oars",
-  "tex_cotton_trade",
-  "tex_drop_spindle",
-  "tex_dye_madder",
-  "tex_dye_woad",
-  "tex_felting",
-  "tex_mordanting",
-  "tex_sailcloth",
-  "tex_silk_trade",
-  "tex_two_beam_loom",
-  "tex_warp_weighted_loom",
-  "tex_wool",
-  "tr_block_tackle",
-  "tr_reefing",
-  "tr_square_rig",
-  "tx2_alum_tanning",
-  "tx2_beam",
-  "tx2_bleaching_sun",
-  "tx2_bottle",
-  "tx2_comb",
-  "tx2_currying",
-  "tx2_doll",
-  "tx2_dyeing_fibre",
-  "tx2_dyeing_piece",
-  "tx2_dyeing_yarn",
-  "tx2_eye_pointed_needle",
-  "tx2_flax_fibre",
-  "tx2_heddle",
-  "tx2_hemp_fibre",
-  "tx2_needle",
-  "tx2_pin",
-  "tx2_retting",
-  "tx2_rope_lay",
-  "tx2_scouring",
-  "tx2_selvedge",
-  "tx2_shed",
-  "tx2_warp_sizing",
-  "tx2_wool_fibre"
- ],
- "state_capacity": 0.15,
- "state_pressure": {
-  "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With state_capacity this low, state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
-  "requisition_name": "what is owed at the thing",
-  "requisition_note": "There is no tax office in Viking-age Scandinavia. What a household owes is assessed and announced at the thing, the assembly of free men, as a levy toward a specific expedition, a hosting obligation (veizla) to a chieftain's retinue, or a fine set by the law-speaker. It is real, and it is also the weakest version of this pressure in the whole file, because there is barely a state to enforce it.",
-  "requisition_base_share": 0.09,
-  "office_name": "standing watch for the leidang",
-  "office_note": "A levy muster could call a household's own ship and crew to a king's or jarl's service; refusing a summons a chieftain could actually enforce cost standing at the next thing, not a fine collected by any office.",
-  "office_base_share": 0.03,
-  "military_name": "a chieftain's muster",
-  "military_note": "A household that can arm men well is a household a chieftain wants in his own following, not a rival's; good iron gets noticed long before any king could requisition it by law.",
-  "confiscation_name": "outlawry and the seizure of the estate",
-  "confiscation_note": "Outlawry (skoggangr) stripped a man of the law's protection and let anyone take his property without penalty - the one confiscation in this file that needs no state at all, only enough enemies at the thing."
- },
- "urban_fraction": 0.03,
- "values": {
-  "_note": "Positive w_labour_saving because labour is scarce, not cheap: exactly the reverse of Rome, and the reason a labour-saving machine is welcome here and resented there. Very high w_commerce, high novelty tolerance, and seidr is feared but not prosecuted by a state, because there is no state.",
-  "_note_eminence": "No state, no court, nobody to denounce you to. The danger here is a feud, not a treason charge.",
-  "adaptation_rate": 0.2,
-  "bribability": 0.3,
-  "patronage_weight": 0.3,
-  "w_commerce": 0.8,
-  "w_eminence_danger": 0.2,
-  "w_information": 0.4,
-  "w_labour_saving": 0.3,
-  "w_magic_fear": 0.45,
-  "w_military": 1.0,
-  "w_novelty": 0.5,
-  "w_religious_rigidity": 0.1
- },
- "wage_index": 0.6,
- "year": 900,
- "local_words": {
-  "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
-  "pairs": [
-   [
-    "in plain quantitative Greek and Latin",
-    "in plain quantitative Latin, and in runes for those who read no Latin"
-   ],
-   [
-    "Senatorial patronage",
-    "The patronage of a jarl"
-   ],
-   [
-    "Imperial patronage",
-    "The patronage of a king"
-   ],
-   [
-    "Licensed collegium of physicians and teachers",
-    "A recognised fellowship of healers and teachers"
-   ]
-  ]
- }
 }

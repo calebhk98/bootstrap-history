@@ -1,537 +1,539 @@
 {
- "_note_cost_multipliers": "Rome is extraordinary at building things out of stone and concrete and has pozzolana, which nobody else will have for 1,700 years. It is correspondingly bad at anything to do with copying information, because it has papyrus rather than paper and a scribal economy that has no reason to want a press.",
- "_note_debt_bondage": "Nexum, bondage for debt, was abolished by the lex Poetelia in 326 BC. A Roman debtor in 100 AD faces seizure of goods and infamia, not the chain gang.",
- "base_reach": 2,
- "blurb": "Peak territorial extent, sound currency, superb civil engineering, an economy resting on slavery, and an elite that despises manual work.",
- "bondage_years": 0,
- "cost_multipliers": {
-  "binders": 0.6,
-  "bridges": 0.75,
-  "buildings": 0.75,
-  "civil": 0.7,
-  "foundations": 0.8,
-  "information": 1.2,
-  "infrastructure": 0.85,
-  "printing": 1.3,
-  "structures": 0.75
- },
- "currency": "denarius",
- "debt_bondage": false,
- "fire_quarter": "insula district, where the tenements stand six storeys in wood",
- "handicap_remedies": {
-  "_doc": "Rome is bad at copying information for one reason: papyrus. Make paper and the handicap is gone entirely.",
-  "information": {
-   "node": "rag_paper",
-   "residual": 1.0
+  "_note_cost_multipliers": "Rome is extraordinary at building things out of stone and concrete and has pozzolana, which nobody else will have for 1,700 years. It is correspondingly bad at anything to do with copying information, because it has papyrus rather than paper and a scribal economy that has no reason to want a press.",
+  "_note_debt_bondage": "Nexum, bondage for debt, was abolished by the lex Poetelia in 326 BC. A Roman debtor in 100 AD faces seizure of goods and infamia, not the chain gang.",
+  "base_reach": 2,
+  "blurb": "Peak territorial extent, sound currency, superb civil engineering, an economy resting on slavery, and an elite that despises manual work.",
+  "bondage_years": 0,
+  "cost_multipliers": {
+    "binders": 0.6,
+    "bridges": 0.75,
+    "buildings": 0.75,
+    "civil": 0.7,
+    "foundations": 0.8,
+    "information": 1.2,
+    "infrastructure": 0.85,
+    "printing": 1.3,
+    "structures": 0.75
   },
-  "printing": {
-   "node": "rag_paper",
-   "residual": 1.0
-  }
- },
- "hazards": [
-  {
-   "name": "Antonine plague",
-   "note": "probably smallpox or measles",
-   "staff_loss": 0.28,
-   "years": [
-    165,
-    180
-   ]
+  "currency": "denarius",
+  "debt_bondage": false,
+  "fire_quarter": "insula district, where the tenements stand six storeys in wood",
+  "handicap_remedies": {
+    "_doc": "Rome is bad at copying information for one reason: papyrus. Make paper and the handicap is gone entirely.",
+    "information": {
+      "node": "rag_paper",
+      "residual": 1.0
+    },
+    "printing": {
+      "node": "rag_paper",
+      "residual": 1.0
+    }
   },
-  {
-   "name": "Plague of Cyprian",
-   "staff_loss": 0.28,
-   "years": [
-    249,
-    262
-   ]
+  "hazards": [
+    {
+      "name": "Antonine plague",
+      "note": "probably smallpox or measles",
+      "staff_loss": 0.28,
+      "years": [
+        165,
+        180
+      ]
+    },
+    {
+      "name": "Plague of Cyprian",
+      "staff_loss": 0.28,
+      "years": [
+        249,
+        262
+      ]
+    },
+    {
+      "name": "Third century crisis",
+      "note": "Rome's baseline shifts in what this society values note that it is magic, not heterodoxy, that is criminal here, because the state has never before needed everyone to worship the same way. The Decian edict of 250 breaks that: for the first time, sacrifice to the emperor's genius is demanded empire-wide and certified in writing, a loyalty test with no precedent, followed by Valerian's edicts against Christians in 257-258. That is a real tightening of religious rigidity, not merely more of the old magic-suspicion, so it is modelled as its own small shift below rather than folded into how readily an inexplicable effect is called sorcery.",
+      "output_factor": 0.62,
+      "sack_chance": 0.16,
+      "values": {
+        "w_religious_rigidity": 0.15
+      },
+      "years": [
+        235,
+        284
+      ]
+    },
+    {
+      "name": "Currency debasement",
+      "real_erosion": 0.06,
+      "years": [
+        190,
+        275
+      ]
+    },
+    {
+      "name": "Diocletian's reforms and the Price Edict",
+      "note": "Diocletian came to power in 284 and rebuilt the state by making it much heavier. The tetrarchy of 293 gave the empire four courts to feed; the army was roughly doubled; the iugatio-capitatio assessment taxed land and heads together, often in kind, and needed a census machinery Rome had never had. The Edict on Maximum Prices of 301 fixed ceilings on more than a thousand goods and wages on pain of death, and Lactantius (De mortibus persecutorum 7) says blood was shed over trifles until the law was quietly let die. The same decades made the collegia hereditary: a man's son inherited his trade and could not leave it, which is a direct constraint on anyone who wants to work at something new. That, and not the persecution of 303-311, is why how much trade is honoured falls here. The state also gets stronger and its favour correspondingly more decisive, which is the patronage shift.",
+      "output_factor": 0.9,
+      "values": {
+        "patronage_weight": 0.05,
+        "w_commerce": -0.1,
+        "w_military": 0.05,
+        "w_religious_rigidity": 0.08
+      },
+      "years": [
+        284,
+        305
+      ]
+    },
+    {
+      "name": "The solidus and the end of the debasement",
+      "note": "The debasement modelled above stops, and it is worth saying why, because a century of worthless coin is the largest single thing that happened to this civilization's money and its end is not a small event. Aurelian reformed the antoninianus in 274; Constantine then struck the solidus at 72 to the pound of gold from about 309, and it held that weight essentially unchanged for seven hundred years. Long contracts, banking and long-distance trade become possible again for anyone who can get gold. The other half of this entry is quieter and better attested than it is famous: the conquests that supplied cheap slaves had ended, the colonate was binding tenants to the land instead, and late antiquity is when water power actually spreads in the Roman world. Ausonius, writing about the Moselle around 370 (Mosella, lines 361-364), describes water-driven saws cutting stone - the first securely attested water-powered saws anywhere. Rome's baseline hostility to labour-saving devices is real but it is at its weakest here, so how a device that replaces a man is received moves back toward neutral. This entry carries no damage: it is a good century and is modelled as one.",
+      "values": {
+        "w_commerce": 0.12,
+        "w_labour_saving": 0.15
+      },
+      "years": [
+        312,
+        375
+      ]
+    },
+    {
+      "name": "Christianisation of the empire",
+      "note": "Rome's baseline note says it is magic and not heterodoxy that is criminal here, because the state has never needed everyone to worship the same way. Over this century that stops being true. The Edict of Milan in 313 tolerates Christianity; Constantius II's law of 357 (Theodosian Code 9.16.4) makes consulting a haruspex a capital offence; Theodosius' edict of 380 makes Nicene Christianity the religion of the state and the laws of 391-392 close the temples and ban sacrifice outright; and in 385 Priscillian is executed at Trier, the first man in the empire put to death for holding the wrong doctrine. Divination and astrology were already suspect; what is new is that there is now one correct answer about the world, and an apparatus for finding out who does not hold it. This is the largest single shifts in what this society values shift in this file and it runs against the technologist, not with him.",
+      "values": {
+        "w_magic_fear": 0.1,
+        "w_novelty": -0.05,
+        "w_religious_rigidity": 0.35
+      },
+      "years": [
+        313,
+        400
+      ]
+    },
+    {
+      "name": "Adrianople and the Gothic settlement",
+      "note": "Valens let the Tervingi cross the Danube in 376 to escape the Huns, mishandled feeding them, and lost two thirds of the eastern field army and his own life at Adrianople on 9 August 378; Ammianus (31.13) calls it the worst defeat since Cannae. The treaty of 382 then settled the Goths on imperial soil under their own leaders, which had never been done before. The damage to a workshop is not the battle but what follows it: an army that has to be rebuilt is paid for out of taxation, and a frontier that is now inside the frontier keeps moving.",
+      "output_factor": 0.85,
+      "sack_chance": 0.03,
+      "years": [
+        376,
+        405
+      ]
+    },
+    {
+      "name": "The crossings, and the sack of Rome",
+      "note": "Vandals, Alans and Suebi crossed the Rhine at the end of 406 and were never expelled; the garrison of Britain left in 407 and did not come back; Alaric's Goths entered Rome on 24 August 410, the first capture of the city in eight hundred years, which Jerome and Augustine both wrote about as the end of something. Geiseric took Carthage in 439, and with it the African grain that had fed Rome since Augustus, and sacked Rome again over a fortnight in June 455. Attila reached Italy in 452. The sack risk here is deliberately per-year and low rather than a single certainty: most places in the western empire were not sacked in any given year of this half-century, and a great many were sacked in some year of it.",
+      "output_factor": 0.72,
+      "sack_chance": 0.04,
+      "staff_loss": 0.1,
+      "condition": {
+        "field": "output_factor",
+        "requires_all": [
+          "endowment_land",
+          "crop_rotation"
+        ],
+        "outcome": "avert",
+        "met_message": "The crossings, and the sack of Rome: Geiseric takes Carthage in 439 and with it the African grain that had fed Rome since Augustus - but your household never ate off that fleet. Land of your own, worked in fields that do not fail together, means the grain crisis that guts everyone else's ledger passes yours by. (The Rhine crossings, Alaric's sack and Attila's march are none of them yours to prevent: sack risk and staff are unaffected.)",
+        "unmet_message": "The crossings, and the sack of Rome: your table still depends on the African grain fleet, so when Geiseric takes Carthage this window, your trade and output fall exactly as Rome's did."
+      },
+      "years": [
+        406,
+        460
+      ]
+    },
+    {
+      "name": "The end of the western empire",
+      "note": "Ricimer besieged and sacked Rome in 472; Odoacer deposed Romulus Augustulus on 4 September 476 and sent the western regalia to Constantinople, which contemporaries treated as an administrative tidying-up rather than an epoch. What actually ends is the fiscal machine: the western state stops collecting taxes at scale and therefore stops paying for roads, aqueducts, harbours, an army and a currency. Protection after this comes from a bishop or a landowner who is physically nearby, not from a governor who answers to a court, which is the patronage shift; and the long-distance exchange that carried African red slip ware to Britain simply stops, which is the commerce shift.",
+      "output_factor": 0.6,
+      "values": {
+        "patronage_weight": 0.1,
+        "w_commerce": -0.15
+      },
+      "years": [
+        461,
+        492
+      ]
+    },
+    {
+      "name": "Ostrogothic Italy under Theodoric",
+      "note": "Modelling the fifth and sixth centuries as unbroken decline would be false, so this is here. Theodoric ruled Italy from 493 to 526 and Cassiodorus' Variae, written as his secretary, are letters ordering the repair of aqueducts and city walls, the draining of the Pontine marshes, the protection of ancient statues from theft, and a water-clock and a sundial to be made and sent to the Burgundian king with a letter explaining how they work. The Senate still met, the grain dole still ran, the coinage was still struck to Roman standards, and both Boethius and Cassiodorus did their work at this court - though Theodoric had Boethius executed in 524, which is the reminder that a good century is not a safe one. Ostrogothic Italy was better governed than Italy had been for a hundred years and would be for four hundred more. No damage fields: this is a window in which to build.",
+      "values": {
+        "w_commerce": 0.08,
+        "w_novelty": 0.05
+      },
+      "years": [
+        493,
+        526
+      ]
+    },
+    {
+      "name": "Justinian's Gothic War",
+      "note": "Belisarius landed in Sicily in 535 to recover Italy for the empire and the war took nineteen years. Rome changed hands five times; the Goths cut the aqueducts in 537 and they were never fully restored, ending the water supply of a city that had had one for eight hundred years; Totila emptied Rome of its inhabitants in 546. Procopius, who was there, is the source and is not a neutral one. The Pragmatic Sanction of 554 handed back an Italy with a wrecked countryside, a collapsed urban population and no functioning senate. The reconquest destroyed more of Roman Italy than any of the invasions had.",
+      "output_factor": 0.55,
+      "sack_chance": 0.05,
+      "staff_loss": 0.12,
+      "years": [
+        535,
+        554
+      ]
+    },
+    {
+      "name": "The Justinianic plague",
+      "note": "First recorded at Pelusium in Egypt in the summer of 541 and in Constantinople by the spring of 542, where Procopius (Wars 2.22-23) says the dead reached five thousand and then ten thousand a day. It has since been confirmed as Yersinia pestis from sixth-century burials at Aschheim and elsewhere: the same organism as the Black Death. The mortality is genuinely disputed - Procopius' figures are not usable, and recent work on pollen records, coin finds and papyri argues the demographic effect was a good deal smaller than the literary sources imply. It is set well below England's Black Death here for that reason, not because it was a mild disease.",
+      "staff_loss": 0.3,
+      "years": [
+        541,
+        545
+      ]
+    },
+    {
+      "name": "Recurrent plague",
+      "note": "The 541 outbreak did not end; it came back roughly every decade for two centuries. Outbreaks are recorded at Constantinople in 558, in the 570s and in 586, and in the west over the same period - Gregory of Tours has the plague at Marseille in 588, and Gregory the Great was elected at Rome in 590 during one of them. Lower severity than the first wave, because some immunity exists and because the population it is working on has already been reduced.",
+      "staff_loss": 0.12,
+      "years": [
+        558,
+        600
+      ]
+    },
+    {
+      "name": "The Lombard invasion",
+      "note": "Alboin crossed the Julian Alps in the spring of 568, three years after Justinian's reconquest was complete and while the plague was still running, and there was nothing left in Italy to stop him. The peninsula was permanently split between Lombard duchies inland and Byzantine strips along the coasts and the corridor from Rome to Ravenna, and stayed split for twelve centuries. Paul the Deacon's Historia Langobardorum is the narrative source. For anyone with a workshop, this is the end of a single market, a single law and a single currency in Italy.",
+      "output_factor": 0.62,
+      "sack_chance": 0.03,
+      "years": [
+        568,
+        600
+      ]
+    },
+    {
+      "name": "The Arab conquests close the Mediterranean",
+      "note": "Within a century of Muhammad's death in 632, Arab armies had taken Syria and Egypt from Byzantium (634-642), swept across North Africa and taken Carthage itself in 698, and crossed into Spain in 711. Henri Pirenne's thesis - that it is this, and not the fifth-century invasions, which actually ends the ancient Mediterranean as a single economic space - is contested on details but not on the basic shape: papyrus from Egypt, African red slip ware and the grain fleets all stop reaching Italy across this window, a sea that had been Rome's own for six centuries becomes a frontier, and whatever reaches Ravenna or Rome now comes from a much smaller world.",
+      "output_factor": 0.85,
+      "condition": {
+        "field": "output_factor",
+        "requires_all": [
+          "endowment_land",
+          "water_power_scale",
+          "civ_road_paved"
+        ],
+        "outcome": "avert",
+        "met_message": "The Arab conquests close the Mediterranean: the papyrus, the African red slip ware and the grain fleets stop reaching Italy - but none of them were ever reaching you. Land, power and roads that are your own, not shipped in across a sea that has just become a frontier, mean the closing of the Mediterranean does not touch your output. (The sea is still closed, and the society's regard for commerce still falls with it - that is not yours to hold back.)",
+        "unmet_message": "The Arab conquests close the Mediterranean: your workshop still drew on the goods that crossed that sea, so when it closes, your trade and output fall with everyone else's."
+      },
+      "values": {
+        "w_commerce": -0.1
+      },
+      "years": [
+        634,
+        700
+      ]
+    },
+    {
+      "name": "The Carolingian renaissance",
+      "note": "Charlemagne's court at Aachen gathers Alcuin of York and a real revival of schooling, a standardised minuscule hand that makes copying faster and more legible, and a currency reform (the silver denier, not by coincidence the ancestor of the word this file still counts in) stable enough to use; he is crowned Emperor in Rome on Christmas Day 800 by Leo III, the first time the title is claimed in the west since 476. It is a revival built on a much smaller base than the old empire - most of Charlemagne's Europe could not read - but a play tester who reached the year 600 and asked the game why two centuries of total silence followed found, correctly, that nothing here answered them; this is the first thing since the Lombards that is not a catastrophe.",
+      "values": {
+        "w_novelty": 0.05,
+        "patronage_weight": -0.03
+      },
+      "years": [
+        774,
+        800
+      ]
+    }
+  ],
+  "home_regions": [
+    "italia",
+    "gaul_germania",
+    "britannia",
+    "hispania",
+    "north_africa",
+    "greece_anatolia",
+    "levant_mesopotamia"
+  ],
+  "id": "rome_100ad",
+  "institutions": {
+    "bank": "argentarii, deposit and credit",
+    "charter": "imperial grant only",
+    "corporation": false,
+    "guild": "collegium, licensed and watched",
+    "note": "No limited liability and no corporation. A societas dissolves on a partner's death. This is a real constraint on any enterprise meant to outlive you, and the workaround is a testamentary foundation endowed in land.",
+    "partnership": true,
+    "patent": false,
+    "testament": true
   },
-  {
-   "name": "Third century crisis",
-   "note": "Rome's baseline shifts in what this society values note that it is magic, not heterodoxy, that is criminal here, because the state has never before needed everyone to worship the same way. The Decian edict of 250 breaks that: for the first time, sacrifice to the emperor's genius is demanded empire-wide and certified in writing, a loyalty test with no precedent, followed by Valerian's edicts against Christians in 257-258. That is a real tightening of religious rigidity, not merely more of the old magic-suspicion, so it is modelled as its own small shift below rather than folded into how readily an inexplicable effect is called sorcery.",
-   "output_factor": 0.62,
-   "sack_chance": 0.16,
-   "values": {
-    "w_religious_rigidity": 0.15
-   },
-   "years": [
-    235,
-    284
-   ]
+  "literacy_elite": 0.9,
+  "literacy_general": 0.12,
+  "name": "The Roman Empire under Trajan",
+  "notes": [
+    "Slavery is the central economic institution and it suppresses the business case for every labour-saving device.",
+    "Manual work is socially degrading: Cicero De Officiis 1.150-151, Seneca Ep. 90.",
+    "Unlicensed associations are illegal: Trajan refuses Pliny even a fire brigade, Ep. 10.34.",
+    "Already trades annually to India on the monsoon and by relay to China."
+  ],
+  "opening": {
+    "arrival": "You come to on the Ostia road in the eighteenth year of Domitian's calendar, except Domitian is four years dead and nobody has corrected the milestone. It is the second consulship of Trajan. Rome is at its greatest extent and its most confident: the roads are the best in the world, the water arrives on schedule, the courts sit, the grain fleet comes in from Alexandria, and sixty-five million people are governed by men who genuinely believe the arrangement is permanent.",
+    "what_is_coming": "Sixty-five good years, then the Antonine plague. A century after that, the currency is debased to a tenth and the frontier stops holding. You know the dates. Nobody else does.",
+    "what_is_missing": "Not the ideas. The instruments. Nobody can measure a temperature, hold a tolerance, sustain a vacuum, or purify anything. Every single thing you know how to build waits behind those four.",
+    "what_you_can_see": "Concrete that sets under water. Glass windows. Surgical instruments a modern surgeon would recognise. Water-mills in banks of sixteen. A postal service that outruns anything Europe will have again for fourteen hundred years. And no mechanical clock, no printing, no spectacles, no chimney, no stirrup, no zero.",
+    "what_this_models": "You are one household, not the Roman state. Sixty-five million people live under Trajan and roughly one in eight of them in a town at all - about 7,800,000 town dwellers - but every trade you can hire, and every price that moves when you hire one more, is sized to the ONE town your household actually works in: the order of 50,000 people, not the Empire. Type 'population' once you are playing to see exactly how your own reach compares, trade by trade, to the whole of it."
   },
-  {
-   "name": "Currency debasement",
-   "real_erosion": 0.06,
-   "years": [
-    190,
-    275
-   ]
+  "population": 65000000,
+  "price_index": 1.0,
+  "starting_techs": [
+    "ag2_composting",
+    "ag2_liming",
+    "ag2_malting",
+    "ag2_marling",
+    "ag2_oil_pressing",
+    "ag2_potash",
+    "ag2_refrigeration_ice",
+    "cap_heat_0700",
+    "cap_power_human",
+    "cap_power_muscle",
+    "cap_tol_1mm",
+    "civ_amphitheatre",
+    "civ_aqueduct_roman",
+    "civ_arch_roman",
+    "civ_brick_tile",
+    "civ_chorobates",
+    "civ_circus_racecourse",
+    "civ_dome_roman",
+    "civ_gate_sluice",
+    "civ_glass_windows",
+    "civ_insula",
+    "civ_iron_wrought",
+    "civ_marble_facing",
+    "civ_road_paved",
+    "civ_sewer_roman",
+    "civ_street_paved",
+    "civ_surveying_groma",
+    "civ_town_planning",
+    "civ_vault_barrel",
+    "cn_gypsum_plaster",
+    "cn_pile_driving",
+    "cn_post_lintel",
+    "cn_stone_polish",
+    "fin_annona",
+    "fin_apprenticeship",
+    "fin_arbitrage",
+    "fin_argentarii",
+    "fin_auction",
+    "fin_bankruptcy",
+    "fin_bimetallism",
+    "fin_census",
+    "fin_coined_money",
+    "fin_collegium",
+    "fin_contract_law",
+    "fin_employment_contract",
+    "fin_ferry",
+    "fin_gambling_house",
+    "fin_government",
+    "fin_hotel",
+    "fin_inn",
+    "fin_maritime_loan",
+    "fin_market",
+    "fin_monopoly",
+    "fin_mortgage",
+    "fin_pawnshop",
+    "fin_plantation",
+    "fin_seigniorage",
+    "fin_societas",
+    "fin_tariff",
+    "fin_tax_farming",
+    "fin_testament",
+    "fin_trading_post",
+    "fin_usury_law",
+    "fin_wage",
+    "fud_fish_curing_and_smoking",
+    "fud_hay_making_storage",
+    "hom_board_games",
+    "hom_candle_beeswax",
+    "hom_candle_tallow",
+    "hom_cosmetics_roman",
+    "hom_flush_latrine_simple",
+    "hom_furniture_wooden",
+    "hom_hypocaust",
+    "hom_lead_plumbing",
+    "hom_locks_keys",
+    "hom_mirror_bronze_polished",
+    "hom_musical_instruments",
+    "hom_oil_lamp_simple",
+    "hom_perfume_enfleurage",
+    "hom_public_bath",
+    "hom_toys_dolls",
+    "hom_umbrella",
+    "lnd_axle_pivot_front",
+    "lnd_bridge",
+    "lnd_cursus_publicus",
+    "lnd_four_wheel_cart",
+    "lnd_harness_throat_girth",
+    "lnd_horse_saddle_basic",
+    "lnd_litter",
+    "lnd_milestone",
+    "lnd_mule_transport",
+    "lnd_ox_transport",
+    "lnd_paved_road_network",
+    "lnd_two_wheel_cart",
+    "lnd_tyre_iron",
+    "lnd_wheel_spoked",
+    "mat_alum",
+    "mat_asbestos",
+    "mat_beeswax",
+    "mat_bitumen",
+    "mat_brass",
+    "mat_bronze",
+    "mat_calamine",
+    "mat_carbon_black",
+    "mat_charcoal",
+    "mat_emery",
+    "mat_galena",
+    "mat_glass_soda",
+    "mat_gold",
+    "mat_gypsum",
+    "mat_lead",
+    "mat_leather",
+    "mat_lime",
+    "mat_linen",
+    "mat_mercury",
+    "mat_natron",
+    "mat_obsidian_blade",
+    "mat_olive_oil",
+    "mat_papyrus",
+    "mat_parchment",
+    "mat_pyrolusite",
+    "mat_salt",
+    "mat_shellac",
+    "mat_silk",
+    "mat_silver",
+    "mat_sulfur",
+    "mat_tallow",
+    "mat_tin",
+    "mat_vitriols",
+    "mat_wrought_iron",
+    "med_amputation",
+    "med_bone_setting",
+    "med_cataract_couching",
+    "med_herbal_pharmacy",
+    "med_legal_physician",
+    "med_obstetric_practice",
+    "med_opium_mandrake",
+    "med_surgical_kit_good",
+    "med_trepanation",
+    "med_wound_suturing",
+    "met_bloomery_bog_iron",
+    "met_ore_crushing_sorting",
+    "mfg_adhesive_bond",
+    "mfg_cold_riveting",
+    "mfg_enamelling",
+    "mfg_flux",
+    "mfg_hot_riveting",
+    "mfg_painting",
+    "mfg_soft_solder",
+    "mt2_amalgamation",
+    "mt2_earthenware",
+    "mt2_timbering_safety",
+    "opt_burning_glass",
+    "opt_dioptra",
+    "opt_geared_mechanisms",
+    "opt_groma",
+    "opt_metal_mirror_polished",
+    "opt_steelyards",
+    "opt_sundial",
+    "opt_water_clock",
+    "opt_water_globe_magnifier",
+    "prn_carbon_ink",
+    "prn_codex_bound",
+    "prn_library_archive",
+    "prn_mosaic_fresco",
+    "prn_papyrus_sheets",
+    "prn_parchment_sheets",
+    "prn_scribal_copying",
+    "prn_sculpture",
+    "prn_seals_stamps",
+    "prn_theatre_pantomime",
+    "prn_wax_tablets",
+    "pwr_animal_treadmill",
+    "pwr_coal_seam",
+    "pwr_force_pump",
+    "pwr_petroleum_seeps",
+    "pwr_screw_press_power",
+    "sc2_institution_textbook",
+    "sea_anchor",
+    "sea_coastal_pilotage",
+    "sea_lead_sheathing",
+    "sea_lodestone",
+    "sea_merchant_ships_large",
+    "sea_monsoon_route",
+    "sea_mortise_tenon",
+    "sea_pharos_lighthouse",
+    "sea_sounding_lines",
+    "sea_spritsail",
+    "sea_square_sail",
+    "sea_steering_oars",
+    "tex_cotton_trade",
+    "tex_drop_spindle",
+    "tex_dye_madder",
+    "tex_dye_murex",
+    "tex_dye_woad",
+    "tex_felting",
+    "tex_indigo",
+    "tex_mordanting",
+    "tex_sailcloth",
+    "tex_silk_trade",
+    "tex_two_beam_loom",
+    "tex_vegetable_tanning",
+    "tex_warp_weighted_loom",
+    "tex_wool",
+    "tr_block_tackle",
+    "tr_reefing",
+    "tr_square_rig",
+    "tx2_alum_tanning",
+    "tx2_asbestos_cloth",
+    "tx2_beam",
+    "tx2_bottle",
+    "tx2_comb",
+    "tx2_currying",
+    "tx2_doll",
+    "tx2_dyeing_fibre",
+    "tx2_dyeing_piece",
+    "tx2_dyeing_yarn",
+    "tx2_eye_pointed_needle",
+    "tx2_fulling",
+    "tx2_heddle",
+    "tx2_needle",
+    "tx2_pin",
+    "tx2_scouring",
+    "tx2_warp_sizing",
+    "tx2_wool_fibre"
+  ],
+  "state_capacity": 0.85,
+  "state_pressure": {
+    "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; *_base_share is the MOST of a year's revenue this civilisation's state takes at full notice, before protection bargains requisition down (office is not bargained down: it is compulsory).",
+    "requisition_name": "the annona and the munera",
+    "requisition_note": "Grain for the city and the army was levied as the annona, administered in kind; compulsory public services, the munera, fell on anyone with the property to bear them (Digest 50.4), and after Diocletian's reforms (284-305) the Price Edict of 301 fixed what a thing could be sold for at all, on pain of death. A household with an oil press, a furnace or a granary the state can point to is a household it can assess.",
+    "requisition_base_share": 0.16,
+    "office_name": "the decurionate",
+    "office_note": "Municipal office was not petitioned for, it was assigned by census qualification, and it cost the office-holder his own money - the council seat that funded the games, the grain dole and the aqueduct repair out of pocket (the munus, again), while also making him answerable for the town's own tax quota if the rolls came up short. Being rich enough to be asked is being rich enough to ruin yourself refusing.",
+    "office_base_share": 0.06,
+    "military_name": "the fabricae",
+    "military_note": "The later empire armed itself through state arms factories (fabricae) that could draw requisitioned metalworking skill on short notice; a smith who can cast a working gun in the fourth century is a smith the praetorian prefecture wants an accounting from, Price Edict or no Price Edict.",
+    "confiscation_name": "proscription and the bona damnatorum",
+    "confiscation_note": "Confiscated property of the condemned (bona damnatorum) was a normal fiscal category, not an aberration, and Tacitus and Tertullian both record delatores who made a living finding rich men worth accusing. A fortune too large to go on taxing is a fortune the state has other tools for."
   },
-  {
-   "name": "Diocletian's reforms and the Price Edict",
-   "note": "Diocletian came to power in 284 and rebuilt the state by making it much heavier. The tetrarchy of 293 gave the empire four courts to feed; the army was roughly doubled; the iugatio-capitatio assessment taxed land and heads together, often in kind, and needed a census machinery Rome had never had. The Edict on Maximum Prices of 301 fixed ceilings on more than a thousand goods and wages on pain of death, and Lactantius (De mortibus persecutorum 7) says blood was shed over trifles until the law was quietly let die. The same decades made the collegia hereditary: a man's son inherited his trade and could not leave it, which is a direct constraint on anyone who wants to work at something new. That, and not the persecution of 303-311, is why how much trade is honoured falls here. The state also gets stronger and its favour correspondingly more decisive, which is the patronage shift.",
-   "output_factor": 0.9,
-   "values": {
-    "patronage_weight": 0.05,
-    "w_commerce": -0.1,
-    "w_military": 0.05,
-    "w_religious_rigidity": 0.08
-   },
-   "years": [
-    284,
-    305
-   ]
+  "urban_fraction": 0.12,
+  "values": {
+    "_note": "w_magic_fear 0.8 because the Lex Cornelia is used against malefici and astrologers are expelled repeatedly. w_religious_rigidity only 0.2 because Roman religion is pluralistic and absorbs new cults readily; it is MAGIC that is criminal, not heterodoxy. w_labour_saving negative because of the Vespasian precedent and cheap coerced labour.",
+    "_note_eminence": "An autocracy in which prominence is lethal: Sejanus, Seneca, Thrasea Paetus. The higher you rise the fewer people are above you, and every one of them is a threat.",
+    "adaptation_rate": 0.08,
+    "bribability": 0.55,
+    "patronage_weight": 0.85,
+    "w_commerce": 0.3,
+    "w_eminence_danger": 0.85,
+    "w_information": -0.3,
+    "w_labour_saving": -0.6,
+    "w_magic_fear": 0.8,
+    "w_military": 0.9,
+    "w_novelty": -0.4,
+    "w_religious_rigidity": 0.2
   },
-  {
-   "name": "The solidus and the end of the debasement",
-   "note": "The debasement modelled above stops, and it is worth saying why, because a century of worthless coin is the largest single thing that happened to this civilization's money and its end is not a small event. Aurelian reformed the antoninianus in 274; Constantine then struck the solidus at 72 to the pound of gold from about 309, and it held that weight essentially unchanged for seven hundred years. Long contracts, banking and long-distance trade become possible again for anyone who can get gold. The other half of this entry is quieter and better attested than it is famous: the conquests that supplied cheap slaves had ended, the colonate was binding tenants to the land instead, and late antiquity is when water power actually spreads in the Roman world. Ausonius, writing about the Moselle around 370 (Mosella, lines 361-364), describes water-driven saws cutting stone - the first securely attested water-powered saws anywhere. Rome's baseline hostility to labour-saving devices is real but it is at its weakest here, so how a device that replaces a man is received moves back toward neutral. This entry carries no damage: it is a good century and is modelled as one.",
-   "values": {
-    "w_commerce": 0.12,
-    "w_labour_saving": 0.15
-   },
-   "years": [
-    312,
-    375
-   ]
-  },
-  {
-   "name": "Christianisation of the empire",
-   "note": "Rome's baseline note says it is magic and not heterodoxy that is criminal here, because the state has never needed everyone to worship the same way. Over this century that stops being true. The Edict of Milan in 313 tolerates Christianity; Constantius II's law of 357 (Theodosian Code 9.16.4) makes consulting a haruspex a capital offence; Theodosius' edict of 380 makes Nicene Christianity the religion of the state and the laws of 391-392 close the temples and ban sacrifice outright; and in 385 Priscillian is executed at Trier, the first man in the empire put to death for holding the wrong doctrine. Divination and astrology were already suspect; what is new is that there is now one correct answer about the world, and an apparatus for finding out who does not hold it. This is the largest single shifts in what this society values shift in this file and it runs against the technologist, not with him.",
-   "values": {
-    "w_magic_fear": 0.1,
-    "w_novelty": -0.05,
-    "w_religious_rigidity": 0.35
-   },
-   "years": [
-    313,
-    400
-   ]
-  },
-  {
-   "name": "Adrianople and the Gothic settlement",
-   "note": "Valens let the Tervingi cross the Danube in 376 to escape the Huns, mishandled feeding them, and lost two thirds of the eastern field army and his own life at Adrianople on 9 August 378; Ammianus (31.13) calls it the worst defeat since Cannae. The treaty of 382 then settled the Goths on imperial soil under their own leaders, which had never been done before. The damage to a workshop is not the battle but what follows it: an army that has to be rebuilt is paid for out of taxation, and a frontier that is now inside the frontier keeps moving.",
-   "output_factor": 0.85,
-   "sack_chance": 0.03,
-   "years": [
-    376,
-    405
-   ]
-  },
-  {
-   "name": "The crossings, and the sack of Rome",
-   "note": "Vandals, Alans and Suebi crossed the Rhine at the end of 406 and were never expelled; the garrison of Britain left in 407 and did not come back; Alaric's Goths entered Rome on 24 August 410, the first capture of the city in eight hundred years, which Jerome and Augustine both wrote about as the end of something. Geiseric took Carthage in 439, and with it the African grain that had fed Rome since Augustus, and sacked Rome again over a fortnight in June 455. Attila reached Italy in 452. The sack risk here is deliberately per-year and low rather than a single certainty: most places in the western empire were not sacked in any given year of this half-century, and a great many were sacked in some year of it.",
-   "output_factor": 0.72,
-   "sack_chance": 0.04,
-   "staff_loss": 0.1,
-   "condition": {
-    "field": "output_factor",
-    "requires_all": [
-     "endowment_land",
-     "crop_rotation"
-    ],
-    "outcome": "avert",
-    "met_message": "The crossings, and the sack of Rome: Geiseric takes Carthage in 439 and with it the African grain that had fed Rome since Augustus - but your household never ate off that fleet. Land of your own, worked in fields that do not fail together, means the grain crisis that guts everyone else's ledger passes yours by. (The Rhine crossings, Alaric's sack and Attila's march are none of them yours to prevent: sack risk and staff are unaffected.)",
-    "unmet_message": "The crossings, and the sack of Rome: your table still depends on the African grain fleet, so when Geiseric takes Carthage this window, your trade and output fall exactly as Rome's did."
-   },
-   "years": [
-    406,
-    460
-   ]
-  },
-  {
-   "name": "The end of the western empire",
-   "note": "Ricimer besieged and sacked Rome in 472; Odoacer deposed Romulus Augustulus on 4 September 476 and sent the western regalia to Constantinople, which contemporaries treated as an administrative tidying-up rather than an epoch. What actually ends is the fiscal machine: the western state stops collecting taxes at scale and therefore stops paying for roads, aqueducts, harbours, an army and a currency. Protection after this comes from a bishop or a landowner who is physically nearby, not from a governor who answers to a court, which is the patronage shift; and the long-distance exchange that carried African red slip ware to Britain simply stops, which is the commerce shift.",
-   "output_factor": 0.6,
-   "values": {
-    "patronage_weight": 0.1,
-    "w_commerce": -0.15
-   },
-   "years": [
-    461,
-    492
-   ]
-  },
-  {
-   "name": "Ostrogothic Italy under Theodoric",
-   "note": "Modelling the fifth and sixth centuries as unbroken decline would be false, so this is here. Theodoric ruled Italy from 493 to 526 and Cassiodorus' Variae, written as his secretary, are letters ordering the repair of aqueducts and city walls, the draining of the Pontine marshes, the protection of ancient statues from theft, and a water-clock and a sundial to be made and sent to the Burgundian king with a letter explaining how they work. The Senate still met, the grain dole still ran, the coinage was still struck to Roman standards, and both Boethius and Cassiodorus did their work at this court - though Theodoric had Boethius executed in 524, which is the reminder that a good century is not a safe one. Ostrogothic Italy was better governed than Italy had been for a hundred years and would be for four hundred more. No damage fields: this is a window in which to build.",
-   "values": {
-    "w_commerce": 0.08,
-    "w_novelty": 0.05
-   },
-   "years": [
-    493,
-    526
-   ]
-  },
-  {
-   "name": "Justinian's Gothic War",
-   "note": "Belisarius landed in Sicily in 535 to recover Italy for the empire and the war took nineteen years. Rome changed hands five times; the Goths cut the aqueducts in 537 and they were never fully restored, ending the water supply of a city that had had one for eight hundred years; Totila emptied Rome of its inhabitants in 546. Procopius, who was there, is the source and is not a neutral one. The Pragmatic Sanction of 554 handed back an Italy with a wrecked countryside, a collapsed urban population and no functioning senate. The reconquest destroyed more of Roman Italy than any of the invasions had.",
-   "output_factor": 0.55,
-   "sack_chance": 0.05,
-   "staff_loss": 0.12,
-   "years": [
-    535,
-    554
-   ]
-  },
-  {
-   "name": "The Justinianic plague",
-   "note": "First recorded at Pelusium in Egypt in the summer of 541 and in Constantinople by the spring of 542, where Procopius (Wars 2.22-23) says the dead reached five thousand and then ten thousand a day. It has since been confirmed as Yersinia pestis from sixth-century burials at Aschheim and elsewhere: the same organism as the Black Death. The mortality is genuinely disputed - Procopius' figures are not usable, and recent work on pollen records, coin finds and papyri argues the demographic effect was a good deal smaller than the literary sources imply. It is set well below England's Black Death here for that reason, not because it was a mild disease.",
-   "staff_loss": 0.3,
-   "years": [
-    541,
-    545
-   ]
-  },
-  {
-   "name": "Recurrent plague",
-   "note": "The 541 outbreak did not end; it came back roughly every decade for two centuries. Outbreaks are recorded at Constantinople in 558, in the 570s and in 586, and in the west over the same period - Gregory of Tours has the plague at Marseille in 588, and Gregory the Great was elected at Rome in 590 during one of them. Lower severity than the first wave, because some immunity exists and because the population it is working on has already been reduced.",
-   "staff_loss": 0.12,
-   "years": [
-    558,
-    600
-   ]
-  },
-  {
-   "name": "The Lombard invasion",
-   "note": "Alboin crossed the Julian Alps in the spring of 568, three years after Justinian's reconquest was complete and while the plague was still running, and there was nothing left in Italy to stop him. The peninsula was permanently split between Lombard duchies inland and Byzantine strips along the coasts and the corridor from Rome to Ravenna, and stayed split for twelve centuries. Paul the Deacon's Historia Langobardorum is the narrative source. For anyone with a workshop, this is the end of a single market, a single law and a single currency in Italy.",
-   "output_factor": 0.62,
-   "sack_chance": 0.03,
-   "years": [
-    568,
-    600
-   ]
-  },
-  {
-   "name": "The Arab conquests close the Mediterranean",
-   "note": "Within a century of Muhammad's death in 632, Arab armies had taken Syria and Egypt from Byzantium (634-642), swept across North Africa and taken Carthage itself in 698, and crossed into Spain in 711. Henri Pirenne's thesis - that it is this, and not the fifth-century invasions, which actually ends the ancient Mediterranean as a single economic space - is contested on details but not on the basic shape: papyrus from Egypt, African red slip ware and the grain fleets all stop reaching Italy across this window, a sea that had been Rome's own for six centuries becomes a frontier, and whatever reaches Ravenna or Rome now comes from a much smaller world.",
-   "output_factor": 0.85,
-   "condition": {
-    "field": "output_factor",
-    "requires_all": [
-     "endowment_land",
-     "water_power_scale",
-     "civ_road_paved"
-    ],
-    "outcome": "avert",
-    "met_message": "The Arab conquests close the Mediterranean: the papyrus, the African red slip ware and the grain fleets stop reaching Italy - but none of them were ever reaching you. Land, power and roads that are your own, not shipped in across a sea that has just become a frontier, mean the closing of the Mediterranean does not touch your output. (The sea is still closed, and the society's regard for commerce still falls with it - that is not yours to hold back.)",
-    "unmet_message": "The Arab conquests close the Mediterranean: your workshop still drew on the goods that crossed that sea, so when it closes, your trade and output fall with everyone else's."
-   },
-   "values": {
-    "w_commerce": -0.1
-   },
-   "years": [
-    634,
-    700
-   ]
-  },
-  {
-   "name": "The Carolingian renaissance",
-   "note": "Charlemagne's court at Aachen gathers Alcuin of York and a real revival of schooling, a standardised minuscule hand that makes copying faster and more legible, and a currency reform (the silver denier, not by coincidence the ancestor of the word this file still counts in) stable enough to use; he is crowned Emperor in Rome on Christmas Day 800 by Leo III, the first time the title is claimed in the west since 476. It is a revival built on a much smaller base than the old empire - most of Charlemagne's Europe could not read - but a play tester who reached the year 600 and asked the game why two centuries of total silence followed found, correctly, that nothing here answered them; this is the first thing since the Lombards that is not a catastrophe.",
-   "values": {
-    "w_novelty": 0.05,
-    "patronage_weight": -0.03
-   },
-   "years": [
-    774,
-    800
-   ]
-  }
- ],
- "home_regions": [
-  "italia",
-  "gaul_germania",
-  "britannia",
-  "hispania",
-  "north_africa",
-  "greece_anatolia",
-  "levant_mesopotamia"
- ],
- "id": "rome_100ad",
- "institutions": {
-  "bank": "argentarii, deposit and credit",
-  "charter": "imperial grant only",
-  "corporation": false,
-  "guild": "collegium, licensed and watched",
-  "note": "No limited liability and no corporation. A societas dissolves on a partner's death. This is a real constraint on any enterprise meant to outlive you, and the workaround is a testamentary foundation endowed in land.",
-  "partnership": true,
-  "patent": false,
-  "testament": true
- },
- "literacy_elite": 0.9,
- "literacy_general": 0.12,
- "name": "The Roman Empire under Trajan",
- "notes": [
-  "Slavery is the central economic institution and it suppresses the business case for every labour-saving device.",
-  "Manual work is socially degrading: Cicero De Officiis 1.150-151, Seneca Ep. 90.",
-  "Unlicensed associations are illegal: Trajan refuses Pliny even a fire brigade, Ep. 10.34.",
-  "Already trades annually to India on the monsoon and by relay to China."
- ],
- "opening": {
-  "arrival": "You come to on the Ostia road in the eighteenth year of Domitian's calendar, except Domitian is four years dead and nobody has corrected the milestone. It is the second consulship of Trajan. Rome is at its greatest extent and its most confident: the roads are the best in the world, the water arrives on schedule, the courts sit, the grain fleet comes in from Alexandria, and sixty-five million people are governed by men who genuinely believe the arrangement is permanent.",
-  "what_is_coming": "Sixty-five good years, then the Antonine plague. A century after that, the currency is debased to a tenth and the frontier stops holding. You know the dates. Nobody else does.",
-  "what_is_missing": "Not the ideas. The instruments. Nobody can measure a temperature, hold a tolerance, sustain a vacuum, or purify anything. Every single thing you know how to build waits behind those four.",
-  "what_you_can_see": "Concrete that sets under water. Glass windows. Surgical instruments a modern surgeon would recognise. Water-mills in banks of sixteen. A postal service that outruns anything Europe will have again for fourteen hundred years. And no mechanical clock, no printing, no spectacles, no chimney, no stirrup, no zero.",
-  "what_this_models": "You are one household, not the Roman state. Sixty-five million people live under Trajan and roughly one in eight of them in a town at all - about 7,800,000 town dwellers - but every trade you can hire, and every price that moves when you hire one more, is sized to the ONE town your household actually works in: the order of 50,000 people, not the Empire. Type 'population' once you are playing to see exactly how your own reach compares, trade by trade, to the whole of it."
- },
- "population": 65000000,
- "price_index": 1.0,
- "starting_techs": [
-  "ag2_composting",
-  "ag2_liming",
-  "ag2_malting",
-  "ag2_marling",
-  "ag2_oil_pressing",
-  "ag2_potash",
-  "ag2_refrigeration_ice",
-  "cap_heat_0700",
-  "cap_power_human",
-  "cap_power_muscle",
-  "cap_tol_1mm",
-  "civ_amphitheatre",
-  "civ_aqueduct_roman",
-  "civ_arch_roman",
-  "civ_brick_tile",
-  "civ_chorobates",
-  "civ_circus_racecourse",
-  "civ_dome_roman",
-  "civ_gate_sluice",
-  "civ_glass_windows",
-  "civ_insula",
-  "civ_iron_wrought",
-  "civ_marble_facing",
-  "civ_road_paved",
-  "civ_sewer_roman",
-  "civ_street_paved",
-  "civ_surveying_groma",
-  "civ_town_planning",
-  "civ_vault_barrel",
-  "cn_gypsum_plaster",
-  "cn_pile_driving",
-  "cn_post_lintel",
-  "cn_stone_polish",
-  "fin_annona",
-  "fin_apprenticeship",
-  "fin_arbitrage",
-  "fin_argentarii",
-  "fin_auction",
-  "fin_bankruptcy",
-  "fin_bimetallism",
-  "fin_census",
-  "fin_coined_money",
-  "fin_collegium",
-  "fin_contract_law",
-  "fin_employment_contract",
-  "fin_ferry",
-  "fin_gambling_house",
-  "fin_government",
-  "fin_hotel",
-  "fin_inn",
-  "fin_maritime_loan",
-  "fin_market",
-  "fin_monopoly",
-  "fin_mortgage",
-  "fin_pawnshop",
-  "fin_plantation",
-  "fin_seigniorage",
-  "fin_societas",
-  "fin_tariff",
-  "fin_tax_farming",
-  "fin_testament",
-  "fin_trading_post",
-  "fin_usury_law",
-  "fin_wage",
-  "fud_fish_curing_and_smoking",
-  "fud_hay_making_storage",
-  "hom_board_games",
-  "hom_candle_beeswax",
-  "hom_candle_tallow",
-  "hom_cosmetics_roman",
-  "hom_flush_latrine_simple",
-  "hom_furniture_wooden",
-  "hom_hypocaust",
-  "hom_lead_plumbing",
-  "hom_locks_keys",
-  "hom_mirror_bronze_polished",
-  "hom_musical_instruments",
-  "hom_oil_lamp_simple",
-  "hom_perfume_enfleurage",
-  "hom_public_bath",
-  "hom_toys_dolls",
-  "hom_umbrella",
-  "lnd_axle_pivot_front",
-  "lnd_bridge",
-  "lnd_cursus_publicus",
-  "lnd_four_wheel_cart",
-  "lnd_harness_throat_girth",
-  "lnd_horse_saddle_basic",
-  "lnd_litter",
-  "lnd_milestone",
-  "lnd_mule_transport",
-  "lnd_ox_transport",
-  "lnd_paved_road_network",
-  "lnd_two_wheel_cart",
-  "lnd_tyre_iron",
-  "lnd_wheel_spoked",
-  "mat_alum",
-  "mat_asbestos",
-  "mat_beeswax",
-  "mat_bitumen",
-  "mat_brass",
-  "mat_bronze",
-  "mat_calamine",
-  "mat_carbon_black",
-  "mat_charcoal",
-  "mat_emery",
-  "mat_galena",
-  "mat_glass_soda",
-  "mat_gold",
-  "mat_gypsum",
-  "mat_lead",
-  "mat_leather",
-  "mat_lime",
-  "mat_linen",
-  "mat_mercury",
-  "mat_natron",
-  "mat_obsidian_blade",
-  "mat_olive_oil",
-  "mat_papyrus",
-  "mat_parchment",
-  "mat_pyrolusite",
-  "mat_salt",
-  "mat_shellac",
-  "mat_silk",
-  "mat_silver",
-  "mat_sulfur",
-  "mat_tallow",
-  "mat_tin",
-  "mat_vitriols",
-  "mat_wrought_iron",
-  "med_amputation",
-  "med_bone_setting",
-  "med_cataract_couching",
-  "med_herbal_pharmacy",
-  "med_legal_physician",
-  "med_obstetric_practice",
-  "med_opium_mandrake",
-  "med_surgical_kit_good",
-  "med_trepanation",
-  "med_wound_suturing",
-  "met_bloomery_bog_iron",
-  "met_ore_crushing_sorting",
-  "mfg_adhesive_bond",
-  "mfg_cold_riveting",
-  "mfg_enamelling",
-  "mfg_flux",
-  "mfg_hot_riveting",
-  "mfg_painting",
-  "mfg_soft_solder",
-  "mt2_amalgamation",
-  "mt2_earthenware",
-  "mt2_timbering_safety",
-  "opt_burning_glass",
-  "opt_dioptra",
-  "opt_geared_mechanisms",
-  "opt_groma",
-  "opt_metal_mirror_polished",
-  "opt_steelyards",
-  "opt_sundial",
-  "opt_water_clock",
-  "opt_water_globe_magnifier",
-  "prn_carbon_ink",
-  "prn_codex_bound",
-  "prn_library_archive",
-  "prn_mosaic_fresco",
-  "prn_papyrus_sheets",
-  "prn_parchment_sheets",
-  "prn_scribal_copying",
-  "prn_sculpture",
-  "prn_seals_stamps",
-  "prn_theatre_pantomime",
-  "prn_wax_tablets",
-  "pwr_animal_treadmill",
-  "pwr_coal_seam",
-  "pwr_force_pump",
-  "pwr_petroleum_seeps",
-  "pwr_screw_press_power",
-  "sc2_institution_textbook",
-  "sea_anchor",
-  "sea_coastal_pilotage",
-  "sea_lead_sheathing",
-  "sea_lodestone",
-  "sea_merchant_ships_large",
-  "sea_monsoon_route",
-  "sea_mortise_tenon",
-  "sea_pharos_lighthouse",
-  "sea_sounding_lines",
-  "sea_spritsail",
-  "sea_square_sail",
-  "sea_steering_oars",
-  "tex_cotton_trade",
-  "tex_drop_spindle",
-  "tex_dye_madder",
-  "tex_dye_murex",
-  "tex_dye_woad",
-  "tex_felting",
-  "tex_indigo",
-  "tex_mordanting",
-  "tex_sailcloth",
-  "tex_silk_trade",
-  "tex_two_beam_loom",
-  "tex_warp_weighted_loom",
-  "tex_wool",
-  "tr_block_tackle",
-  "tr_reefing",
-  "tr_square_rig",
-  "tx2_alum_tanning",
-  "tx2_asbestos_cloth",
-  "tx2_beam",
-  "tx2_bottle",
-  "tx2_comb",
-  "tx2_currying",
-  "tx2_doll",
-  "tx2_dyeing_fibre",
-  "tx2_dyeing_piece",
-  "tx2_dyeing_yarn",
-  "tx2_eye_pointed_needle",
-  "tx2_heddle",
-  "tx2_needle",
-  "tx2_pin",
-  "tx2_scouring",
-  "tx2_warp_sizing",
-  "tx2_wool_fibre"
- ],
- "state_capacity": 0.85,
- "state_pressure": {
-  "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; *_base_share is the MOST of a year's revenue this civilisation's state takes at full notice, before protection bargains requisition down (office is not bargained down: it is compulsory).",
-  "requisition_name": "the annona and the munera",
-  "requisition_note": "Grain for the city and the army was levied as the annona, administered in kind; compulsory public services, the munera, fell on anyone with the property to bear them (Digest 50.4), and after Diocletian's reforms (284-305) the Price Edict of 301 fixed what a thing could be sold for at all, on pain of death. A household with an oil press, a furnace or a granary the state can point to is a household it can assess.",
-  "requisition_base_share": 0.16,
-  "office_name": "the decurionate",
-  "office_note": "Municipal office was not petitioned for, it was assigned by census qualification, and it cost the office-holder his own money - the council seat that funded the games, the grain dole and the aqueduct repair out of pocket (the munus, again), while also making him answerable for the town's own tax quota if the rolls came up short. Being rich enough to be asked is being rich enough to ruin yourself refusing.",
-  "office_base_share": 0.06,
-  "military_name": "the fabricae",
-  "military_note": "The later empire armed itself through state arms factories (fabricae) that could draw requisitioned metalworking skill on short notice; a smith who can cast a working gun in the fourth century is a smith the praetorian prefecture wants an accounting from, Price Edict or no Price Edict.",
-  "confiscation_name": "proscription and the bona damnatorum",
-  "confiscation_note": "Confiscated property of the condemned (bona damnatorum) was a normal fiscal category, not an aberration, and Tacitus and Tertullian both record delatores who made a living finding rich men worth accusing. A fortune too large to go on taxing is a fortune the state has other tools for."
- },
- "urban_fraction": 0.12,
- "values": {
-  "_note": "w_magic_fear 0.8 because the Lex Cornelia is used against malefici and astrologers are expelled repeatedly. w_religious_rigidity only 0.2 because Roman religion is pluralistic and absorbs new cults readily; it is MAGIC that is criminal, not heterodoxy. w_labour_saving negative because of the Vespasian precedent and cheap coerced labour.",
-  "_note_eminence": "An autocracy in which prominence is lethal: Sejanus, Seneca, Thrasea Paetus. The higher you rise the fewer people are above you, and every one of them is a threat.",
-  "adaptation_rate": 0.08,
-  "bribability": 0.55,
-  "patronage_weight": 0.85,
-  "w_commerce": 0.3,
-  "w_eminence_danger": 0.85,
-  "w_information": -0.3,
-  "w_labour_saving": -0.6,
-  "w_magic_fear": 0.8,
-  "w_military": 0.9,
-  "w_novelty": -0.4,
-  "w_religious_rigidity": 0.2
- },
- "wage_index": 1.0,
- "year": 100
+  "wage_index": 1.0,
+  "year": 100
 }
