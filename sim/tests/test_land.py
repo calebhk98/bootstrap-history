@@ -327,15 +327,263 @@ class CivilizationTerritoryTests(unittest.TestCase):
             rome.price_kg_grain_equivalent_per_iugerum,
             norse.price_kg_grain_equivalent_per_iugerum)
 
-    def test_a_single_home_region_civilization_prices_land_at_zero(self):
-        # Han China and the Norse both hold exactly one home region this
-        # round - see the module docstring for why that is a genuine
-        # finding (no differential rent without a worse region of their
-        # OWN to compare against) rather than a bug this test should guard
-        # against reappearing.
+    def test_a_single_home_region_civilization_no_longer_prices_at_zero(self):
+        # UPDATE (Complaints/46): this used to assert exactly the opposite
+        # - Han China and the Norse both hold exactly one home region, and
+        # the OLD, extensive-margin-only mechanism priced both at exactly
+        # zero because neither had a worse region of its own to compare
+        # against. That was the defect Complaints/46 named: a civilization
+        # holding one uniform region has nothing WORSE to earn a
+        # differential rent over, regardless of how many people are
+        # drawing on it. The INTENSIVE margin (see land.py's own LABOUR
+        # INTENSITY section) fixes this without touching the extensive
+        # mechanism at all - both civilizations now price above zero
+        # purely from their own population pressing on their own land.
         for civilization_id in ("han_china_100ad", "norse_900ad"):
             outcome = land.margin_outcome_for_civilization(civilization_id)
-            self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+            self.assertGreater(
+                outcome.price_kg_grain_equivalent_per_iugerum, 0.0,
+                "%s: a single-region civilization should still price its "
+                "land above zero once crowding (the intensive margin) is "
+                "accounted for" % civilization_id)
+            # The EXTENSIVE component alone is still exactly zero for a
+            # single region - only the intensive component is doing the
+            # work here, which is the whole point of the fix.
+            for allocation in outcome.allocations:
+                self.assertEqual(
+                    allocation.extensive_rent_kg_grain_equivalent_per_iugerum,
+                    0.0)
+
+
+# A single, fixed synthetic region used by every test below that needs a
+# "solo" civilization's own territory without depending on real geography.
+# Declared ONCE, at one fixed set of values, and never varied - land.py's
+# own declare() registry rejects the SAME region key re-declared with a
+# DIFFERENT value (see sim/constants.py's declare()), so every test that
+# needs a different scenario varies the CIVILIZATION (population,
+# home_regions) against this same fixed geography instead of the geography
+# itself.
+_SOLO_GEOGRAPHY = {
+    "regions": {
+        "solo_test_region": {
+            "land": {
+                "land_area_km2": 100000.0,
+                "arable_fraction": 0.5,
+                "fertility_quality_multiplier": 1.0,
+                "conf": "D",
+                "source": "sim/tests/test_land.py synthetic fixture",
+            }
+        }
+    }
+}
+
+
+def _solo_civilization(population):
+    return {"home_regions": ["solo_test_region"], "population": population}
+
+
+class LabourIntensityTests(unittest.TestCase):
+    """labour_hours_applied_per_iugerum - the civilization-wide intensity
+    figure that feeds the intensive margin, in isolation from any fertility
+    or margin-of-cultivation logic.
+    """
+
+    def test_scales_linearly_with_population(self):
+        one = land.labour_hours_applied_per_iugerum(1_000_000, 500_000.0)
+        two = land.labour_hours_applied_per_iugerum(2_000_000, 500_000.0)
+        self.assertAlmostEqual(two, one * 2.0)
+
+    def test_scales_inversely_with_arable_land(self):
+        small_territory = land.labour_hours_applied_per_iugerum(
+            1_000_000, 100_000.0)
+        large_territory = land.labour_hours_applied_per_iugerum(
+            1_000_000, 1_000_000.0)
+        self.assertGreater(small_territory, large_territory)
+
+    def test_zero_land_returns_zero_rather_than_dividing_by_zero(self):
+        self.assertEqual(
+            land.labour_hours_applied_per_iugerum(1_000_000, 0.0), 0.0)
+
+    def test_negative_population_is_rejected(self):
+        with self.assertRaises(ValueError):
+            land.labour_hours_applied_per_iugerum(-1, 1000.0)
+
+    def test_negative_land_is_rejected(self):
+        with self.assertRaises(ValueError):
+            land.labour_hours_applied_per_iugerum(1000, -1.0)
+
+
+class YieldAtIntensityTests(unittest.TestCase):
+    """yield_kg_per_iugerum_at_intensity - the Cobb-Douglas curve this
+    module duplicates from sim/world/agriculture.py's own gross_harvest_kg,
+    on a per-iugerum basis (see land.py's own LABOUR INTENSITY section).
+    """
+
+    def _reference_hours_per_iugerum(self):
+        return (land.LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE
+               * land.IUGERUM_HECTARES)
+
+    def test_reference_intensity_reproduces_the_flat_reference_yield(self):
+        # The calibration promise this whole curve is built around: at
+        # exactly the reference intensity, this must equal
+        # reference_yield_kg_per_iugerum exactly, for any fertility.
+        for fertility in (0.5, 1.0, 1.35):
+            expected = land.reference_yield_kg_per_iugerum(fertility)
+            actual = land.yield_kg_per_iugerum_at_intensity(
+                fertility, self._reference_hours_per_iugerum())
+            self.assertAlmostEqual(actual, expected)
+
+    def test_more_labour_raises_yield(self):
+        reference_hours = self._reference_hours_per_iugerum()
+        low = land.yield_kg_per_iugerum_at_intensity(1.0, reference_hours)
+        high = land.yield_kg_per_iugerum_at_intensity(
+            1.0, reference_hours * 4.0)
+        self.assertGreater(high, low)
+
+    def test_yield_grows_slower_than_labour_diminishing_returns(self):
+        # Quadrupling labour must NOT quadruple output - the whole point
+        # of LAND_LABOUR_OUTPUT_ELASTICITY < 1.
+        reference_hours = self._reference_hours_per_iugerum()
+        base = land.yield_kg_per_iugerum_at_intensity(1.0, reference_hours)
+        quadrupled = land.yield_kg_per_iugerum_at_intensity(
+            1.0, reference_hours * 4.0)
+        self.assertLess(quadrupled, base * 4.0)
+        self.assertGreater(quadrupled, base)
+
+    def test_zero_labour_yields_nothing(self):
+        self.assertEqual(land.yield_kg_per_iugerum_at_intensity(1.0, 0.0), 0.0)
+
+    def test_negative_labour_is_rejected(self):
+        with self.assertRaises(ValueError):
+            land.yield_kg_per_iugerum_at_intensity(1.0, -1.0)
+
+
+class IntensiveRentTests(unittest.TestCase):
+    """intensive_rent_kg_grain_equivalent_per_iugerum - the Cobb-Douglas
+    land share Complaints/46 asked for: rent a SINGLE region earns from
+    being crowded, with no other, worse region needed anywhere.
+    """
+
+    def test_crowding_a_single_region_raises_its_rent(self):
+        low_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_iugerum(
+            1.0, 40.0)
+        high_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_iugerum(
+            1.0, 400.0)
+        self.assertGreater(high_intensity_rent, low_intensity_rent)
+
+    def test_better_land_earns_more_even_from_intensive_alone(self):
+        # No margin, no comparison region - just fertility, at a FIXED
+        # intensity - and the better parcel still earns more.
+        worse = land.intensive_rent_kg_grain_equivalent_per_iugerum(0.5, 100.0)
+        better = land.intensive_rent_kg_grain_equivalent_per_iugerum(1.5, 100.0)
+        self.assertGreater(better, worse)
+
+    def test_zero_labour_earns_no_intensive_rent(self):
+        self.assertEqual(
+            land.intensive_rent_kg_grain_equivalent_per_iugerum(1.0, 0.0), 0.0)
+
+    def test_never_negative(self):
+        for fertility in (0.1, 1.0, 3.0):
+            for hours in (0.0, 1.0, 1000.0):
+                self.assertGreaterEqual(
+                    land.intensive_rent_kg_grain_equivalent_per_iugerum(
+                        fertility, hours),
+                    0.0)
+
+
+class CombinedMarginOutcomeTests(unittest.TestCase):
+    """margin_outcome_for_civilization - where the extensive margin
+    (find_margin_of_cultivation, unchanged) and the intensive margin
+    (this task's own addition) are actually added together. Uses the
+    fixed _SOLO_GEOGRAPHY fixture so these checks do not depend on real
+    geography.json numbers, plus the project's own real civilizations for
+    the headline claims the task itself asks to be verified.
+    """
+
+    def test_denser_population_on_the_same_single_region_raises_its_price(self):
+        sparse = land.margin_outcome_for_civilization(
+            "sparse", geography=_SOLO_GEOGRAPHY,
+            civilizations={"sparse": _solo_civilization(10_000)})
+        dense = land.margin_outcome_for_civilization(
+            "dense", geography=_SOLO_GEOGRAPHY,
+            civilizations={"dense": _solo_civilization(10_000_000)})
+        self.assertGreater(
+            dense.price_kg_grain_equivalent_per_iugerum,
+            sparse.price_kg_grain_equivalent_per_iugerum)
+        # And both are strictly positive once ANY population presses on
+        # the land - this is the exact defect Complaints/46 named: a
+        # single, uniform region used to price at zero no matter how many
+        # people depended on it.
+        self.assertGreater(sparse.price_kg_grain_equivalent_per_iugerum, 0.0)
+
+    def test_a_civilization_with_no_population_prices_at_zero(self):
+        outcome = land.margin_outcome_for_civilization(
+            "empty", geography=_SOLO_GEOGRAPHY,
+            civilizations={"empty": _solo_civilization(0)})
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+
+    def test_a_civilization_with_no_home_regions_prices_at_zero_not_crashing(self):
+        outcome = land.margin_outcome_for_civilization(
+            "landless", geography=_SOLO_GEOGRAPHY,
+            civilizations={"landless": {"home_regions": [], "population": 1000}})
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertEqual(outcome.labour_hours_per_iugerum, 0.0)
+
+    def test_rome_shows_both_margins_at_once(self):
+        # The task's own "both must work together" requirement: a
+        # civilization with varied land AND crowding should show BOTH
+        # effects on its own better-than-marginal regions, not just one.
+        outcome = land.margin_outcome_for_civilization("rome_100ad")
+        by_region = {a.region_land.region: a for a in outcome.allocations}
+        north_africa = by_region["north_africa"]
+        self.assertGreater(
+            north_africa.extensive_rent_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertGreater(
+            north_africa.intensive_rent_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertAlmostEqual(
+            north_africa.rent_kg_grain_equivalent_per_iugerum,
+            (north_africa.extensive_rent_kg_grain_equivalent_per_iugerum
+             + north_africa.intensive_rent_kg_grain_equivalent_per_iugerum))
+
+    def test_han_china_no_longer_prices_at_zero(self):
+        # The task's own headline check, restated at the civilization
+        # level rather than the ReferenceYield/MarginOfCultivation level -
+        # see test_a_single_home_region_civilization_no_longer_prices_at_
+        # zero above for the same claim with the extensive-component
+        # breakdown asserted too.
+        outcome = land.margin_outcome_for_civilization("han_china_100ad")
+        self.assertGreater(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+
+    def test_abundant_land_per_head_is_cheaper_than_crowded_land(self):
+        # The task's own explicit requirement: a civilization with
+        # abundant land per head should still be cheaper than a crowded
+        # one. Norse Scandinavia and Rome/Han China hold similarly
+        # UNIFORM-ish territory (the Norse hold one region; so does Han
+        # China), but the Norse have vastly more land per person than
+        # either - this is a claim about POPULATION DENSITY on held
+        # territory, not about fertility, so it should hold even though
+        # the Norse's own land is also the least fertile of the three.
+        norse = land.margin_outcome_for_civilization("norse_900ad")
+        china = land.margin_outcome_for_civilization("han_china_100ad")
+        rome = land.margin_outcome_for_civilization("rome_100ad")
+        self.assertLess(
+            norse.price_kg_grain_equivalent_per_iugerum,
+            china.price_kg_grain_equivalent_per_iugerum)
+        self.assertLess(
+            norse.price_kg_grain_equivalent_per_iugerum,
+            rome.price_kg_grain_equivalent_per_iugerum)
+
+    def test_rome_still_outprices_the_norse_with_both_margins_active(self):
+        # The pre-existing headline check (CivilizationTerritoryTests.
+        # test_rome_outprices_the_norse) exercised the extensive margin
+        # alone; this re-asserts the same ordering now that the intensive
+        # margin is layered on top of it, so a future change to the
+        # intensity mechanism cannot silently invert it.
+        rome = land.margin_outcome_for_civilization("rome_100ad")
+        norse = land.margin_outcome_for_civilization("norse_900ad")
+        self.assertGreater(
+            rome.price_kg_grain_equivalent_per_iugerum,
+            norse.price_kg_grain_equivalent_per_iugerum)
 
 
 if __name__ == "__main__":

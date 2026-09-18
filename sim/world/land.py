@@ -17,6 +17,25 @@ use, and the margin that sets land's price is the worst LAND actually
 needed to feed however many people are drawing on it, not the worst DEPOSIT
 actually needed to meet a metal quota. This module is that mechanism.
 
+UPDATE (Complaints/46): THAT WAS ONLY HALF OF RICARDO, AND THIS ROUND ADDS
+THE OTHER HALF. Everything above is the EXTENSIVE margin - better land
+against worse. Complaints/46 measured what that leaves out: Han China holds
+one region, Rome holds seven, and a civilization holding a single uniform
+region has nothing WORSE of its own to earn a differential rent over, so it
+priced land at exactly zero regardless of population - Han China
+(58,000,000 people) and the Norse (1,500,000) came out identically priced,
+which was a finding about the MAP's own filing system (how many labels a
+region happened to be split into), not about either civilization's land.
+The INTENSIVE margin - diminishing returns to more labour on the SAME
+ground, the second and third ploughing of one field yielding less than the
+first - is the other source of rent, and it does not need a worse region to
+exist anywhere: crowd one region hard enough and it earns rent from itself.
+See the LABOUR INTENSITY section below, sim/world/agriculture.py's own
+Cobb-Douglas production function (the source this section's physics is
+DUPLICATED from, per this module's STANDALONE section, never imported), and
+margin_outcome_for_civilization's own docstring for where the two margins
+actually combine.
+
 THE STAKEHOLDER'S FRAMING, which this module is built to fit rather than
 adapt afterwards: land belongs under geography (not floating free the way
 `iugerum_land` used to), it must be PER-CIVILISATION and CHANGEABLE (China
@@ -137,10 +156,22 @@ demanded - the SAME `quantity_supplied` bookkeeping
 `sim/world/deposits.py`'s own `Allocation` already keeps, so a parcel
 priced in but not reached contributes zero weight, not zero price to a
 nonzero weight). A CIVILIZATION HOLDING ONLY ONE REGION THEREFORE PRICES
-LAND AT EXACTLY ZERO THIS ROUND, AND THAT IS A FINDING, NOT A BUG - see
-Han China and the Norse in this module's own `--why`-style report and the
-task's own write-up for what it says about why a civilization wants
-varied territory, not merely more of it.
+LAND AT EXACTLY ZERO FROM THIS FUNCTION ALONE, AND THAT WAS THE WHOLE
+FINDING THIS SECTION USED TO STOP AT - see Han China and the Norse in this
+module's own `--why`-style report for what a purely extensive, differential
+model says about why a civilization wants varied territory, not merely more
+of it.
+
+UPDATE (Complaints/46): THIS IS STILL TRUE OF `find_margin_of_cultivation`
+ITSELF, AND THAT IS NOW DELIBERATE, NOT THE WHOLE ANSWER. This function
+computes the EXTENSIVE margin only, on purpose, so its own tests keep
+checking exactly one mechanism at a time - see the LABOUR INTENSITY section
+below for the INTENSIVE margin this was missing, and
+`margin_outcome_for_civilization`'s own docstring for where the two are
+added together. A civilization holding one region still gets a zero
+EXTENSIVE rent from this function; it no longer gets a zero PRICE from
+`margin_outcome_for_civilization`, because crowding that one region is a
+real, separate source of rent this function was never built to see.
 
 DEMAND IS A PARAMETER, EXACTLY LIKE sim/world/deposits.py'S OWN, BUT A
 DIFFERENT ONE. `quantity_demanded_kg_grain_equivalent` needs three
@@ -237,14 +268,26 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
     deposits. Real grain was expensive to move in bulk before rail, which
     this project already represents elsewhere (freight distance in
     `sim/engine/economy.py`) but not here.
-  - No depletion, no intensive margin, no capital (irrigation works,
-    drainage, forest clearance) that would raise a parcel's own fertility
-    over time. Land does not run out the way an ore body does - that is
-    this module's entire reason for existing rather than reusing
-    `sim/world/deposits.py` outright - but real land quality is not
-    actually fixed forever either; treating `fertility_quality_multiplier`
-    as a constant per region is a simplification, not a claim that
-    fertility cannot be raised (or ruined) by what is done to it.
+  - No depletion, no capital (irrigation works, drainage, forest
+    clearance) that would raise a parcel's own fertility over time. Land
+    does not run out the way an ore body does - that is this module's
+    entire reason for existing rather than reusing `sim/world/deposits.py`
+    outright - but real land quality is not actually fixed forever either;
+    treating `fertility_quality_multiplier` as a constant per region is a
+    simplification, not a claim that fertility cannot be raised (or
+    ruined) by what is done to it. UPDATE (Complaints/46): the INTENSIVE
+    MARGIN (diminishing returns to labour on fixed land) IS now done - see
+    the LABOUR INTENSITY section - and is a different thing from either of
+    these: it never claims land runs out or that fertility itself changes,
+    only that the SAME land yields less per additional hour of labour
+    applied to it, which is what lets a civilization's own population
+    density raise its own rent with no depletion and no capital
+    improvement anywhere in the story.
+  - The amount of land `find_margin_of_cultivation` decides is actually
+    needed to meet quantity demanded is still computed at the FLAT
+    reference yield, not the intensity-adjusted one the LABOUR INTENSITY
+    section derives - see that section's own WHAT THIS DELIBERATELY DOES
+    NOT DO for the seam this leaves and why it is left alone this round.
   - No feedback from land rent into wheat_kg's own price, or into any
     other `extracted_from: "arable land"` material's price (wheat, wool,
     linen, olive oil - see `data/production/40_organics.json`'s own
@@ -419,6 +462,283 @@ def quantity_demanded_kg_grain_equivalent(population):
 
 
 # ============================================================================
+# LABOUR INTENSITY - THE INTENSIVE MARGIN (Complaints/46)
+# ============================================================================
+# Everything above prices land by comparing ONE FLAT yield-per-iugerum
+# (REFERENCE_WHEAT_YIELD_KG_PER_HECTARE, at whatever labour a "reference"
+# farmer applies) across regions of different fertility - the EXTENSIVE
+# margin, Ricardo's "worse land against better". Complaints/46 measured
+# what that leaves out: a civilization holding a single uniform region has
+# nothing WORSE of its own to earn a differential rent over, so it prices
+# land at exactly zero regardless of how many people are drawing on that
+# one region - Han China (58,000,000 people on one region) and the Norse
+# (1,500,000 on one region) came out identically priced at zero, which is a
+# statement about the MAP's own filing system, not about either
+# civilization's land.
+#
+# THE FIX, FOLLOWING sim/world/agriculture.py'S OWN PHYSICS RATHER THAN
+# REBUILDING IT. That module's `gross_harvest_kg` is Cobb-Douglas in land
+# and labour - constant returns to the two together, but its own
+# LABOUR_OUTPUT_ELASTICITY < 1 means output on a FIXED parcel grows slower
+# than the labour applied to it (the second and third ploughing of one
+# field yielding less than the first - exactly the intensive margin this
+# module was missing). Its own `marginal_product_of_labour_kg_per_hour`
+# gives the closed form for why: for harvest = TFP * hectares**(1-e) *
+# hours**e, the extra kilograms the next hour of labour buys is
+# e * harvest / hours, which falls as hours rises because e < 1. This
+# module does NOT import agriculture.py (see the module docstring's
+# STANDALONE section) - every constant below is DUPLICATED from it, with
+# the same discipline REFERENCE_WHEAT_YIELD_KG_PER_HECTARE above already
+# uses, and the functions below reproduce the SAME shape on a
+# PER-IUGERUM basis (land fixed at exactly one iugerum, so there is no
+# separate land exponent to carry) rather than calling agriculture.py's
+# own code.
+#
+# WHAT LAND EARNS FROM THIS, AND WHY IT IS ADDITIVE WITH THE EXTENSIVE
+# RENT ABOVE RATHER THAN A REPLACEMENT FOR IT. Cobb-Douglas has a standard
+# property (Euler's theorem, constant returns to scale): if labour is paid
+# its own marginal product for every hour actually worked, output splits
+# into a labour share (the elasticity, e) and a LAND share (1 - e) with
+# nothing left over - no separate market-clearing step needed.
+# `intensive_rent_kg_grain_equivalent_per_iugerum` is exactly that land
+# share, evaluated at however many labour-hours a civilization's own
+# population actually applies to each iugerum it holds
+# (`labour_hours_applied_per_iugerum`). Crowd the SAME region with more
+# people and this rises - Boserup's finding, that a population pressed for
+# land intensifies rather than merely spreading out - with NO dependence
+# on whether any other, worse region exists anywhere: a single,
+# uniformly fertile region earns this from itself alone. It is added ON
+# TOP of the extensive rent computed above, not blended into it:
+# `margin_outcome_for_civilization` is the one function that combines the
+# two (see its own docstring), and `find_margin_of_cultivation` above is
+# left completely unchanged - a civilization with varied land AND crowding
+# shows BOTH effects, and one with neither (an unpopulated, single,
+# uniform region) still correctly prices at zero.
+#
+# WHAT THIS DELIBERATELY DOES NOT DO. The amount of land
+# `find_margin_of_cultivation` decides is actually needed to meet a
+# civilization's quantity demanded is computed at the FLAT reference
+# yield, exactly as before - it is NOT reduced to reflect that a crowded
+# civilization is (by this section's own claim) squeezing MORE than the
+# reference yield out of the land it already works. A fully closed model
+# would feed the intensity this section derives back into how much
+# iugera `find_margin_of_cultivation` allocates in the first place; this
+# round prices the intensity it finds without feeding it back into that
+# allocation. TAG: TEMPORARY SIMPLIFICATION (CLAUDE.md SS3.4) - see
+# `margin_outcome_for_civilization`'s own docstring for exactly where this
+# seam is and what closing it would require.
+
+LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
+    "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE", 150.0,
+    kind="engineering_estimate",
+    unit="labourer-hours/hectare/season, at REFERENCE_WHEAT_YIELD_KG_PER_HECTARE",
+    source="Same figure and same source as sim/world/agriculture.py's own "
+           "REFERENCE_LABOUR_HOURS_PER_HECTARE: data/production/"
+           "40_organics.json wheat_kg entry's labour_hours.labourer "
+           "(cross-ploughing, broadcast sowing, weeding, sickle reaping, "
+           "threshing/winnowing) aggregated to about 150 hours/ha. "
+           "Declared again here under a LAND_-prefixed name rather than "
+           "imported or given the identical name, per this module's own "
+           "STANDALONE section and the same declare()-registry reasoning "
+           "LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY's own declaration "
+           "already gives for a different constant.",
+    confidence="B",
+    why="The labour intensity REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is "
+        "quoted at - the anchor point (fertility 1.0, this many hours)  "
+        "yield_kg_per_iugerum_at_intensity's own Cobb-Douglas curve is "
+        "calibrated to reproduce exactly.")
+
+LAND_LABOUR_OUTPUT_ELASTICITY = declare(
+    "LAND_LABOUR_OUTPUT_ELASTICITY", 0.5,
+    kind="temporary_heuristic",
+    unit="dimensionless (Cobb-Douglas exponent on labour)",
+    source="Same figure and same reasoning as sim/world/agriculture.py's "
+           "own LABOUR_OUTPUT_ELASTICITY: agricultural-economics estimates "
+           "of labour's output elasticity typically fall in the 0.3-0.6 "
+           "range, and 0.5 (output scales with the square root of labour "
+           "hours) is the midpoint of that range, not a number derived "
+           "for any crop or region this module prices specifically. "
+           "Declared again here under a LAND_-prefixed name for the same "
+           "declare()-registry reason LAND_REFERENCE_LABOUR_HOURS_PER_"
+           "HECTARE's own declaration gives.",
+    confidence="C",
+    why="The curve shape that makes doubling labour on fixed land yield "
+        "less than double the output - the whole mechanism this section "
+        "exists to add. Without it, output would scale linearly with "
+        "labour and crowding could never raise a region's own yield, let "
+        "alone its rent.")
+
+LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
+    "LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER", 1400.0,
+    kind="temporary_heuristic",
+    unit="hours/worker/year",
+    source="Same figure and same reasoning as sim/world/agriculture.py's "
+           "own ANNUAL_LABOUR_HOURS_PER_FARM_WORKER: 1,200-1,500 hours/"
+           "year is the rough order of magnitude historical agricultural-"
+           "labour estimates give for a seasonal farm calendar (bursts at "
+           "ploughing, sowing and harvest, slack in between); 1,400 is a "
+           "round midpoint, not a figure sourced to any one civilization "
+           "this module prices. Declared again here under a LAND_-"
+           "prefixed name for the same declare()-registry reason given "
+           "above.",
+    confidence="C",
+    why="How many hours ONE farm worker can give to the land in a year - "
+        "the first of two facts LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA "
+        "multiplies together to get how much labour a whole POPULATION "
+        "(not just its farm workers) supplies; see that constant's own "
+        "declaration for the second.")
+
+LAND_AGRARIAN_POPULATION_SHARE = declare(
+    "LAND_AGRARIAN_POPULATION_SHARE", 0.85,
+    kind="temporary_heuristic",
+    unit="fraction of population engaged in farming (dimensionless)",
+    source="sim/world/agriculture.py's own docstring names 'the historical "
+           "80-90%' as the farm-population share of a pre-industrial "
+           "society (in the course of explaining why its own computed "
+           "farm-population share comes out far below that figure) - a "
+           "commonly cited range in agrarian economic history, not a "
+           "number this project has derived from its own data. 0.85 is "
+           "the midpoint of that range, taken here because this module "
+           "needs a single point figure and that docstring states only a "
+           "range.",
+    confidence="D",
+    why="Converts LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, a rate PER "
+        "FARM WORKER, into a rate per PERSON OF THE WHOLE POPULATION - "
+        "the same total-population convention "
+        "quantity_demanded_kg_grain_equivalent already uses on the "
+        "demand side (it does not split farmers from everyone else "
+        "either), applied here to the supply side so both sides of this "
+        "module's ledger treat 'population' the same way.")
+
+LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA = (
+    LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER * LAND_AGRARIAN_POPULATION_SHARE)
+# ~1,190 hours/person/year. Arithmetic on two already-declared numbers, not
+# a fact of its own - the same non-declare() treatment
+# GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA gets in sim/world/agriculture.py.
+# TAG: COMPOUNDING HEURISTIC (CLAUDE.md SS3.4) - this multiplies two
+# temporary_heuristic figures together, so its own uncertainty is at least
+# as large as the wider of the two, not smaller; declared confidence D on
+# both of its own inputs for exactly that reason, even though
+# LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER alone is confidence C.
+
+
+def labour_hours_applied_per_iugerum(population, total_arable_iugera_held,
+                                     annual_farm_labour_hours_per_capita=None):
+    """How many labour-hours a civilization's own population applies, on
+    average, to each iugerum of arable land it HOLDS - its whole endowment
+    across every home region, not only the iugera `find_margin_of_
+    cultivation` decides are actually needed to meet quantity demanded (see
+    this section's own WHAT THIS DELIBERATELY DOES NOT DO for why the two
+    are kept separate this round).
+
+    This is a CIVILIZATION-WIDE figure, exactly like
+    `quantity_demanded_kg_grain_equivalent` is civilization-wide: the same
+    "one pooled land-and-labour market" simplification `find_margin_of_
+    cultivation`'s own docstring already states for the extensive margin
+    (no transport friction, no intra-region split), applied here to
+    labour instead of land.
+
+    Returns 0.0 for a civilization with no arable land at all (rather than
+    raising), since a population with nothing to farm applies no labour to
+    farming it - matches `load_region_lands`'s own "a gap here is a future
+    region's problem, not this call's" handling of an unrecognised region.
+    """
+    if population < 0:
+        raise ValueError("population cannot be negative: %r" % (population,))
+    if total_arable_iugera_held < 0:
+        raise ValueError("total_arable_iugera_held cannot be negative: %r"
+                          % (total_arable_iugera_held,))
+    annual_farm_labour_hours_per_capita = (
+        LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA
+        if annual_farm_labour_hours_per_capita is None
+        else annual_farm_labour_hours_per_capita)
+    if total_arable_iugera_held <= 0.0:
+        return 0.0
+    return (population * annual_farm_labour_hours_per_capita
+            / total_arable_iugera_held)
+
+
+def yield_kg_per_iugerum_at_intensity(fertility_quality_multiplier,
+                                      labour_hours_per_iugerum,
+                                      kg_per_hectare_at_quality_1=None,
+                                      iugerum_hectares=None,
+                                      reference_labour_hours_per_hectare=None,
+                                      labour_output_elasticity=None):
+    """Kilograms of grain-equivalent one iugerum at this fertility produces
+    in a season, at `labour_hours_per_iugerum` of labour applied to it -
+    `reference_yield_kg_per_iugerum`'s own flat figure, generalised to
+    depend on labour the way `sim/world/agriculture.py`'s `gross_harvest_kg`
+    does.
+
+    Cobb-Douglas in labour alone (land is fixed at exactly one iugerum, so
+    there is no separate land term to raise to a power): output scales
+    with `labour_hours_per_iugerum ** LAND_LABOUR_OUTPUT_ELASTICITY`,
+    calibrated so that at exactly the reference intensity
+    (LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, converted to one iugerum)
+    this returns EXACTLY `reference_yield_kg_per_iugerum(fertility_
+    quality_multiplier)` - the same anchor-at-the-known-point discipline
+    `reference_yield_kg_per_iugerum` itself uses for REFERENCE_WHEAT_
+    YIELD_KG_PER_HECTARE. At zero (or negative) labour hours this returns
+    0.0 (no one worked it, nothing grew) rather than raising or dividing
+    by zero.
+    """
+    if labour_hours_per_iugerum < 0:
+        raise ValueError("labour_hours_per_iugerum cannot be negative: %r"
+                          % (labour_hours_per_iugerum,))
+    reference_labour_hours_per_hectare = (
+        LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE
+        if reference_labour_hours_per_hectare is None
+        else reference_labour_hours_per_hectare)
+    labour_output_elasticity = (
+        LAND_LABOUR_OUTPUT_ELASTICITY if labour_output_elasticity is None
+        else labour_output_elasticity)
+    iugerum_hectares_value = (
+        IUGERUM_HECTARES if iugerum_hectares is None else iugerum_hectares)
+    if labour_hours_per_iugerum <= 0.0:
+        return 0.0
+    reference_yield = reference_yield_kg_per_iugerum(
+        fertility_quality_multiplier, kg_per_hectare_at_quality_1,
+        iugerum_hectares)
+    reference_labour_hours_per_iugerum = (
+        reference_labour_hours_per_hectare * iugerum_hectares_value)
+    intensity_ratio = (labour_hours_per_iugerum
+                       / reference_labour_hours_per_iugerum)
+    return reference_yield * (intensity_ratio ** labour_output_elasticity)
+
+
+def intensive_rent_kg_grain_equivalent_per_iugerum(
+        fertility_quality_multiplier, labour_hours_per_iugerum,
+        kg_per_hectare_at_quality_1=None, iugerum_hectares=None,
+        reference_labour_hours_per_hectare=None,
+        labour_output_elasticity=None):
+    """The INTENSIVE margin's own contribution to one iugerum's rent: the
+    Cobb-Douglas LAND share of what that iugerum produces at
+    `labour_hours_per_iugerum` - see this section's own WHAT LAND EARNS
+    FROM THIS for the Euler's-theorem argument (labour paid its own
+    marginal product leaves exactly `1 - LAND_LABOUR_OUTPUT_ELASTICITY` of
+    output as land's own residual). Unlike the extensive rent `find_
+    margin_of_cultivation` computes, this needs no OTHER region to compare
+    against - a single, uniformly fertile region crowded by a large
+    population earns this from itself alone, which is exactly what
+    Complaints/46 found missing.
+
+    Rises with `labour_hours_per_iugerum` (more crowding, more rent) and
+    with `fertility_quality_multiplier` (better land still earns more,
+    even from this margin alone) - both directions asserted directly in
+    `sim/tests/test_land.py` rather than left to be inferred from a
+    downstream price.
+    """
+    labour_output_elasticity = (
+        LAND_LABOUR_OUTPUT_ELASTICITY if labour_output_elasticity is None
+        else labour_output_elasticity)
+    yield_at_intensity = yield_kg_per_iugerum_at_intensity(
+        fertility_quality_multiplier, labour_hours_per_iugerum,
+        kg_per_hectare_at_quality_1, iugerum_hectares,
+        reference_labour_hours_per_hectare, labour_output_elasticity)
+    return max(0.0, (1.0 - labour_output_elasticity) * yield_at_intensity)
+
+
+# ============================================================================
 # REGION LAND - the physical facts, read from data/world/geography.json
 # ============================================================================
 
@@ -581,7 +901,18 @@ LandAllocation = collections.namedtuple("LandAllocation", [
     "arable_iugera_supplied",
     "fertility_quality_multiplier",
     "rent_kg_grain_equivalent_per_iugerum",
-])
+    # The two components `rent_kg_grain_equivalent_per_iugerum` above adds
+    # together - see the LABOUR INTENSITY section and margin_outcome_for_
+    # civilization's own docstring. `find_margin_of_cultivation` below only
+    # ever fills `extensive_...` (leaving `intensive_...` at its default of
+    # 0.0, and `rent_kg_grain_equivalent_per_iugerum` equal to the
+    # extensive figure alone) - it is `margin_outcome_for_civilization`
+    # that fills both. Trailing, defaulted fields so every existing
+    # construction site and every existing test that only names the
+    # fields it cares about keeps working unchanged.
+    "extensive_rent_kg_grain_equivalent_per_iugerum",
+    "intensive_rent_kg_grain_equivalent_per_iugerum",
+], defaults=(0.0, 0.0))
 
 MarginOutcome = collections.namedtuple("MarginOutcome", [
     "quantity_demanded_kg",
@@ -591,7 +922,13 @@ MarginOutcome = collections.namedtuple("MarginOutcome", [
     "quantity_supplied_kg",
     "unmet_demand_kg",
     "price_kg_grain_equivalent_per_iugerum",
-])
+    # The civilization-wide labour intensity (see
+    # labour_hours_applied_per_iugerum) that produced this outcome's own
+    # intensive-margin rent, or None when this outcome came straight from
+    # find_margin_of_cultivation (extensive margin only, no intensity
+    # computed) rather than from margin_outcome_for_civilization.
+    "labour_hours_per_iugerum",
+], defaults=(None,))
 
 
 def find_margin_of_cultivation(region_lands, quantity_demanded_kg,
@@ -659,7 +996,8 @@ def find_margin_of_cultivation(region_lands, quantity_demanded_kg,
             region_land=land,
             arable_iugera_supplied=supplied_iugera,
             fertility_quality_multiplier=land.fertility_quality_multiplier,
-            rent_kg_grain_equivalent_per_iugerum=rent_per_iugerum))
+            rent_kg_grain_equivalent_per_iugerum=rent_per_iugerum,
+            extensive_rent_kg_grain_equivalent_per_iugerum=rent_per_iugerum))
         weighted_rent_sum += rent_per_iugerum * supplied_iugera
         supplied_iugera_total += supplied_iugera
 
@@ -679,11 +1017,50 @@ def find_margin_of_cultivation(region_lands, quantity_demanded_kg,
 def margin_outcome_for_civilization(civilization_id, geography=None,
                                     civilizations=None,
                                     kg_per_hectare_at_quality_1=None,
-                                    iugerum_hectares=None):
-    """find_margin_of_cultivation, for one civilization's own territory and
-    population - the single call sim/solve_prices.py's own land-rent
-    wiring makes. Population is read straight from the civilization's own
-    file (an INITIAL CONDITION, per CLAUDE.md SS3.1), not a constant.
+                                    iugerum_hectares=None,
+                                    annual_farm_labour_hours_per_capita=None):
+    """find_margin_of_cultivation's own EXTENSIVE-margin outcome, for one
+    civilization's own territory and population, with the INTENSIVE
+    margin's own rent (see the LABOUR INTENSITY section above) added on
+    top of every worked parcel - the single call sim/solve_prices.py's own
+    land-rent wiring makes, and the one place in this module where the two
+    margins actually combine.
+
+    Population is read straight from the civilization's own file (an
+    INITIAL CONDITION, per CLAUDE.md SS3.1), not a constant.
+
+    THE COMBINATION, IN ORDER:
+
+      1. Run `find_margin_of_cultivation` exactly as before - which parcel
+         is marginal, and each worked parcel's EXTENSIVE rent (its own
+         fertility surplus over the margin's), is computed by that
+         function alone and is not touched by anything below.
+      2. `labour_hours_applied_per_iugerum` turns this civilization's own
+         population and its own TOTAL held arable endowment (every
+         iugerum named in `home_regions`, not only the iugera step 1
+         decided were actually needed) into a single, civilization-wide
+         labour intensity. A civilization holding one region - the exact
+         case that used to price at zero, because step 1 alone still
+         returns exactly zero there - is where this number does all the
+         work.
+      3. Every parcel step 1 actually allocated some iugera to (an unused,
+         worse-than-margin parcel stays at exactly zero from BOTH margins
+         - a parcel nobody needs earns nothing, matching
+         `sim/world/deposits.py`'s own convention) gets `intensive_rent_
+         kg_grain_equivalent_per_iugerum` ADDED to its extensive rent, at
+         THIS civilization's own intensity.
+      4. The civilization's own reported price is recomputed as the same
+         supply-weighted average `find_margin_of_cultivation` itself
+         uses, over the COMBINED (extensive + intensive) rent instead of
+         the extensive rent alone.
+
+    WHAT THIS DOES NOT DO. The iugera step 1 allocates are computed at the
+    FLAT reference yield, not the intensity-adjusted one - a fully closed
+    model would let a crowded civilization's higher yield-per-iugerum
+    reduce how much land `find_margin_of_cultivation` says it actually
+    needs; this round prices the intensity it finds without feeding it
+    back into that allocation. See the LABOUR INTENSITY section's own
+    WHAT THIS DELIBERATELY DOES NOT DO.
     """
     civilization = _load_civilization(civilization_id, civilizations)
     region_lands = cultivable_land_for_civilization(
@@ -692,9 +1069,40 @@ def margin_outcome_for_civilization(civilization_id, geography=None,
     if population is None:
         raise KeyError("%r has no population field" % (civilization_id,))
     quantity_demanded_kg = quantity_demanded_kg_grain_equivalent(population)
-    return find_margin_of_cultivation(
+    extensive_outcome = find_margin_of_cultivation(
         region_lands, quantity_demanded_kg,
         kg_per_hectare_at_quality_1, iugerum_hectares)
+
+    total_arable_iugera_held = sum(
+        region_land.arable_iugera for region_land in region_lands)
+    labour_hours_per_iugerum = labour_hours_applied_per_iugerum(
+        population, total_arable_iugera_held,
+        annual_farm_labour_hours_per_capita)
+
+    combined_allocations = []
+    weighted_rent_sum = 0.0
+    supplied_iugera_total = 0.0
+    for allocation in extensive_outcome.allocations:
+        intensive_rent = 0.0
+        if allocation.arable_iugera_supplied > 0.0:
+            intensive_rent = intensive_rent_kg_grain_equivalent_per_iugerum(
+                allocation.fertility_quality_multiplier,
+                labour_hours_per_iugerum, kg_per_hectare_at_quality_1,
+                iugerum_hectares)
+        combined_rent = (allocation.rent_kg_grain_equivalent_per_iugerum
+                         + intensive_rent)
+        combined_allocations.append(allocation._replace(
+            rent_kg_grain_equivalent_per_iugerum=combined_rent,
+            intensive_rent_kg_grain_equivalent_per_iugerum=intensive_rent))
+        weighted_rent_sum += combined_rent * allocation.arable_iugera_supplied
+        supplied_iugera_total += allocation.arable_iugera_supplied
+
+    combined_price = (weighted_rent_sum / supplied_iugera_total
+                      if supplied_iugera_total > 0.0 else 0.0)
+    return extensive_outcome._replace(
+        allocations=combined_allocations,
+        price_kg_grain_equivalent_per_iugerum=combined_price,
+        labour_hours_per_iugerum=labour_hours_per_iugerum)
 
 
 if __name__ == "__main__":
@@ -713,21 +1121,28 @@ if __name__ == "__main__":
                  len(civilization.get("home_regions") or [])))
         print("  quantity demanded: %.4g kg grain-equivalent/yr"
               % outcome.quantity_demanded_kg)
+        print("  labour intensity (civ-wide): %.4g hours/iugerum applied "
+              "across the whole held endowment (reference is %.4g)"
+              % (outcome.labour_hours_per_iugerum,
+                 LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE * IUGERUM_HECTARES))
         for allocation in sorted(
                 outcome.allocations,
                 key=lambda a: -a.fertility_quality_multiplier):
             marker = (" <- MARGINAL" if allocation.region_land.region
                       == outcome.marginal_region else "")
             print("  %-20s fertility=%5.2f  arable=%14.4g iugera  "
-                  "used=%14.4g iugera  rent=%8.4f kg/iugerum%s"
+                  "used=%14.4g iugera  rent=%8.4f (ext=%7.4f + int=%7.4f) "
+                  "kg/iugerum%s"
                   % (allocation.region_land.region,
                      allocation.fertility_quality_multiplier,
                      allocation.region_land.arable_iugera,
                      allocation.arable_iugera_supplied,
                      allocation.rent_kg_grain_equivalent_per_iugerum,
+                     allocation.extensive_rent_kg_grain_equivalent_per_iugerum,
+                     allocation.intensive_rent_kg_grain_equivalent_per_iugerum,
                      marker))
-        print("  PRICE (supply-weighted average rent): %.4f kg grain-"
-              "equivalent/iugerum"
+        print("  PRICE (supply-weighted average rent, extensive + "
+              "intensive): %.4f kg grain-equivalent/iugerum"
               % outcome.price_kg_grain_equivalent_per_iugerum)
         if outcome.unmet_demand_kg > 0.0:
             print("  UNMET DEMAND: %.4g kg/yr beyond this civilization's "

@@ -184,3 +184,68 @@ have real numbers now. What remains is that four of five civilisations still
 price their land at zero for a structural reason, and that no rent anywhere
 is capitalised. That is much closer than "land is free", and it is not there
 yet.
+
+## Update: the intensive margin landed, and nobody's land is free
+
+    rome_100ad        55.779 hours per iugerum   (was 9.141)
+    han_china_100ad   47.242                     (was 0.0)
+    mexica_1500       18.415                     (was 0.0)
+    england_1300      17.156                     (was 0.0)
+    norse_900ad       13.581                     (was 0.0)
+
+The extensive margin - better land against worse - is untouched. The
+intensive margin is added beside it: output on a fixed area grows more slowly
+than the labour applied to it, so by Euler's theorem on the constant-returns
+production function `agriculture.py` already uses, paying labour its own
+marginal product leaves land the remaining share. That residual is rent, and
+it needs no worse region to compare against, which is exactly why a single
+uniform region can now earn it.
+
+### The ordering, and why it is not tuned
+
+It falls out of population density on held territory, which is measured from
+figures already in the repository rather than chosen:
+
+    rome_100ad       0.136 person per iugerum
+    han_china_100ad  0.117
+    the other three  0.03 to 0.04
+
+Rome and Han China are both dense, so their intensive rents come out close.
+Rome then adds extensive rent on top, because it holds seven regions of
+differing quality and China holds one. That Rome finishes highest with China
+a close second, both far clear of the land-abundant three, is the "both
+margins, not either alone" result this complaint asked for.
+
+Norse, England and Mexica stay cheap because they have three to four times
+more land per head, which is the correct reason for cheap land.
+
+### It also closes most of the flow-versus-stock gap
+
+This complaint recorded that the computed figure is a yearly rent and the
+book price a purchase price, so the comparable annual figure is about 130 to
+165 hours at a historical twenty to twenty-five years' purchase. Rome was
+roughly fifteen times low. At 55.8 it is now about two and a half to three
+times low. Still a gap, and no longer the kind that suggests a missing
+mechanism.
+
+### Two things deliberately left
+
+The extensive fill still uses the flat reference yield rather than the
+intensity-adjusted one, so a crowded civilisation's higher yield per iugerum
+does not yet reduce how much land it needs in the first place. Labelled a
+temporary simplification in the module rather than hidden.
+
+And capitalising the flow into a stock still needs a discount rate, which
+this project has nowhere - the capital mechanism spreads a build cost over a
+service life with no interest at all. Land remains the first thing to need
+one.
+
+### A cost worth naming
+
+`land.py` is standalone by design and may not import `agriculture.py`, so the
+production elasticity and the reference labour intensity are now DUPLICATED
+between the two modules rather than shared. They can drift apart silently.
+That is the same class of problem as the two import roots that let one file
+become two module objects, and it wants the same kind of fix: one home for a
+physical constant, imported from wherever it is needed.
+EOF
