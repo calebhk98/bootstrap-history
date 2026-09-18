@@ -95,7 +95,7 @@ def materials_the_tree_consumes(nodes):
     return counts
 
 
-def check(entries, known_materials, known_trades):
+def check(entries, known_materials, known_trades, known_nodes=None):
     problems = []
     for name, entry in sorted(entries.items()):
         where = "%s" % name
@@ -154,6 +154,37 @@ def check(entries, known_materials, known_trades):
                 if not isinstance(value, (int, float)) or value < 0:
                     problems.append("%s: '%s' must be a non-negative number, "
                                     "not %r" % (where, energy_field, value))
+
+        # REQUIRES_NODE. Which tech-tree node has to be reached before
+        # anyone can run this technique. Three states, and the difference
+        # between them is the whole point of the field:
+        #
+        #   absent      - nobody has classified this entry yet. It is
+        #                 admitted to an ungated solve and EXCLUDED from a
+        #                 gated one, and counted in the coverage line so the
+        #                 gap is a number rather than a silence.
+        #   null        - available to anyone, anywhere, with no technology
+        #                 at all: gathering firewood, quarrying stone,
+        #                 growing wheat. A deliberate statement, not a gap.
+        #   "node_id"   - available once that node is reached.
+        #
+        # This exists because sim/solve_prices.py had no notion of WHEN: a
+        # 100 AD scenario priced its electricity off a photovoltaic panel,
+        # which is the defect Complaints/39 records. A typo here reads as
+        # "this technique is never available", which is why the id is
+        # checked against the tree rather than taken on trust.
+        if "requires_node" in entry:
+            required = entry["requires_node"]
+            if required is not None:
+                if not isinstance(required, str):
+                    problems.append("%s: requires_node must be a tech-tree "
+                                    "node id or null, not %r"
+                                    % (where, required))
+                elif known_nodes is not None and required not in known_nodes:
+                    problems.append("%s: requires_node '%s' is not a node in "
+                                    "the tech tree - a typo here silently "
+                                    "removes this technique from every gated "
+                                    "solve" % (where, required))
 
         # CAPITAL, if present. Same standard as everything else in this file:
         # real material keys, real trades, a positive physical service life
@@ -343,7 +374,8 @@ def main(argv=None):
             print("no entry for %r" % arguments.entry)
             return 1
         print(json.dumps(entry, indent=1))
-        problems = check({arguments.entry: entry}, known_materials, known_trades)
+        problems = check({arguments.entry: entry}, known_materials, known_trades,
+                         known_nodes=set(nodes))
         for problem in problems:
             print("  PROBLEM %s" % problem)
         return 1 if problems else 0
@@ -357,7 +389,8 @@ def main(argv=None):
             print("   %-26s consumed by %4d nodes" % (name, count))
         return 0
 
-    problems = check(entries, known_materials, known_trades) + duplicates
+    problems = check(entries, known_materials, known_trades,
+                     known_nodes=set(nodes)) + duplicates
     for problem in problems:
         print("  %s" % problem)
 
@@ -385,6 +418,19 @@ def main(argv=None):
              100.0 * len(set(entries) & set(consumed)) / max(1, len(consumed))))
     print("weighted by how often the tree consumes them: %.1f%% (%d of %d "
           "consumption sites)" % (100.0 * covered / max(1, total), covered, total))
+    # ERA COVERAGE. Separate from material coverage and deliberately printed
+    # next to it: an entry can be complete in every physical respect and
+    # still be unusable by a gated solve, because nothing says when the
+    # technique becomes available. Unclassified entries are silently
+    # DROPPED from a gated solve, so this number is the one that says how
+    # much of the cost base a dated question can actually see.
+    classified = [name for name, entry in entries.items()
+                  if "requires_node" in entry]
+    always = [name for name in classified if entries[name]["requires_node"] is None]
+    print("%d of %d entries say when they become available (%.1f%%); %d of "
+          "those need no technology at all"
+          % (len(classified), len(entries),
+             100.0 * len(classified) / max(1, len(entries)), len(always)))
     print("%d problem(s)" % len(problems))
     return 1 if problems else 0
 

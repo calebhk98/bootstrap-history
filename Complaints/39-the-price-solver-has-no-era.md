@@ -123,3 +123,48 @@ compressor), `barium_kg` (a vacuum pump on the aluminothermic reduction) and
 from a waterwheel or a steam engine drives directly, with no electricity
 anywhere in the chain - which is the test. That makes the set complete;
 there is no fourth one waiting to be found.
+
+## The mechanism is built; the labelling is not
+
+The gate exists as of this branch. `sim/solve_prices.py --civ rome_100ad`
+filters the technique set down to what that civilization can run and solves
+the smaller system, and `sim/tests/test_price_solver_era_gate.py` pins it.
+
+It does nothing yet, and the tool says so:
+
+```
+ERA GATE: rome_100ad holds 223 technologies; 0 of 196 techniques are
+available to it (0 need a node it has not reached, 196 carry no
+requires_node and are dropped unclassified).
+```
+
+That is the honest reading, not a bug. The gate needs each production entry
+to say which tech-tree node lets anyone run it, and until this round the
+production data had no link to the tree at all - `data/production/_SCHEMA.md`
+says so outright, and `sim/audit_costs.py` has been guessing the link by
+stripping a unit suffix off a material key and hoping a node id matches,
+which works for 47 of 162. So the missing piece was never a solver
+mechanism. It was a field.
+
+`requires_node` is that field, with three states that are deliberately
+three (schema, validator and solver all agree on them): absent means nobody
+has classified the entry and a gated solve drops it; `null` means no
+technology is needed at all; a node id means available once that node is
+reached. `validate_production.py` checks every id against the tree, because
+a typo here reads as "never available" and would price a material out of
+existence in every dated scenario without a word.
+
+The remaining work is 196 judgements, one per entry, and it is the kind that
+wants care rather than a sweep: the gate on electrolytic zinc is whatever
+supplies an industrial current, not the node that first roasts an ore.
+Coverage is printed by `validate_production.py` on every run, so the
+progress is measurable from zero.
+
+### What the labelling must not turn into
+
+A table of invention dates. There is none in the solver and there must not
+be one: availability comes from the tree's own prerequisite structure and
+from a civilization's `starting_techs`, both initial conditions, and a
+century written next to a technique would be a hardcoded outcome under
+CLAUDE.md section 3.1. The `--civ` flag reads `starting_techs` and nothing
+else for exactly that reason.

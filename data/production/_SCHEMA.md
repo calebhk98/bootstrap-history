@@ -34,7 +34,43 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
+| `requires_node` | WHEN this technique becomes available: the id of the tech-tree node that has to be reached before anyone can run it, or `null` for a technique that needs no technology at all. See WHEN A TECHNIQUE BECOMES AVAILABLE below. Omitting the field is not the same as `null` - it means nobody has classified this entry, and a gated solve drops it. |
 | `conf` | A well attested, B probable, C the author's estimate. Be honest; C is fine and common. |
+
+## WHEN A TECHNIQUE BECOMES AVAILABLE
+
+The solver used to have no notion of time. Every technique in this directory
+competed on cost alone, in every scenario, so a 100 AD Roman question got its
+electricity from a photovoltaic panel and its aluminium from Hall-Heroult -
+the cheapest routes, and correct as data, but not available to anyone alive
+in 100 AD. `Complaints/39` records the defect. `requires_node` is the fix.
+
+Three states, and the difference between them is the whole point:
+
+| value | meaning |
+|---|---|
+| field absent | Nobody has classified this entry. It competes in an ungated solve and is DROPPED from a gated one. `validate_production.py` counts these so the gap is a number rather than a silence. |
+| `null` | Available to anyone, anywhere, with no technology whatever: gathering firewood, quarrying stone, digging clay, growing wheat. A deliberate statement. |
+| a node id | Available once that node is reached. The id is checked against `data/tech_tree.json`; a typo silently means "never available", so it is verified rather than trusted. |
+
+Pick the node that is the REAL gate, not the earliest node the process
+touches. Electrolytic zinc needs electrolysis, so its gate is whatever node
+supplies an industrial current, not the node that first roasts an ore -
+someone who can roast but cannot electrolyse still cannot run this recipe.
+When two nodes are both genuinely necessary, name the LATER one, because
+that is the one that decides the date; the tree's own `pre` chain carries
+the earlier ones.
+
+When the honest answer is that no single node gates it, say so in
+`yield_basis` and leave the field absent. An absent field costs coverage,
+which is visible and fixable. A wrong node id is invisible and prices a
+whole material out of existence in every gated scenario that should have
+had it.
+
+A civilisation's `starting_techs` (`data/civilizations/*.json`) is the era
+set a gated solve is run against - 223 node ids for `rome_100ad`. So the
+test of a label is concrete: with this id, does this technique come out
+available to Rome in 100 AD, and is that right?
 
 ## CAPITAL
 

@@ -452,6 +452,53 @@ yields - is reported by name, the same way a missing recipe already was; see
 was built against (the docstring's own axe/iron example, and self-referencing
 seed corn) and `sim/tests/test_price_solver_cycles.py` for the pinned tests,
 inverted now that the pass accepts what it should.
+
+THE SOLVER NOW HAS A NOTION OF WHEN, AND DID NOT BEFORE. This is the defect
+Complaints/39 records, and it was found by reading a run rather than by
+reasoning about the code: a 100 AD Roman scenario came back pricing every
+one of its three energy carriers off `electrical_mj_photovoltaic`. The data
+was right - a panel really is the cheapest source of electricity at solved
+prices - and the answer was still nonsense, because nobody in 100 AD has a
+panel. Every technique in `data/production/` competed on cost alone, in
+every scenario, and cost alone has no date on it.
+
+The fix is a gate, not a deletion. Each entry may carry `requires_node`: the
+tech-tree node that has to be reached before anyone can run that technique
+(see WHEN A TECHNIQUE BECOMES AVAILABLE in `data/production/_SCHEMA.md`).
+A civilisation's `starting_techs` is a set of exactly those ids, so
+
+    python3 sim/solve_prices.py --civ rome_100ad
+
+filters the entries down to what Rome can actually do and then solves that
+smaller system. The whole rest of the mechanism is unchanged: the same
+resolvability pass, the same fixed point, the same choice of technique -
+choosing now among the techniques that exist rather than among all of them,
+which is what choice of technique was always supposed to mean.
+
+Three things this deliberately does NOT do, each because doing it would
+hide something:
+
+  - It does not delete the photovoltaic entry. The panel is correct data.
+    Removing it would make the Roman answer look right while the tool went
+    on silently using Hall-Heroult and the compound steam engine for
+    everything else.
+  - It does not treat an unclassified entry as universally available. An
+    entry with no `requires_node` is DROPPED from a gated solve and counted,
+    because the alternative - admitting it - is exactly how the photovoltaic
+    panel got into a Roman answer in the first place. An unlabelled entry
+    is an unanswered question, and the honest handling of an unanswered
+    question is to say how many there are.
+  - It does not date anything by year. There is no table mapping techniques
+    to centuries anywhere in this file, and there must not be: that would be
+    a hardcoded outcome (CLAUDE.md section 3.1). Availability comes from the
+    tree's own prerequisite structure and the civilisation's own starting
+    set, both of which are initial conditions rather than results.
+
+WHAT A GATED SOLVE COSTS. Fewer techniques means fewer materials have any
+path to a price at all, so a gated run resolves strictly fewer materials
+than an ungated one and reports the difference. That is the correct answer
+rather than a regression: a material no Roman could make does not have a
+Roman price, and printing one for it was the bug.
 """
 import argparse
 import collections
@@ -516,6 +563,64 @@ def wage_ratios_by_trade(prices_json):
     return {trade: entry["rate"] / unskilled_rate
             for trade, entry in wage_table.items()
             if not trade.startswith("_")}
+
+
+def load_starting_technologies(civilization_id):
+    """The set of tech-tree node ids a civilization begins the game holding.
+
+    This is read straight from `data/civilizations/<id>.json`'s
+    `starting_techs`, which is an INITIAL CONDITION - what this society has
+    already worked out by the year it starts in - and so is exactly the kind
+    of input CLAUDE.md section 3.1 allows. It is not a schedule of when
+    techniques were invented; there is no such table here and there must not
+    be one.
+    """
+    path = os.path.join(HERE, os.pardir, "data", "civilizations",
+                        "%s.json" % civilization_id)
+    if not os.path.exists(path):
+        available = sorted(name[:-len(".json")]
+                           for name in os.listdir(os.path.dirname(path))
+                           if name.endswith(".json") and not name.startswith("_"))
+        raise FileNotFoundError(
+            "no civilization %r - have: %s" % (civilization_id, ", ".join(available)))
+    with open(path) as handle:
+        civilization = json.load(handle)
+    return set(civilization.get("starting_techs") or [])
+
+
+def techniques_available_to(production_entries, reached_nodes):
+    """Split the production entries into what this era can run and what it cannot.
+
+    Returns (available, unreached, unclassified) - the first a dict in the
+    same shape as `production_entries`, the other two sorted lists of recipe
+    ids, kept apart because they mean different things and want different
+    responses:
+
+      unreached    - the entry names a node this civilization has not
+                     reached. Working as intended. A Roman cannot electrolyse
+                     zinc and the solve should not offer to.
+      unclassified - the entry carries no `requires_node` at all, so nobody
+                     has said when it becomes available. Dropped, because
+                     admitting it is precisely how a photovoltaic panel ended
+                     up pricing Roman electricity (Complaints/39), and
+                     counted, because a silent drop is how that stayed
+                     invisible for as long as it did.
+
+    `requires_node: null` is a third, deliberate state: available with no
+    technology whatever - gathering firewood, quarrying stone, growing wheat.
+    It is admitted to every era, including the earliest.
+    """
+    available, unreached, unclassified = {}, [], []
+    for recipe_id, entry in production_entries.items():
+        if "requires_node" not in entry:
+            unclassified.append(recipe_id)
+            continue
+        required = entry["requires_node"]
+        if required is None or required in reached_nodes:
+            available[recipe_id] = entry
+        else:
+            unreached.append(recipe_id)
+    return available, sorted(unreached), sorted(unclassified)
 
 
 def build_producers_index(production_entries):
@@ -1232,6 +1337,13 @@ def main(argv=None):
                              "ratio, worst disagreement first")
     parser.add_argument("--damping", type=float, default=DAMPING_FACTOR,
                         help="fixed-point damping factor (default %.1f)" % DAMPING_FACTOR)
+    parser.add_argument("--civ", metavar="CIVILIZATION",
+                        help="solve using only the techniques this civilization "
+                             "can actually run, from its starting_techs (e.g. "
+                             "rome_100ad). Without this the solve is UNDATED and "
+                             "will happily price Roman electricity off a "
+                             "photovoltaic panel - see THE SOLVER NOW HAS A "
+                             "NOTION OF WHEN, above, and Complaints/39")
     arguments = parser.parse_args(argv)
 
     _tree, prices_json, nodes, _wages_unused, _goods_unused = simulator.load()
@@ -1245,6 +1357,36 @@ def main(argv=None):
         for duplicate in duplicates:
             print("  %s" % duplicate)
         return 1
+
+    # THE ERA GATE. Applied before anything else looks at the entries, so
+    # that resolvability, the fixed point, choice of technique, --why and
+    # --compare all see the same, single set of techniques. Filtering later
+    # - say, only inside `solve` - would leave the resolvability pass
+    # reporting materials as priceable that this era has no way to make.
+    unreached_techniques, unclassified_techniques = [], []
+    all_production_entries = production_entries
+    if arguments.civ:
+        try:
+            reached_nodes = load_starting_technologies(arguments.civ)
+        except FileNotFoundError as problem:
+            # A CLI typo deserves the list of real names, not a traceback.
+            print(problem)
+            return 1
+        entries_before_gate = len(production_entries)
+        (production_entries, unreached_techniques,
+         unclassified_techniques) = techniques_available_to(
+            production_entries, reached_nodes)
+        print("ERA GATE: %s holds %d technologies; %d of %d techniques are "
+              "available to it (%d need a node it has not reached, %d carry "
+              "no requires_node and are dropped unclassified)."
+              % (arguments.civ, len(reached_nodes), len(production_entries),
+                 entries_before_gate, len(unreached_techniques),
+                 len(unclassified_techniques)))
+        if unclassified_techniques:
+            print("       An unclassified technique is an unanswered "
+                  "question, not a universal one - see WHEN A TECHNIQUE "
+                  "BECOMES AVAILABLE in data/production/_SCHEMA.md.")
+        print()
 
     wage_by_trade = wage_ratios_by_trade(prices_json)
     producers_of = build_producers_index(production_entries)
@@ -1334,9 +1476,23 @@ def main(argv=None):
         print("MATERIALS WITH NO PATH TO A PRICE - a missing input entry, or "
               "a cycle with no extracted/labour-only material to bottom out "
               "at:")
+        # UNDER A GATE, "no production entry at all" would be a lie: the
+        # entry exists and this era simply cannot run it, which is a
+        # completely different finding and wants a different response
+        # (nothing, if the gate is right). Separate the two so a gated run
+        # does not read as a hole in the data.
+        gated_out_materials = set()
+        for recipe_id in unreached_techniques + unclassified_techniques:
+            gated_out_materials |= set(
+                (all_production_entries[recipe_id].get("outputs") or {}))
         for material in unpriceable:
-            reason = "no production entry at all" if material not in producers_of \
-                else "every producing recipe needs an input with no path of its own"
+            if material not in producers_of and material in gated_out_materials:
+                reason = ("something makes it, but nothing this era can run "
+                          "- correctly gated out, not a missing entry")
+            elif material not in producers_of:
+                reason = "no production entry at all"
+            else:
+                reason = "every producing recipe needs an input with no path of its own"
             print("   %-26s consumed by %4d tree node(s) - %s"
                   % (material, tree_consumed.get(material, 0), reason))
 
