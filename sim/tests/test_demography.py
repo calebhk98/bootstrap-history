@@ -187,10 +187,40 @@ class NutritionResponseTests(unittest.TestCase):
         self.assertEqual(values[0], 0.0)
         self.assertEqual(values[-1], 1.0)
 
-    def test_fertility_does_not_rise_above_baseline_on_surplus(self):
+    def test_fertility_rises_above_baseline_on_surplus_then_saturates(self):
+        # Flipped for Complaints/45-no-granary-so-the-baseline-collapses.md:
+        # this used to pin fertility flat at 1.0 above subsistence, which is
+        # exactly the response-side floor that complaint's diagnosis named
+        # as the reason a granary alone only closed part of the century's
+        # unexplained decline (see _fertility_multiplier's own docstring).
+        # A bounded ramp above subsistence, mirroring the below-subsistence
+        # ramp's shape, is applied instead: fertility rises with abundance,
+        # up to a sourced ceiling, and stays there rather than climbing
+        # without bound.
         self.assertEqual(demography._fertility_multiplier(1.0), 1.0)
-        self.assertEqual(demography._fertility_multiplier(1.5), 1.0)
-        self.assertEqual(demography._fertility_multiplier(3.0), 1.0)
+        self.assertGreater(demography._fertility_multiplier(1.2), 1.0)
+        self.assertLess(demography._fertility_multiplier(1.2),
+                         demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+        self.assertAlmostEqual(
+            demography._fertility_multiplier(1.6363637),
+            demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+        self.assertAlmostEqual(
+            demography._fertility_multiplier(3.0),
+            demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+        self.assertAlmostEqual(
+            demography._fertility_multiplier(1_000.0),
+            demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER)
+
+    def test_fertility_rises_monotonically_above_subsistence(self):
+        ratios = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 2.0, 5.0]
+        values = [demography._fertility_multiplier(ratio) for ratio in ratios]
+        self.assertEqual(values, sorted(values))
+
+    def test_fertility_surplus_never_exceeds_the_declared_ceiling(self):
+        for ratio in (1.0, 1.2, 1.5, 1.6363636, 2.0, 10.0, 1e6):
+            self.assertLessEqual(
+                demography._fertility_multiplier(ratio),
+                demography.FERTILITY_SURPLUS_CEILING_MULTIPLIER + 1e-9)
 
     def test_mortality_multiplier_is_one_at_and_above_subsistence(self):
         for vulnerability in (1.0, demography.STARVATION_VULNERABILITY_CHILD,
@@ -229,6 +259,115 @@ class NutritionResponseTests(unittest.TestCase):
             ratio, demography.STARVATION_VULNERABILITY_ELDERLY) - 1.0
         self.assertGreater(child_excess, working_age_excess)
         self.assertGreater(elderly_excess, working_age_excess)
+
+
+class GrowthCeilingTests(unittest.TestCase):
+    """The stakeholder's own biological upper bound on human population
+    growth, reproduced here as a sanity ceiling rather than a target -
+    Complaints/45-no-granary-so-the-baseline-collapses.md. Assume no
+    deaths, unlimited food, a 50/50 sex split, one child per pregnancy per
+    woman per year, and reproductive ages 18 to 40 inclusive. In a stable
+    age distribution the count of people aged `age` is proportional to
+    growth_multiplier ** -age, and each person contributes an effective 0.5
+    births a year, so the consistency condition is
+
+        1 = 0.5 * sum over ages 18..40 of growth_multiplier ** -(age + 1)
+
+    which solves numerically to about 1.0906 (about 9.06% a year, doubling
+    in about 8 years). This is a CEILING under deliberately generous
+    assumptions (no deaths at all, a birth every year from every woman) -
+    a real model must come out well under it, and, just as importantly,
+    must not come out negative when handed unlimited food: "no food
+    shortage ever happened for a century" is a strictly easier case for
+    growth than anything this model's baseline vital rates are calibrated
+    against.
+    """
+
+    @staticmethod
+    def _biological_growth_ceiling():
+        lowest_reproductive_age = 18
+        highest_reproductive_age = 40
+        effective_births_per_person_per_year = 0.5  # one child/year/woman,
+        # 50/50 sex split, so half the stable-age-distribution population at
+        # each reproductive age is a woman who gives birth that year.
+
+        def implied_births_per_person(growth_multiplier):
+            return effective_births_per_person_per_year * sum(
+                growth_multiplier ** -(age + 1)
+                for age in range(lowest_reproductive_age,
+                                  highest_reproductive_age + 1))
+
+        low, high = 1.0 + 1e-9, 3.0
+        for _ in range(200):
+            mid = (low + high) / 2.0
+            if implied_births_per_person(mid) > 1.0:
+                low = mid
+            else:
+                high = mid
+        return (low + high) / 2.0
+
+    def test_biological_ceiling_is_about_nine_percent_a_year(self):
+        ceiling = self._biological_growth_ceiling()
+        self.assertAlmostEqual(ceiling, 1.0906, places=3)
+
+    def test_unlimited_food_growth_is_positive_and_well_under_the_ceiling(self):
+        # "Unlimited food" means literally that: enough calories every
+        # single year that the nutrition ratio never falls below the
+        # subsistence line, computed fresh off the population's OWN
+        # requirement each year (not a fixed number a shrinking or growing
+        # population could later outrun). Above nutrition_ratio == 1.0 both
+        # _excess_mortality_multiplier and _fertility_multiplier are flat
+        # once the ratio clears the abundance ceiling (~1.636), so any
+        # sufficiently large multiple of subsistence food gives the same
+        # result - 1000x is used to make that saturation explicit rather
+        # than relying on a ratio that merely happens to be "big enough".
+        population = demography.Population.stationary(65_000_000.0, seed=1)
+        start = population.total
+        for _year in range(100):
+            population.step(population._subsistence_food() * 1000.0,
+                             jitter=False)
+        end = population.total
+        annual_growth_rate = (end / start) ** (1.0 / 100.0) - 1.0
+
+        self.assertGreater(
+            annual_growth_rate, 0.0,
+            "unlimited food should not produce population decline")
+        ceiling_growth_rate = self._biological_growth_ceiling() - 1.0
+        self.assertLess(
+            annual_growth_rate, ceiling_growth_rate,
+            "growth under unlimited food exceeded the biological ceiling")
+        # "Well under": FERTILITY_SURPLUS_CEILING_MULTIPLIER was checked
+        # against this same bound and comes in around 2-3%/year on its own
+        # (see that constant's declaration) - a regression that pushed
+        # this well past that, toward the ~9%/year ceiling, would mean the
+        # ramp is no longer doing what it was checked to do.
+        self.assertLess(annual_growth_rate, 0.05)
+
+    def test_famine_still_raises_mortality_and_still_hits_children_and_elderly_harder(self):
+        # The fertility ramp above subsistence must not come at the cost of
+        # the famine mechanism itself: a real shortfall still has to raise
+        # mortality above baseline and lower fertility below it, and still
+        # has to hit children and the elderly harder than working-age
+        # adults, using the same STARVATION_VULNERABILITY_* weights as
+        # before this change - population sensitivity to food is the whole
+        # point of wiring agriculture in, and must survive fixing the
+        # response-side floor's asymmetry.
+        population = demography.Population.stationary(65_000_000.0, seed=2)
+        fed_flows = population.copy().step(population._subsistence_food())
+        famine_flows = population.copy().step(
+            population._subsistence_food() * 0.5)
+
+        self.assertGreater(famine_flows.deaths, fed_flows.deaths)
+        self.assertLess(famine_flows.births, fed_flows.births)
+
+        child_mortality_rate = (
+            famine_flows.deaths_children / population.children)
+        working_age_mortality_rate = (
+            famine_flows.deaths_working_age / population.working_age)
+        elderly_mortality_rate = (
+            famine_flows.deaths_elderly / population.elderly)
+        self.assertGreater(child_mortality_rate, working_age_mortality_rate)
+        self.assertGreater(elderly_mortality_rate, working_age_mortality_rate)
 
 
 class FoodShockAndRecoveryTests(unittest.TestCase):

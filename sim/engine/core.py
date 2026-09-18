@@ -1692,19 +1692,55 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         into next year's opening stock, not anything about how one year's
         flows balance.
 
-        WHAT THIS DOES NOT CLAIM TO FIX. The nutrition-ratio response is
-        still floored at 1.0 on both the mortality and fertility side (see
-        demography.py's `_excess_mortality_multiplier` and
-        `_fertility_multiplier`) - a granary damps the ASYMMETRY OF INPUT
-        weather reaching the population, it does not change the asymmetry
-        of the population's OWN RESPONSE to whatever reaches it. Whether
-        that response-side floor should also change is a separate
-        question, investigated rather than assumed - see demography.py's
-        `_fertility_multiplier` docstring for what was checked (a bounded
-        benefit above 1.0 was designed and passed the stakeholder's own
-        growth-rate sanity check, but was not wired in here: the change
-        needs sim/tests/test_demography.py's own pinned assertion updated
-        alongside it, and that file is outside this task's ownership).
+        WHAT THIS DOES NOT CLAIM TO FIX, UPDATED FOR Complaints/45's
+        FOLLOW-UP ("with 0 large events, you shouldn't have a population
+        decline over a century"). demography.py's `_fertility_multiplier`
+        now DOES ramp fertility up above nutrition_ratio == 1.0 (a bounded,
+        Hutterite-anchored ceiling - see its own docstring and
+        FERTILITY_SURPLUS_CEILING_MULTIPLIER's declaration; checked against
+        the stakeholder's own biological growth-rate ceiling in
+        sim/tests/test_demography.py's `GrowthCeilingTests`, which measures
+        ~2.1%/year under literally unlimited food against a ~9.06%/year
+        ceiling). `_excess_mortality_multiplier` remains floored at 1.0 -
+        no sourced biological limit on how far mortality can fall below an
+        already-observed subsistence baseline was found; see that
+        function's own docstring for what was checked and why it came up
+        empty.
+
+        THAT FIX CANNOT ACTUALLY FIRE THROUGH THIS CALL SITE, MEASURED
+        RATHER THAN ASSUMED, AND THIS IS THE MORE IMPORTANT REMAINING FACT.
+        `agriculture.Storage.step` (agriculture.py, outside this task's
+        ownership) sets `consumption_kg = max(0.0, min(food_demand_kg,
+        self.stock_kg))` - consumption is capped at bare subsistence demand
+        NO MATTER HOW MUCH is banked in `self.farm_stock_kg`, so
+        `food_available_kcal_per_day` (and therefore the `nutrition_ratio`
+        `Population.step` receives below) can structurally never exceed
+        1.0 through this wiring, a granary surplus or no. Measured directly
+        (rome_100ad, events=False, 100 years): the maximum nutrition_ratio
+        observed across the run is exactly 1.0000, and the century-end
+        population is bit-identical whether demography.py's fertility ramp
+        above 1.0 is present or reverted to its old flat cap - the ramp is
+        real, sourced and correct in isolation, but it is dead code from
+        this engine's point of view until a population is ever ALLOWED to
+        eat above subsistence in a good year, which is a decision about
+        CONSUMPTION, not fertility, and belongs in agriculture.py's
+        `Storage.step`, not here. Flagged rather than worked around: this
+        task does not own agriculture.py, and inventing a second,
+        shadow consumption rule in this method to route around that
+        ownership boundary would create two disagreeing accounts of how
+        much a population eats, which is worse than leaving the boundary
+        visible.
+
+        The unshocked century measured today (72.9% of starting
+        population, not Complaints/45's 75.0% - the codebase has moved on
+        agriculture.py/land.py since that figure was recorded, unrelated to
+        this change, which was confirmed to be a no-op on this number by
+        the same bit-identical-trajectory check above) is therefore still
+        explained the same way that complaint left it: a mean nutrition
+        ratio measurably below 1.0 (weather variance that can only ever
+        pull the ratio down, never push it up, given the consumption cap
+        above) feeding a mortality response that is real, sourced, and
+        correctly one-sided for the reason given above.
 
         LABOUR AND LAND UNIT DECISIONS (WIRING_MILESTONE_4.md SS4.1/4.2),
         MADE HERE RATHER THAN LEFT IMPLICIT. The farm workforce is sized
@@ -1818,9 +1854,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # (sim/engine/proto/saveload.py) for why it survives a save.
         farm_storage = agriculture.Storage(
             stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(yr))
+        # `reserve_target_kg` is the SAME figure the carry-forward is capped
+        # at below, and passing it is what lets a population eat above bare
+        # subsistence in a good year. Without it, Storage.step reverts to
+        # min(demand, stock): people eat subsistence or less, never more,
+        # so the nutrition ratio handed to demography cannot exceed 1.0 and
+        # a good year buys nothing while a bad one still costs lives. The
+        # granary alone did not fix that - it banked the grain and then
+        # forbade anyone to eat it. Filling the reserve first is what stops
+        # this becoming a feast that empties the granary: only grain already
+        # beyond the reserve is eaten, which is grain that would otherwise
+        # have sat there and spoiled.
+        reserve_target_kg = agriculture.granary_capacity_kg(
+            adult_equivalent_population * agriculture.annual_food_demand_kg_per_person())
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
-            worker_count=farm_workers_fte)
+            worker_count=farm_workers_fte,
+            reserve_target_kg=reserve_target_kg)
         # CLOSE THE YEAR: write what this year's Storage call actually
         # leaves on hand back as next year's opening stock, capped at what
         # this civilisation's storage infrastructure can physically hold

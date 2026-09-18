@@ -366,6 +366,36 @@ STARVATION_VULNERABILITY_ELDERLY = declare(
     why="Same reasoning and same status as STARVATION_VULNERABILITY_CHILD, "
         "for the elderly band instead.")
 
+FERTILITY_SURPLUS_CEILING_MULTIPLIER = declare(
+    "FERTILITY_SURPLUS_CEILING_MULTIPLIER", 1.8,
+    kind="temporary_heuristic",
+    unit="multiple of baseline fertility",
+    source="Eaton & Mayer 1953's study of Hutterite colonies is the "
+           "standard demographic reference for the highest total fertility "
+           "rate documented for any human population with no deliberate "
+           "birth control: roughly 9 to 11 births per woman, lifetime, "
+           "against this module's own TOTAL_FERTILITY_RATE baseline of "
+           "5.0. 1.8x sits at the low end of that ratio (9/5.0 = 1.8; "
+           "11/5.0 = 2.2) rather than its middle or high end - chosen "
+           "conservatively, the same direction every other point-within-"
+           "range choice in this module leans (see the paragraph above "
+           "SURVIVAL_TO_WORKING_AGE).",
+    confidence="D",
+    why="The ceiling _fertility_multiplier ramps up to as nutrition rises "
+        "above subsistence, mirroring _excess_mortality_multiplier's "
+        "ramp down to STARVATION_MORTALITY_CEILING_MULTIPLIER below it. "
+        "Checked against the stakeholder's own biological growth-rate "
+        "ceiling (Complaints/45-no-granary-so-the-baseline-collapses.md): "
+        "at this model's stationary age structure (roughly 46% "
+        "working-age) and ANNUAL_FERTILITY_RATE_PER_WOMAN, a population "
+        "fed at this ceiling throughout contributes on the order of 2-3% "
+        "growth a year from births alone, comfortably under the ~9.06%/"
+        "year ceiling that assumes no deaths at all and a birth every "
+        "year from every woman aged 18-40 - so 1.8x is not chosen to hit "
+        "any particular growth number, it is bounded independently by the "
+        "Hutterite comparison and then CHECKED (not tuned) against the "
+        "growth ceiling, which it does not come close to binding.")
+
 NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
     "NUTRITION_YEAR_TO_YEAR_NOISE_STD", 0.03,
     kind="temporary_heuristic",
@@ -378,35 +408,32 @@ NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
         "exists so a caller can explore that. It defaults OFF (see "
         "step()'s `jitter` parameter) rather than being applied "
         "unconditionally, for a reason worth recording rather than "
-        "quietly working around: the mortality and fertility responses "
-        "both still have a floor at nutrition_ratio == 1.0 (a good year "
-        "does not reduce mortality below baseline, or raise fertility "
-        "above it - see _fertility_multiplier's own docstring for why a "
-        "bounded benefit above 1.0 was investigated, checked against the "
-        "stakeholder's own growth-rate bound, and found NOT to be blocked "
-        "by that bound, yet still left unapplied here pending a change to "
-        "sim/tests/test_demography.py's own pinned assertion that this "
-        "task's file ownership does not cover), so symmetric noise around "
-        "1.0 still pushes AVERAGE excess mortality up and average "
-        "fertility down even when average food supply is exactly at "
-        "subsistence (Jensen's inequality applied to a one-sided response "
-        "curve) - real agrarian societies damp exactly this effect with "
-        "grain storage, carrying a good year's surplus into a bad year. "
-        "That storage now exists one layer up, at the point food actually "
-        "reaches this module (sim/engine/core.py's `Sim.farm_stock_kg`, "
-        "wired for Complaints/45-no-granary-so-the-baseline-collapses.md) "
-        "- which damps the ASYMMETRY OF THE WEATHER REACHING a population, "
-        "but does nothing about the asymmetry of THIS module's own "
-        "mortality/fertility response to whatever nutrition ratio it is "
-        "actually handed. Turning noise on here without also re-deriving "
-        "this magnitude from a real harvest-variance figure would still "
-        "manufacture a population decline that is an artefact of an "
-        "unsourced noise MAGNITUDE, not a claim about real variability - "
-        "precisely the kind of invented outcome CLAUDE.md SS3.1 rules out "
-        "- so it stays off until either storage damps enough of it or a "
-        "real harvest-variance figure replaces the guess. Still declared, "
-        "and the machinery (`step`'s `jitter` argument, each Population's "
-        "own seeded `random.Random`) still exists, so a scenario that DOES "
+        "quietly working around: THE MORTALITY RESPONSE STILL HAS A FLOOR "
+        "at nutrition_ratio == 1.0 (a good year does not reduce mortality "
+        "below baseline - see _excess_mortality_multiplier's own "
+        "docstring for why no sourced biological limit was found to lift "
+        "that floor). Fertility no longer floors the same way - "
+        "_fertility_multiplier now ramps UP above subsistence, applied "
+        "for Complaints/45-no-granary-so-the-baseline-collapses.md - so "
+        "symmetric noise around 1.0 partially cancels on the fertility "
+        "side but still pushes AVERAGE excess mortality up whenever "
+        "average food supply is exactly at subsistence (Jensen's "
+        "inequality applied to what is now a one-sided response curve on "
+        "ONE side of the ledger instead of both). Real agrarian societies "
+        "also damp the INPUT side of this with grain storage, carrying a "
+        "good year's surplus into a bad year; that storage now exists one "
+        "layer up, at the point food actually reaches this module (sim/"
+        "engine/core.py's `Sim.farm_stock_kg`). Between the two changes, "
+        "less of the original problem remains, but the mortality floor is "
+        "real and sourced (see _excess_mortality_multiplier), not a gap "
+        "left for convenience, so turning noise on here without a real "
+        "harvest-variance figure would still manufacture a downward drift "
+        "that is an artefact of an unsourced noise MAGNITUDE, not a claim "
+        "about real variability - precisely the kind of invented outcome "
+        "CLAUDE.md SS3.1 rules out - so it stays off until a real "
+        "harvest-variance figure replaces the guess. Still declared, and "
+        "the machinery (`step`'s `jitter` argument, each Population's own "
+        "seeded `random.Random`) still exists, so a scenario that DOES "
         "want to explore harvest variance has a real, deterministic, "
         "seeded random source to use rather than needing to invent its "
         "own.")
@@ -433,6 +460,30 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     benefit above bare subsistence) rather than an oversight, and it means
     this function cannot depress mortality to zero by overfeeding, which a
     naive multiplicative model easily could.
+
+    CHECKED FOR A SOURCED LOWER LIMIT, FOR Complaints/45-no-granary-so-the-
+    baseline-collapses.md, AND NONE WAS FOUND (unlike the fertility side -
+    see _fertility_multiplier and FERTILITY_SURPLUS_CEILING_MULTIPLIER for
+    the ceiling that WAS sourced and applied). The literature on whether
+    better-nourished pre-industrial sub-populations had materially lower
+    mortality than the general population does not give a clean multiplier
+    to mirror the fertility ramp with: Antonovsky's review of historical
+    social-class mortality differentials found them smallest or absent
+    exactly where baseline mortality was highest (i.e. exactly the regime
+    this model's baseline rates describe), and the best-studied elite
+    cohort - the British peerage - shows mortality no better, and before
+    the eighteenth century sometimes WORSE, than the general English
+    population studied by Wrigley & Schofield, because any nutritional
+    advantage was offset by other exposures (the peerage's own excess risks)
+    that a pure nutrition-to-mortality channel does not capture. Whatever
+    real biological floor exists below an already-near-subsistence baseline
+    is confounded, in every source found, with disease environment, hygiene
+    and medical care rather than isolated as a calorie effect - so there is
+    no sourced number here to apply, and inventing one to mirror the
+    fertility side just because it would be symmetric is exactly the kind
+    of unlabelled heuristic CLAUDE.md SS3.4 forbids. This floor therefore
+    stays exactly as it was. If a future source isolates a nutrition-only
+    mortality elasticity below this baseline, it belongs here.
 
     Below 1.0, this is linear in the calories the population actually has,
     from 1.0 (at the subsistence line) to STARVATION_MORTALITY_CEILING_
@@ -472,63 +523,62 @@ def _fertility_multiplier(nutrition_ratio):
     additional numeric constant beyond the nutrition ratio itself and the
     definitional bounds 0 and 1.
 
-    At or above subsistence: capped at 1.0. Extra food does not raise
-    fertility further here, which matches the real limiting factors on
-    pre-industrial fertility above subsistence being things this model does
-    not represent (birth spacing, breastfeeding duration, age at marriage)
-    rather than calories - i.e. the cap is a statement of what the model
-    is NOT claiming to explain, not a claim that surplus food has zero real
-    effect on fertility.
+    AT OR ABOVE SUBSISTENCE: a bounded upward ramp, mirroring
+    `_excess_mortality_multiplier`'s below-1.0 ramp exactly - linear from
+    1.0 at subsistence to FERTILITY_SURPLUS_CEILING_MULTIPLIER at the same
+    calorie distance above subsistence that the starvation floor sits below
+    it (so span == SUBSISTENCE... - STARVATION_FLOOR..., reused on both
+    sides rather than invented twice), flat at the ceiling beyond that. A
+    population that eats well really does raise more surviving children;
+    the two sourced endpoints (1.0 at subsistence, the Hutterite-anchored
+    ceiling at FERTILITY_SURPLUS_CEILING_MULTIPLIER - see that constant's
+    own declaration) are real, the straight line between them is invented,
+    same status as the mortality side's own straight line.
 
-    INVESTIGATED, AND DELIBERATELY LEFT AS A FLOOR RATHER THAN CHANGED, FOR
-    Complaints/45-no-granary-so-the-baseline-collapses.md's THIRD QUESTION
-    ("should the floor at nutrition_ratio == 1.0 become a real, bounded
-    benefit above it"). A population that eats well really does raise more
-    surviving children, and this function's flatness above 1.0 cannot
-    represent that at all - so a bounded upward ramp, mirroring
-    `_excess_mortality_multiplier`'s below-1.0 ramp exactly (linear from
-    1.0 at subsistence to a ceiling multiplier at the same calorie distance
-    above subsistence that the starvation floor sits below it, flat beyond
-    that - the identical shape STARVATION_MORTALITY_CEILING_MULTIPLIER
-    already uses), was designed, implemented and CHECKED against the
-    stakeholder's own napkin bound before being pulled back out:
+    RESOLVES Complaints/45-no-granary-so-the-baseline-collapses.md's THIRD
+    QUESTION ("should the floor at nutrition_ratio == 1.0 become a real,
+    bounded benefit above it"). This exact shape was designed, implemented,
+    checked against the stakeholder's own growth-rate ceiling, and then
+    REVERTED once already because sim/tests/test_demography.py's pinned
+    `test_fertility_does_not_rise_above_baseline_on_surplus` asserted the
+    opposite and that file was outside the reverting task's ownership (see
+    that complaint's own account, and FERTILITY_SURPLUS_CEILING_MULTIPLIER's
+    declaration for the arithmetic that check used). This change applies it
+    and updates that test in the same commit, which is what the earlier
+    attempt could not do.
 
-      - This module's own constants make the check straightforward. At
-        this model's stationary age structure (see sim/tests/test_
-        demography.py's own stationarity check; roughly 46% working-age)
-        and ANNUAL_FERTILITY_RATE_PER_WOMAN, births at nutrition_ratio ==
-        1.0 already run about 3.4% of total population/year. Reaching the
-        stakeholder's ~11%/year growth ceiling from births ALONE (ignoring
-        that deaths do not vanish) would need a fertility multiplier of
-        roughly 3.2x baseline - an effective total fertility rate near 16
-        births per woman, which is not documented for any human
-        population, historical or modern (the Hutterite colonies studied
-        by Eaton & Mayer 1953, the standard demographic reference for
-        natural-fertility maxima, run roughly 9-11). The 11%/year ceiling
-        is therefore NOT BINDING at any historically defensible fertility
-        multiplier - a ceiling around 1.8x baseline (chosen from the same
-        Hutterite-vs-this-model's-own-5.0-baseline comparison) leaves
-        growth from this mechanism alone in the 2-3%/year range even in a
-        sustained abundant stretch, comfortably inside the stakeholder's
-        bound.
+    Measured (sim/tests/test_demography.py's GrowthCeilingTests): fed with
+    unlimited food (nutrition ratio pinned above the ceiling every year, no
+    shortfall ever), this model now grows at a small positive annual rate,
+    not the ~-0.03%/year it produced with fertility flat at 1.0 above
+    subsistence - see that test class's own docstring for the exact figure
+    and its comparison to the stakeholder's ~9.06%/year biological ceiling
+    (Complaints/45), which it stays far under.
 
-      - THIS CHANGE IS NOT APPLIED IN THIS FUNCTION, even though it passed
-        that check, because sim/tests/test_demography.py's own
-        NutritionResponseTests.test_fertility_does_not_rise_above_baseline_
-        on_surplus pins the exact opposite (`_fertility_multiplier(1.5) ==
-        1.0`) - a file this task's own scope rules do not permit editing
-        (it belongs to another live agent in this checkout, not to
-        agriculture.py/demography.py/core.py/saveload.py, the only files
-        this task owns). Applying the mechanism and updating that one
-        pinned assertion are therefore a single change for whoever owns
-        that test file to make together, not something this task can do
-        half of safely. `_excess_mortality_multiplier` was left alone for
-        an unrelated reason: raising it needs a biological ceiling on how
-        far mortality can fall below an already-historically-observed
-        baseline, which nothing sourced here derives, whereas the
-        fertility side had a real, checked, ready-to-apply answer.
+    `_excess_mortality_multiplier` (the floor, not the ceiling side) is
+    DELIBERATELY LEFT UNCHANGED - see its own docstring for why: lowering
+    it needs a biological ceiling on how far mortality can fall below an
+    already-historically-observed baseline, and nothing sourced was found
+    for that (see this module's caller-facing report / this task's own
+    report for what was checked and why it came up empty). Baseline
+    mortality here already IS the observed rate of a population at
+    subsistence, not a floor modelled downward from something higher, so
+    there is no equivalent "how far above the historical figure can we go"
+    room to check the way there was on the fertility side.
     """
-    return max(0.0, min(1.0, nutrition_ratio))
+    if nutrition_ratio < 1.0:
+        return max(0.0, nutrition_ratio)
+    calories = nutrition_ratio * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
+    span = (SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
+            - STARVATION_FLOOR_CALORIES_PER_ADULT_EQUIVALENT_DAY)
+    abundance_ceiling_calories = (
+        SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY + span)
+    if calories >= abundance_ceiling_calories:
+        return FERTILITY_SURPLUS_CEILING_MULTIPLIER
+    fraction_of_span = (
+        (calories - SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY) / span)
+    surplus = (FERTILITY_SURPLUS_CEILING_MULTIPLIER - 1.0) * fraction_of_span
+    return 1.0 + surplus
 
 
 StepFlows = collections.namedtuple(

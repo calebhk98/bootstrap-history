@@ -545,6 +545,26 @@ GRAIN_SPOILAGE_RATE_PER_YEAR = declare(
         "after this year's consumption is drawn, to whatever is left "
         "sitting in storage - see Storage.step.")
 
+MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE = declare(
+    "MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE", 1.75,
+    unit="dimensionless (annual grain a person eats in a year of plenty, as a "
+         "multiple of what the same person eats at bare subsistence)",
+    kind="biological_parameter",
+    source="Subsistence here is the roughly 2,000 kcal a day this project "
+           "already uses. A person doing sustained heavy agricultural labour "
+           "eats on the order of 3,500 to 4,000 kcal a day, which is where "
+           "1.75 comes from. It is a ceiling on what a HUMAN can usefully "
+           "eat, not on what a household can acquire - grain beyond it goes "
+           "to livestock, brewing, seed or market rather than into a person.",
+    why="Without a ceiling above subsistence the model had no way to say a "
+        "population ate WELL. Consumption was min(demand, stock), so the "
+        "nutrition ratio could never exceed 1.0 however full the granary "
+        "was, and a good year therefore bought nothing while a bad year "
+        "still cost lives. That one-sidedness is what Complaints/45 is "
+        "about, and the granary only fixed half of it - it banked the grain "
+        "and then never let anyone eat it.")
+
+
 GRANARY_CAPACITY_YEARS_OF_DEMAND = declare(
     "GRANARY_CAPACITY_YEARS_OF_DEMAND", 1.0,
     kind="engineering_estimate",
@@ -1742,7 +1762,7 @@ class Storage(object):
     def step(self, land, labour_hours, population, technique_multiplier=1.0,
              hectares_next_year=None, crop=None, soil=None, rotation=None,
              toolkit=None, storage_technique=None, worker_count=None,
-             hours_per_worker_day=None):
+             hours_per_worker_day=None, reserve_target_kg=None):
         """Advance one year: sow, grow, harvest, eat, spoil, retain next
         year's seed, bank whatever is left. Mutates `self.stock_kg` and
         returns the exact flows that moved it.
@@ -1852,8 +1872,39 @@ class Storage(object):
         self.stock_kg += harvest_kg
 
         food_demand_kg = population * annual_food_demand_kg_per_person(crop)
-        consumption_kg = max(0.0, min(food_demand_kg, self.stock_kg))
-        food_shortfall_kg = max(0.0, food_demand_kg - consumption_kg)
+        # EATING WELL IN A GOOD YEAR. This used to be min(demand, stock), so
+        # a population ate exactly subsistence or less and never more, which
+        # meant the nutrition ratio handed to demography could not exceed 1.0
+        # however full the granary was. Combined with a mortality and
+        # fertility response that floors at 1.0, that made every good year
+        # worth nothing and every bad year cost real people - the ratchet
+        # Complaints/45 records. The granary alone did not fix it: it banked
+        # the grain and then forbade anyone to eat it.
+        #
+        # THE RESERVE IS FILLED FIRST, which is the whole point of having
+        # one. Extra eating comes only out of what is already beyond the
+        # reserve a prudent household is holding against next year, so this
+        # cannot empty the granary to feast - it eats the grain that would
+        # otherwise have sat there and spoiled.
+        #
+        # `reserve_target_kg` defaults to None, meaning "no reserve named",
+        # and then no extra is eaten at all and this reduces to exactly the
+        # old line. A caller that persists stock across years should pass
+        # the same figure it caps the granary at.
+        subsistence_consumption_kg = max(0.0, min(food_demand_kg, self.stock_kg))
+        extra_consumption_kg = 0.0
+        if reserve_target_kg is not None:
+            stock_beyond_reserve_kg = max(
+                0.0, self.stock_kg - subsistence_consumption_kg - reserve_target_kg)
+            most_a_person_can_eat_kg = food_demand_kg * (
+                MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE - 1.0)
+            extra_consumption_kg = min(stock_beyond_reserve_kg,
+                                       most_a_person_can_eat_kg)
+        consumption_kg = subsistence_consumption_kg + extra_consumption_kg
+        # Shortfall is measured against SUBSISTENCE demand, never against the
+        # larger amount a well-fed year allows - eating well is not a way to
+        # run a deficit.
+        food_shortfall_kg = max(0.0, food_demand_kg - subsistence_consumption_kg)
         self.stock_kg -= consumption_kg
 
         spoilage_kg = max(0.0, self.stock_kg) * storage_technique.spoilage_rate_per_year

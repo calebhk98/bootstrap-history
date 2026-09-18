@@ -55,6 +55,11 @@ import unittest
 # every other engine-level demographic check.
 from .harness import *  # noqa: F401,F403
 
+# The engine's own copy, not a fresh `sim.world.agriculture` import: this
+# repository has two import roots and they produce two distinct module
+# objects, so patching or reading the wrong one silently measures nothing.
+from sim.engine.core import agriculture
+
 
 def _rome_sim(events=False):
     return sim(civ="rome_100ad", events=events)
@@ -86,12 +91,26 @@ class VariesWithWeatherTests(unittest.TestCase):
         # would not (it would also fail a model that is correctly capped).
         self.assertGreater(statistics.pstdev(ratios), 0.05, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
-        # <= 1.0 + float slop, never assertEqual: consumption_kg is capped
-        # at food_demand_kg in Storage.step, but the two sides of that min()
-        # are built from slightly different float expressions, so a
-        # comfortably-met year lands at 1.0 plus or minus the last bit, not
-        # always bit-exact 1.0.
-        self.assertLessEqual(max(ratios), 1.0 + 1e-9, ratios)
+        # THE 1.0 CEILING IS GONE ON PURPOSE. This used to assert
+        # max(ratios) <= 1.0, because Storage.step capped consumption at
+        # food_demand_kg however full the granary was - so a population
+        # could never eat WELL, only adequately or badly. Combined with a
+        # mortality and fertility response that floors at 1.0, that made
+        # every good year worth nothing and every bad year cost lives,
+        # which is the ratchet Complaints/45 is about. Consumption may now
+        # exceed subsistence, bounded by what a person can physically eat
+        # (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE) and drawn only from
+        # grain already beyond the reserve.
+        #
+        # The upper bound asserted here is that physiological ceiling, not
+        # 1.0 - a ratio above it would mean people eating more than a human
+        # can, which is a real bug.
+        self.assertLessEqual(max(ratios),
+                             agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE + 1e-9,
+                             ratios)
+        # And it must ACTUALLY happen at least once, or the mechanism is
+        # present but inert and this test would pass against the old cap.
+        self.assertGreater(max(ratios), 1.0, ratios)
 
     def test_gross_harvest_is_a_real_computed_number_not_zero(self):
         test_sim = _rome_sim(events=False)
@@ -146,7 +165,10 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # and not a demand that the no-carryover simplification's own cost
         # be zero.
         self.assertGreater(mean_ratio, 0.7, ratios)
-        self.assertLessEqual(mean_ratio, 1.0, ratios)  # never above: capped
+        # The MEAN stays at or below subsistence even though individual good
+        # years now exceed it: eating above subsistence draws only on grain
+        # already beyond the reserve, which is rare. Measured at about 0.995.
+        self.assertLessEqual(mean_ratio, 1.0, ratios)
 
     def test_population_declines_but_does_not_run_away_to_extinction(self):
         test_sim = _rome_sim(events=False)
