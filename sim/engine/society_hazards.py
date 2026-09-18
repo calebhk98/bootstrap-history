@@ -603,393 +603,488 @@ class HazardsMixin:
         gets the Great Famine and the Black Death. The Mexica get the contact
         epidemics, which are the most severe hazard in the whole directory and
         are not a fair fight. None of it is hardcoded here any more.
+
+        One method per hazard kind (staff_loss, sack_chance, output_factor,
+        real_erosion, values), called here in this same order for every hazard
+        whose window is open this year - the same order the single function used
+        to test these five `if` blocks in, one after another, on the same hazard.
+        Each was moved out verbatim, so the number and order of self.rng draws
+        this method (and everything it calls) makes is exactly what it was before
+        the split: nothing was hoisted out of a branch, reordered, or made eager.
         """
-        rng = self.rng
         for hazard in self.civ.get("hazards", []):
             hazard_start, hazard_end = hazard.get("years", [0, 0])
             if not (hazard_start <= yr <= hazard_end):
                 continue
             hazard = self._resolve_hazard_condition(hazard, yr, hazard_start)
-            if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
-                relief, why = self.hazard_relief("staff_loss")
-                loss = hazard["staff_loss"] * relief
-                _people_before = (self.household.scholars + self.household.artisans
-                                  + sum(self.household.employees.values()))
-                self.household.scholars *= (1 - loss); self.household.artisans *= (1 - loss)
-                for trade in list(self.household.employees):
-                    self.household.employees[trade] *= (1 - loss)
-                self.household.directors_extra *= (1 - loss)
-                # THE MONEY GOES TOO, and the log never said so. A weird-play
-                # tester watched the Black Death take 12,676 denarii down to
-                # 9,111 against a stated net of -195 a year, with the only
-                # message reading "staff -45%", and reasonably concluded the
-                # accounts were broken. A plague empties the market as well as
-                # the workshop; that is real, and it has to be said.
-                cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
-                # SAY WHAT ACTUALLY HAPPENED TO YOU. A weird-play tester with no
-                # staff and no money read "staff -45%, and 0 pence gone" three
-                # years running and reasonably concluded the event was firing
-                # against nobody. It was: they had nothing to lose. An event
-                # should report the harm it did, not the harm it would have
-                # done to somebody else.
-                # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
-                # and your own hedges do not change that: the quarantine you
-                # built protects your people, not everyone else's labour
-                # market. A playtester found a plague that hit them and
-                # nobody else, and asked why their wage bill never moved
-                # afterward the way the real Black Death moved England's.
-                # This uses the hazard's RAW rate, never `loss` above, which
-                # is personal and already reduced by your own hedges; and
-                # cutting self.population's actual cohorts (rather than
-                # accumulating a scalar deficit) naturally compounds two
-                # plagues in one lifetime onto whatever the first left
-                # behind, because the second cut is a fraction of the
-                # ALREADY-REDUCED population, not of some separately tracked
-                # deficit - see _apply_population_mortality_shock (core.py),
-                # which is what actually moves self.population; pop_scale
-                # and wage_index (also core.py) read it back out on demand.
-                #
-                # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S - the
-                # one thing `raw` never used to answer to. med_relief is
-                # medical_diffusion_relief() (above): how much of germ
-                # theory, quarantine and vaccination has actually spread
-                # through the society by the year this hazard's window
-                # opens, as opposed to `relief` just above, which is the
-                # founder's own private, has()-gated hedge. A founder who
-                # invented the vaccine for a pandemic CENTURIES early and
-                # let it diffuse is the user's own example - "the Black
-                # Death becomes a minor period of some sickness" - answered
-                # here, against the empire-wide figure, never against
-                # `loss`.
-                historical = hazard["staff_loss"]
-                med_relief = self.medical_diffusion_relief()
-                raw = historical * (1.0 - med_relief)
-                self._apply_population_mortality_shock(raw)
-                # The event has happened NOW.  Do not leave the population
-                # and wage screens at their pre-plague values until the next
-                # annual resolution; refresh (log-only now - see
-                # _refresh_demographic_indexes's own docstring) immediately.
-                self._refresh_demographic_indexes(yr)
-                # SEVERITY HONESTY: the words have to match `loss`, the
-                # number the mechanic just applied above, not `raw`, the
-                # historical hazard's own unmitigated figure - a tester
-                # whose sanitation and quarantine cut a 28% plague down to
-                # 0.4% still read "staff -0%... (would have been -28%: ...)"
-                # in the same breath, and came away certain they had just
-                # lived through a 28% plague, because the sentence restated
-                # 28% twice and the near-zero number once. `relief` (mult)
-                # is the SAME diminishing fraction hazard_relief and
-                # hazard_advice already compute, and hazard_timeline's own
-                # "hedged" cutoff is this same 0.75 - reused, not a second
-                # estimate of what your hedges did.
-                _hit = []
-                if _people_before > 0.05:
-                    if why and relief <= 0.25:
-                        _hit.append("staff -%d%%, held off almost entirely "
-                                    "by what you built (%s)"
-                                    % (loss * 100, "; ".join(why)))
-                    elif why and relief <= 0.75:
-                        _hit.append("staff -%d%% (softened by %s)"
-                                    % (loss * 100, "; ".join(why)))
-                    else:
-                        _hit.append("staff -%d%%" % (loss * 100))
-                if cash > 0.5:
-                    _hit.append("%s gone with the trade that stopped"
-                                % "{:,.0f}".format(cash))
-                if not _hit:
-                    _hit.append("you had nothing it could take")
-                msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
-                # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
-                # and your own hedges do not change that: the quarantine you
-                # built protects your people, not everyone else's labour
-                # market (see the comment on `raw` above). Kept as a
-                # SEPARATE sentence, explicitly "either way", so a household
-                # that came through nearly untouched does not read this
-                # empire-wide toll as its own.
-                if raw > 0.01:
-                    # NO FIXED RECOVERY HORIZON TO QUOTE ANY MORE - see
-                    # core.py's _apply_population_mortality_shock/pop_scale:
-                    # recovery is now whatever self.population's own vital
-                    # rates produce on the surviving cohort structure, not a
-                    # number this hazard hands out at the moment it fires.
-                    msg += (". Empire-wide, population -%d%%%s - wages (and "
-                            "everything paid in them) stay dear until the "
-                            "population does, either way"
-                            % (raw * 100,
-                               (" (the country's own public health has "
-                                "spread far enough to hold this below the "
-                                "%d%% this would otherwise have been - "
-                                "%d%% softer)"
-                                % (round(historical * 100),
-                                   round(med_relief * 100)))
-                               if med_relief > 0.02 else ""))
-                elif med_relief > 0.02 and historical > 0.01:
-                    # THE COUNTRY CHANGED, SAY SO EVEN WHEN THE NUMBER
-                    # ROUNDS TO NOTHING. A founder whose diffused medicine
-                    # has cut a plague to under 1% empire-wide would
-                    # otherwise see no "Empire-wide" clause at all and have
-                    # no way to tell a mechanism that fired from one that
-                    # never existed.
-                    msg += (". Empire-wide: the country's own public health "
-                            "- not only yours - has spread far enough that "
-                            "this, historically a %d%% loss, barely "
-                            "registers"
-                            % round(historical * 100))
-                self.household.log.append((yr, msg))
-            if "sack_chance" in hazard:
-                relief, why = self.hazard_relief("sack_chance")
-                probability = hazard["sack_chance"] * relief
-                if why and rng.random() < hazard["sack_chance"] - probability:
-                    self.household.log.append((yr, "%s: an attack comes to nothing (%s)"
-                                     % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
-                if rng.random() < probability:
-                    # SAY WHAT IT TOOK FROM YOU. This printed "a site is
-                    # sacked" and nothing else while removing 62% of a
-                    # weird-play tester's money, restarting every project they
-                    # had and cutting their people nearly in half - and they
-                    # owned no sites at all. The plague family was taught to
-                    # report the harm it actually did; this one was not, and a
-                    # bare event line against an unexplained fall in capital is
-                    # how a player stops trusting the ledger.
-                    _cap0 = max(0.0, self.household.capital)
-                    # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS.
-                    # A player watched the event announce "92.7 of your
-                    # people gone" and then read `state`'s employees_total -
-                    # the headcount screen actually shows - sitting exactly
-                    # where it was. This branch reduced artisans, scholars
-                    # and directors_extra and left self.household.employees (hired
-                    # smiths, scribes, masons - for a developed household,
-                    # most of its people) completely untouched, while the
-                    # plague family right above DOES reduce employees (see
-                    # its own `for t in self.household.employees` loop). A sack is not
-                    # gentler to hired staff than a plague; the two hazards
-                    # had simply drifted apart. _people0/_people_after now
-                    # count the same population the announcement claims to
-                    # describe and `state` actually renders.
-                    _people0 = (self.household.artisans + self.household.scholars
-                                + sum(self.household.employees.values()))
-                    _act0 = len(self.household.active)
-                    self.lose_capital(self.SACK_CAPITAL_LOSS)
-                    self.household.artisans *= self.SACK_STAFF_RETENTION; self.household.scholars *= self.SACK_STAFF_RETENTION
-                    for trade in list(self.household.employees):
-                        self.household.employees[trade] *= self.SACK_STAFF_RETENTION
-                    self.household.directors_extra *= self.SACK_DIRECTORS_RETENTION
-                    for node_id in sorted(self.household.active):
-                        self.household.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
-                        self.household.active[node_id]["yrs"] = 0.0
-                    _people_after = (self.household.artisans + self.household.scholars
-                                     + sum(self.household.employees.values()))
-                    _took = []
-                    if _cap0 - max(0.0, self.household.capital) > 0.5:
-                        _took.append("%s taken"
-                                     % "{:,.0f}".format(_cap0 - max(0.0, self.household.capital)))
-                    if _people0 - _people_after > 0.05:
-                        _took.append("%.1f of your people gone"
-                                     % (_people0 - _people_after))
-                    if _act0:
-                        _took.append("%d project%s back to the beginning"
-                                     % (_act0, "" if _act0 == 1 else "s"))
-                    self.household.log.append((yr, "%s: a site is sacked - %s"
-                                     % (hazard.get("name", "crisis"),
-                                        ", ".join(_took)
-                                        or "you had nothing it could take")))
-                    # Sim.corpus_hedge (core.py) is the one place this is
-                    # decided, and `risk` calls the same method - see its
-                    # own comment for why this used to quote `running()`
-                    # and tell a player, in `risk`, that they had a hedge
-                    # `running()` said had already lapsed.
-                    corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
-                    if rng.random() < corpus_loss_probability:
-                        # sorted() matters: self.household.done is a SET and iterates in an
-                        # order that depends on PYTHONHASHSEED, so feeding it
-                        # unsorted to rng.sample made the same --seed give a
-                        # different answer every invocation.
-                        # Never the society's own inheritance: you can lose what
-                        # YOU built, not what the civilization has always known.
-                        # Nor corpus_dispersed: its whole definition is that
-                        # copies exist in other people's hands, beyond this
-                        # one site - a sack here cannot reach a copy sitting
-                        # in a library three provinces away. corpus_written,
-                        # one set of books in one place, stays losable; only
-                        # dispersal is out of a single raid's reach. This is
-                        # about a SACK specifically - mothballing or
-                        # abandoning the corpus yourself is a different
-                        # mechanism and still applies.
-                        losable = sorted(node_id for node_id in self.household.done
-                                         if node_id not in self.household.granted
-                                         and node_id != "corpus_dispersed")
-                        if losable:
-                            drop = rng.sample(losable, max(1, int(len(losable) * frac)))
-                            _lost = self.household.forgotten
-                            for node_id in drop:
-                                self.household.operating.discard(node_id)
-                                self.household.done.discard(node_id)
-                                self.household.mothballed.discard(node_id)
-                                # KEPT, so `risk` can list what you have to
-                                # build again. Otherwise the only record is a
-                                # log line a century back.
-                                _lost[node_id] = yr
-                            self._done_changed()
-                            # NAME THEM. A play tester discovered a loss decades
-                            # later, when `start X` said "missing prerequisites:
-                            # <thing you built two hundred years ago>", and then
-                            # rebuilt the chain one refusal at a time. A bare
-                            # count is not a report of what happened to you.
-                            _named = sorted(drop)
-                            _corpus = [tech_id for tech_id in ("corpus_written",
-                                                   "corpus_dispersed")
-                                       if tech_id in drop]
-                            # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON.
-                            # Naming the lost ids was the first fix; a Rome
-                            # player with a real goal set still found out the
-                            # road had gotten longer only by re-running `path`
-                            # afterwards and comparing it by hand to what they
-                            # remembered - a sack that silently undid a third
-                            # of their critical-path progress in one turn.
-                            # Said here, once, in the same breath as the loss
-                            # itself, using the same goal-closure `never_
-                            # abandon` already computes and caches.
-                            _on_road = 0
-                            _goal = getattr(self, "goal", None)
-                            if _goal and _goal in self.nodes:
-                                try:
-                                    _gc = getattr(self, "_goal_closure", None)
-                                    if _gc is None:
-                                        _gc = self._goal_closure = closure(
-                                            self.nodes, _goal)
-                                    _on_road = sum(1 for tech_id in drop if tech_id in _gc)
-                                except Exception:
-                                    _on_road = 0
-                            self.household.log.append((yr, "KNOWLEDGE LOST: %d technolog%s "
-                                                 "forgotten - %s%s%s%s"
-                                % (len(drop), "y" if len(drop) == 1 else "ies",
-                                   ", ".join(_named[:8])
-                                   + (" and %d more" % (len(_named) - 8)
-                                      if len(_named) > 8 else ""),
-                                   # BEFORE the loss, not after: `drop` has
-                                   # already come out of `self.household.done` by this
-                                   # point, so re-asking `self.household.done` here
-                                   # could tell a player the corpus was
-                                   # "never printed and dispersed" in the
-                                   # same sentence that says the corpus
-                                   # itself just went - both about the same
-                                   # sacking. _hedge_before was read when
-                                   # the sack started, before anything was
-                                   # taken.
-                                   "" if _hedge_before == "corpus_dispersed"
-                                   else " (the corpus was never printed and "
-                                        "dispersed)",
-                                   ". THE CORPUS ITSELF WENT (%s): your hedge "
-                                   "against this is gone and 'risk' will say so "
-                                   "- build it again first" % ", ".join(_corpus)
-                                   if _corpus else "",
-                                   (". %d of these stood on the road to your "
-                                    "goal: the route is longer than it was a "
-                                    "moment ago - 'path' will show the rebuilt "
-                                    "shape of it" % _on_road)
-                                   if _on_road else "")))
-            if "output_factor" in hazard:
-                relief, why = self.hazard_relief("output_factor")
-                # relief moves the floor back toward 1.0 rather than scaling the
-                # damage: self-sufficiency means less of your income was ever
-                # coming through the thing the war cut.
-                floor = 1.0 - (1.0 - hazard["output_factor"]) * relief
-                before = self.output_factor
-                self.output_factor = min(self.output_factor, floor)
-                # ONCE, AND THEN A REMINDER, not every year of a hundred-year
-                # war. output_factor recovers a little each step, so this line
-                # re-fired the moment the war pulled it back down - which is
-                # every single year. A weird-play tester read the same sentence
-                # about the Hundred Years War roughly eighty times and stopped
-                # reading the log, which is the real cost: a message repeated
-                # until it is noise has stopped being a message.
-                said = getattr(self, "_said_output", {})
-                key = hazard.get("name", "crisis")
-                if before > self.output_factor and yr - said.get(key, -99) >= 20:
-                    said[key] = yr
-                    self._said_output = said
-                    # SAY WHAT HELD. A founder who armed the state before the
-                    # war arrived measured protection 0.019 to 0.019 against
-                    # one who never touched the military branch, and every
-                    # other hazard message in this file already names its
-                    # hedges - staff_loss says "would have been"; sack_chance
-                    # says "comes to nothing (%s)". This one said nothing,
-                    # which is indistinguishable from doing nothing.
-                    self.household.log.append((yr, "%s: trade and output fall to %d%% of "
-                                         "normal%s"
-                                     % (key, self.output_factor * 100,
-                                        " (your own strength holds off worse: %s)"
-                                        % "; ".join(why[:3]) if why else "")))
-            if "real_erosion" in hazard:
-                relief, why = self.hazard_relief("real_erosion")
-                self.money_real *= (1 - hazard["real_erosion"])
-                bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
-                had = max(0.0, self.household.capital)
-                self.lose_capital(bite)
-                lost = had - max(0.0, self.household.capital)
-                if not getattr(self, "_said_debasement", 0) or yr - self._said_debasement >= 15:
-                    self._said_debasement = yr
-                    # SAY WHAT IT DID TO YOU, and say what it did NOT do. A
-                    # break tester read "the coin is worth 99% less", checked
-                    # `why horse_collar` in 107, 207 and 307 AD, found the
-                    # quote identical to the denarius, and filed it as the
-                    # debasement doing nothing. It is doing something: every
-                    # price in this game is what a thing really costs in
-                    # labour and materials, which debasement does not change.
-                    # What it destroys is the money you are HOLDING. Quoting
-                    # the bite in coin makes that the visible half.
-                    self.household.log.append((yr, "%s: the coin is worth %d%% less than it "
-                                         "was%s. Quoted costs are what a thing "
-                                         "really takes to make, so they do not "
-                                         "move; what debases is the money in "
-                                         "your chest, and this year it took %s%s"
-                                     % (hazard.get("name", "debasement"),
-                                        (1 - self.money_real) * 100,
-                                        "; you feel less of it (%s)" % "; ".join(why)
-                                        if why else "",
-                                        "{:,.0f}".format(lost)
-                                        if lost > 0.5 else "nothing, because you "
-                                        "were holding none",
-                                        " denarii" if lost > 0.5 else "")))
-            if "values" in hazard:
-                # A hazard can kill your people, burn a site, or make you
-                # poorer, and that used to be the whole vocabulary. Norse
-                # Christianisation is none of those: its real effect is on
-                # what the society BELIEVES, which is exactly what
-                # alarm_of() and update_protection() read out of self.w. This
-                # is apply_tech_effects' mechanism (see there), aimed at a
-                # hazard instead of a technology, with one difference: a
-                # technology is a single event and logs once, but a hazard
-                # like this runs for over a century, so the shift is spread
-                # evenly across every year of `years` rather than dumped on
-                # the first one. Applying 1/Nth of the total delta every
-                # year, for N years, is what "gradual" means here; a single
-                # jump on the first year would be exactly the fake
-                # instantaneous conversion this mechanism exists to avoid.
-                span = max(1, int(hazard_end) - int(hazard_start) + 1)
-                changed = {}
-                for field, total_delta in hazard["values"].items():
-                    if field.startswith("_") or not isinstance(total_delta, (int, float)):
-                        continue
-                    if field not in self.w:
-                        continue
-                    before = self.w[field]
-                    self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
-                    if abs(self.w[field] - before) > 1e-9:
-                        changed[field] = self.w[field]
-                # VISIBLE WHILE IT HAPPENS, not only in hindsight: a tester
-                # should be able to watch the society turning against them
-                # year by year, not discover it as a lump sum in the future.
-                # A hundred-odd years of this hazard would be a hundred-odd
-                # near-identical log lines if this fired every year, so it
-                # is throttled to the first year, the last, and every tenth
-                # in between -- the same spirit as the debasement throttle
-                # just above, which exists for the same reason.
-                if changed and (yr == hazard_start or yr == hazard_end or (yr - hazard_start) % 10 == 0):
-                    self.household.log.append((yr, "%s: the society's values are shifting (%s)"
-                                     % (hazard.get("name", "hazard"),
-                                        ", ".join("%s now %.2f" % (field, value)
-                                                  for field, value in sorted(changed.items())))))
+            self._shock_staff_loss(hazard, yr)
+            self._shock_sack_chance(hazard, yr)
+            self._shock_output_factor(hazard, yr)
+            self._shock_real_erosion(hazard, yr)
+            self._shock_values(hazard, yr, hazard_start, hazard_end)
+
+    def _shock_staff_loss(self, hazard, yr):
+        """The staff_loss branch of _shocks: disease and famine years.
+
+        Split out of _shocks for complexity. Moved verbatim from the body of
+        the single _shocks function, including every comment below, so nothing
+        needed rewriting and the self.rng draws stay in the exact order
+        _shocks always made them in - see _shocks's own docstring.
+        """
+        rng = self.rng
+        if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
+            relief, why = self.hazard_relief("staff_loss")
+            loss = hazard["staff_loss"] * relief
+            _people_before = (self.household.scholars + self.household.artisans
+                              + sum(self.household.employees.values()))
+            self.household.scholars *= (1 - loss); self.household.artisans *= (1 - loss)
+            for trade in list(self.household.employees):
+                self.household.employees[trade] *= (1 - loss)
+            self.household.directors_extra *= (1 - loss)
+            # THE MONEY GOES TOO, and the log never said so. A weird-play
+            # tester watched the Black Death take 12,676 denarii down to
+            # 9,111 against a stated net of -195 a year, with the only
+            # message reading "staff -45%", and reasonably concluded the
+            # accounts were broken. A plague empties the market as well as
+            # the workshop; that is real, and it has to be said.
+            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
+            # SAY WHAT ACTUALLY HAPPENED TO YOU. A weird-play tester with no
+            # staff and no money read "staff -45%, and 0 pence gone" three
+            # years running and reasonably concluded the event was firing
+            # against nobody. It was: they had nothing to lose. An event
+            # should report the harm it did, not the harm it would have
+            # done to somebody else.
+            # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
+            # and your own hedges do not change that: the quarantine you
+            # built protects your people, not everyone else's labour
+            # market. A playtester found a plague that hit them and
+            # nobody else, and asked why their wage bill never moved
+            # afterward the way the real Black Death moved England's.
+            # This uses the hazard's RAW rate, never `loss` above, which
+            # is personal and already reduced by your own hedges; and
+            # cutting self.population's actual cohorts (rather than
+            # accumulating a scalar deficit) naturally compounds two
+            # plagues in one lifetime onto whatever the first left
+            # behind, because the second cut is a fraction of the
+            # ALREADY-REDUCED population, not of some separately tracked
+            # deficit - see _apply_population_mortality_shock (core.py),
+            # which is what actually moves self.population; pop_scale
+            # and wage_index (also core.py) read it back out on demand.
+            #
+            # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S - the
+            # one thing `raw` never used to answer to. med_relief is
+            # medical_diffusion_relief() (above): how much of germ
+            # theory, quarantine and vaccination has actually spread
+            # through the society by the year this hazard's window
+            # opens, as opposed to `relief` just above, which is the
+            # founder's own private, has()-gated hedge. A founder who
+            # invented the vaccine for a pandemic CENTURIES early and
+            # let it diffuse is the user's own example - "the Black
+            # Death becomes a minor period of some sickness" - answered
+            # here, against the empire-wide figure, never against
+            # `loss`.
+            historical = hazard["staff_loss"]
+            med_relief = self.medical_diffusion_relief()
+            raw = historical * (1.0 - med_relief)
+            self._apply_population_mortality_shock(raw)
+            # The event has happened NOW.  Do not leave the population
+            # and wage screens at their pre-plague values until the next
+            # annual resolution; refresh (log-only now - see
+            # _refresh_demographic_indexes's own docstring) immediately.
+            self._refresh_demographic_indexes(yr)
+            # SEVERITY HONESTY: the words have to match `loss`, the
+            # number the mechanic just applied above, not `raw`, the
+            # historical hazard's own unmitigated figure - a tester
+            # whose sanitation and quarantine cut a 28% plague down to
+            # 0.4% still read "staff -0%... (would have been -28%: ...)"
+            # in the same breath, and came away certain they had just
+            # lived through a 28% plague, because the sentence restated
+            # 28% twice and the near-zero number once. `relief` (mult)
+            # is the SAME diminishing fraction hazard_relief and
+            # hazard_advice already compute, and hazard_timeline's own
+            # "hedged" cutoff is this same 0.75 - reused, not a second
+            # estimate of what your hedges did.
+            _hit = []
+            if _people_before > 0.05:
+                if why and relief <= 0.25:
+                    _hit.append("staff -%d%%, held off almost entirely "
+                                "by what you built (%s)"
+                                % (loss * 100, "; ".join(why)))
+                elif why and relief <= 0.75:
+                    _hit.append("staff -%d%% (softened by %s)"
+                                % (loss * 100, "; ".join(why)))
+                else:
+                    _hit.append("staff -%d%%" % (loss * 100))
+            if cash > 0.5:
+                _hit.append("%s gone with the trade that stopped"
+                            % "{:,.0f}".format(cash))
+            if not _hit:
+                _hit.append("you had nothing it could take")
+            msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
+            # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
+            # and your own hedges do not change that: the quarantine you
+            # built protects your people, not everyone else's labour
+            # market (see the comment on `raw` above). Kept as a
+            # SEPARATE sentence, explicitly "either way", so a household
+            # that came through nearly untouched does not read this
+            # empire-wide toll as its own.
+            if raw > 0.01:
+                # NO FIXED RECOVERY HORIZON TO QUOTE ANY MORE - see
+                # core.py's _apply_population_mortality_shock/pop_scale:
+                # recovery is now whatever self.population's own vital
+                # rates produce on the surviving cohort structure, not a
+                # number this hazard hands out at the moment it fires.
+                msg += (". Empire-wide, population -%d%%%s - wages (and "
+                        "everything paid in them) stay dear until the "
+                        "population does, either way"
+                        % (raw * 100,
+                           (" (the country's own public health has "
+                            "spread far enough to hold this below the "
+                            "%d%% this would otherwise have been - "
+                            "%d%% softer)"
+                            % (round(historical * 100),
+                               round(med_relief * 100)))
+                           if med_relief > 0.02 else ""))
+            elif med_relief > 0.02 and historical > 0.01:
+                # THE COUNTRY CHANGED, SAY SO EVEN WHEN THE NUMBER
+                # ROUNDS TO NOTHING. A founder whose diffused medicine
+                # has cut a plague to under 1% empire-wide would
+                # otherwise see no "Empire-wide" clause at all and have
+                # no way to tell a mechanism that fired from one that
+                # never existed.
+                msg += (". Empire-wide: the country's own public health "
+                        "- not only yours - has spread far enough that "
+                        "this, historically a %d%% loss, barely "
+                        "registers"
+                        % round(historical * 100))
+            self.household.log.append((yr, msg))
+
+    def _shock_sack_chance(self, hazard, yr):
+        """The sack_chance branch of _shocks: a site sacked.
+
+        Split out of _shocks for complexity. Moved verbatim from the body of
+        the single _shocks function, including every comment below, so nothing
+        needed rewriting and the self.rng draws stay in the exact order
+        _shocks always made them in - see _shocks's own docstring. The actual
+        sacking (_sack_site) and the knowledge it can take (_sack_corpus_loss)
+        are split further below for the same reason: each rng draw stays
+        exactly where it already was, just inside a smaller function.
+        """
+        rng = self.rng
+        if "sack_chance" in hazard:
+            relief, why = self.hazard_relief("sack_chance")
+            probability = hazard["sack_chance"] * relief
+            if why and rng.random() < hazard["sack_chance"] - probability:
+                self.household.log.append((yr, "%s: an attack comes to nothing (%s)"
+                                 % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
+            if rng.random() < probability:
+                self._sack_site(hazard, yr)
+
+    def _sack_site(self, hazard, yr):
+        """What a sack itself takes: capital, staff, projects reset - then,
+        maybe, the corpus.
+
+        Split out of _shock_sack_chance for complexity. Moved verbatim,
+        including every comment below; the self.rng draw at the bottom stays
+        exactly where _shocks always made it.
+        """
+        rng = self.rng
+        # SAY WHAT IT TOOK FROM YOU. This printed "a site is
+        # sacked" and nothing else while removing 62% of a
+        # weird-play tester's money, restarting every project they
+        # had and cutting their people nearly in half - and they
+        # owned no sites at all. The plague family was taught to
+        # report the harm it actually did; this one was not, and a
+        # bare event line against an unexplained fall in capital is
+        # how a player stops trusting the ledger.
+        _cap0 = max(0.0, self.household.capital)
+        # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS.
+        # A player watched the event announce "92.7 of your
+        # people gone" and then read `state`'s employees_total -
+        # the headcount screen actually shows - sitting exactly
+        # where it was. This branch reduced artisans, scholars
+        # and directors_extra and left self.household.employees (hired
+        # smiths, scribes, masons - for a developed household,
+        # most of its people) completely untouched, while the
+        # plague family right above DOES reduce employees (see
+        # its own `for t in self.household.employees` loop). A sack is not
+        # gentler to hired staff than a plague; the two hazards
+        # had simply drifted apart. _people0/_people_after now
+        # count the same population the announcement claims to
+        # describe and `state` actually renders.
+        _people0 = (self.household.artisans + self.household.scholars
+                    + sum(self.household.employees.values()))
+        _act0 = len(self.household.active)
+        self.lose_capital(self.SACK_CAPITAL_LOSS)
+        self.household.artisans *= self.SACK_STAFF_RETENTION; self.household.scholars *= self.SACK_STAFF_RETENTION
+        for trade in list(self.household.employees):
+            self.household.employees[trade] *= self.SACK_STAFF_RETENTION
+        self.household.directors_extra *= self.SACK_DIRECTORS_RETENTION
+        for node_id in sorted(self.household.active):
+            self.household.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
+            self.household.active[node_id]["yrs"] = 0.0
+        _people_after = (self.household.artisans + self.household.scholars
+                         + sum(self.household.employees.values()))
+        _took = []
+        if _cap0 - max(0.0, self.household.capital) > 0.5:
+            _took.append("%s taken"
+                         % "{:,.0f}".format(_cap0 - max(0.0, self.household.capital)))
+        if _people0 - _people_after > 0.05:
+            _took.append("%.1f of your people gone"
+                         % (_people0 - _people_after))
+        if _act0:
+            _took.append("%d project%s back to the beginning"
+                         % (_act0, "" if _act0 == 1 else "s"))
+        self.household.log.append((yr, "%s: a site is sacked - %s"
+                         % (hazard.get("name", "crisis"),
+                            ", ".join(_took)
+                            or "you had nothing it could take")))
+        # Sim.corpus_hedge (core.py) is the one place this is
+        # decided, and `risk` calls the same method - see its
+        # own comment for why this used to quote `running()`
+        # and tell a player, in `risk`, that they had a hedge
+        # `running()` said had already lapsed.
+        corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
+        if rng.random() < corpus_loss_probability:
+            self._sack_corpus_loss(yr, frac, _hedge_before)
+
+    def _sack_corpus_loss(self, yr, frac, _hedge_before):
+        """The corpus lost to a sack: which technologies, and what it does to
+        the goal road.
+
+        Split out of _sack_site for complexity. Moved verbatim, including
+        every comment below; the self.rng.sample() draw stays exactly where
+        _shocks always made it, right after the corpus_loss_probability roll
+        in _sack_site.
+        """
+        rng = self.rng
+        # sorted() matters: self.household.done is a SET and iterates in an
+        # order that depends on PYTHONHASHSEED, so feeding it
+        # unsorted to rng.sample made the same --seed give a
+        # different answer every invocation.
+        # Never the society's own inheritance: you can lose what
+        # YOU built, not what the civilization has always known.
+        # Nor corpus_dispersed: its whole definition is that
+        # copies exist in other people's hands, beyond this
+        # one site - a sack here cannot reach a copy sitting
+        # in a library three provinces away. corpus_written,
+        # one set of books in one place, stays losable; only
+        # dispersal is out of a single raid's reach. This is
+        # about a SACK specifically - mothballing or
+        # abandoning the corpus yourself is a different
+        # mechanism and still applies.
+        losable = sorted(node_id for node_id in self.household.done
+                         if node_id not in self.household.granted
+                         and node_id != "corpus_dispersed")
+        if losable:
+            drop = rng.sample(losable, max(1, int(len(losable) * frac)))
+            _lost = self.household.forgotten
+            for node_id in drop:
+                self.household.operating.discard(node_id)
+                self.household.done.discard(node_id)
+                self.household.mothballed.discard(node_id)
+                # KEPT, so `risk` can list what you have to
+                # build again. Otherwise the only record is a
+                # log line a century back.
+                _lost[node_id] = yr
+            self._done_changed()
+            self._log_corpus_loss(yr, drop, _hedge_before)
+
+    def _log_corpus_loss(self, yr, drop, _hedge_before):
+        """Name what a sack's corpus loss took, and what it does to the goal
+        road.
+
+        Split out of _sack_corpus_loss for complexity. Moved verbatim,
+        including every comment below. Makes no self.rng draws: `drop` is
+        already decided by the time this runs.
+        """
+        # NAME THEM. A play tester discovered a loss decades
+        # later, when `start X` said "missing prerequisites:
+        # <thing you built two hundred years ago>", and then
+        # rebuilt the chain one refusal at a time. A bare
+        # count is not a report of what happened to you.
+        _named = sorted(drop)
+        _corpus = [tech_id for tech_id in ("corpus_written",
+                               "corpus_dispersed")
+                   if tech_id in drop]
+        # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON.
+        # Naming the lost ids was the first fix; a Rome
+        # player with a real goal set still found out the
+        # road had gotten longer only by re-running `path`
+        # afterwards and comparing it by hand to what they
+        # remembered - a sack that silently undid a third
+        # of their critical-path progress in one turn.
+        # Said here, once, in the same breath as the loss
+        # itself, using the same goal-closure `never_
+        # abandon` already computes and caches.
+        _on_road = 0
+        _goal = getattr(self, "goal", None)
+        if _goal and _goal in self.nodes:
+            try:
+                _gc = getattr(self, "_goal_closure", None)
+                if _gc is None:
+                    _gc = self._goal_closure = closure(
+                        self.nodes, _goal)
+                _on_road = sum(1 for tech_id in drop if tech_id in _gc)
+            except Exception:
+                _on_road = 0
+        self.household.log.append((yr, "KNOWLEDGE LOST: %d technolog%s "
+                             "forgotten - %s%s%s%s"
+            % (len(drop), "y" if len(drop) == 1 else "ies",
+               ", ".join(_named[:8])
+               + (" and %d more" % (len(_named) - 8)
+                  if len(_named) > 8 else ""),
+               # BEFORE the loss, not after: `drop` has
+               # already come out of `self.household.done` by this
+               # point, so re-asking `self.household.done` here
+               # could tell a player the corpus was
+               # "never printed and dispersed" in the
+               # same sentence that says the corpus
+               # itself just went - both about the same
+               # sacking. _hedge_before was read when
+               # the sack started, before anything was
+               # taken.
+               "" if _hedge_before == "corpus_dispersed"
+               else " (the corpus was never printed and "
+                    "dispersed)",
+               ". THE CORPUS ITSELF WENT (%s): your hedge "
+               "against this is gone and 'risk' will say so "
+               "- build it again first" % ", ".join(_corpus)
+               if _corpus else "",
+               (". %d of these stood on the road to your "
+                "goal: the route is longer than it was a "
+                "moment ago - 'path' will show the rebuilt "
+                "shape of it" % _on_road)
+               if _on_road else "")))
+
+    def _shock_output_factor(self, hazard, yr):
+        """The output_factor branch of _shocks: wars and the administrative
+        aftermath of one.
+
+        Split out of _shocks for complexity. Moved verbatim from the body of
+        the single _shocks function, including every comment below. Makes no
+        self.rng draws.
+        """
+        if "output_factor" in hazard:
+            relief, why = self.hazard_relief("output_factor")
+            # relief moves the floor back toward 1.0 rather than scaling the
+            # damage: self-sufficiency means less of your income was ever
+            # coming through the thing the war cut.
+            floor = 1.0 - (1.0 - hazard["output_factor"]) * relief
+            before = self.output_factor
+            self.output_factor = min(self.output_factor, floor)
+            # ONCE, AND THEN A REMINDER, not every year of a hundred-year
+            # war. output_factor recovers a little each step, so this line
+            # re-fired the moment the war pulled it back down - which is
+            # every single year. A weird-play tester read the same sentence
+            # about the Hundred Years War roughly eighty times and stopped
+            # reading the log, which is the real cost: a message repeated
+            # until it is noise has stopped being a message.
+            said = getattr(self, "_said_output", {})
+            key = hazard.get("name", "crisis")
+            if before > self.output_factor and yr - said.get(key, -99) >= 20:
+                said[key] = yr
+                self._said_output = said
+                # SAY WHAT HELD. A founder who armed the state before the
+                # war arrived measured protection 0.019 to 0.019 against
+                # one who never touched the military branch, and every
+                # other hazard message in this file already names its
+                # hedges - staff_loss says "would have been"; sack_chance
+                # says "comes to nothing (%s)". This one said nothing,
+                # which is indistinguishable from doing nothing.
+                self.household.log.append((yr, "%s: trade and output fall to %d%% of "
+                                     "normal%s"
+                                 % (key, self.output_factor * 100,
+                                    " (your own strength holds off worse: %s)"
+                                    % "; ".join(why[:3]) if why else "")))
+
+    def _shock_real_erosion(self, hazard, yr):
+        """The real_erosion branch of _shocks: currency debasement.
+
+        Split out of _shocks for complexity. Moved verbatim from the body of
+        the single _shocks function, including every comment below. Makes no
+        self.rng draws.
+        """
+        if "real_erosion" in hazard:
+            relief, why = self.hazard_relief("real_erosion")
+            self.money_real *= (1 - hazard["real_erosion"])
+            bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
+            had = max(0.0, self.household.capital)
+            self.lose_capital(bite)
+            lost = had - max(0.0, self.household.capital)
+            if not getattr(self, "_said_debasement", 0) or yr - self._said_debasement >= 15:
+                self._said_debasement = yr
+                # SAY WHAT IT DID TO YOU, and say what it did NOT do. A
+                # break tester read "the coin is worth 99% less", checked
+                # `why horse_collar` in 107, 207 and 307 AD, found the
+                # quote identical to the denarius, and filed it as the
+                # debasement doing nothing. It is doing something: every
+                # price in this game is what a thing really costs in
+                # labour and materials, which debasement does not change.
+                # What it destroys is the money you are HOLDING. Quoting
+                # the bite in coin makes that the visible half.
+                self.household.log.append((yr, "%s: the coin is worth %d%% less than it "
+                                     "was%s. Quoted costs are what a thing "
+                                     "really takes to make, so they do not "
+                                     "move; what debases is the money in "
+                                     "your chest, and this year it took %s%s"
+                                 % (hazard.get("name", "debasement"),
+                                    (1 - self.money_real) * 100,
+                                    "; you feel less of it (%s)" % "; ".join(why)
+                                    if why else "",
+                                    "{:,.0f}".format(lost)
+                                    if lost > 0.5 else "nothing, because you "
+                                    "were holding none",
+                                    " denarii" if lost > 0.5 else "")))
+
+    def _shock_values(self, hazard, yr, hazard_start, hazard_end):
+        """The values branch of _shocks: gradual shifts in what the society
+        believes, spread evenly across the hazard's own window.
+
+        Split out of _shocks for complexity. Moved verbatim from the body of
+        the single _shocks function, including every comment below. Makes no
+        self.rng draws.
+        """
+        if "values" in hazard:
+            # A hazard can kill your people, burn a site, or make you
+            # poorer, and that used to be the whole vocabulary. Norse
+            # Christianisation is none of those: its real effect is on
+            # what the society BELIEVES, which is exactly what
+            # alarm_of() and update_protection() read out of self.w. This
+            # is apply_tech_effects' mechanism (see there), aimed at a
+            # hazard instead of a technology, with one difference: a
+            # technology is a single event and logs once, but a hazard
+            # like this runs for over a century, so the shift is spread
+            # evenly across every year of `years` rather than dumped on
+            # the first one. Applying 1/Nth of the total delta every
+            # year, for N years, is what "gradual" means here; a single
+            # jump on the first year would be exactly the fake
+            # instantaneous conversion this mechanism exists to avoid.
+            span = max(1, int(hazard_end) - int(hazard_start) + 1)
+            changed = {}
+            for field, total_delta in hazard["values"].items():
+                if field.startswith("_") or not isinstance(total_delta, (int, float)):
+                    continue
+                if field not in self.w:
+                    continue
+                before = self.w[field]
+                self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
+                if abs(self.w[field] - before) > 1e-9:
+                    changed[field] = self.w[field]
+            # VISIBLE WHILE IT HAPPENS, not only in hindsight: a tester
+            # should be able to watch the society turning against them
+            # year by year, not discover it as a lump sum in the future.
+            # A hundred-odd years of this hazard would be a hundred-odd
+            # near-identical log lines if this fired every year, so it
+            # is throttled to the first year, the last, and every tenth
+            # in between -- the same spirit as the debasement throttle
+            # just above, which exists for the same reason.
+            if changed and (yr == hazard_start or yr == hazard_end or (yr - hazard_start) % 10 == 0):
+                self.household.log.append((yr, "%s: the society's values are shifting (%s)"
+                                 % (hazard.get("name", "hazard"),
+                                    ", ".join("%s now %.2f" % (field, value)
+                                              for field, value in sorted(changed.items())))))
+
 
     PATRON_DEATH_ANNUAL_CHANCE = declare(
         "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="temporary_heuristic",
