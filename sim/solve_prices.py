@@ -37,19 +37,83 @@ craft. Every wage is expressed as a ratio against `labourer`'s rate, so
 `wage_of("labourer") == 1.0` by construction and every price this script
 prints is "how many hours of unskilled labour", never denarii.
 
-RENT_IS_ZERO. Extracted materials (ore at the pit head, timber in the forest,
-salt in the pan) have no cost of production - nature made them, nobody's
-labour did - so their price should be their labour cost plus a RENT on the
-deposit or field, set by the quality of the worst source still worth working
-(the extensive margin). That margin needs geography (competing sites of
-different quality) and demand (something bidding for the marginal one), and
-this branch has neither: `data/production/` is a flat recipe list with no
-notion of "this ore body" versus "that poorer one". So this round sets
-`rent_per_unit(material) = 0.0` for every extracted material, unconditionally,
-and says so here rather than burying it in a comment nobody reads. Zero rent
-is not "no answer" - it is the honest lower bound: whatever the true price is,
-it is at least the labour it takes, and this is that floor. Tag: HEURISTIC,
-not a physical fact, tracked against Milestone 1's provenance ledger.
+RENT ON EXTRACTED MATERIALS (Complaints/32, fixed this round for six of
+seven metals). Extracted materials (ore at the pit head, timber in the
+forest, salt in the pan) have no cost of production - nature made them,
+nobody's labour did - so their price should be their labour cost plus a
+RENT on the deposit or field, set by the quality of the worst source still
+worth working (the extensive margin). That margin needs geography
+(competing sites of different quality) and demand (something bidding for
+the marginal one). `data/production/` still cannot supply either - it is a
+flat recipe list with no notion of "this ore body" versus "that poorer
+one" - but `sim/world/deposits.py` now can: it carries a named-deposit
+supply curve (ore grade, hardness, depth, sinking cost) for iron, copper,
+tin, lead, silver, gold and mercury, and finds the marginal deposit for a
+given quantity demanded exactly the way Ricardian rent theory says to.
+This file now uses it for the six of those seven metals that
+`data/production/` represents as an EXTRACTED ore material
+(`iron_ore_kg`, `copper_ore_kg`, `cassiterite_kg`, `galena_kg`,
+`silver_ore_kg`, `cinnabar_kg` - see RENT_BEARING_ORE_MATERIALS below).
+Gold is the exception: `gold_kg` folds placer extraction and mercury
+amalgamation into one recipe with no separate `extracted_from` ore stage
+of its own (see WHAT THIS DOES NOT REACH below), so it is left at zero
+rent, unchanged, rather than forced into a mechanism the data does not
+carry for it.
+
+THE DEMAND-DETERMINES-THE-MARGIN LOOP, AND HOW IT WAS ACTUALLY CLOSED.
+Ricardian rent is circular by construction: which deposit is marginal
+depends on how much is demanded, and (in a fully closed model) how much is
+demanded depends on the price that same margin sets. This project has no
+demand system yet (`sim/world/demand.py` prices HOUSEHOLD demand, not a
+metal market's quantity response to its own price), so the loop is NOT
+closed here - it is cut, deliberately and visibly, at the same place
+`sim/world/deposits.py`'s own docstring already cuts it: quantity demanded
+is fixed at `data/world/resources.json`'s `empire_output_100ad` figure for
+each metal, a real historical OUTPUT level (an initial condition, per
+CLAUDE.md 3.1) rather than a quantity derived from the price this file
+computes. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - the day a real supply-
+and-demand system exists for these metals, `rent_hours_per_kg_by_ore_
+material` is the one function that changes, and everything downstream of
+it (the rent term in `recipe_cost_and_allocation`, choice of technique
+between the ore-route and byproduct-route for silver, and so on) is
+already wired to take whatever number it produces.
+
+HOW THE PER-KG-OF-METAL RENT BECOMES A PER-KG-OF-ORE PRICE, AND THE
+APPROXIMATION THIS INTRODUCES. `sim/world/deposits.py` prices a metal per
+kilogram of CONTAINED METAL raised, pre-smelting; `data/production/` prices
+its ore materials per kilogram of ORE (rock or gravel), and lets the
+smelting recipe that consumes the ore state its OWN, separate, generic
+ore-to-metal ratio (`copper_kg` assumes 50 kg ore/kg metal; no particular
+named deposit in `deposits.json` need actually run at that grade). Folding
+a per-kg-metal rent into a per-kg-ore price therefore needs a ratio to
+convert with, and this file uses each metal's DOMINANT smelting recipe's
+own ratio for that conversion (RENT_BEARING_ORE_MATERIALS names it), which
+makes the rent embedded in THAT recipe's own final price exactly right by
+construction (see `rent_hours_per_kg_by_ore_material`'s own docstring for
+the algebra) but is only APPROXIMATE for any OTHER recipe that consumes
+the same ore at a different ratio: `iron_ore_kg` feeds both `pig_iron_kg`
+(2.2 t ore/t metal, the ratio used here) and `iron_bloom_kg` (4.0 t
+ore/t metal, the bloomery route) - `iron_bloom_kg`'s own share of iron's
+rent comes out about 1.8x too large as a result. `galena_kg` has the
+opposite, harmless case: it also feeds `bismuth_kg` and `selenium_kg` at
+enormously higher ore-per-unit ratios, and those materials picking up a
+proportionally large share of lead's rent is the CORRECT answer (a trace
+byproduct that needs three million kg of galena per kg recovered should
+carry three million kg worth of that galena's rent), not an artifact.
+Tag: TEMPORARY HEURISTIC (CLAUDE.md 3.4) for the `iron_bloom_kg` case
+specifically; fixing it needs `data/production/` to record the actual
+deposit or grade each recipe draws on, which is out of this file's scope
+and out of this task's ownership (`data/production/` is owned elsewhere
+right now).
+
+WHAT THIS DOES NOT REACH. Every OTHER extracted material - forest timber,
+quarried stone, salt, gold's placer-and-amalgamation step, and every metal
+`sim/world/deposits.py` has no named-deposit list for - still prices at
+exactly zero rent, unconditionally, exactly as before. Zero rent there is
+still not "no answer" - it is the same honest lower bound this section
+used to claim for everything: whatever the true price is, it is at least
+the labour it takes. Tag: HEURISTIC, not a physical fact, tracked against
+Milestone 1's provenance ledger.
 
 ENERGY IS NOW PRICED, AS THREE MARKETS - THERMAL, MECHANICAL AND ELECTRICAL -
 CONNECTED BY CONVERSION RECIPES, NOT TWO MARKETS WITH ELECTRICITY GLUED TO
@@ -328,9 +392,11 @@ so it is not lost.
 WHAT THIS DOES NOT MODEL, LABELLED RATHER THAN HIDDEN. The water-wheel
 technique assumes continuous year-round operation (a real wheel is idled by
 drought, ice and repair) and treats the SITE - the head and flow of a
-particular stretch of river - as free, under the same RENT_IS_ZERO rule as
-every other extracted material; a genuine site-scarcity rent, the way
-`sim/world/deposits.py` now derives one for ore, would raise this price at
+particular stretch of river - as free, under the same zero-rent rule that
+still covers every extracted material `sim/world/deposits.py` has no named-
+deposit list for (see RENT ON EXTRACTED MATERIALS above); a genuine
+site-scarcity rent, the way `sim/world/deposits.py` now derives one for the
+six ores it covers, would raise this price at
 large scale and is future work, not this round's. Ox-muscle mechanical work
 is omitted entirely: this file has no priced fodder material (only
 wheat_kg, a poor stand-in for a working animal's mostly-hay ration), and
@@ -533,9 +599,17 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+# REPO_ROOT, not just HERE, has to be on sys.path for `from sim.world import
+# deposits` below: `sim` is a namespace package rooted at the repository, the
+# same one sim/tests/__main__.py's own docstring explains, and this file is
+# normally launched as a bare script (`python3 sim/solve_prices.py`), which
+# only puts HERE (sim/ itself) on sys.path automatically.
+sys.path.insert(0, REPO_ROOT)
 import simulator                                # noqa: E402  (see sys.path above)
 from validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 
 NUMERAIRE_TRADE = "labourer"
 
@@ -843,7 +917,8 @@ def _has_external_anchor(entry, resolved_so_far):
     return False
 
 
-def _component_is_productive(component, production_entries, resolved_so_far):
+def _component_is_productive(component, production_entries, resolved_so_far,
+                             rent_hours_per_kg_by_material=None):
     """Test the productiveness condition (Hawkins-Simon: the input-output
     matrix restricted to `component` has spectral radius under 1) the same
     way the module docstring says the design should work it out - by
@@ -892,7 +967,8 @@ def _component_is_productive(component, production_entries, resolved_so_far):
         candidates_by_material = collections.defaultdict(list)
         for entry in relevant.values():
             result = recipe_cost_and_allocation(
-                "<cycle productiveness test>", entry, prices, dummy_wage_by_trade)
+                "<cycle productiveness test>", entry, prices, dummy_wage_by_trade,
+                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
             if result is None:
                 continue
             _total_cost, output_prices = result
@@ -928,7 +1004,8 @@ def _component_is_productive(component, production_entries, resolved_so_far):
         "at" % (", ".join(sorted(component)), MAXIMUM_ITERATIONS))
 
 
-def compute_resolvable_materials(production_entries, producers_of, diagnostics=None):
+def compute_resolvable_materials(production_entries, producers_of, diagnostics=None,
+                                 rent_hours_per_kg_by_material=None):
     """Which materials can, even in principle, bottom out in labour and rent.
 
     First, the acyclic part: a material is resolvable once it has at least
@@ -968,7 +1045,8 @@ def compute_resolvable_materials(production_entries, producers_of, diagnostics=N
         if component_set <= resolvable:
             continue  # settled already, e.g. absorbed by an earlier component
         is_productive, explanation = _component_is_productive(
-            component_set, production_entries, resolvable)
+            component_set, production_entries, resolvable,
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
         if is_productive:
             resolvable |= component_set
             # A newly-productive cycle can unlock ordinary, acyclic recipes
@@ -980,15 +1058,25 @@ def compute_resolvable_materials(production_entries, producers_of, diagnostics=N
     return resolvable
 
 
-def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
+def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
+                               rent_hours_per_kg_by_material=None):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
     or None if some input has no price yet (should not happen for a
     resolvable recipe fed resolvable inputs, but the caller does not assume
-    that - see the module docstring on why rent is fixed at zero, why
-    `thermal_mj`/`mechanical_mj` are priced through the energy market in
+    that - see the module docstring on why most extracted materials still
+    price at zero rent, why six ores no longer do, why `thermal_mj`/
+    `mechanical_mj` are priced through the energy market in
     data/production/70_energy.json, and why `energy_mj` still is not).
+
+    `rent_hours_per_kg_by_material` is {material_key: hours of rent per kg
+    of that material's OWN output} - see RENT ON EXTRACTED MATERIALS in the
+    module docstring and `rent_hours_per_kg_by_ore_material` below for how
+    it is built. Omitted or None, every material's rent is zero, exactly
+    the old RENT_IS_ZERO behaviour; this is the default so that the cycle-
+    productiveness test and any other caller that has no opinion about rent
+    is not forced to pass an empty dict everywhere.
 
     The split is net-realisable-value allocation: each output's share of the
     batch's total cost is its own current value (quantity times current
@@ -1034,10 +1122,16 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
     for trade, hours_per_batch in labour_hours.items():
         labour_cost_hours += hours_per_batch * wage_by_trade[trade]
 
-    # RENT_IS_ZERO - see the module docstring. Written out as a term, rather
-    # than simply left out of the sum, so that the day rent stops being zero
-    # this is the one line that changes.
-    rent_hours = 0.0
+    # RENT (see RENT ON EXTRACTED MATERIALS in the module docstring). A
+    # material not named in `rent_hours_per_kg_by_material` - which is
+    # everything except the six ores sim/world/deposits.py covers - still
+    # prices at exactly 0.0 rent, the old RENT_IS_ZERO answer. Summed over
+    # every output rather than assumed single-output, so a hypothetical
+    # future joint-output ore entry would be charged correctly on each of
+    # its outputs rather than silently on only one.
+    rent_by_kg = rent_hours_per_kg_by_material or {}
+    rent_hours = sum(output_quantity * rent_by_kg.get(output_material, 0.0)
+                     for output_material, output_quantity in outputs.items())
 
     capital_cost_hours = 0.0
     for capital_good in (entry.get("capital") or []):
@@ -1096,9 +1190,141 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade):
     return total_process_cost_hours, output_prices
 
 
+# {ore_material_key: (metal_name_in_deposits_METALS, (candidate_recipe_id,
+# ...))} - see RENT ON EXTRACTED MATERIALS in the module docstring for what
+# this table is, why gold is not in it (gold_kg has no extracted_from ore
+# stage of its own for rent to attach to), and why the "dominant" recipe
+# matters (it is the one whose own ore-to-metal ratio is used to convert a
+# per-kg-of-metal rent into a per-kg-of-ore price, and the one that ratio
+# is EXACT for - see rent_hours_per_kg_by_ore_material's own docstring).
+# copper, tin, silver and mercury each have exactly one recipe that
+# consumes their ore, so there is only one candidate for them. Iron has
+# two - pig_iron_kg (blast furnace) and iron_bloom_kg (direct bloomery) -
+# at different ore-to-metal ratios, and which of them an era can even RUN
+# differs: `--civ rome_100ad` gates pig_iron_kg out entirely (blast_furnace
+# is not a Roman technology) while leaving iron_bloom_kg available, so a
+# single fixed recipe id here would silently leave iron at zero rent for
+# every Roman-era gated solve - exactly the scenario this task's own VERIFY
+# step runs. The tuple is tried in order and the first candidate present in
+# THIS solve's (possibly gated) production_entries is used, so an ungated
+# solve gets the blast-furnace ratio and a Roman-gated one falls back to
+# the bloomery ratio - both real recipes, never an invented one.
+RENT_BEARING_ORE_MATERIALS = {
+    "iron_ore_kg": ("iron", ("pig_iron_kg", "iron_bloom_kg")),
+    "copper_ore_kg": ("copper", ("copper_kg",)),
+    "cassiterite_kg": ("tin", ("tin_kg",)),
+    "galena_kg": ("lead", ("lead_kg",)),
+    "silver_ore_kg": ("silver", ("silver_kg",)),
+    "cinnabar_kg": ("mercury", ("mercury_kg",)),
+}
+
+
+def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
+    """{ore_material_key: hours of rent per kg of that ore's own output},
+    for every metal in RENT_BEARING_ORE_MATERIALS whose ore and dominant
+    smelting recipe both survive this era's gate - see RENT ON EXTRACTED
+    MATERIALS in the module docstring for the mechanism this implements and
+    why it is only approximate for a metal with more than one ore-consuming
+    recipe.
+
+    THE ALGEBRA. `sim/world/deposits.py`'s `find_marginal_deposit` gives
+    `price_at_margin_labour_hours_per_kg` - the Ricardian, rent-inclusive
+    price of one kilogram of CONTAINED METAL, at the fixed quantity demanded
+    this function reads from `data/world/resources.json`'s own
+    `empire_output_100ad` (see the module docstring's own TEMPORARY
+    HEURISTIC paragraph on why that quantity is fixed rather than derived
+    from price). Call that `metal_price`.
+
+    The dominant recipe's own `inputs[ore] / outputs[metal]` ratio
+    (`ore_per_metal`, kg of ore per kg of metal) is what turns a kilogram of
+    metal into a kilogram of ore in `data/production/`'s own accounting.
+    The ore's own recipe carries no inputs, so its RENT-FREE price
+    (`ore_base_price`, labour only, exactly what this file used to compute)
+    is fixed and does not depend on the solve's iteration at all - this
+    function is therefore called once, before the iteration starts, not
+    once per round.
+
+    Setting `existing_extraction_proxy = ore_base_price * ore_per_metal`
+    (what the dominant recipe already implies a kilogram of metal's
+    extraction costs, with no rent), the rent this function attributes to
+    the metal is `max(0, metal_price - existing_extraction_proxy)` - the
+    Ricardian gap between the marginal deposit's true price and what the
+    zero-rent recipe already charges - and dividing that back by
+    `ore_per_metal` gives `rent_per_kg_ore`, the number this function
+    returns for that ore. Added onto `ore_base_price` inside
+    `recipe_cost_and_allocation` and multiplied back through the dominant
+    recipe's own `ore_per_metal`, it reproduces `metal_price` on that
+    recipe's output EXACTLY (the division and the later multiplication use
+    the same ratio); every OTHER recipe that consumes the same ore at a
+    DIFFERENT ratio gets an approximation instead, by design - see the
+    module docstring.
+
+    A metal whose marginal deposit is cheap enough that the existing
+    zero-rent recipe already prices above it (which can happen: the two
+    numbers come from unrelated sources, `data/production/`'s own generic
+    grade assumption and `sim/world/deposits.py`'s specific named
+    deposits) gets exactly 0.0 rent here, not a negative one - rent is a
+    surplus over cost of production, never a discount below it.
+    """
+    with open(deposits.RESOURCES_FILE) as handle:
+        resources_json = json.load(handle)
+
+    rent_by_ore_material = {}
+    for ore_material, (metal, candidate_recipe_ids) in RENT_BEARING_ORE_MATERIALS.items():
+        ore_entry = production_entries.get(ore_material)
+        if ore_entry is None:
+            # Gated out of this era (--civ), or (should not happen for a
+            # base material the tree already validates) simply absent -
+            # either way there is nothing to attach a rent to, so this ore
+            # keeps the RENT_IS_ZERO default rather than a guess.
+            continue
+        dominant_entry = next(
+            (production_entries[recipe_id] for recipe_id in candidate_recipe_ids
+             if recipe_id in production_entries),
+            None)
+        if dominant_entry is None:
+            # Every candidate recipe is gated out of this era too - iron
+            # under an ungated future-tech solve missing BOTH blast furnace
+            # and bloomery would land here, which should not happen for
+            # this project's own civilizations but is handled the same way
+            # as any other missing recipe: zero rent, not a guess.
+            continue
+        dominant_inputs = dominant_entry.get("inputs") or {}
+        dominant_outputs = dominant_entry.get("outputs") or {}
+        if ore_material not in dominant_inputs or not dominant_outputs:
+            continue
+        ore_per_metal = dominant_inputs[ore_material] / max(dominant_outputs.values())
+        if ore_per_metal <= 0:
+            continue
+
+        ore_outputs = ore_entry.get("outputs") or {}
+        if ore_material not in ore_outputs:
+            continue
+        ore_output_quantity = ore_outputs[ore_material]
+        base_cost = recipe_cost_and_allocation(ore_material, ore_entry, {}, wage_by_trade)
+        if base_cost is None:
+            continue
+        ore_base_total_hours, _ = base_cost
+        ore_base_price_per_kg = ore_base_total_hours / ore_output_quantity
+        existing_extraction_proxy_per_kg_metal = ore_base_price_per_kg * ore_per_metal
+
+        deposits_for_metal = deposits.load_deposits(metal)
+        quantity_demanded_tonnes_per_year = (
+            resources_json["empire_output_100ad"][metal]["t_per_yr"])
+        outcome = deposits.find_marginal_deposit(
+            deposits_for_metal, quantity_demanded_tonnes_per_year)
+        metal_price_per_kg = outcome.price_at_margin_labour_hours_per_kg
+
+        rent_per_kg_metal = max(
+            0.0, metal_price_per_kg - existing_extraction_proxy_per_kg_metal)
+        rent_by_ore_material[ore_material] = rent_per_kg_metal / ore_per_metal
+
+    return rent_by_ore_material
+
+
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
-         tolerance=CONVERGENCE_TOLERANCE):
+         tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1126,7 +1352,9 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             outputs = entry.get("outputs") or {}
             if not outputs or not all(o in resolvable_materials for o in outputs):
                 continue
-            result = recipe_cost_and_allocation(recipe_id, entry, prices, wage_by_trade)
+            result = recipe_cost_and_allocation(
+                recipe_id, entry, prices, wage_by_trade,
+                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
             if result is None:
                 continue
             _total_cost, output_prices = result
@@ -1158,7 +1386,8 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
 
 def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_material,
-                                          prices, wage_by_trade, share_threshold=0.5):
+                                          prices, wage_by_trade, share_threshold=0.5,
+                                          rent_hours_per_kg_by_material=None):
     """{material: value_share} for every material whose CONVERGED, CHOSEN
     recipe is a joint-production recipe in which this material holds under
     `share_threshold` of the batch's value.
@@ -1175,7 +1404,9 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
         outputs = entry.get("outputs") or {}
         if len(outputs) <= 1:
             continue
-        result = recipe_cost_and_allocation(recipe_id, entry, prices, wage_by_trade)
+        result = recipe_cost_and_allocation(
+            recipe_id, entry, prices, wage_by_trade,
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
         if result is None:
             continue
         total_process_cost, _output_prices = result
@@ -1196,7 +1427,8 @@ def format_hours(value):
 
 
 def print_why(material, production_entries, producers_of, resolvable_materials,
-              prices, wage_by_trade, chosen_recipe_by_material, indent=0, ancestors=()):
+              prices, wage_by_trade, chosen_recipe_by_material, indent=0, ancestors=(),
+              rent_hours_per_kg_by_material=None):
     """Recursive cost breakdown for one material: how much of its price is
     which input, which labour, which rent - recursing into every priced
     input in turn, with a cycle guard so a recipe graph that legitimately
@@ -1229,10 +1461,20 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
     header += "   (conf %s)" % conf
     print(header)
 
+    rent_by_kg = rent_hours_per_kg_by_material or {}
     if entry.get("extracted_from"):
-        print("%s  EXTRACTED from %s - no cost of production, only labour "
-              "and a rent this round fixed at 0.0 (see RENT_IS_ZERO)."
-              % (pad, entry["extracted_from"]))
+        material_rent_per_kg = rent_by_kg.get(material)
+        if material_rent_per_kg:
+            print("%s  EXTRACTED from %s - labour plus a Ricardian rent of "
+                  "%s h/kg from sim/world/deposits.py's marginal-deposit "
+                  "supply curve (see RENT ON EXTRACTED MATERIALS)."
+                  % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
+        else:
+            print("%s  EXTRACTED from %s - no cost of production, only "
+                  "labour and a rent this round fixed at 0.0 (see RENT ON "
+                  "EXTRACTED MATERIALS - this material is not one of the "
+                  "six ores sim/world/deposits.py covers)."
+                  % (pad, entry["extracted_from"]))
 
     candidates = sorted(set(producers_of.get(material, [])) - {recipe_id})
     if candidates:
@@ -1244,7 +1486,9 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
               "split across outputs by current value share" % (
               pad, ", ".join("%s (%.4g)" % (key, outputs[key]) for key in other_outputs)))
 
-    result = recipe_cost_and_allocation(recipe_id, entry, prices, wage_by_trade)
+    result = recipe_cost_and_allocation(
+        recipe_id, entry, prices, wage_by_trade,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
     total_process_cost, output_prices = result
     output_quantity = outputs[material]
     this_output_value_share = (output_prices[material] * output_quantity) / total_process_cost \
@@ -1274,6 +1518,14 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                          if total_process_cost > 0 else "n/a")
             print("%s    %-24s %10.4g h  @ %6.3fx unskilled wage = %10s h  (%s)" % (
                 pad, trade, hours_per_batch, wage, format_hours(cost), share_text))
+
+    rent_this_batch = sum(quantity * rent_by_kg.get(output_material, 0.0)
+                          for output_material, quantity in outputs.items())
+    if rent_this_batch > 0:
+        share_text = ("%.1f%% of process cost" % (100.0 * rent_this_batch / total_process_cost)
+                     if total_process_cost > 0 else "n/a")
+        print("%s  rent (Ricardian, see RENT ON EXTRACTED MATERIALS): "
+              "%10s h  (%s)" % (pad, format_hours(rent_this_batch), share_text))
 
     capital_goods = entry.get("capital") or []
     if capital_goods:
@@ -1350,7 +1602,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
         print()
         print_why(input_material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,
-                  indent=indent + 1, ancestors=next_ancestors)
+                  indent=indent + 1, ancestors=next_ancestors,
+                  rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
 
 
 def main(argv=None):
@@ -1415,9 +1668,19 @@ def main(argv=None):
 
     wage_by_trade = wage_ratios_by_trade(prices_json)
     producers_of = build_producers_index(production_entries)
+
+    # RENT ON EXTRACTED MATERIALS (see the module docstring). Computed once,
+    # against this solve's own (possibly era-gated) production_entries and
+    # wage table, before the iteration starts - see
+    # rent_hours_per_kg_by_ore_material's own docstring for why it does not
+    # need to be recomputed every round.
+    rent_hours_per_kg_by_material = rent_hours_per_kg_by_ore_material(
+        production_entries, wage_by_trade)
+
     unproductive_cycles = []
     resolvable_materials = compute_resolvable_materials(
-        production_entries, producers_of, diagnostics=unproductive_cycles)
+        production_entries, producers_of, diagnostics=unproductive_cycles,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
 
     tree_consumed = materials_the_tree_consumes(nodes)
     all_referenced_materials = set(tree_consumed) | set(producers_of)
@@ -1427,11 +1690,13 @@ def main(argv=None):
 
     prices, iterations_run, residual, chosen_recipe_by_material = solve(
         production_entries, producers_of, resolvable_materials, wage_by_trade,
-        damping=arguments.damping)
+        damping=arguments.damping,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
 
     converged = residual < CONVERGENCE_TOLERANCE
     unanchored_byproducts = minor_joint_byproducts_are_unanchored(
-        production_entries, chosen_recipe_by_material, prices, wage_by_trade)
+        production_entries, chosen_recipe_by_material, prices, wage_by_trade,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
 
     if arguments.why:
         material = arguments.why
@@ -1440,7 +1705,8 @@ def main(argv=None):
                   "data/production/ produces or references. Typo?" % material)
             return 1
         print_why(material, production_entries, producers_of, resolvable_materials,
-                  prices, wage_by_trade, chosen_recipe_by_material)
+                  prices, wage_by_trade, chosen_recipe_by_material,
+                  rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
         return 0
 
     if arguments.compare:
@@ -1482,12 +1748,27 @@ def main(argv=None):
 
     # Default: every material's price, in labour-hours.
     print("PRICE SOLVER - numeraire is one hour of unskilled (%r trade) "
-          "labour. Rent on extracted materials is fixed at 0.0 this round "
-          "(RENT_IS_ZERO); thermal_mj, mechanical_mj and electrical_mj are "
-          "all priced via the three-way energy market and its conversion "
-          "recipes in data/production/70_energy.json; energy_mj is still "
-          "not priced (see module docstring)." % NUMERAIRE_TRADE)
+          "labour. Rent on the ore of iron, copper, tin, lead, silver and "
+          "mercury is now priced from sim/world/deposits.py's Ricardian "
+          "marginal-deposit supply curve (see RENT ON EXTRACTED MATERIALS "
+          "in the module docstring); every other extracted material "
+          "(forest, quarry, salt pan, gold's placer-and-amalgamation step) "
+          "still prices at zero rent. thermal_mj, mechanical_mj and "
+          "electrical_mj are all priced via the three-way energy market "
+          "and its conversion recipes in data/production/70_energy.json; "
+          "energy_mj is still not priced (see module docstring)."
+          % NUMERAIRE_TRADE)
     print()
+    if rent_hours_per_kg_by_material:
+        print("RENT NOW PRICED for %d of the %d ore materials named in "
+              "RENT_BEARING_ORE_MATERIALS this era's gate leaves reachable "
+              "(the rest fell out of the gate along with every recipe that "
+              "would have consumed them):"
+              % (len(rent_hours_per_kg_by_material), len(RENT_BEARING_ORE_MATERIALS)))
+        for ore_material in sorted(rent_hours_per_kg_by_material):
+            print("   %-26s %10s h/kg rent"
+                  % (ore_material, format_hours(rent_hours_per_kg_by_material[ore_material])))
+        print()
     print("convergence: %s after %d iteration(s), final max relative change "
           "%.3e (tolerance %.0e, damping %.2f)"
           % ("CONVERGED" if converged else "DID NOT CONVERGE",

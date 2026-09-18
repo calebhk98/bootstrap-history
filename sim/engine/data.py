@@ -245,7 +245,37 @@ def load_civ(name="rome_100ad"):
     return civ
 
 
-def load():
+def load(use_solved_prices=False, held_technology_ids=()):
+    """Load the tree and `prices.json`, and derive each node's cost.
+
+    `use_solved_prices` is OFF BY DEFAULT and every existing call site calls
+    `load()` with no arguments, so this defaults to exactly the code path
+    this function has always run: `goods` built straight from
+    `prices.json`'s own `purchase_prices_denarii`, nothing imported, nothing
+    solved. That is deliberate - see `sim/engine/prices.py`'s module
+    docstring for the whole mechanism this is opting into and why it stays
+    off until something asks for it - and it is why the import of
+    `sim.engine.prices` below is INSIDE the `if`: a caller that never opts
+    in never even imports the solver, let alone runs it.
+
+    Passing `use_solved_prices=True` asks `sim.engine.prices` to solve a
+    price for every material it can under `held_technology_ids` (an
+    iterable of tech-tree node ids - typically a civilization's completed
+    node set) and substitutes those into `goods` in place of the book
+    figure, falling back to the book for anything the solver cannot yet
+    price. The RETURN SHAPE is unchanged either way - still the same
+    five-tuple every caller already unpacks - so this is a pure substitution
+    of where `goods`'s numbers came from, not a new thing callers have to
+    learn to read. Node costs (`_labour_cost`, `_material_cost`, `_total_cost`,
+    `_hired_hours`) are then derived from `goods` exactly as before, so a
+    solved material's price flows through to node cost the same way a book
+    one always has.
+
+    Use `goods_provenance()` below to see WHICH materials came from which
+    source, independent of whether this switch is on - that report is the
+    measurable burndown of `data/prices.json`, and it should be checkable
+    without having to first flip the engine's own behaviour.
+    """
     with open(TREE) as source:
         tree = json.load(source)
     with open(PRICES) as source:
@@ -255,12 +285,35 @@ def load():
              if not key.startswith("_")}
     goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
              if not key.startswith("_")}
+    if use_solved_prices:
+        from . import prices as price_solver
+        goods, _provenance = price_solver.priced_goods_table(
+            held_technology_ids, goods, prices)
     for node in nodes.values():
         node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
         node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())
         node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
         node["_hired_hours"] = sum(node["lab"].values())
     return tree, prices, nodes, wages, goods
+
+
+def goods_provenance(held_technology_ids=()):
+    """{material: "solved" | "book"} for every material `prices.json`
+    prices, from `sim.engine.prices.priced_goods_table` - the burndown that
+    measures "prices.json slowly deleted" one entry at a time (see that
+    module's docstring). This always asks the solver, regardless of
+    `load()`'s own `use_solved_prices` switch: the point is to be able to
+    measure the split BEFORE deciding to turn the engine's own prices over
+    to it, not only after.
+    """
+    with open(PRICES) as source:
+        prices = json.load(source)
+    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
+             if not key.startswith("_")}
+    from . import prices as price_solver
+    _goods, provenance = price_solver.priced_goods_table(
+        held_technology_ids, goods, prices)
+    return provenance
 
 
 # How many things rest on each node, for the whole tree at once.

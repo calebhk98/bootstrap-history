@@ -150,6 +150,21 @@ TOPICS = [
     # it, and the solve had no way to tell a Roman technique from a modern
     # one. See Complaints/39 for the run that exposed it.
     "price_solver_era_gate",
+    # Complaints/32's own follow-up: the solver printed RENT_IS_ZERO on
+    # every run although sim/world/deposits.py's Ricardian marginal-deposit
+    # model sat unimported next to it. Pins rent_hours_per_kg_by_ore_material
+    # (the demand-fixed-exogenously heuristic that closes the loop) and the
+    # iron blast-furnace/bloomery fallback --civ rome_100ad actually
+    # exercises.
+    "price_solver_rent",
+    # sim/engine/prices.py: the first wiring of the price solver into the
+    # engine - given a set of held technology ids, ask the solver for a
+    # price, cached on the gate nodes held rather than the full technology
+    # set, with data/prices.json as the fallback and a per-material
+    # provenance report ("solved" or "book") as the measurable burndown.
+    # Off by default; sim/engine/data.py's load() only calls it when
+    # use_solved_prices=True. See that module's own docstring.
+    "engine_prices",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
     # both directions, so the count can only move deliberately.
