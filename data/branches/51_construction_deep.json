@@ -3,12 +3,20 @@
   "id": "cn_quarrying_wedge",
   "name": "Stone quarrying with wedge",
   "cat": "stone",
-  "pre": ["cap_tol_1mm"],
-  "traits": ["labour_saving"],
-  "kb": "Drive wedges into natural fissures to break stone blocks",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_quarrying_wedge",
   "ph": 20,
-  "lab": {"labourer": 100},
-  "mat": {"mat_wrought_iron": 5},
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 5
+  },
   "cap": 100,
   "up": 10,
   "build_yrs": 0.1,
@@ -26,12 +34,22 @@
   "id": "cn_stone_saw",
   "name": "Stone saw with abrasive",
   "cat": "stone",
-  "pre": ["cap_tol_1mm"],
-  "traits": ["labour_saving"],
-  "kb": "Frame saw with abrasive sand to cut stone into dressed blocks",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_quarrying_wedge",
   "ph": 40,
-  "lab": {"carpenter": 60, "mason": 40},
-  "mat": {"mat_wrought_iron": 8, "mat_sand": 20},
+  "lab": {
+   "carpenter": 60,
+   "mason": 40
+  },
+  "mat": {
+   "mat_wrought_iron": 8,
+   "mat_sand": 20
+  },
   "cap": 150,
   "up": 20,
   "build_yrs": 0.2,
@@ -49,12 +67,23 @@
   "id": "cn_gang_saw",
   "name": "Gang saw for stone",
   "cat": "stone",
-  "pre": ["cn_stone_saw", "cap_power_water"],
-  "traits": ["labour_saving"],
-  "kb": "Multiple parallel blades driven by water power to cut stone simultaneously",
+  "pre": [
+   "cn_stone_saw",
+   "cap_power_water"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_quarrying_wedge",
   "ph": 80,
-  "lab": {"millwright": 120, "mason": 60},
-  "mat": {"mat_wrought_iron": 60, "mat_wood": 100},
+  "lab": {
+   "millwright": 120,
+   "mason": 60
+  },
+  "mat": {
+   "mat_wrought_iron": 60,
+   "mat_wood": 100
+  },
   "cap": 600,
   "up": 80,
   "build_yrs": 1,
@@ -72,12 +101,18 @@
   "id": "cn_stone_polish",
   "name": "Stone polishing and smoothing",
   "cat": "stone",
-  "pre": ["cap_tol_1mm"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
-  "kb": "Rubbing stone surfaces with abrasive blocks to achieve smoothness",
+  "kb": "87_construction.md#cn_quarrying_wedge",
   "ph": 30,
-  "lab": {"mason": 80},
-  "mat": {"mat_emery": 5},
+  "lab": {
+   "mason": 80
+  },
+  "mat": {
+   "mat_emery": 5
+  },
   "cap": 120,
   "up": 15,
   "build_yrs": 0.15,
@@ -95,12 +130,25 @@
   "id": "cn_mortar",
   "name": "Lime mortar",
   "cat": "binders",
-  "pre": ["mat_lime"],
-  "traits": [],
-  "kb": "Slaked lime mixed with sand, water and sometimes tallow or blood to bind masonry",
-  "ph": 40,
-  "lab": {"mason": 100},
-  "mat": {"mat_lime": 50, "mat_sand": 100},
+  "pre": [
+   "mat_lime",
+   "mil_artillery_piece"
+  ],
+  "traits": [
+   "military"
+  ],
+  "kb": "87_construction.md#cn_pozzolana_concrete",
+  "ph": 80.0,
+  "lab": {
+   "furnaceman": 80.0,
+   "mason": 100.0,
+   "smith": 70.0
+  },
+  "mat": {
+   "bronze_kg": 600.0,
+   "lime_kg": 50.0,
+   "sand_kg": 100.0
+  },
   "cap": 200,
   "up": 30,
   "build_yrs": 0.2,
@@ -112,18 +160,33 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Lime carbonates slowly in air over years. The binder is the product of a chemical reaction you cannot control, only manage with thickness and porosity."
+  "note": "Short barrel on fixed pivot fires at high angle over walls. Simplest gun, most robust, slowest. Chamber is conical. Low muzzle velocity means it does not need recoil control.",
+  "req_any": [
+   {
+    "group": "binder",
+    "options": {
+     "mat_gypsum": 0.4,
+     "mat_lime": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "cn_gypsum_plaster",
   "name": "Gypsum plaster finish",
   "cat": "binders",
-  "pre": ["mat_gypsum"],
+  "pre": [
+   "mat_gypsum"
+  ],
   "traits": [],
-  "kb": "Calcined gypsum mixed with water for quick-setting finish plaster",
+  "kb": "87_construction.md#cn_portland_cement",
   "ph": 35,
-  "lab": {"mason": 80},
-  "mat": {"mat_gypsum": 60},
+  "lab": {
+   "mason": 80
+  },
+  "mat": {
+   "mat_gypsum": 60
+  },
   "cap": 150,
   "up": 25,
   "build_yrs": 0.15,
@@ -141,12 +204,21 @@
   "id": "cn_pozzolana_concrete",
   "name": "Pozzolana hydraulic concrete",
   "cat": "binders",
-  "pre": ["mat_pozzolana", "mat_lime"],
+  "pre": [
+   "mat_pozzolana",
+   "mat_lime"
+  ],
   "traits": [],
   "kb": "Lime and volcanic ash create a binder that sets underwater",
   "ph": 50,
-  "lab": {"chemist": 40, "mason": 60},
-  "mat": {"mat_pozzolana": 80, "mat_lime": 30},
+  "lab": {
+   "chemist": 40,
+   "mason": 60
+  },
+  "mat": {
+   "mat_pozzolana": 80,
+   "mat_lime": 30
+  },
   "cap": 250,
   "up": 40,
   "build_yrs": 0.3,
@@ -164,12 +236,21 @@
   "id": "cn_terrazzo",
   "name": "Terrazzo floor finish",
   "cat": "finishes",
-  "pre": ["cn_mortar", "cn_stone_polish"],
+  "pre": [
+   "cn_mortar",
+   "cn_stone_polish"
+  ],
   "traits": [],
-  "kb": "Lime mortar with stone chips and marble dust, polished smooth",
+  "kb": "87_construction.md#cn_terrazzo",
   "ph": 60,
-  "lab": {"mason": 100},
-  "mat": {"mat_lime": 40, "mat_sand": 100, "mat_marble_dust": 50},
+  "lab": {
+   "mason": 100
+  },
+  "mat": {
+   "mat_lime": 40,
+   "mat_sand": 100,
+   "mat_marble_dust": 50
+  },
   "cap": 300,
   "up": 50,
   "build_yrs": 0.5,
@@ -187,12 +268,23 @@
   "id": "cn_artificial_stone",
   "name": "Artificial cast stone",
   "cat": "binders",
-  "pre": ["cn_mortar", "cap_tol_1mm"],
-  "traits": ["labour_saving"],
-  "kb": "Lime mortar cast in wooden moulds to create facing stones",
+  "pre": [
+   "cn_mortar",
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_portland_cement",
   "ph": 70,
-  "lab": {"mason": 80, "carpenter": 60},
-  "mat": {"mat_lime": 60, "mat_sand": 150},
+  "lab": {
+   "mason": 80,
+   "carpenter": 60
+  },
+  "mat": {
+   "mat_lime": 60,
+   "mat_sand": 150
+  },
   "cap": 400,
   "up": 60,
   "build_yrs": 0.6,
@@ -210,12 +302,20 @@
   "id": "cn_post_lintel",
   "name": "Post and lintel structure",
   "cat": "structural",
-  "pre": ["cap_tol_1mm"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
-  "kb": "Vertical posts with horizontal beam spanning between them",
+  "kb": "87_construction.md#cn_post_lintel",
   "ph": 25,
-  "lab": {"mason": 100, "carpenter": 50},
-  "mat": {"mat_wrought_iron": 10, "mat_wood": 200},
+  "lab": {
+   "mason": 100,
+   "carpenter": 50
+  },
+  "mat": {
+   "mat_wrought_iron": 10,
+   "mat_wood": 200
+  },
   "cap": 200,
   "up": 30,
   "build_yrs": 0.4,
@@ -233,12 +333,18 @@
   "id": "cn_true_arch",
   "name": "True arch in stone",
   "cat": "structural",
-  "pre": ["cap_tol_1mm"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
-  "kb": "Wedge-shaped stones arranged radially, transmitting load laterally to supports",
+  "kb": "87_construction.md#cn_true_arch",
   "ph": 35,
-  "lab": {"mason": 120},
-  "mat": {"mat_wrought_iron": 5},
+  "lab": {
+   "mason": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 5
+  },
   "cap": 300,
   "up": 50,
   "build_yrs": 0.5,
@@ -256,12 +362,18 @@
   "id": "cn_groin_vault",
   "name": "Groin vault in stone",
   "cat": "structural",
-  "pre": ["cn_true_arch"],
+  "pre": [
+   "cn_true_arch"
+  ],
   "traits": [],
-  "kb": "Two barrel vaults intersected at right angles, creating four curved triangular surfaces",
+  "kb": "87_construction.md#cn_true_arch",
   "ph": 100,
-  "lab": {"mason": 200},
-  "mat": {"mat_wrought_iron": 15},
+  "lab": {
+   "mason": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 15
+  },
   "cap": 800,
   "up": 120,
   "build_yrs": 2,
@@ -279,12 +391,18 @@
   "id": "cn_ribbed_vault",
   "name": "Ribbed vault in stone",
   "cat": "structural",
-  "pre": ["cn_groin_vault"],
+  "pre": [
+   "cn_groin_vault"
+  ],
   "traits": [],
-  "kb": "Arched stone ribs bear the load, with lighter web filling in between",
+  "kb": "87_construction.md#cn_true_arch",
   "ph": 120,
-  "lab": {"mason": 200},
-  "mat": {"mat_wrought_iron": 20},
+  "lab": {
+   "mason": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 20
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 2.5,
@@ -302,12 +420,18 @@
   "id": "cn_flying_buttress",
   "name": "Flying buttress in stone",
   "cat": "structural",
-  "pre": ["cn_true_arch"],
+  "pre": [
+   "cn_true_arch"
+  ],
   "traits": [],
-  "kb": "External arched support transferring vault load outboard to distant pier",
+  "kb": "87_construction.md#cn_true_arch",
   "ph": 90,
-  "lab": {"mason": 150},
-  "mat": {"mat_wrought_iron": 10},
+  "lab": {
+   "mason": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 10
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 1.5,
@@ -325,12 +449,18 @@
   "id": "cn_timber_truss",
   "name": "Timber roof truss",
   "cat": "structural",
-  "pre": ["cap_tol_1mm"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
-  "kb": "Triangulated timber frame with tension ties and compression struts",
+  "kb": "87_construction.md#cn_king_post",
   "ph": 45,
-  "lab": {"carpenter": 120},
-  "mat": {"mat_wood": 300},
+  "lab": {
+   "carpenter": 120
+  },
+  "mat": {
+   "mat_wood": 300
+  },
   "cap": 400,
   "up": 60,
   "build_yrs": 0.6,
@@ -348,12 +478,18 @@
   "id": "cn_king_post",
   "name": "King post roof truss",
   "cat": "structural",
-  "pre": ["cn_timber_truss"],
+  "pre": [
+   "cn_timber_truss"
+  ],
   "traits": [],
   "kb": "Single vertical post from apex to tie beam, supporting ridge under tension",
   "ph": 40,
-  "lab": {"carpenter": 100},
-  "mat": {"mat_wood": 250},
+  "lab": {
+   "carpenter": 100
+  },
+  "mat": {
+   "mat_wood": 250
+  },
   "cap": 350,
   "up": 50,
   "build_yrs": 0.5,
@@ -371,12 +507,22 @@
   "id": "cn_queen_post",
   "name": "Queen post roof truss",
   "cat": "structural",
-  "pre": ["cn_timber_truss"],
-  "traits": [],
+  "pre": [
+   "cn_timber_truss",
+   "civ_roof_king_post"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
   "kb": "Two posts set back from apex, with central strut and spreading collar tie",
-  "ph": 55,
-  "lab": {"carpenter": 130},
-  "mat": {"mat_wood": 280},
+  "ph": 100.0,
+  "lab": {
+   "carpenter": 130
+  },
+  "mat": {
+   "timber_m3": 2.5,
+   "wood_kg": 280.0
+  },
   "cap": 500,
   "up": 75,
   "build_yrs": 0.7,
@@ -388,18 +534,26 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Two posts working inward reduce the tie-beam span compared to king post, enabling longer roof slopes. Geometry is trickier to lay out."
+  "note": "Two vertical posts between tie and rafters, with a horizontal strut between them. Allows longer spans than king post without intermediate supports. The posts are in compression, the tie in tension, the struts shared the vertical load."
  },
  {
   "id": "cn_lattice_truss",
   "name": "Lattice truss for beams",
   "cat": "structural",
-  "pre": ["cn_timber_truss"],
-  "traits": ["labour_saving"],
-  "kb": "Timber ribs in criss-cross pattern to create deep beam with minimal weight",
+  "pre": [
+   "cn_timber_truss"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_pratt_truss",
   "ph": 70,
-  "lab": {"carpenter": 120},
-  "mat": {"mat_wood": 200},
+  "lab": {
+   "carpenter": 120
+  },
+  "mat": {
+   "mat_wood": 200
+  },
   "cap": 600,
   "up": 100,
   "build_yrs": 1,
@@ -417,12 +571,23 @@
   "id": "cn_warren_truss",
   "name": "Warren truss",
   "cat": "structural",
-  "pre": ["cn_lattice_truss", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Diagonal members at 45 degrees with no vertical struts, all triangles pointing same way",
+  "pre": [
+   "cn_lattice_truss",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_pratt_truss",
   "ph": 85,
-  "lab": {"carpenter": 100, "engineer": 60},
-  "mat": {"mat_wood": 220, "mat_wrought_iron": 20},
+  "lab": {
+   "carpenter": 100,
+   "engineer": 60
+  },
+  "mat": {
+   "mat_wood": 220,
+   "mat_wrought_iron": 20
+  },
   "cap": 800,
   "up": 150,
   "build_yrs": 1.2,
@@ -440,12 +605,22 @@
   "id": "cn_pratt_truss",
   "name": "Pratt truss",
   "cat": "structural",
-  "pre": ["cn_warren_truss"],
-  "traits": [],
-  "kb": "Diagonals slope inward from panel ends, verticals carry shear",
+  "pre": [
+   "cn_warren_truss"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_pratt_truss",
   "ph": 90,
-  "lab": {"carpenter": 110, "engineer": 70},
-  "mat": {"mat_wood": 230, "mat_wrought_iron": 25},
+  "lab": {
+   "carpenter": 110,
+   "engineer": 70
+  },
+  "mat": {
+   "mat_wood": 230,
+   "mat_wrought_iron": 25
+  },
   "cap": 900,
   "up": 160,
   "build_yrs": 1.3,
@@ -463,12 +638,21 @@
   "id": "cn_trussed_arch",
   "name": "Trussed arch",
   "cat": "structural",
-  "pre": ["cn_true_arch", "cn_timber_truss"],
+  "pre": [
+   "cn_true_arch",
+   "cn_timber_truss"
+  ],
   "traits": [],
-  "kb": "Arch ribs braced by interior timber trusses to prevent spreading",
+  "kb": "87_construction.md#cn_king_post",
   "ph": 100,
-  "lab": {"carpenter": 100, "mason": 80},
-  "mat": {"mat_wood": 250, "mat_wrought_iron": 15},
+  "lab": {
+   "carpenter": 100,
+   "mason": 80
+  },
+  "mat": {
+   "mat_wood": 250,
+   "mat_wrought_iron": 15
+  },
   "cap": 900,
   "up": 140,
   "build_yrs": 1.8,
@@ -486,12 +670,23 @@
   "id": "cn_space_frame",
   "name": "Space frame three-dimensional truss",
   "cat": "structural",
-  "pre": ["cn_warren_truss", "cap_tol_10um"],
-  "traits": ["labour_saving"],
-  "kb": "Pyramidal cells of tetrahedral trusses creating deep beam in three dimensions",
+  "pre": [
+   "cn_warren_truss",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_pratt_truss",
   "ph": 150,
-  "lab": {"carpenter": 80, "engineer": 100},
-  "mat": {"mat_wood": 300, "mat_wrought_iron": 60},
+  "lab": {
+   "carpenter": 80,
+   "engineer": 100
+  },
+  "mat": {
+   "mat_wood": 300,
+   "mat_wrought_iron": 60
+  },
   "cap": 2000,
   "up": 300,
   "build_yrs": 2,
@@ -509,12 +704,19 @@
   "id": "cn_iron_column",
   "name": "Cast iron column",
   "cat": "structural",
-  "pre": ["blast_furnace"],
+  "pre": [
+   "blast_furnace"
+  ],
   "traits": [],
-  "kb": "Hollow cast iron shaft for vertical load bearing",
+  "kb": "87_construction.md#cn_cast_iron_beam",
   "ph": 65,
-  "lab": {"smith": 80, "furnaceman": 60},
-  "mat": {"mat_cast_iron": 200},
+  "lab": {
+   "smith": 80,
+   "furnaceman": 60
+  },
+  "mat": {
+   "mat_cast_iron": 200
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 0.8,
@@ -532,12 +734,21 @@
   "id": "cn_cast_iron_beam",
   "name": "Cast iron beam",
   "cat": "structural",
-  "pre": ["cn_iron_column"],
-  "traits": [],
-  "kb": "I-shaped or hollow-section beam cast in one piece",
+  "pre": [
+   "cn_iron_column"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_cast_iron_beam",
   "ph": 80,
-  "lab": {"smith": 100, "furnaceman": 80},
-  "mat": {"mat_cast_iron": 250},
+  "lab": {
+   "smith": 100,
+   "furnaceman": 80
+  },
+  "mat": {
+   "mat_cast_iron": 250
+  },
   "cap": 900,
   "up": 150,
   "build_yrs": 1,
@@ -555,12 +766,19 @@
   "id": "cn_wrought_iron_girder",
   "name": "Wrought iron plate girder",
   "cat": "structural",
-  "pre": ["mat_wrought_iron"],
+  "pre": [
+   "mat_wrought_iron"
+  ],
   "traits": [],
-  "kb": "Flat plates riveted together to form deep I-shaped beam",
+  "kb": "87_construction.md#cn_wrought_iron_girder",
   "ph": 95,
-  "lab": {"smith": 120, "engineer": 60},
-  "mat": {"mat_wrought_iron": 300},
+  "lab": {
+   "smith": 120,
+   "engineer": 60
+  },
+  "mat": {
+   "mat_wrought_iron": 300
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 1.2,
@@ -572,18 +790,36 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Riveted plate girders are flexible, not stiff. Many rivets must hold against vibration and stress concentration at holes. Riveting skill is critical."
+  "note": "Riveted plate girders are flexible, not stiff. Many rivets must hold against vibration and stress concentration at holes. Riveting skill is critical.",
+  "req_any": [
+   {
+    "group": "structural",
+    "options": {
+     "mat_cast_iron": 0.35,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "cn_rolled_I_beam",
   "name": "Rolled iron or steel I beam",
   "cat": "structural",
-  "pre": ["bessemer_openhearth"],
-  "traits": ["labour_saving"],
-  "kb": "I-shaped section hot rolled from solid billet in one pass",
+  "pre": [
+   "bessemer_openhearth"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_wrought_iron_girder",
   "ph": 110,
-  "lab": {"furnaceman": 100, "engineer": 80},
-  "mat": {"mat_bulk_steel": 350},
+  "lab": {
+   "furnaceman": 100,
+   "engineer": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 350
+  },
   "cap": 1500,
   "up": 280,
   "build_yrs": 1.5,
@@ -601,12 +837,22 @@
   "id": "cn_plate_girder",
   "name": "Steel plate girder assembly",
   "cat": "structural",
-  "pre": ["mat_bulk_steel"],
-  "traits": [],
-  "kb": "Steel plates and angles welded or riveted into deep box girder",
+  "pre": [
+   "mat_bulk_steel",
+   "mfg_hot_riveting"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_wrought_iron_girder",
   "ph": 105,
-  "lab": {"smith": 140, "engineer": 90},
-  "mat": {"mat_bulk_steel": 380},
+  "lab": {
+   "smith": 140,
+   "engineer": 90
+  },
+  "mat": {
+   "mat_bulk_steel": 380
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 1.4,
@@ -618,18 +864,34 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Stiffness comes from geometric depth, not just material. Web must be braced to prevent buckling. Flanges carry bending, web carries shear."
+  "note": "Stiffness comes from geometric depth, not just material. Web must be braced to prevent buckling. Flanges carry bending, web carries shear.",
+  "req_any": [
+   {
+    "group": "structural",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.35,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "cn_riveted_connection",
   "name": "Riveted bolted connection",
   "cat": "connections",
-  "pre": ["mat_wrought_iron"],
+  "pre": [
+   "mat_wrought_iron"
+  ],
   "traits": [],
-  "kb": "Hot rivets upset through overlapping plates to create permanent joint",
+  "kb": "87_construction.md#cn_riveted_connection",
   "ph": 70,
-  "lab": {"smith": 120},
-  "mat": {"mat_wrought_iron": 40},
+  "lab": {
+   "smith": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 40
+  },
   "cap": 600,
   "up": 80,
   "build_yrs": 0.9,
@@ -641,18 +903,37 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Hot rivet is upset under the hammer, growing to fill the hole. Force comes from thermal contraction after cooling. Each rivet must be hand-hammered; no way to speed it up."
+  "note": "Hot rivet is upset under the hammer, growing to fill the hole. Force comes from thermal contraction after cooling. Each rivet must be hand-hammered; no way to speed it up.",
+  "req_any": [
+   {
+    "group": "rivet_material",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.2,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "cn_bolted_connection",
   "name": "Bolted connection with nut",
   "cat": "connections",
-  "pre": ["master_screw"],
-  "traits": ["labour_saving"],
-  "kb": "Threaded bolt through plates, tightened with wrench and nut",
+  "pre": [
+   "master_screw"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_riveted_connection",
   "ph": 85,
-  "lab": {"smith": 100, "engineer": 50},
-  "mat": {"mat_wrought_iron": 35},
+  "lab": {
+   "smith": 100,
+   "engineer": 50
+  },
+  "mat": {
+   "mat_wrought_iron": 35
+  },
   "cap": 800,
   "up": 120,
   "build_yrs": 1,
@@ -670,12 +951,22 @@
   "id": "cn_welded_connection",
   "name": "Electric arc welded joint",
   "cat": "connections",
-  "pre": ["arc_furnace_ferroalloys", "cap_power_electric"],
-  "traits": ["labour_saving"],
-  "kb": "Electric arc melts base steel and electrode, creating homogeneous joint",
+  "pre": [
+   "arc_furnace_ferroalloys",
+   "cap_power_electric"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_riveted_connection",
   "ph": 125,
-  "lab": {"smith": 100, "electrician": 80},
-  "mat": {"mat_bulk_steel": 60},
+  "lab": {
+   "smith": 100,
+   "electrician": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 60
+  },
   "cap": 1600,
   "up": 250,
   "build_yrs": 1.5,
@@ -693,12 +984,18 @@
   "id": "cn_gusset_plate",
   "name": "Gusset plate reinforcement",
   "cat": "connections",
-  "pre": ["cn_riveted_connection"],
+  "pre": [
+   "cn_riveted_connection"
+  ],
   "traits": [],
-  "kb": "Diagonal or triangular plates added at joints to carry shear",
+  "kb": "87_construction.md#cn_riveted_connection",
   "ph": 60,
-  "lab": {"smith": 90},
-  "mat": {"mat_wrought_iron": 50},
+  "lab": {
+   "smith": 90
+  },
+  "mat": {
+   "mat_wrought_iron": 50
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 0.8,
@@ -716,12 +1013,23 @@
   "id": "cn_steel_frame_skeleton",
   "name": "Steel frame skeleton building",
   "cat": "structural",
-  "pre": ["cn_rolled_I_beam", "cn_welded_connection"],
-  "traits": ["labour_saving"],
+  "pre": [
+   "cn_rolled_I_beam",
+   "cn_welded_connection"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
   "kb": "Multi-storey frame of rolled columns and beams, with non-structural walls",
   "ph": 180,
-  "lab": {"engineer": 120, "smith": 100, "carpenter": 80},
-  "mat": {"mat_bulk_steel": 800},
+  "lab": {
+   "engineer": 120,
+   "smith": 100,
+   "carpenter": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 800
+  },
   "cap": 3000,
   "up": 500,
   "build_yrs": 2.5,
@@ -739,12 +1047,25 @@
   "id": "cn_curtain_wall",
   "name": "Curtain wall non-structural facade",
   "cat": "envelope",
-  "pre": ["cn_steel_frame_skeleton"],
-  "traits": ["labour_saving"],
-  "kb": "Lightweight panel hung from floor slab, carrying no structural load",
-  "ph": 140,
-  "lab": {"carpenter": 100, "engineer": 70},
-  "mat": {"mat_bulk_steel": 150, "mat_glass_soda": 200},
+  "pre": [
+   "cn_steel_frame_skeleton",
+   "mat_glass_soda"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_curtain_wall",
+  "ph": 150.0,
+  "lab": {
+   "artisan": 400.0,
+   "carpenter": 100.0,
+   "engineer": 70.0
+  },
+  "mat": {
+   "glass_raw_kg": 100.0,
+   "iron_bar_kg": 60.0,
+   "steel_plate_kg": 150.0
+  },
   "cap": 2000,
   "up": 300,
   "build_yrs": 2,
@@ -756,18 +1077,27 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Panels are supported only at top, not at sills. Wind load is transmitted through fasteners to the frame. Sealing is critical; no redundancy if one panel fails."
+  "note": "Frames of iron or steel with glass or panels hung from the steel skeleton. The wall does not carry load; the frame does. Allows large glazed areas and flexibility. Every modern tall building uses this principle; it is inseparable from the steel frame."
  },
  {
   "id": "cn_cantilever",
   "name": "Cantilever beam or slab",
   "cat": "structural",
-  "pre": ["cn_rolled_I_beam", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Beam fixed at one end, projecting unsupported",
+  "pre": [
+   "cn_rolled_I_beam",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_post_lintel",
   "ph": 85,
-  "lab": {"engineer": 100},
-  "mat": {"mat_bulk_steel": 250},
+  "lab": {
+   "engineer": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 250
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 1.2,
@@ -785,12 +1115,21 @@
   "id": "cn_suspension_bridge",
   "name": "Suspension bridge system",
   "cat": "bridges",
-  "pre": ["cn_wire_cable_spinning"],
-  "traits": ["infrastructure"],
-  "kb": "Flexible cable hung from towers suspends deck via vertical hangers",
+  "pre": [
+   "cn_wire_cable_spinning"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_suspension_bridge",
   "ph": 200,
-  "lab": {"engineer": 150, "carpenter": 100},
-  "mat": {"mat_bulk_steel": 1000},
+  "lab": {
+   "engineer": 150,
+   "carpenter": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 1000
+  },
   "cap": 5000,
   "up": 800,
   "build_yrs": 3,
@@ -808,12 +1147,22 @@
   "id": "cn_wire_cable_spinning",
   "name": "Steel wire rope and spinning",
   "cat": "materials",
-  "pre": ["mat_bulk_steel"],
-  "traits": [],
-  "kb": "Twisted steel wires bundled into large-diameter rope under tension",
+  "pre": [
+   "mat_bulk_steel",
+   "mfg_wire_drawing"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_suspension_bridge",
   "ph": 110,
-  "lab": {"smith": 120, "engineer": 80},
-  "mat": {"mat_bulk_steel": 400},
+  "lab": {
+   "smith": 120,
+   "engineer": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 400
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 1.5,
@@ -825,18 +1174,36 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Twisting individual wires increases axial stiffness. Rotation of the bundle during spinning must be controlled, otherwise the rope twists itself apart."
+  "note": "Twisting individual wires increases axial stiffness. Rotation of the bundle during spinning must be controlled, otherwise the rope twists itself apart.",
+  "req_any": [
+   {
+    "group": "cable_material",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "cn_cable_anchorage",
   "name": "Cable anchorage block",
   "cat": "bridges",
-  "pre": ["cn_wire_cable_spinning"],
-  "traits": [],
-  "kb": "Massive concrete or steel block anchoring cable at tension, preventing pull-out",
+  "pre": [
+   "cn_wire_cable_spinning"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_suspension_bridge",
   "ph": 95,
-  "lab": {"engineer": 80, "mason": 100},
-  "mat": {"mat_concrete_reinforced": 500},
+  "lab": {
+   "engineer": 80,
+   "mason": 100
+  },
+  "mat": {
+   "mat_concrete_reinforced": 500
+  },
   "cap": 1800,
   "up": 350,
   "build_yrs": 2,
@@ -854,12 +1221,21 @@
   "id": "cn_stiffening_truss",
   "name": "Stiffening truss for deck",
   "cat": "bridges",
-  "pre": ["cn_warren_truss"],
-  "traits": [],
-  "kb": "Deep truss runs along deck, resisting wind and dynamic loads",
+  "pre": [
+   "cn_warren_truss"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_suspension_bridge",
   "ph": 100,
-  "lab": {"engineer": 90, "carpenter": 100},
-  "mat": {"mat_bulk_steel": 350},
+  "lab": {
+   "engineer": 90,
+   "carpenter": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 350
+  },
   "cap": 1600,
   "up": 300,
   "build_yrs": 1.8,
@@ -877,12 +1253,23 @@
   "id": "cn_box_girder",
   "name": "Box girder or tubular section",
   "cat": "structural",
-  "pre": ["cn_plate_girder"],
-  "traits": [],
-  "kb": "Closed hollow section with four sides, resisting torsion effectively",
-  "ph": 105,
-  "lab": {"engineer": 100, "smith": 90},
-  "mat": {"mat_bulk_steel": 300},
+  "pre": [
+   "cn_plate_girder",
+   "civ_neutral_axis",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_wrought_iron_girder",
+  "ph": 120.0,
+  "lab": {
+   "engineer": 250.0,
+   "smith": 90.0
+  },
+  "mat": {
+   "mat_bulk_steel": 300
+  },
   "cap": 1500,
   "up": 280,
   "build_yrs": 1.5,
@@ -894,18 +1281,30 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Box resists torsion in proportion to enclosed area. Open section (I beam) has no torsional stiffness. Welding the box closed is expensive but essential."
+  "note": "A hollow rectangular tube of steel or concrete. Material is placed far from the neutral axis (the walls), giving maximum rigidity with minimum weight. Bridges and long-span buildings use box girders. Torsional stiffness is also high; useful when spans are asymmetric."
  },
  {
   "id": "cn_arch_bridge_steel",
   "name": "Steel arch bridge",
   "cat": "bridges",
-  "pre": ["cn_rolled_I_beam"],
-  "traits": [],
+  "pre": [
+   "cn_rolled_I_beam",
+   "civ_arch_roman",
+   "civ_method_joints",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
   "kb": "Two-hinged or fixed arch of steel, carrying load in compression to abutments",
-  "ph": 130,
-  "lab": {"engineer": 110, "carpenter": 100},
-  "mat": {"mat_bulk_steel": 700},
+  "ph": 250.0,
+  "lab": {
+   "engineer": 110,
+   "carpenter": 100
+  },
+  "mat": {
+   "mat_bulk_steel": 700
+  },
   "cap": 2200,
   "up": 400,
   "build_yrs": 2.2,
@@ -917,18 +1316,29 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Arch must be hinged or buckling becomes a problem. Fixed arch is indeterminate; temperature change and settlement cause internal stress, not reactions."
+  "note": "An arch of steel riveted or welded. Steel can be made into arched members with joints. Span to 500m. Requires calculation of arch stresses and support reactions. Sydney Harbour Bridge (1932) is a steel arch; it carries road, rail, and pedestrians."
  },
  {
   "id": "cn_bascule_bridge",
   "name": "Bascule drawbridge",
   "cat": "bridges",
-  "pre": ["cn_rolled_I_beam", "cap_power_electric"],
-  "traits": ["infrastructure"],
-  "kb": "Counterweighted leaf pivoting up on hinge to allow ship passage",
+  "pre": [
+   "cn_rolled_I_beam",
+   "cap_power_electric"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_bascule_bridge",
   "ph": 140,
-  "lab": {"engineer": 120, "carpenter": 100, "electrician": 60},
-  "mat": {"mat_bulk_steel": 800},
+  "lab": {
+   "engineer": 120,
+   "carpenter": 100,
+   "electrician": 60
+  },
+  "mat": {
+   "mat_bulk_steel": 800
+  },
   "cap": 2500,
   "up": 450,
   "build_yrs": 2.5,
@@ -946,12 +1356,21 @@
   "id": "cn_swing_bridge",
   "name": "Swing bridge on central pivot",
   "cat": "bridges",
-  "pre": ["cn_wrought_iron_girder"],
-  "traits": ["infrastructure"],
-  "kb": "Bridge rotates on central post, aligning with river or opening for traffic",
+  "pre": [
+   "cn_wrought_iron_girder"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_bascule_bridge",
   "ph": 110,
-  "lab": {"engineer": 100, "carpenter": 90},
-  "mat": {"mat_wrought_iron": 600},
+  "lab": {
+   "engineer": 100,
+   "carpenter": 90
+  },
+  "mat": {
+   "mat_wrought_iron": 600
+  },
   "cap": 1900,
   "up": 350,
   "build_yrs": 2,
@@ -969,12 +1388,21 @@
   "id": "cn_pontoon_bridge",
   "name": "Pontoon floating bridge",
   "cat": "bridges",
-  "pre": ["cap_tol_1mm"],
-  "traits": ["infrastructure"],
-  "kb": "Floating barges or floats lashed together, connected by chains, with deck on top",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_bascule_bridge",
   "ph": 85,
-  "lab": {"carpenter": 100, "sailor": 80},
-  "mat": {"mat_wood": 500},
+  "lab": {
+   "carpenter": 100,
+   "sailor": 80
+  },
+  "mat": {
+   "mat_wood": 500
+  },
   "cap": 1600,
   "up": 300,
   "build_yrs": 1.8,
@@ -992,12 +1420,20 @@
   "id": "cn_aqueduct",
   "name": "Masonry aqueduct arch bridge",
   "cat": "infrastructure",
-  "pre": ["cn_true_arch"],
-  "traits": ["infrastructure"],
-  "kb": "Series of tall arches carrying water channel across valley",
+  "pre": [
+   "cn_true_arch"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_aqueduct",
   "ph": 110,
-  "lab": {"mason": 200},
-  "mat": {"mat_wrought_iron": 30},
+  "lab": {
+   "mason": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 30
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 3,
@@ -1015,12 +1451,22 @@
   "id": "cn_siphon",
   "name": "Inverted siphon pipe",
   "cat": "infrastructure",
-  "pre": ["cn_aqueduct", "mat_lead"],
-  "traits": ["infrastructure"],
-  "kb": "Pipe drops below required level then rises, allowing water to cross obstacles",
+  "pre": [
+   "cn_aqueduct",
+   "mat_lead"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_aqueduct",
   "ph": 75,
-  "lab": {"plumber": 100, "engineer": 50},
-  "mat": {"mat_lead": 200},
+  "lab": {
+   "plumber": 100,
+   "engineer": 50
+  },
+  "mat": {
+   "mat_lead": 200
+  },
   "cap": 900,
   "up": 150,
   "build_yrs": 1.2,
@@ -1038,12 +1484,21 @@
   "id": "cn_pile_driving",
   "name": "Pile driving by drop hammer",
   "cat": "foundations",
-  "pre": ["cap_power_muscle"],
-  "traits": ["infrastructure"],
-  "kb": "Heavy weight dropped onto pile to drive it into soft ground",
+  "pre": [
+   "cap_power_human"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_pile_driving",
   "ph": 40,
-  "lab": {"labourer": 150},
-  "mat": {"mat_wood": 200, "mat_wrought_iron": 40},
+  "lab": {
+   "labourer": 150
+  },
+  "mat": {
+   "mat_wood": 200,
+   "mat_wrought_iron": 40
+  },
   "cap": 400,
   "up": 60,
   "build_yrs": 0.8,
@@ -1061,12 +1516,21 @@
   "id": "cn_screw_pile",
   "name": "Screw pile with helical blade",
   "cat": "foundations",
-  "pre": ["master_screw"],
-  "traits": ["labour_saving"],
-  "kb": "Spiral blade on shaft screws into ground like a corkscrew",
+  "pre": [
+   "master_screw"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_pile_driving",
   "ph": 95,
-  "lab": {"engineer": 80, "labourer": 100},
-  "mat": {"mat_wrought_iron": 150},
+  "lab": {
+   "engineer": 80,
+   "labourer": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 150
+  },
   "cap": 1000,
   "up": 180,
   "build_yrs": 1.2,
@@ -1084,12 +1548,21 @@
   "id": "cn_sheet_piling",
   "name": "Sheet piling wall",
   "cat": "foundations",
-  "pre": ["cn_pile_driving"],
-  "traits": ["infrastructure"],
-  "kb": "Interlocked steel or timber sheets driven side by side to create waterproof wall",
+  "pre": [
+   "cn_pile_driving"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_cofferdam",
   "ph": 100,
-  "lab": {"carpenter": 100, "labourer": 120},
-  "mat": {"mat_wrought_iron": 250},
+  "lab": {
+   "carpenter": 100,
+   "labourer": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 250
+  },
   "cap": 1100,
   "up": 200,
   "build_yrs": 1.5,
@@ -1107,12 +1580,25 @@
   "id": "cn_caisson",
   "name": "Caisson cofferdam box",
   "cat": "foundations",
-  "pre": ["cn_sheet_piling"],
-  "traits": ["infrastructure"],
-  "kb": "Watertight box sunk to bedrock, filled with air, allowing work underwater",
-  "ph": 120,
-  "lab": {"carpenter": 120, "engineer": 80},
-  "mat": {"mat_wood": 300, "mat_wrought_iron": 100},
+  "pre": [
+   "cn_sheet_piling",
+   "civ_cofferdam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_caisson",
+  "ph": 150.0,
+  "lab": {
+   "carpenter": 400.0,
+   "engineer": 80.0,
+   "labourer": 600.0
+  },
+  "mat": {
+   "iron_bar_kg": 100.0,
+   "timber_m3": 8.0,
+   "wood_kg": 300.0
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 2,
@@ -1124,18 +1610,29 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Box is heavy, sinks under its own weight. Must be sealed at corners and joints. Explosive decompression if air is lost. Caisson disease kills workers who decompress too fast."
+  "note": "A large hollow box sunk into water or soft ground, interior pumped dry, filled with concrete. London Bridge (1831) used caissons. Allows foundation work below water. Risk of leaking, and the deeper you go, the harder to keep dry."
  },
  {
   "id": "cn_pneumatic_caisson",
   "name": "Pneumatic caisson with air pressure",
   "cat": "foundations",
-  "pre": ["cn_caisson", "cap_power_steam"],
-  "traits": ["infrastructure"],
-  "kb": "Compressed air pumped into caisson keeps water out at depth",
+  "pre": [
+   "cn_caisson",
+   "cap_power_steam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_caisson",
   "ph": 140,
-  "lab": {"engineer": 100, "carpenter": 100},
-  "mat": {"mat_wood": 300, "mat_bulk_steel": 150},
+  "lab": {
+   "engineer": 100,
+   "carpenter": 100
+  },
+  "mat": {
+   "mat_wood": 300,
+   "mat_bulk_steel": 150
+  },
   "cap": 1800,
   "up": 350,
   "build_yrs": 2.5,
@@ -1153,12 +1650,22 @@
   "id": "cn_cofferdam",
   "name": "Cofferdam temporary barrier",
   "cat": "foundations",
-  "pre": ["cap_power_muscle"],
-  "traits": ["infrastructure"],
+  "pre": [
+   "cap_power_muscle"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
   "kb": "Temporary enclosure of sheet pile or timber, pumped dry for work",
   "ph": 60,
-  "lab": {"carpenter": 100, "labourer": 100},
-  "mat": {"mat_wood": 200, "mat_wrought_iron": 50},
+  "lab": {
+   "carpenter": 100,
+   "labourer": 100
+  },
+  "mat": {
+   "mat_wood": 200,
+   "mat_wrought_iron": 50
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 0.9,
@@ -1176,12 +1683,23 @@
   "id": "cn_diaphragm_wall",
   "name": "Diaphragm wall with slurry",
   "cat": "foundations",
-  "pre": ["cn_sheet_piling", "cap_measure_len"],
-  "traits": ["labour_saving"],
-  "kb": "Slurry-filled trench with concrete wall cast in place",
+  "pre": [
+   "cn_sheet_piling",
+   "cap_measure_len"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_cofferdam",
   "ph": 160,
-  "lab": {"engineer": 120, "carpenter": 80},
-  "mat": {"mat_cement_portland": 400, "mat_bentonite_slurry": 200},
+  "lab": {
+   "engineer": 120,
+   "carpenter": 80
+  },
+  "mat": {
+   "mat_cement_portland": 400,
+   "mat_bentonite_slurry": 200
+  },
   "cap": 2200,
   "up": 400,
   "build_yrs": 2.2,
@@ -1199,12 +1717,21 @@
   "id": "cn_underpinning",
   "name": "Underpinning of existing structure",
   "cat": "foundations",
-  "pre": ["cn_caisson"],
-  "traits": [],
-  "kb": "Installing new foundation beneath existing building without damage",
+  "pre": [
+   "cn_caisson"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_caisson",
   "ph": 130,
-  "lab": {"engineer": 100, "mason": 100},
-  "mat": {"mat_wrought_iron": 80},
+  "lab": {
+   "engineer": 100,
+   "mason": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 80
+  },
   "cap": 1500,
   "up": 280,
   "build_yrs": 2,
@@ -1222,12 +1749,21 @@
   "id": "cn_dewatering",
   "name": "Dewatering system with pumps",
   "cat": "foundations",
-  "pre": ["cap_power_steam"],
-  "traits": ["infrastructure"],
-  "kb": "Pumps remove groundwater from foundation excavation",
+  "pre": [
+   "cap_power_steam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_cofferdam",
   "ph": 85,
-  "lab": {"engineer": 70, "carpenter": 60},
-  "mat": {"mat_wrought_iron": 120},
+  "lab": {
+   "engineer": 70,
+   "carpenter": 60
+  },
+  "mat": {
+   "mat_wrought_iron": 120
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 1.2,
@@ -1245,12 +1781,20 @@
   "id": "cn_soil_compaction",
   "name": "Soil compaction by roller",
   "cat": "foundations",
-  "pre": ["cap_power_muscle"],
-  "traits": ["labour_saving"],
-  "kb": "Heavy roller or rammer compacts soil in lifts, increasing bearing capacity",
+  "pre": [
+   "cap_power_human"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_pile_driving",
   "ph": 70,
-  "lab": {"labourer": 120},
-  "mat": {"mat_cast_iron": 200},
+  "lab": {
+   "labourer": 120
+  },
+  "mat": {
+   "mat_cast_iron": 200
+  },
   "cap": 800,
   "up": 120,
   "build_yrs": 1,
@@ -1268,12 +1812,20 @@
   "id": "cn_retaining_wall",
   "name": "Retaining wall gravity structure",
   "cat": "structures",
-  "pre": ["cn_true_arch"],
-  "traits": ["infrastructure"],
-  "kb": "Massive masonry wall holding back soil pressure",
+  "pre": [
+   "cn_true_arch"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_gravity_dam",
   "ph": 80,
-  "lab": {"mason": 150},
-  "mat": {"mat_wrought_iron": 20},
+  "lab": {
+   "mason": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 20
+  },
   "cap": 900,
   "up": 140,
   "build_yrs": 1.5,
@@ -1291,12 +1843,20 @@
   "id": "cn_gravity_dam",
   "name": "Gravity dam masonry structure",
   "cat": "structures",
-  "pre": ["cn_retaining_wall"],
-  "traits": ["infrastructure"],
-  "kb": "Massive triangular dam wall where weight resists water pressure",
+  "pre": [
+   "cn_retaining_wall"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_gravity_dam",
   "ph": 120,
-  "lab": {"mason": 200},
-  "mat": {"mat_wrought_iron": 50},
+  "lab": {
+   "mason": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 50
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 2.5,
@@ -1314,12 +1874,22 @@
   "id": "cn_arch_dam",
   "name": "Arch dam curved structure",
   "cat": "structures",
-  "pre": ["cn_true_arch", "cn_gravity_dam"],
-  "traits": ["infrastructure"],
-  "kb": "Curved arch carries water load horizontally to valley walls",
+  "pre": [
+   "cn_true_arch",
+   "cn_gravity_dam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_gravity_dam",
   "ph": 140,
-  "lab": {"mason": 180, "engineer": 80},
-  "mat": {"mat_wrought_iron": 40},
+  "lab": {
+   "mason": 180,
+   "engineer": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 40
+  },
   "cap": 1600,
   "up": 300,
   "build_yrs": 2.8,
@@ -1337,12 +1907,21 @@
   "id": "cn_earth_dam",
   "name": "Earth dam with clay core",
   "cat": "structures",
-  "pre": ["cn_soil_compaction"],
-  "traits": ["infrastructure"],
-  "kb": "Compacted earth with impermeable clay core, gravel and filter zones",
+  "pre": [
+   "cn_soil_compaction"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_gravity_dam",
   "ph": 100,
-  "lab": {"engineer": 90, "labourer": 150},
-  "mat": {"mat_clay": 1000},
+  "lab": {
+   "engineer": 90,
+   "labourer": 150
+  },
+  "mat": {
+   "mat_clay": 1000
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 2,
@@ -1360,12 +1939,25 @@
   "id": "cn_spillway",
   "name": "Spillway overflow structure",
   "cat": "structures",
-  "pre": ["cn_true_arch", "cn_gravity_dam"],
-  "traits": ["infrastructure"],
-  "kb": "Controlled overflow channel protecting dam from overtopping",
-  "ph": 95,
-  "lab": {"engineer": 100, "mason": 100},
-  "mat": {"mat_wrought_iron": 30},
+  "pre": [
+   "cn_true_arch",
+   "cn_gravity_dam",
+   "cap_measure_len",
+   "civ_statics"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_gravity_dam",
+  "ph": 150.0,
+  "lab": {
+   "engineer": 300.0,
+   "mason": 400.0
+  },
+  "mat": {
+   "brick_1000": 50.0,
+   "iron_bar_kg": 30.0
+  },
   "cap": 1300,
   "up": 220,
   "build_yrs": 1.8,
@@ -1377,18 +1969,27 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "High-velocity water in spillway can erode concrete. Stilling basin dissipates energy. Spillway must never be overtopped; if crest elevation is wrong, whole dam fails."
+  "note": "A controlled overflow weir at a set height. If the dam fills above that level, water goes over the spillway, not over the dam. The spillway must carry high velocity water without erosion. Most dam failures are hydraulic: overtopping erodes the downstream slope."
  },
  {
   "id": "cn_tunnel_cut_cover",
   "name": "Tunnel by cut and cover",
   "cat": "structures",
-  "pre": ["cn_cofferdam"],
-  "traits": ["infrastructure"],
-  "kb": "Open trench with roof beam and arch or vault cover, then backfill",
+  "pre": [
+   "cn_cofferdam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_drill_blast",
   "ph": 105,
-  "lab": {"carpenter": 120, "mason": 100},
-  "mat": {"mat_wrought_iron": 100},
+  "lab": {
+   "carpenter": 120,
+   "mason": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 100
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 2,
@@ -1406,12 +2007,24 @@
   "id": "cn_tunnel_shield",
   "name": "Tunnel shield method",
   "cat": "structures",
-  "pre": ["cn_pneumatic_caisson"],
-  "traits": ["infrastructure"],
-  "kb": "Steel cylinder pushed forward, excavating at front, lining installed behind",
-  "ph": 150,
-  "lab": {"engineer": 120, "labourer": 150},
-  "mat": {"mat_bulk_steel": 300},
+  "pre": [
+   "cn_pneumatic_caisson",
+   "civ_tunnel_rock_drill",
+   "cn_caisson"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_tunnel_shield",
+  "ph": 250.0,
+  "lab": {
+   "engineer": 400.0,
+   "labourer": 600.0
+  },
+  "mat": {
+   "iron_bar_kg": 100.0,
+   "steel_plate_kg": 300.0
+  },
   "cap": 1800,
   "up": 350,
   "build_yrs": 2.5,
@@ -1423,18 +2036,28 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Shield is pushed forward by jacks. Face is pressurised or shielded to prevent collapse. Rings are bolted together as shield advances. Grout fills void behind."
+  "note": "A large cylindrical shield advances meter by meter through soft ground (clay, silt). Men dig at the face inside; segments are assembled behind; the shield is jacked forward. London Underground used this (1863 onwards). Prevents cave-ins but is slow and heavy."
  },
  {
   "id": "cn_drill_blast",
   "name": "Drill and blast tunnel",
   "cat": "structures",
-  "pre": ["cn_tunnel_cut_cover", "mat_nitroglycerin"],
-  "traits": ["labour_saving"],
-  "kb": "Holes drilled in rock face, filled with explosives, detonated in sequence",
+  "pre": [
+   "cn_tunnel_cut_cover",
+   "mat_nitroglycerin"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_drill_blast",
   "ph": 125,
-  "lab": {"engineer": 100, "labourer": 120},
-  "mat": {"mat_nitroglycerin": 50},
+  "lab": {
+   "engineer": 100,
+   "labourer": 120
+  },
+  "mat": {
+   "mat_nitroglycerin": 50
+  },
   "cap": 1600,
   "up": 300,
   "build_yrs": 2.2,
@@ -1452,12 +2075,21 @@
   "id": "cn_tunnel_lining",
   "name": "Tunnel permanent lining",
   "cat": "structures",
-  "pre": ["cn_tunnel_shield"],
-  "traits": ["infrastructure"],
-  "kb": "Cast concrete rings bolted together inside tunnel to support walls",
+  "pre": [
+   "cn_tunnel_shield"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_tunnel_shield",
   "ph": 95,
-  "lab": {"mason": 110, "engineer": 60},
-  "mat": {"mat_cement_portland": 200},
+  "lab": {
+   "mason": 110,
+   "engineer": 60
+  },
+  "mat": {
+   "mat_cement_portland": 200
+  },
   "cap": 1300,
   "up": 220,
   "build_yrs": 1.8,
@@ -1475,12 +2107,21 @@
   "id": "cn_ventilation_shaft",
   "name": "Ventilation shaft and duct",
   "cat": "structures",
-  "pre": ["cn_tunnel_lining"],
-  "traits": ["infrastructure"],
-  "kb": "Secondary shaft for air circulation in long tunnels",
+  "pre": [
+   "cn_tunnel_lining"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_drill_blast",
   "ph": 85,
-  "lab": {"engineer": 80, "mason": 100},
-  "mat": {"mat_cement_portland": 150},
+  "lab": {
+   "engineer": 80,
+   "mason": 100
+  },
+  "mat": {
+   "mat_cement_portland": 150
+  },
   "cap": 1100,
   "up": 180,
   "build_yrs": 1.5,
@@ -1498,12 +2139,22 @@
   "id": "cn_crane_treadwheel",
   "name": "Treadwheel crane",
   "cat": "equipment",
-  "pre": ["cap_power_muscle"],
-  "traits": ["labour_saving"],
+  "pre": [
+   "cap_power_human",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
   "kb": "Large wooden wheel driven by workers walking inside it",
   "ph": 55,
-  "lab": {"carpenter": 100, "labourer": 80},
-  "mat": {"mat_wood": 200},
+  "lab": {
+   "carpenter": 100,
+   "labourer": 80
+  },
+  "mat": {
+   "mat_wood": 200
+  },
   "cap": 500,
   "up": 70,
   "build_yrs": 0.7,
@@ -1515,18 +2166,28 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Mechanical advantage comes from wheel radius. Internal braking is essential; if rope breaks, load and cage slam down, killing occupants."
+  "note": "Large wooden drum turned by men inside a hamster wheel. Could lift tens of tonnes. Documented in Vitruvius; used to build the aqueducts and temples. Survives in medieval and Renaissance construction accounts."
  },
  {
   "id": "cn_crane_derrick",
   "name": "Derrick crane with guy lines",
   "cat": "equipment",
-  "pre": ["cn_timber_truss"],
-  "traits": ["labour_saving"],
-  "kb": "Tall mast held by cables and guy ropes, hook suspended from peak",
+  "pre": [
+   "cn_timber_truss"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_crane_derrick",
   "ph": 75,
-  "lab": {"carpenter": 120, "sailor": 60},
-  "mat": {"mat_wood": 250, "mat_hemp": 100},
+  "lab": {
+   "carpenter": 120,
+   "sailor": 60
+  },
+  "mat": {
+   "mat_wood": 250,
+   "mat_hemp": 100
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 1,
@@ -1544,12 +2205,23 @@
   "id": "cn_crane_tower",
   "name": "Tower crane on fixed base",
   "cat": "equipment",
-  "pre": ["cn_rolled_I_beam", "cap_power_electric"],
-  "traits": ["labour_saving"],
-  "kb": "Steel tower with rotating jib and hoist, electrically driven",
+  "pre": [
+   "cn_rolled_I_beam",
+   "cap_power_electric"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_crane_derrick",
   "ph": 130,
-  "lab": {"engineer": 120, "carpenter": 80, "electrician": 70},
-  "mat": {"mat_bulk_steel": 400},
+  "lab": {
+   "engineer": 120,
+   "carpenter": 80,
+   "electrician": 70
+  },
+  "mat": {
+   "mat_bulk_steel": 400
+  },
   "cap": 1800,
   "up": 350,
   "build_yrs": 1.8,
@@ -1567,12 +2239,21 @@
   "id": "cn_block_tackle_hoist",
   "name": "Block and tackle with rope",
   "cat": "equipment",
-  "pre": ["cap_power_muscle"],
-  "traits": ["labour_saving"],
-  "kb": "Fixed and movable pulleys multiply force by rope arrangement",
+  "pre": [
+   "cap_power_human"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_crane_treadwheel",
   "ph": 30,
-  "lab": {"carpenter": 60},
-  "mat": {"mat_wood": 80, "mat_rope": 50},
+  "lab": {
+   "carpenter": 60
+  },
+  "mat": {
+   "mat_wood": 80,
+   "mat_rope": 50
+  },
   "cap": 250,
   "up": 30,
   "build_yrs": 0.3,
@@ -1590,12 +2271,21 @@
   "id": "cn_scaffolding",
   "name": "Timber scaffolding system",
   "cat": "equipment",
-  "pre": ["cap_tol_1mm"],
-  "traits": ["labour_saving"],
-  "kb": "Temporary timber framework lashed together with rope and planks for worker access",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_scaffolding",
   "ph": 50,
-  "lab": {"carpenter": 120},
-  "mat": {"mat_wood": 150, "mat_hemp": 80},
+  "lab": {
+   "carpenter": 120
+  },
+  "mat": {
+   "mat_wood": 150,
+   "mat_hemp": 80
+  },
   "cap": 600,
   "up": 80,
   "build_yrs": 0.6,
@@ -1613,12 +2303,23 @@
   "id": "cn_elevator_safety_brake",
   "name": "Elevator with safety brake",
   "cat": "equipment",
-  "pre": ["cn_crane_treadwheel", "cap_tol_100um"],
-  "traits": ["labour_saving"],
+  "pre": [
+   "cn_crane_treadwheel",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
   "kb": "Counterweighted cage with mechanical brake that grips guide rails if rope breaks",
   "ph": 120,
-  "lab": {"carpenter": 100, "smith": 100, "engineer": 80},
-  "mat": {"mat_wrought_iron": 250},
+  "lab": {
+   "carpenter": 100,
+   "smith": 100,
+   "engineer": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 250
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 1.5,
@@ -1636,12 +2337,20 @@
   "id": "cn_plumbing_stack",
   "name": "Plumbing vertical stack system",
   "cat": "building_systems",
-  "pre": ["mat_lead"],
-  "traits": ["infrastructure"],
-  "kb": "Lead or iron pipe stacks for water supply and waste drainage",
+  "pre": [
+   "mat_lead"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_plumbing_stack",
   "ph": 80,
-  "lab": {"plumber": 120},
-  "mat": {"mat_lead": 200},
+  "lab": {
+   "plumber": 120
+  },
+  "mat": {
+   "mat_lead": 200
+  },
   "cap": 900,
   "up": 130,
   "build_yrs": 1.2,
@@ -1653,18 +2362,36 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Waste must slope correctly or it backs up. Soil pipe must be large to prevent siphoning. Supply lines must be sloped so air cannot trap high points."
+  "note": "Waste must slope correctly or it backs up. Soil pipe must be large to prevent siphoning. Supply lines must be sloped so air cannot trap high points.",
+  "req_any": [
+   {
+    "group": "pipe_material",
+    "options": {
+     "mat_cast_iron": 0.7,
+     "mat_copper": 0.9,
+     "mat_lead": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "cn_trapped_drain",
   "name": "Trap with water seal",
   "cat": "building_systems",
-  "pre": ["cn_plumbing_stack"],
-  "traits": ["medical"],
-  "kb": "U-bend under sink that holds water to block sewer gas and pests",
+  "pre": [
+   "cn_plumbing_stack"
+  ],
+  "traits": [
+   "medical"
+  ],
+  "kb": "87_construction.md#cn_plumbing_stack",
   "ph": 60,
-  "lab": {"plumber": 90},
-  "mat": {"mat_lead": 80},
+  "lab": {
+   "plumber": 90
+  },
+  "mat": {
+   "mat_lead": 80
+  },
   "cap": 600,
   "up": 80,
   "build_yrs": 0.8,
@@ -1682,12 +2409,22 @@
   "id": "cn_sewer_system",
   "name": "Sewer gravity drainage network",
   "cat": "infrastructure",
-  "pre": ["cn_trapped_drain"],
-  "traits": ["infrastructure", "medical"],
-  "kb": "Underground pipes collecting and transporting waste to treatment or discharge",
+  "pre": [
+   "cn_trapped_drain"
+  ],
+  "traits": [
+   "infrastructure",
+   "medical"
+  ],
+  "kb": "87_construction.md#cn_aqueduct",
   "ph": 100,
-  "lab": {"engineer": 100, "mason": 100},
-  "mat": {"mat_cast_iron": 300},
+  "lab": {
+   "engineer": 100,
+   "mason": 100
+  },
+  "mat": {
+   "mat_cast_iron": 300
+  },
   "cap": 1300,
   "up": 250,
   "build_yrs": 2,
@@ -1705,12 +2442,21 @@
   "id": "cn_water_main",
   "name": "Water main distribution pipe",
   "cat": "infrastructure",
-  "pre": ["cn_plumbing_stack"],
-  "traits": ["infrastructure"],
-  "kb": "Underground pipeline supplying water to district",
+  "pre": [
+   "cn_plumbing_stack"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_aqueduct",
   "ph": 85,
-  "lab": {"plumber": 100, "engineer": 70},
-  "mat": {"mat_cast_iron": 250},
+  "lab": {
+   "plumber": 100,
+   "engineer": 70
+  },
+  "mat": {
+   "mat_cast_iron": 250
+  },
   "cap": 1100,
   "up": 180,
   "build_yrs": 1.5,
@@ -1728,12 +2474,18 @@
   "id": "cn_damp_proof_course",
   "name": "Damp proof course barrier layer",
   "cat": "building_systems",
-  "pre": ["mat_bitumen"],
+  "pre": [
+   "mat_bitumen"
+  ],
   "traits": [],
-  "kb": "Impermeable layer in wall preventing capillary rise of moisture",
+  "kb": "87_construction.md#cn_cavity_wall",
   "ph": 50,
-  "lab": {"mason": 100},
-  "mat": {"mat_bitumen": 50},
+  "lab": {
+   "mason": 100
+  },
+  "mat": {
+   "mat_bitumen": 50
+  },
   "cap": 500,
   "up": 60,
   "build_yrs": 0.5,
@@ -1745,18 +2497,35 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Capillary rise can be metres high in masonry. Moisture triggers rot and salt crystallisation. Damp proof course breaks the capillary chain."
+  "note": "Capillary rise can be metres high in masonry. Moisture triggers rot and salt crystallisation. Damp proof course breaks the capillary chain.",
+  "req_any": [
+   {
+    "group": "damp_proof",
+    "options": {
+     "mat_bitumen": 1.0,
+     "mat_lead": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "cn_cavity_wall",
   "name": "Cavity wall with air space",
   "cat": "building_systems",
-  "pre": ["cn_damp_proof_course"],
-  "traits": ["labour_saving"],
-  "kb": "Two separate leaves of masonry with air gap, stopping moisture penetration",
+  "pre": [
+   "cn_damp_proof_course"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_cavity_wall",
   "ph": 75,
-  "lab": {"mason": 130},
-  "mat": {"mat_brick": 400},
+  "lab": {
+   "mason": 130
+  },
+  "mat": {
+   "mat_brick": 400
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 1.3,
@@ -1774,13 +2543,29 @@
   "id": "cn_central_heating",
   "name": "Central heating hot water system",
   "cat": "building_systems",
-  "pre": ["cn_plumbing_stack", "cap_heat_1300"],
-  "traits": ["infrastructure"],
-  "kb": "Boiler heats water circulated through pipes to radiators",
-  "ph": 95,
-  "lab": {"plumber": 120, "engineer": 80},
-  "mat": {"mat_cast_iron": 250, "mat_lead": 100},
-  "cap": 1200,
+  "pre": [
+   "cn_plumbing_stack",
+   "cap_heat_1300",
+   "cap_power_steam",
+   "steam_high_pressure"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_central_heating",
+  "ph": 180.0,
+  "lab": {
+   "engineer": 80.0,
+   "mason": 150.0,
+   "plumber": 200.0,
+   "smith": 180.0
+  },
+  "mat": {
+   "brass_kg": 15.0,
+   "cast_iron_kg": 250.0,
+   "lead_kg": 100.0
+  },
+  "cap": 1500.0,
   "up": 200,
   "build_yrs": 1.4,
   "adopt_yrs": 1,
@@ -1791,18 +2576,25 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Boiler must be kept filled and bleed of air. Expansion tank absorbs water expanding as it heats. Radiators must drain when not in use or freeze."
+  "note": "Boiler in basement or furnace room heats water, which circulates through cast-iron radiators in all rooms. Replaces fireplaces and central stove heating. Enables uniform comfort; transforms house design. Requires piping, a circulating pump, and constant fuel supply."
  },
  {
   "id": "cn_radiator",
   "name": "Cast iron radiator",
   "cat": "building_systems",
-  "pre": ["mat_cast_iron"],
+  "pre": [
+   "mat_cast_iron"
+  ],
   "traits": [],
   "kb": "Cast iron section carrying hot water, radiating heat to room",
   "ph": 65,
-  "lab": {"smith": 100, "furnaceman": 60},
-  "mat": {"mat_cast_iron": 150},
+  "lab": {
+   "smith": 100,
+   "furnaceman": 60
+  },
+  "mat": {
+   "mat_cast_iron": 150
+  },
   "cap": 700,
   "up": 100,
   "build_yrs": 0.8,
@@ -1820,12 +2612,22 @@
   "id": "cn_forced_ventilation",
   "name": "Forced ventilation mechanical system",
   "cat": "building_systems",
-  "pre": ["cap_power_steam"],
-  "traits": ["infrastructure"],
-  "kb": "Fan driven by motor or steam engine pushes air through ducts",
+  "pre": [
+   "cap_power_steam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_central_heating",
   "ph": 100,
-  "lab": {"engineer": 100, "carpenter": 80},
-  "mat": {"mat_cast_iron": 200, "mat_sheet_iron": 150},
+  "lab": {
+   "engineer": 100,
+   "carpenter": 80
+  },
+  "mat": {
+   "mat_cast_iron": 200,
+   "mat_sheet_iron": 150
+  },
   "cap": 1100,
   "up": 180,
   "build_yrs": 1.3,
@@ -1843,12 +2645,21 @@
   "id": "cn_fire_escape",
   "name": "Fire escape stairs and landings",
   "cat": "building_systems",
-  "pre": ["cn_rolled_I_beam"],
-  "traits": ["infrastructure"],
-  "kb": "External metal stairway providing emergency exit route",
+  "pre": [
+   "cn_rolled_I_beam"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_fire_escape",
   "ph": 75,
-  "lab": {"carpenter": 100, "smith": 80},
-  "mat": {"mat_wrought_iron": 200},
+  "lab": {
+   "carpenter": 100,
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 200
+  },
   "cap": 900,
   "up": 130,
   "build_yrs": 1,
@@ -1866,12 +2677,23 @@
   "id": "cn_sprinkler",
   "name": "Automatic fire sprinkler",
   "cat": "building_systems",
-  "pre": ["cn_water_main", "cap_measure_temp"],
-  "traits": ["infrastructure"],
-  "kb": "Heat-triggered valve on water pipe, spraying room when temperature rises",
+  "pre": [
+   "cn_water_main",
+   "cap_measure_temp"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_fire_escape",
   "ph": 110,
-  "lab": {"plumber": 100, "engineer": 80},
-  "mat": {"mat_cast_iron": 150, "mat_bronze": 50},
+  "lab": {
+   "plumber": 100,
+   "engineer": 80
+  },
+  "mat": {
+   "mat_cast_iron": 150,
+   "mat_bronze": 50
+  },
   "cap": 1300,
   "up": 200,
   "build_yrs": 1.5,
@@ -1889,12 +2711,22 @@
   "id": "cn_plate_glass_window",
   "name": "Plate glass large pane",
   "cat": "envelope",
-  "pre": ["glass_lead", "cap_heat_1600"],
-  "traits": [],
-  "kb": "Polished sheet glass cast and ground flat, large transparent panes",
+  "pre": [
+   "glass_lead",
+   "cap_heat_1600"
+  ],
+  "traits": [
+   "luxury"
+  ],
+  "kb": "87_construction.md#cn_curtain_wall",
   "ph": 120,
-  "lab": {"glassblower": 150, "optician": 100},
-  "mat": {"mat_glass_soda": 300},
+  "lab": {
+   "glassblower": 150,
+   "optician": 100
+  },
+  "mat": {
+   "mat_glass_soda": 300
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 1.5,
@@ -1912,12 +2744,20 @@
   "id": "cn_sash_window",
   "name": "Sash window with cord and weight",
   "cat": "envelope",
-  "pre": ["cn_plate_glass_window"],
+  "pre": [
+   "cn_plate_glass_window"
+  ],
   "traits": [],
-  "kb": "Two glass panes slide vertically in wooden frame, balanced by counterweights",
+  "kb": "87_construction.md#cn_curtain_wall",
   "ph": 85,
-  "lab": {"carpenter": 120, "smith": 60},
-  "mat": {"mat_wood": 100, "mat_cast_iron": 100},
+  "lab": {
+   "carpenter": 120,
+   "smith": 60
+  },
+  "mat": {
+   "mat_wood": 100,
+   "mat_cast_iron": 100
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 1.1,
@@ -1935,12 +2775,23 @@
   "id": "cn_roof_truss_corrugated",
   "name": "Roof truss with corrugated iron",
   "cat": "envelope",
-  "pre": ["cn_timber_truss", "bessemer_openhearth"],
-  "traits": ["labour_saving"],
-  "kb": "Wooden or steel truss supporting corrugated sheet metal roof",
+  "pre": [
+   "cn_timber_truss",
+   "bessemer_openhearth"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_curtain_wall",
   "ph": 95,
-  "lab": {"carpenter": 110, "smith": 80},
-  "mat": {"mat_wrought_iron": 200, "mat_sheet_iron": 300},
+  "lab": {
+   "carpenter": 110,
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 200,
+   "mat_sheet_iron": 300
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 1.3,
@@ -1958,12 +2809,22 @@
   "id": "cn_asphalt_roofing",
   "name": "Asphalt roll roofing and shingles",
   "cat": "envelope",
-  "pre": ["mat_bitumen"],
-  "traits": [],
-  "kb": "Bitumen-impregnated felt, laid in overlapping layers with hot tar",
+  "pre": [
+   "mat_bitumen"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_curtain_wall",
   "ph": 80,
-  "lab": {"carpenter": 100, "labourer": 80},
-  "mat": {"mat_bitumen": 150, "mat_felt": 200},
+  "lab": {
+   "carpenter": 100,
+   "labourer": 80
+  },
+  "mat": {
+   "mat_bitumen": 150,
+   "mat_felt": 200
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 1,
@@ -1981,12 +2842,22 @@
   "id": "cn_insulation",
   "name": "Building insulation materials",
   "cat": "building_systems",
-  "pre": ["cap_measure_temp"],
-  "traits": [],
-  "kb": "Fibrous or cellular materials filling cavities and reducing heat transfer",
+  "pre": [
+   "cap_measure_temp"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_cavity_wall",
   "ph": 90,
-  "lab": {"carpenter": 100, "engineer": 70},
-  "mat": {"mat_wood_fibre": 150, "mat_cork": 100},
+  "lab": {
+   "carpenter": 100,
+   "engineer": 70
+  },
+  "mat": {
+   "mat_wood_fibre": 150,
+   "mat_cork": 100
+  },
   "cap": 1100,
   "up": 180,
   "build_yrs": 1.2,
@@ -2004,12 +2875,21 @@
   "id": "cn_concrete_mixer",
   "name": "Rotary concrete mixer drum",
   "cat": "equipment",
-  "pre": ["cap_power_steam"],
-  "traits": ["labour_saving"],
-  "kb": "Rotating drum tumbles concrete ingredients to uniform mix",
+  "pre": [
+   "cap_power_steam"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 100,
-  "lab": {"engineer": 100, "smith": 80},
-  "mat": {"mat_cast_iron": 300},
+  "lab": {
+   "engineer": 100,
+   "smith": 80
+  },
+  "mat": {
+   "mat_cast_iron": 300
+  },
   "cap": 1300,
   "up": 250,
   "build_yrs": 1.5,
@@ -2027,12 +2907,21 @@
   "id": "cn_vibratory_compaction",
   "name": "Vibratory compaction of concrete",
   "cat": "techniques",
-  "pre": ["cap_power_electric"],
-  "traits": ["labour_saving"],
-  "kb": "Electric or pneumatic vibrators eliminate air pockets in fresh concrete",
+  "pre": [
+   "cap_power_electric"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 85,
-  "lab": {"engineer": 80, "labourer": 70},
-  "mat": {"mat_cast_iron": 100},
+  "lab": {
+   "engineer": 80,
+   "labourer": 70
+  },
+  "mat": {
+   "mat_cast_iron": 100
+  },
   "cap": 1000,
   "up": 150,
   "build_yrs": 1,
@@ -2050,12 +2939,21 @@
   "id": "cn_formwork_shuttering",
   "name": "Formwork and shuttering system",
   "cat": "techniques",
-  "pre": ["cn_timber_truss"],
-  "traits": ["labour_saving"],
-  "kb": "Temporary wooden or steel mould supporting concrete until cured",
+  "pre": [
+   "cn_timber_truss"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 95,
-  "lab": {"carpenter": 140, "labourer": 100},
-  "mat": {"mat_wood": 300},
+  "lab": {
+   "carpenter": 140,
+   "labourer": 100
+  },
+  "mat": {
+   "mat_wood": 300
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 1.5,
@@ -2073,12 +2971,22 @@
   "id": "cn_slipform",
   "name": "Slipform creeping formwork",
   "cat": "techniques",
-  "pre": ["cn_formwork_shuttering", "cap_power_electric"],
-  "traits": ["labour_saving"],
-  "kb": "Formwork slowly rises as concrete cures, allowing continuous pour",
+  "pre": [
+   "cn_formwork_shuttering",
+   "cap_power_electric"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 160,
-  "lab": {"engineer": 140, "carpenter": 120},
-  "mat": {"mat_bulk_steel": 400},
+  "lab": {
+   "engineer": 140,
+   "carpenter": 120
+  },
+  "mat": {
+   "mat_bulk_steel": 400
+  },
   "cap": 2000,
   "up": 400,
   "build_yrs": 2.5,
@@ -2096,12 +3004,22 @@
   "id": "cn_shotcrete",
   "name": "Sprayed concrete shotcrete",
   "cat": "techniques",
-  "pre": ["cn_concrete_mixer", "cap_power_steam"],
-  "traits": ["labour_saving"],
-  "kb": "Concrete sprayed at high velocity onto surface, compacted in flight",
+  "pre": [
+   "cn_concrete_mixer",
+   "cap_power_steam"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 110,
-  "lab": {"engineer": 100, "labourer": 100},
-  "mat": {"mat_cement_portland": 200},
+  "lab": {
+   "engineer": 100,
+   "labourer": 100
+  },
+  "mat": {
+   "mat_cement_portland": 200
+  },
   "cap": 1400,
   "up": 280,
   "build_yrs": 1.6,
@@ -2119,12 +3037,19 @@
   "id": "cn_expansion_joint",
   "name": "Expansion joint control system",
   "cat": "techniques",
-  "pre": ["cap_measure_temp"],
+  "pre": [
+   "cap_measure_temp"
+  ],
   "traits": [],
-  "kb": "Gaps and filler materials allowing concrete movement from temperature change",
+  "kb": "87_construction.md#cn_concrete_mixer",
   "ph": 75,
-  "lab": {"engineer": 90},
-  "mat": {"mat_bitumen": 50, "mat_cork": 80},
+  "lab": {
+   "engineer": 90
+  },
+  "mat": {
+   "mat_bitumen": 50,
+   "mat_cork": 80
+  },
   "cap": 800,
   "up": 120,
   "build_yrs": 1,
@@ -2142,12 +3067,26 @@
   "id": "cn_reinforced_concrete",
   "name": "Reinforced concrete slab and beam",
   "cat": "materials",
-  "pre": ["mat_bulk_steel", "mat_cement_portland"],
-  "traits": [],
-  "kb": "Steel bars in tension zones of concrete element counteract concrete cracking",
-  "ph": 115,
-  "lab": {"engineer": 120, "mason": 100},
-  "mat": {"mat_cement_portland": 200, "mat_bulk_steel": 150},
+  "pre": [
+   "mat_bulk_steel",
+   "mat_cement_portland",
+   "civ_neutral_axis",
+   "mat_concrete_reinforced"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_reinforced_concrete",
+  "ph": 200.0,
+  "lab": {
+   "engineer": 300.0,
+   "mason": 100.0,
+   "master": 200.0
+  },
+  "mat": {
+   "mat_cement_portland": 200,
+   "mat_bulk_steel": 150
+  },
   "cap": 1600,
   "up": 300,
   "build_yrs": 1.8,
@@ -2159,18 +3098,44 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Steel and concrete have nearly identical thermal expansion; if not, the bond breaks every summer and they separate. This accidental match made reinforced concrete possible."
+  "note": "Steel bars embedded in concrete take tension; concrete takes compression. Their thermal expansion coefficients happen to match (both expand at roughly 10-12 ppm/K). Steel does not rust in the alkaline environment of concrete. This works; Coignet patented it (1891). Allows thin slabs and long spans.",
+  "req_any": [
+   {
+    "group": "reinforcement",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.3,
+     "mat_wrought_iron": 0.6
+    }
+   },
+   {
+    "group": "binder",
+    "options": {
+     "mat_cement_portland": 1.0,
+     "mat_pozzolana": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "cn_deformed_rebar",
   "name": "Deformed reinforcing bar",
   "cat": "materials",
-  "pre": ["mat_bulk_steel"],
-  "traits": [],
-  "kb": "Steel rod with ribs or deformations for better concrete bond",
+  "pre": [
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_reinforced_concrete",
   "ph": 85,
-  "lab": {"smith": 100, "engineer": 60},
-  "mat": {"mat_bulk_steel": 180},
+  "lab": {
+   "smith": 100,
+   "engineer": 60
+  },
+  "mat": {
+   "mat_bulk_steel": 180
+  },
   "cap": 1200,
   "up": 200,
   "build_yrs": 1.3,
@@ -2182,18 +3147,39 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Ribs cut into the surface create mechanical bond better than friction. Bond failure is difficult to detect until beam collapses. Testing requires destructive sampling."
+  "note": "Ribs cut into the surface create mechanical bond better than friction. Bond failure is difficult to detect until beam collapses. Testing requires destructive sampling.",
+  "req_any": [
+   {
+    "group": "reinforcement",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.35,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "cn_prestressed_concrete",
   "name": "Prestressed concrete element",
   "cat": "materials",
-  "pre": ["cn_reinforced_concrete"],
-  "traits": ["labour_saving"],
-  "kb": "Steel cables stressed before concrete sets, then released, creating internal compression",
-  "ph": 145,
-  "lab": {"engineer": 140, "mason": 100},
-  "mat": {"mat_bulk_steel": 200, "mat_cement_portland": 250},
+  "pre": [
+   "cn_reinforced_concrete"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_prestressed_concrete",
+  "ph": 180.0,
+  "lab": {
+   "engineer": 300.0,
+   "mason": 100.0,
+   "master": 150.0
+  },
+  "mat": {
+   "mat_bulk_steel": 200,
+   "mat_cement_portland": 250
+  },
   "cap": 1900,
   "up": 380,
   "build_yrs": 2,
@@ -2205,18 +3191,27 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Stressing imparts compression that cancels tensile stress from bending. Longer spans and thinner sections are possible. Stress loss over time requires careful design margins."
+  "note": "Steel cables under high tension are embedded in concrete, then the tension is released. The concrete is compressed throughout. This pre-compression means the concrete can resist higher loads before cracking. Beams can span further. Freyssinet (1928) pioneered this."
  },
  {
   "id": "cn_post_tensioning",
   "name": "Post tensioning with stressing jacks",
   "cat": "techniques",
-  "pre": ["cn_prestressed_concrete"],
-  "traits": [],
-  "kb": "Cables stressed after concrete hardens using large hydraulic jacks",
+  "pre": [
+   "cn_prestressed_concrete"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_prestressed_concrete",
   "ph": 135,
-  "lab": {"engineer": 130, "carpenter": 90},
-  "mat": {"mat_bulk_steel": 220},
+  "lab": {
+   "engineer": 130,
+   "carpenter": 90
+  },
+  "mat": {
+   "mat_bulk_steel": 220
+  },
   "cap": 1850,
   "up": 350,
   "build_yrs": 2,
@@ -2234,12 +3229,21 @@
   "id": "cn_precast_panel",
   "name": "Precast concrete panel",
   "cat": "materials",
-  "pre": ["cn_reinforced_concrete"],
-  "traits": ["labour_saving"],
-  "kb": "Concrete element cast off-site in controlled conditions, transported and erected",
+  "pre": [
+   "cn_reinforced_concrete"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_reinforced_concrete",
   "ph": 110,
-  "lab": {"engineer": 100, "mason": 100},
-  "mat": {"mat_cement_portland": 300},
+  "lab": {
+   "engineer": 100,
+   "mason": 100
+  },
+  "mat": {
+   "mat_cement_portland": 300
+  },
   "cap": 1500,
   "up": 280,
   "build_yrs": 1.8,
@@ -2257,12 +3261,22 @@
   "id": "cn_portland_cement",
   "name": "Portland cement powder",
   "cat": "binders",
-  "pre": ["cap_heat_1600"],
-  "traits": [],
-  "kb": "Calcined limestone and clay ground to powder, hydrates with water",
+  "pre": [
+   "cap_heat_1600"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "87_construction.md#cn_portland_cement",
   "ph": 120,
-  "lab": {"chemist": 100, "furnaceman": 100},
-  "mat": {"mat_limestone": 200, "mat_clay": 100},
+  "lab": {
+   "chemist": 100,
+   "furnaceman": 100
+  },
+  "mat": {
+   "mat_limestone": 200,
+   "mat_clay": 100
+  },
   "cap": 1400,
   "up": 250,
   "build_yrs": 1.5,
@@ -2280,12 +3294,22 @@
   "id": "cn_rotary_cement_kiln",
   "name": "Rotary cement kiln",
   "cat": "equipment",
-  "pre": ["cn_portland_cement", "cap_power_steam"],
-  "traits": ["labour_saving"],
-  "kb": "Large rotating drum maintaining clinkering temperature for continuous production",
+  "pre": [
+   "cn_portland_cement",
+   "cap_power_steam"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_portland_cement",
   "ph": 160,
-  "lab": {"engineer": 140, "furnaceman": 120},
-  "mat": {"mat_bulk_steel": 500},
+  "lab": {
+   "engineer": 140,
+   "furnaceman": 120
+  },
+  "mat": {
+   "mat_bulk_steel": 500
+  },
   "cap": 2200,
   "up": 450,
   "build_yrs": 2.5,
@@ -2303,12 +3327,21 @@
   "id": "cn_cement_clinker_grinding",
   "name": "Cement clinker mill grinding",
   "cat": "equipment",
-  "pre": ["cn_portland_cement"],
-  "traits": ["labour_saving"],
-  "kb": "Ball mill or roller mill grinds clinker to fine powder for cement",
+  "pre": [
+   "cn_portland_cement"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "87_construction.md#cn_portland_cement",
   "ph": 110,
-  "lab": {"engineer": 100, "furnaceman": 80},
-  "mat": {"mat_bulk_steel": 300},
+  "lab": {
+   "engineer": 100,
+   "furnaceman": 80
+  },
+  "mat": {
+   "mat_bulk_steel": 300
+  },
   "cap": 1500,
   "up": 280,
   "build_yrs": 1.6,

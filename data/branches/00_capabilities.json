@@ -18,7 +18,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME ALREADY HAS THIS. Updraught pottery kiln, wood fired. Free starting capability. Glazes, bricks, lime, glass working."
+  "note": "Already available wherever there is an updraught pottery kiln, wood fired. Free starting capability. Glazes, bricks, lime, glass working."
  },
  {
   "id": "cap_heat_1100",
@@ -42,7 +42,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "ROME ALREADY HAS THIS. Bloomery iron, bronze casting, glass melting. A man on a bellows tops out near here. Everything above this rung needs a machine."
+  "note": "Already reached wherever bloomery iron, bronze casting and glass melting are practised. A man on a bellows tops out near here. Everything above this rung needs a machine."
  },
  {
   "id": "cap_heat_1300",
@@ -159,7 +159,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME ALREADY HAS THIS, and is very good at it. Carpentry, masonry, bronze casting, the Antikythera gearwork. Free."
+  "note": "Already reached, and reached well, by any tradition with serious carpentry, masonry and bronze casting (the Antikythera gearwork is the standing proof). Free."
  },
  {
   "id": "cap_tol_100um",
@@ -378,7 +378,7 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Cupellation, fire refining, recrystallisation. Rome nearly reaches this for silver and gold already."
+  "note": "Cupellation, fire refining, recrystallisation. Any advanced ancient metallurgical tradition nearly reaches this for silver and gold already."
  },
  {
   "id": "cap_pure_4N",
@@ -459,32 +459,10 @@
  },
  {
   "id": "cap_power_muscle",
-  "name": "Muscle and animal power",
-  "cat": "capability",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
-  "yrs": 0,
-  "risk": 0.0,
-  "sus": 0,
-  "gov": 0,
-  "rev": 0,
-  "sch": 0,
-  "art": 0,
-  "conf": "A",
-  "note": "ROME HAS THIS. A man sustains roughly 75 W; an ox perhaps 400 W. Free, and the reason Roman industry is shaped the way it is."
- },
- {
-  "id": "cap_power_water",
-  "name": "Water power, tens of kW on one shaft",
+  "name": "Draught-animal muscle power",
   "cat": "capability",
   "pre": [
-   "cap_power_muscle",
-   "water_power_scale"
+   "cap_power_human"
   ],
   "kb": "",
   "ph": 0,
@@ -500,7 +478,37 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME ALREADY HAS THIS and barely uses it for anything but grinding grain. Barbegal runs 16 overshot wheels. The technology gap is imagination, not engineering."
+  "note": "Oxen, horses, mules, or comparable domesticated draught animals can supply sustained traction and rotary power; an ox can provide roughly 400 W. This capability is not universal human muscle power and is absent where suitable working animals and harness traditions do not exist.",
+  "traits": [
+   "infrastructure"
+  ]
+ },
+ {
+  "id": "cap_power_water",
+  "name": "Water power, tens of kW on one shaft",
+  "cat": "capability",
+  "pre": [
+   "water_power_scale",
+   "cap_power_human"
+  ],
+  "kb": "",
+  "ph": 0,
+  "lab": {},
+  "mat": {},
+  "cap": 0,
+  "up": 20,
+  "yrs": 0,
+  "risk": 0.0,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "A",
+  "note": "Already available and barely used for anything but grinding grain, wherever a water wheel turns (Rome's Barbegal runs 16 overshot wheels and still mostly grinds grain). The technology gap is imagination, not engineering.",
+  "traits": [
+   "infrastructure"
+  ]
  },
  {
   "id": "cap_power_steam",
@@ -524,7 +532,10 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Power where there is no river. Until you need that, water is cheaper and needs a far shorter prerequisite chain."
+  "note": "Power where there is no river. Until you need that, water is cheaper and needs a far shorter prerequisite chain.",
+  "traits": [
+   "infrastructure"
+  ]
  },
  {
   "id": "cap_power_electric",
@@ -548,7 +559,11 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "One dynamo on the millpond shaft you already built. Enough for arc lights, electroplating, a laboratory."
+  "note": "One dynamo on the millpond shaft you already built. Enough for arc lights, electroplating, a laboratory.",
+  "traits": [
+   "inexplicable",
+   "infrastructure"
+  ]
  },
  {
   "id": "cap_power_grid",
@@ -572,7 +587,10 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "The precondition for every energy-intensive process: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a purity programme eats."
+  "note": "The precondition for every energy-intensive process: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a purity programme eats.",
+  "traits": [
+   "infrastructure"
+  ]
  },
  {
   "id": "cap_measure_len",
@@ -766,14 +784,22 @@
   "name": "Oxygen and hydrogen in quantity",
   "cat": "capability",
   "pre": [
-   "industrial_gases"
+   "analytical_chemistry",
+   "sulfuric_retort"
   ],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
+  "kb": "20_chemistry.md#industrial_gases",
+  "ph": 450.0,
+  "lab": {
+   "artisan": 2000.0,
+   "chemist": 2500.0
+  },
+  "mat": {
+   "pyrolusite_kg": 900.0,
+   "sulfuric_acid_kg": 3000.0,
+   "zinc_kg": 600.0
+  },
+  "cap": 3500.0,
+  "up": 2500.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -782,6 +808,27 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Gate on the oxy-hydrogen flame, fused quartz, balloons, and the hydrogen reduction of germanium oxide."
+  "note": "Zinc or iron with acid gives hydrogen; heating manganese dioxide or a chlorate gives oxygen. Needed for the oxy-hydrogen torch, for fused quartz, for balloons, and later for reducing germanium oxide to metal. Hydrogen and air is an explosive mixture over a very wide range; be disciplined.",
+  "traits": [
+   "inexplicable",
+   "spectacle"
+  ],
+  "req_any": [
+   {
+    "group": "sulfuric_acid_supply",
+    "options": {
+     "chm_contact_sulfuric": 1.0,
+     "lead_chamber": 1.0
+    }
+   },
+   {
+    "group": "zinc_metal_supply",
+    "options": {
+     "mat_zinc": 1.0,
+     "zinc_industry_scale": 1.0,
+     "zinc_metal": 1.0
+    }
+   }
+  ]
  }
 ]

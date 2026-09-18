@@ -252,3 +252,138 @@ against production and stopping there would look like data loss in `kb`,
 `note` and `pre` until `repair` is re-run). `data/tech_tree.json` was left
 byte-for-byte as committed by this work; only `sim/treetool.py` and the two
 branch files with the resolved collision were changed.
+
+---
+
+## Done for real: regenerated, after moving the real work out of the tree first
+
+The mechanism above was correct and untouched (`sim/treetool.py` needed no
+further changes). What was still owed was this file's own repeated warning:
+"the tree stays authoritative" only meant something *while nobody had
+checked what was sitting in the tree and nowhere else*. That check is done
+now, and this section is the record of it.
+
+**Method.** `merge --dry-run` against the live tree and branches was
+diffed field by field, not just counted. To separate "branches finally
+applying" from "the tree quietly diverging from branches", every branch fix
+found along the way was applied to a SCRATCH copy of the branches, the full
+`merge` -> `repair` -> `apply-caps` pipeline was re-run against that scratch
+copy, and the result was diffed against the real committed tree again. Repeat
+until the only remaining differences are understood. That loop is what
+turned "2,834 of 2,864 nodes would change" into a short, explainable list.
+
+**What was REAL WORK sitting only in the tree, now moved into branches:**
+
+- `traits` on 853 nodes - present in the tree, absent from every branch file.
+  Once restored, `repair`'s `SOCIAL-FLAT` default-application stopped
+  double-guessing `gov`/`sus` for those nodes, which is why the next two
+  items exist.
+- `gov`/`sus` scalars, hand-set (matching `repair`'s own category defaults,
+  which is HOW they got their number in the first place, but no longer
+  reproducible once `traits` was correct) on around 290 nodes.
+- `kb` recipe-level doc anchors (e.g. `76_farming_food_deep.md#ag2_
+  adulteration_law`) on 754 nodes - real, checked-against-`knowledge/`
+  documentation links that existed only in the tree; branches had nothing,
+  so `repair`'s generic module-level fallback was quietly standing in for
+  real content on every one of them.
+- `note` prose on 292 nodes - specific historical/technical detail (temperatures,
+  dates, mechanisms) that had replaced a terser branch description, verified
+  by hand rather than by length alone (18 further cases were judged
+  genuinely ambiguous - both sides substantive, differently written - and
+  were deliberately left for the branch's own text to win, rather than
+  guessed at a second time).
+- `req_any` material-substitution groups on 131 nodes (e.g. "cast iron OR
+  bronze OR wrought steel, at different quality multipliers") - present only
+  in the tree.
+- `cat`/`risk` on the 7 nodes (`mat_chile_nitrate`, `mat_cryolite`, `mat_
+  gutta_percha`, `mat_natural_rubber`, `mat_newworld_crops`, `mat_platinum_
+  bulk`, `mat_quinine`) that a geography-driven realism pass moved from the
+  retired `unobtainable` category to `located_material`. Branches still said
+  `unobtainable`, which `sim/engine/projects.py` treats as PERMANENTLY
+  BLOCKED regardless of civilisation or geography - regenerating without
+  this fix would have made seven real, geography-gated materials
+  unbuildable in every game, forever.
+- `mat`/`lab`/`ph`/`cap`/`up`/`build_yrs`/`yrs`/`conf`/`name` - a systematic,
+  one-directional re-costing (median 1.7x-5x higher `ph`/`cap`/`mat`/`lab`)
+  that had been applied to the tree directly and never to branches, found by
+  the ratio always running the same way across hundreds of nodes rather than
+  splitting both ways the way an ordinary two-sided disagreement would.
+  `rev` looked like the same shape at first (branch consistently ~5x the
+  tree's figure) but turned out to be the opposite case - see below.
+- Real `pre` edges on 433 nodes (689 individual edges: 527 ordinary
+  prerequisites - e.g. New World crops correctly requiring
+  `exp_atlantic_crossing` - plus 162 capability rungs added by hand, unmarked,
+  consistent with the realism review's "GATE HARDER" / "MISSING GATE"
+  verdicts rather than with `repair`'s (disabled) keyword heuristic).
+
+**What was found and corrected in the OTHER direction - branches carrying a
+STALE edge that the tree had already, deliberately, dropped or split.** The
+first pass of the `pre` fix above was naive (add whatever the tree has that
+the branch doesn't) and it re-broke two already-shipped fixes as a result,
+caught only by the regression suite:
+
+- `tl_pneumatic_tyre` and `tl_vulcanized_rubber` regained a direct
+  `mat_natural_rubber` prerequisite that a "rubber must be made, not bought"
+  fix had deliberately removed in favour of routing through
+  `tl_vulcanized_rubber` / `mat_rubber_coagulated`. Removed again, at the
+  branch (`45a_transport_land_deep.json`).
+- Seventeen nodes (`cn_crane_treadwheel`, `cn_pile_driving`, `en_treadwheel`,
+  `pwr_force_pump`, `tr_capstan`, `tr_windlass`, and eleven more) carried a
+  stale `cap_power_muscle` prerequisite alongside the tree's correct `cap_
+  power_human`, undoing a "human labour and animal labour are distinct
+  capability gates" fix. The stale edge was removed at each node's branch
+  source, not papered over by editing the tree.
+
+**Two fields held back, not applied, despite branches being real,
+deliberately-authored content:** `rev` and (on reflection, in most of its
+600+ remaining nodes) `up`. Complaints/30's own "Decision" section from
+before this work said outright that this pass had never had its "author
+intent" checked, and it was right to be cautious: letting `up` flow
+(`branch has a real number, tree has 0`, the majority pattern already
+measured above) turns out to zero-then-un-zero exactly the set of
+notation/theory/method nodes an earlier fix had deliberately made NOT
+ventures (`is_venture()` is `rev > 0 or up > 0`, and the theory nodes were
+zeroed on both fields on purpose) - flipping ~1,063 of them back into
+openable "shops". `rev` breaks a closer invariant: letting its branch figure
+through (median ~5x the tree's) let a fresh household fund `identity_cover`
+in one step instead of three, which is a live regression test's whole
+point. Both were pushed back to the TREE's value at every branch site that
+disagreed (1,063 nodes for `up`, 246 for `rev`) rather than at the mechanism
+level, so `merge`'s field-overlay stays a single honest rule and the
+special-casing lives in the data, where it is visible, not in the code,
+where it would not be. The branch-authored numbers are not lost - they are
+still in this file's git history and in every branch file's git blame -
+they are simply not yet the ones in play. Doing that review is still the
+outstanding work this file already asked for once.
+
+**Three genuine self-cycles, fixed at the source, as expected:**
+`mat_bulk_steel` -> `bessemer_openhearth` (a retired duplicate id merged
+back into itself), `cap_gas_o2h2` -> `industrial_gases` (same shape), `tl_
+electric_starter` -> `electric_starter` (the file's own self-ref-repair
+prefixing an unqualified id back onto itself). **Two more, found by actually
+running the merge rather than trusting the earlier count:** `lnd_steering_
+geometry` <-> `lnd_automobile` and `md2_microbiology_culture` <-> `md2_agar_
+media`, both two-node cycles where each side named the other as its own
+prerequisite. In both cases the backward edge (steering geometry requiring
+a complete automobile; agar media requiring the culturing technique it is
+itself a prerequisite for) was the one removed.
+
+**Fixed point, proved:** `merge` -> `repair` -> `apply-caps`, run a second
+time immediately after the first, produces a byte-identical `data/tech_
+tree.json`. (A bare second `merge`, with no `repair`/`apply-caps` in
+between, is NOT byte-identical to itself - exactly as this file's "Decision"
+section already said it would look, since `repair` and `apply-caps` add
+content `merge` alone does not know about. That is not a fixed-point
+failure, it is running one third of the pipeline and comparing it to all of
+it.)
+
+**Result:** 2,864 nodes before, 2,864 after. `python3 sim/simulator.py
+validate` clean. `python3 sim/test_regressions.py` - 2,147 checks, 0
+failures, including `civilisation_prerequisites` (still exactly the same 17
+pinned violations), `tierless_schema`, and all five `realism_part0*` topics.
+`treetool.py judge`'s mean score is unchanged at 96.0/100, and the grade
+distribution moved by single digits (SOCIAL-FLAT defects fell from 135 to
+124, because real `traits` are now doing that job instead of a category
+guess). The five civilisations' `living_cost()`, `revenue()` and starting
+`capital()` are bit-for-bit identical to before this regeneration - holding
+`rev`/`up` back is exactly why.

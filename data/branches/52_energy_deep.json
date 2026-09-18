@@ -4,12 +4,12 @@
   "name": "Treadwheel",
   "cat": "water_prime",
   "pre": [
-   "cap_power_muscle"
+   "cap_power_human"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Vertical wheel with internal steps for walkers to climb",
+  "kb": "98_power_plants.md#en_undershot_wheel",
   "ph": 20,
   "lab": {
    "carpenter": 100
@@ -24,7 +24,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.05,
-  "rev": 150,
+  "rev": 25.3,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -40,7 +40,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Horizontal wheel rotated by walking or trotting horse",
+  "kb": "98_power_plants.md#en_undershot_wheel",
   "ph": 30,
   "lab": {
    "carpenter": 150
@@ -55,7 +55,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.05,
-  "rev": 250,
+  "rev": 52.7,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -72,7 +72,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Vertical wheel driven by water impulse at bottom",
+  "kb": "98_power_plants.md#en_undershot_wheel",
   "ph": 60,
   "lab": {
    "millwright": 300
@@ -92,7 +92,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Paddle buckets catch water flow; poor efficiency (25 percent) but works on shallow rivers where no height drop exists."
+  "note": "This already operates at scale wherever there is a river to turn it. The water pushes on the bucket; it is simple, portable, and tolerates muddy water and sand."
  },
  {
   "id": "en_overshot_wheel",
@@ -105,7 +105,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Vertical wheel fed at top, water weight drives rotation",
+  "kb": "98_power_plants.md#en_overshot_wheel",
   "ph": 80,
   "lab": {
    "millwright": 368
@@ -121,34 +121,38 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.12,
-  "rev": 1000,
+  "rev": 214.7,
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Water fills buckets at top; gravity and flow together drive motion (60-80 percent efficiency). Needs height drop and leat."
+  "note": "This already exists wherever a flowing stream gives a significant drop, and it is capable of real scale: Rome's 16-wheel Barbegal complex is the standing example. Weight of the water does the work; it needs a significant drop but delivers more power per wheel."
  },
  {
   "id": "en_breastshot_wheel",
   "name": "Breastshot water wheel",
   "cat": "water_prime",
   "pre": [
-   "cap_power_water"
+   "cap_power_water",
+   "cap_tol_1mm",
+   "water_power_scale"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Vertical wheel with buckets struck at breast height",
-  "ph": 70,
+  "kb": "98_power_plants.md#en_overshot_wheel",
+  "ph": 180.0,
   "lab": {
-   "millwright": 322
+   "artisan": 200.0,
+   "carpenter": 300.0,
+   "millwright": 322.0
   },
   "mat": {
-   "mat_wrought_iron": 120,
-   "mat_wood_bulk": 280
+   "iron_bar_kg": 120.0,
+   "timber_m3": 5.0
   },
-  "cap": 65,
-  "up": 12,
+  "cap": 150.0,
+  "up": 40.0,
   "build_yrs": 0.9,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -158,7 +162,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Compromise between undershot and overshot; efficient (70 percent) on moderate head. Buckets fill partway down wheel."
+  "note": "Water hits the wheel at mid-height, between overshot and undershot. Smeaton measured efficiency systematically: breastshot wins by combining gravity and impulse when head is moderate. This is how empirical engineering began."
  },
  {
   "id": "en_poncelet_wheel",
@@ -171,7 +175,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Curved buckets reduce shock and spillage at entry",
+  "kb": "98_power_plants.md#en_overshot_wheel",
   "ph": 100,
   "lab": {
    "millwright": 322,
@@ -188,7 +192,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.12,
-  "rev": 1200,
+  "rev": 207.0,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -206,7 +210,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Fixed guide vanes, rotating bucket rings, outward radial flow",
+  "kb": "98_power_plants.md#en_fourneyron_turbine",
   "ph": 200,
   "lab": {
    "engineer": 460,
@@ -240,7 +244,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Guide vanes direct water inward radially then downward",
+  "kb": "98_power_plants.md#en_fourneyron_turbine",
   "ph": 220,
   "lab": {
    "engineer": 506,
@@ -270,23 +274,29 @@
   "pre": [
    "en_fourneyron_turbine",
    "cap_tol_10um",
-   "boring_mill"
+   "boring_mill",
+   "cap_heat_1300",
+   "cap_tol_100um",
+   "mat_cast_iron",
+   "water_power_scale"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Free jets strike hemispherical buckets with splitter vanes",
-  "ph": 180,
+  "kb": "98_power_plants.md#en_fourneyron_turbine",
+  "ph": 250.0,
   "lab": {
-   "engineer": 441,
-   "machinist": 368
+   "artisan": 150.0,
+   "engineer": 441.0,
+   "machinist": 368.0
   },
   "mat": {
-   "mat_cast_iron": 200,
-   "mat_bronze": 150
+   "bronze_kg": 150.0,
+   "cast_iron_kg": 200.0,
+   "iron_bar_kg": 25.0
   },
-  "cap": 300,
-  "up": 60,
+  "cap": 350.0,
+  "up": 70.0,
   "build_yrs": 2.0,
   "adopt_yrs": 0,
   "dev_years": 6,
@@ -296,7 +306,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Two buckets per impulse; splitter divides jet precisely. Runs at high speed (hundreds of rpm) on high head; 90+ percent efficient."
+  "note": "A jet of water hits a double-cup bucket at high speed, splitting the jet tangentially to the wheel. Ideal for very high heads with low flow. The bucket profile is critical; casting is easier than machining but requires controlled cooling to avoid cracks."
  },
  {
   "id": "en_kaplan_turbine",
@@ -309,7 +319,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adjustable blades and guide vanes for varying flow and head",
+  "kb": "98_power_plants.md#en_fourneyron_turbine",
   "ph": 250,
   "lab": {
    "engineer": 552,
@@ -342,7 +352,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Pipe or channel carrying water to turbine from height",
+  "kb": "98_power_plants.md#en_penstock",
   "ph": 50,
   "lab": {
    "mason": 368,
@@ -359,7 +369,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.08,
-  "rev": 800,
+  "rev": 113.9,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -375,7 +385,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Expanding tube below turbine recovers exit velocity energy",
+  "kb": "98_power_plants.md#en_penstock",
   "ph": 80,
   "lab": {
    "engineer": 300,
@@ -410,7 +420,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Floats or weights sense flow and adjust spillway gate",
+  "kb": "98_power_plants.md#en_water_wheel_governor",
   "ph": 100,
   "lab": {
    "millwright": 368,
@@ -438,24 +448,28 @@
   "name": "Tide mill",
   "cat": "water_prime",
   "pre": [
-   "en_overshot_wheel"
+   "en_overshot_wheel",
+   "en_breastshot_wheel",
+   "water_power_scale"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
   "kb": "Impoundment captured by gates at high tide, released through wheel",
-  "ph": 120,
+  "ph": 200.0,
   "lab": {
    "millwright": 460,
    "mason": 300
   },
   "mat": {
-   "mat_stone": 1000,
-   "mat_wrought_iron": 100
+   "brick_1000": 10.0,
+   "iron_bar_kg": 100.0,
+   "stone_kg": 2000.0,
+   "timber_m3": 6.0
   },
-  "cap": 60,
-  "up": 12,
+  "cap": 400.0,
+  "up": 100.0,
   "build_yrs": 3.0,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -465,31 +479,32 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Pool fills twice daily on rising tide; wheel operates when tide falls. Intermittent but predictable. Sluice gates must seal well and handle tidal silt."
+  "note": "A mill at the estuary with gates that open on incoming tide, close on outgoing, releasing a head of water. Twice per 24 hours, not continuous, but free and predictable. Requires careful site and sluice design."
  },
  {
   "id": "en_post_mill",
   "name": "Post mill",
   "cat": "wind_prime",
   "pre": [
-   "cap_power_water"
+   "cap_power_water",
+   "cap_tol_1mm"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
   "kb": "Windmill on single central post, rotates whole body to face wind",
-  "ph": 100,
+  "ph": 250.0,
   "lab": {
    "carpenter": 552,
    "millwright": 300
   },
   "mat": {
-   "mat_wood_bulk": 800,
-   "mat_wrought_iron": 200
+   "iron_bar_kg": 200.0,
+   "timber_m3": 8.0
   },
-  "cap": 50,
-  "up": 10,
+  "cap": 300.0,
+  "up": 60.0,
   "build_yrs": 2.0,
   "adopt_yrs": 0.5,
   "dev_years": 0,
@@ -499,32 +514,36 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Body pivots on single tall post; manual rotation or fantail adjusts heading. Wooden frame limits size. Top-bearing torque is extreme; needs strong construction."
+  "note": "The entire mill building pivots on a post to face the wind. It is portable, fits anywhere, and gives you wind power without a tall fixed tower. The miller rotates it by hand or rope from a tail pole."
  },
  {
   "id": "en_tower_mill",
   "name": "Tower mill",
   "cat": "wind_prime",
   "pre": [
-   "en_post_mill"
+   "en_post_mill",
+   "cap_tol_1mm",
+   "mat_cast_iron"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
   "kb": "Fixed brick or stone tower, cap rotates to face wind",
-  "ph": 150,
+  "ph": 300.0,
   "lab": {
    "mason": 736,
    "millwright": 368
   },
   "mat": {
-   "mat_stone": 2000,
-   "mat_brick": 1000,
-   "mat_wrought_iron": 300
+   "brick_1000": 20.0,
+   "cast_iron_kg": 30.0,
+   "iron_bar_kg": 300.0,
+   "stone_kg": 2000.0,
+   "timber_m3": 6.0
   },
-  "cap": 80,
-  "up": 15,
+  "cap": 500.0,
+  "up": 80.0,
   "build_yrs": 4.0,
   "adopt_yrs": 0.5,
   "dev_years": 0,
@@ -534,7 +553,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Only cap rotates on ring bearing; allows larger sails and heavier machinery inside. Conical tower reduces bearing load. More expensive but much more capable."
+  "note": "A fixed tapered brick or stone tower with a rotating cap. Taller and heavier than a post mill, it catches stronger winds and is more stable. The rotary bearing is now high stress, needing good metalwork."
  },
  {
   "id": "en_windmill_fantail",
@@ -547,18 +566,19 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Auxiliary small windmill perpendicular to main axis",
-  "ph": 90,
+  "kb": "98_power_plants.md#en_patent_sail",
+  "ph": 200.0,
   "lab": {
-   "millwright": 322,
-   "master_screw": 60
+   "artisan": 200.0,
+   "carpenter": 150.0,
+   "millwright": 322.0
   },
   "mat": {
-   "mat_wrought_iron": 80,
-   "mat_wood_bulk": 200
+   "iron_bar_kg": 80.0,
+   "timber_m3": 2.0
   },
-  "cap": 50,
-  "up": 8,
+  "cap": 150.0,
+  "up": 40.0,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -568,7 +588,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Small tail rotor catches wind sideways to main sails; drives gearing that turns main cap automatically to stay aligned. Eliminates manual turning."
+  "note": "A small perpendicular fan on the tail of the cap automatically rotates the mill to face the wind. If the wind is too strong, the fan spins faster, which tilts a striker linkage that furls the sail. No miller attendance needed at night."
  },
  {
   "id": "en_patent_sail",
@@ -581,7 +601,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Fabric sail on parallelogram frame automatically reefs in gusts",
+  "kb": "98_power_plants.md#en_patent_sail",
   "ph": 110,
   "lab": {
    "carpenter": 368,
@@ -598,7 +618,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 800,
+  "rev": 235.9,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -614,7 +634,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adjustable sails with springs to change angle quickly",
+  "kb": "98_power_plants.md#en_patent_sail",
   "ph": 100,
   "lab": {
    "carpenter": 322,
@@ -631,7 +651,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 850,
+  "rev": 264.3,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -648,7 +668,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Windmill-driven reciprocating pump for water",
+  "kb": "98_power_plants.md#en_wind_pump",
   "ph": 120,
   "lab": {
    "millwright": 414,
@@ -682,7 +702,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Windmill coupled to dynamo for electric generation",
+  "kb": "98_power_plants.md#en_wind_pump",
   "ph": 180,
   "lab": {
    "engineer": 368,
@@ -753,7 +773,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Remote condenser vessel cools steam while cylinder stays hot",
+  "kb": "98_power_plants.md#en_separate_condenser",
   "ph": 200,
   "lab": {
    "engineer": 552,
@@ -787,7 +807,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Steam pushes piston both ways; twice the strokes per minute",
+  "kb": "98_power_plants.md#en_atmospheric_engine",
   "ph": 160,
   "lab": {
    "engineer": 478,
@@ -821,7 +841,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Four-bar linkage guides piston rod in nearly straight line",
+  "kb": "98_power_plants.md#en_parallel_motion",
   "ph": 100,
   "lab": {
    "engineer": 368,
@@ -855,7 +875,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Spinning weights fly out in gust, close throttle valve automatically",
+  "kb": "98_power_plants.md#en_water_wheel_governor",
   "ph": 120,
   "lab": {
    "engineer": 414,
@@ -889,7 +909,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Planet gear rolls around sun gear, converting reciprocal to rotary",
+  "kb": "98_power_plants.md#en_parallel_motion",
   "ph": 100,
   "lab": {
    "engineer": 349,
@@ -919,7 +939,10 @@
   "pre": [
    "cap_heat_1300",
    "cap_tol_10um",
-   "boring_mill"
+   "boring_mill",
+   "mat_bulk_steel",
+   "steam_high_pressure",
+   "thermodynamics_theory"
   ],
   "req_any": [
    {
@@ -934,7 +957,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Steam 3-10 atm above atmospheric pressure",
+  "kb": "98_power_plants.md#en_high_pressure_engine",
   "ph": 180,
   "lab": {
    "engineer": 506,
@@ -951,7 +974,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.2,
-  "rev": 2200,
+  "rev": 711.4,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -967,7 +990,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Steam inlet closes partway through piston stroke, pressure drops",
+  "kb": "98_power_plants.md#en_expansive_working",
   "ph": 110,
   "lab": {
    "engineer": 386,
@@ -1000,7 +1023,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Slide valve closes inlet at fraction of stroke",
+  "kb": "98_power_plants.md#en_expansive_working",
   "ph": 90,
   "lab": {
    "machinist": 322,
@@ -1034,7 +1057,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Four independent rotating cams open and close inlet and exhaust",
+  "kb": "98_power_plants.md#en_expansive_working",
   "ph": 150,
   "lab": {
    "engineer": 460,
@@ -1068,7 +1091,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Steam flows one direction through cylinder; exhaust from middle",
+  "kb": "98_power_plants.md#en_high_pressure_engine",
   "ph": 160,
   "lab": {
    "engineer": 478,
@@ -1102,7 +1125,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "High pressure cylinder exhausts into low pressure cylinder",
+  "kb": "98_power_plants.md#en_high_pressure_engine",
   "ph": 180,
   "lab": {
    "engineer": 515,
@@ -1135,7 +1158,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spray cold water directly into exhaust steam chamber",
+  "kb": "98_power_plants.md#en_separate_condenser",
   "ph": 70,
   "lab": {
    "machinist": 250
@@ -1168,7 +1191,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Tubes carry cold water past condensing steam, no direct contact",
+  "kb": "98_power_plants.md#en_separate_condenser",
   "ph": 100,
   "lab": {
    "engineer": 322,
@@ -1201,7 +1224,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Exhaust steam heats boiler feedwater before entering boiler",
+  "kb": "98_power_plants.md#en_economiser",
   "ph": 90,
   "lab": {
    "engineer": 303,
@@ -1234,7 +1257,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Exhaust gases preheat feedwater in tubes through flue",
+  "kb": "98_power_plants.md#en_economiser",
   "ph": 100,
   "lab": {
    "engineer": 331,
@@ -1262,22 +1285,24 @@
   "name": "Haystack boiler",
   "cat": "steam_boiler",
   "pre": [
-   "cap_heat_1100"
+   "cap_heat_1100",
+   "steam_atmospheric"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Copper sphere or hemispherical shell, wood fire underneath",
-  "ph": 60,
+  "ph": 180.0,
   "lab": {
    "coppersmith": 300
   },
   "mat": {
-   "mat_copper": 400,
-   "mat_wrought_iron": 100
+   "copper_kg": 400.0,
+   "iron_bar_kg": 100.0,
+   "iron_sheet_kg": 80.0
   },
-  "cap": 40,
-  "up": 8,
+  "cap": 300.0,
+  "up": 80.0,
   "build_yrs": 1.0,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -1287,7 +1312,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Earliest practical boiler form; seams leak unless brazed carefully. Can only hold 2-3 atm before failure. Light and portable. Expensive copper limits use to important engines."
+  "note": "A rounded iron shell, fire at the bottom, the simplest boiler. Low pressure, small explosion risk, but slow steam generation and poor heat transfer. Used where durability matters more than speed."
  },
  {
   "id": "en_boiler_wagon",
@@ -1295,22 +1320,24 @@
   "cat": "steam_boiler",
   "pre": [
    "cap_heat_1100",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "steam_atmospheric"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Cylindrical iron shell with flat ends, internal fire tube",
-  "ph": 80,
+  "ph": 200.0,
   "lab": {
    "metalworker": 368
   },
   "mat": {
-   "mat_cast_iron": 600,
-   "mat_wrought_iron": 300
+   "cast_iron_kg": 600.0,
+   "iron_bar_kg": 300.0,
+   "iron_sheet_kg": 100.0
   },
-  "cap": 60,
-  "up": 12,
+  "cap": 400.0,
+  "up": 100.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 0,
@@ -1320,7 +1347,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Horizontal cylinder with single large fire tube; water surrounds tube. Explosions are common until pressure gauges become standard. Needs strong flat-end construction."
+  "note": "Cylindrical shell, internal fire tubes passing through water. More surface area than haystack; faster steam generation. Mobile, used on early locomotives and threshing machines. Prone to scale and tube fouling."
  },
  {
   "id": "en_boiler_cornish",
@@ -1328,23 +1355,27 @@
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_wagon",
-   "cap_tol_10um"
+   "cap_tol_10um",
+   "cap_tol_100um",
+   "steam_high_pressure"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Cylindrical shell with two fire tubes inside",
-  "ph": 110,
+  "ph": 250.0,
   "lab": {
    "engineer": 349,
    "metalworker": 368
   },
   "mat": {
-   "mat_cast_iron": 800,
-   "mat_wrought_iron": 400
+   "cast_iron_kg": 800.0,
+   "copper_kg": 20.0,
+   "iron_bar_kg": 400.0,
+   "iron_sheet_kg": 120.0
   },
-  "cap": 90,
-  "up": 18,
+  "cap": 600.0,
+  "up": 150.0,
   "build_yrs": 2.0,
   "adopt_yrs": 0.1,
   "dev_years": 5,
@@ -1354,7 +1385,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Two parallel tubes increase heating surface without much size increase. Better heat transfer. Fire and flue gas contact is more even; less scaling in cold spots."
+  "note": "One large fire tube through the water. Rugged, handles high pressure, but prone to violent failure if the tube plugs and overheats. Requires skilled operation and routine inspection."
  },
  {
   "id": "en_boiler_lancashire",
@@ -1362,23 +1393,27 @@
   "cat": "steam_boiler",
   "pre": [
    "en_boiler_cornish",
-   "cap_tol_10um"
+   "cap_tol_10um",
+   "cap_tol_100um",
+   "steam_high_pressure"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Cylindrical shell with two large internal fire tubes with return flues",
-  "ph": 130,
+  "ph": 250.0,
   "lab": {
    "engineer": 386,
    "metalworker": 414
   },
   "mat": {
-   "mat_cast_iron": 1000,
-   "mat_wrought_iron": 500
+   "cast_iron_kg": 1000.0,
+   "copper_kg": 30.0,
+   "iron_bar_kg": 500.0,
+   "iron_sheet_kg": 140.0
   },
-  "cap": 110,
-  "up": 22,
+  "cap": 700.0,
+  "up": 160.0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.1,
   "dev_years": 6,
@@ -1388,7 +1423,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Each large fire tube has small return flue inside. Gases reverse direction and pick up more heat. Huge increase in surface area. Standard industrial boiler by 1900."
+  "note": "Two fire tubes: more heat surface than Cornish, better steam generation. Smaller diameter tubes cool faster if they scale, less dramatic failure. Industrial standard for textile mills and pumping stations."
  },
  {
   "id": "en_boiler_locomotive",
@@ -1401,7 +1436,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Compact box with many small fire tubes, flat sides and crown sheet",
+  "kb": "98_power_plants.md#en_boiler_cornish",
   "ph": 120,
   "lab": {
    "engineer": 368,
@@ -1430,24 +1465,33 @@
   "cat": "steam_boiler",
   "pre": [
    "cap_tol_10um",
-   "boring_mill"
+   "boring_mill",
+   "cap_heat_1300",
+   "cap_heat_1600",
+   "cap_tol_100um",
+   "cap_tol_1mm",
+   "mat_bulk_steel",
+   "steam_high_pressure"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Water flows through tubes between two large drums, fire outside",
-  "ph": 160,
+  "ph": 300.0,
   "lab": {
    "engineer": 441,
    "machinist": 368
   },
   "mat": {
-   "mat_steel": 600,
-   "mat_cast_iron": 300,
-   "mat_bronze": 100
+   "brass_kg": 50.0,
+   "bronze_kg": 100.0,
+   "cast_iron_kg": 300.0,
+   "copper_kg": 40.0,
+   "iron_bar_kg": 80.0,
+   "steel_plate_kg": 300.0
   },
-  "cap": 150,
-  "up": 35,
+  "cap": 2500.0,
+  "up": 300.0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,
   "dev_years": 8,
@@ -1457,7 +1501,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Tubes are subject to tension not compression; can be thin walled. Explosion less likely because no large volume of water. Excellent for high pressure and large capacity. ..."
+  "note": "Small tubes of water through a chamber of hot gas, boiler in a steel frame. Much higher steam generation than fire-tube types, safer (small volume of water means less explosive stored energy), but more complex assembly and maintenance."
  },
  {
   "id": "en_boiler_babcock",
@@ -1469,7 +1513,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Drum-and-tube with straight inclined tubes between drums",
+  "kb": "98_power_plants.md#en_boiler_water_tube",
   "ph": 140,
   "lab": {
    "engineer": 386,
@@ -1503,7 +1547,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Helical coil of tubes wrapped around combustion chamber",
+  "kb": "98_power_plants.md#en_boiler_water_tube",
   "ph": 150,
   "lab": {
    "engineer": 404,
@@ -1532,22 +1576,27 @@
   "name": "Safety valve (pop-off)",
   "cat": "steam_auxiliary",
   "pre": [
-   "en_high_pressure_engine"
+   "en_high_pressure_engine",
+   "cap_tol_1mm",
+   "steam_atmospheric"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "Spring-loaded valve pops open at set pressure",
-  "ph": 70,
+  "kb": "98_power_plants.md#en_safety_valve",
+  "ph": 150.0,
   "lab": {
-   "machinist": 250
+   "artisan": 100.0,
+   "machinist": 250.0,
+   "smith": 150.0
   },
   "mat": {
-   "mat_bronze": 60,
-   "mat_wrought_iron": 40
+   "brass_kg": 10.0,
+   "bronze_kg": 60.0,
+   "iron_bar_kg": 40.0
   },
-  "cap": 50,
-  "up": 8,
+  "cap": 150.0,
+  "up": 20.0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.3,
   "dev_years": 0,
@@ -1557,7 +1606,7 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Spring constant and weight set pressure; simple and direct. Valve closure can be abrupt causing chatter. Essential for high-pressure boilers; prevents catastrophic explosion."
+  "note": "A weighted spring-loaded valve that lifts at a set pressure, and a Bourdon or liquid gauge to read it. Early boiler explosions killed many; this is the honest lesson that machines need observation and limits. Requires calibration and maintenance."
  },
  {
   "id": "en_pressure_gauge",
@@ -1604,7 +1653,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Valve lets condensate out but closes if steam reaches it",
+  "kb": "98_power_plants.md#en_safety_valve",
   "ph": 80,
   "lab": {
    "machinist": 280
@@ -1671,7 +1720,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "High-velocity jet from nozzle strikes flat-bottomed buckets",
+  "kb": "98_power_plants.md#en_steam_turbine_impulse",
   "ph": 200,
   "lab": {
    "engineer": 506,
@@ -1700,23 +1749,29 @@
   "cat": "steam_prime",
   "pre": [
    "en_steam_turbine_impulse",
-   "cap_tol_10um"
+   "cap_tol_10um",
+   "cap_heat_1600",
+   "mat_tool_steel_hss",
+   "steam_high_pressure"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Stationary and rotating blade rows alternate; pressure drops gradually",
-  "ph": 230,
+  "kb": "98_power_plants.md#en_steam_turbine_impulse",
+  "ph": 400.0,
   "lab": {
-   "engineer": 552,
-   "machinist": 460
+   "artisan": 300.0,
+   "engineer": 552.0,
+   "machinist": 500.0
   },
   "mat": {
-   "mat_steel": 400,
-   "mat_bronze": 200
+   "bronze_kg": 200.0,
+   "cast_iron_kg": 80.0,
+   "copper_kg": 40.0,
+   "tool_steel_kg": 50.0
   },
-  "cap": 350,
-  "up": 70,
+  "cap": 2000.0,
+  "up": 400.0,
   "build_yrs": 3.0,
   "adopt_yrs": 0.2,
   "dev_years": 12,
@@ -1726,7 +1781,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Each rotor blade row expands steam; reaction force pushes rotor forward. Many stages (10-50) give efficiency 85+ percent. Works well at low rpm (3000). No speed multiplier needed."
+  "note": "Stages of rotor and stator blades; steam expands through each stage, doing work and accelerating. Above a few hundred kW, this beats reciprocating engines: no reciprocating masses, no vibration, compact, efficient. Blade tolerances and metallurgy are severe."
  },
  {
   "id": "en_steam_turbine_curtis",
@@ -1738,7 +1793,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Multiple impulse stages with buckets in series on same rotor",
+  "kb": "98_power_plants.md#en_steam_turbine_impulse",
   "ph": 210,
   "lab": {
    "engineer": 524,
@@ -1772,7 +1827,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Curved blade shapes optimised for steam flow and stress distribution",
+  "kb": "98_power_plants.md#en_turbine_blading",
   "ph": 150,
   "lab": {
    "engineer": 441,
@@ -1788,7 +1843,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 1400,
+  "rev": 351.7,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1805,7 +1860,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Vacuum below rotor blades increases expansion work",
+  "kb": "98_power_plants.md#en_turbine_blading",
   "ph": 160,
   "lab": {
    "engineer": 460,
@@ -1840,7 +1895,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Gearbox reduces turbine rpm to working speed",
+  "kb": "98_power_plants.md#en_parallel_motion",
   "ph": 120,
   "lab": {
    "engineer": 368,
@@ -1857,7 +1912,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.12,
-  "rev": 1200,
+  "rev": 379.3,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1870,23 +1925,27 @@
   "pre": [
    "coal_coke",
    "cap_heat_1100",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "cap_tol_10um",
+   "crank_conrod",
+   "pwr_coal_gas"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Four-stroke engine burning producer gas",
-  "ph": 140,
+  "kb": "98_power_plants.md#en_four_stroke_cycle",
+  "ph": 350.0,
   "lab": {
-   "engineer": 414,
-   "machinist": 322
+   "engineer": 414.0,
+   "machinist": 400.0
   },
   "mat": {
-   "mat_cast_iron": 400,
-   "mat_wrought_iron": 200
+   "cast_iron_kg": 400.0,
+   "iron_bar_kg": 200.0,
+   "tool_steel_kg": 30.0
   },
-  "cap": 80,
-  "up": 16,
+  "cap": 1200.0,
+  "up": 200.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 6,
@@ -1896,7 +1955,17 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Ignition by heated tube; no electrical spark needed. Efficiency 20 percent. Slower and heavier than later petrol engines but burns cheap gas. Very reliable."
+  "note": "Coal gas is sucked in, mixed with air, sparked, and exploded. Much lighter and simpler than a steam engine. No boiler, no furnace, no engineer. Otto and Diesel engines follow. Early models are unreliable; ignition is the problem.",
+  "req_any": [
+   {
+    "group": "fuel_source",
+    "options": {
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.8,
+     "wood_kg": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "en_four_stroke_cycle",
@@ -1942,7 +2011,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Piston opens exhaust ports; simultaneously inlet opens",
+  "kb": "98_power_plants.md#en_four_stroke_cycle",
   "ph": 90,
   "lab": {
    "engineer": 312,
@@ -2019,7 +2088,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "High-pressure pump sprays fuel into cylinder at precise moment",
+  "kb": "98_power_plants.md#en_poppet_valve",
   "ph": 150,
   "lab": {
    "engineer": 441,
@@ -2053,7 +2122,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Diesel-like engine without fuel pump; combustion chamber bulb stays hot",
+  "kb": "98_power_plants.md#en_hot_bulb_engine",
   "ph": 120,
   "lab": {
    "engineer": 368,
@@ -2074,7 +2143,18 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Fuel drips into hot bulb; combustion is slow but sustained. Simple carburettor; no precision injection. Lower efficiency (25 percent) but robust and forgiving. Cheaper than Diesel."
+  "note": "Fuel drips into hot bulb; combustion is slow but sustained. Simple carburettor; no precision injection. Lower efficiency (25 percent) but robust and forgiving. Cheaper than Diesel.",
+  "req_any": [
+   {
+    "group": "fuel_source",
+    "options": {
+     "coal_coke": 0.7,
+     "mat_charcoal": 0.5,
+     "mat_petroleum_refined": 1.0,
+     "wood_kg": 0.3
+    }
+   }
+  ]
  },
  {
   "id": "en_gas_producer",
@@ -2088,7 +2168,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Charcoal or coke burns with limited air; CO and H2 in exhaust gas",
+  "kb": "98_power_plants.md#en_coke_oven",
   "ph": 130,
   "lab": {
    "engineer": 386,
@@ -2105,11 +2185,21 @@
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.13,
-  "rev": 1200,
+  "rev": 339.3,
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Fuel gas flows up through grate; water cooler removes tars. Engine burns mixed gas; lower calorific value than coal but simpler than retort and town gas system. No pipeline needed."
+  "note": "Fuel gas flows up through grate; water cooler removes tars. Engine burns mixed gas; lower calorific value than coal but simpler than retort and town gas system. No pipeline needed.",
+  "req_any": [
+   {
+    "group": "fuel_source",
+    "options": {
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85,
+     "wood_kg": 0.75
+    }
+   }
+  ]
  },
  {
   "id": "en_carburetted_engine",
@@ -2122,7 +2212,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Fuel spray evaporates and mixes with air before intake valve",
+  "kb": "98_power_plants.md#en_hot_bulb_engine",
   "ph": 110,
   "lab": {
    "engineer": 358,
@@ -2156,7 +2246,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Mushroom valve on spring, pushed up by eccentric cam on shaft",
+  "kb": "98_power_plants.md#en_poppet_valve",
   "ph": 100,
   "lab": {
    "machinist": 322,
@@ -2190,7 +2280,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Hollow sleeve inside cylinder reciprocates or rotates to open ports",
+  "kb": "98_power_plants.md#en_poppet_valve",
   "ph": 120,
   "lab": {
    "engineer": 386,
@@ -2224,7 +2314,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Gear-driven or belt-driven compressor forces more air into cylinder",
+  "kb": "98_power_plants.md#en_supercharger",
   "ph": 140,
   "lab": {
    "engineer": 423,
@@ -2258,7 +2348,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Turbine on exhaust spins compressor on common shaft",
+  "kb": "98_power_plants.md#en_supercharger",
   "ph": 160,
   "lab": {
    "engineer": 460,
@@ -2288,12 +2378,16 @@
   "pre": [
    "cap_heat_1600",
    "cap_tol_10um",
-   "boring_mill"
+   "boring_mill",
+   "air_jet_engine_concept",
+   "mat_nickel",
+   "mat_tool_steel_hss",
+   "thermodynamics_theory"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Compressor, combustor, and turbine on same shaft",
+  "kb": "98_power_plants.md#en_gas_turbine",
   "ph": 250,
   "lab": {
    "engineer": 598,
@@ -2326,7 +2420,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Compressor, combustor, turbine with exhaust nozzle for thrust",
+  "kb": "98_power_plants.md#en_gas_turbine",
   "ph": 300,
   "lab": {
    "engineer": 644,
@@ -2360,7 +2454,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Combustion chamber with nozzle; thrust from expanding gases",
+  "kb": "98_power_plants.md#en_gas_turbine",
   "ph": 200,
   "lab": {
    "chemist": 368,
@@ -2377,11 +2471,19 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.25,
-  "rev": 2500,
+  "rev": 751.5,
   "sch": 0,
   "art": 5,
   "conf": "C",
-  "note": "Solid grain burns with high velocity exhaust. Throat and nozzle diverter geometry critical. Liquid engines need pumps, injectors, and tanks. Combustion temperature 2000-3..."
+  "note": "Solid grain burns with high velocity exhaust. Throat and nozzle diverter geometry critical. Liquid engines need pumps, injectors, and tanks. Combustion temperature 2000-3...",
+  "req_any": [
+   {
+    "group": "porcelain_supply",
+    "options": {
+     "mat_porcelain": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_liquid_propellant",
@@ -2393,7 +2495,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Kerosene or petrol with liquid oxygen or nitric acid oxidiser",
+  "kb": "98_power_plants.md#en_gas_turbine",
   "ph": 180,
   "lab": {
    "chemist": 414,
@@ -2410,7 +2512,7 @@
   "dev_years": 14,
   "dev_people": 4,
   "risk": 0.23,
-  "rev": 2600,
+  "rev": 757.1,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2422,23 +2524,26 @@
   "cat": "prime_alternative",
   "pre": [
    "cap_heat_1100",
-   "cap_tol_100um"
+   "cap_tol_100um",
+   "cap_heat_1300"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Sealed cylinder with gas cycled through hot and cold ends",
-  "ph": 120,
+  "kb": "98_power_plants.md#en_stirling_engine",
+  "ph": 300.0,
   "lab": {
-   "engineer": 368,
-   "machinist": 294
+   "artisan": 200.0,
+   "engineer": 368.0,
+   "machinist": 300.0
   },
   "mat": {
-   "mat_cast_iron": 350,
-   "mat_copper": 100
+   "cast_iron_kg": 350.0,
+   "copper_kg": 100.0,
+   "iron_bar_kg": 40.0
   },
-  "cap": 80,
-  "up": 15,
+  "cap": 800.0,
+  "up": 120.0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.05,
   "dev_years": 6,
@@ -2448,7 +2553,19 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Air expands when hot, contracts when cold; connected by regenerator. Can burn any fuel on outside. Efficiency 40 percent theoretically but 25 percent actually. Slow speed..."
+  "note": "Two cylinders with a hot end and cold end, connected via a regenerator. Displacement and timing are offset so heat is recycled. External combustion, any fuel, but complex mechanics and modest power. Useful for stationary engines where simplicity matters.",
+  "req_any": [
+   {
+    "group": "fuel_source",
+    "options": {
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.95,
+     "mat_petroleum_refined": 0.9,
+     "peat_kg": 0.65,
+     "wood_kg": 0.85
+    }
+   }
+  ]
  },
  {
   "id": "en_compressed_air_engine",
@@ -2461,7 +2578,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Piston engine using stored compressed air energy",
+  "kb": "98_power_plants.md#en_stirling_engine",
   "ph": 100,
   "lab": {
    "engineer": 331,
@@ -2495,7 +2612,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Pressurised water reservoir stores energy",
+  "kb": "98_power_plants.md#en_hydraulic_accumulator",
   "ph": 100,
   "lab": {
    "engineer": 349,
@@ -2529,7 +2646,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "High-pressure pipes throughout factory distribute energy from central pump",
+  "kb": "98_power_plants.md#en_hydraulic_accumulator",
   "ph": 140,
   "lab": {
    "engineer": 386,
@@ -2562,7 +2679,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Flat metal band wound on drum; stores energy when wound",
+  "kb": "98_power_plants.md#en_stirling_engine",
   "ph": 80,
   "lab": {
    "clockmaker": 322,
@@ -2578,7 +2695,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.1,
-  "rev": 600,
+  "rev": 6.7,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2596,7 +2713,7 @@
    "labour_saving"
   ],
   "kb": "Heavy wheel spun up by engine stores kinetic energy",
-  "ph": 110,
+  "ph": 200.0,
   "lab": {
    "engineer": 368,
    "machinist": 300
@@ -2605,8 +2722,8 @@
    "mat_cast_iron": 800,
    "mat_wrought_iron": 300
   },
-  "cap": 130,
-  "up": 25,
+  "cap": 600.0,
+  "up": 100.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 5,
@@ -2616,7 +2733,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Smooths power delivery in intermittent engines; reduces speed ripple. Large moment of inertia absorbs load surges. Energy stored is proportional to radius squared and rot..."
+  "note": "A massive disc or wheel, spun up and allowed to coast. Energy is stored as rotary momentum. Used in pumping stations to store water-mill power and release it on demand, or to smooth reciprocating engine output."
  },
  {
   "id": "en_dynamo",
@@ -2657,7 +2774,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Split copper rings on shaft; brushes reverse coil connections as pole passes",
+  "kb": "98_power_plants.md#en_alternator",
   "ph": 90,
   "lab": {
    "machinist": 294,
@@ -2693,7 +2810,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Rotating coil in magnetic field produces alternating current",
+  "kb": "98_power_plants.md#en_alternator",
   "ph": 130,
   "lab": {
    "engineer": 386,
@@ -2726,7 +2843,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Small dynamo on same shaft provides field current for large alternator",
+  "kb": "98_power_plants.md#en_alternator",
   "ph": 100,
   "lab": {
    "machinist": 303,
@@ -2760,7 +2877,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Three coils spaced 120 degrees produce three voltage waves 120 degrees apart",
+  "kb": "98_power_plants.md#en_alternator",
   "ph": 110,
   "lab": {
    "engineer": 368,
@@ -2788,17 +2905,22 @@
   "name": "Transformer (step up and step down)",
   "cat": "electrical_dist",
   "pre": [
-   "motor_transformer_ac"
+   "motor_transformer_ac",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Primary and secondary coils wound on common iron core",
-  "ph": 0,
+  "kb": "40_power_precision.md",
+  "ph": 250.0,
   "lab": {},
-  "mat": {},
-  "cap": 0,
+  "mat": {
+   "cast_iron_kg": 80.0,
+   "copper_kg": 50.0,
+   "oil_mineral_kg": 30.0
+  },
+  "cap": 800.0,
   "up": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
@@ -2809,7 +2931,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Already in VOCABULARY as existing tech; referenced only."
+  "note": "Two coils on an iron core; AC in one induces AC in the other at a different voltage. No moving parts, highly efficient. Allows voltage conversion without rotating machinery, the key to AC distribution."
  },
  {
   "id": "en_transmission_line",
@@ -2823,7 +2945,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Bare copper wire or stranded cable suspended on insulators",
+  "kb": "98_power_plants.md#en_transmission_line",
   "ph": 140,
   "lab": {
    "engineer": 423,
@@ -2844,7 +2966,15 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Transmission distance and voltage linked to loss; V^2 loss in fixed resistance. Long distances demand high voltage (10-100 kV). Copper cost dominates. Stranding allows flexibility."
+  "note": "Transmission distance and voltage linked to loss; V^2 loss in fixed resistance. Long distances demand high voltage (10-100 kV). Copper cost dominates. Stranding allows flexibility.",
+  "req_any": [
+   {
+    "group": "porcelain_supply",
+    "options": {
+     "mat_porcelain": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_insulator",
@@ -2856,7 +2986,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Porcelain or ceramic supports conductor and withstands high voltage",
+  "kb": "98_power_plants.md#en_transmission_line",
   "ph": 100,
   "lab": {
    "potter": 322
@@ -2875,7 +3005,15 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Porcelain glaze prevents moisture absorption. Surface shape controls creepage path; longer path equals higher voltage withstand. Contamination and surface cracks cause failure."
+  "note": "Porcelain glaze prevents moisture absorption. Surface shape controls creepage path; longer path equals higher voltage withstand. Contamination and surface cracks cause failure.",
+  "req_any": [
+   {
+    "group": "porcelain_supply",
+    "options": {
+     "mat_porcelain": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_switchgear",
@@ -2888,7 +3026,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Knife blade switches, isolators, load break switch, manual or motor-driven",
+  "kb": "98_power_plants.md#en_switchgear",
   "ph": 120,
   "lab": {
    "engineer": 386,
@@ -2922,7 +3060,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Automatic switch that trips on overcurrent from fault",
+  "kb": "98_power_plants.md#en_switchgear",
   "ph": 140,
   "lab": {
    "engineer": 414,
@@ -2951,22 +3089,25 @@
   "name": "Fuse (wire or cartridge)",
   "cat": "electrical_dist",
   "pre": [
-   "cap_heat_1100"
+   "cap_heat_1100",
+   "mat_copper",
+   "mat_lead"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "Wire melts and breaks circuit at preset current",
+  "kb": "98_power_plants.md#en_switchgear",
   "ph": 70,
   "lab": {
-   "metalworker": 200
+   "artisan": 50.0
   },
   "mat": {
-   "mat_lead": 50,
-   "mat_silver": 30
+   "lead_kg": 50.0,
+   "porcelain_kg": 0.01,
+   "silver_kg": 30.0
   },
-  "cap": 80,
-  "up": 10,
+  "cap": 10000.0,
+  "up": 2000.0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.2,
   "dev_years": 0,
@@ -2976,7 +3117,31 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Simple one-shot protection; melts at exact current after precise time delay. Silver alloys reduce corrosion and resist vibration. Renewable fuses avoid replacement cost."
+  "note": "Simple one-shot protection; melts at exact current after precise time delay. Silver alloys reduce corrosion and resist vibration. Renewable fuses avoid replacement cost.",
+  "req_any": [
+   {
+    "group": "element",
+    "options": {
+     "mat_copper": 0.9,
+     "mat_lead": 1.0,
+     "mat_silver": 0.95
+    }
+   },
+   {
+    "group": "support",
+    "options": {
+     "mat_mica": 0.9,
+     "mat_porcelain": 1.0
+    }
+   },
+   {
+    "group": "cartridge",
+    "options": {
+     "mat_paper": 0.8,
+     "mat_porcelain": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_lightning_arrester",
@@ -2988,7 +3153,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Spark gap or resistance path diverts surge to ground",
+  "kb": "98_power_plants.md#en_switchgear",
   "ph": 90,
   "lab": {
    "engineer": 303,
@@ -3017,24 +3182,28 @@
   "cat": "electrical_dist",
   "pre": [
    "en_switchgear",
-   "en_transformer"
+   "en_transformer",
+   "cap_tol_1mm",
+   "pwr_high_voltage_transmission"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "Building with transformers, switchgear, and controls reducing high voltage to distribution level",
-  "ph": 150,
+  "kb": "98_power_plants.md#en_substation",
+  "ph": 300.0,
   "lab": {
-   "engineer": 460,
-   "mason": 368
+   "artisan": 250.0,
+   "engineer": 460.0,
+   "mason": 368.0
   },
   "mat": {
-   "mat_steel": 300,
-   "mat_brick": 1000,
-   "mat_concrete_reinforced": 500
+   "cast_iron_kg": 100.0,
+   "copper_kg": 60.0,
+   "porcelain_kg": 40.0,
+   "steel_plate_kg": 500.0
   },
-  "cap": 180,
-  "up": 0,
+  "cap": 2000.0,
+  "up": 300.0,
   "build_yrs": 2.0,
   "adopt_yrs": 0.2,
   "dev_years": 6,
@@ -3044,7 +3213,15 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Reduces transmission voltage (50 kV) to distribution (10 kV) then to local (400V). Oil cooling for transformers. Local control and protection. Multiple substations in tow..."
+  "note": "Receives high-voltage transmission lines, steps them down via transformers to local distribution voltage, distributes to neighborhoods and industries. A hub between generation and use; switching and protection equipment required.",
+  "req_any": [
+   {
+    "group": "porcelain_supply",
+    "options": {
+     "mat_porcelain": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_rotary_converter",
@@ -3052,20 +3229,24 @@
   "cat": "electrical_auxiliary",
   "pre": [
    "en_alternator",
-   "en_three_phase_gen"
+   "en_three_phase_gen",
+   "el2_dynamo_shunt_wound",
+   "el2_synchronous_motor"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Motor-generator on common shaft converts AC polyphase to DC or vice versa",
+  "kb": "98_power_plants.md#en_battery_charging",
   "ph": 150,
   "lab": {
    "engineer": 432,
    "machinist": 368
   },
   "mat": {
-   "mat_copper": 200,
-   "mat_cast_iron": 300
+   "brass_kg": 30.0,
+   "cast_iron_kg": 300.0,
+   "copper_kg": 200.0,
+   "copper_wire_kg": 100.0
   },
   "cap": 160,
   "up": 30,
@@ -3078,32 +3259,51 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Synchronous motor pulls polyphase AC, driving generator rotor that produces DC. Elegant but needs starting torque; rarely used. Motor-driven DC generator is simpler but l..."
+  "note": "Synchronous motor pulls polyphase AC, driving generator rotor that produces DC. Elegant but needs starting torque; rarely used. Motor-driven DC generator is simpler but l...",
+  "req_any": [
+   {
+    "group": "stator_winding",
+    "options": {
+     "copper_refining": 1.0
+    }
+   },
+   {
+    "group": "rotor_winding",
+    "options": {
+     "copper_refining": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_battery_lead_acid",
   "name": "Lead acid storage battery",
   "cat": "electrical_storage",
   "pre": [
-   "cap_tol_100um"
+   "cap_tol_100um",
+   "cap_power_electric",
+   "cap_tol_1mm",
+   "lead_chamber",
+   "mat_lead"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
   "kb": "Lead plates in sulfuric acid; charge with DC current",
-  "ph": 100,
+  "ph": 250.0,
   "lab": {
    "chemist": 349,
    "metalworker": 300
   },
   "mat": {
-   "mat_lead": 400,
-   "mat_sulfuric_acid": 300,
-   "mat_glass_soda": 150
+   "glass_raw_kg": 20.0,
+   "lead_kg": 400.0,
+   "sulfuric_acid_kg": 300.0,
+   "wood_ash_kg": 5.0
   },
-  "cap": 100,
-  "up": 18,
+  "cap": 800.0,
+  "up": 80.0,
   "build_yrs": 1.0,
   "adopt_yrs": 0.3,
   "dev_years": 6,
@@ -3113,7 +3313,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Chemical energy storage. Positive plate (lead oxide) and negative plate (lead) in acid electrolyte. Voltage 2V per cell; six cells give 12V. Efficiency 80-90 percent roun..."
+  "note": "Lead oxide and lead plates in sulfuric acid: charge with DC, discharge to get power. Rechargeable, robust, stores significant energy. The acid eats organic matter and corrodes copper; wood cases and lead terminals are necessary."
  },
  {
   "id": "en_battery_nickel_iron",
@@ -3121,24 +3321,27 @@
   "cat": "electrical_storage",
   "pre": [
    "en_battery_lead_acid",
-   "mat_nickel"
+   "mat_nickel",
+   "cap_tol_100um",
+   "potash_soda"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Nickel oxide and iron plates in potassium hydroxide electrolyte",
-  "ph": 140,
+  "kb": "98_power_plants.md#en_battery_lead_acid",
+  "ph": 300.0,
   "lab": {
-   "chemist": 386,
-   "metalworker": 322
+   "artisan": 200.0,
+   "chemist": 386.0
   },
   "mat": {
-   "mat_nickel": 200,
-   "mat_iron": 250,
-   "mat_potash": 200
+   "iron_bar_kg": 15.0,
+   "natron_kg": 10.0,
+   "nickel_kg": 200.0,
+   "steel_plate_kg": 8.0
   },
-  "cap": 120,
-  "up": 22,
+  "cap": 600.0,
+  "up": 100.0,
   "build_yrs": 1.3,
   "adopt_yrs": 0.1,
   "dev_years": 8,
@@ -3148,7 +3351,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "More robust than lead acid; survives overcharge and physical abuse. Voltage 1.2V per cell (lower than lead-acid). Cycle life 5000+ cycles. Self-discharge higher. More exp..."
+  "note": "Nickel oxide and iron electrodes in caustic soda solution. Tougher than lead-acid, tolerates abuse and overcharge, but lower voltage and self-discharge. Edson and Tesla championed it; it is still used in harsh environments."
  },
  {
   "id": "en_battery_charging",
@@ -3161,7 +3364,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Rectifier and regulator converts alternator AC output to charge current",
+  "kb": "98_power_plants.md#en_battery_charging",
   "ph": 110,
   "lab": {
    "engineer": 358,
@@ -3194,7 +3397,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Spreading multiple loads shifts peak demand; reduces generator and cable sizing",
+  "kb": "98_power_plants.md#en_substation",
   "ph": 120,
   "lab": {
    "engineer": 386
@@ -3207,7 +3410,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 900,
+  "rev": 208.7,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3224,7 +3427,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Multiple power stations and loads connected through network of lines",
+  "kb": "98_power_plants.md#en_substation",
   "ph": 180,
   "lab": {
    "engineer": 506
@@ -3257,7 +3460,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Synchronised generators running at same frequency share load automatically",
+  "kb": "98_power_plants.md#en_substation",
   "ph": 150,
   "lab": {
    "engineer": 441
@@ -3288,7 +3491,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Capacitors or synchronous condensers reduce reactive power",
+  "kb": "98_power_plants.md#en_substation",
   "ph": 120,
   "lab": {
    "engineer": 377,
@@ -3318,14 +3521,18 @@
   "pre": [
    "en_francis_turbine",
    "en_alternator",
-   "en_substation"
+   "en_substation",
+   "dynamo",
+   "power_grid",
+   "pwr_water_turbine_fourneyron",
+   "water_power_scale"
   ],
   "traits": [
    "labour_saving",
    "infrastructure"
   ],
   "kb": "Multiple turbines in powerhouse with generators and transformers",
-  "ph": 200,
+  "ph": 400.0,
   "lab": {
    "engineer": 552,
    "mason": 460
@@ -3335,8 +3542,8 @@
    "mat_cast_iron": 800,
    "mat_copper": 300
   },
-  "cap": 300,
-  "up": 0,
+  "cap": 1000.0,
+  "up": 200.0,
   "build_yrs": 5.0,
   "adopt_yrs": 0.3,
   "dev_years": 12,
@@ -3346,7 +3553,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Dam and reservoir manage water supply. Powerhouse design trades efficiency against cost. Typical efficiency 90 percent. Environmental impact significant; silt accumulatio..."
+  "note": "A dam, penstock, turbine, and dynamo coupled: water flow becomes rotary motion becomes electrical current. The scale is decided by head and flow. Long-distance transmission at high voltage makes remote hydro economical."
  },
  {
   "id": "en_thermal_station",
@@ -3362,7 +3569,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Boiler, turbine, generator, and cooling tower in integrated plant",
+  "kb": "98_power_plants.md#en_hydroelectric_station",
   "ph": 220,
   "lab": {
    "engineer": 598,
@@ -3380,11 +3587,21 @@
   "dev_years": 14,
   "dev_people": 4,
   "risk": 0.16,
-  "rev": 3200,
+  "rev": 666.6,
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Boiler efficiency 80 percent; turbine 40 percent; overall 32 percent. Condenser cooling is bottleneck; large volumes of water needed. Coal handling, ash disposal, and chi..."
+  "note": "Boiler efficiency 80 percent; turbine 40 percent; overall 32 percent. Condenser cooling is bottleneck; large volumes of water needed. Coal handling, ash disposal, and chi...",
+  "req_any": [
+   {
+    "group": "fuel_source",
+    "options": {
+     "coal_coke": 1.0,
+     "mat_petroleum_refined": 0.85,
+     "peat_kg": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "en_pumped_storage",
@@ -3392,23 +3609,30 @@
   "cat": "energy_storage",
   "pre": [
    "en_hydroelectric_station",
-   "en_motor_transformer_ac"
+   "en_motor_transformer_ac",
+   "dynamo",
+   "motor_transformer_ac",
+   "power_grid",
+   "water_power_scale"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Pump water uphill at night using cheap power; release through turbine at peak demand",
-  "ph": 180,
+  "ph": 400.0,
   "lab": {
    "engineer": 506,
    "mason": 414
   },
   "mat": {
-   "mat_stone": 1500,
-   "mat_cast_iron": 600
+   "cast_iron_kg": 600.0,
+   "concrete_reinforced_kg": 500.0,
+   "steel_plate_kg": 150.0,
+   "stone_kg": 1500.0,
+   "timber_m3": 10.0
   },
-  "cap": 250,
-  "up": 0,
+  "cap": 5000.0,
+  "up": 500.0,
   "build_yrs": 4.0,
   "adopt_yrs": 0.4,
   "dev_years": 10,
@@ -3418,7 +3642,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Reversible turbine-pump saves cost. Elevation difference is critical; 100m head typical. Round-trip efficiency 75 percent. Requires two reservoirs. Enables integration of..."
+  "note": "Two reservoirs at different elevations: pump water up when power is cheap, run it down to generate when demand is high. Stores energy as gravitational potential; no battery needed. Requires two dams and good geology."
  },
  {
   "id": "en_charcoal_burning",
@@ -3430,7 +3654,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Wood in covered pit or kiln burned with limited air",
+  "kb": "98_power_plants.md#en_charcoal_burning",
   "ph": 60,
   "lab": {
    "furnaceman": 250
@@ -3445,7 +3669,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.08,
-  "rev": 500,
+  "rev": 86.7,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3462,7 +3686,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Underground or surface mining; washing removes clay and slate",
+  "kb": "98_power_plants.md#en_charcoal_burning",
   "ph": 100,
   "lab": {
    "engineer": 322,
@@ -3494,7 +3718,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Coal heated without air (destructive distillation) in sealed oven",
+  "kb": "98_power_plants.md#en_coke_oven",
   "ph": 120,
   "lab": {
    "engineer": 358,
@@ -3511,7 +3735,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.13,
-  "rev": 1100,
+  "rev": 305.1,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3527,7 +3751,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Coal or coke heated in firebrick retort; gas distilled and separated",
+  "kb": "98_power_plants.md#en_coke_oven",
   "ph": 140,
   "lab": {
    "engineer": 386,
@@ -3545,7 +3769,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 1400,
+  "rev": 418.5,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3561,7 +3785,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Inverted bell in tank holds gas at constant pressure",
+  "kb": "98_power_plants.md#en_coke_oven",
   "ph": 110,
   "lab": {
    "engineer": 349,
@@ -3596,7 +3820,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Cable tool or rotary drilling; extraction pumps for shallow wells",
+  "kb": "98_power_plants.md#en_oil_drilling",
   "ph": 130,
   "lab": {
    "engineer": 386,
@@ -3613,7 +3837,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.18,
-  "rev": 1500,
+  "rev": 484.1,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3630,7 +3854,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Fractional distillation separates crude into boiling fractions",
+  "kb": "98_power_plants.md#en_oil_drilling",
   "ph": 140,
   "lab": {
    "engineer": 414,
@@ -3693,18 +3917,21 @@
   "name": "Kerosene (paraffin oil) production",
   "cat": "fuel_product",
   "pre": [
-   "en_oil_refining_distillation"
+   "en_oil_refining_distillation",
+   "pwr_oil_refinery"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "200-300 C boiling fraction from crude oil refining",
-  "ph": 80,
+  "kb": "98_power_plants.md#en_petrol",
+  "ph": 100.0,
   "lab": {
-   "chemist": 300
+   "artisan": 100.0,
+   "chemist": 300.0
   },
   "mat": {
-   "mat_steel": 100
+   "brass_kg": 2.0,
+   "glass_raw_kg": 5.0
   },
   "cap": 120,
   "up": 20,
@@ -3713,11 +3940,11 @@
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 900,
+  "rev": 183.3,
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Primary use was lighting (oil lamps). Later used in heaters and engines. Flash point and viscosity control critical for safety. Purity affects lamp cleanliness."
+  "note": "Kerosene is a clear liquid fraction with a clean flame, brighter than candles or whale oil. Cheaper to refine than to ship coal. Lamps are simple: wick, chimney, brass fitting."
  },
  {
   "id": "en_petrol",
@@ -3729,7 +3956,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "40-200 C boiling fraction from crude oil refining",
+  "kb": "98_power_plants.md#en_petrol",
   "ph": 90,
   "lab": {
    "chemist": 294
@@ -3744,7 +3971,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 1000,
+  "rev": 165.1,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3791,7 +4018,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Refined high-viscosity fractions for machinery lubrication",
+  "kb": "98_power_plants.md#en_petrol",
   "ph": 100,
   "lab": {
    "chemist": 322
@@ -3806,7 +4033,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 1100,
+  "rev": 179.2,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3823,7 +4050,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Excavation and sun-drying of peat bog deposits",
+  "kb": "98_power_plants.md#en_charcoal_burning",
   "ph": 70,
   "lab": {
    "miner": 322
@@ -3838,7 +4065,7 @@
   "dev_years": 0,
   "dev_people": 0,
   "risk": 0.1,
-  "rev": 600,
+  "rev": 172.7,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3854,7 +4081,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Oil-bearing shale heated in retort; kerogen breaks down to synthetic oil",
+  "kb": "98_power_plants.md#en_oil_drilling",
   "ph": 130,
   "lab": {
    "engineer": 377,
@@ -3872,7 +4099,7 @@
   "dev_years": 7,
   "dev_people": 1,
   "risk": 0.13,
-  "rev": 1200,
+  "rev": 339.0,
   "sch": 0,
   "art": 2,
   "conf": "C",

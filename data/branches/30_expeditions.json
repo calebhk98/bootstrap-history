@@ -17,7 +17,7 @@
    "wine_common_kg": 2000
   },
   "cap": 600,
-  "up": 150,
+  "up": 0.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -26,7 +26,11 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "THE gate on every voyage over about ten weeks, and it is the cheapest thing in this branch. Scurvy killed more sailors than storms and battle combined for four centuries. You know the answer: fresh or preserved citrus, or any source of ascorbic acid, and sauerkraut works. Rome has lemons and citrons, and cabbage. Solve this and the Atlantic becomes a logistics problem instead of a death sentence."
+  "note": "THE gate on every voyage over about ten weeks, and it is the cheapest thing in this branch. Scurvy killed more sailors than storms and battle combined for four centuries. You know the answer: fresh or preserved citrus, or any source of ascorbic acid, and sauerkraut works. Citrus grows through much of the Mediterranean and cabbage almost everywhere in the temperate world, including where citrus does not reach. Solve this and the ocean becomes a logistics problem instead of a death sentence.",
+  "traits": [
+   "commerce",
+   "military"
+  ]
  },
  {
   "id": "exp_openocean_navigation",
@@ -46,7 +50,7 @@
   },
   "mat": {},
   "cap": 1200,
-  "up": 300,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
@@ -55,7 +59,21 @@
   "sch": 2,
   "art": 2,
   "conf": "B",
-  "note": "Latitude by sun or pole star is straightforward. LONGITUDE IS A CLOCK PROBLEM and until you have a sea-going timekeeper you navigate by latitude sailing: run to the target latitude, then run east or west along it. Columbus did exactly that. It is inefficient and it works."
+  "note": "Latitude by sun or pole star is straightforward. LONGITUDE IS A CLOCK PROBLEM and until you have a sea-going timekeeper you navigate by latitude sailing: run to the target latitude, then run east or west along it. Columbus did exactly that. It is inefficient and it works.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military"
+  ],
+  "req_any": [
+   {
+    "group": "windward_capability",
+    "options": {
+     "sea_keel_deep": 0.85,
+     "tr_fore_aft_rig": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "exp_oceangoing_hull",
@@ -78,7 +96,7 @@
    "canvas_kg": 900
   },
   "cap": 9000,
-  "up": 2500,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.25,
   "sus": 0,
@@ -87,7 +105,21 @@
   "sch": 1,
   "art": 6,
   "conf": "B",
-  "note": "Roman merchantmen are already large: the Alexandrian grain ships carried on the order of a thousand tonnes. What they are built for is the Mediterranean, not the North Atlantic in winter. Skeleton-first framing, a sternpost rudder and a rig that will beat to windward turn a coaster into an ocean ship."
+  "note": "Existing merchant hulls are often already large (Roman grain ships to Alexandria carried on the order of a thousand tonnes; Norse ships already cross the open Atlantic in this era) but are built for calmer or coastal waters, not the worst of a winter ocean crossing. Skeleton-first framing, a sternpost rudder and a rig that will beat to windward turn a coaster into a true ocean ship.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military"
+  ],
+  "req_any": [
+   {
+    "group": "hull",
+    "options": {
+     "sea_clinker_hull": 0.9,
+     "tr_frame_first_construction": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "exp_trade_route_extend",
@@ -113,7 +145,11 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Rome ALREADY trades to India annually on the monsoon and to China by relay. You do not need to discover anything: you need agents, capital and a standing order. This is the cheapest way to obtain saltpetre, shellac, cotton, wootz, camphor and pepper, and it should be one of your first commercial acts."
+  "note": "Extending an existing long-distance trade network needs agents, capital and a standing order, not new discovery. Where you already have a route (Rome already trades to India annually on the monsoon and to China by relay; check your own civilization's notes for what you already reach) this is often the cheapest way to obtain goods your home region lacks, and it should be one of your first commercial acts.",
+  "traits": [
+   "commerce",
+   "military"
+  ]
  },
  {
   "id": "exp_coastal_africa",
@@ -142,7 +178,12 @@
   "sch": 1,
   "art": 4,
   "conf": "B",
-  "note": "Hanno the Carthaginian sailed this coast around 500 BC and the account survives. It is coastal sailing, not an ocean crossing. It gets you West African gold directly instead of through Saharan middlemen, and it gets you LANDOLPHIA RUBBER, which is the answer to the supposedly unobtainable rubber problem."
+  "note": "Hanno the Carthaginian sailed this coast around 500 BC and the account survives. It is coastal sailing, not an ocean crossing. It gets you West African gold directly instead of through Saharan middlemen, and it gets you LANDOLPHIA RUBBER, which is the answer to the supposedly unobtainable rubber problem.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military"
+  ]
  },
  {
   "id": "exp_africa_circumnavigation",
@@ -169,7 +210,12 @@
   "sch": 2,
   "art": 6,
   "conf": "B",
-  "note": "Herodotus reports Phoenicians doing this under Necho II, sailing south down the Red Sea and returning through the Pillars three years later. Contested, and physically possible. It joins your Mediterranean and Indian Ocean shipping into one system you own end to end."
+  "note": "Herodotus reports Phoenicians doing this under Necho II, sailing south down the Red Sea and returning through the Pillars three years later. Contested, and physically possible. It joins your Mediterranean and Indian Ocean shipping into one system you own end to end.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military"
+  ]
  },
  {
   "id": "exp_atlantic_crossing",
@@ -188,7 +234,7 @@
   },
   "mat": {},
   "cap": 26000,
-  "up": 8000,
+  "up": 0.0,
   "yrs": 4.0,
   "risk": 0.5,
   "sus": 6,
@@ -197,7 +243,13 @@
   "sch": 2,
   "art": 6,
   "conf": "B",
-  "note": "About 5,600 km from the Canaries to the Caribbean on the trade winds, roughly five weeks. The Canaries are already known to Rome; Pliny describes them. The voyage is well within a good Roman hull. What kills you is water, food and scurvy, which is why the provisioning node comes first."
+  "note": "About 5,600 km from the Canaries to the Caribbean on the trade winds, roughly five weeks. The Canaries are within reach of Mediterranean and Atlantic-facing sailors alike (Pliny already describes them from the Roman side). The voyage is well within a capable ocean-going hull. What kills you is water, food and scurvy, which is why the provisioning node comes first.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military",
+   "spectacle"
+  ]
  },
  {
   "id": "exp_americas_factory",
@@ -227,7 +279,13 @@
   "sch": 3,
   "art": 15,
   "conf": "C",
-  "note": "Seed stock of potato, maize, tomato, cassava, chilli and cacao; cinchona bark for malaria; Hevea rubber; Andean silver and Colombian platinum. A single successful voyage home with potato seed stock is worth more to European nutrition than anything else in this document. THE MORAL PROBLEM IS REAL AND IS NOT A FOOTNOTE: every historical version of this node was built on conquest, forced labour and epidemic catastrophe among people who had no immunity to anything you carry. The tree does not require you to repeat that. See the ethics note in 95_expeditions.md."
+  "note": "Seed stock of potato, maize, tomato, cassava, chilli and cacao; cinchona bark for malaria; Hevea rubber; Andean silver and Colombian platinum. A single successful voyage home with potato seed stock is worth more to European nutrition than anything else in this document. THE MORAL PROBLEM IS REAL AND IS NOT A FOOTNOTE: every historical version of this node was built on conquest, forced labour and epidemic catastrophe among people who had no immunity to anything you carry. The tree does not require you to repeat that. See the ethics note in 95_expeditions.md.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military",
+   "spectacle"
+  ]
  },
  {
   "id": "exp_colony_administration",
@@ -255,7 +313,12 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The legal and financial machinery that makes a distant post survive a bad decade: a chartered body with limited liability, a resident agent, a garrison, and a court. Rome has no corporation, so you must build one out of a societas plus a licensed collegium plus imperial charter."
+  "note": "The legal and financial machinery that makes a distant post survive a bad decade: a durable body with some form of limited liability, a resident agent, a garrison, and a court. None of these societies starts with a ready-made corporation; Rome builds the equivalent out of a societas plus a licensed collegium plus an imperial charter, and every other society assembles its own version from whatever institutions it actually has (see the civilization file's `institutions` field).",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military"
+  ]
  },
  {
   "id": "exp_transplant_botany",
@@ -285,7 +348,11 @@
   "sch": 2,
   "art": 3,
   "conf": "B",
-  "note": "The highest-leverage act of industrial espionage available. Sugar cane, cotton, tea, coffee, cloves, cinchona and rubber were ALL moved out of their homelands by deliberate transplant, and every one of those transplants broke a monopoly and collapsed a price. Wardian cases (a sealed glazed box) are what make live plants survive a long sea voyage, and that is a trivial thing to build."
+  "note": "The highest-leverage act of industrial espionage available. Sugar cane, cotton, tea, coffee, cloves, cinchona and rubber were ALL moved out of their homelands by deliberate transplant, and every one of those transplants broke a monopoly and collapsed a price. Wardian cases (a sealed glazed box) are what make live plants survive a long sea voyage, and that is a trivial thing to build.",
+  "traits": [
+   "commerce",
+   "military"
+  ]
  },
  {
   "id": "exp_conquest_resource",
@@ -313,6 +380,12 @@
   "sch": 1,
   "art": 10,
   "conf": "C",
-  "note": "The option this tree refuses to pretend does not exist, because it is what actually happened. A pre-industrial society that meets one carrying firearms, iron ships and quinine does not win. Rome with a century's technical lead would take whatever it wanted. THE MODEL SCORES THIS AS AVAILABLE AND CHEAP AND ALSO AS THE SINGLE MOST DESTRUCTIVE NODE IN THE TREE. It is included so the tree is honest, not because it is recommended, and the simulator tracks a separate atrocity counter for it rather than folding it into the score."
+  "note": "The option this tree refuses to pretend does not exist, because it is what actually happened. A pre-industrial society that meets one carrying firearms, iron ships and quinine does not win. Any society with a century's technical lead over its neighbours would take whatever it wanted. THE MODEL SCORES THIS AS AVAILABLE AND CHEAP AND ALSO AS THE SINGLE MOST DESTRUCTIVE NODE IN THE TREE. It is included so the tree is honest, not because it is recommended, and the simulator tracks a separate atrocity counter for it rather than folding it into the score.",
+  "traits": [
+   "commerce",
+   "infrastructure",
+   "military",
+   "weapon_democratising"
+  ]
  }
 ]

@@ -28,7 +28,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "The kernel is that a single spherical surface converges parallel light to a point. Aberrations are severe; useful only for low magnification."
+  "note": "The kernel is that a single spherical surface converges parallel light to a point. Aberrations are severe; useful only for low magnification.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_doublet_lens",
@@ -36,20 +38,22 @@
   "cat": "optics",
   "pre": [
    "in2_simple_lens",
-   "glass_lead"
+   "glass_lead",
+   "cap_tol_10um",
+   "lens_grinding",
+   "mat_glass_lead"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Crown and flint glass cemented together to correct chromatic aberration",
-  "ph": 120,
+  "ph": 180.0,
   "lab": {
    "optician": 400,
    "master_screw": 40
   },
   "mat": {
-   "mat_glass_lead": 2,
-   "mat_glass_soda": 2
+   "glass_raw_kg": 1.2
   },
   "cap": 800,
   "up": 60,
@@ -62,7 +66,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Red and blue light have different refractive indices; flint glass bends them oppositely. A concave flint inside a convex crown cancels the dispersion while keeping convergence. Cemented joint must be optically contacted."
+  "note": "Red and blue light have different refractive indices; flint glass bends them oppositely. A concave flint inside a convex crown cancels the dispersion while keeping convergence. Cemented joint must be optically contacted.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_triplet_lens",
@@ -97,7 +103,9 @@
   "sch": 0,
   "art": 5,
   "conf": "C",
-  "note": "Flint-crown-flint sandwich with carefully chosen thicknesses eliminates both primary and secondary chromatic aberration. Air gaps between elements are essential; spacing is critical."
+  "note": "Flint-crown-flint sandwich with carefully chosen thicknesses eliminates both primary and secondary chromatic aberration. Air gaps between elements are essential; spacing is critical.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_petzval_portrait_lens",
@@ -130,7 +138,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "The kernel is that a convergent group behind the aperture stop naturally focuses field curvature to a curved surface, which is acceptable for portrait work where central sharpness matters. f/3.5 was revolutionary for 1840s photography."
+  "note": "The kernel is that a convergent group behind the aperture stop naturally focuses field curvature to a curved surface, which is acceptable for portrait work where central sharpness matters. f/3.5 was revolutionary for 1840s photography.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_cooke_triplet_photography",
@@ -163,7 +173,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Symmetry means left and right aberrations cancel; the central meniscus acts as field flattener. Astigmatism and coma are small across a wide field. This design persisted unchanged into the 1970s."
+  "note": "Symmetry means left and right aberrations cancel; the central meniscus acts as field flattener. Astigmatism and coma are small across a wide field. This design persisted unchanged into the 1970s.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_tessar_lens",
@@ -196,7 +208,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "The rear doublet is cemented; front elements air-spaced. Tessar corrects all primary aberrations (spherical, coma, astigmatism, field curvature) and controls distortion. f/4.5 was standard for hand cameras 1902-1950."
+  "note": "The rear doublet is cemented; front elements air-spaced. Tessar corrects all primary aberrations (spherical, coma, astigmatism, field curvature) and controls distortion. f/4.5 was standard for hand cameras 1902-1950.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_telephoto_design",
@@ -228,14 +242,17 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "The interval between front and rear elements is shorter than focal length; magnification and physical compactness are the point. Rear element separation tunes back working distance."
+  "note": "The interval between front and rear elements is shorter than focal length; magnification and physical compactness are the point. Rear element separation tunes back working distance.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_wide_angle_lens",
   "name": "Wide angle photographic lens",
   "cat": "optics",
   "pre": [
-   "in2_cooke_triplet_photography"
+   "in2_cooke_triplet_photography",
+   "cap_tol_100um"
   ],
   "traits": [
    "infrastructure"
@@ -261,7 +278,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Large field angle means massive distortion if not corrected. Symmetrical designs minimize distortion at the cost of vignetting. Focal length/image diagonal ratio defines angle of view."
+  "note": "Large field angle means massive distortion if not corrected. Symmetrical designs minimize distortion at the cost of vignetting. Focal length/image diagonal ratio defines angle of view.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_primary_mirror",
@@ -296,7 +315,9 @@
   "sch": 0,
   "art": 5,
   "conf": "B",
-  "note": "The parabola corrects spherical aberration; a sphere would have offaxis focus. Speculums corrode; silvered glass requires maintenance every few years. Precision to 0.1 wavelength required for good focus."
+  "note": "The parabola corrects spherical aberration; a sphere would have offaxis focus. Speculums corrode; silvered glass requires maintenance every few years. Precision to 0.1 wavelength required for good focus.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_cassegrain_reflector",
@@ -328,7 +349,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Effective focal length can be very large; physical tube is short and stiff. Secondary blockage costs light; useful for high magnification and spectroscopy. Cassegrain and Gregorian differ in secondary curvature (convex vs concave)."
+  "note": "Effective focal length can be very large; physical tube is short and stiff. Secondary blockage costs light; useful for high magnification and spectroscopy. Cassegrain and Gregorian differ in secondary curvature (convex vs concave).",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_newtonian_reflector",
@@ -360,7 +383,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Simple and cheap; no secondary mirror obstruction. Off-axis aberrations manageable up to f/4. The flat (Newtonian diagonal) must be very small (5-15% blockage) and precisely angled."
+  "note": "Simple and cheap; no secondary mirror obstruction. Off-axis aberrations manageable up to f/4. The flat (Newtonian diagonal) must be very small (5-15% blockage) and precisely angled.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_schmidt_corrector_plate",
@@ -393,7 +418,9 @@
   "sch": 0,
   "art": 5,
   "conf": "C",
-  "note": "A spherical mirror has severe offaxis aberrations. A thin aspheric plate near the center of curvature corrects all of them. Requires precision figuring to waves; small deviations ruin image."
+  "note": "A spherical mirror has severe offaxis aberrations. A thin aspheric plate near the center of curvature corrects all of them. Requires precision figuring to waves; small deviations ruin image.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_prism_amici",
@@ -425,7 +452,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "The roof angle must be precisely 90 degrees; any error causes the two roof faces to produce a split image. Coating the roof faces was later improvement."
+  "note": "The roof angle must be precisely 90 degrees; any error causes the two roof faces to produce a split image. Coating the roof faces was later improvement.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_prism_porro",
@@ -457,7 +486,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Porro gives longer eyepiece separation than roof; better for binoculars where one prism arm doubles as the barrel. Internal reflections must not degrade contrast."
+  "note": "Porro gives longer eyepiece separation than roof; better for binoculars where one prism arm doubles as the barrel. Internal reflections must not degrade contrast.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_beam_splitter",
@@ -490,7 +521,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Evaporated metal films or dielectric coatings create partial reflectors. Dichroic effect (color-dependent reflection) requires interference; multilayer coatings achieve sharp wavelength separation."
+  "note": "Evaporated metal films or dielectric coatings create partial reflectors. Dichroic effect (color-dependent reflection) requires interference; multilayer coatings achieve sharp wavelength separation.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_polariser_crystal",
@@ -523,7 +556,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Natural birefringence of calcite; extraordinary ray and ordinary ray have different refractive indices. Carving and cementing a prism at the Brewster angle transmits one, reflects the other internally."
+  "note": "Natural birefringence of calcite; extraordinary ray and ordinary ray have different refractive indices. Carving and cementing a prism at the Brewster angle transmits one, reflects the other internally.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_waveplate_mica",
@@ -555,7 +590,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Quarter wave plate shifts phase by 90 degrees; half wave by 180. Thickness controls retardation. Mica easily cleaves to controlled thickness; later crystals like quartz are more stable."
+  "note": "Quarter wave plate shifts phase by 90 degrees; half wave by 180. Thickness controls retardation. Mica easily cleaves to controlled thickness; later crystals like quartz are more stable.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_interference_filter",
@@ -589,7 +626,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Alternating high and low index layers create destructive interference outside the pass band. Extremely narrow passbands possible; sharp edges. Requires vacuum evaporation and strict thickness control."
+  "note": "Alternating high and low index layers create destructive interference outside the pass band. Extremely narrow passbands possible; sharp edges. Requires vacuum evaporation and strict thickness control.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_antireflection_coating",
@@ -622,7 +661,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "A single quarter-wave layer of the right index nearly halves losses at design wavelength; this doubled the effective aperture of telescopes and microscopes. Multicoatings extend bandwidth."
+  "note": "A single quarter-wave layer of the right index nearly halves losses at design wavelength; this doubled the effective aperture of telescopes and microscopes. Multicoatings extend bandwidth.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_reticle_crosshair",
@@ -651,7 +692,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Etching with diamond point or photographic reduction defines the graticule. Registration of crosshairs to optical axis is the precision step."
+  "note": "Etching with diamond point or photographic reduction defines the graticule. Registration of crosshairs to optical axis is the precision step.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_eyepiece_huygens",
@@ -680,7 +723,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Lens separation equals the sum of focal lengths; real image forms between elements. Long eye relief and wide field for low powers; chromatic aberration high."
+  "note": "Lens separation equals the sum of focal lengths; real image forms between elements. Long eye relief and wide field for low powers; chromatic aberration high.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_eyepiece_kellner",
@@ -710,7 +755,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Achromatic eyelens corrects the Huygens problem; large field of view; good eye relief. Became standard for 19th-century microscopes."
+  "note": "Achromatic eyelens corrects the Huygens problem; large field of view; good eye relief. Became standard for 19th-century microscopes.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_eyepiece_ramsden",
@@ -739,7 +786,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Real image forms between lenses; reticle can be placed there. Simpler than Kellner and Huygens. Used for surveying instruments where a graticule is essential."
+  "note": "Real image forms between lenses; reticle can be placed there. Simpler than Kellner and Huygens. Used for surveying instruments where a graticule is essential.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_eyepiece_orthoscopic",
@@ -769,7 +818,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "All aberrations well corrected; distortion nearly absent. Best planetary observation eyepiece until the Erfle; good for telescopes of any focal ratio."
+  "note": "All aberrations well corrected; distortion nearly absent. Best planetary observation eyepiece until the Erfle; good for telescopes of any focal ratio.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_eyepiece_erfle",
@@ -799,7 +850,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "The kernel: five elements can be tuned to flatten field and correct all aberrations across a wide angle. Previous 3-4 element designs limited to 50 degrees."
+  "note": "The kernel: five elements can be tuned to flatten field and correct all aberrations across a wide angle. Previous 3-4 element designs limited to 50 degrees.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_condenser_substage",
@@ -828,7 +881,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Iris diaphragm controls numerical aperture of illumination; matching it to objective NA maximizes contrast and depth of field. Substage height adjustment focuses the light."
+  "note": "Iris diaphragm controls numerical aperture of illumination; matching it to objective NA maximizes contrast and depth of field. Substage height adjustment focuses the light.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_immersion_objective_oil",
@@ -861,7 +916,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Oil (n=1.52) matches glass closely; light bent less at air-glass interface, allowing higher NA. Allows numerical apertures above 1.0, finer resolution. Standard for 1000x magnification."
+  "note": "Oil (n=1.52) matches glass closely; light bent less at air-glass interface, allowing higher NA. Allows numerical apertures above 1.0, finer resolution. Standard for 1000x magnification.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_phase_contrast_objective",
@@ -894,7 +951,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Transparent samples have tiny amplitude differences that the eye cannot detect; phase differences are huge but invisible. Phase plate retards diffracted light; interference makes phases visible. Revolutionary for biology."
+  "note": "Transparent samples have tiny amplitude differences that the eye cannot detect; phase differences are huge but invisible. Phase plate retards diffracted light; interference makes phases visible. Revolutionary for biology.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_dark_field_condenser",
@@ -923,26 +982,34 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Unstained samples are nearly invisible in brightfield because they scatter little and absorb little. Dark field cuts direct light; scattered light from particles appears bright on black background."
+  "note": "Unstained samples are nearly invisible in brightfield because they scatter little and absorb little. Dark field cuts direct light; scattered light from particles appears bright on black background.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_ultramicroscope",
   "name": "Ultramicroscope: dark field with slit lamp",
   "cat": "optics",
   "pre": [
-   "in2_dark_field_condenser"
+   "in2_dark_field_condenser",
+   "cap_heat_1600",
+   "microscope_compound"
   ],
   "traits": [
    "spectacle"
   ],
   "kb": "Intense line source illuminates specimen at high angle; Tyndall scattering visible",
-  "ph": 85,
+  "ph": 150.0,
   "lab": {
-   "optician": 300
+   "artisan": 140.0,
+   "master": 80.0,
+   "optician": 300.0
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_wrought_iron": 5
+   "brass_kg": 2.5,
+   "glass_raw_kg": 1.0,
+   "iron_bar_kg": 5.0,
+   "timber_m3": 0.2
   },
   "cap": 2000,
   "up": 150,
@@ -955,7 +1022,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Colloid particles smaller than visible wavelength scatter light; ultramicroscope can detect particles 10-100 nm, below direct visibility limit. Used to verify kinetic theory of matter."
+  "note": "Colloid particles smaller than visible wavelength scatter light; ultramicroscope can detect particles 10-100 nm, below direct visibility limit. Used to verify kinetic theory of matter.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_microtome_sliding",
@@ -985,7 +1054,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Tissue freezes on stage; blade slides at angle; spring deflection determines slice thickness. 50-200 micron sections for hand microscopy."
+  "note": "Tissue freezes on stage; blade slides at angle; spring deflection determines slice thickness. 50-200 micron sections for hand microscopy.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_microtome_rotary",
@@ -1017,7 +1088,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Screw advance per rotation is fixed and precise; blade remains stationary; hundreds of consecutive micron-thick sections from one specimen. Required for neuroanatomy."
+  "note": "Screw advance per rotation is fixed and precise; blade remains stationary; hundreds of consecutive micron-thick sections from one specimen. Required for neuroanatomy.",
+  "gov": 1,
+  "sus": 3
  },
  {
   "id": "in2_electron_microscope_column",
@@ -1052,14 +1125,18 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Electrons have wavelength 1000x smaller than visible light; 2000x higher resolution. Requires high vacuum, high voltage (50-100 kV), and magnetic lenses. Sample preparation and observation technique are complex."
+  "note": "Electrons have wavelength 1000x smaller than visible light; 2000x higher resolution. Requires high vacuum, high voltage (50-100 kV), and magnetic lenses. Sample preparation and observation technique are complex.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_electron_source_cathode",
   "name": "Electron source: heated cathode",
   "cat": "optics",
   "pre": [
-   "discharge_xray"
+   "discharge_xray",
+   "mat_tungsten",
+   "met_powder_metallurgy"
   ],
   "traits": [],
   "kb": "Tungsten filament heated to 2700K; thermionic emission produces electron beam",
@@ -1081,7 +1158,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Filament life determined by evaporation rate; higher temperature gives more current but shorter life. Wehnelt cap focuses emission. Tungsten chosen for high melting point and low evaporation."
+  "note": "Filament life determined by evaporation rate; higher temperature gives more current but shorter life. Wehnelt cap focuses emission. Tungsten chosen for high melting point and low evaporation.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_spectrograph_prism",
@@ -1190,20 +1269,26 @@
   "cat": "laboratory",
   "pre": [
    "master_screw",
-   "cap_tol_1um"
+   "cap_tol_1um",
+   "cap_heat_1600",
+   "cap_measure_len"
   ],
   "traits": [
    "infrastructure"
   ],
   "kb": "Master screw with diamond point advances across glass or metal; grooves separated by wavelength precision",
-  "ph": 250,
+  "ph": 400.0,
   "lab": {
-   "machinist": 800
+   "artisan": 250.0,
+   "machinist": 800.0,
+   "master": 300.0,
+   "smith": 200.0
   },
   "mat": {
-   "mat_wrought_iron": 50,
-   "mat_cast_iron": 200,
-   "diamond": 0.002
+   "brass_kg": 5.0,
+   "cast_iron_kg": 200.0,
+   "iron_bar_kg": 50.0,
+   "steel_noric_kg": 8.0
   },
   "cap": 8000,
   "up": 500,
@@ -1216,7 +1301,7 @@
   "sch": 0,
   "art": 5,
   "conf": "B",
-  "note": "The most demanding instrument before 1950. Screw must advance uniformly against spring loading; spindle runout < 0.5 micron over 200 mm stroke. Most sophisticated mechanical device of its era."
+  "note": "Machine whose sole purpose is scratching tens of thousands of equally spaced lines. Demands the finest lead screw in existence, thermal stability to microns, diamond tool, and 2 years of debugging."
  },
  {
   "id": "in2_interferometer_michelson",
@@ -1395,7 +1480,9 @@
   "name": "Cloud chamber: Wilson expansion chamber",
   "cat": "laboratory",
   "pre": [
-   "pump_pneumatic"
+   "pump_pneumatic",
+   "glass_labware",
+   "sc2_physics_nucleus_discovery"
   ],
   "traits": [
    "information"
@@ -1522,7 +1609,9 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Electron wavelength < 1 Angstrom; very small diffraction angles. Phosphor screen detects diffraction pattern. Low-energy electrons (50-500 eV) scatter strongly from top layers."
+  "note": "Electron wavelength < 1 Angstrom; very small diffraction angles. Phosphor screen detects diffraction pattern. Low-energy electrons (50-500 eV) scatter strongly from top layers.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_ultracentrifuge",
@@ -1658,7 +1747,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Temperature compensation via dummy gauge. Bridge circuit nulls initial resistance; strain produces bridge imbalance. Gauge factor (delta-R/R per unit strain) is material-dependent and reproducible."
+  "note": "Temperature compensation via dummy gauge. Bridge circuit nulls initial resistance; strain produces bridge imbalance. Gauge factor (delta-R/R per unit strain) is material-dependent and reproducible.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_strain_gauge_bridge",
@@ -1668,7 +1759,9 @@
    "in2_strain_gauge_electric",
    "vacuum_tube"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Wheatstone bridge with strain gauge and vacuum tube amplifier measures tiny resistance changes",
   "ph": 120,
   "lab": {
@@ -1798,7 +1891,9 @@
    "electromagnet",
    "cap_power_electric"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Armature driven by AC field; table oscillates at mains frequency; amplitude controlled",
   "ph": 110,
   "lab": {
@@ -1829,7 +1924,9 @@
   "pre": [
    "motor_transformer_ac"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Sample in rotating fixture; stress oscillates sinusoidally; failure recorded vs cycle count",
   "ph": 100,
   "lab": {
@@ -1859,7 +1956,9 @@
   "pre": [
    "cap_heat_1600"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Specimen held at fixed stress and temperature; elongation measured vs time",
   "ph": 130,
   "lab": {
@@ -1891,7 +1990,9 @@
    "cap_tol_10um",
    "cap_heat_1600"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Hydraulic or screw press confines sample; pressure measured by pressure gauge",
   "ph": 150,
   "lab": {
@@ -1920,7 +2021,9 @@
   "pre": [
    "fused_quartz"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Vacuum between walls; liquid nitrogen or helium maintains cryogenic temperature",
   "ph": 90,
   "lab": {
@@ -1951,7 +2054,9 @@
   "pre": [
    "cap_heat_1300"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Gas expands through throttle; cooling is proportional to enthalpy drop",
   "ph": 80,
   "lab": {
@@ -1981,7 +2086,9 @@
   "pre": [
    "in2_joule_thomson_valve"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Compressed gas cools against expanding outflow; cascade stages liquefy air",
   "ph": 120,
   "lab": {
@@ -2011,7 +2118,9 @@
   "pre": [
    "in2_linde_cycle_expansion_engine"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Expander cools more efficiently than Joule-Thomson; some gas expands to do work",
   "ph": 130,
   "lab": {
@@ -2042,7 +2151,9 @@
    "electromagnet",
    "in2_cryostat_dewar_flask"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Magnetic field aligns spins; adiabatic removal of field allows spins to disorder, cooling",
   "ph": 150,
   "lab": {
@@ -2160,21 +2271,29 @@
   "cat": "surveying",
   "pre": [
    "in2_spirit_level",
-   "micrometer_gauges"
+   "micrometer_gauges",
+   "cap_measure_len",
+   "cap_tol_100um",
+   "lens_grinding",
+   "opt_transit_instrument",
+   "telescope"
   ],
   "traits": [
    "military"
   ],
   "kb": "Telescope with two perpendicular rotating circles; horizontal and vertical angles",
-  "ph": 100,
+  "ph": 200.0,
   "lab": {
-   "optician": 350,
-   "master_screw": 50
+   "artisan": 150.0,
+   "master": 300.0,
+   "optician": 350.0,
+   "smith": 120.0
   },
   "mat": {
-   "mat_brass": 15,
-   "mat_glass_soda": 5,
-   "mat_wrought_iron": 30
+   "brass_kg": 20.0,
+   "glass_raw_kg": 5.0,
+   "iron_bar_kg": 30.0,
+   "timber_m3": 0.4
   },
   "cap": 2500,
   "up": 150,
@@ -2187,7 +2306,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Circles divided 360 degrees with minute precision; verniers read to 10 seconds. Optics give magnification; telescope focuses on distant point."
+  "note": "A telescope on a graduated circle; turns to measure angles to two objects. From a point, you can sight two distant landmarks and calculate their angle. Repeated sightings from multiple points give positions by triangulation. Accuracy to seconds of arc changes the scale of surveying from sight to hundreds of kilometres."
  },
  {
   "id": "in2_tacheometer",
@@ -2227,17 +2346,23 @@
   "name": "Plane table: graphical surveying",
   "cat": "surveying",
   "pre": [
-   "in2_spirit_level"
+   "in2_spirit_level",
+   "cap_tol_1mm",
+   "telescope"
   ],
   "traits": [],
   "kb": "Board on tripod; graphite paper and straightedge; draw map directly in field",
-  "ph": 60,
+  "ph": 100.0,
   "lab": {
-   "carpenter": 200
+   "artisan": 140.0,
+   "carpenter": 200.0,
+   "smith": 80.0
   },
   "mat": {
-   "mat_wood": 10,
-   "mat_brass": 3
+   "brass_kg": 3.0,
+   "iron_bar_kg": 1.0,
+   "timber_m3": 0.3,
+   "wood_kg": 10.0
   },
   "cap": 500,
   "up": 40,
@@ -2250,7 +2375,7 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Immediate feedback on map; errors caught in field. Slope corrections and magnetic declination must be handled separately. Useful for small-area mapping."
+  "note": "Telescope mounted on wooden board over map. Sighting to features and drawing lines produces map directly. Faster than theodolite but less precise; good for topographic detail."
  },
  {
   "id": "in2_alidade_ruler",
@@ -2320,7 +2445,9 @@
    "in2_tape_measure_steel",
    "cap_measure_len"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Known length baseline; correction for slope, temperature, tension; used as reference for triangulation",
   "ph": 90,
   "lab": {
@@ -2351,7 +2478,9 @@
    "in2_baseline_measurement_apparatus",
    "in2_theodolite"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Network of triangulation points; height determined by precise levelling",
   "ph": 130,
   "lab": {
@@ -2383,7 +2512,9 @@
    "in2_spirit_level",
    "micrometer_gauges"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Calibrated rod with mm graduations; telescope focuses on graticule; difference of sights gives height difference",
   "ph": 80,
   "lab": {
@@ -2415,7 +2546,10 @@
   "pre": [
    "micrometer_gauges"
   ],
-  "traits": [],
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
   "kb": "Mass hangs on calibrated spring; period or deflection indicates local gravity",
   "ph": 100,
   "lab": {
@@ -2443,9 +2577,13 @@
   "name": "Magnetometer: sensitive compass",
   "cat": "surveying",
   "pre": [
-   "magnet_permanent"
+   "magnet_permanent",
+   "cap_tol_100um",
+   "galvanometer"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Magnetic needle suspended by fine quartz fiber; deflection angle measures field",
   "ph": 75,
   "lab": {
@@ -2541,20 +2679,25 @@
   "cat": "surveying",
   "pre": [
    "clock_pendulum",
-   "master_screw"
+   "master_screw",
+   "cap_measure_time_ms",
+   "cap_tol_10um",
+   "case_hardening"
   ],
   "traits": [
    "military"
   ],
   "kb": "Balance spring oscillator; bimetallic compensation maintains frequency at sea temperature variation",
-  "ph": 140,
+  "ph": 250.0,
   "lab": {
-   "machinist": 450,
-   "master_screw": 80
+   "artisan": 600.0,
+   "machinist": 450.0,
+   "master": 300.0,
+   "optician": 200.0
   },
   "mat": {
-   "mat_steel": 5,
-   "mat_brass": 8
+   "brass_kg": 200.0,
+   "steel_noric_kg": 1.0
   },
   "cap": 3000,
   "up": 250,
@@ -2567,7 +2710,7 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Chronometer rate (gain/loss per day) must be < 1 second; observed rate used to correct while at sea. Ship's motion and temperature gradients are constant challenges."
+  "note": "Chronometers use a balance wheel and hairspring in a gimbal mount. Temperature compensation is critical; expansion changes spring rate and loses time. The kernel is that a simple spring-driven watch gains and loses seconds per day, but a chronometer must lose less than one second per month."
  },
  {
   "id": "in2_chronometer_rate_check",
@@ -2770,7 +2913,9 @@
    "photography",
    "in2_gyrocompass"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Camera mounted on gyroscopic platform; vibration isolation allows sharp photos from aircraft",
   "ph": 130,
   "lab": {
@@ -2801,7 +2946,9 @@
   "pre": [
    "in2_aerial_camera_mount"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Pair of aerial photos viewed stereoscopically; parallax gives elevation; comparator measures precise positions",
   "ph": 100,
   "lab": {
@@ -2861,7 +3008,9 @@
   "pre": [
    "micrometer_gauges"
   ],
-  "traits": [],
+  "traits": [
+   "inexplicable"
+  ],
   "kb": "Blackened metal foil heated by infrared; resistance change measured",
   "ph": 80,
   "lab": {
@@ -2912,7 +3061,9 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Quantum efficiency 5-10 percent; spectral response depends on cathode material. Cathode sensitivity to residual gas vapor is problem."
+  "note": "Quantum efficiency 5-10 percent; spectral response depends on cathode material. Cathode sensitivity to residual gas vapor is problem.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_photomultiplier_cascade_amplifier",
@@ -2921,7 +3072,10 @@
   "pre": [
    "in2_photocell_vacuum_photoelectric"
   ],
-  "traits": [],
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
   "kb": "Initial photocurrent amplified by secondary emission from dynode chain",
   "ph": 120,
   "lab": {
@@ -2952,7 +3106,9 @@
    "in2_spectrograph_grating",
    "in2_photomultiplier_cascade_amplifier"
   ],
-  "traits": [],
+  "traits": [
+   "information"
+  ],
   "kb": "Spectrum dispersed by grating; many photocells measure intensity at different wavelengths",
   "ph": 130,
   "lab": {
@@ -3003,7 +3159,9 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Leaf must be thin and light; damped oscillation with critical damping optimal. Used to detect radioactivity by ionisation of air."
+  "note": "Leaf must be thin and light; damped oscillation with critical damping optimal. Used to detect radioactivity by ionisation of air.",
+  "gov": 1,
+  "sus": 8
  },
  {
   "id": "in2_ionisation_chamber",
@@ -3012,7 +3170,10 @@
   "pre": [
    "in2_electroscope_gold_leaf"
   ],
-  "traits": [],
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
   "kb": "Gas ionised by radiation; ions collected by electric field; current measured",
   "ph": 85,
   "lab": {
@@ -3042,7 +3203,10 @@
   "pre": [
    "in2_ionisation_chamber"
   ],
-  "traits": [],
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
   "kb": "Gas avalanche multiplication in cylindrical electrode; each ion produces 10^6 electrons",
   "ph": 110,
   "lab": {
@@ -3072,7 +3236,10 @@
   "pre": [
    "in2_photomultiplier_cascade_amplifier"
   ],
-  "traits": [],
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
   "kb": "Radiation hits crystal; fluorescence photons counted by photomultiplier",
   "ph": 120,
   "lab": {
@@ -3102,8 +3269,10 @@
    "microscope_compound",
    "micrometer_gauges"
   ],
-  "traits": [],
-  "kb": "Microscope mounted on precision screw; stage position read to 0.01 mm",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_optical_comparator",
   "ph": 80,
   "lab": {
    "optician": 280,
@@ -3165,7 +3334,7 @@
    "cap_measure_mass_mg"
   ],
   "traits": [],
-  "kb": "Knife-edge pivot; pans on either side; rider weight determines mass",
+  "kb": "89_remaining_arts.md#in2_analytical_balance",
   "ph": 50,
   "lab": {
    "mechanician": 160
@@ -3194,8 +3363,10 @@
   "pre": [
    "analytical_balance"
   ],
-  "traits": [],
-  "kb": "Mass suspended on quartz fiber; torsion angle measured by mirror deflection",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_analytical_balance",
   "ph": 85,
   "lab": {
    "optician": 280
@@ -3222,10 +3393,14 @@
   "name": "Microbalance: quartz oscillator frequency shift",
   "cat": "measurement",
   "pre": [
-   "quartz_resonator"
+   "quartz_resonator",
+   "in2_quartz_resonator_frequency"
   ],
-  "traits": [],
-  "kb": "Thin quartz disk vibrates at natural frequency; mass deposited on surface shifts frequency",
+  "traits": [
+   "information",
+   "inexplicable"
+  ],
+  "kb": "89_remaining_arts.md#in2_analytical_balance",
   "ph": 100,
   "lab": {
    "electrician": 350
@@ -3254,7 +3429,7 @@
    "daniell_cell"
   ],
   "traits": [],
-  "kb": "Two dissimilar metals joined; temperature difference produces EMF proportional to delta-T",
+  "kb": "89_remaining_arts.md#in2_thermocouple",
   "ph": 45,
   "lab": {
    "electrician": 140
@@ -3284,8 +3459,10 @@
   "pre": [
    "copper_refining"
   ],
-  "traits": [],
-  "kb": "Platinum wire resistance increases linearly with temperature; measured by bridge circuit",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_thermocouple",
   "ph": 80,
   "lab": {
    "electrician": 260
@@ -3317,7 +3494,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Constant-volume or constant-pressure gas thermometer; defines absolute zero and Kelvin scale",
+  "kb": "89_remaining_arts.md#in2_thermocouple",
   "ph": 140,
   "lab": {
    "experimentalist": 400
@@ -3347,7 +3524,7 @@
    "thermometer"
   ],
   "traits": [],
-  "kb": "Mercury column in evacuated tube; height indicates atmospheric pressure",
+  "kb": "89_remaining_arts.md#in2_bourdon_pressure_gauge",
   "ph": 45,
   "lab": {
    "glassblower": 150
@@ -3376,8 +3553,10 @@
   "pre": [
    "cap_tol_100um"
   ],
-  "traits": [],
-  "kb": "Evacuated metal capsule flexes with pressure; linkage amplifies motion to pointer",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_bourdon_pressure_gauge",
   "ph": 70,
   "lab": {
    "machinist": 240
@@ -3436,8 +3615,10 @@
   "pre": [
    "mercury_barometer"
   ],
-  "traits": [],
-  "kb": "Gas trapped in graduated tube and compressed against mercury column; pressure from height drop",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_bourdon_pressure_gauge",
   "ph": 85,
   "lab": {
    "glassblower": 300
@@ -3469,7 +3650,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Quartz crystal cut and polished; piezoelectric effect creates oscillation at resonant frequency",
+  "kb": "89_remaining_arts.md#in2_quartz_resonator_frequency",
   "ph": 110,
   "lab": {
    "optician": 350,
@@ -3499,7 +3680,7 @@
    "mercury_barometer"
   ],
   "traits": [],
-  "kb": "Restricted opening in pipe; pressure drop upstream and downstream is proportional to flow rate squared",
+  "kb": "89_remaining_arts.md#in2_pitot_tube",
   "ph": 50,
   "lab": {
    "mechanician": 160
@@ -3528,8 +3709,10 @@
   "pre": [
    "orifice_flow_meter"
   ],
-  "traits": [],
-  "kb": "Smooth contraction and expansion; pressure drop in throat measures flow rate",
+  "traits": [
+   "information"
+  ],
+  "kb": "89_remaining_arts.md#in2_pitot_tube",
   "ph": 70,
   "lab": {
    "machinist": 220
@@ -3587,8 +3770,10 @@
   "pre": [
    "master_screw"
   ],
-  "traits": [],
-  "kb": "Thin spiral steel spring driving balance wheel; frequency defines watch rate",
+  "traits": [
+   "commerce"
+  ],
+  "kb": "89_remaining_arts.md#in2_quartz_resonator_frequency",
   "ph": 100,
   "lab": {
    "machinist": 350,
@@ -3618,7 +3803,7 @@
    "cap_heat_1100"
   ],
   "traits": [],
-  "kb": "Two prongs vibrate in opposition; frequency determined by mass and stiffness",
+  "kb": "89_remaining_arts.md#in2_quartz_resonator_frequency",
   "ph": 60,
   "lab": {
    "smith": 200
