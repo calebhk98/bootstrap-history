@@ -46,7 +46,12 @@ SAVE_FIELDS = (
     # revert to "let the allocator decide" on every resume, which is the
     # exact silent-reset fault `policy` itself was fixed for.
     "hour_allocations", "work_trade",
-    "commissioned", "teaching_hours_this_year", "wages_paid",
+    # teaching_hours_this_year was listed here as well as below. Harmless -
+    # the tuple is only ever iterated, so the field was simply saved twice -
+    # but it made the list 99 literals naming 98 fields, and a list that does
+    # not agree with itself is a list nobody trusts to be complete. It lives
+    # below, with the other within-year tallies its comment is about.
+    "commissioned", "wages_paid",
     "bondage_years_left", "bondage_debt", "money_real", "credit_frozen_until",
     # Counters and within-year tallies that were being silently reset on every
     # single command, because with --session every command is a save and a load.
@@ -65,6 +70,39 @@ SAVE_FIELDS = (
     # THE COUNTRY'S OWN ADOPTION OF WHAT YOU BUILT. See
     # SocietyMixin._advance_food_diffusion_population (society.py).
     "_food_pop_bonus_applied",
+    # THE COUNTRY'S OWN AGE-COHORT POPULATION (sim/world/demography.py's
+    # `Population`, wired in by docs/architecture/WIRING_MILESTONE_4.md).
+    # Three plain floats, not the object itself - JSON has no `Population`,
+    # and Sim.__init__ always builds one before load_state runs (see
+    # core.py's pop_children/pop_working_age/pop_elderly properties), so
+    # only the three cohort counts need to round-trip, the same way
+    # `mine_tranches` stores structured-but-flat data rather than an object.
+    # NONE of the nine attributes _demographic_recovery's scalar model
+    # replaced were ever in this tuple - this is not a rename of an
+    # existing save field, it is the fix for a live bug (see the properties'
+    # own comment in core.py): a demographic shock's effect was silently
+    # wiped by the very next --session command because nothing carried it
+    # across a save/load cycle.
+    "pop_children", "pop_working_age", "pop_elderly",
+    # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md):
+    # agriculture.Storage's carried-forward stock, in kilograms of grain.
+    # A plain float, not an object - same reasoning as the three pop_*
+    # fields just above (JSON has no `Storage` either, and `Sim.__init__`
+    # always sets a default of 0.0 before `load_state` runs, so only the
+    # one number needs to round-trip). Before this field existed, a fresh
+    # `agriculture.Storage(stock_kg=0.0, ...)` was constructed every single
+    # year regardless of what the previous year's harvest banked, which is
+    # the missing-buffer bug Complaints/45 measured (rome_100ad,
+    # events=False, falling to 21.9% of its starting population over a
+    # century with no hazard of any kind - Jensen's inequality on
+    # demography.py's own one-sided mortality/fertility response to
+    # symmetric weather noise, with nothing damping it). Without this in
+    # SAVE_FIELDS, a --session game would silently re-lose its entire
+    # banked surplus on every single command, the exact "every command is
+    # a save and a load, so an unsaved field breaks the game in normal
+    # play" fault CLAUDE.md SS3.5 calls out pop_children/pop_working_age/
+    # pop_elderly as the precedent for.
+    "farm_stock_kg",
     # TONNES ON HAND. Own production a year did not use banks here instead of
     # evaporating, which is what lets a twenty-gram gold demand be met by
     # buying twenty grams rather than by commissioning a mine. It has to
@@ -140,18 +178,18 @@ def save_state(s, path):
     it is a save file.
     """
     blob = {}
-    for f in SAVE_FIELDS:
-        v = getattr(s, f, None)
-        if isinstance(v, set):
-            v = {"__set__": sorted(v)}
-        blob[f] = v
+    for field_name in SAVE_FIELDS:
+        value = getattr(s, field_name, None)
+        if isinstance(value, set):
+            value = {"__set__": sorted(value)}
+        blob[field_name] = value
     blob["_civ"] = s.civ.get("id")
     # THE GOAL YOU CHOSE, same reasoning as _fog/_immortal just below: it is
     # a choice the menu asked about when this game began, not a flag that
     # should silently reset to the transistor because a resume happened to
     # omit --goal. See load_state.
     blob["_goal"] = getattr(s, "goal", None)
-    blob["_civ_live"] = {k: s.civ.get(k) for k in
+    blob["_civ_live"] = {attr: s.civ.get(attr) for attr in
                          ("literacy_general", "literacy_elite", "state_capacity")}
     blob["_weights"] = dict(s.w)
     blob["_fog"] = getattr(s, "fog", False)
@@ -171,8 +209,8 @@ def save_state(s, path):
     # events were silently re-drawn every time a player came back to a save,
     # which is a different game from the one they left.
     try:
-        st = s.rng.getstate()
-        blob["_rng"] = [st[0], list(st[1]), st[2]]
+        rng_state = s.rng.getstate()
+        blob["_rng"] = [rng_state[0], list(rng_state[1]), rng_state[2]]
     except Exception:
         blob["_rng"] = None
     blob["_version"] = SAVE_VERSION
@@ -182,8 +220,8 @@ def save_state(s, path):
     parent = os.path.dirname(os.path.abspath(path))
     if parent and not os.path.isdir(parent):
         os.makedirs(parent, exist_ok=True)
-    with open(tmp, "w") as fh:
-        json.dump(blob, fh, indent=1, sort_keys=True, default=str)
+    with open(tmp, "w") as handle:
+        json.dump(blob, handle, indent=1, sort_keys=True, default=str)
     os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
     return path
 
@@ -237,7 +275,7 @@ def _validate_save(blob, s):
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
                 "got %s" % type(blob).__name__)
-    missing = [f for f in REQUIRED_SAVE_FIELDS if f not in blob]
+    missing = [field_name for field_name in REQUIRED_SAVE_FIELDS if field_name not in blob]
     if missing:
         shown = ", ".join(missing[:8])
         if len(missing) > 8:
@@ -256,13 +294,13 @@ def _validate_save(blob, s):
     try:
         rng_version, rng_keys, rng_gaussian = blob["_rng"]
         probe = random.Random()
-        probe.setstate((rng_version, tuple(int(x) for x in rng_keys), rng_gaussian))
+        probe.setstate((rng_version, tuple(int(state_int) for state_int in rng_keys), rng_gaussian))
     except (TypeError, ValueError):
         return "this save has an invalid random-number state"
-    for f in ("year", "capital"):
-        v = blob.get(f)
-        if isinstance(v, bool) or not isinstance(v, (int, float)):
-            return "this save is corrupt: '%s' should be a number, got %r" % (f, v)
+    for field_name in ("year", "capital"):
+        value = blob.get(field_name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return "this save is corrupt: '%s' should be a number, got %r" % (field_name, value)
 
     civ_id = blob.get("_civ")
     have_civ = s.civ.get("id")
@@ -274,15 +312,15 @@ def _validate_save(blob, s):
     active = blob.get("active")
     if not isinstance(active, dict):
         return "this save is corrupt: 'active' should be an object of id -> progress"
-    for k, v in active.items():
-        if not isinstance(k, str) or not isinstance(v, dict):
-            return "this save is corrupt: active[%r] is not a valid entry" % (k,)
-        for f in ("ph_left", "spent", "cost_left"):
-            if f not in v or isinstance(v[f], bool) or not isinstance(v[f], (int, float)):
+    for node_id, value in active.items():
+        if not isinstance(node_id, str) or not isinstance(value, dict):
+            return "this save is corrupt: active[%r] is not a valid entry" % (node_id,)
+        for field_name in ("ph_left", "spent", "cost_left"):
+            if field_name not in value or isinstance(value[field_name], bool) or not isinstance(value[field_name], (int, float)):
                 return ("this save is corrupt: active[%r] is missing a numeric "
-                         "'%s'" % (k, f))
-        if not isinstance(v.get("lab_left"), dict):
-            return "this save is corrupt: active[%r] is missing 'lab_left'" % (k,)
+                         "'%s'" % (node_id, field_name))
+        if not isinstance(value.get("lab_left"), dict):
+            return "this save is corrupt: active[%r] is missing 'lab_left'" % (node_id,)
 
     done = blob.get("done")
     if not (isinstance(done, dict) and isinstance(done.get("__set__"), list)):
@@ -291,23 +329,23 @@ def _validate_save(blob, s):
     # Every node id the save refers to must still exist in the tree we have
     # loaded right now.
     unknown = set()
-    for f in _SET_FIELDS_OF_NODE_IDS:
-        v = blob.get(f)
-        if v is None:
+    for field_name in _SET_FIELDS_OF_NODE_IDS:
+        value = blob.get(field_name)
+        if value is None:
             continue
-        ids = v.get("__set__") if isinstance(v, dict) else None
-        if ids is None or not all(isinstance(x, str) for x in ids):
-            return "this save is corrupt: '%s' should be a set of id strings" % f
-        unknown |= {x for x in ids if x not in s.nodes}
-    unknown |= {k for k in active if k not in s.nodes}
-    for f in _SET_FIELDS_OF_TRADE_NAMES:
-        v = blob.get(f)
-        if v is None:
+        ids = value.get("__set__") if isinstance(value, dict) else None
+        if ids is None or not all(isinstance(node_id, str) for node_id in ids):
+            return "this save is corrupt: '%s' should be a set of id strings" % field_name
+        unknown |= {node_id for node_id in ids if node_id not in s.nodes}
+    unknown |= {node_id for node_id in active if node_id not in s.nodes}
+    for field_name in _SET_FIELDS_OF_TRADE_NAMES:
+        value = blob.get(field_name)
+        if value is None:
             continue
-        ids = v.get("__set__") if isinstance(v, dict) else None
-        if ids is None or not all(isinstance(x, str) for x in ids):
-            return "this save is corrupt: '%s' should be a set of trade names" % f
-        strange = [x for x in ids if x not in WAGES]
+        ids = value.get("__set__") if isinstance(value, dict) else None
+        if ids is None or not all(isinstance(trade_name, str) for trade_name in ids):
+            return "this save is corrupt: '%s' should be a set of trade names" % field_name
+        strange = [trade_name for trade_name in ids if trade_name not in WAGES]
         if strange:
             return ("this save refers to trade(s) this game does not have: %s"
                     % ", ".join(sorted(strange)[:6]))
@@ -331,8 +369,8 @@ def civ_of_save(path):
     file knew the answer the whole time.
     """
     try:
-        with open(path) as fh:
-            return (json.load(fh) or {}).get("_civ")
+        with open(path) as handle:
+            return (json.load(handle) or {}).get("_civ")
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -346,8 +384,8 @@ def goal_of_save(path):
     would be picked for the wrong goal.
     """
     try:
-        with open(path) as fh:
-            return (json.load(fh) or {}).get("_goal")
+        with open(path) as handle:
+            return (json.load(handle) or {}).get("_goal")
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -378,8 +416,8 @@ def load_state(s, path):
                          "game is being played with it. A save cannot turn the "
                          "fog off; start a new game without it if that is what "
                          "you want.")
-    for f in SAVE_FIELDS:
-        v = blob[f]
+    for field_name in SAVE_FIELDS:
+        value = blob[field_name]
         # NEVER restore a null over a live default. A field that had not been
         # initialised yet when the game was saved, spend_last_year and
         # insolvent_years among them, was written as null and then loaded back
@@ -389,11 +427,11 @@ def load_state(s, path):
         # players is safe, and went back to holding a process open through a
         # FIFO instead. My own round-trip tests missed it because I happened to
         # step the clock first, which initialises those fields.
-        if v is None:
+        if value is None:
             continue
-        if isinstance(v, dict) and "__set__" in v:
-            v = set(v["__set__"])
-        setattr(s, f, v)
+        if isinstance(value, dict) and "__set__" in value:
+            value = set(value["__set__"])
+        setattr(s, field_name, value)
     # PROMOTE THE ACCUMULATORS BACK, before anything adds to one. JSON has no
     # defaultdict and no Counter, so the loop above has just put plain dicts
     # where projects.py does `self.failed_attempts[k] += 1` and economy.py
@@ -402,7 +440,7 @@ def load_state(s, path):
     # promotion, done here rather than lazily because these two are written
     # to directly rather than through an accessor.
     s.failed_attempts = collections.defaultdict(
-        int, {k: int(v) for k, v in (getattr(s, "failed_attempts", None) or {}).items()})
+        int, {node_id: int(value) for node_id, value in (getattr(s, "failed_attempts", None) or {}).items()})
     s.shortages = collections.Counter(getattr(s, "shortages", None) or {})
     # `operating` JUST WENT BACK TO BEING A PLAIN SET. The generic setattr
     # above has no idea self.operating is normally an _InvalidatingSet (see
@@ -418,12 +456,12 @@ def load_state(s, path):
     s.fog = bool(blob["_fog"])
     s.cfg["immortal"] = bool(blob["_immortal"])
     s.goal = blob["_goal"]
-    _v, _keys, _g = blob["_rng"]
-    s.rng.setstate((_v, tuple(int(x) for x in _keys), _g))
+    rng_version, _keys, rng_gaussian = blob["_rng"]
+    s.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))
 
-    for k, v in blob["_civ_live"].items():
-        if v is not None:
-            s.civ[k] = v
+    for attr, value in blob["_civ_live"].items():
+        if value is not None:
+            s.civ[attr] = value
     s.w.update(blob["_weights"])
     s.state_capacity = float(s.civ.get("state_capacity", s.state_capacity))
     s.fog = bool(blob.get("_fog", False))

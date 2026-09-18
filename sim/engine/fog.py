@@ -80,11 +80,11 @@ def strip_self_play_advice(text):
 
     def _is_self_play(p):
         low = p.lower()
-        if any(ph in low for ph in _SELF_PLAY_PHRASES):
+        if any(phrase in low for phrase in _SELF_PLAY_PHRASES):
             return True
         return bool(_SELF_PLAY_META.search(p) and _SELF_PLAY_RANK.search(p))
 
-    return " ".join(p for p in parts if not _is_self_play(p)).strip()
+    return " ".join(sentence for sentence in parts if not _is_self_play(sentence)).strip()
 
 
 class FogMixin:
@@ -100,37 +100,33 @@ class FogMixin:
     # format can do that - it is that reload also handed back every denarius
     # and year that discovery cost, for free, as many times as you like.
     #
-    # The fix is a property instead of a plain attribute, so it holds
-    # regardless of WHICH code assigns to `.revealed` - load_state
-    # (protocol.py) is the path the exploit uses, but this does not require
-    # editing it or knowing about every future caller: assigning a smaller
-    # set here only ever grows what is already known, never shrinks it. A
-    # genuinely fresh Sim is untouched - the first assignment ever made (both
-    # `play` and `agent` set `s.revealed = set()` right after construction,
-    # before any `load_state`) has nothing to union with yet, so it is a
-    # plain replace, exactly as before this existed.
-    @property
-    def revealed(self):
-        return self.__dict__.get("_revealed", set())
-
-    @revealed.setter
-    def revealed(self, value):
-        cur = self.__dict__.get("_revealed")
-        self.__dict__["_revealed"] = (set(value) if cur is None
-                                      else set(cur) | set(value))
+    # THE RATCHET ITSELF NOW LIVES ON `Household`, not here: `revealed` is
+    # this household's own accumulated knowledge of the tree, which is
+    # exactly the shape of state HOUSEHOLD_EXTRACTION.md moved onto its own
+    # object, and a property is still how the ratchet holds regardless of
+    # WHICH code assigns to it - `load_state` (proto/saveload.py, via the
+    # `Sim.revealed` outside-surface property near the bottom of core.py) is
+    # the path the exploit this fixed used, but the ratchet does not need to
+    # know about every future caller either way: assigning a smaller set only
+    # ever grows what is already known, never shrinks it. See
+    # sim/engine/actors/household.py for the property itself. Every call
+    # site below reads and writes `self.household.revealed` directly, for
+    # the same reason every other moved field's engine-internal call sites
+    # do (HOUSEHOLD_EXTRACTION.md section 2): this is the hot path, not the
+    # outside surface.
 
     def reveal_from(self, k):
         """Completing something teaches you what it leads towards, vaguely."""
         if not getattr(self, "fog", False):
             return
-        self.revealed = set(getattr(self, "revealed", set()))
-        self.revealed.add(k)
-        for other, n in self.nodes.items():
-            if k in n.get("pre", []):
-                self.revealed.add(other)
-            for g in n.get("req_any", []):
-                if k in (g.get("options") or {}):
-                    self.revealed.add(other)
+        self.household.revealed = set(getattr(self.household, "revealed", set()))
+        self.household.revealed.add(k)
+        for other, node in self.nodes.items():
+            if k in node.get("pre", []):
+                self.household.revealed.add(other)
+            for group in node.get("req_any", []):
+                if k in (group.get("options") or {}):
+                    self.household.revealed.add(other)
 
     def is_visible(self, k, _memo=None):
         """Can the player see this node at all?
@@ -153,9 +149,9 @@ class FogMixin:
         """
         if not getattr(self, "fog", False):
             return True
-        if k in self.done or k in self.active:
+        if k in self.household.done or k in self.household.active:
             return True
-        if k in getattr(self, "revealed", set()):
+        if k in getattr(self.household, "revealed", set()):
             return True
         memo = {} if _memo is None else _memo
         if k in memo:
@@ -190,7 +186,7 @@ class FogMixin:
         """
         if not missing:
             return None
-        known = [p for p in missing if self.is_visible(p, _memo=_memo)]
+        known = [prereq_id for prereq_id in missing if self.is_visible(prereq_id, _memo=_memo)]
         hidden = len(missing) - len(known)
         if not getattr(self, "fog", False) or not hidden:
             msg = "missing prerequisites: " + ", ".join(missing)
@@ -228,7 +224,7 @@ class FogMixin:
     # upkeep if it is ever OPENED, so completing them on the player's behalf
     # would be spending their money on a decision they were never asked about.
     # They do not need opening to satisfy a prerequisite - start_reason tests
-    # `p not in self.done`, not operating - so the honest fix is to say what
+    # `p not in self.household.done`, not operating - so the honest fix is to say what
     # the refusal was already about: this one is free, start it.
     FREE_PREREQ_NAMED_AT_MOST = 3
 
@@ -236,18 +232,18 @@ class FogMixin:
         """", and X costs nothing..." for whichever missing prerequisites are
         free, instant and startable right now - or "" when none are."""
         ready = []
-        for p in missing:
-            n = self.nodes.get(p)
-            if not n:
+        for node_id in missing:
+            node = self.nodes.get(node_id)
+            if not node:
                 continue
-            if ((n.get("_total_cost") or 0) > 1 or (n.get("ph") or 0) > 0
-                    or (n.get("yrs") or 0) > 0 or (n.get("risk") or 0) > 0):
+            if ((node.get("_total_cost") or 0) > 1 or (node.get("ph") or 0) > 0
+                    or (node.get("yrs") or 0) > 0 or (node.get("risk") or 0) > 0):
                 continue
             # ONLY IF THEY CAN ACT ON IT NOW. Naming a free node that is
             # itself blocked is not help, it is a second refusal wearing the
             # first one's clothes.
-            if all(q in self.done for q in n["pre"]):
-                ready.append(p)
+            if all(prereq_id in self.household.done for prereq_id in node["pre"]):
+                ready.append(node_id)
         if not ready:
             return ""
         ready = ready[:self.FREE_PREREQ_NAMED_AT_MOST]
@@ -256,17 +252,17 @@ class FogMixin:
                     "start %s" % (ready[0], ready[0]))
         return (". %s cost nothing, take no time and cannot fail: start "
                 "them now (%s)"
-                % (", ".join(ready), ", ".join("start " + p for p in ready)))
+                % (", ".join(ready), ", ".join("start " + node_id for node_id in ready)))
 
     def fog_scrub(self, text):
         """Strip node ids the player has not discovered out of a message."""
         if not text or not getattr(self, "fog", False):
             return text
-        out = text
-        for k in self.nodes:
-            if k in out and not self.is_visible(k):
-                out = out.replace(k, "something you have not heard of")
-        return out
+        scrubbed = text
+        for node_id in self.nodes:
+            if node_id in scrubbed and not self.is_visible(node_id):
+                scrubbed = scrubbed.replace(node_id, "something you have not heard of")
+        return scrubbed
 
     def fog_summary(self, k):
         """One sentence. Deliberately not the whole note, and never the unlocks."""
@@ -315,47 +311,47 @@ class FogMixin:
         # (core.py): the sack itself calls the same method, so this screen
         # cannot quote a hedge the sack does not honour.
         chance, frac, hedge = self.corpus_hedge()
-        at_risk = len(self.done - self.granted)
+        at_risk = len(self.household.done - self.household.granted)
         # WHAT YOU HAVE ALREADY LOST, and have to build again. Without this the
         # only record of a sacking is a log line a century back, and a play
         # tester discovered theirs one refusal at a time - "missing
         # prerequisites: <thing you built two hundred years ago>".
-        _gone = sorted((k for k, _y in (getattr(self, "forgotten", None) or {}).items()
-                        if k not in self.done),
-                       key=lambda k: -(self.forgotten[k]))
+        _gone = sorted((node_id for node_id, _year in (getattr(self.household, "forgotten", None) or {}).items()
+                        if node_id not in self.household.done),
+                       key=lambda k: -(self.household.forgotten[k]))
         upcoming = []
-        for h in (self.civ.get("hazards") or []):
-            yrs = h.get("years") or []
+        for hazard in (self.civ.get("hazards") or []):
+            yrs = hazard.get("years") or []
             if not yrs:
                 continue
-            y0 = yrs[0]
-            y1 = yrs[1] if len(yrs) > 1 else yrs[0]
-            if self.year > y1:
+            year_start = yrs[0]
+            year_end = yrs[1] if len(yrs) > 1 else yrs[0]
+            if self.year > year_end:
                 continue                      # already survived, or missed
-            row = {"name": h.get("name", "hazard"),
-                   "years": [y0, y1],
-                   "in_progress": y0 <= self.year <= y1,
-                   "sacks_a_site": bool(h.get("sack_chance")),
-                   "sack_chance_per_year": h.get("sack_chance"),
-                   "staff_loss": h.get("staff_loss"),
-                   "staff_loss_wave_chance_per_year": (0.32 if h.get("staff_loss")
+            row = {"name": hazard.get("name", "hazard"),
+                   "years": [year_start, year_end],
+                   "in_progress": year_start <= self.year <= year_end,
+                   "sacks_a_site": bool(hazard.get("sack_chance")),
+                   "sack_chance_per_year": hazard.get("sack_chance"),
+                   "staff_loss": hazard.get("staff_loss"),
+                   "staff_loss_wave_chance_per_year": (0.32 if hazard.get("staff_loss")
                                                         is not None else None),
-                   "note": h.get("note")}
+                   "note": hazard.get("note")}
             # WHAT YOU CAN DO ABOUT IT. Every hazard here is fightable, and
             # until now nothing said so: testers watched the plague arrive on
             # the year they were told it would and treated it as weather.
             row["what_you_can_do"] = {}
             for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
-                if kind in h or (kind == "sack_chance" and h.get("sack_chance")):
+                if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
                     row["what_you_can_do"][kind] = self.hazard_advice(kind)
-            if "sack_chance" in h:
+            if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
-                    h["sack_chance"] * self.hazard_relief("sack_chance")[0], 4)
-            if "staff_loss" in h:
+                    hazard["sack_chance"] * self.hazard_relief("sack_chance")[0], 4)
+            if "staff_loss" in hazard:
                 row["staff_loss_after_what_you_have_built"] = round(
-                    h["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
-                remaining = max(y0, self.year)
-                waves = max(1, y1 - remaining + 1)
+                    hazard["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
+                remaining = max(year_start, self.year)
+                waves = max(1, year_end - remaining + 1)
                 per_wave = row["staff_loss_after_what_you_have_built"]
                 row["remaining_annual_wave_checks"] = waves
                 row["chance_of_at_least_one_staff_loss_wave"] = round(
@@ -369,17 +365,17 @@ class FogMixin:
         # bytes, which is the wall this whole interface was broken up to stop
         # producing. A player deciding what to do this decade does not need
         # four hundred words on enclosure in 1700.
-        _soon = [r for r in upcoming
-                 if r.get("in_progress") or (r["years"][0] - self.year) <= 120]
-        _later = [r for r in upcoming if r not in _soon]
+        _soon = [row for row in upcoming
+                 if row.get("in_progress") or (row["years"][0] - self.year) <= 120]
+        _later = [row for row in upcoming if row not in _soon]
         # Full hazard records are large (advice plus historical prose). Keep
         # only the four nearest actionable records and reduce every later one
         # to the two fields needed to find it in the chronology.
         _full = _soon[:4]
         _compact = _soon[4:] + _later
-        upcoming = _full + [{"name": r["name"], "years": r["years"],
-                             "sacks_a_site": r.get("sacks_a_site", False)}
-                            for r in _compact]
+        upcoming = _full + [{"name": row["name"], "years": row["years"],
+                             "sacks_a_site": row.get("sacks_a_site", False)}
+                            for row in _compact]
         # Norse hazards do not sack anything, and a playtester watched this
         # advertise a loss risk and recommend a hedge for a full 500 year run in
         # which no sacking could ever occur. Risk you cannot face is not risk.
@@ -390,7 +386,7 @@ class FogMixin:
         # nothing yet" sitting unchanged on this screen for a hundred and
         # fifty years was the actual defect, not merely the lack of a list.
         timeline = self.hazard_timeline()
-        can_be_sacked = any(h.get("sacks_a_site") for h in upcoming)
+        can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
             return {
                 "technologies_at_risk": at_risk,
@@ -423,7 +419,7 @@ class FogMixin:
             "critical_capabilities_not_operating": self.capability_gaps() or None,
             **({"you_have_already_lost": len(_gone),
                 "and_have_to_build_again": _gone[:10],
-                "the_most_recent_went_in": self.forgotten[_gone[0]]} if _gone else {}),
+                "the_most_recent_went_in": self.household.forgotten[_gone[0]]} if _gone else {}),
             # Under fog, do not name a node the player has not discovered. A
             # tester was told in `state` that corpus_dispersed would hedge them,
             # asked `why` about it, and was told they had never heard of it.

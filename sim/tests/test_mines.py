@@ -162,7 +162,7 @@ check("...and mine_depletion_note() explains it in a sentence, not just a "
 # PYTHONHASHSEED. Proven the same way the rest of this suite proves it: run
 # twice with different hash seeds and compare the exact figures.
 def _mine_snapshot(seed_env):
-    p = subprocess.run(
+    completed_process = subprocess.run(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
@@ -173,7 +173,7 @@ def _mine_snapshot(seed_env):
          "print(repr(round(s.mine_depletion_factor('coal'), 12)))"],
         capture_output=True, text=True, timeout=60, cwd=HERE,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout.strip()
+    return completed_process.stdout.strip()
 _snap_a, _snap_b = _par_map(_mine_snapshot, ("0", "12345"))
 check("mine depletion is identical under a different PYTHONHASHSEED",
       _snap_a == _snap_b and _snap_a, (_snap_a, _snap_b))
@@ -202,8 +202,8 @@ for _ in range(50):
     s_two.commission_mines()
 check("opening a second coal working later gives TWO distinct workings of "
       "the same material, not one merged capacity number",
-      len(s_two.mines) == 2 and len(set(w["opened_year"] for w in s_two.mines)) == 2,
-      [(w["opened_year"], w["capacity"]) for w in s_two.mines])
+      len(s_two.mines) == 2 and len(set(working["opened_year"] for working in s_two.mines)) == 2,
+      [(working["opened_year"], working["capacity"]) for working in s_two.mines])
 _older = min(s_two.mines, key=lambda w: w["opened_year"])
 _newer = max(s_two.mines, key=lambda w: w["opened_year"])
 check("...and the newer working is measurably LESS worked-out than the "
@@ -216,9 +216,9 @@ check("...and the newer working is measurably LESS worked-out than the "
 check("...and mine_yield_t (the material total) is exactly the sum of "
       "each working's own actual output, not the nominal tonnage sunk",
       abs(s_two.mine_yield_t("coal")
-          - sum(s_two.mine_yield_t_for(w) for w in s_two.mines)) < 1e-6,
+          - sum(s_two.mine_yield_t_for(working) for working in s_two.mines)) < 1e-6,
       s_two.mine_yield_t("coal"))
-_saved_expected = sum(s_two.mine_operating_cost_for(w) for w in s_two.mines)
+_saved_expected = sum(s_two.mine_operating_cost_for(working) for working in s_two.mines)
 _ok, _msg = s_two.close_mine("coal")
 check("closing a material closes every working of it and refunds the SUM "
       "of each working's OWN operating cost, not a material-average figure",
@@ -238,7 +238,7 @@ check("...and every coal working is actually gone, not just one of them",
 # material, and a coincidence surviving four seeds is far less likely than
 # surviving two.
 def _mines_snapshot(seed_env):
-    p = subprocess.run(
+    completed_process = subprocess.run(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
@@ -256,7 +256,7 @@ def _mines_snapshot(seed_env):
          "print(sorted((w['material'], w['opened_year'], round(w['intensity_yrs'], 9)) for w in s.mines))"],
         capture_output=True, text=True, timeout=60, cwd=HERE,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout
+    return completed_process.stdout
 _mines_seeds = ("0", "1", "12345", "999983")
 _snaps = dict(zip(_mines_seeds, _par_map(_mines_snapshot, _mines_seeds)))
 check("several workings across several materials give byte-identical "

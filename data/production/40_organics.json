@@ -1,0 +1,691 @@
+{
+ "_note": "Organics, textiles and animal products. GROWN materials (wheat, olive oil, wine, milk, wool, cotton, hemp, flax-as-linen, silk, rose petals, cork, oak bark, shellac, rubber) are priced as land- or pasture-limited yields with no material inputs, matching timber_m3's own pattern - and, as of Complaints/49, each also states `land_iugera_years` so the land it occupies is actually charged (see LAND in _SCHEMA.md), not just named in prose; livestock byproducts (hide, bone, fat, tallow's fat, bristle, horsehair, manure) are priced as marginal-labour-only byproducts of husbandry this file does not yet price on its own account, and each says so. See _SCHEMA.md.",
+ "materials": {
+  "iugerum_land": {
+   "outputs": {
+    "iugerum_land": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {},
+   "extracted_from": "unclaimed land",
+   "basis": "per iugerum (~0.2523 hectare, the Roman unit of area - 240 x 120 Roman feet) of land",
+   "yield_basis": "iugerum_land is not manufactured, it IS the ground - there is no recipe that produces a hectare the way a furnace produces copper. Handled the same way the tree handles a forest or an ore deposit: extracted_from, essentially no labour (marking a boundary and recording a title costs a scribe minutes, not the farm-hands-worth of hours a real crop or a real building costs), and a rent set by the worst iugerum still worth taking rather than a cost of production. What the land is WORTH once held - what it grows, what timber stands on it, what ore lies under it - is priced by the entries that name it in their own extracted_from (wheat_kg, wool_kg, linen_kg, olive_oil_kg, cork_kg, oak_bark_kg, rose_petals_kg, timber_m3, ore deposits): this entry only prices the act of the land becoming somebody's to use, not its yield. 0.2523 ha/iugerum is the standard conversion (a iugerum was nominally the area a yoke of oxen could plough in a day).",
+   "conf": "C",
+   "requires_node": null
+  },
+  "wheat_kg": {
+   "outputs": {
+    "wheat_kg": 577.5
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare CROPPED with wheat for one growing season, output as kg of threshed grain delivered to the granary, net of the seed corn held back for next year's sowing. A hectare cropped is not a hectare held: under the two-field rotation of this period an equal area lies fallow, so a holding is about twice this area - see sim/world/agriculture.py's FALLOW_SHARE_OF_HOLDING, which is where that land requirement lives.",
+   "yield_basis": "GROWN, so the limit is land and a yield-to-seed ratio, not a recipe with material inputs - this is the single number that decides what share of a pre-industrial population must farm, so it deserves the most defensible physical basis in this file. Ancient Mediterranean wheat under an ard (a scratch plough that does not invert the sod, so a field needs several cross-ploughings rather than one deep one) without heavy manuring returned on the order of 4-5 fold on the seed sown - Columella's own figures and modern archaeobotanical estimates for Roman Italy agree on this order of magnitude. Taking the midpoint 4.5 fold at a seeding rate of 165 kg/ha (the midpoint of the 150-180 kg/ha broadcast range) gives a GROSS yield of 742.5 kg/ha, and subtracting the 165 kg/ha of seed corn held back gives the 577.5 kg/ha stated as this entry's output. ARITHMETIC CORRECTION, RECORDED RATHER THAN QUIETLY APPLIED: this entry previously stated 800 kg/ha and called it net of seed while deriving it from the same fold times seed arithmetic, which yields a GROSS figure by definition - fold return is measured against the seed sown, so the seed is inside it. 800 is a defensible gross number and was an indefensible net one; the two readings differ by 28%, and everything downstream (surplus, the farm-population share, the price of bread) scales off which one is meant. inputs stays empty rather than listing wheat_kg as its own seed input because sim/solve_prices.py's resolvability pass treats a material that appears among its own inputs as never bottoming out in labour, which is wrong for a self-reproducing crop but is the tool's rule today - see Complaints/31. LABOUR. Cross-ploughing, broadcast sowing, weeding, sickle reaping, and threshing and winnowing by flail or ox-treading - about 150 hours/ha in aggregate for pre-mechanical technique. This aggregate is under suspicion and is NOT to be treated as settled: hand reaping with a sickle runs at roughly 0.1 ha per worker-day, which is on the order of 100 hours per hectare for the reaping alone, and that does not leave room inside 150 for the other five sub-tasks. Correcting it means re-deriving this line from its sub-tasks at defensible rates, which has not been done, so the number stands with the doubt attached rather than being adjusted by guess. LAND (Complaints/49): this entry's whole batch already IS the one hectare-year its own basis states, so land_iugera_years is exactly that hectare expressed in the unit iugerum_land is priced in - 1 ha / 0.2523 ha/iugerum (this file's own iugerum_land entry) = 3.9635 iugera-years, not a new area estimate. sim/solve_prices.py charges this against iugerum_land's own solved price (sim/world/land.py's Ricardian margin of cultivation for the civilization being solved) exactly like any ordinary input, which is how the rent that module computes finally reaches the price of bread - see LAND in _SCHEMA.md.",
+   "conf": "B",
+   "requires_node": null
+  },
+  "olive_oil_kg": {
+   "outputs": {
+    "olive_oil_kg": 300.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 190.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of mature, unirrigated olive grove, long-run average across on- and off-bearing years",
+   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/49): the whole batch is the one hectare-year the basis above already states, so land_iugera_years is that hectare in iugerum_land's own unit - 1 ha / 0.2523 ha/iugerum = 3.9635 iugera-years - charged against iugerum_land's solved rent by sim/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "wine_common_kg": {
+   "outputs": {
+    "wine_common_kg": 2700.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 200.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of vineyard per year, output as kg of fermented common (table) wine, taking wine's density as close to water's",
+   "yield_basis": "GROWN. Pre-modern, unfertilised Mediterranean vineyards - no clonal selection, no irrigation, no chemical inputs - yielded on the order of a few tonnes of grapes per hectare per year, well below a modern high-input vineyard's 10+ tonnes; taken here as 4000 kg/ha. Treading and pressing recovers roughly 65-70% of that weight as must (juice), the rest staying in skins, pips and stems (pomace, which has its own uses this file does not track); fermentation itself loses only a few percent of mass as CO2 escapes, so output is set at 2700 kg/ha. Labour is viticulture across the year - pruning, tying, hoeing weeds, treating for mildew/pests by hand - plus the harvest, treading and racking at vintage; wine's own AGEING afterwards is calendar time in a jar or barrel, not labour, and belongs in a build/storage calendar rather than here. LAND (Complaints/49): the batch is the one hectare-year of vineyard the basis already states, so land_iugera_years is that hectare in iugerum_land's own unit (1 ha / 0.2523 ha/iugerum = 3.9635 iugera-years), charged against iugerum_land's solved rent the same way any input is - see LAND in _SCHEMA.md.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "milk_kg": {
+   "outputs": {
+    "milk_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 120.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "pasture",
+   "basis": "per hectare of dairying pasture per year (goats/sheep, the common ancient Mediterranean dairy animals)",
+   "yield_basis": "GROWN via pasture rather than manufactured. An unimproved ancient dairy goat or ewe - no modern breeding for milk yield - gave on the order of 150-250 litres/year across a lactation, far below a modern dairy breed; rough Mediterranean grazing without irrigation or hay supplementation supports perhaps 4-6 such animals per hectare. Taking 5 animals/ha at ~200 kg/animal/yr (milk's density is close enough to water's that kg and litres are used interchangeably here) gives roughly 1000 kg/ha/yr. Labour is milking twice daily through the lactation plus the herding/penning time apportioned to dairying rather than to wool or meat from the same flock. LAND (Complaints/49): the batch is the one hectare-year of pasture the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years, see wheat_kg's own LAND note for the conversion). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - this pasture is charged iugerum_land's solved rent, which sim/world/land.py sets from the ARABLE margin of cultivation; real pasture was often land unfit for the plough and cheaper at the margin than cropland, so this overstates milk's true land cost until land.py tracks a rent specific to grazing land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "wool_kg": {
+   "outputs": {
+    "wool_kg": 3.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 3.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "pasture",
+   "basis": "per hectare of sheep pasture per year, output as kg of raw greasy (unwashed) fleece",
+   "yield_basis": "GROWN, limited by pasture and stocking rate, not a recipe - this is a raw fibre entry with NO spinning or weaving in it; that processing is priced downstream in thread_kg/fabric_kg/cloth_kg so any fibre (this or cotton_kg) can feed the same generic textile chain. Unimproved ancient sheep breeds, before the deliberate selection for fleece weight that only intensifies over the following centuries, clipped on the order of 1.5-2 kg of raw greasy wool a year; rough, unmanured Mediterranean grazing supports perhaps 1.5 such sheep per hectare. That gives roughly 3 kg wool/ha/yr, taken as the output. Labour is shearing (fast - under half an hour a sheep with hand shears once the animal is caught) plus a share of the flock's herding time; the wool is greasy/unwashed as sheared, so scouring losses (lanolin, suint, dirt - commonly a third to half the raw weight) belong to whatever downstream entry first needs clean fibre, not to this one. LAND (Complaints/49): the batch is the one hectare-year of pasture the basis states, converted to land_iugera_years the same way every hectare-basis entry in this file is (3.9635 iugera-years - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged iugerum_land's solved rent, which is set from the ARABLE margin of cultivation (sim/world/land.py); real sheep pasture was commonly rougher ground than cropland and would earn a lower rent of its own, so this overstates wool's true land cost until land.py distinguishes pasture from arable land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "cotton_kg": {
+   "outputs": {
+    "cotton_kg": 200.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 4600.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of cotton per year, output as kg of ginned lint fibre",
+   "yield_basis": "GROWN, and - like wool_kg - a RAW FIBRE entry with no spinning or weaving in it; cotton_fabric_kg is the separate, downstream, manufactured entry for woven cloth, consistent with cotton being the one fibre in this file that already has two tracked material keys. Pre-modern rainfed cotton (no synthetic fertiliser, no mechanical picking) commonly returned on the order of 500-600 kg of seed cotton per hectare; ginning - separating the lint from the seed - removes roughly two thirds of that weight as seed, leaving about 200 kg of lint per hectare, taken as the output. The labour figure is dominated by a real, well documented historical bottleneck: BEFORE a mechanical gin, cleaning cotton by hand runs at only about half a kilogram of lint per worker-day (roughly the historically cited one pound/day for hand-ginning), so clearing 200 kg of lint took on the order of 400 worker-days - about 4000 hours - of ginning alone, dwarfing the roughly 150-200 hours of planting, weeding and hand-picking that precede it. This is exactly why the saw gin was transformative: it did not touch the farming or the picking, only this one enormous, otherwise-irreducible labour sink. LAND (Complaints/49): the batch is the one hectare-year the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years - see wheat_kg's own LAND note for the conversion), charged against iugerum_land's solved rent like any other input.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "hemp_fiber_kg": {
+   "outputs": {
+    "hemp_fiber_kg": 500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of hemp per year, output as kg of retted, broken and scutched bast fibre",
+   "yield_basis": "GROWN; a raw fibre entry like wool_kg and cotton_kg, with no spinning/weaving. Hemp is a higher-yielding bast fibre than flax under pre-modern cultivation, commonly cited on the order of 500-900 kg of usable fibre per hectare after retting (rotting the stalk in water or dew to free the fibre from the woody core) and mechanical breaking and scutching; taken conservatively at 500 kg/ha. Labour covers the field work plus breaking and scutching the retted stalks by hand; retting ITSELF is days of soaking, calendar time rather than labour, needing only periodic checking. LAND (Complaints/49): the batch is the one hectare-year the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years - see wheat_kg's own LAND note), charged against iugerum_land's solved rent like any other input.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "linen_kg": {
+   "outputs": {
+    "linen_kg": 150.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1250.0,
+    "artisan": 700.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of flax per year, output as kg of finished, woven linen cloth",
+   "yield_basis": "GROWN, but UNLIKE wool_kg/cotton_kg/hemp_fiber_kg this entry folds the entire chain from field to finished cloth into one number, because flax has only this one tracked material key - there is no separate 'flax_fiber_kg' or 'linen_thread_kg' for the tree to consume at an intermediate stage, so linen_kg has to represent the usable end-state directly. The chain: flax straw retted, broken, scutched and hackled yields on the order of 150-250 kg of good spinnable line fibre per hectare (well below hemp's yield - flax is a finer, more delicate fibre for finer cloth); spinning and weaving losses take a further 10-15%, giving roughly 150 kg of finished cloth/ha, taken as the output. The labour is where the real cost lives: hand SPINNING flax into thread on a spindle or wheel is, by a wide historical margin, the slowest step in pre-mechanised textile production - it took several full-time spinners' output to keep one weaver supplied, which is exactly why the spinning jenny mattered centuries before power looms did. Field work, retting, breaking, scutching and hackling for a hectare's fibre is put at roughly 250 labourer-hours; spinning that fibre into thread at roughly 1000 labourer-hours (household/unskilled craft, historically often women's and children's work); weaving the thread into cloth on a horizontal loom at roughly 700 artisan-hours (skilled, equipment-using work, hence the different trade). Bleaching/finishing is treated as folded into the weaving step rather than broken out separately. LAND (Complaints/49): the batch is the one hectare-year the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years - see wheat_kg's own LAND note), charged against iugerum_land's solved rent like any other input.",
+   "conf": "C",
+   "requires_node": "tex_drop_spindle"
+  },
+  "silk_kg": {
+   "outputs": {
+    "silk_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 3000.0,
+    "artisan": 2000.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of mulberry orchard per year (with its attached silkworm-rearing and reeling), output as kg of finished silk",
+   "yield_basis": "GROWN, folding the whole sericulture chain into one entry for the same reason as linen_kg: there is no separate tracked key for raw cocoons or reeled thread. The chain, using the traditional Chinese/Japanese ratios this craft is best documented by: an intensively pruned mulberry orchard can put on the order of 20-30 tonnes of leaf per hectare per year; silkworms convert roughly 20 kg of fresh mulberry leaf into 1 kg of fresh cocoons (they are extremely inefficient converters - most of the leaf mass is respired or excreted); reeling then recovers only about a tenth of a cocoon's weight as usable filament, the rest being the dead pupa and the sericin gum that reeling in hot water washes away. Multiplying through: 20,000 kg leaf/ha / 20 (leaf:cocoon) / 10 (cocoon:reeled silk) is on the order of 100 kg of finished silk per hectare per year, taken as the output, with weaving folded in since - like linen_kg - there is no separate 'silk cloth' key. The labour is enormous per unit weight, matching silk's historic value density: rearing worms is round-the-clock attention for weeks (correct temperature, humidity, and feeding several times a day) rather than seasonal field labour, and reeling/weaving is a trained, delicate craft done at a fine gauge no other fibre in this file approaches. LAND (Complaints/49): the batch is the one hectare-year of mulberry orchard the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years - see wheat_kg's own LAND note), charged against iugerum_land's solved rent like any other input.",
+   "conf": "C",
+   "requires_node": "tx2_sericulture"
+  },
+  "shellac_kg": {
+   "outputs": {
+    "shellac_kg": 25.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 60.0,
+    "artisan": 25.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "forest",
+   "basis": "per hectare of lac-insect host forest (fig, palas or ber trees infested with Kerria lacca) per year, output as kg of purified shellac",
+   "yield_basis": "Shellac is a resin secreted by a scale insect over host trees in South and Southeast Asian forest, not a crop grown on cleared arable land, so it is extracted_from forest the way timber and oak_bark are. Encrusted twigs ('sticklac') are cut and scraped from infested host trees at a modest rate per hectare of forest given low host density and the insect's own reproduction cycle, taken here at roughly 75 kg sticklac/ ha/yr; crushing, winnowing and washing sticklac to remove bark fragments, the insects' own red dye and wax recovers roughly a third of that weight as purified shellac, giving about 25 kg/ha/yr. Labour is harvesting the encrusted twigs (climbing/cutting, spread across a forest rather than concentrated the way a field crop is) plus the processing - crushing, washing and a final gentle melt-and-filter through cloth to make flake shellac. This is the least well documented entry in this file by per-hectare yield; the harvesting technique and the roughly one-third purification yield are solid, the per-hectare density of host trees in a working forest is this author's estimate. LAND (Complaints/49): the batch is the one hectare-year of host forest the basis states, converted the same way every hectare-basis entry in this file is (3.9635 iugera-years - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged iugerum_land's solved rent, set from the ARABLE margin of cultivation (sim/world/land.py); real lac-host forest was not cropland and would earn its own, likely lower, rent, so this overstates shellac's true land cost until land.py distinguishes forest from arable land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "rubber_kg": {
+   "outputs": {
+    "rubber_kg": 5.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 200.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "forest",
+   "basis": "per hectare of wild (untended) rubber-tree forest per year, output as kg of dry, coagulated rubber",
+   "yield_basis": "Wild latex-bearing trees (Hevea in Amazonia, or Castilla/Ficus elastica elsewhere before plantation Hevea existed) grow scattered through natural forest rather than planted in rows, which is the whole economic story of the wild-rubber trade: natural stands run only on the order of 1-3 tappable trees per hectare, and a tapped wild tree yields on the order of 2-3 kg of dry rubber a year (latex is only ~30-35% rubber solids before coagulation with acid or smoke; that loss is already folded into this per-tree dry-rubber figure). Two trees/ha x 2.5 kg/tree gives roughly 5 kg/ha/yr, a genuinely low number, which is exactly why wild rubber could never match plantation output once Malayan estates - hundreds of trees per hectare, deliberately planted - came online, and why this entry's labour is dominated by WALKING: a tapper visits a long looping forest trail (historically an 'estrada') between widely scattered trees, collecting and smoking/coagulating the latex, rather than working a dense, compact plot. LAND (Complaints/49): the batch is the one hectare-year of forest the basis states, converted the same way every hectare-basis entry in this file is (3.9635 iugera-years - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged iugerum_land's solved rent, set from the ARABLE margin of cultivation (sim/world/land.py); real wild-rubber forest was not cropland and would earn its own, likely lower, rent, so this overstates rubber's true land cost until land.py distinguishes forest from arable land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "rubber_tubing_kg": {
+   "outputs": {
+    "rubber_tubing_kg": 1.0
+   },
+   "inputs": {
+    "rubber_kg": 1.1
+   },
+   "labour_hours": {
+    "artisan": 2.0
+   },
+   "basis": "per kg of finished rubber tubing",
+   "yield_basis": "Manufactured from rubber_kg by warming, rolling/extruding round a mandrel and trimming to shape; the 10% excess over the finished weight is scrap and trim loss. LABELLED HEURISTIC (rule 3.4): a real tubing process vulcanises the rubber with sulphur and heat so it holds its shape and does not perish or turn tacky, and that chemistry is not yet modelled anywhere in this file - no sulphur input, no vulcanisation labour or heat is charged here. This entry prices only the mechanical shaping of UNVULCANISED rubber and should be revisited once a sulphur/vulcanisation chain exists; until then it understates true production cost and, more importantly, overstates how durable/available the good would really be at any tier before vulcanisation is discovered.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "hide_kg": {
+   "outputs": {
+    "hide_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.5
+   },
+   "extracted_from": "livestock (a slaughter byproduct of meat and dairy husbandry)",
+   "basis": "per kg of raw, untanned animal hide taken off a slaughtered animal",
+   "yield_basis": "Hide is a JOINT PRODUCT of raising livestock for meat and milk, not a thing grown or made in its own right - the cost of feeding, herding and raising the animal belongs to whatever entry eventually prices meat and milk (milk_kg exists in this file; meat does not yet), and charging the animal's whole upkeep to leather here would double-count that cost the day a meat entry is added. What belongs here is only the MARGINAL step once the animal is already being slaughtered for those other reasons: flaying the carcass and salting or air-drying the hide enough that it survives transport to a tanner, a matter of a skilled butcher's minutes per animal, not a farming season. LABELLED HEURISTIC (rule 3.4): a complete accounting would instead apportion a SHARE of the animal's feed and grazing-land cost to the hide by its relative market value against meat, tallow, bone, gut and horn - the same joint-cost logic the copper_kg example uses when galena ore yields both lead and silver - but that split needs a livestock/meat entry to divide against, and none exists yet in this file. Until one does, this entry understates the true cost of hide by roughly the animal's own keep.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "leather_kg": {
+   "outputs": {
+    "leather_kg": 1.0
+   },
+   "inputs": {
+    "hide_kg": 1.15,
+    "oak_bark_kg": 3.0
+   },
+   "labour_hours": {
+    "labourer": 4.0,
+    "artisan": 2.0
+   },
+   "basis": "per kg of finished vegetable (oak-bark) tanned leather",
+   "yield_basis": "Leather is hides plus tannin plus a great deal of TIME - and time is not labour, so this entry is explicit about which is which. Fleshing and liming (soaking in a lime bath to loosen hair and dissolve the epidermis) removes hair and some tissue, a mass loss partly offset by the tannin the hide later absorbs, netting to roughly 1.15 kg of raw hide needed per kg of finished leather. Traditional oak-bark vegetable tanning used large quantities of ground bark relative to the hide's own weight - historical tanneries are commonly described using several times the hide's weight in bark across the whole tan - taken here at 3 kg of oak_bark_kg per kg of leather. The labour figures (fleshing, liming, working the hide by hand in the tan pits; then currying/finishing - shaving to thickness, working in oils) are what a tanner and his labourers actually DO with their hands; they do NOT include the months the hide spends soaking in progressively stronger tan liquors in a pit, which for heavy leather traditionally ran six months to well over a year. That soak time ties up PIT CAPACITY AND CAPITAL, not labour-hours, and belongs in whatever the sim uses to model production lead time, not in labour_hours here.",
+   "conf": "C",
+   "requires_node": "tex_vegetable_tanning"
+  },
+  "parchment_sheet": {
+   "outputs": {
+    "parchment_sheet": 1.0
+   },
+   "inputs": {
+    "hide_kg": 0.35
+   },
+   "labour_hours": {
+    "artisan": 3.0
+   },
+   "basis": "per finished parchment sheet (a scraped, limed and stretched animal-skin writing surface, roughly 0.3 x 0.4 m)",
+   "yield_basis": "Parchment is NOT leather and is not tanned - no oak_bark_kg in this recipe. A skin is limed to loosen the hair (the same alkaline unhairing step leather uses), then scraped thin on both sides with a curved lunellum knife while stretched taut on a wooden frame, so it dries under tension into a flat, translucent sheet rather than the flexible, chemically-tanned material leather is; this is a physical/mechanical transformation (thinning + drying under tension) rather than a chemical one, which is why the process and the labour look completely different from leather despite starting from the same raw hide. Roughly two thirds of a raw hide's mass is scraped away or trimmed from the usable rectangle (the edges, legs and belly of a skin are thin, uneven or scarred and are cut off), so about 0.35 kg of raw hide is consumed per finished sheet. The labour is skilled and slow - careful scraping without cutting through the membrane, repeated re-wetting and re-tensioning on the frame, then pouncing the surface smooth with pumice or chalk - a craft with essentially no historical mechanisation before this era.",
+   "conf": "C",
+   "requires_node": "prn_parchment_sheets"
+  },
+  "papyrus_sheet": {
+   "outputs": {
+    "papyrus_sheet": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3,
+    "artisan": 0.15
+   },
+   "extracted_from": "riverine marsh",
+   "basis": "per finished papyrus sheet (laid, pressed and dried strips of Cyperus papyrus pith, roughly Egyptian standard size before sheets are pasted into a roll)",
+   "yield_basis": "Papyrus is made straight from a marsh reed, with NO pulping and no rag economy the way paper_kg has - the pith of the papyrus stem is sliced into thin ribbons, laid in two perpendicular layers, and pressed; the stem's own sugary sap acts as the glue once pressed and dried, so there is no separate binder input either. The limiting natural resource is riverine marsh (classically the Nile Delta), which regrows every flood season the way a coppiced forest regrows rather than being sown and reaped like a field crop, so it is extracted_from rather than arable land, matching how this file treats timber and cork. Labour is quoted per sheet rather than per hectare of marsh because the reed bed itself is not the bottleneck - a stand of papyrus vastly outproduces what a small workshop can slice, lay and press in a day - so the real constraint is the skilled artisan hours of preparing and pressing sheets, plus the lighter labourer work of cutting and hauling stems from the marsh.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "ink_kg": {
+   "outputs": {
+    "ink_kg": 1.0
+   },
+   "inputs": {
+    "olive_oil_kg": 10.0
+   },
+   "labour_hours": {
+    "labourer": 5.0,
+    "scribe": 1.0
+   },
+   "basis": "per kg of finished carbon (lampblack) ink, ground into a water/gum suspension",
+   "yield_basis": "Carbon ink - lampblack soot ground into a thin gum-and-water paste - is, per the project's own material-gating review, a basic ancient craft with no real barrier to entry (it predates every era this simulator covers). It is made by burning oil in a shallow lamp under a cool surface (a bowl, a plate) and scraping off the soot that condenses there; this recovers only a small fraction of the fuel's mass as usable black - most of the oil simply burns to CO2 and water vapour and gives light rather than soot - so producing the roughly half-a-kilogram of pigment a kilogram of ink-cake needs takes several kilograms of burnt lamp oil, taken here at 10 kg of olive_oil_kg per kg of finished ink. LABELLED HEURISTIC (rule 3.4): the traditional binder is gum arabic, which is not a tracked material in this file; its small, cheap contribution to the recipe is folded into labour rather than given its own line, understating true material cost by a small margin. Labour is mostly the slow, fiddly business of tending smoky lamps and collecting soot without contaminating it with lamp-black already scraped, plus a scribe's time grinding the collected soot into the binder and testing it flows and dries correctly - ink-making was frequently done by the scriptorium itself rather than bought in, which is why 'scribe' rather than a dedicated trade appears here.",
+   "conf": "C",
+   "requires_node": "prn_carbon_ink"
+  },
+  "bristles_kg": {
+   "outputs": {
+    "bristles_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.5
+   },
+   "extracted_from": "livestock (hog bristle, a slaughter byproduct)",
+   "basis": "per kg of sorted hog bristle",
+   "yield_basis": "A slaughter byproduct like hide_kg and bone_kg, priced the same way: the cost of raising the pig belongs to whatever entry eventually prices pork (not yet in this file), and this entry only charges the marginal labour of plucking and sorting bristle by length and stiffness once the animal is already being butchered for meat. LABELLED HEURISTIC (rule 3.4), same caveat as hide_kg: a complete accounting would apportion a share of the animal's feed cost by joint-product value once a meat entry exists.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "horsehair_kg": {
+   "outputs": {
+    "horsehair_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "extracted_from": "livestock (mane and tail hair, sheared without harming the animal, or a knacker's byproduct)",
+   "basis": "per kg of sorted, cleaned horsehair",
+   "yield_basis": "Mane and tail hair can be cut from a living working or draft horse without harming it (unlike hide or bone, so this is not strictly a slaughter byproduct, though a dead animal's hair is also collected by knackers); the horse's own keep is charged to whatever puts it to work (traction, riding), not to this entry. Labour is shearing/combing the hair from the animal, then sorting and cleaning it by length, a light hand task.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "bone_kg": {
+   "outputs": {
+    "bone_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "extracted_from": "livestock (a slaughter byproduct)",
+   "basis": "per kg of raw butchered bone",
+   "yield_basis": "Another slaughter byproduct priced the same way as hide_kg: the animal's own upkeep belongs to a meat/dairy entry this file does not yet have, and this entry charges only the marginal butchery labour of separating bone from meat during an ordinary slaughter. LABELLED HEURISTIC (rule 3.4): same joint-cost caveat as hide_kg.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "bone_ash_kg": {
+   "outputs": {
+    "bone_ash_kg": 1.0
+   },
+   "inputs": {
+    "bone_kg": 1.4,
+    "charcoal_kg": 1.0
+   },
+   "labour_hours": {
+    "furnaceman": 2.0
+   },
+   "basis": "per kg of calcined bone ash",
+   "yield_basis": "Bone is roughly two-thirds mineral (calcium phosphate) and the rest organic matter - collagen, fat, marrow. Calcining (burning) a bone white in a hot, sustained fire drives off all of the organic fraction as smoke and gas, leaving only the mineral ash behind at roughly 65-70% of the original dry weight, so about 1.4 kg of raw bone is needed per kg of finished ash - the inverse of that yield. This needs a genuinely hot, sustained fire rather than a quick burn, priced here as charcoal fuel and a furnaceman's hours tending the kiln until the bone is fully white through and through rather than just charred black on the surface.",
+   "conf": "C",
+   "requires_node": "cap_heat_0700"
+  },
+  "gelatin_kg": {
+   "outputs": {
+    "gelatin_kg": 1.0
+   },
+   "inputs": {
+    "bone_kg": 6.5,
+    "firewood_kg": 4.0
+   },
+   "labour_hours": {
+    "labourer": 5.0
+   },
+   "basis": "per kg of dried gelatin (rendered animal glue)",
+   "yield_basis": "Bone's organic fraction is mostly collagen, on the order of a fifth to a quarter of its dry weight; long, hot-water simmering (NOT boiling dry, which would scorch it) breaks collagen down into soluble gelatin and extracts perhaps half of what is physically present, the rest staying locked in the spent bone residue even after hours of rendering. Net yield on the order of 12-15% of raw bone weight, taken as 1/6.5, is why gelatin/glue rendering historically used large volumes of bone for a comparatively small output. The multi-day simmer itself is CALENDAR TIME tying up a kettle and a fire, not labour - the labour_hours here are for keeping the fire fed, skimming the pot, and reducing/drying the strained liquor down to a solid glue afterwards, not for standing over it the whole time.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "agar_or_gelatin_kg": {
+   "outputs": {
+    "agar_or_gelatin_kg": 1.0
+   },
+   "inputs": {
+    "bone_kg": 6.5,
+    "firewood_kg": 4.0
+   },
+   "labour_hours": {
+    "labourer": 5.0
+   },
+   "basis": "per kg of gelling agent (the animal-gelatin branch of this either/or material)",
+   "yield_basis": "This key names an EITHER/OR node - agar (extracted by boiling and cooling red seaweed, principally Gelidium) or animal gelatin, whichever a consumer can obtain - and this entry prices only one branch of it. Agar is a genuinely different physical process (a marine-algae extraction, discovered in 17th-century Japan and dependent on access to the right coastal seaweed beds) with no route into a Roman-founder-era Mediterranean economy, so this entry defaults to the animal-gelatin route this file already has worked out in gelatin_kg and reuses its numbers exactly - see gelatin_kg's yield_basis for the bone-to-collagen reasoning. LABELLED HEURISTIC (rule 3.4): treat this as a placeholder that will be WRONG the moment a consumer of this material is actually reachable only by a founder with access to a seaweed-gathering coastline, at which point the agar branch needs its own entry rather than borrowing gelatin's.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "manure_kg": {
+   "outputs": {
+    "manure_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.1
+   },
+   "extracted_from": "livestock (a byproduct of keeping draft and dairy animals)",
+   "basis": "per kg of collected manure",
+   "yield_basis": "A byproduct of animals kept for traction, milk or meat, not a thing produced in its own right - a working ox or a dairy herd produces manure whether or not anyone wants it, in well-documented daily quantities per head. The only marginal cost this entry charges is collecting it from stalls, pens or a droving path rather than letting it lie, a light task folded into ordinary animal tending.",
+   "conf": "B",
+   "requires_node": null
+  },
+  "cork_kg": {
+   "outputs": {
+    "cork_kg": 400.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 30.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "forest",
+   "basis": "per hectare of managed cork-oak (Quercus suber) grove per year, annualised across the harvest cycle",
+   "yield_basis": "Cork oak bark can only be stripped once the tree is mature and then only every ~9 years without killing the tree (stripping too soon or too often exposes the living cambium and kills it) - a real biological harvest cycle, not a farming choice. A mature grove yields on the order of a few tonnes of raw cork per hectare at each stripping; annualised across the roughly nine-year cycle by imagining a grove with its stands staggered so some part is always due for stripping, that comes to roughly 400 kg/ha/yr. Labour is the skilled hand-stripping itself (a special curved axe is used to cut the bark without wounding the growth layer beneath), which for a given amount of cork takes far less time than, say, coppicing timber, since only the bark - not the tree - is removed. LAND (Complaints/49): the batch is the one hectare-year of grove the basis states, converted the same way every hectare-basis entry in this file is (3.9635 iugera-years - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged iugerum_land's solved rent, set from the ARABLE margin of cultivation (sim/world/land.py); a real cork grove is not cropland and would earn its own, likely different, rent, so this is an approximation until land.py distinguishes forest from arable land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "oak_bark_kg": {
+   "outputs": {
+    "oak_bark_kg": 200.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "forest",
+   "basis": "per hectare of coppiced tanbark oak (Quercus robur/petraea, NOT cork oak) per year, annualised across the coppice rotation",
+   "yield_basis": "A different oak, and a different harvest, from cork_kg: tanbark oak is COPPICED - cut down to a stool every ~20-25 years and left to regrow from the stump, with the whole felled pole's bark stripped and dried, rather than having only its bark peeled from a standing living tree. A coppice stand yields several tonnes of dried bark per hectare at each cut; annualised across the rotation the way cork_kg is, that comes to roughly 200 kg/ha/yr. Labour is felling the coppice poles and stripping and stacking their bark to dry, a seasonal task done only once a generation per stand but priced here as its annual-equivalent rate. LAND (Complaints/49): the batch is the one hectare-year of coppice the basis states, converted the same way every hectare-basis entry in this file is (3.9635 iugera-years - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged iugerum_land's solved rent, set from the ARABLE margin of cultivation (sim/world/land.py); a real coppice stand is not cropland and would earn its own, likely different, rent, so this is an approximation until land.py distinguishes forest from arable land.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "beeswax_kg": {
+   "outputs": {
+    "beeswax_kg": 0.5
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 10.0
+   },
+   "extracted_from": "managed apiary",
+   "basis": "per hive per year (traditional fixed-comb skep or log hive, not a moveable-frame hive)",
+   "yield_basis": "Quoted per HIVE-YEAR rather than per hectare because bees forage over several kilometres of surrounding countryside well beyond any land the beekeeper holds, so an apiary is not land-limited the way a crop or a flock is - what limits it is the number of hives someone can build and tend, and the forage available in the district as a whole. A traditional skep or log hive, harvested by cutting out and crushing the comb (there is no moveable frame to spin honey out and return the empty comb), yields on the order of half a kilogram of rendered wax a year alongside its honey - the comb itself is wax, so a good part of the harvested structure IS the product. Labour is a season's hive tending (smoking the colony, cutting comb) plus straining the wax free of honey and debris by gentle melting.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "wax_kg": {
+   "outputs": {
+    "wax_kg": 1.0
+   },
+   "inputs": {
+    "beeswax_kg": 1.1
+   },
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "basis": "per kg of refined/clarified wax",
+   "yield_basis": "A light refining step on beeswax_kg - re-melting and straining out residual honey, propolis and comb debris, then often a further clarification through sand or cloth - rather than a different substance; the two keys are kept separate in this file so a recipe that specifically wants clean, pale, filtered wax (candle-making, sealing, lost-wax casting) is not mixed up with raw dark comb wax straight off the hive. The 10% excess input is the debris and residual honey removed during clarification.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "soap_kg": {
+   "outputs": {
+    "soap_kg": 1.15
+   },
+   "inputs": {
+    "tallow_kg": 1.0,
+    "wood_ash_kg": 3.0,
+    "firewood_kg": 2.0
+   },
+   "labour_hours": {
+    "labourer": 4.0
+   },
+   "basis": "per this batch (1 kg tallow + 3 kg wood ash) of soft soap",
+   "yield_basis": "Saponification: rendered animal fat boiled for hours with a caustic lye leached from wood ash (potassium carbonate dissolved out of ash with water - this file has no separate tracked 'lye_kg', so wood_ash_kg is used directly as the alkali source, the way it is already a real material the tree consumes elsewhere). Leaching enough usable potash out of ash for a full boil traditionally needs several times the fat's weight in ash, taken here at 3:1; the finished soft soap comes out slightly heavier than the fat that went in because it retains bound water and residual alkali, taken as a 15% gain. Labour is leaching the ash (pouring water through it repeatedly and collecting the lye), then a long stirred boil with the fat over a wood fire until it saponifies and thickens.",
+   "conf": "C",
+   "requires_node": "ch2_rxn_saponification"
+  },
+  "fat_kg": {
+   "outputs": {
+    "fat_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "extracted_from": "livestock (suet and trimmed fat, a slaughter byproduct)",
+   "basis": "per kg of raw, unrendered animal fat",
+   "yield_basis": "A slaughter byproduct priced the same way as hide_kg, bone_kg and bristles_kg: the animal's own keep belongs to a meat entry this file does not yet have, and this entry charges only the marginal butchery labour of trimming fat from the carcass.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "tallow_kg": {
+   "outputs": {
+    "tallow_kg": 1.0
+   },
+   "inputs": {
+    "fat_kg": 1.15,
+    "firewood_kg": 0.5
+   },
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "basis": "per kg of rendered, strained tallow",
+   "yield_basis": "Rendering: raw fat is melted gently over a fire and strained to remove connective tissue and protein solids ('cracklings'), which separate out and are discarded (or eaten) rather than remaining in the finished product; this loses roughly 10-15% of the raw fat's weight, so about 1.15 kg of raw fat_kg is needed per kg of finished tallow. Labour is tending the rendering pot at a gentle, non-scorching heat and straining the melt through cloth.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "essential_oil_kg": {
+   "outputs": {
+    "essential_oil_kg": 1.0
+   },
+   "inputs": {
+    "rose_petals_kg": 3500.0,
+    "firewood_kg": 200.0
+   },
+   "labour_hours": {
+    "labourer": 200.0,
+    "artisan": 20.0
+   },
+   "basis": "per kg of steam-distilled essential oil (rose otto taken as the representative case)",
+   "yield_basis": "Flower petals hold their aromatic oil at an extremely low concentration - on the order of a few hundredths of a percent by weight for rose, which is why attar of rose is one of the most valuable liquids by weight in the pre-modern world. Perfumery sources consistently put the ratio at several thousand kilograms of fresh petals per kilogram of finished oil after steam distillation; taken here at 3500:1. Steam distilling that much plant material needs a correspondingly large, sustained fire under a still (a copper alembic historically) across many batches, priced as firewood. Labour is split between the huge quantity of hand-picking needed upstream (folded in here as labourer hours on top of rose_petals_kg's own harvest, since a still-load is picked and processed in a short window before the oil volatilises away) and the artisan's skilled hours running the still and separating the oil from the distillate.",
+   "conf": "B",
+   "requires_node": "distillation_alcohol"
+  },
+  "rose_petals_kg": {
+   "outputs": {
+    "rose_petals_kg": 2500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of rose grown for perfumery per year",
+   "yield_basis": "GROWN, like the food and fibre crops in this file. Rose grown specifically for attar production (the best-documented case being Bulgaria's Rose Valley, a tradition old enough to be a fair proxy for a pre-industrial founder) commonly yields on the order of 2000-3000 kg of fresh blossom per hectare per year across the short flowering season; taken here as 2500 kg/ha. Labour is almost entirely hand-picking, and a great deal of it relative to the light weight of an individual blossom, because the oil content is highest and best preserved if flowers are picked at dawn before the day's heat volatilises it away, compressing the whole harvest into short pre-dawn windows across the flowering season. LAND (Complaints/49): the batch is the one hectare-year the basis states, so land_iugera_years is that hectare in iugerum_land's own unit (3.9635 iugera-years - see wheat_kg's own LAND note), charged against iugerum_land's solved rent like any other input.",
+   "conf": "B",
+   "requires_node": null
+  },
+  "wick_cotton_m": {
+   "outputs": {
+    "wick_cotton_m": 1.0
+   },
+   "inputs": {
+    "cotton_kg": 0.0021
+   },
+   "labour_hours": {
+    "labourer": 0.02
+   },
+   "basis": "per metre of finished, braided cotton wick",
+   "yield_basis": "A simple braided-cotton candle/lamp wick runs on the order of 2 grams of cotton fibre per metre of length for an ordinary taper-sized wick (thicker wicks for larger lamps would need more); a small allowance on top of that raw 2 g/m covers waste in carding and braiding. Labour is fast per metre once done in bulk lengths - twisting or plaiting several strands of carded cotton together is a quick repetitive hand task, nothing like the slow business of spinning fine thread for cloth.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "thread_kg": {
+   "outputs": {
+    "thread_kg": 1.0
+   },
+   "inputs": {
+    "wool_kg": 1.05
+   },
+   "labour_hours": {
+    "labourer": 6.0
+   },
+   "basis": "per kg of spun thread, wool taken as the representative raw fibre",
+   "yield_basis": "The first stage of this file's generic textile chain (thread_kg -> fabric_kg -> cloth_kg), which any raw fibre entry (wool_kg here; cotton_kg or hemp_fiber_kg could equally feed it) can be imagined substituting into. Carding (combing the fibres straight and parallel) and spinning on a spindle or wheel loses a small amount of fibre as short, unspinnable waste, taken at 5%. Spinning is unskilled/semi-skilled hand or household craft historically, hence 'labourer' rather than a specialised trade, and - as linen_kg's entry discusses at length - is by far the slowest step in hand textile production; the hours here are lower than linen_kg's per-kg spinning cost because wool's fibre is coarser and quicker to spin to a usable thickness than fine flax line fibre.",
+   "conf": "C",
+   "requires_node": "tex_drop_spindle"
+  },
+  "fabric_kg": {
+   "outputs": {
+    "fabric_kg": 1.0
+   },
+   "inputs": {
+    "thread_kg": 1.05
+   },
+   "labour_hours": {
+    "artisan": 5.0
+   },
+   "basis": "per kg of plain-woven fabric straight off the loom, undressed and unfinished",
+   "yield_basis": "Second stage of the generic textile chain: thread is warped and woven on a loom, a skilled, equipment-using craft (hence 'artisan' rather than 'labourer', unlike the spinning stage before it) with a modest loom-waste allowance (thrums, selvedge trimming) taken at 5%. This is UNFINISHED cloth - no fulling, dyeing, bleaching or napping yet - which is what distinguishes it from cloth_kg.",
+   "conf": "C",
+   "requires_node": "tex_two_beam_loom"
+  },
+  "cloth_kg": {
+   "outputs": {
+    "cloth_kg": 1.0
+   },
+   "inputs": {
+    "fabric_kg": 1.05
+   },
+   "labour_hours": {
+    "labourer": 3.0
+   },
+   "basis": "per kg of finished, dressed cloth",
+   "yield_basis": "Third stage of the generic textile chain: raw loom-state fabric is finished - fulled (pounded/trodden with water and fuller's earth to full-shrink and felt a wool weave tight, or simply washed and bleached for a linen/cotton weave), then dried, stretched back to shape on tenter frames, and sometimes napped or pressed. A modest further mass loss (grease, dirt and loose fibre washed out) is taken at 5%. This is the cloth a tailor or sailmaker actually buys.",
+   "conf": "C",
+   "requires_node": "tx2_fulling"
+  },
+  "canvas_kg": {
+   "outputs": {
+    "canvas_kg": 1.0
+   },
+   "inputs": {
+    "hemp_fiber_kg": 1.15
+   },
+   "labour_hours": {
+    "labourer": 8.0
+   },
+   "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",
+   "yield_basis": "Canvas is coarse and heavy - thick, tightly twisted cordage-like thread rather than fine cloth thread - so, unlike the fine-linen chain, it needs FEWER hours of spinning and weaving per kilogram of finished fabric: a given weight of coarse thread has far less total length to spin and weave than the same weight spun fine, which is exactly why heavy sailcloth was cheaper per kilogram than fine linen despite using a similar raw fibre. Hemp is the traditional canvas fibre (from the Latin 'cannabis' by way of 'canvas' itself) for its strength and rot-resistance at sea, hence hemp_fiber_kg rather than linen_kg as the input, with a 15% processing loss through coarse spinning and weaving.",
+   "conf": "C",
+   "requires_node": "tex_two_beam_loom"
+  },
+  "felt_kg": {
+   "outputs": {
+    "felt_kg": 1.0
+   },
+   "inputs": {
+    "wool_kg": 1.2
+   },
+   "labour_hours": {
+    "labourer": 4.0
+   },
+   "basis": "per kg of finished wool felt",
+   "yield_basis": "Felt is NOT woven and has no thread_kg/fabric_kg stage at all: loose, carded wool fibre is matted directly into a solid sheet using heat, moisture and mechanical agitation (the same fibre-scale hooking that makes wool shrink and mat if washed too hot), which is why felt has been valued since antiquity - among steppe nomads especially - as a fast, low-labour, non-woven textile: it skips spinning into thread and weaving on a loom entirely. The processing loss (grease, dirt, short unfelted waste) is taken somewhat higher than the woven-cloth chain's, at 20%, since raw fleece is worked directly rather than first cleaned for spinning.",
+   "conf": "C",
+   "requires_node": "tex_felting"
+  },
+  "cotton_fabric_kg": {
+   "outputs": {
+    "cotton_fabric_kg": 1.0
+   },
+   "inputs": {
+    "cotton_kg": 1.1
+   },
+   "labour_hours": {
+    "labourer": 8.0,
+    "artisan": 5.0
+   },
+   "basis": "per kg of woven cotton fabric",
+   "yield_basis": "Cotton's own version of the thread_kg->fabric_kg->cloth_kg chain, given its own single entry because cotton_kg is explicitly a raw-fibre-only key (see cotton_kg's own yield_basis) with its finished-fabric counterpart tracked separately, the way flax is not. Carding and spinning ginned lint, then weaving it, uses labour hours of the same order as the generic wool chain (thread_kg + fabric_kg combined) since the physical process - draw out fibre, twist to thread, weave on a loom - does not differ much by fibre once the fibre itself is clean and ginned; a 10% combined carding/spinning/weaving loss is assumed.",
+   "conf": "C",
+   "requires_node": "tex_drop_spindle"
+  },
+  "cloth_bag_kg": {
+   "outputs": {
+    "cloth_bag_kg": 1.0
+   },
+   "inputs": {
+    "cloth_kg": 1.1
+   },
+   "labour_hours": {
+    "labourer": 1.5
+   },
+   "basis": "per kg of finished cloth bag, by the weight of the bag itself",
+   "yield_basis": "A simple sewn item: cloth is cut into panels and hand-sewn into a bag, with a 10% allowance for cutting waste and seam overlap. Labour is cutting and hand-sewing, a quick task relative to producing the cloth itself, which is why this entry's own labour is small next to cloth_kg's.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "wood_pulp_kg": {
+   "outputs": {
+    "wood_pulp_kg": 1.0
+   },
+   "inputs": {
+    "firewood_kg": 2.1,
+    "wood_ash_kg": 0.05,
+    "charcoal_kg": 0.3
+   },
+   "labour_hours": {
+    "labourer": 0.4,
+    "machinist": 0.2
+   },
+   "basis": "per kg of chemical (kraft/soda-process) wood pulp",
+   "yield_basis": "An industrial-era alternative to rag paper's fibre source. Wood is priced here as firewood_kg (bulk, unseasoned wood by weight) rather than the existing timber_m3 entry, because timber_m3 is specifically seasoned, squared CONSTRUCTION timber, and pulpwood is neither seasoned nor squared - firewood-grade bulk wood is the closer match by weight and is already a material key this file's validator can mass-balance. Chemical (kraft/soda) pulping cooks wood chips in a hot alkaline liquor and recovers only about 45-50% of the dry wood's mass as pulp, the rest dissolving into the cooking liquor as lignin and hemicellulose and leaving as spent liquor, so roughly 2.1 kg of wood is needed per kg of pulp. wood_ash_kg stands in for the cooking alkali (a real kraft/soda mill uses caustic soda, a chemical this file does not yet track as its own material - LABELLED HEURISTIC, rule 3.4) and charcoal_kg fuels the sustained pressurised cook. Labour is handling/chipping the wood (labourer) and running the cooking and washing equipment (machinist, since this is inherently a later-tier, equipment-heavy process rather than a hand craft).",
+   "conf": "C",
+   "requires_node": "ch2_process_kraft_pulping"
+  },
+  "paper_kg": {
+   "outputs": {
+    "paper_kg": 1.0
+   },
+   "inputs": {
+    "linen_rag_kg": 1.4,
+    "wood_ash_kg": 0.05,
+    "firewood_kg": 3.0
+   },
+   "labour_hours": {
+    "labourer": 8.0,
+    "artisan": 5.0
+   },
+   "basis": "per kg of finished, dried and sized rag paper",
+   "yield_basis": "PAPER FROM RAGS IS A REAL CHAIN, and rags are themselves worn-out linen - see linen_rag_kg's own entry for why that input already carries a collection cost rather than a fresh-manufacture one. Turning rags into paper: the rags are boiled with a weak lye (wood ash again, as in soap_kg) to loosen dirt and help break down the fibre, then beaten (historically by hand with mallets, later by water-powered stamping mills - this entry assumes the more labour-heavy hand/tended-mill case) into a fibrous pulp slurry, which a vatman forms into sheets on a wire mould, couches onto felts, presses to squeeze out water, and hangs to dry before sizing (typically with gelatin_kg or a starch, omitted here as a small addition) to stop ink from feathering. Washing, boiling and beating loses some fibre, so roughly 1.4 kg of rag is needed per kg of finished dry paper. Labour splits into the pulping/beating/vatting (labourer) and the more skilled sheet-forming, couching, pressing and sizing (artisan).",
+   "conf": "C",
+   "requires_node": "prn_hand_papermaking"
+  },
+  "linen_rag_kg": {
+   "outputs": {
+    "linen_rag_kg": 1.0
+   },
+   "inputs": {
+    "linen_kg": 1.3
+   },
+   "labour_hours": {
+    "labourer": 3.0
+   },
+   "basis": "per kg of usable, sorted linen rag",
+   "yield_basis": "Rags are not manufactured - they are worn-out linen textiles (old clothing, sailcloth, sheeting) that have already lived a full economic life as cloth, so this entry's real 'production' is COLLECTING and sorting them, not weaving anything new. The 1.3:1 ratio of linen_kg 'consumed' per kg of usable rag reflects that a chunk of what a rag-and-bone dealer collects is too rotten, greasy or dyed to be worth a papermaker's money and gets discarded, not that fresh cloth is being fed into the entry as raw material. Because the input is priced at linen_kg's own finished-cloth cost, this entry's output price already carries the embedded cost of the ORIGINAL weaving - which is realistic: a rag's true opportunity cost is the cloth it once was, and paper mills historically competed with the clothing trade for the same worn-out linen, a real and often-complained-about scarcity (rag shortages are a recurring theme in the history of the paper trade right up to the switch to wood pulp). Labour is picking, sorting by colour/grade and rough-cleaning collected rags.",
+   "conf": "C",
+   "requires_node": null
+  }
+ }
+}

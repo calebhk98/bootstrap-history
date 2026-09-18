@@ -15,7 +15,7 @@ from .harness import *  # noqa: F401,F403
 # could disagree with what actually happened.
 
 def _zero_lab(n):
-    return {t: 0.0 for t in n.get("lab", {})}
+    return {trade: 0.0 for trade in n.get("lab", {})}
 
 
 # --- a directed project jumps the queue, ahead of higher-`order` work that
@@ -70,12 +70,12 @@ check("...and the hours the directive could not place there are not lost: "
       s.active[_kD]["hours_offered_this_year"]
       == s.director_pool() - s.active[_kC]["hours_offered_this_year"],
       s.active[_kD]["hours_offered_this_year"])
-_new = [m for _, m in s.log[_before:]]
+_new = [message for _, message in s.log[_before:]]
 check("...and the player is told BY NAME that the directive could not be "
       "fully honoured, and that the reason is a pace/calendar floor, not "
       "a refusal to give it hours",
-      any("DIRECTED HOURS UNUSED" in m and _nC["name"] in m
-          and "calendar floor" in m for m in _new),
+      any("DIRECTED HOURS UNUSED" in message and _nC["name"] in message
+          and "calendar floor" in message for message in _new),
       _new)
 
 # --- two standing orders together asking for more than the whole pool: the
@@ -98,9 +98,9 @@ check("the first of two over-committed standing orders gets its directive "
       s.active[_kE]["hours_offered_this_year"])
 check("...and the second gets only what the pool had left, named as the "
       "pool running out, not as anything wrong with that project",
-      any("DIRECTED HOURS UNUSED" in m and "before this one's turn came" in m
-          for _, m in s.log[_before:]),
-      [m for _, m in s.log[_before:]])
+      any("DIRECTED HOURS UNUSED" in message and "before this one's turn came" in message
+          for _, message in s.log[_before:]),
+      [message for _, message in s.log[_before:]])
 
 # --- a player who never calls `allocate` sees the ordinary priority order
 # and nothing else: with an empty hour_allocations, the sort key collapses
@@ -115,8 +115,8 @@ for _k in _order3:
 s.step()
 check("with nothing ever directed, hours still go out strictly by `order` "
       "rank, exactly as before `allocate` existed",
-      [s.active[k]["pool_rank_this_year"] for k in _order3] == [1, 2, 3],
-      [s.active[k]["pool_rank_this_year"] for k in _order3])
+      [s.active[node_id]["pool_rank_this_year"] for node_id in _order3] == [1, 2, 3],
+      [s.active[node_id]["pool_rank_this_year"] for node_id in _order3])
 
 # --- `allocate` itself: refuses a project that is not active yet, refuses
 # an id that does not exist, sets, reports back, and clears.

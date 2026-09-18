@@ -21,7 +21,7 @@ s_fe = sim()
 s_fe.fog = True
 s_fe.revealed = set()
 _av_fe = S._agent_available(s_fe, NODES, {"all": True})
-_est_rows = [r for r in _av_fe["available"] if isinstance(r["earns_per_year"], list)]
+_est_rows = [row for row in _av_fe["available"] if isinstance(row["earns_per_year"], list)]
 check("available quotes a range, not the true figure, for an unbuilt thing "
       "under fog",
       len(_est_rows) > 10, len(_est_rows))
@@ -39,9 +39,9 @@ check("the fogged estimate is deterministic - the same game asked the same "
 # NOT A TIGHT SYMMETRIC BAND ON THE TRUTH: "400 +/- 50" gives the truth away
 # just as plainly as the bare number did. Most of the range in a real sample
 # has to sit CLOSER on one side than the other.
-_asym = sum(1 for r in _est_rows
-            if (NODES[r["id"]]["rev"] - r["earns_per_year"][0])
-            != (r["earns_per_year"][1] - NODES[r["id"]]["rev"]))
+_asym = sum(1 for row in _est_rows
+            if (NODES[row["id"]]["rev"] - row["earns_per_year"][0])
+            != (row["earns_per_year"][1] - NODES[row["id"]]["rev"]))
 check("the estimate is not a tight symmetric band centred on the truth - "
       "most of a real sample sit closer to one bound than the other",
       _asym >= len(_est_rows) * 0.5, "%d of %d" % (_asym, len(_est_rows)))
@@ -49,7 +49,7 @@ check("the estimate is not a tight symmetric band centred on the truth - "
 # UPKEEP STAYS EXACT. The user's question was specifically about payback
 # (revenue); upkeep is closer to a quoted price, knowable in advance, and
 # this project already keeps `cost` exact under fog for the same reason.
-_k_up = next((r["id"] for r in _est_rows if NODES[r["id"]]["up"] > 0), None)
+_k_up = next((row["id"] for row in _est_rows if NODES[row["id"]]["up"] > 0), None)
 if _k_up:
     _wu = S._agent_dispatch(s_fe, NODES, {"cmd": "why", "id": _k_up})
     check("upkeep is exact under fog even for a thing you have never run",
@@ -94,7 +94,7 @@ for _spid, _banned in (
     _wn = S._node_explain(sim(), NODES, _spid)
     check("%s's note no longer ranks itself against the rest of the tree"
           % _spid,
-          all(b not in (_wn.get("note") or "") for b in _banned),
+          all(banned_phrase not in (_wn.get("note") or "") for banned_phrase in _banned),
           _wn.get("note"))
 
 # LEGITIMATE WARNINGS SURVIVE: plague_preparedness still tells you the date
@@ -135,7 +135,7 @@ _pair_pn = None
 for _cand in s_pn.order:
     if not s_pn.can_start(_cand):
         continue
-    _dep = next((m for m in NODES if _cand in NODES[m]["pre"]), None)
+    _dep = next((node_id for node_id in NODES if _cand in NODES[node_id]["pre"]), None)
     if _dep:
         _pair_pn = (_cand, _dep)
         break
@@ -146,7 +146,7 @@ _txt_pn = _RP("why", _w_pn)
 check("a refusal for a started-but-unfinished prerequisite says it has to "
       "be FINISHED, not merely started - on the path a player actually hits",
       "FINISHED" in _txt_pn and "not merely started" in _txt_pn,
-      [ln for ln in _txt_pn.splitlines() if "FINISHED" in ln] or _txt_pn[:200])
+      [line for line in _txt_pn.splitlines() if "FINISHED" in line] or _txt_pn[:200])
 
 
 # --- JOB 3b: a fog-safe sense of progress DURING play, and nothing more
@@ -180,8 +180,8 @@ check("`values` exists and lists this society's own traits as numbers",
       _vals.get("ok") and len(_vals.get("values") or []) >= 8, _vals)
 check("...and every field event text names is one this command can look up",
       {"w_novelty", "w_commerce", "w_magic_fear"} <=
-      {r["field"] for r in _vals["values"]},
-      [r["field"] for r in _vals["values"]])
+      {row["field"] for row in _vals["values"]},
+      [row["field"] for row in _vals["values"]])
 
 
 # --- JOB 3d: a long step stops when something it warned about actually
@@ -194,9 +194,9 @@ s_se.end_year = s_se.cfg["start_year"] + 200
 # Plain `start`, not `rush` - this check has to stand on its own before
 # `rush` exists as a command (see JOB 3f, committed separately and later).
 _memo_se = {}
-_ok_se = [k for k in s_se.order if s_se.can_start(k, _memo=_memo_se)]
-_ok_se = [k for k in _ok_se
-          if not (NODES[k]["ph"] == 0 and NODES[k]["_total_cost"] <= 1)]
+_ok_se = [node_id for node_id in s_se.order if s_se.can_start(node_id, _memo=_memo_se)]
+_ok_se = [node_id for node_id in _ok_se
+          if not (NODES[node_id]["ph"] == 0 and NODES[node_id]["_total_cost"] <= 1)]
 _ok_se.sort(key=lambda k: s_se.project_cost(k), reverse=True)
 for _k_se in _ok_se[:15]:
     S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se})
@@ -207,15 +207,15 @@ _step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})
 # this test is actually about. Keep stepping through any such earlier stop;
 # the property under test is that it reaches, and stops AT, exhaustion
 # eventually, never running past it within one call.
-_saw_exhausted = any("CREDIT EXHAUSTED" in e["message"] for e in _step_ce["events"])
+_saw_exhausted = any("CREDIT EXHAUSTED" in event["message"] for event in _step_ce["events"])
 _hops = 0
 while (not _saw_exhausted and _step_ce.get("stopped_early")
        and s_se.year < s_se.end_year and _hops < 20):
     _step_ce = S._agent_dispatch(s_se, NODES,
                                  {"cmd": "step",
                                   "years": min(100, s_se.end_year - s_se.year)})
-    _saw_exhausted = any("CREDIT EXHAUSTED" in e["message"]
-                        for e in _step_ce["events"])
+    _saw_exhausted = any("CREDIT EXHAUSTED" in event["message"]
+                        for event in _step_ce["events"])
     _hops += 1
 check("a multi-year step stops the moment credit is actually exhausted, "
       "rather than running the rest of the years on top of it",
@@ -246,10 +246,10 @@ _step_wn = S._agent_dispatch(s_wn, NODES, {"cmd": "step", "years": 50})
 check("a multi-year step stops the moment it is CLOSE TO THE LIMIT too, not "
       "only once credit is fully exhausted",
       bool(_step_wn.get("stopped_early"))
-      and any("CLOSE TO THE LIMIT" in e["message"] for e in _step_wn["events"])
-      and not any("CREDIT EXHAUSTED" in e["message"] for e in _step_wn["events"]),
+      and any("CLOSE TO THE LIMIT" in event["message"] for event in _step_wn["events"])
+      and not any("CREDIT EXHAUSTED" in event["message"] for event in _step_wn["events"]),
       (_step_wn.get("stopped_early"),
-       [e["message"] for e in _step_wn["events"]]))
+       [event["message"] for event in _step_wn["events"]]))
 check("...leaving most of the requested years unspent, not run through",
       _step_wn["year"] < s_wn.cfg["start_year"] + 100, _step_wn["year"])
 

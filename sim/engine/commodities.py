@@ -9,7 +9,7 @@ throttle) -- handed THIS CIVILISATION'S ACTUAL copper numbers via
 `commodities.json` would otherwise guess. `core.py` still does not import
 this module and `Sim` still has no inventory (`Ledger`, the stock-tracking
 class below, is exercised by the demo and the regression suite only): see
-`rome/data/world/COMMODITIES.md` section "What was decided" for why a full
+`data/world/COMMODITIES.md` section "What was decided" for why a full
 swap of `resource_throttle()`/`MARKET_SHARE`/`material_price_factor()` for
 this module's OWN (separately-sourced) price/national-output machinery was
 rejected, and what was taken instead.
@@ -29,8 +29,8 @@ import math
 import os
 import random
 
-HERE = os.path.dirname(os.path.abspath(__file__))        # rome/sim/engine
-SIMDIR = os.path.dirname(HERE)                            # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))        # sim/engine
+SIMDIR = os.path.dirname(HERE)                            # sim
 ROOT = os.path.dirname(SIMDIR)                            # rome
 COMMODITIES_FILE = os.path.join(ROOT, "data", "world", "commodities.json")
 
@@ -77,9 +77,9 @@ class CommodityLedger:
         # one commodity. Built once, not per call -- annual_material_demand()
         # in economy.py has the same shape of cache for the same reason.
         self._material_to_commodity = {}
-        for cid, c in self.commodities.items():
-            for mk in c.get("material_keys", []):
-                self._material_to_commodity[mk] = cid
+        for commodity_id, commodity in self.commodities.items():
+            for material_key in commodity.get("material_keys", []):
+                self._material_to_commodity[material_key] = commodity_id
 
     # ---- consumption: what a set of built/active nodes eats -------------
     #
@@ -94,22 +94,22 @@ class CommodityLedger:
         """Tonnes/yr of raw material KEYS (as they appear in `mat`, e.g.
         "copper_kg") demanded by these nodes. One level below commodities;
         commodity_demand() rolls this up."""
-        d = collections.Counter()
-        for k in active_ids:
-            n = self.nodes.get(k)
-            if not n:
+        material_tonnes = collections.Counter()
+        for node_id in active_ids:
+            node = self.nodes.get(node_id)
+            if not node:
                 continue
-            span = max(1.0, float(n.get("build_yrs") or n.get("yrs") or 1.0))
-            for m, q in (n.get("mat") or {}).items():
-                d[m] += float(q) / span / 1000.0        # kg -> tonnes/yr
-        for k in node_ids:
-            n = self.nodes.get(k)
-            if not n or float(n.get("up", 0) or 0) <= 0 or not n.get("mat"):
+            span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
+            for material_key, quantity_kg in (node.get("mat") or {}).items():
+                material_tonnes[material_key] += float(quantity_kg) / span / 1000.0        # kg -> tonnes/yr
+        for node_id in node_ids:
+            node = self.nodes.get(node_id)
+            if not node or float(node.get("up", 0) or 0) <= 0 or not node.get("mat"):
                 continue
-            span = max(1.0, float(n.get("build_yrs") or n.get("yrs") or 1.0))
-            for m, q in n["mat"].items():
-                d[m] += 0.5 * float(q) / span / 1000.0
-        return d
+            span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
+            for material_key, quantity_kg in node["mat"].items():
+                material_tonnes[material_key] += 0.5 * float(quantity_kg) / span / 1000.0
+        return material_tonnes
 
     def commodity_demand(self, node_ids=(), active_ids=()):
         """Tonnes/yr of each tracked commodity DIRECTLY named in some node's
@@ -118,24 +118,24 @@ class CommodityLedger:
         for `copper` -- that indirect, chained demand is what
         propagate_demand() is for, deliberately kept separate. See
         COMMODITIES.md section 7."""
-        out = collections.Counter()
-        for mk, t in self.material_kg_per_yr(node_ids, active_ids).items():
-            cid = self._material_to_commodity.get(mk)
-            if cid:
-                out[cid] += t
-        return out
+        commodity_totals = collections.Counter()
+        for material_key, tonnes in self.material_kg_per_yr(node_ids, active_ids).items():
+            commodity_id = self._material_to_commodity.get(material_key)
+            if commodity_id:
+                commodity_totals[commodity_id] += tonnes
+        return commodity_totals
 
     def commodity_consumers(self, commodity_id):
         """Every node id whose `mat` dict draws on this commodity, and the
         raw (un-annualised) kilograms it asks for. "What consumes it,"
         answered by name rather than by number."""
         keys = set(self.commodities[commodity_id].get("material_keys", []))
-        out = {}
-        for nid, n in self.nodes.items():
-            hit = {m: q for m, q in (n.get("mat") or {}).items() if m in keys}
-            if hit:
-                out[nid] = hit
-        return out
+        consumers_by_node = {}
+        for node_id, node in self.nodes.items():
+            matched = {material_key: quantity_kg for material_key, quantity_kg in (node.get("mat") or {}).items() if material_key in keys}
+            if matched:
+                consumers_by_node[node_id] = matched
+        return consumers_by_node
 
     # ---- production -------------------------------------------------------
     #
@@ -156,11 +156,11 @@ class CommodityLedger:
     def best_multiplier(self, commodity_id, built):
         """The output multiplier this commodity's production currently runs
         at, given a set of built node ids. 1.0 if nothing built changes it."""
-        c = self.commodities[commodity_id]
+        commodity = self.commodities[commodity_id]
         route_best = 1.0
         boost = 1.0
         built = set(built)
-        for entry in c.get("produced_by", []):
+        for entry in commodity.get("produced_by", []):
             node = entry.get("node", "")
             is_built = node.startswith("mine:") or node in built
             if not is_built:
@@ -184,12 +184,12 @@ class CommodityLedger:
         each step rather than a flat national estimate."""
         if commodity_id in self.supply_override:
             return float(self.supply_override[commodity_id])
-        c = self.commodities[commodity_id]
-        if c.get("recipe"):
+        commodity = self.commodities[commodity_id]
+        if commodity.get("recipe"):
             return self._manufactured_output(commodity_id, built)
-        base = c.get("national_output_t_per_yr")
+        base = commodity.get("national_output_t_per_yr")
         if base is None:
-            base = c.get("import_capacity_t_per_yr", 0.0)
+            base = commodity.get("import_capacity_t_per_yr", 0.0)
         return base * self.best_multiplier(commodity_id, built)
 
     def _manufacturing_capacity_t_per_yr(self, commodity_id, built):
@@ -200,14 +200,14 @@ class CommodityLedger:
         real deliveries rather than a second national estimate -- see that
         function's own comment for why using country_output() there would
         double-count the upstream constraint)."""
-        c = self.commodities[commodity_id]
-        base = float(c.get("national_manufacturing_capacity_t_per_yr", 0.0))
+        commodity = self.commodities[commodity_id]
+        base = float(commodity.get("national_manufacturing_capacity_t_per_yr", 0.0))
         return base * self.best_multiplier(commodity_id, built)
 
     def _manufactured_output(self, commodity_id, built):
-        c = self.commodities[commodity_id]
+        commodity = self.commodities[commodity_id]
         cap = self._manufacturing_capacity_t_per_yr(commodity_id, built)
-        recipe = c.get("recipe") or {}
+        recipe = commodity.get("recipe") or {}
         limits = []
         for input_id, ratio in recipe.items():
             if ratio <= 0:
@@ -230,8 +230,8 @@ class CommodityLedger:
         figure that is not a raw national total to begin with."""
         if commodity_id in self.supply_override:
             return float(self.supply_override[commodity_id])
-        c = self.commodities[commodity_id]
-        share = float(c.get("market_share", 0.03))
+        commodity = self.commodities[commodity_id]
+        share = float(commodity.get("market_share", 0.03))
         return self.country_output(commodity_id, built) * min(1.0, share * standing_multiplier)
 
     def player_supply(self, commodity_id, own_production_t=0.0, built=(),
@@ -251,11 +251,11 @@ class CommodityLedger:
         """Denarii per kg, from how hard `demand_t` leans on `supply_t`,
         bounded by this commodity's own floor and ceiling (section 2's
         `price_floor_factor` / `price_ceiling_factor`)."""
-        c = self.commodities[commodity_id]
-        base = float(c.get("base_price_denarii_per_kg", 1.0))
-        elastic = float(c.get("elasticity", 1.0))
-        floor = float(c.get("price_floor_factor", 0.4))
-        ceil_ = float(c.get("price_ceiling_factor", 6.0))
+        commodity = self.commodities[commodity_id]
+        base = float(commodity.get("base_price_denarii_per_kg", 1.0))
+        elastic = float(commodity.get("elasticity", 1.0))
+        floor = float(commodity.get("price_floor_factor", 0.4))
+        ceil_ = float(commodity.get("price_ceiling_factor", 6.0))
         ratio = demand_t / max(supply_t, 1e-9)
         factor = max(floor, min(ceil_, ratio ** elastic))
         return base * factor
@@ -267,10 +267,10 @@ class CommodityLedger:
         fundamental) and 4.4 for what it deliberately is NOT (seasons,
         shocks)."""
         rng = rng or random
-        c = self.commodities[commodity_id]
-        base = float(c.get("base_price_denarii_per_kg", 1.0))
-        floor = float(c.get("price_floor_factor", 0.4)) * base
-        ceil_ = float(c.get("price_ceiling_factor", 6.0)) * base
+        commodity = self.commodities[commodity_id]
+        base = float(commodity.get("base_price_denarii_per_kg", 1.0))
+        floor = float(commodity.get("price_floor_factor", 0.4)) * base
+        ceil_ = float(commodity.get("price_ceiling_factor", 6.0)) * base
         fundamental = self.price(commodity_id, demand_t, supply_t)
         noisy = fundamental * math.exp(rng.gauss(0.0, sigma))
         return max(floor, min(ceil_, noisy))
@@ -309,10 +309,10 @@ class CommodityLedger:
         NOT adjusted for a specific civilization's reach -- that needs a
         live Sim's region_reach()/material_reach(), which this standalone
         module deliberately does not have. See COMMODITIES.md section 6."""
-        c = self.commodities[commodity_id]
+        commodity = self.commodities[commodity_id]
         return {
-            "regions": list(c.get("regions", [])),
-            "cost_multiplier": c.get("cost_multiplier"),
+            "regions": list(commodity.get("regions", [])),
+            "cost_multiplier": commodity.get("cost_multiplier"),
             "reach_adjusted": False,
             "note": ("Roman-calibrated multiplier from geography.json, not "
                      "adjusted for who is asking. A live Sim's material_reach() "
@@ -376,20 +376,20 @@ class CommodityLedger:
             # a second share discount. See CommodityLedger's own comment.
             if cid in self.supply_override:
                 return own_production.get(cid, 0.0) + float(self.supply_override[cid])
-            c = self.commodities[cid]
-            if c.get("recipe"):
+            commodity = self.commodities[cid]
+            if commodity.get("recipe"):
                 base = self._manufacturing_capacity_t_per_yr(cid, built)
             else:
-                base = c.get("national_output_t_per_yr")
+                base = commodity.get("national_output_t_per_yr")
                 if base is None:
-                    base = c.get("import_capacity_t_per_yr", 0.0)
+                    base = commodity.get("import_capacity_t_per_yr", 0.0)
                 base *= self.best_multiplier(cid, built)
-            share = float(c.get("market_share", 0.03))
+            share = float(commodity.get("market_share", 0.03))
             return own_production.get(cid, 0.0) + base * min(1.0, share * standing_multiplier)
 
         def visit(cid, requested_t):
-            c = self.commodities[cid]
-            recipe = c.get("recipe") or {}
+            commodity = self.commodities[cid]
+            recipe = commodity.get("recipe") or {}
             children = {}
             upstream_cap_t = float("inf")
             for input_id, ratio in recipe.items():
@@ -422,8 +422,8 @@ class CommodityLedger:
         def walk(n):
             if n["bottleneck"]:
                 out.append(n["bottleneck"])
-            for ch in n["children"].values():
-                walk(ch)
+            for child in n["children"].values():
+                walk(child)
 
         walk(propagation_node)
         return out
@@ -440,7 +440,7 @@ class CommodityLedger:
         `built` (direct demand only; see that method's own note about why
         this does not include chained demand from a recipe -- use
         propagate_demand() for that)."""
-        c = self.commodities[commodity_id]
+        commodity = self.commodities[commodity_id]
         if demand_t is None:
             demand_t = self.commodity_demand(node_ids=built).get(commodity_id, 0.0)
         supply_t = self.player_supply(commodity_id, own_production_t, built, standing_multiplier)
@@ -449,13 +449,13 @@ class CommodityLedger:
             "you_produce_t_per_yr": own_production_t,
             "you_can_buy_t_per_yr": self.market_available(commodity_id, built, standing_multiplier),
             "country_produces_t_per_yr": self.country_output(commodity_id, built),
-            "produced_by": c.get("produced_by", []),
+            "produced_by": commodity.get("produced_by", []),
             "consumed_by": self.commodity_consumers(commodity_id) if self.nodes else {},
             "trade_partners": self.trade_partners(commodity_id),
-            "monopoly_possible": c.get("monopoly_possible", False),
+            "monopoly_possible": commodity.get("monopoly_possible", False),
             "demand_t_per_yr": demand_t,
             "price_denarii_per_kg": self.price(commodity_id, demand_t, supply_t),
-            "base_price_denarii_per_kg": c.get("base_price_denarii_per_kg"),
+            "base_price_denarii_per_kg": commodity.get("base_price_denarii_per_kg"),
         }
 
 

@@ -9,7 +9,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -18,7 +18,16 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS at scale. Noricum is famous for it. Soft, tough, weldable, no useful casting."
+  "note": "Already produced at scale wherever there is a strong ironworking tradition (Noricum is famous for supplying Rome's). Soft, tough, weldable, no useful casting.",
+  "req_any": [
+   {
+    "group": "iron_source",
+    "options": {
+     "blast_furnace": 1.0,
+     "met_bloomery_bog_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "mat_bronze",
@@ -30,7 +39,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -39,7 +48,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Casting, bearings, statuary, instruments."
+  "note": "Already available wherever there is bronze-casting skill. Casting, bearings, statuary, instruments."
  },
  {
   "id": "mat_brass",
@@ -51,7 +60,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -60,7 +69,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS, made by heating copper with calamine and charcoal WITHOUT ever seeing zinc metal. See mat_zinc for why."
+  "note": "Already made wherever copper is heated with calamine and charcoal, without anyone ever seeing zinc metal. See mat_zinc for why."
  },
  {
   "id": "mat_lead",
@@ -72,7 +81,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -81,7 +90,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS in enormous quantity from Britannia and Hispania. Cheap. The only common material that survives hot sulfuric acid."
+  "note": "Already available in enormous quantity wherever there is a major lead-mining region (Britannia and Hispania supply Rome's). Cheap. The only common material that survives hot sulfuric acid."
  },
  {
   "id": "mat_tin",
@@ -93,7 +102,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -102,19 +111,28 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Cornwall and Iberia. Expensive, long haul."
+  "note": "Already available wherever there is trade access to a source (Cornwall and Iberia supply Rome's). Expensive, long haul."
  },
  {
   "id": "mat_copper",
   "name": "Copper (fire refined)",
   "cat": "material",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
+  "pre": [
+   "blast_furnace",
+   "cap_heat_1100"
+  ],
+  "kb": "10_metallurgy.md#copper_refining",
+  "ph": 200.0,
+  "lab": {
+   "furnaceman": 2000.0,
+   "smith": 1200.0
+  },
+  "mat": {
+   "charcoal_kg": 480000.0,
+   "copper_ore_kg": 1200000.0
+  },
+  "cap": 2500.0,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -123,7 +141,20 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Not pure enough for good conductors; see cap_pure_4N."
+  "note": "Poling and fire refining to get copper clean enough to draw into long fine wire without breaking. A separate node from electro-refining because you need it before you have any electricity.",
+  "traits": [
+   "infrastructure"
+  ],
+  "req_any": [
+   {
+    "group": "fuel",
+    "options": {
+     "charcoal_industrial": 0.85,
+     "coal_coke": 1.0,
+     "mat_charcoal": 0.85
+    }
+   }
+  ]
  },
  {
   "id": "mat_silver",
@@ -135,7 +166,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -144,7 +175,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Cupellation from galena."
+  "note": "Already produced wherever cupellation from galena is practised."
  },
  {
   "id": "mat_gold",
@@ -156,7 +187,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -165,7 +196,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Las Medulas, and Dacia from 106 AD."
+  "note": "Already mined wherever there is a working goldfield (Rome's include Las Medulas, and Dacia from 106 AD)."
  },
  {
   "id": "mat_mercury",
@@ -177,7 +208,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -186,7 +217,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Almaden, an imperial monopoly. Pliny NH 33.118 price-fixes minium at 70 HS per pound."
+  "note": "Already available wherever there is trade access to a cinnabar source (Rome's is Almaden, an imperial monopoly; Pliny NH 33.118 price-fixes minium at 70 HS per pound)."
  },
  {
   "id": "mat_sulfur",
@@ -198,7 +229,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -207,7 +238,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Sicily and the Aeolian islands."
+  "note": "Already available wherever there is trade access to a volcanic source (Sicily and the Aeolian islands supply Rome's)."
  },
  {
   "id": "mat_natron",
@@ -219,7 +250,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -228,7 +259,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Wadi Natrun. IT IS NOT SALTPETRE. This confusion has wrecked more bootstrap plans than any other single error."
+  "note": "Already available wherever there is trade access to a natron source (Rome's is Wadi Natrun). IT IS NOT SALTPETRE. This confusion has wrecked more bootstrap plans than any other single error."
  },
  {
   "id": "mat_lime",
@@ -240,7 +271,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -249,7 +280,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Mortar, glass flux, causticising, agriculture."
+  "note": "Already produced wherever limestone is burned. Mortar, glass flux, causticising, agriculture."
  },
  {
   "id": "mat_gypsum",
@@ -261,7 +292,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -270,7 +301,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS."
+  "note": "Already available wherever there is a gypsum deposit."
  },
  {
   "id": "mat_alum",
@@ -282,7 +313,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -291,7 +322,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Melos. Mordant, styptic, sizing."
+  "note": "Already available wherever there is trade access to an alum source (Rome's is Melos). Mordant, styptic, sizing."
  },
  {
   "id": "mat_vitriols",
@@ -303,7 +334,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -312,7 +343,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS lying in heaps at pyrite mines as a weathering product, and has no idea what it is for. Feedstock for sulfuric acid."
+  "note": "Already lying in heaps at pyrite mines as a weathering product everywhere pyrite is worked, and generally nobody yet has any idea what it is for. Feedstock for sulfuric acid."
  },
  {
   "id": "mat_pyrolusite",
@@ -324,7 +355,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -333,7 +364,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS and already uses it as glassmaker's soap without knowing why."
+  "note": "Already mined and already used as glassmaker's soap, wherever there is a live glass industry, generally without anyone knowing why it works."
  },
  {
   "id": "mat_galena",
@@ -345,7 +376,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -354,7 +385,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS everywhere it mines lead. It is also a working semiconductor, which nobody will suspect for 1800 years."
+  "note": "Already available everywhere lead is mined. It is also a working semiconductor, which nobody will suspect for 1800 years."
  },
  {
   "id": "mat_calamine",
@@ -366,7 +397,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -375,7 +406,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS and already smelts it into brass."
+  "note": "Already mined and already smelted into brass wherever both ore and the skill exist."
  },
  {
   "id": "mat_asbestos",
@@ -387,7 +418,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -396,7 +427,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Cyprus. Pliny describes it. Useful, and it will kill your workers slowly."
+  "note": "Already available wherever there is trade access to a deposit (Rome's is Cyprus; Pliny describes it). Useful, and it will kill your workers slowly."
  },
  {
   "id": "mat_emery",
@@ -408,7 +439,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -417,19 +448,26 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Your abrasive for every ground surface in this document."
+  "note": "Already available wherever there is trade access to a deposit. Your abrasive for every ground surface in this document."
  },
  {
   "id": "mat_pozzolana",
   "name": "Pozzolana and hydraulic concrete",
   "cat": "material",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
+  "pre": [
+   "mat_lime"
+  ],
+  "kb": "87_construction.md#cn_pozzolana_concrete",
+  "ph": 50.0,
+  "lab": {
+   "chemist": 40.0,
+   "mason": 60.0
+  },
+  "mat": {
+   "lime_kg": 110.0
+  },
+  "cap": 250.0,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -438,19 +476,21 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS and it is better in seawater than Portland cement. Do not try to improve it."
+  "note": "Pozzolanic reaction between silica and lime happens slowly and imperceptibly. The concrete is weak for months then becomes very hard. No chemical knowledge, only empirical observation of ash quality and mixing ratio."
  },
  {
   "id": "mat_papyrus",
   "name": "Papyrus",
   "cat": "material",
   "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
+  "kb": "88_media_signals.md#if_papyrus",
+  "ph": 20.0,
+  "lab": {
+   "scribe": 60.0
+  },
   "mat": {},
-  "cap": 0,
-  "up": 20,
+  "cap": 300.0,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -459,19 +499,24 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. An Egyptian near-monopoly, which is a strategic reason to make paper."
+  "note": "Papyrus does not cure; it works wet. Plant laminae naturally adhere without paste if pressed fresh.",
+  "traits": [
+   "information"
+  ]
  },
  {
   "id": "mat_parchment",
   "name": "Parchment",
   "cat": "material",
   "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
+  "kb": "88_media_signals.md#if_papyrus",
+  "ph": 30.0,
+  "lab": {
+   "scribe": 80.0
+  },
   "mat": {},
-  "cap": 0,
-  "up": 20,
+  "cap": 400.0,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -480,7 +525,10 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Durable and dear."
+  "note": "Scraped skin accepts ink and erasure. Alkali lime wash removes hair without destroying fibre.",
+  "traits": [
+   "information"
+  ]
  },
  {
   "id": "mat_linen",
@@ -492,7 +540,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -501,7 +549,11 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Sailcloth, and the feedstock for rag paper."
+  "note": "Linen from flax after retting and breaking. Already produced routinely wherever flax is grown and processed.",
+  "traits": [
+   "commerce",
+   "labour_saving"
+  ]
  },
  {
   "id": "mat_wool",
@@ -534,7 +586,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -543,7 +595,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Bellows, seals, gaskets, drive belts."
+  "note": "Already produced wherever livestock are kept and tanned. Bellows, seals, gaskets, drive belts."
  },
  {
   "id": "mat_beeswax",
@@ -555,7 +607,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -564,7 +616,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Lost wax casting, luting, acid-proof coating."
+  "note": "Already available wherever bees are kept. Lost wax casting, luting, acid-proof coating."
  },
  {
   "id": "mat_tallow",
@@ -576,7 +628,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -585,7 +637,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. Lubricant for wire drawing and machining."
+  "note": "Already available wherever animals are rendered. Lubricant for wire drawing and machining."
  },
  {
   "id": "mat_olive_oil",
@@ -597,7 +649,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -606,7 +658,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS in industrial quantity. Soap, lighting, quenching, varnish base."
+  "note": "Already available in industrial quantity wherever olives are grown at scale. Soap, lighting, quenching, varnish base."
  },
  {
   "id": "mat_bitumen",
@@ -618,7 +670,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -627,7 +679,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS from Mesopotamia and the Dead Sea. Cable insulation, waterproofing, and the seed of petroleum chemistry."
+  "note": "Already available wherever there is trade access to a seep (Mesopotamia and the Dead Sea supply Rome's). Cable insulation, waterproofing, and the seed of petroleum chemistry."
  },
  {
   "id": "mat_salt",
@@ -639,7 +691,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -648,7 +700,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS, taxed and strategically controlled. Feedstock for hydrochloric acid and the whole chlor-alkali branch."
+  "note": "Already available, taxed and strategically controlled, wherever there is a salt works. Feedstock for hydrochloric acid and the whole chlor-alkali branch."
  },
  {
   "id": "mat_glass_soda",
@@ -660,7 +712,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -669,7 +721,10 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS and is genuinely good at it, including deliberately decolourised near-colourless glass."
+  "note": "Already made, and made well, wherever there is a live glass industry, including deliberately decolourised near-colourless glass.",
+  "traits": [
+   "luxury"
+  ]
  },
  {
   "id": "mat_charcoal",
@@ -681,7 +736,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -690,7 +745,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "ROME HAS THIS. The real ceiling on iron output is forest, not ore."
+  "note": "Already produced wherever wood is burned for it. The real ceiling on iron output is forest, not ore."
  },
  {
   "id": "mat_silk",
@@ -702,7 +757,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -723,7 +778,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -736,150 +791,195 @@
  },
  {
   "id": "mat_natural_rubber",
-  "name": "Natural rubber (Hevea)",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
+  "name": "Natural rubber",
+  "cat": "located_material",
+  "pre": [
+   "exp_coastal_africa"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 60.0,
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "UNOBTAINABLE. Amazon basin. There is no route to the Americas and there will not be one in your lifetime or your grandchildren's. Every plan that assumes rubber is wrong. Substitutes: gutta percha (also unobtainable), shellac, oiled linen, silk, bitumen, and much later synthetic rubber from coal tar or petroleum, which is a full chemical industry away."
+  "note": "NOT UNOBTAINABLE. Hevea is Amazonian, but Landolphia and Funtumia vines in West and Central Africa yield real rubber and were the basis of a large industry in the 1890s. West Africa is COASTAL SAILING from the Pillars of Hercules and Hanno the Carthaginian did it around 500 BC. You need a voyage down a coast and the knowledge of which vine to tap, not an ocean crossing."
  },
  {
   "id": "mat_gutta_percha",
   "name": "Gutta percha",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
+  "cat": "located_material",
+  "pre": [
+   "exp_trade_route_extend"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 120.0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 20,
-  "yrs": 0,
-  "risk": 1.0,
+  "cap": 1800.0,
+  "up": 0.0,
+  "yrs": 2.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "UNOBTAINABLE in quantity. Malayan Palaquium latex, not traded west until the 19th century. This is the material that made submarine cables possible historically; you will have to solve undersea insulation another way."
+  "note": "NOT UNOBTAINABLE. Palaquium latex from Malaya, reached by extending east whatever long-distance ocean trade route you already have (Rome already sails there annually). Indian and Malay traders already carry it partway.",
+  "traits": [
+   "commerce",
+   "infrastructure"
+  ],
+  "build_yrs": 2.0
  },
  {
   "id": "mat_quinine",
-  "name": "Quinine (cinchona)",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
-  "lab": {},
+  "name": "Quinine from cinchona",
+  "cat": "located_material",
+  "pre": [
+   "analytical_chemistry",
+   "exp_americas_factory"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 150.0,
+  "lab": {
+   "chemist": 250.0
+  },
   "mat": {},
-  "cap": 0,
-  "up": 20,
+  "cap": 200.0,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "UNOBTAINABLE. Andean. Malaria is endemic around Rome and you cannot treat it. Drain the marshes instead."
+  "note": "NOT UNOBTAINABLE, only Andean. Malaria is endemic across much of the Mediterranean and the tropical world, which makes this worth an ocean crossing by itself wherever it is a problem for you. Once you have it, TRANSPLANT it: the Dutch and British both moved cinchona out of Peru and broke the monopoly.",
+  "traits": [
+   "medical"
+  ],
+  "req_any": [
+   {
+    "group": "cinchona_bark",
+    "options": {
+     "exp_americas_cinchona": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "mat_chile_nitrate",
-  "name": "Chile saltpetre",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
+  "name": "Sodium nitrate",
+  "cat": "located_material",
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 60.0,
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "UNOBTAINABLE. Atacama. Your nitrogen comes from nitre beds and, very late, from the electric arc."
+  "note": "NOT UNOBTAINABLE, and also not needed. Bengal saltpetre is already on a trade route reachable by long-distance sea trade (Rome's India route is one example) and supplied the world's gunpowder for centuries, and nitre beds work anywhere. The Chilean desert deposits are real and reachable the same way potato and cacao are, but you will not need them."
  },
  {
   "id": "mat_newworld_crops",
-  "name": "Potato, maize, tomato, cassava, chilli, cocoa, tobacco, vanilla",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
+  "name": "New World crops",
+  "cat": "located_material",
+  "pre": [
+   "exp_americas_factory"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 60.0,
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "UNOBTAINABLE. All American. The crops that transformed Old World agriculture are not available to you. Do not plan a population increase around them."
+  "note": "NOT UNOBTAINABLE. These are CROPS, not commodities, out of the Americas: you need seed stock once and then you grow them forever. One successful voyage home with potato seed changes the caloric ceiling of agriculture permanently.",
+  "traits": [
+   "food"
+  ]
  },
  {
   "id": "mat_cryolite",
-  "name": "Cryolite",
-  "cat": "unobtainable",
+  "name": "Cryolite, or a synthetic fluoride bath",
+  "cat": "located_material",
   "pre": [],
-  "kb": "",
-  "ph": 0,
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 200.0,
   "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
+  "mat": {
+   "fluorspar_kg": 400.0
+  },
+  "cap": 2600.0,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
-  "conf": "A",
-  "note": "EFFECTIVELY UNOBTAINABLE. Greenland. Aluminium smelting must use a synthetic fluoride bath made from your own hydrofluoric acid."
+  "conf": "B",
+  "note": "NOT UNOBTAINABLE, and the interesting part is that you should not go and get it. Ivigtut in Greenland is the only workable natural deposit and reaching it is a North Atlantic voyage far harder than anything else in this tree. The synthetic route is easier: cryolite is sodium aluminium fluoride, and you can make the bath from hydrofluoric acid, which you get by warming fluorspar with sulfuric acid. Fluorspar occurs in Britain and the Alps. The catch is that HF attacks glass, so it must be handled in lead or wax-lined vessels, and it does something worse to people: it penetrates skin painlessly and destroys bone calcium hours later. Treat every splash as serious even when it does not hurt.",
+  "req_any": [
+   {
+    "group": "fluoride_bath",
+    "options": {
+     "exp_trade_route_extend": 0.4,
+     "hydrofluoric_acid": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "mat_platinum_bulk",
-  "name": "Platinum in quantity",
-  "cat": "unobtainable",
-  "pre": [],
-  "kb": "",
-  "ph": 0,
+  "name": "Platinum",
+  "cat": "located_material",
+  "pre": [
+   "exp_trade_route_extend"
+  ],
+  "kb": "89_remaining_arts.md#mat_natural_rubber",
+  "ph": 60.0,
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
-  "risk": 1.0,
+  "risk": 0.15,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "EFFECTIVELY UNOBTAINABLE. The workable placers are Colombian and Uralian. Small quantities may reach you; do not design a process around it."
+  "note": "NOT UNOBTAINABLE. Colombian and Ural placers. The Urals are reachable overland through Scythian and Sarmatian trade without crossing any ocean. Take the overland road: extend the eastern trade routes and buy Ural placer metal from the people who already work it. Rounding the Cape for the Colombian placers will also get you there, at far greater cost."
  },
  {
   "id": "mat_cast_iron",
@@ -894,7 +994,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -918,7 +1018,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
@@ -958,15 +1058,28 @@
   "name": "Bulk steel (converter and open hearth)",
   "cat": "material",
   "pre": [
-   "bessemer_openhearth",
-   "cap_heat_1600"
+   "cap_heat_1600",
+   "analytical_chemistry",
+   "finery_puddling",
+   "high_temp_furnace",
+   "mt2_basic_converter",
+   "mt2_silica_brick_refractory"
   ],
-  "kb": "",
-  "ph": 60,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 20,
+  "kb": "10_metallurgy.md#alloy_steels_ferroalloys",
+  "ph": 900.0,
+  "lab": {
+   "chemist": 4000.0,
+   "furnaceman": 12000.0,
+   "labourer": 15000.0
+  },
+  "mat": {
+   "coal_kg": 38400000.0,
+   "iron_ore_kg": 30000000.0,
+   "lime_kg": 60000.0,
+   "manganese_kg": 3000.0
+  },
+  "cap": 40000.0,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.25,
   "sus": 0,
@@ -975,7 +1088,18 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Thousands of tonnes instead of kilogrammes. NOTE THE PHOSPHORUS PROBLEM: an acid lining cannot remove it and most European ores carry it, so you need a basic dolomite lining (Thomas and Gilchrist). Knowing this in advance saves you the years it cost Bessemer."
+  "note": "Cheap steel in thousands of tonnes rather than kilogrammes. Note the phosphorus problem: acid linings cannot remove it and most European ores contain it, so you need the basic lining (Thomas and Gilchrist) with a dolomite hearth. Missing this cost Bessemer years, and knowing it in advance saves you them. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
+  "traits": [
+   "infrastructure"
+  ],
+  "req_any": [
+   {
+    "group": "manganese_supply",
+    "options": {
+     "mat_manganese": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "mat_tool_steel_hss",
@@ -991,7 +1115,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1000,7 +1124,10 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Tungsten and chromium carbides that hold an edge red hot. Multiplies every machine tool's output several fold."
+  "note": "Tungsten and chromium carbides that hold an edge red hot. Multiplies every machine tool's output several fold.",
+  "traits": [
+   "labour_saving"
+  ]
  },
  {
   "id": "mat_stainless",
@@ -1016,7 +1143,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1040,7 +1167,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
@@ -1049,7 +1176,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "CRITICAL PATH AND ALMOST NOBODY SEES IT. Zinc boils at 907 C, below the temperature at which its ore is reduced, so the metal leaves as vapour and reburns at the furnace mouth. That is exactly why Rome makes brass by cementation and has never seen the metal. Seal the retort and condense downward. No zinc, no voltaic pile, no electricity."
+  "note": "CRITICAL PATH AND ALMOST NOBODY SEES IT. Zinc boils at 907 C, below the temperature at which its ore is reduced, so the metal leaves as vapour and reburns at the furnace mouth. That is exactly why brass gets made by cementation everywhere, without anyone having seen the metal itself. Seal the retort and condense downward. No zinc, no voltaic pile, no electricity."
  },
  {
   "id": "mat_nickel",
@@ -1065,7 +1192,7 @@
   "lab": {},
   "mat": {},
   "cap": 3000,
-  "up": 300,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1089,7 +1216,7 @@
   "lab": {},
   "mat": {},
   "cap": 6000,
-  "up": 600,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1113,7 +1240,7 @@
   "lab": {},
   "mat": {},
   "cap": 3000,
-  "up": 300,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.25,
   "sus": 0,
@@ -1122,7 +1249,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Deoxidises and desulfurises steel. Rome already mines the ore as a glass decolouriser without knowing it is a metal."
+  "note": "Deoxidises and desulfurises steel. Already mined as a glass decolouriser in any developed glass industry (Rome among them), without anyone yet realising it is a metal."
  },
  {
   "id": "mat_tungsten",
@@ -1137,7 +1264,7 @@
   "lab": {},
   "mat": {},
   "cap": 15000,
-  "up": 1500,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.35,
   "sus": 0,
@@ -1161,7 +1288,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1185,7 +1312,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1208,7 +1335,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1229,7 +1356,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -1238,7 +1365,7 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "ROME HAS THIS. Ink pigment, and much later the reinforcing filler that makes rubber into tyres."
+  "note": "Already produced wherever lamps or fires are burned for soot. Ink pigment, and much later the reinforcing filler that makes rubber into tyres."
  },
  {
   "id": "mat_glass_lead",
@@ -1253,7 +1380,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
@@ -1262,7 +1389,10 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "High dispersion. Pair it with crown glass and you get the achromatic doublet, which is what makes a compound microscope beat a single bead."
+  "note": "High dispersion. Pair it with crown glass and you get the achromatic doublet, which is what makes a compound microscope beat a single bead.",
+  "traits": [
+   "luxury"
+  ]
  },
  {
   "id": "mat_glass_boro",
@@ -1324,7 +1454,7 @@
   "lab": {},
   "mat": {},
   "cap": 1500,
-  "up": 150,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.25,
   "sus": 0,
@@ -1348,7 +1478,7 @@
   "lab": {},
   "mat": {},
   "cap": 9000,
-  "up": 900,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.25,
   "sus": 0,
@@ -1372,7 +1502,7 @@
   "lab": {},
   "mat": {},
   "cap": 6000,
-  "up": 600,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.25,
   "sus": 0,
@@ -1395,7 +1525,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.0,
   "sus": 0,
@@ -1413,14 +1543,20 @@
   "pre": [
    "nitric_acid",
    "cap_pure_4N",
-   "mat_camphor"
+   "mat_camphor",
+   "cap_measure_temp",
+   "chm_guncotton"
   ],
   "kb": "",
   "ph": 150,
-  "lab": {},
-  "mat": {},
+  "lab": {
+   "chemist": 150.0
+  },
+  "mat": {
+   "coal_kg": 80.0
+  },
   "cap": 7000,
-  "up": 700,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.35,
   "sus": 0,
@@ -1429,7 +1565,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "The first thermoplastic. Film base, combs, billiard balls. VIOLENTLY FLAMMABLE and it is what made early cinema so dangerous."
+  "note": "Nitrocellulose becomes plastic when mixed with camphor. Sheet is then made by rolling between heated cylinders. Celluloid revolutionises photography by replacing glass plates, enables flexible film stock, and is used for combs, buttons, piano keys. The material is flammable and degrades over time to become increasingly brittle."
  },
  {
   "id": "mat_camphor",
@@ -1441,7 +1577,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 0,
   "risk": 0.3,
   "sus": 0,
@@ -1490,7 +1626,7 @@
   "lab": {},
   "mat": {},
   "cap": 4000,
-  "up": 400,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.3,
   "sus": 0,
@@ -1515,7 +1651,7 @@
   "lab": {},
   "mat": {},
   "cap": 40000,
-  "up": 4000,
+  "up": 0.0,
   "yrs": 5.0,
   "risk": 0.45,
   "sus": 0,
@@ -1540,7 +1676,7 @@
   "lab": {},
   "mat": {},
   "cap": 12000,
-  "up": 1200,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.3,
   "sus": 0,
@@ -1563,7 +1699,7 @@
   "lab": {},
   "mat": {},
   "cap": 2000,
-  "up": 200,
+  "up": 0.0,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
@@ -1586,7 +1722,7 @@
   "lab": {},
   "mat": {},
   "cap": 0,
-  "up": 20,
+  "up": 0.0,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
@@ -1604,14 +1740,20 @@
   "pre": [
    "destructive_distillation",
    "nitric_acid",
-   "analytical_chemistry"
+   "analytical_chemistry",
+   "tex_mordanting"
   ],
   "kb": "",
   "ph": 200,
-  "lab": {},
-  "mat": {},
+  "lab": {
+   "chemist": 200.0
+  },
+  "mat": {
+   "acetic_acid_kg": 50.0,
+   "dye_kg": 100.0
+  },
   "cap": 15000,
-  "up": 1500,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.35,
   "sus": 0,
@@ -1620,7 +1762,12 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless."
+  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless.",
+  "traits": [
+   "commerce",
+   "labour_saving",
+   "status_threatening"
+  ]
  },
  {
   "id": "mat_nitrocellulose",
@@ -1635,7 +1782,7 @@
   "lab": {},
   "mat": {},
   "cap": 3000,
-  "up": 300,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.4,
   "sus": 0,
@@ -1652,14 +1799,20 @@
   "cat": "material",
   "pre": [
    "nitric_acid",
-   "mat_glycerol"
+   "mat_glycerol",
+   "cap_measure_temp",
+   "chm_oleum"
   ],
   "kb": "",
-  "ph": 100,
-  "lab": {},
-  "mat": {},
+  "ph": 150.0,
+  "lab": {
+   "chemist": 250.0
+  },
+  "mat": {
+   "coal_kg": 80.0
+  },
   "cap": 5000,
-  "up": 500,
+  "up": 0.0,
   "yrs": 2.0,
   "risk": 0.45,
   "sus": 0,
@@ -1668,7 +1821,11 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Absorbed into kieselguhr it becomes handleable. Mining and tunnelling output rises sharply. Also the most likely single thing in this document to kill you and everyone in the building."
+  "note": "Nitroglycerin is prepared by adding glycerol dropwise to a mixture of nitric and sulfuric acid at 10 C or below. It is a contact explosive - shock or friction detonates it with no need for a fuse. It is also unstable on storage and can spontaneously explode. Absorption onto diatomaceous earth (dynamite) is the only practical way to handle it safely.",
+  "traits": [
+   "infrastructure",
+   "military"
+  ]
  },
  {
   "id": "mat_glycerol",
@@ -1701,14 +1858,24 @@
   "pre": [
    "mat_ammonia",
    "steam_watt",
-   "cap_tol_10um"
+   "cap_tol_10um",
+   "cap_power_steam",
+   "steam_high_pressure"
   ],
   "kb": "",
-  "ph": 180,
-  "lab": {},
-  "mat": {},
+  "ph": 200.0,
+  "lab": {
+   "artisan": 150.0,
+   "master": 250.0,
+   "smith": 200.0
+  },
+  "mat": {
+   "ammonia_kg": 5.0,
+   "brass_kg": 15.0,
+   "cast_iron_kg": 80.0
+  },
   "cap": 12000,
-  "up": 1200,
+  "up": 0.0,
   "yrs": 3.0,
   "risk": 0.3,
   "sus": 0,
@@ -1717,6 +1884,6 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Vapour compression with ammonia. Food preservation, meat shipping, brewing year round, and the seed of gas liquefaction and low temperature physics."
+  "note": "Ammonia or ether evaporation in a compressor cools an ice chamber. Requires a steam engine to drive the compressor. Early mechanical ice-makers (Carve, 1850s) free wealthy households from dependence on natural ice harvesting and storage."
  }
 ]

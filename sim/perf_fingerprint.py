@@ -6,9 +6,9 @@ game. This records a hash of the ENTIRE simulation state after every single
 year of a set of reference runs - several civilisations, several seeds, fog
 on and off, optimiser and manual - and writes them to a JSON file.
 
-    python3 rome/sim/perf_fingerprint.py record baseline.json
+    python3 sim/perf_fingerprint.py record baseline.json
     ...make a change...
-    python3 rome/sim/perf_fingerprint.py check baseline.json
+    python3 sim/perf_fingerprint.py check baseline.json
 
 `check` re-runs the same scenarios and reports the FIRST year at which any
 run diverges, and which fields differ. A year-by-year hash rather than a
@@ -37,7 +37,7 @@ _LAB, ORDER, _B = S.load_strategy("recommended", NODES, GOAL)
 # as the engine grows without this file having to be maintained alongside it.
 # `log` is dropped: it is prose, it is enormous, and a change to the wording
 # of a message is not a change to the simulation.
-FIELDS = tuple(f for f in SAVE_FIELDS if f != "log")
+FIELDS = tuple(field for field in SAVE_FIELDS if field != "log")
 
 
 def _canon(v):
@@ -47,16 +47,16 @@ def _canon(v):
         # float IS a change, and this harness exists to catch exactly that.
         return repr(v)
     if isinstance(v, set):
-        return ["__set__"] + sorted(_canon(x) for x in v)
+        return ["__set__"] + sorted(_canon(item) for item in v)
     if isinstance(v, dict):
-        return {str(k): _canon(v[k]) for k in sorted(v, key=str)}
+        return {str(key): _canon(v[key]) for key in sorted(v, key=str)}
     if isinstance(v, (list, tuple)):
-        return [_canon(x) for x in v]
+        return [_canon(item) for item in v]
     return v
 
 
 def state_of(s):
-    return {f: _canon(getattr(s, f, None)) for f in FIELDS}
+    return {field: _canon(getattr(s, field, None)) for field in FIELDS}
 
 
 def digest(d):
@@ -84,12 +84,12 @@ SCENARIOS = [
 
 
 def build(sc):
-    s = S.Sim(NODES, ORDER, random.Random(sc["seed"]), events=sc["events"],
+    sim = S.Sim(NODES, ORDER, random.Random(sc["seed"]), events=sc["events"],
               manual=False, civ=S.load_civ(sc["civ"]))
-    s.goal, s.done_year = GOAL, {}
+    sim.goal, sim.done_year = GOAL, {}
     if sc["fog"]:
-        s.fog = True
-    return s
+        sim.fog = True
+    return sim
 
 
 def name_of(sc):
@@ -100,61 +100,61 @@ def name_of(sc):
 
 def run(sc, keep_states=False):
     """Return (per-year digests, cpu seconds, final full state)."""
-    s = build(sc)
-    t0 = time.process_time()
+    sim = build(sc)
+    start_time = time.process_time()
     per_year, states = [], []
     for _ in range(sc["years"]):
-        if getattr(s, "dead_reason", None):
+        if getattr(sim, "dead_reason", None):
             break
-        s.step()
-        st = state_of(s)
-        per_year.append(digest(st))
+        sim.step()
+        state = state_of(sim)
+        per_year.append(digest(state))
         if keep_states:
-            states.append(st)
-    return per_year, time.process_time() - t0, states
+            states.append(state)
+    return per_year, time.process_time() - start_time, states
 
 
 def record(path):
     out, total = {}, 0.0
-    for sc in SCENARIOS:
-        nm = name_of(sc)
-        years, cpu, _ = run(sc)
+    for scenario in SCENARIOS:
+        name = name_of(scenario)
+        years, cpu, _ = run(scenario)
         total += cpu
-        out[nm] = {"scenario": sc, "years": years}
-        print("  %-42s %5d years  %7.2fs cpu" % (nm, len(years), cpu))
+        out[name] = {"scenario": scenario, "years": years}
+        print("  %-42s %5d years  %7.2fs cpu" % (name, len(years), cpu))
     print("  %-42s %18.2fs cpu TOTAL" % ("", total))
-    with open(path, "w") as f:
-        json.dump(out, f, indent=1)
+    with open(path, "w") as handle:
+        json.dump(out, handle, indent=1)
     print("written to %s" % path)
     return 0
 
 
 def check(path):
-    with open(path) as f:
-        base = json.load(f)
+    with open(path) as handle:
+        base = json.load(handle)
     bad, total, btotal = [], 0.0, 0.0
-    for nm, rec in base.items():
-        sc = rec["scenario"]
-        want = rec["years"]
+    for name, entry in base.items():
+        scenario = entry["scenario"]
+        want = entry["years"]
         # keep_states only for the re-run, so a divergence can be explained
         # without a second run of the whole thing.
-        got, cpu, states = run(sc, keep_states=True)
+        got, cpu, states = run(scenario, keep_states=True)
         total += cpu
         if got == want:
-            print("  %-42s SAME  %5d years  %7.2fs cpu" % (nm, len(got), cpu))
+            print("  %-42s SAME  %5d years  %7.2fs cpu" % (name, len(got), cpu))
             continue
         # FIRST divergent year, not all of them: after the first one every
         # later year differs too and listing them buries the one that matters.
-        i = next((j for j in range(min(len(got), len(want)))
-                  if got[j] != want[j]), min(len(got), len(want)))
-        bad.append((nm, i))
+        diverged_at = next((index for index in range(min(len(got), len(want)))
+                  if got[index] != want[index]), min(len(got), len(want)))
+        bad.append((name, diverged_at))
         print("  %-42s DIVERGED at year index %d (of %d/%d)"
-              % (nm, i, len(got), len(want)))
+              % (name, diverged_at, len(got), len(want)))
         if len(got) != len(want):
             print("      run length changed: %d -> %d" % (len(want), len(got)))
-        if i < len(states):
+        if diverged_at < len(states):
             print("      re-run this scenario under a debugger; changed state "
-                  "is in %s year %d" % (nm, i))
+                  "is in %s year %d" % (name, diverged_at))
     print()
     if bad:
         print("FAIL: %d of %d scenarios diverged" % (len(bad), len(base)))

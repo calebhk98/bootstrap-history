@@ -26,7 +26,7 @@ check("bare null/number/string/list does not kill the session",
 
 # --- Norse BREAK: `why` crashed on nodes missing the v1 scalars
 missing = [x["id"] for x in TREE["nodes"]
-           if any(f not in x for f in ("sus", "gov", "cat", "pre"))]
+           if any(field not in x for field in ("sus", "gov", "cat", "pre"))]
 check("no node is missing a required field", not missing, str(missing[:4]))
 
 # --- Rome WEIRD: buy+manumit minted labour from money
@@ -38,15 +38,15 @@ check("manumission does not double-count the same person",
 
 # --- Han WEIRD / Norse BREAK: slicing dodged the volume surcharge
 def spend(slices, per):
-    t = sim(capital=1e9)
+    spend_sim = sim(capital=1e9)
     # ROOM TO PUT THEM. Buying now respects the same feed/house/oversee cap
     # `hire` always did, so a test about PRICING has to make room first or it
     # is really testing the cap.
-    run_it(t, "workshop_first", "freedman_staff")
-    c0 = t.capital
+    run_it(spend_sim, "workshop_first", "freedman_staff")
+    starting_capital = spend_sim.capital
     for _ in range(slices):
-        t.buy_slaves(per)
-    return c0 - t.capital
+        spend_sim.buy_slaves(per)
+    return starting_capital - spend_sim.capital
 one, four, twelve = spend(1, 12), spend(4, 3), spend(12, 1)
 check("buying in slices costs the same as buying at once",
       max(one, four, twelve) - min(one, four, twelve) < 1.0,
@@ -65,7 +65,7 @@ check("freeing untrained people does not skip the training lag",
 _q_civs = ("rome_100ad", "han_china_100ad")
 _q_results = _par_map(lambda civ: proto([{"cmd": "why", "id": "blast_furnace"}],
                                         civ=civ)[0], _q_civs)
-q = dict(zip(_q_civs, (r[0]["cost"]["total"] for r in _q_results)))
+q = dict(zip(_q_civs, (results[0]["cost"]["total"] for results in _q_results)))
 check("why quotes a civilization-specific cost",
       q["rome_100ad"] != q["han_china_100ad"], str(q))
 
@@ -76,14 +76,14 @@ for f in sorted(os.listdir(S.CIVDIR)):
         continue
     c = json.load(open(os.path.join(S.CIVDIR, f)))
     ids = {x["id"] for x in TREE["nodes"]}
-    bad += [t for t in (c.get("starting_techs") or []) if t not in ids]
+    bad += [tech_id for tech_id in (c.get("starting_techs") or []) if tech_id not in ids]
 check("every civilization's starting techs exist", not bad, str(bad))
 
 # --- Han BREAK: one society was granted another's institutions
 s = sim(civ="han_china_100ad", manual=False)
 for _ in range(2):
     s.step()
-foreign = [k for k in s.granted if "_roman" in k or "annona" in k]
+foreign = [node_id for node_id in s.granted if "_roman" in node_id or "annona" in node_id]
 check("a society is not granted another society's institutions",
       not foreign, str(foreign[:4]))
 
@@ -160,7 +160,7 @@ early = {"sc2_physics_nuclear_fission", "sc2_physics_wave_mechanics",
          "el2_sonar_acoustic_detection_ranging", "el2_photomultiplier_single_photon"}
 # all:true, because `available` is a digest by default now
 r, _, _ = proto([{"cmd": "available", "all": True}])
-offered = {a["id"] for a in r[0]["available"]} & early
+offered = {entry["id"] for entry in r[0]["available"]} & early
 check("no advanced physics is startable in year one", not offered, str(offered))
 
 # --- naive A: debasement must not make everything cheaper
@@ -174,13 +174,13 @@ check("a debased currency does not collapse prices",
 # --- reviewer: debt must be bounded and ruin must be recoverable.
 #     Two hundred simulated years; the single most expensive check here.
 def _ruin_run():
-    s = sim(manual=False, capital=1e6)
-    s.buy_slaves(400)
+    ruin_sim = sim(manual=False, capital=1e6)
+    ruin_sim.buy_slaves(400)
     worst = 0.0
     for _ in range(200):
-        s.step()
-        worst = min(worst, s.capital)
-    return s, worst
+        ruin_sim.step()
+        worst = min(worst, ruin_sim.capital)
+    return ruin_sim, worst
 
 
 _RUIN = {}
@@ -209,9 +209,9 @@ check("manual play never buys people for you", s.slaves == 0 and s.freedmen == 0
       "slaves %d freedmen %d" % (s.slaves, s.freedmen))
 
 # --- naive WEIRD: nothing should repay its whole cost in weeks
-pumps = [k for k, n in NODES.items()
-         if float(n.get("rev") or 0) > 0 and n["_total_cost"] > 0
-         and n["_total_cost"] / float(n["rev"]) < 0.5]
+pumps = [node_id for node_id, node in NODES.items()
+         if float(node.get("rev") or 0) > 0 and node["_total_cost"] > 0
+         and node["_total_cost"] / float(node["rev"]) < 0.5]
 check("no node repays its entire cost in under six months", not pumps,
       "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
 
@@ -301,12 +301,12 @@ check("your own gold mine blunts a debasement", gold < 0.5, "%.2f" % gold)
 # protected the founder, nothing changed what a war cost the state, nothing
 # recovered faster. These checks pin the fix and the boundary around it: the
 # branch now matters, and does not matter so much that it swallows the tree.
-_MIL_NODES = sorted(k for k in NODES if "military" in (NODES[k].get("traits") or ()))
+_MIL_NODES = sorted(node_id for node_id in NODES if "military" in (NODES[node_id].get("traits") or ()))
 check("the tree still has a real military branch to test against",
       len(_MIL_NODES) >= 100, len(_MIL_NODES))
 
 s = sim()
-_FOUNDER_MIL_NODES = [k for k in _MIL_NODES if k not in s.granted]
+_FOUNDER_MIL_NODES = [node_id for node_id in _MIL_NODES if node_id not in s.granted]
 lev0 = s.military_leverage()
 s.done.add(_FOUNDER_MIL_NODES[0])
 lev1 = s.military_leverage()
@@ -356,7 +356,7 @@ out_mil, out_why = s_out_mil.hazard_relief("output_factor")
 check("a war costs an armed empire's trade less than an unarmed one's - "
       "every output_factor hazard in these civilization files is a war or "
       "its administrative aftermath, and this is the branch's answer to it",
-      out_mil < out_bare and any("military strength" in w for w in out_why),
+      out_mil < out_bare and any("military strength" in reason for reason in out_why),
       (out_bare, out_mil, out_why))
 
 staff_bare, _ = s_out_bare.hazard_relief("staff_loss")
@@ -385,7 +385,7 @@ check("an armed empire's trade recovers from a war faster than an unarmed "
 # Spanish arrival, whose dates are untouched, or cure the same contact
 # epidemics that hit staff_loss, which nothing military should touch.
 s_mex = sim(civ="mexica_1500")
-_spanish = next(h for h in s_mex.civ["hazards"] if "Spanish" in h.get("name", ""))
+_spanish = next(hazard for hazard in s_mex.civ["hazards"] if "Spanish" in hazard.get("name", ""))
 check("the Spanish invasion still arrives on its historical date, unmoved "
       "by anything this change does",
       _spanish["years"] == [1519, 1521], _spanish["years"])
@@ -411,7 +411,7 @@ p = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "agent",
                     "--civ", "rome_100ad", "--fog"],
                    input='{"cmd":"why","id":"identity_cover"}\n',
                    capture_output=True, text=True, timeout=120, cwd=ROOT)
-reply = json.loads([l for l in p.stdout.splitlines() if l.strip()][0])
+reply = json.loads([line for line in p.stdout.splitlines() if line.strip()][0])
 check("fog hides the exact downstream count",
       reply.get("downstream_count") is None and reply.get("how_much_rests_on_this"),
       "downstream %r band %r" % (reply.get("downstream_count"),
@@ -428,10 +428,10 @@ check("debt bondage follows the society, and is a term of years",
 # --- the user: a reply nobody can read is a reply nobody reads
 r, _, _ = proto([{"cmd": "state"}, {"cmd": "available"}, {"cmd": "help"},
                  {"cmd": "labour"}])
-sizes = {c: len(json.dumps(x)) for c, x in
+sizes = {reply_name: len(json.dumps(x)) for reply_name, x in
          zip(("state", "available", "help", "labour"), r)}
 check("no ordinary reply is a wall of text",
-      all(v < 6000 for v in sizes.values()), str(sizes))
+      all(value < 6000 for value in sizes.values()), str(sizes))
 
 # a late-game available must not blow up either: it was 165KB at year 250.
 #
@@ -454,17 +454,17 @@ check("no ordinary reply is a wall of text",
 def _tree_opens_up():
     out = []
     for frac in (0.30, 0.55):
-        s = sim(capital=1e6, manual=False)
-        s.fog = True
+        tree_sim = sim(capital=1e6, manual=False)
+        tree_sim.fog = True
         cut = int(len(ORDER) * frac)
-        s.done.update(ORDER[:cut])
-        s._done_changed()
-        avail = S._agent_available(s, NODES)
+        tree_sim.done.update(ORDER[:cut])
+        tree_sim._done_changed()
+        avail = S._agent_available(tree_sim, NODES)
         digest = len(json.dumps(avail))
         out.append((digest < 12000,
                     "%d bytes at %d%% of tree done with %d things startable"
                     % (digest, int(frac * 100), avail["count"])))
-    return all(ok for ok, _ in out), "; ".join(d for _, d in out)
+    return all(ok for ok, _ in out), "; ".join(detail for _, detail in out)
 
 
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
@@ -476,7 +476,7 @@ check("a bare invocation opens the menu rather than a usage error",
       p.returncode == 0 and "ONE PERSON" in p.stdout, p.stdout[:80] + p.stderr[:80])
 check("the bare menu is a main menu (New game / Load / Options), not "
       "straight into the civilisation picker",
-      all(w in p.stdout for w in ("New game", "Load a saved game", "Options")),
+      all(option in p.stdout for option in ("New game", "Load a saved game", "Options")),
       p.stdout[:1500])
 
 # The civilisation list itself lives one door in, behind "New game" - "1"
@@ -486,7 +486,7 @@ p2 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                     input="1\nb\nq\n", capture_output=True, text=True, timeout=120,
                     cwd=ROOT)
 check("the menu offers every civilisation with its lore",
-      all(w in p2.stdout for w in ("Later Han", "Trajan", "Viking", "Edward I", "Mexica")),
+      all(option in p2.stdout for option in ("Later Han", "Trajan", "Viking", "Edward I", "Mexica")),
       "missing one of the five")
 
 # `play` was Rome-only and its loop ended at 100+horizon, so any civ that does
@@ -509,13 +509,13 @@ for (civ, first_year), p in zip(_civ_year_pairs,
           first_year in p.stdout and "Ended %s" % first_year not in p.stdout,
           p.stdout[-120:])
 
-civ_files = [f for f in os.listdir(os.path.join(ROOT, "rome", "data", "civilizations"))
-             if f.endswith(".json") and not f.startswith("_")]
+civ_files = [filename for filename in os.listdir(os.path.join(ROOT, "data", "civilizations"))
+             if filename.endswith(".json") and not filename.startswith("_")]
 missing_lore = []
 for f in civ_files:
-    d = json.load(open(os.path.join(ROOT, "rome", "data", "civilizations", f)))
+    d = json.load(open(os.path.join(ROOT, "data", "civilizations", f)))
     op = d.get("opening") or {}
-    if not all(op.get(k) for k in ("arrival", "what_you_can_see",
+    if not all(op.get(field_name) for field_name in ("arrival", "what_you_can_see",
                                    "what_is_missing", "what_is_coming")):
         missing_lore.append(d.get("id", f))
 check("every civilisation has its opening written", not missing_lore, str(missing_lore))
@@ -558,22 +558,22 @@ check("a mine can be closed, and stops costing",
 #     silently omitted labour, hire, train, money, risk, policy and the rest.
 r, _, _ = proto([{"cmd": "definitely_not_a_command"}], civ="mexica_1500")
 _advertised = r[0].get("error", "")
-_real = [c for c in S.KNOWN_COMMANDS]
+_real = [command for command in S.KNOWN_COMMANDS]
 check("the unknown-command message advertises every command there is",
-      all(c in _advertised for c in _real),
-      "missing: %s" % [c for c in _real if c not in _advertised])
+      all(command in _advertised for command in _real),
+      "missing: %s" % [command for command in _real if command not in _advertised])
 
 # and every command it advertises must actually answer. FIVE SECONDS, because
 # it builds a fresh Mexica game per command and there are now dozens; the
 # cheap half above, that the message names them all, stays on the fast path.
 def _every_advertised_command_answers():
     dead = []
-    for c in _real:
-        if c in ("quit", "save", "load"):
+    for command in _real:
+        if command in ("quit", "save", "load"):
             continue                  # need arguments or end the session
-        rr, _, _ = proto([{"cmd": c}], civ="mexica_1500")
-        if rr and "unknown cmd" in str(rr[0].get("error", "")):
-            dead.append(c)
+        response, _, _ = proto([{"cmd": command}], civ="mexica_1500")
+        if response and "unknown cmd" in str(response[0].get("error", "")):
+            dead.append(command)
     return not dead, str(dead)
 
 slow_check("every advertised command is one the game answers to",
@@ -621,9 +621,9 @@ print(";".join(out))
     seen = set()
     for hashseed in ("0", "12345"):
         env = dict(os.environ, PYTHONHASHSEED=hashseed)
-        r = subprocess.run([sys.executable, "-c", src], capture_output=True,
+        proc = subprocess.run([sys.executable, "-c", src], capture_output=True,
                            text=True, timeout=600, cwd=ROOT, env=env)
-        seen.add(r.stdout.strip() or ("ERROR: " + r.stderr[-200:]))
+        seen.add(proc.stdout.strip() or ("ERROR: " + proc.stderr[-200:]))
     return seen
 
 
@@ -638,15 +638,15 @@ slow_check("the same seed gives the same result, whatever PYTHONHASHSEED is",
 
 # --- round 2 A: the setting is Rome wearing a hat -- notes must generalise
 _ROME_TEMPLATES = ("ROME ALREADY HAS THIS", "ROME HAS THIS", "ROME POSSIBLY HAS THIS")
-bare_rome_notes = [k for k, n in NODES.items()
-                    if any(t in (n.get("note") or "") for t in _ROME_TEMPLATES)]
+bare_rome_notes = [node_id for node_id, node in NODES.items()
+                    if any(template in (node.get("note") or "") for template in _ROME_TEMPLATES)]
 check("no node note bluntly claims 'Rome [already] has this'",
       not bare_rome_notes, str(bare_rome_notes[:5]))
 
-bare_rome_prices = [k for k, v in PRICES["wage_rates_denarii_per_hour"].items()
-                     if not k.startswith("_") and isinstance(v, dict)
-                     and ("Rome has" in (v.get("note") or "")
-                          or "Rome already has" in (v.get("note") or ""))]
+bare_rome_prices = [trade_key for trade_key, value in PRICES["wage_rates_denarii_per_hour"].items()
+                     if not trade_key.startswith("_") and isinstance(value, dict)
+                     and ("Rome has" in (value.get("note") or "")
+                          or "Rome already has" in (value.get("note") or ""))]
 check("no wage-rate note bluntly claims 'Rome has these'",
       not bare_rome_prices, str(bare_rome_prices))
 
@@ -659,15 +659,15 @@ check("the cover identity is not named after one civilization's version",
 # zero price tag every civilization can exploit)
 _ROMAN_INSTITUTIONS = ["civ_arch_roman", "fin_annona", "fin_argentarii",
                        "fin_collegium", "fin_societas", "hom_cosmetics_roman"]
-rome_missing = [k for k in _ROMAN_INSTITUTIONS
-                if k not in (S.load_civ("rome_100ad").get("starting_techs") or [])]
+rome_missing = [node_id for node_id in _ROMAN_INSTITUTIONS
+                if node_id not in (S.load_civ("rome_100ad").get("starting_techs") or [])]
 check("Rome is granted its own institutions through starting_techs",
       not rome_missing, str(rome_missing))
-still_free = [k for k in _ROMAN_INSTITUTIONS if NODES[k]["cap"] == 0 and NODES[k]["ph"] == 0]
+still_free = [node_id for node_id in _ROMAN_INSTITUTIONS if NODES[node_id]["cap"] == 0 and NODES[node_id]["ph"] == 0]
 check("Rome's institutions are not free for whoever starts them",
       not still_free, str(still_free))
 s = sim(civ="norse_900ad")
-norse_has_them_free = [k for k in _ROMAN_INSTITUTIONS if k in s.done]
+norse_has_them_free = [node_id for node_id in _ROMAN_INSTITUTIONS if node_id in s.done]
 check("a Norse founder is not handed Rome's institutions for nothing",
       not norse_has_them_free, str(norse_has_them_free))
 
@@ -686,7 +686,7 @@ s = sim(civ="rome_100ad")
 _ANACHRONISMS = ["mil_chemical_mustard", "mil_trace_italienne", "mil_general_staff",
                  "mil_conscription_reserve", "mil_trench", "hot_air_balloon",
                  "mil_observation_balloon", "mil_gunpowder_base"]
-startable_turn_one = [k for k in _ANACHRONISMS if s.can_start(k)]
+startable_turn_one = [node_id for node_id in _ANACHRONISMS if s.can_start(node_id)]
 check("no anachronistic weapon or doctrine is startable turn one",
       not startable_turn_one, str(startable_turn_one))
 check("mustard gas needs industrial chlorine and a delivery shell",
@@ -719,7 +719,7 @@ _EFFECT_FIELDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion",
                    # effect on this society is what it believes, not a body
                    # count or a burned field - is what caught the gap.
                    "values")
-inert = [h["name"] for h in norse_hazards if not any(f in h for f in _EFFECT_FIELDS)]
+inert = [hazard["name"] for hazard in norse_hazards if not any(field in hazard for field in _EFFECT_FIELDS)]
 check("no Norse hazard is purely decorative (no effect field the engine reads)",
       not inert, str(inert))
 

@@ -38,10 +38,10 @@ def _factor(v):
     """
     if not isinstance(v, (int, float)) or isinstance(v, bool):
         return _fmt_num(v)
-    f = float(v)
-    if abs(f - round(f)) < 5e-4:
-        return "%d" % round(f)
-    return ("%.3f" % f).rstrip("0")
+    value = float(v)
+    if abs(value - round(value)) < 5e-4:
+        return "%d" % round(value)
+    return ("%.3f" % value).rstrip("0")
 
 
 def _fmt_num(v):
@@ -58,16 +58,16 @@ def _fmt_num(v):
     if isinstance(v, bool):
         return str(v)
     if isinstance(v, (int, float)):
-        f = float(v)
-        if f != f or f in (float("inf"), float("-inf")):
+        value = float(v)
+        if value != value or value in (float("inf"), float("-inf")):
             return str(v)
-        if f == 0:
+        if value == 0:
             return "0"
-        if abs(f) >= 1000:
-            return "{:,.0f}".format(f)
-        if abs(f) >= 1:
-            return "{:,.0f}".format(f) if float(f).is_integer() else "{:,.1f}".format(f)
-        return "{:,.2f}".format(f)
+        if abs(value) >= 1000:
+            return "{:,.0f}".format(value)
+        if abs(value) >= 1:
+            return "{:,.0f}".format(value) if float(value).is_integer() else "{:,.1f}".format(value)
+        return "{:,.2f}".format(value)
     return str(v)
 
 
@@ -95,14 +95,14 @@ def _pct(v):
     if v is None:
         return "-"
     try:
-        f = 100.0 * float(v)
+        percent = 100.0 * float(v)
     except (TypeError, ValueError):
         return str(v)
-    if f <= 0.0:
+    if percent <= 0.0:
         return "0%"
-    if f < 0.5:
+    if percent < 0.5:
         return "<1%"
-    return "%.0f%%" % f
+    return "%.0f%%" % percent
 
 
 def _wrap(text, width=None, indent=""):
@@ -123,12 +123,12 @@ def _wrap(text, width=None, indent=""):
     if not text:
         return ""
     words, lines, cur = str(text).split(), [], ""
-    for w in words:
-        if len(cur) + len(w) + 1 > width:
+    for word in words:
+        if len(cur) + len(word) + 1 > width:
             lines.append(indent + cur)
-            cur = w
+            cur = word
         else:
-            cur = (cur + " " + w).strip()
+            cur = (cur + " " + word).strip()
     if cur:
         lines.append(indent + cur)
     return "\n".join(lines)
@@ -189,21 +189,21 @@ def _qty(cmd, key, default=None):
     a mistake is name it. A numeric string is still accepted, because "5" is
     unambiguous and refusing it helps nobody.
     """
-    v = cmd.get(key, default)
-    if v is None:
+    value = cmd.get(key, default)
+    if value is None:
         return None, "%s is required" % key
-    if isinstance(v, bool):
+    if isinstance(value, bool):
         return None, "%s must be a number, not true or false" % key
-    if isinstance(v, (int, float)):
-        f = float(v)
-    elif isinstance(v, str):
+    if isinstance(value, (int, float)):
+        quantity = float(value)
+    elif isinstance(value, str):
         try:
-            f = float(v.strip())
+            quantity = float(value.strip())
         except ValueError:
-            return None, "%s must be a number, not %r" % (key, v)
+            return None, "%s must be a number, not %r" % (key, value)
     else:
-        return None, "%s must be a number, not %s" % (key, type(v).__name__)
-    if f != f or f in (float("inf"), float("-inf")):
+        return None, "%s must be a number, not %s" % (key, type(value).__name__)
+    if quantity != quantity or quantity in (float("inf"), float("-inf")):
         return None, ("%s must be a real number; NaN and Infinity are not "
                       "quantities" % key)
     # A QUANTITY, NOT A FLOAT EXPERIMENT. `hire smith 999999999999999999999`
@@ -211,10 +211,10 @@ def _qty(cmd, key, default=None):
     # denarii" - a refusal, but one written in scientific notation and binary
     # rounding error, which is the game losing its composure rather than
     # keeping it. Nothing in this world comes in more than a billion.
-    if abs(f) > 1e9:
+    if abs(quantity) > 1e9:
         return None, ("%s must be a quantity of something real. There are not "
                       "a thousand million of anything here" % key)
-    return f, None
+    return quantity, None
 
 
 def _num(v, default=0.0):
@@ -229,12 +229,12 @@ def _num(v, default=0.0):
     bought 999,999 hectares of woodland with 400 denarii this way.
     """
     try:
-        f = float(v)
+        number = float(v)
     except (TypeError, ValueError):
         return float(default)
-    if f != f or f in (float("inf"), float("-inf")):
+    if number != number or number in (float("inf"), float("-inf")):
         return float(default)
-    return f
+    return number
 
 
 def _clean(v):
@@ -273,15 +273,15 @@ def _localise_words(obj, pairs):
     if not pairs:
         return obj
     if isinstance(obj, str):
-        for a, b in pairs:
-            if a in obj:
-                obj = obj.replace(a, b)
+        for old_phrase, new_phrase in pairs:
+            if old_phrase in obj:
+                obj = obj.replace(old_phrase, new_phrase)
         return obj
     if isinstance(obj, list):
-        return [_localise_words(x, pairs) for x in obj]
+        return [_localise_words(item, pairs) for item in obj]
     if isinstance(obj, dict):
         # Keys are protocol; only the values a person reads get rewritten.
-        return {k: _localise_words(v, pairs) for k, v in obj.items()}
+        return {key: _localise_words(value, pairs) for key, value in obj.items()}
     return obj
 
 
@@ -300,9 +300,9 @@ def _localise_money(obj, word):
     if isinstance(obj, str):
         return _MONEY_RE.sub(word, obj)
     if isinstance(obj, list):
-        return [_localise_money(x, word) for x in obj]
+        return [_localise_money(item, word) for item in obj]
     if isinstance(obj, dict):
         # KEYS ARE NOT PROSE. A field name is part of the protocol and scripts
         # match on it; only the values a person reads get rewritten.
-        return {k: _localise_money(v, word) for k, v in obj.items()}
+        return {key: _localise_money(value, word) for key, value in obj.items()}
     return obj

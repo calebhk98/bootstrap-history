@@ -152,16 +152,28 @@ def _agent_help(s, topic=None):
                 'file after every command and read back when you start '
                 'again. So a script or an agent may run one command per '
                 'invocation and throw the process away: `echo state | '
-                'python3 rome/sim/simulator.py play --session game.json` '
+                'python3 sim/simulator.py play --session game.json` '
                 'prints the readable screen and exits, and the next '
                 'invocation carries on from exactly where it left off. '
                 'There is no need for a held-open pipe, a FIFO or tmux. '
                 'See {"cmd":"help","topic":"sittings"}.'),
-            "more": {t: '{"cmd":"help","topic":"%s"}' % t for t in HELP_TOPICS},
+            "more": {topic_name: '{"cmd":"help","topic":"%s"}' % topic_name for topic_name in HELP_TOPICS},
         }
 
     if topic in ("commands", "command", "all"):
         return {"commands": {
+            "json / compact": "add the word 'json' to almost any command "
+                "(or \"json\":true in a JSON command) to get its reply as "
+                "the raw structured object the game already computes, "
+                "instead of the rendered screen - the same fields, prose "
+                "explanations included, nothing removed. Add 'compact' "
+                "instead (it implies 'json') on 'why', 'state' or 'stuck' "
+                "and those three also gain a small extra set of fields - "
+                "'blocked'/'blocked_by'/'explanation' on 'why', "
+                "'blocked_projects' on 'state', 'blockers' on 'stuck' - "
+                "that say the same thing every one of the plain fields "
+                "already does, just in one shape shared across all three. "
+                "'why loom compact', 'state compact', 'stuck compact'",
             "state": "where you stand; add full:true for every field",
             "available": "what you could begin today, summarised by subject; "
                          "add subject, find, afford, limit/offset, or all:true; "
@@ -377,9 +389,9 @@ def _agent_help(s, topic=None):
                 "and it needs no pipe held open, no FIFO and no tmux. Send "
                 "one command on standard input, read the reply, let the "
                 "process exit, and run it again for the next command:\n"
-                "    echo state | python3 rome/sim/simulator.py play "
+                "    echo state | python3 sim/simulator.py play "
                 "--session game.json\n"
-                "    echo 'step 5' | python3 rome/sim/simulator.py play "
+                "    echo 'step 5' | python3 sim/simulator.py play "
                 "--session game.json\n"
                 "The second invocation resumes exactly where the first "
                 "stopped. `play` gives you the readable screen; `agent` "

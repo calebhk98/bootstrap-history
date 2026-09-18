@@ -14,7 +14,7 @@ from .harness import *  # noqa: F401,F403
 # see the final report for the recommended change.
 # =============================================================================
 s_rep = sim()
-_rep_cands = [k for k, n in NODES.items() if n.get("rev", 0) > 0]
+_rep_cands = [node_id for node_id, node in NODES.items() if node.get("rev", 0) > 0]
 _rk = sorted(_rep_cands)[0]
 _n = NODES[_rk]
 _rep0 = s_rep.reputation
@@ -114,8 +114,8 @@ check("Han China is never handed Rome's courier relay or Ptolemy's lighthouse fo
 # open-ocean navigation, which needs SOME way to sail to windward and
 # previously named none at all.
 check("the Norse deep keel now genuinely enables open-ocean navigation",
-      any("sea_keel_deep" in g.get("options", {})
-          for g in NODES["exp_openocean_navigation"]["req_any"]),
+      any("sea_keel_deep" in group.get("options", {})
+          for group in NODES["exp_openocean_navigation"]["req_any"]),
       NODES["exp_openocean_navigation"]["req_any"])
 
 # --- FREE AND WEIGHTLESS IS NOT THE SAME AS UNIVERSALLY AVAILABLE. The
@@ -131,15 +131,15 @@ check("the Norse deep keel now genuinely enables open-ocean navigation",
 _mex = sim(civ="mexica_1500")
 check("the Mexica are not handed other people's seas: no sail, no "
       "Mediterranean hull, no merchant fleet, no monsoon crossing",
-      not any(k in _mex.granted for k in
+      not any(tech_id in _mex.granted for tech_id in
               ("sea_square_sail", "sea_spritsail", "sea_mortise_tenon",
                "sea_merchant_ships_large", "sea_monsoon_route")),
-      sorted(k for k in _mex.granted if k.startswith("sea_")))
+      sorted(tech_id for tech_id in _mex.granted if tech_id.startswith("sea_")))
 check("...and canoe use does not silently grant an Old World nautical package",
-      not any(k in _mex.granted for k in
+      not any(tech_id in _mex.granted for tech_id in
               ("sea_anchor", "sea_sounding_lines", "sea_coastal_pilotage",
                "sea_steering_oars")),
-      sorted(k for k in _mex.granted if k.startswith("sea_")))
+      sorted(tech_id for tech_id in _mex.granted if tech_id.startswith("sea_")))
 check("the ocean-going hull gate remains a buildable route, not an inherited gift",
       "exp_oceangoing_hull" not in _mex.granted
       and "exp_oceangoing_hull" in NODES,
@@ -182,9 +182,9 @@ _clo_now = S.closure(NODES, GOAL)
 _added = ("microscope_compound", "el2_electropolishing_etching_surface_finish",
           "mat_gold", "phosphor_bronze_alloy")
 check("the four audited prerequisites really are on the road to the goal",
-      all(a in _clo_now for a in _added),
-      [a for a in _added if a not in _clo_now])
-_marginal = len(set().union(*(S.closure(NODES, a) | {a} for a in _added))
+      all(added_id in _clo_now for added_id in _added),
+      [added_id for added_id in _added if added_id not in _clo_now])
+_marginal = len(set().union(*(S.closure(NODES, added_id) | {added_id} for added_id in _added))
                 - (_clo_now - set(_added)))
 check("...and between them they cost the road about eight nodes, not dozens",
       _marginal <= 10, _marginal)
@@ -196,7 +196,7 @@ check("...and between them they cost the road about eight nodes, not dozens",
 # filtered by is_visible(). Pin it so a future data edit cannot reintroduce
 # the same leak by being specific in the wrong field.
 check("the goal's own note never spells out the id of one of its prerequisites",
-      not any(p in NODES["point_contact_transistor"]["note"]
-              for p in NODES["point_contact_transistor"]["pre"]),
-      [p for p in NODES["point_contact_transistor"]["pre"]
-       if p in NODES["point_contact_transistor"]["note"]])
+      not any(prereq_id in NODES["point_contact_transistor"]["note"]
+              for prereq_id in NODES["point_contact_transistor"]["pre"]),
+      [prereq_id for prereq_id in NODES["point_contact_transistor"]["pre"]
+       if prereq_id in NODES["point_contact_transistor"]["note"]])

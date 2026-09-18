@@ -1,7 +1,7 @@
 """Runner for the split regression suite.
 
-`python3 -m rome.sim.tests` (or `python3 rome/sim/tests/__main__.py`, or the
-`rome/sim/test_regressions.py` shim) runs every topic module below, in the
+`python3 -m sim.tests` (or `python3 sim/tests/__main__.py`, or the
+`sim/test_regressions.py` shim) runs every topic module below, in the
 same order test_regressions.py always ran them in, and prints the same
 summary line it always has. `--only economy,labour` (comma-separated topic
 names, matching this list) runs just those modules - everything else about
@@ -12,15 +12,26 @@ import importlib
 import json
 import os
 import sys
+import unittest
 
-# So `python3 rome/sim/tests/__main__.py` (run as a plain script, no package
-# context) works exactly like `python3 -m rome.sim.tests`: put the repo root
-# on sys.path and import everything below by its absolute dotted name, never
+# So `python3 sim/tests/__main__.py` (run as a plain script, no package
+# context) works exactly like `python3 -m sim.tests`: put the repo root on
+# sys.path and import everything below by its absolute dotted name, never
 # relatively, so it does not matter whether this module itself was reached
 # via -m, via this file's own __main__ guard, or via the test_regressions.py
 # shim.
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))))))
+#
+# THE DOTTED NAME USED TO BE `rome.sim.tests`, WHICH MEANT THE SUITE ONLY RAN
+# IF THE CHECKOUT DIRECTORY WAS NAMED `rome`. It is named bootstrap-history on
+# GitHub, so a fresh clone could not run its own tests: the import died on
+# ModuleNotFoundError before a single check executed. `sim` is a PEP 420
+# namespace package (no __init__.py) and `sim.tests` a regular one, so
+# rooting the import at the repository instead of at its parent works from
+# any directory, under any name, with no packaging metadata.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 # Original test_regressions.py's own top-to-bottom order. A topic file's
 # name records which of the file's own section banners it came from - see
@@ -64,6 +75,19 @@ TOPICS = [
     "complaints_09_16",
     "complaint_13_specialist_supervision",
     "complaints_17_24",
+    # Complaints/34: commissioned SCHOLAR hours bought nothing, because the
+    # project gate read the standing headcount. The same defect
+    # craft_hands_available() was written to fix, never extended to scholars.
+    "complaint_34_scholar_hours",
+    # Complaints/38: `path` printed one founder-hours budget and judged
+    # feasibility against a different one. The test asserts the printed and
+    # judged figures share a SOURCE, not merely that they currently agree.
+    "complaint_38_founder_lifetime",
+    # sim/engine/proto/: the agent-oriented compact output mode asked for in
+    # Complaints/35 section 1 - structured state WITHOUT losing the
+    # reason-carrying prose. Includes the byte-identical proof that the
+    # mode-off path is unchanged.
+    "compact_mode",
     "dynamic_wages",
     "economic_levers_inventory",
     "explicit_starting_techs",
@@ -71,7 +95,258 @@ TOPICS = [
     "realism_part03",
     "realism_part04",
     "realism_part05",
+    # Written as unittest.TestCase classes rather than top-level check() calls;
+    # _run_topic handles both. It had never run: unregistered here, and unable
+    # to import under the old rome.sim.tests rooting even if it had been.
+    "tierless_schema",
+    # sim/world/agriculture.py: land, labour, technique and weather into
+    # food, standalone and with no import of sim/engine/ - see that
+    # module's own docstring for why. Also unittest.TestCase-style.
+    "agriculture",
+    # sim/world/demography.py: age-cohort population dynamics, standalone
+    # and with no import of sim/engine/ - see that module's own docstring
+    # for why, and sim/world/__init__.py for the package as a whole. Also
+    # unittest.TestCase-style.
+    "demography",
+    # WIRING MILESTONE 4's seam: sim/engine/core.py's Sim._demographic_
+    # recovery now feeds sim/world/agriculture.py's real land+labour+weather
+    # harvest to sim/world/demography.py's Population.step, replacing a
+    # stand-in that assumed nutrition_ratio == 1.0 every year. Neither
+    # agriculture nor demography's own standalone suite can see this seam -
+    # each proves its own module correct in isolation, and the seam does
+    # not exist inside either module - so this is the one place a famine
+    # actually falling out of land/labour/weather/population, rather than
+    # a scripted hazard, is checked end to end. Depends on sim/engine/, so
+    # unlike agriculture/demography above it is NOT standalone. Also
+    # unittest.TestCase-style.
+    "agriculture_wiring",
+    # sim/world/military_logistics.py: rations, fodder, baggage-train range
+    # and firearm ammunition/maintenance as consumption arithmetic,
+    # standalone and with no import of sim/engine/ or the other sim/world/
+    # modules - see that module's own docstring for why. Also
+    # unittest.TestCase-style.
+    "military_logistics",
+    # sim/world/transport.py: freight cost per tonne-km from draught-animal
+    # metabolism, rolling resistance and gradient, standalone and with no
+    # import of sim/engine/ or the other sim/world/ modules - see that
+    # module's own docstring for why. Also unittest.TestCase-style.
+    "transport",
+    # sim/tests/test_material_freight.py: the crossing that wires transport.py
+    # into sim/engine/economy.py - a live Sim, through geography.json's own
+    # per-region `minerals` table, not standalone like "transport" above.
+    # Flat check()-at-import style, like most other topics.
+    "material_freight",
+    # sim/world/deposits.py: Ricardian rent (marginal-deposit pricing) from
+    # ore grade, depth and hardness, standalone and with no import of
+    # sim/engine/ or the other sim/world/ modules - see that module's own
+    # docstring for why and Complaints/32 for the gap it closes. Also
+    # unittest.TestCase-style.
+    "deposits",
+    # sim/world/demand.py: households with budgets and a Stone-Geary/LES
+    # demand system, plus derived (producer) demand read straight from
+    # data/production/*.json - standalone and with no import of sim/engine/
+    # or any other sim/world/ module - see that module's own docstring for
+    # why. Also unittest.TestCase-style.
+    "demand",
+    # docs/architecture/DEMAND_AT_SCALE.md: pins two structural defects in
+    # the demand system - the hard subsistence cliff and the Engel-curve
+    # floor - in the "assert the wrong behaviour, invert don't delete"
+    # style test_price_solver_cycles.py used before Complaints/31 was fixed.
+    "demand_at_scale",
+    # Guards the two silent bugs that made --burndown print "0 numbers
+    # declared" while 32 were declared, which left milestone 1 unmeasurable.
+    "constants_burndown",
+    # Pins Complaints/31: the price solver's resolvability pass refuses
+    # every recipe cycle, including the axe/iron example its own docstring
+    # uses. Written as assertions on the CURRENT wrong behaviour so the
+    # suite stays green and the defect stays impossible to miss.
+    "price_solver_cycles",
+    # Pins the technique-to-node link the price solver gates on. The tree
+    # records what a node CONSUMES and never what anything produces, so
+    # nothing joined a production recipe to the node that lets anyone run
+    # it, and the solve had no way to tell a Roman technique from a modern
+    # one. See Complaints/39 for the run that exposed it.
+    "price_solver_era_gate",
+    # Complaints/32's own follow-up: the solver printed RENT_IS_ZERO on
+    # every run although sim/world/deposits.py's Ricardian marginal-deposit
+    # model sat unimported next to it. Pins rent_hours_per_kg_by_ore_material
+    # (the demand-fixed-exogenously heuristic that closes the loop) and the
+    # iron blast-furnace/bloomery fallback --civ rome_100ad actually
+    # exercises.
+    "price_solver_rent",
+    # The last of the five standalone sim/world/ modules to be wired.
+    # military_logistics.py derives what a soldier's iron and ammunition
+    # cost to keep supplied, in KILOGRAMS - deliberately never converted to
+    # money, because a mass-to-currency conversion would need a price this
+    # crossing has no business inventing.
+    "military_logistics_wiring",
+    # Complaints/30 stage 3: a branch edit to an EXISTING tech-tree node was
+    # silently discarded, so data/branches/ was decorative for every id the
+    # tree already carried. Pins the field-by-field overlay, the fixed point
+    # (no edits means byte-identical output), and the new rule that an id
+    # defined in two branch files is an error naming both sides.
+    "branch_merge_authority",
+    # sim/world/land.py: Ricardian rent at the MARGIN OF CULTIVATION, which
+    # is a different mechanism from deposits.py's ore rent because a mine
+    # depletes and a field does not. Complaints/43 - land solved to exactly
+    # 0.0 and land scarcity is what drives a pre-industrial economy.
+    "land",
+    # Complaints/45: the unshocked baseline collapsed because Storage was
+    # rebuilt empty every year, so a good harvest was discarded while a bad
+    # one still cost lives. Pins the granary, the double-seed-deduction bug
+    # that was hiding behind it, and the proof that the farm workforce share
+    # does NOT respond to a famine.
+    "granary_persistence",
+    # sim/world/labour_market.py: the fixed point over TRADE ALLOCATION that
+    # solve_prices.py is for material prices, in the same labour-hours
+    # numeraire and needing no wages. Answers whether a famine can pull a
+    # blacksmith into the fields - mechanically yes, quantitatively almost
+    # not at all.
+    "labour_market",
+    # Complaints/44: England made process heat by FRICTION because a
+    # megajoule was a megajoule to the solver and you cannot forge with a
+    # warm bearing. A technique now states the temperature it reaches and a
+    # process the temperature it needs, using the tree's own cap_heat_*
+    # rungs, and choice of technique picks the cheapest one THAT WORKS.
+    "temperature_caps",
+    # tools/generate_geography_tiles.py's output: 1,139 equal-area land
+    # tiles of 150,000 km2 each, derived by ONE stated rule from Natural
+    # Earth land polygons and the Koppen-Geiger climate classification,
+    # rather than 21 hand-written regions sized by what they are called.
+    # Complaints/46. Added ALONGSIDE `regions`, which is untouched.
+    "geography_tiles",
+    # sim/world/shared_constants.py: one home for a physical fact several
+    # domains need, after land.py and agriculture.py were found holding six
+    # of them apiece - including one under a different name AND a different
+    # unit (fallow as a multiplier of 2.0 in one, a share of 0.5 in the
+    # other). Also the net that catches a future re-duplication.
+    "shared_constants",
+    # sim/engine/prices.py's own copy of the RENT_IS_ZERO bug: the function
+    # the engine switch calls was solving without the rent tables, so
+    # flipping it on would have discarded two rounds of rent work. Also
+    # pins that land rent is per-civilisation and cannot be shared between
+    # two civilisations holding the same technologies.
+    "engine_prices_civilization_rent",
+    # sim/engine/prices.py: the first wiring of the price solver into the
+    # engine - given a set of held technology ids, ask the solver for a
+    # price, cached on the gate nodes held rather than the full technology
+    # set, with data/prices.json as the fallback and a per-material
+    # provenance report ("solved" or "book") as the measurable burndown.
+    # Off by default; sim/engine/data.py's load() only calls it when
+    # use_solved_prices=True. See that module's own docstring.
+    "engine_prices",
+    # Complaints/46, the engine half: forest_land_ceiling scaled how much
+    # coppice woodland a civilisation can organise by len(home_regions) - the
+    # COUNT of labels its territory is filed under. Han China is 9,597,000 km2
+    # filed as one region and Rome is 9,517,500 km2 filed as seven, so China
+    # could reach a seventh of Rome's firewood on the same ground. Now per
+    # million km2 of real home land, which also pins that the count cannot
+    # come back: two territories of equal area get equal ceilings whatever
+    # their region count.
+    # Complaints/48: technology could only ever make mortality WORSE - the
+    # child-survival rate was a constant, so a civilisation that learned germ
+    # theory buried exactly as many children as one that had not. The eight
+    # medical nodes now drive a disease burden read live from what is held,
+    # instead of queueing a scalar population bonus on a forty-year ramp.
+    "disease_burden_wiring",
+    # Complaints/47: one weather draw decided the harvest in Britain and in
+    # Egypt on the same coin flip. Weather is now drawn per home region and
+    # pooled by each region's share of the cultivable land, so holding spread
+    # -out territory is worth something - which is what the grain fleet was
+    # for. Pins that the seed stays a pure function of (civ, region, year).
+    "regional_weather_wiring",
+    # Complaints/50: a region record was one weather draw, so Han China -
+    # the same size as the Roman Empire, with more cultivable land - flipped
+    # ONE coin where Rome flipped seven. Territory is now broken into
+    # geography.json's 150,000 km2 land_tiles and correlated by real
+    # distance through an exponential kernel, so diversification comes from
+    # being spread out rather than from row count.
+    "growing_season_weather_correlation",
+    # Complaints/49: not one recipe consumed iugerum_land, so two rounds of
+    # land-rent work reached no price anybody paid. Grown and land-limited
+    # materials now state land_iugera_years and the solver charges rent for
+    # it. Pins the property that matters: wheat priced identically in all
+    # five civilisations before, and must now rank with each one's own rent.
+    "price_solver_land",
+    "complaint_46_forest_area_not_region_count",
+    # Complaints/42: a civilisation holding a node whose own prerequisites it
+    # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
+    # both directions, so the count can only move deliberately.
+    "civilisation_prerequisites",
+    # Guards the id()-reuse hazard that made the simulation non-deterministic;
+    # structural, so it catches the class rather than the one instance.
+    "determinism",
+    # The tool that makes the naming sweep affordable; verified here because a
+    # verification tool nobody verified is a rubber stamp.
+    "rename_prover",
+    # The suite has to be able to run before anything above it can:
+    # this topic checks that it does so from a checkout of any name,
+    # in any directory. It is last because it re-runs one cheap topic
+    # in a child process.
+    "suite_portability",
 ]
+
+
+def _run_topic(slug, harness):
+    """Import one topic module, and run it whichever style it is written in.
+
+    Almost every topic module is plain top-level code calling check() at import
+    time, so importing it IS running it. One - tierless_schema - is written as
+    unittest.TestCase classes instead, which import cleanly and then do
+    nothing. It sat in sim/tests/ unregistered and unrun for its whole life,
+    and it could not have run even if registered: it does `from sim import
+    treetool`, which needed the repository root on sys.path, which is exactly
+    what the old `rome.sim.tests` rooting did not provide.
+
+    Rather than rewrite six working tests into the other style, the runner
+    accepts both. Each TestCase method becomes one check, so a unittest topic
+    reports in the same summary, the same count, and the same exit code as
+    every other topic.
+    """
+    mod = importlib.import_module("sim.tests.test_%s" % slug)
+
+    cases = unittest.TestLoader().loadTestsFromModule(mod)
+    if not cases.countTestCases():
+        return
+
+    for case in _flatten(cases):
+        result = unittest.TestResult()
+        # WRAPPED IN A ONE-CASE SUITE, NOT `case.run(result)` DIRECTLY.
+        # Running a TestCase instance straight bypasses setUpClass and
+        # tearDownClass entirely - those are invoked by the SUITE, not by
+        # the case - so a module using the ordinary unittest idiom
+        #
+        #     @classmethod
+        #     def setUpClass(cls): cls.data = load()
+        #
+        # came back with AttributeError on every single test here, while
+        # passing perfectly under `python3 -m unittest`. That combination is
+        # the worst kind of trap: an author verifies with the standard tool,
+        # sees green, and only this runner disagrees. It cost one agent a
+        # whole test module before it was noticed, and three modules in this
+        # directory already use the idiom.
+        #
+        # TestSuite.run does the class fixture handling, so a one-case suite
+        # gets it right. The cost is that setUpClass runs once per test
+        # rather than once per class, which is correct-but-slower; every
+        # current user of it loads a JSON file, so it does not matter. If a
+        # module ever needs a genuinely expensive class fixture, group by
+        # class here instead of paying it per test.
+        unittest.TestSuite([case]).run(result)
+        problems = result.errors + result.failures
+        harness.check(
+            "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " ")),
+            not problems,
+            problems[0][1].strip().splitlines()[-1] if problems else "")
+
+
+def _flatten(suite):
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            for sub in _flatten(item):
+                yield sub
+        else:
+            yield item
 
 
 def _parse_only(argv):
@@ -109,12 +384,12 @@ def main(argv=None):
     # names throughout (never a relative "from . import"), so this runs the
     # same way whether reached via -m, via this file's own __main__ guard,
     # or via the test_regressions.py shim.
-    from rome.sim.tests import harness
+    from sim.tests import harness
 
     print("PLAYTEST REGRESSIONS\n" + "=" * 72)
     for slug in TOPICS:
         if slug in selected:
-            importlib.import_module("rome.sim.tests.test_%s" % slug)
+            _run_topic(slug, harness)
 
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"

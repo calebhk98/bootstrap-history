@@ -7,17 +7,17 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
   a TOOL   : run, compare, sweep     Monte-Carlo a strategy, find where it breaks
   a GAME   : play, agent             step through it yourself, or let a script play
 
-    python3 rome/sim/simulator.py validate
-    python3 rome/sim/simulator.py civs                       who you can play
-    python3 rome/sim/simulator.py play --manual               free choice, no autopilot
-    python3 rome/sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py validate
+    python3 sim/simulator.py civs                       who you can play
+    python3 sim/simulator.py play --manual               free choice, no autopilot
+    python3 sim/simulator.py agent --civ rome_100ad --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
 no protocol document to read, on purpose.
 
 No third-party dependencies. Python 3.8+.
-Design notes and the full protocol: rome/sim/PROTOCOL.md
+Design notes and the full protocol: sim/PROTOCOL.md
 """
 
 import argparse, json, math, os, random, sys
@@ -25,15 +25,15 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import defaultdict, deque
 
-# This file lives in rome/sim/engine/, one level deeper than simulator.py used
+# This file lives in sim/engine/, one level deeper than simulator.py used
 # to, so the data directory is two parents up rather than one. Everything that
 # reads a path reads it from here.
-HERE = os.path.dirname(os.path.abspath(__file__))          # rome/sim/engine
-SIMDIR = os.path.dirname(HERE)                             # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))          # sim/engine
+SIMDIR = os.path.dirname(HERE)                             # sim
 ROOT = os.path.dirname(SIMDIR)                             # rome
 TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
-STRATS = os.path.join(SIMDIR, "strategies")   # rome/sim/strategies, beside simulator.py
+STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 
 # ----------------------------------------------------------------------------
 # Loading and derived economics
@@ -68,19 +68,20 @@ def haversine_km(lat1, lon1, lat2, lon2):
     ports, so this is a reach ESTIMATE, the same spirit as everything else in
     this file being an order-of-magnitude model rather than a survey.
     """
-    r = 6371.0
-    p1, p2 = math.radians(lat1), math.radians(lat2)
+    earth_radius_km = 6371.0
+    lat1_rad, lat2_rad = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlmb = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
-    return 2 * r * math.asin(math.sqrt(a))
+    angular_term = (math.sin(dphi / 2) ** 2
+                    + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlmb / 2) ** 2)
+    return 2 * earth_radius_km * math.asin(math.sqrt(angular_term))
 
 def _load_tech_effects():
-    p = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
+    path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
     try:
-        with open(p) as source:
+        with open(path) as source:
             effects = json.load(source)
-        return {k: v for k, v in effects.items() if not k.startswith("_")}
+        return {key: value for key, value in effects.items() if not key.startswith("_")}
     except Exception:
         return {}
 
@@ -98,9 +99,9 @@ def _load_wages():
     failure as the save file writing nulls: the bug is the except, not the data.
     """
     with open(PRICES) as source:
-        p = json.load(source)
-    return {k: v["rate"] for k, v in p["wage_rates_denarii_per_hour"].items()
-            if isinstance(v, dict) and "rate" in v}
+        prices_data = json.load(source)
+    return {key: value["rate"] for key, value in prices_data["wage_rates_denarii_per_hour"].items()
+            if isinstance(value, dict) and "rate" in value}
 
 
 WAGES = _load_wages()
@@ -117,15 +118,15 @@ def _load_annual_wages():
     where it does not.
     """
     with open(PRICES) as source:
-        p = json.load(source)
+        prices_data = json.load(source)
     out = {}
-    for k, v in p["wage_rates_denarii_per_hour"].items():
-        if not isinstance(v, dict):
+    for trade, value in prices_data["wage_rates_denarii_per_hour"].items():
+        if not isinstance(value, dict):
             continue
-        if "day_hs" in v:
-            out[k] = v["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
-        elif "rate" in v:
-            out[k] = v["rate"] * 2500.0
+        if "day_hs" in value:
+            out[trade] = value["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
+        elif "rate" in value:
+            out[trade] = value["rate"] * 2500.0
     return out
 
 
@@ -134,9 +135,9 @@ ANNUAL_WAGE = _load_annual_wages()
 
 def _load_trade_notes():
     with open(PRICES) as source:
-        p = json.load(source)
-    return {k: (v.get("note") or "") for k, v in p["wage_rates_denarii_per_hour"].items()
-            if isinstance(v, dict)}
+        prices_data = json.load(source)
+    return {key: (value.get("note") or "") for key, value in prices_data["wage_rates_denarii_per_hour"].items()
+            if isinstance(value, dict)}
 
 
 TRADE_NOTES = _load_trade_notes()
@@ -145,7 +146,7 @@ TRADE_NOTES = _load_trade_notes()
 # says so, in its own notes, for every one of them ("does not exist yet; you
 # must create this trade"), so read it rather than keeping a second list that
 # can drift out of step with the first.
-TRADES_ABSENT = frozenset(t for t, note in TRADE_NOTES.items()
+TRADES_ABSENT = frozenset(trade for trade, note in TRADE_NOTES.items()
                           if "does not exist" in note.lower())
 
 # What kind of person a trade is, for the two aggregate pools the tech tree asks
@@ -209,57 +210,125 @@ def load_civ(name="rome_100ad"):
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
-    f = os.path.join(CIVDIR, name + ".json")
-    if not os.path.exists(f):
+    path = os.path.join(CIVDIR, name + ".json")
+    if not os.path.exists(path):
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations - the same convention cli.py applies in both the places
         # it lists this directory, and the one place that did not, which is why
         # a play tester's typo was answered with "available: _TECH_EFFECTS,
         # england_1300, ...".
-        have = sorted(x[:-5] for x in os.listdir(CIVDIR)
-                      if x.endswith(".json") and not x.startswith("_"))
+        have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
+                      if filename.endswith(".json") and not filename.startswith("_"))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
-    c = json.load(open(f))
+    civ = json.load(open(path))
     # Opening ownership is scenario data, not an optional convenience with an
     # implicit fallback.  Silently turning a missing declaration into an empty
     # list makes a newly-authored scenario look valid while stripping its
     # entire inherited material/capability state.
-    if "starting_techs" not in c:
+    if "starting_techs" not in civ:
         raise ValueError("civilization %r must declare starting_techs explicitly"
-                         % c.get("id", name))
-    if not isinstance(c["starting_techs"], list):
+                         % civ.get("id", name))
+    if not isinstance(civ["starting_techs"], list):
         raise ValueError("civilization %r starting_techs must be a list"
-                         % c.get("id", name))
-    duplicates = sorted(k for k, count in collections.Counter(
-        c["starting_techs"]).items() if count > 1)
+                         % civ.get("id", name))
+    duplicates = sorted(tech_id for tech_id, count in collections.Counter(
+        civ["starting_techs"]).items() if count > 1)
     if duplicates:
         raise ValueError("civilization %r repeats starting technologies: %s"
-                         % (c.get("id", name), ", ".join(duplicates)))
-    c.setdefault("values", {})
-    for k, d in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
+                         % (civ.get("id", name), ", ".join(duplicates)))
+    civ.setdefault("values", {})
+    for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),
                  ("w_commerce",0.3),("bribability",0.4),("patronage_weight",0.6),
                  ("adaptation_rate",0.10)):
-        c["values"].setdefault(k, d)
-    return c
+        civ["values"].setdefault(field, default)
+    return civ
 
 
-def load():
+def load(use_solved_prices=False, held_technology_ids=(), civilization_id=None):
+    """Load the tree and `prices.json`, and derive each node's cost.
+
+    `use_solved_prices` is OFF BY DEFAULT and every existing call site calls
+    `load()` with no arguments, so this defaults to exactly the code path
+    this function has always run: `goods` built straight from
+    `prices.json`'s own `purchase_prices_denarii`, nothing imported, nothing
+    solved. That is deliberate - see `sim/engine/prices.py`'s module
+    docstring for the whole mechanism this is opting into and why it stays
+    off until something asks for it - and it is why the import of
+    `sim.engine.prices` below is INSIDE the `if`: a caller that never opts
+    in never even imports the solver, let alone runs it.
+
+    Passing `use_solved_prices=True` asks `sim.engine.prices` to solve a
+    price for every material it can under `held_technology_ids` (an
+    iterable of tech-tree node ids - typically a civilization's completed
+    node set) and substitutes those into `goods` in place of the book
+    figure, falling back to the book for anything the solver cannot yet
+    price. The RETURN SHAPE is unchanged either way - still the same
+    five-tuple every caller already unpacks - so this is a pure substitution
+    of where `goods`'s numbers came from, not a new thing callers have to
+    learn to read. Node costs (`_labour_cost`, `_material_cost`, `_total_cost`,
+    `_hired_hours`) are then derived from `goods` exactly as before, so a
+    solved material's price flows through to node cost the same way a book
+    one always has.
+
+    Use `goods_provenance()` below to see WHICH materials came from which
+    source, independent of whether this switch is on - that report is the
+    measurable burndown of `data/prices.json`, and it should be checkable
+    without having to first flip the engine's own behaviour.
+
+    `civilization_id` matters only when `use_solved_prices` is True: it
+    decides whose held territory `iugerum_land` prices against (see
+    `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION). It defaults to
+    `None`, which `sim.engine.prices.priced_goods_table` resolves to Rome -
+    the same default the standalone `sim/solve_prices.py --civ`-less run
+    uses - so a caller pricing a NON-ROME civilization's goods table must
+    pass its id here explicitly, or its land is silently priced as Rome's.
+    """
     with open(TREE) as source:
         tree = json.load(source)
     with open(PRICES) as source:
         prices = json.load(source)
-    nodes = {n["id"]: n for n in tree["nodes"]}
-    wages = {k: v["rate"] for k, v in prices["wage_rates_denarii_per_hour"].items()
-             if not k.startswith("_")}
-    goods = {k: v["p"] for k, v in prices["purchase_prices_denarii"].items()
-             if not k.startswith("_")}
-    for n in nodes.values():
-        n["_labour_cost"] = sum(wages[t] * h for t, h in n["lab"].items())
-        n["_material_cost"] = sum(goods[m] * q for m, q in n["mat"].items())
-        n["_total_cost"] = n["_labour_cost"] + n["_material_cost"] + n["cap"]
-        n["_hired_hours"] = sum(n["lab"].values())
+    nodes = {node["id"]: node for node in tree["nodes"]}
+    wages = {key: value["rate"] for key, value in prices["wage_rates_denarii_per_hour"].items()
+             if not key.startswith("_")}
+    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
+             if not key.startswith("_")}
+    if use_solved_prices:
+        from . import prices as price_solver
+        goods, _provenance = price_solver.priced_goods_table(
+            held_technology_ids, goods, prices,
+            civilization_id=civilization_id)
+    for node in nodes.values():
+        node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
+        node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())
+        node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
+        node["_hired_hours"] = sum(node["lab"].values())
     return tree, prices, nodes, wages, goods
+
+
+def goods_provenance(held_technology_ids=(), civilization_id=None):
+    """{material: "solved" | "gated" | "no_recipe"} for every material
+    `prices.json` prices, from `sim.engine.prices.priced_goods_table` - the
+    burndown that measures "prices.json slowly deleted" one entry at a time
+    (see that module's docstring). This always asks the solver, regardless
+    of `load()`'s own `use_solved_prices` switch: the point is to be able to
+    measure the split BEFORE deciding to turn the engine's own prices over
+    to it, not only after.
+
+    `civilization_id` should be the SAME civilization `held_technology_ids`
+    came from - see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION for
+    why land rent needs to know this and cannot infer it from
+    `held_technology_ids` alone. Left at `None` it prices land as Rome's,
+    which is silently wrong for any other civilization's report.
+    """
+    with open(PRICES) as source:
+        prices = json.load(source)
+    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
+             if not key.startswith("_")}
+    from . import prices as price_solver
+    _goods, provenance = price_solver.priced_goods_table(
+        held_technology_ids, goods, prices, civilization_id=civilization_id)
+    return provenance
 
 
 # How many things rest on each node, for the whole tree at once.
@@ -282,16 +351,31 @@ _DESC_CACHE = {}
 
 def descendants(nodes):
     """{id: bitmask of everything downstream of it}, plus the index it uses."""
-    key = id(nodes)
-    hit = _DESC_CACHE.get(key)
-    if hit is not None and hit[0] == len(nodes):
+    # KEYED ON id(nodes) BUT VALIDATED BY IDENTITY, not by len(nodes).
+    #
+    # id() is only unique among objects that are alive at the same moment. A
+    # freed dict's address goes to the next same-sized allocation, so a cache
+    # that trusts a bare id() will hand a brand-new tree the index built for a
+    # dead one. Validating on len(nodes) narrows that to "a different dict
+    # that happens to have the same number of keys", which in a suite that
+    # builds small synthetic node dicts by the hundred is not narrow at all.
+    #
+    # This exact hazard, in the sibling cache in economy.py, is what made the
+    # simulation non-deterministic - see
+    # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
+    # the entry keeps that dict alive for as long as the entry can be compared
+    # against it, so its address cannot be recycled into a false hit while the
+    # entry lives. sim/engine/proto/nodes.py makes the same argument at length
+    # for the same shape of cache.
+    hit = _DESC_CACHE.get(id(nodes))
+    if hit is not None and hit[0] is nodes:
         return hit[1], hit[2]
-    index = {k: i for i, k in enumerate(sorted(nodes))}
-    kids = {k: [] for k in nodes}
+    index = {node_id: i for i, node_id in enumerate(sorted(nodes))}
+    kids = {node_id: [] for node_id in nodes}
     for m in nodes:
-        for p in nodes[m]["pre"]:
-            if p in kids:
-                kids[p].append(m)
+        for prereq_id in nodes[m]["pre"]:
+            if prereq_id in kids:
+                kids[prereq_id].append(m)
     # Iterative post-order DFS rather than topo_order(): that one rescans every
     # key for every key it pops, which is 8 million comparisons on this tree and
     # three and a half seconds of stall the first time anybody typed
@@ -302,20 +386,20 @@ def descendants(nodes):
             continue
         stack = [(root, False)]
         while stack:
-            k, expanded = stack.pop()
+            node_id, expanded = stack.pop()
             if expanded:
                 m = 0
-                for c in kids[k]:
-                    m |= (1 << index[c]) | masks.get(c, 0)
-                masks[k] = m
+                for child_id in kids[node_id]:
+                    m |= (1 << index[child_id]) | masks.get(child_id, 0)
+                masks[node_id] = m
                 continue
-            if k in masks:
+            if node_id in masks:
                 continue
-            stack.append((k, True))
-            for c in kids[k]:
-                if c not in masks:
-                    stack.append((c, False))
-    _DESC_CACHE[key] = (len(nodes), masks, index)
+            stack.append((node_id, True))
+            for child_id in kids[node_id]:
+                if child_id not in masks:
+                    stack.append((child_id, False))
+    _DESC_CACHE[id(nodes)] = (nodes, masks, index)
     return masks, index
 
 
@@ -359,13 +443,13 @@ def hard_pre(nodes, k):
     # that can only ever subtract one. The first version of this reported a
     # "cycle" among ten nodes that have no cycle between them at all: they
     # were simply the nodes Kahn's algorithm could never finish emitting.
-    n = nodes[k]
+    node = nodes[k]
     out, seen = [], set()
-    for p in n["pre"]:
-        if p not in seen:
-            seen.add(p)
-            out.append(p)
-    for grp in (n.get("req_any") or []):
+    for prereq_id in node["pre"]:
+        if prereq_id not in seen:
+            seen.add(prereq_id)
+            out.append(prereq_id)
+    for grp in (node.get("req_any") or []):
         opts = grp.get("options") or {}
         if len(opts) == 1:
             (opt,) = opts.keys()
@@ -398,29 +482,29 @@ def topo_order(nodes, subset=None):
           `keys` and filtering would have produced each time.
     """
     keys = set(subset) if subset else set(nodes)
-    hp = {k: hard_pre(nodes, k) for k in keys}
-    indeg = {k: 0 for k in keys}
-    for k in keys:
-        for p in hp[k]:
-            if p in keys:
-                indeg[k] += 1
+    hard_pre_by_node = {node_id: hard_pre(nodes, node_id) for node_id in keys}
+    indeg = {node_id: 0 for node_id in keys}
+    for node_id in keys:
+        for prereq_id in hard_pre_by_node[node_id]:
+            if prereq_id in keys:
+                indeg[node_id] += 1
     # Reverse index: for each key, the OTHER keys that name it as a hard
     # prerequisite, in sorted order - the same relative order `sorted(keys)`
     # would have visited them in, since it is a subsequence of that sort.
-    dependents = {k: [] for k in keys}
-    for m in sorted(keys):
-        for p in hp[m]:
-            if p in keys:
-                dependents[p].append(m)
-    ready = deque(sorted(k for k in keys if indeg[k] == 0))
+    dependents = {node_id: [] for node_id in keys}
+    for dependent_id in sorted(keys):
+        for prereq_id in hard_pre_by_node[dependent_id]:
+            if prereq_id in keys:
+                dependents[prereq_id].append(dependent_id)
+    ready = deque(sorted(node_id for node_id in keys if indeg[node_id] == 0))
     out = []
     while ready:
-        k = ready.popleft()
-        out.append(k)
-        for m in dependents[k]:
-            indeg[m] -= 1
-            if indeg[m] == 0:
-                ready.append(m)
+        node_id = ready.popleft()
+        out.append(node_id)
+        for dependent_id in dependents[node_id]:
+            indeg[dependent_id] -= 1
+            if indeg[dependent_id] == 0:
+                ready.append(dependent_id)
     if len(out) != len(keys):
         raise RuntimeError("cycle detected among: %s" % sorted(keys - set(out)))
     return out
@@ -461,11 +545,11 @@ def closure(nodes, goal):
     """
     need, stack = set(), [goal]
     while stack:
-        c = stack.pop()
-        if c in need or c not in nodes:
+        node_id = stack.pop()
+        if node_id in need or node_id not in nodes:
             continue
-        need.add(c)
-        stack.extend(hard_pre(nodes, c))
+        need.add(node_id)
+        stack.extend(hard_pre(nodes, node_id))
     return need
 
 
@@ -480,15 +564,15 @@ def critical_path(nodes, goal):
     order = topo_order(nodes, need)
     best = {}
     chain = {}
-    for k in order:
-        n = nodes[k]
-        own = max(n["yrs"], n["ph"] / 2000.0)
-        pb, pc = 0.0, []
-        for p in hard_pre(nodes, k):
-            if p in best and best[p] > pb:
-                pb, pc = best[p], chain[p]
-        best[k] = pb + own
-        chain[k] = pc + [k]
+    for node_id in order:
+        node = nodes[node_id]
+        own = max(node["yrs"], node["ph"] / 2000.0)
+        prereq_best, prereq_chain = 0.0, []
+        for prereq_id in hard_pre(nodes, node_id):
+            if prereq_id in best and best[prereq_id] > prereq_best:
+                prereq_best, prereq_chain = best[prereq_id], chain[prereq_id]
+        best[node_id] = prereq_best + own
+        chain[node_id] = prereq_chain + [node_id]
     return best[goal], chain[goal]
 
 
@@ -517,7 +601,7 @@ def goal_catalog(tree, nodes=None):
     data file silently."""
     goals = tree["meta"].get("goals") or []
     if nodes is not None:
-        bad = [g["node"] for g in goals if g.get("node") not in nodes]
+        bad = [goal_entry["node"] for goal_entry in goals if goal_entry.get("node") not in nodes]
         if bad:
             raise SystemExit("tech_tree.json meta.goals names nodes that do "
                              "not exist: %s" % ", ".join(bad))
@@ -528,9 +612,9 @@ def goal_lookup(tree, node_id):
     """The goal_catalog entry for `node_id`, or None if it is not one of the
     named, selectable goals (an arbitrary node id is still a legal --goal
     for `path`/`plan` - see resolve_goal - it just has no menu entry)."""
-    for g in tree["meta"].get("goals") or ():
-        if g.get("node") == node_id:
-            return g
+    for goal_entry in tree["meta"].get("goals") or ():
+        if goal_entry.get("node") == node_id:
+            return goal_entry
     return None
 
 
@@ -548,7 +632,7 @@ def resolve_goal(tree, nodes, name):
     if not name:
         return tree["meta"]["goal_node"]
     if name not in nodes:
-        known = ", ".join(sorted(g["node"] for g in tree["meta"].get("goals") or ()))
+        known = ", ".join(sorted(goal_entry["node"] for goal_entry in tree["meta"].get("goals") or ()))
         raise SystemExit("no such goal or node: %r. Selectable goals: %s"
                          % (name, known))
     return name
@@ -577,13 +661,13 @@ def win_condition_describe(n):
     the same reasoning validate's own required-field check gives for why a
     missing piece of display data must degrade, not crash, a player's
     session."""
-    wc = n.get("win_condition") or {}
-    metric, op, val = wc.get("metric"), wc.get("op"), wc.get("value")
+    win_condition = n.get("win_condition") or {}
+    metric, comparison_op, val = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
     pct = "%d%%" % round((val or 0.0) * 100)
     tmpl = WIN_CONDITION_LABELS.get(metric)
     if tmpl:
         return tmpl % pct
-    return "a measurement (%s %s %s) is met" % (metric, op, val)
+    return "a measurement (%s %s %s) is met" % (metric, comparison_op, val)
 
 
 # ----------------------------------------------------------------------------

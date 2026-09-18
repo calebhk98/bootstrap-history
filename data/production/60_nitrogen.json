@@ -1,0 +1,75 @@
+{
+ "_note": "Saltpetre and the nitrogen chain. Written at COST-STRUCTURE level only - what a process consumes and how much comes out - because that is what the price solver needs and it is all it needs. No procedure, no conditions, no operating detail. The economically interesting fact here is a calendar, not a recipe.",
+ "materials": {
+  "nitre_kg": {
+   "outputs": {
+    "nitre_kg": 1000.0
+   },
+   "inputs": {
+    "manure_kg": 12000.0,
+    "wood_ash_kg": 900.0
+   },
+   "labour_hours": {
+    "labourer": 420.0
+   },
+   "extracted_from": "nitre bed, or a mined deposit, or import",
+   "basis": "per tonne of refined saltpetre from a worked nitre bed",
+   "yield_basis": "THE COST HERE IS A CALENDAR, AND THAT IS THE WHOLE POINT. A nitre bed is soil, manure and ash left to nitrifying bacteria for 12 to 24 months. No amount of money shortens it, which is why this single material gates the entire nitrogen branch of the tech tree and why the simulator already models nitre beds as a calendar floor rather than a purchase. The mass ratio is poor - a bed yields a low single-digit percentage of its charge as nitre - and the labour is turning and leaching over two years rather than skilled work. The alternatives are geographic rather than technical: mined deposits where they exist, or import from the Gangetic plain along a route Rome already sails. A society with neither, and no patience, does not get nitrogen chemistry at all. Numbers are order of magnitude; the two-year floor is the number that matters and it is well attested.",
+   "conf": "C",
+   "requires_node": "nitre_beds"
+  },
+  "nitric_acid_kg": {
+   "outputs": {
+    "nitric_acid_kg": 1000.0
+   },
+   "inputs": {
+    "nitre_kg": 1350.0,
+    "sulfuric_acid_kg": 800.0
+   },
+   "labour_hours": {
+    "chemist": 30.0,
+    "labourer": 60.0
+   },
+   "basis": "per tonne of nitric acid",
+   "yield_basis": "STOICHIOMETRIC, so the ratio follows from the molar masses rather than from an estimate: potassium nitrate is 101.1 g/mol and nitric acid 63.0, so a tonne of acid needs about 1.6 t of nitre at perfect conversion, and rather more in practice. Taken at 1.35 t here against a partial-conversion route that leaves a bisulphate rather than driving to completion. The economic point, and the only one the solver needs, is that nitric acid costs a nitre and a sulfuric acid - it inherits the two-year calendar of the first and the fuel of the second, which is why it stays expensive in any society that cannot do both. Cost structure only; this entry deliberately carries no process detail.",
+   "conf": "C",
+   "requires_node": "nitric_acid"
+  },
+  "nitrocellulose_kg": {
+   "outputs": {
+    "nitrocellulose_kg": 1000.0
+   },
+   "inputs": {
+    "linen_rag_kg": 620.0,
+    "nitric_acid_kg": 900.0,
+    "sulfuric_acid_kg": 1600.0
+   },
+   "labour_hours": {
+    "chemist": 55.0,
+    "labourer": 90.0
+   },
+   "basis": "per tonne of product",
+   "yield_basis": "COST STRUCTURE ONLY. Nitrated cellulose gains mass over the cellulose it starts from, so the fibre input is well under a tonne; the acids are largely recovered and re-used rather than consumed, and the figures here are net of a recovery this entry does not attempt to model in detail. What the solver needs from this entry is that the cost is dominated by the nitric acid, which inherits saltpetre's two-year calendar, and not by the cellulose, which is rags. That is the fact that decides whether a society can afford the material at all. No procedure, conditions or operating detail is recorded here, deliberately.",
+   "conf": "C",
+   "requires_node": "mat_nitrocellulose"
+  },
+  "nitroglycerin_kg": {
+   "outputs": {
+    "nitroglycerin_kg": 1000.0
+   },
+   "inputs": {
+    "fat_kg": 520.0,
+    "nitric_acid_kg": 800.0,
+    "sulfuric_acid_kg": 1400.0
+   },
+   "labour_hours": {
+    "chemist": 70.0,
+    "labourer": 70.0
+   },
+   "basis": "per tonne of product",
+   "yield_basis": "COST STRUCTURE ONLY, on the same pattern as nitrocellulose and for the same reason. Glycerol comes from fat as a by-product of soap making, so the organic input is cheap and abundant wherever soap is made; the acids dominate, and the nitric acid among them, so the cost again traces back through saltpetre to a two-year bed. The one economically distinctive fact is the handling: the product cannot be stored or carried like an ordinary industrial chemical, so its delivered cost carries a transport and loss penalty that the ordinary freight model will understate. Flagged here rather than modelled. No procedure, conditions or operating detail is recorded, deliberately.",
+   "conf": "C",
+   "requires_node": "mat_nitroglycerin"
+  }
+ }
+}

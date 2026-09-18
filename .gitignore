@@ -113,3 +113,16 @@ scratch/
 .local/
 working/
 work/
+
+# Test-suite scratch directories. The suite exercises real relative save
+# paths, so it writes these under the repository root while it runs and
+# removes them at the end; they exist only if a run was interrupted.
+_loadtest_tmp/
+_playtest_tmp/
+
+# Temporary pinned copy of prove_rename_safe.py, used as a stable oracle
+# while the prover itself is being rewritten. Deleted once that lands; it
+# lives inside sim/ because the prover derives its repo root from its own
+# location (ROOT = dirname(dirname(__file__))), so a copy anywhere else
+# silently reports "nothing to prove" for every file.
+sim/_prover_pinned.py

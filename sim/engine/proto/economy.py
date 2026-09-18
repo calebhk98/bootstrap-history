@@ -56,9 +56,9 @@ def _agent_values(s):
     w_novelty, w_commerce" line, naming fields with no way to see what they
     are or what they are now. This is that way.
     """
-    w = dict(getattr(s, "w", {}) or {})
-    rows = [{"field": f, "value": round(w[f], 3), "means": _VALUE_MEANINGS.get(f)}
-            for f in sorted(w) if not f.startswith("_")]
+    weights = dict(getattr(s, "w", {}) or {})
+    rows = [{"field": field, "value": round(weights[field], 3), "means": _VALUE_MEANINGS.get(field)}
+            for field in sorted(weights) if not field.startswith("_")]
     return {"ok": True, "values": rows,
             "note": "a completion's own 'changes the society' line says which "
                     "of these moved and when."}
@@ -114,11 +114,11 @@ def _material_capacity_rows(s):
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": 0.0,
             "surplus_t_per_yr": round(own + market, 1)}
-    for mat, r in rows.items():
+    for mat, row in rows.items():
         if mat in s.mine_capacity:
             note = s.mine_depletion_note(mat)
             if note:
-                r["yield_note"] = note
+                row["yield_note"] = note
     # WORST SHORTFALL FIRST - the bottleneck a player actually has to reason
     # about belongs at the top, not buried alphabetically.
     return sorted(rows.values(), key=lambda r: (r["surplus_t_per_yr"], -r["demand_t_per_yr"]))
@@ -192,8 +192,8 @@ def _power_status(s, nodes):
     out["transmission_capacity_kw"] = round(gen["transmission_kw"], 1)
     mech = gen["mechanical_kw"]
     if mech.get("water") or mech.get("steam"):
-        out["mechanical_shaft_power_kw"] = {k: round(v, 1)
-                                            for k, v in sorted(mech.items()) if v}
+        out["mechanical_shaft_power_kw"] = {mechanism: round(value, 1)
+                                            for mechanism, value in sorted(mech.items()) if value}
     if s.binding == "electricity":
         out["electricity_is_the_binding_constraint"] = True
         out["throttle"] = round(s.throttle, 3)
@@ -205,14 +205,14 @@ def _power_status(s, nodes):
     grid_known = s.is_visible("cap_power_grid")
     if elec_known:
         workshop_scale, grid_scale = [], []
-        for k, n in nodes.items():
-            if k in s.done or not s.is_visible(k):
+        for node_id, node in nodes.items():
+            if node_id in s.done or not s.is_visible(node_id):
                 continue
-            pre = n.get("pre") or []
+            pre = node.get("pre") or []
             if grid_known and not s.has("cap_power_grid") and "cap_power_grid" in pre:
-                grid_scale.append(k)
+                grid_scale.append(node_id)
             elif not s.has("cap_power_electric") and "cap_power_electric" in pre:
-                workshop_scale.append(k)
+                workshop_scale.append(node_id)
         if workshop_scale:
             out["waiting_on_workshop_scale_power"] = sorted(workshop_scale)
         if grid_scale:
@@ -273,24 +273,24 @@ def _agent_mines(s):
     # a working - it has no commissioning year until commission_mines()
     # actually makes it one - so these stay grouped by material, as before.
     _pending = {}
-    for _t in sorted(getattr(s, "mine_tranches", [])):
-        _m, _amt, _ready = _t[0], _t[1], _t[2]
-        _pending.setdefault(_m, [0.0, _ready])
-        _pending[_m][0] += _amt
-        _pending[_m][1] = min(_pending[_m][1], _ready)
+    for _tranche in sorted(getattr(s, "mine_tranches", [])):
+        _material, _amt, _ready = _tranche[0], _tranche[1], _tranche[2]
+        _pending.setdefault(_material, [0.0, _ready])
+        _pending[_material][0] += _amt
+        _pending[_material][1] = min(_pending[_material][1], _ready)
     # GROUPED BY MATERIAL, ordered by commissioning year within it, so
     # several workings of the same seam read as a chronology, not a jumble.
     # self.mines is a list (append/commission order), not a set, so the
     # groupby itself needs no sorted() to be deterministic across hash
     # seeds - only the final row order does, hence the explicit sort key.
     by_mat = {}
-    for w in getattr(s, "mines", ()):
-        by_mat.setdefault(w["material"], []).append(w)
-    for m in sorted(by_mat):
-        workings = by_mat[m]
-        want = sum(dem.get(kk, 0.0) for kk in _keys.get(m, (m,)))
-        total_rated = sum(w["capacity"] for w in workings)
-        for w in sorted(workings, key=lambda w: (
+    for working in getattr(s, "mines", ()):
+        by_mat.setdefault(working["material"], []).append(working)
+    for material in sorted(by_mat):
+        workings = by_mat[material]
+        want = sum(dem.get(demand_key, 0.0) for demand_key in _keys.get(material, (material,)))
+        total_rated = sum(working["capacity"] for working in workings)
+        for working in sorted(workings, key=lambda w: (
                 w.get("opened_year") if w.get("opened_year") is not None
                 else -1)):
             # ACTUAL yield, not the nominal tonnage sunk: THIS working's
@@ -300,7 +300,7 @@ def _agent_mines(s):
             # away from rated capacity, and a player whose coal yield has
             # halved over eighty years has to be able to see that here,
             # not just infer it from a lower revenue somewhere else.
-            actual = s.mine_yield_t_for(w)
+            actual = s.mine_yield_t_for(working)
             # UTILISATION: rated capacity against what is really being
             # drawn - the question the player actually asked. Demand for
             # this material is shared across its workings in proportion to
@@ -312,48 +312,48 @@ def _agent_mines(s):
             # one shows 0% however healthy its seam is - exactly the
             # distinction between a real supply and an economic asset the
             # player asked to see.
-            share = want * (w["capacity"] / total_rated) if total_rated > 0 else 0.0
+            share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
             drawn = min(share, actual)
-            util = (drawn / w["capacity"]) if w["capacity"] > 0 else 0.0
+            util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
             rows.append({
-                "material": m,
-                "commissioned_year": w.get("opened_year") if w.get("opened_year")
+                "material": material,
+                "commissioned_year": working.get("opened_year") if working.get("opened_year")
                                      is not None else "unknown (from a save "
                                      "written before per-working tracking "
                                      "existed)",
-                "rated_capacity_t_per_yr": round(w["capacity"], 2),
+                "rated_capacity_t_per_yr": round(working["capacity"], 2),
                 "actual_output_t_per_yr": round(actual, 2),
                 "material_demand_t_per_yr": round(want, 2),
-                "costs_you_a_year": round(s.mine_operating_cost_for(w), 1),
+                "costs_you_a_year": round(s.mine_operating_cost_for(working), 1),
                 "utilization": ("%d%%" % round(100.0 * util))
-                               if w["capacity"] > 0 else "-",
+                               if working["capacity"] > 0 else "-",
                 # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
                 # not only as a percentage a reader has to interpret. A
                 # tester's own question was exactly this: does the game
                 # count a mine as real supply, or only as an economic asset
                 # sitting on the books?
                 "actually_supplying_demand": bool(drawn > 1e-9),
-                "yield_note": s.mine_depletion_note_for(w),
-                "shut_it_with": "close %s" % m})
-    for m, (amt, ready) in sorted(_pending.items()):
+                "yield_note": s.mine_depletion_note_for(working),
+                "shut_it_with": "close %s" % material})
+    for material, (amt, ready) in sorted(_pending.items()):
         rows.append({
-            "material": m,
+            "material": material,
             "commissioned_year": "pending",
             "rated_capacity_t_per_yr": 0.0,
             "actual_output_t_per_yr": 0.0,
             "material_demand_t_per_yr":
-                round(sum(dem.get(kk, 0.0) for kk in _keys.get(m, (m,))), 2),
+                round(sum(dem.get(demand_key, 0.0) for demand_key in _keys.get(material, (material,))), 2),
             "costs_you_a_year": 0.0,
             "utilization": "sinking",
             "actually_supplying_demand": False,
             "ready_in": ready,
             "tonnes_a_year_when_it_is_ready": round(amt, 2),
-            "shut_it_with": "close %s" % m})
+            "shut_it_with": "close %s" % material})
     return {"ok": True,
             "mines_you_own": rows or "none",
             "they_cost_you_a_year_in_all": round(s.mine_operating_cost(), 1),
             "your_revenue_is": round(s.revenue(), 1),
-            "still_being_sunk": {m: v[1] for m, v in sorted(_pending.items())},
+            "still_being_sunk": {material: value[1] for material, value in sorted(_pending.items())},
             "note": "Workings are charged every year they stand, whether or "
                     "not you use what they raise. One you no longer need is "
                     "money going out for nothing: 'close <material>'. "
@@ -412,44 +412,44 @@ def _portfolio_rows(nodes, active_out):
     to hold each one in their head.
     """
     rows = []
-    for k, a in active_out.items():
-        n = nodes[k]
-        constraint = _portfolio_constraint(a.get("waiting_on"))
+    for node_id, entry in active_out.items():
+        node = nodes[node_id]
+        constraint = _portfolio_constraint(entry.get("waiting_on"))
         row = {
-            "id": k, "name": a["name"], "constraint": constraint,
-            "waiting_on": a.get("waiting_on"),
+            "id": node_id, "name": entry["name"], "constraint": constraint,
+            "waiting_on": entry.get("waiting_on"),
             # READ, NOT RECOMPUTED, same as everything below it: arrears
             # gives unspendable founder hours back, so waiting_on above can
             # say "your hours" for a project that is really underfunded.
             # why_underfunded is the real reason, already sitting on the
             # same active-dict entry - see _waiting_on's own comment.
-            "why_underfunded": a.get("why_underfunded"),
-            "founder_hours_left": a.get("founder_hours_left"),
-            "founder_hours_total": a.get("founder_hours_total"),
+            "why_underfunded": entry.get("why_underfunded"),
+            "founder_hours_left": entry.get("founder_hours_left"),
+            "founder_hours_total": entry.get("founder_hours_total"),
             # READ, NOT RECOMPUTED. These four come straight off the same
             # st dict step()'s own allocator loop wrote them to (core.py,
             # "pool_total_this_year" and neighbours) - the actual share this
             # project got this year, and why, never a second guess at it
             # that could end up disagreeing with what was actually applied.
-            "hours_offered_this_year": a.get("hours_offered_this_year"),
-            "hours_effective_this_year": a.get("hours_effective_this_year"),
+            "hours_offered_this_year": entry.get("hours_offered_this_year"),
+            "hours_effective_this_year": entry.get("hours_effective_this_year"),
             # THE STANDING ORDER ITSELF, same read-not-recomputed rule as
             # its four neighbours - None for every project nobody has
             # directed, which is most of them on any save that predates
             # `allocate` or never uses it.
-            "hours_directed_this_year": a.get("hours_directed_this_year"),
-            "pool_rank_this_year": a.get("pool_rank_this_year"),
-            "pool_active_count_this_year": a.get("pool_active_count_this_year"),
-            "pool_total_this_year": a.get("pool_total_this_year"),
-            "years_in_progress": a.get("years_in_progress"),
+            "hours_directed_this_year": entry.get("hours_directed_this_year"),
+            "pool_rank_this_year": entry.get("pool_rank_this_year"),
+            "pool_active_count_this_year": entry.get("pool_active_count_this_year"),
+            "pool_total_this_year": entry.get("pool_total_this_year"),
+            "years_in_progress": entry.get("years_in_progress"),
             "calendar_years_left": round(
-                max(0.0, float(n["yrs"]) - float(a.get("years_in_progress") or 0.0)), 1),
-            "still_to_pay": a.get("still_to_pay"),
-            "chance_of_failure": n.get("risk") or None,
+                max(0.0, float(node["yrs"]) - float(entry.get("years_in_progress") or 0.0)), 1),
+            "still_to_pay": entry.get("still_to_pay"),
+            "chance_of_failure": node.get("risk") or None,
         }
-        if "will_be_abandoned_in_years" in a:
-            row["will_be_abandoned_in_years"] = a["will_be_abandoned_in_years"]
-            row["because_nobody_here_can"] = a.get("because_nobody_here_can")
+        if "will_be_abandoned_in_years" in entry:
+            row["will_be_abandoned_in_years"] = entry["will_be_abandoned_in_years"]
+            row["because_nobody_here_can"] = entry.get("because_nobody_here_can")
         rows.append(row)
     rows.sort(key=lambda r: (_PORTFOLIO_ORDER.get(r["constraint"], 9),
                              -(r["founder_hours_left"] or 0.0)))
@@ -465,15 +465,15 @@ def _spare_capacity(s, state_out):
     already compute for their own screens.
     """
     families = {}
-    for t in WAGES:
-        if not s.trade_available(t):
+    for trade in WAGES:
+        if not s.trade_available(trade):
             continue
-        fam = trade_family(t)
-        d = families.setdefault(fam, [0.0, 0.0])
-        supply = s.hours_you_can_call_on(t)
-        used = min(supply, s.trade_hours_used.get(t, 0.0))
-        d[0] += supply
-        d[1] += used
+        fam = trade_family(trade)
+        pair = families.setdefault(fam, [0.0, 0.0])
+        supply = s.hours_you_can_call_on(trade)
+        used = min(supply, s.trade_hours_used.get(trade, 0.0))
+        pair[0] += supply
+        pair[1] += used
     rows = []
     for fam, (supply, used) in sorted(families.items()):
         spare = max(0.0, supply - used)
@@ -517,13 +517,13 @@ def _trade_demand_rows(s):
     founder-hours problem at all in the run that said it; it was this.
     """
     rows = []
-    for t, d in s.trade_demand_vs_supply().items():
+    for trade, detail in s.trade_demand_vs_supply().items():
         rows.append({
-            "trade": t, "trade_family": trade_family(t),
-            "demand_hours_this_year": d["demand_hours_this_year"],
-            "supply_hours_this_year": d["supply_hours_this_year"],
-            "oversubscribed": d["oversubscribed"],
-            "projects_drawing_on_it": d["projects_drawing_on_it"],
+            "trade": trade, "trade_family": trade_family(trade),
+            "demand_hours_this_year": detail["demand_hours_this_year"],
+            "supply_hours_this_year": detail["supply_hours_this_year"],
+            "oversubscribed": detail["oversubscribed"],
+            "projects_drawing_on_it": detail["projects_drawing_on_it"],
         })
     rows.sort(key=lambda r: (not r["oversubscribed"],
                              r["supply_hours_this_year"] - r["demand_hours_this_year"]))
@@ -608,7 +608,7 @@ def _dashboard_snapshot(s):
         "employees_total": round(sum(s.employees.values()), 2),
         "scholars": round(s.scholars, 2),
         "artisans": round(s.artisans, 2),
-        "mine_capacity": {m: round(v, 1) for m, v in s.mine_capacity.items()},
+        "mine_capacity": {material: round(value, 1) for material, value in s.mine_capacity.items()},
         "scandal": round(s.scandal, 2),
         "reputation": round(s.reputation, 1),
         "eminence": round(s.eminence, 2),
@@ -665,23 +665,23 @@ def _agent_economy(s, cmd=None):
         # the worst one.
         rows, seen = [], set()
         for pair in s.MATERIAL_CHECKS.values():
-            ek = pair[0]
-            if ek in seen:
+            material_key = pair[0]
+            if material_key in seen:
                 continue
-            seen.add(ek)
-            rows.append({"material": ek,
-                        "price_factor_over_book": round(s.material_price_factor(ek), 3)})
+            seen.add(material_key)
+            rows.append({"material": material_key,
+                        "price_factor_over_book": round(s.material_price_factor(material_key), 3)})
         out["tracked_material_prices"] = sorted(rows, key=lambda r: -r["price_factor_over_book"])
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": t, "a_year_of_one": round(s.annual_wage(t), 0),
+            {"trade": trade, "a_year_of_one": round(s.annual_wage(trade), 0),
              "wage_foundation": {
-                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
-                 **{k: round(v, 3) for k, v in s.wage_cost_factors(t).items()},
+                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(trade, 375.0),
+                 **{factor_key: round(value, 3) for factor_key, value in s.wage_cost_factors(trade).items()},
                  "demographic_scarcity": round(s.wage_index, 3),
-                 "local_trade_scarcity": round(s.labour_price_factor(t), 3)}}
-            for t in sorted(WAGES) if s.trade_available(t)]
+                 "local_trade_scarcity": round(s.labour_price_factor(trade), 3)}}
+            for trade in sorted(WAGES) if s.trade_available(trade)]
     return out
 
 
@@ -745,10 +745,10 @@ def _agent_changes(s, nodes, cmd=None):
     then_cap = baseline.get("mine_capacity") or {}
     now_cap = now.get("mine_capacity") or {}
     cap_changes = []
-    for m in sorted(set(then_cap) | set(now_cap)):
-        d = round(now_cap.get(m, 0.0) - then_cap.get(m, 0.0), 1)
-        if abs(d) > 0.05:
-            cap_changes.append({"material": m, "change_t_per_yr": d})
+    for material in sorted(set(then_cap) | set(now_cap)):
+        change = round(now_cap.get(material, 0.0) - then_cap.get(material, 0.0), 1)
+        if abs(change) > 0.05:
+            cap_changes.append({"material": material, "change_t_per_yr": change})
 
     def _uniq(seq):
         return list(dict.fromkeys(seq))
@@ -762,9 +762,9 @@ def _agent_changes(s, nodes, cmd=None):
         opened.extend(rec.get("concerns_opened") or [])
         closed.extend(rec.get("concerns_closed") or [])
     completed = _uniq(completed)
-    revealed = _uniq([k for k in revealed if k not in completed])
+    revealed = _uniq([node_id for node_id in revealed if node_id not in completed])
     opened = _uniq(opened)
-    closed = _uniq([k for k in closed if k not in opened])
+    closed = _uniq([node_id for node_id in closed if node_id not in opened])
     # A HANDFUL OF WORDS, NOT THE WHOLE LOG. Anything the engine already
     # logged as happening TO this player over the window, filtered to the
     # kind of thing a player would call a political event rather than
@@ -773,8 +773,8 @@ def _agent_changes(s, nodes, cmd=None):
     _MARKERS = ("sack", "denounced", "founder dies", "plague", "crisis",
                "scandal", "credit exhausted", "insolvency", "war", "revolt",
                "famine", "fire", "died", "denunciation")
-    events = [{"year": y, "message": m} for y, m in s.log
-             if cutoff < y <= s.year and any(mk in m.lower() for mk in _MARKERS)]
+    events = [{"year": year, "message": message} for year, message in s.log
+             if cutoff < year <= s.year and any(marker in message.lower() for marker in _MARKERS)]
     return {
         "ok": True,
         "from_year": baseline["year"], "to_year": now["year"],

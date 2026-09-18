@@ -39,11 +39,11 @@ _s_vcap = sim(civ="rome_100ad", capital=5000000.0)
 _s_vcap.done.update(["identity_cover", "tex_horizontal_loom"])
 _s_vcap._done_changed()
 _vt_cap = S._agent_dispatch(_s_vcap, NODES, {"cmd": "ventures"})
-_cap_ids = [r.get("id") for r in (_vt_cap.get(
+_cap_ids = [entry.get("id") for entry in (_vt_cap.get(
     "capabilities_you_know_how_to_run_but_have_not_opened") or [])
-    if isinstance(r, dict)]
-_ord_ids = [r.get("id") for r in (_vt_cap.get(
-    "you_know_how_but_have_not_opened") or []) if isinstance(r, dict)]
+    if isinstance(entry, dict)]
+_ord_ids = [entry.get("id") for entry in (_vt_cap.get(
+    "you_know_how_but_have_not_opened") or []) if isinstance(entry, dict)]
 check("ventures puts an idle capability institution in its own list, not "
       "the ordinary earn/cost one",
       "identity_cover" in _cap_ids and "identity_cover" not in _ord_ids,
@@ -96,22 +96,22 @@ _s_haz = sim(civ="rome_100ad")
 _s_haz.events = True
 _s_haz.year = 240          # inside Rome's Third Century Crisis, 235-284
 _rk = S._agent_dispatch(_s_haz, NODES, {"cmd": "risk"})
-_crisis = next((h for h in (_rk.get("knowledge_risk") or {}).get(
-    "known_hazards_ahead") or [] if "Third century" in h.get("name", "")), None)
+_crisis = next((hazard for hazard in (_rk.get("knowledge_risk") or {}).get(
+    "known_hazards_ahead") or [] if "Third century" in hazard.get("name", "")), None)
 check("a real dated, multi-year sacking hazard exists to check against",
-      _crisis is not None, [h.get("name") for h in
+      _crisis is not None, [hazard.get("name") for hazard in
       (_rk.get("knowledge_risk") or {}).get("known_hazards_ahead") or []])
 if _crisis:
     _rendered_risk = _RRISK(_rk)
     check("risk says a per-year hazard is rolled EVERY year of its window, "
           "not once",
           "checked EVERY year" in _rendered_risk and "chance" in _rendered_risk,
-          [ln for ln in _rendered_risk.splitlines() if "checked EVERY year" in ln])
+          [line for line in _rendered_risk.splitlines() if "checked EVERY year" in line])
     check("...and the cumulative chance across the window is higher than "
           "the bare per-year figure, which is the whole point",
-          any("100%" in ln or "chance at least one sacking" in ln
-              for ln in _rendered_risk.splitlines()),
-          [ln for ln in _rendered_risk.splitlines() if "sacking lands" in ln])
+          any("100%" in line or "chance at least one sacking" in line
+              for line in _rendered_risk.splitlines()),
+          [line for line in _rendered_risk.splitlines() if "sacking lands" in line])
 
 # --- FINDING: `path <goal>` is the actual walkthrough and was buried in one
 # line of `help commands`, absent from the five starter verbs, and answered
@@ -125,9 +125,9 @@ check("path names how many of the remaining nodes are startable today",
       and _rp2["startable_today_count"] >= 1,
       _rp2.get("startable_today_count"))
 _av2 = S._agent_dispatch(_s_pth2, NODES, {"cmd": "available", "all": True})
-_av_ids = {e["id"] for e in (_av2.get("available") or []) if isinstance(e, dict)}
-_path_startable_ids = {e["id"] for e in (_rp2.get("startable_today_toward_this") or [])
-                       if isinstance(e, dict)}
+_av_ids = {entry["id"] for entry in (_av2.get("available") or []) if isinstance(entry, dict)}
+_path_startable_ids = {entry["id"] for entry in (_rp2.get("startable_today_toward_this") or [])
+                       if isinstance(entry, dict)}
 check("...and every one of those is genuinely on `available` too - the "
       "join is a real intersection, not an invented list",
       _path_startable_ids <= _av_ids, _path_startable_ids - _av_ids)
@@ -160,11 +160,11 @@ check("set-up: on a fresh turn-one Rome game every startable node on the "
       "route to the goal earns nothing by itself - this is the real "
       "opening, not an invented fixture",
       bool(_rp_pay_ok.get("startable_today_toward_this"))
-      and all(e.get("earns_per_year", 0) <= 0
-              for e in _rp_pay_ok["startable_today_toward_this"]
-              if isinstance(e, dict)),
-      [(e.get("id"), e.get("earns_per_year"))
-       for e in _rp_pay_ok.get("startable_today_toward_this") or []])
+      and all(entry.get("earns_per_year", 0) <= 0
+              for entry in _rp_pay_ok["startable_today_toward_this"]
+              if isinstance(entry, dict)),
+      [(entry.get("id"), entry.get("earns_per_year"))
+       for entry in _rp_pay_ok.get("startable_today_toward_this") or []])
 check("`path` says outright, from turn one, that an all-knowledge route "
       "will not cover costs and names a command that finds what actually "
       "pays - not only after the household is already in the red, which "
@@ -181,9 +181,9 @@ check("...and the warning reaches the rendered page too, not only the JSON",
 # critical path has a revenue-positive node startable right now, rather
 # than assuming one exists.
 _s_scan = sim(civ="rome_100ad")
-_earning_goal = next((g for g in NODES
-                     if any(NODES[p]["rev"] > 0 and _s_scan.can_start(p)
-                            for p in S.closure(NODES, g))), None)
+_earning_goal = next((goal_candidate for goal_candidate in NODES
+                     if any(NODES[node_id]["rev"] > 0 and _s_scan.can_start(node_id)
+                            for node_id in S.closure(NODES, goal_candidate))), None)
 check("a goal with a real earner on its startable-today route exists to "
       "test the negative case against",
       _earning_goal is not None, _earning_goal)
@@ -203,8 +203,8 @@ _rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": GOAL})
 check("set-up: a household with almost nothing to spend, tested against "
       "the same all-knowledge opening route",
       bool(_rp_comb.get("startable_today_toward_this")), _rp_comb)
-_comb_total = sum(_s_comb.project_cost(e["id"])
-                  for e in _rp_comb["startable_today_toward_this"])
+_comb_total = sum(_s_comb.project_cost(entry["id"])
+                  for entry in _rp_comb["startable_today_toward_this"])
 check("`path` names the combined cost of everything listed against what "
       "can actually be raised, when that combined cost exceeds it - the "
       "one number individual affordability checks never show",
@@ -252,7 +252,7 @@ check("...and an ordinary business closing carries no such warning",
 # --- naive14: AN OUTSIDE PLAYER WON BLIND AS LATER HAN WITH FOG ON AND AN
 # IMMORTAL FOUNDER (grown and alloy junction transistors, 575 AD, 168/168
 # required nodes) and reported what nearly cost them the run anyway. See
-# rome/playtest/naive14/EXTERNAL_TOP_PROBLEMS.md and
+# playtest/naive14/EXTERNAL_TOP_PROBLEMS.md and
 # EXTERNAL_BLIND_PLAYTHROUGH.md.
 #
 # TOP_PROBLEMS #1, rated most damaging: point_contact_transistor's own note
@@ -318,16 +318,16 @@ def _disclaimed_prereq_contradictions(nodes):
                "being could would should before after still about".split())
 
     def keywords(text):
-        return {w for w in re.findall(r"[a-z]{5,}", text.lower()) if w not in stop}
+        return {word for word in re.findall(r"[a-z]{5,}", text.lower()) if word not in stop}
 
     out = []
-    for k, n in sorted(nodes.items()):
-        low = (n.get("note") or "").lower()
+    for node_id, node in sorted(nodes.items()):
+        low = (node.get("note") or "").lower()
         hit = None
         for pat in disclaim_pats:
-            m = re.search(pat, low)
-            if m:
-                hit = m
+            match = re.search(pat, low)
+            if match:
+                hit = match
                 break
         if not hit:
             continue
@@ -339,16 +339,16 @@ def _disclaimed_prereq_contradictions(nodes):
             wkw |= keywords(span)
         if not wkw:
             continue
-        prereq_ids = list(n.get("pre") or [])
-        for g in (n.get("req_any") or []):
-            prereq_ids.extend((g.get("options") or {}).keys())
+        prereq_ids = list(node.get("pre") or [])
+        for req_group in (node.get("req_any") or []):
+            prereq_ids.extend((req_group.get("options") or {}).keys())
         for pid in prereq_ids:
-            pn = nodes.get(pid)
-            if not pn:
+            prereq_node = nodes.get(pid)
+            if not prereq_node:
                 continue
-            pkw = keywords(pn.get("name") or "") | {pid.lower()}
+            pkw = keywords(prereq_node.get("name") or "") | {pid.lower()}
             if wkw & pkw:
-                out.append((k, pid, hit.group(0), sorted(wkw & pkw)))
+                out.append((node_id, pid, hit.group(0), sorted(wkw & pkw)))
     return out
 
 
@@ -383,7 +383,7 @@ check("...and the scanner is not vacuous: it does flag the original, "
 # vacuum tube, hence the goal) with "no visible way to improve the odds" -
 # pinned at the category level so a future located_material node cannot
 # reintroduce the same placeholder unnoticed.
-_located_risks = {k: n["risk"] for k, n in NODES.items() if n.get("cat") == "located_material"}
+_located_risks = {node_id: node["risk"] for node_id, node in NODES.items() if node.get("cat") == "located_material"}
 check("no located_material node rolls a near-certain failure every year - "
       "0.95 was an unrevisited placeholder copied across ten of the "
       "category's eleven nodes, not a researched figure",
@@ -392,10 +392,10 @@ check("no located_material node rolls a near-certain failure every year - "
 
 # --- TOP_PROBLEMS #12, generalised beyond the one platinum instance
 # already named there: a data file (as opposed to the `kb` field's
-# deliberate rome/knowledge/*.md citations, shown to the player on every
+# deliberate knowledge/*.md citations, shown to the player on every
 # `why` screen as an in-fiction "recipe" reference) is not something a
 # player's own note should ever send them to read.
-_geo_leaks = [k for k, n in NODES.items() if "data/world/" in (n.get("note") or "")]
+_geo_leaks = [node_id for node_id, node in NODES.items() if "data/world/" in (node.get("note") or "")]
 check("no node's player-facing note sends the player to read a data file "
       "out of the game - ten notes did ('See data/world/geography.json "
       "...'), platinum among them, found and fixed as a family rather "
@@ -420,12 +420,12 @@ _GATED_VEHICLES = ("tr_hopper_wagon", "lnd_two_wheel_cart", "lnd_four_wheel_cart
 check("the wheeled/animal-powered vehicles a Mexica player actually reached "
       "turn one are now in the same needs_first group as the harnesses, not "
       "a separate, unenforced list",
-      all(k in _mex_needs_first for k in _GATED_VEHICLES),
-      [k for k in _GATED_VEHICLES if k not in _mex_needs_first])
+      all(node_id in _mex_needs_first for node_id in _GATED_VEHICLES),
+      [node_id for node_id in _GATED_VEHICLES if node_id not in _mex_needs_first])
 _s_mex2 = sim(civ="mexica_1500")
 check("...and a fresh Mexica founder cannot start any of them turn one",
-      not any(_s_mex2.can_start(k) for k in _GATED_VEHICLES),
-      [k for k in _GATED_VEHICLES if _s_mex2.can_start(k)])
+      not any(_s_mex2.can_start(node_id) for node_id in _GATED_VEHICLES),
+      [node_id for node_id in _GATED_VEHICLES if _s_mex2.can_start(node_id)])
 check("...including the ambient-grant path, not only explicit `start` - "
       "pwr_animal_treadmill is tier 0 with no cost, which is exactly what "
       "grant_ambient() hands out for free the moment prerequisites clear, "
@@ -445,9 +445,9 @@ check("...and importing draught animals lifts the gate on all of them, the "
       "needs_first() clearing, not as can_start(), since a vehicle can "
       "have its own further, unrelated prerequisites (mil_artillery_carriage "
       "still wants iron and a trunnion)",
-      all(_s_mex3.needs_first(k)[0] is None for k in _GATED_VEHICLES),
-      [(k, _s_mex3.needs_first(k)) for k in _GATED_VEHICLES
-       if _s_mex3.needs_first(k)[0] is not None])
+      all(_s_mex3.needs_first(node_id)[0] is None for node_id in _GATED_VEHICLES),
+      [(node_id, _s_mex3.needs_first(node_id)) for node_id in _GATED_VEHICLES
+       if _s_mex3.needs_first(node_id)[0] is not None])
 _s_mex4 = sim(civ="mexica_1500")
 check("the wheel concept itself, human-powered wheeled transport, and "
       "water/human-turned machinery are NOT swept into the same gate - "

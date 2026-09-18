@@ -9,6 +9,7 @@ from collections import defaultdict
 
 from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
+from constants import declare
 
 
 class LabourMixin:
@@ -39,18 +40,29 @@ class LabourMixin:
             whole += 1
         return float(whole)
 
+    BONDAGE_HOURS_SHARE = declare(
+        "BONDAGE_HOURS_SHARE", 0.25, kind="temporary_heuristic",
+        unit="fraction of founder_hours_per_year", source=None, confidence="D",
+        why="What fraction of a bonded founder's day is still their own to "
+            "spend, the rest being owed to whoever holds the bond. Not zero, "
+            "because nobody works every waking hour and the evenings are "
+            "where this model assumes the work gets done; not derived from "
+            "any actual bondage contract terms, of which this engine has "
+            "none, only picked so bondage costs something real without "
+            "being a total stop.")
+
     def director_pool(self):
-        h = 0.0
+        total_hours = 0.0
         if self.founder_alive:
             own = self.cfg["founder_hours_per_year"]
             # In bondage most of your hours are owed to somebody else. Not all
             # of them: nobody worked every waking hour, and the evenings are
             # where the work gets done. This is the cost, and it is temporary.
-            if self.bondage_years_left > 0:
-                own *= 0.25
-            h += own
-        h += self.directors_extra * self.cfg["director_hours_per_year"]
-        return h
+            if self.household.bondage_years_left > 0:
+                own *= self.BONDAGE_HOURS_SHARE
+            total_hours += own
+        total_hours += self.household.directors_extra * self.cfg["director_hours_per_year"]
+        return total_hours
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -81,8 +93,35 @@ class LabourMixin:
     # civilization with less of either number gets a genuinely smaller pool,
     # in proportion, and a civilization with more (Han's elite literacy, 0.95
     # against Rome's 0.9) is not penalised for having read more than Rome did.
-    LITERACY_REFERENCE_GENERAL = 0.12   # rome_100ad.json literacy_general
-    LITERACY_REFERENCE_ELITE = 0.90     # rome_100ad.json literacy_elite
+    LITERACY_REFERENCE_GENERAL = declare(
+        "LITERACY_REFERENCE_GENERAL", 0.12, kind="initial_condition",
+        unit="fraction of population able to read (general)",
+        source="rome_100ad.json's own literacy_general field.",
+        confidence="B",
+        why="Rome's own starting literacy_general, copied here as the "
+            "denominator every OTHER civilisation's literate-trade capacity "
+            "is measured against, because every other constant in this "
+            "economy (price index, cost multipliers) is already calibrated "
+            "relative to Rome. A duplicate of a real starting condition, "
+            "not an invented number - but it IS a duplicate, kept in sync "
+            "with rome_100ad.json only by hand.")
+    LITERACY_REFERENCE_ELITE = declare(
+        "LITERACY_REFERENCE_ELITE", 0.90, kind="initial_condition",
+        unit="fraction of the propertied class able to read (elite)",
+        source="rome_100ad.json's own literacy_elite field.", confidence="B",
+        why="As LITERACY_REFERENCE_GENERAL, for the lettered, propertied "
+            "pool `scholar` is drawn from.")
+    LITERACY_FACTOR_CAP = declare(
+        "LITERACY_FACTOR_CAP", 4.0, kind="temporary_heuristic",
+        unit="dimensionless multiple of the Rome-reference pool",
+        source=None, confidence="D",
+        why="How far a literacy_factor may rise above 1.0 for a society "
+            "that has read PAST Rome's own reference literacy. Bounded so "
+            "a civilisation is never treated as though it could staff an "
+            "unbounded number of literate trades just because a handful of "
+            "technologies nudged literacy above 0.9; the figure 4.0 is "
+            "tuned headroom, not a measured ceiling on how literate a "
+            "pre-modern society can get.")
 
     def literacy_factor(self, trade):
         """0..1: how much of this trade's usual pool this society's literacy
@@ -104,7 +143,55 @@ class LabourMixin:
         # Bounded at four, because a lettered pool cannot outgrow the town
         # without the town growing, and because the tech effects that feed it
         # are deliberately small.
-        return max(0.0, min(4.0, float(lit) / ref))
+        return max(0.0, min(self.LITERACY_FACTOR_CAP, float(lit) / ref))
+
+    # "A CIVILIZATION OF 1.5 MILLION CANNOT FIELD WHAT ONE OF 65 MILLION CAN"
+    # (hired_cap's own comment) - the same floor-plus-variable-share curve
+    # reused everywhere in this file that a labour-market size has to shrink
+    # with pop_scale (literate_capacity, hired_cap, market_supply,
+    # home_town_population_estimate) rather than four independent numbers
+    # that could drift apart.
+    POP_SCALE_FLOOR_SHARE = declare(
+        "POP_SCALE_FLOOR_SHARE", 0.25, kind="temporary_heuristic",
+        unit="fraction of the reference labour market",
+        source=None, confidence="D",
+        why="Even the smallest civilisation this game starts (pop_scale "
+            "near zero) is assumed to keep a quarter of Rome's own "
+            "reference town's labour-market depth - a floor so a small "
+            "society is diminished, not annihilated. Tuned, not measured: "
+            "a real figure would come from how town size actually relates "
+            "to specialist-trade depth, which this engine does not model.")
+    POP_SCALE_VARIABLE_SHARE = declare(
+        "POP_SCALE_VARIABLE_SHARE", 0.75, kind="temporary_heuristic",
+        unit="fraction of the reference labour market, scaled by pop_scale",
+        source=None, confidence="D",
+        why="The remaining three quarters of market depth that DOES scale "
+            "with pop_scale, so a full-size (pop_scale=1.0) civilisation "
+            "sees the whole reference figure and a shrunken one sees "
+            "proportionately less of it. Paired with POP_SCALE_FLOOR_SHARE, "
+            "which the two are tuned to sum to 1.0 with.")
+    SCHOLAR_MARKET_SHARE = declare(
+        "SCHOLAR_MARKET_SHARE", 0.35, kind="temporary_heuristic",
+        unit="fraction of hired_hours_cap_base", source=None, confidence="D",
+        why="What share of the abstracted labour-market pool a scholar-"
+            "family trade can draw on before literacy narrows it further - "
+            "literate men are a small fraction of anywhere. Tuned to make "
+            "the pre-literacy scholar ceiling feel like a real but tight "
+            "wall; a real figure needs an occupational census this project "
+            "does not have (see TRADE_DENSITY's own comment on the same "
+            "gap for other trades).")
+    LITERATE_CAPACITY_FLOOR = declare(
+        "LITERATE_CAPACITY_FLOOR", 1.5, kind="temporary_heuristic",
+        unit="people", source=None, confidence="D",
+        why="A literate trade's hiring ceiling is ADDED to, not maxed "
+            "with, this floor, so a society with almost no literate pool "
+            "(Viking-age Scandinavia's rune-carvers and Latin-reading "
+            "priests) still has SOMEONE findable rather than a ceiling "
+            "that rounds to nobody. The rune-carver and the priest are "
+            "always there; this is what makes that true numerically. "
+            "Picked so the floor is real without swallowing the signal "
+            "literacy_factor is supposed to carry (see this function's "
+            "own docstring on why max() broke the mechanism for Norse).")
 
     def literate_capacity(self, trade):
         """The most people this society's literacy will EVER let you have in
@@ -123,7 +210,7 @@ class LabourMixin:
         FOR `scholar` ONLY, THIS IS NOT THE WHOLE WALL. A player who typed
         `hire scholar 12` was refused at 5.9, "ever, at any price" - and
         auto_hire, forty years later with the same civilisation, held 146.4
-        scholars, because step() smoothed self.scholars toward
+        scholars, because step() smoothed self.household.scholars toward
         staff_capacity()'s institutional ceiling directly and never once
         called hire() or read this function. Fixing the bypass (see step(),
         core.py) without fixing the number it now has to respect would have
@@ -151,8 +238,9 @@ class LabourMixin:
         """
         if trade not in self.LITERATE_TRADES:
             return float("inf")
-        base = self.cfg["hired_hours_cap_base"] * (0.25 + 0.75 * min(1.0, self.pop_scale))
-        people = base * 0.35 / self.HOURS_PER_PERSON_YEAR
+        base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
+                                                     + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        people = base * self.SCHOLAR_MARKET_SHARE / self.HOURS_PER_PERSON_YEAR
         # A FLOOR OF TWO, because the unfloored number said something false.
         # Norse elite literacy is a sixth of Rome's, which took this ceiling to
         # 0.2 people: not "scarce" but "there is no such person in Scandinavia,
@@ -172,14 +260,14 @@ class LabourMixin:
         # exists to matter for. A floor that swallows the signal is worse than
         # no floor. The rune-carver and the priest are always findable; the POOL
         # on top of them is what literacy buys, and it is what teaching moves.
-        cap = 1.5 + people * self.literacy_factor(trade)
+        cap = self.LITERATE_CAPACITY_FLOOR + people * self.literacy_factor(trade)
         if trade == "scholar":
             # THE SAME POOL auto_hire ALREADY TRUSTED. staff_capacity()'s `sc`
             # is schools, academies, patrons and the industrial cascade that
             # trains scholars outright and carries their keep on the
             # institution's own upkeep (see _grant_staff) - it is not a second,
             # looser estimate of the same thing, it is the number step() was
-            # already smoothing self.scholars toward before this function's
+            # already smoothing self.household.scholars toward before this function's
             # cap ever got in the way. Zero with no such institution running,
             # which is why a fresh household still sees exactly the
             # market-share figure above and no more.
@@ -236,9 +324,9 @@ class LabourMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        pending = sum(row[3] for row in self.training
+        pending = sum(row[3] for row in self.household.training
                       if len(row) > 2 and row[2] == trade)
-        return self.employees.get(trade, 0.0) + pending
+        return self.household.employees.get(trade, 0.0) + pending
 
     # ---- the market responds to demand, and to supply ----------------------
     # FINDINGS_ROUND2 section R: market_pressure already does this for slaves
@@ -249,28 +337,59 @@ class LabourMixin:
     # a year in step(), which lives in core.py, so nothing outside this file
     # has to know this exists). 0.6x a year, the same rate market_pressure
     # decays at (0.55, near enough) - mostly gone in three years.
+    LABOUR_PRESSURE_DECAY_RATE = declare(
+        "LABOUR_PRESSURE_DECAY_RATE", 0.6, kind="temporary_heuristic",
+        unit="fraction of remembered pressure surviving per year",
+        source=None, confidence="D",
+        why="How fast a burst of recent hiring or commissioning stops "
+            "moving the price of a trade - the same rate this file's own "
+            "comment says market_pressure decays at for slaves (0.55, "
+            "'near enough'), reused for labour rather than fitted "
+            "independently. Mostly gone in three years; a real figure "
+            "would come from how fast a local labour market actually "
+            "recovers from a demand shock, which nothing here measures.")
+
     def labour_pressure(self, trade):
-        rec = getattr(self, "_labour_pressure", None)
+        rec = getattr(self.household, "_labour_pressure", None)
         rec = rec.get(trade) if rec else None
         if not rec:
             return 0.0
-        hours, yr = rec
-        age = max(0.0, self.year - yr)
-        return hours * (0.6 ** age)
+        hours, year = rec
+        age = max(0.0, self.year - year)
+        return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def _add_labour_pressure(self, trade, hours):
-        d = getattr(self, "_labour_pressure", None)
-        if d is None:
-            d = self._labour_pressure = {}
-        d[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
+        pressures = getattr(self.household, "_labour_pressure", None)
+        if pressures is None:
+            pressures = self.household._labour_pressure = {}
+        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
+
+    LABOUR_PRESSURE_SHARE_CAP = declare(
+        "LABOUR_PRESSURE_SHARE_CAP", 1.5, kind="temporary_heuristic",
+        unit="dimensionless (pressure / market_supply)",
+        source=None, confidence="D",
+        why="Caps how much of the price-pressure curve a single burst of "
+            "hiring can reach, so leaning on a trade harder and harder does "
+            "not send its price to infinity. The curve shape (saturating, "
+            "not linear) is a real claim about markets; where exactly it "
+            "saturates is tuned.")
+    LABOUR_PRICE_PRESSURE_COEFFICIENT = declare(
+        "LABOUR_PRICE_PRESSURE_COEFFICIENT", 0.9, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="How much a fully-leaned-on trade's price roughly doubles by: "
+            "at share=1.0 this term alone adds 0.9 to the multiplier. "
+            "material_price_factor uses the identical curve for the same "
+            "reason (see this function's own docstring); the coefficient "
+            "itself is tuned to feel like a real but survivable premium, "
+            "not fitted to an observed labour-market price response.")
 
     def _labour_price_factor_from(self, pressure, supply):
         """The one curve behind labour_price_factor - split out so a forecast
         can share it exactly rather than recomputing it (see
         labour_price_factor_after_hiring)."""
         supply = max(1.0, supply)
-        share = min(1.5, pressure / supply)
-        return 1.0 + 0.9 * share * share
+        share = min(self.LABOUR_PRESSURE_SHARE_CAP, pressure / supply)
+        return 1.0 + self.LABOUR_PRICE_PRESSURE_COEFFICIENT * share * share
 
     def labour_price_factor(self, trade):
         """What hiring, commissioning or keeping MORE of this trade costs
@@ -316,26 +435,106 @@ class LabourMixin:
         if n <= 0:
             return self.labour_price_factor(trade)
         add_hours = n * self.HOURS_PER_PERSON_YEAR
-        before = self.employees.get(trade, 0.0)
-        self.employees[trade] = before + n
+        before = self.household.employees.get(trade, 0.0)
+        self.household.employees[trade] = before + n
         try:
             supply_after = self.market_supply(trade)
         finally:
             if before:
-                self.employees[trade] = before
+                self.household.employees[trade] = before
             else:
-                self.employees.pop(trade, None)
+                self.household.employees.pop(trade, None)
         pressure_after = self.labour_pressure(trade) + add_hours
         return self._labour_price_factor_from(pressure_after, supply_after)
 
     # What each of these adds to the CEILING on people, taken from
     # staff_capacity below so the advice and the arithmetic cannot drift apart.
+    # THESE ARE THE SAME NUMBERS AS STAFF_CAPACITY_SOURCES's own artisan (`ar`)
+    # column below, for every node the two tables share, kept as INT here
+    # (whole household places, for "%d" advice text) rather than the float
+    # STAFF_CAPACITY_SOURCES needs for its own unit-scaled arithmetic - two
+    # declared names per figure rather than one, so a rename or a cast can
+    # never silently turn a place count into a fraction of one.
+    _ROOM_SOURCES_WHY = (
+        "Household places this institution adds to the hiring/teaching "
+        "ceiling, read off the same design pass as STAFF_CAPACITY_SOURCES's "
+        "artisan column (see that table's own _why) - not an independent "
+        "figure, and not derived from anything physical: a real answer "
+        "would come from how many people a workshop, a school or a furnace "
+        "of a given real size actually employs and supervises.")
+    ROOM_PLACES_WORKSHOP_FIRST = declare(
+        "ROOM_PLACES_WORKSHOP_FIRST", 6, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_FREEDMAN_STAFF = declare(
+        "ROOM_PLACES_FREEDMAN_STAFF", 10, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_SCHOOL_FOUNDED = declare(
+        "ROOM_PLACES_SCHOOL_FOUNDED", 12, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_PATRON_SENATORIAL = declare(
+        "ROOM_PLACES_PATRON_SENATORIAL", 6, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_ENDOWMENT_LAND = declare(
+        "ROOM_PLACES_ENDOWMENT_LAND", 8, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_PATRON_IMPERIAL = declare(
+        "ROOM_PLACES_PATRON_IMPERIAL", 50, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_ACADEMY_NETWORK = declare(
+        "ROOM_PLACES_ACADEMY_NETWORK", 50, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_INTERCHANGEABLE_PARTS = declare(
+        "ROOM_PLACES_INTERCHANGEABLE_PARTS", 40, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_CRUCIBLE_STEEL = declare(
+        "ROOM_PLACES_CRUCIBLE_STEEL", 12, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_BLAST_FURNACE = declare(
+        "ROOM_PLACES_BLAST_FURNACE", 15, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_TELEGRAPH_ELECTRIC = declare(
+        "ROOM_PLACES_TELEGRAPH_ELECTRIC", 25, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_STEAM_HIGH_PRESSURE = declare(
+        "ROOM_PLACES_STEAM_HIGH_PRESSURE", 45, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_MET_OPEN_HEARTH_FURNACE = declare(
+        "ROOM_PLACES_MET_OPEN_HEARTH_FURNACE", 65, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_RAILWAY = declare(
+        "ROOM_PLACES_RAILWAY", 95, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
+    ROOM_PLACES_POWER_GRID = declare(
+        "ROOM_PLACES_POWER_GRID", 130, kind="temporary_heuristic",
+        unit="household places", source=None, confidence="D",
+        why=_ROOM_SOURCES_WHY)
     ROOM_SOURCES = (
-        ("workshop_first", 6), ("freedman_staff", 10), ("school_founded", 12),
-        ("patron_senatorial", 6), ("endowment_land", 8), ("patron_imperial", 50),
-        ("academy_network", 50), ("interchangeable_parts", 40),
-        ("crucible_steel", 12), ("blast_furnace", 15),
-        ("telegraph_electric", 25), ("steam_high_pressure", 45),
+        ("workshop_first", ROOM_PLACES_WORKSHOP_FIRST),
+        ("freedman_staff", ROOM_PLACES_FREEDMAN_STAFF),
+        ("school_founded", ROOM_PLACES_SCHOOL_FOUNDED),
+        ("patron_senatorial", ROOM_PLACES_PATRON_SENATORIAL),
+        ("endowment_land", ROOM_PLACES_ENDOWMENT_LAND),
+        ("patron_imperial", ROOM_PLACES_PATRON_IMPERIAL),
+        ("academy_network", ROOM_PLACES_ACADEMY_NETWORK),
+        ("interchangeable_parts", ROOM_PLACES_INTERCHANGEABLE_PARTS),
+        ("crucible_steel", ROOM_PLACES_CRUCIBLE_STEEL),
+        ("blast_furnace", ROOM_PLACES_BLAST_FURNACE),
+        ("telegraph_electric", ROOM_PLACES_TELEGRAPH_ELECTRIC),
+        ("steam_high_pressure", ROOM_PLACES_STEAM_HIGH_PRESSURE),
         # met_open_hearth_furnace, NOT "bessemer_openhearth" - same stale id
         # STAFF_CAPACITY_SOURCES carried below until it was corrected there;
         # this second table was not updated in the same pass, so `k in
@@ -343,7 +542,9 @@ class LabourMixin:
         # function gives and the sixty-five places an open-hearth furnace is
         # actually worth (see staff_capacity(), which DOES use the right id)
         # were never once offered as a reason to build or reopen one.
-        ("met_open_hearth_furnace", 65), ("railway", 95), ("power_grid", 130),
+        ("met_open_hearth_furnace", ROOM_PLACES_MET_OPEN_HEARTH_FURNACE),
+        ("railway", ROOM_PLACES_RAILWAY),
+        ("power_grid", ROOM_PLACES_POWER_GRID),
     )
     # fin_trial_balance, fin_company_town and fin_chain_store - the
     # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
@@ -380,30 +581,30 @@ class LabourMixin:
         # A CLOSED ROOM SOURCE IS NOT A MISSING ONE. staff_capacity() already
         # drops a source's places the moment its venture is not running (see
         # STAFF_CAPACITY_SOURCES's must_be_running), and the advice below used
-        # to filter only on `k not in self.done` - so a school built, then
+        # to filter only on `k not in self.household.done` - so a school built, then
         # shut for want of a supervisor, vanished from this text entirely: not
         # counted (correctly), and never named as the cheapest way back,
         # either. A player who hit the ceiling it had been holding up was
         # told to build endowment_land or court an imperial patron instead of
         # simply reopening what they already owned.
-        reopen = [(k, add) for k, add in self.ROOM_SOURCES
-                  if k in self.done and k in self.nodes and k not in self.operating
-                  and self.is_venture(k)]
+        reopen = [(node_id, add) for node_id, add in self.ROOM_SOURCES
+                  if node_id in self.household.done and node_id in self.nodes and node_id not in self.household.operating
+                  and self.is_venture(node_id)]
         reopen.sort(key=lambda kv: -kv[1])
-        want = [(k, add) for k, add in self.ROOM_SOURCES
-                if k not in self.done and k in self.nodes
-                and self.is_visible(k)]
+        want = [(node_id, add) for node_id, add in self.ROOM_SOURCES
+                if node_id not in self.household.done and node_id in self.nodes
+                and self.is_visible(node_id)]
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
         def _distance(k):
-            return len(closure(self.nodes, k) - self.done)
+            return len(closure(self.nodes, k) - self.household.done)
         want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
              "building anything else. "
-             % (" and ".join("%s (+%d)" % (k, a) for k, a in reopen[:2]),
+             % (" and ".join("%s (+%d)" % (node_id, places) for node_id, places in reopen[:2]),
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
         if not want:
@@ -414,11 +615,11 @@ class LabourMixin:
             return ("Room comes from institutions and heavy industry, and you "
                     "have every one of them this society offers; what is left "
                     "grows on its own as they run.")
-        _now = [(k, a) for k, a in want if self.start_reason(k)[0]]
+        _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id)[0]]
         return ("Room is not bought, it is built: %s%s. Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
                 % (_reopen_bit,
-                   "; ".join("%s (+%d places)" % (k, a) for k, a in want[:3]),
+                   "; ".join("%s (+%d places)" % (node_id, places) for node_id, places in want[:3]),
                    "" if _now else " None is startable today; they are listed "
                                    "nearest first, so the first is what to work "
                                    "towards."))
@@ -443,29 +644,167 @@ class LabourMixin:
     # when the concern does. bessemer_openhearth is the exception: a society
     # that has learned to make steel this way does not forget the men it
     # trained if one works closes.
+    # Scholars/artisans/directors each institution trains outright, once
+    # running - the raw figures behind STAFF_CAPACITY_SOURCES below, pulled
+    # into named declarations so the table's own numbers carry provenance.
+    # None of these is derived from anything physical (a real school's
+    # actual graduation rate, a real patron's actual household); each is a
+    # design-balance figure sized so the tree's own pacing (a school by
+    # year N, an academy network by year M) feels achievable, which is
+    # exactly the shape CLAUDE.md 3.4 calls a labelled heuristic rather
+    # than a violation - nothing here stands in for a historical OUTCOME
+    # (a wage, a price, an army size), only for an untouched mechanism
+    # (how fast an institution actually trains people).
+    _STAFF_CAPACITY_WHY = (
+        "One institution's contribution to the scholars/artisans/directors "
+        "ceiling in STAFF_CAPACITY_SOURCES, once running. Sized for game "
+        "pacing against this tree's own calendar, not measured from any "
+        "real institution's actual output; see that table's own surrounding "
+        "comments for the specific history behind figures that were found "
+        "wrong (met_open_hearth_furnace's stale id, fin_societas kept out, "
+        "power_grid's own size).")
+    STAFF_SCHOLARS_SCHOOL_FOUNDED = declare(
+        "STAFF_SCHOLARS_SCHOOL_FOUNDED", 12.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_COLLEGIUM_LICENSED = declare(
+        "STAFF_SCHOLARS_COLLEGIUM_LICENSED", 3.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_PATRON_SENATORIAL = declare(
+        "STAFF_SCHOLARS_PATRON_SENATORIAL", 4.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_PATRON_IMPERIAL = declare(
+        "STAFF_SCHOLARS_PATRON_IMPERIAL", 14.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_ENDOWMENT_LAND = declare(
+        "STAFF_SCHOLARS_ENDOWMENT_LAND", 6.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_ACADEMY_NETWORK = declare(
+        "STAFF_SCHOLARS_ACADEMY_NETWORK", 40.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_CORPUS_DISPERSED = declare(
+        "STAFF_SCHOLARS_CORPUS_DISPERSED", 8.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_INTERCHANGEABLE_PARTS = declare(
+        "STAFF_SCHOLARS_INTERCHANGEABLE_PARTS", 4.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_TELEGRAPH_ELECTRIC = declare(
+        "STAFF_SCHOLARS_TELEGRAPH_ELECTRIC", 6.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE = declare(
+        "STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE", 6.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_RAILWAY = declare(
+        "STAFF_SCHOLARS_RAILWAY", 8.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_SCHOLARS_POWER_GRID = declare(
+        "STAFF_SCHOLARS_POWER_GRID", 45.0, kind="temporary_heuristic",
+        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_WORKSHOP_FIRST = declare(
+        "STAFF_ARTISANS_WORKSHOP_FIRST", 6.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_FREEDMAN_STAFF = declare(
+        "STAFF_ARTISANS_FREEDMAN_STAFF", 10.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_SCHOOL_FOUNDED = declare(
+        "STAFF_ARTISANS_SCHOOL_FOUNDED", 12.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_PATRON_SENATORIAL = declare(
+        "STAFF_ARTISANS_PATRON_SENATORIAL", 6.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_PATRON_IMPERIAL = declare(
+        "STAFF_ARTISANS_PATRON_IMPERIAL", 50.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_ENDOWMENT_LAND = declare(
+        "STAFF_ARTISANS_ENDOWMENT_LAND", 8.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_ACADEMY_NETWORK = declare(
+        "STAFF_ARTISANS_ACADEMY_NETWORK", 50.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_INTERCHANGEABLE_PARTS = declare(
+        "STAFF_ARTISANS_INTERCHANGEABLE_PARTS", 40.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_CRUCIBLE_STEEL = declare(
+        "STAFF_ARTISANS_CRUCIBLE_STEEL", 12.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_BLAST_FURNACE = declare(
+        "STAFF_ARTISANS_BLAST_FURNACE", 15.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_TELEGRAPH_ELECTRIC = declare(
+        "STAFF_ARTISANS_TELEGRAPH_ELECTRIC", 25.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_STEAM_HIGH_PRESSURE = declare(
+        "STAFF_ARTISANS_STEAM_HIGH_PRESSURE", 45.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE = declare(
+        "STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE", 65.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_RAILWAY = declare(
+        "STAFF_ARTISANS_RAILWAY", 95.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_POWER_GRID = declare(
+        "STAFF_ARTISANS_POWER_GRID", 130.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_SCHOOL_FOUNDED = declare(
+        "STAFF_DIRECTORS_SCHOOL_FOUNDED", 2.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_PATRON_IMPERIAL = declare(
+        "STAFF_DIRECTORS_PATRON_IMPERIAL", 2.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_ENDOWMENT_LAND = declare(
+        "STAFF_DIRECTORS_ENDOWMENT_LAND", 1.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_ACADEMY_NETWORK = declare(
+        "STAFF_DIRECTORS_ACADEMY_NETWORK", 6.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_CORPUS_DISPERSED = declare(
+        "STAFF_DIRECTORS_CORPUS_DISPERSED", 1.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_POWER_GRID = declare(
+        "STAFF_DIRECTORS_POWER_GRID", 6.0, kind="temporary_heuristic",
+        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_FIN_TRIAL_BALANCE = declare(
+        "STAFF_ARTISANS_FIN_TRIAL_BALANCE", 4.0, kind="temporary_heuristic",
+        unit="artisans (clerks)", source=None, confidence="D",
+        why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_FIN_TRIAL_BALANCE = declare(
+        "STAFF_DIRECTORS_FIN_TRIAL_BALANCE", 2.0, kind="temporary_heuristic",
+        unit="directors (deputies)", source=None, confidence="D",
+        why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_FIN_COMPANY_TOWN = declare(
+        "STAFF_ARTISANS_FIN_COMPANY_TOWN", 20.0, kind="temporary_heuristic",
+        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
+    STAFF_ARTISANS_FIN_CHAIN_STORE = declare(
+        "STAFF_ARTISANS_FIN_CHAIN_STORE", 30.0, kind="temporary_heuristic",
+        unit="artisans (branch staff)", source=None, confidence="D",
+        why=_STAFF_CAPACITY_WHY)
+    STAFF_DIRECTORS_FIN_CHAIN_STORE = declare(
+        "STAFF_DIRECTORS_FIN_CHAIN_STORE", 4.0, kind="temporary_heuristic",
+        unit="directors (branch managers)", source=None, confidence="D",
+        why=_STAFF_CAPACITY_WHY)
+
     STAFF_CAPACITY_SOURCES = (
-        ("workshop_first",         0.0,   6.0, 0.0, True,  True),
-        ("freedman_staff",         0.0,  10.0, 0.0, True,  True),
-        ("school_founded",        12.0,  12.0, 2.0, True,  True),
-        ("collegium_licensed",     3.0,   0.0, 0.0, True,  True),
-        ("patron_senatorial",      4.0,   6.0, 0.0, False, True),
-        ("patron_imperial",       14.0,  50.0, 2.0, False, True),
-        ("endowment_land",         6.0,   8.0, 1.0, False, True),
-        ("academy_network",       40.0,  50.0, 6.0, True,  True),
-        ("corpus_dispersed",       8.0,   0.0, 1.0, False, True),
-        ("interchangeable_parts",  4.0,  40.0, 0.0, False, True),
-        ("crucible_steel",         0.0,  12.0, 0.0, False, True),
-        ("blast_furnace",          0.0,  15.0, 0.0, False, True),
-        ("telegraph_electric",     6.0,  25.0, 0.0, False, True),
-        ("steam_high_pressure",    0.0,  45.0, 0.0, False, True),
+        ("workshop_first",         0.0,   STAFF_ARTISANS_WORKSHOP_FIRST, 0.0, True,  True),
+        ("freedman_staff",         0.0,   STAFF_ARTISANS_FREEDMAN_STAFF, 0.0, True,  True),
+        ("school_founded",        STAFF_SCHOLARS_SCHOOL_FOUNDED, STAFF_ARTISANS_SCHOOL_FOUNDED, STAFF_DIRECTORS_SCHOOL_FOUNDED, True,  True),
+        ("collegium_licensed",     STAFF_SCHOLARS_COLLEGIUM_LICENSED, 0.0, 0.0, True,  True),
+        ("patron_senatorial",      STAFF_SCHOLARS_PATRON_SENATORIAL, STAFF_ARTISANS_PATRON_SENATORIAL, 0.0, False, True),
+        ("patron_imperial",       STAFF_SCHOLARS_PATRON_IMPERIAL, STAFF_ARTISANS_PATRON_IMPERIAL, STAFF_DIRECTORS_PATRON_IMPERIAL, False, True),
+        ("endowment_land",         STAFF_SCHOLARS_ENDOWMENT_LAND, STAFF_ARTISANS_ENDOWMENT_LAND, STAFF_DIRECTORS_ENDOWMENT_LAND, False, True),
+        ("academy_network",       STAFF_SCHOLARS_ACADEMY_NETWORK, STAFF_ARTISANS_ACADEMY_NETWORK, STAFF_DIRECTORS_ACADEMY_NETWORK, True,  True),
+        ("corpus_dispersed",       STAFF_SCHOLARS_CORPUS_DISPERSED, 0.0, STAFF_DIRECTORS_CORPUS_DISPERSED, False, True),
+        ("interchangeable_parts",  STAFF_SCHOLARS_INTERCHANGEABLE_PARTS, STAFF_ARTISANS_INTERCHANGEABLE_PARTS, 0.0, False, True),
+        ("crucible_steel",         0.0,   STAFF_ARTISANS_CRUCIBLE_STEEL, 0.0, False, True),
+        ("blast_furnace",          0.0,   STAFF_ARTISANS_BLAST_FURNACE, 0.0, False, True),
+        ("telegraph_electric",     STAFF_SCHOLARS_TELEGRAPH_ELECTRIC, STAFF_ARTISANS_TELEGRAPH_ELECTRIC, 0.0, False, True),
+        ("steam_high_pressure",    0.0,   STAFF_ARTISANS_STEAM_HIGH_PRESSURE, 0.0, False, True),
         # met_open_hearth_furnace, NOT "bessemer_openhearth", which is the id
         # this line carried for as long as it existed and which is not in the
         # tree: self.has() of a node that does not exist is False for ever, so
         # the sixty-five artisans the late game's biggest single training step
         # was supposed to hand over were never handed over once.
-        ("met_open_hearth_furnace", 6.0,  65.0, 0.0, False, False),
-        ("railway",                8.0,  95.0, 0.0, False, True),
-        ("power_grid",            45.0, 130.0, 6.0, False, True),
+        ("met_open_hearth_furnace", STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE, STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE, 0.0, False, False),
+        ("railway",                STAFF_SCHOLARS_RAILWAY, STAFF_ARTISANS_RAILWAY, 0.0, False, True),
+        ("power_grid",            STAFF_SCHOLARS_POWER_GRID, STAFF_ARTISANS_POWER_GRID, STAFF_DIRECTORS_POWER_GRID, False, True),
         # ORGANISATION, NOT INDUSTRY: the same question - "how many more
         # people can this household feed, house and oversee" - answered by
         # the tech tree's own finance/organisation branch
@@ -531,14 +870,14 @@ class LabourMixin:
         # effect lives in supervision_room() instead, where it reads as "one
         # more capable person to oversee with" rather than as a deputy the
         # accounting has not yet been invented to supervise.
-        ("fin_trial_balance",      0.0,   4.0, 2.0, False, False),
+        ("fin_trial_balance",      0.0,   STAFF_ARTISANS_FIN_TRIAL_BALANCE, STAFF_DIRECTORS_FIN_TRIAL_BALANCE, False, False),
         # fin_company_town ("Employer provides housing, food, and goods to
         # workers... Highly profitable but politically dangerous"): the
         # housing half of "feed, house and oversee" bought outright, at the
         # going concern's own cost (it runs at a loss on the books, like a
         # school, which is why it belongs in CAPABILITY_INSTITUTIONS rather
         # than being shed as an ordinary mistake - see economy.py).
-        ("fin_company_town",       0.0,  20.0, 0.0, False, True),
+        ("fin_company_town",       0.0,  STAFF_ARTISANS_FIN_COMPANY_TOWN, 0.0, False, True),
         # fin_chain_store ("operates identical stores in multiple cities,
         # buying centrally and selling retail in each location... requires
         # sophisticated management and accounting"): REACH, named in the
@@ -550,8 +889,78 @@ class LabourMixin:
         # not a second schoolroom. Its branch managers are the `di` term:
         # layers of supervision a founder's own two thousand hours a year
         # could never provide alone.
-        ("fin_chain_store",        0.0,  30.0, 4.0, True,  True),
+        ("fin_chain_store",        0.0,  STAFF_ARTISANS_FIN_CHAIN_STORE, STAFF_DIRECTORS_FIN_CHAIN_STORE, True,  True),
     )
+
+    STAFF_CAPITAL_INCOME_RATE = declare(
+        "STAFF_CAPITAL_INCOME_RATE", 0.06, kind="temporary_heuristic",
+        unit="fraction of capital per year", source=None, confidence="D",
+        why="Idle capital is treated as though it earns this much a year "
+            "toward what a household can afford to pay staff, standing in "
+            "for a real return on capital (lending it out, investing it) "
+            "this engine does not model at the household level. Not "
+            "derived from DEBT_BASE_RATE or any other rate elsewhere in "
+            "the engine; picked as a plausible order of magnitude.")
+    STAFF_BUDGET_SHARE_OF_SPARE = declare(
+        "STAFF_BUDGET_SHARE_OF_SPARE", 0.40, kind="temporary_heuristic",
+        unit="fraction of true surplus", source=None, confidence="D",
+        why="Of the surplus actually left after upkeep and living costs, "
+            "the share a household is willing to commit to new staff in a "
+            "single year rather than holding back - a caution constant, "
+            "not a measured savings rate.")
+    STAFF_ANNUAL_WAGE_REFERENCE = declare(
+        "STAFF_ANNUAL_WAGE_REFERENCE", 420.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=wage_index=1",
+        source=None, confidence="D",
+        why="A reference annual wage used to convert an affordability "
+            "budget in denarii into a headcount, standing in for the "
+            "actual mix of trades a household would hire into - a rough "
+            "blended figure, not any one trade's real annual_wage().")
+    STAFF_EXTRA_HEADROOM_WEIGHT = declare(
+        "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="How much more expensive supervision_room()'s extra headroom "
+            "is treated as, relative to an institutional scholar or "
+            "artisan, when the same affordability budget has to cover "
+            "both. Tuned so the headroom hiring does not silently crowd "
+            "out institutional staffing or the other way round; not "
+            "measured against any real relative cost of the two.")
+    STAFF_POP_SCALE_FLOOR = declare(
+        "STAFF_POP_SCALE_FLOOR", 0.45, kind="temporary_heuristic",
+        unit="fraction of the institutional ceiling", source=None,
+        confidence="D",
+        why="Even the smallest civilisation this game starts keeps this "
+            "much of the institutional staffing ceiling, so a small "
+            "society is diminished rather than unable to staff anything "
+            "at all - the softening this function's own comment describes "
+            "after 'a first pass made every small civilization fail "
+            "outright'. Tuned to that observed failure, not measured.")
+    STAFF_POP_SCALE_VARIABLE = declare(
+        "STAFF_POP_SCALE_VARIABLE", 0.55, kind="temporary_heuristic",
+        unit="fraction of the institutional ceiling, scaled by pop_scale",
+        source=None, confidence="D",
+        why="The remaining share of the institutional ceiling that DOES "
+            "grow with population, paired with STAFF_POP_SCALE_FLOOR (the "
+            "two are tuned to sum to 1.0).")
+    STAFF_POP_SCALE_EXPONENT = declare(
+        "STAFF_POP_SCALE_EXPONENT", 0.35, kind="temporary_heuristic",
+        unit="dimensionless exponent on pop_scale", source=None,
+        confidence="D",
+        why="How sub-linearly the population-scaled share of staffing "
+            "capacity grows with pop_scale - a civilisation of 4.5 million "
+            "can eventually staff what one of 65 million can, just more "
+            "slowly, rather than never. The sub-linear SHAPE is the real "
+            "claim (bigger societies are not proportionately easier to "
+            "staff from); the exact exponent is tuned, not fitted.")
+    DIRECTOR_SCALE_HEADROOM = declare(
+        "DIRECTOR_SCALE_HEADROOM", 1.3, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="Directors are allowed to reach a slightly higher fraction of "
+            "their institutional ceiling than scholars/artisans do at the "
+            "same affordability `scale`, on the theory that a household "
+            "stretched thin still prioritises the deputies who let it run "
+            "concerns at a distance. Tuned headroom, not a measured "
+            "priority order.")
 
     def staff_capacity(self):
         """How many trained people the institution can support.
@@ -565,7 +974,7 @@ class LabourMixin:
         # is a thing you do rather than a staff of four you are handed on
         # arrival and never asked for.
         base_sc, base_ar = 0.0, 0.0
-        sc = ar = di = 0.0
+        scholars = artisans = directors = 0.0
         # A SECOND SCHOOL TRAINS A SECOND SCHOOL'S WORTH OF SCHOLARS. Linear in
         # institution_units, which is 1.0 for a run that never founds more than
         # the original single unit - exactly the constants below, unchanged -
@@ -584,10 +993,10 @@ class LabourMixin:
         for key, _sc, _ar, _di, scaled, must_run in self.STAFF_CAPACITY_SOURCES:
             if not (self.running(key) if must_run else self.has(key)):
                 continue
-            u = self.institution_units(key) if scaled else 1.0
-            sc += _sc * u
-            ar += _ar * u
-            di += _di * u
+            units = self.institution_units(key) if scaled else 1.0
+            scholars += _sc * units
+            artisans += _ar * units
+            directors += _di * units
         # LITERACY BOUNDS THE SCHOLAR CEILING. A school, an academy or an
         # imperial patron can only produce as many scholars as this society
         # has literate, propertied people to draw them from (literacy_factor
@@ -597,7 +1006,7 @@ class LabourMixin:
         # printing, schools and libraries raise literacy_elite
         # (apply_tech_effects, society.py) and widen it again as a run goes
         # on, which is the entire point of building them.
-        sc *= self.literacy_factor("scholar")
+        scholars *= self.literacy_factor("scholar")
         # you cannot keep staff you cannot pay
         # a famous school attracts students and patrons it did not have to pay for
         # WAGES ARE A REAL CHARGE NOW (see wage_bill), so this ceiling is no
@@ -619,9 +1028,10 @@ class LabourMixin:
         # anything: money already going to rent and to people you already
         # employ is not there to hire more people with.
         spare = max(0.0, (self.revenue() - self.upkeep() - self.living_cost())
-                    * self.rep_factor() + max(0.0, self.capital) * 0.06)
-        budget = spare * 0.40
-        afford = budget / (420.0 * self.price_index * self.wage_index)
+                    * self.rep_factor()
+                    + max(0.0, self.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
+        budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
+        afford = budget / (self.STAFF_ANNUAL_WAGE_REFERENCE * self.price_index * self.wage_index)
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It used to be
         # added with no affordability check of its own at all - this ceiling's
@@ -641,8 +1051,9 @@ class LabourMixin:
         # bondage ten steps later. The whole careful affordability calculation
         # above was undone by the floor beneath it: "grow the staff toward what
         # you can house and pay" has to be able to mean nobody.
-        scale = min(1.0, afford / max(1.0, sc + ar + extra * 1.35))
-        self._staff_scale = scale     # step() applies this to `extra` too
+        scale = min(1.0, afford / max(1.0, scholars + artisans
+                                      + extra * self.STAFF_EXTRA_HEADROOM_WEIGHT))
+        self.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.
@@ -650,9 +1061,49 @@ class LabourMixin:
         # A 4.5 million person society CAN eventually staff a semiconductor
         # programme, it just has to grow into it. Making that impossible was a
         # modelling error, not a finding.
-        pop = 0.45 + 0.55 * min(1.0, self.pop_scale ** 0.35)
-        return (base_sc + sc * scale * pop, base_ar + ar * scale * pop,
-                di * min(1.0, scale * 1.3) * pop)
+        pop = (self.STAFF_POP_SCALE_FLOOR
+               + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
+        return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
+                directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
+
+    _SUPERVISION_ROOM_WHY = (
+        "Household headroom (people a founder may oversee, distinct from "
+        "the institutional staff_capacity ceiling) this source is worth, "
+        "used identically by supervision_room() and by "
+        "supervision_room_from()'s own breakdown of it - one declared name "
+        "per source rather than the same literal written twice, so the "
+        "breakdown cannot drift from the total it explains. Tuned game "
+        "balance, not measured from anything: a real figure would come "
+        "from how many workers a person of a given period could actually "
+        "keep an eye on.")
+    SUPERVISION_ROOM_SELF = declare(
+        "SUPERVISION_ROOM_SELF", 6.0, kind="temporary_heuristic",
+        unit="people", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_PER_DIRECTOR_EXTRA = declare(
+        "SUPERVISION_ROOM_PER_DIRECTOR_EXTRA", 14.0, kind="temporary_heuristic",
+        unit="people per trained deputy", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_WORKSHOP_FIRST = declare(
+        "SUPERVISION_ROOM_WORKSHOP_FIRST", 6.0, kind="temporary_heuristic",
+        unit="people per unit", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_SCHOOL_FOUNDED = declare(
+        "SUPERVISION_ROOM_SCHOOL_FOUNDED", 10.0, kind="temporary_heuristic",
+        unit="people per unit", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_ACADEMY_NETWORK = declare(
+        "SUPERVISION_ROOM_ACADEMY_NETWORK", 30.0, kind="temporary_heuristic",
+        unit="people per unit", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_FIN_CHAIN_STORE = declare(
+        "SUPERVISION_ROOM_FIN_CHAIN_STORE", 20.0, kind="temporary_heuristic",
+        unit="people per unit", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
+    SUPERVISION_ROOM_FIN_SOCIETAS = declare(
+        "SUPERVISION_ROOM_FIN_SOCIETAS", 4.0, kind="temporary_heuristic",
+        unit="people", source=None, confidence="D",
+        why=_SUPERVISION_ROOM_WHY)
 
     def supervision_room(self):
         """People you can direct and pay BEYOND what your institutions train.
@@ -668,14 +1119,15 @@ class LabourMixin:
         this is the honest version of the same headroom. You hire them, you pay
         them every year, and you can only supervise so many.
         """
-        room = (6.0 + 14.0 * self.directors_extra
-                + max(0.0, getattr(self, "worker_housing_places", 0.0)))
+        room = (self.SUPERVISION_ROOM_SELF
+                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * self.household.directors_extra
+                + max(0.0, getattr(self.household, "worker_housing_places", 0.0)))
         if self.running("workshop_first"):
-            room += 6.0 * self.institution_units("workshop_first")
+            room += self.SUPERVISION_ROOM_WORKSHOP_FIRST * self.institution_units("workshop_first")
         if self.running("school_founded"):
-            room += 10.0 * self.institution_units("school_founded")
+            room += self.SUPERVISION_ROOM_SCHOOL_FOUNDED * self.institution_units("school_founded")
         if self.running("academy_network"):
-            room += 30.0 * self.institution_units("academy_network")
+            room += self.SUPERVISION_ROOM_ACADEMY_NETWORK * self.institution_units("academy_network")
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
         # in; fin_chain_store is the tree's own word for the thing that is not
@@ -689,7 +1141,7 @@ class LabourMixin:
         # whether the household can pay its clerks, not by whether a director
         # could in principle watch them.
         if self.running("fin_chain_store"):
-            room += 20.0 * self.institution_units("fin_chain_store")
+            room += self.SUPERVISION_ROOM_FIN_CHAIN_STORE * self.institution_units("fin_chain_store")
         # A PARTNER IS NOT ON YOUR PAYROLL, which is why a partnership belongs
         # in this headroom and not only in the institutional ceiling above.
         # (Headroom, not a free staff: hiring INTO it is still scaled by what
@@ -714,7 +1166,7 @@ class LabourMixin:
         # asymmetry is the point of the starting_techs list, not a side effect
         # of it to be routed around.
         if self.has("fin_societas"):
-            room += 4.0
+            room += self.SUPERVISION_ROOM_FIN_SOCIETAS
         return room
 
     def supervision_room_from(self):
@@ -731,31 +1183,80 @@ class LabourMixin:
         point of having five civilisations, and an advantage nobody can see
         is an advantage the player cannot reason about.
         """
-        rows = [{"source": "yourself", "people": 6.0,
+        rows = [{"source": "yourself", "people": self.SUPERVISION_ROOM_SELF,
                  "what_it_is": "what one person can keep an eye on"}]
-        if self.directors_extra > 0.005:
+        if self.household.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
-                         round(14.0 * self.directors_extra, 2),
+                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * self.household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
         for key, per, words in (
-                ("workshop_first", 6.0, "a place of your own to work in"),
-                ("school_founded", 10.0, "a school, and the people it keeps"),
-                ("academy_network", 30.0, "an academy network"),
-                ("fin_chain_store", 20.0, "branches in other towns")):
+                ("workshop_first", self.SUPERVISION_ROOM_WORKSHOP_FIRST, "a place of your own to work in"),
+                ("school_founded", self.SUPERVISION_ROOM_SCHOOL_FOUNDED, "a school, and the people it keeps"),
+                ("academy_network", self.SUPERVISION_ROOM_ACADEMY_NETWORK, "an academy network"),
+                ("fin_chain_store", self.SUPERVISION_ROOM_FIN_CHAIN_STORE, "branches in other towns")):
             if self.running(key):
                 rows.append({"source": key,
                              "people": round(per * self.institution_units(key), 2),
                              "what_it_is": words})
         if self.has("fin_societas"):
-            rows.append({"source": "fin_societas", "people": 4.0,
+            rows.append({"source": "fin_societas", "people": self.SUPERVISION_ROOM_FIN_SOCIETAS,
                          "what_it_is": "a partner who shares the watching, and "
                                        "whose own capital and attention are not "
                                        "on your payroll"})
         return rows
 
+    # THE SAME COEFFICIENTS market_supply() USES for identical formulas below
+    # - one declared name per figure rather than the literal written twice,
+    # so hired_cap()'s ceiling and market_supply()'s ceiling for the same
+    # institution can never silently drift apart.
+    HIRING_MULTIPLIER_EXPONENT = declare(
+        "HIRING_MULTIPLIER_EXPONENT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless exponent on institution_units", source=None,
+        confidence="D",
+        why="SQRT rather than linear scaling of an institution's hiring-"
+            "pool multiplier with how many units of it are founded - "
+            "diminishing returns on what a place trains, matching "
+            "institution_unit_cost's own diminishing-cost curve. Chosen "
+            "because unbounded compounding of several such multipliers "
+            "together multiplied hired_cap by roughly two orders of "
+            "magnitude in a traced Rome run (see this function's own "
+            "comment); the exponent itself is tuned to tame that, not "
+            "measured.")
+    SCHOOL_FOUNDED_HIRING_COEFFICIENT = declare(
+        "SCHOOL_FOUNDED_HIRING_COEFFICIENT", 1.0, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="How much a school widens the local hiring pool, at one unit: "
+            "cap *= 1 + this * units**HIRING_MULTIPLIER_EXPONENT. Tuned "
+            "game balance.")
+    FREEDMAN_STAFF_HIRING_COEFFICIENT = declare(
+        "FREEDMAN_STAFF_HIRING_COEFFICIENT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="As SCHOOL_FOUNDED_HIRING_COEFFICIENT, for a freedman staff, "
+            "smaller because it widens the pool less than a school does.")
+    ACADEMY_NETWORK_HIRING_COEFFICIENT = declare(
+        "ACADEMY_NETWORK_HIRING_COEFFICIENT", 1.5, kind="temporary_heuristic",
+        unit="dimensionless", source=None, confidence="D",
+        why="As SCHOOL_FOUNDED_HIRING_COEFFICIENT, for an academy network, "
+            "larger because it is a bigger, later institution.")
+    PATRON_IMPERIAL_HIRING_MULTIPLIER = declare(
+        "PATRON_IMPERIAL_HIRING_MULTIPLIER", 3.0, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="A flat tripling of the local hiring pool once an imperial "
+            "patron's name is behind you - a flat multiplier rather than a "
+            "unit-scaled one because there is only one imperial patron. "
+            "Tuned to make the patronage genuinely open doors, not "
+            "measured from any real patron's actual reach.")
+    INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER = declare(
+        "INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER", 1.5, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="Interchangeable parts widen who can be productively hired "
+            "(less need for a single all-round master craftsman), applied "
+            "as a flat half-again multiplier. Tuned, not measured.")
+
     def hired_cap(self):
         # a civilization of 1.5 million cannot staff what one of 65 million can
-        cap = self.cfg["hired_hours_cap_base"] * (0.25 + 0.75 * min(1.0, self.pop_scale))
+        cap = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
+                                                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
         # 1.0 + (mult - 1.0) * sqrt(units): exactly the old `cap *= mult` at
         # units 1.0 (a run that never expands sees the identical multiplier),
         # and SQRT rather than linear beyond that - because these multipliers
@@ -770,19 +1271,64 @@ class LabourMixin:
         # more people as the first did; a ninth does not teach nine times as
         # many as one did.
         if self.running("school_founded"):
-            cap *= 1.0 + 1.0 * self.institution_units("school_founded") ** 0.5
+            cap *= 1.0 + self.SCHOOL_FOUNDED_HIRING_COEFFICIENT * self.institution_units("school_founded") ** self.HIRING_MULTIPLIER_EXPONENT
         if self.running("freedman_staff"):
-            cap *= 1.0 + 0.5 * self.institution_units("freedman_staff") ** 0.5
-        if self.running("patron_imperial"):   cap *= 3.0
+            cap *= 1.0 + self.FREEDMAN_STAFF_HIRING_COEFFICIENT * self.institution_units("freedman_staff") ** self.HIRING_MULTIPLIER_EXPONENT
+        if self.running("patron_imperial"):   cap *= self.PATRON_IMPERIAL_HIRING_MULTIPLIER
         if self.running("academy_network"):
-            cap *= 1.0 + 1.5 * self.institution_units("academy_network") ** 0.5
-        if self.running("interchangeable_parts"): cap *= 1.5
+            cap *= 1.0 + self.ACADEMY_NETWORK_HIRING_COEFFICIENT * self.institution_units("academy_network") ** self.HIRING_MULTIPLIER_EXPONENT
+        if self.running("interchangeable_parts"): cap *= self.INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER
         return cap
 
     # ---- how a SOCIETY reacts to a TECHNOLOGY -------------------------------
-    STATE_WEIGHTS = {"infrastructure":0.5, "food":0.7, "medical":0.5,
-                     "luxury":0.1, "spectacle":0.1, "inexplicable":0.0,
-                     "status_threatening":-0.6, "weapon_democratising":-0.5}
+    STATE_WEIGHT_INFRASTRUCTURE = declare(
+        "STATE_WEIGHT_INFRASTRUCTURE", 0.5, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D",
+        why="How favourably the state views a technology tagged "
+            "'infrastructure', on the scale state_interest() combines "
+            "these weights with. Roughly ordered by plausible period "
+            "attitude (infrastructure and food welcomed, a status- or "
+            "weapon-democratising technology resisted) but the specific "
+            "magnitudes are tuned game balance, not derived from any "
+            "state's actual recorded policy.")
+    STATE_WEIGHT_FOOD = declare(
+        "STATE_WEIGHT_FOOD", 0.7, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHT_MEDICAL = declare(
+        "STATE_WEIGHT_MEDICAL", 0.5, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHT_LUXURY = declare(
+        "STATE_WEIGHT_LUXURY", 0.1, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHT_SPECTACLE = declare(
+        "STATE_WEIGHT_SPECTACLE", 0.1, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHT_INEXPLICABLE = declare(
+        "STATE_WEIGHT_INEXPLICABLE", 0.0, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D",
+        why="A technology the state has no framework to react to earns "
+            "neither favour nor suspicion by default. See "
+            "STATE_WEIGHT_INFRASTRUCTURE for the rest of this table.")
+    STATE_WEIGHT_STATUS_THREATENING = declare(
+        "STATE_WEIGHT_STATUS_THREATENING", -0.6, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHT_WEAPON_DEMOCRATISING = declare(
+        "STATE_WEIGHT_WEAPON_DEMOCRATISING", -0.5, kind="temporary_heuristic",
+        unit="dimensionless state-interest weight", source=None,
+        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
+    STATE_WEIGHTS = {"infrastructure": STATE_WEIGHT_INFRASTRUCTURE,
+                     "food": STATE_WEIGHT_FOOD, "medical": STATE_WEIGHT_MEDICAL,
+                     "luxury": STATE_WEIGHT_LUXURY, "spectacle": STATE_WEIGHT_SPECTACLE,
+                     "inexplicable": STATE_WEIGHT_INEXPLICABLE,
+                     "status_threatening": STATE_WEIGHT_STATUS_THREATENING,
+                     "weapon_democratising": STATE_WEIGHT_WEAPON_DEMOCRATISING}
 
     def _staff_advice(self, kind):
         """Name the remedy, not just the shortfall - and only remedies you could
@@ -803,13 +1349,13 @@ class LabourMixin:
             # multiplier via running(node), so a school built and then shut
             # for want of a supervisor stops widening the hiring pool exactly
             # as if it had never been built - and this advice, filtering on
-            # `node not in self.done`, fell silent about it rather than
+            # `node not in self.household.done`, fell silent about it rather than
             # naming the actual remedy. Reopening costs a supervisor, not a
             # second institution; say that first.
-            elif node in self.done and node not in self.operating and self.is_venture(node):
+            elif node in self.household.done and node not in self.household.operating and self.is_venture(node):
                 bits.append("reopen %s ('open %s') - you already built this; "
                             "it is only shut" % (node, node))
-            elif node not in self.done and self.is_visible(node):
+            elif node not in self.household.done and self.is_visible(node):
                 # NOT A CIRCLE. `why workshop_first` says it is blocked for want
                 # of artisans, and the advice on how to get artisans said "build
                 # workshop_first (you need somewhere for them to work)" - a play
@@ -820,9 +1366,9 @@ class LabourMixin:
                 # Asked DIRECTLY of the node's own requirement, never through
                 # start_reason - which calls this function, so the obvious
                 # version of this test recurses until the stack gives out.
-                _n = self.nodes[node]
-                _short = (_n["art"] > self.artisans + 1e-9 if kind == "artisans"
-                          else _n["sch"] > self.effective_scholars() + 1e-9)
+                _node = self.nodes[node]
+                _short = (_node["art"] > self.household.artisans + 1e-9 if kind == "artisans"
+                          else _node["sch"] > self.effective_scholars() + 1e-9)
                 if _short:
                     bits.append("build %s eventually (%s) - but it is itself "
                                 "waiting on %s, so hire or commission first"
@@ -832,6 +1378,21 @@ class LabourMixin:
         if not bits:
             return "wait: your existing institutions add %s each year." % kind
         return "To get more %s: %s." % (kind, "; ".join(bits[:3]))
+
+    WAGE_REPUTATION_BONUS_CAP = declare(
+        "WAGE_REPUTATION_BONUS_CAP", 0.5, kind="temporary_heuristic",
+        unit="fraction of the trade rate", source=None, confidence="D",
+        why="A well-known founder can earn up to half again the ordinary "
+            "trade rate for their own hours of wage labour, capped so "
+            "reputation cannot make wage labour arbitrarily lucrative. "
+            "Tuned game balance, not a measured wage premium for fame.")
+    WAGE_REPUTATION_SCALE = declare(
+        "WAGE_REPUTATION_SCALE", 200.0, kind="temporary_heuristic",
+        unit="reputation points per 100% of the bonus", source=None,
+        confidence="D",
+        why="How much reputation it takes to reach WAGE_REPUTATION_BONUS_"
+            "CAP's own ceiling. Tuned to REPUTATION_EASE_SCALE's own order "
+            "of magnitude (economy.py), not derived from anything.")
 
     def work_for_wages(self, trade, hours):
         """Do a job. For money. Like everybody else.
@@ -852,9 +1413,9 @@ class LabourMixin:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        w = WAGES.get(trade)
-        if w is None:
-            here = sorted(t for t in WAGES if self.trade_available(t))
+        wage_rate = WAGES.get(trade)
+        if wage_rate is None:
+            here = sorted(candidate_trade for candidate_trade in WAGES if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR.
         # A break tester earned wages as a chemist, an electrician and an
@@ -900,11 +1461,12 @@ class LabourMixin:
         # ran a 2.3x spread.
         rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
-               * (1.0 + min(0.5, self.reputation / 200.0)))
+               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
+                            self.household.reputation / self.WAGE_REPUTATION_SCALE)))
         before_practice = self.revenue()
-        self.capital += pay
-        self.wage_hours_this_year = getattr(self, "wage_hours_this_year", 0.0) + hours
-        self.wages_earned = getattr(self, "wages_earned", 0.0) + pay
+        self.household.capital += pay
+        self.household.wage_hours_this_year = getattr(self.household, "wage_hours_this_year", 0.0) + hours
+        self.household.wages_earned = getattr(self.household, "wages_earned", 0.0) + pay
         # SAY WHEN IT IS A BAD TRADE. Selling your hours costs you the practice
         # those same hours were running (see practice_attention), and for a
         # physician it is usually a loss: a tester measured a full year of
@@ -930,12 +1492,12 @@ class LabourMixin:
         _wanted = self.active_hours_still_wanted()
         if _wanted:
             _after = max(0.0, self.director_pool() - self.director_hours_committed())
-            _short = {kk: vv for kk, vv in _wanted.items() if vv > _after + 0.5}
+            _short = {trade_id: hours_wanted for trade_id, hours_wanted in _wanted.items() if hours_wanted > _after + 0.5}
             if _short:
                 _named = sorted(_short.items(), key=lambda kv: -kv[1])[:2]
                 _more = len(_short) - len(_named)
                 _bits = ["%s (wants about %.0f more of your hours this year)"
-                        % (kk, vv) for kk, vv in _named]
+                        % (trade_id, hours_wanted) for trade_id, hours_wanted in _named]
                 _starve = (
                     "this leaves only %.0f of your own hours for the rest of "
                     "the year, and %s: %s%s. Nothing is lost - what it does "
@@ -952,12 +1514,12 @@ class LabourMixin:
             # THE THREE NUMBERS HAVE TO SUBTRACT. Rounding each separately gave
             # "you earned 128 ... was worth 234 ... so this cost you 105", and
             # a break tester did the subtraction. Round first, then subtract.
-            _p, _l = round(pay), round(lost)
+            _paid, _lost = round(pay), round(lost)
             _msg = ("you earned %s, and the practice those hours were "
                     "running was worth %s a year - so this cost you %s. "
                     "Wage work is for when you have no practice to lose."
-                    % ("{:,.0f}".format(_p), "{:,.0f}".format(_l),
-                       "{:,.0f}".format(_l - _p)))
+                    % ("{:,.0f}".format(_paid), "{:,.0f}".format(_lost),
+                       "{:,.0f}".format(_lost - _paid)))
             if _starve:
                 _msg += " Also: " + _starve
             return pay, _msg
@@ -978,8 +1540,8 @@ class LabourMixin:
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for t, n in self.employees.items():
-            total += n * self.annual_wage(t)
+        for trade, count in self.household.employees.items():
+            total += count * self.annual_wage(trade)
         return total
 
     # Materials a worker must replace to remain in their trade. These are not
@@ -998,6 +1560,60 @@ class LabourMixin:
         "scribe": ("paper",), "smith": ("iron", "charcoal"),
     }
 
+    HOUSING_PRESSURE_START_OCCUPANCY = declare(
+        "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",
+        unit="fraction of supervision_room occupied", source=None,
+        confidence="D",
+        why="Housing pressure on wages begins only once this share of the "
+            "household's real places are occupied - a household with room "
+            "to spare pays no housing premium at all. Tuned threshold, not "
+            "measured from any real housing-market crowding curve.")
+    HOUSING_PRESSURE_BAND = declare(
+        "HOUSING_PRESSURE_BAND", 0.25, kind="temporary_heuristic",
+        unit="fraction of supervision_room", source=None, confidence="D",
+        why="How much further occupancy has to rise, past "
+            "HOUSING_PRESSURE_START_OCCUPANCY, before the housing premium "
+            "reaches its full HOUSING_PRESSURE_MAX_MARKUP - i.e. it is "
+            "fully saturated at 1.0 (completely full). Tuned, not "
+            "measured.")
+    HOUSING_PRESSURE_MAX_MARKUP = declare(
+        "HOUSING_PRESSURE_MAX_MARKUP", 0.4, kind="temporary_heuristic",
+        unit="fraction added to the housing cost factor", source=None,
+        confidence="D",
+        why="The most a fully-crowded household's housing cost factor can "
+            "rise by. Tuned game balance, not a measured rent response to "
+            "crowding.")
+    WAGE_SHARE_FOOD = declare(
+        "WAGE_SHARE_FOOD", 0.45, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D",
+        why="Subsistence food's assumed share of what a wage has to cover, "
+            "used to blend the endogenous food/housing/tool price factors "
+            "with the flat skill/difficulty premium into one multiplier on "
+            "the historical wage table. The four shares (this, WAGE_SHARE_"
+            "HOUSING, WAGE_SHARE_TOOLS, WAGE_SHARE_SKILL_DIFFICULTY) are "
+            "tuned to sum to 1.0 and to leave the weighted factor at "
+            "almost exactly 1.0 under neutral starting prices (see this "
+            "function's own docstring); a real breakdown would need actual "
+            "household-budget shares for a pre-modern worker, which this "
+            "project does not have.")
+    WAGE_SHARE_HOUSING = declare(
+        "WAGE_SHARE_HOUSING", 0.20, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D", why="See WAGE_SHARE_FOOD.")
+    WAGE_SHARE_TOOLS = declare(
+        "WAGE_SHARE_TOOLS", 0.10, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D", why="See WAGE_SHARE_FOOD.")
+    WAGE_SHARE_SKILL_AND_DIFFICULTY = declare(
+        "WAGE_SHARE_SKILL_AND_DIFFICULTY", 0.25, kind="temporary_heuristic",
+        unit="fraction of the wage-cost weighting", source=None,
+        confidence="D",
+        why="The fixed share of a wage that is skill, training, hazard and "
+            "bargaining position - the part the historical wage table "
+            "itself carries and that this endogenous model does not try "
+            "to re-derive. See WAGE_SHARE_FOOD for the rest of the split.")
+
     def wage_cost_factors(self, trade):
         """Endogenous food, housing and trade-tool multipliers for a wage.
 
@@ -1006,7 +1622,17 @@ class LabourMixin:
         jobs. Forty-five percent is subsistence food, twenty percent housing,
         ten percent tools/consumables, and twenty-five percent that fixed
         skill/difficulty premium. At neutral prices the weighted factor is
-        exactly 1.0, preserving the calibrated starting economy.
+        1.0 to within about a part in a million, preserving the calibrated
+        starting economy.
+
+        It is not EXACTLY 1.0, and the difference is the model working. The
+        tools term reads real market factors, and a society does not start
+        with an empty market: Rome's 223 inherited technologies already burn
+        charcoal, so charcoal opens the game carrying 5.0 t/yr of demand and
+        prices a hair above neutral. The smith's wage carries that hair. This
+        docstring claimed "exactly" for a long time, and the one check that
+        would have caught it happened to sit behind a stray sys.exit in
+        another test module and had never run.
         """
         food = self.essential_price_ratio()
         # Use structural places, not household_room(): that method includes
@@ -1016,18 +1642,30 @@ class LabourMixin:
         occupancy = self.headcount() / capacity
         # Housing pressure begins only when three quarters of the household's
         # real places are occupied; adding housing/capacity lowers it again.
-        housing = 1.0 + 0.4 * max(0.0, min(1.0, (occupancy - 0.75) / 0.25))
+        housing = 1.0 + self.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0,
+                        (occupancy - self.HOUSING_PRESSURE_START_OCCUPANCY) / self.HOUSING_PRESSURE_BAND))
         basket = self.TRADE_TOOL_BASKETS.get(trade, ())
-        tools = (sum(self.material_price_factor(m) for m in basket) / len(basket)
+        tools = (sum(self.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
-                "weighted": 0.45 * food + 0.20 * housing
-                            + 0.10 * tools + 0.25}
+                "weighted": self.WAGE_SHARE_FOOD * food + self.WAGE_SHARE_HOUSING * housing
+                            + self.WAGE_SHARE_TOOLS * tools + self.WAGE_SHARE_SKILL_AND_DIFFICULTY}
+
+    ANNUAL_WAGE_FALLBACK = declare(
+        "ANNUAL_WAGE_FALLBACK", 375.0, kind="temporary_heuristic",
+        unit="denarii/year at price_index=wage_index=1", source=None,
+        confidence="D",
+        why="What a trade with no entry of its own in ANNUAL_WAGE "
+            "(data.py) is assumed to be paid, so an unlisted trade still "
+            "gets a plausible wage rather than zero. A generic middling "
+            "figure, not an attested wage for any specific trade - every "
+            "trade this engine actually names has its own real ANNUAL_WAGE "
+            "entry; this is only reached for one that does not.")
 
     def annual_wage(self, trade, include_local_scarcity=True):
         """Current annual wage, derived from living costs and labour scarcity."""
-        base = ANNUAL_WAGE.get(trade, 375.0)
+        base = ANNUAL_WAGE.get(trade, self.ANNUAL_WAGE_FALLBACK)
         factors = self.wage_cost_factors(trade)
         local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
         return (base * factors["weighted"] * self.price_index
@@ -1035,7 +1673,37 @@ class LabourMixin:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return self.scholars + (1.0 if self.founder_alive else 0.0)
+        return self.household.scholars + (1.0 if self.founder_alive else 0.0)
+
+    def scholar_hands_available(self):
+        """Scholars you can actually put on a project this year: the ones on
+        your own staff, yourself, plus the ones whose time you have already
+        bought under contract.
+
+        THE SAME FIX craft_hands_available() GOT, ARRIVING LATE. That
+        function's own comment records the bug: a gate that read the payroll
+        alone, so work you had already paid an outside shop to do could not
+        satisfy the requirement - and the refusal's advice was to go and
+        commission it. `commission` could not unblock the gate that
+        recommended commission.
+
+        It was fixed for craft trades and never extended to scholars, so the
+        identical defect survived for them and was reported as
+        Complaints/34: buying labourer hours works, buying SCHOLAR hours
+        does nothing. Reproduced against the live protocol - a 2,000-hour
+        scholar commission succeeded, took the money, and left the refusal
+        byte-identical.
+
+        A year of a scholar's time IS a scholar, for the purpose of whether
+        you may attempt a thing that needs one. Buying the work rather than
+        the person is the whole point of `commission`, and it is what
+        somebody in this position actually did.
+        """
+        contracted = sum(hours for trade, hours
+                         in getattr(self.household, "contract_hours", {}).items()
+                         if trade_family(trade) == "scholar")
+        return (self.effective_scholars()
+                + contracted / self.HOURS_PER_PERSON_YEAR)
 
     def trade_available(self, t):
         """Can this trade be had here at all, at any price?
@@ -1046,8 +1714,8 @@ class LabourMixin:
         """
         if t not in TRADES_ABSENT:
             return True
-        return (t in self.trades_created
-                or getattr(self, "trade_schools", {}).get(t, 0.0) > 0)
+        return (t in self.household.trades_created
+                or getattr(self.household, "trade_schools", {}).get(t, 0.0) > 0)
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
@@ -1056,14 +1724,14 @@ class LabourMixin:
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
         cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
-        if seats <= 0 or cost > self.capital:
+        if seats <= 0 or cost > self.household.capital:
             return False, "cannot afford that trade school"
-        self.capital -= cost
-        schools = getattr(self, "trade_schools", None)
+        self.household.capital -= cost
+        schools = getattr(self.household, "trade_schools", None)
         if schools is None:
-            schools = self.trade_schools = {}
+            schools = self.household.trade_schools = {}
         schools[trade] = schools.get(trade, 0.0) + seats
-        self.trades_created.add(trade)
+        self.household.trades_created.add(trade)
         return True, None
 
     def _trade_market_class(self, t):
@@ -1129,7 +1797,24 @@ class LabourMixin:
     # million can" - hired_cap()'s own comment) - a smaller civilisation's
     # own provincial towns are smaller too, which is a separate and
     # defensible claim from how big ONE of them is.
-    TOWN_POPULATION_REFERENCE = 50000.0
+    TOWN_POPULATION_REFERENCE = declare(
+        "TOWN_POPULATION_REFERENCE", 50000.0, kind="engineering_estimate",
+        unit="people, at pop_scale=1.0",
+        source="Meiggs, 'Roman Ostia', 2nd ed. 1973 (the album of the "
+               "fabri tignuarii of Ostia, CIL XIV 4569, dated 198 AD, "
+               "records about 350 quinquennial members of one "
+               "building-trade guild in a town usually put at the order "
+               "of 50,000 people).",
+        confidence="C",
+        why="The size of the ONE provincial town this household's labour "
+            "market represents, at full population scale - not the whole "
+            "country. Anchored on a real attestation (guild membership as "
+            "a share of a town of known rough size), used as a floor "
+            "rather than a precise census figure since guild rolls "
+            "undercount apprentices, slaves and women in the trade. This "
+            "sizes a MARKET, not a historical outcome the simulation is "
+            "meant to reproduce - see this constant's own long comment "
+            "above for the full derivation.")
 
     # What SHARE of that town plies each class of trade - feeding BOTH
     # market_supply's ceiling for 'abundant' and 'common' (the classes the
@@ -1160,11 +1845,39 @@ class LabourMixin:
     #              again for the one the game already singles out as
     #              rarest - not research, and said so here rather than
     #              dressed up as data.
+    _TRADE_DENSITY_WHY = (
+        "Share of TOWN_POPULATION_REFERENCE plying a trade of this class - "
+        "'common' is anchored directly on the Ostia guild figure "
+        "(TOWN_POPULATION_REFERENCE's own citation); 'abundant' is set "
+        "higher again to match the wage table's own language calling "
+        "those trades abundant or numerous, still within an order of "
+        "magnitude of the real attestation; 'uncommon' and 'scarce' have "
+        "NO comparable figure found for the trades in them and are "
+        "honest, explicitly-labelled order-of-magnitude placeholders, not "
+        "research - see this table's own long comment above.")
+    TRADE_DENSITY_ABUNDANT = declare(
+        "TRADE_DENSITY_ABUNDANT", 0.014, kind="engineering_estimate",
+        unit="fraction of the town's population", source=None,
+        confidence="C", why=_TRADE_DENSITY_WHY)
+    TRADE_DENSITY_COMMON = declare(
+        "TRADE_DENSITY_COMMON", 0.007, kind="engineering_estimate",
+        unit="fraction of the town's population",
+        source="CIL XIV 4569 (see TOWN_POPULATION_REFERENCE): about 0.7% "
+               "of the town registered in one common building trade.",
+        confidence="C", why=_TRADE_DENSITY_WHY)
+    TRADE_DENSITY_UNCOMMON = declare(
+        "TRADE_DENSITY_UNCOMMON", 0.001, kind="temporary_heuristic",
+        unit="fraction of the town's population", source=None,
+        confidence="D", why=_TRADE_DENSITY_WHY)
+    TRADE_DENSITY_SCARCE = declare(
+        "TRADE_DENSITY_SCARCE", 0.00015, kind="temporary_heuristic",
+        unit="fraction of the town's population", source=None,
+        confidence="D", why=_TRADE_DENSITY_WHY)
     TRADE_DENSITY = {
-        "abundant": 0.014,
-        "common": 0.007,
-        "uncommon": 0.001,
-        "scarce": 0.00015,
+        "abundant": TRADE_DENSITY_ABUNDANT,
+        "common": TRADE_DENSITY_COMMON,
+        "uncommon": TRADE_DENSITY_UNCOMMON,
+        "scarce": TRADE_DENSITY_SCARCE,
     }
     # scholar and scribe are bound by literacy, not by town population (see
     # literacy_factor, literate_capacity) - their NATIONAL estimate uses the
@@ -1178,9 +1891,59 @@ class LabourMixin:
     # purpose (see that set's own comment - "an agent working on commission is
     # not, in this period, chiefly a reader") so it gets a plain urban density
     # instead, also with no specific count found.
-    SCHOLAR_ENGAGEMENT_FRACTION = 0.002   # of literacy_elite x population
-    SCRIBE_ENGAGEMENT_FRACTION = 0.05     # of literacy_general x population
-    MERCHANT_DENSITY = 0.004              # of urban population, like a craft
+    SCHOLAR_ENGAGEMENT_FRACTION = declare(
+        "SCHOLAR_ENGAGEMENT_FRACTION", 0.002, kind="temporary_heuristic",
+        unit="fraction of (literacy_elite x population)", source=None,
+        confidence="D",
+        why="What fraction of the literate, propertied population makes "
+            "its living as a scholar for hire, rather than simply being a "
+            "literate landowner, priest or advocate. No published count "
+            "exists for this; deliberately small, consistent with "
+            "literate_capacity('scholar') topping out at 5.9 reachable "
+            "for Rome before any institution trains more.")
+    SCRIBE_ENGAGEMENT_FRACTION = declare(
+        "SCRIBE_ENGAGEMENT_FRACTION", 0.05, kind="temporary_heuristic",
+        unit="fraction of (literacy_general x population)", source=None,
+        confidence="D",
+        why="As SCHOLAR_ENGAGEMENT_FRACTION, for scribes drawn from the "
+            "wider general-literacy pool rather than the propertied elite.")
+    MERCHANT_DENSITY = declare(
+        "MERCHANT_DENSITY", 0.004, kind="temporary_heuristic",
+        unit="fraction of urban population", source=None, confidence="D",
+        why="Merchant density, treated like an ordinary craft density "
+            "(TRADE_DENSITY) rather than a literacy-bound one, because "
+            "merchant is deliberately excluded from LITERATE_TRADES (an "
+            "agent working on commission is not, in this period, chiefly "
+            "a reader). No specific count found; an order-of-magnitude "
+            "placeholder.")
+
+    TAUGHT_TRADE_SUPPLY_MULTIPLIER = declare(
+        "TAUGHT_TRADE_SUPPLY_MULTIPLIER", 1.5, kind="temporary_heuristic",
+        unit="dimensionless multiplier on your own employees' hours",
+        source=None, confidence="D",
+        why="For a trade this society had no word for until you taught it "
+            "(TRADES_ABSENT), the market this household reaches is only "
+            "the people you trained plus the ones they have since trained "
+            "themselves - approximated as half again your own headcount's "
+            "hours, standing in for that second generation, rather than "
+            "modelling who-taught-whom explicitly.")
+    SCARCE_TRADE_HIRING_SHARE = declare(
+        "SCARCE_TRADE_HIRING_SHARE", 0.08, kind="temporary_heuristic",
+        unit="fraction of hired_hours_cap_base", source=None,
+        confidence="D",
+        why="Hiring ceiling share for the 'scarce' trade class (today, "
+            "just millwright, this tree's own 'scarcest useful trade you "
+            "can hire') - tighter than TRADE_DENSITY_UNCOMMON's already-"
+            "tight share. Pre-existing, separately-tuned figure kept as "
+            "the fix that widened 'abundant'/'common' left it (see "
+            "TRADE_DENSITY's own comment on why these three keep their "
+            "own tuning).")
+    UNCOMMON_TRADE_HIRING_SHARE = declare(
+        "UNCOMMON_TRADE_HIRING_SHARE", 0.25, kind="temporary_heuristic",
+        unit="fraction of hired_hours_cap_base", source=None,
+        confidence="D",
+        why="As SCARCE_TRADE_HIRING_SHARE, for the 'uncommon' class "
+            "(glassblowers, engravers, masters).")
 
     def market_supply(self, t):
         """Hours a year of this trade the local labour market can actually supply.
@@ -1195,12 +1958,14 @@ class LabourMixin:
         """
         if not self.trade_available(t):
             return 0.0
-        base = self.cfg["hired_hours_cap_base"] * (0.25 + 0.75 * min(1.0, self.pop_scale))
-        school_hours = (getattr(self, "trade_schools", {}).get(t, 0.0)
+        base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
+                                                     + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        school_hours = (getattr(self.household, "trade_schools", {}).get(t, 0.0)
                         * self.HOURS_PER_PERSON_YEAR)
         if t in TRADES_ABSENT:
             # Only the people you taught, plus the ones they have taught since.
-            return (self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR * 1.5
+            return (self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+                    * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                     + school_hours)
         cls = self._trade_market_class(t)
         if cls in ("abundant", "common"):
@@ -1208,20 +1973,21 @@ class LabourMixin:
             # this function's own docstring and the comment above
             # TOWN_POPULATION_REFERENCE for the full account and its
             # citation).
-            town = self.TOWN_POPULATION_REFERENCE * (0.25 + 0.75 * min(1.0, self.pop_scale))
+            town = self.TOWN_POPULATION_REFERENCE * (self.POP_SCALE_FLOOR_SHARE
+                                                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
             cap = town * self.TRADE_DENSITY[cls] * self.HOURS_PER_PERSON_YEAR
         elif cls == "scholar":
-            cap = base * 0.35          # literate men are a small fraction of anywhere
+            cap = base * self.SCHOLAR_MARKET_SHARE   # literate men are a small fraction of anywhere
         elif cls == "scarce":
-            cap = base * 0.08
+            cap = base * self.SCARCE_TRADE_HIRING_SHARE
         else:
-            cap = base * 0.25          # uncommon: glassblowers, engravers, masters
+            cap = base * self.UNCOMMON_TRADE_HIRING_SHARE   # uncommon: glassblowers, engravers, masters
         if self.running("school_founded"):
-            cap *= 1.0 + 1.0 * self.institution_units("school_founded") ** 0.5
-        if self.running("patron_imperial"):       cap *= 3.0
+            cap *= 1.0 + self.SCHOOL_FOUNDED_HIRING_COEFFICIENT * self.institution_units("school_founded") ** self.HIRING_MULTIPLIER_EXPONENT
+        if self.running("patron_imperial"):       cap *= self.PATRON_IMPERIAL_HIRING_MULTIPLIER
         if self.running("academy_network"):
-            cap *= 1.0 + 1.5 * self.institution_units("academy_network") ** 0.5
-        if self.running("interchangeable_parts"): cap *= 1.5
+            cap *= 1.0 + self.ACADEMY_NETWORK_HIRING_COEFFICIENT * self.institution_units("academy_network") ** self.HIRING_MULTIPLIER_EXPONENT
+        if self.running("interchangeable_parts"): cap *= self.INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER
         # A trade that needs reading cannot be bought past how many people
         # here can read (FINDINGS_ROUND2 section Q). scholar and scribe are
         # the only literate trades that reach this branch - the taught ones
@@ -1230,7 +1996,7 @@ class LabourMixin:
         # train().
         if t in self.LITERATE_TRADES:
             cap *= self.literacy_factor(t)
-        return (cap + self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        return (cap + self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
                 + school_hours)
 
     def reachable_trade_population(self, t):
@@ -1273,13 +2039,16 @@ class LabourMixin:
         """
         if not self.trade_available(t):
             return 0.0
-        reference_pop = float(self.civ.get("population", 0.0))
-        # pop_scale is expressed relative to Rome's 65m reference, while this
-        # civilisation's configured population is its own unshocked baseline.
-        # The ratio therefore exposes both mortality and subsequent growth.
-        scale_from_baseline = (self.pop_scale / self._pop_scale_base
-                               if self._pop_scale_base else 1.0)
-        pop = reference_pop * scale_from_baseline
+        # WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md SS1.1):
+        # this used to reconstruct an absolute headcount from
+        # civ["population"] (a fixed config number) times a ratio of two
+        # scalar fields (pop_scale/_pop_scale_base) - the one place in the
+        # engine that tried to answer "how many people are actually here" as
+        # a headcount rather than a ratio, built entirely out of ratios.
+        # self.population.total (sim/world/demography.py's age-cohort
+        # model, now the engine's own running headcount) IS that number
+        # directly - no reconstruction needed.
+        pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if t == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
@@ -1292,7 +2061,7 @@ class LabourMixin:
             # into existence by you alone (trade_available already checked
             # this is now true), so "the country's" population of the trade
             # IS what you have taught - there is no wider pool to estimate.
-            return self.employees.get(t, 0.0)
+            return self.household.employees.get(t, 0.0)
         return urban * self.TRADE_DENSITY.get(self._trade_market_class(t), 0.0)
 
     def home_town_population_estimate(self):
@@ -1305,7 +2074,8 @@ class LabourMixin:
         the abstraction hired_hours_cap_base and this constant already
         are (see TOWN_POPULATION_REFERENCE's own comment).
         """
-        return self.TOWN_POPULATION_REFERENCE * (0.25 + 0.75 * min(1.0, self.pop_scale))
+        return self.TOWN_POPULATION_REFERENCE * (self.POP_SCALE_FLOOR_SHARE
+                                                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
 
     def population_report(self):
         """Everything the 'population' command (protocol.py) shows, worked
@@ -1323,19 +2093,24 @@ class LabourMixin:
         about whether that is most of the trade or a rounding error
         against it. This says both, next to each other, once.
         """
+        # WIRING MILESTONE 4: see national_trade_population's own comment,
+        # just above - the same reconstruction-by-ratio used to happen here,
+        # and self.population.total (the age-cohort model) is now the
+        # direct answer. `reference_pop`/`scale_from_baseline` are kept as
+        # the screen's own "before simulated changes" comparison, not as
+        # inputs to `pop` any more.
         reference_pop = float(self.civ.get("population", 0.0))
-        scale_from_baseline = (self.pop_scale / self._pop_scale_base
-                               if self._pop_scale_base else 1.0)
-        pop = reference_pop * scale_from_baseline
+        pop = self.population.total
+        scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
         urban_frac = float(self.civ.get("urban_fraction", 0.0))
         trades = []
-        for t in sorted(WAGES):
-            national = self.national_trade_population(t)
-            reach = self.reachable_trade_population(t) if self.trade_available(t) else 0.0
-            have = self.employees.get(t, 0.0)
+        for trade in sorted(WAGES):
+            national = self.national_trade_population(trade)
+            reach = self.reachable_trade_population(trade) if self.trade_available(trade) else 0.0
+            have = self.household.employees.get(trade, 0.0)
             trades.append({
-                "trade": t,
-                "exists_here": self.trade_available(t),
+                "trade": trade,
+                "exists_here": self.trade_available(trade),
                 "estimated_in_the_country": round(national, 1),
                 "within_your_reach": round(reach, 2),
                 "you_employ": round(have, 2),
@@ -1434,18 +2209,94 @@ class LabourMixin:
     #   prc_capstan_turret_lathe "unskilled operator can repeat production" -
     #                       still an operator, still a machinist, just a much
     #                       faster one per hour; machinist.
+    _LABOUR_PRODUCTIVITY_WHY = (
+        "A fraction of the productivity gain this node's own tree note "
+        "claims, diluted because these figures compound with one another "
+        "and because the affected trade (e.g. 'artisan') is broader than "
+        "the specific task the note describes (e.g. weaving) - see this "
+        "table's own long comment above for exactly which note each row "
+        "cites and how much it was scaled down. The dilution factor is "
+        "tuned judgement, not itself sourced.")
+    LABOUR_PRODUCTIVITY_TEX_TREADLE_LOOM = declare(
+        "LABOUR_PRODUCTIVITY_TEX_TREADLE_LOOM", 0.03, kind="temporary_heuristic",
+        unit="fractional bonus to an artisan-hour's output",
+        source="tex_treadle_loom's own tree note: 'speeds weaving "
+               "noticeably' (the weakest claim in this table's chain).",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_TEX_FLYING_SHUTTLE = declare(
+        "LABOUR_PRODUCTIVITY_TEX_FLYING_SHUTTLE", 0.06, kind="temporary_heuristic",
+        unit="fractional bonus to an artisan-hour's output",
+        source="tex_flying_shuttle's own tree note: 'triples weaving "
+               "speed'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_TEX_SPINNING_WHEEL = declare(
+        "LABOUR_PRODUCTIVITY_TEX_SPINNING_WHEEL", 0.05, kind="temporary_heuristic",
+        unit="fractional bonus to an artisan-hour's output",
+        source="tex_spinning_wheel's own tree note: 'roughly tripling "
+               "output per spinner'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MET_TRIP_HAMMER = declare(
+        "LABOUR_PRODUCTIVITY_MET_TRIP_HAMMER", 0.08, kind="temporary_heuristic",
+        unit="fractional bonus to a smith-hour's output",
+        source="met_trip_hammer's own tree note: 'much faster than hand "
+               "hammering... foundation of heavy forge work'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MET_WATER_ORE_STAMP = declare(
+        "LABOUR_PRODUCTIVITY_MET_WATER_ORE_STAMP", 0.08, kind="temporary_heuristic",
+        unit="fractional bonus to a miner-hour's output",
+        source="met_water_ore_stamp's own tree note: 'crush ore... far "
+               "faster than hand crushing'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MET_THREE_HIGH_MILL = declare(
+        "LABOUR_PRODUCTIVITY_MET_THREE_HIGH_MILL", 0.10, kind="temporary_heuristic",
+        unit="fractional bonus to a smith-hour's output",
+        source="met_three_high_mill's own tree note: 'doubles throughput' "
+               "of a rolling mill.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MET_CONVERTER_FURNACE = declare(
+        "LABOUR_PRODUCTIVITY_MET_CONVERTER_FURNACE", 0.08, kind="temporary_heuristic",
+        unit="fractional bonus to a furnaceman-hour's output",
+        source="met_converter_furnace's own tree note: 'speed and low "
+               "labour cost per ton is the payoff'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_BELLOWS_WATER_BLOWN = declare(
+        "LABOUR_PRODUCTIVITY_BELLOWS_WATER_BLOWN", 0.10, kind="temporary_heuristic",
+        unit="fractional bonus to a furnaceman-hour's output",
+        source="bellows_water_blown's own tree note: 'the single "
+               "highest-leverage mechanical change available... "
+               "continuous high-volume blast'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MFG_RAKE_CLEARANCE = declare(
+        "LABOUR_PRODUCTIVITY_MFG_RAKE_CLEARANCE", 0.06, kind="temporary_heuristic",
+        unit="fractional bonus to a machinist-hour's output",
+        source="mfg_rake_clearance's own tree note: 'saves 30 percent "
+               "power and doubles tool life'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_MFG_HSS_DEVELOPMENT = declare(
+        "LABOUR_PRODUCTIVITY_MFG_HSS_DEVELOPMENT", 0.15, kind="temporary_heuristic",
+        unit="fractional bonus to a machinist-hour's output",
+        source="mfg_hss_development's own tree note: 'cuts three times "
+               "faster than Mushet steel' - the most direct per-hour claim "
+               "in this table.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
+    LABOUR_PRODUCTIVITY_PRC_CAPSTAN_TURRET_LATHE = declare(
+        "LABOUR_PRODUCTIVITY_PRC_CAPSTAN_TURRET_LATHE", 0.10, kind="temporary_heuristic",
+        unit="fractional bonus to a machinist-hour's output",
+        source="prc_capstan_turret_lathe's own tree note: 'unskilled "
+               "operator can repeat production'.",
+        confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
     LABOUR_PRODUCTIVITY_SOURCES = (
-        ("tex_treadle_loom", "artisan", 0.03),
-        ("tex_flying_shuttle", "artisan", 0.06),
-        ("tex_spinning_wheel", "artisan", 0.05),
-        ("met_trip_hammer", "smith", 0.08),
-        ("met_water_ore_stamp", "miner", 0.08),
-        ("met_three_high_mill", "smith", 0.10),
-        ("met_converter_furnace", "furnaceman", 0.08),
-        ("bellows_water_blown", "furnaceman", 0.10),
-        ("mfg_rake_clearance", "machinist", 0.06),
-        ("mfg_hss_development", "machinist", 0.15),
-        ("prc_capstan_turret_lathe", "machinist", 0.10),
+        ("tex_treadle_loom", "artisan", LABOUR_PRODUCTIVITY_TEX_TREADLE_LOOM),
+        ("tex_flying_shuttle", "artisan", LABOUR_PRODUCTIVITY_TEX_FLYING_SHUTTLE),
+        ("tex_spinning_wheel", "artisan", LABOUR_PRODUCTIVITY_TEX_SPINNING_WHEEL),
+        ("met_trip_hammer", "smith", LABOUR_PRODUCTIVITY_MET_TRIP_HAMMER),
+        ("met_water_ore_stamp", "miner", LABOUR_PRODUCTIVITY_MET_WATER_ORE_STAMP),
+        ("met_three_high_mill", "smith", LABOUR_PRODUCTIVITY_MET_THREE_HIGH_MILL),
+        ("met_converter_furnace", "furnaceman", LABOUR_PRODUCTIVITY_MET_CONVERTER_FURNACE),
+        ("bellows_water_blown", "furnaceman", LABOUR_PRODUCTIVITY_BELLOWS_WATER_BLOWN),
+        ("mfg_rake_clearance", "machinist", LABOUR_PRODUCTIVITY_MFG_RAKE_CLEARANCE),
+        ("mfg_hss_development", "machinist", LABOUR_PRODUCTIVITY_MFG_HSS_DEVELOPMENT),
+        ("prc_capstan_turret_lathe", "machinist", LABOUR_PRODUCTIVITY_PRC_CAPSTAN_TURRET_LATHE),
     )
     # NEVER MORE THAN HALF AGAIN, however many of the above a run has built.
     # Every other saturating multiplier in this file (labour_price_factor,
@@ -1453,7 +2304,18 @@ class LabourMixin:
     # small, individually-defensible bonuses is still an uncapped sum, and
     # this compounds with hired_cap, market_supply's own institutional
     # multipliers, and the project pacing built on top of both.
-    LABOUR_PRODUCTIVITY_CAP = 1.5
+    LABOUR_PRODUCTIVITY_CAP = declare(
+        "LABOUR_PRODUCTIVITY_CAP", 1.5, kind="temporary_heuristic",
+        unit="dimensionless multiplier", source=None, confidence="D",
+        why="However many productivity-raising technologies a run has "
+            "built, no trade's hour may be worth more than half again its "
+            "base value. Every other saturating multiplier in this file "
+            "(labour_price_factor, literacy_factor) is capped for the "
+            "same reason: an uncapped sum of small, individually-"
+            "defensible bonuses is still an uncapped sum, and this "
+            "compounds with hired_cap and market_supply's own "
+            "institutional multipliers. The cap value itself is tuned, "
+            "not derived from any real productivity ceiling.")
 
     def labour_productivity(self, trade):
         """How much MORE a real hour of this trade is worth this year, from
@@ -1467,8 +2329,8 @@ class LabourMixin:
         why each figure is what it is.
         """
         bonus = 0.0
-        for node, tr, add in self.LABOUR_PRODUCTIVITY_SOURCES:
-            if tr == trade and node in self.done:
+        for node, row_trade, add in self.LABOUR_PRODUCTIVITY_SOURCES:
+            if row_trade == trade and node in self.household.done:
                 bonus += add
         return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
 
@@ -1502,12 +2364,12 @@ class LabourMixin:
         # out of the hours it can call on, which is this number, not how
         # many people the town could in principle hire (market_supply, still
         # unchanged, still governs hiring capacity and labour_price_factor).
-        return ((self.market_supply(t) + self.contract_hours.get(t, 0.0))
+        return ((self.market_supply(t) + self.household.contract_hours.get(t, 0.0))
                 * self.labour_productivity(t))
 
     def hours_reserved(self, t):
         """Hours of this trade you have already bought from an outside shop."""
-        return self.contract_hours.get(t, 0.0)
+        return self.household.contract_hours.get(t, 0.0)
 
     def market_supply_split(self, t):
         """(the town's hours, your own people's hours). Same total, said honestly.
@@ -1519,7 +2381,7 @@ class LabourMixin:
         smith-hours available. The arithmetic was right and the label was
         wrong: the town's share had not moved at all.
         """
-        mine = self.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        mine = self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
         total = self.market_supply(t)
         if t in TRADES_ABSENT:
             # There is no market in these at all; every hour is somebody you
@@ -1552,7 +2414,7 @@ class LabourMixin:
                 "can point to; a wage, an apprentice's keep or a commission "
                 "fee is money simply spent, and nothing stands behind that "
                 "the way a half-built project does). You are %s short."
-                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.capital),
+                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.household.capital),
                    "{:,.0f}".format(max(0.0, room)),
                    "{:,.0f}".format(max(0.0, fee - room))))
 
@@ -1637,11 +2499,11 @@ class LabourMixin:
                               " - %d is the most whole people you can take" % whole
                               if whole else " - you have no room for even one",
                               self._room_advice()))
-        self.capital -= fee
+        self.household.capital -= fee
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
-        self.wages_prepaid = getattr(self, "wages_prepaid", 0.0) + fee
-        self.employees[trade] = self.employees.get(trade, 0.0) + float(n)
+        self.household.wages_prepaid = getattr(self.household, "wages_prepaid", 0.0) + fee
+        self.household.employees[trade] = self.household.employees.get(trade, 0.0) + float(n)
         self._add_labour_pressure(trade, float(n) * self.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE. This returned None, so the
@@ -1654,7 +2516,7 @@ class LabourMixin:
                       "first year in advance). You now have %.1f, and %.2f "
                       "household place(s) left"
                       % (n, trade, "" if n == 1 else "s",
-                         "{:,.0f}".format(fee), self.employees[trade],
+                         "{:,.0f}".format(fee), self.household.employees[trade],
                          max(0.0, self.household_room())))
 
     def fire(self, trade, n):
@@ -1671,9 +2533,9 @@ class LabourMixin:
         the way any abandoned work is, and they do not arrive.
         """
         trade = str(trade or "").strip().lower()
-        have = self.employees.get(trade, 0.0)
-        pending = sum(r[3] for r in self.training
-                      if len(r) > 3 and r[2] == trade)
+        have = self.household.employees.get(trade, 0.0)
+        pending = sum(record[3] for record in self.household.training
+                      if len(record) > 3 and record[2] == trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
         n = float(n)
@@ -1690,28 +2552,57 @@ class LabourMixin:
         note = None
         if have > 0:
             gone = min(n, have)
-            self.employees[trade] = have - gone
-            if self.employees[trade] <= 1e-9:
-                self.employees.pop(trade)
+            self.household.employees[trade] = have - gone
+            if self.household.employees[trade] <= 1e-9:
+                self.household.employees.pop(trade)
             n -= gone
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if n > 0 and pending > 0:
             stopped, still = 0.0, []
-            for r in self.training:
-                if len(r) > 3 and r[2] == trade and n > 0:
-                    take = min(n, r[3])
-                    r[3] -= take
+            for record in self.household.training:
+                if len(record) > 3 and record[2] == trade and n > 0:
+                    take = min(n, record[3])
+                    record[3] -= take
                     n -= take
                     stopped += take
-                if len(r) <= 3 or r[3] > 1e-9:
-                    still.append(r)
-            self.training = still
+                if len(record) <= 3 or record[3] > 1e-9:
+                    still.append(record)
+            self.household.training = still
             if stopped > 0:
                 note = ((note + "; " if note else "")
                         + "stopped teaching %g more (what you paid to keep them "
                           "while they learned is gone)" % stopped)
         self._resync_pools()
         return True, note
+
+    TEACHING_HOURS_PER_PERSON = declare(
+        "TEACHING_HOURS_PER_PERSON", 450.0, kind="temporary_heuristic",
+        unit="founder-hours per person taught", source=None,
+        confidence="D",
+        why="How many of the founder's own hours it takes to teach one "
+            "person a new trade. Tuned so teaching is a real, felt cost "
+            "against the roughly 2,000-hour year (see this method's own "
+            "docstring on a play tester who trained 4 machinists and lost "
+            "1,800 of 2,000 founder-hours), not measured against any real "
+            "pre-modern apprenticeship's actual instructional load.")
+    TEACHING_MATURATION_YEARS = declare(
+        "TEACHING_MATURATION_YEARS", 2.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="How long after being taught a person takes to mature into a "
+            "working member of the new trade - shorter than TRAINING_YEARS "
+            "(3.0, for a bought and untrained person) because teaching "
+            "starts from an already-skilled craftsman rather than an "
+            "unskilled purchase. Tuned, not measured.")
+    TEACHING_FEE_MULTIPLIER = declare(
+        "TEACHING_FEE_MULTIPLIER", 1.2, kind="temporary_heuristic",
+        unit="dimensionless multiplier on the source trade's annual wage",
+        source=None, confidence="D",
+        why="What it costs, per person taught, to keep the SOURCE "
+            "trade's people fed while they are pulled off their own "
+            "bench to learn something new - a premium over their "
+            "ordinary annual wage, the same idea labour_price_factor "
+            "prices for hiring and market_pressure prices for buying "
+            "slaves. Tuned premium, not a measured opportunity cost.")
 
     def train(self, trade, n, frm=None):
         """Teach a trade that does not exist here into existence.
@@ -1739,7 +2630,7 @@ class LabourMixin:
                        else "glassblower" if trade == "optician"
                        else "scribe" if trade == "chemist"
                        else "smith")).strip().lower()
-        if frm in TRADES_ABSENT and frm not in self.trades_created:
+        if frm in TRADES_ABSENT and frm not in self.household.trades_created:
             return False, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
@@ -1753,7 +2644,7 @@ class LabourMixin:
             have = self._trade_headcount_pending(trade)
             if have + n > cap + 1e-6:
                 return False, self._literate_wall_refusal(trade, cap, have)
-        hours = 450.0 * n            # your hours, teaching, per person
+        hours = self.TEACHING_HOURS_PER_PERSON * n            # your hours, teaching, per person
         pool = self.director_pool() - self.director_hours_committed()
         if hours > pool:
             return False, ("teaching %g %ss takes %.0f of your own hours and you have "
@@ -1780,15 +2671,15 @@ class LabourMixin:
         # slaves and labour_price_factor now prices for hiring: the more of
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
-        fee = n * self.annual_wage(frm) * 1.2
+        fee = n * self.annual_wage(frm) * self.TEACHING_FEE_MULTIPLIER
         if fee > self.spending_power("buy"):
             return False, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (n, trade, "" if n == 1 else "s"), fee)
-        self.capital -= fee
-        self.teaching_hours_this_year = getattr(self, "teaching_hours_this_year", 0.0) + hours
-        self.trades_created.add(trade)
-        self.training.append([0.0, self.year + 2.0, trade, float(n)])
+        self.household.capital -= fee
+        self.household.teaching_hours_this_year = getattr(self.household, "teaching_hours_this_year", 0.0) + hours
+        self.household.trades_created.add(trade)
+        self.household.training.append([0.0, self.year + self.TEACHING_MATURATION_YEARS, trade, float(n)])
         self._add_labour_pressure(frm, float(n) * self.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK. A play tester's `train machinist 4` quietly ate
         # 1,800 of their 2,000 founder-hours and, with nothing left to
@@ -1803,7 +2694,7 @@ class LabourMixin:
         # not yet finished (ready is the year they MATURE, not the year they
         # start). What this never said, in either direction: they cannot do
         # a day of the work before that year, and core.py adds them to
-        # self.employees itself the moment they do, automatically - no
+        # self.household.employees itself the moment they do, automatically - no
         # 'hire' needed to put THESE apprentices to work.
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
@@ -1811,7 +2702,7 @@ class LabourMixin:
                       "Until then they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "denarii to keep them while they learn"
-                      % (n, trade, "s" if n != 1 else "", self.year + 2,
+                      % (n, trade, "s" if n != 1 else "", self.year + self.TEACHING_MATURATION_YEARS,
                          "{:,.0f}".format(hours), "{:,.0f}".format(_left),
                          "{:,.0f}".format(fee)))
 
@@ -1844,35 +2735,35 @@ class LabourMixin:
             except Exception:
                 need = self._goal_closure = set()
         seen = 0
-        for k in self.order:
+        for node_id in self.order:
             if seen >= look:
                 break
-            if k in self.done or k in self.active or k not in need:
+            if node_id in self.household.done or node_id in self.household.active or node_id not in need:
                 continue
-            n = self.nodes[k]
-            if any(p not in self.done for p in n["pre"]):
+            node = self.nodes[node_id]
+            if any(prereq_id not in self.household.done for prereq_id in node["pre"]):
                 continue
             seen += 1
-            short = n["art"] - self.craft_hands_available()
-            if short <= 0 or n["sch"] > self.effective_scholars():
+            short = node["art"] - self.craft_hands_available()
+            if short <= 0 or node["sch"] > self.effective_scholars():
                 continue
             hours = short * self.HOURS_PER_PERSON_YEAR
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
             best = None
-            for t in sorted(WAGES):
-                if trade_family(t) != "craft" or not self.trade_available(t):
+            for trade in sorted(WAGES):
+                if trade_family(trade) != "craft" or not self.trade_available(trade):
                     continue
-                spare = self.market_supply(t) - self.contract_hours.get(t, 0.0)
+                spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
                 if spare < hours:
                     continue
-                if best is None or WAGES[t] < WAGES[best]:
-                    best = t
+                if best is None or WAGES[trade] < WAGES[best]:
+                    best = trade
             if best is None:
                 continue
             ok, _why = self.commission(best, hours)
             if ok:
-                return (k, best, hours)
+                return (node_id, best, hours)
         return None
 
     def craft_hands_available(self):
@@ -1883,8 +2774,8 @@ class LabourMixin:
         year of a carpenter's time IS a carpenter, for the purposes of whether
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
-        contracted = sum(h for t, h in getattr(self, "contract_hours", {}).items()
-                         if trade_family(t) == "craft")
+        contracted = sum(hours for trade, hours in getattr(self.household, "contract_hours", {}).items()
+                         if trade_family(trade) == "craft")
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -1894,7 +2785,28 @@ class LabourMixin:
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
         own = 1.0 if self.founder_alive else 0.0
-        return self.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
+        return self.household.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
+
+    COMMISSION_PREMIUM_MULTIPLIER = declare(
+        "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",
+        unit="dimensionless multiplier on the trade's ordinary wage rate",
+        source=None, confidence="D",
+        why="What a shop charges for a one-off job over what it pays its "
+            "own man for a year, before local scarcity (labour_price_"
+            "factor) adds anything further. Tuned so commissioning is a "
+            "real premium over hiring rather than a free substitute for "
+            "it, not measured from any real subcontracting markup. NOTE "
+            "for Complaints/34 ('buying scholar hours fails for want of "
+            "scholars'): this function's own gates - trade_available(), "
+            "market_supply(trade) for the spare-hours ceiling, and this "
+            "fee against spending_power('buy') - do not test "
+            "self.household.employees for `trade` at all, and "
+            "market_supply('scholar') (see that function) is independent "
+            "of whether any scholars are currently on staff. Nothing in "
+            "this file's commission()/market_supply() path refuses a "
+            "scholar commission for want of existing scholar employees; "
+            "if the complaint reproduces, the refusal is not coming from "
+            "here.")
 
     def commission(self, trade, hours):
         """Pay for a job, not for a person.
@@ -1912,26 +2824,27 @@ class LabourMixin:
         if not self.trade_available(trade):
             return False, ("no %s will take the work; the trade does not exist here: %s"
                            % (trade, TRADE_NOTES.get(trade, "")))
-        spare = self.market_supply(trade) - self.contract_hours.get(trade, 0.0)
+        spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
         if hours > spare:
             return False, ("the %ss here can spare %.0f more hours this year, not %.0f"
                            % (trade, max(0.0, spare), hours))
         # A shop charges more for a one-off than it pays its own man for a
         # year, and more again if you are buying deep into what the local
         # market can spare this year (see labour_price_factor).
-        fee = (hours * WAGES[trade] * 1.6 * self.wage_index * self.price_index
+        fee = (hours * WAGES[trade] * self.COMMISSION_PREMIUM_MULTIPLIER
+              * self.wage_index * self.price_index
               * self.labour_price_factor(trade))
         if fee > self.spending_power("buy"):
             return False, self._cash_in_hand_refusal(
                 "%.0f hours of a %s" % (hours, trade), fee)
-        self.capital -= fee
-        self.contract_hours[trade] = self.contract_hours.get(trade, 0.0) + hours
-        self.commissioned[trade] = self.commissioned.get(trade, 0.0) + hours
+        self.household.capital -= fee
+        self.household.contract_hours[trade] = self.household.contract_hours.get(trade, 0.0) + hours
+        self.household.commissioned[trade] = self.household.commissioned.get(trade, 0.0) + hours
         self._add_labour_pressure(trade, hours)
         return True, ("%.0f hours of a %s bought for %.0f denarii" % (hours, trade, fee))
 
     def headcount(self):
-        return sum(self.employees.values()) + self.slaves + self.freedmen
+        return sum(self.household.employees.values()) + self.household.slaves + self.household.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.
@@ -1944,21 +2857,21 @@ class LabourMixin:
         and correctly identified it as the dominant strategy in the game. There
         is one year, and one pair of hands.
         """
-        return (getattr(self, "teaching_hours_this_year", 0.0)
-                + getattr(self, "wage_hours_this_year", 0.0))
+        return (getattr(self.household, "teaching_hours_this_year", 0.0)
+                + getattr(self.household, "wage_hours_this_year", 0.0))
 
     def _grant_staff(self, scholars=0.0, artisans=0.0):
         """An institution hands you people outright, on completion - the
         school's own professors, the freedmen a patron staffs your workshop
         with. They are not on the payroll you can fire (their keep is already
         inside the institution's own upkeep), so they do not belong in
-        `self.employees`; they have to survive `_resync_pools()` some other
+        `self.household.employees`; they have to survive `_resync_pools()` some other
         way, which is what this records.
 
-        Before this existed, `_complete()` added straight to self.scholars /
-        self.artisans, and the very next call to `_resync_pools()` - which
+        Before this existed, `_complete()` added straight to self.household.scholars /
+        self.household.artisans, and the very next call to `_resync_pools()` - which
         runs unconditionally every single step() - overwrote both from
-        `self.employees` alone and threw the grant away entirely. A player
+        `self.household.employees` alone and threw the grant away entirely. A player
         who founded the school, in the one mode (`--manual`, which the
         interactive protocol always uses) where nothing else keeps employees
         and the aggregate in step, read the node's own description promising
@@ -1966,13 +2879,33 @@ class LabourMixin:
         trained scholars, you have 1.0" - the pivot node, built and paid for,
         doing nothing at all.
         """
-        g = getattr(self, "granted_staff", None)
-        if g is None:
-            g = self.granted_staff = {"scholars": 0.0, "artisans": 0.0}
-        g["scholars"] = g.get("scholars", 0.0) + scholars
-        g["artisans"] = g.get("artisans", 0.0) + artisans
-        self.scholars += scholars
-        self.artisans += artisans
+        granted = getattr(self.household, "granted_staff", None)
+        if granted is None:
+            granted = self.household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
+        granted["scholars"] = granted.get("scholars", 0.0) + scholars
+        granted["artisans"] = granted.get("artisans", 0.0) + artisans
+        self.household.scholars += scholars
+        self.household.artisans += artisans
+
+    FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
+        "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",
+        unit="fraction of a full worker's artisan capacity", source=None,
+        confidence="D",
+        why="A trained, freed person counts as a full worker. Paired with "
+            "TRAINED_SLAVE_ARTISAN_PRODUCTIVITY below: the gap between the "
+            "two is this model's stand-in for the real productivity cost "
+            "of coercion, which nothing here derives from an actual "
+            "measured difference in enslaved versus free labour output.")
+    TRAINED_SLAVE_ARTISAN_PRODUCTIVITY = declare(
+        "TRAINED_SLAVE_ARTISAN_PRODUCTIVITY", 0.7, kind="temporary_heuristic",
+        unit="fraction of a full worker's artisan capacity", source=None,
+        confidence="D",
+        why="A trained person still held as a slave is worth less than a "
+            "freedman doing the same work - coerced labour is real but "
+            "worse, which is also the whole argument for manumission "
+            "being strictly better on these numbers (see buy_slaves' own "
+            "docstring). The specific 0.7 is tuned game balance, not a "
+            "measured efficiency gap.")
 
     def _resync_pools(self):
         """Recompute the two aggregate pools the tech tree asks for from the
@@ -2001,42 +2934,109 @@ class LabourMixin:
 
         PLUS WHAT AN INSTITUTION GRANTED OUTRIGHT. See _grant_staff: those
         people are real and already paid for out of the institution's own
-        upkeep, and this is the one place that ever told self.scholars and
-        self.artisans what they are, so it is the one place that has to add
+        upkeep, and this is the one place that ever told self.household.scholars and
+        self.household.artisans what they are, so it is the one place that has to add
         the grant back rather than let it be overwritten out of existence.
         """
-        craft = sum(n for t, n in self.employees.items() if trade_family(t) == "craft")
-        schol = self.employees.get("scholar", 0.0)
-        granted = getattr(self, "granted_staff", None) or {}
+        craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
+        schol = self.household.employees.get("scholar", 0.0)
+        granted = getattr(self.household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. Two things were wrong
         # here at once and they cancelled into a disappearance. Everyone bought
         # counted at full worth from the day of purchase, so the training lag
         # that buy_slaves' own docstring promises did nothing; and when a
         # training row finally matured, step() added its capacity to
-        # self.artisans - which THIS function then recomputed from scratch and
+        # self.household.artisans - which THIS function then recomputed from scratch and
         # threw away at the next call. A play tester bought and freed people,
         # saw them enter training as a trade named literally `None`, and
         # watched their craftsmen fall from 35 to 3.8 when the training
         # finished. Excluding those still learning makes the lag real and makes
         # the maturation stick, because by then they are simply part of the
         # count below.
-        # buy_slaves stores 0.55 of a worker per person bought, so that is the
-        # divisor that recovers the headcount still learning.
-        learning = sum(row[0] for row in getattr(self, "training", ())
-                       if len(row) <= 2) / 0.55
-        owned = max(0.0, self.freedmen + self.slaves - learning)
+        # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
+        # bought, so that is the divisor that recovers the headcount still
+        # learning.
+        learning = sum(row[0] for row in getattr(self.household, "training", ())
+                       if len(row) <= 2) / self.WORKER_EQUIVALENT_UNTRAINED
+        owned = max(0.0, self.household.freedmen + self.household.slaves - learning)
         # Split what is left in the same proportion as what is held.
-        held = self.freedmen + self.slaves
+        held = self.household.freedmen + self.household.slaves
         if held > 0:
-            free_share = self.freedmen / held
+            free_share = self.household.freedmen / held
         else:
             free_share = 0.0
-        self.artisans = (craft + owned * free_share * 1.0
-                         + owned * (1.0 - free_share) * 0.7
+        self.household.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
+                         + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY
                          + granted.get("artisans", 0.0))
-        self.scholars = schol + granted.get("scholars", 0.0)
+        self.household.scholars = schol + granted.get("scholars", 0.0)
 
-    TRAINING_YEARS = 3.0      # nobody is a useful artisan the week you buy them
+    TRAINING_YEARS = declare(
+        "TRAINING_YEARS", 3.0, kind="temporary_heuristic",
+        unit="years", source=None, confidence="D",
+        why="How long a newly-bought or newly-trained person takes to "
+            "mature into a useful worker - nobody is a useful artisan the "
+            "week you buy them. Tuned to make the training lag real "
+            "without being punitive; not measured from any real "
+            "apprenticeship length (met_trip_hammer and similar nodes' "
+            "own multi-year floors are a separate, better-sourced figure "
+            "for a different thing).")
+
+    SLAVE_MARKET_DEPTH_FLOOR = declare(
+        "SLAVE_MARKET_DEPTH_FLOOR", 8.0, kind="temporary_heuristic",
+        unit="people", source=None, confidence="D",
+        why="The smallest a local slave market's depth is ever assumed to "
+            "be, even at pop_scale near zero, so a tiny civilisation still "
+            "has SOME market rather than an infinitely steep price curve. "
+            "Tuned floor, not measured.")
+    SLAVE_MARKET_DEPTH_SCALE = declare(
+        "SLAVE_MARKET_DEPTH_SCALE", 40.0, kind="temporary_heuristic",
+        unit="people, at pop_scale=1.0", source=None, confidence="D",
+        why="How deep a full-size civilisation's local slave market is "
+            "assumed to be before price pressure really bites - a market-"
+            "size assumption, not an attested number of people traded "
+            "anywhere in this game's period.")
+    SLAVE_MARKET_DEPTH_POP_EXPONENT = declare(
+        "SLAVE_MARKET_DEPTH_POP_EXPONENT", 0.5, kind="temporary_heuristic",
+        unit="dimensionless exponent on pop_scale", source=None,
+        confidence="D",
+        why="Sub-linear (square-root) growth of slave-market depth with "
+            "population, the same diminishing-returns shape this file "
+            "uses elsewhere for a market that does not scale one-for-one "
+            "with population size. Tuned shape, not fitted.")
+    SLAVE_PRICE_CONGESTION_EXPONENT = declare(
+        "SLAVE_PRICE_CONGESTION_EXPONENT", 1.85, kind="temporary_heuristic",
+        unit="dimensionless (1 + congestion power)", source=None,
+        confidence="D",
+        why="The exponent of the rising-price curve integrated across a "
+            "purchase (nth head costs more than the first): 1.0 (linear "
+            "count) plus 0.85 of super-linear congestion as you buy "
+            "deeper into the local market. The congestion power is tuned "
+            "to make buying in bulk or in quick slices cost the same "
+            "(see this function's own docstring on the exploit this "
+            "closed), not derived from an observed price-quantity curve "
+            "for any real slave market.")
+    SLAVE_BASE_PRICE_DENARII = declare(
+        "SLAVE_BASE_PRICE_DENARII", 300.0, kind="hardcoded_outcome",
+        unit="denarii, at price_index=1 and zero market pressure",
+        source=None, confidence="D",
+        why="The list price of one person before any congestion surcharge "
+            "- a flat number this file asserts rather than derives from "
+            "food, security, transport and recruitment costs the way "
+            "CLAUDE.md 3.1 asks a price to be derived. §3.1 CANDIDATE: "
+            "this is exactly the shape the Roman-soldier example in "
+            "CLAUDE.md warns about (a person's price stated outright "
+            "rather than computed from the underlying scarcity), and "
+            "RECLASSIFIED as hardcoded_outcome on that basis. The agent that "
+            "declared it argued the opposite - that unlike DEBT_BASE_RATE "
+            "this is not an attested historical figure, just a "
+            "plausible-looking round number - which is true and is the "
+            "wrong axis: an INVENTED price is worse than a copied one, "
+            "because at least the copied one is right about the world. "
+            "What the kind tests is whether the quantity is an OUTPUT "
+            "this simulation should compute, not where the number came "
+            "from. A real mechanism would price a person the way "
+            "labour.py now prices free labour: from local supply, risk "
+            "and what the buyer can actually enforce.")
 
     def slave_quote(self, n_people):
         """What buying this many people actually costs, here, today.
@@ -2056,17 +3056,18 @@ class LabourMixin:
         # market_pressure accumulates with every purchase and decays each year
         # as sellers restock, so buying in slices is now priced as one large
         # purchase unless you actually wait between them.
-        depth = max(8.0, 40.0 * self.pop_scale ** 0.5)
+        depth = max(self.SLAVE_MARKET_DEPTH_FLOOR,
+                    self.SLAVE_MARKET_DEPTH_SCALE * self.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
         # Integrate the rising price ACROSS the purchase instead of applying one
         # surcharge to the whole block. Applying the end-price to every head
         # overcharged a single large call relative to the same number bought in
         # slices, which is why slicing still saved about a fifth. Now the nth
         # head costs what the nth head costs however you group them.
-        already = getattr(self, "market_pressure", 0.0)
-        n = float(n_people)
-        e = 1.85                       # 1 + 0.85
-        integral = (((already + n) ** e) - (already ** e)) / (e * (depth ** 0.85))
-        return 300.0 * (n + integral) * self.price_index
+        already = getattr(self.household, "market_pressure", 0.0)
+        people_count = float(n_people)
+        exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
+        integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** (exponent - 1.0)))
+        return self.SLAVE_BASE_PRICE_DENARII * (people_count + integral) * self.price_index
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.
@@ -2117,7 +3118,7 @@ class LabourMixin:
         # needs all three exactly as much as a person you pay. More so.
         room = self.household_room()
         if n_people > room:
-            self._last_buy_refusal = (
+            self.household._last_buy_refusal = (
                 "you can supervise, house and teach %.2f more people, not %g - "
                 "and a person you own needs feeding and housing exactly as much "
                 "as one you pay. %s"
@@ -2125,22 +3126,67 @@ class LabourMixin:
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
-        if price > self.capital:
+        if price > self.household.capital:
             return 0
-        self.capital -= price
-        self.slaves += n_people
-        self.market_pressure = getattr(self, "market_pressure", 0.0) + n_people
-        # Untrained on arrival. They become productive through self.training.
-        self.training.append([n_people * 0.55, self.year + self.TRAINING_YEARS])
+        self.household.capital -= price
+        self.household.slaves += n_people
+        self.household.market_pressure = getattr(self.household, "market_pressure", 0.0) + n_people
+        # Untrained on arrival. They become productive through self.household.training.
+        self.household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self.year + self.TRAINING_YEARS])
         return n_people
 
+    WORKER_EQUIVALENT_UNTRAINED = declare(
+        "WORKER_EQUIVALENT_UNTRAINED", 0.55, kind="temporary_heuristic",
+        unit="fraction of a full worker's artisan capacity", source=None,
+        confidence="D",
+        why="What fraction of a full worker a person newly bought is "
+            "assumed to represent, entered into the training queue and "
+            "matured over TRAINING_YEARS. Not a measured productivity "
+            "ratio; picked so the training lag is real (see buy_slaves' "
+            "own docstring on the exploit this closed) without being all "
+            "or nothing.")
+    MANUMISSION_ARTISAN_UPLIFT = declare(
+        "MANUMISSION_ARTISAN_UPLIFT", 0.45, kind="temporary_heuristic",
+        unit="fraction of a full worker's artisan capacity", source=None,
+        confidence="D",
+        why="What manumission adds to an already-TRAINED person's artisan "
+            "value: the same person working properly rather than under "
+            "coercion, a rise from WORKER_EQUIVALENT_UNTRAINED (0.55) to a "
+            "full worker (1.0), so it adds the difference, 0.45 - not "
+            "another whole worker. See buy_slaves' own docstring for the "
+            "double-counting bug this figure fixed.")
+    MANUMISSION_REPUTATION_GAIN_PER_PERSON = declare(
+        "MANUMISSION_REPUTATION_GAIN_PER_PERSON", 0.4, kind="temporary_heuristic",
+        unit="reputation points per person freed, before saturation",
+        source=None, confidence="D",
+        why="How much standing freeing one person is worth before the "
+            "saturation term below discounts it. Tuned game balance, not "
+            "a measured social reward for manumission in any specific "
+            "period.")
+    MANUMISSION_REPUTATION_SATURATION_SCALE = declare(
+        "MANUMISSION_REPUTATION_SATURATION_SCALE", 25.0, kind="temporary_heuristic",
+        unit="people manumitted, for the saturation denominator",
+        source=None, confidence="D",
+        why="How fast repeated manumission stops being newsworthy: 'the "
+            "first freedmen you make are a statement; the four hundredth "
+            "is a payroll'. The saturating SHAPE is a real claim about "
+            "admiration; the scale of it is tuned, not measured.")
+    MANUMISSION_REPUTATION_GAIN_CAP = declare(
+        "MANUMISSION_REPUTATION_GAIN_CAP", 6.0, kind="temporary_heuristic",
+        unit="reputation points, per manumit() call", source=None,
+        confidence="D",
+        why="The most a single manumission act can raise reputation by, "
+            "however many people it frees at once - uncapped, this was a "
+            "reputation pump that beat taking a patron. Tuned ceiling, not "
+            "measured.")
+
     def manumit(self, n_people):
-        n_people = min(n_people, self.slaves)
+        n_people = min(n_people, self.household.slaves)
         if not n_people:
             return 0
-        self.slaves -= n_people
-        self.freedmen += n_people
-        self.manumitted_total += n_people
+        self.household.slaves -= n_people
+        self.household.freedmen += n_people
+        self.household.manumitted_total += n_people
         # The SAME person, working properly: 0.55 to 1.0, not another whole
         # worker. This was the double count.
         #
@@ -2154,17 +3200,18 @@ class LabourMixin:
         # The training queue also carries taught-trade rows now (which have a
         # trade name in them and no artisan capacity), so read column 0 by index
         # rather than unpacking a row whose width is no longer fixed.
-        in_training = sum(row[0] for row in self.training)
-        untrained = min(n_people, int(in_training / 0.55 + 0.5))
+        in_training = sum(row[0] for row in self.household.training)
+        untrained = min(n_people, int(in_training / self.WORKER_EQUIVALENT_UNTRAINED + 0.5))
         trained_freed = max(0, n_people - untrained)
-        self.artisans += trained_freed * 0.45
+        self.household.artisans += trained_freed * self.MANUMISSION_ARTISAN_UPLIFT
         if untrained:
-            share = untrained / max(1.0, in_training / 0.55)
-            for row in self.training:
-                row[0] *= 1.0 + 0.45 / 0.55 * min(1.0, share)
+            share = untrained / max(1.0, in_training / self.WORKER_EQUIVALENT_UNTRAINED)
+            for row in self.household.training:
+                row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
         # Manumission was publicly admired, and admiration saturates. The first
         # freedmen you make are a statement; the four hundredth is a payroll.
         # Uncapped, this was a reputation pump that beat taking a patron.
-        gain = 0.4 * n_people / (1.0 + self.manumitted_total / 25.0)
-        self.reputation += min(gain, 6.0)
+        gain = (self.MANUMISSION_REPUTATION_GAIN_PER_PERSON * n_people
+                / (1.0 + self.household.manumitted_total / self.MANUMISSION_REPUTATION_SATURATION_SCALE))
+        self.household.reputation += min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)
         return n_people

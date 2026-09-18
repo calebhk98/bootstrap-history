@@ -1,8 +1,8 @@
 """Shared fixtures, imports and check-recording machinery for the split
-test suite (see rome/sim/tests/__main__.py for the runner).
+test suite (see sim/tests/__main__.py for the runner).
 
 This is test_regressions.py's own former preamble (import block, TREE/NODES/
-ORDER/GOAL, check()/slow_check()/proto()/sim()/run_it()/_par_map(), the
+ORDER/GOAL, check()/slow_check()/proto()sim()/run_it()/_par_map(), the
 subprocess-timing patch and the --jobs parsing), moved here VERBATIM so every
 topic module in this package can do `from .harness import *` and see exactly
 what the old flat script saw at the top of the file. Every topic module is
@@ -24,13 +24,29 @@ its own verbatim copy too (harmless - it simply shadows the harness-provided
 name with an identical one within that module's own namespace, exactly
 reproducing the original file's behaviour there).
 """
-import collections, copy, glob, json, os, random, re, subprocess, sys, time
+import atexit, collections, copy, glob, json, os, random, re, shutil, subprocess, sys, time
 import concurrent.futures as _concurrent_futures
 import threading
 import tempfile
 
+# HERE is this repository's sim/ directory; ROOT is the repository itself.
+#
+# ROOT USED TO BE THE REPOSITORY'S PARENT, and the suite only ran at all if
+# that parent happened to contain a directory literally named `rome`. Two
+# things came of that, both bad. Every scratch file the suite writes
+# (_loadtest_tmp, _playtest_tmp, and every subprocess run with cwd=ROOT)
+# landed OUTSIDE the checkout, in whatever directory the checkout happened to
+# sit in. And a check that globbed os.path.join(ROOT, "data", ...) - the
+# natural spelling, and the one build_index.py already used - silently matched
+# nothing, so ten assertions about the civilization files' event coverage ran
+# zero times for as long as they existed without anyone noticing, because a
+# for-loop over an empty glob does not fail, it just says nothing.
+#
+# ROOT is now the repository, so `os.path.join(ROOT, "data", ...)` means what
+# it reads as, scratch files stay inside the checkout where .gitignore can see
+# them, and nothing anywhere depends on what the checkout is called.
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import simulator as S
 import planner as PLANNER
@@ -61,13 +77,13 @@ _real_subprocess_run = subprocess.run
 
 
 def _timed_subprocess_run(*a, **kw):
-    t0 = time.time()
+    start_time = time.time()
     try:
         return _real_subprocess_run(*a, **kw)
     finally:
-        dt = time.time() - t0
+        elapsed_seconds = time.time() - start_time
         with _SUBPROC_LOCK:
-            _SUBPROC_TIME[0] += dt
+            _SUBPROC_TIME[0] += elapsed_seconds
             _SUBPROC_CALLS[0] += 1
 
 
@@ -113,8 +129,8 @@ def _par_map(fn, items):
     items = list(items)
     if JOBS <= 1 or len(items) <= 1:
         return [fn(x) for x in items]
-    with _concurrent_futures.ThreadPoolExecutor(max_workers=min(JOBS, len(items))) as ex:
-        return list(ex.map(fn, items))
+    with _concurrent_futures.ThreadPoolExecutor(max_workers=min(JOBS, len(items))) as executor:
+        return list(executor.map(fn, items))
 
 
 # --- progress, to stderr only (stdout - the thing diffed against an older
@@ -133,11 +149,11 @@ def _progress_ping():
 
 
 def sim(civ="rome_100ad", capital=None, manual=True, events=False):
-    cfg = {"start_capital": capital} if capital is not None else None
-    s = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
-              civ=S.load_civ(civ), cfg=cfg)
-    s.goal, s.done_year = GOAL, {}
-    return s
+    config = {"start_capital": capital} if capital is not None else None
+    test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
+              civ=S.load_civ(civ), cfg=config)
+    test_sim.goal, test_sim.done_year = GOAL, {}
+    return test_sim
 
 
 def run_it(s, *keys):
@@ -148,9 +164,9 @@ def run_it(s, *keys):
     A check that wants the capability has to open the place, the same as a
     player would.
     """
-    for k in keys:
-        s.done.add(k)
-        s.operating.add(k)
+    for key in keys:
+        s.done.add(key)
+        s.operating.add(key)
     s._done_changed()
     return s
 
@@ -205,15 +221,15 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
         cmd += ["--kit", kit]
     if fog:
         cmd += ["--fog"]
-    p = subprocess.run(cmd, input="\n".join(json.dumps(c) for c in lines) + "\n",
+    completed_process = subprocess.run(cmd, input="\n".join(json.dumps(command) for command in lines) + "\n",
                        capture_output=True, text=True, timeout=300, cwd=ROOT)
-    out = []
-    for ln in p.stdout.splitlines():
+    parsed_lines = []
+    for line in completed_process.stdout.splitlines():
         try:
-            out.append(json.loads(ln))
+            parsed_lines.append(json.loads(line))
         except ValueError:
             pass
-    return out, p.stdout, p.returncode
+    return parsed_lines, completed_process.stdout, completed_process.returncode
 
 
 # ============================================================================
@@ -227,7 +243,7 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
 # it) exactly reproduces the original behaviour everywhere.
 # ============================================================================
 
-# --- from rome/sim/test_regressions.py's old "load/save" block (originally
+# --- from sim/test_regressions.py's old "load/save" block (originally
 # introduced around its own robustness-checks section): every save/load path
 # used by the tests lives under one relative scratch directory, so that a
 # real player's own relative save path is what's being exercised.
@@ -246,11 +262,33 @@ def _rel(name):
 _PLAY_DIR = "_playtest_tmp"
 
 
+# A GREEN RUN LEAVES NOTHING BEHIND; A RED ONE LEAVES THE EVIDENCE.
+#
+# Both scratch directories are created relative to ROOT, and ROOT is now the
+# repository, so they sit inside the checkout where they are visible (and
+# .gitignore'd) rather than being dropped in whatever directory the checkout
+# happened to live in. Visible means they have to be tidied, and `--only`
+# runs never reach the one topic module that used to rmtree _playtest_tmp on
+# its way past. Doing it at interpreter exit covers every entry point and
+# every topic selection.
+#
+# Only on a clean run, though. When a check fails, the save file or session
+# transcript that failed it is usually the fastest way to see why, and
+# deleting it on the way out would be the sort of helpfulness that costs an
+# hour later.
+@atexit.register
+def _remove_scratch_dirs_if_green():
+    if FAILURES:
+        return
+    for scratch_dir in (_LOADTEST_DIR, _PLAY_DIR):
+        shutil.rmtree(os.path.join(ROOT, scratch_dir), ignore_errors=True)
+
+
 # --- from the old "HISTORICAL EVENTS ANSWER TO WHAT WAS ACTUALLY BUILT"
 # section: look up one named hazard from a civilisation file, by name.
 def _hazard(civname, hazard_name):
-    _c = S.load_civ(civname)
-    return next(h for h in _c["hazards"] if h["name"] == hazard_name)
+    civ_data = S.load_civ(civname)
+    return next(hazard for hazard in civ_data["hazards"] if hazard["name"] == hazard_name)
 
 
 # --- from the old "TWO LOOMS COMPETE" goods-market section: n_looms real,
@@ -260,30 +298,30 @@ def _mk_loom_sim(n_looms, age_years):
     """n_looms real, distinct textiles-category venture nodes, all opened
     the same year, aged the same number of years. Uses real tree nodes
     (not synthetic ones), the same way the rest of this file does."""
-    cand = sorted(k for k, n in NODES.items()
-                  if n.get("cat") == "textiles" and n.get("rev"))
-    assert len(cand) >= n_looms, "not enough textiles venture nodes in the tree"
-    chosen = cand[:n_looms]
-    s = sim(civ="rome_100ad", capital=5_000_000.0)
-    s.artisans = s.scholars = 100.0 * n_looms
+    candidates = sorted(node_id for node_id, node in NODES.items()
+                  if node.get("cat") == "textiles" and node.get("rev"))
+    assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
+    chosen = candidates[:n_looms]
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
+    loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
-        s.employees[trade] = 100.0 * n_looms
-    s.year = 100
-    for k in chosen:
-        s.done.add(k)
-        s.done_year[k] = 100
-    s._done_changed()
-    for k in chosen:
-        for trade, required in NODES[k].get("lab", {}).get("trades", {}).items():
-            s.employees[trade] = max(s.employees.get(trade, 0.0),
+        loom_sim.employees[trade] = 100.0 * n_looms
+    loom_sim.year = 100
+    for node_id in chosen:
+        loom_sim.done.add(node_id)
+        loom_sim.done_year[node_id] = 100
+    loom_sim._done_changed()
+    for node_id in chosen:
+        for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():
+            loom_sim.employees[trade] = max(loom_sim.employees.get(trade, 0.0),
                                      float(required) * n_looms)
-        ok, msg = s.open_venture(k)
-        assert ok, (k, msg)
-    s.year = 100 + age_years
-    return s, chosen
+        ok, msg = loom_sim.open_venture(node_id)
+        assert ok, (node_id, msg)
+    loom_sim.year = 100 + age_years
+    return loom_sim, chosen
 
 
 # --- mid-file "from engine.X import Y as Z" aliases: pure, side-effect-free
@@ -334,4 +372,4 @@ import time as _time
 # flat script had at global scope, including the (many) leading-underscore
 # names above - a plain `import *` skips those unless __all__ says otherwise.
 # Computed, not hand-listed, so nothing added above is ever silently dropped.
-__all__ = [_n for _n in list(globals()) if not _n.startswith("__")]
+__all__ = [name for name in list(globals()) if not name.startswith("__")]

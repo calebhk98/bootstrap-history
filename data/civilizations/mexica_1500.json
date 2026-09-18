@@ -1,444 +1,445 @@
 {
- "_note_cost_multipliers": "No domesticable large mammal exists in Mesoamerica, so every load moves on a human back and every plough, cart, harness and horse-hoe in the tree is a far worse deal here. That is a fact about the continent, not something the founder can teach away, and it is the single largest handicap any civilization in this file carries. Against it: superb calendrical astronomy, intensive chinampa agriculture that outyields Roman farming per hectare, and cotton textiles.",
- "_note_debt_bondage": "Tlacotin: servitude entered into for debt, worked off, not heritable, and the person could buy their own freedom. Not chattel slavery, and the model should not flatten it into one.",
- "base_reach": 1,
- "blurb": "A large, dense, literate, well-administered state with monumental construction, chinampa agriculture that outyields anything in Europe, and no draught animals, no iron, no wheel in practical use.",
- "bondage_years": 8,
- "cost_multipliers": {
-  "agriculture": 1.3,
-  "alloys": 1.7,
-  "animal_traction": 3.0,
-  "astronomy": 0.8,
-  "bicycles": 2.0,
-  "carriage_engineering": 2.2,
-  "casting": 1.5,
-  "field_machinery": 2.4,
-  "food": 0.85,
-  "infrastructure": 1.15,
-  "land_transport": 2.2,
-  "metallurgy": 1.7,
-  "textiles": 0.9,
-  "transport": 2.2
- },
- "currency": "cacao bean and cotton cloth",
- "debt_bondage": true,
- "fire_quarter": "reed and adobe quarter by the canal",
- "handicap_remedies": {
-  "_doc": "Every handicap here can be lifted. That is the point: nothing about a society is permanent, and a founder who knows what is missing can go and fetch it.",
-  "agriculture": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.0
+  "_note_cost_multipliers": "No domesticable large mammal exists in Mesoamerica, so every load moves on a human back and every plough, cart, harness and horse-hoe in the tree is a far worse deal here. That is a fact about the continent, not something the founder can teach away, and it is the single largest handicap any civilization in this file carries. Against it: superb calendrical astronomy, intensive chinampa agriculture that outyields Roman farming per hectare, and cotton textiles.",
+  "_note_debt_bondage": "Tlacotin: servitude entered into for debt, worked off, not heritable, and the person could buy their own freedom. Not chattel slavery, and the model should not flatten it into one.",
+  "base_reach": 1,
+  "blurb": "A large, dense, literate, well-administered state with monumental construction, chinampa agriculture that outyields anything in Europe, and no draught animals, no iron, no wheel in practical use.",
+  "bondage_years": 8,
+  "cost_multipliers": {
+    "agriculture": 1.3,
+    "alloys": 1.7,
+    "animal_traction": 3.0,
+    "astronomy": 0.8,
+    "bicycles": 2.0,
+    "carriage_engineering": 2.2,
+    "casting": 1.5,
+    "field_machinery": 2.4,
+    "food": 0.85,
+    "infrastructure": 1.15,
+    "land_transport": 2.2,
+    "metallurgy": 1.7,
+    "textiles": 0.9,
+    "transport": 2.2
   },
-  "alloys": {
-   "node": "blast_furnace",
-   "residual": 1.0
+  "currency": "cacao bean and cotton cloth",
+  "debt_bondage": true,
+  "fire_quarter": "reed and adobe quarter by the canal",
+  "handicap_remedies": {
+    "_doc": "Every handicap here can be lifted. That is the point: nothing about a society is permanent, and a founder who knows what is missing can go and fetch it.",
+    "agriculture": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.0
+    },
+    "alloys": {
+      "node": "blast_furnace",
+      "residual": 1.0
+    },
+    "animal_traction": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.15
+    },
+    "bicycles": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.0
+    },
+    "carriage_engineering": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.15
+    },
+    "casting": {
+      "node": "blast_furnace",
+      "residual": 1.0
+    },
+    "field_machinery": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.2
+    },
+    "infrastructure": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.0
+    },
+    "land_transport": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.15
+    },
+    "metallurgy": {
+      "node": "blast_furnace",
+      "residual": 1.0
+    },
+    "transport": {
+      "node": "exp_import_draught_animals",
+      "residual": 1.15
+    }
   },
-  "animal_traction": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.15
+  "hazards": [
+    {
+      "name": "Old World epidemics on contact",
+      "note": "Smallpox, measles and typhus in a population with no immunity. This is the single most severe hazard of any civilization in this directory and it is not a fair fight.",
+      "staff_loss": 0.8,
+      "years": [
+        1520,
+        1600
+      ]
+    },
+    {
+      "name": "Spanish invasion",
+      "note": "The conquest does not just take the city, it replaces the religious order that ran it. Franciscan and Dominican friars begin systematic campaigns against indigenous ritual almost immediately, and the colonial administration that follows is far less willing than the tlatoani's court to read an inexplicable effect as divine favour rather than as diabolism or sorcery to be extirpated -- applied gradually below as shifts in what this society values, over the same short years as the the chance of being sacked, because there is no long war here to spread it across.",
+      "sack_chance": 0.9,
+      "values": {
+        "w_magic_fear": 0.35,
+        "w_novelty": -0.2,
+        "w_religious_rigidity": 0.3
+      },
+      "years": [
+        1519,
+        1521
+      ]
+    },
+    {
+      "name": "The colonial order: encomienda, repartimiento, congregacion",
+      "note": "The conquest is a short event; the thing it installs is not. Encomienda grants of tribute and labour ran from 1521, were curtailed by the New Laws of 1542 and were replaced by the repartimiento, a rotating draft on indigenous villages for mine and estate work. The congregaciones of about 1595 to 1605 moved the survivors of the epidemics into planned towns where they could be counted and taxed. The legal position of an indigenous man under this order is the point: he is a permanent minor in law, with a protective court of his own (the Juzgado General de Indios, from 1592) and correspondingly without the standing to contract freely; the Spanish craft guilds' ordinances in Mexico City reserved masterships to Spaniards; and the Crown's mercantile policy actively suppressed New Spanish manufactures that competed with Spain's. The one genuinely surprising fact is on the other side: the Holy Office, established in Mexico in 1571, was forbidden to try Indians, who went instead to the bishop's provisorato de indios. That is a lesser danger than a Spaniard faced, not a greater one, which is why how readily an inexplicable effect is called sorcery does not rise further here beyond what the conquest already did.",
+      "output_factor": 0.72,
+      "values": {
+        "patronage_weight": 0.1,
+        "w_commerce": -0.1,
+        "w_information": -0.1,
+        "w_novelty": -0.1
+      },
+      "years": [
+        1550,
+        1700
+      ]
+    },
+    {
+      "name": "The silver cycle and the patio process",
+      "note": "Zacatecas was struck in 1546 and Guanajuato in 1548, and in 1554 Bartolome de Medina worked out the patio amalgamation process at Pachuca - crushed ore spread in a yard with salt, copper sulphate and mercury and turned by mules for weeks - which made low-grade ore payable and is a genuine New World invention rather than an import. New Spain became the largest silver producer on earth and the Valenciana at Guanajuato the richest single mine in the world by the 1780s. The institutional consequences matter more here than the bullion: the Real Tribunal de Mineria was chartered in 1777 with its own court and credit fund, and its Real Seminario de Mineria opened in 1792 under Fausto Elhuyar, co-discoverer of tungsten, with Andres Manuel del Rio teaching mineralogy there - del Rio identified vanadium in a Zimapan ore in 1801, in Mexico, nine years before anyone in Europe. Mining is the one field in which colonial New Spain actively wanted new machinery, imported the men who understood it and paid for the schooling, and it is the best environment this civilization offers a technologist between the conquest and the twentieth century. No damage fields: this is the opening, and it runs for two and a half centuries.",
+      "values": {
+        "w_commerce": 0.2,
+        "w_labour_saving": 0.1,
+        "w_novelty": 0.15
+      },
+      "years": [
+        1554,
+        1810
+      ]
+    },
+    {
+      "name": "The matlazahuatl of 1736",
+      "note": "Probably typhus. It began at Tacuba in August 1736 and ran through the valley of Mexico for three years; the usual figures are forty to fifty thousand dead in Mexico City and something like two hundred thousand across New Spain. It is the last great colonial epidemic before the smallpox of 1797, which is itself the immediate reason the Crown sent the Balmis expedition out from A Coruna at the end of 1803, carrying live vaccine to America in relays of orphan boys arm to arm - the first mass vaccination campaign anywhere in the world, and one that began here.",
+      "staff_loss": 0.25,
+      "years": [
+        1736,
+        1739
+      ]
+    },
+    {
+      "name": "The Bourbon reforms",
+      "note": "Jose de Galvez's visita general from 1765, the intendancy system of 1786 that replaced the old patchwork of jurisdictions with salaried administrators, the comercio libre decree of 1778 that let New Spain trade with ports other than Cadiz, and the Royal Botanical Expedition of 1787 with its garden and its chair of botany in Mexico City. The Enlightenment arrives in New Spain through the Bourbon state rather than against it, which is why novelty gets cheaper here and doctrine gets lighter at the same time. The cost side is the expulsion of the Jesuits in 1767, which closed the best schools in the viceroyalty overnight and turned a generation of creole intellectuals against Madrid - the reforms that made the colony richer and better run are also what made it want to leave.",
+      "values": {
+        "patronage_weight": -0.05,
+        "w_commerce": 0.1,
+        "w_novelty": 0.1,
+        "w_religious_rigidity": -0.1
+      },
+      "years": [
+        1765,
+        1800
+      ]
+    },
+    {
+      "name": "The wars of independence",
+      "note": "Hidalgo called the rising at Dolores on 16 September 1810; within a fortnight his followers had taken Guanajuato and stormed the Alhondiga de Granaditas, and the mining districts were the first thing wrecked. Morelos was shot in 1815, and Iturbide ended the war in 1821 by changing sides, entering Mexico City on 27 September under the Plan de Iguala. For anyone who needs capital, metal or machinery this is the worst event in Mexican history and worse than the conquest was for the economy. Silver output fell by about three quarters and did not regain its 1809 level until the 1880s, because the deep workings flooded the moment the drainage engines stopped and re-draining them needed capital that no government of the next fifty years had. The Real Seminario de Mineria survived but its graduates had nothing to work on.",
+      "output_factor": 0.5,
+      "sack_chance": 0.07,
+      "staff_loss": 0.12,
+      "condition": {
+        "field": "output_factor",
+        "requires_all": [
+          "met_mine_pumping"
+        ],
+        "outcome": "alter",
+        "alter_scale": 0.5,
+        "met_message": "The wars of independence: the mining districts are the first thing wrecked, and across New Spain the deep workings flood the moment the drainage engines stop - but your own pumps are yours, not a government's, and they keep running through the war, so the flooding that ends everyone else's decade only half-touches yours. (The war itself, the shootings, the changing sides, are none of them yours to stop.)",
+        "unmet_message": "The wars of independence: your workings drain on engines that depend on the same capital everyone else's does, and when the war stops it, the flood takes your decade the way it took New Spain's."
+      },
+      "years": [
+        1810,
+        1821
+      ]
+    },
+    {
+      "name": "The unstable republic and the foreign wars",
+      "note": "Something like fifty governments in the first thirty years; Santa Anna in and out of the presidency eleven times; Texas gone in 1836; the war with the United States from 1846 to 1848 ending at Guadalupe Hidalgo on 2 February 1848 with the loss of half the national territory. Then the Reform, which is the largest favourable shifts in what this society values change in this file: the Ley Juarez of 1855 abolished the ecclesiastical and military fueros, the Ley Lerdo of 1856 forced the Church to sell its landholding, the constitution of 1857 secularised civil life and the Leyes de Reforma of 1859-1860 nationalised Church property outright and established civil marriage, civil registry, secular cemeteries and freedom of worship. The three-year civil war it caused from 1858, the French intervention that followed, Maximilian, and his execution at Queretaro on 19 June 1867 are the price of it. A society that began this file governed by a ritual calendar ends it with doctrine having very little formal power over anything, and how much doctrine constrains what may be said has to say so. The erosion field here is not metal debasement: the silver peso stayed good, and that is exactly why every one of these governments financed itself by prestamos forzosos, forced loans levied on whoever in the capital was visibly solvent, and by pledging customs revenue years ahead. Being known to have money is the danger, which is also why patronage and how much money can buy in a courtroom both rise: a protector in the current government is the only asset that holds its value.",
+      "output_factor": 0.6,
+      "real_erosion": 0.015,
+      "sack_chance": 0.03,
+      "values": {
+        "bribability": 0.1,
+        "patronage_weight": 0.1,
+        "w_religious_rigidity": -0.35
+      },
+      "years": [
+        1821,
+        1867
+      ]
+    },
+    {
+      "name": "The Porfiriato",
+      "note": "Porfirio Diaz held power from 1876 to 1911 under the slogan of order and progress, and for a technologist the order was real and so was the progress. Railway line went from about 640 km in 1876 to some 19,000 km by 1910, with the telegraph following the track; electric light reached Guanajuato in 1879 and the first central generating station in Mexico City opened in 1897; foreign capital rebuilt the mines around steam pumps, dynamite and cyanide leaching, so silver and then copper and lead output passed their colonial peaks; commercial oil began at Ebano in 1901. It was paid for with land concentration, debt peonage on the henequen and tobacco estates, and the shootings at Cananea in 1906 and Rio Blanco in 1907, which is what produced what comes next. Inside this window it is the most favourable environment for building something new that this civilization has had since 1519, and the shifts in what this society values here say so.",
+      "values": {
+        "patronage_weight": 0.05,
+        "w_commerce": 0.2,
+        "w_labour_saving": 0.2,
+        "w_novelty": 0.2
+      },
+      "years": [
+        1876,
+        1910
+      ]
+    },
+    {
+      "name": "The Revolution",
+      "note": "Madero's Plan de San Luis Potosi called the rising for 20 November 1910; Huerta's coup in February 1913 turned it into a general war between Carranza, Villa and Zapata that was not settled until Obregon in 1920. Demographers put the net population loss at between one and two million out of about fifteen, counting deaths, births that did not happen and emigration to the United States; the influenza of 1918 took perhaps another three hundred thousand on top of that. The railways were both the armies' chief weapon and their chief target, so the Porfirian network that made the previous entry possible was systematically destroyed, and the mines closed. The constitution of 1917 that came out of it vested subsoil rights in the nation - article 27, and the origin of the oil expropriation twenty-one years later.",
+      "output_factor": 0.45,
+      "sack_chance": 0.09,
+      "staff_loss": 0.18,
+      "years": [
+        1910,
+        1920
+      ]
+    },
+    {
+      "name": "The Cristero war",
+      "note": "The anticlerical articles of the 1917 constitution were enforced in earnest from 1926 and the countryside of the centre-west rose against it; perhaps 250,000 died before the arreglos of 1929 patched up a modus vivendi. It is a small entry because it was regional - Jalisco, Michoacan, Guanajuato, Zacatecas - and because the cities and the mines largely kept working through it. The shifts in what this society values shift here is downward, not upward, which reads oddly for a religious war: the anticlerical articles won. Article 3 made education secular, article 130 denied priests the vote and let the states cap their numbers, and the 1929 settlement conceded the practice of religion while leaving all of that standing.",
+      "output_factor": 0.85,
+      "values": {
+        "w_religious_rigidity": -0.15
+      },
+      "years": [
+        1926,
+        1929
+      ]
+    },
+    {
+      "name": "The Mexican miracle",
+      "note": "Thirty years of growth averaging above six per cent a year with a stable peso, on import-substituting industrialisation behind tariffs. The institutional base was laid just before it: the Instituto Politecnico Nacional in 1936, the oil expropriation and the founding of Pemex in 1938, and after the war the Ciudad Universitaria of UNAM in 1954 and the national nuclear energy commission in 1955. From here on Mexico trains its own physicists and engineers at home instead of sending its sons to Europe or doing without. Adult literacy goes from roughly a half in 1940 to roughly three quarters by 1970, which is why how freely knowledge travels moves furthest of anything here: for the first time in this file, information reaching ordinary people is something the state is spending money to cause rather than to prevent. how readily an inexplicable effect is called sorcery falls with it: a state that is building a nuclear commission and a university city of a hundred thousand students is not a state that reads an unexplained effect as sorcery.",
+      "values": {
+        "w_commerce": 0.15,
+        "w_information": 0.25,
+        "w_labour_saving": 0.15,
+        "w_magic_fear": -0.2,
+        "w_novelty": 0.15,
+        "w_religious_rigidity": -0.1
+      },
+      "years": [
+        1940,
+        1970
+      ]
+    },
+    {
+      "name": "The Mexico City earthquake",
+      "note": "Magnitude 8.0 off the coast of Michoacan on the morning of 19 September 1985, amplified by the old lake bed the city is built on. The official death toll was around ten thousand and credible estimates run to double that; several hundred buildings in the centre came down, including hospitals, and the government's failure to respond is usually treated as the beginning of the end of one-party rule. A single-year risk of losing a site outright, which is exactly what it was.",
+      "sack_chance": 0.12,
+      "years": [
+        1985,
+        1985
+      ]
+    },
+    {
+      "name": "The debt crisis and the lost decade",
+      "note": "The peso was devalued in 1976 for the first time in twenty-two years; the oil boom that followed it collapsed with the oil price, and on 20 August 1982 Mexico told its creditors it could not pay, which is the event that started the whole Latin American debt crisis. Inflation ran above a hundred per cent for most of the 1980s and touched about 160 per cent in 1987; the banks were nationalised in 1982; the currency was redenominated a thousand old pesos to one new one in 1993; and the devaluation of December 1994 halved it again inside a fortnight. The erosion here is set far below what actually happened - the peso lost more than three orders of magnitude against the dollar between 1976 and 1995, and modelling that honestly would end every run - but the direction is the point: anything saved in the currency over these years was destroyed, and only land, metal and machinery held.",
+      "output_factor": 0.82,
+      "real_erosion": 0.07,
+      "years": [
+        1982,
+        1995
+      ]
+    },
+    {
+      "name": "NAFTA and the end of PRI hegemony",
+      "note": "The North American Free Trade Agreement took effect on 1 January 1994, the same year the peso crisis above technically begins with the Chiapas uprising and the assassination of the ruling party's own presidential candidate, Luis Donaldo Colosio. It takes six more years for the rest of the one-party system Mexico had lived under since 1929 to give way: Vicente Fox's win in July 2000 is the first time the Institutional Revolutionary Party has lost the presidency in seventy-one years. Trade opens and the old patronage machine that had run every election loses its grip at the same time, which is why both belong in one entry.",
+      "values": {
+        "w_commerce": 0.1,
+        "patronage_weight": -0.08,
+        "w_novelty": 0.05
+      },
+      "years": [
+        1994,
+        2000
+      ]
+    },
+    {
+      "name": "The drug war",
+      "note": "President Felipe Calderon declared war on the cartels in December 2006 and deployed the army against them; the killing that followed is usually put at well over a hundred thousand dead by the mid-2010s and has not stopped since, concentrated in particular states and along particular trafficking routes rather than spread evenly, which is why this is modelled as a standing, low sack risk and a drag on trade rather than as a single mortality event. This file stops adding history at approximately the point it is being written, 2026: nothing after that is invented, and the long quiet stretch after this entry toward the edge of a 700-year run is the honest shape of not yet knowing what happens next, not a gap in the research.",
+      "output_factor": 0.92,
+      "sack_chance": 0.02,
+      "years": [
+        2006,
+        2024
+      ]
+    },
+    {
+      "name": "The Puebla-Morelos earthquake",
+      "note": "Magnitude 7.1, struck midday on 19 September 2017 - the thirty-second anniversary, to the day, of the 1985 quake above - and brought down more than forty buildings in Mexico City alone along with heavy damage across Puebla and Morelos. Far smaller than 1985 in both magnitude and death toll (around 370 dead against the earlier quake's thousands), modelled the same way and at roughly a third of its risk.",
+      "sack_chance": 0.04,
+      "years": [
+        2017,
+        2017
+      ]
+    }
+  ],
+  "home_regions": [
+    "americas_carib"
+  ],
+  "id": "mexica_1500",
+  "institutions": {
+    "bank": false,
+    "charter": "tlatoani grant",
+    "corporation": false,
+    "guild": "pochteca merchant order, hereditary and privileged",
+    "partnership": true,
+    "patent": false,
+    "testament": true
   },
-  "bicycles": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.0
+  "literacy_elite": 0.4,
+  "literacy_general": 0.03,
+  "name": "The Mexica Triple Alliance",
+  "notes": [
+    "NO IRON, NO DRAUGHT ANIMALS, NO PRACTICAL WHEEL. Obsidian is sharper than steel and shatters. Every metallurgy node starts from copper and gold.",
+    "Chinampa agriculture yields more per hectare than any European system, so the food constraint that shapes the Roman tree does not bind here.",
+    "The absence of draught animals is the deepest constraint: it removes the plough, the cart, the mill and the horse collar in one stroke."
+  ],
+  "opening": {
+    "arrival": "You arrive in Tenochtitlan, a city of a quarter of a million people built on a lake, with causeways, an aqueduct of two channels so one can be cleaned while the other runs, botanical gardens, compulsory schooling, and a market that astonished the men who destroyed it.",
+    "what_is_coming": "Nineteen years. Then ships, and then smallpox, and the smallpox is the one that matters: a population with no immunity to anything the Old World has been trading back and forth for four thousand years. This is the hardest start in this game and it is not a fair fight.",
+    "what_is_missing": "The wheel is a toy here because there is nothing to pull a cart: no horse, no ox, no donkey anywhere in the hemisphere. Every load in this civilisation moves on a human back. That is not ignorance, and no amount of teaching will fix it. Neither will it fix the absence of iron, of large domesticated animals, or of the diseases that made Europeans survivable to each other.",
+    "what_you_can_see": "Chinampas that yield seven crops a year. Obsidian edges sharper than any steel. Featherwork and goldwork of a quality Europe cannot match. A writing system, an accurate calendar, and civil engineering on water that Venice would recognise as kin.",
+    "what_this_models": "You are one household, not the Triple Alliance. Five million people live under this order and a full quarter of them in a town - about 1,250,000 town dwellers, more urbanised than Rome itself - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people, not Tenochtitlan's quarter of a million. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the Alliance's true numbers."
   },
-  "carriage_engineering": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.15
+  "population": 5000000,
+  "price_index": 0.8,
+  "starting_techs": [
+    "cap_heat_0700",
+    "cap_power_human",
+    "cap_tol_1mm",
+    "civ_monumental_stone",
+    "fin_auction",
+    "fin_government",
+    "fin_market",
+    "fin_tax_farming",
+    "fud_cacao",
+    "fud_chinampa",
+    "fud_maize",
+    "hom_board_games",
+    "hom_furniture_wooden",
+    "hom_mirror_bronze_polished",
+    "hom_musical_instruments",
+    "hom_oil_lamp_simple",
+    "mat_alum",
+    "mat_beeswax",
+    "mat_bitumen",
+    "mat_carbon_black",
+    "mat_charcoal",
+    "mat_emery",
+    "mat_gold",
+    "mat_gypsum",
+    "mat_leather",
+    "mat_lime",
+    "mat_obsidian_blade",
+    "mat_salt",
+    "mat_silver",
+    "prn_sculpture",
+    "tex_cotton_trade",
+    "tex_drop_spindle",
+    "tex_felting",
+    "tex_vegetable_tanning",
+    "tex_wool"
+  ],
+  "state_capacity": 0.8,
+  "state_pressure": {
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
+    "requisition_name": "the tribute of the calpixque",
+    "requisition_note": "The tlatoani's tribute collectors, the calpixque, assessed tribute in kind on a fixed schedule recorded in documents like the Codex Mendoza - cacao, featherwork, cloth, metal - and a calpulli producing more than its neighbours simply had a larger quota fixed on it, not a lighter one.",
+    "requisition_base_share": 0.22,
+    "office_name": "a cuauhpilli commission",
+    "office_note": "Commoners who distinguished themselves, especially in war, could be raised to the cuauhpilli, a service nobility that came with land and duties at once - an honour that was also a standing claim on the man's time and output for the state that raised him.",
+    "office_base_share": 0.05,
+    "military_name": "the tlatoani's armouries",
+    "military_note": "A producer of obsidian-edged weapons or featherwork armour at any scale was already supplying the macehualtin levies and the pochteca's own guarded caravans; the Triple Alliance's wars were frequent enough that such a workshop was never overlooked for long.",
+    "confiscation_name": "forfeiture to the tlatoani",
+    "confiscation_note": "Property of a noble disgraced or executed reverted to the tlatoani's own disposal; the theocratic hierarchy this file's own _note_eminence already names as dangerous to stand outside of is the same hierarchy that decides whether your holdings stay yours."
   },
-  "casting": {
-   "node": "blast_furnace",
-   "residual": 1.0
-  },
-  "field_machinery": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.2
-  },
-  "infrastructure": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.0
-  },
-  "land_transport": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.15
-  },
-  "metallurgy": {
-   "node": "blast_furnace",
-   "residual": 1.0
-  },
-  "transport": {
-   "node": "exp_import_draught_animals",
-   "residual": 1.15
-  }
- },
- "hazards": [
-  {
-   "name": "Old World epidemics on contact",
-   "note": "Smallpox, measles and typhus in a population with no immunity. This is the single most severe hazard of any civilization in this directory and it is not a fair fight.",
-   "staff_loss": 0.8,
-   "years": [
-    1520,
-    1600
-   ]
-  },
-  {
-   "name": "Spanish invasion",
-   "note": "The conquest does not just take the city, it replaces the religious order that ran it. Franciscan and Dominican friars begin systematic campaigns against indigenous ritual almost immediately, and the colonial administration that follows is far less willing than the tlatoani's court to read an inexplicable effect as divine favour rather than as diabolism or sorcery to be extirpated -- applied gradually below as shifts in what this society values, over the same short years as the the chance of being sacked, because there is no long war here to spread it across.",
-   "sack_chance": 0.9,
-   "values": {
-    "w_magic_fear": 0.35,
-    "w_novelty": -0.2,
-    "w_religious_rigidity": 0.3
-   },
-   "years": [
-    1519,
-    1521
-   ]
-  },
-  {
-   "name": "The colonial order: encomienda, repartimiento, congregacion",
-   "note": "The conquest is a short event; the thing it installs is not. Encomienda grants of tribute and labour ran from 1521, were curtailed by the New Laws of 1542 and were replaced by the repartimiento, a rotating draft on indigenous villages for mine and estate work. The congregaciones of about 1595 to 1605 moved the survivors of the epidemics into planned towns where they could be counted and taxed. The legal position of an indigenous man under this order is the point: he is a permanent minor in law, with a protective court of his own (the Juzgado General de Indios, from 1592) and correspondingly without the standing to contract freely; the Spanish craft guilds' ordinances in Mexico City reserved masterships to Spaniards; and the Crown's mercantile policy actively suppressed New Spanish manufactures that competed with Spain's. The one genuinely surprising fact is on the other side: the Holy Office, established in Mexico in 1571, was forbidden to try Indians, who went instead to the bishop's provisorato de indios. That is a lesser danger than a Spaniard faced, not a greater one, which is why how readily an inexplicable effect is called sorcery does not rise further here beyond what the conquest already did.",
-   "output_factor": 0.72,
-   "values": {
-    "patronage_weight": 0.1,
-    "w_commerce": -0.1,
-    "w_information": -0.1,
-    "w_novelty": -0.1
-   },
-   "years": [
-    1550,
-    1700
-   ]
-  },
-  {
-   "name": "The silver cycle and the patio process",
-   "note": "Zacatecas was struck in 1546 and Guanajuato in 1548, and in 1554 Bartolome de Medina worked out the patio amalgamation process at Pachuca - crushed ore spread in a yard with salt, copper sulphate and mercury and turned by mules for weeks - which made low-grade ore payable and is a genuine New World invention rather than an import. New Spain became the largest silver producer on earth and the Valenciana at Guanajuato the richest single mine in the world by the 1780s. The institutional consequences matter more here than the bullion: the Real Tribunal de Mineria was chartered in 1777 with its own court and credit fund, and its Real Seminario de Mineria opened in 1792 under Fausto Elhuyar, co-discoverer of tungsten, with Andres Manuel del Rio teaching mineralogy there - del Rio identified vanadium in a Zimapan ore in 1801, in Mexico, nine years before anyone in Europe. Mining is the one field in which colonial New Spain actively wanted new machinery, imported the men who understood it and paid for the schooling, and it is the best environment this civilization offers a technologist between the conquest and the twentieth century. No damage fields: this is the opening, and it runs for two and a half centuries.",
-   "values": {
-    "w_commerce": 0.2,
+  "urban_fraction": 0.25,
+  "values": {
+    "_note": "w_religious_rigidity 0.9 is the dominant constraint: the calendar and the ritual cycle govern the year and anything touching them is dangerous. But an inexplicable effect is likelier to be read as divine favour than as a crime, so w_magic_fear is LOWER than Rome's, which is a genuinely different strategic situation.",
+    "_note_eminence": "A theocratic hierarchy with a strong priesthood; standing outside it is dangerous.",
+    "adaptation_rate": 0.09,
+    "bribability": 0.35,
+    "patronage_weight": 0.75,
+    "w_commerce": 0.5,
+    "w_eminence_danger": 0.7,
+    "w_information": -0.5,
     "w_labour_saving": 0.1,
-    "w_novelty": 0.15
-   },
-   "years": [
-    1554,
-    1810
-   ]
+    "w_magic_fear": 0.3,
+    "w_military": 1.0,
+    "w_novelty": -0.3,
+    "w_religious_rigidity": 0.9
   },
-  {
-   "name": "The matlazahuatl of 1736",
-   "note": "Probably typhus. It began at Tacuba in August 1736 and ran through the valley of Mexico for three years; the usual figures are forty to fifty thousand dead in Mexico City and something like two hundred thousand across New Spain. It is the last great colonial epidemic before the smallpox of 1797, which is itself the immediate reason the Crown sent the Balmis expedition out from A Coruna at the end of 1803, carrying live vaccine to America in relays of orphan boys arm to arm - the first mass vaccination campaign anywhere in the world, and one that began here.",
-   "staff_loss": 0.25,
-   "years": [
-    1736,
-    1739
-   ]
+  "wage_index": 0.5,
+  "year": 1500,
+  "needs_first": {
+    "_doc": "Things this society cannot begin at all until it has the one thing they all rest on. Distinct from cost_multipliers, which make a domain dearer: these are not dear here, they are impossible. A break tester started horse_collar in the Valley of Mexico in 1500 on the same screen as a menu describing a society with no draught animals, and `why` there still called it a collar for a draught horse. Every entry is liftable by the node it names.",
+    "draught animals": {
+      "node": "exp_import_draught_animals",
+      "because": "there is no draught animal in Mesoamerica: no horse, no ox, no mule, nothing that pulls. Every load in this society moves on a human back. Bring animals across first and all of this opens at once",
+      "ids": [
+        "ag2_horse_hoe",
+        "en_horse_gin",
+        "horse_collar",
+        "lnd_four_wheel_cart",
+        "lnd_harness_throat_girth",
+        "lnd_horse_saddle_basic",
+        "lnd_mule_transport",
+        "lnd_ox_transport",
+        "lnd_two_wheel_cart",
+        "mil_artillery_carriage",
+        "pwr_animal_treadmill",
+        "tl_horse_tram",
+        "tl_stirrup",
+        "tl_tandem_harness",
+        "tr_hopper_wagon"
+      ]
+    },
+    "seagoing sail": {
+      "node": "exp_oceangoing_hull",
+      "because": "this society has no sail and no seagoing hull. Mesoamerican water transport is the paddled canoe - on the lake, and hugging the coast as far as Xicalango - and there is no mast, no rigging, no keel and no vessel built to be out of sight of land anywhere in it. The square sail, the spritsail, the mortise-and-tenon Mediterranean hull and the monsoon crossing to India are all other people's answers to other people's seas. Build a hull that can take open water first.",
+      "ids": [
+        "sea_merchant_ships_large",
+        "sea_mortise_tenon",
+        "sea_square_sail",
+        "sea_spritsail",
+        "sea_monsoon_route"
+      ]
+    }
   },
-  {
-   "name": "The Bourbon reforms",
-   "note": "Jose de Galvez's visita general from 1765, the intendancy system of 1786 that replaced the old patchwork of jurisdictions with salaried administrators, the comercio libre decree of 1778 that let New Spain trade with ports other than Cadiz, and the Royal Botanical Expedition of 1787 with its garden and its chair of botany in Mexico City. The Enlightenment arrives in New Spain through the Bourbon state rather than against it, which is why novelty gets cheaper here and doctrine gets lighter at the same time. The cost side is the expulsion of the Jesuits in 1767, which closed the best schools in the viceroyalty overnight and turned a generation of creole intellectuals against Madrid - the reforms that made the colony richer and better run are also what made it want to leave.",
-   "values": {
-    "patronage_weight": -0.05,
-    "w_commerce": 0.1,
-    "w_novelty": 0.1,
-    "w_religious_rigidity": -0.1
-   },
-   "years": [
-    1765,
-    1800
-   ]
-  },
-  {
-   "name": "The wars of independence",
-   "note": "Hidalgo called the rising at Dolores on 16 September 1810; within a fortnight his followers had taken Guanajuato and stormed the Alhondiga de Granaditas, and the mining districts were the first thing wrecked. Morelos was shot in 1815, and Iturbide ended the war in 1821 by changing sides, entering Mexico City on 27 September under the Plan de Iguala. For anyone who needs capital, metal or machinery this is the worst event in Mexican history and worse than the conquest was for the economy. Silver output fell by about three quarters and did not regain its 1809 level until the 1880s, because the deep workings flooded the moment the drainage engines stopped and re-draining them needed capital that no government of the next fifty years had. The Real Seminario de Mineria survived but its graduates had nothing to work on.",
-   "output_factor": 0.5,
-   "sack_chance": 0.07,
-   "staff_loss": 0.12,
-   "condition": {
-    "field": "output_factor",
-    "requires_all": [
-     "met_mine_pumping"
-    ],
-    "outcome": "alter",
-    "alter_scale": 0.5,
-    "met_message": "The wars of independence: the mining districts are the first thing wrecked, and across New Spain the deep workings flood the moment the drainage engines stop - but your own pumps are yours, not a government's, and they keep running through the war, so the flooding that ends everyone else's decade only half-touches yours. (The war itself, the shootings, the changing sides, are none of them yours to stop.)",
-    "unmet_message": "The wars of independence: your workings drain on engines that depend on the same capital everyone else's does, and when the war stops it, the flood takes your decade the way it took New Spain's."
-   },
-   "years": [
-    1810,
-    1821
-   ]
-  },
-  {
-   "name": "The unstable republic and the foreign wars",
-   "note": "Something like fifty governments in the first thirty years; Santa Anna in and out of the presidency eleven times; Texas gone in 1836; the war with the United States from 1846 to 1848 ending at Guadalupe Hidalgo on 2 February 1848 with the loss of half the national territory. Then the Reform, which is the largest favourable shifts in what this society values change in this file: the Ley Juarez of 1855 abolished the ecclesiastical and military fueros, the Ley Lerdo of 1856 forced the Church to sell its landholding, the constitution of 1857 secularised civil life and the Leyes de Reforma of 1859-1860 nationalised Church property outright and established civil marriage, civil registry, secular cemeteries and freedom of worship. The three-year civil war it caused from 1858, the French intervention that followed, Maximilian, and his execution at Queretaro on 19 June 1867 are the price of it. A society that began this file governed by a ritual calendar ends it with doctrine having very little formal power over anything, and how much doctrine constrains what may be said has to say so. The erosion field here is not metal debasement: the silver peso stayed good, and that is exactly why every one of these governments financed itself by prestamos forzosos, forced loans levied on whoever in the capital was visibly solvent, and by pledging customs revenue years ahead. Being known to have money is the danger, which is also why patronage and how much money can buy in a courtroom both rise: a protector in the current government is the only asset that holds its value.",
-   "output_factor": 0.6,
-   "real_erosion": 0.015,
-   "sack_chance": 0.03,
-   "values": {
-    "bribability": 0.1,
-    "patronage_weight": 0.1,
-    "w_religious_rigidity": -0.35
-   },
-   "years": [
-    1821,
-    1867
-   ]
-  },
-  {
-   "name": "The Porfiriato",
-   "note": "Porfirio Diaz held power from 1876 to 1911 under the slogan of order and progress, and for a technologist the order was real and so was the progress. Railway line went from about 640 km in 1876 to some 19,000 km by 1910, with the telegraph following the track; electric light reached Guanajuato in 1879 and the first central generating station in Mexico City opened in 1897; foreign capital rebuilt the mines around steam pumps, dynamite and cyanide leaching, so silver and then copper and lead output passed their colonial peaks; commercial oil began at Ebano in 1901. It was paid for with land concentration, debt peonage on the henequen and tobacco estates, and the shootings at Cananea in 1906 and Rio Blanco in 1907, which is what produced what comes next. Inside this window it is the most favourable environment for building something new that this civilization has had since 1519, and the shifts in what this society values here say so.",
-   "values": {
-    "patronage_weight": 0.05,
-    "w_commerce": 0.2,
-    "w_labour_saving": 0.2,
-    "w_novelty": 0.2
-   },
-   "years": [
-    1876,
-    1910
-   ]
-  },
-  {
-   "name": "The Revolution",
-   "note": "Madero's Plan de San Luis Potosi called the rising for 20 November 1910; Huerta's coup in February 1913 turned it into a general war between Carranza, Villa and Zapata that was not settled until Obregon in 1920. Demographers put the net population loss at between one and two million out of about fifteen, counting deaths, births that did not happen and emigration to the United States; the influenza of 1918 took perhaps another three hundred thousand on top of that. The railways were both the armies' chief weapon and their chief target, so the Porfirian network that made the previous entry possible was systematically destroyed, and the mines closed. The constitution of 1917 that came out of it vested subsoil rights in the nation - article 27, and the origin of the oil expropriation twenty-one years later.",
-   "output_factor": 0.45,
-   "sack_chance": 0.09,
-   "staff_loss": 0.18,
-   "years": [
-    1910,
-    1920
-   ]
-  },
-  {
-   "name": "The Cristero war",
-   "note": "The anticlerical articles of the 1917 constitution were enforced in earnest from 1926 and the countryside of the centre-west rose against it; perhaps 250,000 died before the arreglos of 1929 patched up a modus vivendi. It is a small entry because it was regional - Jalisco, Michoacan, Guanajuato, Zacatecas - and because the cities and the mines largely kept working through it. The shifts in what this society values shift here is downward, not upward, which reads oddly for a religious war: the anticlerical articles won. Article 3 made education secular, article 130 denied priests the vote and let the states cap their numbers, and the 1929 settlement conceded the practice of religion while leaving all of that standing.",
-   "output_factor": 0.85,
-   "values": {
-    "w_religious_rigidity": -0.15
-   },
-   "years": [
-    1926,
-    1929
-   ]
-  },
-  {
-   "name": "The Mexican miracle",
-   "note": "Thirty years of growth averaging above six per cent a year with a stable peso, on import-substituting industrialisation behind tariffs. The institutional base was laid just before it: the Instituto Politecnico Nacional in 1936, the oil expropriation and the founding of Pemex in 1938, and after the war the Ciudad Universitaria of UNAM in 1954 and the national nuclear energy commission in 1955. From here on Mexico trains its own physicists and engineers at home instead of sending its sons to Europe or doing without. Adult literacy goes from roughly a half in 1940 to roughly three quarters by 1970, which is why how freely knowledge travels moves furthest of anything here: for the first time in this file, information reaching ordinary people is something the state is spending money to cause rather than to prevent. how readily an inexplicable effect is called sorcery falls with it: a state that is building a nuclear commission and a university city of a hundred thousand students is not a state that reads an unexplained effect as sorcery.",
-   "values": {
-    "w_commerce": 0.15,
-    "w_information": 0.25,
-    "w_labour_saving": 0.15,
-    "w_magic_fear": -0.2,
-    "w_novelty": 0.15,
-    "w_religious_rigidity": -0.1
-   },
-   "years": [
-    1940,
-    1970
-   ]
-  },
-  {
-   "name": "The Mexico City earthquake",
-   "note": "Magnitude 8.0 off the coast of Michoacan on the morning of 19 September 1985, amplified by the old lake bed the city is built on. The official death toll was around ten thousand and credible estimates run to double that; several hundred buildings in the centre came down, including hospitals, and the government's failure to respond is usually treated as the beginning of the end of one-party rule. A single-year risk of losing a site outright, which is exactly what it was.",
-   "sack_chance": 0.12,
-   "years": [
-    1985,
-    1985
-   ]
-  },
-  {
-   "name": "The debt crisis and the lost decade",
-   "note": "The peso was devalued in 1976 for the first time in twenty-two years; the oil boom that followed it collapsed with the oil price, and on 20 August 1982 Mexico told its creditors it could not pay, which is the event that started the whole Latin American debt crisis. Inflation ran above a hundred per cent for most of the 1980s and touched about 160 per cent in 1987; the banks were nationalised in 1982; the currency was redenominated a thousand old pesos to one new one in 1993; and the devaluation of December 1994 halved it again inside a fortnight. The erosion here is set far below what actually happened - the peso lost more than three orders of magnitude against the dollar between 1976 and 1995, and modelling that honestly would end every run - but the direction is the point: anything saved in the currency over these years was destroyed, and only land, metal and machinery held.",
-   "output_factor": 0.82,
-   "real_erosion": 0.07,
-   "years": [
-    1982,
-    1995
-   ]
-  },
-  {
-   "name": "NAFTA and the end of PRI hegemony",
-   "note": "The North American Free Trade Agreement took effect on 1 January 1994, the same year the peso crisis above technically begins with the Chiapas uprising and the assassination of the ruling party's own presidential candidate, Luis Donaldo Colosio. It takes six more years for the rest of the one-party system Mexico had lived under since 1929 to give way: Vicente Fox's win in July 2000 is the first time the Institutional Revolutionary Party has lost the presidency in seventy-one years. Trade opens and the old patronage machine that had run every election loses its grip at the same time, which is why both belong in one entry.",
-   "values": {
-    "w_commerce": 0.1,
-    "patronage_weight": -0.08,
-    "w_novelty": 0.05
-   },
-   "years": [
-    1994,
-    2000
-   ]
-  },
-  {
-   "name": "The drug war",
-   "note": "President Felipe Calderon declared war on the cartels in December 2006 and deployed the army against them; the killing that followed is usually put at well over a hundred thousand dead by the mid-2010s and has not stopped since, concentrated in particular states and along particular trafficking routes rather than spread evenly, which is why this is modelled as a standing, low sack risk and a drag on trade rather than as a single mortality event. This file stops adding history at approximately the point it is being written, 2026: nothing after that is invented, and the long quiet stretch after this entry toward the edge of a 700-year run is the honest shape of not yet knowing what happens next, not a gap in the research.",
-   "output_factor": 0.92,
-   "sack_chance": 0.02,
-   "years": [
-    2006,
-    2024
-   ]
-  },
-  {
-   "name": "The Puebla-Morelos earthquake",
-   "note": "Magnitude 7.1, struck midday on 19 September 2017 - the thirty-second anniversary, to the day, of the 1985 quake above - and brought down more than forty buildings in Mexico City alone along with heavy damage across Puebla and Morelos. Far smaller than 1985 in both magnitude and death toll (around 370 dead against the earlier quake's thousands), modelled the same way and at roughly a third of its risk.",
-   "sack_chance": 0.04,
-   "years": [
-    2017,
-    2017
-   ]
+  "local_words": {
+    "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
+    "pairs": [
+      [
+        "in plain quantitative Greek and Latin",
+        "in plain quantitative Nahuatl, in a notation you devise for it"
+      ],
+      [
+        "Senatorial patronage",
+        "The patronage of a tecuhtli of the calpulli"
+      ],
+      [
+        "Imperial patronage",
+        "The patronage of the tlatoani"
+      ],
+      [
+        "Licensed collegium of physicians and teachers",
+        "A recognised body of ticitl and teachers"
+      ]
+    ]
   }
- ],
- "home_regions": [
-  "americas_carib"
- ],
- "id": "mexica_1500",
- "institutions": {
-  "bank": false,
-  "charter": "tlatoani grant",
-  "corporation": false,
-  "guild": "pochteca merchant order, hereditary and privileged",
-  "partnership": true,
-  "patent": false,
-  "testament": true
- },
- "literacy_elite": 0.4,
- "literacy_general": 0.03,
- "name": "The Mexica Triple Alliance",
- "notes": [
-  "NO IRON, NO DRAUGHT ANIMALS, NO PRACTICAL WHEEL. Obsidian is sharper than steel and shatters. Every metallurgy node starts from copper and gold.",
-  "Chinampa agriculture yields more per hectare than any European system, so the food constraint that shapes the Roman tree does not bind here.",
-  "The absence of draught animals is the deepest constraint: it removes the plough, the cart, the mill and the horse collar in one stroke."
- ],
- "opening": {
-  "arrival": "You arrive in Tenochtitlan, a city of a quarter of a million people built on a lake, with causeways, an aqueduct of two channels so one can be cleaned while the other runs, botanical gardens, compulsory schooling, and a market that astonished the men who destroyed it.",
-  "what_is_coming": "Nineteen years. Then ships, and then smallpox, and the smallpox is the one that matters: a population with no immunity to anything the Old World has been trading back and forth for four thousand years. This is the hardest start in this game and it is not a fair fight.",
-  "what_is_missing": "The wheel is a toy here because there is nothing to pull a cart: no horse, no ox, no donkey anywhere in the hemisphere. Every load in this civilisation moves on a human back. That is not ignorance, and no amount of teaching will fix it. Neither will it fix the absence of iron, of large domesticated animals, or of the diseases that made Europeans survivable to each other.",
-  "what_you_can_see": "Chinampas that yield seven crops a year. Obsidian edges sharper than any steel. Featherwork and goldwork of a quality Europe cannot match. A writing system, an accurate calendar, and civil engineering on water that Venice would recognise as kin.",
-  "what_this_models": "You are one household, not the Triple Alliance. Five million people live under this order and a full quarter of them in a town - about 1,250,000 town dwellers, more urbanised than Rome itself - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people, not Tenochtitlan's quarter of a million. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the Alliance's true numbers."
- },
- "population": 5000000,
- "price_index": 0.8,
- "starting_techs": [
-  "cap_heat_0700",
-  "cap_power_human",
-  "cap_tol_1mm",
-  "civ_monumental_stone",
-  "fin_auction",
-  "fin_government",
-  "fin_market",
-  "fin_tax_farming",
-  "fud_cacao",
-  "fud_chinampa",
-  "fud_maize",
-  "hom_board_games",
-  "hom_furniture_wooden",
-  "hom_mirror_bronze_polished",
-  "hom_musical_instruments",
-  "hom_oil_lamp_simple",
-  "mat_alum",
-  "mat_beeswax",
-  "mat_bitumen",
-  "mat_carbon_black",
-  "mat_charcoal",
-  "mat_emery",
-  "mat_gold",
-  "mat_gypsum",
-  "mat_leather",
-  "mat_lime",
-  "mat_obsidian_blade",
-  "mat_salt",
-  "mat_silver",
-  "prn_sculpture",
-  "tex_cotton_trade",
-  "tex_drop_spindle",
-  "tex_felting",
-  "tex_wool"
- ],
- "state_capacity": 0.8,
- "state_pressure": {
-  "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
-  "requisition_name": "the tribute of the calpixque",
-  "requisition_note": "The tlatoani's tribute collectors, the calpixque, assessed tribute in kind on a fixed schedule recorded in documents like the Codex Mendoza - cacao, featherwork, cloth, metal - and a calpulli producing more than its neighbours simply had a larger quota fixed on it, not a lighter one.",
-  "requisition_base_share": 0.22,
-  "office_name": "a cuauhpilli commission",
-  "office_note": "Commoners who distinguished themselves, especially in war, could be raised to the cuauhpilli, a service nobility that came with land and duties at once - an honour that was also a standing claim on the man's time and output for the state that raised him.",
-  "office_base_share": 0.05,
-  "military_name": "the tlatoani's armouries",
-  "military_note": "A producer of obsidian-edged weapons or featherwork armour at any scale was already supplying the macehualtin levies and the pochteca's own guarded caravans; the Triple Alliance's wars were frequent enough that such a workshop was never overlooked for long.",
-  "confiscation_name": "forfeiture to the tlatoani",
-  "confiscation_note": "Property of a noble disgraced or executed reverted to the tlatoani's own disposal; the theocratic hierarchy this file's own _note_eminence already names as dangerous to stand outside of is the same hierarchy that decides whether your holdings stay yours."
- },
- "urban_fraction": 0.25,
- "values": {
-  "_note": "w_religious_rigidity 0.9 is the dominant constraint: the calendar and the ritual cycle govern the year and anything touching them is dangerous. But an inexplicable effect is likelier to be read as divine favour than as a crime, so w_magic_fear is LOWER than Rome's, which is a genuinely different strategic situation.",
-  "_note_eminence": "A theocratic hierarchy with a strong priesthood; standing outside it is dangerous.",
-  "adaptation_rate": 0.09,
-  "bribability": 0.35,
-  "patronage_weight": 0.75,
-  "w_commerce": 0.5,
-  "w_eminence_danger": 0.7,
-  "w_information": -0.5,
-  "w_labour_saving": 0.1,
-  "w_magic_fear": 0.3,
-  "w_military": 1.0,
-  "w_novelty": -0.3,
-  "w_religious_rigidity": 0.9
- },
- "wage_index": 0.5,
- "year": 1500,
- "needs_first": {
-  "_doc": "Things this society cannot begin at all until it has the one thing they all rest on. Distinct from cost_multipliers, which make a domain dearer: these are not dear here, they are impossible. A break tester started horse_collar in the Valley of Mexico in 1500 on the same screen as a menu describing a society with no draught animals, and `why` there still called it a collar for a draught horse. Every entry is liftable by the node it names.",
-  "draught animals": {
-   "node": "exp_import_draught_animals",
-   "because": "there is no draught animal in Mesoamerica: no horse, no ox, no mule, nothing that pulls. Every load in this society moves on a human back. Bring animals across first and all of this opens at once",
-   "ids": [
-    "ag2_horse_hoe",
-    "en_horse_gin",
-    "horse_collar",
-    "lnd_four_wheel_cart",
-    "lnd_harness_throat_girth",
-    "lnd_horse_saddle_basic",
-    "lnd_mule_transport",
-    "lnd_ox_transport",
-    "lnd_two_wheel_cart",
-    "mil_artillery_carriage",
-    "pwr_animal_treadmill",
-    "tl_horse_tram",
-    "tl_stirrup",
-    "tl_tandem_harness",
-    "tr_hopper_wagon"
-   ]
-  },
-  "seagoing sail": {
-   "node": "exp_oceangoing_hull",
-   "because": "this society has no sail and no seagoing hull. Mesoamerican water transport is the paddled canoe - on the lake, and hugging the coast as far as Xicalango - and there is no mast, no rigging, no keel and no vessel built to be out of sight of land anywhere in it. The square sail, the spritsail, the mortise-and-tenon Mediterranean hull and the monsoon crossing to India are all other people's answers to other people's seas. Build a hull that can take open water first.",
-   "ids": [
-    "sea_merchant_ships_large",
-    "sea_mortise_tenon",
-    "sea_square_sail",
-    "sea_spritsail",
-    "sea_monsoon_route"
-   ]
-  }
- },
- "local_words": {
-  "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
-  "pairs": [
-   [
-    "in plain quantitative Greek and Latin",
-    "in plain quantitative Nahuatl, in a notation you devise for it"
-   ],
-   [
-    "Senatorial patronage",
-    "The patronage of a tecuhtli of the calpulli"
-   ],
-   [
-    "Imperial patronage",
-    "The patronage of the tlatoani"
-   ],
-   [
-    "Licensed collegium of physicians and teachers",
-    "A recognised body of ticitl and teachers"
-   ]
-  ]
- }
 }

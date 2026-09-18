@@ -3,14 +3,23 @@
   "id": "tl_horseshoe",
   "name": "Nailed horseshoe",
   "cat": "animal_traction",
-  "pre": ["mat_wrought_iron"],
-  "traits": ["labour_saving"],
+  "pre": [
+   "mat_wrought_iron",
+   "horse_collar"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
   "kb": "Iron U-shaped shoe nailed to hoof perimeter",
   "ph": 40,
-  "lab": {"smith": 80},
-  "mat": {"mat_wrought_iron": 0.5},
-  "cap": 150,
-  "up": 15,
+  "lab": {
+   "smith": 80
+  },
+  "mat": {
+   "iron_bar_kg": 5.0
+  },
+  "cap": 200.0,
+  "up": 50.0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "dev_years": 2,
@@ -20,18 +29,38 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Nails grip hoof wall without driving into sensitive tissue; the curve distributes load. Works where ground is wet or rocky. Unshod horses slip."
+  "note": "Iron shoes nailed to hoof allow horses to work on stone roads for weeks without going lame. This is not efficiency; this is making the horse usable on paved ground instead of destroying it.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_horse_collar",
   "name": "Rigid padded horse collar",
   "cat": "animal_traction",
-  "pre": ["mat_leather", "mat_wool"],
-  "traits": ["labour_saving"],
+  "pre": [
+   "mat_leather",
+   "mat_wool"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
   "kb": "Padded frame that lets horse pull from shoulders not neck",
   "ph": 50,
-  "lab": {"artisan": 100},
-  "mat": {"mat_leather": 3, "mat_wool": 1},
+  "lab": {
+   "artisan": 100
+  },
+  "mat": {
+   "mat_leather": 3,
+   "mat_wool": 1
+  },
   "cap": 400,
   "up": 40,
   "build_yrs": 0.2,
@@ -49,12 +78,24 @@
   "id": "tl_whippletree",
   "name": "Whippletree and swingletree",
   "cat": "animal_traction",
-  "pre": ["tl_horse_collar", "mat_wrought_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Hinged bar that pivots to equalize load across multiple animals",
+  "pre": [
+   "tl_horse_collar",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_horse_collar",
   "ph": 60,
-  "lab": {"carpenter": 80, "smith": 40},
-  "mat": {"mat_wrought_iron": 1, "mat_wood": 3},
+  "lab": {
+   "carpenter": 120.0,
+   "smith": 40.0
+  },
+  "mat": {
+   "iron_bar_kg": 3.0,
+   "timber_m3": 0.5,
+   "wood_kg": 3.0
+  },
   "cap": 300,
   "up": 30,
   "build_yrs": 0.3,
@@ -66,18 +107,38 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Each horse pulls equally even if they are different strengths; load distributes by a free pivot. Critical for heavy loads and team hauling."
+  "note": "The whippletree, or evener, is a pivoting bar that distributes pull evenly between two horses, preventing one from shirking. Without it, tandem teams do not work.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_tandem_harness",
   "name": "Tandem harness for shafts",
   "cat": "animal_traction",
-  "pre": ["tl_horse_collar", "mat_leather"],
-  "traits": ["labour_saving"],
-  "kb": "Two horses in line sharing draft load via shaft trace system",
+  "pre": [
+   "tl_horse_collar",
+   "mat_leather"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_horse_collar",
   "ph": 70,
-  "lab": {"artisan": 120},
-  "mat": {"mat_leather": 4, "mat_rope": 2},
+  "lab": {
+   "artisan": 120
+  },
+  "mat": {
+   "mat_leather": 4,
+   "mat_rope": 2
+  },
   "cap": 350,
   "up": 35,
   "build_yrs": 0.3,
@@ -89,20 +150,41 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Horses positioned one behind the other; the lead horse sets direction, rear horse pushes. Standard for coaches and heavy wagons."
+  "note": "Horses positioned one behind the other; the lead horse sets direction, rear horse pushes. Standard for coaches and heavy wagons.",
+  "req_any": [
+   {
+    "group": "organic_material",
+    "options": {
+     "mat_leather": 1.0,
+     "tex_wool": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "tl_stirrup",
   "name": "Stirrup with foot loop",
   "cat": "animal_traction",
-  "pre": ["mat_wrought_iron", "mat_leather"],
-  "traits": ["labour_saving"],
-  "kb": "Metal loop hung from saddle to support rider foot",
-  "ph": 45,
-  "lab": {"smith": 60},
-  "mat": {"mat_wrought_iron": 0.3, "mat_leather": 0.5},
-  "cap": 200,
-  "up": 20,
+  "pre": [
+   "mat_wrought_iron",
+   "mat_leather",
+   "lnd_horse_saddle_basic"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_horse_collar",
+  "ph": 60.0,
+  "lab": {
+   "artisan": 50.0,
+   "smith": 150.0
+  },
+  "mat": {
+   "iron_bar_kg": 3.0,
+   "leather_kg": 2.0
+  },
+  "cap": 250.0,
+  "up": 30.0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 1,
@@ -112,18 +194,39 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Allows rider to stand in saddle and apply weight and force; enables mounted combat and faster gaits. Foot placement adds stability."
+  "note": "Metal foot-loops hanging from saddle revolutionise horseback riding. Rider can brace legs, rise from seat, and deliver force in combat or work. This is as much a military technology as a transport one.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_spoked_wheel",
   "name": "Improved spoked wheel",
   "cat": "wheels_running_gear",
-  "pre": ["mat_wrought_iron", "mat_wood"],
-  "traits": ["labour_saving"],
-  "kb": "Radial spokes under tension with metal rim band",
+  "pre": [
+   "mat_wrought_iron",
+   "mat_wood"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_spoked_wheel",
   "ph": 80,
-  "lab": {"carpenter": 120, "smith": 80},
-  "mat": {"mat_wrought_iron": 4, "mat_wood": 8},
+  "lab": {
+   "carpenter": 120,
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 4,
+   "mat_wood": 8
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.5,
@@ -135,18 +238,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Tensioned spokes are lighter and stronger than solid wood; the metal rim distributes braking and impact loads. Wheels survive rutted roads."
+  "note": "Tensioned spokes are lighter and stronger than solid wood; the metal rim distributes braking and impact loads. Wheels survive rutted roads.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_iron_tyre",
   "name": "Iron tyre band",
   "cat": "wheels_running_gear",
-  "pre": ["tl_spoked_wheel", "mat_wrought_iron", "cap_heat_1100"],
-  "traits": ["labour_saving"],
-  "kb": "Forged iron band shrunk onto wooden wheel rim",
+  "pre": [
+   "tl_spoked_wheel",
+   "mat_wrought_iron",
+   "cap_heat_1100"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_spoked_wheel",
   "ph": 100,
-  "lab": {"smith": 150},
-  "mat": {"mat_wrought_iron": 5},
+  "lab": {
+   "smith": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 5
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.6,
@@ -158,17 +281,34 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Iron hardness resists ground wear and stone damage; shrink-fit creates friction grip. Wheel lasts 10 times longer than bare wood on stone."
+  "note": "Iron hardness resists ground wear and stone damage; shrink-fit creates friction grip. Wheel lasts 10 times longer than bare wood on stone.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_shrink_fit",
   "name": "Shrink-fit tyre assembly",
   "cat": "wheels_running_gear",
-  "pre": ["tl_iron_tyre", "cap_heat_1100"],
-  "traits": ["labour_saving"],
-  "kb": "Heat iron tyre to expand, slide onto rim, cool to grip",
+  "pre": [
+   "tl_iron_tyre",
+   "cap_heat_1100"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_spoked_wheel",
   "ph": 120,
-  "lab": {"smith": 200},
+  "lab": {
+   "smith": 200
+  },
   "mat": {},
   "cap": 700,
   "up": 70,
@@ -187,12 +327,21 @@
   "id": "tl_macadam_road",
   "name": "Macadam road surface",
   "cat": "roads_surfaces",
-  "pre": ["cap_tol_1mm"],
-  "traits": ["infrastructure"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
   "kb": "Layers of small stones compacted into solid binding mass",
   "ph": 140,
-  "lab": {"engineer": 200, "labourer": 500},
-  "mat": {"gravel_kg": 1000},
+  "lab": {
+   "engineer": 200,
+   "labourer": 500
+  },
+  "mat": {
+   "gravel_kg": 1000
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 1,
@@ -210,12 +359,25 @@
   "id": "tl_road_roller",
   "name": "Steam road roller",
   "cat": "roads_surfaces",
-  "pre": ["tl_macadam_road", "steam_high_pressure", "crank_conrod"],
-  "traits": ["labour_saving", "infrastructure"],
-  "kb": "Heavy steam-powered cylinder compacts stone and asphalt",
+  "pre": [
+   "tl_macadam_road",
+   "steam_high_pressure",
+   "crank_conrod"
+  ],
+  "traits": [
+   "labour_saving",
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_road_roller",
   "ph": 160,
-  "lab": {"engineer": 300, "machinist": 200},
-  "mat": {"mat_bulk_steel": 20, "mat_cast_iron": 15},
+  "lab": {
+   "engineer": 300,
+   "machinist": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 20,
+   "mat_cast_iron": 15
+  },
   "cap": 2000,
   "up": 200,
   "build_yrs": 1.5,
@@ -233,12 +395,23 @@
   "id": "tl_tarmacadam",
   "name": "Tarmacadam: tar-bound stone",
   "cat": "roads_surfaces",
-  "pre": ["tl_macadam_road", "mat_bitumen"],
-  "traits": ["infrastructure"],
+  "pre": [
+   "tl_macadam_road",
+   "mat_bitumen"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
   "kb": "Macadam base with hot coal tar binder and top dressing",
   "ph": 150,
-  "lab": {"engineer": 250, "chemist": 100},
-  "mat": {"mat_bitumen": 200, "gravel_kg": 1000},
+  "lab": {
+   "engineer": 250,
+   "chemist": 100
+  },
+  "mat": {
+   "mat_bitumen": 200,
+   "gravel_kg": 1000
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 1.2,
@@ -256,12 +429,21 @@
   "id": "tl_concrete_roadway",
   "name": "Reinforced concrete road",
   "cat": "roads_surfaces",
-  "pre": ["mat_concrete_reinforced"],
-  "traits": ["infrastructure"],
-  "kb": "Steel-reinforced Portland cement slab laid on prepared base",
+  "pre": [
+   "mat_concrete_reinforced"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_macadam_road",
   "ph": 200,
-  "lab": {"engineer": 400, "mason": 300},
-  "mat": {"mat_concrete_reinforced": 500},
+  "lab": {
+   "engineer": 400,
+   "mason": 300
+  },
+  "mat": {
+   "mat_concrete_reinforced": 500
+  },
   "cap": 3000,
   "up": 300,
   "build_yrs": 2,
@@ -280,10 +462,14 @@
   "name": "Cambered road and drainage",
   "cat": "roads_surfaces",
   "pre": [],
-  "traits": ["infrastructure"],
-  "kb": "Road surface slopes from centre to edges; ditches along sides",
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_macadam_road",
   "ph": 80,
-  "lab": {"engineer": 150},
+  "lab": {
+   "engineer": 150
+  },
   "mat": {},
   "cap": 800,
   "up": 80,
@@ -302,12 +488,20 @@
   "id": "tl_kerbing",
   "name": "Kerb and gutter edge",
   "cat": "roads_surfaces",
-  "pre": ["mat_stone"],
-  "traits": ["infrastructure"],
-  "kb": "Stone edge strip separates carriageway from sidewalk",
+  "pre": [
+   "mat_stone"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_macadam_road",
   "ph": 60,
-  "lab": {"mason": 120},
-  "mat": {"mat_stone": 50},
+  "lab": {
+   "mason": 120
+  },
+  "mat": {
+   "mat_stone": 50
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.5,
@@ -325,12 +519,20 @@
   "id": "tl_level_crossing",
   "name": "Level crossing: road and rail",
   "cat": "roads_surfaces",
-  "pre": ["railway"],
-  "traits": ["infrastructure"],
-  "kb": "Road surface raised or lowered to meet rail level at grade",
+  "pre": [
+   "railway"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_road_roller",
   "ph": 120,
-  "lab": {"engineer": 250},
-  "mat": {"mat_concrete_reinforced": 100},
+  "lab": {
+   "engineer": 250
+  },
+  "mat": {
+   "mat_concrete_reinforced": 100
+  },
   "cap": 1500,
   "up": 150,
   "build_yrs": 1,
@@ -348,12 +550,18 @@
   "id": "tl_plain_bearing",
   "name": "Plain journal bearing",
   "cat": "wheels_running_gear",
-  "pre": ["mat_bronze"],
+  "pre": [
+   "mat_bronze"
+  ],
   "traits": [],
-  "kb": "Soft metal sleeve around rotating shaft; oil film reduces friction",
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 70,
-  "lab": {"smith": 100},
-  "mat": {"mat_bronze": 1},
+  "lab": {
+   "smith": 100
+  },
+  "mat": {
+   "mat_bronze": 1
+  },
   "cap": 400,
   "up": 40,
   "build_yrs": 0.3,
@@ -365,18 +573,37 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Bronze wears instead of the shaft; replaceable. Oil film is hydrodynamic; bearing runs hot if oil starves. Standard in wooden carts."
+  "note": "Bronze wears instead of the shaft; replaceable. Oil film is hydrodynamic; bearing runs hot if oil starves. Standard in wooden carts.",
+  "req_any": [
+   {
+    "group": "structural_bronze",
+    "options": {
+     "mat_bronze": 1.0,
+     "mat_cast_iron": 0.7,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "tl_roller_bearing",
   "name": "Roller bearing: cylindrical",
   "cat": "wheels_running_gear",
-  "pre": ["cap_tol_1mm", "mat_steel"],
-  "traits": [],
-  "kb": "Hardened steel cylinders in cage rolling on hardened races",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 120,
-  "lab": {"machinist": 180},
-  "mat": {"mat_bulk_steel": 2},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_bulk_steel": 2
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.6,
@@ -394,12 +621,23 @@
   "id": "tl_ball_bearing",
   "name": "Ball bearing: spherical",
   "cat": "wheels_running_gear",
-  "pre": ["cap_tol_100um", "cap_heat_1100"],
-  "traits": [],
-  "kb": "Hardened steel balls in cage on hardened grooved races",
+  "pre": [
+   "cap_tol_100um",
+   "cap_heat_1100",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 150,
-  "lab": {"machinist": 220},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "artisan": 100.0,
+   "machinist": 220.0
+  },
+  "mat": {
+   "steel_plate_kg": 5.0
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 0.8,
@@ -411,18 +649,27 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Spheres conform to race geometry; friction is 1/100th of plain bearing. Requires tolerance and hardness. Standard in bicycles and motors."
+  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides."
  },
  {
   "id": "tl_taper_roller_bearing",
   "name": "Taper roller bearing",
   "cat": "wheels_running_gear",
-  "pre": ["tl_ball_bearing", "cap_tol_10um"],
-  "traits": [],
-  "kb": "Conical rollers in cage on matching conical races",
+  "pre": [
+   "tl_ball_bearing",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 180,
-  "lab": {"machinist": 300},
-  "mat": {"mat_bulk_steel": 2},
+  "lab": {
+   "machinist": 300
+  },
+  "mat": {
+   "mat_bulk_steel": 2
+  },
   "cap": 1800,
   "up": 180,
   "build_yrs": 1,
@@ -440,12 +687,18 @@
   "id": "tl_grease_cup",
   "name": "Grease cup with screw plunger",
   "cat": "wheels_running_gear",
-  "pre": ["mat_wrought_iron"],
+  "pre": [
+   "mat_wrought_iron"
+  ],
   "traits": [],
-  "kb": "Cup on bearing with spring plunger; screw forces grease down shaft",
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 50,
-  "lab": {"smith": 60},
-  "mat": {"mat_wrought_iron": 0.2},
+  "lab": {
+   "smith": 60
+  },
+  "mat": {
+   "mat_wrought_iron": 0.2
+  },
   "cap": 300,
   "up": 30,
   "build_yrs": 0.2,
@@ -457,18 +710,37 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Periodic manual screw-turn adds grease; spring pressure keeps old grease out. Prevents bearing starvation and water ingress on wagon axles."
+  "note": "Periodic manual screw-turn adds grease; spring pressure keeps old grease out. Prevents bearing starvation and water ingress on wagon axles.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_oil_bath",
   "name": "Oil bath: submerged bearing",
   "cat": "wheels_running_gear",
-  "pre": ["tl_ball_bearing", "mat_olive_oil"],
-  "traits": [],
-  "kb": "Bearing runs submerged in oil; oil clings to parts by capillary action",
+  "pre": [
+   "tl_ball_bearing",
+   "mat_olive_oil"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_ball_bearing",
   "ph": 80,
-  "lab": {"machinist": 100},
-  "mat": {"mat_cast_iron": 2},
+  "lab": {
+   "machinist": 100
+  },
+  "mat": {
+   "mat_cast_iron": 2
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.4,
@@ -486,12 +758,20 @@
   "id": "tl_leaf_spring",
   "name": "Leaf spring: stacked flat",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Curved flat steel leaves stacked and clamped at ends",
+  "pre": [
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_leaf_spring",
   "ph": 100,
-  "lab": {"smith": 150},
-  "mat": {"mat_wrought_iron": 3},
+  "lab": {
+   "smith": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 3
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.5,
@@ -503,18 +783,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Flat geometry is easy to forge; stacked layers share load and provide damping. Leaf separation under impact; requires periodic re-tensioning."
+  "note": "Flat geometry is easy to forge; stacked layers share load and provide damping. Leaf separation under impact; requires periodic re-tensioning.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_elliptic_spring",
   "name": "Elliptic spring: single curved",
   "cat": "carriage_engineering",
-  "pre": ["tl_leaf_spring", "cap_heat_1100"],
-  "traits": ["labour_saving"],
-  "kb": "Single curved plate hung from axle; smooth compliance",
+  "pre": [
+   "tl_leaf_spring",
+   "cap_heat_1100"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_leaf_spring",
   "ph": 120,
-  "lab": {"smith": 180},
-  "mat": {"mat_wrought_iron": 2.5},
+  "lab": {
+   "smith": 180
+  },
+  "mat": {
+   "mat_wrought_iron": 2.5
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -532,12 +831,21 @@
   "id": "tl_coil_spring",
   "name": "Coil spring: helical wire",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron", "cap_tol_1mm"],
-  "traits": [],
-  "kb": "Wire or steel rod wound in helix; compresses under load",
+  "pre": [
+   "mat_wrought_iron",
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_leaf_spring",
   "ph": 110,
-  "lab": {"smith": 150},
-  "mat": {"mat_wrought_iron": 1.5},
+  "lab": {
+   "smith": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 1.5
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -549,18 +857,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Uniform spring rate over travel; no friction loss like leaf springs. Compact; fits inside axle tubes. Oscillates without damping."
+  "note": "Uniform spring rate over travel; no friction loss like leaf springs. Compact; fits inside axle tubes. Oscillates without damping.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_friction_damper",
   "name": "Friction damper: sliding block",
   "cat": "carriage_engineering",
-  "pre": ["tl_coil_spring"],
-  "traits": [],
-  "kb": "Spring-loaded block dragged by spring motion; dissipates energy",
+  "pre": [
+   "tl_coil_spring"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_leaf_spring",
   "ph": 90,
-  "lab": {"machinist": 120},
-  "mat": {"mat_bronze": 0.5, "mat_wrought_iron": 1},
+  "lab": {
+   "machinist": 120
+  },
+  "mat": {
+   "mat_bronze": 0.5,
+   "mat_wrought_iron": 1
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -578,12 +905,21 @@
   "id": "tl_hydraulic_shock",
   "name": "Hydraulic shock absorber",
   "cat": "carriage_engineering",
-  "pre": ["tl_coil_spring", "cap_tol_10um"],
-  "traits": [],
-  "kb": "Piston in oil cylinder; orifice restricts flow and damps motion",
+  "pre": [
+   "tl_coil_spring",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_leaf_spring",
   "ph": 160,
-  "lab": {"machinist": 250},
-  "mat": {"mat_bulk_steel": 3},
+  "lab": {
+   "machinist": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 3
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 0.8,
@@ -601,12 +937,22 @@
   "id": "tl_fifth_wheel",
   "name": "Fifth wheel coupling",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron", "tl_ball_bearing"],
-  "traits": ["labour_saving"],
-  "kb": "Articulated hitch between tractor and trailer via rotating disk",
+  "pre": [
+   "mat_wrought_iron",
+   "tl_ball_bearing"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_ackermann_steering",
   "ph": 130,
-  "lab": {"smith": 180, "machinist": 80},
-  "mat": {"mat_wrought_iron": 5},
+  "lab": {
+   "smith": 180,
+   "machinist": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 5
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -618,17 +964,31 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Low-friction pivot lets trailer turn independently; no stress on kingpin. Enables articulated rigs and half-tracks."
+  "note": "Low-friction pivot lets trailer turn independently; no stress on kingpin. Enables articulated rigs and half-tracks.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_ackermann_steering",
   "name": "Ackermann steering geometry",
   "cat": "carriage_engineering",
-  "pre": ["cap_tol_1mm"],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "Front wheels steered so inner wheel turns more than outer",
   "ph": 100,
-  "lab": {"engineer": 150},
+  "lab": {
+   "engineer": 150
+  },
   "mat": {},
   "cap": 700,
   "up": 70,
@@ -647,12 +1007,19 @@
   "id": "tl_kingpin",
   "name": "Kingpin and steering arm",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron", "tl_ball_bearing"],
+  "pre": [
+   "mat_wrought_iron",
+   "tl_ball_bearing"
+  ],
   "traits": [],
-  "kb": "Vertical pivot pin through steering knuckle with ball bearing",
+  "kb": "86_transport_deep.md#tl_ackermann_steering",
   "ph": 80,
-  "lab": {"smith": 120},
-  "mat": {"mat_wrought_iron": 1},
+  "lab": {
+   "smith": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 1
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -664,18 +1031,38 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Ball bearing lets front wheel turn freely; kingpin takes axial thrust. Caster angle puts turning axis ahead of contact patch for stability."
+  "note": "Ball bearing lets front wheel turn freely; kingpin takes axial thrust. Caster angle puts turning axis ahead of contact patch for stability.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_brake_shoe",
   "name": "Brake shoe: curved pad",
   "cat": "carriage_engineering",
-  "pre": ["mat_cast_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Curved cast iron pad presses on wheel rim or drum by lever",
+  "pre": [
+   "mat_cast_iron",
+   "cap_tol_1mm",
+   "case_hardening"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 70,
-  "lab": {"smith": 100},
-  "mat": {"mat_cast_iron": 1},
+  "lab": {
+   "smith": 150.0
+  },
+  "mat": {
+   "cast_iron_kg": 20.0
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.3,
@@ -687,18 +1074,38 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Curved form conforms to wheel; friction coefficient is 0.3 to 0.4. Wears smooth; brake fade if overheated. Standard on carts and coaches."
+  "note": "Early brakes used wooden shoes; cast iron shoes are more durable. The kernel is that shoe friction converts kinetic energy to heat; excessive braking overheats shoes and reduces friction.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_drum_brake",
   "name": "Drum brake: shoes in cylinder",
   "cat": "carriage_engineering",
-  "pre": ["tl_brake_shoe", "mat_cast_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Two shoes inside rotating drum; hydraulic or cable pulls them out",
+  "pre": [
+   "tl_brake_shoe",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 120,
-  "lab": {"machinist": 180},
-  "mat": {"mat_cast_iron": 3},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_cast_iron": 3
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -710,18 +1117,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Enclosed brakes protect from water and mud; self-energizing if shoes are wedged into drum. Fade if overheated; requires cooling time."
+  "note": "Enclosed brakes protect from water and mud; self-energizing if shoes are wedged into drum. Fade if overheated; requires cooling time.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_disc_brake",
   "name": "Disc brake: pad on disk",
   "cat": "carriage_engineering",
-  "pre": ["cap_tol_100um", "mat_bulk_steel"],
-  "traits": ["labour_saving"],
-  "kb": "Brake pads squeeze rotating disk; high friction, excellent cooling",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 150,
-  "lab": {"machinist": 250},
-  "mat": {"mat_bulk_steel": 2},
+  "lab": {
+   "machinist": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 2
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -733,18 +1160,37 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Disk cools by convection; no fade even in continuous braking. Linear force; no self-energizing issues. Modern standard."
+  "note": "Disk cools by convection; no fade even in continuous braking. Linear force; no self-energizing issues. Modern standard.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_hydraulic_brake_line",
   "name": "Hydraulic brake line and cylinder",
   "cat": "carriage_engineering",
-  "pre": ["cap_tol_10um", "mat_bulk_steel"],
-  "traits": ["labour_saving"],
-  "kb": "Fluid pressure in hose transmits braking force to four wheels equally",
+  "pre": [
+   "cap_tol_10um",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 130,
-  "lab": {"machinist": 200},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "machinist": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -756,18 +1202,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Eliminates cable routing and friction; equal pressure on all wheels prevents skew and locks. Requires bleed valves to remove air bubbles."
+  "note": "Eliminates cable routing and friction; equal pressure on all wheels prevents skew and locks. Requires bleed valves to remove air bubbles.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_handbrake",
   "name": "Handbrake: lever and cable",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron", "mat_rope"],
-  "traits": ["labour_saving"],
-  "kb": "Operator lever pulls cable to engage brake; ratchet holds locked",
+  "pre": [
+   "mat_wrought_iron",
+   "mat_rope"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 70,
-  "lab": {"smith": 100},
-  "mat": {"mat_wrought_iron": 0.5, "mat_rope": 1},
+  "lab": {
+   "smith": 100
+  },
+  "mat": {
+   "mat_wrought_iron": 0.5,
+   "mat_rope": 1
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.3,
@@ -779,20 +1245,46 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Ratchet lets driver hold vehicle on slope; release is manual. Simple and reliable. Works at parking."
+  "note": "Ratchet lets driver hold vehicle on slope; release is manual. Simple and reliable. Works at parking.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_differential",
   "name": "Differential: bevel gears",
   "cat": "carriage_engineering",
-  "pre": ["cap_tol_1mm", "mat_wrought_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Four-gear spider lets driven wheels turn at different speeds in corners",
-  "ph": 140,
-  "lab": {"smith": 180, "machinist": 100},
-  "mat": {"mat_cast_iron": 2},
-  "cap": 800,
-  "up": 80,
+  "pre": [
+   "cap_tol_1mm",
+   "mat_wrought_iron",
+   "cap_tol_100um",
+   "lnd_otto_cycle_four_stroke"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_differential",
+  "ph": 150.0,
+  "lab": {
+   "artisan": 120.0,
+   "machinist": 300.0,
+   "smith": 200.0
+  },
+  "mat": {
+   "brass_kg": 10.0,
+   "cast_iron_kg": 2.0,
+   "iron_bar_kg": 80.0,
+   "steel_plate_kg": 40.0
+  },
+  "cap": 2500.0,
+  "up": 200.0,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
@@ -802,18 +1294,36 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Without this the inside wheel scrubs 15 percent and the axle twists; with it, smooth cornering. Essential for motor vehicles and powered carts."
+  "note": "Bevel gear system that allows both rear wheels to turn at different speeds during cornering. Without it, inside wheel scrapes and car is hard to steer.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_live_axle",
   "name": "Live axle: powered driving",
   "cat": "carriage_engineering",
-  "pre": ["tl_differential"],
-  "traits": ["labour_saving"],
-  "kb": "Axle rotates with wheels; power delivered through shaft inside",
+  "pre": [
+   "tl_differential"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_differential",
   "ph": 120,
-  "lab": {"smith": 150},
-  "mat": {"mat_wrought_iron": 4},
+  "lab": {
+   "smith": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 4
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -831,12 +1341,18 @@
   "id": "tl_dead_axle",
   "name": "Dead axle: non-driven",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron"],
+  "pre": [
+   "mat_wrought_iron"
+  ],
   "traits": [],
-  "kb": "Axle does not rotate; wheels spin freely on bearings",
+  "kb": "86_transport_deep.md#tl_differential",
   "ph": 60,
-  "lab": {"smith": 80},
-  "mat": {"mat_wrought_iron": 3},
+  "lab": {
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 3
+  },
   "cap": 400,
   "up": 40,
   "build_yrs": 0.3,
@@ -848,18 +1364,37 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Used for steering and rear trailer axles; no power transmission. Simpler than live axle."
+  "note": "Used for steering and rear trailer axles; no power transmission. Simpler than live axle.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_universal_joint",
   "name": "Universal joint: Cardan shaft",
   "cat": "carriage_engineering",
-  "pre": ["cap_tol_1mm", "mat_wrought_iron"],
-  "traits": [],
-  "kb": "Double-jointed shaft transmits rotation at angles up to 30 degrees",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_differential",
   "ph": 110,
-  "lab": {"smith": 150},
-  "mat": {"mat_wrought_iron": 1},
+  "lab": {
+   "smith": 150
+  },
+  "mat": {
+   "mat_wrought_iron": 1
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -871,18 +1406,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Cruciform spider with needle bearings allows shaft to bend; speed is uniform if using double joints. Essential for connecting engine to axle."
+  "note": "Cruciform spider with needle bearings allows shaft to bend; speed is uniform if using double joints. Essential for connecting engine to axle.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_propshaft",
   "name": "Propshaft: transmission shaft",
   "cat": "carriage_engineering",
-  "pre": ["tl_universal_joint", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Long shaft with universal joints connects gearbox to differential",
+  "pre": [
+   "tl_universal_joint",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_differential",
   "ph": 100,
-  "lab": {"machinist": 150},
-  "mat": {"mat_bulk_steel": 2},
+  "lab": {
+   "machinist": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 2
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.5,
@@ -900,12 +1454,22 @@
   "id": "tl_velocipede",
   "name": "Velocipede: pedal-driven wheel",
   "cat": "bicycles",
-  "pre": ["tl_spoked_wheel", "cap_tol_1mm"],
-  "traits": ["labour_saving"],
-  "kb": "Cranks attached to hub of large wheel; pedals drive directly",
+  "pre": [
+   "tl_spoked_wheel",
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_safety_bicycle",
   "ph": 100,
-  "lab": {"carpenter": 120, "smith": 80},
-  "mat": {"mat_wrought_iron": 2},
+  "lab": {
+   "carpenter": 120,
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 2
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.5,
@@ -923,12 +1487,28 @@
   "id": "tl_penny_farthing",
   "name": "Penny-farthing: large wheel",
   "cat": "bicycles",
-  "pre": ["tl_velocipede", "cap_tol_100um"],
-  "traits": ["labour_saving"],
-  "kb": "Huge front wheel with pedal cranks, tiny rear wheel",
+  "pre": [
+   "tl_velocipede",
+   "cap_tol_100um",
+   "cap_tol_1mm",
+   "lnd_boneshaker",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_safety_bicycle",
   "ph": 110,
-  "lab": {"carpenter": 140, "smith": 100},
-  "mat": {"mat_wrought_iron": 3},
+  "lab": {
+   "artisan": 100.0,
+   "carpenter": 150.0,
+   "smith": 200.0
+  },
+  "mat": {
+   "cast_iron_kg": 5.0,
+   "iron_bar_kg": 20.0,
+   "timber_m3": 1.0
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.6,
@@ -940,18 +1520,27 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Wheel diameter reaches 60 inches; one pedal turn covers 15 feet. Speed is possible; instability and rider height are hazards."
+  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most."
  },
  {
   "id": "tl_chain_drive",
   "name": "Chain drive: roller chain",
   "cat": "bicycles",
-  "pre": ["cap_tol_100um", "mat_wrought_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Rollers on links mesh with sprockets to transmit power",
+  "pre": [
+   "cap_tol_100um",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_chain_drive",
   "ph": 120,
-  "lab": {"machinist": 180},
-  "mat": {"mat_wrought_iron": 1},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_wrought_iron": 1
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -963,18 +1552,45 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Decouples crank size from wheel size; enables small wheel with high speed. Rollers reduce wear on sprockets; chain stretches with use."
+  "note": "Decouples crank size from wheel size; enables small wheel with high speed. Rollers reduce wear on sprockets; chain stretches with use.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_safety_bicycle",
   "name": "Safety bicycle: chain-driven",
   "cat": "bicycles",
-  "pre": ["tl_chain_drive", "tl_ball_bearing"],
-  "traits": ["labour_saving"],
-  "kb": "Equal-sized wheels with chain drive to rear wheel",
+  "pre": [
+   "tl_chain_drive",
+   "tl_ball_bearing",
+   "lnd_chain_drive_bicycle",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_safety_bicycle",
   "ph": 130,
-  "lab": {"carpenter": 150, "machinist": 100},
-  "mat": {"mat_wrought_iron": 2},
+  "lab": {
+   "artisan": 100.0,
+   "carpenter": 150.0,
+   "machinist": 150.0,
+   "smith": 250.0
+  },
+  "mat": {
+   "cast_iron_kg": 8.0,
+   "iron_bar_kg": 15.0,
+   "rubber_kg": 2.0,
+   "timber_m3": 1.0
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -986,18 +1602,27 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Low seat position is stable; handlebar steering is direct. Chain and sprockets allow gear ratios; pedal force is efficient."
+  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry."
  },
  {
   "id": "tl_freewheel",
   "name": "Freewheel: ratchet hub",
   "cat": "bicycles",
-  "pre": ["tl_safety_bicycle", "cap_tol_100um"],
-  "traits": ["labour_saving"],
-  "kb": "Hub spins freely when pedals stop; mechanical ratchet",
+  "pre": [
+   "tl_safety_bicycle",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_chain_drive",
   "ph": 100,
-  "lab": {"machinist": 150},
-  "mat": {"mat_bulk_steel": 1},
+  "lab": {
+   "machinist": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 1
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1015,12 +1640,21 @@
   "id": "tl_derailleur",
   "name": "Derailleur: chain shifter",
   "cat": "bicycles",
-  "pre": ["tl_freewheel", "cap_tol_10um"],
-  "traits": ["labour_saving"],
-  "kb": "Pivot arm shifts chain between sprockets; cable controlled",
+  "pre": [
+   "tl_freewheel",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_chain_drive",
   "ph": 140,
-  "lab": {"machinist": 220},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 220
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -1038,12 +1672,21 @@
   "id": "tl_hub_gear",
   "name": "Hub gear: internal speeds",
   "cat": "bicycles",
-  "pre": ["tl_freewheel", "cap_tol_10um"],
-  "traits": ["labour_saving"],
-  "kb": "Planetary gears inside hub allow multiple speed ratios",
+  "pre": [
+   "tl_freewheel",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_chain_drive",
   "ph": 160,
-  "lab": {"machinist": 280},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "machinist": 280
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 0.8,
@@ -1061,12 +1704,21 @@
   "id": "tl_caliper_brake",
   "name": "Caliper brake: side-pull",
   "cat": "bicycles",
-  "pre": ["tl_safety_bicycle", "cap_tol_100um"],
-  "traits": ["labour_saving"],
-  "kb": "Twin arms pivot at pivot bolt; pads squeeze rim from sides",
+  "pre": [
+   "tl_safety_bicycle",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_chain_drive",
   "ph": 100,
-  "lab": {"machinist": 150},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1084,12 +1736,26 @@
   "id": "tl_carburettor",
   "name": "Carburettor: fuel atomiser",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_bulk_steel"],
-  "traits": [],
-  "kb": "Moving air through venturi creates vacuum to atomise fuel",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel",
+   "lnd_otto_cycle_four_stroke"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 150,
-  "lab": {"machinist": 200},
-  "mat": {"mat_bulk_steel": 1},
+  "lab": {
+   "artisan": 80.0,
+   "machinist": 200.0,
+   "smith": 120.0
+  },
+  "mat": {
+   "brass_kg": 8.0,
+   "copper_kg": 5.0,
+   "steel_plate_kg": 10.0
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -1101,18 +1767,36 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Bernoulli effect pulls fuel into airstream; float chamber maintains level. Throttle valve controls air flow and mixture ratio."
+  "note": "Fuel nozzle sprays petrol into an air stream at variable rates. Mixture must be tuned to engine speed. Precise ratio is critical; too rich or too lean and the engine stalls.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_throttle",
   "name": "Throttle valve: fuel control",
   "cat": "motor_subsystems",
-  "pre": ["tl_carburettor"],
-  "traits": [],
-  "kb": "Butterfly valve controls fuel and air intake to engine",
+  "pre": [
+   "tl_carburettor"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 80,
-  "lab": {"machinist": 120},
-  "mat": {"mat_cast_iron": 0.5},
+  "lab": {
+   "machinist": 120
+  },
+  "mat": {
+   "mat_cast_iron": 0.5
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -1130,12 +1814,21 @@
   "id": "tl_magneto_ignition",
   "name": "Magneto ignition: coil armature",
   "cat": "motor_subsystems",
-  "pre": ["cap_measure_time_ms", "cap_heat_1100"],
-  "traits": [],
-  "kb": "Rotating magnet induces high-voltage pulse in coil at each cylinder",
+  "pre": [
+   "cap_measure_time_ms",
+   "cap_heat_1100"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_magneto_ignition",
   "ph": 160,
-  "lab": {"machinist": 240},
-  "mat": {"mat_bulk_steel": 1},
+  "lab": {
+   "machinist": 240
+  },
+  "mat": {
+   "mat_bulk_steel": 1
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -1153,12 +1846,21 @@
   "id": "tl_coil_ignition",
   "name": "Coil ignition: battery and breaker",
   "cat": "motor_subsystems",
-  "pre": ["electromagnet", "cap_measure_time_ms"],
-  "traits": [],
-  "kb": "Battery powers coil; breaker points open to induce spark at plug",
+  "pre": [
+   "electromagnet",
+   "cap_measure_time_ms"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_magneto_ignition",
   "ph": 140,
-  "lab": {"machinist": 200},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -1176,12 +1878,28 @@
   "id": "tl_spark_plug",
   "name": "Spark plug: electrode gap",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_10um", "mat_porcelain"],
-  "traits": [],
-  "kb": "Insulated electrode with air gap in combustion chamber",
+  "pre": [
+   "cap_tol_10um",
+   "mat_porcelain",
+   "electromagnet",
+   "lnd_otto_cycle_four_stroke"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_magneto_ignition",
   "ph": 120,
-  "lab": {"machinist": 150},
-  "mat": {"mat_porcelain": 0.2},
+  "lab": {
+   "artisan": 70.0,
+   "machinist": 180.0,
+   "smith": 100.0
+  },
+  "mat": {
+   "ceramic_kg": 1.0,
+   "copper_kg": 3.0,
+   "platinum_g": 2.0,
+   "porcelain_kg": 0.2
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1193,18 +1911,35 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Ceramic insulator withstands 1000 C and high pressure; central electrode is nickel-alloy. Gap requires precise machining and adjustment."
+  "note": "Electric spark across a gap ignites fuel mix at the exact moment of compression. Timing is everything; even small errors cause misfires and loss of power.",
+  "req_any": [
+   {
+    "group": "platinum_supply",
+    "options": {
+     "mat_platinum_bulk": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_distributor",
   "name": "Distributor: switching contacts",
   "cat": "motor_subsystems",
-  "pre": ["tl_spark_plug", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Rotating contact arm sends voltage to each spark plug in sequence",
+  "pre": [
+   "tl_spark_plug",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_magneto_ignition",
   "ph": 130,
-  "lab": {"machinist": 180},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -1222,12 +1957,20 @@
   "id": "tl_electric_starter",
   "name": "Electric starter motor",
   "cat": "motor_subsystems",
-  "pre": ["electric_starter", "cap_power_electric"],
-  "traits": ["labour_saving"],
-  "kb": "Battery-powered motor with pinion gear engages flywheel",
+  "pre": [
+   "cap_power_electric"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_dynamo",
   "ph": 170,
-  "lab": {"electrician": 250},
-  "mat": {"mat_bulk_steel": 2},
+  "lab": {
+   "electrician": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 2
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 0.8,
@@ -1245,12 +1988,19 @@
   "id": "tl_dynamo",
   "name": "Dynamo: rotary power generator",
   "cat": "motor_subsystems",
-  "pre": ["dynamo", "cap_power_electric"],
+  "pre": [
+   "dynamo",
+   "cap_power_electric"
+  ],
   "traits": [],
   "kb": "Spinning armature in magnetic field generates voltage to charge battery",
   "ph": 150,
-  "lab": {"electrician": 220},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "electrician": 220
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -1268,14 +2018,27 @@
   "id": "tl_radiator",
   "name": "Radiator: water cooler",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_1mm", "mat_brass"],
-  "traits": [],
-  "kb": "Thin brass tubes and fins cool hot water by exposure to air",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_brass",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_radiator",
   "ph": 140,
-  "lab": {"machinist": 200},
-  "mat": {"mat_brass": 2},
+  "lab": {
+   "furnaceman": 60.0,
+   "machinist": 200.0,
+   "smith": 100.0
+  },
+  "mat": {
+   "brass_kg": 2.0,
+   "cast_iron_kg": 150.0
+  },
   "cap": 900,
-  "up": 90,
+  "up": 100.0,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
@@ -1285,18 +2048,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Fins increase surface area; water flows in at base and out at top by thermosiphon circulation. Cooling must match engine heat output."
+  "note": "Fins increase surface area for heat transfer. Scaling inside radiators reduces heat flow; circulation must be clean. Thermostat valve controls flow independently.",
+  "req_any": [
+   {
+    "group": "corrosion_resistant_metal",
+    "options": {
+     "mat_brass": 1.0,
+     "mat_bronze": 0.9,
+     "mat_copper": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_water_pump",
   "name": "Water pump: centrifugal",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_cast_iron"],
-  "traits": [],
-  "kb": "Spinning impeller pushes water through cooling circuit",
+  "pre": [
+   "cap_tol_100um",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_radiator",
   "ph": 110,
-  "lab": {"machinist": 160},
-  "mat": {"mat_cast_iron": 1.5},
+  "lab": {
+   "machinist": 160
+  },
+  "mat": {
+   "mat_cast_iron": 1.5
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1308,18 +2090,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Impeller blades fling water outward; centrifugal force creates pressure head. Thermostat bypass allows fast warm-up."
+  "note": "Impeller blades fling water outward; centrifugal force creates pressure head. Thermostat bypass allows fast warm-up.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_thermostat",
   "name": "Thermostat: temperature valve",
   "cat": "motor_subsystems",
-  "pre": ["cap_measure_temp", "mat_wrought_iron"],
-  "traits": [],
-  "kb": "Wax pellet expands with heat; valve restricts bypass to radiator",
+  "pre": [
+   "cap_measure_temp",
+   "mat_wrought_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_radiator",
   "ph": 90,
-  "lab": {"machinist": 120},
-  "mat": {"mat_wrought_iron": 0.3},
+  "lab": {
+   "machinist": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 0.3
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -1331,18 +2133,38 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Wax expands at setpoint (around 82 C); opens gradually. Prevents engine overcooling at startup and overheating at full load."
+  "note": "Wax expands at setpoint (around 82 C); opens gradually. Prevents engine overcooling at startup and overheating at full load.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_fan_belt",
   "name": "Fan belt and pulley drive",
   "cat": "motor_subsystems",
-  "pre": ["tl_water_pump", "mat_rubber"],
-  "traits": [],
-  "kb": "V-belt wrapped around pulleys drives cooling fan",
+  "pre": [
+   "tl_water_pump",
+   "mat_rubber",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_radiator",
   "ph": 100,
-  "lab": {"machinist": 140},
-  "mat": {"mat_rubber": 1},
+  "lab": {
+   "machinist": 140
+  },
+  "mat": {
+   "mat_rubber": 1
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1360,12 +2182,21 @@
   "id": "tl_cone_clutch",
   "name": "Cone clutch: friction surface",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_1mm", "mat_bronze"],
-  "traits": [],
-  "kb": "Male and female cones interlock; axial force engages drive",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_bronze"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 120,
-  "lab": {"machinist": 180},
-  "mat": {"mat_bronze": 1},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_bronze": 1
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -1377,18 +2208,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Conical geometry increases normal force and torque capacity at shallow angles. Slipping heats both surfaces; requires cooling time."
+  "note": "Conical geometry increases normal force and torque capacity at shallow angles. Slipping heats both surfaces; requires cooling time.",
+  "req_any": [
+   {
+    "group": "structural_bronze",
+    "options": {
+     "mat_bronze": 1.0,
+     "mat_cast_iron": 0.7,
+     "mat_wrought_iron": 0.6
+    }
+   }
+  ]
  },
  {
   "id": "tl_plate_clutch",
   "name": "Plate clutch: disk friction",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_cast_iron"],
-  "traits": [],
-  "kb": "Spring-loaded disk with friction material squeezes between plates",
+  "pre": [
+   "cap_tol_100um",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 130,
-  "lab": {"machinist": 200},
-  "mat": {"mat_cast_iron": 1.5},
+  "lab": {
+   "machinist": 200
+  },
+  "mat": {
+   "mat_cast_iron": 1.5
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -1400,18 +2250,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Friction material burns if slipped excessively; wear changes pedal feel. Diaphragm spring reduces effort; self-adjusting for wear."
+  "note": "Friction material burns if slipped excessively; wear changes pedal feel. Diaphragm spring reduces effort; self-adjusting for wear.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_sliding_gearbox",
   "name": "Sliding gearbox: mesh shift",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_1mm", "mat_cast_iron"],
-  "traits": [],
-  "kb": "Gears slide on shafts to engage different ratios",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 140,
-  "lab": {"machinist": 220},
-  "mat": {"mat_cast_iron": 3},
+  "lab": {
+   "machinist": 220
+  },
+  "mat": {
+   "mat_cast_iron": 3
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -1423,18 +2293,38 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Gears crash if shifted under load; must rev-match or double-clutch. Four to six speeds typical. Crude compared to synchromesh."
+  "note": "Gears crash if shifted under load; must rev-match or double-clutch. Four to six speeds typical. Crude compared to synchromesh.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_synchromesh",
   "name": "Synchromesh: synchronizer ring",
   "cat": "motor_subsystems",
-  "pre": ["tl_sliding_gearbox", "cap_tol_10um"],
-  "traits": [],
-  "kb": "Friction cone syncs gear speeds before meshing; smooths shift",
+  "pre": [
+   "tl_sliding_gearbox",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 160,
-  "lab": {"machinist": 280},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "machinist": 280
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 0.8,
@@ -1452,12 +2342,21 @@
   "id": "tl_epicyclic_gearbox",
   "name": "Epicyclic gearbox: planetary",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_cast_iron"],
-  "traits": [],
-  "kb": "Small gears orbit around central sun gear; multiple ratios by holding components",
+  "pre": [
+   "cap_tol_100um",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 170,
-  "lab": {"machinist": 300},
-  "mat": {"mat_cast_iron": 2.5},
+  "lab": {
+   "machinist": 300
+  },
+  "mat": {
+   "mat_cast_iron": 2.5
+  },
   "cap": 1400,
   "up": 140,
   "build_yrs": 1,
@@ -1469,18 +2368,38 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Very compact; ratios determined by which element is held fixed. Used in early automatic transmissions and in-wheel motors."
+  "note": "Very compact; ratios determined by which element is held fixed. Used in early automatic transmissions and in-wheel motors.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_automatic_transmission",
   "name": "Automatic transmission: hydraulic",
   "cat": "motor_subsystems",
-  "pre": ["tl_epicyclic_gearbox", "cap_tol_10um"],
-  "traits": ["labour_saving"],
-  "kb": "Hydraulic torque converter shifts gears automatically",
+  "pre": [
+   "tl_epicyclic_gearbox",
+   "cap_tol_10um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_plate_clutch",
   "ph": 200,
-  "lab": {"engineer": 350},
-  "mat": {"mat_bulk_steel": 4},
+  "lab": {
+   "engineer": 350
+  },
+  "mat": {
+   "mat_bulk_steel": 4
+  },
   "cap": 2000,
   "up": 200,
   "build_yrs": 1.5,
@@ -1498,12 +2417,21 @@
   "id": "tl_fuel_pump",
   "name": "Fuel pump: mechanical",
   "cat": "motor_subsystems",
-  "pre": ["crank_conrod", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Cam-operated diaphragm pump lifts fuel from tank to carburettor",
+  "pre": [
+   "crank_conrod",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 100,
-  "lab": {"machinist": 140},
-  "mat": {"mat_cast_iron": 1},
+  "lab": {
+   "machinist": 140
+  },
+  "mat": {
+   "mat_cast_iron": 1
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1521,12 +2449,21 @@
   "id": "tl_oil_pump",
   "name": "Oil pump: pressure lubrication",
   "cat": "motor_subsystems",
-  "pre": ["crank_conrod", "cap_tol_100um"],
-  "traits": [],
-  "kb": "Geared pump pressurises oil to lubricate engine bearings",
+  "pre": [
+   "crank_conrod",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_oil_pump",
   "ph": 120,
-  "lab": {"machinist": 180},
-  "mat": {"mat_cast_iron": 1.5},
+  "lab": {
+   "machinist": 180
+  },
+  "mat": {
+   "mat_cast_iron": 1.5
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -1544,12 +2481,18 @@
   "id": "tl_air_filter",
   "name": "Air filter: intake cleaning",
   "cat": "motor_subsystems",
-  "pre": ["mat_cloth"],
+  "pre": [
+   "mat_cloth"
+  ],
   "traits": [],
-  "kb": "Cloth or paper element traps dust from intake air",
+  "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 60,
-  "lab": {"artisan": 80},
-  "mat": {"mat_cloth": 0.5},
+  "lab": {
+   "artisan": 80
+  },
+  "mat": {
+   "mat_cloth": 0.5
+  },
   "cap": 400,
   "up": 40,
   "build_yrs": 0.2,
@@ -1567,12 +2510,21 @@
   "id": "tl_muffler",
   "name": "Muffler: silencer pipe",
   "cat": "motor_subsystems",
-  "pre": ["mat_cast_iron"],
-  "traits": [],
-  "kb": "Chamber with baffles absorbs exhaust noise",
+  "pre": [
+   "mat_cast_iron",
+   "mfg_hot_riveting"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_muffler",
   "ph": 80,
-  "lab": {"smith": 100},
-  "mat": {"mat_cast_iron": 2},
+  "lab": {
+   "smith": 100
+  },
+  "mat": {
+   "mat_cast_iron": 2
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -1584,18 +2536,39 @@
   "sch": 0,
   "art": 2,
   "conf": "B",
-  "note": "Expansion and baffle design attenuate pulsations; silencing is incomplete. Backpressure aids low-end torque."
+  "note": "Expansion and baffle design attenuate pulsations; silencing is incomplete. Backpressure aids low-end torque.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_windscreen_wiper",
   "name": "Windscreen wiper: mechanical",
   "cat": "motor_subsystems",
-  "pre": ["crank_conrod", "mat_rubber"],
-  "traits": ["labour_saving"],
-  "kb": "Camshaft-driven arm swings wiper blade across glass",
+  "pre": [
+   "crank_conrod",
+   "mat_rubber",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_muffler",
   "ph": 100,
-  "lab": {"machinist": 150},
-  "mat": {"mat_rubber": 0.2},
+  "lab": {
+   "machinist": 150
+  },
+  "mat": {
+   "mat_rubber": 0.2
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -1613,12 +2586,21 @@
   "id": "tl_headlamp",
   "name": "Headlamp: electric light",
   "cat": "motor_subsystems",
-  "pre": ["cap_power_electric", "arc_light_lamp"],
-  "traits": ["infrastructure"],
-  "kb": "Parabolic reflector and incandescent or arc lamp for road lighting",
+  "pre": [
+   "cap_power_electric",
+   "arc_light_lamp"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_headlamp",
   "ph": 120,
-  "lab": {"optician": 150},
-  "mat": {"mat_glass_soda": 1},
+  "lab": {
+   "optician": 150
+  },
+  "mat": {
+   "mat_glass_soda": 1
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -1636,12 +2618,20 @@
   "id": "tl_indicator",
   "name": "Indicator light: direction signal",
   "cat": "motor_subsystems",
-  "pre": ["cap_power_electric"],
-  "traits": ["infrastructure"],
-  "kb": "Flashing light or arm signals intent to turn",
+  "pre": [
+   "cap_power_electric"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_headlamp",
   "ph": 70,
-  "lab": {"electrician": 100},
-  "mat": {"mat_glass_soda": 0.1},
+  "lab": {
+   "electrician": 100
+  },
+  "mat": {
+   "mat_glass_soda": 0.1
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.3,
@@ -1659,14 +2649,35 @@
   "id": "tl_omnibus",
   "name": "Omnibus: passenger coach",
   "cat": "vehicle_types",
-  "pre": ["tl_horse_collar", "tl_elliptic_spring"],
-  "traits": ["commerce", "labour_saving"],
-  "kb": "Large open or enclosed carriage seating 10 to 30 passengers",
-  "ph": 160,
-  "lab": {"carpenter": 300, "smith": 150},
-  "mat": {"mat_wrought_iron": 8, "mat_wood": 50},
-  "cap": 1200,
-  "up": 120,
+  "pre": [
+   "tl_horse_collar",
+   "tl_elliptic_spring",
+   "fin_ferry",
+   "lnd_air_brake",
+   "lnd_automobile"
+  ],
+  "traits": [
+   "commerce",
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
+  "ph": 250.0,
+  "lab": {
+   "carpenter": 300.0,
+   "machinist": 350.0,
+   "merchant": 200.0,
+   "smith": 250.0
+  },
+  "mat": {
+   "brass_kg": 25.0,
+   "iron_bar_kg": 200.0,
+   "leather_kg": 50.0,
+   "steel_plate_kg": 150.0,
+   "timber_m3": 100.0,
+   "wood_kg": 50.0
+  },
+  "cap": 8000.0,
+  "up": 1000.0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
   "dev_years": 6,
@@ -1676,18 +2687,30 @@
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "Spring suspension carries multiple passengers smoothly; seats are arranged lengthwise or in rows. Public transport standard from 1820."
+  "note": "Coach carrying multiple paying passengers on a fixed route. Cheaper than hiring a private carriage. Operates on schedule and shares capacity with strangers."
  },
  {
   "id": "tl_horse_tram",
   "name": "Tram: horse-drawn",
   "cat": "vehicle_types",
-  "pre": ["tl_omnibus", "railway"],
-  "traits": ["commerce", "labour_saving"],
-  "kb": "Carriage running on rails pulled by horses",
+  "pre": [
+   "tl_omnibus",
+   "railway"
+  ],
+  "traits": [
+   "commerce",
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 180,
-  "lab": {"carpenter": 350, "smith": 200},
-  "mat": {"mat_wrought_iron": 15, "mat_wood": 40},
+  "lab": {
+   "carpenter": 350,
+   "smith": 200
+  },
+  "mat": {
+   "mat_wrought_iron": 15,
+   "mat_wood": 40
+  },
   "cap": 1500,
   "up": 150,
   "build_yrs": 2,
@@ -1705,12 +2728,24 @@
   "id": "tl_steam_tram",
   "name": "Tram: steam-powered",
   "cat": "vehicle_types",
-  "pre": ["tl_horse_tram", "steam_high_pressure"],
-  "traits": ["labour_saving", "infrastructure"],
-  "kb": "Small steam engine on platform drives tram on rails",
+  "pre": [
+   "tl_horse_tram",
+   "steam_high_pressure"
+  ],
+  "traits": [
+   "labour_saving",
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 220,
-  "lab": {"engineer": 300, "machinist": 200},
-  "mat": {"mat_cast_iron": 20, "mat_wrought_iron": 10},
+  "lab": {
+   "engineer": 300,
+   "machinist": 200
+  },
+  "mat": {
+   "mat_cast_iron": 20,
+   "mat_wrought_iron": 10
+  },
   "cap": 2000,
   "up": 200,
   "build_yrs": 2.5,
@@ -1728,12 +2763,23 @@
   "id": "tl_electric_tram",
   "name": "Tram: electric powered",
   "cat": "vehicle_types",
-  "pre": ["power_grid", "tl_motor_dc"],
-  "traits": ["labour_saving", "infrastructure"],
-  "kb": "Electric motor powered from overhead wires via trolley pole",
+  "pre": [
+   "power_grid",
+   "tl_motor_dc"
+  ],
+  "traits": [
+   "labour_saving",
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 200,
-  "lab": {"electrician": 280, "machinist": 150},
-  "mat": {"mat_bulk_steel": 15},
+  "lab": {
+   "electrician": 280,
+   "machinist": 150
+  },
+  "mat": {
+   "mat_bulk_steel": 15
+  },
   "cap": 1800,
   "up": 180,
   "build_yrs": 2,
@@ -1751,12 +2797,23 @@
   "id": "tl_trolleybus",
   "name": "Trolleybus: electric bus",
   "cat": "vehicle_types",
-  "pre": ["tl_electric_tram", "tl_omnibus"],
-  "traits": ["labour_saving", "infrastructure"],
-  "kb": "Bus-sized vehicle with electric motor powered from overhead wires",
+  "pre": [
+   "tl_electric_tram",
+   "tl_omnibus"
+  ],
+  "traits": [
+   "labour_saving",
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 210,
-  "lab": {"electrician": 300, "carpenter": 180},
-  "mat": {"mat_bulk_steel": 10},
+  "lab": {
+   "electrician": 300,
+   "carpenter": 180
+  },
+  "mat": {
+   "mat_bulk_steel": 10
+  },
   "cap": 1900,
   "up": 190,
   "build_yrs": 2.2,
@@ -1774,12 +2831,24 @@
   "id": "tl_motor_lorry",
   "name": "Motor lorry: gasoline truck",
   "cat": "vehicle_types",
-  "pre": ["tl_carburettor", "tl_coil_ignition", "tl_plate_clutch"],
-  "traits": ["labour_saving", "commerce"],
-  "kb": "Petrol-engined vehicle for cargo transport",
+  "pre": [
+   "tl_carburettor",
+   "tl_coil_ignition",
+   "tl_plate_clutch"
+  ],
+  "traits": [
+   "labour_saving",
+   "commerce"
+  ],
+  "kb": "86_transport_deep.md#tl_motor_lorry",
   "ph": 240,
-  "lab": {"engineer": 350, "carpenter": 200},
-  "mat": {"mat_bulk_steel": 25},
+  "lab": {
+   "engineer": 350,
+   "carpenter": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 25
+  },
   "cap": 2200,
   "up": 220,
   "build_yrs": 2.5,
@@ -1797,12 +2866,24 @@
   "id": "tl_articulated_trailer",
   "name": "Articulated trailer: semi-trailer",
   "cat": "vehicle_types",
-  "pre": ["tl_fifth_wheel", "tl_motor_lorry"],
-  "traits": ["labour_saving", "commerce"],
-  "kb": "Unpowered trailer coupled with fifth wheel to powered tractor",
+  "pre": [
+   "tl_fifth_wheel",
+   "tl_motor_lorry"
+  ],
+  "traits": [
+   "labour_saving",
+   "commerce"
+  ],
+  "kb": "86_transport_deep.md#tl_motor_lorry",
   "ph": 170,
-  "lab": {"carpenter": 250, "smith": 120},
-  "mat": {"mat_wrought_iron": 15, "mat_wood": 30},
+  "lab": {
+   "carpenter": 250,
+   "smith": 120
+  },
+  "mat": {
+   "mat_wrought_iron": 15,
+   "mat_wood": 30
+  },
   "cap": 1600,
   "up": 160,
   "build_yrs": 1.8,
@@ -1820,14 +2901,31 @@
   "id": "tl_tractor",
   "name": "Tractor: agricultural motorvehicle",
   "cat": "vehicle_types",
-  "pre": ["tl_carburettor", "tl_ball_bearing"],
-  "traits": ["labour_saving"],
-  "kb": "Low-speed high-torque motor with power takeoff for implements",
-  "ph": 250,
-  "lab": {"engineer": 350, "machinist": 200},
-  "mat": {"mat_bulk_steel": 30},
-  "cap": 2300,
-  "up": 230,
+  "pre": [
+   "tl_carburettor",
+   "tl_ball_bearing",
+   "lnd_diesel_cycle",
+   "tl_caterpillar_track",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_motor_lorry",
+  "ph": 350.0,
+  "lab": {
+   "artisan": 200.0,
+   "engineer": 350.0,
+   "machinist": 400.0,
+   "smith": 350.0
+  },
+  "mat": {
+   "iron_bar_kg": 250.0,
+   "rubber_kg": 50.0,
+   "steel_plate_kg": 180.0
+  },
+  "cap": 10000.0,
+  "up": 1500.0,
   "build_yrs": 2.8,
   "adopt_yrs": 0.5,
   "dev_years": 11,
@@ -1837,20 +2935,39 @@
   "sch": 120,
   "art": 5,
   "conf": "B",
-  "note": "Three-point hitch connects implements; PTO shaft drives threshers, pumps, balers. Wide tyres and low centre-of-gravity for soft ground."
+  "note": "Powerful engine mounted on crawler tracks for traction in mud. Can pull multiple ploughs or work in woods. Changes farmwork from oxen to machines; entire labour class displaced."
  },
  {
   "id": "tl_caterpillar_track",
   "name": "Caterpillar track: endless belt",
   "cat": "vehicle_types",
-  "pre": ["cap_tol_1mm", "mat_wrought_iron"],
-  "traits": ["labour_saving"],
-  "kb": "Linked steel shoes on driving sprockets distribute load over wide area",
+  "pre": [
+   "cap_tol_1mm",
+   "mat_wrought_iron",
+   "ag2_tractor_steam",
+   "cap_tol_100um",
+   "lnd_otto_cycle_four_stroke",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_motor_lorry",
   "ph": 200,
-  "lab": {"smith": 250, "machinist": 150},
-  "mat": {"mat_wrought_iron": 40},
-  "cap": 2000,
-  "up": 200,
+  "lab": {
+   "artisan": 150.0,
+   "engineer": 380.0,
+   "machinist": 320.0,
+   "smith": 300.0
+  },
+  "mat": {
+   "cast_iron_kg": 150.0,
+   "iron_bar_kg": 150.0,
+   "rubber_kg": 30.0,
+   "steel_plate_kg": 200.0
+  },
+  "cap": 6000.0,
+  "up": 400.0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.4,
   "dev_years": 8,
@@ -1860,20 +2977,43 @@
   "sch": 100,
   "art": 5,
   "conf": "B",
-  "note": "Tracks climb steep slopes and cross soft ground; mud does not cling to shoes. Higher traction than wheels. Used on tanks and heavy dozers."
+  "note": "Steel shoes on chains loop around drive sprockets. Distributes weight over ground to reduce sinking in mud. Allows cross-country movement on otherwise impassable terrain.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_half_track",
   "name": "Half-track vehicle",
   "cat": "vehicle_types",
-  "pre": ["tl_caterpillar_track", "tl_motor_lorry"],
-  "traits": ["labour_saving", "military"],
+  "pre": [
+   "tl_caterpillar_track",
+   "tl_motor_lorry",
+   "cap_tol_1mm",
+   "mil_track"
+  ],
+  "traits": [
+   "labour_saving",
+   "military"
+  ],
   "kb": "Tracks at rear, steered wheels at front",
   "ph": 220,
-  "lab": {"engineer": 300, "machinist": 200},
-  "mat": {"mat_bulk_steel": 28},
-  "cap": 2100,
-  "up": 210,
+  "lab": {
+   "engineer": 300,
+   "machinist": 200
+  },
+  "mat": {
+   "steel_plate_kg": 1500.0
+  },
+  "cap": 10000.0,
+  "up": 700.0,
   "build_yrs": 2.4,
   "adopt_yrs": 0.4,
   "dev_years": 9,
@@ -1883,18 +3023,28 @@
   "sch": 110,
   "art": 5,
   "conf": "B",
-  "note": "Front wheels steer; tracks handle traction. Lower cost than full track; faster on roads. Used in WW2 for soft-ground transport."
+  "note": "Wheels in front for steering, tracks in rear for power. Lighter than tank but terrain-capable. Carries troops or specialised equipment. Faster than tracked vehicle on roads."
  },
  {
   "id": "tl_motorcycle",
   "name": "Motorcycle: two-wheeled motor",
   "cat": "vehicle_types",
-  "pre": ["tl_safety_bicycle", "tl_carburettor"],
-  "traits": ["labour_saving", "commerce"],
-  "kb": "Single-cylinder engine in bicycle frame with motorcycle tyres",
+  "pre": [
+   "tl_safety_bicycle",
+   "tl_carburettor"
+  ],
+  "traits": [
+   "labour_saving",
+   "commerce"
+  ],
+  "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 180,
-  "lab": {"mechanic": 250},
-  "mat": {"mat_bulk_steel": 8},
+  "lab": {
+   "mechanic": 250
+  },
+  "mat": {
+   "mat_bulk_steel": 8
+  },
   "cap": 1700,
   "up": 170,
   "build_yrs": 1.8,
@@ -1912,12 +3062,21 @@
   "id": "tl_snow_plough",
   "name": "Snow plough: powered blade",
   "cat": "vehicle_types",
-  "pre": ["tl_motor_lorry"],
-  "traits": ["infrastructure"],
-  "kb": "V-shaped blade mounted on truck clears snow from road surface",
+  "pre": [
+   "tl_motor_lorry"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_motor_lorry",
   "ph": 150,
-  "lab": {"engineer": 200, "smith": 120},
-  "mat": {"mat_cast_iron": 8},
+  "lab": {
+   "engineer": 200,
+   "smith": 120
+  },
+  "mat": {
+   "mat_cast_iron": 8
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 1.3,
@@ -1935,12 +3094,25 @@
   "id": "tl_pneumatic_tyre",
   "name": "Pneumatic tyre: air-filled",
   "cat": "wheels_running_gear",
-  "pre": ["mat_natural_rubber", "cap_pure_2N", "cap_heat_1100"],
-  "traits": ["labour_saving"],
-  "kb": "Rubber envelope filled with air; sidewalls flex to absorb bumps",
+  "pre": [
+   "cap_pure_2N",
+   "cap_heat_1100",
+   "tl_ball_bearing",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 160,
-  "lab": {"chemist": 200},
-  "mat": {"mat_natural_rubber": 5},
+  "lab": {
+   "artisan": 200.0,
+   "chemist": 200.0
+  },
+  "mat": {
+   "cotton_fabric_kg": 2.0,
+   "rubber_kg": 5.0
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 1,
@@ -1952,18 +3124,26 @@
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "Air spring is light and effective; pinch-flats require inner tube. Rotation must be balanced or vibration results. Puncture repair by patching."
+  "note": "REQUIRES NATURAL RUBBER, reachable only through the West African coastal expedition branch (see mat_natural_rubber, exp_coastal_africa): rubber is not native to the Mediterranean, Scandinavia, North China or England, and the Hevea of the New World is not reachable at all without an Atlantic crossing - but the Landolphia and Funtumia vines of West and Central Africa are real rubber, reachable by coastal sailing, which is the route this node actually uses. Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation."
  },
  {
   "id": "tl_inner_tube",
   "name": "Inner tube: rubber bladder",
   "cat": "wheels_running_gear",
-  "pre": ["tl_pneumatic_tyre"],
-  "traits": [],
-  "kb": "Separate air-holding tube inside tyre; prevents pinch-flats",
+  "pre": [
+   "tl_pneumatic_tyre"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 120,
-  "lab": {"chemist": 150},
-  "mat": {"mat_natural_rubber": 2},
+  "lab": {
+   "chemist": 150
+  },
+  "mat": {
+   "mat_natural_rubber": 2
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.7,
@@ -1981,12 +3161,21 @@
   "id": "tl_tyre_bead",
   "name": "Tyre bead: rim seat",
   "cat": "wheels_running_gear",
-  "pre": ["tl_pneumatic_tyre", "cap_tol_1mm"],
-  "traits": [],
-  "kb": "Reinforced edge of tyre seats onto wheel rim",
+  "pre": [
+   "tl_pneumatic_tyre",
+   "cap_tol_1mm"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 100,
-  "lab": {"chemist": 140},
-  "mat": {"mat_natural_rubber": 1},
+  "lab": {
+   "chemist": 140
+  },
+  "mat": {
+   "mat_natural_rubber": 1
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.5,
@@ -2004,11 +3193,18 @@
   "id": "tl_tyre_tread",
   "name": "Tyre tread pattern",
   "cat": "wheels_running_gear",
-  "pre": ["tl_pneumatic_tyre", "cap_heat_1100"],
-  "traits": [],
-  "kb": "Grooves carved into tyre surface channel water away from contact patch",
+  "pre": [
+   "tl_pneumatic_tyre",
+   "cap_heat_1100"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 110,
-  "lab": {"chemist": 160},
+  "lab": {
+   "chemist": 160
+  },
   "mat": {},
   "cap": 650,
   "up": 65,
@@ -2027,12 +3223,21 @@
   "id": "tl_solid_rubber_tyre",
   "name": "Solid rubber tyre",
   "cat": "wheels_running_gear",
-  "pre": ["mat_natural_rubber"],
-  "traits": [],
-  "kb": "Thick rubber wheel without air; hard and durable",
+  "pre": [
+   "mat_natural_rubber",
+   "tl_vulcanized_rubber"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 100,
-  "lab": {"chemist": 130},
-  "mat": {"mat_natural_rubber": 8},
+  "lab": {
+   "chemist": 130
+  },
+  "mat": {
+   "mat_natural_rubber": 8
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.6,
@@ -2050,12 +3255,22 @@
   "id": "tl_motor_dc",
   "name": "DC electric motor",
   "cat": "motor_subsystems",
-  "pre": ["cap_power_electric", "electromagnet"],
-  "traits": [],
-  "kb": "Rotating coil in permanent magnet field powered by DC current",
+  "pre": [
+   "cap_power_electric",
+   "electromagnet"
+  ],
+  "traits": [
+   "infrastructure",
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_dynamo",
   "ph": 140,
-  "lab": {"electrician": 200},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "electrician": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -2073,12 +3288,22 @@
   "id": "tl_wire_spoke_wheel",
   "name": "Wire spoke wheel",
   "cat": "wheels_running_gear",
-  "pre": ["tl_spoked_wheel", "cap_tol_100um"],
-  "traits": ["labour_saving"],
-  "kb": "Steel wire spokes replace wooden or iron spokes; lighter and stronger",
+  "pre": [
+   "tl_spoked_wheel",
+   "cap_tol_100um"
+  ],
+  "traits": [
+   "labour_saving"
+  ],
+  "kb": "86_transport_deep.md#tl_spoked_wheel",
   "ph": 120,
-  "lab": {"carpenter": 100, "smith": 140},
-  "mat": {"mat_wrought_iron": 2},
+  "lab": {
+   "carpenter": 100,
+   "smith": 140
+  },
+  "mat": {
+   "mat_wrought_iron": 2
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -2096,12 +3321,23 @@
   "id": "tl_vulcanized_rubber",
   "name": "Vulcanized rubber",
   "cat": "wheels_running_gear",
-  "pre": ["mat_natural_rubber", "mat_sulfur", "cap_heat_1100"],
-  "traits": [],
-  "kb": "Sulfur compound heated with rubber to cure and harden it",
+  "pre": [
+   "mat_sulfur",
+   "cap_heat_1100",
+   "mat_rubber_coagulated"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_pneumatic_tyre",
   "ph": 140,
-  "lab": {"chemist": 200},
-  "mat": {"mat_natural_rubber": 5, "mat_sulfur": 1},
+  "lab": {
+   "chemist": 200
+  },
+  "mat": {
+   "mat_natural_rubber": 5,
+   "mat_sulfur": 1
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.7,
@@ -2119,12 +3355,21 @@
   "id": "tl_connecting_rod",
   "name": "Connecting rod: piston link",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_bulk_steel"],
-  "traits": [],
-  "kb": "Steel link connects piston to crankshaft; transfers reciprocal motion to rotary",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_engine_block",
   "ph": 150,
-  "lab": {"machinist": 240},
-  "mat": {"mat_bulk_steel": 1.5},
+  "lab": {
+   "machinist": 240
+  },
+  "mat": {
+   "mat_bulk_steel": 1.5
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -2136,18 +3381,37 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "I-beam section resists bending; pin holes at each end. Mass must be balanced for high-speed rotation or vibration is severe."
+  "note": "I-beam section resists bending; pin holes at each end. Mass must be balanced for high-speed rotation or vibration is severe.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_piston_assembly",
   "name": "Piston with rings",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_cast_iron"],
-  "traits": [],
-  "kb": "Cast iron cup with sealing rings slides in cylinder bore",
+  "pre": [
+   "cap_tol_100um",
+   "mat_cast_iron"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_engine_block",
   "ph": 160,
-  "lab": {"machinist": 280},
-  "mat": {"mat_cast_iron": 2},
+  "lab": {
+   "machinist": 280
+  },
+  "mat": {
+   "mat_cast_iron": 2
+  },
   "cap": 1100,
   "up": 110,
   "build_yrs": 0.8,
@@ -2159,18 +3423,38 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Compression ring seals gases; oil ring wipes cylinder wall. Rings must slide freely or friction is excessive and compression leaks past."
+  "note": "Compression ring seals gases; oil ring wipes cylinder wall. Rings must slide freely or friction is excessive and compression leaks past.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_intake_valve",
   "name": "Intake valve with cam",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_bulk_steel"],
-  "traits": [],
-  "kb": "Conical valve opens and closes intake port via camshaft lobe",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_intake_valve",
   "ph": 140,
-  "lab": {"machinist": 220},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 220
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 900,
   "up": 90,
   "build_yrs": 0.6,
@@ -2182,18 +3466,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Cam lobe pushes tappet and rod; valve lifts against spring. Timing is fixed by cam profile; wrong timing kills efficiency."
+  "note": "Cam lobe pushes tappet and rod; valve lifts against spring. Timing is fixed by cam profile; wrong timing kills efficiency.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_exhaust_valve",
   "name": "Exhaust valve with spring",
   "cat": "motor_subsystems",
-  "pre": ["tl_intake_valve", "cap_heat_1300"],
-  "traits": [],
-  "kb": "Heat-resistant valve opens and closes exhaust port",
+  "pre": [
+   "tl_intake_valve",
+   "cap_heat_1300"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_intake_valve",
   "ph": 150,
-  "lab": {"machinist": 240},
-  "mat": {"mat_bulk_steel": 0.5},
+  "lab": {
+   "machinist": 240
+  },
+  "mat": {
+   "mat_bulk_steel": 0.5
+  },
   "cap": 1000,
   "up": 100,
   "build_yrs": 0.7,
@@ -2211,12 +3514,20 @@
   "id": "tl_carbide_lamp",
   "name": "Carbide headlamp",
   "cat": "motor_subsystems",
-  "pre": ["cap_gas_o2h2"],
-  "traits": ["infrastructure"],
-  "kb": "Acetylene gas from carbide and water burns with bright flame",
+  "pre": [
+   "cap_gas_o2h2"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_headlamp",
   "ph": 100,
-  "lab": {"machinist": 150},
-  "mat": {"mat_brass": 1},
+  "lab": {
+   "machinist": 150
+  },
+  "mat": {
+   "mat_brass": 1
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -2234,12 +3545,20 @@
   "id": "tl_storage_battery",
   "name": "Lead-acid storage battery",
   "cat": "motor_subsystems",
-  "pre": ["mat_lead", "mat_sulfuric_acid", "cap_power_electric"],
+  "pre": [
+   "mat_lead",
+   "mat_sulfuric_acid",
+   "cap_power_electric"
+  ],
   "traits": [],
   "kb": "Lead plates in sulfuric acid store electrical energy",
   "ph": 130,
-  "lab": {"chemist": 180},
-  "mat": {"mat_lead": 8},
+  "lab": {
+   "chemist": 180
+  },
+  "mat": {
+   "mat_lead": 8
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -2257,12 +3576,22 @@
   "id": "tl_engine_block",
   "name": "Engine block: cast cylinder",
   "cat": "motor_subsystems",
-  "pre": ["mat_cast_iron", "cap_heat_1600"],
-  "traits": [],
-  "kb": "Cast iron monolithic block holds cylinders and bearing supports",
+  "pre": [
+   "mat_cast_iron",
+   "cap_heat_1600"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_engine_block",
   "ph": 170,
-  "lab": {"furnaceman": 250, "machinist": 200},
-  "mat": {"mat_cast_iron": 50},
+  "lab": {
+   "furnaceman": 250,
+   "machinist": 200
+  },
+  "mat": {
+   "mat_cast_iron": 50
+  },
   "cap": 1200,
   "up": 120,
   "build_yrs": 1,
@@ -2274,18 +3603,37 @@
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "Single casting eliminates many seams; cooling jackets are sand-cored. Boring and honing cylinders to tolerance requires careful tool control."
+  "note": "Single casting eliminates many seams; cooling jackets are sand-cored. Boring and honing cylinders to tolerance requires careful tool control.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_cooling_fan",
   "name": "Cooling fan: mechanical drive",
   "cat": "motor_subsystems",
-  "pre": ["tl_radiator"],
-  "traits": [],
-  "kb": "Spinning blades pull air through radiator fins",
+  "pre": [
+   "tl_radiator"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_radiator",
   "ph": 100,
-  "lab": {"machinist": 140},
-  "mat": {"mat_cast_iron": 2},
+  "lab": {
+   "machinist": 140
+  },
+  "mat": {
+   "mat_cast_iron": 2
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -2303,12 +3651,20 @@
   "id": "tl_pressure_relief_valve",
   "name": "Pressure relief valve: oil system",
   "cat": "motor_subsystems",
-  "pre": ["tl_oil_pump"],
-  "traits": [],
-  "kb": "Spring-loaded valve diverts oil back to sump if pressure exceeds limit",
+  "pre": [
+   "tl_oil_pump"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_oil_pump",
   "ph": 90,
-  "lab": {"machinist": 130},
-  "mat": {"mat_cast_iron": 0.5},
+  "lab": {
+   "machinist": 130
+  },
+  "mat": {
+   "mat_cast_iron": 0.5
+  },
   "cap": 600,
   "up": 60,
   "build_yrs": 0.4,
@@ -2326,12 +3682,21 @@
   "id": "tl_cam_follower",
   "name": "Cam follower and tappet",
   "cat": "motor_subsystems",
-  "pre": ["cap_tol_100um", "mat_bulk_steel"],
-  "traits": [],
-  "kb": "Hardened follower rides on camshaft lobe and operates valve",
+  "pre": [
+   "cap_tol_100um",
+   "mat_bulk_steel"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_engine_block",
   "ph": 120,
-  "lab": {"machinist": 200},
-  "mat": {"mat_bulk_steel": 1},
+  "lab": {
+   "machinist": 200
+  },
+  "mat": {
+   "mat_bulk_steel": 1
+  },
   "cap": 800,
   "up": 80,
   "build_yrs": 0.6,
@@ -2343,18 +3708,37 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Roller followers reduce friction compared to flat or spherical; hardness prevents wear under high Hertzian stress."
+  "note": "Roller followers reduce friction compared to flat or spherical; hardness prevents wear under high Hertzian stress.",
+  "req_any": [
+   {
+    "group": "structural_steel",
+    "options": {
+     "mat_bulk_steel": 1.0,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 0.7
+    }
+   }
+  ]
  },
  {
   "id": "tl_ignition_timing",
   "name": "Ignition timing advance mechanism",
   "cat": "motor_subsystems",
-  "pre": ["tl_magneto_ignition", "cap_measure_time_ms"],
-  "traits": [],
-  "kb": "Mechanical advance shifts spark timing with engine rpm",
+  "pre": [
+   "tl_magneto_ignition",
+   "cap_measure_time_ms"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "86_transport_deep.md#tl_magneto_ignition",
   "ph": 110,
-  "lab": {"machinist": 170},
-  "mat": {"mat_bulk_steel": 0.3},
+  "lab": {
+   "machinist": 170
+  },
+  "mat": {
+   "mat_bulk_steel": 0.3
+  },
   "cap": 700,
   "up": 70,
   "build_yrs": 0.5,
@@ -2372,12 +3756,18 @@
   "id": "tl_transmission_lubrication",
   "name": "Transmission oil sump and drain",
   "cat": "motor_subsystems",
-  "pre": ["mat_cast_iron"],
+  "pre": [
+   "mat_cast_iron"
+  ],
   "traits": [],
-  "kb": "Gear box filled with oil that bathes and cools gears",
+  "kb": "86_transport_deep.md#tl_oil_pump",
   "ph": 70,
-  "lab": {"smith": 80},
-  "mat": {"mat_cast_iron": 3},
+  "lab": {
+   "smith": 80
+  },
+  "mat": {
+   "mat_cast_iron": 3
+  },
   "cap": 500,
   "up": 50,
   "build_yrs": 0.3,
@@ -2389,18 +3779,36 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Oil viscosity must be chosen for ambient temperature; splash lubrication relies on gear teeth churning oil. Regular changes remove metal particles."
+  "note": "Oil viscosity must be chosen for ambient temperature; splash lubrication relies on gear teeth churning oil. Regular changes remove metal particles.",
+  "req_any": [
+   {
+    "group": "structural_casting",
+    "options": {
+     "mat_bronze": 0.7,
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 1.0,
+     "mat_wrought_iron": 0.8
+    }
+   }
+  ]
  },
  {
   "id": "tl_wire_rope_brake",
   "name": "Wire rope brake cable",
   "cat": "carriage_engineering",
-  "pre": ["mat_wrought_iron", "mat_rope"],
+  "pre": [
+   "mat_wrought_iron",
+   "mat_rope"
+  ],
   "traits": [],
-  "kb": "Steel wire rope transmits brake force from lever to shoe",
+  "kb": "86_transport_deep.md#tl_brake_shoe",
   "ph": 60,
-  "lab": {"smith": 80},
-  "mat": {"mat_wrought_iron": 0.3},
+  "lab": {
+   "smith": 80
+  },
+  "mat": {
+   "mat_wrought_iron": 0.3
+  },
   "cap": 400,
   "up": 40,
   "build_yrs": 0.2,
@@ -2412,18 +3820,34 @@
   "sch": 0,
   "art": 2,
   "conf": "A",
-  "note": "Stranded rope accepts bending around pulleys; weaker than solid cable but easier to route around wheels and frame. Stretches and requires adjustment."
+  "note": "Stranded rope accepts bending around pulleys; weaker than solid cable but easier to route around wheels and frame. Stretches and requires adjustment.",
+  "req_any": [
+   {
+    "group": "structural_wrought",
+    "options": {
+     "mat_bulk_steel": 0.9,
+     "mat_cast_iron": 0.6,
+     "mat_wrought_iron": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "tl_anti_siphon_valve",
   "name": "Anti-siphon valve in fuel line",
   "cat": "motor_subsystems",
-  "pre": ["tl_fuel_pump"],
+  "pre": [
+   "tl_fuel_pump"
+  ],
   "traits": [],
-  "kb": "One-way valve prevents fuel from siphoning back to tank",
+  "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 50,
-  "lab": {"machinist": 70},
-  "mat": {"mat_brass": 0.2},
+  "lab": {
+   "machinist": 70
+  },
+  "mat": {
+   "mat_brass": 0.2
+  },
   "cap": 300,
   "up": 30,
   "build_yrs": 0.2,

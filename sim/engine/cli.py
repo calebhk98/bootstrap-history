@@ -17,6 +17,7 @@ from .protocol import (
     _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
     _agent_state, _node_explain, civ_of_save, goal_of_save, final_report,
     load_state, parse_typed, render_final, render_pretty, save_state)
+from constants import declare
 
 
 # ----------------------------------------------------------------------------
@@ -114,7 +115,7 @@ def ensure_fixed_hash_seed(seed="0"):
 # Measured with every stroke of luck removed - no events, no project
 # failures, an immortal founder, the game's own planner doing the ordering -
 # reaching the current goal has taken about 451 years from Han China and
-# about 1,019 from Rome (see rome/data/review/PATH_SEARCH.md section 6 for
+# about 1,019 from Rome (see data/review/PATH_SEARCH.md section 6 for
 # the method and the full tables). A 500-year Standard is generous for the
 # one and short of reachable for the other, and a menu that offers both
 # civilisations and both horizons with nothing connecting them is offering a
@@ -129,7 +130,7 @@ def ensure_fixed_hash_seed(seed="0"):
 # does not climb back out of for roughly 850 years) and section 4.4 proves,
 # by direct ablation, that no reordering of the strategy file - which is
 # the entire space planner.py/path_search.py can search - changes it. A
-# real, far stronger playthrough (rome/playtest/fixtures/
+# real, far stronger playthrough (playtest/fixtures/
 # rome_434_goal_startable.json) reaches the SAME goal in 334 years, three
 # times faster, by playing manually rather than by any order this table's
 # own instrument can express. Do not read 1,019 as "Rome cannot be won
@@ -163,7 +164,7 @@ DICE_FREE_FLOOR_YEARS = {
 # at DICE_FREE_FLOOR_YEARS above. Every word of that was true about the
 # instrument and false as advice: a player reading it concludes Rome cannot be
 # won in 400 years, and a player has since reached the same Rome goal's
-# startable point in 334 years (rome/playtest/fixtures/
+# startable point in 334 years (playtest/fixtures/
 # rome_434_goal_startable.json) under fog, on a second attempt, with the
 # point-contact transistor failing six times in a row. 1,019 is not a floor
 # under play, it is one policy's ceiling - see DICE_FREE_FLOOR_YEARS' own
@@ -217,8 +218,8 @@ def load_strategy(name, nodes, goal):
     if not os.path.exists(path) and os.path.exists(str(name)):
         path = str(name)
     if os.path.exists(path):
-        s = json.load(open(path))
-        order = [k for k in s["order"] if k in nodes]
+        strategy_data = json.load(open(path))
+        order = [node_id for node_id in strategy_data["order"] if node_id in nodes]
         # Everything the strategy did not name gets a sensible default ordering:
         # things the goal needs first, then cheapest first. Falling
         # back to alphabetical order made the simulation spend a century acquiring
@@ -229,7 +230,7 @@ def load_strategy(name, nodes, goal):
         # node is worth would have gone on ranking against the old one for ever,
         # silently and with nothing failing.
         need = closure(nodes, goal)
-        rest = [k for k in nodes if k not in order]
+        rest = [node_id for node_id in nodes if node_id not in order]
         rest.sort(key=lambda k: (k not in need, nodes[k]["_total_cost"], k))
         # STABILISE THE WHOLE THING TOGETHER, not the two halves separately.
         # Sorting `rest` on its own left 681 places where a node preceded its
@@ -239,12 +240,12 @@ def load_strategy(name, nodes, goal):
         # which it needs). One pass over the concatenation keeps the strategy's
         # preference wherever it is legal and repairs it where it is not.
         full = topo_stable(nodes, order + rest)
-        return s.get("label", name), full, set(s.get("bounties", []))
+        return strategy_data.get("label", name), full, set(strategy_data.get("bounties", []))
     if name == "topo":
         need = closure(nodes, goal)
         order = topo_order(nodes, need)
         return ("bare topological order to the goal",
-                order + [k for k in topo_order(nodes) if k not in need], set())
+                order + [node_id for node_id in topo_order(nodes) if node_id not in need], set())
     if name == "cheapest":
         order = sorted(nodes, key=lambda k: nodes[k]["_total_cost"])
         return "cheapest first", topo_stable(nodes, order), set()
@@ -282,43 +283,43 @@ def topo_stable(nodes, preference, already=()):
     # that work going nowhere: mat_manganese was correctly required, and came
     # out of here at index 187 behind the mat_bulk_steel at index 65 that
     # cannot be built without it.
-    hp = {k: hard_pre(nodes, k) for k in pref}
+    hard_pre_by_node = {node_id: hard_pre(nodes, node_id) for node_id in pref}
     # Index the dependants so each placement only revisits what it could free,
     # rather than rescanning the whole list: the old loop was O(n^2) with a
     # list.remove() inside it, over 2,700 nodes.
     waiting = {}
     ready = []
-    for k in pref:
-        missing = sum(1 for p in hp[k] if p not in placed)
-        waiting[k] = missing
+    for node_id in pref:
+        missing = sum(1 for prereq_id in hard_pre_by_node[node_id] if prereq_id not in placed)
+        waiting[node_id] = missing
         if not missing:
-            ready.append(k)
+            ready.append(node_id)
     dependants = {}
     inset = set(pref)
-    for k in pref:
-        for p in hp[k]:
-            if p in inset:
-                dependants.setdefault(p, []).append(k)
-    rank = {k: i for i, k in enumerate(pref)}
+    for node_id in pref:
+        for prereq_id in hard_pre_by_node[node_id]:
+            if prereq_id in inset:
+                dependants.setdefault(prereq_id, []).append(node_id)
+    rank = {node_id: i for i, node_id in enumerate(pref)}
     import heapq
-    heap = [(rank[k], k) for k in ready]
+    heap = [(rank[node_id], node_id) for node_id in ready]
     heapq.heapify(heap)
     seen = set()
     while heap:
-        _r, k = heapq.heappop(heap)
-        if k in seen:
+        _rank, node_id = heapq.heappop(heap)
+        if node_id in seen:
             continue
-        seen.add(k)
-        out.append(k)
-        placed.add(k)
-        for m in dependants.get(k, ()):
-            waiting[m] -= 1
-            if waiting[m] == 0 and m not in seen:
-                heapq.heappush(heap, (rank[m], m))
+        seen.add(node_id)
+        out.append(node_id)
+        placed.add(node_id)
+        for dependent_id in dependants.get(node_id, ()):
+            waiting[dependent_id] -= 1
+            if waiting[dependent_id] == 0 and dependent_id not in seen:
+                heapq.heappush(heap, (rank[dependent_id], dependent_id))
     # Anything genuinely unreachable (a prerequisite outside both lists) keeps
     # its preferred order rather than being dropped.
     if len(out) < len(pref):
-        out.extend(k for k in pref if k not in seen)
+        out.extend(node_id for node_id in pref if node_id not in seen)
     return out
 
 
@@ -326,25 +327,65 @@ def topo_stable(nodes, preference, already=()):
 # Commands
 # ----------------------------------------------------------------------------
 
+# HOW LONG THE `validate --deep` REACHABILITY PROBE RUNS, per goal. Longer
+# than the structural critical-path floor because a probe with no search-
+# rounds relaxation (see cmd_validate's own comment on this) needs slack to
+# actually reach a goal it structurally can, but capped because this runs one
+# real Sim trial per goal per civilisation and a menu-adjacent command has to
+# stay fast. Balances thoroughness against runtime; not derived from
+# anything about the tree or the civilisations it probes.
+VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR", 2.5,
+    kind="temporary_heuristic", unit="probe years per critical-path floor year",
+    source=None, confidence="D",
+    why="How much slack over the structural critical-path floor the "
+        "reachability probe gets before it is declared 'not reached'. A "
+        "real trial needs more calendar time than the floor (which assumes "
+        "every roll goes right and no year is ever spent short of money, "
+        "people or material - see critical_path's own docstring), and 2.5x "
+        "was picked to give a CPM-ordered, dice-free trial room to actually "
+        "finish without the probe running long. A real mechanism would "
+        "measure how much slack a CPM order typically needs over its floor, "
+        "goal by goal, instead of applying one ratio to all of them.")
+VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS", 50, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Floor under the scaled probe horizon above, for a goal whose "
+        "critical path is very short - so a five-year-floor lifetime goal "
+        "still gets a probe window long enough to build anything around it, "
+        "rather than being cut off almost immediately. Picked to feel "
+        "sufficient, not measured against how long the shortest goals "
+        "actually take under real play.")
+VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS = declare(
+    "VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS", 350, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Ceiling on the scaled probe horizon above, so a goal with a long "
+        "critical-path floor (the transistor's own structural floor runs "
+        "well past a century) does not turn this structural-checks command "
+        "into a multi-minute run - see this command's own comment on why "
+        "--deep is opt-in at all. Picked for speed, not because 350 years "
+        "is a meaningful ceiling on what a real trial might need.")
+
+
 def cmd_validate(a):
     tree, prices, nodes, wages, goods = load()
     errs, warns = [], []
-    for k, n in nodes.items():
-        for p in n["pre"]:
-            if p not in nodes: errs.append("%s: unknown prereq %s" % (k, p))
-        for m in n["mat"]:
-            if m not in goods: errs.append("%s: unpriced material %s" % (k, m))
-        for t in n["lab"]:
-            if t not in wages: errs.append("%s: unknown trade %s" % (k, t))
-        if not 0 <= n["risk"] <= 1: errs.append("%s: risk out of range" % k)
-        if n["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (k, n["conf"]))
+    for node_id, node_record in nodes.items():
+        for prereq_id in node_record["pre"]:
+            if prereq_id not in nodes: errs.append("%s: unknown prereq %s" % (node_id, prereq_id))
+        for material_id in node_record["mat"]:
+            if material_id not in goods: errs.append("%s: unpriced material %s" % (node_id, material_id))
+        for trade_id in node_record["lab"]:
+            if trade_id not in wages: errs.append("%s: unknown trade %s" % (node_id, trade_id))
+        if not 0 <= node_record["risk"] <= 1: errs.append("%s: risk out of range" % node_id)
+        if node_record["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (node_id, node_record["conf"]))
         # A `why` on seven hand-written nodes killed the process with KeyError
         # 'sus' because I added them without the v1 scalars the explain path
         # still reads. Catch a missing field here, where it is a warning, rather
         # than in a player's session, where it is the end of their game.
-        for f in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
-            if f not in n:
-                errs.append("%s: missing required field '%s'" % (k, f))
+        for field_name in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
+            if field_name not in node_record:
+                errs.append("%s: missing required field '%s'" % (node_id, field_name))
     try:
         topo_order(nodes)
     except RuntimeError as e:
@@ -361,32 +402,32 @@ def cmd_validate(a):
         errs.append("meta.goal_node %r does not exist" % default_goal)
     catalog = goal_catalog(tree)
     goal_rows = []
-    for g in catalog:
-        node = g.get("node")
+    for goal in catalog:
+        node = goal.get("node")
         if node not in nodes:
             errs.append("meta.goals: %r names a node that does not exist" % node)
             continue
         need = closure(nodes, node)
         yrs, chain = critical_path(nodes, node)
-        goal_rows.append((g, node, need, yrs, chain))
+        goal_rows.append((goal, node, need, yrs, chain))
 
     print("nodes            : %d" % len(nodes))
-    print("edges            : %d" % sum(len(n["pre"]) for n in nodes.values()))
-    print("total capital     : %s den across all %d nodes" % (f"{sum(n['_total_cost'] for n in nodes.values()):,.0f}", len(nodes)))
-    print("total founder hrs : %s" % f"{sum(n['ph'] for n in nodes.values()):,}")
+    print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
+    print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
+    print("total founder hrs : %s" % f"{sum(node_record['ph'] for node_record in nodes.values()):,}")
     print()
     print("GOALS (%d selectable; 'goals' prints this table alone)" % len(goal_rows))
     print("%-34s %9s %10s  %s" % ("name", "closure", "floor(yr)", "node"))
     print("-" * 90)
-    for g, node, need, yrs, chain in goal_rows:
+    for goal, node, need, yrs, chain in goal_rows:
         print("%-34s %9d %10.1f  %s%s"
-              % (g.get("name", node)[:34], len(need), yrs, node,
+              % (goal.get("name", node)[:34], len(need), yrs, node,
                  "  <- DEFAULT" if node == default_goal else ""))
     print()
     if errs:
-        print("ERRORS:"); [print("  " + e) for e in errs]
+        print("ERRORS:"); [print("  " + message) for message in errs]
     if warns:
-        print("WARNINGS:"); [print("  " + w) for w in warns]
+        print("WARNINGS:"); [print("  " + message) for message in warns]
 
     # REACHABILITY, PER CIVILISATION - opt in with --deep, because this runs
     # a real dice-free Sim (see path_search.deterministic_sim) once per
@@ -407,26 +448,77 @@ def cmd_validate(a):
             sys.path.insert(0, _simdir)
         import planner as _planner
         from path_search import deterministic_sim
-        civ_ids = sorted(x[:-5] for x in os.listdir(CIVDIR)
-                         if x.endswith(".json") and not x.startswith("_"))
-        for g, node, need, yrs, chain in goal_rows:
-            probe_horizon = min(350, max(50, int(math.ceil(yrs * 2.5))))
+        civ_ids = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
+                         if filename.endswith(".json") and not filename.startswith("_"))
+        for goal, node, need, yrs, chain in goal_rows:
+            probe_horizon = min(VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS,
+                                max(VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS,
+                                    int(math.ceil(yrs * VALIDATE_DEEP_PROBE_HORIZON_YEARS_PER_FLOOR_YEAR))))
             cells = []
             for civ in civ_ids:
-                s0 = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
-                order, c, extras, staffing = _planner.backward_plan(
-                    nodes, node, s0, side_branches=12, side_branch_every=8)
+                probe_sim = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
+                order, cost, extras, staffing = _planner.backward_plan(
+                    nodes, node, probe_sim, side_branches=12, side_branch_every=8)
                 full = _planner._repaired(nodes, node, order)
-                s = deterministic_sim(nodes, full, node, civ, probe_horizon)
-                cells.append("%s: %s" % (civ, ("%d AD" % s.goal_year) if s.goal_year
+                probe_result = deterministic_sim(nodes, full, node, civ, probe_horizon)
+                cells.append("%s: %s" % (civ, ("%d AD" % probe_result.goal_year) if probe_result.goal_year
                                          else "not within %dy" % probe_horizon))
-            print("  %-30s %s" % (g.get("name", node)[:30], "  |  ".join(cells)))
+            print("  %-30s %s" % (goal.get("name", node)[:30], "  |  ".join(cells)))
 
     if not errs:
         print()
         print("OK: tree is a valid DAG, fully priced, every selectable goal's "
               "closure and critical path compute cleanly.")
     return 1 if errs else 0
+
+
+# Complaints/38: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
+# how big a number is, never to gate anything a player can actually do
+# (neither cmd_path nor cmd_why stops a player starting a project past this
+# many hours; this is a claim made TO the player, not a rule enforced on
+# them). USED to be a separately typed 72,000, two lines below a SEPARATE
+# printed sentence deriving 60,000 from "2000/yr for 30 yrs" - both wrong,
+# because both were literals and DEFAULTS["founder_hours_per_year"] is DATA a
+# civilisation can set (see that field's own "2,000, NOT 2,400" comment for
+# why it moved off the 2,400 that made 72,000 exact). Typing a corrected
+# 60,000 in its place would only move the drift, not close it: if a scenario
+# ever sets founder_hours_per_year (or the expected working-life figure
+# below) to something else, a typed number is wrong again the moment it
+# does.
+#
+# So there is no typed lifetime figure any more. `_founder_lifetime_hours()`
+# computes it from the same two DEFAULTS entries the rest of the engine
+# reads for exactly this founder: `founder_hours_per_year` (how many hours a
+# year the founder works, same figure a hired man is paid by) and
+# `founder_life_mean` (the founder's EXPECTED REMAINING WORKING LIFE IN
+# YEARS - not a new "expected working years" invented for this print
+# statement, but the existing DEFAULTS entry core.py itself uses as the mean
+# of the founder's mortality draw: "founder remaining lifespan, elite male
+# already aged 35", see core.py's `life_left`). Multiplying those two is the
+# expression that used to disagree with itself across two printed lines;
+# now cmd_path's printed budget, cmd_path's feasibility judgement and
+# cmd_why's "% of a life" figure all call this one function, so whatever
+# DEFAULTS says, they cannot say two different things about it again.
+#
+# (2,000 * 28 = 56,000 today - neither of the two old literals. That is not
+# a third guess: it is what the honest expression above comes to under
+# today's DEFAULTS, and it is smaller than the "corrected" 60,000 the
+# complaint itself flagged as the obvious-but-wrong fix, because 28 years
+# is the figure the mortality model actually uses, not the round 30 the old
+# print statement typed.)
+def _founder_lifetime_hours(cfg=None):
+    """Founder-hours a whole working life holds: hours/year * expected
+    working years, both read from `cfg` if given (a live Sim's config, which
+    may override either) and otherwise from DEFAULTS - the same source
+    core.py reads `founder_hours_per_year` and `founder_life_mean` from for
+    the founder's real hours ledger and real mortality draw. No caller of
+    this function may re-derive or re-type either input; that duplication is
+    exactly what let the two numbers drift apart before.
+    """
+    cfg = cfg or {}
+    hours_per_year = cfg.get("founder_hours_per_year", DEFAULTS["founder_hours_per_year"])
+    expected_working_years = cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
+    return hours_per_year * expected_working_years
 
 
 def cmd_path(a):
@@ -438,22 +530,30 @@ def cmd_path(a):
     print("%-4s %-39s %8s %9s %6s %5s %5s" %
           ("#", "node", "yourhrs", "cost(den)", "years", "risk", "conf"))
     print("-" * 88)
-    for i, k in enumerate(order, 1):
-        n = nodes[k]
-        cum_cost += n["_total_cost"]; cum_ph += n["ph"]
+    for i, node_id in enumerate(order, 1):
+        node_record = nodes[node_id]
+        cum_cost += node_record["_total_cost"]; cum_ph += node_record["ph"]
         print("%-4d %-39s %8d %9s %6.1f %5.2f %5s" %
-              (i, k[:39], n["ph"], f"{n['_total_cost']:,.0f}", n["yrs"], n["risk"], n["conf"]))
+              (i, node_id[:39], node_record["ph"], f"{node_record['_total_cost']:,.0f}", node_record["yrs"], node_record["risk"], node_record["conf"]))
     print("-" * 88)
     print("TOTAL  %d nodes   %s founder-hours   %s denarii" %
           (len(order), f"{cum_ph:,.0f}", f"{cum_cost:,.0f}"))
     yrs, chain = critical_path(nodes, goal)
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
-    for k in chain:
-        print("   -> %s  (%.1f yr floor, %d your-hrs)" % (k, nodes[k]["yrs"], nodes[k]["ph"]))
-    print("\nFounder-hours available in one lifetime at 2000/yr for 30 yrs: 60,000")
+    for node_id in chain:
+        print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
+    # Complaints/38: the printed budget and the feasibility judgement below
+    # used to be two separately typed numbers (60,000 printed, 72,000
+    # judged) that could disagree, and did. Both now come from one call, so
+    # they say the same thing about the same DEFAULTS whatever those are.
+    lifetime_hours = _founder_lifetime_hours()
+    print("\nFounder-hours available in one lifetime at %s/yr for %s yrs: %s" %
+          (f"{DEFAULTS['founder_hours_per_year']:,.0f}",
+           f"{DEFAULTS['founder_life_mean']:,.0f}",
+           f"{lifetime_hours:,.0f}"))
     print("Founder-hours demanded by this path                          : %s" % f"{cum_ph:,.0f}")
     print("=> %s" % ("feasible alone in principle, but not with the calendar floors"
-                     if cum_ph < 72000 else
+                     if cum_ph < lifetime_hours else
                      "IMPOSSIBLE for one person. You must convert your hours into other people's hours."))
 
 
@@ -462,16 +562,16 @@ def cmd_costs(a):
     rows = sorted(nodes.values(), key=lambda n: -n["_total_cost"])[:a.top]
     print("%-34s %10s %10s %10s %8s %6s" % ("node", "labour", "materials", "capital", "TOTAL", "rev/yr"))
     print("-" * 84)
-    for n in rows:
+    for node_record in rows:
         print("%-34s %10s %10s %10s %8s %6s" % (
-            n["id"][:34], f"{n['_labour_cost']:,.0f}", f"{n['_material_cost']:,.0f}",
-            f"{n['cap']:,.0f}", f"{n['_total_cost']:,.0f}", f"{n['rev']:,}"))
+            node_record["id"][:34], f"{node_record['_labour_cost']:,.0f}", f"{node_record['_material_cost']:,.0f}",
+            f"{node_record['cap']:,.0f}", f"{node_record['_total_cost']:,.0f}", f"{node_record['rev']:,}"))
     print()
-    prof = sorted([n for n in nodes.values() if n["rev"]], key=lambda n: -(n["rev"] / max(n["_total_cost"], 1)))
+    prof = sorted([node_record for node_record in nodes.values() if node_record["rev"]], key=lambda n: -(n["rev"] / max(n["_total_cost"], 1)))
     print("Best return on capital (revenue per denarius of setup cost):")
-    for n in prof[:12]:
+    for node_record in prof[:12]:
         print("  %-32s %6.2f  (rev %s / cost %s)" %
-              (n["id"][:32], n["rev"] / max(n["_total_cost"], 1), f"{n['rev']:,}", f"{n['_total_cost']:,.0f}"))
+              (node_record["id"][:32], node_record["rev"] / max(node_record["_total_cost"], 1), f"{node_record['rev']:,}", f"{node_record['_total_cost']:,.0f}"))
 
 
 _Z95 = 1.959963984540054  # two-sided 95% normal quantile, to stdlib float precision
@@ -494,14 +594,14 @@ def _wilson_interval(successes, n, z=_Z95):
     """
     if n <= 0:
         return (0.0, 1.0)
-    p = successes / n
-    z2 = z * z
-    denom = 1.0 + z2 / n
-    centre = p + z2 / (2 * n)
-    margin = z * math.sqrt((p * (1.0 - p) + z2 / (4 * n)) / n)
-    lo = (centre - margin) / denom
-    hi = (centre + margin) / denom
-    return (max(0.0, lo), min(1.0, hi))
+    rate = successes / n
+    z_squared = z * z
+    denom = 1.0 + z_squared / n
+    centre = rate + z_squared / (2 * n)
+    margin = z * math.sqrt((rate * (1.0 - rate) + z_squared / (4 * n)) / n)
+    lower = (centre - margin) / denom
+    upper = (centre + margin) / denom
+    return (max(0.0, lower), min(1.0, upper))
 
 
 def _fmt_rate_ci(successes, n):
@@ -509,10 +609,10 @@ def _fmt_rate_ci(successes, n):
     anywhere in this file's output. A bare percentage from a few dozen
     Monte Carlo trials invites a reader to treat it as a measurement with no
     error bar, which is exactly the failure this function exists to close."""
-    lo, hi = _wilson_interval(successes, n)
+    lower, upper = _wilson_interval(successes, n)
     rate = 100.0 * successes / n if n else 0.0
     return ("%d/%d (%.1f%%)  95%% CI [%.1f%%, %.1f%%] (Wilson score)"
-            % (successes, n, rate, 100.0 * lo, 100.0 * hi))
+            % (successes, n, rate, 100.0 * lower, 100.0 * upper))
 
 
 # How few successes is too few to trust a median/quartile year-to-goal? There
@@ -525,11 +625,11 @@ _MIN_SUCCESSES_FOR_QUANTILES = 10
 
 
 def _summarise(results, label):
-    n = len(results)
-    ok = [r for r in results if r.goal_year]
-    k = len(ok)
+    run_count = len(results)
+    finished = [run for run in results if run.goal_year]
+    success_count = len(finished)
     print("\n=== %s ===" % label)
-    print("runs                : %d" % n)
+    print("runs                : %d" % run_count)
     # WHAT THIS COMMAND ACTUALLY MEASURES, SAID ONCE, UP FRONT, BEFORE ANY
     # NUMBER. `--mc N` re-rolls ONE FIXED strategy order against N different
     # random event sequences and reports how that order coped; it has never
@@ -543,7 +643,7 @@ def _summarise(results, label):
           "choose or improve the order. 'plan' (critical-path method) and "
           "'search' (dice-free, relaxed against the binding constraint) are "
           "the commands that do that."
-          % (n, "" if n == 1 else "s"))
+          % (run_count, "" if run_count == 1 else "s"))
     # AGGREGATE PROGRESS, LEADING - not the success rate. A batch this small
     # against a multi-century, near-certain-to-fail-or-succeed goal can be a
     # ~1% event either way (this project's own default invocation has
@@ -551,44 +651,44 @@ def _summarise(results, label):
     # reading it as "the" result instead of one thing among several this
     # batch can actually support saying. How far every run got - not only
     # the ones that finished - is informative at any N, including this one.
-    tech = sorted(len(r.done) for r in results)
-    q = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
+    tech = sorted(len(run.done) for run in results)
+    quantile_of = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
     print()
     print("technologies completed (whole tree, across all %d run%s):"
-          % (n, "" if n == 1 else "s"))
+          % (run_count, "" if run_count == 1 else "s"))
     print("   worst %d | p25 %d | median %d | p75 %d | best %d"
-          % (tech[0], q(tech, .25), q(tech, .5), q(tech, .75), tech[-1]))
+          % (tech[0], quantile_of(tech, .25), quantile_of(tech, .5), quantile_of(tech, .75), tech[-1]))
     need = closure(results[0].nodes, results[0].goal)
-    tot = len(need)
-    prog = sorted(len(need & r.done) for r in results)
+    needed_count = len(need)
+    progress = sorted(len(need & run.done) for run in results)
     print("goal's own closure completed (%d node%s needed):"
-          % (tot, "" if tot == 1 else "s"))
+          % (needed_count, "" if needed_count == 1 else "s"))
     print("   worst %d/%d | p25 %d | median %d | p75 %d | best %d/%d"
-          % (prog[0], tot, q(prog, .25), q(prog, .5), q(prog, .75),
-             prog[-1], tot))
+          % (progress[0], needed_count, quantile_of(progress, .25), quantile_of(progress, .5), quantile_of(progress, .75),
+             progress[-1], needed_count))
     causes = defaultdict(int)
-    for r in results:
-        if r.dead_reason: causes[r.dead_reason.split(":")[0]] += 1
-        elif not r.goal_year: causes["ran out of horizon"] += 1
+    for run in results:
+        if run.dead_reason: causes[run.dead_reason.split(":")[0]] += 1
+        elif not run.goal_year: causes["ran out of horizon"] += 1
     if causes:
         print("failure modes       :")
-        for cause, v in sorted(causes.items(), key=lambda x: -x[1]):
-            print("   %-58s %3d (%.0f%%)" % (cause, v, 100.0 * v / len(results)))
+        for cause, value in sorted(causes.items(), key=lambda x: -x[1]):
+            print("   %-58s %3d (%.0f%%)" % (cause, value, 100.0 * value / len(results)))
     # where do runs get stuck. PRECISE EVEN AT N=25: almost every run that
     # does not reach the goal is blocked on one of a small handful of nodes,
     # which is a near-certain event rather than the ~1% one the success rate
     # itself often is - see the rate section below for that distinction said
     # out loud where a reader is looking at both numbers side by side.
     stuck = defaultdict(int)
-    for r in results:
-        if not r.goal_year:
-            rneed = closure(r.nodes, r.goal)
-            miss = [kk for kk in topo_order(r.nodes, rneed) if kk not in r.done]
-            if miss: stuck[miss[0]] += 1
+    for run in results:
+        if not run.goal_year:
+            run_need = closure(run.nodes, run.goal)
+            missing_nodes = [node_id for node_id in topo_order(run.nodes, run_need) if node_id not in run.done]
+            if missing_nodes: stuck[missing_nodes[0]] += 1
     if stuck:
         print("first blocked node  :")
-        for kk, v in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
-            print("   %-58s %3d" % (kk, v))
+        for node_id, value in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
+            print("   %-58s %3d" % (node_id, value))
     # THE SUCCESS RATE, BELOW THE FOLD, NOT AS THE HEADLINE - see the "what
     # this measures" line above for why, and this project's own diagnosis
     # (planner.py's docstring) for the number that made the point concrete:
@@ -599,20 +699,20 @@ def _summarise(results, label):
     # explain either fact. The progress tables above already say how far
     # those same trials got; this says how many of them finished.
     print()
-    if k == 0:
+    if success_count == 0:
         # DO NOT SILENTLY PRINT A TABLE OF ZEROS. Zero successes out of N is
         # a statement about THIS ORDER's luck under THIS horizon, not a
         # verdict on the goal - recommended.json scores exactly this at a
         # 500-700 year horizon while a computed order has reached 100%, same
         # tree, same civilisation. Re-running this same order with a
         # different --seed will not change that; a different ORDER might.
-        print("*** ZERO of %d trials reached the goal under this order. ***" % n)
+        print("*** ZERO of %d trials reached the goal under this order. ***" % run_count)
         print("    Before reading anything below as a verdict on the GOAL: this is a")
         print("    known losing order at this horizon, not evidence the goal is out of")
         print("    reach. 'plan' (critical-path method) or 'search' (dice-free, relaxed")
         print("    against the binding constraint) compute a different order instead of")
         print("    re-testing this one against more luck.")
-    print("reached the goal    : %s" % _fmt_rate_ci(k, n))
+    print("reached the goal    : %s" % _fmt_rate_ci(success_count, run_count))
     # --no-events IS NOT A NOISE-FREE BASELINE. See the --no-events help text
     # for the full explanation; this is the one-line reminder at the point
     # where a reader is actually looking at numbers from such a run.
@@ -625,35 +725,35 @@ def _summarise(results, label):
         print("                      batch still has real seed-to-seed variance - it is")
         print("                      reproducible for one seed, not noise-free. See")
         print("                      --deterministic for a run where that is also true.")
-    if "[deterministic]" in label and n > 1:
+    if "[deterministic]" in label and run_count > 1:
         print("                      NOTE: '--deterministic' replaces the rng with one")
         print("                      that always rolls the side that never fails, so")
         print("                      every one of these %d trials is identical - there"
-              % n)
+              % run_count)
         print("                      is no luck left for more trials to re-roll. This")
         print("                      is the order's single dice-free outcome, repeated.")
-    if k == 0:
+    if success_count == 0:
         pass  # already said above, plainly, before the rate line itself
-    elif k < _MIN_SUCCESSES_FOR_QUANTILES:
-        ys = sorted(r.goal_year for r in ok)
+    elif success_count < _MIN_SUCCESSES_FOR_QUANTILES:
+        years_reached = sorted(run.goal_year for run in finished)
         print("year reached        : only %d success%s in %d trials - too few for a"
-              % (k, "" if k == 1 else "es", n))
+              % (success_count, "" if success_count == 1 else "es", run_count))
         print("                      median/quartiles; that would just relabel a")
         print("                      handful of individual runs as a distribution.")
         print("                      observed year%s: %s"
-              % ("" if k == 1 else "s", ", ".join(str(y) for y in ys)))
+              % ("" if success_count == 1 else "s", ", ".join(str(year) for year in years_reached)))
         print("                      trust the CI on the rate above instead.")
     else:
-        ys = sorted(r.goal_year for r in ok)
-        qy = lambda p: ys[min(len(ys) - 1, int(p * len(ys)))]
+        years_reached = sorted(run.goal_year for run in finished)
+        year_at_percentile = lambda p: years_reached[min(len(years_reached) - 1, int(p * len(years_reached)))]
         print("year reached        : best %d | p25 %d | median %d | p75 %d | worst %d"
-              % (ys[0], qy(.25), qy(.5), qy(.75), ys[-1]))
+              % (years_reached[0], year_at_percentile(.25), year_at_percentile(.5), year_at_percentile(.75), years_reached[-1]))
         start = results[0].cfg["start_year"]
-        print("elapsed from %d AD  : median %d years" % (start, qy(.5) - start))
-    sh = collections.Counter()
-    for r in results:
-        sh.update(r.shortages)
-    if sh:
+        print("elapsed from %d AD  : median %d years" % (start, year_at_percentile(.5) - start))
+    shortage_counter = collections.Counter()
+    for run in results:
+        shortage_counter.update(run.shortages)
+    if shortage_counter:
         # RELABELLED, NOT RECOMPUTED. This used to print the same summed
         # Counter under the label "(median run)" - it is a SUM across every
         # run, not a median of anything. A true per-material median across
@@ -662,16 +762,16 @@ def _summarise(results, label):
         # key, which is a real change to what gets computed, not just what
         # gets printed - out of scope here. Relabelling the existing number
         # honestly is the fix that belongs in a "what gets printed" pass.
-        print("years spent short of a raw material (SUM across %d runs, not a median):" % n)
-        for mat, v in sh.most_common(5):
-            print("   %-12s %d run-years" % (mat, v))
-    fh = sorted(r.forest_ha for r in results)
-    print("coppice woodland owned: median %.0f hectares" % fh[len(fh) // 2])
-    rep = sorted(r.reputation for r in results)
-    print("final reputation    : median %.0f/100" % rep[len(rep) // 2])
-    b = [r.bounties_paid for r in results]
-    if any(b):
-        print("bounties posted     : mean %.1f per run" % (sum(b) / len(b)))
+        print("years spent short of a raw material (SUM across %d runs, not a median):" % run_count)
+        for material, value in shortage_counter.most_common(5):
+            print("   %-12s %d run-years" % (material, value))
+    forest_hectares = sorted(run.forest_ha for run in results)
+    print("coppice woodland owned: median %.0f hectares" % forest_hectares[len(forest_hectares) // 2])
+    reputations = sorted(run.reputation for run in results)
+    print("final reputation    : median %.0f/100" % reputations[len(reputations) // 2])
+    bounty_payments = [run.bounties_paid for run in results]
+    if any(bounty_payments):
+        print("bounties posted     : mean %.1f per run" % (sum(bounty_payments) / len(bounty_payments)))
 
 
 def cmd_run(a):
@@ -682,12 +782,12 @@ def cmd_run(a):
     res = []
     for i in range(a.mc):
         rng = DetRNG(a.seed + i) if deterministic else random.Random(a.seed + i)
-        s = Sim(nodes, order, rng, events=not a.no_events,
+        run_result = Sim(nodes, order, rng, events=not a.no_events,
                 cfg={"immortal": not a.mortal,
                      "start_capital": STARTING_KITS[a.kit]["den"]},
                 civ=load_civ(a.civ),
                 bounty_set=(set() if a.no_bounties else bounties)).run(goal, a.horizon)
-        res.append(s)
+        res.append(run_result)
     _summarise(res, "%s%s%s" % (label,
                                 "  [events disabled]" if a.no_events else "",
                                 "  [deterministic]" if deterministic else ""))
@@ -704,7 +804,7 @@ def cmd_run(a):
     # are not choices anybody made, and ties within a year are broken by id so
     # the file is reproducible.
     if getattr(a, "save_winner", None):
-        won = [s for s in res if s.goal_year]
+        won = [run_result for run_result in res if run_result.goal_year]
         if not won:
             sys.stderr.write("no trial reached the goal, so there is no winning "
                              "order to save\n")
@@ -719,8 +819,8 @@ def cmd_run(a):
             # The 149 nodes of the goal's closure, in the order a run that won
             # actually completed them, is.
             _need = closure(nodes, goal)
-            seq = sorted((k for k in best.done
-                          if k in _need and k not in best.granted),
+            seq = sorted((node_id for node_id in best.done
+                          if node_id in _need and node_id not in best.granted),
                          key=lambda k: (best.done_year.get(k, 0), k))
             out = {"label": "CAPTURED: the order a run that reached the goal in "
                             "%d AD actually finished its work in" % best.goal_year,
@@ -735,15 +835,15 @@ def cmd_run(a):
                        "and it includes side branches that trial happened to "
                        "build and may not have needed."],
                    "order": seq}
-            with open(a.save_winner, "w") as fh:
-                json.dump(out, fh, indent=1)
+            with open(a.save_winner, "w") as save_file:
+                json.dump(out, save_file, indent=1)
             sys.stderr.write("saved the winning order (%d nodes, goal in %d AD) "
                              "to %s\n" % (len(seq), best.goal_year, a.save_winner))
     if a.trace:
-        s = res[0]
+        run_result = res[0]
         print("\n--- trace of run 0 ---")
-        for y, m in s.log:
-            print("  %4d  %s" % (y, m))
+        for year, message in run_result.log:
+            print("  %4d  %s" % (year, message))
 
 
 def cmd_compare(a):
@@ -854,9 +954,9 @@ def _resolve_horizon(a, session):
     """
     if session and not _horizon_explicit():
         meta = settings.load_session_meta(session)
-        h = meta.get("horizon_years")
-        if isinstance(h, (int, float)) and h > 0:
-            return int(h)
+        horizon_years = meta.get("horizon_years")
+        if isinstance(horizon_years, (int, float)) and horizon_years > 0:
+            return int(horizon_years)
     return a.horizon
 
 
@@ -908,19 +1008,19 @@ def cmd_play(a):
     kit = getattr(a, "kit", None)
     if kit:
         cfg["start_capital"] = STARTING_KITS[kit]["den"]
-    s = Sim(nodes, order,
+    sim = Sim(nodes, order,
             DetRNG(a.seed) if getattr(a, "deterministic", False) else random.Random(a.seed),
             events=True, bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(a)), cfg=cfg)
-    s.goal = goal
-    s.done_year = {}
-    s.end_year = s.cfg["start_year"] + horizon
-    s.fog = bool(getattr(a, "fog", False))
-    s.revealed = set()
+    sim.goal = goal
+    sim.done_year = {}
+    sim.end_year = sim.cfg["start_year"] + horizon
+    sim.fog = bool(getattr(a, "fog", False))
+    sim.revealed = set()
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
-    _protocol.MONEY_SHORT = money_short(s.civ)
+    _protocol.MONEY_SHORT = money_short(sim.civ)
 
     # A --session THAT DOES NOT EXIST IS A TYPO, NOT AN INVITATION. Naming a
     # save file that is not there used to start a brand new default game -
@@ -947,15 +1047,15 @@ def cmd_play(a):
     checkpoint_source = None
     if not fresh:
         try:
-            load_state(s, session)
+            load_state(sim, session)
         except Exception as e:
             print("could not read the save file %r: %s" % (session, e))
             return 1
         if settings.is_checkpoint(session):
             checkpoint_source = session
-            session = _pick_session_filename(s.civ.get("id") or "game")
+            session = _pick_session_filename(sim.civ.get("id") or "game")
         else:
-            print("Resumed from %s: %d AD." % (session, s.year))
+            print("Resumed from %s: %d AD." % (session, sim.year))
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player
@@ -965,12 +1065,12 @@ def cmd_play(a):
         # game has promised has to exist from the moment it is promised. The
         # same promise holds for a checkpoint's forked session file: it has
         # been named out loud below, so it has to be real from that moment on.
-        save_state(s, session)
+        save_state(sim, session)
     if checkpoint_source:
         print("Resumed the checkpoint at %s: %d AD. A checkpoint stays "
               "exactly as it is - nothing you do now writes back into it. "
               "From here on, this game is autosaving to %s instead."
-              % (checkpoint_source, s.year, session))
+              % (checkpoint_source, sim.year, session))
     # THE WELCOME AND TUTORIAL TEXT IS A PREFERENCE NOW (Options: "show the
     # welcome message and tutorial on new games"). A player on their fifth
     # new game does not need the five starter verbs explained again every
@@ -983,7 +1083,7 @@ def cmd_play(a):
         print(_wrap("You arrive in %d AD with %d %s and nothing else: no "
                     "employees, no slaves, and nobody who owes you anything. "
                     "What you have is everything you know."
-                    % (s.year, s.capital, money_word(s.civ))))
+                    % (sim.year, sim.capital, money_word(sim.civ))))
         # THE KIT SAID 4,000 AND YOU ARRIVED WITH 3,000, SILENTLY. Every
         # kit's figure (STARTING_KITS) is priced in Rome 100 AD denarii, the
         # same currency project_cost and everything else is calibrated
@@ -994,14 +1094,14 @@ def cmd_play(a):
         # cash" one screen later with no statement anywhere that the two
         # numbers were the same kit. The arithmetic was always right; only
         # the silence was a bug.
-        if kit and abs(s.price_index - 1.0) > 0.002:
+        if kit and abs(sim.price_index - 1.0) > 0.002:
             _quoted = STARTING_KITS.get(kit, {}).get("den")
             if _quoted:
                 print(_wrap('The "%s" kit is quoted in Rome\'s prices (%d den); '
                             "here, prices run at %.3gx Rome's, so that arrived "
                             "as %d %s, not %d."
-                            % (kit, _quoted, s.price_index, s.capital,
-                               money_word(s.civ), _quoted)))
+                            % (kit, _quoted, sim.price_index, sim.capital,
+                               money_word(sim.civ), _quoted)))
         print()
         # `open` BELONGS IN THE OPENING. Finishing a project earns you
         # nothing until you open its doors, auto_open ships off for a player
@@ -1041,7 +1141,7 @@ def cmd_play(a):
         # it does. It has no business being harder to find than the five
         # above, once a player has a goal in mind - which, on arrival, they
         # already do.
-        if not s.fog:
+        if not sim.fog:
             print()
             print(_wrap("Once you have a goal in mind: 'path <name>' lays "
                         "out everything still standing between here and "
@@ -1058,7 +1158,7 @@ def cmd_play(a):
         # The same figure state reports: the pool LESS hours already sold for
         # wages. The prompt disagreeing with state about the one number on it
         # is how a tester found the accounting wrong in the first place.
-        free_hours = max(0.0, s.director_pool() - s.director_hours_committed())
+        free_hours = max(0.0, sim.director_pool() - sim.director_hours_committed())
         # The prompt is built here and never passes through the renderer, so it
         # was the last place still saying "den" in a game counted in pence.
         # THE SAME TWO NUMBERS `why` PRINTS, for the same reason the hours
@@ -1070,9 +1170,9 @@ def cmd_play(a):
         # and "(you have 1, 0)" in `why` on the same turn and reported the
         # game as having lost count of their staff.
         prompt = ("[%d AD | %d %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
-                  % (s.year, s.capital, money_short(s.civ), free_hours,
-                     s.effective_scholars(), s.craft_hands_available(),
-                     s.reputation))
+                  % (sim.year, sim.capital, money_short(sim.civ), free_hours,
+                     sim.effective_scholars(), sim.craft_hands_available(),
+                     sim.reputation))
         try:
             line = input(prompt)
         except (EOFError, KeyboardInterrupt):
@@ -1090,7 +1190,7 @@ def cmd_play(a):
         _tokens = line.strip().split()
         _word0 = _tokens[0].lower() if _tokens else ""
         if _word0 in ("options", "option", "settings"):
-            session = _ingame_options(s, session)
+            session = _ingame_options(sim, session)
             continue
         # SESSION COMMANDS, BARE ONLY - see the block comment above
         # _ingame_saves for why these four exist and why each is intercepted
@@ -1102,10 +1202,10 @@ def cmd_play(a):
             _ingame_saves(app_cfg, session)
             continue
         if _word0 == "save" and len(_tokens) == 1:
-            _ingame_save_milestone(s, session)
+            _ingame_save_milestone(sim, session)
             continue
         if _word0 == "load" and len(_tokens) == 1:
-            session = _ingame_load(app_cfg, s, session, a)
+            session = _ingame_load(app_cfg, sim, session, a)
             continue
         if _word0 == "menu" and len(_tokens) == 1:
             # NOT A LOSS. This game has already been saved after every
@@ -1139,7 +1239,7 @@ def cmd_play(a):
         # actually waits through.
         _t0 = time.time()
         try:
-            resp = _agent_dispatch(s, nodes, cmd)
+            resp = _agent_dispatch(sim, nodes, cmd)
         except Exception as e:            # never lose a session to a bug
             resp = {"ok": False,
                     "error": "internal error handling that command: %s: %s. "
@@ -1153,7 +1253,7 @@ def cmd_play(a):
         # promises "progress is written to this file after every command...
         # close the terminal, anything".
         if session:
-            save_state(s, session)
+            save_state(sim, session)
         try:
             # 'state json' / 'portfolio json' / 'risk json': the raw reply,
             # one line, instead of the rendered screen. Every player of this
@@ -1189,23 +1289,39 @@ def cmd_play(a):
         # unable to read their own final position. The dispatcher already
         # refuses anything that would move the game on once it has ended; what
         # is left is looking at it, which is the whole point of finishing.
-        end = _agent_end_reason(s)
+        end = _agent_end_reason(sim)
         if end and not getattr(a, "_said_end", False):
             a._said_end = True
             # THE SCOREBOARD, not one sentence. See protocol.final_report.
-            print(render_final(final_report(s, nodes)))
+            print(render_final(final_report(sim, nodes)))
             print()
             print(_wrap("You can still look at anything; 'quit' when you are "
                         "done."))
             print()
-    if _agent_end_reason(s) and not getattr(a, "_said_end", False):
-        print(render_final(final_report(s, nodes)))
+    if _agent_end_reason(sim) and not getattr(a, "_said_end", False):
+        print(render_final(final_report(sim, nodes)))
         print()
-    print("Ended %d AD. %s" % (s.year, _agent_end_reason(s) or "stopped"))
+    print("Ended %d AD. %s" % (sim.year, _agent_end_reason(sim) or "stopped"))
     if session:
         print("Saved to %s. Come back with:" % session)
-        print("   python3 rome/sim/simulator.py play --session %s" % session)
+        print("   python3 sim/simulator.py play --session %s" % session)
     return 0
+
+
+# THE SAME FLOOR core.py's Sim.__init__ APPLIES AT YEAR ZERO (see
+# _ingame_options below, "THE SAME DRAW core.py's Sim.__init__ makes"), kept
+# as its own declared name because core.py has not migrated its own copy to
+# declare() yet - two independent literals with the same value, not one
+# shared source, so a change to one will not reach the other.
+INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS = declare(
+    "INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
+    unit="years", source=None, confidence="D",
+    why="Floor under the gaussian draw for a founder's remaining lifespan, "
+        "so a bad roll (or a mean/sd combination that puts real weight below "
+        "zero) cannot hand a newly-mortal founder a negative or "
+        "vanishingly short life. Not derived from any mortality curve; "
+        "picked to guarantee a few years of remaining play regardless of "
+        "the draw.")
 
 
 def _ingame_options(s, session):
@@ -1337,9 +1453,10 @@ def _ingame_options(s, session):
                 # around "founder remaining lifespan" for the line this
                 # mirrors.
                 mean = s.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
-                sd = s.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
+                std_dev = s.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
                 s.cfg["immortal"] = False
-                s.life_left = max(5, s.rng.gauss(mean, sd))
+                s.life_left = max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS,
+                                  s.rng.gauss(mean, std_dev))
                 s.founder_alive = True
                 print("   -- done. Mortality is on from %d AD." % s.year)
             else:
@@ -1380,7 +1497,7 @@ def _ingame_options(s, session):
                 pass
             print("   -- moved. This game now saves to %s" % session)
             print("   Come back to it with:")
-            print("      python3 rome/sim/simulator.py play --session %s" % session)
+            print("      python3 sim/simulator.py play --session %s" % session)
 
         else:
             print("   -- not a choice right now.")
@@ -1417,10 +1534,10 @@ def _ingame_saves(cfg, session):
         print()
         return
     cur_abs = os.path.abspath(session) if session else None
-    for i, r in enumerate(rows, 1):
+    for i, row in enumerate(rows, 1):
         marker = ("<- this game" if cur_abs
-                  and os.path.abspath(r["path"]) == cur_abs else None)
-        _print_save_row(i, r, civ_index, need, marker)
+                  and os.path.abspath(row["path"]) == cur_abs else None)
+        _print_save_row(i, row, civ_index, need, marker)
     print(_wrap("'load' switches this session to one of these; 'save' on "
                 "its own keeps a new copy of exactly this moment, alongside "
                 "whatever this game is already autosaving to."))
@@ -1433,16 +1550,16 @@ def _pick_milestone_filename(civ_id):
     never quietly overwritten by the very next ordinary turn's autosave.
     Same claim-by-creating discipline as _pick_session_filename, for the
     same reason: two milestones saved in the same second must not collide."""
-    d = settings.resolve_save_dir()
-    prefix = os.path.join(d, civ_id) + "_saved_"
-    i = 1
+    save_dir = settings.resolve_save_dir()
+    prefix = os.path.join(save_dir, civ_id) + "_saved_"
+    attempt = 1
     while True:
-        candidate = "%s%d.json" % (prefix, i)
+        candidate = "%s%d.json" % (prefix, attempt)
         try:
             os.close(os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
             return candidate
         except FileExistsError:
-            i += 1
+            attempt += 1
         except OSError:
             return candidate
 
@@ -1494,8 +1611,8 @@ def _ingame_load(cfg, s, session, a):
         print(_wrap("Nothing there to switch to."))
         print()
         return session
-    for i, r in enumerate(rows, 1):
-        _print_save_row(i, r, civ_index, need)
+    for i, row in enumerate(rows, 1):
+        _print_save_row(i, row, civ_index, need)
     print("   b) never mind, keep playing this one")
     try:
         raw = input("\n   Which one? [1-%d, or b] " % len(rows)).strip().lower()
@@ -1518,10 +1635,10 @@ def _ingame_load(cfg, s, session, a):
     # files means reading that file's own sidecar, not keeping whatever
     # horizon the game just left behind.
     meta = settings.load_session_meta(chosen)
-    h = meta.get("horizon_years")
-    if isinstance(h, (int, float)) and h > 0:
-        s.cfg["horizon_years"] = int(h)
-        s.end_year = s.cfg["start_year"] + int(h)
+    horizon_years = meta.get("horizon_years")
+    if isinstance(horizon_years, (int, float)) and horizon_years > 0:
+        s.cfg["horizon_years"] = int(horizon_years)
+        s.end_year = s.cfg["start_year"] + int(horizon_years)
     # A STALE "already said the ending" FLAG WOULD LIE HERE TWICE OVER: it
     # could suppress the scoreboard for a save that HAD already ended, or
     # (after this session later ends on its own) skip announcing THAT ending
@@ -1577,22 +1694,22 @@ def cmd_agent(a):
     # have rejected outright, because the flag did not exist here at all.
     cfg = {"start_capital": STARTING_KITS[a.kit]["den"], "horizon_years": a.horizon,
            "immortal": not getattr(a, "mortal", False)}
-    s = Sim(nodes, order,
+    sim = Sim(nodes, order,
             DetRNG(a.seed) if getattr(a, "deterministic", False) else random.Random(a.seed),
             events=not a.no_events,
             cfg=cfg, civ=load_civ(_civ_for_session(a)), bounty_set=set(), manual=True)
-    s.goal = goal
-    s.done_year = {}
-    s.end_year = s.cfg["start_year"] + a.horizon
-    s.fog = bool(getattr(a, "fog", False))
-    s.revealed = set()
+    sim.goal = goal
+    sim.done_year = {}
+    sim.end_year = sim.cfg["start_year"] + a.horizon
+    sim.fog = bool(getattr(a, "fog", False))
+    sim.revealed = set()
     pretty = bool(getattr(a, "pretty", False))
 
     session = getattr(a, "session", None)
     checkpoint_source = None
     if session and os.path.exists(session) and not _is_claimed_slot(session):
         try:
-            load_state(s, session)
+            load_state(sim, session)
         except Exception as e:
             sys.stdout.write(json.dumps(
                 {"ok": False, "error": "could not read the save file %r: %s" % (session, e)}
@@ -1606,8 +1723,8 @@ def cmd_agent(a):
         # protocol itself did not ask for.
         if settings.is_checkpoint(session):
             checkpoint_source = session
-            session = _pick_session_filename(s.civ.get("id") or "game")
-            save_state(s, session)
+            session = _pick_session_filename(sim.civ.get("id") or "game")
+            save_state(sim, session)
             sys.stderr.write(json.dumps(
                 {"checkpoint_resumed":
                  "%s is a frozen checkpoint; nothing further is written back "
@@ -1642,7 +1759,7 @@ def cmd_agent(a):
     # anything parsing positionally, which it promptly did to my own tests.
     if not (session and os.path.exists(session)):
         sys.stderr.write(json.dumps(
-            {"welcome": _agent_help(s),
+            {"welcome": _agent_help(sim),
              "read this first": "This is the only instruction you get. Everything "
                                 "else is here or in {\"cmd\":\"help\"}."},
             indent=1) + "\n")
@@ -1657,17 +1774,17 @@ def cmd_agent(a):
         if not isinstance(cmds, list):
             emit({"ok": False, "error": "--script file must contain a JSON list of command objects"})
             return 1
-        for c in cmds:
-            resp = _agent_dispatch(s, nodes, c)
+        for command_obj in cmds:
+            resp = _agent_dispatch(sim, nodes, command_obj)
             # SAVE BEFORE YOU SPEAK. See the stdin loop below for why: the same
             # ordering bug lived in both loops, and only the stdin one is what a
             # human normally drives, so it is the one the playtesters actually
             # hit, but a --script run piped through something that closes early
             # loses exactly the same way.
             if session:
-                save_state(s, session)
+                save_state(sim, session)
             try:
-                emit(resp, c.get("cmd") if isinstance(c, dict) else None)
+                emit(resp, command_obj.get("cmd") if isinstance(command_obj, dict) else None)
             except BrokenPipeError:
                 try:
                     sys.stdout.close()
@@ -1697,7 +1814,7 @@ def cmd_agent(a):
         # "malformed input ends your game" class through the quit check, one
         # line after the guard that was supposed to prevent exactly that.
         try:
-            resp = _agent_dispatch(s, nodes, cmd)
+            resp = _agent_dispatch(sim, nodes, cmd)
         except Exception as e:                      # never lose a session to a bug
             resp = {"ok": False,
                     "error": "internal error handling that command: %s: %s. "
@@ -1716,7 +1833,7 @@ def cmd_agent(a):
         # terminal, anything" and come back; a promise that holds only when
         # nobody closes the pipe first is not that promise.
         if session:
-            save_state(s, session)
+            save_state(sim, session)
         try:
             emit(resp, cmd.get("cmd") if isinstance(cmd, dict) else None)
         except BrokenPipeError:
@@ -1748,13 +1865,13 @@ def cmd_sensitivity(a):
     # per-trial shocks, differing only in which node was dropped. See
     # cmd_compare for the full rationale; do not randomise this per call.
     def trial(drop=None):
-        o = [k for k in order if k != drop]
-        res = [Sim(nodes, o, random.Random(a.seed + i), events=True,
+        trimmed_order = [node_id for node_id in order if node_id != drop]
+        res = [Sim(nodes, trimmed_order, random.Random(a.seed + i), events=True,
                    bounty_set=bounties).run(goal, a.horizon)
                for i in range(a.mc)]
-        succ = sum(1 for r in res if r.goal_year)
-        ok = sorted(r.goal_year for r in res if r.goal_year)
-        return (100.0 * succ / len(res), ok[len(ok) // 2] if ok else None, succ, len(res))
+        succ = sum(1 for result in res if result.goal_year)
+        successful_years = sorted(result.goal_year for result in res if result.goal_year)
+        return (100.0 * succ / len(res), successful_years[len(successful_years) // 2] if successful_years else None, succ, len(res))
 
     base_rate, base_med, base_succ, base_n = trial()
     print("baseline (%s): %s" % (a.strategy, _fmt_rate_ci(base_succ, base_n)))
@@ -1775,30 +1892,30 @@ def cmd_sensitivity(a):
              "semaphore_telegraph", "citizenship", "mirror_amalgam", "lens_grinding",
              "crop_rotation", "world_map", "sanitation_antisepsis", "telegraph_electric"]
     rows = []
-    for k in cands:
-        if k not in nodes:
+    for node_id in cands:
+        if node_id not in nodes:
             continue
-        if k in need:
-            print("%-26s %10s %10s   hard prerequisite of the goal, cannot be skipped" % (k, "-", "-"))
+        if node_id in need:
+            print("%-26s %10s %10s   hard prerequisite of the goal, cannot be skipped" % (node_id, "-", "-"))
             continue
-        r, m, succ, ntot = trial(k)
-        rows.append((base_rate - r, k, r, m, succ, ntot))
+        success_rate, median_year, succ, ntot = trial(node_id)
+        rows.append((base_rate - success_rate, node_id, success_rate, median_year, succ, ntot))
     scored = []
-    for d, k, r, m, succ, ntot in rows:
-        delay = (m - base_med) if (m and base_med) else 999
+    for rate_drop, node_id, success_rate, median_year, succ, ntot in rows:
+        delay = (median_year - base_med) if (median_year and base_med) else 999
         # one point of success rate is worth roughly two years of delay
-        score = d + delay / 2.0
-        scored.append((score, k, r, m, d, delay, succ, ntot))
-    for score, k, r, m, d, delay, succ, ntot in sorted(scored, reverse=True):
+        score = rate_drop + delay / 2.0
+        scored.append((score, node_id, success_rate, median_year, rate_drop, delay, succ, ntot))
+    for score, node_id, success_rate, median_year, rate_drop, delay, succ, ntot in sorted(scored, reverse=True):
         verdict = ("CRITICAL, do not skip" if score > 20 else
                    "clearly worth it" if score > 8 else
                    "worth it" if score > 3 else
                    "marginal in this model" if score > -3 else
                    "the model says this costs more than it returns")
-        lo, hi = _wilson_interval(succ, ntot)
-        ci = "[%.0f%%,%.0f%%]" % (100.0 * lo, 100.0 * hi)
+        lower, upper = _wilson_interval(succ, ntot)
+        confidence_interval = "[%.0f%%,%.0f%%]" % (100.0 * lower, 100.0 * upper)
         print("%-24s %7.0f%% %16s %8s %+8s   %s" %
-              (k, r, ci, m or "never", ("%d yr" % delay) if m else "n/a", verdict))
+              (node_id, success_rate, confidence_interval, median_year or "never", ("%d yr" % delay) if median_year else "n/a", verdict))
 
 
 def cmd_plan(a):
@@ -1809,7 +1926,7 @@ def cmd_plan(a):
     goal's prerequisite closure, instead of either hand-writing a guess
     (recommended.json, 0% on Rome at a 700-year horizon) or capturing
     whatever a lucky trial happened to do (captured_han_386.json - a floor,
-    not a method). See rome/sim/planner.py for the reasoning in full; this is
+    not a method). See sim/planner.py for the reasoning in full; this is
     a thin CLI wrapper, the same relationship `cmd_run` has to `Sim.run`.
 
     NEVER REACHED FROM `play` OR `agent`. Both of those are how a fogged
@@ -1822,13 +1939,13 @@ def cmd_plan(a):
     if _simdir not in sys.path:
         sys.path.insert(0, _simdir)
     import planner as _planner
-    tree, _p, nodes, _w, _g = load()
+    tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, a.goal)
     if not a.search_rounds:
         # UNCHANGED FROM BEFORE. Purely structural CPM, optionally refined
         # against real trials - the path every existing caller and test
         # already exercises.
-        order, rationale, _c = _planner.plan(
+        order, rationale, _cpm_result = _planner.plan(
             civ=a.civ, goal=a.goal, seed_strategy=a.seed_strategy,
             side_branches=a.side_branches, side_branch_every=a.side_branch_every,
             refine_rounds=a.refine_rounds, mc=a.mc, horizon=a.horizon, seed=a.seed)
@@ -1840,7 +1957,7 @@ def cmd_plan(a):
         for line in rationale:
             print("  - " + line)
         return 0
-    # SOLVE THE DICE-FREE PROBLEM FIRST (see rome/sim/path_search.py):
+    # SOLVE THE DICE-FREE PROBLEM FIRST (see sim/path_search.py):
     # diagnose the binding constraint against a trial with the dice removed
     # entirely and relax it, round by round, and USE that order directly -
     # not merely as a --seed-strategy tie-break for a fresh CPM pass, which
@@ -1869,10 +1986,10 @@ def cmd_plan(a):
            (", goal reached %d AD" % last["goal_year"]) if last["goal_year"] else "",
            ", ".join(last["scarce_trades"]) or "(none)"),
     ]
-    _grown = [h for h in history if h["grow_supply_tried"]]
+    _grown = [round_record for round_record in history if round_record["grow_supply_tried"]]
     if _grown:
-        _n_tried = sum(len(h["grow_supply_tried"]) for h in _grown)
-        _kept = [t["institution"] for h in _grown for t in h["grow_supply_tried"] if t["kept"]]
+        _n_tried = sum(len(round_record["grow_supply_tried"]) for round_record in _grown)
+        _kept = [institution_trial["institution"] for round_record in _grown for institution_trial in round_record["grow_supply_tried"] if institution_trial["kept"]]
         rationale.append(
             "Grow-supply (move 3): a capital trap was diagnosed and %d "
             "candidate institution(s) were tried, one at a time, each kept "
@@ -1885,9 +2002,9 @@ def cmd_plan(a):
         # own order and side branches become what gets measured and
         # advanced round by round, instead of planner.plan() deriving a
         # fresh CPM pass that does not know about the search's relaxation.
-        s = Sim(nodes, [], random.Random(a.seed), events=False, civ=load_civ(a.civ))
+        probe_sim = Sim(nodes, [], random.Random(a.seed), events=False, civ=load_civ(a.civ))
         order, extras, score = _planner.refine(
-            nodes, goal, s, order, extras, a.civ, a.mc, a.horizon, a.seed,
+            nodes, goal, probe_sim, order, extras, a.civ, a.mc, a.horizon, a.seed,
             a.refine_rounds, a.side_branch_every)
         if score is not None:
             rationale.append(
@@ -1917,7 +2034,7 @@ def cmd_search(a):
     this file's own docstring: "does the current plan even get there with
     the dice off?", asked on its own, at path_search.py's own standalone
     defaults, without also having to think about CPM seeding or refinement.
-    See rome/sim/path_search.py for the full reasoning - the scarce named
+    See sim/path_search.py for the full reasoning - the scarce named
     trades, the capital trap, and the three moves (pull, resequence, grow
     supply) this measures against a real Sim with the dice removed rather
     than guesses at.
@@ -1945,77 +2062,166 @@ def cmd_search(a):
     return 0
 
 
+# FOUR NUMBERS `cmd_why` PRINTS TO DESCRIBE MECHANICS IT DOES NOT ITSELF RUN -
+# every one of these is a duplicate of a value computed for real elsewhere in
+# the engine, kept here only so a player can see the consequence of a choice
+# before making it. Declaring them does not remove the duplication (the real
+# fix is cli.py reading the engine's own values instead of repeating them),
+# but it does mean a `why` on it can say plainly which duplicate this is and
+# what happens if the two ever disagree.
+WHY_FAILURE_LOSS_FRACTION = declare(
+    "WHY_FAILURE_LOSS_FRACTION", 0.4, kind="temporary_heuristic",
+    unit="fraction of cost and hours lost on a failed attempt", source=None,
+    confidence="C",
+    why="What `why` tells a player a failed attempt at a risky node would "
+        "cost them, in money and in hours - duplicating the 0.4 that "
+        "engine/projects.py actually charges when a project fails "
+        "(ph_left set to node['ph']*0.4, and the money loss computed as "
+        "node['_total_cost']*0.4*cost_money_factor() - see that file's own "
+        "'40, NOT 60' comment). Declared here, at the same value, because "
+        "this file does not import projects.py's ProjectsMixin and so has "
+        "no name to import instead; if that 0.4 is ever retuned there this "
+        "line will go stale silently until someone notices the two numbers "
+        "disagree.")
+WHY_BOUNTY_PRICE_MULTIPLE = declare(
+    "WHY_BOUNTY_PRICE_MULTIPLE", 2.5, kind="temporary_heuristic",
+    unit="multiple of build cost", source=None, confidence="C",
+    why="The 'about how much a public bounty would cost' estimate `why` "
+        "prints, duplicating the 2.5x engine/projects.py's post_bounty() "
+        "actually charges (see that function's own comment on a playtester "
+        "who found `why` and `bounty` quoting different figures for the "
+        "same node before this line existed at all). This estimate omits "
+        "civ_cost_factor() and material_cost_factor(), which the real "
+        "charge applies and this preview does not, so it is already an "
+        "approximation even before considering the two multipliers might "
+        "drift apart.")
+WHY_OPPOSITION_COST_PCT = declare(
+    "WHY_OPPOSITION_COST_PCT", 25, kind="temporary_heuristic",
+    unit="percent added per unit of state opposition (-gov)", source=None,
+    confidence="C",
+    why="The 'costs X% more' a `why` screen quotes for an opposed node - 100 "
+        "times engine/economy.py's own declared OPPOSITION_COST_PER_UNIT "
+        "(0.25), which opposition_factor() actually applies to project cost. "
+        "Declared separately, at the matching value, because this file has "
+        "no live Sim to read that constant off of in cmd_why (no Sim object "
+        "is constructed here at all - this command works from tree data "
+        "alone) and gov, the node's raw -3..+3 trait, is not the same "
+        "quantity opposition_factor() multiplies by (state_interest(), a "
+        "continuous function of gov and other factors) - so this is already "
+        "an approximation of what an opposed build will actually cost, not "
+        "an exact preview of it.")
+WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
+    "WHY_OPPOSITION_SUSPICION_PER_UNIT", 3, kind="temporary_heuristic",
+    unit="suspicion points per unit of state opposition (-gov)", source=None,
+    confidence="D",
+    why="The '+X extra suspicion' a `why` screen quotes for an opposed node. "
+        "FLAGGED: engine/projects.py's own post_bounty() comment says "
+        "publicity 'used to also add to a suspicion scalar that nothing "
+        "ever read' before scandal/eminence replaced it - which suggests "
+        "the mechanic this line describes may no longer exist in the engine "
+        "at all, and this could be describing a consequence that does not "
+        "happen. Left at its source value rather than silently removed or "
+        "changed - a literal migration must not also fix what it says, the "
+        "same discipline _founder_lifetime_hours()'s own comment explains "
+        "for a case that WAS worth fixing (Complaints/38); worth an actual "
+        "read of whether 'sus' still does anything before the next hand "
+        "touches this line.")
+
+
 def cmd_why(a):
     """Explain one node: what it needs, what needs it, and what it costs."""
     tree, prices, nodes, wages, goods = load()
-    k = a.node
-    if k not in nodes:
-        near = [x for x in nodes if a.node.lower() in x.lower()]
+    node_id = a.node
+    if node_id not in nodes:
+        near = [candidate_id for candidate_id in nodes if a.node.lower() in candidate_id.lower()]
         raise SystemExit("unknown node. did you mean: %s" % (", ".join(near[:8]) or "no idea"))
-    n = nodes[k]
-    print("%s  [%s, confidence %s]" % (n["name"], n["cat"], n["conf"]))
+    node_record = nodes[node_id]
+    print("%s  [%s, confidence %s]" % (node_record["name"], node_record["cat"], node_record["conf"]))
     print("=" * 78)
-    print(n["note"])
+    print(node_record["note"])
     print()
-    print("Recipe          : rome/knowledge/%s" % n["kb"])
-    print("Your hours      : %s   (%.1f%% of a 72,000-hour life)" % (f"{n['ph']:,}", 100.0 * n["ph"] / 72000))
-    print("Hired labour    : %s" % (", ".join("%s %s h" % (t, f"{h:,}") for t, h in n["lab"].items()) or "none"))
-    print("Materials       : %s" % (", ".join("%s %s" % (m, f"{q:,}") for m, q in n["mat"].items()) or "none"))
+    print("Recipe          : knowledge/%s" % node_record["kb"])
+    # Complaints/38: same computed budget cmd_path prints and judges against
+    # - see _founder_lifetime_hours()'s own comment - so this percentage
+    # cannot go stale against either of those the way a separately typed
+    # "72,000-hour life" did.
+    lifetime_hours = _founder_lifetime_hours()
+    print("Your hours      : %s   (%.1f%% of a %s-hour life)" %
+          (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / lifetime_hours,
+           f"{lifetime_hours:,.0f}"))
+    print("Hired labour    : %s" % (", ".join("%s %s h" % (trade, f"{hours:,}") for trade, hours in node_record["lab"].items()) or "none"))
+    print("Materials       : %s" % (", ".join("%s %s" % (material, f"{quantity:,}") for material, quantity in node_record["mat"].items()) or "none"))
     print("Cost            : %s den labour + %s materials + %s capital = %s TOTAL"
-          % (f"{n['_labour_cost']:,.0f}", f"{n['_material_cost']:,.0f}",
-             f"{n['cap']:,}", f"{n['_total_cost']:,.0f}"))
-    print("Upkeep          : %s den/yr        Revenue: %s den/yr" % (f"{n['up']:,}", f"{n['rev']:,}"))
-    print("Calendar floor  : %.1f years (money cannot buy this down)" % n["yrs"])
+          % (f"{node_record['_labour_cost']:,.0f}", f"{node_record['_material_cost']:,.0f}",
+             f"{node_record['cap']:,}", f"{node_record['_total_cost']:,.0f}"))
+    print("Upkeep          : %s den/yr        Revenue: %s den/yr" % (f"{node_record['up']:,}", f"{node_record['rev']:,}"))
+    print("Calendar floor  : %.1f years (money cannot buy this down)" % node_record["yrs"])
     # WHAT A FAILURE COSTS, not only how likely one is. The rate was on the
     # screen and the sum never was, so three players in a row read "10% per
     # attempt" as a small thing and were not expecting the 35,433 pence it
     # took off a 141,824-pence project. The share is a flat 40% every time;
     # what varies is the size of what you started, which is exactly the
     # number a player is holding in their head when they decide.
-    if n["risk"]:
+    if node_record["risk"]:
         print("Failure risk    : %.0f%% per attempt - a failure costs %s (40%%) "
               "and %s of your hours to do again"
-              % (100 * n["risk"], f"{n['_total_cost'] * 0.4:,.0f}",
-                 f"{n['ph'] * 0.4:,.0f}"))
+              % (100 * node_record["risk"],
+                 f"{node_record['_total_cost'] * WHY_FAILURE_LOSS_FRACTION:,.0f}",
+                 f"{node_record['ph'] * WHY_FAILURE_LOSS_FRACTION:,.0f}"))
     else:
         print("Failure risk    : none")
-    print("Staff needed    : %d trained scholars, %d trained artisans" % (n["sch"], n["art"]))
-    print("Suspicion       : %+d       State interest: %+d%s" % (n.get("sus", 0), n.get("gov", 0),
+    print("Staff needed    : %d trained scholars, %d trained artisans" % (node_record["sch"], node_record["art"]))
+    print("Suspicion       : %+d       State interest: %+d%s" % (node_record.get("sus", 0), node_record.get("gov", 0),
           ("  <- OPPOSED. Costs %d%% more, +%d extra suspicion, needs %s"
-           % (25 * -n.get("gov", 0), 3 * -n.get("gov", 0),
-              "senatorial patronage" if n.get("gov", 0) <= -2 else "a patron"))
-          if n.get("gov", 0) < 0 else ""))
-    eligible = (n["cat"] in ("glass_optics", "metallurgy", "precision",
+           % (WHY_OPPOSITION_COST_PCT * -node_record.get("gov", 0),
+              WHY_OPPOSITION_SUSPICION_PER_UNIT * -node_record.get("gov", 0),
+              "senatorial patronage" if node_record.get("gov", 0) <= -2 else "a patron"))
+          if node_record.get("gov", 0) < 0 else ""))
+    eligible = (node_record["cat"] in ("glass_optics", "metallurgy", "precision",
                 "power", "agriculture", "information", "instruments"))
     print("Bounty          : %s" % ("YES, can be bought as a public prize for about %s den"
-                                    % f"{n['_total_cost'] * 2.5:,.0f}" if eligible else
+                                    % f"{node_record['_total_cost'] * WHY_BOUNTY_PRICE_MULTIPLE:,.0f}" if eligible else
                                     "no, a local craftsman could not recognise success"))
     print()
     print("DIRECT PREREQUISITES")
-    for p_ in n["pre"] or ["(none, you can start this on arrival)"]:
-        print("   %s" % (("%-30s %s" % (p_, nodes[p_]["name"])) if p_ in nodes else p_))
-    need = closure(nodes, k) - {k}
+    for prereq_id in node_record["pre"] or ["(none, you can start this on arrival)"]:
+        print("   %s" % (("%-30s %s" % (prereq_id, nodes[prereq_id]["name"])) if prereq_id in nodes else prereq_id))
+    need = closure(nodes, node_id) - {node_id}
     print("\nFULL CHAIN BEHIND IT: %d nodes, %s of your hours, %s denarii, %.0f-year serial floor"
-          % (len(need), f"{sum(nodes[x]['ph'] for x in need):,}",
-             f"{sum(nodes[x]['_total_cost'] for x in need):,.0f}", critical_path(nodes, k)[0]))
+          % (len(need), f"{sum(nodes[descendant_id]['ph'] for descendant_id in need):,}",
+             f"{sum(nodes[descendant_id]['_total_cost'] for descendant_id in need):,.0f}", critical_path(nodes, node_id)[0]))
     print("   " + ", ".join(topo_order(nodes, need)))
     # req_any COUNTS: see protocol._unlocked_by. Ten nodes, among them the
     # Norse clinker hull and bog-iron bloomery and the Mexica's chinampa, were
     # reported as dead ends because this scanned hard prerequisites only.
     from .protocol import _unlocked_by
-    unlocks = _unlocked_by(k, nodes)
+    unlocks = _unlocked_by(node_id, nodes)
     print("\nDIRECTLY UNLOCKS")
-    for u in unlocks or ["(nothing, this is a leaf)"]:
-        print("   %s" % (("%-30s %s" % (u, nodes[u]["name"])) if u in nodes else u))
+    for unlock_id in unlocks or ["(nothing, this is a leaf)"]:
+        print("   %s" % (("%-30s %s" % (unlock_id, nodes[unlock_id]["name"])) if unlock_id in nodes else unlock_id))
     # FOLLOWING SUBSTITUTION GROUPS TOO: see protocol._downstream_of for why
     # this is not closure()'s question. The chinampa printed "TOTAL DOWNSTREAM:
     # 0" while feeding terracing through a req_any option.
     from .protocol import _downstream_of
-    blocks = _downstream_of(k, nodes)
+    blocks = _downstream_of(node_id, nodes)
     print("\nTOTAL DOWNSTREAM: %d nodes depend on this, directly or indirectly." % len(blocks))
     _goal_here = resolve_goal(tree, nodes, getattr(a, "goal", None))
-    if _goal_here in blocks or _goal_here == k:
+    if _goal_here in blocks or _goal_here == node_id:
         print("   INCLUDING THE GOAL. This node is on the critical path.")
+
+
+# Complaints/38 section 2: cmd_sweep's "mortality" axis sweeps
+# founder_life_mean and needs a spread to draw around each mean point. This
+# USED to be a separately declared 4.0, half of DEFAULTS["founder_life_sd"]
+# (8.0) - the standard deviation every ordinary game, core.py's own
+# founder-lifespan draw, and this file's own _ingame_options all actually
+# use. A sweep whose whole purpose is to show how the OUTCOME is distributed
+# under mortality was doing so at half the real variance, understating the
+# tail in both directions - exactly the thing a sweep is for. Fixed by
+# deleting the second number: the mortality axis below now reads
+# DEFAULTS["founder_life_sd"] directly, the same way it already reads
+# DEFAULTS["founder_life_mean"] for its central values, so there is only one
+# place left that can disagree with itself.
 
 
 def cmd_sweep(a):
@@ -2042,14 +2248,15 @@ def cmd_sweep(a):
     print("-" * 92)
     any_thin = False
     any_success = False
-    for v in values:
+    for value in values:
         cfg, life = {}, None
         if key == "founder_life_mean":
-            cfg = {"immortal": False, "founder_life_mean": v, "founder_life_sd": 4.0}
+            cfg = {"immortal": False, "founder_life_mean": value,
+                   "founder_life_sd": DEFAULTS["founder_life_sd"]}
         elif key == "founder_life":
-            life = v
+            life = value
         else:
-            cfg[key] = v
+            cfg[key] = value
         res = []
         for i in range(a.mc):
             # COMMON RANDOM NUMBERS across the points of this sweep, same
@@ -2061,22 +2268,22 @@ def cmd_sweep(a):
             if life is not None:
                 sim.life_left = float(life)
             res.append(sim.run(goal, a.horizon))
-        succ = sum(1 for r in res if r.goal_year)
-        ok = sorted(r.goal_year for r in res if r.goal_year)
-        c = defaultdict(int)
-        for r in res:
-            if not r.goal_year:
-                c[(r.dead_reason or "ran out of horizon").split(":")[0]] += 1
-        worst = max(c.items(), key=lambda x: x[1]) if c else ("none", 0)
-        lo, hi = _wilson_interval(succ, len(res))
+        succ = sum(1 for run in res if run.goal_year)
+        successful_years = sorted(run.goal_year for run in res if run.goal_year)
+        failure_causes = defaultdict(int)
+        for run in res:
+            if not run.goal_year:
+                failure_causes[(run.dead_reason or "ran out of horizon").split(":")[0]] += 1
+        worst = max(failure_causes.items(), key=lambda x: x[1]) if failure_causes else ("none", 0)
+        lower, upper = _wilson_interval(succ, len(res))
         thin = 0 < succ < _MIN_SUCCESSES_FOR_QUANTILES
         any_thin = any_thin or thin
         any_success = any_success or succ > 0
         print("%-12s %7.0f%% %16s %8s %8s   %s" %
-              (f"{v:,}", 100.0 * succ / len(res),
-               "[%.0f%%,%.0f%%]" % (100.0 * lo, 100.0 * hi),
-               (str(ok[len(ok) // 2]) + "*" if thin else ok[len(ok) // 2]) if ok else "never",
-               ok[len(ok) // 4] if ok else "-",
+              (f"{value:,}", 100.0 * succ / len(res),
+               "[%.0f%%,%.0f%%]" % (100.0 * lower, 100.0 * upper),
+               (str(successful_years[len(successful_years) // 2]) + "*" if thin else successful_years[len(successful_years) // 2]) if successful_years else "never",
+               successful_years[len(successful_years) // 4] if successful_years else "-",
                "%s (%d)" % (worst[0][:44], worst[1]) if worst[1] else "-"))
     print("\nWatch the failure column, not the success column. When it changes, the")
     print("binding constraint has changed and so should your strategy.")
@@ -2116,20 +2323,38 @@ def cmd_goals(a):
     catalog = goal_catalog(tree, nodes)
     print("%-34s %9s %10s  %-11s %s" % ("name", "closure", "floor(yr)", "scale", "node"))
     print("-" * 100)
-    for g in catalog:
-        node = g["node"]
+    for goal in catalog:
+        node = goal["node"]
         need = closure(nodes, node)
         yrs, _chain = critical_path(nodes, node)
         print("%-34s %9d %10.1f  %-11s %s%s"
-              % (g.get("name", node)[:34], len(need), yrs, g.get("scale", ""), node,
+              % (goal.get("name", node)[:34], len(need), yrs, goal.get("scale", ""), node,
                  "  <- DEFAULT" if node == default_goal else ""))
-        if g.get("blurb"):
-            print("    " + g["blurb"])
-        wc = nodes[node].get("win_condition")
-        if wc:
+        if goal.get("blurb"):
+            print("    " + goal["blurb"])
+        win_condition = nodes[node].get("win_condition")
+        if win_condition:
             print("    won by measurement, not by building: %s"
                   % win_condition_describe(nodes[node]))
     return 0
+
+
+# THE SAME DEFAULT engine/society.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
+# (0.5) - kept as its own name because this file has no Sim/SocietyMixin
+# instance to read that constant from (cmd_civs works from the raw civ JSON
+# files directly, before any game has started), same shape as
+# INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS just above.
+CIVS_EMINENCE_DANGER_DEFAULT = declare(
+    "CIVS_EMINENCE_DANGER_DEFAULT", 0.5, kind="temporary_heuristic",
+    unit="dimensionless weight", source=None, confidence="D",
+    why="What this screen shows for 'eminence is dangerous' when a "
+        "civilisation's own JSON does not set w_eminence_danger - a mid-scale "
+        "default rather than a claim about any specific civilisation. "
+        "Matches engine/society.py's EMINENCE_DANGER_WEIGHT_DEFAULT, which "
+        "is the value actually used if a live game hits the same missing "
+        "field; declared separately here so the two can be told apart if "
+        "they are ever retuned independently, and so a reader of this file "
+        "alone can see this number is not invented for display.")
 
 
 def cmd_civs(a):
@@ -2142,43 +2367,43 @@ def cmd_civs(a):
     home ground itself rather than just the region ids.
     """
     geo = load_geography()
-    region_names = {rid: r.get("name", rid)
-                    for rid, r in (geo.get("regions") or {}).items()
+    region_names = {rid: region_record.get("name", rid)
+                    for rid, region_record in (geo.get("regions") or {}).items()
                     if not rid.startswith("_")}
-    for f in sorted(os.listdir(CIVDIR)):
+    for civ_filename in sorted(os.listdir(CIVDIR)):
         # Files starting with "_" are schema/reference data, not a playable
         # civilization (e.g. _TECH_EFFECTS.json), same convention this file
         # already uses everywhere else for "_"-prefixed keys and entries.
-        if not f.endswith(".json") or f.startswith("_"):
+        if not civ_filename.endswith(".json") or civ_filename.startswith("_"):
             continue
-        c = json.load(open(os.path.join(CIVDIR, f)))
-        v = c["values"]
-        print("%-16s %s, %s" % (c["id"], c["name"], c["year"]))
-        print("   %s" % c.get("blurb", ""))
-        homes = [region_names.get(r, r) for r in c.get("home_regions") or []]
+        civ_data = json.load(open(os.path.join(CIVDIR, civ_filename)))
+        value = civ_data["values"]
+        print("%-16s %s, %s" % (civ_data["id"], civ_data["name"], civ_data["year"]))
+        print("   %s" % civ_data.get("blurb", ""))
+        homes = [region_names.get(region_id, region_id) for region_id in civ_data.get("home_regions") or []]
         print("   home ground: %s" % (", ".join(homes) if homes else "(none set)"))
         print("   population %s   state capacity %.2f   base_reach %d (how far it already "
               "routinely travels)   starts with %d technologies"
-              % (f"{c.get('population',0):,}", c.get("state_capacity", 0),
-                 c.get("base_reach", 0), len(c.get("starting_techs", []))))
+              % (f"{civ_data.get('population',0):,}", civ_data.get("state_capacity", 0),
+                 civ_data.get("base_reach", 0), len(civ_data.get("starting_techs", []))))
         print("   fears the inexplicable %.2f | fears heterodoxy %.2f | resents machines %+.2f "
               "| bribable %.2f | habituates %.2f"
-              % (v["w_magic_fear"], v["w_religious_rigidity"], v["w_labour_saving"],
-                 v["bribability"], v["adaptation_rate"]))
+              % (value["w_magic_fear"], value["w_religious_rigidity"], value["w_labour_saving"],
+                 value["bribability"], value["adaptation_rate"]))
         print("   eminence is dangerous %.2f  (how much prominence ITSELF endangers you)"
-              % v.get("w_eminence_danger", 0.5))
-        mults = c.get("cost_multipliers") or {}
+              % value.get("w_eminence_danger", CIVS_EMINENCE_DANGER_DEFAULT))
+        mults = civ_data.get("cost_multipliers") or {}
         if mults:
-            easy = sorted((x for x in mults.items() if x[1] < 1.0), key=lambda x: x[1])[:4]
-            hard = sorted((x for x in mults.items() if x[1] > 1.0), key=lambda x: -x[1])[:4]
+            easy = sorted((cost_pair for cost_pair in mults.items() if cost_pair[1] < 1.0), key=lambda x: x[1])[:4]
+            hard = sorted((cost_pair for cost_pair in mults.items() if cost_pair[1] > 1.0), key=lambda x: -x[1])[:4]
             if easy:
-                print("   good at : " + ", ".join("%s x%.2f" % kv for kv in easy))
+                print("   good at : " + ", ".join("%s x%.2f" % cost_pair for cost_pair in easy))
             if hard:
-                print("   bad at  : " + ", ".join("%s x%.2f" % kv for kv in hard))
+                print("   bad at  : " + ", ".join("%s x%.2f" % cost_pair for cost_pair in hard))
         print()
     print("starting kits (--kit):")
-    for k, d in STARTING_KITS.items():
-        print("   %-14s %9s den   %s" % (k, f"{d['den']:,}", d["desc"]))
+    for kit_id, kit_data in STARTING_KITS.items():
+        print("   %-14s %9s den   %s" % (kit_id, f"{kit_data['den']:,}", kit_data["desc"]))
     return 0
 
 
@@ -2222,11 +2447,11 @@ def _wrap(text, width=None, indent="   "):
     if width is None:
         width = _DISPLAY_WIDTH
     words, lines, cur = text.split(), [], ""
-    for w in words:
-        if len(cur) + len(w) + 1 > width:
-            lines.append(indent + cur); cur = w
+    for word in words:
+        if len(cur) + len(word) + 1 > width:
+            lines.append(indent + cur); cur = word
         else:
-            cur = (cur + " " + w).strip()
+            cur = (cur + " " + word).strip()
     if cur:
         lines.append(indent + cur)
     return "\n".join(lines)
@@ -2274,27 +2499,27 @@ def _pick_session_filename(civ_id):
     # every command has to put them somewhere a person can find and delete -
     # and, now, somewhere a player stuck with a non-persistent $HOME can move
     # away from entirely. See settings.py's module docstring.
-    d = settings.resolve_save_dir()
-    civ_id = os.path.join(d, civ_id)
+    save_dir = settings.resolve_save_dir()
+    civ_id = os.path.join(save_dir, civ_id)
     highest = 1
     prefix = civ_id + "_"
     try:
-        for nm in (os.path.join(d, x) for x in os.listdir(d)):
-            if nm.startswith(prefix) and nm.endswith(".json"):
+        for save_name in (os.path.join(save_dir, filename) for filename in os.listdir(save_dir)):
+            if save_name.startswith(prefix) and save_name.endswith(".json"):
                 try:
-                    highest = max(highest, int(nm[len(prefix):-5]))
+                    highest = max(highest, int(save_name[len(prefix):-5]))
                 except ValueError:
                     pass
     except OSError:
         pass
-    i = highest if os.path.exists("%s.json" % civ_id) else 1
+    attempt = highest if os.path.exists("%s.json" % civ_id) else 1
     while True:
-        candidate = ("%s.json" % civ_id) if i == 1 else ("%s_%d.json" % (civ_id, i))
+        candidate = ("%s.json" % civ_id) if attempt == 1 else ("%s_%d.json" % (civ_id, attempt))
         try:
             os.close(os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
             return candidate
         except FileExistsError:
-            i += 1
+            attempt += 1
         except OSError:
             # Cannot write here at all; hand back a name and let `save` report
             # the real error rather than looping for ever.
@@ -2313,18 +2538,18 @@ def _ask(prompt, options, default=None):
             return default
         if raw in ("q", "quit", "exit"):
             return None
-        for o in options:
-            if raw == o or (len(raw) == 1 and o.startswith(raw)):
-                return o
+        for option in options:
+            if raw == option or (len(raw) == 1 and option.startswith(raw)):
+                return option
         print("   -- I did not understand that. Options: %s" % ", ".join(options))
 
 
 def _load_civ_list():
     civs = []
-    for fn in sorted(os.listdir(CIVDIR)):
-        if not fn.endswith(".json") or fn.startswith("_"):
+    for civ_filename in sorted(os.listdir(CIVDIR)):
+        if not civ_filename.endswith(".json") or civ_filename.startswith("_"):
             continue
-        civs.append(json.load(open(os.path.join(CIVDIR, fn))))
+        civs.append(json.load(open(os.path.join(CIVDIR, civ_filename))))
     civs.sort(key=lambda c: c.get("year", 0))
     return civs
 
@@ -2339,16 +2564,16 @@ def _new_game(civs, cfg):
     print("-" * 78)
     print("   WHERE, AND WHEN")
     print("-" * 78)
-    for i, c in enumerate(civs, 1):
+    for i, civ_record in enumerate(civs, 1):
         print()
-        print("   %d) %s, %d" % (i, c.get("name", c["id"]), c.get("year", 0)))
-        print(_wrap(c.get("blurb", ""), indent="      "))
+        print("   %d) %s, %d" % (i, civ_record.get("name", civ_record["id"]), civ_record.get("year", 0)))
+        print(_wrap(civ_record.get("blurb", ""), indent="      "))
         print("      %s people   state capacity %.2f   prices %.2fx Rome"
-              % (f"{c.get('population', 0):,}", c.get("state_capacity", 0),
-                 c.get("price_index", 1.0)))
+              % (f"{civ_record.get('population', 0):,}", civ_record.get("state_capacity", 0),
+                 civ_record.get("price_index", 1.0)))
     print()
-    default_i = next((i for i, c in enumerate(civs, 1)
-                      if c.get("id") == cfg.get("default_civ")), None)
+    default_i = next((i for i, civ_record in enumerate(civs, 1)
+                      if civ_record.get("id") == cfg.get("default_civ")), None)
     prompt = ("   Which one? [1-%d%s, or b to go back] "
               % (len(civs), (", default %d" % default_i) if default_i else ""))
     while True:
@@ -2366,7 +2591,7 @@ def _new_game(civs, cfg):
             break
         print("   -- a number from 1 to %d." % len(civs))
 
-    op = civ.get("opening") or {}
+    opening = civ.get("opening") or {}
     print()
     print("=" * 78)
     print(("   %s, %d" % (civ.get("name", civ["id"]), civ.get("year", 0))).upper())
@@ -2376,13 +2601,13 @@ def _new_game(civs, cfg):
                          ("what_is_missing", "What is missing"),
                          ("what_is_coming", "What is coming, and only you know it"),
                          ("what_this_models", "The size of your own reach")):
-        if not op.get(key):
+        if not opening.get(key):
             continue
         print()
         if heading:
             print("   %s" % heading.upper())
-        print(_wrap(op[key]))
-    if not op:
+        print(_wrap(opening[key]))
+    if not opening:
         print()
         print(_wrap(civ.get("blurb", "")))
     print()
@@ -2446,17 +2671,17 @@ def _new_game(civs, cfg):
     default_goal_id = cfg.get("default_goal") or tree["meta"]["goal_node"]
     if default_goal_id not in nodes:
         default_goal_id = tree["meta"]["goal_node"]
-    default_gi = next((i for i, g in enumerate(goals, 1)
-                       if g["node"] == default_goal_id), 1)
-    for i, g in enumerate(goals, 1):
-        node = g["node"]
+    default_gi = next((i for i, goal_row in enumerate(goals, 1)
+                       if goal_row["node"] == default_goal_id), 1)
+    for i, goal_row in enumerate(goals, 1):
+        node = goal_row["node"]
         need = closure(nodes, node)
-        yrs, _c = critical_path(nodes, node)
+        yrs, _chain = critical_path(nodes, node)
         print("   %d) %s  (closure %d, floor %.0fy%s)"
-              % (i, g.get("name", node), len(need), yrs,
-                 ", %s" % g["scale"] if g.get("scale") else ""))
-        if g.get("blurb"):
-            print(_wrap(g["blurb"], indent="         "))
+              % (i, goal_row.get("name", node), len(need), yrs,
+                 ", %s" % goal_row["scale"] if goal_row.get("scale") else ""))
+        if goal_row.get("blurb"):
+            print(_wrap(goal_row["blurb"], indent="         "))
         if nodes[node].get("win_condition"):
             print(_wrap("Won by measurement, not by building: %s."
                         % win_condition_describe(nodes[node]), indent="         "))
@@ -2494,7 +2719,7 @@ def _new_game(civs, cfg):
     # THE ONE HONEST THING A MODE MENU CAN SAY HERE: the same number of years
     # is a completely different offer depending which civilisation it is
     # attached to - see DICE_FREE_FLOOR_YEARS's own comment for the measurement
-    # and rome/data/review/PATH_SEARCH.md for the method. Said to the player
+    # and data/review/PATH_SEARCH.md for the method. Said to the player
     # NOW, about the civilisation they just picked, rather than left for them
     # to discover by overshooting a horizon that was never going to be enough.
     # THE FLOOR OF THE GOAL YOU JUST PICKED, not of the default one. This said
@@ -2527,11 +2752,11 @@ def _new_game(civs, cfg):
     # must not be routed through an extra "how many years?" prompt just
     # because 321 is not one of the four named numbers.
     default_h = cfg.get("default_horizon", 500)
-    _mode_by_years = {m[2]: m[0] for m in HORIZON_MODES if m[2]}
+    _mode_by_years = {mode[2]: mode[0] for mode in HORIZON_MODES if mode[2]}
     _mode_by_years[ENDLESS_HORIZON_YEARS] = "endless"
     _default_key = _mode_by_years.get(default_h)
-    _default_idx = (next(i for i, m in enumerate(HORIZON_MODES, 1)
-                         if m[0] == _default_key)
+    _default_idx = (next(i for i, mode in enumerate(HORIZON_MODES, 1)
+                         if mode[0] == _default_key)
                     if _default_key else len(HORIZON_MODES) + 1)
     while True:
         try:
@@ -2554,8 +2779,8 @@ def _new_game(civs, cfg):
         if rawh.isdigit() and 1 <= int(rawh) <= len(HORIZON_MODES) + 1:
             choice = int(rawh)
         else:
-            _match = next((i for i, m in enumerate(HORIZON_MODES, 1)
-                          if rawh in (m[0], m[1].lower())), None)
+            _match = next((i for i, mode in enumerate(HORIZON_MODES, 1)
+                          if rawh in (mode[0], mode[1].lower())), None)
             if _match is None:
                 print("   -- a number from 1 to %d, a name, or b."
                       % (len(HORIZON_MODES) + 1))
@@ -2631,7 +2856,7 @@ def _new_game(civs, cfg):
         "so you can stop any time - close the terminal, anything - and come "
         "back to exactly where you left off with:"))
     print()
-    print("      python3 rome/sim/simulator.py play --session %s" % session)
+    print("      python3 sim/simulator.py play --session %s" % session)
     print()
 
     class Args:
@@ -2669,7 +2894,7 @@ def _save_listing(cfg):
         if hit is None:
             hit = _need_cache[goal_id] = closure(nodes, goal_id)
         return goal_id, hit
-    civ_index = {c["id"]: c for c in _load_civ_list()}
+    civ_index = {civ_record["id"]: civ_record for civ_record in _load_civ_list()}
     save_dir = settings.resolve_save_dir(cfg)
     rows = settings.list_saves(save_dir)
     # EACH ROW CARRIES ITS OWN GOAL AND ITS OWN CLOSURE. _need_for above was
@@ -2677,11 +2902,11 @@ def _save_listing(cfg):
     # renderer was factored out in a different branch at the same time; a
     # listing that measured every save against the transistor's 168 nodes would
     # report a save playing a five-node lifetime goal as 3/168 done.
-    for _r in rows:
-        _gid, _gneed = _need_for(_r.get("goal"))
-        _r["goal_id"] = _gid
-        _r["goal_name"] = nodes.get(_gid, {}).get("name", _gid)
-        _r["goal_need"] = _gneed
+    for _row in rows:
+        _gid, _gneed = _need_for(_row.get("goal"))
+        _row["goal_id"] = _gid
+        _row["goal_name"] = nodes.get(_gid, {}).get("name", _gid)
+        _row["goal_need"] = _gneed
     # The fourth element is the DEFAULT goal's closure, kept only as the
     # fallback a row without a readable goal uses. Each row carries its own
     # above, which is the number that actually gets printed.
@@ -2704,9 +2929,9 @@ def _print_save_row(i, r, civ_index, need, marker=None):
               "its details")
         print()
         return
-    c = civ_index.get(r["civ_id"], {})
-    name = c.get("name", r["civ_id"] or "unknown civilisation")
-    start = c.get("year")
+    civ_record = civ_index.get(r["civ_id"], {})
+    name = civ_record.get("name", r["civ_id"] or "unknown civilisation")
+    start = civ_record.get("year")
     year = r["year"]
     elapsed = ("  (%d years in)" % (year - start)
               if isinstance(start, (int, float)) and isinstance(year, (int, float))
@@ -2757,17 +2982,17 @@ def _load_game(cfg):
         print(_wrap("Nothing there yet. Start a new game first, or type the "
                     "path to a save file below if you have one somewhere else."))
         print()
-    for i, r in enumerate(rows, 1):
-        _print_save_row(i, r, civ_index, need)
+    for i, row in enumerate(rows, 1):
+        _print_save_row(i, row, civ_index, need)
 
     print("   b) back to the main menu")
     if rows:
-        pr = "   Which one? [1-%d, p to type a path instead, or b] " % len(rows)
+        prompt = "   Which one? [1-%d, p to type a path instead, or b] " % len(rows)
     else:
-        pr = "   p) type a path to a save file, or b) back"
+        prompt = "   p) type a path to a save file, or b) back"
     while True:
         try:
-            raw = input("\n" + pr + "\n   > ").strip()
+            raw = input("\n" + prompt + "\n   > ").strip()
         except (EOFError, KeyboardInterrupt):
             print(); return None
         low = raw.lower()
@@ -2909,16 +3134,16 @@ def _options_menu(cfg):
                       "from now on.")
                 continue
             try:
-                w = int(raw2)
-                if w < 20:
+                display_width = int(raw2)
+                if display_width < 20:
                     raise ValueError
             except ValueError:
                 print("   -- a whole number of columns (at least 20), 'auto', "
                       "or blank.")
                 continue
-            cfg["display_width"] = w
+            cfg["display_width"] = display_width
             settings.save_config(cfg)
-            print("   -- saved. %d columns from now on." % w)
+            print("   -- saved. %d columns from now on." % display_width)
 
         elif word in ("3", "rows", "page"):
             try:
@@ -2930,22 +3155,22 @@ def _options_menu(cfg):
             if not raw2:
                 continue
             try:
-                n = int(raw2)
-                if n <= 0:
+                rows_per_page = int(raw2)
+                if rows_per_page <= 0:
                     raise ValueError
             except ValueError:
                 print("   -- a whole number of rows, more than 0.")
                 continue
-            cfg["rows_per_page"] = n
+            cfg["rows_per_page"] = rows_per_page
             settings.save_config(cfg)
             print("   -- saved.")
 
         elif word in ("4", "welcome", "tutorial"):
-            v = _ask("   Show the welcome message and tutorial on new games? "
+            value = _ask("   Show the welcome message and tutorial on new games? "
                      "[y/n] ", ["y", "n"],
                      "y" if cfg.get("show_welcome", True) else "n")
-            if v:
-                cfg["show_welcome"] = (v == "y")
+            if value:
+                cfg["show_welcome"] = (value == "y")
                 settings.save_config(cfg)
                 print("   -- saved.")
 
@@ -3015,15 +3240,15 @@ def cmd_menu(a):
             return 0
         elif word in ("1", "new", "start"):
             print()
-            rc = _new_game(civs, cfg)
-            if rc is not None:
-                return rc
+            return_code = _new_game(civs, cfg)
+            if return_code is not None:
+                return return_code
             print()
         elif word in ("2", "load", "resume", "continue"):
             print()
-            rc = _load_game(cfg)
-            if rc is not None:
-                return rc
+            return_code = _load_game(cfg)
+            if return_code is not None:
+                return return_code
             print()
         elif word in ("3", "options", "option", "settings"):
             _options_menu(cfg)
@@ -3033,12 +3258,12 @@ def cmd_menu(a):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     # NOT required: typing the bare command should open the menu rather than
     # print a usage error at somebody who has just arrived.
-    sub = p.add_subparsers(dest="cmd", required=False)
-    q = sub.add_parser("validate")
-    q.add_argument("--deep", action="store_true",
+    sub = parser.add_subparsers(dest="cmd", required=False)
+    subparser = sub.add_parser("validate")
+    subparser.add_argument("--deep", action="store_true",
                    help="also run one dice-free, immortal, CPM-ordered trial per "
                         "goal per civilisation (see 'goals' for the roster) and "
                         "report whether each one reaches its goal within a capped "
@@ -3049,31 +3274,31 @@ def main():
     sub.add_parser("goals", help="list the selectable goals - the transistor and every "
                                  "alternative in data/tech_tree.json meta.goals - with "
                                  "each one's closure size and dice-free critical-path floor.")
-    q = sub.add_parser("path"); q.add_argument("goal", nargs="?")
-    q = sub.add_parser("costs"); q.add_argument("--top", type=int, default=20)
-    q = sub.add_parser("why"); q.add_argument("node")
-    q.add_argument("--goal", default=None,
+    subparser = sub.add_parser("path"); subparser.add_argument("goal", nargs="?")
+    subparser = sub.add_parser("costs"); subparser.add_argument("--top", type=int, default=20)
+    subparser = sub.add_parser("why"); subparser.add_argument("node")
+    subparser.add_argument("--goal", default=None,
                    help="which goal to report 'on the critical path' against. "
                         "Default: the tree's own default goal (the transistor).")
-    q = sub.add_parser("sweep")
-    q.add_argument("axis", choices=["capital", "lifespan", "hours", "mortality"])
-    q.add_argument("--strategy", default="recommended")
-    q.add_argument("--goal", default=None,
+    subparser = sub.add_parser("sweep")
+    subparser.add_argument("axis", choices=["capital", "lifespan", "hours", "mortality"])
+    subparser.add_argument("--strategy", default="recommended")
+    subparser.add_argument("--goal", default=None,
                    help="which goal to sweep against. See 'goals' for the roster; "
                         "default is the tree's own default (the transistor).")
-    q.add_argument("--mc", type=int, default=200)
-    q.add_argument("--seed", type=int, default=1)
-    q.add_argument("--horizon", type=int, default=500)
+    subparser.add_argument("--mc", type=int, default=200)
+    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--horizon", type=int, default=500)
     for name in ("run", "compare"):
-        q = sub.add_parser(name)
-        q.add_argument("--strategy", default="recommended")
-        q.add_argument("--goal", default=None,
+        subparser = sub.add_parser(name)
+        subparser.add_argument("--strategy", default="recommended")
+        subparser.add_argument("--goal", default=None,
                        help="which goal to aim at. See 'goals' for the roster; "
                             "default is the tree's own default (the transistor).")
-        q.add_argument("--mc", type=int, default=200)
-        q.add_argument("--seed", type=int, default=1)
-        q.add_argument("--horizon", type=int, default=500)
-        q.add_argument("--no-events", action="store_true",
+        subparser.add_argument("--mc", type=int, default=200)
+        subparser.add_argument("--seed", type=int, default=1)
+        subparser.add_argument("--horizon", type=int, default=500)
+        subparser.add_argument("--no-events", action="store_true",
                        help="turn off weather/plague/political hazard rolls. NOT a "
                             "noise-free baseline: project-failure risk (projects.py "
                             "_complete) and fractional-headcount rounding (labour.py "
@@ -3085,15 +3310,15 @@ def main():
                             "--deterministic for a run where every one of those "
                             "rolls, not only the dated hazards this flag silences, "
                             "comes out the same way every time.")
-        q.add_argument("--no-bounties", action="store_true")
-        q.add_argument("--civ", default="rome_100ad",
+        subparser.add_argument("--no-bounties", action="store_true")
+        subparser.add_argument("--civ", default="rome_100ad",
                        help="which civilization to play. See data/civilizations/")
-        q.add_argument("--kit", default="poor_scholar",
+        subparser.add_argument("--kit", default="poor_scholar",
                        help="starting wealth: " + ", ".join(STARTING_KITS))
-        q.add_argument("--mortal", action="store_true",
+        subparser.add_argument("--mortal", action="store_true",
                        help="turn the founder's mortality back on (default: immortal, "
                             "so the run measures the TREE and not a lifespan lottery)")
-        q.add_argument("--deterministic", action="store_true",
+        subparser.add_argument("--deterministic", action="store_true",
                        help="replace this run's rng with one whose random() always "
                             "returns 1.0 (DetRNG, engine/cli.py - the same class "
                             "path_search.py's own dice-free search trials use): no "
@@ -3110,130 +3335,130 @@ def main():
                             "not a bug. A dice-free trial answers 'does this order "
                             "even get there' at all; it does not choose a better "
                             "order - see 'plan' and 'search' for that.")
-        q.add_argument("--trace", action="store_true")
+        subparser.add_argument("--trace", action="store_true")
         # WRITE DOWN A PATH THAT WORKED, so the next measurement can start from
         # evidence instead of from the same losing list. Feed the file back in
         # with --strategy <path>.
-        q.add_argument("--save-winner", metavar="FILE", default=None,
+        subparser.add_argument("--save-winner", metavar="FILE", default=None,
                        help="if any trial reaches the goal, write the order the "
                             "best one finished its work in to FILE, as a "
                             "strategy you can pass back to --strategy")
-    q = sub.add_parser("sensitivity")
-    q.add_argument("--strategy", default="recommended")
-    q.add_argument("--goal", default=None,
+    subparser = sub.add_parser("sensitivity")
+    subparser.add_argument("--strategy", default="recommended")
+    subparser.add_argument("--goal", default=None,
                    help="which goal to measure sensitivity against. See 'goals' "
                         "for the roster; default is the tree's own default "
                         "(the transistor).")
-    q.add_argument("--mc", type=int, default=200)
-    q.add_argument("--seed", type=int, default=1)
-    q.add_argument("--horizon", type=int, default=500)
-    q = sub.add_parser("plan", help="work backward from the goal over its prerequisite "
+    subparser.add_argument("--mc", type=int, default=200)
+    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--horizon", type=int, default=500)
+    subparser = sub.add_parser("plan", help="work backward from the goal over its prerequisite "
                                     "closure (critical-path method) and write a strategy "
                                     "file, instead of hand-writing one or gambling on a "
                                     "Monte Carlo run until one happens to win. See "
-                                    "rome/sim/planner.py. A developer/optimizer tool, "
+                                    "sim/planner.py. A developer/optimizer tool, "
                                     "like compare/sweep/sensitivity - never reached from "
                                     "play or agent.")
-    q.add_argument("--civ", default="rome_100ad")
-    q.add_argument("--goal", default=None)
-    q.add_argument("--out", required=True, metavar="FILE",
+    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--goal", default=None)
+    subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")
-    q.add_argument("--seed-strategy", default=None,
+    subparser.add_argument("--seed-strategy", default=None,
                    help="a strategy name or path (e.g. captured_han_386, or a "
                         "previous --out) whose order breaks ties among nodes the "
                         "critical path itself ranks as equally urgent")
-    q.add_argument("--side-branches", type=int, default=12,
+    subparser.add_argument("--side-branches", type=int, default=12,
                    help="how many revenue-positive nodes outside the goal's own "
                         "requirements to weave in, to fund the spine. 0 disables")
-    q.add_argument("--side-branch-every", type=int, default=8)
-    q.add_argument("--refine-rounds", type=int, default=0,
+    subparser.add_argument("--side-branch-every", type=int, default=8)
+    subparser.add_argument("--refine-rounds", type=int, default=0,
                    help="plan, run --mc real trials, capture the winner's finish "
                         "order, re-plan from it, repeat this many times. 0 (the "
                         "default) is purely structural and instant")
-    q.add_argument("--mc", type=int, default=12,
+    subparser.add_argument("--mc", type=int, default=12,
                    help="trials per refinement round (ignored if --refine-rounds 0)")
-    q.add_argument("--horizon", type=int, default=700)
-    q.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--horizon", type=int, default=700)
+    subparser.add_argument("--seed", type=int, default=1)
     # DETERMINISTIC SEARCH: solve the dice-free problem first (see
-    # rome/sim/path_search.py), instead of only computing one structural CPM
+    # sim/path_search.py), instead of only computing one structural CPM
     # pass. --search-rounds 0 (the default) leaves `plan` exactly as it was;
     # a nonzero value diagnoses the binding constraint against a dice-free
     # trial of the CPM order (no events, no project failures, immortal
     # founder - see path_search.DetRNG) and relaxes it, round by round,
     # keeping whichever round's order actually scored best.
-    q.add_argument("--search-rounds", type=int, default=0,
+    subparser.add_argument("--search-rounds", type=int, default=0,
                    help="diagnose the binding constraint against a dice-free "
                         "trial and relax it, up to this many rounds, before "
                         "applying --refine-rounds (if any). 0 (default) skips "
                         "this and is purely the structural CPM pass")
-    q.add_argument("--search-horizon", type=int, default=500,
+    subparser.add_argument("--search-horizon", type=int, default=500,
                    help="dice-free horizon used WHILE searching (kept short "
                         "for speed - see path_search.py's own module "
                         "docstring on why a longer, slower verification run "
                         "is a separate step, not part of the search loop)")
-    q.add_argument("--search-backlog-ratio", type=float, default=6.0)
-    q.add_argument("--search-no-grow-supply", action="store_true",
+    subparser.add_argument("--search-backlog-ratio", type=float, default=6.0)
+    subparser.add_argument("--search-no-grow-supply", action="store_true",
                    help="skip the search's move 3 (founding institutions "
                         "one at a time, kept only if a fresh dice-free trial "
                         "measures the result as genuinely better) and use "
                         "only moves 1-2 (pulling/resequencing what is "
                         "already named) - the search's behaviour before "
                         "move 3 existed")
-    q = sub.add_parser("search", help="path_search.py's dice-free search on its own, "
+    subparser = sub.add_parser("search", help="path_search.py's dice-free search on its own, "
                                       "the other front door onto the same machinery "
                                       "'plan --search-rounds' folds into a CPM-seeded "
                                       "pipeline. Answers 'does this order even get "
                                       "there with the dice off' and relaxes the "
                                       "binding constraint it finds, round by round. "
-                                      "See rome/sim/path_search.py. A developer/"
+                                      "See sim/path_search.py. A developer/"
                                       "optimizer tool, like plan/compare/sweep/"
                                       "sensitivity - never reached from play or agent.")
-    q.add_argument("--civ", default="rome_100ad")
-    q.add_argument("--goal", default=None)
-    q.add_argument("--out", required=True, metavar="FILE",
+    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--goal", default=None)
+    subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")
-    q.add_argument("--side-branches", type=int, default=12,
+    subparser.add_argument("--side-branches", type=int, default=12,
                    help="how many revenue-positive nodes outside the goal's own "
                         "requirements to weave in, to fund the spine. 0 disables")
-    q.add_argument("--side-branch-every", type=int, default=8)
-    q.add_argument("--rounds", type=int, default=6,
+    subparser.add_argument("--side-branch-every", type=int, default=8)
+    subparser.add_argument("--rounds", type=int, default=6,
                    help="how many rounds of diagnose-and-relax to run at most; "
                         "a round that reaches the goal, finds no scarce trade "
                         "left, or makes no change to the order stops early")
-    q.add_argument("--horizon", type=int, default=500,
+    subparser.add_argument("--horizon", type=int, default=500,
                    help="dice-free horizon used WHILE searching - kept short "
                         "for speed; verify the winner separately at a longer "
                         "horizon and then against real seeds (e.g. 'run "
                         "--strategy FILE --mc N')")
-    q.add_argument("--backlog-ratio", type=float, default=6.0)
-    q.add_argument("--seed-strategy", default=None,
+    subparser.add_argument("--backlog-ratio", type=float, default=6.0)
+    subparser.add_argument("--seed-strategy", default=None,
                    help="a strategy name or path whose order breaks ties "
                         "among nodes the critical path ranks as equally "
                         "urgent, same as plan's own --seed-strategy")
-    q.add_argument("--no-grow-supply", action="store_true",
+    subparser.add_argument("--no-grow-supply", action="store_true",
                    help="skip move 3 (founding institutions one at a time, "
                         "kept only if measured better) and use only moves "
                         "1-2 (pulling/resequencing what is already named) - "
                         "this search's behaviour before move 3 existed")
     sub.add_parser("menu", help="pick a civilisation, read where you have landed, "
                                 "and start. This is what a bare invocation does.")
-    q = sub.add_parser("play")
-    q.add_argument("--strategy", default="recommended")
-    q.add_argument("--goal", default=None,
+    subparser = sub.add_parser("play")
+    subparser.add_argument("--strategy", default="recommended")
+    subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster "
                         "(the transistor and every alternative); default is the "
                         "tree's own default. Omit when resuming a --session: "
                         "the save says which goal it is.")
-    q.add_argument("--seed", type=int, default=1)
-    q.add_argument("--horizon", type=int, default=500)
-    q.add_argument("--civ", default=None,
+    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--horizon", type=int, default=500)
+    subparser.add_argument("--civ", default=None,
                    help="which civilisation. Omit when resuming a --session: the "
                         "save says which game it is.")
-    q.add_argument("--kit", default="poor_scholar",
+    subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
-    q.add_argument("--fog", action="store_true")
-    q.add_argument("--mortal", action="store_true")
-    q.add_argument("--deterministic", action="store_true",
+    subparser.add_argument("--fog", action="store_true")
+    subparser.add_argument("--mortal", action="store_true")
+    subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
                         "returns 1.0 (DetRNG - same class 'run'/'compare' --deterministic "
                         "and path_search.py's own search trials use): project failure, "
@@ -3245,32 +3470,32 @@ def main():
                         "always fails, so in practice this alone is a fully dice-free "
                         "sitting. A developer/diagnostic tool, not something an "
                         "ordinary playthrough needs.")
-    q.add_argument("--session", default=None,
+    subparser.add_argument("--session", default=None,
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can stop and come back later")
-    q.add_argument("--manual", action="store_true",
+    subparser.add_argument("--manual", action="store_true",
                    help="accepted and ignored: play is always manual now. Nothing "
                         "starts unless you start it. The old advisory mode, where "
                         "the optimizer kept starting things regardless of what you "
                         "typed, is gone; use 'run --trace' to watch it work.")
-    q = sub.add_parser("agent", help="JSON protocol so a script or an AI agent can play "
+    subparser = sub.add_parser("agent", help="JSON protocol so a script or an AI agent can play "
                                      "and choose its own research path. See the module "
                                      "docstring for the command table.")
-    q.add_argument("--strategy", default="recommended",
+    subparser.add_argument("--strategy", default="recommended",
                    help="only used to seed the display order in 'available'; nothing "
                         "is auto-started, this command always runs manual")
-    q.add_argument("--goal", default=None,
+    subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster; "
                         "default is the tree's own default. Omit when resuming a "
                         "--session: the save says which goal it is.")
-    q.add_argument("--seed", type=int, default=1)
-    q.add_argument("--horizon", type=int, default=500)
-    q.add_argument("--civ", default=None,
+    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--horizon", type=int, default=500)
+    subparser.add_argument("--civ", default=None,
                    help="which civilisation. Omit when resuming a --session: the "
                         "save says which game it is.")
-    q.add_argument("--kit", default="poor_scholar",
+    subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
-    q.add_argument("--no-events", action="store_true",
+    subparser.add_argument("--no-events", action="store_true",
                    help="turn off weather/plague/political hazard rolls, for a "
                         "playthrough with fewer surprises. This does NOT make the "
                         "session noise-free: project-failure risk (projects.py "
@@ -3279,13 +3504,13 @@ def main():
                         "either way. A --session is reproducible run-to-run because "
                         "it replays the same seed, not because this flag removed "
                         "the randomness - it only removed the hazard rolls.")
-    q.add_argument("--fog", action="store_true",
+    subparser.add_argument("--fog", action="store_true",
                    help="fog of war: you see what you have built and what you could "
                         "begin next, and nothing about where any of it leads")
-    q.add_argument("--mortal", action="store_true",
+    subparser.add_argument("--mortal", action="store_true",
                    help="turn the founder's mortality back on (default: immortal, "
                         "same meaning as on 'run'/'compare'/'play')")
-    q.add_argument("--deterministic", action="store_true",
+    subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
                         "returns 1.0 (DetRNG - same class 'run'/'compare'/'play' "
                         "--deterministic and path_search.py's own search trials use): "
@@ -3295,27 +3520,27 @@ def main():
                         "--no-events ALONE DOES NOT DO THIS - see that flag's own help "
                         "just above. Combine the two for the same fully dice-free "
                         "session path_search.py's own trials run.")
-    q.add_argument("--session", default=None,
+    subparser.add_argument("--session", default=None,
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can play across separate invocations "
                         "without holding a process open")
-    q.add_argument("--script", default=None,
+    subparser.add_argument("--script", default=None,
                    help="path to a JSON file holding a list of command objects, "
                         "played in order instead of reading stdin")
-    q.add_argument("--pretty", action="store_true",
+    subparser.add_argument("--pretty", action="store_true",
                    help="alongside the ordinary JSON line on stdout - unchanged, "
                         "still exactly one object per line - print a human-readable "
                         "rendering of each reply to stderr. Never changes stdout; "
                         "a script reading only stdout sees no difference at all.")
-    a = p.parse_args()
-    if not a.cmd:
-        a.cmd = "menu"
+    args = parser.parse_args()
+    if not args.cmd:
+        args.cmd = "menu"
     return {"validate": cmd_validate, "path": cmd_path, "costs": cmd_costs,
             "why": cmd_why, "sweep": cmd_sweep, "civs": cmd_civs, "menu": cmd_menu,
             "goals": cmd_goals,
             "run": cmd_run, "compare": cmd_compare, "play": cmd_play, "agent": cmd_agent,
             "sensitivity": cmd_sensitivity, "plan": cmd_plan,
-            "search": cmd_search}[a.cmd](a)
+            "search": cmd_search}[args.cmd](args)
 
 
 if __name__ == "__main__":

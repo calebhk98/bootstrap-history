@@ -1,559 +1,561 @@
 {
- "_note_cost_multipliers": "Wool is the English economy and the whole textile chain is cheaper here than anywhere. Chartered towns, guilds and a money economy make commerce easier than in Rome. Against that: a much smaller population and a king who can attaint you.",
- "_note_debt_bondage": "Distraint and the debtors' gaol, not bondage; the Statute of Merchants 1285 imprisons the debtor until he pays, which is a different failure and is handled as arrears.",
- "base_reach": 2,
- "blurb": "Watermills and windmills everywhere, a real legal system, chartered towns, universities, the horse collar, the crank, the mechanical clock arriving, and about to be hit by the worst demographic catastrophe in European history.",
- "bondage_years": 0,
- "cost_multipliers": {
-  "agriculture": 0.85,
-  "animals": 0.85,
-  "buildings": 0.9,
-  "commerce": 0.85,
-  "fibres": 0.75,
-  "finance": 0.9,
-  "finishing": 0.8,
-  "structures": 0.9,
-  "textiles": 0.7
- },
- "currency": "sterling penny",
- "debt_bondage": false,
- "fire_quarter": "thatched lanes behind the market",
- "handicap_remedies": {
-  "_doc": "No handicaps above 1.0 to remedy."
- },
- "hazards": [
-  {
-   "name": "Great Famine",
-   "staff_loss": 0.12,
-   "years": [
-    1315,
-    1317
-   ]
+  "_note_cost_multipliers": "Wool is the English economy and the whole textile chain is cheaper here than anywhere. Chartered towns, guilds and a money economy make commerce easier than in Rome. Against that: a much smaller population and a king who can attaint you.",
+  "_note_debt_bondage": "Distraint and the debtors' gaol, not bondage; the Statute of Merchants 1285 imprisons the debtor until he pays, which is a different failure and is handled as arrears.",
+  "base_reach": 2,
+  "blurb": "Watermills and windmills everywhere, a real legal system, chartered towns, universities, the horse collar, the crank, the mechanical clock arriving, and about to be hit by the worst demographic catastrophe in European history.",
+  "bondage_years": 0,
+  "cost_multipliers": {
+    "agriculture": 0.85,
+    "animals": 0.85,
+    "buildings": 0.9,
+    "commerce": 0.85,
+    "fibres": 0.75,
+    "finance": 0.9,
+    "finishing": 0.8,
+    "structures": 0.9,
+    "textiles": 0.7
   },
-  {
-   "name": "Black Death",
-   "note": "and recurrent thereafter",
-   "staff_loss": 0.45,
-   "years": [
-    1348,
-    1350
-   ]
+  "currency": "sterling penny",
+  "debt_bondage": false,
+  "fire_quarter": "thatched lanes behind the market",
+  "handicap_remedies": {
+    "_doc": "No handicaps above 1.0 to remedy."
   },
-  {
-   "name": "Hundred Years War",
-   "note": "A century of war funded by taxation Parliament must consent to, which is why Parliament's power grows through this period rather than the Crown's alone, and funded also by letters patent: Edward III's 1331 grant inviting the Flemish clothworker John Kempe to teach English weavers his technique is the template for a whole class of war-driven invitations to bring a foreign process home and be rewarded with a monopoly on it. That makes the wartime Crown a more eager importer of new technique than peacetime custom would be, and makes royal favour, increasingly dispensed through war service and patent grants rather than land alone, matter more than it did -- both applied gradually below as shifts in what this society values, well short of a value that would make this an easy country to work in; the guilds who litigate against a fulling mill are not softened by any of it.",
-   "output_factor": 0.85,
-   "values": {
-    "patronage_weight": 0.05,
-    "w_novelty": 0.1
-   },
-   "years": [
-    1337,
-    1453
-   ]
+  "hazards": [
+    {
+      "name": "Great Famine",
+      "staff_loss": 0.12,
+      "years": [
+        1315,
+        1317
+      ]
+    },
+    {
+      "name": "Black Death",
+      "note": "and recurrent thereafter",
+      "staff_loss": 0.45,
+      "years": [
+        1348,
+        1350
+      ]
+    },
+    {
+      "name": "Hundred Years War",
+      "note": "A century of war funded by taxation Parliament must consent to, which is why Parliament's power grows through this period rather than the Crown's alone, and funded also by letters patent: Edward III's 1331 grant inviting the Flemish clothworker John Kempe to teach English weavers his technique is the template for a whole class of war-driven invitations to bring a foreign process home and be rewarded with a monopoly on it. That makes the wartime Crown a more eager importer of new technique than peacetime custom would be, and makes royal favour, increasingly dispensed through war service and patent grants rather than land alone, matter more than it did -- both applied gradually below as shifts in what this society values, well short of a value that would make this an easy country to work in; the guilds who litigate against a fulling mill are not softened by any of it.",
+      "output_factor": 0.85,
+      "values": {
+        "patronage_weight": 0.05,
+        "w_novelty": 0.1
+      },
+      "years": [
+        1337,
+        1453
+      ]
+    },
+    {
+      "name": "Wars of the Roses",
+      "note": "From the first battle of St Albans on 22 May 1455 to Stoke Field on 16 June 1487, with Towton on 29 March 1461 the bloodiest day ever fought on English soil and Bosworth on 22 August 1485 the decisive one. It is deliberately modelled light, and that is the historically honest choice: the campaigns were short, the armies were small, the fighting was between magnate affinities rather than across the countryside, and the wool exports, the courts, the harvest and the fairs carried on through nearly all of it. What it does change is whose protection is worth having. An attainder passed on the losing side took everything a family owned, the Yorkist and Tudor settlements each redistributed patronage wholesale, and standing conspicuously near a great man became the main way to lose what you had built. The danger to a workshop here is being on the wrong lord's list, not being burnt.",
+      "output_factor": 0.92,
+      "sack_chance": 0.005,
+      "values": {
+        "patronage_weight": 0.08,
+        "w_eminence_danger": 0.1
+      },
+      "years": [
+        1455,
+        1487
+      ]
+    },
+    {
+      "name": "Break with Rome and the dissolution of the monasteries",
+      "note": "The Act of Supremacy of 1534, the suppression of the lesser houses in 1536 and of the greater houses in 1539. Somewhere between a quarter and a third of the land of England changed hands through the Court of Augmentations inside a decade, most of it sold on to gentry buyers to pay for the French war: the largest transfer of English property before the twentieth century, and the making of the improving landlord who will matter enormously in the eighteenth century entry below. The other half is a real loss. The monastic libraries were destroyed - John Leland went round the houses ahead of the commissioners trying to record what was in them and largely failed, and the university library at Oxford was stripped so completely that in 1556 the empty shelves themselves were sold off. Both facts are modelled: a working land market and a burnt archive.",
+      "output_factor": 0.92,
+      "values": {
+        "w_commerce": 0.1,
+        "w_religious_rigidity": 0.1
+      },
+      "years": [
+        1534,
+        1547
+      ]
+    },
+    {
+      "name": "The confessional whiplash",
+      "note": "Edwardian iconoclasm from 1547 to 1553, then Mary's restoration of Rome and the burning of some two hundred and eighty Protestants between 1555 and 1558, then the Elizabethan settlement in 1559. Under each regime the safest scholarly position was to hold no position at all and to have written nothing down that could be produced later. Short, and modelled as shifts in what this society values only: nobody's harvest failed because of it, but the risk of writing anything about the order of the world went up sharply and did not come back down until the next entry.",
+      "values": {
+        "w_magic_fear": 0.05,
+        "w_religious_rigidity": 0.12
+      },
+      "years": [
+        1547,
+        1558
+      ]
+    },
+    {
+      "name": "The Elizabethan settlement and the strangers",
+      "note": "The 1559 settlement ended the confessional swings and deliberately declined to ask hard questions about private belief. The Crown then set about importing technique on purpose. The Company of Mines Royal and the Mineral and Battery Works, both chartered in 1568, brought German miners and brass-makers to Keswick and Tintern; Dutch and Walloon refugee weavers were settled at Sandwich from 1561, Norwich from 1565 and Colchester and Canterbury after, bringing the new draperies with them; and English patents for invention begin in earnest, with Giacomo Acontio's petition of 1565 making the argument that a term of monopoly is the fair price of disclosure. This is the first stretch of English history in which being a foreign man with an unfamiliar process is an asset rather than a liability. The offsetting fact, and it is not small, is that this is also when the witch trials start: the Witchcraft Act of 1563 made it a felony, and the Home Circuit indictments peak between the 1580s and the 1640s. Novelty gets cheaper and doctrine gets lighter, and producing an effect nobody can explain gets more dangerous, all at once.",
+      "values": {
+        "w_commerce": 0.1,
+        "w_magic_fear": 0.05,
+        "w_novelty": 0.15,
+        "w_religious_rigidity": -0.1
+      },
+      "years": [
+        1559,
+        1603
+      ]
+    },
+    {
+      "name": "The dearth of the 1590s",
+      "note": "Four consecutive cold wet summers and failed harvests, 1594 to 1597. Grain prices roughly doubled; parish burial registers in the north-west, Cumberland and Westmorland in particular, show genuine famine mortality, while the south got off with high prices and hunger. The Poor Law of 1598, consolidated in 1601 and in force for two and a half centuries, is the state's answer to it. Modest here because it was regional, not national.",
+      "staff_loss": 0.08,
+      "condition": {
+        "field": "staff_loss",
+        "requires_all": [
+          "crop_rotation",
+          "ag2_silage_silo"
+        ],
+        "outcome": "avert",
+        "met_message": "The dearth of the 1590s: four cold wet summers fail the harvest across the north, but fields that do not fail together and fodder kept through a bad winter mean your household does not go hungry for it.",
+        "unmet_message": "The dearth of the 1590s: your granary is open to a bad harvest the same way everyone else's is, and four in a row is exactly that."
+      },
+      "years": [
+        1594,
+        1597
+      ]
+    },
+    {
+      "name": "Civil War and Interregnum",
+      "note": "Edgehill in 1642, Marston Moor in 1644, Naseby on 14 June 1645, the execution of Charles I on 30 January 1649, Worcester in 1651. Perhaps 85,000 died in the fighting and something like 100,000 more of the camp diseases that travelled with the armies - a share of the population comparable to the First World War's and the worst English event modelled here apart from the plagues. Towns were stormed and sacked, Bolton and Leicester and Bristol twice among them, which is why this civilization now carries a sack risk that it did not carry through the whole of the Hundred Years War: that war was fought in France, and this one was not. The offsetting fact is that the same years produced Hartlib's circle and its programme of useful knowledge, Wilkins' experimental club at Wadham, and the political conditions in which the Royal Society could be chartered eighteen months after the Restoration.",
+      "output_factor": 0.75,
+      "sack_chance": 0.035,
+      "staff_loss": 0.1,
+      "values": {
+        "patronage_weight": 0.05,
+        "w_novelty": 0.1
+      },
+      "years": [
+        1642,
+        1660
+      ]
+    },
+    {
+      "name": "The Great Plague of London",
+      "note": "The last major English outbreak of bubonic plague. The London bills of mortality record about 68,500 deaths and the true figure was probably near 100,000, a fifth to a quarter of the city, concentrated in the poor parishes outside the walls. Everyone who could afford to leave left, including the court and most of the physicians, and that is most of the effect on a workshop: the labour and the custom walk out of the city together and do not come back for a year.",
+      "staff_loss": 0.22,
+      "years": [
+        1665,
+        1666
+      ]
+    },
+    {
+      "name": "The Great Fire of London",
+      "note": "It began in Thomas Farriner's bakehouse in Pudding Lane in the small hours of 2 September 1666 and burned for four days: thirteen thousand two hundred houses, eighty-seven parish churches, the Royal Exchange, the Custom House and old St Paul's - about four fifths of the walled City. Fewer than a dozen deaths were recorded and almost every trade stock inside the walls was lost. It is modelled as a one-year sack risk rather than as a loss of staff because that is precisely what it did: it destroyed the site, the stock and the papers and left the people. The rebuilding acts of 1667 required brick and stone rather than timber, and the first fire insurance office opened in 1681, so this is a hazard that England answered.",
+      "sack_chance": 0.2,
+      "condition": {
+        "field": "sack_chance",
+        "requires_all": [
+          "civ_fireproofing"
+        ],
+        "outcome": "avert",
+        "met_message": "The Great Fire of London: Pudding Lane catches and thirteen thousand timber houses go with it, but your own premises are already the fire-resistant brick and stone the 1667 rebuilding acts will force on everyone else - the fire does not reach you.",
+        "unmet_message": "The Great Fire of London: your workshop is timber and thatch like the rest of the City, and on the night of 2 September 1666 that is exactly what burns."
+      },
+      "years": [
+        1666,
+        1666
+      ]
+    },
+    {
+      "name": "The Royal Society and the end of the witch trials",
+      "note": "The Statute of Monopolies of 1624 had already fixed the shape of English patent law - fourteen years to the true and first inventor of a new manufacture, void for everything else - and after 1660 using it becomes routine rather than exceptional. The Royal Society was chartered in 1662 and printed the Philosophical Transactions from 1665, which is the first standing public record of experiment in England and the first place where publishing a method makes you safer rather than more exposed. Newton's Principia followed in 1687. Over the same decades the witch trials collapse: the last English execution for witchcraft is usually given as Alice Molland at Exeter in 1685, and the last certain one is Temperance Lloyd and the other two Bideford women in 1682; and the Witchcraft Act of 1736 repealed the offence and replaced it with a fine for pretending to have magical powers. Being publicly and printedly curious stops being dangerous in England inside two generations. This is the largest favourable shifts in what this society values shift in this file and it is the reason the eighteenth century looks the way it does.",
+      "values": {
+        "w_commerce": 0.12,
+        "w_information": 0.15,
+        "w_magic_fear": -0.25,
+        "w_novelty": 0.12,
+        "w_religious_rigidity": -0.1
+      },
+      "years": [
+        1660,
+        1740
+      ]
+    },
+    {
+      "name": "The financial revolution",
+      "note": "The settlement of 1689 is not only fiscal: the Toleration Act of the same year let Protestant dissenters worship legally, and the Dissenting academies that followed taught mathematics, natural philosophy and bookkeeping to men the universities would not admit, which is where a good share of the next century's engineers were educated. The Test and Corporation Acts stood until 1828 and Catholics were excluded until 1829, so doctrine still costs something here - but far less than it cost in 1300. On the money: the Bank of England chartered in 1694, a funded national debt serviced by parliamentary taxation rather than by the king's word, the Great Recoinage of 1696 with Newton at the Mint, and by 1720 a securities market deep enough to produce the South Sea Bubble and the Bubble Act passed to stop the next one. Borrowing rates fall further and faster here than anywhere else in Europe, and capital that had to be inherited can now be raised. The rise in how much money can buy in a courtroom is not a joke: the eighteenth-century English state ran on place, pension, sinecure and interest, which is a genuine protection for a man with money to spend on friends and a genuine obstacle to one without.",
+      "values": {
+        "bribability": 0.08,
+        "w_commerce": 0.12,
+        "w_religious_rigidity": -0.15
+      },
+      "years": [
+        1688,
+        1720
+      ]
+    },
+    {
+      "name": "The great frost and the dearth of 1740",
+      "note": "The winter of 1739-40 is the coldest in the Central England Temperature series, which begins in 1659. The 1740 harvest failed across northern Europe, and 1741 was the worst peacetime mortality year of the English eighteenth century. In Ireland the same two years are the bliain an air, the year of the slaughter, in which something like a fifth to a quarter of the population died - proportionally worse than the famine of the 1840s, and much less remembered.",
+      "staff_loss": 0.07,
+      "condition": {
+        "field": "staff_loss",
+        "requires_all": [
+          "crop_rotation",
+          "ag2_silage_silo"
+        ],
+        "outcome": "avert",
+        "met_message": "The great frost and the dearth of 1740: the coldest winter in the record fails the harvest from Ireland to the Baltic, but your fields rotate and your fodder is stored against exactly this, so the dearth does not reach your table.",
+        "unmet_message": "The great frost and the dearth of 1740: you still live one harvest at a time with nothing held against a bad year, and 1740 is the worst one in a century."
+      },
+      "years": [
+        1740,
+        1741
+      ]
+    },
+    {
+      "name": "Enclosure and the agricultural revolution",
+      "note": "More than five thousand private enclosure acts between 1700 and 1830, enclosing something like six and a half million acres of open field and common; Tull's seed drill of about 1701; the Norfolk four-course rotation with turnips and clover; Bakewell's breeding at Dishley from the 1760s. English agricultural output roughly doubled while the share of the workforce on the land fell, which is what releases hands for anything else. The reason this belongs in a technologist's file is Robert Allen's point about why the machines were built here: English wages were high and English coal was cheap, so a device that replaced a man paid for itself in Lancashire when the identical device did not pay in France or in Bengal. how a device that replaces a man is received therefore moves from strongly negative to about neutral across the century - neutral and not positive, because the men whose work is being replaced fight back and keep winning locally: John Kay was driven out of Bury in 1753, the Spitalfields weavers broke engine looms, and the Luddites are only a decade past this horizon.",
+      "values": {
+        "w_commerce": 0.08,
+        "w_labour_saving": 0.25
+      },
+      "years": [
+        1700,
+        1800
+      ]
+    },
+    {
+      "name": "The Napoleonic Wars and the Continental System",
+      "note": "Britain is at war with France for all but one year between 1793 and 1815. Napoleon's Continental System, decreed from Berlin in 1806, tries to close every port in Europe to British trade; Britain's own Orders in Council answer in kind. Trade did not stop - smuggling and re-export through neutral flags were both large - but it ran at a real cost and a real risk of seizure the whole time, and the war itself absorbed a workforce and a tax base that would otherwise have gone to anything else. Unlike the Hundred Years War this is not fought on English soil, so it costs trade and money rather than a sack.",
+      "output_factor": 0.87,
+      "years": [
+        1803,
+        1815
+      ]
+    },
+    {
+      "name": "The Great Exhibition and Victorian confidence in the machine",
+      "note": "Paxton's Crystal Palace opened in Hyde Park on 1 May 1851 and six million people, a third of the population, went through it over five months, to look at machinery as the main attraction rather than as a threat to anyone's trade. It is the clearest single marker of the thing Allen's agricultural-revolution entry above says started only reluctantly: by 1851 a device that replaces a man's work is something Britain holds a celebration of. No damage fields: this is the one unambiguously good year in the file between the Black Death and the twentieth century.",
+      "values": {
+        "w_novelty": 0.08,
+        "w_labour_saving": 0.08
+      },
+      "years": [
+        1851,
+        1851
+      ]
+    },
+    {
+      "name": "The First World War",
+      "note": "Roughly 880,000 British dead out of a population of about 46 million, concentrated almost entirely among working-age men, plus four years in which a large share of everything the country could make went to the trenches rather than to trade. The war is also why income tax, conscription and rationing all become things a British state can simply do, which the financial-revolution and Royal Society entries above would not have predicted from 1720.",
+      "output_factor": 0.78,
+      "staff_loss": 0.025,
+      "years": [
+        1914,
+        1918
+      ]
+    },
+    {
+      "name": "The Second World War",
+      "note": "About 450,000 British dead, smaller as a share of the population than the First War, but the material disruption is larger: the Blitz, convoy losses in the Atlantic, and an economy converted almost wholly to war production under rationing that outlasted the war itself into the early 1950s. Britain emerges victorious and essentially bankrupt, which is the real backdrop to everything that follows this horizon.",
+      "output_factor": 0.72,
+      "staff_loss": 0.015,
+      "years": [
+        1939,
+        1945
+      ]
+    }
+  ],
+  "home_regions": [
+    "britannia",
+    "gaul_germania"
+  ],
+  "id": "england_1300",
+  "institutions": {
+    "bank": "Italian merchant banks operating",
+    "charter": "royal, purchasable",
+    "corporation": "borough and guild corporations, genuinely perpetual",
+    "guild": "strong, and protective of monopoly",
+    "note": "A PERPETUAL CORPORATION EXISTS HERE and it is the single most important institutional advantage over Rome: an enterprise can outlive its founder without a testamentary trick.",
+    "partnership": true,
+    "patent": "letters patent exist by 1331",
+    "testament": true
   },
-  {
-   "name": "Wars of the Roses",
-   "note": "From the first battle of St Albans on 22 May 1455 to Stoke Field on 16 June 1487, with Towton on 29 March 1461 the bloodiest day ever fought on English soil and Bosworth on 22 August 1485 the decisive one. It is deliberately modelled light, and that is the historically honest choice: the campaigns were short, the armies were small, the fighting was between magnate affinities rather than across the countryside, and the wool exports, the courts, the harvest and the fairs carried on through nearly all of it. What it does change is whose protection is worth having. An attainder passed on the losing side took everything a family owned, the Yorkist and Tudor settlements each redistributed patronage wholesale, and standing conspicuously near a great man became the main way to lose what you had built. The danger to a workshop here is being on the wrong lord's list, not being burnt.",
-   "output_factor": 0.92,
-   "sack_chance": 0.005,
-   "values": {
-    "patronage_weight": 0.08,
-    "w_eminence_danger": 0.1
-   },
-   "years": [
-    1455,
-    1487
-   ]
+  "literacy_elite": 0.5,
+  "literacy_general": 0.06,
+  "name": "England under Edward I",
+  "notes": [
+    "You arrive 48 years before the Black Death kills something like 45% of the population.",
+    "The perpetual corporation is worth more to a multi-generation programme than any machine in the tree.",
+    "Guilds will litigate against your fulling mill. They did, repeatedly, and sometimes won."
+  ],
+  "opening": {
+    "arrival": "You arrive in the reign of Edward I, in a kingdom of four and a half million with a real legal system, chartered towns that can be bargained with, two universities, and a parliament that has just begun to insist on being asked about taxes.",
+    "what_is_coming": "Fifteen years to the Great Famine. Forty-eight to the Black Death, which will kill between a third and a half of everyone you will ever meet, and then come back. Whatever you build must survive that or it must be built after it.",
+    "what_is_missing": "Cheap iron, and the temperature to make it. Everything downstream of steel waits on a furnace nobody has yet built.",
+    "what_you_can_see": "Watermills and windmills on every fall of water and every rise of ground. The horse collar, the crank, the spinning wheel, the blast-furnace arriving, the mechanical clock about to. Double-entry bookkeeping in the Italian houses. Paper, spectacles, the compass, gunpowder known if not yet useful. This is the most mechanically advanced society in this game at its start.",
+    "what_this_models": "You are one household, not the English crown. Four and a half million people live in this kingdom and roughly one in eight in a chartered town - about 540,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the kingdom's true numbers."
   },
-  {
-   "name": "Break with Rome and the dissolution of the monasteries",
-   "note": "The Act of Supremacy of 1534, the suppression of the lesser houses in 1536 and of the greater houses in 1539. Somewhere between a quarter and a third of the land of England changed hands through the Court of Augmentations inside a decade, most of it sold on to gentry buyers to pay for the French war: the largest transfer of English property before the twentieth century, and the making of the improving landlord who will matter enormously in the eighteenth century entry below. The other half is a real loss. The monastic libraries were destroyed - John Leland went round the houses ahead of the commissioners trying to record what was in them and largely failed, and the university library at Oxford was stripped so completely that in 1556 the empty shelves themselves were sold off. Both facts are modelled: a working land market and a burnt archive.",
-   "output_factor": 0.92,
-   "values": {
-    "w_commerce": 0.1,
-    "w_religious_rigidity": 0.1
-   },
-   "years": [
-    1534,
-    1547
-   ]
+  "population": 4500000,
+  "price_index": 1.1,
+  "starting_techs": [
+    "ag2_composting",
+    "ag2_liming",
+    "ag2_malting",
+    "ag2_marling",
+    "ag2_oil_pressing",
+    "ag2_potash",
+    "ag2_refrigeration_ice",
+    "cap_heat_0700",
+    "cap_power_human",
+    "cap_power_muscle",
+    "cap_power_water",
+    "cap_tol_1mm",
+    "civ_glass_windows",
+    "civ_iron_wrought",
+    "civ_marble_facing",
+    "clock_mechanical_escapement",
+    "cn_gypsum_plaster",
+    "cn_pile_driving",
+    "cn_post_lintel",
+    "cn_stone_polish",
+    "fin_apprenticeship",
+    "fin_arbitrage",
+    "fin_auction",
+    "fin_bankruptcy",
+    "fin_bimetallism",
+    "fin_census",
+    "fin_coined_money",
+    "fin_contract_law",
+    "fin_employment_contract",
+    "fin_ferry",
+    "fin_gambling_house",
+    "fin_government",
+    "fin_hotel",
+    "fin_inn",
+    "fin_maritime_loan",
+    "fin_market",
+    "fin_monopoly",
+    "fin_mortgage",
+    "fin_pawnshop",
+    "fin_plantation",
+    "fin_seigniorage",
+    "fin_tariff",
+    "fin_tax_farming",
+    "fin_testament",
+    "fin_trading_post",
+    "fin_usury_law",
+    "fin_wage",
+    "fud_fish_curing_and_smoking",
+    "fud_hay_making_storage",
+    "hom_board_games",
+    "hom_candle_beeswax",
+    "hom_candle_tallow",
+    "hom_flush_latrine_simple",
+    "hom_furniture_wooden",
+    "hom_locks_keys",
+    "hom_mirror_bronze_polished",
+    "hom_musical_instruments",
+    "hom_oil_lamp_simple",
+    "hom_perfume_enfleurage",
+    "hom_toys_dolls",
+    "hom_umbrella",
+    "horse_collar",
+    "lnd_axle_pivot_front",
+    "lnd_bridge",
+    "lnd_four_wheel_cart",
+    "lnd_harness_throat_girth",
+    "lnd_horse_saddle_basic",
+    "lnd_litter",
+    "lnd_milestone",
+    "lnd_mule_transport",
+    "lnd_ox_transport",
+    "lnd_paved_road_network",
+    "lnd_two_wheel_cart",
+    "lnd_tyre_iron",
+    "lnd_wheel_spoked",
+    "mat_alum",
+    "mat_asbestos",
+    "mat_beeswax",
+    "mat_bitumen",
+    "mat_brass",
+    "mat_bronze",
+    "mat_calamine",
+    "mat_carbon_black",
+    "mat_charcoal",
+    "mat_emery",
+    "mat_galena",
+    "mat_glass_soda",
+    "mat_gold",
+    "mat_gypsum",
+    "mat_lead",
+    "mat_leather",
+    "mat_lime",
+    "mat_linen",
+    "mat_mercury",
+    "mat_obsidian_blade",
+    "mat_olive_oil",
+    "mat_paper",
+    "mat_papyrus",
+    "mat_parchment",
+    "mat_pyrolusite",
+    "mat_salt",
+    "mat_silk",
+    "mat_silver",
+    "mat_sulfur",
+    "mat_tallow",
+    "mat_tin",
+    "mat_vitriols",
+    "mat_wrought_iron",
+    "med_amputation",
+    "med_bone_setting",
+    "med_cataract_couching",
+    "med_herbal_pharmacy",
+    "med_obstetric_practice",
+    "med_opium_mandrake",
+    "med_surgical_kit_good",
+    "med_trepanation",
+    "med_wound_suturing",
+    "met_bloomery_bog_iron",
+    "met_ore_crushing_sorting",
+    "mfg_adhesive_bond",
+    "mfg_cold_riveting",
+    "mfg_enamelling",
+    "mfg_flux",
+    "mfg_hot_riveting",
+    "mfg_painting",
+    "mfg_soft_solder",
+    "mt2_amalgamation",
+    "mt2_earthenware",
+    "mt2_timbering_safety",
+    "opt_burning_glass",
+    "opt_dioptra",
+    "opt_geared_mechanisms",
+    "opt_metal_mirror_polished",
+    "opt_steelyards",
+    "opt_sundial",
+    "opt_water_clock",
+    "opt_water_globe_magnifier",
+    "prn_carbon_ink",
+    "prn_codex_bound",
+    "prn_library_archive",
+    "prn_parchment_sheets",
+    "prn_scribal_copying",
+    "prn_sculpture",
+    "prn_seals_stamps",
+    "prn_theatre_pantomime",
+    "prn_wax_tablets",
+    "pwr_animal_treadmill",
+    "pwr_coal_seam",
+    "pwr_force_pump",
+    "pwr_petroleum_seeps",
+    "pwr_screw_press_power",
+    "pwr_ship_sail",
+    "sc2_institution_textbook",
+    "sea_anchor",
+    "sea_coastal_pilotage",
+    "sea_lead_sheathing",
+    "sea_lodestone",
+    "sea_merchant_ships_large",
+    "sea_sounding_lines",
+    "sea_square_sail",
+    "sea_steering_oars",
+    "sea_sternpost_rudder",
+    "tex_cotton_trade",
+    "tex_drop_spindle",
+    "tex_dye_madder",
+    "tex_dye_woad",
+    "tex_felting",
+    "tex_indigo",
+    "tex_mordanting",
+    "tex_sailcloth",
+    "tex_silk_trade",
+    "tex_two_beam_loom",
+    "tex_vegetable_tanning",
+    "tex_warp_weighted_loom",
+    "tex_wool",
+    "tr_block_tackle",
+    "tr_reefing",
+    "tr_square_rig",
+    "tx2_alum_tanning",
+    "tx2_asbestos_cloth",
+    "tx2_beam",
+    "tx2_bleaching_sun",
+    "tx2_bottle",
+    "tx2_comb",
+    "tx2_currying",
+    "tx2_doll",
+    "tx2_dyeing_fibre",
+    "tx2_dyeing_piece",
+    "tx2_dyeing_yarn",
+    "tx2_eye_pointed_needle",
+    "tx2_flax_fibre",
+    "tx2_fulling",
+    "tx2_heddle",
+    "tx2_hemp_fibre",
+    "tx2_needle",
+    "tx2_pin",
+    "tx2_retting",
+    "tx2_rope_lay",
+    "tx2_scouring",
+    "tx2_selvedge",
+    "tx2_shed",
+    "tx2_warp_sizing",
+    "tx2_wool_fibre",
+    "water_power_scale"
+  ],
+  "state_capacity": 0.6,
+  "state_pressure": {
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
+    "requisition_name": "purveyance",
+    "requisition_note": "Purveyance let the Crown take goods and transport for the royal household at a fixed, below-market price, enforced by royal officers with the power of distraint; it was a standing grievance from Magna Carta's clause 28 onward, and a household with a visible surplus was exactly who the purveyor called on first.",
+    "requisition_base_share": 0.13,
+    "office_name": "the shrievalty",
+    "office_note": "Sheriffs and other unpaid county offices were pressed onto men of the right income, who then answered with their own estate for any shortfall in what the office owed the Exchequer - a burden substantial enough that wealthy men regularly paid fines specifically to be excused it.",
+    "office_base_share": 0.05,
+    "military_name": "the Crown's monopoly patents on arms",
+    "military_note": "Letters patent (in force here by 1331) let the Crown grant, and just as easily claim, exclusive rights over a trade it judged militarily useful; a founder casting a working gun attracts exactly that kind of royal interest.",
+    "confiscation_name": "attainder",
+    "confiscation_note": "Attainder stripped a condemned man of his property outright with no separate trial of the facts required after conviction - the Crown's sharpest tool against a subject who has become too large to simply tax."
   },
-  {
-   "name": "The confessional whiplash",
-   "note": "Edwardian iconoclasm from 1547 to 1553, then Mary's restoration of Rome and the burning of some two hundred and eighty Protestants between 1555 and 1558, then the Elizabethan settlement in 1559. Under each regime the safest scholarly position was to hold no position at all and to have written nothing down that could be produced later. Short, and modelled as shifts in what this society values only: nobody's harvest failed because of it, but the risk of writing anything about the order of the world went up sharply and did not come back down until the next entry.",
-   "values": {
-    "w_magic_fear": 0.05,
-    "w_religious_rigidity": 0.12
-   },
-   "years": [
-    1547,
-    1558
-   ]
+  "urban_fraction": 0.12,
+  "values": {
+    "_note": "w_religious_rigidity 0.8 and w_magic_fear 0.7: this is the environment that produced heresy trials and, later, witch trials. Far more dangerous for a natural philosopher than Trajanic Rome, which had no doctrine to offend. Guilds resist labour-saving machinery violently and have legal standing to do it.",
+    "_note_eminence": "A king who can attaint you, but also chartered towns, guilds and a church with its own courts, so power is more divided than in Rome.",
+    "adaptation_rate": 0.09,
+    "bribability": 0.65,
+    "patronage_weight": 0.7,
+    "w_commerce": 0.6,
+    "w_eminence_danger": 0.55,
+    "w_information": -0.4,
+    "w_labour_saving": -0.4,
+    "w_magic_fear": 0.7,
+    "w_military": 0.8,
+    "w_novelty": -0.3,
+    "w_religious_rigidity": 0.8
   },
-  {
-   "name": "The Elizabethan settlement and the strangers",
-   "note": "The 1559 settlement ended the confessional swings and deliberately declined to ask hard questions about private belief. The Crown then set about importing technique on purpose. The Company of Mines Royal and the Mineral and Battery Works, both chartered in 1568, brought German miners and brass-makers to Keswick and Tintern; Dutch and Walloon refugee weavers were settled at Sandwich from 1561, Norwich from 1565 and Colchester and Canterbury after, bringing the new draperies with them; and English patents for invention begin in earnest, with Giacomo Acontio's petition of 1565 making the argument that a term of monopoly is the fair price of disclosure. This is the first stretch of English history in which being a foreign man with an unfamiliar process is an asset rather than a liability. The offsetting fact, and it is not small, is that this is also when the witch trials start: the Witchcraft Act of 1563 made it a felony, and the Home Circuit indictments peak between the 1580s and the 1640s. Novelty gets cheaper and doctrine gets lighter, and producing an effect nobody can explain gets more dangerous, all at once.",
-   "values": {
-    "w_commerce": 0.1,
-    "w_magic_fear": 0.05,
-    "w_novelty": 0.15,
-    "w_religious_rigidity": -0.1
-   },
-   "years": [
-    1559,
-    1603
-   ]
-  },
-  {
-   "name": "The dearth of the 1590s",
-   "note": "Four consecutive cold wet summers and failed harvests, 1594 to 1597. Grain prices roughly doubled; parish burial registers in the north-west, Cumberland and Westmorland in particular, show genuine famine mortality, while the south got off with high prices and hunger. The Poor Law of 1598, consolidated in 1601 and in force for two and a half centuries, is the state's answer to it. Modest here because it was regional, not national.",
-   "staff_loss": 0.08,
-   "condition": {
-    "field": "staff_loss",
-    "requires_all": [
-     "crop_rotation",
-     "ag2_silage_silo"
-    ],
-    "outcome": "avert",
-    "met_message": "The dearth of the 1590s: four cold wet summers fail the harvest across the north, but fields that do not fail together and fodder kept through a bad winter mean your household does not go hungry for it.",
-    "unmet_message": "The dearth of the 1590s: your granary is open to a bad harvest the same way everyone else's is, and four in a row is exactly that."
-   },
-   "years": [
-    1594,
-    1597
-   ]
-  },
-  {
-   "name": "Civil War and Interregnum",
-   "note": "Edgehill in 1642, Marston Moor in 1644, Naseby on 14 June 1645, the execution of Charles I on 30 January 1649, Worcester in 1651. Perhaps 85,000 died in the fighting and something like 100,000 more of the camp diseases that travelled with the armies - a share of the population comparable to the First World War's and the worst English event modelled here apart from the plagues. Towns were stormed and sacked, Bolton and Leicester and Bristol twice among them, which is why this civilization now carries a sack risk that it did not carry through the whole of the Hundred Years War: that war was fought in France, and this one was not. The offsetting fact is that the same years produced Hartlib's circle and its programme of useful knowledge, Wilkins' experimental club at Wadham, and the political conditions in which the Royal Society could be chartered eighteen months after the Restoration.",
-   "output_factor": 0.75,
-   "sack_chance": 0.035,
-   "staff_loss": 0.1,
-   "values": {
-    "patronage_weight": 0.05,
-    "w_novelty": 0.1
-   },
-   "years": [
-    1642,
-    1660
-   ]
-  },
-  {
-   "name": "The Great Plague of London",
-   "note": "The last major English outbreak of bubonic plague. The London bills of mortality record about 68,500 deaths and the true figure was probably near 100,000, a fifth to a quarter of the city, concentrated in the poor parishes outside the walls. Everyone who could afford to leave left, including the court and most of the physicians, and that is most of the effect on a workshop: the labour and the custom walk out of the city together and do not come back for a year.",
-   "staff_loss": 0.22,
-   "years": [
-    1665,
-    1666
-   ]
-  },
-  {
-   "name": "The Great Fire of London",
-   "note": "It began in Thomas Farriner's bakehouse in Pudding Lane in the small hours of 2 September 1666 and burned for four days: thirteen thousand two hundred houses, eighty-seven parish churches, the Royal Exchange, the Custom House and old St Paul's - about four fifths of the walled City. Fewer than a dozen deaths were recorded and almost every trade stock inside the walls was lost. It is modelled as a one-year sack risk rather than as a loss of staff because that is precisely what it did: it destroyed the site, the stock and the papers and left the people. The rebuilding acts of 1667 required brick and stone rather than timber, and the first fire insurance office opened in 1681, so this is a hazard that England answered.",
-   "sack_chance": 0.2,
-   "condition": {
-    "field": "sack_chance",
-    "requires_all": [
-     "civ_fireproofing"
-    ],
-    "outcome": "avert",
-    "met_message": "The Great Fire of London: Pudding Lane catches and thirteen thousand timber houses go with it, but your own premises are already the fire-resistant brick and stone the 1667 rebuilding acts will force on everyone else - the fire does not reach you.",
-    "unmet_message": "The Great Fire of London: your workshop is timber and thatch like the rest of the City, and on the night of 2 September 1666 that is exactly what burns."
-   },
-   "years": [
-    1666,
-    1666
-   ]
-  },
-  {
-   "name": "The Royal Society and the end of the witch trials",
-   "note": "The Statute of Monopolies of 1624 had already fixed the shape of English patent law - fourteen years to the true and first inventor of a new manufacture, void for everything else - and after 1660 using it becomes routine rather than exceptional. The Royal Society was chartered in 1662 and printed the Philosophical Transactions from 1665, which is the first standing public record of experiment in England and the first place where publishing a method makes you safer rather than more exposed. Newton's Principia followed in 1687. Over the same decades the witch trials collapse: the last English execution for witchcraft is usually given as Alice Molland at Exeter in 1685, and the last certain one is Temperance Lloyd and the other two Bideford women in 1682; and the Witchcraft Act of 1736 repealed the offence and replaced it with a fine for pretending to have magical powers. Being publicly and printedly curious stops being dangerous in England inside two generations. This is the largest favourable shifts in what this society values shift in this file and it is the reason the eighteenth century looks the way it does.",
-   "values": {
-    "w_commerce": 0.12,
-    "w_information": 0.15,
-    "w_magic_fear": -0.25,
-    "w_novelty": 0.12,
-    "w_religious_rigidity": -0.1
-   },
-   "years": [
-    1660,
-    1740
-   ]
-  },
-  {
-   "name": "The financial revolution",
-   "note": "The settlement of 1689 is not only fiscal: the Toleration Act of the same year let Protestant dissenters worship legally, and the Dissenting academies that followed taught mathematics, natural philosophy and bookkeeping to men the universities would not admit, which is where a good share of the next century's engineers were educated. The Test and Corporation Acts stood until 1828 and Catholics were excluded until 1829, so doctrine still costs something here - but far less than it cost in 1300. On the money: the Bank of England chartered in 1694, a funded national debt serviced by parliamentary taxation rather than by the king's word, the Great Recoinage of 1696 with Newton at the Mint, and by 1720 a securities market deep enough to produce the South Sea Bubble and the Bubble Act passed to stop the next one. Borrowing rates fall further and faster here than anywhere else in Europe, and capital that had to be inherited can now be raised. The rise in how much money can buy in a courtroom is not a joke: the eighteenth-century English state ran on place, pension, sinecure and interest, which is a genuine protection for a man with money to spend on friends and a genuine obstacle to one without.",
-   "values": {
-    "bribability": 0.08,
-    "w_commerce": 0.12,
-    "w_religious_rigidity": -0.15
-   },
-   "years": [
-    1688,
-    1720
-   ]
-  },
-  {
-   "name": "The great frost and the dearth of 1740",
-   "note": "The winter of 1739-40 is the coldest in the Central England Temperature series, which begins in 1659. The 1740 harvest failed across northern Europe, and 1741 was the worst peacetime mortality year of the English eighteenth century. In Ireland the same two years are the bliain an air, the year of the slaughter, in which something like a fifth to a quarter of the population died - proportionally worse than the famine of the 1840s, and much less remembered.",
-   "staff_loss": 0.07,
-   "condition": {
-    "field": "staff_loss",
-    "requires_all": [
-     "crop_rotation",
-     "ag2_silage_silo"
-    ],
-    "outcome": "avert",
-    "met_message": "The great frost and the dearth of 1740: the coldest winter in the record fails the harvest from Ireland to the Baltic, but your fields rotate and your fodder is stored against exactly this, so the dearth does not reach your table.",
-    "unmet_message": "The great frost and the dearth of 1740: you still live one harvest at a time with nothing held against a bad year, and 1740 is the worst one in a century."
-   },
-   "years": [
-    1740,
-    1741
-   ]
-  },
-  {
-   "name": "Enclosure and the agricultural revolution",
-   "note": "More than five thousand private enclosure acts between 1700 and 1830, enclosing something like six and a half million acres of open field and common; Tull's seed drill of about 1701; the Norfolk four-course rotation with turnips and clover; Bakewell's breeding at Dishley from the 1760s. English agricultural output roughly doubled while the share of the workforce on the land fell, which is what releases hands for anything else. The reason this belongs in a technologist's file is Robert Allen's point about why the machines were built here: English wages were high and English coal was cheap, so a device that replaced a man paid for itself in Lancashire when the identical device did not pay in France or in Bengal. how a device that replaces a man is received therefore moves from strongly negative to about neutral across the century - neutral and not positive, because the men whose work is being replaced fight back and keep winning locally: John Kay was driven out of Bury in 1753, the Spitalfields weavers broke engine looms, and the Luddites are only a decade past this horizon.",
-   "values": {
-    "w_commerce": 0.08,
-    "w_labour_saving": 0.25
-   },
-   "years": [
-    1700,
-    1800
-   ]
-  },
-  {
-   "name": "The Napoleonic Wars and the Continental System",
-   "note": "Britain is at war with France for all but one year between 1793 and 1815. Napoleon's Continental System, decreed from Berlin in 1806, tries to close every port in Europe to British trade; Britain's own Orders in Council answer in kind. Trade did not stop - smuggling and re-export through neutral flags were both large - but it ran at a real cost and a real risk of seizure the whole time, and the war itself absorbed a workforce and a tax base that would otherwise have gone to anything else. Unlike the Hundred Years War this is not fought on English soil, so it costs trade and money rather than a sack.",
-   "output_factor": 0.87,
-   "years": [
-    1803,
-    1815
-   ]
-  },
-  {
-   "name": "The Great Exhibition and Victorian confidence in the machine",
-   "note": "Paxton's Crystal Palace opened in Hyde Park on 1 May 1851 and six million people, a third of the population, went through it over five months, to look at machinery as the main attraction rather than as a threat to anyone's trade. It is the clearest single marker of the thing Allen's agricultural-revolution entry above says started only reluctantly: by 1851 a device that replaces a man's work is something Britain holds a celebration of. No damage fields: this is the one unambiguously good year in the file between the Black Death and the twentieth century.",
-   "values": {
-    "w_novelty": 0.08,
-    "w_labour_saving": 0.08
-   },
-   "years": [
-    1851,
-    1851
-   ]
-  },
-  {
-   "name": "The First World War",
-   "note": "Roughly 880,000 British dead out of a population of about 46 million, concentrated almost entirely among working-age men, plus four years in which a large share of everything the country could make went to the trenches rather than to trade. The war is also why income tax, conscription and rationing all become things a British state can simply do, which the financial-revolution and Royal Society entries above would not have predicted from 1720.",
-   "output_factor": 0.78,
-   "staff_loss": 0.025,
-   "years": [
-    1914,
-    1918
-   ]
-  },
-  {
-   "name": "The Second World War",
-   "note": "About 450,000 British dead, smaller as a share of the population than the First War, but the material disruption is larger: the Blitz, convoy losses in the Atlantic, and an economy converted almost wholly to war production under rationing that outlasted the war itself into the early 1950s. Britain emerges victorious and essentially bankrupt, which is the real backdrop to everything that follows this horizon.",
-   "output_factor": 0.72,
-   "staff_loss": 0.015,
-   "years": [
-    1939,
-    1945
-   ]
+  "wage_index": 0.8,
+  "year": 1300,
+  "local_words": {
+    "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
+    "pairs": [
+      [
+        "in plain quantitative Greek and Latin",
+        "in plain quantitative Latin and English"
+      ],
+      [
+        "Senatorial patronage",
+        "The patronage of a baron"
+      ],
+      [
+        "Imperial patronage",
+        "The patronage of the Crown"
+      ],
+      [
+        "Licensed collegium of physicians and teachers",
+        "A chartered guild of physicians and teachers"
+      ]
+    ]
   }
- ],
- "home_regions": [
-  "britannia",
-  "gaul_germania"
- ],
- "id": "england_1300",
- "institutions": {
-  "bank": "Italian merchant banks operating",
-  "charter": "royal, purchasable",
-  "corporation": "borough and guild corporations, genuinely perpetual",
-  "guild": "strong, and protective of monopoly",
-  "note": "A PERPETUAL CORPORATION EXISTS HERE and it is the single most important institutional advantage over Rome: an enterprise can outlive its founder without a testamentary trick.",
-  "partnership": true,
-  "patent": "letters patent exist by 1331",
-  "testament": true
- },
- "literacy_elite": 0.5,
- "literacy_general": 0.06,
- "name": "England under Edward I",
- "notes": [
-  "You arrive 48 years before the Black Death kills something like 45% of the population.",
-  "The perpetual corporation is worth more to a multi-generation programme than any machine in the tree.",
-  "Guilds will litigate against your fulling mill. They did, repeatedly, and sometimes won."
- ],
- "opening": {
-  "arrival": "You arrive in the reign of Edward I, in a kingdom of four and a half million with a real legal system, chartered towns that can be bargained with, two universities, and a parliament that has just begun to insist on being asked about taxes.",
-  "what_is_coming": "Fifteen years to the Great Famine. Forty-eight to the Black Death, which will kill between a third and a half of everyone you will ever meet, and then come back. Whatever you build must survive that or it must be built after it.",
-  "what_is_missing": "Cheap iron, and the temperature to make it. Everything downstream of steel waits on a furnace nobody has yet built.",
-  "what_you_can_see": "Watermills and windmills on every fall of water and every rise of ground. The horse collar, the crank, the spinning wheel, the blast-furnace arriving, the mechanical clock about to. Double-entry bookkeeping in the Italian houses. Paper, spectacles, the compass, gunpowder known if not yet useful. This is the most mechanically advanced society in this game at its start.",
-  "what_this_models": "You are one household, not the English crown. Four and a half million people live in this kingdom and roughly one in eight in a chartered town - about 540,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the kingdom's true numbers."
- },
- "population": 4500000,
- "price_index": 1.1,
- "starting_techs": [
-  "ag2_composting",
-  "ag2_liming",
-  "ag2_malting",
-  "ag2_marling",
-  "ag2_oil_pressing",
-  "ag2_potash",
-  "ag2_refrigeration_ice",
-  "cap_heat_0700",
-  "cap_power_human",
-  "cap_power_muscle",
-  "cap_power_water",
-  "cap_tol_1mm",
-  "civ_glass_windows",
-  "civ_iron_wrought",
-  "civ_marble_facing",
-  "clock_mechanical_escapement",
-  "cn_gypsum_plaster",
-  "cn_pile_driving",
-  "cn_post_lintel",
-  "cn_stone_polish",
-  "fin_apprenticeship",
-  "fin_arbitrage",
-  "fin_auction",
-  "fin_bankruptcy",
-  "fin_bimetallism",
-  "fin_census",
-  "fin_coined_money",
-  "fin_contract_law",
-  "fin_employment_contract",
-  "fin_ferry",
-  "fin_gambling_house",
-  "fin_government",
-  "fin_hotel",
-  "fin_inn",
-  "fin_maritime_loan",
-  "fin_market",
-  "fin_monopoly",
-  "fin_mortgage",
-  "fin_pawnshop",
-  "fin_plantation",
-  "fin_seigniorage",
-  "fin_tariff",
-  "fin_tax_farming",
-  "fin_testament",
-  "fin_trading_post",
-  "fin_usury_law",
-  "fin_wage",
-  "fud_fish_curing_and_smoking",
-  "fud_hay_making_storage",
-  "hom_board_games",
-  "hom_candle_beeswax",
-  "hom_candle_tallow",
-  "hom_flush_latrine_simple",
-  "hom_furniture_wooden",
-  "hom_locks_keys",
-  "hom_mirror_bronze_polished",
-  "hom_musical_instruments",
-  "hom_oil_lamp_simple",
-  "hom_perfume_enfleurage",
-  "hom_toys_dolls",
-  "hom_umbrella",
-  "horse_collar",
-  "lnd_axle_pivot_front",
-  "lnd_bridge",
-  "lnd_four_wheel_cart",
-  "lnd_harness_throat_girth",
-  "lnd_horse_saddle_basic",
-  "lnd_litter",
-  "lnd_milestone",
-  "lnd_mule_transport",
-  "lnd_ox_transport",
-  "lnd_paved_road_network",
-  "lnd_two_wheel_cart",
-  "lnd_tyre_iron",
-  "lnd_wheel_spoked",
-  "mat_alum",
-  "mat_asbestos",
-  "mat_beeswax",
-  "mat_bitumen",
-  "mat_brass",
-  "mat_bronze",
-  "mat_calamine",
-  "mat_carbon_black",
-  "mat_charcoal",
-  "mat_emery",
-  "mat_galena",
-  "mat_glass_soda",
-  "mat_gold",
-  "mat_gypsum",
-  "mat_lead",
-  "mat_leather",
-  "mat_lime",
-  "mat_linen",
-  "mat_mercury",
-  "mat_obsidian_blade",
-  "mat_olive_oil",
-  "mat_paper",
-  "mat_papyrus",
-  "mat_parchment",
-  "mat_pyrolusite",
-  "mat_salt",
-  "mat_silk",
-  "mat_silver",
-  "mat_sulfur",
-  "mat_tallow",
-  "mat_tin",
-  "mat_vitriols",
-  "mat_wrought_iron",
-  "med_amputation",
-  "med_bone_setting",
-  "med_cataract_couching",
-  "med_herbal_pharmacy",
-  "med_obstetric_practice",
-  "med_opium_mandrake",
-  "med_surgical_kit_good",
-  "med_trepanation",
-  "med_wound_suturing",
-  "met_bloomery_bog_iron",
-  "met_ore_crushing_sorting",
-  "mfg_adhesive_bond",
-  "mfg_cold_riveting",
-  "mfg_enamelling",
-  "mfg_flux",
-  "mfg_hot_riveting",
-  "mfg_painting",
-  "mfg_soft_solder",
-  "mt2_amalgamation",
-  "mt2_earthenware",
-  "mt2_timbering_safety",
-  "opt_burning_glass",
-  "opt_dioptra",
-  "opt_geared_mechanisms",
-  "opt_metal_mirror_polished",
-  "opt_steelyards",
-  "opt_sundial",
-  "opt_water_clock",
-  "opt_water_globe_magnifier",
-  "prn_carbon_ink",
-  "prn_codex_bound",
-  "prn_library_archive",
-  "prn_parchment_sheets",
-  "prn_scribal_copying",
-  "prn_sculpture",
-  "prn_seals_stamps",
-  "prn_theatre_pantomime",
-  "prn_wax_tablets",
-  "pwr_animal_treadmill",
-  "pwr_coal_seam",
-  "pwr_force_pump",
-  "pwr_petroleum_seeps",
-  "pwr_screw_press_power",
-  "pwr_ship_sail",
-  "sc2_institution_textbook",
-  "sea_anchor",
-  "sea_coastal_pilotage",
-  "sea_lead_sheathing",
-  "sea_lodestone",
-  "sea_merchant_ships_large",
-  "sea_sounding_lines",
-  "sea_square_sail",
-  "sea_steering_oars",
-  "sea_sternpost_rudder",
-  "tex_cotton_trade",
-  "tex_drop_spindle",
-  "tex_dye_madder",
-  "tex_dye_woad",
-  "tex_felting",
-  "tex_indigo",
-  "tex_mordanting",
-  "tex_sailcloth",
-  "tex_silk_trade",
-  "tex_two_beam_loom",
-  "tex_warp_weighted_loom",
-  "tex_wool",
-  "tr_block_tackle",
-  "tr_reefing",
-  "tr_square_rig",
-  "tx2_alum_tanning",
-  "tx2_asbestos_cloth",
-  "tx2_beam",
-  "tx2_bleaching_sun",
-  "tx2_bottle",
-  "tx2_comb",
-  "tx2_currying",
-  "tx2_doll",
-  "tx2_dyeing_fibre",
-  "tx2_dyeing_piece",
-  "tx2_dyeing_yarn",
-  "tx2_eye_pointed_needle",
-  "tx2_flax_fibre",
-  "tx2_heddle",
-  "tx2_hemp_fibre",
-  "tx2_needle",
-  "tx2_pin",
-  "tx2_retting",
-  "tx2_rope_lay",
-  "tx2_scouring",
-  "tx2_selvedge",
-  "tx2_shed",
-  "tx2_warp_sizing",
-  "tx2_wool_fibre",
-  "water_power_scale"
- ],
- "state_capacity": 0.6,
- "state_pressure": {
-  "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
-  "requisition_name": "purveyance",
-  "requisition_note": "Purveyance let the Crown take goods and transport for the royal household at a fixed, below-market price, enforced by royal officers with the power of distraint; it was a standing grievance from Magna Carta's clause 28 onward, and a household with a visible surplus was exactly who the purveyor called on first.",
-  "requisition_base_share": 0.13,
-  "office_name": "the shrievalty",
-  "office_note": "Sheriffs and other unpaid county offices were pressed onto men of the right income, who then answered with their own estate for any shortfall in what the office owed the Exchequer - a burden substantial enough that wealthy men regularly paid fines specifically to be excused it.",
-  "office_base_share": 0.05,
-  "military_name": "the Crown's monopoly patents on arms",
-  "military_note": "Letters patent (in force here by 1331) let the Crown grant, and just as easily claim, exclusive rights over a trade it judged militarily useful; a founder casting a working gun attracts exactly that kind of royal interest.",
-  "confiscation_name": "attainder",
-  "confiscation_note": "Attainder stripped a condemned man of his property outright with no separate trial of the facts required after conviction - the Crown's sharpest tool against a subject who has become too large to simply tax."
- },
- "urban_fraction": 0.12,
- "values": {
-  "_note": "w_religious_rigidity 0.8 and w_magic_fear 0.7: this is the environment that produced heresy trials and, later, witch trials. Far more dangerous for a natural philosopher than Trajanic Rome, which had no doctrine to offend. Guilds resist labour-saving machinery violently and have legal standing to do it.",
-  "_note_eminence": "A king who can attaint you, but also chartered towns, guilds and a church with its own courts, so power is more divided than in Rome.",
-  "adaptation_rate": 0.09,
-  "bribability": 0.65,
-  "patronage_weight": 0.7,
-  "w_commerce": 0.6,
-  "w_eminence_danger": 0.55,
-  "w_information": -0.4,
-  "w_labour_saving": -0.4,
-  "w_magic_fear": 0.7,
-  "w_military": 0.8,
-  "w_novelty": -0.3,
-  "w_religious_rigidity": 0.8
- },
- "wage_index": 0.8,
- "year": 1300,
- "local_words": {
-  "_doc": "Player-facing phrases this civilisation says differently. The tree is written from Rome 100 AD, which is the calibration baseline and stays; what does not have to stay is telling a player in Han China that they are writing their corpus in Greek and Latin and seeking Senatorial patronage. Applied to the words of a reply, exactly like `currency`, and only to phrases specific enough that they occur nowhere else. Historical notes ABOUT Rome are not rewritten: they are about Rome.",
-  "pairs": [
-   [
-    "in plain quantitative Greek and Latin",
-    "in plain quantitative Latin and English"
-   ],
-   [
-    "Senatorial patronage",
-    "The patronage of a baron"
-   ],
-   [
-    "Imperial patronage",
-    "The patronage of the Crown"
-   ],
-   [
-    "Licensed collegium of physicians and teachers",
-    "A chartered guild of physicians and teachers"
-   ]
-  ]
- }
 }

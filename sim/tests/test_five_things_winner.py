@@ -151,7 +151,7 @@ check("run/compare/play/agent's --horizon flag still defaults to 500, "
       "completely unaffected by the difficulty-mode work above - Endless "
       "is reached only through the wizard or the in-game 'options' command, "
       "never through a bare --horizon flag",
-      len(_horizon_seen) == 4 and all(v == 500 for v in _horizon_seen.values()),
+      len(_horizon_seen) == 4 and all(value == 500 for value in _horizon_seen.values()),
       _horizon_seen)
 
 # --- ITEM 3: SESSION COMMANDS WITHOUT BACKING OUT THROUGH MENUS. 'saves',
@@ -302,14 +302,36 @@ check("...accepting starts a genuinely new game through the same wizard, "
       os.listdir(_sess7_saves))
 
 # --- THE SAME FREEZE PROPERTY, AGAIN, AGAINST A REAL CAMPAIGN SAVE - not a
-# few years of synthetic play. rome/playtest/fixtures/rome_380_corpus_bug.json
+# few years of synthetic play. playtest/fixtures/rome_380_corpus_bug.json
 # is another agent's regression fixture for a different bug (a real 380 AD
 # Rome save); it is read here, never written to, and its own sha256 is
 # checked below precisely so a future edit to this file notices immediately
 # if it ever became something this test touches instead of merely reads.
+#
+# THE HASH BELOW HAS NOW CHANGED TWICE, DELIBERATELY, FOR THE SAME REASON
+# EACH TIME. First: docs/architecture/WIRING_MILESTONE_4.md added
+# pop_children/pop_working_age/pop_elderly to SAVE_FIELDS (proto/
+# saveload.py), and CLAUDE.md SS3.5 ("there is no save-format migration,
+# ever") means an old fixture simply stops loading under the new schema
+# rather than being shimmed - load_state's own REQUIRED_SAVE_FIELDS check
+# refused this exact file with "missing pop_children, pop_working_age,
+# pop_elderly" until the three fields were added to it (a stationary age
+# structure for Rome's configured 65,000,000, the same split Sim.__init__
+# would build fresh - the fixture predates the demographic model entirely,
+# so there is no "real" recorded cohort state to preserve, only a value
+# that satisfies the current schema).
+#
+# Second: Complaints/45-no-granary-so-the-baseline-collapses.md added
+# `farm_stock_kg` to SAVE_FIELDS the same way, for the same reason - the
+# granary this field persists did not exist when this real player's game
+# was saved, so REQUIRED_SAVE_FIELDS refused the file again with "missing
+# farm_stock_kg" until it was added at 0.0, the same empty-granary initial
+# condition Sim.__init__ constructs for a brand new game (see farm_stock_
+# kg's own comment in proto/saveload.py's SAVE_FIELDS tuple). Every other
+# byte of the file is unchanged both times.
 import hashlib
 import shutil
-_corpus_fixture = os.path.join(ROOT, "rome", "playtest", "fixtures",
+_corpus_fixture = os.path.join(ROOT, "playtest", "fixtures",
                                "rome_380_corpus_bug.json")
 _corpus_sha_before = hashlib.sha256(open(_corpus_fixture, "rb").read()).hexdigest()
 check("the corpus-bug fixture this check borrows is the exact file another "
@@ -317,7 +339,7 @@ check("the corpus-bug fixture this check borrows is the exact file another "
       "fixture changed underneath this check and it is reading the wrong "
       "thing",
       _corpus_sha_before ==
-      "60052a5183f1b887a501a0c1d45e2eef543e435dc074865908d144f21bda648f",
+      "14c95fb6118cd2bc3c814eed6d80c0b4b09ca9ad4ffe2f24b152f60220047868",
       _corpus_sha_before)
 _corpus_ckpt_dir = tempfile.mkdtemp()
 # A FRESH COPY, NAMED LIKE A MILESTONE - the fixture itself is never opened

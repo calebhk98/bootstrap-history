@@ -65,9 +65,9 @@ check("...and `ventures` - the other screen that shows venture_hands's "
 # craftsmen to supervise" with no explanation at all) keeps the exact words
 # a prior regression already checks for, and now also says why.
 _stuck_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "stuck"})
-_reason_sg = next((r for r in _stuck_sg["what_is_holding_you_up"]
-                   if isinstance(r, dict)
-                   and r.get("what", "").startswith("things you built")), None)
+_reason_sg = next((reason for reason in _stuck_sg["what_is_holding_you_up"]
+                   if isinstance(reason, dict)
+                   and reason.get("what", "").startswith("things you built")), None)
 check("the `stuck` advice still names craftsmen specifically (unchanged "
       "substring an earlier regression already relies on)",
       _reason_sg is not None and "craftsmen to supervise" in _reason_sg.get("why", ""),
@@ -129,8 +129,8 @@ _FOOD_NODE, _MED_NODES, _MIL_NODES2, _INFO_NODE = (
 check("the four diffusion categories this section reads are real nodes with "
       "the traits civ_diffusion keys off",
       NODES[_FOOD_NODE]["traits"].__contains__("food")
-      and all("medical" in NODES[k]["traits"] for k in _MED_NODES)
-      and all("military" in NODES[k]["traits"] for k in _MIL_NODES2)
+      and all("medical" in NODES[node_id]["traits"] for node_id in _MED_NODES)
+      and all("military" in NODES[node_id]["traits"] for node_id in _MIL_NODES2)
       and "information" in NODES[_INFO_NODE]["traits"],
       (_FOOD_NODE, _MED_NODES, _MIL_NODES2, _INFO_NODE))
 
@@ -154,8 +154,8 @@ check("diffusion is about half-spread after one half-life and never "
 check("a node with none of the four diffusible traits never diffuses at "
       "all - this mechanism has nothing to say about a lathe or a ledger",
       s.civ_diffusion("workshop_first") == 0.0
-      and not any(t in ("food", "medical", "military", "information")
-                  for t in NODES["workshop_first"]["traits"]),
+      and not any(trait in ("food", "medical", "military", "information")
+                  for trait in NODES["workshop_first"]["traits"]),
       NODES["workshop_first"]["traits"])
 
 # --- military is the one category gated on a patron: the state, not the
@@ -194,8 +194,8 @@ check("eighty years after New World-style crop rotation is done, the "
       s_food._pop_scale_base - _base0 > 0.08,
       s_food._pop_scale_base - _base0)
 check("...and it is told in the log, not only in a state variable",
-      any("no longer only on your own land" in m for _, m in s_food.log),
-      [m for _, m in s_food.log if "no longer only on your own land" in m])
+      any("no longer only on your own land" in message for _, message in s_food.log),
+      [message for _, message in s_food.log if "no longer only on your own land" in message])
 
 s_food_far = sim(civ="rome_100ad")
 s_food_far.granted.discard(_FOOD_NODE)
@@ -223,19 +223,19 @@ check("a founder who never builds any food technology gets none of this - "
 # in _shocks, unchanged by any of this). The user's own example: invent the
 # cure or vaccine for a pandemic and it becomes a minor sickness.
 def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
-    _s = sim(civ=civ, capital=capital)
-    for k in med_nodes:
-        _s.done.add(k)
-    _s.scholars, _s.artisans = 50.0, 200.0
-    for t in list(_s.employees):
-        _s.employees[t] = 50.0
-    haz = next(h for h in _s.civ["hazards"] if hazard_substr in h["name"])
-    yr = haz["years"][0]
-    _s.year = yr
-    _s.done_year = {k: yr - years_before for k in med_nodes}
-    _s.rng = random.Random(1)
-    _s._shocks(yr)
-    return next((m for _y, m in _s.log if hazard_substr in m), "")
+    household = sim(civ=civ, capital=capital)
+    for node_id in med_nodes:
+        household.done.add(node_id)
+    household.scholars, household.artisans = 50.0, 200.0
+    for trade in list(household.employees):
+        household.employees[trade] = 50.0
+    haz = next(hazard for hazard in household.civ["hazards"] if hazard_substr in hazard["name"])
+    years_started = haz["years"][0]
+    household.year = years_started
+    household.done_year = {node_id: years_started - years_before for node_id in med_nodes}
+    household.rng = random.Random(1)
+    household._shocks(years_started)
+    return next((message for _year, message in household.log if hazard_substr in message), "")
 
 
 _antonine_fresh = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 0)
@@ -298,13 +298,13 @@ _sk_armed, _sk_why = s_armed_h.hazard_relief("sack_chance")
 check("a state that has actually absorbed the founder's cannon loses less "
       "trade to a dated war...",
       _of_armed < _of_bare
-      and any("state's own armies" in w for w in _of_why),
+      and any("state's own armies" in explanation for explanation in _of_why),
       (_of_bare, _of_armed, _of_why))
 check("...and is measurably less likely to be sacked, which before this "
       "change was true of the founder's OWN walls and guns but never of "
       "the state's - this is the user's cannon example",
       _sk_armed < _sk_bare
-      and any("state's own armies" in w for w in _sk_why),
+      and any("state's own armies" in explanation for explanation in _sk_why),
       (_sk_bare, _sk_armed, _sk_why))
 check("the relief is bounded on both fields, never enough on its own to "
       "erase a war's cost or a raid's chance entirely",
@@ -324,13 +324,13 @@ check("the Gothic settlement hazard itself still has no `condition` and no "
 # (literacy is already a real ceiling on trades), not a new, separate
 # effect invented from nothing.
 def _literacy_after(info_done, years=200):
-    _s = run_it(sim(civ="norse_900ad", capital=2000000.0), "school_founded")
+    household = run_it(sim(civ="norse_900ad", capital=2000000.0), "school_founded")
     if info_done:
-        _s.done.add(_INFO_NODE); _s.done_year[_INFO_NODE] = _s.year - 150
+        household.done.add(_INFO_NODE); household.done_year[_INFO_NODE] = household.year - 150
     for i in range(1, years + 1):
-        _s.year += 1
-        _s.advance_society(_s.year)
-    return _s.civ["literacy_general"]
+        household.year += 1
+        household.advance_society(household.year)
+    return household.civ["literacy_general"]
 
 
 _lit_no_info = _literacy_after(False)
@@ -395,10 +395,10 @@ print(repr((round(s.food_diffusion_index(), 12),
 
 
 def _diffusion_snapshot(seed_env):
-    p = subprocess.run([sys.executable, "-c", _DIFFUSION_SNAPSHOT_SRC],
+    result = subprocess.run([sys.executable, "-c", _DIFFUSION_SNAPSHOT_SRC],
                         capture_output=True, text=True, timeout=60, cwd=HERE,
                         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout.strip() or ("ERROR: " + p.stderr[-300:])
+    return result.stdout.strip() or ("ERROR: " + result.stderr[-300:])
 
 
 _dif_a, _dif_b = _par_map(_diffusion_snapshot, ("0", "24680"))
@@ -424,13 +424,13 @@ for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
 check("Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
       _soc_room["rome_100ad"][0]
-      and not any(_soc_room[_c][0] for _c in _soc_room if _c != "rome_100ad")
-      and all(_soc_room["rome_100ad"][1] > _soc_room[_c][1]
-              for _c in _soc_room if _c != "rome_100ad"), _soc_room)
+      and not any(_soc_room[civ_id][0] for civ_id in _soc_room if civ_id != "rome_100ad")
+      and all(_soc_room["rome_100ad"][1] > _soc_room[civ_id][1]
+              for civ_id in _soc_room if civ_id != "rome_100ad"), _soc_room)
 check("...and the four without it all start level with each other, so this is "
       "the one technology doing it and not a population effect",
-      len({round(_soc_room[_c][1], 3) for _c in _soc_room
-           if _c != "rome_100ad"}) == 1, _soc_room)
+      len({round(_soc_room[civ_id][1], 3) for civ_id in _soc_room
+           if civ_id != "rome_100ad"}) == 1, _soc_room)
 
 # AND IT IS NOT SILENT. The breakdown names the partnership, and it is the
 # same walk supervision_room sums, so it cannot drift from the total.
@@ -440,16 +440,16 @@ _soc_sc = _soc_cap.get("spare_capacity") or {}
 _soc_rows = _soc_sc.get("and_where_that_comes_from") or []
 check("the capacity screen says where the headroom comes from, and names the "
       "partnership rather than leaving a Roman player to wonder",
-      any(r.get("source") == "fin_societas" for r in _soc_rows), _soc_rows)
+      any(source_row.get("source") == "fin_societas" for source_row in _soc_rows), _soc_rows)
 check("...and the rows add up to exactly the figure they explain, for every "
       "civilisation, so the breakdown cannot drift from the total",
-      all(abs(sum(r["people"] for r in sim(civ=_c).supervision_room_from())
-              - sim(civ=_c).supervision_room()) < 1e-9
-          for _c in ("rome_100ad", "han_china_100ad", "norse_900ad",
+      all(abs(sum(source_row["people"] for source_row in sim(civ=civ_id).supervision_room_from())
+              - sim(civ=civ_id).supervision_room()) < 1e-9
+          for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad",
                      "england_1300", "mexica_1500")),
-      [(_c, sum(r["people"] for r in sim(civ=_c).supervision_room_from()),
-        sim(civ=_c).supervision_room())
-       for _c in ("rome_100ad", "norse_900ad")])
+      [(civ_id, sum(source_row["people"] for source_row in sim(civ=civ_id).supervision_room_from()),
+        sim(civ=civ_id).supervision_room())
+       for civ_id in ("rome_100ad", "norse_900ad")])
 
 # HOW A SCRIPT DRIVES THIS GAME, said where a script author will find it. Every
 # AI agent that has played built a tmux or FIFO harness to hold the process

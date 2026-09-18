@@ -101,23 +101,113 @@ def _absorb_key_colons(rest, flag_keys, value_keys):
     for every caller that uses it, including the next one.
     """
     out = []
-    for w in rest:
-        t = str(w)
-        if ":" in t:
-            a, _, b = t.partition(":")
-            al = a.lower()
-            if al in flag_keys:
-                if b.lower() in ("false", "0", "no", "off"):
+    for token in rest:
+        text = str(token)
+        if ":" in text:
+            key, _, value = text.partition(":")
+            lower_key = key.lower()
+            if lower_key in flag_keys:
+                if value.lower() in ("false", "0", "no", "off"):
                     continue          # same as never having typed it
-                out.append(a)
+                out.append(key)
                 continue
-            if al in value_keys:
-                out.append(a)
-                if b:
-                    out.append(b)
+            if lower_key in value_keys:
+                out.append(key)
+                if value:
+                    out.append(value)
                 continue
-        out.append(t)
+        out.append(text)
     return out
+
+
+# THE AGENT-ORIENTED COMPACT MODE. See Complaints/35 section 1: a player of
+# this game who is itself an AI agent asked for "an explicit agent-oriented
+# compact mode that can return highly structured state without losing the
+# human-readable explanations... I wouldn't rush to remove the prose."
+#
+# THE MACHINERY ALREADY EXISTED, for three commands. `state json`, `risk
+# json` and `portfolio json` each hand-rolled their own scan of the typed
+# words for the literal token "json" and set a "json" field on the command
+# dict; cli.py's own reply loop already reads that field GENERICALLY - "if
+# cmd.get('json'): dump the raw reply; else: render it" - for every command,
+# not just those three, and does so whether the field arrived typed or as a
+# raw {"cmd":...,"json":true} pasted straight from the JSON protocol the
+# game's help text already documents. So typing '{"cmd":"available",
+# "json":true}' at the very same prompt already worked. What was missing was
+# the typed shortcut for everything else: a player (or agent) typing plain
+# words had no way to ask for it on 'available', 'why', 'stuck', 'log', or
+# any of the other twenty-odd read commands without already knowing to hand
+# write JSON.
+#
+# MOST OF THE REPLY ITSELF NEEDED NO CHANGE. Every reply already IS the
+# structured dict the protocol returns - `why`'s "start_blocked_reason",
+# "waiting_on" and "missing_prerequisites", `state`'s "stuck" and
+# "why_underfunded", `stuck`'s own "each_waiting_on" - the reasoning was
+# always a field on the same dict the numbers live on, never a second,
+# separate explanation that only render.py knew how to produce. The one
+# thing render.py does that the raw reply cannot is loop and pad it into a
+# fixed-width table; asking for "json" skips exactly that step and nothing
+# else, so a project cost, its reason for being blocked, and the sentence
+# explaining that reason arrive in the same object, on demand, from a
+# command an agent already knew how to send. 'compact' (see below) goes one
+# step further, for the handful of commands whose whole reason to exist is
+# explaining a block, and gives them all the same small shape for it.
+#
+# 'json' AND 'compact' ARE TWO DIFFERENT THINGS, not one word spelled two
+# ways, because they answer two different questions:
+#
+#   'json'    - a PRESENTATION switch only. It has always meant "show me the
+#               reply this command already computes, raw, instead of
+#               rendering it into the screen" - the reply's own fields are
+#               untouched either way. This is what `state json`, `risk json`
+#               and `portfolio json` already did; it is now every command's
+#               to ask for, not just those three.
+#   'compact' - a CONTENT switch, new. It asks the small set of commands
+#               whose whole job is explaining why something is blocked
+#               ('why', 'state', 'stuck') to ALSO fold their existing
+#               reasoning fields into one small, identically-shaped
+#               "blockers" list - see dispatch.py's _add_compact_fields.
+#               Nothing is removed to make room for it: every field the
+#               plain reply already had is still there, so asking for
+#               'compact' costs nothing if you only wanted 'json'.
+#
+# 'compact' IMPLIES 'json' - an enriched dict is only worth asking for if it
+# is not then immediately flattened back into a table that does not know
+# the new fields exist - so typing 'compact' alone is enough; you do not
+# also have to type 'compact json'.
+_JSON_WORDS = ("json",)
+_COMPACT_WORDS = ("compact",)
+
+
+def _split_json_flag(rest):
+    """rest with any bare 'json'/'compact' token removed, and (want_json,
+    want_compact) for what was found - checked and stripped ONCE, for every
+    command, before that command's own parser ever sees `rest`. Without
+    this, a player typing either documented word in the wrong place lands
+    exactly on the bug _absorb_key_colons was written to stop happening a
+    fourth time: 'available json' has no case above that recognises the bare
+    word "json", so it fell through to the last branch - "a bare word is a
+    subject" - and became a search for a subject literally spelled "json",
+    matching nothing, with no hint that the word had been understood as
+    anything other than mistyped noise. Filtering both out up front, once,
+    means every command's own parser goes on reading exactly the words it
+    always has.
+    """
+    want_json = False
+    want_compact = False
+    kept = []
+    for token in rest:
+        low = str(token).strip().lower()
+        if low in _JSON_WORDS:
+            want_json = True
+            continue
+        if low in _COMPACT_WORDS:
+            want_compact = True
+            continue
+        kept.append(token)
+    if want_compact:
+        want_json = True          # see the block comment just above
+    return kept, want_json, want_compact
 
 
 def parse_typed(line):
@@ -153,30 +243,65 @@ def parse_typed(line):
     parts = text.split()
     head = parts[0].lower()
     rest = parts[1:]
-    op = TYPED_ALIASES.get(head, head)
-    if op not in KNOWN_COMMANDS:
-        near = [c for c in KNOWN_COMMANDS if c.startswith(head[:3])]
+    command = TYPED_ALIASES.get(head, head)
+    if command not in KNOWN_COMMANDS:
+        near = [candidate for candidate in KNOWN_COMMANDS if candidate.startswith(head[:3])]
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 
-    words = [w for w in rest if _typed_number(w) is None]
-    nums = [_typed_number(w) for w in rest if _typed_number(w) is not None]
+    # THE OUTPUT-MODE WORDS, STRIPPED ONCE, FOR EVERY COMMAND - see
+    # _split_json_flag's own comment for why this has to happen here, before
+    # any command's own parser reads `rest`, rather than inside each one.
+    rest, want_json, want_compact = _split_json_flag(rest)
+    words = [word for word in rest if _typed_number(word) is None]
+    nums = [_typed_number(word) for word in rest if _typed_number(word) is not None]
 
-    if op in ("money", "values", "materials", "quit", "score"):
-        return {"cmd": op}, None
+    out, err = _parse_command_body(command, rest, words, nums, want_json)
+    # ONE PLACE BOTH FLAGS ARE APPLIED, for every command this parser has not
+    # already given its own opinion about. `state`, `risk` and `portfolio`
+    # set "json" themselves, always, true or false, because a player reading
+    # their own typed command back (or a test asserting on it) has always
+    # been able to see which way it went; every other command has never
+    # carried the key at all when nobody asked for it, and this preserves
+    # that - "json" only appears here when it is True, so a command with no
+    # json opinion of its own is unaffected byte-for-byte when the word was
+    # never typed. "compact" is never set by any individual command's own
+    # branch, so it is always added here, and only when asked for.
+    if err is None and isinstance(out, dict):
+        if want_json and "json" not in out:
+            out = dict(out, json=True)
+        if want_compact:
+            out = dict(out, compact=True)
+    return out, err
 
-    if op == "sell":
+
+def _parse_command_body(command, rest, words, nums, want_json):
+    """The command-specific parsing `parse_typed` delegates to, once the line
+    has been split into a resolved command name, the words, the numbers, and
+    whether 'json' was typed (or implied by 'compact') and already stripped
+    out of `rest`.
+
+    Broken out so that stripping the output-mode words can happen exactly
+    once, upstream of every branch below, instead of duplicated (or missed)
+    in each one - see _split_json_flag.
+    """
+    if command in ("money", "values", "materials", "quit", "score"):
+        return {"cmd": command}, None
+
+    if command == "sell":
         if not words or not nums:
             return None, "sell needs a material and tonnes, e.g. 'sell iron 50'."
         return {"cmd": "sell", "material": words[0].lower(), "n": nums[0]}, None
 
-    if op == "risk":
-        # 'risk json' prints the raw reply - see 'portfolio json' and
-        # 'state json' just below for the same fix in the same family.
-        return {"cmd": "risk",
-               "json": "json" in [w.lower() for w in words]}, None
+    if command == "risk":
+        # 'risk json' (or 'risk compact') prints the raw reply - see
+        # 'portfolio json' and 'state json' just below for the same fix in
+        # the same family. want_json is already the answer: _split_json_flag
+        # stripped the word out of `rest` (and so out of `words`) before
+        # this function was even called.
+        return {"cmd": "risk", "json": want_json}, None
 
-    if op == "rush":
+    if command == "rush":
         # 'rush' alone starts everything you could begin today; 'rush 5',
         # 'rush limit:5' and 'rush limit 5' all cap it at the first five,
         # highest-leverage first.
@@ -191,15 +316,15 @@ def parse_typed(line):
         # game was the one that removed the safety, silently. Same key:value
         # spelling `state full:true` already takes.
         out = {"cmd": "rush"}
-        if any(str(w).lower() in ("force", "confirm", "yes") for w in rest):
+        if any(str(word).lower() in ("force", "confirm", "yes") for word in rest):
             out["force"] = True
         _lim = None
-        for w in rest:
-            t = str(w)
+        for word in rest:
+            token_text = str(word)
             for pre in ("limit:", "limit=", "n:", "n="):
-                if t.lower().startswith(pre):
-                    v = _typed_number(t[len(pre):])
-                    if v is None:
+                if token_text.lower().startswith(pre):
+                    value = _typed_number(token_text[len(pre):])
+                    if value is None:
                         # AND A CAP THAT DID NOT PARSE IS A REFUSAL, not a
                         # shrug. Falling through to no limit at all means the
                         # one typo a player can make while trying to be
@@ -208,8 +333,8 @@ def parse_typed(line):
                                       "start. 'rush limit:3' begins the three "
                                       "highest-leverage things you could "
                                       "begin today; 'rush' alone begins every "
-                                      "one of them." % t[len(pre):])
-                    _lim = v
+                                      "one of them." % token_text[len(pre):])
+                    _lim = value
                     break
         if _lim is None and nums:
             _lim = nums[0]
@@ -217,21 +342,19 @@ def parse_typed(line):
             out["limit"] = int(_lim)
         return out, None
 
-    if op == "state":
+    if command == "state":
         # 'state full' and 'state full:true' both mean the same thing, and a
         # player who has read the JSON docs will type the second. 'state
-        # json' (in any position, 'state full json' included) prints the
-        # raw reply instead of the rendered screen: every player of this
-        # game is an AI agent parsing text, and several have lost runs to
-        # parsing prose that was never meant to be machine-readable.
-        low_rest = [w.lower() for w in rest]
+        # json' (in any position, 'state full json' included, and now 'state
+        # compact' too - see _split_json_flag) prints the raw reply instead
+        # of the rendered screen: every player of this game is an AI agent
+        # parsing text, and several have lost runs to parsing prose that was
+        # never meant to be machine-readable.
+        low_rest = [word.lower() for word in rest]
         want_full = bool(rest) and low_rest[0].split(":")[0] == "full"
-        out = {"cmd": "state", "full": want_full}
-        if "json" in low_rest:
-            out["json"] = True
-        return out, None
+        return {"cmd": "state", "full": want_full, "json": want_json}, None
 
-    if op == "available":
+    if command == "available":
         # 'available' alone is the digest. The rest are the same narrowings the
         # digest itself suggests, spelled the way a person would say them:
         #   available metallurgy      available find furnace
@@ -254,35 +377,35 @@ def parse_typed(line):
             flag_keys=("all", "reverse", "reversed", "desc", "descending"),
             value_keys=("find", "search", "named", "afford", "under", "within",
                         "limit", "offset", "heard", "heard_offset", "sort"))
-        low = [w.lower() for w in rest]
+        low = [word.lower() for word in rest]
         i = 0
         while i < len(low):
-            w = low[i]
+            word = low[i]
             nxt = low[i + 1] if i + 1 < len(low) else None
-            if w == "all":
+            if word == "all":
                 out["all"] = True
-            elif w in ("find", "search", "named") and nxt:
+            elif word in ("find", "search", "named") and nxt:
                 out["find"] = nxt; i += 1
-            elif w in ("afford", "under", "within") and nxt is not None:
+            elif word in ("afford", "under", "within") and nxt is not None:
                 out["afford"] = _typed_number(nxt) or 0; i += 1
-            elif w == "limit" and nxt is not None:
+            elif word == "limit" and nxt is not None:
                 out["limit"] = int(_typed_number(nxt) or 0); i += 1
-            elif w == "offset" and nxt is not None:
+            elif word == "offset" and nxt is not None:
                 out["offset"] = int(_typed_number(nxt) or 0); i += 1
-            elif w in ("heard", "heard_offset") and nxt is not None:
+            elif word in ("heard", "heard_offset") and nxt is not None:
                 out["heard_offset"] = int(_typed_number(nxt) or 0); i += 1
             # SORT AND REVERSE, spelled the way a person would type them:
             # 'available sort risk reverse'. A break tester paging through
             # "632 more, nearest first" by hand, thirty at a time, is exactly
             # the failure a typed synonym for the JSON 'sort' field exists to
             # stop.
-            elif w == "sort" and nxt:
+            elif word == "sort" and nxt:
                 out["sort"] = nxt; i += 1
-            elif w in ("reverse", "reversed", "desc", "descending"):
+            elif word in ("reverse", "reversed", "desc", "descending"):
                 out["reverse"] = True
-            elif _typed_number(w) is not None:
-                out["afford"] = _typed_number(w)
-            elif w in ("subject", "group", "in") and nxt:
+            elif _typed_number(word) is not None:
+                out["afford"] = _typed_number(word)
+            elif word in ("subject", "group", "in") and nxt:
                 out["subject"] = " ".join(rest[i + 1:])
                 break
             else:
@@ -294,10 +417,10 @@ def parse_typed(line):
             i += 1
         return out, None
 
-    if op == "help":
+    if command == "help":
         return {"cmd": "help", "topic": (rest[0].lower() if rest else None)}, None
 
-    if op == "step":
+    if command == "step":
         # A bare 'n' is one year, which is what it has always meant - but
         # `step abc` is not a bare 'n'. That fell through to the default and
         # silently advanced a year, while `step 0` and `step -5` were properly
@@ -310,10 +433,10 @@ def parse_typed(line):
                           % " ".join(rest))
         return {"cmd": "step", "years": (nums[0] if nums else 1)}, None
 
-    if op == "ventures":
+    if command == "ventures":
         return {"cmd": "ventures"}, None
 
-    if op == "log":
+    if command == "log":
         # 'log' alone is the twenty most recent lines. The same narrowings
         # 'available' takes, spelled the way a person would say them:
         #   log failures              log find plague
@@ -332,33 +455,33 @@ def parse_typed(line):
             flag_keys=("failures", "failure", "fails", "fail",
                       "oldest", "forward", "newest", "backward", "recent"),
             value_keys=("find", "search", "since", "before", "limit", "offset"))
-        low = [w.lower() for w in rest]
+        low = [word.lower() for word in rest]
         i = 0
         while i < len(low):
-            w = low[i]
+            word = low[i]
             nxt = low[i + 1] if i + 1 < len(low) else None
-            if w in ("failures", "failure", "fails", "fail"):
+            if word in ("failures", "failure", "fails", "fail"):
                 out["failures"] = True
-            elif w in ("find", "search") and nxt:
+            elif word in ("find", "search") and nxt:
                 out["find"] = nxt; i += 1
-            elif w == "since" and nxt is not None:
+            elif word == "since" and nxt is not None:
                 out["since"] = int(_typed_number(nxt) or 0); i += 1
-            elif w == "before" and nxt is not None:
+            elif word == "before" and nxt is not None:
                 out["before"] = int(_typed_number(nxt) or 0); i += 1
-            elif w == "limit" and nxt is not None:
+            elif word == "limit" and nxt is not None:
                 out["limit"] = int(_typed_number(nxt) or 0); i += 1
-            elif w == "offset" and nxt is not None:
+            elif word == "offset" and nxt is not None:
                 out["offset"] = int(_typed_number(nxt) or 0); i += 1
-            elif w in ("oldest", "forward"):
+            elif word in ("oldest", "forward"):
                 out["order"] = "oldest"
-            elif w in ("newest", "backward", "recent"):
+            elif word in ("newest", "backward", "recent"):
                 out["order"] = "newest"
-            elif _typed_number(w) is not None:
-                out["limit"] = int(_typed_number(w))
+            elif _typed_number(word) is not None:
+                out["limit"] = int(_typed_number(word))
             i += 1
         return out, None
 
-    if op == "open" and nums:
+    if command == "open" and nums:
         # A TRAILING NUMBER IS UNITS, NOT PART OF THE NAME. 'open
         # school_founded 2' founds a second school - see
         # ProjectsMixin._expand_institution. No id is only digits, so a
@@ -369,12 +492,12 @@ def parse_typed(line):
             want = NODE_IDS_LOWER.get(want.lower(), want)
         return {"cmd": "open", "id": want, "units": nums[-1]}, None
 
-    if op in ("why", "path", "start", "stop", "bounty", "mothball",
+    if command in ("why", "path", "start", "stop", "bounty", "mothball",
               "restore", "open"):
         if not rest:
             return None, ("%s needs the name of a technology, e.g. '%s "
                           "fud_wheelbarrow'. 'available' lists what you can "
-                          "begin now." % (op, op))
+                          "begin now." % (command, command))
         # MATCHED CASE-INSENSITIVELY, NOT LOWERCASED. `WHY AG2_MARLING` was
         # refused with "did you mean: ag2_marling", the game naming the right
         # answer and declining to act on it - but flattening the case broke
@@ -398,79 +521,78 @@ def parse_typed(line):
         want = " ".join(rest)
         if want not in NODE_IDS:
             want = NODE_IDS_LOWER.get(want.lower(), want)
-        return {"cmd": op, "id": want}, None
+        return {"cmd": command, "id": want}, None
 
-    if op in ("withdraw", "retire"):
+    if command in ("withdraw", "retire"):
         return {"cmd": "withdraw"}, None
 
-    if op == "mines":
+    if command == "mines":
         return {"cmd": "mines"}, None
 
-    if op == "stuck":
+    if command == "stuck":
         return {"cmd": "stuck"}, None
 
-    if op == "capacity":
+    if command == "capacity":
         return {"cmd": "capacity"}, None
 
-    if op == "portfolio":
-        # 'portfolio json' prints the raw reply instead of the rendered
-        # table - see _absorb_key_colons's own family of fixes for why this
-        # is scanned across all of `words`, not just rest[0]: a player typing
-        # 'portfolio json' after reading the JSON docs should not have that
-        # silently ignored the way 'state full' once would have been had it
-        # come second. Every player of this game is an AI agent parsing
-        # text, and prose is not a stable interface to parse.
-        return {"cmd": "portfolio",
-               "json": "json" in [w.lower() for w in words]}, None
+    if command == "portfolio":
+        # 'portfolio json' (or 'portfolio compact') prints the raw reply
+        # instead of the rendered table. A player typing that after reading
+        # the JSON docs should not have it silently ignored the way 'state
+        # full' once would have been had it come second - every player of
+        # this game is an AI agent parsing text, and prose is not a stable
+        # interface to parse. want_json is scanned across the whole line
+        # (not just rest[0]) by _split_json_flag, upstream of this function.
+        return {"cmd": "portfolio", "json": want_json}, None
 
-    if op == "economy":
-        return {"cmd": "economy", "full": "full" in [w.lower() for w in words]}, None
+    if command == "economy":
+        return {"cmd": "economy", "full": "full" in [word.lower() for word in words]}, None
 
-    if op == "changes":
+    if command == "changes":
         # 'changes' alone means the last 5 years; 'changes 10' means ten.
         return {"cmd": "changes", "years": (nums[0] if nums else 5)}, None
 
-    if op == "bribe":
+    if command == "bribe":
         if not nums:
             return None, "bribe needs an amount, e.g. 'bribe 500'."
         return {"cmd": "bribe", "amount": nums[0]}, None
 
-    if op == "population":
+    if command == "population":
         # No argument: the country, the town, and every trade at once. Not
         # a fog spoiler (see the op handler's own comment) - demography,
         # not the tech tree - so nothing here is gated on what the player
         # has discovered.
         return {"cmd": "population"}, None
 
-    if op == "labour":
+    if command == "labour":
         # A PLAYER WHO TYPES THE FIELD NAME MEANS THE FIELD. The help shows
         # {"cmd":"labour","trade":"smith"}, so `labour trade smith` is the
         # obvious typed reading of it, and it was answered with "no such trade:
         # trade". Same for `available subject metallurgy`, which quietly
         # searched for a subject literally called "subject metallurgy" and
         # reported nothing startable.
-        _w = [x for x in words if x.lower() != "trade"]
-        return {"cmd": "labour", "trade": (_w[0].lower() if _w else None)}, None
+        _trade_words = [word for word in words if word.lower() != "trade"]
+        return {"cmd": "labour", "trade": (_trade_words[0].lower() if _trade_words else None)}, None
 
-    if op in ("hire", "fire"):
+    if command in ("hire", "fire"):
         if not words:
             return None, ("%s needs a trade, e.g. '%s smith 2'. 'labour' lists "
-                          "which trades exist here." % (op, op))
-        return {"cmd": op, "trade": words[0].lower(),
+                          "which trades exist here." % (command, command))
+        return {"cmd": command, "trade": words[0].lower(),
                 "n": (nums[0] if nums else 1)}, None
 
-    if op in ("work", "commission"):
+    if command in ("work", "commission"):
         if not words:
             return None, ("%s needs a trade and a number of hours, e.g. "
-                          "'%s smith 200'." % (op, op))
+                          "'%s smith 200'." % (command, command))
         if not nums:
-            return None, "%s needs a number of hours, e.g. '%s %s 200'." % (op, op, words[0])
-        return {"cmd": op, "trade": words[0].lower(), "hours": nums[0]}, None
+            return None, "%s needs a number of hours, e.g. '%s %s 200'." % (command, command, words[0])
+        return {"cmd": command, "trade": words[0].lower(), "hours": nums[0]}, None
 
-    if op == "train":
+    if command == "train":
         # 'train smith 2' and 'train smith 2 from labourer' both read naturally.
         src_trade = None
-        low = [w.lower() for w in words]
+        low = [word.lower() for word in words]
         if "from" in low:
             i = low.index("from")
             if i + 1 < len(low):
@@ -484,20 +606,20 @@ def parse_typed(line):
             out["from"] = src_trade
         return out, None
 
-    if op in ("buy", "quote"):
+    if command in ("buy", "quote"):
         if not words:
             return None, ("%s needs something to %s, e.g. '%s iron 500'."
-                          % (op, op, op))
+                          % (command, command, command))
         # 'buy mine coal 500' and 'quote mine iron 200' are the forms the help
         # itself gives, and the first version of this parser took only the FIRST
         # word and threw the material away - so every documented three-word buy
         # failed with an error that listed the material the player had just
         # typed. A weird-play tester lost the whole mining subsystem to it.
-        out = {"cmd": op, "what": words[0].lower()}
+        out = {"cmd": command, "what": words[0].lower()}
         if len(words) > 1:
             out["material"] = words[1].lower()
         elif out["what"] in ("mine", "mines"):
-            return None, "say which mineral, e.g. '%s mine coal 500'." % op
+            return None, "say which mineral, e.g. '%s mine coal 500'." % command
         # 'buy coal 500' means the same thing and is what a person types; the
         # protocol wants it spelled out as a mine in a mineral.
         if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
@@ -513,14 +635,14 @@ def parse_typed(line):
             out["n"] = nums[0]
         return out, None
 
-    if op == "close":
+    if command == "close":
         if not words:
             return None, "close needs a mine, e.g. 'close iron'."
         # 'close mine coal' and 'close coal' both mean the one thing close does.
         mat = words[1].lower() if len(words) > 1 else words[0].lower()
         return {"cmd": "close", "what": mat, "material": mat}, None
 
-    if op == "allocate":
+    if command == "allocate":
         # Bare 'allocate' lists the standing orders in hand, same as bare
         # 'policy' lists the automatic switches.
         if not rest:
@@ -530,12 +652,12 @@ def parse_typed(line):
                           "arithmetic_positional 500' or 'allocate work "
                           "labourer 100'.")
         target = words[0]
-        _clear = any(w.lower() in ("off", "none", "clear", "stop")
-                    for w in words[1:]) or (bool(nums) and nums[0] == 0)
+        _clear = any(word.lower() in ("off", "none", "clear", "stop")
+                    for word in words[1:]) or (bool(nums) and nums[0] == 0)
         if target.lower() == "work":
             out = {"cmd": "allocate", "id": "work"}
-            trade = next((w.lower() for w in words[1:]
-                         if w.lower() not in ("off", "none", "clear", "stop")),
+            trade = next((word.lower() for word in words[1:]
+                         if word.lower() not in ("off", "none", "clear", "stop")),
                         None)
             if trade:
                 out["trade"] = trade
@@ -559,7 +681,7 @@ def parse_typed(line):
                           % (target, target))
         return out, None
 
-    if op == "policy":
+    if command == "policy":
         if not rest:
             return {"cmd": "policy"}, None
         if len(rest) < 2:
@@ -574,11 +696,11 @@ def parse_typed(line):
             return None, "say 'on' or 'off', e.g. 'policy auto_hire off'."
         return {"cmd": "policy", "set": {rest[0].lower(): flag}}, None
 
-    if op in ("save", "load"):
+    if command in ("save", "load"):
         if not rest:
-            return None, "%s needs a file name, e.g. '%s mygame.json'." % (op, op)
-        return {"cmd": op, "file": rest[0]}, None
+            return None, "%s needs a file name, e.g. '%s mygame.json'." % (command, command)
+        return {"cmd": command, "file": rest[0]}, None
 
     # Any command added to KNOWN_COMMANDS that this parser has not been taught
     # about still reaches the dispatcher rather than being refused here.
-    return {"cmd": op}, None
+    return {"cmd": command}, None

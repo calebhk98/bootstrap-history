@@ -101,20 +101,20 @@ _s_die.life_left = 1.0
 for _ in range(6):
     _s_die.step()
 check("the founder's death says what it means for the run, not only that it happened",
-      any("THE FOUNDER DIES" in m and "nobody to direct" in m
-          for _, m in _s_die.log),
-      [m for _, m in _s_die.log if "FOUNDER DIES" in m][:1])
+      any("THE FOUNDER DIES" in message and "nobody to direct" in message
+          for _, message in _s_die.log),
+      [message for _, message in _s_die.log if "FOUNDER DIES" in message][:1])
 check("...and the programme dissolving is counted down where a player sees it",
-      any("DISSOLVING" in m and "ends at twelve" in m for _, m in _s_die.log),
-      [m for _, m in _s_die.log if "DISSOLVING" in m][:1])
+      any("DISSOLVING" in message and "ends at twelve" in message for _, message in _s_die.log),
+      [message for _, message in _s_die.log if "DISSOLVING" in message][:1])
 
 # --- BREAK, round 12: a developer's own change-log marker was shipped in the
 # prose a player reads. 1,108 nodes carried "[AUDIT: ... See JOB 1 upkeep
 # audit.]" in their note field, the win condition among them, naming the task
 # numbering of the agent that had edited them. The reasoning for a change
 # belongs in the commit message; the note field is what the player reads.
-_leaks = sorted(k for k, v in NODES.items()
-                if "AUDIT" in ((v.get("note") or "") + (v.get("name") or "")))
+_leaks = sorted(node_id for node_id, value in NODES.items()
+                if "AUDIT" in ((value.get("note") or "") + (value.get("name") or "")))
 check("no developer change-log marker is shipped in player-facing prose",
       not _leaks, _leaks[:5])
 
@@ -133,8 +133,8 @@ for _k_ra in _ra_cases:
     check("%s is not a dead end: something really does need it" % _k_ra,
           bool(_un), _un)
 check("...and what rests on it is counted, not reported as nothing",
-      all(len(_DS(k, NODES)) >= 1 for k in _ra_cases),
-      {k: len(_DS(k, NODES)) for k in _ra_cases})
+      all(len(_DS(node_id, NODES)) >= 1 for node_id in _ra_cases),
+      {node_id: len(_DS(node_id, NODES)) for node_id in _ra_cases})
 # THE REASON THE CACHED INDEX CANNOT DO THIS. The tree is a directed acyclic
 # graph on `pre` and is NOT acyclic once req_any options are edges too: one
 # example is hydrochloric_acid, whose sulfuric_acid_supply group offers
@@ -173,14 +173,14 @@ def _cycle_on(edges_of):
 
 check("the tree is acyclic on hard prerequisites, which is what closure() "
       "walks and why it must not follow substitutions",
-      _cycle_on(lambda k: [p for p in NODES[k]["pre"] if p in NODES]) is None,
-      _cycle_on(lambda k: [p for p in NODES[k]["pre"] if p in NODES]))
+      _cycle_on(lambda k: [prereq_id for prereq_id in NODES[k]["pre"] if prereq_id in NODES]) is None,
+      _cycle_on(lambda k: [prereq_id for prereq_id in NODES[k]["pre"] if prereq_id in NODES]))
 
 def _pre_and_single_option_any(k):
-    n = NODES[k]
-    out = [p for p in n["pre"] if p in NODES]
-    for g in (n.get("req_any") or []):
-        opts = g.get("options") or {}
+    node = NODES[k]
+    out = [prereq_id for prereq_id in node["pre"] if prereq_id in NODES]
+    for req_group in (node.get("req_any") or []):
+        opts = req_group.get("options") or {}
         if len(opts) == 1:
             (opt,) = opts.keys()
             if opt in NODES:
@@ -201,9 +201,9 @@ def _pre_and_any(k):
     # walk over these edges has to skip anything that is not a node or it dies
     # on KeyError: 'lead_kg'. _unlocked_by is safe from this by construction,
     # because it only ever asks whether a node's options mention k.
-    out = [p for p in NODES[k]["pre"] if p in NODES]
-    for g in (NODES[k].get("req_any") or []):
-        out.extend(o for o in sorted(g.get("options") or {}) if o in NODES)
+    out = [prereq_id for prereq_id in NODES[k]["pre"] if prereq_id in NODES]
+    for req_group in (NODES[k].get("req_any") or []):
+        out.extend(option for option in sorted(req_group.get("options") or {}) if option in NODES)
     return out
 
 # _cycle_on (above) is a root-reachability check that skips any node once it
@@ -237,15 +237,15 @@ check("...and NOT acyclic once every substitution option counts as an edge, "
 # everyone's attention is a decision; committing four centuries of it is not.
 _s_rush = sim(capital=5000000.0)
 _r_rush = S._agent_dispatch(_s_rush, NODES, {"cmd": "rush", "limit": 1000})
-_owed_rush = sum(NODES[r["id"]]["ph"] for r in (_r_rush.get("started") or []))
+_owed_rush = sum(NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or []))
 check("`rush` does not commit more hours than a couple of years can hold",
       _owed_rush <= _s_rush.director_pool() * 2.0 + max(
-          NODES[r["id"]]["ph"] for r in (_r_rush.get("started") or [{"id": GOAL}])),
+          NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or [{"id": GOAL}])),
       (_owed_rush, _s_rush.director_pool()))
 check("...and says why it stopped rather than silently starting fewer",
-      any("would not make them go faster" in str(r.get("why"))
-          for r in (_r_rush.get("not_started") or [])),
-      [r.get("why") for r in (_r_rush.get("not_started") or [])][:1])
+      any("would not make them go faster" in str(entry.get("why"))
+          for entry in (_r_rush.get("not_started") or [])),
+      [entry.get("why") for entry in (_r_rush.get("not_started") or [])][:1])
 
 # --- BREAK, round 12: five scholars hired, five years stepped, the payroll
 # read 5, 4, 3, 3, 2 and NOTHING said why. The rate was right all along
@@ -258,14 +258,14 @@ _s_att.hire("scholar", 8)
 for _ in range(12):
     _s_att.step()
 check("losing people to death and better offers is announced, not silent",
-      any("lose" in m and "scholar" in m for _, m in _s_att.log),
-      [m for _, m in _s_att.log if "lose" in m][:2])
+      any("lose" in message and "scholar" in message for _, message in _s_att.log),
+      [message for _, message in _s_att.log if "lose" in message][:2])
 
 check("`rush` starts more than one thing in a single call",
       _ru.get("count_started", 0) >= 2, _ru.get("count_started"))
 check("...and every id it reports started is actually active now",
-      all(r["id"] in s_ru.active or r["id"] in s_ru.done for r in _ru["started"]),
-      [r["id"] for r in _ru["started"]])
+      all(entry["id"] in s_ru.active or entry["id"] in s_ru.done for entry in _ru["started"]),
+      [entry["id"] for entry in _ru["started"]])
 check("...and a limit caps how many it actually begins",
       S._agent_dispatch(sim(), NODES, {"cmd": "rush", "limit": 1})["count_started"] == 1,
       None)
@@ -277,12 +277,12 @@ check("...and a limit caps how many it actually begins",
 s_ruf = sim()
 s_ruf.fog = True
 s_ruf.revealed = set()
-_avf = {r["id"] for r in S._agent_available(s_ruf, NODES, {"all": True})["available"]}
+_avf = {entry["id"] for entry in S._agent_available(s_ruf, NODES, {"all": True})["available"]}
 _ruf = S._agent_dispatch(s_ruf, NODES, {"cmd": "rush", "force": True})
 check("under fog, everything `rush` starts was already on the visible "
       "`available` list",
-      all(r["id"] in _avf for r in _ruf["started"]),
-      [r["id"] for r in _ruf["started"] if r["id"] not in _avf])
+      all(entry["id"] in _avf for entry in _ruf["started"]),
+      [entry["id"] for entry in _ruf["started"] if entry["id"] not in _avf])
 
 # EVERY NEW COMMAND MUST BE ADVERTISED. Same check the suite already runs
 # for the rest of KNOWN_COMMANDS, pinned here for the two just added so a
@@ -354,7 +354,7 @@ check("a trade practised for a fee (an assay office) still opens as a "
 # moved - 22.6s of the suite's own time on a check that asserts nothing about
 # any INDIVIDUAL Sim, only a count. Measured via ROME_TEST_PROFILE.
 _venture_s = sim()
-_venture_ct = sum(1 for k in NODES if _venture_s.is_venture(k))
+_venture_ct = sum(1 for node_id in NODES if _venture_s.is_venture(node_id))
 check("the count of nodes offered to `open` as a concern is down from the "
       "break's 1,493, and not collapsed toward zero",
       1300 <= _venture_ct <= 1450, _venture_ct)

@@ -105,19 +105,19 @@ for _node, _tr, _add in s2.LABOUR_PRODUCTIVITY_SOURCES:
 check("stacking every productivity technology this run has wired in never "
       "pushes any trade's multiplier past the cap, however many technologies "
       "a civilization eventually builds",
-      all(s2.labour_productivity(tr) <= s2.LABOUR_PRODUCTIVITY_CAP + 1e-9
-          for _n, tr, _a in s2.LABOUR_PRODUCTIVITY_SOURCES),
-      [(tr, s2.labour_productivity(tr)) for _n, tr, _a in sorted(
+      all(s2.labour_productivity(trade) <= s2.LABOUR_PRODUCTIVITY_CAP + 1e-9
+          for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
+      [(trade, s2.labour_productivity(trade)) for _, trade, _ in sorted(
           s2.LABOUR_PRODUCTIVITY_SOURCES, key=lambda r: r[1])])
 
 check("every node named in LABOUR_PRODUCTIVITY_SOURCES is a real node in "
       "the compiled tree, not a name that was never wired to anything",
-      all(_n in NODES for _n, _tr, _a in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
-      [_n for _n, _tr, _a in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if _n not in NODES])
+      all(node_id in NODES for node_id, _, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
+      [node_id for node_id, _, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if node_id not in NODES])
 check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
       "the wage table",
-      all(_tr in WAGES for _n, _tr, _a in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
-      [_tr for _n, _tr, _a in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if _tr not in WAGES])
+      all(trade in WAGES for _, trade, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
+      [trade for _, trade, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if trade not in WAGES])
 # EDUCATING A WHOLE SOCIETY. The user's own question: "can we make the whole
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"
@@ -129,7 +129,7 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 # this file's own 3-second rule (see check() timing) exists precisely so a
 # check does not silently become the slowest thing in the suite this way.
 _s0_agri = sim()
-_agri_nodes = sorted(k for k in NODES if _s0_agri._is_agri_mechanisation(k))
+_agri_nodes = sorted(node_id for node_id in NODES if _s0_agri._is_agri_mechanisation(node_id))
 check("a genuinely farm-labour-saving slice of the tree exists and is a "
       "modest fraction of it, not the whole `food`-tagged sprawl",
       35 <= len(_agri_nodes) <= 45, len(_agri_nodes))
@@ -193,7 +193,7 @@ check("a handful of mechanised techniques frees only a little slack, not "
 # proven rather than merely argued, the same way the rest of this suite
 # proves determinism elsewhere.
 def _edu_snapshot(seed_env):
-    p = subprocess.run(
+    result = subprocess.run(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
@@ -213,7 +213,7 @@ def _edu_snapshot(seed_env):
          "round(s.employees.get('electrician', 0.0), 12))))"],
         capture_output=True, text=True, timeout=60, cwd=HERE,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout.strip()
+    return result.stdout.strip()
 _edu_a, _edu_b = _par_map(_edu_snapshot, ("0", "98765"))
 check("literacy growth and trade absorption are identical under a "
       "different PYTHONHASHSEED",
@@ -297,8 +297,8 @@ check("...and which taught trades the society has absorbed on its own",
 # (society.py) - a number exposed for a competitive-pricing pass to spend,
 # deliberately not yet spent in revenue() itself (see that function's own
 # docstring for why, and for the seam left for the agent doing that work).
-_rev_node = next(k for k in sorted(NODES) if NODES[k].get("rev", 0) > 0)
-_no_rev_node = next(k for k in sorted(NODES) if NODES[k].get("rev", 0) <= 0)
+_rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) > 0)
+_no_rev_node = next(node_id for node_id in sorted(NODES) if NODES[node_id].get("rev", 0) <= 0)
 
 s_dif = sim(capital=1000000.0)
 check("a technology nobody has opened for business has nothing to leak",
@@ -356,7 +356,7 @@ check("`state` reports how much of what you run has diffused to competitors",
 # game will still sell it at a flat book price - so you could build an
 # aluminium monoplane in Rome 100AD with no grid, no generator, no
 # electrolysis cell, buying the metal at 6 denarii a kilo. This pins the 24
-# materials audited and fixed for that gap (see rome/data/review/
+# materials audited and fixed for that gap (see data/review/
 # MATERIAL_GATING.md for the full audit, including the ~69 materials judged
 # genuinely purchasable in antiquity - iron, copper, wool, clay, timber,
 # salt and the like - where no gate is correct).
@@ -378,14 +378,14 @@ def _full_ancestors(k, _nodes=NODES):
         if cur in seen:
             continue
         seen.add(cur)
-        n = _nodes.get(cur)
-        if not n:
+        node = _nodes.get(cur)
+        if not node:
             continue
-        for p in (n.get("pre") or []):
-            if p in _nodes and p not in seen:
-                stack.append(p)
-        for g in (n.get("req_any") or []):
-            for opt in (g.get("options") or {}):
+        for prereq_id in (node.get("pre") or []):
+            if prereq_id in _nodes and prereq_id not in seen:
+                stack.append(prereq_id)
+        for req_group in (node.get("req_any") or []):
+            for opt in (req_group.get("options") or {}):
                 if opt in _nodes and opt not in seen:
                     stack.append(opt)
     seen.discard(k)
@@ -440,10 +440,10 @@ _KNOWN_UNGATED = {"nickel_kg": {"electroplating"}}
 
 _mat_gaps = {}
 for _mat, _prods in _GATED_MATERIALS.items():
-    _consumers = [k for k, v in NODES.items() if (v.get("mat") or {}).get(_mat)]
+    _consumers = [node_id for node_id, value in NODES.items() if (value.get("mat") or {}).get(_mat)]
     _excuse = _KNOWN_UNGATED.get(_mat, set())
-    _bad = [k for k in _consumers
-            if k not in _excuse and not (_prods & _full_ancestors(k))]
+    _bad = [node_id for node_id in _consumers
+            if node_id not in _excuse and not (_prods & _full_ancestors(node_id))]
     if _bad:
         _mat_gaps[_mat] = _bad
 check("every consumer of a material this tree can only make by an invented, "
@@ -453,11 +453,11 @@ check("every consumer of a material this tree can only make by an invented, "
 check("...and there really are gated materials and consumers here to check, "
       "not an empty audit passing by having nothing to look at",
       len(_GATED_MATERIALS) >= 20
-      and sum(1 for _m in _GATED_MATERIALS
-              for _k, _v in NODES.items() if (_v.get("mat") or {}).get(_m)) >= 60,
+      and sum(1 for material in _GATED_MATERIALS
+              for _node_id, node in NODES.items() if (node.get("mat") or {}).get(material)) >= 60,
       len(_GATED_MATERIALS))
-_graphite_bad = [k for k in _graphite_pinned
-                 if "mat_graphite_pure" not in _full_ancestors(k)]
+_graphite_bad = [node_id for node_id in _graphite_pinned
+                 if "mat_graphite_pure" not in _full_ancestors(node_id)]
 check("the semiconductor-grade graphite crucibles on the road to the goal "
       "itself require actually-pure graphite, not natural lump graphite "
       "bought off the market",
@@ -586,7 +586,7 @@ s_fz.enforce_credit_limit(105)
 check("settling again while an earlier freeze is still in force extends "
       "the unlock date...",
       s_fz.credit_frozen_until == 117, s_fz.credit_frozen_until)
-_fz_msgs = [m for _, m in s_fz.log[_before_log_fz:] if "INSOLVENCY SETTLED" in m]
+_fz_msgs = [message for _, message in s_fz.log[_before_log_fz:] if "INSOLVENCY SETTLED" in message]
 check("...and says so in the same event, naming both the old and the new "
       "date, rather than moving the deadline with no word about it",
       bool(_fz_msgs) and "110" in _fz_msgs[0] and "117" in _fz_msgs[0],
@@ -598,7 +598,7 @@ s_fz2.capital = -(s_fz2.credit_limit() * 1.5)
 s_fz2.last_settlement = -999
 _before_log_fz2 = len(s_fz2.log)
 s_fz2.enforce_credit_limit(105)
-_fz2_msgs = [m for _, m in s_fz2.log[_before_log_fz2:] if "INSOLVENCY SETTLED" in m]
+_fz2_msgs = [message for _, message in s_fz2.log[_before_log_fz2:] if "INSOLVENCY SETTLED" in message]
 check("...while a first-ever settlement, with nothing to extend, says "
       "nothing about a moved date",
       bool(_fz2_msgs) and "moves with every settlement" not in _fz2_msgs[0],

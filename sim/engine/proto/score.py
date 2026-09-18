@@ -40,7 +40,7 @@ def final_report(s, nodes):
            "failed_attempts": sum(getattr(s, "failed_attempts", {}).values())}
     if goal and goal in nodes:
         need = closure(nodes, goal)
-        left = [x for x in topo_order(nodes, need) if x not in s.done]
+        left = [node_id for node_id in topo_order(nodes, need) if node_id not in s.done]
         out["the_goal"] = goal
         out["reached_it"] = bool(s.goal_year)
         out["the_whole_road_was"] = len(need)
@@ -220,14 +220,14 @@ def _score_components(s, nodes, reveal_tree_total):
     # otherwise be a frozenset, and PYTHONHASHSEED must not move the sum.
     inst_keys = sorted(s.CAPABILITY_INSTITUTIONS)
     inst_vals = []
-    for k in inst_keys:
-        if k in s.SCALABLE_INSTITUTIONS:
-            ceiling = max(1.0, s.institution_unit_ceiling(k))
-            inst_vals.append(min(1.0, s.institution_units(k) / ceiling))
+    for institution_id in inst_keys:
+        if institution_id in s.SCALABLE_INSTITUTIONS:
+            ceiling = max(1.0, s.institution_unit_ceiling(institution_id))
+            inst_vals.append(min(1.0, s.institution_units(institution_id) / ceiling))
         else:
-            inst_vals.append(1.0 if s.running(k) else 0.0)
+            inst_vals.append(1.0 if s.running(institution_id) else 0.0)
     inst_norm = (sum(inst_vals) / len(inst_vals)) if inst_vals else 0.0
-    out["institutions"] = {"raw": sum(1 for v in inst_vals if v > 0.0),
+    out["institutions"] = {"raw": sum(1 for value in inst_vals if value > 0.0),
                             "of_total": len(inst_vals),
                             "normalized": inst_norm}
 
@@ -265,7 +265,7 @@ def _score_components(s, nodes, reveal_tree_total):
     res_parts = [corpus_preserved, solvent_share, staffing_share,
                  scandal_margin, founder_share]
     res_norm = sum(res_parts) / len(res_parts)
-    out["resilience"] = {"raw": sum(1 for v in res_parts if v >= 0.999),
+    out["resilience"] = {"raw": sum(1 for value in res_parts if value >= 0.999),
                           "of_total": len(res_parts), "normalized": res_norm}
 
     # STANDING (5%) - reputation alone, not eminence: eminence is a danger
@@ -334,8 +334,8 @@ def score_report(s, nodes):
     goal = getattr(s, "goal", None)
     goal_reached = bool(goal and s.goal_year)
     total = None
-    if goal_reached and all(c["normalized"] is not None for c in components.values()):
-        total = round(sum(c["weighted"] for c in components.values()), 4)
+    if goal_reached and all(component["normalized"] is not None for component in components.values()):
+        total = round(sum(component["weighted"] for component in components.values()), 4)
     # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE. A player asked
     # for exactly this: a percentage answers "how much of the possible
     # score", a point figure answers "how did this run do against that
@@ -388,39 +388,39 @@ def _score_lines(out, indent="  "):
     shared by `score` (render_score) and the ending screen (render_final),
     so there is exactly one rendering of a score to fall out of step.
     """
-    L = []
+    lines = []
     if not out.get("goal_reached"):
-        L.append(_wrap("no score: the goal was not reached%s"
+        lines.append(_wrap("no score: the goal was not reached%s"
                        % (" yet" if out.get("end_reason") is None else "")
                        + (". The breakdown below is provisional - what you "
                           "would be optimising if you reached %s."
                           % (out.get("goal_in_words") or "the goal")
                           if out.get("end_reason") is None else "."),
                        indent=indent))
-        L.append("")
+        lines.append("")
     for name in _SCORE_COMPONENT_ORDER:
-        c = (out.get("components") or {}).get(name)
-        if not c:
+        component = (out.get("components") or {}).get(name)
+        if not component:
             continue
         label = name.replace("_", " ")
-        if c.get("normalized") is None:
-            L.append("%s%-20s withheld: %s" % (indent, label, c.get("withheld", "-")))
+        if component.get("normalized") is None:
+            lines.append("%s%-20s withheld: %s" % (indent, label, component.get("withheld", "-")))
             continue
-        L.append("%s%-20s raw %-14s normalized %-6s weight %-5s weighted %s"
-                 % (indent, label, _fmt_num(c.get("raw")),
-                    "%.3f" % c["normalized"], "%.0f%%" % (c["weight"] * 100),
-                    "%.4f" % c["weighted"]))
-    L.append("")
+        lines.append("%s%-20s raw %-14s normalized %-6s weight %-5s weighted %s"
+                 % (indent, label, _fmt_num(component.get("raw")),
+                    "%.3f" % component["normalized"], "%.0f%%" % (component["weight"] * 100),
+                    "%.4f" % component["weighted"]))
+    lines.append("")
     if out.get("total") is not None:
-        L.append("%sTOTAL: %.1f%%  (%s / 1000 points)"
+        lines.append("%sTOTAL: %.1f%%  (%s / 1000 points)"
                  % (indent, out["total"] * 100, _fmt_num(out.get("points"))))
     else:
-        L.append("%sTOTAL: -- (%s)" % (indent, out.get("no_score")
+        lines.append("%sTOTAL: -- (%s)" % (indent, out.get("no_score")
                  or "not computable until the run ends under fog"))
     ach = out.get("achievements") or {}
     if ach:
-        L.append("")
-        L.append("%sACHIEVEMENTS" % indent)
-        for a in ach.values():
-            L.append("%s  [%s] %s" % (indent, "x" if a["won"] else " ", a["what"]))
-    return L
+        lines.append("")
+        lines.append("%sACHIEVEMENTS" % indent)
+        for achievement in ach.values():
+            lines.append("%s  [%s] %s" % (indent, "x" if achievement["won"] else " ", achievement["what"]))
+    return lines

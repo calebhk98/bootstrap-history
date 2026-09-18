@@ -1,0 +1,344 @@
+{
+ "_note": "Ferrous metals family. See _SCHEMA.md. Two intermediates are introduced here because nothing else owns them: pig_iron_kg (the liquid, high-carbon product of a blast furnace, distinct from cast_iron_kg which is pig iron poured to shape, and from iron_bar_kg which is pig iron fined down to low-carbon wrought iron) and noric_ore_kg (the naturally manganese-bearing ore that made ferrum Noricum better without any deliberate alloying step). charcoal_kg, coal_kg, limestone_kg, flux_kg and lime_kg are referenced as inputs but defined by the fuels/stone family, not here.",
+ "materials": {
+  "iron_ore_kg": {
+   "outputs": {
+    "iron_ore_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 14.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of run-of-mine iron ore (hematite, limonite or bog-ore nodules) at the pit head or bog",
+   "yield_basis": "EXTRACTED, so there is only labour and a rent on the deposit, exactly as in the copper_ore_kg worked example - ore grade belongs to the smelting recipe that consumes this ore, not to this one, because the same tonne of rock costs the same to dig whether it assays rich or poor. Iron ore is typically won more easily than a hard-rock copper sulphide vein: bog iron is raked up as loose nodules from marsh sediment, and much surface hematite/limonite breaks out of shallow, weathered outcrops rather than requiring deep hard-rock working. Taken here at roughly 80 kg of ore moved per hour (against the copper_ore_kg example's 55 kg/hour for a hard-rock vein), giving about 14 hours per tonne.",
+   "requires_node": null,
+   "conf": "C"
+  },
+  "iron_bloom_kg": {
+   "outputs": {
+    "iron_bloom_kg": 1000.0
+   },
+   "inputs": {
+    "iron_ore_kg": 4000.0,
+    "charcoal_kg": 6000.0
+   },
+   "labour_hours": {
+    "furnaceman": 600.0,
+    "smith": 150.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of consolidated bloomery iron (wrought-iron sponge, hammered to expel most of its slag), ready for a smith to work",
+   "yield_basis": "BLOOMERY, a direct, solid-state reduction that never reaches iron's 1538 C melting point, so the furnace never separates metal from slag as cleanly as a blast furnace does. Ore at roughly 40% iron content gives up perhaps 55% of its contained iron to the bloom - archaeological bloomery reconstructions consistently report substantial iron loss to slag, because the fayalitic slag that must form to free the metal carries away a great deal of unreduced iron oxide with it. A tonne of ~90%-metallic consolidated bloom therefore needs on the order of 4 tonnes of ore (0.9 / (0.40 x 0.55) = 4.09, rounded to 4000 kg). Charcoal is set by the reduction chemistry (CO reducing Fe2O3/Fe3O4) plus holding a small shaft or pit furnace at smelting heat for the hours a smelt takes; experimental bloomeries commonly report 5-8 kg charcoal per kg of bloom, taken here at 6. Labour is the dominant cost and the reason bloomery iron was so expensive: a single ancient or medieval smelt might run most of a day of continuous bellows-work to yield on the order of 10-20 kg of bloom, which scales to several hundred furnaceman-hours per tonne; the smith hours are the separate work of reheating and hammering the spongy bloom to squeeze out slag and consolidate it into one coherent mass.",
+   "requires_node": "mat_wrought_iron",
+   "conf": "C"
+  },
+  "pig_iron_kg": {
+   "outputs": {
+    "pig_iron_kg": 1000.0
+   },
+   "inputs": {
+    "iron_ore_kg": 2200.0,
+    "charcoal_kg": 4000.0,
+    "flux_kg": 300.0
+   },
+   "labour_hours": {
+    "furnaceman": 25.0
+   },
+   "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "blast furnace stack, structural masonry",
+     "build_materials": {
+      "stone_kg": 400000.0
+     },
+     "build_labour_hours": {
+      "mason": 3000.0,
+      "labourer": 1500.0
+     },
+     "service_life_years": 40,
+     "annual_output_at_basis": 400000.0,
+     "capital_basis": "An 18th-century charcoal-fired blast furnace stack ran 6-9 m tall on a broad stone base, historically documented as standing for decades once built - the stack is a static stone shell that does the furnace no chemical harm as long as its inner lining (priced separately below) is kept sound. 400 t of stone is an order-of-magnitude figure for a structure that size and mass, not a specific quarry survey. A furnace of this kind, blown in and campaigned most weeks of the working year, is documented as turning out on the order of a few hundred tonnes of pig iron annually; 400 t/yr is taken as representative of a productive charcoal furnace rather than either a small bloomery-scale plant or a much larger coke-fired 19th-century furnace.",
+     "conf": "C"
+    },
+    {
+     "good": "hearth lining, bosh plates, tuyeres and bellows drive",
+     "build_materials": {
+      "brick_1000": 25.0,
+      "iron_bar_kg": 3000.0,
+      "timber_m3": 40.0
+     },
+     "build_labour_hours": {
+      "mason": 400.0,
+      "smith": 300.0,
+      "millwright": 300.0,
+      "carpenter": 150.0
+     },
+     "service_life_years": 4,
+     "annual_output_at_basis": 400000.0,
+     "capital_basis": "The parts of a blast furnace that actually touch molten iron and slag do not last as long as the stack around them: firebrick lining spalls from thermal cycling and is chemically attacked by the slag, and the cast-iron bosh plates and tuyeres erode from the same heat and blast - a hearth reline every few years, well inside the stack's own multi-decade life, is why this is a separate list item rather than folded into the stack above. Brick and iron quantities are an order-of-magnitude estimate for a hearth and bosh lining at this furnace's scale; timber and the millwright/carpenter hours cover the water-wheel and bellows drive that supplies the furnace's continuous blast, whose wooden wheel and gearing wear faster than stonework but slower than the lining itself, so it is bundled with the lining's 4-year figure as a simplification rather than given a third list item.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of liquid pig iron tapped from a blast furnace (roughly 4% carbon plus the silicon, manganese and phosphorus picked up from the ore and flux)",
+   "yield_basis": "BLAST FURNACE, an indirect process: continuous countercurrent operation (ore and charcoal descending against rising hot reducing gas) recovers iron far more completely than a bloomery's batch smelt, because the gas has the whole shaft to react in before the charge reaches tapping heat, and the slag is tapped molten rather than trapping unreduced ore in a solid mass. Taking recovery at roughly 92% of contained iron from a richer ore than a bloomery is fed (blast furnaces were historically supplied the best ore to hand, taken here at 50% Fe) gives about 2.2 tonnes of ore per tonne of pig iron (1.0 / (0.50 x 0.92) = 2.17, rounded to 2200 kg) - roughly half the bloomery's ore appetite, which is the whole economic point of the indirect process. Charcoal at 4 t per tonne of metal is lower per kg of iron than the bloomery figure despite the furnace running far hotter (it must reach and hold above iron's 1538 C melting point), because continuous operation lets the rising gas preheat the descending charge instead of that heat being relit from cold for every batch. Flux is limestone-equivalent to combine with the ore's silica gangue into a fluid, tappable slag, taken at roughly 14% of ore mass. Labour per tonne is far below a bloomery's because a blast furnace runs continuously for weeks with a small crew, so the same total campaign labour is spread over vastly more metal - this is a different ore-to-metal ratio, a different fuel-per-kg, and a different labour figure from iron_bloom_kg, as the process demands.",
+   "requires_node": "blast_furnace",
+   "conf": "C"
+  },
+  "cast_iron_kg": {
+   "outputs": {
+    "cast_iron_kg": 1000.0
+   },
+   "inputs": {
+    "pig_iron_kg": 1080.0
+   },
+   "labour_hours": {
+    "smith": 15.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of iron castings, cast to shape directly from a blast furnace's own liquid pig iron (moulding, pouring, fettling)",
+   "yield_basis": "Cast iron is pig iron poured to shape rather than refined further, so its composition is essentially unchanged - this entry is casting loss, not a metallurgical transformation, which is exactly why a blast furnace's output is described as producing CAST iron rather than bar: nothing here removes carbon. Loss is oxide dross skimmed from the ladle before pouring, plus gate, riser and sprue metal that does not end up in the finished casting, plus the occasional mis-cast reject; taken together at roughly 8%, which is why the input figure exceeds the output. Fettling (knocking off gates and risers, filing the parting line) is a smith's finishing work rather than a furnace process, hence the modest labour figure.",
+   "requires_node": "blast_furnace",
+   "conf": "C"
+  },
+  "iron_bar_kg": {
+   "outputs": {
+    "iron_bar_kg": 1000.0
+   },
+   "inputs": {
+    "pig_iron_kg": 1250.0,
+    "charcoal_kg": 2000.0
+   },
+   "labour_hours": {
+    "furnaceman": 80.0,
+    "smith": 120.0
+   },
+   "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "finery hearth, chafery and water-powered hammer",
+     "build_materials": {
+      "stone_kg": 30000.0,
+      "brick_1000": 3.0,
+      "iron_bar_kg": 800.0,
+      "timber_m3": 30.0
+     },
+     "build_labour_hours": {
+      "mason": 500.0,
+      "millwright": 400.0,
+      "carpenter": 250.0,
+      "smith": 150.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 150000.0,
+     "capital_basis": "A finery forge is a stone-and-brick hearth building housing the finery and chafery fires plus a water-powered helve or tilt hammer for shingling and drawing out the bloom - a real, historically water-powered plant (finery forges are among the earliest documented industrial uses of waterpower in medieval and early modern Europe), not a hand hearth. Stone and brick cover the hearth structure; iron_bar_kg is used here for the hammer's own iron fittings (helve tip, anvil block bindings) - a small self-referential capital draw, exactly the kind of recipe-graph cycle solve_prices.py's module docstring already says the fixed-point solver handles rather than forbids. Timber and the carpenter/millwright hours are the wheel, frame and hammer beam, which decay faster than the masonry and set the 15-year figure. A single finery forge of this kind is taken to turn out on the order of 100-200 t/yr of bar; 150 t/yr is a representative midpoint.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of consolidated wrought-iron bar (fined and hammered down to under roughly 0.1% carbon)",
+   "yield_basis": "FINING (finery or puddling): cast iron's roughly 4% carbon, plus its silicon and phosphorus, is oxidised out in an air blast or reverberatory hearth until the metal is soft, weldable wrought iron - this is what the task means by cast iron needing to be fined into bar, and it is decarburisation, the mirror image of the cementation used below to make steel. The same oxidising conditions that burn out the carbon also burn some of the iron itself into the slag ('finery cinder'); this iron loss is a documented feature of the fining process rather than a rounding error, taken here at roughly 20%, so 1.25 t of pig iron is needed per tonne of bar. Charcoal fires the hearth and the several reheats needed to shingle (hammer-consolidate) the spongy fined bloom and draw it out into bar, taken at 2 t per tonne of bar - a separate fuel bill from the pig iron's own smelting. Labour is heavy hand-work (blowing and tending the hearth, then hammering) but far less per tonne than a bloomery needs, because the ore-to-metal saving happened upstream at the blast furnace: fining itself is not a cheap step, it is simply a smaller share of the total cost than smelting straight from ore.",
+   "requires_node": "finery_puddling",
+   "conf": "C"
+  },
+  "noric_ore_kg": {
+   "outputs": {
+    "noric_ore_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 18.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of run-of-mine manganiferous spathic iron ore (siderite), of the type historically worked in Noricum in the eastern Alps",
+   "yield_basis": "EXTRACTED, like iron_ore_kg, but from Alpine vein and adit workings (the historical Hüttenberg-type Noric ore body) rather than bog or shallow surface ore, so it is taken at the harder-rock figure used in the copper_ore_kg worked example (18 h/t) rather than iron_ore_kg's easier 14. What makes this its own material, rather than iron_ore_kg under another name, is chemistry rather than hardness: it carries manganese as a natural impurity in the same rock, which is what the smelting entry (steel_noric_kg) turns into an advantage - see that entry's yield_basis.",
+   "requires_node": null,
+   "conf": "C"
+  },
+  "steel_noric_kg": {
+   "outputs": {
+    "steel_noric_kg": 1000.0
+   },
+   "inputs": {
+    "noric_ore_kg": 3500.0,
+    "charcoal_kg": 6000.0
+   },
+   "labour_hours": {
+    "furnaceman": 600.0,
+    "smith": 150.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of Noric steel, produced directly from the ore in a bloomery rather than by separate cementation",
+   "yield_basis": "Ferrum Noricum's reputation was not a better process, it was better ore, and that is why this belongs here rather than in labour or fuel: manganese occurring naturally in Noric siderite (geologically the same family as a modern spiegeleisen ore) does two things a plain bloomery ore cannot. Manganese oxide fluxes the furnace slag more freely than iron oxide alone, which is why the ore-to-metal ratio here (3.5 t ore per tonne of metal, an estimate by analogy to iron_bloom_kg's 4 t) is somewhat better than plain bloomery despite otherwise identical furnace conditions. And manganese carried into the metal itself scavenges sulphur as MnS instead of FeS, which is what removes the hot-shortness that plagues iron smelted from sulphur-bearing ores, and raises hardenability enough to take a better edge on quenching without any deliberate alloying step ever being taken. The underlying mechanism (manganese as a natural deoxidiser and desulphuriser) is standard, well-attested ferrous metallurgy; the specific ore-to-metal and fuel figures are this author's estimate by analogy to the plain bloomery entry, which is why the whole entry is marked C rather than B.",
+   "requires_node": "mat_wrought_iron",
+   "conf": "C"
+  },
+  "tool_steel_kg": {
+   "outputs": {
+    "tool_steel_kg": 1000.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1150.0,
+    "charcoal_kg": 3000.0
+   },
+   "labour_hours": {
+    "furnaceman": 30.0,
+    "smith": 100.0
+   },
+   "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "cementation furnace, cone and chests",
+     "build_materials": {
+      "brick_1000": 60.0,
+      "iron_bar_kg": 1500.0
+     },
+     "build_labour_hours": {
+      "mason": 1500.0,
+      "smith": 150.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 250000.0,
+     "capital_basis": "A cementation furnace of the Sheffield type is a substantial brick cone, often 10 m or more tall, built to draw the furnace's chimney and enclose two long sealed sandstone or firebrick chests packed with iron bar and charcoal for the multi-day cementation cycle described in tool_steel_kg's own yield_basis; iron_bar_kg here covers the chests' iron banding and fittings rather than the bar being cemented (that is already this entry's own `inputs`). Brick quantity is an order-of-magnitude figure for a structure of that scale. Ten years reflects the cone's substantial masonry construction cycling through many multi-day charges without the severe thermal shock a metal-smelting hearth sees. A large multi-chest cone running several charges a year is taken to yield on the order of 250 t/yr of consolidated blister/shear steel.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of consolidated (shear/blister) tool steel, cemented and reworked from wrought-iron bar",
+   "yield_basis": "CEMENTATION: wrought-iron bar is packed in charcoal inside sealed chests and held around 900-1000 C for five to ten days, letting carbon diffuse into the iron from the surface inward - a slow solid-state diffusion process, which is why it takes days rather than hours, and the diffusing carbon itself adds negligible mass. The mass loss that matters is downstream: the carbon case is uneven straight out of the chest (high at the surface, low at the core), so a tool-grade steel means breaking the resulting 'blister steel' bars, bundling and forge-welding them together (shear steel) to homogenise the carbon, and every one of those reheats burns a few percent of the iron to scale, compounding over the several heats a good tool steel needs - taken together at roughly 15%, which is the 'small yield' the cementation process is known for. Charcoal consumption is dominated by the week-long cementation furnace campaign rather than the welding heats themselves. Furnaceman hours are low per tonne because cementation is a passive batch process - a furnace holds many bars at once and needs only periodic checking over its multi-day cycle; smith hours are the active, per-heat labour of breaking, bundling and hammer-welding.",
+   "requires_node": "cementation_steel",
+   "conf": "C"
+  },
+  "steel_plate_kg": {
+   "outputs": {
+    "steel_plate_kg": 1000.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1100.0,
+    "charcoal_kg": 2500.0
+   },
+   "labour_hours": {
+    "furnaceman": 25.0,
+    "smith": 60.0
+   },
+   "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "cementation furnace, cone and chests",
+     "build_materials": {
+      "brick_1000": 50.0,
+      "iron_bar_kg": 1200.0
+     },
+     "build_labour_hours": {
+      "mason": 1300.0,
+      "smith": 120.0
+     },
+     "service_life_years": 10,
+     "annual_output_at_basis": 300000.0,
+     "capital_basis": "The same cementation-furnace structure as tool_steel_kg's, on the same reasoning, sized slightly smaller because steel_plate_kg's own yield_basis describes a shorter case-hardening cycle needing less furnace-time per tonne, which is taken here as somewhat higher annual throughput from a comparable structure rather than a smaller one - real works of this kind commonly ran both grades from broadly similar cones. This is a real modelling simplification: a works making both tool steel and structural plate would in practice share one furnace rather than build two, so treating each recipe as capitalising its own furnace risks double-counting if both are run at once. It is flagged here rather than hidden.",
+     "conf": "C"
+    },
+    {
+     "good": "water-powered rolling mill (housing, rolls and wheel)",
+     "build_materials": {
+      "iron_bar_kg": 4000.0,
+      "timber_m3": 60.0,
+      "stone_kg": 15000.0
+     },
+     "build_labour_hours": {
+      "millwright": 900.0,
+      "smith": 400.0,
+      "carpenter": 300.0,
+      "mason": 300.0
+     },
+     "service_life_years": 20,
+     "annual_output_at_basis": 300000.0,
+     "capital_basis": "steel_plate_kg's own yield_basis says stock is 'forged or rolled flat'; a rolling mill - paired iron rolls turned by a water wheel through gearing, housed in a timber-and-masonry mill building - is the mechanised route and the archetypal heavy fixed capital of early industrial metalworking. Iron here covers the rolls, shafting and gearing; timber and stone cover the wheel, frame and mill building. Twenty years is a single blended figure for the whole plant, which understates the truth that the rolls themselves wear and need reworking or replacing well before the building or wheel does - a simplification noted rather than resolved with a second list item, for the same reason as the furnace item above: keeping this entry to two items rather than three or four.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of cemented steel plate, forged or rolled flat from wrought-iron bar",
+   "yield_basis": "The same cementation process as tool_steel_kg, but a shorter case-hardening cycle and only one consolidation heat before flattening to plate, which is why the charcoal, loss and smith-labour figures here are all lower than tool_steel_kg's: structural plate does not need the thoroughly homogenised, repeatedly shear-welded carbon case that a cutting edge does. The loss that remains (10%) is oxide scale from the cementation reheat plus the flattening passes themselves, each of which needs the stock brought back to working heat and each of which scales a little more.",
+   "requires_node": "cementation_steel",
+   "conf": "C"
+  },
+  "iron_sheet_kg": {
+   "outputs": {
+    "iron_sheet_kg": 1000.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1080.0
+   },
+   "labour_hours": {
+    "smith": 40.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of thin wrought-iron sheet, hammered or rolled flat from bar",
+   "yield_basis": "Purely mechanical hot-working - no carbon is added, so this is iron, not steel, unlike steel_plate_kg. Flattening bar into thin sheet needs many more reheat-and-work cycles than leaving stock at bar thickness, because the iron work-hardens and cools quickly as it is drawn thinner, forcing frequent returns to the fire; each of those heats forms mill scale (FeO/Fe3O4) that flakes off and is lost. Taken at roughly 8% loss, reflecting the larger number of passes that thin sheet requires compared with a single forging or rolling operation.",
+   "requires_node": null,
+   "conf": "C"
+  },
+  "wire_drawn_kg": {
+   "outputs": {
+    "wire_drawn_kg": 1000.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1050.0
+   },
+   "labour_hours": {
+    "smith": 60.0
+   },
+   "energy_mj": 0.0,
+   "mechanical_mj": 150.0,
+   "capital": [
+    {
+     "good": "water-powered wire-drawing bench and dies",
+     "build_materials": {
+      "iron_bar_kg": 200.0,
+      "timber_m3": 15.0,
+      "tool_steel_kg": 50.0
+     },
+     "build_labour_hours": {
+      "millwright": 200.0,
+      "smith": 150.0,
+      "carpenter": 80.0
+     },
+     "service_life_years": 8,
+     "annual_output_at_basis": 60000.0,
+     "capital_basis": "wire_drawn_kg's own yield_basis describes drawing through 'a series of dies' - a water- or hand-powered draw-bench pulling wire through progressively smaller die plates. tool_steel_kg is used here for the dies themselves, which must be hard enough to survive repeated abrasive drawing without being cut away by the wire passing through them - a real cross-reference to another priced material rather than an assumed number. Iron and timber cover the bench frame and drive train. Eight years blends the bench's own longer structural life with the dies' shorter, wear-driven replacement cycle, the same simplification made for the rolling mill above rather than a second list item. A single bench of this scale is taken to turn out on the order of tens of tonnes of finished wire a year.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of cold-drawn iron wire, forged down to rod and then drawn through a series of dies",
+   "yield_basis": "Bar is first forged down to rod (a small scale loss, folded into the 5% input figure), then drawn cold through dies of progressively smaller bore - a mechanical, not thermal, process, and nearly lossless in mass since no metal is oxidised or cut away, only reshaped. What limits it is the metal's own work-hardening: iron can only take about 20-30% reduction in cross-section per draw before it cracks, so fine wire needs many passes with an intermediate annealing heat between them to restore ductility. The mechanical_mj figure is the mechanical work of that plastic deformation (redundant deformation plus die friction), estimated in the low hundreds of kJ per kg for a multi-pass draw of iron wire, i.e. on the order of 150 MJ per tonne - a real cost distinct from any fuel already counted as an input, which is why it is carried separately rather than folded into a fuel quantity. It is MECHANICAL rather than thermal (see ENERGY in sim/solve_prices.py's module docstring): a draw-bench delivers shaft work directly, priced through data/production/70_energy.json's mechanical energy market (water wheel or human muscle), never through a fuel's calorific value.",
+   "requires_node": "drawplate_wire",
+   "conf": "C"
+  },
+  "flue_dust_kg": {
+   "outputs": {
+    "flue_dust_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 4.0
+   },
+   "extracted_from": "blast-furnace flue and dust-catcher (an unavoidable by-product of pig-iron smelting, not itself smelted)",
+   "basis": "per tonne of fine particulate swept from a blast furnace's flue and dust-catcher",
+   "yield_basis": "Furnace draught strong enough to sustain combustion and reduction also carries a share of the charge - unburnt charcoal fines, ore dust, and condensed metal-oxide fume - up the stack rather than down into the melt, and this settles out in the flue and dust-catcher rather than being smelted. It is not a separately manufactured material: its ore and fuel are already paid for as part of the pig_iron_kg entry that produced it, so this entry carries no material inputs of its own, only the labour of shovelling it out of the dust-catcher, which is why it is marked extracted_from rather than given a smelting recipe - the same logic as a by-product that costs nothing but collecting.",
+   "requires_node": "blast_furnace",
+   "conf": "C"
+  },
+  "green_vitriol_kg": {
+   "outputs": {
+    "green_vitriol_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 45.0
+   },
+   "extracted_from": "weathered pyrite/marcasite outcrops and old mine workings (natural efflorescence)",
+   "basis": "per tonne of gathered crystalline ferrous sulphate (green vitriol, also called copperas)",
+   "yield_basis": "Iron pyrite oxidises spontaneously on exposure to damp air, and the product - hydrated ferrous sulphate (melanterite, 'green vitriol') - effloresces as a visible crust on weathered pyritic shale and old mine workings. Nature does the chemistry; there is no furnace and no fuel, hence extracted_from rather than a smelting recipe. It is a thin surface deposit rather than a body of rock, so gathering it by scraping is slower per tonne worked than digging ore of comparable hardness; taken here at roughly double the iron_ore_kg labour figure to reflect the much lower yield per unit area covered. Later, deliberate 'copperas works', which piled crushed pyrite in the open for a year or more to speed up the same weathering, are a labour/land trade against waiting for natural exposure, not a different chemical process, so they are not modelled as a separate entry.",
+   "requires_node": null,
+   "conf": "C"
+  }
+ }
+}

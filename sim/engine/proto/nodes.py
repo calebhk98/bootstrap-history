@@ -21,7 +21,7 @@ from ..core import Sim
 # below reuses the same dict rather than paying it again.
 _NODES_ONCE = load()[2]
 NODE_IDS = frozenset(_NODES_ONCE)
-NODE_IDS_LOWER = {k.lower(): k for k in NODE_IDS}
+NODE_IDS_LOWER = {node_id.lower(): node_id for node_id in NODE_IDS}
 
 
 def _norm_name(text):
@@ -60,19 +60,19 @@ def _resolve_by_name(text):
     id typo, extended to names because a player cannot be expected to know
     that names, unlike ids, are not unique.
     """
-    q = _norm_name(text)
-    if not q:
+    normalized_query = _norm_name(text)
+    if not normalized_query:
         return []
-    exact = NODE_NAME_NORM.get(q)
+    exact = NODE_NAME_NORM.get(normalized_query)
     if exact:
         return list(exact)
-    if len(q) < 3:
+    if len(normalized_query) < 3:
         return []            # too short to mean anything as a name fragment
-    prefix = [k for nm, ids in NODE_NAME_NORM.items() if nm.startswith(q) for k in ids]
+    prefix = [node_id for normalized_name, ids in NODE_NAME_NORM.items() if normalized_name.startswith(normalized_query) for node_id in ids]
     if prefix:
         return prefix
-    if len(q) >= 4:
-        return [k for nm, ids in NODE_NAME_NORM.items() if q in nm for k in ids]
+    if len(normalized_query) >= 4:
+        return [node_id for normalized_name, ids in NODE_NAME_NORM.items() if normalized_query in normalized_name for node_id in ids]
     return []
 
 
@@ -91,10 +91,10 @@ def _downstream_of(k, nodes):
     seen, stack = set(), [k]
     while stack:
         cur = stack.pop()
-        for m in _unlocked_by(cur, nodes):
-            if m not in seen:
-                seen.add(m)
-                stack.append(m)
+        for dependent_id in _unlocked_by(cur, nodes):
+            if dependent_id not in seen:
+                seen.add(dependent_id)
+                stack.append(dependent_id)
     seen.discard(k)
     return seen
 
@@ -133,12 +133,12 @@ def _unlocked_by_index(nodes):
     if entry is not None and entry[0] is nodes:
         return entry[1]
     idx = {}
-    for m, v in nodes.items():
-        prereqs = set(v["pre"])
-        for g in (v.get("req_any") or []):
-            prereqs.update(g.get("options") or {})
-        for p in prereqs:
-            idx.setdefault(p, []).append(m)
+    for node_id, value in nodes.items():
+        prereqs = set(value["pre"])
+        for group in (value.get("req_any") or []):
+            prereqs.update(group.get("options") or {})
+        for prereq_id in prereqs:
+            idx.setdefault(prereq_id, []).append(node_id)
     for lst in idx.values():
         lst.sort()
     _unlocked_by_cache[id(nodes)] = (nodes, idx)
@@ -168,13 +168,13 @@ def _did_you_mean(k, nodes, limit=8, s=None):
     common case and an exact prefix is a better guess than anything fuzzy, then
     difflib for the rest.
     """
-    q = str(k).lower()
-    near = [x for x in nodes if q in x.lower()]
+    query = str(k).lower()
+    near = [result_id for result_id in nodes if query in result_id.lower()]
     if len(near) < limit:
         import difflib
-        for x in difflib.get_close_matches(q, list(nodes), n=limit, cutoff=0.6):
-            if x not in near:
-                near.append(x)
+        for result_id in difflib.get_close_matches(query, list(nodes), n=limit, cutoff=0.6):
+            if result_id not in near:
+                near.append(result_id)
     # A word from the middle of a name is a real attempt too: "wheelbarrow"
     # should find fud_wheelbarrow even when the fuzzy score does not.
     # A SUBSTANTIAL word from the middle of a name is a real attempt too:
@@ -182,10 +182,10 @@ def _did_you_mean(k, nodes, limit=8, s=None):
     # because matching on "fud" or "ag2" returns every node in the branch and
     # buries the one good answer under seven bad ones.
     if len(near) < limit:
-        parts = [w for w in q.split("_") if len(w) >= 4]
-        for x in nodes:
-            if any(w in x.lower() for w in parts) and x not in near:
-                near.append(x)
+        parts = [word for word in query.split("_") if len(word) >= 4]
+        for result_id in nodes:
+            if any(word in result_id.lower() for word in parts) and result_id not in near:
+                near.append(result_id)
             if len(near) >= limit:
                 break
     # NOT THROUGH THE FOG. `help fog` says in as many words that there is no
@@ -198,5 +198,5 @@ def _did_you_mean(k, nodes, limit=8, s=None):
     # still a statement about what exists.
     if s is not None and getattr(s, "fog", False):
         memo = {}
-        near = [x for x in near if s.is_visible(x, _memo=memo)]
+        near = [result_id for result_id in near if s.is_visible(result_id, _memo=memo)]
     return near[:limit]

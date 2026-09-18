@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Worked demonstration of the commodity framework in
 sim/engine/commodities.py, against the exact cases the brief named. Read
-rome/data/world/COMMODITIES.md for the design; this script is proof it
+data/world/COMMODITIES.md for the design; this script is proof it
 runs, not the documentation.
 
-    python3 rome/sim/demo_commodities.py
+    python3 sim/demo_commodities.py
 
 Sections 1-6 have no dependency on Sim, a civilization, or a running game:
 the standalone framework working on the tech tree and commodities.json
@@ -19,7 +19,7 @@ import os
 import random
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))         # rome/sim
+HERE = os.path.dirname(os.path.abspath(__file__))         # sim
 ROOT = os.path.dirname(HERE)                               # rome
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "engine"))
@@ -29,7 +29,7 @@ import simulator as S
 
 def load_nodes():
     tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
-    return {n["id"]: n for n in tree["nodes"]}
+    return {node["id"]: node for node in tree["nodes"]}
 
 
 def rule(title):
@@ -48,7 +48,7 @@ def main():
     print("  you produce            : %.1f t/yr" % report["you_produce_t_per_yr"])
     print("  you can buy            : %.1f t/yr (of the country's output)" % report["you_can_buy_t_per_yr"])
     print("  the country produces   : %.1f t/yr" % report["country_produces_t_per_yr"])
-    print("  producers (tech)       : %s" % [p["node"] for p in report["produced_by"]])
+    print("  producers (tech)       : %s" % [producer["node"] for producer in report["produced_by"]])
     print("  consumers (tech, count): %d nodes reference copper_kg or copper_ore_kg" % len(report["consumed_by"]))
     print("  trade partners         : %s" % report["trade_partners"]["regions"])
     print("  market value           : %.2f den/kg (base %.2f)" % (report["price_denarii_per_kg"], report["base_price_denarii_per_kg"]))
@@ -141,7 +141,7 @@ def main():
     series = led.price_series("iron", demand_t=2000.0, supply_t=2475.0, years=10, rng=rng)
     print("   ten years of iron price around its supply/demand fundamental (%.2f den/kg base):"
           % led.commodities["iron"]["base_price_denarii_per_kg"])
-    print("   " + ", ".join("%.2f" % p for p in series))
+    print("   " + ", ".join("%.2f" % price for price in series))
 
     rule("7. THE SAME MECHANISM, NOW WIRED IN: A REAL SIM'S OWN COPPER NUMBERS")
     print("   economy.py's wire_chain_report() calls THIS SAME propagate_demand(),")
@@ -165,8 +165,8 @@ def main():
     print("   mineral_scale) for the actual civilization in play, not a second guess.")
 
     rule("DONE")
-    print("See rome/data/world/COMMODITIES.md for the design, and")
-    print("rome/sim/test_regressions.py for the same claims as enforced checks.")
+    print("See data/world/COMMODITIES.md for the design, and")
+    print("sim/test_regressions.py for the same claims as enforced checks.")
 
 
 if __name__ == "__main__":

@@ -145,11 +145,11 @@ import planner as _planner
 
 def deterministic_sim(nodes, order, goal, civ, horizon, bounty_set=None):
     """One dice-free trial of `order` against `civ`, to `horizon` years."""
-    s = Sim(nodes, order, DetRNG(1), events=False,
+    sim = Sim(nodes, order, DetRNG(1), events=False,
             cfg={"immortal": True}, civ=load_civ(civ),
             bounty_set=set(bounty_set or ()))
-    s.run(goal, horizon)
-    return s
+    sim.run(goal, horizon)
+    return sim
 
 
 def fitness(s, need):
@@ -161,7 +161,7 @@ def fitness(s, need):
     tune, which is the whole reason it is shaped this way rather than as one
     blended score.
     """
-    done = sum(1 for k in need if k in s.done)
+    done = sum(1 for node_id in need if node_id in s.done)
     return (1 if s.goal_year else 0, -(s.goal_year or 10 ** 9), done, s.capital)
 
 
@@ -188,16 +188,16 @@ def diagnose_scarce_trades(s, nodes, outstanding, backlog_ratio=6.0):
     years per node.
     """
     scarce = {}
-    for t in TRADES_ABSENT:
-        contested = [k for k in outstanding if nodes[k]["lab"].get(t, 0.0) > 0]
+    for trade in TRADES_ABSENT:
+        contested = [node_id for node_id in outstanding if nodes[node_id]["lab"].get(trade, 0.0) > 0]
         if len(contested) < 2:
             continue
-        backlog = sum(nodes[k]["lab"][t] for k in contested)
-        supply = max(1.0, s.hours_you_can_call_on(t))
+        backlog = sum(nodes[node_id]["lab"][trade] for node_id in contested)
+        supply = max(1.0, s.hours_you_can_call_on(trade))
         if backlog / supply > backlog_ratio:
-            scarce[t] = {"contested": contested, "backlog": backlog,
+            scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,
-                         "employees": s.employees.get(t, 0.0)}
+                         "employees": s.employees.get(trade, 0.0)}
     return scarce
 
 
@@ -208,11 +208,11 @@ def stuck_active(s, need):
     search itself), read straight off `s.active`.
     """
     out = []
-    for k, st in s.active.items():
-        if k not in need:
+    for node_id, state in s.active.items():
+        if node_id not in need:
             continue
-        if st.get("stalled_years", 0) > 0 or st.get("short_of_trade") or st.get("waiting_on_money"):
-            out.append(k)
+        if state.get("stalled_years", 0) > 0 or state.get("short_of_trade") or state.get("waiting_on_money"):
+            out.append(node_id)
     return sorted(out)
 
 
@@ -259,11 +259,11 @@ def diagnose_capital_trap(s, need, min_closure_frac=0.9):
 # ----------------------------------------------------------------------------
 
 def _needs(nodes, k, trades):
-    return any(nodes[k]["lab"].get(t, 0.0) > 0 for t in trades)
+    return any(nodes[k]["lab"].get(trade, 0.0) > 0 for trade in trades)
 
 
 def _scarce_hours(nodes, k, trades):
-    return sum(nodes[k]["lab"].get(t, 0.0) for t in trades)
+    return sum(nodes[k]["lab"].get(trade, 0.0) for trade in trades)
 
 
 def pull_scarce_extras(order, nodes, need, scarce):
@@ -278,11 +278,11 @@ def pull_scarce_extras(order, nodes, need, scarce):
     if not scarce:
         return list(order)
     keep, pulled = [], []
-    for k in order:
-        if k not in need and _needs(nodes, k, scarce):
-            pulled.append(k)
+    for node_id in order:
+        if node_id not in need and _needs(nodes, node_id, scarce):
+            pulled.append(node_id)
         else:
-            keep.append(k)
+            keep.append(node_id)
     return keep + pulled
 
 
@@ -300,15 +300,15 @@ def spt_within_slack_bands(order, nodes, need, c, scarce):
     slack = c["slack"]
     out = []
     i = 0
-    n = len(order)
-    while i < n:
-        k = order[i]
-        if k not in need:
-            out.append(k)
+    count = len(order)
+    while i < count:
+        node_id = order[i]
+        if node_id not in need:
+            out.append(node_id)
             i += 1
             continue
-        band = round(slack.get(k, 0.0), 3)
-        j = i
+        band = round(slack.get(node_id, 0.0), 3)
+        band_end = i
         group = []
         # A "band" is a maximal run of CONSECUTIVE spine nodes sharing this
         # exact slack value - not every node in the tree with this slack,
@@ -316,13 +316,13 @@ def spt_within_slack_bands(order, nodes, need, c, scarce):
         # with spine placement and moving spine nodes PAST an interleaved
         # side branch would silently undo the funding cadence `interleave`
         # was built to give the household.
-        while j < n and order[j] in need and round(slack.get(order[j], 0.0), 3) == band:
-            group.append(order[j])
-            j += 1
+        while band_end < count and order[band_end] in need and round(slack.get(order[band_end], 0.0), 3) == band:
+            group.append(order[band_end])
+            band_end += 1
         group.sort(key=lambda x: (0, _scarce_hours(nodes, x, scarce)) if _needs(nodes, x, scarce)
                                   else (1, 0.0))
         out.extend(group)
-        i = j
+        i = band_end
     return out
 
 
@@ -356,22 +356,22 @@ def grow_supply(nodes, goal, need, s0, cur_order, cur_extras, civ, horizon,
     not kept is not tried again the same way; the order is exactly as if it
     had never been offered.
     """
-    candidates = [k for k in _planner.pick_staffing(nodes, need, s0)
-                  if k not in cur_extras]
+    candidates = [node_id for node_id in _planner.pick_staffing(nodes, need, s0)
+                  if node_id not in cur_extras]
     extras = list(cur_extras)
     fit = base_fit
     tried = []
-    for k in candidates:
-        trial_extras = extras + [k]
+    for node_id in candidates:
+        trial_extras = extras + [node_id]
         spine = [x for x in cur_order if x in need]
         trial_order = _planner.interleave(spine, trial_extras, side_branch_every)
         full = _planner._repaired(nodes, goal, trial_order)
         sim = deterministic_sim(nodes, full, goal, civ, horizon)
         trial_fit = fitness(sim, need)
         kept = trial_fit > fit
-        tried.append({"institution": k, "kept": kept, "fitness": trial_fit})
+        tried.append({"institution": node_id, "kept": kept, "fitness": trial_fit})
         log("    try founding %-22s -> %s (closure %d, capital %.0f)"
-            % (k, "kept: genuinely better" if kept else "discarded: no better",
+            % (node_id, "kept: genuinely better" if kept else "discarded: no better",
                trial_fit[2], trial_fit[3]))
         if kept:
             extras, fit = trial_extras, trial_fit
@@ -416,9 +416,9 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
     tree, prices, nodes, wages, goods = load()
     goal = resolve_goal(tree, nodes, goal)
     need = closure(nodes, goal)
-    s0 = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
-    order, c, extras, staffing = _planner.backward_plan(
-        nodes, goal, s0, seed_order=seed_order, side_branches=side_branches,
+    baseline_sim = Sim(nodes, [], random.Random(1), events=False, civ=load_civ(civ))
+    order, cpm_result, extras, staffing = _planner.backward_plan(
+        nodes, goal, baseline_sim, seed_order=seed_order, side_branches=side_branches,
         side_branch_every=side_branch_every)
 
     history = []
@@ -430,7 +430,7 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
         sim = deterministic_sim(nodes, full, goal, civ, horizon)
         fit = fitness(sim, need)
         stuck = stuck_active(sim, need)
-        outstanding = [k for k in (need | set(cur_extras)) if k not in sim.done]
+        outstanding = [node_id for node_id in (need | set(cur_extras)) if node_id not in sim.done]
         scarce = diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio)
         trap = diagnose_capital_trap(sim, need)
         rec = {"round": rnd, "goal_year": sim.goal_year,
@@ -459,13 +459,13 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
             log("  capital trap detected; trying grow_supply (founding "
                 "institutions one at a time, kept only if measured better)")
             new_extras, new_fit, tried = grow_supply(
-                nodes, goal, need, s0, cur_order, cur_extras, civ, horizon,
+                nodes, goal, need, baseline_sim, cur_order, cur_extras, civ, horizon,
                 side_branch_every, fit, log)
             rec["grow_supply_tried"] = tried
             if new_fit > fit:
                 cur_extras = new_extras
                 cur_order = _planner.interleave(
-                    [k for k in cur_order if k in need], cur_extras, side_branch_every)
+                    [node_id for node_id in cur_order if node_id in need], cur_extras, side_branch_every)
                 fit = new_fit
                 if fit > best_fit:
                     best_fit, best_order, best_extras = fit, cur_order, cur_extras
@@ -485,8 +485,8 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
             # order would not find anything new.
             log("  no scarce-trade bottleneck detected; stopping early")
             break
-        spine = [k for k in cur_order if k in need]
-        new_spine = spt_within_slack_bands(spine, nodes, need, c, scarce)
+        spine = [node_id for node_id in cur_order if node_id in need]
+        new_spine = spt_within_slack_bands(spine, nodes, need, cpm_result, scarce)
         new_order = pull_scarce_extras(
             _planner.interleave(new_spine, cur_extras, side_branch_every),
             nodes, need, scarce)
@@ -502,34 +502,34 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
 # ----------------------------------------------------------------------------
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
+    parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--civ", default="rome_100ad")
-    ap.add_argument("--goal", default=None)
-    ap.add_argument("--out", required=True, help="strategy file to write")
-    ap.add_argument("--side-branches", type=int, default=12)
-    ap.add_argument("--side-branch-every", type=int, default=8)
-    ap.add_argument("--rounds", type=int, default=6)
-    ap.add_argument("--horizon", type=int, default=500,
+    parser.add_argument("--civ", default="rome_100ad")
+    parser.add_argument("--goal", default=None)
+    parser.add_argument("--out", required=True, help="strategy file to write")
+    parser.add_argument("--side-branches", type=int, default=12)
+    parser.add_argument("--side-branch-every", type=int, default=8)
+    parser.add_argument("--rounds", type=int, default=6)
+    parser.add_argument("--horizon", type=int, default=500,
                     help="dice-free horizon used WHILE searching - kept short "
                          "for speed; verify the winner separately at a longer "
                          "horizon and then against real seeds")
-    ap.add_argument("--backlog-ratio", type=float, default=6.0)
-    ap.add_argument("--seed-strategy", default=None,
+    parser.add_argument("--backlog-ratio", type=float, default=6.0)
+    parser.add_argument("--seed-strategy", default=None,
                     help="a strategy name or path whose order breaks ties "
                          "among nodes the critical path ranks as equally "
                          "urgent, same as planner.py's own --seed-strategy")
-    ap.add_argument("--no-grow-supply", action="store_true",
+    parser.add_argument("--no-grow-supply", action="store_true",
                     help="skip move 3 (founding institutions one at a time, "
                          "kept only if measured better) and reproduce this "
                          "module's behaviour before it existed - moves 1 and "
                          "2 (pulling/resequencing what is already named) only")
-    a = ap.parse_args()
-    t0 = time.time()
+    args = parser.parse_args()
+    start_time = time.time()
     order, rationale = plan_and_write(
-        a.civ, a.goal, a.out, a.side_branches, a.side_branch_every, a.rounds,
-        a.horizon, a.backlog_ratio, a.seed_strategy, a.no_grow_supply)
-    print("wrote %d nodes to %s in %.1fs" % (len(order), a.out, time.time() - t0))
+        args.civ, args.goal, args.out, args.side_branches, args.side_branch_every, args.rounds,
+        args.horizon, args.backlog_ratio, args.seed_strategy, args.no_grow_supply)
+    print("wrote %d nodes to %s in %.1fs" % (len(order), args.out, time.time() - start_time))
     for line in rationale:
         print("  - " + line)
 
@@ -560,10 +560,10 @@ def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
     tree, _p, nodes, _w, _g = load()
     goal = resolve_goal(tree, nodes, goal)
     last = history[-1]
-    grown = [h for h in history if h["grow_supply_tried"]]
-    kept = [t["institution"] for h in grown for t in h["grow_supply_tried"] if t["kept"]]
+    grown = [round_entry for round_entry in history if round_entry["grow_supply_tried"]]
+    kept = [trial["institution"] for round_entry in grown for trial in round_entry["grow_supply_tried"] if trial["kept"]]
     rationale = [
-        "Deterministic search (rome/sim/path_search.py): CPM order, then up "
+        "Deterministic search (sim/path_search.py): CPM order, then up "
         "to %d rounds of diagnosing the binding constraint against a "
         "dice-free trial (no events, no project failures, immortal founder) "
         "and relaxing it, keeping whichever round scored best." % rounds,
@@ -574,7 +574,7 @@ def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
                 ", ".join(last["scarce_trades"]) or "(none)"),
     ]
     if grown:
-        n_tried = sum(len(h["grow_supply_tried"]) for h in grown)
+        n_tried = sum(len(round_entry["grow_supply_tried"]) for round_entry in grown)
         rationale.append(
             "Grow-supply (move 3): a capital trap was diagnosed and %d "
             "candidate institution(s) were tried, one at a time, each kept "

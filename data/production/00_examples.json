@@ -1,0 +1,70 @@
+{
+ "_note": "One entry of each shape. See _SCHEMA.md.",
+ "materials": {
+  "copper_ore_kg": {
+   "outputs": {
+    "copper_ore_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 18.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of run-of-mine sulphide ore at the pit head",
+   "yield_basis": "EXTRACTED, so there are no material inputs and no cost of production - only labour, and a rent on the deposit set by the poorest ore still worth hauling. The labour figure is the physical work of breaking and moving rock: an ancient miner with hammer, gad and fire-setting moves on the order of 50-60 kg of hard rock per hour in a worked adit, so a tonne is roughly 18 hours. Grade is NOT in this number - it belongs to the smelting entry that consumes this ore, because the same tonne of rock costs the same to dig whether it assays 2% or 4%.",
+   "requires_node": null,
+   "conf": "C"
+  },
+  "copper_kg": {
+   "outputs": {
+    "copper_kg": 1000.0
+   },
+   "inputs": {
+    "copper_ore_kg": 50000.0,
+    "charcoal_kg": 4000.0,
+    "flux_kg": 300.0
+   },
+   "labour_hours": {
+    "furnaceman": 120.0,
+    "smith": 40.0
+   },
+   "energy_mj": 0.0,
+   "capital": [
+    {
+     "good": "copper smelting shaft furnace (clay and stone)",
+     "build_materials": {
+      "clay_kg": 5000.0,
+      "stone_kg": 8000.0
+     },
+     "build_labour_hours": {
+      "mason": 200.0,
+      "labourer": 100.0
+     },
+     "service_life_years": 6,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "A small ancient/medieval copper shaft furnace is a clay-lined stone stack a couple of metres tall - far smaller than an iron blast furnace because copper melts and reduces at a much lower temperature and campaign scale. Clay and stone quantities are an order-of-magnitude estimate for a structure that size, not a survey of a specific excavated furnace. Service life is set by how long the clay lining survives repeated firing to smelting heat before it cracks and must be relaid - years rather than decades, because unlike a blast furnace's masonry stack there is no separate structural shell outlasting the lining; taken at 6 years as a single blended figure for that reason. Annual output assumes the furnace campaigns for a large fraction of the working year at the batch scale implied by copper_kg's own recipe.",
+     "conf": "C"
+    }
+   ],
+   "basis": "per tonne of fire-refined copper",
+   "yield_basis": "SMELTED, so the yield is grade times recovery. Cyprus and Rio Tinto sulphide ores run 2-4% copper; roast-and-reduction in a shaft furnace recovers on the order of 80% of it, the rest going to slag and flue. One tonne of metal therefore needs 30-60 t of ore, taken here at 50 t. Charcoal is set by the reduction chemistry plus the heat to hold 1200 C through several roasts, about 4 kg per kg of metal, which is why a smelter is sited by a forest rather than by the mine. None of these numbers is derived from the price of copper.",
+   "conf": "C"
+  },
+  "timber_m3": {
+   "outputs": {
+    "timber_m3": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 9.0,
+    "carpenter": 3.0
+   },
+   "land_iugera_years": 1.4863,
+   "extracted_from": "forest",
+   "basis": "per cubic metre of squared, seasoned construction timber delivered at the wood yard",
+   "yield_basis": "HARVESTED, so the limit is the forest's annual growth rather than a recipe, and the entry earns a rent on woodland rather than a cost of production. A managed temperate broadleaf woodland puts on roughly 3-5 cubic metres per hectare per year, which is the real constraint on how much timber a region can supply indefinitely. The labour is felling, cross-cutting, hauling and squaring by axe and pit saw; roughly a third of the standing volume is lost to kerf, taper, sapwood and defect, so a cubic metre of usable squared timber starts as about 1.5 standing. Seasoning is time, not labour, and belongs in the build calendar rather than here. LAND (Complaints/49), the worked example of this field's shape (see _SCHEMA.md's WORKED EXAMPLES): unlike the other GROWN entries in this file, timber's own basis is per FINISHED CUBIC METRE, not per hectare-year, so land_iugera_years needs an actual conversion rather than a fixed 1-hectare figure - 1.5 standing m3 (this entry's own felling loss, stated above) / 4 m3/ha/yr mean annual increment (the midpoint of the 3-5 m3/ha/yr this entry already states) = 0.375 ha-years per finished m3, converted to 0.375 / 0.2523 ha/iugerum = 1.4863 iugera-years. Charged against iugerum_land's own solved rent (sim/world/land.py) by sim/solve_prices.py exactly like an ordinary input - see LAND in _SCHEMA.md. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) for the rent VALUE only (forest land priced at the same rent as arable cropland - see wool_kg's own LAND note in data/production/40_organics.json for the same caveat); the AREA figure above is a physical mean-annual-increment fact, not a heuristic.",
+   "requires_node": null,
+   "conf": "C"
+  }
+ }
+}

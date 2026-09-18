@@ -23,17 +23,17 @@ for _y in range(150, 320):
     if getattr(s_sack, "forgotten", None):
         break
 check("a sacking names the technologies it destroyed",
-      any("KNOWLEDGE LOST" in m and "_" in m.split("forgotten")[-1]
-          for _, m in s_sack.log),
-      [m for _, m in s_sack.log if "KNOWLEDGE LOST" in m][:1])
+      any("KNOWLEDGE LOST" in message and "_" in message.split("forgotten")[-1]
+          for _, message in s_sack.log),
+      [message for _, message in s_sack.log if "KNOWLEDGE LOST" in message][:1])
 _kr = s_sack.knowledge_risk()
 check("...and `risk` lists what you have to build again",
       _kr.get("you_have_already_lost", 0) > 0
       and _kr.get("and_have_to_build_again"),
       _kr.get("you_have_already_lost"))
 check("...and everything it lists really is gone from what you know",
-      all(x not in s_sack.done for x in _kr["and_have_to_build_again"]),
-      [x for x in _kr["and_have_to_build_again"] if x in s_sack.done])
+      all(node_id not in s_sack.done for node_id in _kr["and_have_to_build_again"]),
+      [node_id for node_id in _kr["and_have_to_build_again"] if node_id in s_sack.done])
 # The hedge follows what you KNOW, not what you run: a play tester thought it
 # followed `operating` because a sacking had quietly taken their corpus.
 s_hg = sim(capital=500000.0)
@@ -77,7 +77,7 @@ s_shg.civ["hazards"] = [{"name": "TEST SACK", "years": [s_shg.year, s_shg.year],
                          "sack_chance": 1.0}]
 _before_shg = len(s_shg.log)
 s_shg._shocks(s_shg.year)
-_shg_msgs = [m for _, m in s_shg.log[_before_shg:] if "a site is sacked" in m]
+_shg_msgs = [message for _, message in s_shg.log[_before_shg:] if "a site is sacked" in message]
 _shg_announced = float(re.search(r"([\d.]+) of your people gone",
                                  _shg_msgs[0]).group(1)) if _shg_msgs else 0.0
 _shg_total1 = s_shg.artisans + s_shg.scholars + sum(s_shg.employees.values())
@@ -121,23 +121,23 @@ class _AlwaysSackRNG:
 
 
 def _corpus_sack_scenario(hedge_node, n_done=300):
-    s = sim(capital=1_000_000.0)
-    cands = sorted(k for k in NODES if k not in s.granted)[:n_done]
-    s.done.update(cands)
+    household = sim(capital=1_000_000.0)
+    cands = sorted(node_id for node_id in NODES if node_id not in household.granted)[:n_done]
+    household.done.update(cands)
     if hedge_node:
-        s.done.add(hedge_node)
-    s._done_changed()
-    s.rng = _AlwaysSackRNG()
-    s.civ = dict(s.civ)
-    s.civ["hazards"] = [{"name": "TEST SACK", "years": [s.year, s.year],
+        household.done.add(hedge_node)
+    household._done_changed()
+    household.rng = _AlwaysSackRNG()
+    household.civ = dict(household.civ)
+    household.civ["hazards"] = [{"name": "TEST SACK", "years": [household.year, household.year],
                          "sack_chance": 1.0}]
-    return s
+    return household
 
 
 def _expected_losable(s):
-    return sorted(k for k in s.done
-                  if k not in s.granted
-                  and k != "corpus_dispersed")
+    return sorted(node_id for node_id in s.done
+                  if node_id not in s.granted
+                  and node_id != "corpus_dispersed")
 
 
 # No corpus at all: the undefended figures.
@@ -217,7 +217,7 @@ for _seed in range(1, 7):
 # second, ordinary non-starting node sitting right next to corpus_dispersed in
 # `done` is NOT spared.
 s_f3w = sim(capital=500000.0)
-_f3_other = next(k for k in NODES if k != "corpus_dispersed" and k not in s_f3w.granted)
+_f3_other = next(node_id for node_id in NODES if node_id != "corpus_dispersed" and node_id not in s_f3w.granted)
 s_f3w.done.update(["corpus_dispersed", _f3_other])
 s_f3w._done_changed()
 s_f3w.rng = _AlwaysSackRNG()
@@ -240,7 +240,7 @@ check("an ordinary non-starting node sharing the sack with corpus_dispersed is "
 # sacking. The text must be built from how things stood BEFORE the loss.
 s_f2 = sim(capital=500000.0)
 s_f2.done.add("corpus_dispersed")
-for _k in sorted(k for k in NODES if k not in s_f2.granted and k != "corpus_dispersed")[:200]:
+for _k in sorted(node_id for node_id in NODES if node_id not in s_f2.granted and node_id != "corpus_dispersed")[:200]:
     s_f2.done.add(_k)
 s_f2._done_changed()
 s_f2.rng = _AlwaysSackRNG()
@@ -249,7 +249,7 @@ s_f2.civ["hazards"] = [{"name": "TEST SACK", "years": [s_f2.year, s_f2.year],
                         "sack_chance": 1.0}]
 _before_f2 = len(s_f2.log)
 s_f2._shocks(s_f2.year)
-_f2_msgs = [m for _, m in s_f2.log[_before_f2:] if "KNOWLEDGE LOST" in m]
+_f2_msgs = [message for _, message in s_f2.log[_before_f2:] if "KNOWLEDGE LOST" in message]
 check("a sack that cannot touch corpus_dispersed (it is excluded from "
       "`losable`) never claims in the same breath that the corpus was "
       "never dispersed and that the corpus itself went",
@@ -262,7 +262,7 @@ check("...and, since the corpus really is still dispersed, the line does "
       _f2_msgs)
 
 # --- PROVED ON A REAL PLAYER'S SAVE, not just constructed abstractly.
-# rome/playtest/fixtures/rome_380_corpus_bug.json is the fixture a player
+# playtest/fixtures/rome_380_corpus_bug.json is the fixture a player
 # actually reached: Rome at 380 AD, fog on, immortal, 2,049 done, 309
 # million denarii, with BOTH corpus_written and corpus_dispersed done and
 # NEITHER one operating - a household that wrote the corpus, dispersed it,
@@ -280,7 +280,7 @@ check("...and, since the corpus really is still dispersed, the line does "
 # commit message for the exact before-fix log line this save produces);
 # this check runs only the fixed code, deterministically, and would fail
 # the moment `risk` and the sack disagree about this save again.
-_FIXTURE_380 = os.path.join(ROOT, "rome", "playtest", "fixtures",
+_FIXTURE_380 = os.path.join(ROOT, "playtest", "fixtures",
                             "rome_380_corpus_bug.json")
 s_fix = sim(capital=1.0)
 S.load_state(s_fix, _FIXTURE_380)
@@ -291,8 +291,8 @@ check("the fixture is what it claims to be: both corpora done, neither "
       and "corpus_dispersed" not in s_fix.operating,
       (s_fix.has("corpus_written"), s_fix.has("corpus_dispersed"),
        "corpus_written" in s_fix.operating, "corpus_dispersed" in s_fix.operating))
-_fix_losable_before = [k for k in s_fix.done
-                       if k not in s_fix.granted]
+_fix_losable_before = [node_id for node_id in s_fix.done
+                       if node_id not in s_fix.granted]
 check("...and its losable pool (done, non-starting, not granted) really is "
       "1,214, the figure the rest of this check is measured against",
       len(_fix_losable_before) == 1214, len(_fix_losable_before))
@@ -315,7 +315,7 @@ s_fix.civ["hazards"] = [{"name": "Adrianople and the Gothic settlement",
 _before_fix_log = len(s_fix.log)
 s_fix._shocks(s_fix.year)
 _fix_lost = len(getattr(s_fix, "forgotten", None) or {})
-_fix_msgs = [m for _, m in s_fix.log[_before_fix_log:] if "KNOWLEDGE LOST" in m]
+_fix_msgs = [message for _, message in s_fix.log[_before_fix_log:] if "KNOWLEDGE LOST" in message]
 check("THE CHECK THAT FAILS IF THE SACK AND `risk` EVER DISAGREE AGAIN, "
       "run against a real player's own save: this sack takes 97 "
       "technologies (8% of the 1,213 losable once corpus_dispersed is "
@@ -356,7 +356,7 @@ class _AlwaysZeroRNG:
         return list(population)[:k]
 s_kr2 = sim(capital=1_000_000.0)
 _gc2 = sorted(S.closure(NODES, GOAL))
-_on_road_cands = [k for k in _gc2 if k not in S.Sim(NODES, PRICES, WAGES, GOODS).granted][:6]
+_on_road_cands = [node_id for node_id in _gc2 if node_id not in S.Sim(NODES, PRICES, WAGES, GOODS).granted][:6]
 check("a non-starting node on the actual road to the goal exists to test "
       "against - this is a property of the live tree, not a fixture",
       len(_on_road_cands) >= 1, _on_road_cands)
@@ -368,7 +368,7 @@ s_kr2.civ["hazards"] = [{"name": "TEST CRISIS", "years": [s_kr2.year, s_kr2.year
                          "sack_chance": 1.0}]
 _before_kr2 = len(s_kr2.log)
 s_kr2._shocks(s_kr2.year)
-_kr2_msgs = [m for _, m in s_kr2.log[_before_kr2:] if "KNOWLEDGE LOST" in m]
+_kr2_msgs = [message for _, message in s_kr2.log[_before_kr2:] if "KNOWLEDGE LOST" in message]
 check("the KNOWLEDGE LOST event names how many of the forgotten "
       "technologies stood on the road to the current goal, in the same "
       "breath as the loss itself",
@@ -408,21 +408,21 @@ s_cg._done_changed()
 _cg_gaps = s_cg.capability_gaps()
 check("a capability institution that is done but not operating is named, "
       "by id, with the specific benefit it is not collecting right now",
-      {g["id"] for g in _cg_gaps} == {"patron_imperial", "corpus_dispersed"},
+      {gap["id"] for gap in _cg_gaps} == {"patron_imperial", "corpus_dispersed"},
       _cg_gaps)
 check("the warning has the exact shape asked for: 'Critical capability "
       "completed but not operating: <id>. <benefit> is currently "
       "inactive.', with the fix command that actually reopens it",
-      all(g["warning"] == ("Critical capability completed but not "
+      all(gap["warning"] == ("Critical capability completed but not "
                            "operating: %s. %s is currently inactive."
-                           % (g["id"], g["benefit_switched_off"]))
-          and g["fix"] == "open %s" % g["id"]
-          for g in _cg_gaps),
+                           % (gap["id"], gap["benefit_switched_off"]))
+          and gap["fix"] == "open %s" % gap["id"]
+          for gap in _cg_gaps),
       _cg_gaps)
 check("...and closes the moment the doors reopen - this is a LIVE check of "
       "running(), not a one-time note",
       (s_cg.operating.add("patron_imperial"),
-       {g["id"] for g in s_cg.capability_gaps()})[1] == {"corpus_dispersed"},
+       {gap["id"] for gap in s_cg.capability_gaps()})[1] == {"corpus_dispersed"},
       s_cg.capability_gaps())
 s_cg.operating.discard("patron_imperial")
 check("plague_preparedness is deliberately never warned about: its only "
@@ -437,14 +437,14 @@ check("fin_university's sole benefit is shared (an `or`) with "
       (lambda s: (
           s.done.add("fin_university"), s.done.add("school_founded"),
           s.operating.add("school_founded"), s._done_changed(),
-          "fin_university" not in {g["id"] for g in s.capability_gaps()})[-1]
+          "fin_university" not in {gap["id"] for gap in s.capability_gaps()})[-1]
       )(sim()),
       "checked fin_university/school_founded or-gate")
 _st_cg = S._agent_state(s_cg, NODES)
 check("`state` - the screen a player rereads every year - carries this "
       "warning too, not only a command nobody runs unprompted",
       _st_cg.get("critical_capabilities_not_operating") is not None
-      and {g["id"] for g in _st_cg["critical_capabilities_not_operating"]}
+      and {gap["id"] for gap in _st_cg["critical_capabilities_not_operating"]}
           == {"corpus_dispersed", "patron_imperial"},
       _st_cg.get("critical_capabilities_not_operating"))
 check("...and says nothing when every completed capability is open",
@@ -455,12 +455,12 @@ _risk_cg = s_cg.knowledge_risk()
 check("`risk` - the screen whose whole job is telling you what protects "
       "you - carries the same warning, independent of `state`",
       _risk_cg.get("critical_capabilities_not_operating") is not None
-      and {g["id"] for g in _risk_cg["critical_capabilities_not_operating"]}
+      and {gap["id"] for gap in _risk_cg["critical_capabilities_not_operating"]}
           == {"corpus_dispersed", "patron_imperial"},
       _risk_cg.get("critical_capabilities_not_operating"))
 check("the id named is never hidden under fog - a player has always "
       "already discovered anything in their own `done`",
-      all(s_cg.is_visible(g["id"]) for g in _cg_gaps), _cg_gaps)
+      all(s_cg.is_visible(gap["id"]) for gap in _cg_gaps), _cg_gaps)
 
 # --- BREAK: auto_mine took 353,039 a year against 467,227 of revenue and
 # there was no command that named what you owned or what it cost.
@@ -479,7 +479,7 @@ check("there is a command that lists the mines you own and their cost",
       _rmn["mines_you_own"] != "none"
       and _rmn["they_cost_you_a_year_in_all"] > 0, _rmn.get("mines_you_own"))
 check("...and each row says how to shut it",
-      all("close" in r["shut_it_with"] for r in _rmn["mines_you_own"]),
+      all("close" in mine_row["shut_it_with"] for mine_row in _rmn["mines_you_own"]),
       _rmn["mines_you_own"][:1])
 check("...and it renders as a table, not a dict dump",
       "YOUR OWN WORKINGS" in _RP("mines", _rmn) and "{" not in _RP("mines", _rmn),
@@ -521,15 +521,15 @@ check("a substitution group reads as English, not as a data slug",
 # identical. Float sums over SETS: addition is not associative, the total
 # gates open_venture with a hard comparison, and one bit decides a century.
 def _one_run(seed=9, years=180, civ="rome_100ad"):
-    s_ = S.Sim(NODES, ORDER, random.Random(seed), events=True, manual=False,
+    run = S.Sim(NODES, ORDER, random.Random(seed), events=True, manual=False,
                civ=S.load_civ(civ), cfg={"start_capital": 100000.0})
-    s_.goal, s_.done_year = GOAL, {}
+    run.goal, run.done_year = GOAL, {}
     for _ in range(years):
-        s_.step()
-        if s_.dead_reason or s_.goal_year:
+        run.step()
+        if run.dead_reason or run.goal_year:
             break
-    return (round(s_.capital, 6), len(s_.done), len(s_.operating),
-            round(s_.reputation, 9))
+    return (round(run.capital, 6), len(run.done), len(run.operating),
+            round(run.reputation, 9))
 
 # THE FIRST OF THESE COSTS 190 OF THE SUITE'S SECONDS, because it simulates
 # 180 years. It is kept exactly as it was: it catches cross-instance state
@@ -539,8 +539,8 @@ def _one_run(seed=9, years=180, civ="rome_100ad"):
 # always runs its scenarios in the same order in the same process - it never
 # builds two independent runs back to back the way this one does.
 def _same_seed_same_run():
-    a = _one_run()
-    return _one_run() == a, (a, _one_run())
+    first_result = _one_run()
+    return _one_run() == first_result, (first_result, _one_run())
 
 slow_check("the same seed gives the same run, twice in one process",
            _same_seed_same_run)
@@ -556,7 +556,7 @@ slow_check("the same seed gives the same run, twice in one process",
 #       121 or 196 depending which seed was tried, and did not diverge at
 #       ALL within 200 years for 3 of 6 seeds tried - a coin flip, for the
 #       one thing it exists to catch.
-#   rome/sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
+#   sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
 #       five civilisations, hashing the FULL save-file state every year):
 #       diverged within 1-7 years on ALL NINE scenarios, every time.
 #
@@ -616,17 +616,17 @@ def _fingerprint_under_seed(hash_seed, years_cap):
 
 
 def _same_under_other_hash_seed():
-    a = _fingerprint_under_seed(0, _HASH_SEED_HORIZON)
-    b = _fingerprint_under_seed(1234567, _HASH_SEED_HORIZON)
-    if a == b:
+    fingerprints_a = _fingerprint_under_seed(0, _HASH_SEED_HORIZON)
+    fingerprints_b = _fingerprint_under_seed(1234567, _HASH_SEED_HORIZON)
+    if fingerprints_a == fingerprints_b:
         return True, ""
-    for (na, da), (nb, db) in zip(a, b):
-        if da != db:
-            j = next((y for y in range(min(len(da), len(db)))
-                      if da[y] != db[y]), min(len(da), len(db)))
-            return False, "%s diverged at year %d" % (na, j)
+    for (scenario_name, digests_a), (_, digests_b) in zip(fingerprints_a, fingerprints_b):
+        if digests_a != digests_b:
+            diverged_at_year = next((year for year in range(min(len(digests_a), len(digests_b)))
+                      if digests_a[year] != digests_b[year]), min(len(digests_a), len(digests_b)))
+            return False, "%s diverged at year %d" % (scenario_name, diverged_at_year)
     return False, "run lengths differ: %r vs %r" % (
-        [len(d) for _, d in a], [len(d) for _, d in b])
+        [len(digests) for _, digests in fingerprints_a], [len(digests) for _, digests in fingerprints_b])
 
 
 slow_check("...and the same run in a process with a different string hash seed",
@@ -671,7 +671,7 @@ check("...and what the chance of being denounced this year is",
       _st_sc.get("chance_of_being_denounced_this_year"))
 check("...and the page prints both, next to the eminence line that already did",
       "SCANDAL is dangerous above" in _RP("state", _st_sc),
-      [l for l in _RP("state", _st_sc).splitlines() if "dangerous above" in l])
+      [line for line in _RP("state", _st_sc).splitlines() if "dangerous above" in line])
 
 # --- BREAK: the advertised price index touched nothing a player feels.
 # Revenue ~233 and living costs 230.0 TO THE DECIMAL in all five civs, against
@@ -699,8 +699,8 @@ check("...and the cheapest really is the cheapest",
 # opened, because the ramp read the year you worked it OUT. Delaying `open`
 # was strictly better than opening promptly.
 s_rp = sim(capital=500000.0)
-_vr = next(k for k in sorted(NODES)
-           if s_rp.is_venture(k) and NODES[k]["rev"] > 500 and not NODES[k]["pre"])
+_vr = next(node_id for node_id in sorted(NODES)
+           if s_rp.is_venture(node_id) and NODES[node_id]["rev"] > 500 and not NODES[node_id]["pre"])
 s_rp.done.add(_vr); s_rp.done_year[_vr] = 100; s_rp._done_changed()
 s_rp.artisans = s_rp.scholars = 20.0
 s_rp.year = 130
@@ -741,9 +741,9 @@ from engine.data import closure as _closure
 _behind = sorted(_closure(NODES, "telescope") - {"telescope"})
 check("...and it is the sum of what each of those nodes would actually cost",
       abs(_chains["norse_900ad"]
-          - sum(_s_ch.project_cost(x) for x in _behind)) < 0.5,
+          - sum(_s_ch.project_cost(node_id) for node_id in _behind)) < 0.5,
       (_chains["norse_900ad"],
-       round(sum(_s_ch.project_cost(x) for x in _behind), 1)))
+       round(sum(_s_ch.project_cost(node_id) for node_id in _behind), 1)))
 
 # --- BREAK: `risk` applied the 80% chance twice, so "expected lost per
 # sacking" was exactly 20% low - a sacking that has happened has happened.
@@ -766,7 +766,7 @@ s_pl = sim()
 s_pl.capital = -s_pl.credit_limit() * 1.03
 s_pl.warn_near_the_limit(105)
 check("the limit warning is about what is ahead of you, not behind",
-      not s_pl.log, [m for _, m in s_pl.log])
+      not s_pl.log, [message for _, message in s_pl.log])
 
 # --- BREAK: `bribe 1` refused at 0% protection as "already as protected as
 # money can make you".
@@ -815,7 +815,7 @@ s_rm2.done.update(NODES); s_rm2._done_changed()
 # is exactly the case the next block tests (reopen advice, not "you have
 # everything"), so "every one of them" has to mean everything built AND
 # running, the same distinction run_it exists to set up everywhere else.
-s_rm2.operating.update(k for k, _ in s_rm2.ROOM_SOURCES if k in NODES)
+s_rm2.operating.update(node_id for node_id, _ in s_rm2.ROOM_SOURCES if node_id in NODES)
 check("...and says so plainly when you already hold every one of them",
       "every one of them" in s_rm2._room_advice(), s_rm2._room_advice())
 
@@ -858,8 +858,8 @@ check("the scholar-pool advice offers to reopen a shut school rather than "
 # staff_capacity) already counted them correctly.
 check("ROOM_SOURCES names real node ids only - no stale reference silently "
       "filtered out of every reply that reads this table",
-      all(k in NODES for k, _ in s_rm3.ROOM_SOURCES),
-      [k for k, _ in s_rm3.ROOM_SOURCES if k not in NODES])
+      all(node_id in NODES for node_id, _ in s_rm3.ROOM_SOURCES),
+      [node_id for node_id, _ in s_rm3.ROOM_SOURCES if node_id not in NODES])
 
 
 # --- BREAK: three places said the town could field 8,750 scribe-hours a year,
@@ -948,11 +948,11 @@ check("there is one command that answers why you are not getting on",
 # work in hand, money to pay for it and people to do it". It was the first
 # thing they typed and it was false.
 check("...and on turn one it says you have started nothing",
-      any(r.get("what") == "you have started nothing"
-          for r in _rs[0]["what_is_holding_you_up"]),
+      any(reason.get("what") == "you have started nothing"
+          for reason in _rs[0]["what_is_holding_you_up"]),
       _rs[0]["what_is_holding_you_up"])
 check("...and names something you could start instead",
-      any("start " in str(r.get("why")) for r in _rs[0]["what_is_holding_you_up"]),
+      any("start " in str(reason.get("why")) for reason in _rs[0]["what_is_holding_you_up"]),
       _rs[0]["what_is_holding_you_up"])
 # ...and once something IS running and nothing is wrong, it says so plainly
 # without claiming work in hand that is not there.
@@ -961,8 +961,8 @@ _s_ok.start_project("identity_cover")
 _rs_ok = S._agent_dispatch(_s_ok, NODES, {"cmd": "stuck"})
 check("...and with work in hand and money it says nothing is holding you up",
       isinstance(_rs_ok.get("what_is_holding_you_up"), str)
-      or all(r.get("what") != "you have started nothing"
-             for r in _rs_ok["what_is_holding_you_up"]),
+      or all(reason.get("what") != "you have started nothing"
+             for reason in _rs_ok["what_is_holding_you_up"]),
       _rs_ok.get("what_is_holding_you_up"))
 check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now") in NODES,
@@ -973,16 +973,16 @@ _rs2, _, _ = proto([{"cmd": "start", "id": "identity_cover"},
 _held = _rs2[-1]["what_is_holding_you_up"]
 check("...and once you are committed and in the red it names both",
       not isinstance(_held, str)
-      and {"work in hand", "arrears"} <= {r["what"] for r in _held},
-      [r.get("what") for r in _held] if not isinstance(_held, str) else _held)
+      and {"work in hand", "arrears"} <= {reason["what"] for reason in _held},
+      [reason.get("what") for reason in _held] if not isinstance(_held, str) else _held)
 check("...and says what each piece of work in hand is waiting for",
-      any(r.get("each_waiting_on") for r in _held if isinstance(r, dict)), _held)
+      any(reason.get("each_waiting_on") for reason in _held if isinstance(reason, dict)), _held)
 check("...and it renders as a page, not a dict dump",
       "WHY YOU ARE NOT GETTING ON" in _RP("stuck", _rs2[-1])
       and "{" not in _RP("stuck", _rs2[-1]), _RP("stuck", _rs2[-1])[:70])
 _rst, _, _ = proto([{"cmd": "state"}])
 check("...and `state` advertises it every turn",
-      any("stuck" in x for x in (_rst[0].get("also_available") or [])),
+      any("stuck" in option for option in (_rst[0].get("also_available") or [])),
       _rst[0].get("also_available"))
 
 # --- BREAK: "things you built and never opened" picked the best-margin shut
@@ -1012,9 +1012,9 @@ check("...and a fresh household genuinely cannot supervise it yet",
       _need_art_sg > _art_free_sg + 0.01,
       (_need_art_sg, _art_free_sg))
 _stuck_shut = S._agent_dispatch(s_shut, NODES, {"cmd": "stuck"})
-_shut_reason = next((r for r in _stuck_shut["what_is_holding_you_up"]
-                    if isinstance(r, dict)
-                    and r.get("what", "").startswith("things you built")),
+_shut_reason = next((reason for reason in _stuck_shut["what_is_holding_you_up"]
+                    if isinstance(reason, dict)
+                    and reason.get("what", "").startswith("things you built")),
                    None)
 check("`stuck` never tells a player to 'open' something open_venture will "
       "actually refuse",
@@ -1036,9 +1036,9 @@ s_can.done.add("lens_grinding")
 s_can._done_changed()
 s_can.artisans = 10.0
 _stuck_can = S._agent_dispatch(s_can, NODES, {"cmd": "stuck"})
-_can_reason = next((r for r in _stuck_can["what_is_holding_you_up"]
-                   if isinstance(r, dict)
-                   and r.get("what") == "things you built and never opened"),
+_can_reason = next((reason for reason in _stuck_can["what_is_holding_you_up"]
+                   if isinstance(reason, dict)
+                   and reason.get("what") == "things you built and never opened"),
                   None)
 check("...and once there really are enough hands free, `stuck` goes back to "
       "naming the concrete 'open X' command",
@@ -1074,16 +1074,16 @@ check("...and the engine teaches it again rather than skipping every node "
 # forty years is fine; teaching the same one four times is the treadmill that
 # cost three Rome seeds most of what they built.
 def _reteaching_is_once_a_generation():
-    s_ = sim(capital=2000000.0, manual=False)
-    s_.trades_created.add("machinist")
+    household = sim(capital=2000000.0, manual=False)
+    household.trades_created.add("machinist")
     per_trade = {}
     for _ in range(40):
-        before = dict(getattr(s_, "last_taught", {}))
-        s_.step()
-        for t, y in getattr(s_, "last_taught", {}).items():
-            if before.get(t) != y:
-                per_trade[t] = per_trade.get(t, 0) + 1
-    return (all(v <= 40 // s_.RETEACH_EVERY + 1 for v in per_trade.values()),
+        before = dict(getattr(household, "last_taught", {}))
+        household.step()
+        for trade, year_taught in getattr(household, "last_taught", {}).items():
+            if before.get(trade) != year_taught:
+                per_trade[trade] = per_trade.get(trade, 0) + 1
+    return (all(value <= 40 // household.RETEACH_EVERY + 1 for value in per_trade.values()),
             per_trade)
 
 slow_check("...and no more than once a generation FOR THE SAME TRADE",

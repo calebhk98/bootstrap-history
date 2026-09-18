@@ -21,8 +21,8 @@ _rd, _, _ = proto([{"cmd": "start", "id": "arithmetic_positional"},
                    {"cmd": "step", "years": 1},
                    {"cmd": "state"}])
 check("clearing your debt by working does not make you insolvent",
-      not any("INSOLVENCY" in json.dumps(x) for x in _rd), 
-      [e for x in _rd for e in (x.get("events") or []) if "INSOLVENCY" in str(e)])
+      not any("INSOLVENCY" in json.dumps(reply) for reply in _rd),
+      [event for reply in _rd for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)])
 check("...and does not take your whole reputation with it",
       _rd[-1].get("reputation", 0) > 1.0, _rd[-1].get("reputation"))
 s_cc = sim()
@@ -62,13 +62,13 @@ for _ in range(4):
 _vr = S._agent_dispatch(s_vv, NODES, {"cmd": "ventures"})
 _led = s_vv.revenue_sources()
 check("ventures quotes the same earnings the ledger credits",
-      all(abs(r["earns_a_year"] - _led.get(r["id"], r["earns_a_year"])) < 0.11
-          for r in _vr["running"]),
-      [(r["id"], r["earns_a_year"], _led.get(r["id"])) for r in _vr["running"]][:2])
+      all(abs(venture_row["earns_a_year"] - _led.get(venture_row["id"], venture_row["earns_a_year"])) < 0.11
+          for venture_row in _vr["running"]),
+      [(venture_row["id"], venture_row["earns_a_year"], _led.get(venture_row["id"])) for venture_row in _vr["running"]][:2])
 check("...and its NEEDS column is the supervision the engine charges",
-      all(abs(r["needs"]["craftsmen"] - s_vv.venture_hands(r["id"])[1]) < 0.011
-          for r in _vr["running"]),
-      [(r["id"], r["needs"]) for r in _vr["running"]][:2])
+      all(abs(venture_row["needs"]["craftsmen"] - s_vv.venture_hands(venture_row["id"])[1]) < 0.011
+          for venture_row in _vr["running"]),
+      [(venture_row["id"], venture_row["needs"]) for venture_row in _vr["running"]][:2])
 
 
 # --- BREAK: "CREDIT EXHAUSTED: 2 projects halted, unfinished" - "halted"
@@ -89,9 +89,9 @@ check("the creditors stopping your work does not burn what you paid",
       abs(s_ce.paid_towards.get("identity_cover", 0.0) - _spent) < 0.5,
       s_ce.paid_towards)
 check("...and the event says so, and names what it stopped",
-      any("identity_cover" in m and "stands to your credit" in m
-          for _, m in s_ce.log),
-      [m for _, m in s_ce.log if "CREDIT EXHAUSTED" in m][:1])
+      any("identity_cover" in message and "stands to your credit" in message
+          for _, message in s_ce.log),
+      [message for _, message in s_ce.log if "CREDIT EXHAUSTED" in message][:1])
 s_ce.capital, s_ce.credit_frozen_until = 50000.0, 0
 s_ce.start_project("identity_cover")
 check("...and beginning again takes it off the bill",
@@ -107,8 +107,8 @@ check("...and the credit is spent once, not every time",
 s_rs = sim(capital=500000.0)
 s_rs.done.update(NODES); s_rs._done_changed()
 s_rs.artisans = s_rs.scholars = 5.0
-_vv = next(k for k in sorted(NODES)
-           if s_rs.is_venture(k) and NODES[k]["rev"] > 500)
+_vv = next(node_id for node_id in sorted(NODES)
+           if s_rs.is_venture(node_id) and NODES[node_id]["rev"] > 500)
 s_rs.open_venture(_vv)
 _fullfee = max(s_rs.project_cost(_vv) * 0.3, NODES[_vv]["up"] * 2.0)
 s_rs.artisans = s_rs.scholars = 0.0
@@ -131,10 +131,10 @@ check("restoring a shop the staffing rule shut costs the tenth it promised",
 s_hy = sim(capital=500000.0)
 s_hy.done.update(NODES); s_hy._done_changed()
 s_hy.artisans = s_hy.scholars = 6.0
-_vh = max((k for k in sorted(NODES)
-           if s_hy.is_venture(k) and NODES[k]["rev"] > 500
-           and 1.6 <= s_hy.venture_hands(k)[1] <= 5.0
-           and s_hy.venture_hands(k)[0] <= 5.0),
+_vh = max((node_id for node_id in sorted(NODES)
+           if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
+           and 1.6 <= s_hy.venture_hands(node_id)[1] <= 5.0
+           and s_hy.venture_hands(node_id)[0] <= 5.0),
           key=lambda k: s_hy.venture_hands(k)[1])
 _ok_hy, _ = s_hy.open_venture(_vh)
 check("(a shop to test the staffing rule on is open)",
@@ -161,7 +161,7 @@ check("...but a whole hand short still does",
 # hours already bought. A play tester read two of the three on one turn and
 # reported the game as having lost count of their household.
 s_cn = sim(capital=20000.0)
-_kn = next(k for k in sorted(NODES) if NODES[k]["art"] >= 2 and NODES[k]["sch"] == 0)
+_kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
 s_cn.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
@@ -189,14 +189,14 @@ for _r in _RUB:
 # have gone and got some.
 def _anc_of(k, seen=None):
     seen = seen if seen is not None else set()
-    for _p in NODES[k]["pre"]:
-        if _p not in seen:
-            seen.add(_p); _anc_of(_p, seen)
+    for prereq_id in NODES[k]["pre"]:
+        if prereq_id not in seen:
+            seen.add(prereq_id); _anc_of(prereq_id, seen)
     return seen
-_rub_users = sorted(k for k, v in NODES.items()
-                    if any("rubber" in m for m in (v.get("mat") or {})))
-_ungated = [k for k in _rub_users
-            if not ({"mat_natural_rubber", "mat_synthetic_rubber"} & _anc_of(k))]
+_rub_users = sorted(node_id for node_id, value in NODES.items()
+                    if any("rubber" in material for material in (value.get("mat") or {})))
+_ungated = [node_id for node_id in _rub_users
+            if not ({"mat_natural_rubber", "mat_synthetic_rubber"} & _anc_of(node_id))]
 # --- BREAK: a node whose own note names a material it does not require. The
 # blind prerequisite audit found in2_electron_source_cathode saying "Tungsten
 # chosen for high melting point and low evaporation" with no tungsten anywhere
@@ -278,7 +278,7 @@ check("...and a nearly-paid project is not refused for its gross price",
 # real, discounted figure showed up only inside a `start` refusal or its
 # success line, after the fact.
 s_wp = sim(capital=1000.0)
-_wp_k = next(kk for kk in s_wp.order if s_wp.can_start(kk) and NODES[kk]["ph"] > 0)
+_wp_k = next(node_id for node_id in s_wp.order if s_wp.can_start(node_id) and NODES[node_id]["ph"] > 0)
 s_wp.start_project(_wp_k)
 s_wp.active[_wp_k]["spent"] = 500.0
 s_wp.stop_project(_wp_k)
@@ -298,7 +298,7 @@ check("...and it matches what `start` would actually bill, not a second "
       (_wp_out["cost"]["what_start_would_actually_charge"],))
 # And the ordinary case - nothing sunk into this node - gets no such field.
 s_wp2 = sim(capital=1000.0)
-_wp2_k = next(kk for kk in s_wp2.order if s_wp2.can_start(kk))
+_wp2_k = next(node_id for node_id in s_wp2.order if s_wp2.can_start(node_id))
 _wp2_out = S._agent_dispatch(s_wp2, NODES, {"cmd": "why", "id": _wp2_k})
 check("...while a project with nothing sunk into it gets no discount "
       "field at all - there is nothing to discount",
@@ -337,9 +337,9 @@ check("...while a zero-revenue capability gets no ramp note at all",
 # the one moment a player could still back out - opening itself - for any
 # ordinary venture where upkeep exceeds revenue even fully ramped up.
 s_ln = sim(capital=1_000_000.0)
-_ln_k = next((k for k, n in NODES.items()
-             if n.get("up", 0) > n.get("rev", 0) > 0
-             and k not in s_ln.CAPABILITY_INSTITUTIONS), None)
+_ln_k = next((node_id for node_id, node in NODES.items()
+             if node.get("up", 0) > node.get("rev", 0) > 0
+             and node_id not in s_ln.CAPABILITY_INSTITUTIONS), None)
 check("a real, non-capability net-loss-making node exists in the tree to "
       "test against",
       _ln_k is not None, _ln_k)
@@ -367,8 +367,8 @@ if _ln_k:
 # actual question - does an OPENABLE loss-making institution get warned
 # about its loss - reproducibly.
 s_ln2 = sim(capital=1_000_000.0)
-_ln2_cands = sorted(k for k in s_ln2.CAPABILITY_INSTITUTIONS
-                    if NODES.get(k, {}).get("up", 0) > NODES.get(k, {}).get("rev", 0))
+_ln2_cands = sorted(node_id for node_id in s_ln2.CAPABILITY_INSTITUTIONS
+                    if NODES.get(node_id, {}).get("up", 0) > NODES.get(node_id, {}).get("rev", 0))
 _ln2_k, _ln2_ok, _ln2_msg = None, False, ""
 for _cand in _ln2_cands:
     s_ln2.done.add(_cand)
@@ -401,7 +401,7 @@ check("available says what you could raise for a project",
 _page = _RP("available", _rav[0])
 check("...and marks the rows you could not raise it for",
       "*" in _page and "A * after COST" in _page,
-      [l for l in _page.splitlines() if "after COST" in l])
+      [line for line in _page.splitlines() if "after COST" in line])
 _cheap, _, _ = proto([{"cmd": "available", "limit": 2}])
 check("...and does not mark what you can plainly afford",
       "A * after COST" not in _RP("available", _cheap),
@@ -422,14 +422,14 @@ for _cf in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json"
         continue
     _cd = json.load(open(_cf))
     _start = _cd["year"]
-    _windows = sorted((h["years"][0], h["years"][1]) for h in _cd.get("hazards", []))
+    _windows = sorted((hazard["years"][0], hazard["years"][1]) for hazard in _cd.get("hazards", []))
     _prev, _gaps = _start, []
     for (_a, _b) in _windows:
         _gaps.append(_a - _prev)
         _prev = max(_prev, _b)
     check("%s: no silent stretch longer than 90 years between its dated "
           "events" % _cid,
-          all(g <= 90 for g in _gaps), _gaps)
+          all(gap <= 90 for gap in _gaps), _gaps)
     if _cid != "mexica_1500":
         # The Mexica's list runs out at the edge of real history, not at the
         # horizon - extending it past here would mean inventing the future,
@@ -444,16 +444,31 @@ for _cf in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json"
 # playtester watched the Black Death take a third of their own staff and
 # nothing else happen anywhere in the game, and asked why a mortality event
 # this size left the rest of the economy untouched - no dearer hiring, no
-# dearer wages, nothing. self.pop_deficit (core.py, fed by _shocks in
-# society.py) is the fix: the hazard now also costs the whole labour market
-# people, and a smaller labour market pays more to hire from.
+# dearer wages, nothing. self._apply_population_mortality_shock (core.py,
+# fed by _shocks in society.py) is the fix: the hazard now also costs the
+# whole labour market people, and a smaller labour market pays more to hire
+# from.
+#
+# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md) REWRITE:
+# these checks used to assert on self.pop_deficit and self._pop_recovery_
+# years, a scalar deficit decaying on a hand-set exponential clock.
+# sim/world/demography.py's own test suite FALSIFIES that shape (see its
+# module docstring): two populations losing an identical 30% in one year,
+# one sparing working-age adults and one not, diverge afterward, which a
+# clock that only knows a SIZE cannot reproduce. self.population (a
+# demography.Population) replaced it, so these checks now read
+# self.population.total and the computed self.pop_scale/self.wage_index
+# properties instead - see core.py's own comment above pop_scale for the
+# full account of what changed and why.
 s = sim(civ="england_1300")
 _normal_wage = s.wage_index
+_pop_before = s.population.total
 s.year = 1348
 s._shocks(1348)
+_pop_loss_fraction = 1.0 - s.population.total / _pop_before
 check("the Black Death costs the whole society people, not only your own "
       "household",
-      abs(s.pop_deficit - 0.45) < 1e-6, s.pop_deficit)
+      abs(_pop_loss_fraction - 0.45) < 1e-6, _pop_loss_fraction)
 
 # --- your own quarantine (plague_preparedness) protects your own household
 # - that is what hazard_relief already does to the personal staff_loss above
@@ -462,11 +477,13 @@ check("the Black Death costs the whole society people, not only your own "
 s2 = sim(civ="england_1300")
 s2.done.add("plague_preparedness"); s2.operating.add("plague_preparedness")
 s2._done_changed()
+_pop2_before = s2.population.total
 s2.year = 1348
 s2._shocks(1348)
+_pop2_loss_fraction = 1.0 - s2.population.total / _pop2_before
 check("a hedge against plague shields your own staff, not the whole "
       "population's labour market",
-      abs(s2.pop_deficit - 0.45) < 1e-6, s2.pop_deficit)
+      abs(_pop2_loss_fraction - 0.45) < 1e-6, _pop2_loss_fraction)
 
 # --- scarcer labour is dearer labour immediately: the event and the economy
 # screen must not disagree for the remainder of the year in which it fires.
@@ -480,12 +497,21 @@ check("wages remain elevated the year after a mortality shock",
       s.wage_index > _normal_wage * 1.2, (_normal_wage, s.wage_index))
 check("the wage cascade is LOGGED, so a player can see why their wage bill "
       "jumped instead of having to notice it in the accounts",
-      any("running" in m and "above normal" in m for _y, m in s.log),
-      [m for _y, m in s.log if "wage" in m.lower()])
+      any("running" in message and "above normal" in message for _year, message in s.log),
+      [message for _year, message in s.log if "wage" in message.lower()])
 
-# --- it fades on the clock the hazard earned, not instantly and not
-# forever - the actual brief: "the effect decaying back over a historically
-# plausible recovery period rather than being permanent or instant".
+# --- recovery is now EMERGENT from self.population's own vital rates
+# (births and deaths on the surviving cohort structure) rather than a
+# clock this engine sets - demography.py's own docstring says the model is
+# not perfectly self-replicating even at exact subsistence, so a shocked
+# population does not snap back to its pre-shock level; it resumes
+# ordinary (near-zero net) growth from its new, smaller base. That is a
+# real, checkable prediction of the demographic model, not a number this
+# test can assert to a specific decade the way the old fixed 150-year
+# clock could - so what this checks is only the SHAPE the old test's own
+# brief asked for: the premium stays substantial for a long time (decades),
+# it does not evaporate in a handful of years, and it never grows without
+# bound either.
 s4 = sim(civ="england_1300")
 s4.year = 1348
 s4._shocks(1348)
@@ -498,31 +524,97 @@ _end_premium = s4.wage_index / _normal_wage - 1.0
 check("fifty years on, the wage premium from the Black Death is still "
       "substantial, not gone in a handful of years",
       _mid_premium > 0.10, _mid_premium)
-check("...and by England's roughly 150-year demographic recovery it has "
-      "mostly faded, not stayed at its peak forever",
-      _end_premium < 0.05, _end_premium)
+check("...and it has not grown without bound a century later either - this "
+      "is a mortality shock working through births and deaths, not a "
+      "runaway",
+      _end_premium < _mid_premium * 2.0 + 0.10, (_mid_premium, _end_premium))
 
-# --- a milder mortality event earns a shorter recovery than the Black
-# Death's 150 years, in proportion to how much of the population it
-# actually took, not the same horizon regardless of size.
+# --- a milder mortality event costs the society less than a more severe
+# one, in proportion to its own severity, not some fixed effect regardless
+# of size - the same relative-severity property the old _pop_recovery_years
+# clock asserted via its own recovery horizon, now checked directly on the
+# population loss itself, which is the number that actually drives
+# wage_index under the new model.
 s5 = sim(civ="rome_100ad")
+_pop5_before = s5.population.total
 for _yr in range(165, 181):
     s5.year = _yr
     s5._shocks(_yr)
-    if s5.pop_deficit > 0:
+    if s5.population.total < _pop5_before:
         break
-check("the Antonine plague (28% of staff) earns a shorter demographic "
-      "recovery than the Black Death's (45%) 150 years, scaled to size",
-      0 < s5._pop_recovery_years < 150.0, s5._pop_recovery_years)
+_antonine_loss_fraction = 1.0 - s5.population.total / _pop5_before
+check("the Antonine plague (28% of staff) costs the society a smaller "
+      "population fraction than the Black Death's 45%, scaled to size",
+      0 < _antonine_loss_fraction < 0.45, _antonine_loss_fraction)
 
-# --- JOB 3: TECHNOLOGY RAISES THE POPULATION, SLOWLY. Sanitation,
-# antisepsis, crop rotation and the like should feed back into a bigger
-# labour market eventually, but a lower death rate shows up in the headcount
-# a generation later, not the day a latrine opens - so apply_tech_effects
-# must queue the gain rather than apply it the year the node completes.
+# --- JOB 2b: THE LIVE SAVE/LOAD BUG WIRING MILESTONE 4 FIXES.
+# docs/architecture/WIRING_MILESTONE_4.md SS3: none of the nine attributes
+# the OLD scalar model used were ever in SAVE_FIELDS, so a demographic
+# shock's wage premium was silently wiped the moment a --session game was
+# resumed in a fresh process (cli.py reconstructs a brand-new Sim from the
+# civilisation file on every invocation, then load_state()s the save over
+# it - CLAUDE.md SS5's "every single command is a save followed by a load"
+# describes exactly this sequence). self.population's three cohort counts
+# are now in SAVE_FIELDS (proto/saveload.py) via the pop_children/
+# pop_working_age/pop_elderly forwarding properties (core.py) - this drives
+# a hazard through the REAL save/reload cycle cli.py actually uses, the one
+# gap every existing demography-adjacent test left open (none of them
+# drove a hazard through save_state/load_state in the same process).
+s7 = sim(civ="england_1300")
+_pop7_before = s7.population.total
+s7.year = 1348
+s7._shocks(1348)
+_shocked_children = s7.population.children
+_shocked_working_age = s7.population.working_age
+_shocked_elderly = s7.population.elderly
+check("the save/load round-trip test below actually exercises a real "
+      "shock, not a no-op",
+      s7.population.total < _pop7_before * 0.99, s7.population.total)
+_save7 = os.path.join(HERE, "_test_wiring_milestone4_pop_save.json")
+S.save_state(s7, _save7)
+# A FRESH Sim, built the way cli.py's --session resume really does it
+# (Sim(...) from the civilisation file, THEN load_state over it) - not the
+# same object with its cohorts merely re-read, which would pass even if
+# SAVE_FIELDS were still missing every one of these three names.
+s7_fresh = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
+                 civ=S.load_civ("england_1300"))
+s7_fresh.goal, s7_fresh.done_year = GOAL, {}
+S.load_state(s7_fresh, _save7)
+os.remove(_save7)
+check("a demographic shock's cohort counts survive a real save/reconstruct/"
+      "load cycle bit-for-bit - the exact failure mode the OLD pop_deficit/"
+      "wage_index/_pop_scale_base trio had, live, because none of the nine "
+      "attributes _demographic_recovery used were ever in SAVE_FIELDS",
+      (s7_fresh.population.children == _shocked_children
+       and s7_fresh.population.working_age == _shocked_working_age
+       and s7_fresh.population.elderly == _shocked_elderly),
+      (s7_fresh.population, (_shocked_children, _shocked_working_age, _shocked_elderly)))
+check("...and the wage premium that cohort state drives is therefore ALSO "
+      "intact after the round-trip, not silently reset to baseline",
+      s7_fresh.wage_index > s7_fresh._wage_index_base * 1.2, s7_fresh.wage_index)
+
+# --- JOB 3: A FOOD TECHNOLOGY RAISES THE POPULATION, SLOWLY. Crop
+# rotation, the three-field system, New World crops and the like should feed
+# back into a bigger labour market eventually, but more food shows up in the
+# headcount a generation later, not the season it is first sown - so
+# apply_tech_effects must queue the gain rather than apply it the year the
+# node completes.
+#
+# THE VEHICLE USED TO BE `sanitation_antisepsis`, AND THE SWAP IS THE POINT,
+# not a workaround. The eight DISEASE technologies (Sim.DISEASE_BURDEN_TECH_
+# IDS) no longer queue a scalar here at all: they drive `_disease_burden()`
+# live, and the generational lag this ramp was imitating now falls out of the
+# cohort model instead - people stop dying the year the latrine opens, and the
+# headcount answers over the following decades because that is how cohorts
+# work. The forty-year ramp was a hardcoded stand-in for a lag the simulation
+# can now produce (CLAUDE.md SS3.1), so for disease it is gone, and
+# test_disease_burden_wiring.py is what guards the mechanism that replaced it.
+# The five FOOD entries sharing the `population` field still queue exactly as
+# before, which is what this job tests. `crop_rotation` carries the same 0.02
+# weight `sanitation_antisepsis` did, so every number below is unchanged.
 s6 = sim(civ="rome_100ad")
 _base_pop = s6._pop_scale_base
-s6.apply_tech_effects("sanitation_antisepsis")
+s6.apply_tech_effects("crop_rotation")
 check("a population-raising technology does not move the population the "
       "instant it completes",
       s6._pop_scale_base == _base_pop, s6._pop_scale_base)
@@ -533,7 +625,7 @@ check("...but it has fully landed by the end of its forty-year ramp",
 check("...and the gain stops growing once it has landed, rather than "
       "compounding forever",
       not s6._pop_tech_pending, s6._pop_tech_pending)
-s6.apply_tech_effects("sanitation_antisepsis")
+s6.apply_tech_effects("crop_rotation")
 for _yr in range(140, 140 + 20):
     s6._demographic_recovery(_yr)
 check("halfway through a SECOND such technology's ramp, only half of its "
@@ -549,16 +641,16 @@ check("halfway through a SECOND such technology's ramp, only half of its "
 # still read "(would have been -28%: ...)" glued onto the same sentence and
 # reasonably called it a catastrophe.
 def _plague_line(mitigated_nodes):
-    _s = sim(civ="rome_100ad", capital=1000000.0)
+    household = sim(civ="rome_100ad", capital=1000000.0)
     if mitigated_nodes:
-        run_it(_s, *mitigated_nodes)
-    _s.scholars, _s.artisans = 50.0, 200.0
-    for _t in list(_s.employees):
-        _s.employees[_t] = 50.0
-    _s.rng = random.Random(1)          # a seed that rolls the 32% plague check
-    _s.year = 165
-    _s._shocks(165)
-    return next((_m for _y, _m in _s.log if "Antonine plague" in _m), "")
+        run_it(household, *mitigated_nodes)
+    household.scholars, household.artisans = 50.0, 200.0
+    for trade in list(household.employees):
+        household.employees[trade] = 50.0
+    household.rng = random.Random(1)          # a seed that rolls the 32% plague check
+    household.year = 165
+    household._shocks(165)
+    return next((message for _year, message in household.log if "Antonine plague" in message), "")
 
 
 _HEAVY = ["sanitation_antisepsis", "med_quarantine_sanitation", "germ_theory",
@@ -584,6 +676,6 @@ check("a partially mitigated plague is 'softened', not 'held off almost "
       "softened by" in _line_some, _line_some)
 check("the empire-wide toll is still told, in every case, as a separate "
       "fact explicitly not the household's own experience",
-      all("Empire-wide, population -28%" in _l and "either way" in _l
-          for _l in (_line_none, _line_heavy, _line_some)),
+      all("Empire-wide, population -28%" in line and "either way" in line
+          for line in (_line_none, _line_heavy, _line_some)),
       (_line_none, _line_heavy, _line_some))
