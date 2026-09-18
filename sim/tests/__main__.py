@@ -209,6 +209,12 @@ TOPICS = [
     # process the temperature it needs, using the tree's own cap_heat_*
     # rungs, and choice of technique picks the cheapest one THAT WORKS.
     "temperature_caps",
+    # tools/generate_geography_tiles.py's output: 1,139 equal-area land
+    # tiles of 150,000 km2 each, derived by ONE stated rule from Natural
+    # Earth land polygons and the Koppen-Geiger climate classification,
+    # rather than 21 hand-written regions sized by what they are called.
+    # Complaints/46. Added ALONGSIDE `regions`, which is untouched.
+    "geography_tiles",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology
@@ -259,7 +265,28 @@ def _run_topic(slug, harness):
 
     for case in _flatten(cases):
         result = unittest.TestResult()
-        case.run(result)
+        # WRAPPED IN A ONE-CASE SUITE, NOT `case.run(result)` DIRECTLY.
+        # Running a TestCase instance straight bypasses setUpClass and
+        # tearDownClass entirely - those are invoked by the SUITE, not by
+        # the case - so a module using the ordinary unittest idiom
+        #
+        #     @classmethod
+        #     def setUpClass(cls): cls.data = load()
+        #
+        # came back with AttributeError on every single test here, while
+        # passing perfectly under `python3 -m unittest`. That combination is
+        # the worst kind of trap: an author verifies with the standard tool,
+        # sees green, and only this runner disagrees. It cost one agent a
+        # whole test module before it was noticed, and three modules in this
+        # directory already use the idiom.
+        #
+        # TestSuite.run does the class fixture handling, so a one-case suite
+        # gets it right. The cost is that setUpClass runs once per test
+        # rather than once per class, which is correct-but-slower; every
+        # current user of it loads a JSON file, so it does not matter. If a
+        # module ever needs a genuinely expensive class fixture, group by
+        # class here instead of paying it per test.
+        unittest.TestSuite([case]).run(result)
         problems = result.errors + result.failures
         harness.check(
             "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " ")),

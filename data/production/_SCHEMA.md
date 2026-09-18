@@ -26,9 +26,9 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `outputs` | {material_key: quantity}. Usually one key. More than one means genuine joint production - smelting galena yields lead AND silver, and pretending otherwise misprices both. |
 | `inputs` | {material_key: quantity} consumed to produce that output. Keys must be material keys the tree already uses, or new ones you also define an entry for. A material with no inputs is EXTRACTED rather than made: say so in extracted_from. |
 | `labour_hours` | {trade: hours} to produce one basis unit. Trades must exist in data/prices.json wage_rates_denarii_per_hour. |
-| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel, OR by converting mechanical or electrical energy into heat. Priced by `sim/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal, coal, electrical resistance/arc, or mechanical friction - whichever is cheaper AND CAPABLE ENOUGH at solved prices; see `temperature_needed_c`/`temperature_reached_c` immediately below - friction is real but essentially never wins, see ENERGY in that file's module docstring). Usually 0 for pre-industrial processes, where the fuel IS the energy. Still UNDIFFERENTIATED BY TEMPERATURE AS ONE PRICE (a decision, not an oversight - full grading into several thermal_mj_below_X pools is still future work), but no longer temperature-BLIND: see TEMPERATURE in `sim/solve_prices.py`'s module docstring and CAPABILITY_CAP_FIELDS there for what changed after Complaints/44 and what still has not. |
+| `thermal_mj` | Process HEAT not already accounted for by a fuel listed in `inputs` - obtainable by burning an ordinary solid fuel, OR by converting mechanical or electrical energy into heat. Priced by `sim/solve_prices.py` through the thermal energy market in `data/production/70_energy.json` (charcoal, coal, electrical resistance/arc, or mechanical friction - whichever is cheaper AND CAPABLE ENOUGH at solved prices; see `temperature_needed_c`/`temperature_reached_c` immediately below - friction is real but essentially never wins, see ENERGY in that file's module docstring). Usually 0 for pre-industrial processes, where the fuel IS the energy. STILL ONE NAMED CARRIER, but no longer one shared PRICE: PER-CONSUMER GRADING (Complaints/44, continued) now solves a separate price for every distinct `temperature_needed_c` this era's entries actually state, so a cool use and a hot use of the same `thermal_mj` field get the cheapest technique that clears EACH one's own requirement, at the same time, rather than one technique chosen for the era's single hottest requirement - see TEMPERATURE in `sim/solve_prices.py`'s module docstring for the full mechanism and why a materials-per-band split was rejected in favour of this. |
 | `temperature_reached_c` | Optional, on a TECHNIQUE that supplies `thermal_mj` (or, in the future, another capped carrier) - the sustained temperature (Celsius) that technique can physically deliver, a real physical fact with a stated basis (CLAUDE.md 3.1), never tuned to make it win or lose. Prefer the tech tree's own `cap_heat_0700`/`1100`/`1300`/`1600`/`2000`/`3000` rungs as reference values over an invented number - see the worked entries in `data/production/70_energy.json`. Omit for anything that is not itself an energy-carrier-supplying technique. See CAPABILITY_CAP_FIELDS in `sim/solve_prices.py`'s module docstring for the mechanism this feeds. |
-| `temperature_needed_c` | Optional, on a recipe (of ANY kind, not only an energy-carrier technique) that draws a nonzero `thermal_mj` - the temperature its own process genuinely needs, if higher than the shared pool's own default floor (see `sim/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`). Omitting it is not the same as stating a low number: an entry with no stated requirement pays the shared pool's ordinary price, unfiltered by anything beyond that default floor, exactly as before this field existed - see WHEN TO ADD A TEMPERATURE REQUIREMENT below for which entries are worth annotating first. |
+| `temperature_needed_c` | Optional, on a recipe (of ANY kind, not only an energy-carrier technique) that draws a nonzero `thermal_mj` - the temperature its own process genuinely needs. Omitting it is not the same as stating a low number: an entry with no stated requirement pays the shared pool's ordinary price (the cheapest technique clearing only the universal default floor, `sim/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`), exactly as before this field existed. An entry that DOES state a requirement is graded SEPARATELY from that shared pool and from every other entry's own stated requirement (see PER-CONSUMER GRADING in `thermal_mj`'s own description above) - stating a high requirement here no longer raises what any other entry, including the generic pool, has to pay. See WHEN TO ADD A TEMPERATURE REQUIREMENT below for which entries are worth annotating first. |
 | `mechanical_mj` | Shaft work not already accounted for by `inputs` - a turning axle, nothing else. Priced through the same file's mechanical energy market (a water wheel's amortised build, human muscle, a heat engine converting thermal energy, or a motor converting electrical energy - whichever is cheaper). Electricity is NOT automatically shaft work (see ENERGY in `sim/solve_prices.py`'s module docstring, and THE ALUMINIUM DEFECT there for the bug this used to be) - a process that specifically needs a CURRENT, not a shaft, belongs in `electrical_mj` instead even where the current happens to come from a dynamo today. |
 | `electrical_mj` | Electrical energy not already accounted for by `inputs` - a current, or heat/work reached only because electricity supplies it (electrolysis; arc or resistance heating, which alone reaches temperatures no fuel here does; a motor). Priced through the same file's electrical energy market (a water wheel through a dynamo, a heat engine through a dynamo, or a photovoltaic panel with no shaft at all - whichever is cheaper). Use this, not `mechanical_mj`, for any process whose PHYSICAL requirement is electricity itself, so the choice-of-technique mechanism can pick photovoltaic over hydro-plus-dynamo once that route is actually cheaper, rather than that choice being foreclosed by which field an entry happened to use. |
 | `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
@@ -182,11 +182,25 @@ for the physics of each link (calorific values, furnace and conversion
 efficiencies, a water wheel's typical kilowatts from
 `data/world/resources.json`) and for what is deliberately NOT modelled
 yet (a site-scarcity rent on the best mill sites; an ox as well as a
-labourer turning the crank; FULL TEMPERATURE GRADING within `thermal_mj`
-itself, several thermal_mj_below_X pools rather than one shared floor -
-see TEMPERATURE in that docstring for why that fuller version is still a
-named, deferred decision rather than a silent gap, and for what this
-round's narrower fix does and does not close).
+labourer turning the crank; a second graded dimension alongside
+temperature - torque, pressure - which TEMPERATURE in that docstring
+gives the worked example for).
+
+TEMPERATURE WITHIN `thermal_mj` IS NOW GRADED PER CONSUMER, NOT ONE SHARED
+FLOOR (Complaints/44, continued). The first round's fix computed a SINGLE
+floor for the whole `thermal_mj` pool - the largest requirement any active
+consumer stated - and that was itself found to be a bug: it let the era's
+single hottest requirement lock every cooler use out of a technique that
+could obviously still do its (cooler) job, and let a newly cheap cold
+source undercut a hot use's own requirement rather than merely the generic
+pool's. `thermal_mj` stays ONE named carrier - no `thermal_mj_below_X`
+split, and no rewrite of any consuming entry outside this round's ownership
+- but the PRICE behind that name is now solved separately for every
+distinct `temperature_needed_c` this era's own entries state, so a cool
+job and a hot job sharing the same carrier name each get the cheapest
+technique that clears THEIR OWN requirement, at the same time. See
+TEMPERATURE in `sim/solve_prices.py`'s module docstring for the mechanism
+in full and why a materials-per-band split was considered and rejected.
 
 USE `electrical_mj`, NOT `mechanical_mj`, FOR A GENUINELY ELECTRICAL NEED.
 The previous version of this schema described `mechanical_mj` as including
@@ -222,7 +236,11 @@ what only the arc route can - the very mistake TEMPERATURE warns about).
 genuinely needs more heat than the shared `thermal_mj` pool's default floor
 (`sim/solve_prices.py`'s `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) already
 guarantees - see CAPABILITY_CAP_FIELDS in that file's module docstring for
-the mechanism this feeds and Complaints/44 for the defect it closes.
+the mechanism this feeds and Complaints/44 for the defect it closes. Stating
+one here grades THIS recipe's own price separately from everything else
+(PER-CONSUMER GRADING) - it never raises what any other entry, including
+the generic pool, pays, so adding one is safe to do in isolation and does
+not need coordinating with any other entry that also draws on `thermal_mj`.
 
 Add it where the temperature genuinely DECIDES which technique wins, the
 same test `requires_node` already asks: smelting, forging, glass, pottery
@@ -314,7 +332,7 @@ structural rather than a matter of precision:
 |---|---|
 | **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/solve_prices.py` |
 | rent | `extracted_from` marks it; the solver fixes it at zero this round |
-| energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is now PARTIALLY modelled (Complaints/44) - every thermal_mj-supplying technique states what it can reach and the pool's choice of technique may no longer pick one that cannot clear a stated floor - but the pool stays ONE price rather than being fully graded by temperature, which is still a separately named, deliberately deferred gap; see TEMPERATURE in the solver's module docstring for exactly what changed and what has not |
+| energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is now graded PER CONSUMER (Complaints/44, continued) - every thermal_mj-supplying technique states what it can reach, and every distinct requirement this era's own consumers actually state gets its OWN separately solved price, rather than one shared floor across every consumer of the carrier; the carrier stays ONE NAME (no `thermal_mj_below_X` split - that would need every other consuming entry, most outside this directory's per-file ownership, rewritten to name a band), which is a considered trade-off rather than a deferred gap; see TEMPERATURE in the solver's module docstring for the mechanism and the trade-off in full |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
 

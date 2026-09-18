@@ -328,79 +328,120 @@ and chosen by the same cheapest-technique rule as everything else:
                                 margin this file cannot yet quantify. Tag:
                                 GAP, not a heuristic, per CLAUDE.md 3.4.
 
-TEMPERATURE - PARTIALLY MODELLED AS OF THIS ROUND (Complaints/44). A
-megajoule of heat is not fungible across temperature: one MJ at 200 C
-cannot do what one MJ at 1600 C can, which is the whole reason a bloomery
-cannot melt iron however much charcoal is fed into it. That gap sat
-harmless in this file as long as no civilisation could turn a shaft for
-almost nothing - the moment England 1300 could (the water-wheel iron gate
-fix), `thermal_mj_friction` (mechanical heat, ~98% efficient, ALWAYS
-modelled but never meant to win - see CHOICE OF TECHNIQUE above) undercut
-charcoal on pure running cost and the solver picked it, pricing English
-process heat off a warm bearing. `thermal_mj_friction`'s own yield_basis
-predicted this could never happen; the reason it happened anyway is
-exactly the gap this section used to describe and now partly closes -
-see Complaints/44 for the full incident.
+TEMPERATURE, AND WHY A SINGLE SHARED FLOOR WAS ITSELF A BUG (Complaints/44,
+then a second defect found by the stakeholder reasoning about the first
+fix rather than by running anything - see Complaints/44's own text for the
+friction incident this paragraph continues from). A megajoule of heat is
+not fungible across temperature: one MJ at 200 C cannot do what one MJ at
+1600 C can, which is the whole reason a bloomery cannot melt iron however
+much charcoal is fed into it. The first round's fix gave every
+thermal_mj-supplying technique a `temperature_reached_c` and computed ONE
+shared floor for the whole pool - the LARGER of the pool's own default
+(`THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) and whatever the single
+HOTTEST active consumer stated it needed - and excluded any technique
+that fell short of that one number. That correctly kept a warm bearing
+out of England's forges, and it was ALSO wrong in a way nothing had yet
+exercised: a single global floor means the hottest consumer in the WHOLE
+ECONOMY sets the bar for every other use of the carrier, however cool.
+Concretely, on the data as it stood, the three `mechanical_mj_heat_
+engine_*` entries' own stated 1000 C requirement already raised the
+SHARED floor to 1000 C for every thermal_mj consumer in the file, plaster
+and rosin (150-160 C, per their own `yield_basis`) included - harmless
+today only because charcoal and coal both happen to clear 1100 C anyway,
+not because the mechanism was right. Invent a technique that reaches
+2500 C anywhere in the economy (a genuinely hot process, nothing to do
+with brick-firing) and the SAME shared-floor logic would raise the pool's
+floor to 2500 C and lock charcoal and coal - both 1100 C, comfortably hot
+enough to fire a brick, glaze a pot or melt glass - out of every thermal_
+mj use in the file, brick-firing included. That is the stakeholder's own
+example (a fission-hot process should not disqualify existing coal
+burning from melting iron) and the mirror image of it (a cheap, merely-
+warm source should not stop being usable for the modest jobs it was
+already doing, the moment something hotter is invented elsewhere) - both
+follow from the same defect: a shared floor conflates "what the hottest
+job needs" with "what every job may use."
 
-`thermal_mj` still stays a single UNDIFFERENTIATED pool this round - full
-grading (several thermal_mj_below_X materials, one per technology's
-actual reach, with every heat-needing recipe restated to say which grade
-it needs) is still NOT done, for the same reason as before: it would mean
-touching every existing thermal_mj consumer's own entry, most of which
-`data/production/` other agents currently own, which is out of this
-round's scope. What IS done this round is narrower and does not need
-touching those files: every technique that supplies `thermal_mj` now
-states the temperature it can physically reach
-(`temperature_reached_c`), and a technique may no longer win the pool's
-choice-of-technique competition if that reach falls short of what
-"usable process heat" - as this file's own techniques already describe
-themselves (thermal_mj_charcoal's own yield_basis: "a still, a
-carbonating tower, a calciner") - actually needs. The floor for that
-comparison, `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C` below, is not
-invented: it is `data/tech_tree.json`'s own `cap_heat_0700` node - "Free
-starting capability... Glazes, bricks, lime, glass working", `pre: []` -
-the lowest sustained-heat rung the tree names and the one every
-civilisation this file prices for already has, so a technique that
-cannot even clear it is not delivering the same thing a kiln fire does,
-whatever its own energy efficiency. `CAPABILITY_CAP_FIELDS` also lets a
-SPECIFIC recipe raise that floor further by stating its own
-`temperature_needed_c` (this round's worked example: the three
-`mechanical_mj_heat_engine_*` entries below, which need a real boiler
-firebox, not merely boiling-point heat, regardless of engine class - see
-their own yield_basis) - an entry that states neither field keeps working
-exactly as before, unfiltered, which is why this is additive rather than
-a rewrite of the existing choice-of-technique mechanism (see `solve`'s own
-docstring and `CAPABILITY_CAP_FIELDS` for the mechanism itself).
+THE FIX IS PER-CONSUMER GRADING, not a second global number and not
+several separate carrier materials. `thermal_mj` stays ONE named carrier
+- so every entry outside this round's ownership that already draws on it
+(`petroleum_refined_kg`, `sodium_carbonate_solvay_kg`, `plaster_kg`,
+`rosin_kg`, `ammonium_nitrate_kg`, none of which state their own
+`temperature_needed_c`) keeps reading exactly the same field name and
+needs no edit - but the PRICE a given consuming recipe pays for it is no
+longer one shared number. `capability_required_grades` collects the set
+of distinct requirements THIS era's own entries actually state (the
+carrier's own universal default, `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`,
+plus each ACTIVE consumer's own `temperature_needed_c`, exactly as
+before); `capability_price_for_requirement` then solves, separately, for
+the cheapest technique that clears EACH one of those requirements, at
+this round's own prices - so a 2500 C requirement gets its own answer
+(today: `thermal_mj_electrical_resistance`, the only technique in this
+file that reaches it) without disturbing the 1000 C answer the heat
+engines get (charcoal or coal, whichever is cheaper - unchanged) or the
+700 C answer everything else gets (also charcoal or coal - also
+unchanged). A recipe that states no requirement at all still just pays
+`thermal_mj`'s own ordinary solved price - the cheapest technique
+clearing the universal default floor, which is ALL `capability_floor_
+by_carrier` computes now (see its own docstring: it no longer looks at
+what any consumer needs, because a consumer's own need is graded
+separately). `thermal_mj_friction` is excluded from every one of these
+grades it cannot reach (its own 100 C never clears even the 700 C
+default), the same physical fact as before - the ONLY behaviour change
+this round is that a hot grade existing, or ceasing to exist, no longer
+touches a cooler grade's own answer.
 
 This is a real fix, not the bloomery-melts-iron mistake restated: it does
 not claim charcoal and coal can do what only an arc furnace can (see
 `quartz_tube_kg` below, still bypassing the pool entirely and unaffected
 by this round's change), and it does not single out friction by name -
-`thermal_mj_friction` loses because its OWN stated reach (100 C - the
-ordinary, sourced ceiling of a sustained, unpressurised mechanical
-friction heater; see that entry's own yield_basis for the citation) falls
-short of the SAME general floor every technique is checked against, the
-same way `thermal_mj_electrical_resistance` (3000 C) and
-`thermal_mj_charcoal`/`thermal_mj_coal` (1100 C each) clear it easily.
-What full temperature grading would still take, unchanged from before:
-one thermal_mj_below_X material per technology's actual reach, every
-thermal_mj-consuming entry (most of them outside this round's ownership)
-restated with its own `temperature_needed_c`, and a solver rule that a
-recipe may only draw on the SPECIFIC grade whose ceiling is at or above
-what it needs, rather than the single shared floor this round's narrower
-fix applies uniformly. A SECOND PHYSICAL LIMIT SLOTS IN THE SAME WAY,
-WITHOUT REDESIGN (the stakeholder's own example: a water wheel should not
-be able to deliver a torque of millions) - add a second entry to
-`CAPABILITY_CAP_FIELDS` keyed on `mechanical_mj`, e.g.
-`("torque_reached_nm", "torque_needed_nm", 0.0)`, give
-`mechanical_mj_waterwheel` and friends their own `torque_reached_nm`
-(a real figure: a wheel's torque is its power divided by its shaft's
-angular speed, both already physical facts this file or
+`thermal_mj_friction` loses every grade it competes for because its OWN
+stated reach (100 C - the ordinary, sourced ceiling of a sustained,
+unpressurised mechanical friction heater; see that entry's own
+yield_basis for the citation) falls short of every one of them, the same
+way `thermal_mj_electrical_resistance` (3000 C) and `thermal_mj_charcoal`/
+`thermal_mj_coal` (1100 C each) clear the 700 C and 1000 C grades easily
+and only resistance clears a hypothetical 2500 C one.
+
+`thermal_mj` STILL stays a single NAMED carrier rather than being split
+into several materials (`thermal_mj_at_1100`, and so on) - the two
+candidate shapes this task's own report weighs are "separate carrier
+materials, using the tree's own `cap_heat_0700/1100/1300/2000/3000` rungs
+as band edges" against "one carrier, priced per consumer", and the second
+is what is built here, for a reason specific to this round's ownership
+rather than a claim that it is better in general: the five consuming
+entries in the paragraph above live in files this task does not own, and
+every one of them names the field `thermal_mj`, not a banded name - a
+separate-materials scheme would need each of THEIR OWN entries rewritten
+to say which band they draw from, which is exactly the edit this task is
+fenced off from making. Per-consumer grading needs no such rewrite: it
+reads the SAME `thermal_mj` field and the SAME (optional)
+`temperature_needed_c` field every entry already has the vocabulary for,
+and grades the price behind the name rather than the name itself. If a
+future round DOES own every consumer (or the split is judged worth a
+coordinated rewrite anyway), separate band materials remain available
+and would give each band its own resolvable price for `--why` and
+`--compare` to show directly, rather than the graded price computed on
+demand the way this round shows it (see print_why's own ENERGY section
+below) - a real trade-off, not a decision this round claims to have
+closed.
+
+A SECOND PHYSICAL LIMIT SLOTS IN THE SAME WAY, WITHOUT REDESIGN (the
+stakeholder's own example: a water wheel should not be able to deliver a
+torque of millions) - add a second entry to `CAPABILITY_CAP_FIELDS` keyed
+on `mechanical_mj`, e.g. `("torque_reached_nm", "torque_needed_nm",
+0.0)`, give `mechanical_mj_waterwheel` and friends their own `torque_
+reached_nm` (a real figure: a wheel's torque is its power divided by its
+shaft's angular speed, both already physical facts this file or
 `data/world/resources.json` states), and give whichever recipe needs a
-torque floor its own `torque_needed_nm` - `capability_floor_by_carrier`
-and `_meets_capability_floor` do not know or care which physical
-dimension they are comparing, so nothing else changes. See this task's
-own report for the worked argument.
+torque floor its own `torque_needed_nm`. Nothing else changes:
+`capability_required_grades`, `capability_price_for_requirement` and
+`_meets_capability_floor` all key off `CAPABILITY_CAP_FIELDS` rather than
+naming `thermal_mj` or `temperature_reached_c` anywhere in their own
+bodies, so a torque-needing forge press and a temperature-needing kiln
+would be graded side by side, on two independent dimensions of the SAME
+`mechanical_mj`/`thermal_mj` carriers, by the same two functions that
+grade temperature today. See this task's own report for the worked
+argument.
 
 WHICH ENTRIES USE ELECTRICAL_MJ DIRECTLY, RATHER THAN THROUGH A CONVERSION.
 `aluminium_kg` (Hall-Heroult electrolysis current), `silicon_kg` (arc-furnace
@@ -684,17 +725,17 @@ THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C = 700.0
 # today); a recipe that CONSUMES that carrier may state, on itself, the
 # floor it needs on the same dimension (`temperature_needed_c`). Both
 # fields are optional - an entry that states neither is unconstrained,
-# exactly as it was before this mechanism existed (see CAPABILITY_CAP
-# FIELDS' own use in `solve` and `capability_floor_by_carrier` below,
-# and TEMPERATURE in the module docstring for why this stays a single
-# shared floor per carrier rather than full per-consumer grading this
-# round). Keyed by carrier rather than hand-written at each call site for
-# the same reason ENERGY_CARRIER_FIELDS above is: so a second physical
-# dimension - torque, pressure, whatever a future stakeholder names next -
-# slots in as one more entry here, read by the same two functions, rather
-# than a second, parallel, hand-rolled comparison. See the module
-# docstring's TEMPERATURE section for the worked example (a torque cap on
-# mechanical_mj) and this task's own report for the argument in full.
+# exactly as it was before this mechanism existed (see this file's own
+# `solve`, `capability_floor_by_carrier` and `capability_price_for_
+# requirement` below, and TEMPERATURE in the module docstring for why
+# grading is now PER CONSUMER rather than one shared floor). Keyed by
+# carrier rather than hand-written at each call site for the same reason
+# ENERGY_CARRIER_FIELDS above is: so a second physical dimension - torque,
+# pressure, whatever a future stakeholder names next - slots in as one
+# more entry here, read by the same functions, rather than a second,
+# parallel, hand-rolled comparison. See the module docstring's TEMPERATURE
+# section for the worked example (a torque cap on mechanical_mj) and this
+# task's own report for the argument in full.
 CAPABILITY_CAP_FIELDS = {
     "thermal_mj": ("temperature_reached_c", "temperature_needed_c",
                    THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C),
@@ -702,42 +743,178 @@ CAPABILITY_CAP_FIELDS = {
 
 
 def capability_floor_by_carrier(production_entries):
-    """{carrier_material: required floor value}, one entry per carrier
-    named in CAPABILITY_CAP_FIELDS, for THIS solve's own (possibly
-    era-gated) `production_entries`.
+    """{carrier_material: the carrier's own UNIVERSAL default floor} - one
+    entry per carrier named in CAPABILITY_CAP_FIELDS.
 
-    The floor is the LARGER of the carrier's own default (the free,
-    universal minimum every technique claiming to supply it must clear -
-    see THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's own citation) and
-    whatever `needed_field` value any entry ACTUALLY DRAWING ON that
-    carrier in this era's own (possibly gated) production_entries states -
-    so a genuinely more demanding real consumer raises the bar for the
-    whole shared pool, which a single undifferentiated market price
-    requires (see TEMPERATURE in the module docstring for why the pool
-    stays undifferentiated, rather than split per consumer, this round).
-    An entry that draws on the carrier but states no `needed_field` at all
-    does not raise the floor - "no stated requirement" means exactly that,
-    not zero.
+    THIS IS DELIBERATELY NOT "the largest requirement any consumer states"
+    any more (see TEMPERATURE in the module docstring for why that WAS
+    this function's behaviour, and why it was itself a bug: a single
+    shared floor lets the hottest consumer anywhere in the economy lock
+    every cooler consumer out of the cheap technique it could already
+    use, and lets a newly cheap cold source push a hot consumer's own
+    requirement down to nothing it never asked for). A specific
+    consumer's own stated requirement is now graded separately by
+    `capability_price_for_requirement` below, so this function only has
+    to return the one number every technique claiming to supply the
+    carrier is checked against regardless of what any consumer needs -
+    the free, universal minimum (THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's
+    own citation) - which decides `thermal_mj`'s own ordinary pool price,
+    the one every consumer with no stated requirement of its own pays.
+
+    `production_entries` is kept as a parameter, and unused, so every
+    existing call site (and `_meets_capability_floor` below, which takes
+    this function's own return value) is unaffected by this round's
+    change in what the function computes.
     """
-    floor_by_carrier = {}
+    return {carrier: default_floor
+            for carrier, (_reached_field, _needed_field, default_floor)
+            in CAPABILITY_CAP_FIELDS.items()}
+
+
+def capability_required_grades(production_entries):
+    """{carrier_material: sorted tuple of every distinct requirement this
+    era's own (possibly gated) `production_entries` actually states for
+    that carrier} - the carrier's own universal default floor, ALWAYS
+    included (every civilisation this file prices for already clears
+    it), plus each ACTIVE consumer's own `needed_field` value: an entry
+    that draws a nonzero amount of the carrier (`entry.get(carrier)` is
+    truthy) AND states a requirement on it (`entry.get(needed_field) is
+    not None`) - "no stated requirement" still means exactly that, not
+    zero, exactly as `capability_floor_by_carrier` used to describe for
+    its own single shared number.
+
+    This is the PER-CONSUMER GRADING this round's fix is built on (see
+    TEMPERATURE in the module docstring): every distinct value here gets
+    its OWN price from `capability_price_for_requirement`, computed
+    independently, so a 2500 C requirement existing somewhere in the
+    economy neither raises nor lowers the price a 1000 C or a 700 C
+    requirement gets - each is simply one more entry in the set this
+    function returns.
+    """
+    required_by_carrier = {}
     for carrier, (_reached_field, needed_field, default_floor) in CAPABILITY_CAP_FIELDS.items():
-        required = default_floor
+        required_values = {default_floor}
         for entry in production_entries.values():
             if entry.get(carrier) and entry.get(needed_field) is not None:
-                required = max(required, entry[needed_field])
-        floor_by_carrier[carrier] = required
-    return floor_by_carrier
+                required_values.add(entry[needed_field])
+        required_by_carrier[carrier] = tuple(sorted(required_values))
+    return required_by_carrier
+
+
+def capability_price_for_requirement(carrier, required_value, production_entries,
+                                     current_prices, wage_by_trade,
+                                     rent_hours_per_kg_by_material=None):
+    """(price, recipe_id) for the CHEAPEST technique that both supplies
+    `carrier` and clears `required_value` on the physical dimension
+    CAPABILITY_CAP_FIELDS grades it by, costed at this round's own
+    `current_prices` - or None if nothing eligible resolves this round
+    (should not happen for any value `capability_required_grades` itself
+    produced, since the default floor is always clearable by this file's
+    own PRIMARY techniques, but a caller must still handle it the same
+    way an ordinary unpriceable material is handled elsewhere in this
+    file: propagate the failure rather than guess a price).
+
+    THIS is the mechanism that replaces the single shared floor: called
+    once per distinct required value (see `capability_required_grades`),
+    not once per carrier, so a hot requirement and a cool one sharing the
+    same carrier name get independently the cheapest technique that
+    actually clears EACH one, rather than the cheapest technique that
+    clears whichever requirement happens to be largest.
+
+    A candidate technique that states no reach at all on this dimension
+    is treated as unconstrained (it clears every requirement) - the same
+    "no stated value, no new behaviour" rule `_meets_capability_floor`
+    already applies; today every PRIMARY thermal_mj technique states one,
+    so this only matters for a future carrier or a future technique added
+    without one.
+
+    Deliberately does NOT thread a capability-graded price into this
+    inner cost calculation for the CANDIDATE techniques themselves (see
+    `recipe_cost_and_allocation`'s own `capability_band_price_by_carrier`
+    parameter) - a producer of one capped carrier drawing on ANOTHER
+    capped carrier with its own stated requirement would need that too,
+    but no entry in this file does that today (the only other carrier
+    CAPABILITY_CAP_FIELDS could someday grade, `mechanical_mj`, is not
+    graded yet - see the module docstring's torque example), so this is
+    left as a plain `current_prices` lookup for now rather than solved
+    for a case that does not exist. Tag: GAP, not a heuristic, per
+    CLAUDE.md 3.4 - the day a second graded carrier feeds a first one,
+    this function's own candidate costing needs the same banded lookup
+    `recipe_cost_and_allocation` already has.
+    """
+    reached_field = CAPABILITY_CAP_FIELDS[carrier][0]
+    best = None
+    for recipe_id, entry in production_entries.items():
+        outputs = entry.get("outputs") or {}
+        if carrier not in outputs:
+            continue
+        reached = entry.get(reached_field)
+        if reached is not None and reached < required_value:
+            continue
+        result = recipe_cost_and_allocation(
+            recipe_id, entry, current_prices, wage_by_trade,
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+        if result is None:
+            continue
+        _total_cost, output_prices = result
+        price = output_prices[carrier]
+        if best is None or price < best[0]:
+            best = (price, recipe_id)
+    return best
+
+
+def _capability_graded_price(carrier, entry, current_prices,
+                             capability_band_price_by_carrier):
+    """The price a SPECIFIC consuming `entry` pays for `carrier` this
+    round - PER-CONSUMER GRADING (see TEMPERATURE in the module
+    docstring). An entry that states its own requirement on the
+    dimension CAPABILITY_CAP_FIELDS grades `carrier` by pays whatever the
+    cheapest technique clearing THAT requirement costs, read from
+    `capability_band_price_by_carrier` (built once per round by `solve`,
+    one entry per value `capability_required_grades` found - see
+    `capability_price_for_requirement`); an entry that states no
+    requirement - the overwhelming majority of every energy carrier's
+    consumers - pays the carrier's own ordinary solved price
+    (`current_prices[carrier]`), exactly as before this mechanism
+    existed. Returns None (propagating an unpriceable recipe, exactly
+    like a missing input price elsewhere in this file) only if the
+    entry's own stated requirement cannot be met by anything this round -
+    never by silently falling back to the wrong grade's price.
+
+    `capability_band_price_by_carrier` is None outside `solve`'s own
+    iteration (the one-off ore and wheat base-price calls in
+    `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_iugerum`,
+    neither of which ever states a capped-carrier requirement) and for
+    any carrier CAPABILITY_CAP_FIELDS does not grade at all, in which
+    case this always falls through to the plain, ungraded lookup.
+    """
+    capped = CAPABILITY_CAP_FIELDS.get(carrier)
+    if capped and capability_band_price_by_carrier:
+        _reached_field, needed_field, _default_floor = capped
+        required_value = entry.get(needed_field)
+        if required_value is not None:
+            band = capability_band_price_by_carrier.get(carrier) or {}
+            graded = band.get(required_value)
+            return graded[0] if graded is not None else None
+    return current_prices.get(carrier)
 
 
 def _meets_capability_floor(material, entry, floor_by_carrier):
     """True unless `material` is a capability-capped carrier (see
     CAPABILITY_CAP_FIELDS) and `entry`'s own stated reach on that
-    dimension falls short of this era's floor for it. An entry that
+    dimension falls short of `floor_by_carrier[material]`. An entry that
     states no reach at all (most entries, including every material that
     is not itself an energy-carrier-supplying technique) is treated as
     unconstrained - the same "no stated value, no new behaviour" rule
-    this mechanism applies on the consuming side via
-    `capability_floor_by_carrier` above.
+    this mechanism applies throughout.
+
+    Used two ways: with `capability_floor_by_carrier`'s own output, to
+    decide which technique wins the carrier's ORDINARY pool price (what
+    an unlabelled consumer pays); and, inside `capability_price_for_
+    requirement`'s own candidate loop in spirit (that function inlines
+    the same comparison against a single `required_value` rather than a
+    per-carrier dict, since it is testing one specific requirement at a
+    time rather than every carrier's own floor at once).
     """
     capped = CAPABILITY_CAP_FIELDS.get(material)
     if capped is None:
@@ -1188,7 +1365,8 @@ def compute_resolvable_materials(production_entries, producers_of, diagnostics=N
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
-                               rent_hours_per_kg_by_material=None):
+                               rent_hours_per_kg_by_material=None,
+                               capability_band_price_by_carrier=None):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -1198,6 +1376,17 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     price at zero rent, why six ores no longer do, why `thermal_mj`/
     `mechanical_mj` are priced through the energy market in
     data/production/70_energy.json, and why `energy_mj` still is not).
+
+    `capability_band_price_by_carrier` is {carrier: {required_value:
+    (price, recipe_id)}}, built once per round by `solve` from
+    `capability_required_grades` and `capability_price_for_requirement` -
+    see TEMPERATURE in the module docstring and `_capability_graded_price`
+    below for PER-CONSUMER GRADING, the mechanism this feeds. Omitted or
+    None, every energy carrier this recipe draws on prices at
+    `current_prices`'s own flat value for it, exactly the old behaviour -
+    this is the default so every caller with no opinion about grading
+    (the rent and land one-off calls, which never consume a graded
+    carrier) is not forced to pass an empty dict everywhere.
 
     `rent_hours_per_kg_by_material` is {material_key: hours of rent per kg
     of that material's OWN output} - see RENT ON EXTRACTED MATERIALS in the
@@ -1285,12 +1474,18 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     # `inputs` and `labour_hours` above (the MJ figure is already stated
     # against this same batch's basis output) - NOT a per-unit-of-output
     # charge the way `capital` is, so unlike capital_cost_hours none of
-    # these terms gets multiplied by batch_output_quantity.
+    # these terms gets multiplied by batch_output_quantity. PER-CONSUMER
+    # GRADING (Complaints/44, continued - see TEMPERATURE in the module
+    # docstring): the price paid is not always `current_prices[energy_key]`
+    # any more - `_capability_graded_price` returns THIS recipe's own
+    # graded price when it states its own requirement, and falls back to
+    # the same flat lookup as before otherwise.
     energy_cost_hours = 0.0
     for energy_key in ENERGY_CARRIER_FIELDS:
         energy_quantity_per_batch = entry.get(energy_key) or 0.0
         if energy_quantity_per_batch:
-            energy_price = current_prices.get(energy_key)
+            energy_price = _capability_graded_price(
+                energy_key, entry, current_prices, capability_band_price_by_carrier)
             if energy_price is None:
                 return None
             energy_cost_hours += energy_quantity_per_batch * energy_price
@@ -1534,27 +1729,60 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
     Returns (prices, iterations_run, final_residual, chosen_recipe_by_material).
 
-    PHYSICAL CAPABILITY CAPS (Complaints/44; see CAPABILITY_CAP_FIELDS and
-    TEMPERATURE in the module docstring). Before the very first round, this
-    era's own floor for each capped carrier (thermal_mj's required
-    temperature today) is computed once from THIS solve's own
-    `production_entries` - exactly like `rent_hours_per_kg_by_ore_material`
-    is computed once, before the iteration starts, rather than every
-    round, because it does not depend on the price vector at all. Every
-    round after that, a candidate recipe is offered for a material only if
-    `_meets_capability_floor` says its own stated reach clears that floor -
-    a technique that states no reach is unaffected, exactly as before this
-    mechanism existed.
+    PHYSICAL CAPABILITY CAPS, PER CONSUMER (Complaints/44, continued; see
+    CAPABILITY_CAP_FIELDS and TEMPERATURE in the module docstring). Two
+    things are computed once, before the very first round, from THIS
+    solve's own `production_entries` alone - exactly like
+    `rent_hours_per_kg_by_ore_material` is computed once rather than every
+    round, because neither depends on the price vector: `floor_by_carrier`
+    (the carrier's own universal default floor, e.g. thermal_mj's
+    cap_heat_0700 rung) and `required_grades_by_carrier` (every DISTINCT
+    requirement this era's own consumers actually state, the default
+    included - see `capability_required_grades`).
+
+    Every round after that, TWO things happen with those, in order:
+    `capability_price_for_requirement` is re-solved for each distinct
+    required value at THIS round's current prices (a technique's own cost
+    moves every round, so which one clears a given requirement most
+    cheaply can too) into `band_price_by_carrier`, and THEN every recipe
+    is costed with that dict threaded through
+    `recipe_cost_and_allocation`, so a consumer that states its own
+    requirement pays its own graded price rather than the flat pool
+    price. Choice of technique for the carrier MATERIAL itself (`thermal_
+    mj`'s own entry in `resolvable_materials`, what an unlabelled consumer
+    pays) still uses `_meets_capability_floor` against the plain
+    `floor_by_carrier` - the universal default only, exactly as before
+    this mechanism existed, and now correctly UNAFFECTED by any other
+    consumer's own higher requirement (see TEMPERATURE for why that used
+    to be a bug).
     """
     prices = {material: INITIAL_PRICE_GUESS_HOURS for material in resolvable_materials}
     chosen_recipe_by_material = {}
     recipe_ids_in_order = sorted(production_entries)  # stable order; see above
     floor_by_carrier = capability_floor_by_carrier(production_entries)
+    required_grades_by_carrier = capability_required_grades(production_entries)
 
     final_residual = float("inf")
     iterations_run = 0
     for iteration in range(1, max_iterations + 1):
         iterations_run = iteration
+
+        # PER-CONSUMER GRADING: re-solved every round, from THIS round's
+        # own (pre-update) `prices`, exactly like every candidate recipe
+        # below is costed against those same prices (Jacobi - see this
+        # function's own docstring on why every material updates from the
+        # same round's starting point).
+        band_price_by_carrier = {
+            carrier: {
+                required_value: capability_price_for_requirement(
+                    carrier, required_value, production_entries, prices,
+                    wage_by_trade,
+                    rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                for required_value in required_values
+            }
+            for carrier, required_values in required_grades_by_carrier.items()
+        }
+
         candidates_by_material = collections.defaultdict(list)
         for recipe_id in recipe_ids_in_order:
             entry = production_entries[recipe_id]
@@ -1563,7 +1791,8 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
                 continue
             result = recipe_cost_and_allocation(
                 recipe_id, entry, prices, wage_by_trade,
-                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+                capability_band_price_by_carrier=band_price_by_carrier)
             if result is None:
                 continue
             _total_cost, output_prices = result
@@ -1639,13 +1868,35 @@ def format_hours(value):
 
 def print_why(material, production_entries, producers_of, resolvable_materials,
               prices, wage_by_trade, chosen_recipe_by_material, indent=0, ancestors=(),
-              rent_hours_per_kg_by_material=None):
+              rent_hours_per_kg_by_material=None, capability_band_price_by_carrier=None):
     """Recursive cost breakdown for one material: how much of its price is
     which input, which labour, which rent - recursing into every priced
     input in turn, with a cycle guard so a recipe graph that legitimately
     loops (iron needs charcoal needs an axe needs iron) prints once per
     branch and then says so, rather than recursing forever.
+
+    `capability_band_price_by_carrier` is the same {carrier: {required_
+    value: (price, recipe_id)}} shape `solve` builds each round (see
+    PER-CONSUMER GRADING there and `_capability_graded_price`) - computed
+    ONCE here, at the top-level call, from the final converged `prices`,
+    and threaded through every recursive call rather than rebuilt at each
+    level, so a recipe that states its own energy requirement (a heat
+    engine's `temperature_needed_c`, say) is costed and displayed at ITS
+    OWN graded price rather than the carrier's flat pool price - the same
+    distinction `solve` itself now makes, shown here rather than hidden
+    behind a single scalar `prices[carrier]`.
     """
+    if capability_band_price_by_carrier is None:
+        capability_band_price_by_carrier = {
+            carrier: {
+                required_value: capability_price_for_requirement(
+                    carrier, required_value, production_entries, prices,
+                    wage_by_trade,
+                    rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                for required_value in required_values
+            }
+            for carrier, required_values in capability_required_grades(production_entries).items()
+        }
     pad = "  " * indent
     if material not in resolvable_materials:
         print("%s%s: NO PATH TO A PRICE (see the unpriceable-materials list)"
@@ -1726,7 +1977,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
 
     result = recipe_cost_and_allocation(
         recipe_id, entry, prices, wage_by_trade,
-        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+        capability_band_price_by_carrier=capability_band_price_by_carrier)
     total_process_cost, output_prices = result
     output_quantity = outputs[material]
     this_output_value_share = (output_prices[material] * output_quantity) / total_process_cost \
@@ -1793,18 +2045,39 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
     energy_labels = {"thermal_mj": "thermal (heat) energy",
                      "mechanical_mj": "mechanical (shaft) energy",
                      "electrical_mj": "electrical energy"}
+    graded_energy_keys = set()
     for energy_key, label in energy_labels.items():
         energy_quantity = entry.get(energy_key) or 0.0
         if not energy_quantity:
             continue
-        energy_price = prices.get(energy_key)
+        # PER-CONSUMER GRADING (see print_why's own docstring and
+        # TEMPERATURE in the module docstring): THIS recipe's own graded
+        # price if it states a requirement, not necessarily the same as
+        # the carrier's flat pool price shown for `--why thermal_mj`
+        # itself.
+        energy_price = _capability_graded_price(
+            energy_key, entry, prices, capability_band_price_by_carrier)
+        capped = CAPABILITY_CAP_FIELDS.get(energy_key)
+        graded_note = ""
+        if capped:
+            _reached_field, needed_field, _default_floor = capped
+            required_value = entry.get(needed_field)
+            if required_value is not None:
+                graded_energy_keys.add(energy_key)
+                band = (capability_band_price_by_carrier.get(energy_key) or {})
+                graded = band.get(required_value)
+                graded_recipe_id = graded[1] if graded is not None else "NOTHING THIS ERA"
+                pool_recipe_id = chosen_recipe_by_material.get(energy_key, "?")
+                graded_note = ("  [graded: this recipe needs >= %s, met by "
+                               "%s, vs the shared pool's own choice %s]"
+                               % (required_value, graded_recipe_id, pool_recipe_id))
         cost = energy_quantity * energy_price if energy_price is not None else None
         share_text = ("%.1f%% of process cost" % (100.0 * cost / total_process_cost)
                      if cost is not None and total_process_cost > 0 else "n/a")
-        print("%s  %-24s x %10.4g MJ @ %10s h/MJ = %10s h  (%s)" % (
+        print("%s  %-24s x %10.4g MJ @ %10s h/MJ = %10s h  (%s)%s" % (
             pad, label, energy_quantity,
             format_hours(energy_price) if energy_price is not None else "NO PRICE",
-            format_hours(cost) if cost is not None else "?", share_text))
+            format_hours(cost) if cost is not None else "?", share_text, graded_note))
 
     residual_energy_mj = entry.get("energy_mj") or 0.0
     if residual_energy_mj:
@@ -1834,14 +2107,22 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
               % (pad, format_hours(total_process_cost), output_quantity, format_hours(price)))
 
     next_ancestors = ancestors + (material,)
+    # A GRADED energy dependency (this recipe stated its own requirement)
+    # was already shown above, by name and by price, next to the pool's
+    # own choice for comparison - recursing into the generic carrier
+    # material here would print the POOL's chosen technique instead,
+    # which is not necessarily the one this recipe actually pays for (see
+    # PER-CONSUMER GRADING) and would be misleading rather than merely
+    # redundant, so it is skipped rather than recursed into.
     energy_dependencies = [energy_key for energy_key in ENERGY_CARRIER_FIELDS
-                          if entry.get(energy_key)]
+                          if entry.get(energy_key) and energy_key not in graded_energy_keys]
     for input_material in sorted(inputs) + energy_dependencies:
         print()
         print_why(input_material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,
                   indent=indent + 1, ancestors=next_ancestors,
-                  rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                  rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+                  capability_band_price_by_carrier=capability_band_price_by_carrier)
 
 
 def main(argv=None):
