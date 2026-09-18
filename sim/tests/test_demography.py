@@ -261,6 +261,93 @@ class NutritionResponseTests(unittest.TestCase):
         self.assertGreater(elderly_excess, working_age_excess)
 
 
+class MortalityDragDecompositionTests(unittest.TestCase):
+    """The unshocked-century follow-up to Complaints/45-no-granary-so-the-
+    baseline-collapses.md: with the granary and the above-subsistence
+    fertility ramp both in place, rome_100ad with events=False still settles
+    around 74% of its starting population over 100 years with no hazard of
+    any kind (measured directly against the real engine for this
+    investigation - see this task's report for the exact run). This class
+    answers WHY, and rules out one specific candidate explanation by
+    measuring it rather than asserting it: that
+    BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE and SURVIVAL_TO_WORKING_AGE
+    double-count bad years already baked into the historical series they
+    are sourced from. See _excess_mortality_multiplier's own docstring for
+    the literature this class's numbers are drawn from.
+    """
+
+    def test_a_fogel_sized_double_count_correction_is_far_smaller_than_the_measured_drag(self):
+        # Fogel's review of Wrigley & Schofield's own English mortality
+        # series (the source of BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE)
+        # bounds ALL crisis mortality - famine and epidemic combined - at
+        # under 5% of total pre-1800 English deaths, and famine at under
+        # 10% of that crisis share. So the most that ordinary harvest-driven
+        # mortality (as opposed to epidemic) could be double-counted inside
+        # the baseline rate is bounded above by the product of those two
+        # upper bounds.
+        crisis_share_of_total_mortality_upper_bound = 0.05
+        famine_share_of_crisis_mortality_upper_bound = 0.10
+        harvest_driven_double_count_upper_bound = (
+            crisis_share_of_total_mortality_upper_bound
+            * famine_share_of_crisis_mortality_upper_bound)
+
+        baseline_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+        most_the_baseline_could_be_overstated_by = (
+            baseline_rate * harvest_driven_double_count_upper_bound)
+
+        # The actual drag, measured the same way: symmetric weather variance
+        # around a mean ratio of exactly 1.0 (no double-counting hypothesis
+        # needed at all - this is pure Jensen's inequality on the response
+        # curve's shape) raises the AVERAGE excess-mortality multiplier
+        # above the multiplier AT the average ratio. Converted to an annual
+        # rate the same way the double-count bound above was.
+        ratios_with_mean_exactly_one = [0.7, 1.3]
+        average_multiplier = sum(
+            demography._excess_mortality_multiplier(ratio, 1.0)
+            for ratio in ratios_with_mean_exactly_one) / 2.0
+        multiplier_at_the_average_ratio = demography._excess_mortality_multiplier(1.0, 1.0)
+        jensens_inequality_drag_as_a_rate = baseline_rate * (
+            average_multiplier - multiplier_at_the_average_ratio)
+
+        self.assertGreater(jensens_inequality_drag_as_a_rate, 0.0)
+        # At least an order of magnitude bigger: the double-count hypothesis
+        # is real in direction but nowhere near the size of the observed
+        # drag, so it is not where the missing population went.
+        self.assertGreater(
+            jensens_inequality_drag_as_a_rate,
+            most_the_baseline_could_be_overstated_by * 10.0,
+            "a Fogel-sized double-count correction should be far smaller "
+            "than the Jensen's-inequality drag, or the double-count "
+            "hypothesis needs to be taken more seriously than this module "
+            "currently does")
+
+    def test_symmetric_weather_variance_shrinks_population_even_at_mean_ratio_one(self):
+        # The decisive demonstration, using nothing but this module's own
+        # Population machinery: two populations fed the IDENTICAL average
+        # amount of food over many years - one a constant subsistence ratio
+        # of 1.0, the other alternating symmetrically above and below it -
+        # end up at different sizes. No floor was lowered, no elasticity was
+        # invented; the divergence comes purely from
+        # _excess_mortality_multiplier being flat above 1.0 and rising
+        # below it, which is exactly the shape CLAUDE.md SS3.4 requires it
+        # to be labelled as (see that function's own docstring) and exactly
+        # the shape a real granary cannot fully undo.
+        steady = demography.Population.stationary(1_000_000.0, seed=11)
+        varying = demography.Population(
+            steady.children, steady.working_age, steady.elderly, seed=12)
+        steady_food = steady._subsistence_food()
+
+        for year in range(100):
+            steady.step(steady_food)
+            spread_multiplier = 1.3 if year % 2 == 0 else 0.7
+            varying.step(steady_food * spread_multiplier)
+
+        self.assertLess(varying.total, steady.total)
+        # Not a rounding error - a real, measurable divergence over a
+        # century, from mean-preserving variance alone.
+        self.assertLess(varying.total, steady.total * 0.95)
+
+
 class GrowthCeilingTests(unittest.TestCase):
     """The stakeholder's own biological upper bound on human population
     growth, reproduced here as a sanity ceiling rather than a target -
