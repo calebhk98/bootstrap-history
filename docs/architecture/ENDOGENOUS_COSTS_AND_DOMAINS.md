@@ -288,17 +288,30 @@ a milestone moves; it is the first thing anyone reads.
 | | milestone | state |
 |---|---|---|
 | 0 | the production side | **done.** 99.7% of consumption sites; `sim/validate_production.py` |
-| 1 | provenance and a burndown | **under way, and it works.** `sim/constants.py`; the burndown reported 0 of 32 for its whole life until the two bugs behind that were fixed. `economy.py` (240 constants) and `cli.py` (11) migrated; `society.py`, `core.py`, `labour.py`, `projects.py` in flight |
+| 1 | provenance and a burndown | **under way, and it works.** `sim/constants.py`; the burndown reported 0 of 32 for its whole life until the two bugs behind that were fixed. Re-measured: **859 numbers declared, 685 of them temporary heuristics (79.7%), and 11 hardcoded outcomes** that CLAUDE.md §3.1 forbids outright and that are now named individually rather than counted. Six of the eleven are mine-capex figures, which `sim/world/deposits.py`'s sinking-cost model should be able to derive away |
 | 2 | the synthetic world | not started, and probably unnecessary - see the note below |
 | 3 | the household extraction | **done.** `sim/engine/actors/household.py`; all 9 fingerprint scenarios byte-identical |
-| 4 | food and people | **built and NOT WIRED.** `sim/world/agriculture.py` and `demography.py` pass on their own terms; `docs/architecture/WIRING_MILESTONE_4.md` is the plan and predicts all 9 scenarios diverging from year 0 |
-| 5 | the wage, and the price solve | **material half done, wage half blocked.** Every material priced in labour-hours; capital wired in (~1% effect); rent built in `sim/world/deposits.py`; energy in flight. The WAGE waits on 4 |
+| 4 | food and people | **demography WIRED; agriculture still inert.** `Sim` holds a real `Population`; the scalar `pop_deficit` and its exponential recovery clock are deleted, and a hazard's mortality now falls unevenly across age cohorts. All 9 fingerprint scenarios diverged at year 0, as `WIRING_MILESTONE_4.md` predicted. `agriculture.py` is NOT wired: `_demographic_recovery` feeds `Population.step` a labelled stand-in for food, so no famine can happen yet |
+| 5 | the wage, and the price solve | **material half done, wage half blocked.** Every material priced in labour-hours; capital wired in (~1% effect); energy priced as three carriers with a conversion graph. Rent is still 0.0 and the solver says so on every run. The WAGE waits on 4 |
+| 5b | when a technique exists | **new, and not in the original plan.** The solver had no notion of WHEN, so a 100 AD scenario priced its electricity off a photovoltaic panel (`Complaints/39`). `requires_node` joins each recipe to the tree node that unlocks it - 187 of 196 entries, 95.4% - and `--civ rome_100ad` solves only what that society can run. Measured: 0.371 s a solve, and only 82 of 2,864 nodes are gates, so the engine can cache on the gate set and re-solve a few dozen times a game rather than every turn |
 | 6+ | transport, settlements, state finance, war | **partly built, none wired.** `sim/world/transport.py` (freight from animal metabolism), `military_logistics.py` (an army's consumption and its supply range) exist standalone |
 
 **THE PATTERN THIS TABLE NOW SHOWS, and it is the thing to act on.** Five
 standalone modules under `sim/world/` - agriculture, demography, transport,
-deposits, military logistics - are built, tested and inert. None is wired
-into the engine. CLAUDE.md §4 says "coverage is not the same as being wired
+deposits, military logistics - were built, tested and inert. One of the five,
+demography, is now wired, which is the first movement on this pattern since
+it was named. Measured the blunt way, by asking which of them `sim/engine/`
+imports at all:
+
+    transport              nothing
+    military_logistics     nothing
+    deposits               nothing
+    agriculture            nothing
+    demand                 nothing
+    demography             sim/engine/core.py
+
+So the pattern still holds for five of six, and wiring is still worth more
+than another module. CLAUDE.md §4 says "coverage is not the same as being wired
 in" about `data/production/`; it applies here with more force, because a
 module that nothing calls cannot even be wrong yet.
 
