@@ -162,3 +162,52 @@ the tree describes the process the recipe actually uses:
 That is the correct outcome under the schema - an absent field is a counted
 gap, a wrong one is invisible - and it says the tree has holes of its own
 that only became visible once something tried to point at it.
+
+## The tree's own notes say these civilisations have them
+
+The nonferrous slice found two more, and these are the clearest cases yet,
+because the contradiction is inside a single data file rather than between
+two of them. Both node notes are quoted verbatim:
+
+**`cap_heat_1100`** - "Sustained 1100 C (hand-blown charcoal)":
+
+> Already reached wherever bloomery iron, bronze casting and glass melting
+> are practised. A man on a bellows tops out near here.
+
+Rome practises all three. `rome_100ad` does not hold `cap_heat_1100`. The
+consequence is that `antimony_kg` computes as unavailable to Rome, for a
+metal worked since antiquity.
+
+**`lead_metallurgy`** - "Lead sheet, pipe, litharge and cupellation control":
+
+> This is already done, and done well, wherever there is a developed
+> lead-mining and -working tradition (Rome is the best-documented case).
+
+The node names Rome as its own exemplar. `rome_100ad` does not hold it.
+
+So this is not a matter of taste about what a society knew. The tech tree
+states which civilisations already have a node, in prose, in the node, and
+nothing has ever checked that prose against `starting_techs`. The two files
+were authored independently and never reconciled.
+
+That suggests the fix is more tractable than a general realism audit: the
+notes are already the answer for a large share of these nodes. Somebody
+should extract the claims, check them against every civilisation, and turn
+the survivors into a test. Prose is not machine-readable in general, but
+"already reached wherever" and "Rome is the best-documented case" are not
+subtle.
+
+## A duplicate node pair, found the same way
+
+The tree carries two nodes for one technique, from different branch files:
+
+    zinc_metal          pre=[cementation_steel, refractory_fireclay]
+    mt2_zinc_by_retort  pre=[cap_heat_1100, mat_charcoal]
+
+Both are downward/retort distillation of calamine. They have different
+prerequisite chains, so which one a recipe points at changes when zinc
+becomes available. `data/branches/_SCHEMA.md` already warns that ids
+duplicated across branch files make the merge fight itself; this is the same
+failure in the node vocabulary rather than the material one. Flagged, not
+resolved - picking a winner is a tree edit, and the labelling deliberately
+does not make tree edits.

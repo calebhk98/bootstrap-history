@@ -1481,12 +1481,28 @@ def main(argv=None):
         # completely different finding and wants a different response
         # (nothing, if the gate is right). Separate the two so a gated run
         # does not read as a hole in the data.
-        gated_out_materials = set()
-        for recipe_id in unreached_techniques + unclassified_techniques:
-            gated_out_materials |= set(
+        # AND "GATED OUT" IS NOT "UNLABELLED", WHICH THIS CONFLATED. A
+        # technique this era cannot reach is a correct answer and wants no
+        # action. A technique nobody has classified yet is an unanswered
+        # question that happens to LOOK the same from here, and calling it
+        # "correctly gated out" told the reader the opposite of the truth -
+        # copper_kg read as correctly unavailable to Rome when in fact its
+        # file had not been labelled.
+        unreached_materials, unclassified_materials = set(), set()
+        for recipe_id in unreached_techniques:
+            unreached_materials |= set(
                 (all_production_entries[recipe_id].get("outputs") or {}))
+        for recipe_id in unclassified_techniques:
+            unclassified_materials |= set(
+                (all_production_entries[recipe_id].get("outputs") or {}))
+        # A material with both an unreached and an unlabelled recipe is an
+        # open question, so the weaker claim wins.
+        unreached_materials -= unclassified_materials
         for material in unpriceable:
-            if material not in producers_of and material in gated_out_materials:
+            if material not in producers_of and material in unclassified_materials:
+                reason = ("something makes it, but no recipe for it says when "
+                          "it becomes available - UNLABELLED, not gated out")
+            elif material not in producers_of and material in unreached_materials:
                 reason = ("something makes it, but nothing this era can run "
                           "- correctly gated out, not a missing entry")
             elif material not in producers_of:

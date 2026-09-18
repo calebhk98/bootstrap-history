@@ -13,6 +13,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of hand-dressed galena (lead sulphide, PbS) mineral, ~75% PbS by mass",
    "yield_basis": "EXTRACTED. Galena crystallises in bright metallic cubes and is one of the easiest ores in this file to dress by eye - a miner can hand-cob the ore to roughly 75% PbS with little equipment, which is why lead-silver mining shows up so early archaeologically. Labour is higher than copper_ore_kg's hard-rock rate because most economic lead-silver veins (Laurion, Rio Tinto, Cartagena, Broken Hill) are worked underground rather than quarried, and 5 hours/tonne of hand-sorting is added on top of the raw breaking labour. Grade and silver content are NOT in this number - they belong to lead_kg, which is what actually turns this ore into metal.",
+   "requires_node": "mat_galena",
    "conf": "C"
   },
   "lead_kg": {
@@ -49,6 +50,7 @@
    ],
    "basis": "per tonne of refined lead metal smelted and cupelled from argentiferous galena",
    "yield_basis": "JOINT PRODUCTION - smelting galena for lead and pulling silver out of the same bullion are one process, not two, and pretending otherwise misprices both. PbS (239.3 g/mol) is 86.6% lead by mass; at 75% PbS the ore assays ~65% Pb. Roast-reduction smelting recovers on the order of 90% of that, and a further small loss is taken across the cupellation + litharge-reduction cycle described below, giving an overall ~87% ore-to-metal recovery, hence 1770 kg of ore per tonne of lead. Lead's low melting point (327 C) and easy reducibility mean far less fuel than copper needs - 320 kg charcoal per tonne against copper's 4000. Silver content of galena is wildly variable by deposit - some ores are essentially silver-free, others (the reason Athens fought over Laurion, and Rome prized Spanish lead) run rich. 0.5 kg Ag per tonne of contained lead (500 g/t) is a middling figure for a historically-worked silver-lead district, not a universal constant; treat it as the single least certain number in this entry. Cupellation - blowing air across molten bullion so lead oxidises to litharge (PbO) while silver, which does not oxidise under these conditions, stays behind as a bright bead - recovers about 92% of that silver. The litharge is not lost: it is re-smelted with charcoal back to metallic lead, which is why the lead output is not decimated by the cupellation step and why one entry can honestly report both outputs from one recipe.",
+   "requires_node": "mat_lead",
    "conf": "C"
   },
   "silver_ore_kg": {
@@ -62,6 +64,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of dressed native-silver / argentite (Ag2S) ore, ~0.5% Ag by mass",
    "yield_basis": "EXTRACTED, a second and historically dominant route to silver that has nothing to do with lead: the New World silver of Potosi and Zacatecas (from 1545) was mined as silver ore in its own right, not as a lead by-product. 0.5% Ag (5 kg/tonne) reflects a genuinely rich, workable historical silver district; modern remaining ore is usually far leaner (0.01-0.03%) because the rich near-surface ore was worked out first - same caveat as copper_ore_kg's grade note. Labour is high because these are deep hard-rock veins worked without the easy visual sorting galena allows.",
+   "requires_node": null,
    "conf": "C"
   },
   "silver_kg": {
@@ -93,6 +96,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of dressed tin concentrate (~60% SnO2 by mass)",
    "yield_basis": "EXTRACTED, but tin ore is a special case worth spelling out: cassiterite (SnO2) has a specific gravity of ~7, against ~2.7 for typical gangue, so simple gravity washing/jigging concentrates it very effectively even starting from lean alluvial or lode material - this is a real, well-known reason ancient tin (Cornwall, Iberia, Malaya) was cheap to produce relative to its rarity in the crust. Labour is correspondingly lower than copper_ore_kg's hard-rock figure: much historical tin came from alluvial 'stream tin', dug and washed rather than blasted from rock.",
+   "requires_node": null,
    "conf": "C"
   },
   "tin_kg": {
@@ -110,6 +114,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of smelted metallic tin",
    "yield_basis": "SMELTED. SnO2 + 2C -> Sn + 2CO. SnO2 is 78.8% tin by mass (118.7/150.7); a 60% SnO2 concentrate is therefore ~47.3% contained tin, and smelting recovers on the order of 92% of it (tin reduction is one of the easiest in this file - it starts around 600-800 C, well below copper's ~1200 C, and tin melts at only 232 C), giving 1812 kg of concentrate per tonne of metal. Stoichiometric carbon is 0.20 kg per kg Sn (24/118.7); charcoal is ~60-65% carbon and a real furnace needs roughly double the stoichiometric amount for heat and incomplete contact, giving ~0.62 kg charcoal per kg tin. Both furnace time and labour are markedly lower than copper's because of the lower working temperature - this is the physical reason tin and bronze were within reach of Bronze Age metallurgy long before iron.",
+   "requires_node": "mat_tin",
    "conf": "C"
   },
   "bronze_kg": {
@@ -128,6 +133,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of cast bronze, 90% copper / 10% tin by mass",
    "yield_basis": "Bronze is a simple melt-together alloy, not a chemical reaction - no reduction, so the physical fact here is the RATIO, not stoichiometry. 90:10 copper:tin is the classic, archaeologically well-attested proportion balancing hardness against castability and melting point (many real bronzes range 8-13% Sn; 10% is the textbook centre). A ~2% combined melt loss to oxide dross is added on top of the 900:100 ratio. Charcoal here is purely for re-melting two already-reduced metals to ~950-1000 C in a crucible, not for any reduction chemistry, hence a much smaller charcoal figure than either primary smelting entry. Labour is mostly casting/finishing (smith) rather than furnace time, since both feedstocks arrive already as metal.",
+   "requires_node": "mat_bronze",
    "conf": "B"
   },
   "calamine_kg": {
@@ -142,6 +148,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of hand-dressed raw calamine (zinc carbonate/silicate) ore, ~35% Zn by mass, before calcining",
    "yield_basis": "EXTRACTED. Calamine deposits are the weathered, oxidised cap of zinc sulphide ore bodies and sit near the surface, so mining labour is lower than a hard-rock sulphide mine. 35% Zn is representative of hand-dressed carbonate/silicate ore (smithsonite/hemimorphite) before any roasting. Grade here is the RAW mineral, not the calcined product: the carbonate/silicate form carries CO2 and water of crystallisation that a light roast (300-500 C, well below reduction temperature) later drives off, concentrating the remaining oxide's zinc content - that calcining step is folded into the furnace charge of whichever downstream process uses this ore (brass_kg's cementation charge or zinc_kg's retort charge), the same way copper_ore_kg keeps grade separate from copper_kg's smelting. This is the feedstock for BOTH Roman cementation brass and retort zinc distillation - the same ore, two different things done with the zinc it releases.",
+   "requires_node": "mat_calamine",
    "conf": "C"
   },
   "brass_kg": {
@@ -160,6 +167,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of cementation brass (~28% Zn / 72% Cu by mass) - the process cannot be pushed past this",
    "yield_basis": "CEMENTATION, the only route to brass before metallic zinc could be isolated - zinc boils at 907 C, well below the ~1000-1100 C needed to reduce its ore, so an open furnace simply loses it as vapour before it can be condensed as metal (this is exactly why zinc_kg's own retort entry is a distinct, much harder achievement). Cementation works around this by putting solid copper granules or sheet in a sealed crucible with roasted ore and charcoal: zinc vapour forms in situ and diffuses straight into the copper surface, alloying rather than escaping. This self-limits at ~28% Zn because once the copper surface has absorbed that much zinc it is already single-phase alpha-brass and the vapour-pressure gradient driving further diffusion collapses - this is a real, well-documented ceiling on Roman/ancient brass (orichalcum), not a recipe choice, and it is the reason this entry is capped there rather than at whatever ratio might be wanted. calamine_kg is the raw, uncalcined ore at ~35% Zn (see that entry); only ~60% of its contained zinc ever reaches and alloys with the copper (much escapes as fume before it does), which drives the ore quantity here. Charcoal covers the light calcining roast, the ZnO + C -> Zn + CO reduction (0.18 kg C/kg Zn stoichiometric on the zinc actually processed), and holding the crucible near 1000 C for the long soak this process needs - reflected also in the high furnaceman hours, since cementation is a slow, fume-losing process next to the direct-alloy route below.",
+   "requires_node": "mat_brass",
    "conf": "C"
   },
   "brass_direct_alloy_kg": {
@@ -178,6 +186,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of direct-alloyed brass (~30% Zn / 70% Cu), possible only once metallic zinc exists",
    "yield_basis": "Once metallic zinc can be produced on its own (see zinc_kg), brass making changes from a slow cementation soak to simply melting copper and zinc together, a different entry because it is a genuinely different process with a different composition ceiling - alloy brass is not bounded at 28% Zn the way cementation brass is, and commercial 'yellow' or 'cartridge' brass at ~30% Zn is a widely used, well-documented modern composition chosen for cold workability rather than any process limit. Zinc's low boiling point (907 C, against copper's 2562 C) means it fumes off readily during open melting; a 10% zinc make-up loss is assumed, a real and long-standing brass-foundry problem. Furnace and labour time are a fraction of cementation's because this is one melt-and-cast operation rather than a multi-hour solid-state diffusion soak - the two entries should price very differently, and that gap is the whole point of keeping them separate.",
+   "requires_node": "mat_zinc",
    "conf": "C"
   },
   "sphalerite_kg": {
@@ -192,6 +201,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of flotation-concentrated zinc sulphide (sphalerite, ZnS) ore, ~55% Zn by mass",
    "yield_basis": "EXTRACTED. Sphalerite is the primary zinc sulphide ore (as opposed to calamine's weathered carbonate/silicate cap) and responds very well to froth flotation, a 20th-century concentration method that reaches high-grade concentrates from quite lean starting rock - 55% Zn here is representative of a commercial flotation concentrate. This is the feedstock for the roast-leach-electrowin route (zinc_electrolytic_kg), not for cementation or retort distillation, which historically used calamine instead.",
+   "requires_node": "met_froth_flotation",
    "conf": "C"
   },
   "zinc_kg": {
@@ -209,6 +219,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of metallic zinc produced by retort distillation",
    "yield_basis": "RETORT DISTILLATION - the achievement that eluded Europe until the Bristol process of 1738 (India's Zawar mines managed it centuries earlier), despite brass having been made for two thousand years, precisely because it requires not just reducing the ore but condensing the escaping zinc vapour as metal without letting it reoxidise - a sealed fireclay retort with a cooled condenser, not just a hot crucible. calamine_kg is the raw ore at ~35% Zn (see that entry); ZnO + C -> Zn + CO (0.18 kg C/kg Zn stoichiometric) reduces it after an in-furnace calcining roast, and overall recovery of the ore's zinc content as condensed metal is assumed at 70% - better than cementation's capture (this process is built for condensation) but still well short of complete. Retorts themselves were notoriously short-lived, cracking under repeated thermal cycling - reflected in the heavy furnaceman and labourer hours (retort construction/replacement, multi-day firings). This entry and the electrolytic one below produce the identical metal; the difference between them is entirely how hard it is to make, exactly as the aluminium pair below tells the same kind of story.",
+   "requires_node": "zinc_metal",
    "conf": "C"
   },
   "zinc_electrolytic_kg": {
@@ -249,6 +260,7 @@
    ],
    "basis": "per tonne of electrolytic zinc from roasted, leached sulphide ore",
    "yield_basis": "Modern route (roast-leach-electrowin, ~90% of world production): roast sphalerite to ZnO, leach with sulphuric acid (ZnO + H2SO4 -> ZnSO4 + H2O, 1.5 kg acid per kg Zn stoichiometric, taken here at 1.6 kg to allow for excess/pH control), then electrowin Zn2+ + 2e- -> Zn from solution. Overall ore-to-metal recovery ~90% gives 2020 kg concentrate per tonne. Electrical energy is a Faraday's-law calculation, not a guess: one tonne of zinc is 15,290 mol, needing 2 electrons each, i.e. 2.95x10^9 coulombs (15,290 x 2 x 96,485 C/mol); at an industrial cell voltage of ~3.4 V (theoretical decomposition ~2.35 V plus real overpotential and IR drop) that is ~10,000 MJ/tonne, matching the commonly cited industrial figure of roughly 3,300 kWh/tonne (11,880 MJ) reasonably closely once realistic (not 100%) current efficiency is allowed for. Labour is low per unit output because this is a continuous plant process, not hand-fired batches - electricity is substituting for labour here, the same substitution the aluminium pair makes explicit. Germanium and indium are genuine sphalerite by-products with no independent ore of their own anywhere - both figures are order-of-magnitude representative only; actual content varies by well over an order of magnitude between deposits (a handful of unusually enriched ore bodies supply most of the world's indium and germanium), so these two numbers are the least confident in this file. ELECTRICAL, NOT SHAFT WORK: this figure is carried as electrical_mj because the process is electrolysis or an electric furnace, which needs an electric current rather than a turning shaft. It was originally written as mechanical_mj on the reasoning that electricity must bottom out in whatever turns the dynamo - true for a waterwheel, false in general, since a photovoltaic panel makes current from photons with no shaft anywhere. See Complaints/39 and the ENERGY section of sim/solve_prices.py.",
+   "requires_node": "mt2_zinc_by_electrolysis",
    "conf": "C"
   },
   "bauxite_kg": {
@@ -262,6 +274,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of run-of-mine bauxite, ~50% Al2O3 by mass",
    "yield_basis": "EXTRACTED. Bauxite is a residual laterite ore, typically mined by open-cast stripping of shallow, soft, weathered ground rather than hard-rock blasting, which is why its labour figure is lower than copper_ore_kg's. 50% Al2O3 is representative of gibbsitic bauxite (commonly cited range 40-60%).",
+   "requires_node": null,
    "conf": "B"
   },
   "aluminium_kg": {
@@ -301,6 +314,7 @@
    ],
    "basis": "per tonne of electrolytic aluminium (Hall-Heroult process), via Bayer alumina refining from bauxite",
    "yield_basis": "THE clearest case in this file of a price that should fall out of physics rather than be looked up. This entry folds two real industrial steps together: Bayer refining of bauxite to alumina, then Hall-Heroult electrolysis of the alumina to metal - alumina (Al2O3) is NOT tracked as its own intermediate here because the material key 'aluminum_oxide_kg' is already defined elsewhere in data/production/ for a different, natural-corundum abrasive-grade sourcing that this file must not duplicate or edit. Bayer digests bauxite in hot caustic soda, precipitates aluminium hydroxide and calcines it to Al2O3 at ~95% recovery of a 50%-Al2O3 ore (see bauxite_kg); the net cell reaction 2Al2O3 + 3C -> 4Al + 3CO2 needs 1.89 kg stoichiometric Al2O3 per kg Al (101.96/53.96), and the electrolysis itself recovers roughly a further 97% of the alumina it is fed. Chaining both losses back to raw bauxite: 1.89 / (0.50 x 0.95 x 0.97) = 4.10, rounded here to 4.02 tonnes of bauxite per tonne of aluminium. Coal covers the Bayer digestion and calcination heat; the caustic-soda reagent loop (mostly recycled, only losses replaced) is a chemical input this file does not yet track a material for and is folded into the added chemist/labourer hours as a labelled simplification. Stoichiometric carbon-anode consumption for the cell is 0.33 kg C per kg Al (36.03/107.92); real anodes burn faster than stoichiometry from air oxidation, giving the widely reported industrial figure of ~400-450 kg carbon per tonne Al (420 kg used here). Cryolite (Na3AlF6) dissolves the alumina and carries the current; the bath itself is largely closed-loop, and only make-up losses to volatilisation/entrainment need replacing, on the order of 15-25 kg per tonne Al in real smelters (20 kg here). ELECTRICAL ENERGY, the number that actually explains the historical price collapse: by Faraday's law, one tonne of aluminium is 37,065 mol, needing 3 electrons each, i.e. 1.073x10^10 coulombs; at a typical industrial cell voltage of 4.3 V (theoretical back-EMF ~1.2 V plus real overpotential and bath resistance) that is 4.61x10^10 J = 46,000 MJ = ~12.8 MWh per tonne, matching the well-known real-world figure for efficient Hall-Heroult cells (commonly cited ~13 MWh/t) almost exactly. This is a derivation from first principles (Faraday's law + a realistic, independently documented cell voltage), not a number backed into from a price - and it is why aluminium only became cheap once cheap bulk electricity did (Niagara Falls, 1890s), a century after the metal itself was isolated. See aluminium_sodium_reduction_kg for the same metal before that electricity existed. Carried as electrical_mj, not mechanical_mj (see THE ALUMINIUM DEFECT in sim/solve_prices.py's module docstring): this cell needs a CURRENT, and treating that as automatically equivalent to shaft work was a real modelling defect the stakeholder found - a photovoltaic cell or a fuel cell makes electricity with no shaft anywhere in the chain, so a schema that could only get electricity by first imagining a turning axle could never represent aluminium getting cheap by any route except one. data/production/70_energy.json's electrical energy market now prices this 46,000 MJ through whichever technique is actually cheapest - a water wheel's amortised build cost through a dynamo (today's answer, and the reason this metal stayed a laboratory curiosity until a large, cheap source of SHAFT power existed, exactly as before), or a solar panel's amortised build cost with no shaft at all, once that route is cheap enough to win the comparison instead of being unable to compete by construction.",
+   "requires_node": "mat_aluminium",
    "conf": "B"
   },
   "silicon_kg": {
@@ -338,6 +352,7 @@
    ],
    "basis": "per kilogram of solar/semiconductor-grade polycrystalline silicon, added for electrical_mj_photovoltaic below (see 70_energy.json) - not a material the tree consumes yet, defined here because that entry's own capital needs a priced silicon input rather than an invented one",
    "yield_basis": "TWO real industrial steps folded into one entry, the same kind of fold aluminium_kg above makes for Bayer-plus-Hall-Heroult, flagged as a LABELLED HEURISTIC (CLAUDE.md 3.4) rather than itemised further. STEP ONE, carbothermic reduction (submerged electric-arc furnace): SiO2 + 2C -> Si + 2CO2 needs 2.14 kg SiO2 and 0.855 kg C per kg Si stoichiometrically (60.08/28.09 and 24.02/28.09 from the molar masses); real metallurgical-grade furnaces lose silicon to SiO fuming and slag, taken here at 85% overall recovery, giving 2.52 kg sand_quartz_kg (treated as effectively pure SiO2, consistent with quartz_tube_kg's own treatment of the same material) per kg Si. This step needs electricity specifically, not just heat, because industrial practice runs it as a submerged ARC furnace to hold the ~2000 C the reaction wants - a documented industrial specific-energy figure of ~12 MWh (43,200 MJ) per TONNE of metallurgical-grade silicon, i.e. 43.2 MJ/kg, taken here at 12 MWh/t. STEP TWO, purification to solar/semiconductor grade (the Siemens process: trichlorosilane synthesis, distillation and CVD deposition of ultra-pure polysilicon) - a documented, if wide, industrial range of roughly 100-150 kWh per kg of polysilicon output for conventional (non-fluidised-bed) plants, taken here at the conventional-process figure of 120 kWh/kg = 432 MJ/kg. TOTAL: 43.2 + 432 = 475.2 MJ/kg, rounded to 475, carried as electrical_mj rather than thermal_mj because both steps specifically need electrical current (arc heat in step one; resistance-heated CVD reactors and electrolytic-grade purity control in step two) rather than combustion heat - see ENERGY in sim/solve_prices.py's module docstring. WHAT THIS STILL OMITS, LABELLED RATHER THAN HIDDEN: crystal growth (Czochralski pulling of an ingot from the molten polysilicon), wafer sawing (which loses a large fraction of the ingot as kerf), cell processing (diffusion doping, anti-reflective coating) and module lamination are each individually real and individually energy- or capital-intensive steps that real photovoltaic-grade silicon goes through after this entry's own two steps, and NONE of them are modelled here - this entry's price, and hence electrical_mj_photovoltaic's own price below, is consequently a LOWER BOUND by a margin this file cannot yet quantify, the same honest-floor status quartz_tube_kg's old energy_mj carried. Capital (the arc furnace and the Siemens/CVD reactor plant) is now modelled, order-of-magnitude, in the capital list above - an earlier draft of this entry left it at zero, which understated the true cost of a genuinely enormous piece of real industrial plant far more than an order-of-magnitude estimate does; see that list's own capital_basis.",
+   "requires_node": "silicon_path",
    "conf": "C"
   },
   "soda_ash_kg": {
@@ -351,6 +366,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of raw natural sodium carbonate (natron), as harvested from an evaporite/soda-lake deposit",
    "yield_basis": "EXTRACTED - natron efflorescence on dried soda-lake beds (the type locality, Wadi Natrun in Egypt, gives the mineral its name) was harvested by simple raking, historically one of the easiest mineral-gathering operations in this file, hence the very low labour figure. This is the feedstock for metallic sodium (sodium_kg) via carbothermic reduction, the route that made pre-electrolytic aluminium possible at all.",
+   "requires_node": "mat_natron",
    "conf": "C"
   },
   "sodium_kg": {
@@ -403,6 +419,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of hand-dressed cinnabar (mercury sulphide, HgS) ore, ~8% Hg by mass",
    "yield_basis": "EXTRACTED. Cinnabar is a distinctive bright vermilion mineral, easily hand-picked like galena, and the Almaden deposit in Spain - worked continuously from Roman times into the 20th century - is famously the richest in the world; 8% Hg is a representative worked grade for such a deposit, not an average crustal one. Almaden's veins were deep and hot, which is reflected in a mining labour figure above copper_ore_kg's; the mine was worked historically with convict and slave labour precisely because of the difficulty and, unstated here, the mercury-vapour hazard.",
+   "requires_node": null,
    "conf": "C"
   },
   "mercury_kg": {
@@ -419,6 +436,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of metallic mercury recovered by roasting cinnabar and condensing the vapour",
    "yield_basis": "ROASTING: HgS + O2 -> Hg(vapour) + SO2, an ancient and simple process - mercury is dense and condenses readily on cooling, but a meaningful fraction of the vapour still escapes uncaptured, taken here at 85% condensation recovery. At 8% Hg ore grade that still needs 14.7 tonnes of ore per tonne of metal - 8% sounds rich but is still dilute in absolute terms, and mercury mining always moved large ore tonnages even at its best-known deposit. Roasting a sulphide is partly self-heating (oxidising HgS releases heat), so the charcoal figure is modest next to a true reduction smelt. The furnaceman hours are set high because safe operation requires slow, careful firing to contain the vapour for condensation rather than to do more physical work - this reflects real operating practice, not a claim about extra output.",
+   "requires_node": "mat_mercury",
    "conf": "C"
   },
   "copper_wire_kg": {
@@ -435,6 +453,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of cold-drawn copper wire",
    "yield_basis": "Wire drawing is purely mechanical - copper rod is pulled through progressively smaller dies, with no chemical change and no reduction, so there is no ore or fuel-for-reduction input here, only the copper feedstock itself plus a 2% allowance for trim scrap and oxide scale not recovered within this entry's basis. Copper work-hardens as it is drawn and must be periodically annealed (heated and slow-cooled) to restore ductility for further drawing, hence a small furnaceman allowance alongside the machinist hours for the drawing bench itself.",
+   "requires_node": "drawplate_wire",
    "conf": "C"
   },
   "nickel_ore_kg": {
@@ -448,6 +467,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of run-of-mine nickel-copper sulphide ore (pentlandite-bearing), ~1.5% Ni by mass",
    "yield_basis": "EXTRACTED. 1.5% Ni is representative of the large disseminated sulphide ore bodies (Sudbury, Norilsk) that supply most of the world's nickel; labour matches copper_ore_kg's hard-rock figure since the mining method is essentially the same.",
+   "requires_node": null,
    "conf": "C"
   },
   "nickel_kg": {
@@ -466,6 +486,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of refined nickel metal from sulphide ore, via matte smelting, converting and refining",
    "yield_basis": "Matte smelting, converting and final (electrolytic or carbonyl) refining is a multi-stage pyrometallurgical chain with cumulative losses at each stage; ~85% overall recovery from a 1.5% Ni ore gives 78.4 tonnes of ore per tonne of metal, a genuinely large tonnage consistent with how nickel sulphide ore bodies are actually worked. Sulphide roasting is partly autogenous (the sulphides themselves burn), but converting and refining still need substantial coal for heat, hence a large but not copper-smelting-scale fuel figure. Platinum-group metals concentrate in the anode slime left over from nickel-copper refining and are recovered as a genuine by-product of this same ore - not a separate mining operation - at a low but real content, taken here at ~0.5 g combined PGM per tonne of ore processed (order-of-magnitude consistent with reported Sudbury-type grades), giving 39 g platinum per tonne of nickel output. This by-product content is highly deposit-specific and this figure should be read as representative, not universal. See platinum_g / platinum_ore_kg for the older, independent placer-mining route to the same metal.",
+   "requires_node": "mat_nickel",
    "conf": "C"
   },
   "platinum_ore_kg": {
@@ -479,6 +500,7 @@
    "extracted_from": "placer/alluvial deposit",
    "basis": "per tonne of raw alluvial gravel worked for native platinum, at a representative placer grade",
    "yield_basis": "EXTRACTED. Before the Sudbury/Bushveld nickel-copper by-product route existed, the world's platinum came from alluvial placers, above all the Ural Mountains of Russia from the 1820s. A representative placer grade of 0.05 g Pt per cubic metre of gravel is assumed here - rarer than the gold placer grade assumed in gold_kg, since most placers carry far less platinum than gold, though a few exceptional deposits (Colombia's Choco) ran much richer; this is a representative, not universal, figure. Labour uses the same gravel-processing throughput assumed for gold (roughly 0.25 m3/hour of washed gravel per labourer).",
+   "requires_node": null,
    "conf": "C"
   },
   "platinum_g": {
@@ -494,6 +516,7 @@
    "energy_mj": 0.0,
    "basis": "per gram of native platinum recovered from alluvial placer gravel by washing",
    "yield_basis": "At 0.05 g Pt per cubic metre of gravel and the labour throughput described in platinum_ore_kg, one gram of platinum needs roughly 20 cubic metres of gravel (400 kg represented here as the ore input) and about 80 labourer-hours. Unlike placer gold, native platinum grains are typically coarse and dense enough to be captured by simple gravity washing alone, without mercury amalgamation - this is a real, documented difference between the two metals' placer behaviour (indeed Ural miners for decades discarded platinum as a nuisance mixed with their gold, before it was recognised as valuable). See nickel_kg for the later, industrial-era by-product route to the same metal, which largely superseded placer mining in the 20th century.",
+   "requires_node": null,
    "conf": "C"
   },
   "wolframite_kg": {
@@ -508,6 +531,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of gravity/magnetically concentrated wolframite ((Fe,Mn)WO4) ore, ~60% WO3 by mass",
    "yield_basis": "EXTRACTED. Wolframite occurs in hard-rock quartz veins, so mining labour matches other vein ores; wolframite's high density and magnetic susceptibility (unlike most gangue) make it separable to a fairly rich concentrate by gravity and magnetic methods, reflected in the added labourer hours for dressing.",
+   "requires_node": null,
    "conf": "C"
   },
   "tungsten_kg": {
@@ -526,6 +550,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of sintered metallic tungsten (powder-metallurgy route)",
    "yield_basis": "WO3 is 79.3% tungsten by mass (183.84/231.84); a 60% WO3 concentrate is therefore ~47.6% contained tungsten, and the chemical purification (to ammonium paratungstate) plus hydrogen reduction to metal powder runs at roughly 85% overall recovery, giving 2472 kg concentrate per tonne of metal. Tungsten's melting point (3422 C) is far too high for carbon reduction to give clean metal (it forms carbides instead) or for conventional casting, so industrial practice (the Coolidge process) reduces purified WO3 with hydrogen gas at a comparatively modest 700-900 C and then consolidates the resulting powder by sintering at extreme temperature. Coal covers reducing-gas generation and furnace heat; the electrical_mj figure is a rough, explicitly estimated allowance for the electrical energy of resistance/induction sintering a powder compact to near full density at ~2800-3000 C - unlike the aluminium and zinc electrical figures, this one is NOT a clean Faraday's-law derivation (there is no simple electrochemical reaction to apply it to) and should be treated as the least confident number in this entry. Carried as electrical_mj rather than thermal_mj because induction and resistance heating are driven by an electric current rather than by combustion heat. ELECTRICAL, NOT SHAFT WORK: this figure is carried as electrical_mj because the process is electrolysis or an electric furnace, which needs an electric current rather than a turning shaft. It was originally written as mechanical_mj on the reasoning that electricity must bottom out in whatever turns the dynamo - true for a waterwheel, false in general, since a photovoltaic panel makes current from photons with no shaft anywhere. See Complaints/39 and the ENERGY section of sim/solve_prices.py.",
+   "requires_node": "mat_tungsten",
    "conf": "C"
   },
   "chromite_kg": {
@@ -539,6 +564,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of chromite (FeCr2O4) concentrate, ~45% Cr2O3 by mass",
    "yield_basis": "EXTRACTED. 45% Cr2O3 is representative of commercial chromite concentrate; mining labour matches other hard-rock vein/podiform ores.",
+   "requires_node": null,
    "conf": "C"
   },
   "chromium_kg": {
@@ -556,6 +582,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of pure metallic chromium via aluminothermic (Goldschmidt) reduction",
    "yield_basis": "3Cr2O3 + ... simplified to Cr2O3 + 2Al -> Al2O3 + 2Cr. Cr2O3 is 68.4% chromium by mass (104/152); a 45% Cr2O3 concentrate is ~30.8% contained chromium, and reduction plus separation recovers ~85% of it, giving 3820 kg concentrate per tonne of metal. Carbon reduction of chromite gives ferrochrome (a carbide-contaminated iron-chromium alloy, fine for steelmaking but not pure metal), so PURE chromium metal is made instead by aluminothermic reduction: stoichiometric aluminium is 0.52 kg per kg Cr (53.96/104), taken here at 10% excess = 0.57 kg, hence 570 kg of aluminium_kg per tonne of chromium - a real cross-link between two entries in this file. Thermite reactions are self-heating once ignited (no external fuel is needed to sustain them), hence energy_mj is zero despite the very high reaction temperature.",
+   "requires_node": "mat_chromium",
    "conf": "C"
   },
   "stibnite_kg": {
@@ -570,6 +597,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of hand-dressed stibnite (antimony sulphide, Sb2S3) ore, ~60% Sb2S3 by mass",
    "yield_basis": "EXTRACTED. Stibnite forms in distinctive dark, often needle-like crystals in veins and is readily hand-sorted, like galena and cinnabar, which is why antimony has been worked since antiquity (kohl eye-paint, Bronze Age bronzes) despite no large-scale industrial demand until much later.",
+   "requires_node": null,
    "conf": "C"
   },
   "antimony_kg": {
@@ -586,6 +614,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of metallic antimony via liquation and roast-reduction",
    "yield_basis": "Sb2S3 is 71.7% antimony by mass (243.52/339.7); a 60% Sb2S3 concentrate is ~43% contained antimony, and the ancient two-step process - first liquating stibnite out of its gangue (it melts at only ~550 C, well below reduction temperature, an old and simple trick), then roasting to Sb2O3 and reducing with carbon (Sb2O3 + 3C -> 2Sb + 3CO, 0.15 kg C per kg Sb stoichiometric) - recovers ~80% overall, giving 2907 kg ore per tonne of metal.",
+   "requires_node": "mat_antimony",
    "conf": "C"
   },
   "pyrolusite_kg": {
@@ -600,6 +629,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of dressed pyrolusite (manganese dioxide, MnO2) ore, ~80% MnO2 by mass",
    "yield_basis": "EXTRACTED. Pyrolusite typically occurs in soft sedimentary or residual (weathered) deposits rather than hard quartz veins, so mining labour is lower than for a vein ore like wolframite or chromite; 80% MnO2 is representative of a good-quality dressed deposit. This material is already consumed directly by 10 tree nodes (glassmaking decolouriser, pigments) as well as feeding manganese_kg below.",
+   "requires_node": "mat_pyrolusite",
    "conf": "C"
   },
   "manganese_kg": {
@@ -617,6 +647,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of pure metallic manganese via aluminothermic reduction",
    "yield_basis": "3MnO2 + 4Al -> 2Al2O3 + 3Mn. Stoichiometric ore requirement is 1.58 kg MnO2 per kg Mn (260.82/164.82); at 80% ore grade and 85% recovery that is 2328 kg ore per tonne of metal. As with chromium, carbon reduction gives an iron-manganese alloy suitable for steelmaking (ferromanganese) but not pure metal, so pure manganese is made aluminothermically instead: stoichiometric aluminium is 0.655 kg per kg Mn (107.92/164.82), taken at 15% excess = 0.75 kg, another real cross-link to the aluminium entry. Self-heating thermite reaction, hence zero external energy.",
+   "requires_node": "mat_manganese",
    "conf": "C"
   },
   "gold_kg": {
@@ -633,6 +664,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of gold recovered from alluvial placer gravel by ground-sluicing and mercury amalgamation",
    "yield_basis": "Alluvial placer gold, recovered by ground-sluicing and mercury amalgamation of fine grains that panning alone would miss. A representative workable placer grade is assumed at 0.3 g Au per cubic metre of gravel (real placers vary over two-plus orders of magnitude, so treat this as illustrative, not universal); a labourer using a water-assisted ground sluice can process on the order of 2.5 cubic metres of gravel in a 10-hour day (0.25 m3/hour), giving ~0.075 g Au per labourer-hour, i.e. ~13,300 hours per kilogram of gold (about 5-6 person-years) - a large number, but that is precisely the physical reason gold has always been hard-won even from 'rich' placers, not an asserted price. Amalgamation historically lost a substantial share of its mercury rather than recovering it cleanly (open, low-tech retorting), commonly cited on the order of 1-3 kg Hg lost per kg Au recovered in artisanal placer operation; 1.5 kg/kg is used here. furnaceman hours cover amalgam retorting. Vein/hard-rock gold (crushed quartz plus amalgamation or cyanidation) is a different, much higher-throughput but capital-heavy route not modelled here.",
+   "requires_node": "mt2_amalgamation",
    "conf": "C"
   },
   "gold_g": {
@@ -649,6 +681,7 @@
    "energy_mj": 0.0,
    "basis": "per gram of gold, same placer-and-amalgamation process as gold_kg, scaled by 1/1000",
    "yield_basis": "Identical physical process and identical per-unit ratios to gold_kg (0.3 g Au/m3 gravel, 0.25 m3/hour labour throughput, 1.5 kg Hg lost per kg Au) - see that entry for the full reasoning. This entry exists only because the tree consumes gold at gram scale in some nodes and at kilogram scale in others; the physics is the same either way.",
+   "requires_node": "mt2_amalgamation",
    "conf": "C"
   },
   "cryolite_kg": {
@@ -662,6 +695,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of natural cryolite mineral (Na3AlF6), as mined",
    "yield_basis": "EXTRACTED. Natural cryolite is geologically rare - for the whole 19th and much of the 20th century the only economically significant deposit in the world was Ivigtut in Greenland (worked out by 1987; production is synthetic today). It occurs in a granite pegmatite, not the vein or laterite settings of most other ores here, but mining labour is kept in line with other hard-rock extraction for lack of a more specific figure. This is the electrolyte/solvent that makes the Hall-Heroult cell in aluminium_kg work by dissolving alumina at a workable temperature; it is listed separately here because the tree tracks it as its own material, not because it functions chemically any differently from a flux.",
+   "requires_node": "mat_cryolite",
    "conf": "C"
   },
   "bismuth_kg": {
@@ -679,6 +713,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of bismuth recovered as a by-product of electrolytic (Betts-process) lead refining",
    "yield_basis": "Bismuth substitutes for lead in some galena deposits at trace level and concentrates in the anode slime of electrolytic lead refining (the Betts process, which uses a lead-fluosilicate/sulphuric-acid electrolyte, hence the small acid input). Content is taken at a representative but genuinely variable 0.3 kg Bi per tonne of galena processed (some deposits, e.g. Bolivia's, are notably enriched; many carry essentially none), which implies over 3,000 tonnes of ore per tonne of bismuth output - an enormous ratio, but consistent with how small global bismuth production has always been. LABELLED HEURISTIC: this entry's galena_kg input double-books ore tonnage that the lead_kg entry also charges against the same physical ore stream, a known limitation of splitting a joint by-product into its own top-level entry rather than a third output key on lead_kg; it is done this way so bismuth_kg gets its own coverage entry at all. Treat the labour and acid figures as rough.",
+   "requires_node": "mt2_electrorefining",
    "conf": "C"
   },
   "selenium_kg": {
@@ -696,6 +731,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of selenium recovered as a by-product of electrolytic lead refining (a secondary source)",
    "yield_basis": "Selenium substitutes for sulphur at trace level in various sulphide minerals, including occasionally galena, and is recoverable from electrolytic refining anode slime the same way bismuth is. NOTE: the world's dominant real source of selenium is copper anode slime from electrolytic copper refining, not lead - but copper_kg's own entry is already fixed elsewhere in this directory and is not this file's to edit, so this entry deliberately captures only the smaller, secondary lead-associated pathway. Content assumed at 0.15 kg Se per tonne of galena (again genuinely variable and smaller than the copper pathway), implying a very large ore-to-output ratio. Same LABELLED HEURISTIC as bismuth_kg applies to the galena double-booking; this is the least confident entry in the file precisely because it is standing in for a process (copper refining) it cannot reach.",
+   "requires_node": "mt2_electrorefining",
    "conf": "C"
   },
   "molybdenite_kg": {
@@ -710,6 +746,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of flotation-concentrated molybdenite (MoS2) ore, ~85% MoS2 by mass",
    "yield_basis": "EXTRACTED. Molybdenite flotation reaches unusually high-grade concentrates (85-92% MoS2 is a normal commercial figure) because the mineral's platy, greasy crystal structure floats exceptionally cleanly - a genuine mineralogical fact, not an assumption of convenience.",
+   "requires_node": "met_froth_flotation",
    "conf": "C"
   },
   "molybdenum_kg": {
@@ -727,6 +764,7 @@
    "energy_mj": 0.0,
    "basis": "per tonne of metallic molybdenum via roasting and hydrogen reduction",
    "yield_basis": "MoS2 is 59.9% molybdenum by mass (95.96/160.08); an 85% MoS2 concentrate is ~50.9% contained molybdenum. Molybdenum's high melting point (2623 C) rules out simple carbon reduction to clean metal for the same reason as tungsten, so the industrial route roasts MoS2 to MoO3 then reduces it with hydrogen gas - a materially identical process to tungsten_kg's, at ~90% overall recovery, giving 2183 kg concentrate per tonne of metal. Coal covers roasting heat and reducing-gas generation.",
+   "requires_node": "mt2_molybdenum_extraction",
    "conf": "C"
   },
   "barite_kg": {
@@ -740,6 +778,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of dressed barite (barium sulphate, BaSO4) ore, ~90% BaSO4 by mass",
    "yield_basis": "EXTRACTED. Barite is a dense (4.5 g/cm3), often vein- or cavity-filling mineral, readily concentrated to a high-purity commercial grade; mining labour is modest since it is usually soft and shallow relative to metal-sulphide veins.",
+   "requires_node": null,
    "conf": "C"
   },
   "barium_kg": {
@@ -773,6 +812,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of hand-sorted pollucite (caesium aluminosilicate, CsAlSi2O6) ore, ~20% Cs2O by mass",
    "yield_basis": "EXTRACTED. Pollucite is geologically about as rare as cryolite - essentially the world's only major commercial deposit is the Tanco pegmatite mine at Bernic Lake, Manitoba - and is hand-cobbed from pegmatite due to its value, much like galena or cinnabar. 20% Cs2O is representative of ore actually worked there.",
+   "requires_node": null,
    "conf": "C"
   },
   "caesium_g": {
@@ -806,6 +846,7 @@
    "energy_mj": 0.0,
    "basis": "per gram of phosphor bronze (bronze with a small phosphorus addition, for springs, bearings, electrical contacts)",
    "yield_basis": "Phosphor bronze is ordinary bronze (see bronze_kg) with a small phosphorus addition, acting first as a deoxidiser during melting and second as a solid-solution hardener, targeted here at 0.2% retained phosphorus in the finished alloy. Elemental phosphorus is extremely reactive when added to molten metal and much of it burns off as P2O5 fume rather than alloying - retention of perhaps 40% of what is added is assumed here (conf C), meaning roughly 0.5% phosphorus by mass must be charged to retain 0.2%. A ~1% overall casting loss is added to the bronze feedstock. Quoted per GRAM because this is a fine, small-batch specialty alloy for precision components, not a bulk structural material - the tree's own consumption pattern (2 sites) reflects the same thing.",
+   "requires_node": "phosphor_bronze_alloy",
    "conf": "C"
   }
  }
