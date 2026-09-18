@@ -69,3 +69,47 @@ nothing `extracted_from` anything graduates until rent is real.
 rent's absence in the solver a while ago and it stayed an abstract number.
 Land coming out free in the engine's own goods table is the same fact, and
 it is much harder to leave alone.
+
+## Update: rent landed for ore, and land is still free
+
+`sim/world/deposits.py` is now wired into the solver, and the line this
+complaint quoted is gone. The solver's own replacement for it is honest
+about its scope, which is the point of this update:
+
+> Rent on the ore of iron, copper, tin, lead, silver and mercury is now
+> priced from `sim/world/deposits.py`'s Ricardian marginal-deposit supply
+> curve; **every other extracted material (forest, quarry, salt pan, gold's
+> placer-and-amalgamation step) still prices at zero rent.**
+
+So six ores gained a rent term and moved a long way toward their book
+prices - cassiterite 24.6x, silver ore 8.75x, galena 7.58x, tin 6.74x - and
+mercury's rent computed as exactly 0.0, which independently reproduces
+`Complaints/32`'s reading through the full solver rather than a standalone
+run: Almaden's grade covers the demanded output without ever pushing the
+margin, so mercury's remaining gap is institutional rather than a missing
+mechanism.
+
+And:
+
+    iugerum_land   0.00000
+
+Land is still free. It was never going to be fixed by this work - land is
+not an ore, and `deposits.py` models mineral deposits. The eight materials
+this complaint listed have split into two groups: the ore ones are handled,
+and the ones that come from a forest, a quarry, a salt pan or a field are
+not, because nothing yet models the rent on those.
+
+**The switch therefore stays off, for the same reason and a smaller one.**
+The readiness test in this complaint is unchanged and now has a sharper
+edge: a material graduates out of `prices.json` when its computed price is
+defensible. For the six ores that is now arguably true. For anything whose
+`extracted_from` names a forest, a quarry, a salt pan or arable land it is
+still false, and agricultural land is the one that matters most, because it
+is the input whose scarcity drives the entire pre-industrial economy this
+project is trying to simulate.
+
+The next piece of work this points at is not more solver wiring. It is a
+rent model for land, which is a different mechanism from a mineral deposit:
+a mine depletes and a field does not, so land rent comes from location and
+fertility against a margin of cultivation rather than from a grade that
+falls as you dig.
