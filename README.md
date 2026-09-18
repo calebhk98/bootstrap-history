@@ -185,11 +185,10 @@ matter most:
 | `conf` | A well attested, B probable, C the author's estimate |
 
 `sus` and `gov` are contested. Both are present on all nodes and are still
-read (see `sim/engine/cli.py`'s `why` display), but `data/branches/
-CONTRACT_V2.md` §4 is the place to check before relying on them further -
-it carries the authors' current view of where these two fields are headed,
-and that view is more likely to move than this table is to be updated in
-step with it.
+read (see `sim/engine/cli.py`'s `why` display), but `data/branches/CONTRACT_V2.md`
+§4 is the place to check before relying on them further - it carries the
+authors' current view of where these two fields are headed, and that view
+is more likely to move than this table is to be updated in step with it.
 
 ## Confidence, stated plainly
 

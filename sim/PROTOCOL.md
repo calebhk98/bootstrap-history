@@ -22,7 +22,8 @@ No third-party dependencies. Python 3.8+.
     python3 sim/simulator.py path junction_transistor
     python3 sim/simulator.py costs --top 25
     python3 sim/simulator.py run --strategy recommended --mc 400
-    python3 sim/simulator.py run --strategy recommended --no-events   # pure engineering timeline
+    python3 sim/simulator.py run --strategy recommended --no-events   # silences only the dated weather/plague/political hazards, not a noise-free run
+    python3 sim/simulator.py run --strategy recommended --deterministic  # every roll fixed; this is the noise-free run
     python3 sim/simulator.py compare --mc 400
     python3 sim/simulator.py play --strategy recommended
     python3 sim/simulator.py play --manual                            # real free choice, no autopilot
