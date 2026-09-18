@@ -315,6 +315,9 @@ measurement rather than an argument.
 import collections
 import json
 import os
+from typing import (
+    AbstractSet, Any, Callable, Dict, FrozenSet, Iterable, Optional, Tuple,
+)
 
 from sim.constants import declare
 
@@ -329,7 +332,7 @@ _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(_THIS_DIRECTORY))
 PRODUCTION_DIRECTORY = os.path.join(_REPOSITORY_ROOT, "data", "production")
 
 
-def _load_production_data():
+def _load_production_data() -> Dict[str, Any]:
     """Every material entry across data/production/*.json, merged by
     material key - the identical merge `sim.world.demand._load_production_
     data` performs, kept as a second copy rather than an import (see the
@@ -347,7 +350,7 @@ def _load_production_data():
 _PRODUCTION_CACHE = None
 
 
-def production_data():
+def production_data() -> Dict[str, Any]:
     """Cached, read-only view of data/production/*.json's materials. A
     caller that already has this in hand can pass it straight to any
     function below via its `production` argument instead of paying the
@@ -381,14 +384,14 @@ def production_data():
 _KILOGRAM_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": 0.001, "_t": 1000.0}
 
 
-def _kilogram_equivalent(material_key, quantity):
+def _kilogram_equivalent(material_key: str, quantity: float) -> float:
     for suffix, multiplier in _KILOGRAM_EQUIVALENT_PER_UNIT_SUFFIX.items():
         if material_key.endswith(suffix):
             return quantity * multiplier
     return quantity
 
 
-def _dominant_output_key(entry):
+def _dominant_output_key(entry: Dict[str, Any]) -> str:
     """Which of `entry`'s outputs its `labour_hours` are quoted "per unit
     of" - the identical bookkeeping choice sim.world.demand._dominant_
     output_key makes for `inputs`, restated here rather than imported (see
@@ -399,7 +402,8 @@ def _dominant_output_key(entry):
     return max(outputs, key=lambda key: _kilogram_equivalent(key, outputs[key]))
 
 
-def labour_hours_coefficients_per_unit_output(recipe_key, production=None):
+def labour_hours_coefficients_per_unit_output(
+        recipe_key: str, production: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
     """{trade: hours of that trade needed per unit of `recipe_key`'s own
     DOMINANT output produced}, from that recipe's `labour_hours` (spent
     making one batch) and `capital.build_labour_hours` (spent building the
@@ -425,7 +429,7 @@ def labour_hours_coefficients_per_unit_output(recipe_key, production=None):
         raise ValueError("%r's dominant output %r has a zero or missing "
                          "quantity" % (recipe_key, basis_key))
 
-    coefficients = collections.defaultdict(float)
+    coefficients: collections.defaultdict[str, float] = collections.defaultdict(float)
     for trade, hours_per_batch in (entry.get("labour_hours") or {}).items():
         coefficients[trade] += hours_per_batch / basis_quantity
     for capital_item in entry.get("capital") or []:
@@ -438,7 +442,10 @@ def labour_hours_coefficients_per_unit_output(recipe_key, production=None):
     return dict(coefficients)
 
 
-def labour_hours_required_by_trade(planned_output_levels, production=None):
+def labour_hours_required_by_trade(
+        planned_output_levels: Dict[str, float],
+        production: Optional[Dict[str, Any]] = None,
+        ) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
     """Total hours of each trade society's planned output requires this
     year (NEED - see the module docstring's HAVE-versus-NEED section),
     given `planned_output_levels` (a dict of recipe_key -> how much of
@@ -458,8 +465,9 @@ def labour_hours_required_by_trade(planned_output_levels, production=None):
     a claim worth being able to point at the recipe that makes it true.
     """
     production = production if production is not None else production_data()
-    hours_by_trade = collections.defaultdict(float)
-    contributing_recipes_by_trade = collections.defaultdict(dict)
+    hours_by_trade: collections.defaultdict[str, float] = collections.defaultdict(float)
+    contributing_recipes_by_trade: collections.defaultdict[str, Dict[str, float]] = (
+        collections.defaultdict(dict))
     for recipe_key, output_level in planned_output_levels.items():
         if recipe_key not in production or not output_level:
             continue
@@ -489,7 +497,8 @@ def labour_hours_required_by_trade(planned_output_levels, production=None):
 # eventually, or this module's own worked example below) computes the real
 # number and hands it in; this module never computes one on its own.
 
-def additional_hours_to_close_a_shortfall(shortfall_quantity, marginal_product_per_hour):
+def additional_hours_to_close_a_shortfall(
+        shortfall_quantity: float, marginal_product_per_hour: float) -> float:
     """Extra hours of a trade's labour needed to close a shortfall of
     `shortfall_quantity` units of that trade's output, given the marginal
     product of the NEXT hour of that trade's labour at its current
@@ -691,7 +700,7 @@ CROSS_FAMILY_PROXIMITY = declare(
         "destination ALWAYS are, not any particular number.")
 
 
-def _relative_gap_size(gap_hours, basis_hours):
+def _relative_gap_size(gap_hours: float, basis_hours: float) -> float:
     """abs(gap_hours) / basis_hours, as "how many multiples of the basis
     the gap represents" - `float("inf")` when `basis_hours` is exactly zero
     and there IS a gap (nothing to divide by, and no honest finite answer),
@@ -702,9 +711,9 @@ def _relative_gap_size(gap_hours, basis_hours):
 
 
 def _gap_responsive_mobility_rate(
-        base_rate, relative_gap,
-        gain=OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
-        rate_ceiling=OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR):
+        base_rate: float, relative_gap: float,
+        gain: float = OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
+        rate_ceiling: float = OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR) -> float:
     """The rate `Workforce.step` actually uses for one trade's outflow or
     inflow ceiling this period: `base_rate` when `relative_gap` is zero,
     rising LINEARLY with `relative_gap` (see OCCUPATIONAL_MOBILITY_GAP_
@@ -740,7 +749,9 @@ _UNCLASSIFIED_TECHNOLOGY_GATE = object()
 # available on day one.
 
 
-def trades_reachable_given_technology(reached_node_ids=(), production=None):
+def trades_reachable_given_technology(
+        reached_node_ids: Iterable[str] = (),
+        production: Optional[Dict[str, Any]] = None) -> FrozenSet[str]:
     """Every trade a person could pick up WITHOUT an existing master of
     that trade to learn from, given which tech-tree nodes this
     civilisation has already reached - the general mechanism behind
@@ -882,7 +893,7 @@ TRADE_SKILL_FAMILY = {
 # applies with its own "craft" fallback.
 
 
-def trade_skill_family(trade):
+def trade_skill_family(trade: str) -> str:
     """TRADE_SKILL_FAMILY's own lookup, with the honest fallback described
     at that dict's own declaration: an unlisted trade gets a family of one
     (itself), which is indistinguishable from any other family for
@@ -892,9 +903,10 @@ def trade_skill_family(trade):
     return TRADE_SKILL_FAMILY.get(trade, trade)
 
 
-def _flow_proximity(origin_trade, destination_trade, destination_is_walkable,
-                    skill_family_of=trade_skill_family,
-                    cross_family_proximity=CROSS_FAMILY_PROXIMITY):
+def _flow_proximity(
+        origin_trade: str, destination_trade: str, destination_is_walkable: bool,
+        skill_family_of: Callable[[str], str] = trade_skill_family,
+        cross_family_proximity: float = CROSS_FAMILY_PROXIMITY) -> float:
     """How much of a full mobility ceiling a flow FROM `origin_trade` INTO
     `destination_trade` is allowed to use, on a 0-1 scale. `1.0` (full
     ceiling, no distance discount) whenever the destination trade is one a
@@ -973,26 +985,29 @@ class Workforce(object):
 
     __slots__ = ("hours_by_trade",)
 
-    def __init__(self, hours_by_trade):
+    def __init__(self, hours_by_trade: Dict[str, float]) -> None:
         self.hours_by_trade = {trade: float(hours)
                                for trade, hours in hours_by_trade.items()}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Workforce(%r)" % (self.hours_by_trade,)
 
-    def total_hours(self):
+    def total_hours(self) -> float:
         return sum(self.hours_by_trade.values())
 
-    def step(self, hours_required_by_trade,
-             mobility_rate_per_year=OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
-             minimum_absorption_hours_by_trade=None,
-             mobility_gap_response_gain=OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
-             mobility_rate_ceiling_per_year=OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
-             walkable_trades=WALKABLE_TRADES,
-             walkable_trade_seed_share_of_economy_hours=WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS,
-             skill_family_of=trade_skill_family,
-             cross_family_proximity=CROSS_FAMILY_PROXIMITY,
-             skill_distance_balancing_iterations=SKILL_DISTANCE_BALANCING_ITERATIONS):
+    def step(
+            self, hours_required_by_trade: Dict[str, float],
+            mobility_rate_per_year: float = OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
+            minimum_absorption_hours_by_trade: Optional[Dict[str, float]] = None,
+            mobility_gap_response_gain: float = OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,
+            mobility_rate_ceiling_per_year: float = OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR,
+            walkable_trades: AbstractSet[str] = WALKABLE_TRADES,
+            walkable_trade_seed_share_of_economy_hours: float = (
+                WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS),
+            skill_family_of: Callable[[str], str] = trade_skill_family,
+            cross_family_proximity: float = CROSS_FAMILY_PROXIMITY,
+            skill_distance_balancing_iterations: int = SKILL_DISTANCE_BALANCING_ITERATIONS,
+            ) -> Dict[str, "TradeFlow"]:
         """Advance one year: move hours out of trades with more supply than
         is required of them (NEED, `hours_required_by_trade`) and into
         trades with less, bounded on both ends by a GAP-RESPONSIVE mobility
@@ -1119,8 +1134,8 @@ class Workforce(object):
         surplus_trades = [trade for trade, amount in capped_outflow.items() if amount > 0.0]
         shortage_trades = [trade for trade, amount in capped_inflow.items() if amount > 0.0]
 
-        actual_outflow = collections.defaultdict(float)
-        actual_inflow = collections.defaultdict(float)
+        actual_outflow: collections.defaultdict[str, float] = collections.defaultdict(float)
+        actual_inflow: collections.defaultdict[str, float] = collections.defaultdict(float)
         if surplus_trades and shortage_trades:
             flow_matrix = _skill_distance_weighted_flow_matrix(
                 surplus_trades, shortage_trades, capped_outflow, capped_inflow,
@@ -1150,10 +1165,11 @@ class Workforce(object):
         return flows
 
 
-def _skill_distance_weighted_flow_matrix(surplus_trades, shortage_trades,
-                                         capped_outflow, capped_inflow,
-                                         walkable_trades, skill_family_of,
-                                         cross_family_proximity, iterations):
+def _skill_distance_weighted_flow_matrix(
+        surplus_trades: Iterable[str], shortage_trades: Iterable[str],
+        capped_outflow: Dict[str, float], capped_inflow: Dict[str, float],
+        walkable_trades: AbstractSet[str], skill_family_of: Callable[[str], str],
+        cross_family_proximity: float, iterations: int) -> Dict[str, Dict[str, float]]:
     """{origin: {destination: hours}} - how much of each surplus trade's
     capped outflow goes to each shortage trade's capped inflow, preferring
     skill-close pairs (see `_flow_proximity`) over distant ones.
@@ -1218,7 +1234,9 @@ def _skill_distance_weighted_flow_matrix(surplus_trades, shortage_trades,
 # WHAT WAS NOT MET: THE FIRST-CLASS OUTPUT THE OLD "converged=False" HID
 # ============================================================================
 
-def unmet_demand_by_trade(hours_by_trade, hours_required_by_trade):
+def unmet_demand_by_trade(
+        hours_by_trade: Dict[str, float],
+        hours_required_by_trade: Dict[str, float]) -> Dict[str, float]:
     """{trade: hours_required - hours_available}, POSITIVE ENTRIES ONLY -
     the "honest statement of what was NOT met" the stakeholder's points 1
     and 2 asked this module to always report rather than fail on (see the
@@ -1247,7 +1265,9 @@ HaveVersusNeed = collections.namedtuple(
     "HaveVersusNeed", ["trade", "hours_have", "hours_need", "gap", "tightness_ratio"])
 
 
-def have_versus_need(hours_by_trade, hours_required_by_trade):
+def have_versus_need(
+        hours_by_trade: Dict[str, float],
+        hours_required_by_trade: Dict[str, float]) -> Dict[str, "HaveVersusNeed"]:
     """{trade: HaveVersusNeed} - the module docstring's central distinction,
     made callable: `hours_have` is `Workforce.hours_by_trade` (or any dict
     shaped like it) - hours actually worked; `hours_need` is `labour_hours_
@@ -1304,12 +1324,14 @@ LabourMarketOutcome = collections.namedtuple(
     ["workforce", "periods_used", "stabilized", "unmet_demand_by_trade", "history"])
 
 
-def solve_to_stable_allocation(hours_by_trade_initial, hours_required_by_trade,
-                               mobility_rate_per_year=OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
-                               minimum_absorption_hours_by_trade=None,
-                               maximum_periods=MAXIMUM_REALLOCATION_PERIODS,
-                               tolerance_hours=CONVERGENCE_TOLERANCE_HOURS,
-                               **step_kwargs):
+def solve_to_stable_allocation(
+        hours_by_trade_initial: Dict[str, float],
+        hours_required_by_trade: Dict[str, float],
+        mobility_rate_per_year: float = OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
+        minimum_absorption_hours_by_trade: Optional[Dict[str, float]] = None,
+        maximum_periods: int = MAXIMUM_REALLOCATION_PERIODS,
+        tolerance_hours: float = CONVERGENCE_TOLERANCE_HOURS,
+        **step_kwargs: Any) -> "LabourMarketOutcome":
     """Call `Workforce.step` repeatedly against a FIXED `hours_required_by_
     trade` until the allocation STOPS MOVING, or `maximum_periods` is
     reached, and ALWAYS return a real allocation - never a refusal (see the
@@ -1619,7 +1641,8 @@ if __name__ == "__main__":
     grown_output_levels = dict(baseline_output_levels)
     grown_output_levels["wheat_kg"] = baseline_output_levels["wheat_kg"] * (
         harvest_on_grown_land / harvest_normal)
-    grown_hours_required, _ = labour_hours_required_by_trade(grown_output_levels, production)
+    grown_hours_required, _ = labour_hours_required_by_trade(  # type: ignore[assignment]
+        grown_output_levels, production)
     comparison = have_versus_need(settled_workforce, grown_hours_required)
     labourer_comparison = comparison["labourer"]
     print("50%% more cultivable land raises the harvest this land could grow "

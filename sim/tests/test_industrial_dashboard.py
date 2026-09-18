@@ -15,10 +15,7 @@ from .harness import *  # noqa: F401,F403
 # what moved over the last N years. See protocol.py's own block comment
 # above _material_capacity_rows for the full design note.
 # =============================================================================
-from engine.protocol import (_agent_capacity as _ACAP, _agent_economy as _AECO,
-                             _agent_changes as _ACHG, _agent_mines as _AMINES,
-                             render_capacity as _RCAP, render_economy as _REECO,
-                             render_changes as _RCHG)
+from engine.protocol import _agent_capacity as _ACAP, _agent_economy as _AECO
 
 check("the three new commands are advertised in KNOWN_COMMANDS, the same "
       "way every other command has to be - a command nobody can discover "

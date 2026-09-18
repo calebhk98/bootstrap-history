@@ -29,6 +29,18 @@ import concurrent.futures as _concurrent_futures
 import threading
 import tempfile
 
+# ruff reports collections, copy, glob and re (from the combined import just
+# above) and tempfile as unused in THIS file - correctly, harness.py itself
+# never calls them. They stay because other topic modules use them bare
+# (collections.Counter, copy.deepcopy, glob.glob, re.compile, tempfile.*)
+# without importing them locally, relying on `from .harness import *` to put
+# the name in scope, exactly as this file's own docstring above describes.
+# Confirmed by checking every topic module for a bare use with no local
+# import of its own: collections -> test_scanners_and_scheduling.py; copy ->
+# test_explicit_starting_techs.py, test_round8g_display.py; glob ->
+# test_civilisation_data_integrity.py; re -> test_mines.py and others;
+# tempfile -> test_round2_policy_hazards_options.py and others.
+
 # HERE is this repository's sim/ directory; ROOT is the repository itself.
 #
 # ROOT USED TO BE THE REPOSITORY'S PARENT, and the suite only ran at all if
@@ -49,6 +61,10 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import simulator as S
+# PLANNER and COMMOD are unused in harness.py itself for the same reason as
+# the note above: test_people_attrition_scholars.py and test_reputation.py
+# use PLANNER, and test_literacy_market_pricing.py and
+# test_commodities_wired_in.py use COMMOD, bare and without their own import.
 import planner as PLANNER
 from engine import commodities as COMMOD
 
@@ -382,43 +398,47 @@ def _mk_loom_sim(n_looms, age_years):
 # topic module sees the same names via `from .harness import *`, regardless
 # of which one first imports them; each one is also still imported (harmlessly,
 # redundantly) inline at its original spot, verbatim.
-from engine import cli as _CLI, settings as _SETTINGS
+#
+# ruff's F401 pass flags every name below as unused, because none of them is
+# called from harness.py's own body - each exists only so that a LATER topic
+# module can use it without importing it again itself, via `from .harness
+# import *` (harness.py's __all__ near the end of this file is computed from
+# globals(), which ruff cannot follow statically, so it cannot see the
+# re-export either). Checked one by one, over every file in this package, for
+# a bare use with no local import of its own, before deciding which of these
+# to keep:
+#   _CLI            -> test_five_things_winner.py
+#   _protocol       -> test_scanners_and_scheduling.py, test_five_things_winner.py,
+#                      test_affordability_and_credit.py, test_sort_nearest.py,
+#                      test_parallelism_note.py, test_labour_hiring_and_wages.py,
+#                      test_allocate.py
+#   _RP             -> test_scanners_and_scheduling.py, test_interface_honesty.py,
+#                      test_names_and_fog.py, test_industrial_dashboard.py,
+#                      test_player_log.py, test_project_pacing.py,
+#                      test_eminence_scandal_and_reputation.py, test_ventures_lifecycle.py
+#   _WO             -> test_scanners_and_scheduling.py, test_affordability_and_credit.py
+#   _FRPT, _RF      -> test_scanners_and_scheduling.py
+#   _PT             -> test_scanners_and_scheduling.py, test_people_attrition_scholars.py,
+#                      test_complaints_17_24.py, test_fog_leak3.py
+#   _RSTATE         -> test_scanners_and_scheduling.py
+#   _RWHY           -> test_arrears_visibility.py
+#   _PROTO, _RPORT  -> test_arrears_visibility.py
+# Everything else in this block (_SETTINGS, _short_of_staff, _sp_labour,
+# _sp_projects, _closure, _AL, _UB, _DS, _RRISK, _RVENT, _RPATH, _ACAP, _AECO,
+# _ACHG, _AMINES, _RCAP, _REECO, _RCHG, _PT2, _TYPED_ALIASES, _SCORE, _RSCORE,
+# _SW, _APORT, _PCON, plus the stdlib re-imports as _insp_sp/_insp2/_insp3/
+# _re_rem/_re_names/_shutil/_coll/_IL/_IO/_CTX/_time and the bare hashlib and
+# duplicate shutil) had no such consumer anywhere in sim/tests - genuinely
+# dead, not a re-export, so removed rather than kept "just in case".
+from engine import cli as _CLI
 from engine import protocol as _protocol
-from engine.protocol import _short_of_staff
 from engine.protocol import render_pretty as _RP
 from engine.protocol import _waiting_on as _WO
 from engine.protocol import final_report as _FRPT, render_final as _RF
-from engine import labour as _sp_labour, projects as _sp_projects
-from engine.data import closure as _closure
-from engine.protocol import _agent_log as _AL
 from engine.protocol import parse_typed as _PT
-from engine.protocol import _unlocked_by as _UB, _downstream_of as _DS
-from engine.protocol import (render_state as _RSTATE, render_risk as _RRISK,
-                             render_why as _RWHY, render_ventures as _RVENT,
-                             render_path as _RPATH)
-from engine.protocol import (_agent_capacity as _ACAP, _agent_economy as _AECO,
-                             _agent_changes as _ACHG, _agent_mines as _AMINES,
-                             render_capacity as _RCAP, render_economy as _REECO,
-                             render_changes as _RCHG)
-from engine.protocol import parse_typed as _PT2
-from engine.protocol import TYPED_ALIASES as _TYPED_ALIASES
+from engine.protocol import render_state as _RSTATE, render_why as _RWHY
 from engine import protocol as _PROTO
-from engine.protocol import (score_report as _SCORE, render_score as _RSCORE,
-                             SCORE_WEIGHTS as _SW)
-from engine.protocol import _agent_portfolio as _APORT, render_portfolio as _RPORT
-from engine.protocol import _portfolio_constraint as _PCON
-import inspect as _insp_sp
-import inspect as _insp2
-import inspect as _insp3
-import re as _re_rem
-import re as _re_names
-import shutil as _shutil
-import hashlib
-import shutil
-import collections as _coll
-import importlib as _IL
-import io as _IO, contextlib as _CTX
-import time as _time
+from engine.protocol import render_portfolio as _RPORT
 
 # `from .harness import *` must hand every topic module everything the old
 # flat script had at global scope, including the (many) leading-underscore

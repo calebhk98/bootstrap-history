@@ -137,7 +137,7 @@ concrete numbers this claim rests on.
 import collections
 import json
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
@@ -481,7 +481,7 @@ FLOOR_TRADEABLE_SHARE = declare(
         "digitised into this project's data).")
 
 
-def validate_basket(basket: List["Good"]) -> None:
+def validate_basket(basket: Sequence["Good"]) -> None:
     """basket's marginal budget shares must sum to 1 - Stone-Geary's own
     constraint, not a house convention. Raises rather than silently
     renormalising, because a caller whose shares do not sum to 1 has made
@@ -496,7 +496,7 @@ def validate_basket(basket: List["Good"]) -> None:
 
 def household_quantity_demanded_per_capita(
         good: "Good", prices: Dict[str, float], income_per_capita: float,
-        basket: List["Good"]) -> float:
+        basket: Sequence["Good"]) -> float:
     """One `good`'s Stone-Geary demand for a single representative person
     earning `income_per_capita`, given the full `basket` of goods this
     household allocates a budget across (needed because the committed
@@ -607,7 +607,7 @@ def _below_subsistence_quantity_demanded_per_capita(
 
 def aggregate_household_demand(
         good: "Good", prices: Dict[str, float], bins: List["IncomeBin"],
-        basket: List["Good"]) -> float:
+        basket: Sequence["Good"]) -> float:
     """Total (not per-capita) household quantity demanded for `good` across
     every income bin in `bins` - the sum a market actually sees, since a
     bottom-decile household and a top-decile household do not want the
@@ -621,7 +621,7 @@ def aggregate_household_demand(
 
 def aggregate_household_demand_all_goods(
         prices: Dict[str, float], bins: List["IncomeBin"],
-        basket: List["Good"]) -> Dict[str, float]:
+        basket: Sequence["Good"]) -> Dict[str, float]:
     """aggregate_household_demand for every good in `basket` at once - the
     per-good quantities a caller pricing a whole basket would actually
     want, in one dict.
@@ -632,7 +632,7 @@ def aggregate_household_demand_all_goods(
 
 def household_budget_share(
         good: "Good", prices: Dict[str, float], bins: List["IncomeBin"],
-        basket: List["Good"]) -> float:
+        basket: Sequence["Good"]) -> float:
     """What fraction of AGGREGATE household spending, across every bin,
     goes to `good` - the number CalibrationTargetsTests checks against the
     60-80%-on-food historical range. Not read by anything in this module
@@ -802,7 +802,7 @@ validate_basket(DEFAULT_BASKET)
 
 def market_clearing_price(
         good: "Good", quantity_supplied: float, other_prices: Dict[str, float],
-        bins: List["IncomeBin"], basket: List["Good"]) -> float:
+        bins: List["IncomeBin"], basket: Sequence["Good"]) -> float:
     """The price of `good` at which AGGREGATE HOUSEHOLD demand (see this
     section's own docstring; producer/derived demand is a separate channel,
     see derived_intermediate_demand) exactly equals `quantity_supplied`,
@@ -923,7 +923,7 @@ def input_coefficients_per_unit_output(
         raise ValueError("%r's dominant output %r has a zero or missing "
                           "quantity" % (recipe_key, basis_key))
 
-    coefficients = collections.defaultdict(float)
+    coefficients: collections.defaultdict[str, float] = collections.defaultdict(float)
     for material, quantity in entry.get("inputs", {}).items():
         coefficients[material] += quantity / basis_quantity
     for capital_item in entry.get("capital") or []:

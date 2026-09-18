@@ -288,11 +288,6 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         before_children = shocked.population.children
         before_working_age = shocked.population.working_age
         shocked._demographic_recovery(101)
-        children_survival = (shocked.population.children
-                             + shocked._last_demographic_step.deaths_children) / before_children
-        working_age_survival = (
-            (shocked.population.working_age + shocked._last_demographic_step.deaths_working_age)
-            / before_working_age)
         # Both are the SAME kind of figure - this year's deaths in a band
         # divided by that band's own starting count - so they are directly
         # comparable shares, and STARVATION_VULNERABILITY_CHILD (1.6x) >

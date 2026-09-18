@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 # ======================================================================
 
 from engine.protocol import (render_state as _RSTATE, render_risk as _RRISK,
-                             render_why as _RWHY, render_ventures as _RVENT,
+                             render_why as _RWHY,
                              render_path as _RPATH)
 
 # --- FINDING: "finished, stays finished" meant three different things -

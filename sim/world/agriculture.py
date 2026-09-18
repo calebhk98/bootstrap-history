@@ -226,6 +226,7 @@ SHAPE.
 """
 import collections
 import random
+from typing import Optional
 
 from sim.constants import declare
 from sim.world.shared_constants import (
@@ -1353,7 +1354,7 @@ HISTORICAL_FARM_POPULATION_SHARE_HIGH = declare(
     why="The high end of the same range.")
 
 
-def annual_food_demand_kg_per_person(crop=None):
+def annual_food_demand_kg_per_person(crop: Optional["Crop"] = None) -> float:
     """One person's food need for a year, in kilograms of `crop` (default
     wheat).
 
@@ -1371,7 +1372,8 @@ def annual_food_demand_kg_per_person(crop=None):
             / crop.energy_kcal_per_kg)
 
 
-def granary_capacity_kg(food_demand_kg, capacity_years=None):
+def granary_capacity_kg(
+        food_demand_kg: float, capacity_years: Optional[float] = None) -> float:
     """How much grain a population's storage infrastructure can physically
     hold, given `food_demand_kg` (that population's OWN annual food need -
     see `annual_food_demand_kg_per_person`, usually multiplied up by however
@@ -1412,7 +1414,7 @@ class Land(object):
 
     __slots__ = ("hectares", "quality")
 
-    def __init__(self, hectares, quality=1.0):
+    def __init__(self, hectares: float, quality: float = 1.0) -> None:
         if hectares < 0:
             raise ValueError("hectares cannot be negative: %r" % (hectares,))
         if quality <= 0:
@@ -1420,11 +1422,13 @@ class Land(object):
         self.hectares = float(hectares)
         self.quality = float(quality)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Land(hectares=%.4f, quality=%.4f)" % (self.hectares, self.quality)
 
 
-def draw_weather_multiplier(rng, weather_stdev_fraction=WEATHER_YIELD_STDEV_FRACTION):
+def draw_weather_multiplier(
+        rng: random.Random,
+        weather_stdev_fraction: float = WEATHER_YIELD_STDEV_FRACTION) -> float:
     """One year's weather, as a single multiplier on yield.
 
     Not a daily process - see the module docstring's SHAPE section for why
@@ -1446,9 +1450,10 @@ def draw_weather_multiplier(rng, weather_stdev_fraction=WEATHER_YIELD_STDEV_FRAC
     return max(WEATHER_FLOOR_MULTIPLIER, min(WEATHER_CEILING_MULTIPLIER, draw))
 
 
-def _max_hectares_harvestable_by_labour(labour_hours, crop, toolkit,
-                                        worker_count=None,
-                                        hours_per_worker_day=None):
+def _max_hectares_harvestable_by_labour(
+        labour_hours: float, crop: "Crop", toolkit: "Toolkit",
+        worker_count: Optional[float] = None,
+        hours_per_worker_day: Optional[float] = None) -> float:
     """How much land the harvest window and the reaping rate let
     `labour_hours` worth of workers actually bring in this season - the fix
     for the defect the module docstring's "THE HARVEST WINDOW NOW ALSO
@@ -1508,7 +1513,8 @@ def _max_hectares_harvestable_by_labour(labour_hours, crop, toolkit,
     return worker_equivalents * hectares_cropped_per_farm_worker(crop, toolkit)
 
 
-def hectares_reaped_per_worker_hour(crop=None, toolkit=None):
+def hectares_reaped_per_worker_hour(
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """The instantaneous reaping rate: hectares one worker brings in per
     hour actually spent reaping. The per-DAY rate divided by the length of
     a harvest working day, so the two are the same fact stated twice and
@@ -1521,8 +1527,9 @@ def hectares_reaped_per_worker_hour(crop=None, toolkit=None):
     return per_day / HARVEST_WORKING_DAY_HOURS
 
 
-def max_hectares_reapable_by_crew(worker_count, hours_per_worker_day=None,
-                                  crop=None, toolkit=None):
+def max_hectares_reapable_by_crew(
+        worker_count: float, hours_per_worker_day: Optional[float] = None,
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """The physically correct harvest cap: how much a crew of
     `worker_count` can actually bring in, from calendar time.
 
@@ -1554,9 +1561,12 @@ def max_hectares_reapable_by_crew(worker_count, hours_per_worker_day=None,
             * hectares_reaped_per_worker_hour(crop, toolkit))
 
 
-def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
-                      weather_multiplier=1.0, crop=None, toolkit=None,
-                      rotation=None, worker_count=None, hours_per_worker_day=None):
+def gross_harvest_kg(
+        land: "Land", labour_hours: float, technique_multiplier: float = 1.0,
+        weather_multiplier: float = 1.0, crop: Optional["Crop"] = None,
+        toolkit: Optional["Toolkit"] = None, rotation: Optional["Rotation"] = None,
+        worker_count: Optional[float] = None,
+        hours_per_worker_day: Optional[float] = None) -> float:
     """Grain (or `crop`) reaped from `land` this season, in kilograms,
     BEFORE seed is paid back or anything is eaten or spoiled - the same
     "gross" the module docstring's DISAGREEMENT section discusses.
@@ -1655,12 +1665,12 @@ def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
             * technique_multiplier * weather_multiplier)
 
 
-def marginal_product_of_labour_kg_per_hour(land, labour_hours,
-                                            technique_multiplier=1.0,
-                                            weather_multiplier=1.0,
-                                            crop=None, toolkit=None,
-                                            rotation=None, worker_count=None,
-                                            hours_per_worker_day=None):
+def marginal_product_of_labour_kg_per_hour(
+        land: "Land", labour_hours: float, technique_multiplier: float = 1.0,
+        weather_multiplier: float = 1.0, crop: Optional["Crop"] = None,
+        toolkit: Optional["Toolkit"] = None, rotation: Optional["Rotation"] = None,
+        worker_count: Optional[float] = None,
+        hours_per_worker_day: Optional[float] = None) -> float:
     """Extra kilograms of grain the NEXT hour of labour on `land` would add,
     at the current `labour_hours` already applied.
 
@@ -1730,18 +1740,24 @@ class Storage(object):
     natural shape for "advance one tick of an otherwise stateless process".
     """
 
-    def __init__(self, stock_kg=0.0, seed=None):
+    def __init__(self, stock_kg: float = 0.0, seed: Optional[int] = None) -> None:
         self.stock_kg = float(stock_kg)
         self._random = random.Random(seed)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Storage(stock_kg=%.4f)" % (self.stock_kg,)
 
-    def step(self, land, labour_hours, population, technique_multiplier=1.0,
-             hectares_next_year=None, crop=None, soil=None, rotation=None,
-             toolkit=None, storage_technique=None, worker_count=None,
-             hours_per_worker_day=None, reserve_target_kg=None,
-             weather_multiplier=None):
+    def step(
+            self, land: "Land", labour_hours: float, population: float,
+            technique_multiplier: float = 1.0,
+            hectares_next_year: Optional[float] = None, crop: Optional["Crop"] = None,
+            soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
+            toolkit: Optional["Toolkit"] = None,
+            storage_technique: Optional["StorageTechnique"] = None,
+            worker_count: Optional[float] = None,
+            hours_per_worker_day: Optional[float] = None,
+            reserve_target_kg: Optional[float] = None,
+            weather_multiplier: Optional[float] = None) -> "YearFlows":
         """Advance one year: sow, grow, harvest, eat, spoil, retain next
         year's seed, bank whatever is left. Mutates `self.stock_kg` and
         returns the exact flows that moved it.
@@ -1939,7 +1955,7 @@ class Storage(object):
             marginal_product_last_hour_kg_per_hour=marginal_product)
 
 
-def stock_to_carry_forward_kg(flows):
+def stock_to_carry_forward_kg(flows: "YearFlows") -> float:
     """What a caller that persists `Storage` across years should use as
     NEXT year's opening `stock_kg` - `flows.stock_after_kg`, the free
     surplus `Storage.step` computed, PLUS `flows.seed_retained_kg`, the
@@ -1967,7 +1983,8 @@ def stock_to_carry_forward_kg(flows):
     return flows.stock_after_kg + flows.seed_retained_kg
 
 
-def hectares_per_worker_annual_hours_ceiling(crop=None, toolkit=None):
+def hectares_per_worker_annual_hours_ceiling(
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """One of the two ceilings on a farm worker's cropped area: total hours
     in the farming year divided by hours needed per hectare. This is the
     only ceiling this module originally had, and treating it as the answer
@@ -1986,7 +2003,8 @@ def hectares_per_worker_annual_hours_ceiling(crop=None, toolkit=None):
             / (crop.base_labour_hours_per_hectare * toolkit.labour_hours_multiplier))
 
 
-def hectares_per_worker_harvest_window_ceiling(crop=None, toolkit=None):
+def hectares_per_worker_harvest_window_ceiling(
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """The other ceiling: how much a worker can reap before the standing
     crop is lost. Days in the window times hectares reaped per day - see
     the SEASONALITY section above for why the window is a fact about the
@@ -2004,7 +2022,8 @@ def hectares_per_worker_harvest_window_ceiling(crop=None, toolkit=None):
             * toolkit.reaping_rate_multiplier)
 
 
-def hectares_cropped_per_farm_worker(crop=None, toolkit=None):
+def hectares_cropped_per_farm_worker(
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """How many hectares one farm worker actually brings in, in a year:
     the smaller of the two ceilings above, because a constraint you can
     satisfy is not a constraint.
@@ -2026,8 +2045,9 @@ def hectares_cropped_per_farm_worker(crop=None, toolkit=None):
                hectares_per_worker_harvest_window_ceiling(crop, toolkit))
 
 
-def holding_hectares_required_per_farm_worker(crop=None, toolkit=None,
-                                               rotation=None):
+def holding_hectares_required_per_farm_worker(
+        crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None,
+        rotation: Optional["Rotation"] = None) -> float:
     """How much land the farm must HOLD to keep one worker cropping - the
     cropped area grossed up for the fallow that is idle this year. See the
     ROTATION AND FALLOW section for why this is a land requirement and not
@@ -2039,8 +2059,10 @@ def holding_hectares_required_per_farm_worker(crop=None, toolkit=None,
             / (1.0 - rotation.fallow_share_of_holding))
 
 
-def fraction_of_population_that_must_farm(crop=None, soil=None, rotation=None,
-                                           toolkit=None, storage_technique=None):
+def fraction_of_population_that_must_farm(
+        crop: Optional["Crop"] = None, soil: Optional["Soil"] = None,
+        rotation: Optional["Rotation"] = None, toolkit: Optional["Toolkit"] = None,
+        storage_technique: Optional["StorageTechnique"] = None) -> float:
     """The headline calibration figure: what share of a population must be
     farmers to feed the whole population, computed purely from this
     module's declared constants at reference land quality, technique and an
@@ -2124,8 +2146,11 @@ def fraction_of_population_that_must_farm(crop=None, soil=None, rotation=None,
 # difference from a plain float, which is exactly why the decision has to
 # be documented at the boundary that CAN see both conventions.
 
-def farm_workers_fte_for_population(adult_equivalent_population, crop=None, soil=None,
-                                    rotation=None, toolkit=None, storage_technique=None):
+def farm_workers_fte_for_population(
+        adult_equivalent_population: float, crop: Optional["Crop"] = None,
+        soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
+        toolkit: Optional["Toolkit"] = None,
+        storage_technique: Optional["StorageTechnique"] = None) -> float:
     """How many full-time-equivalent farm workers a population of
     `adult_equivalent_population` needs, at reference technique and an
     average weather year, to feed itself: `fraction_of_population_that_
@@ -2151,8 +2176,11 @@ def farm_workers_fte_for_population(adult_equivalent_population, crop=None, soil
     return fraction * adult_equivalent_population
 
 
-def farmland_for_population(adult_equivalent_population, crop=None, soil=None,
-                            rotation=None, toolkit=None, storage_technique=None):
+def farmland_for_population(
+        adult_equivalent_population: float, crop: Optional["Crop"] = None,
+        soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
+        toolkit: Optional["Toolkit"] = None,
+        storage_technique: Optional["StorageTechnique"] = None) -> "Land":
     """A `Land` parcel sized so that the workforce
     `farm_workers_fte_for_population` implies can each crop their full
     `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding

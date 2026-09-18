@@ -933,7 +933,10 @@ check("the free capability nodes the hint exists for are still free: no "
 # and trade-hour demand from a shrunk staff competing invisibly across a
 # dozen projects. Five things below, one per deliverable.
 # =============================================================================
-from engine.protocol import _agent_portfolio as _APORT, render_portfolio as _RPORT
+# render_portfolio (_RPORT) is not used in this file, only _agent_portfolio
+# (_APORT) below - but it IS used by test_arrears_visibility.py, which gets
+# it from harness.py's own re-export rather than importing it here.
+from engine.protocol import _agent_portfolio as _APORT
 
 # --- 1. PER-PROJECT ALLOCATION, READ FROM THE ALLOCATOR ITSELF. core.py's
 # step() (5. progress) now writes pool_total/rank/active_count/remaining_

@@ -777,7 +777,7 @@ DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY = declare(
         "between the child and working-age floors.")
 
 
-def _disease_mortality_multiplier(disease_burden, floor_multiplier):
+def _disease_mortality_multiplier(disease_burden: float, floor_multiplier: float) -> float:
     """How much a band's baseline mortality hazard is scaled by, given the
     disease-and-sanitation environment - the disease-axis counterpart to
     `_excess_mortality_multiplier`'s nutrition axis, and the mechanism that
@@ -847,7 +847,7 @@ DISEASE_FERTILITY_CEILING_UPLIFT_FRACTION = declare(
         "(pathological sterility rather than mortality).")
 
 
-def _fertility_ceiling_for_disease_burden(disease_burden):
+def _fertility_ceiling_for_disease_burden(disease_burden: float) -> float:
     """The fertility ramp's ceiling (see `_fertility_multiplier`) as a
     function of the disease-and-sanitation environment, not a fixed number.
 
@@ -875,7 +875,7 @@ def _fertility_ceiling_for_disease_burden(disease_burden):
 # THE FOOD-TO-VITAL-RATES MECHANISM
 # ============================================================================
 
-def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
+def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -> float:
     """How much a band's baseline mortality is scaled by, given nutrition.
 
     This is the one function in the module where "a food shortage raises
@@ -996,8 +996,9 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     return 1.0 + excess * vulnerability
 
 
-def _fertility_multiplier(nutrition_ratio,
-                           fertility_ceiling=FERTILITY_SURPLUS_CEILING_MULTIPLIER):
+def _fertility_multiplier(
+        nutrition_ratio: float,
+        fertility_ceiling: float = FERTILITY_SURPLUS_CEILING_MULTIPLIER) -> float:
     """How much baseline fertility is scaled by, given nutrition.
 
     `fertility_ceiling` defaults to FERTILITY_SURPLUS_CEILING_MULTIPLIER, so
@@ -1113,22 +1114,23 @@ class Population(object):
 
     __slots__ = ("children", "working_age", "elderly", "_random")
 
-    def __init__(self, children, working_age, elderly, seed=0):
+    def __init__(self, children: float, working_age: float, elderly: float,
+                 seed: int = 0) -> None:
         self.children = float(children)
         self.working_age = float(working_age)
         self.elderly = float(elderly)
         self._random = random.Random(seed)
 
     @property
-    def total(self):
+    def total(self) -> float:
         return self.children + self.working_age + self.elderly
 
     @property
-    def working_age_population(self):
+    def working_age_population(self) -> float:
         """The number this whole module exists to be able to answer."""
         return self.working_age
 
-    def copy(self):
+    def copy(self) -> "Population":
         """An independent Population with its own, separately-advancing
         random stream (re-seeded from a draw of this one's), for branching a
         scenario (e.g. 'what if food had NOT been cut') without either copy's
@@ -1138,12 +1140,14 @@ class Population(object):
                             seed=self._random.getrandbits(64))
         return clone
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("Population(children=%.3f, working_age=%.3f, elderly=%.3f, "
                 "total=%.3f)" % (self.children, self.working_age,
                                   self.elderly, self.total))
 
-    def nutrition_ratio(self, food_available_calories_per_day, jitter=False):
+    def nutrition_ratio(
+            self, food_available_calories_per_day: float,
+            jitter: bool = False) -> float:
         """Calories actually available, divided by what this population
         needs, in adult-equivalents. 1.0 means exactly meeting need. This is
         the single number mortality and fertility both respond to - see the
@@ -1169,9 +1173,9 @@ class Population(object):
             ratio *= (1.0 + self._random.gauss(0.0, NUTRITION_YEAR_TO_YEAR_NOISE_STD))
         return max(0.0, ratio)
 
-    def step(self, food_available_calories_per_day, immigration=0.0,
-             emigration=0.0, jitter=False,
-             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+    def step(self, food_available_calories_per_day: float, immigration: float = 0.0,
+             emigration: float = 0.0, jitter: bool = False,
+             disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> "StepFlows":
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -1274,8 +1278,8 @@ class Population(object):
             deaths_elderly=deaths_elderly)
 
     @classmethod
-    def stationary(cls, total_population, seed=0, years=400,
-                    disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+    def stationary(cls, total_population: float, seed: int = 0, years: int = 400,
+                    disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> "Population":
         """A Population of the given total, with an age structure that is
         the model's OWN stable answer to "what age structure does a
         population fed at exactly subsistence, forever, settle into" -
@@ -1314,7 +1318,7 @@ class Population(object):
         return cls(probe.children * scale, probe.working_age * scale,
                     probe.elderly * scale, seed=seed)
 
-    def _subsistence_food(self):
+    def _subsistence_food(self) -> float:
         """Exactly enough calories to put this population's nutrition ratio
         at 1.0 right now, with no noise - the noise-free food level
         `stationary()` iterates against to find a genuine fixed point."""
@@ -1325,8 +1329,9 @@ class Population(object):
         return adult_equivalent_population * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
 
 
-def child_survival_fraction(nutrition_ratio=1.0,
-                             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+def child_survival_fraction(
+        nutrition_ratio: float = 1.0,
+        disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> float:
     """The fraction of children who reach working age, if `nutrition_ratio`
     and `disease_burden` were both held constant for an entire CHILD_BAND_
     WIDTH_YEARS-year childhood - the closed-form inverse of the transform

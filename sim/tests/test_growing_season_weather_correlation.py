@@ -14,7 +14,6 @@ this file does not own it). What that file's other classes still check
 acceptance bar) is NOT re-checked here to avoid duplicating a suite this
 task does not own; this file is additive, focused on what changed.
 """
-import math
 import statistics
 import unittest
 
