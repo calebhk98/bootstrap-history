@@ -45,11 +45,24 @@ class CapabilityMixin:
     # actually pay: a number is never invented here, only named.
     #
     # plague_preparedness is the one CAPABILITY_INSTITUTIONS member
-    # deliberately absent: its only running()-gated reference left in the
-    # engine is a dead local (`prep` in society.py's _shocks) that nothing
-    # reads, and its real hazard relief (HAZARD_COUNTERS) is has()-gated like
-    # corpus - so closing it costs nothing measurable today. Warning about it
-    # anyway would be exactly the false alarm this exists to avoid.
+    # deliberately absent: its hazard relief (HAZARD_COUNTERS) is has()-gated
+    # like corpus, so closing it costs nothing measurable today, and warning
+    # about it anyway would be exactly the false alarm this exists to avoid.
+    #
+    # THAT REASONING IS SOUND AND ITS PREMISE IS NOW A COMPLAINT. This used to
+    # cite a dead `prep = self.running("plague_preparedness")` local in
+    # _shocks as evidence that nothing gated this on running(); that local has
+    # since been deleted as unused (commit ad627c2), so the citation is gone
+    # rather than merely stale. What it was evidence OF is the open question:
+    # somebody wrote a running() call for this node, in the right function, at
+    # the right point in the year, and whatever would have read it never
+    # landed. Closing a plague plan costs nothing BECAUSE the relief is
+    # has()-gated, and whether has() is the right gate for quarantine
+    # procedure and stockpiles, as opposed to for copies of a book already in
+    # other people's hands, was never argued. See
+    # Complaints/55-a-plague-plan-you-closed-still-saves-you.md. If that
+    # complaint resolves towards has(), this entry should become an explicit
+    # "nothing" rather than an absence.
     NOT_OPERATING_BENEFIT = {
         "academy_network": "Scholar and artisan training, standing, and its "
                            "reduction of eminence risk",
