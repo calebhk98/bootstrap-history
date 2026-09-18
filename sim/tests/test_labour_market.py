@@ -273,9 +273,15 @@ class WorkforceStepMobilityBoundTests(unittest.TestCase):
         # smith's own shortage (999,900h) dwarfs its own size (100h), so its
         # gap-responsive rate saturates at the ceiling - this is exactly the
         # regime OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR exists for.
+        # `walkable_trades=frozenset()` isolates that arithmetic from
+        # `smith`'s OWN, unrelated status in `WALKABLE_TRADES` (real
+        # data/production/ now has smith reachable with no technology at
+        # all - see TechnologyGatedWalkabilityTests - which would otherwise
+        # let the seed-share reference, not this trade's OWN size, set the
+        # ceiling this test means to check).
         workforce = labour_market.Workforce({"potter": 10_000.0, "smith": 100.0})
         flows = workforce.step({"potter": 0.0, "smith": 1_000_000.0},
-                               mobility_rate_per_year=0.05)
+                               mobility_rate_per_year=0.05, walkable_trades=frozenset())
         ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
         self.assertLessEqual(flows["smith"].hours_moved_in, 100.0 * ceiling + 1e-6)
         self.assertAlmostEqual(flows["smith"].hours_moved_in, 100.0 * ceiling)
@@ -299,8 +305,16 @@ class WorkforceStepMobilityBoundTests(unittest.TestCase):
     def test_a_higher_base_rate_moves_at_least_as_much_when_the_gap_is_small(self):
         def moved_in(base_rate):
             workforce = labour_market.Workforce({"smith": 1000.0, "potter": 1_000_000.0})
+            # `walkable_trades=frozenset()` - see the identical note on
+            # test_inflow_never_exceeds_the_ceiling_rate_times_the_trades_
+            # own_size above: this test means to compare two RATES against
+            # smith's own 1,000h size, and `potter`'s own 1,000,000h would
+            # otherwise inflate the seed-share reference far past that,
+            # capping both rates' inflow at the same gap-limited number and
+            # erasing the very difference this test checks for.
             flows = workforce.step({"smith": 1050.0, "potter": 0.0},
-                                   mobility_rate_per_year=base_rate)
+                                   mobility_rate_per_year=base_rate,
+                                   walkable_trades=frozenset())
             return flows["smith"].hours_moved_in
 
         self.assertGreater(moved_in(0.20), moved_in(0.02))
@@ -388,8 +402,41 @@ class WalkableTradeSeedingTests(unittest.TestCase):
         self.assertEqual(flows["optician"].hours_moved_in, 0.0)
         self.assertEqual(workforce.hours_by_trade["optician"], 0.0)
 
-    def test_default_walkable_trades_are_exactly_labourer_and_miner(self):
-        self.assertEqual(labour_market.WALKABLE_TRADES, frozenset({"labourer", "miner"}))
+    def test_default_walkable_trades_is_exactly_the_no_technology_computation(self):
+        # WALKABLE_TRADES is no longer a hand-written list (see
+        # TechnologyGatedWalkabilityTests below for the mechanism itself,
+        # tested against a synthetic, hand-built production fixture) - it
+        # is `trades_reachable_given_technology()` evaluated with no nodes
+        # reached at all, computed once at import time. This checks that
+        # self-consistency directly, against the REAL data/production/
+        # files, without hardcoding what the data currently says (which
+        # would be exactly the "hand-written list" defect this module
+        # docstring's stakeholder point 8 asks to be rid of).
+        self.assertEqual(labour_market.WALKABLE_TRADES,
+                         labour_market.trades_reachable_given_technology())
+
+    def test_labourer_and_miner_remain_walkable_under_the_new_computation(self):
+        # A backward-compatibility smoke check, not a hardcoded outcome:
+        # data/production/'s own labourer and miner entries include many
+        # requires_node: null recipes (general digging and hauling), so
+        # both trades were already, and remain, walkable with no
+        # technology reached at all.
+        self.assertIn("labourer", labour_market.WALKABLE_TRADES)
+        self.assertIn("miner", labour_market.WALKABLE_TRADES)
+
+    def test_walkable_trades_is_a_proper_subset_of_all_named_trades(self):
+        # The computation must actually discriminate - if every trade
+        # data/production/ names came out walkable with no technology
+        # reached, the mechanism would not be doing the job the
+        # stakeholder's "no nuclear engineer in Rome" half asked for.
+        production = labour_market.production_data()
+        all_trades = set()
+        for entry in production.values():
+            all_trades.update((entry.get("labour_hours") or {}).keys())
+            for capital_item in entry.get("capital") or []:
+                all_trades.update((capital_item.get("build_labour_hours") or {}).keys())
+        self.assertTrue(labour_market.WALKABLE_TRADES)
+        self.assertLess(labour_market.WALKABLE_TRADES, all_trades)
 
     def test_a_walkable_trades_own_growth_is_still_bounded_not_instant(self):
         # It moves, but it does not close a huge shortage in a single year -
@@ -400,6 +447,195 @@ class WalkableTradeSeedingTests(unittest.TestCase):
             {"labourer": 100_000.0, "adventurer": 50_000.0, "optician": 0.0},
             walkable_trades=labour_market.WALKABLE_TRADES | {"adventurer"})
         self.assertLess(flows["adventurer"].hours_after, 50_000.0)
+
+
+class SeedReferenceBasisTests(unittest.TestCase):
+    """QUESTION TWO the stakeholder asked: '1% of the whole economy's
+    current hours, instead of a percentage of its own size, [means] year 2
+    will have fewer people go to it? I'm suspicious of that.' Tested
+    directly: `Workforce.step` takes `max(hours_before, seed_reference)`
+    as the ceiling basis for a walkable trade (see `Workforce.step`'s own
+    docstring, step 3), not a hard switch from one to the other - these
+    tests are the exact-arithmetic proof that this is what stops the
+    stall the stakeholder suspected, and a regression guard against ever
+    changing `max` back into a switch keyed on `hours_before == 0`."""
+
+    def test_seed_reference_basis_persists_while_the_trade_is_smaller_than_it(self):
+        # A demand so large that the gap-responsive rate saturates at the
+        # ceiling in every year shown (relative_gap stays huge), so the
+        # amount moved in is exactly `ceiling_rate * ceiling_basis` with no
+        # other effect to confound the comparison. seed_reference here is
+        # 1% of 120,000 h = 1,200 h; `adventurer` stays below that for
+        # (at least) its first two years, so both years must use the SAME
+        # basis and therefore move the SAME amount - a stall would show up
+        # as the second year moving markedly less than the first.
+        workforce = labour_market.Workforce({"labourer": 120_000.0, "adventurer": 0.0})
+        required = {"labourer": 70_000.0, "adventurer": 1_000_000.0}
+        walkable = labour_market.WALKABLE_TRADES | {"adventurer"}
+        first_year = workforce.step(required, walkable_trades=walkable)
+        second_year = workforce.step(required, walkable_trades=walkable)
+        self.assertGreater(first_year["adventurer"].hours_moved_in, 0.0)
+        self.assertAlmostEqual(
+            first_year["adventurer"].hours_moved_in,
+            second_year["adventurer"].hours_moved_in)
+
+    def test_the_basis_switches_to_the_trades_own_size_only_once_it_is_bigger(self):
+        # Once the trade's own hours_before exceeds the seed reference,
+        # its OWN size becomes the (larger) basis - `max`, not the seed
+        # reference forever. This is the mirror check: the mechanism does
+        # not overshoot into ignoring the trade's real size once it no
+        # longer needs the seed's help.
+        workforce = labour_market.Workforce({"labourer": 120_000.0, "adventurer": 2_000.0})
+        required = {"labourer": 70_000.0, "adventurer": 1_000_000.0}
+        walkable = labour_market.WALKABLE_TRADES | {"adventurer"}
+        seed_reference = labour_market.WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS * 122_000.0
+        self.assertGreater(2_000.0, seed_reference)   # the fixture's own precondition
+        flows = workforce.step(required, walkable_trades=walkable)
+        ceiling = labour_market.OCCUPATIONAL_MOBILITY_RATE_CEILING_PER_YEAR
+        self.assertAlmostEqual(flows["adventurer"].hours_moved_in, 2_000.0 * ceiling)
+
+    def test_a_non_walkable_trade_never_gets_the_seed_reference_at_all(self):
+        # The seed reference is only ever added on TOP of a trade's own
+        # size for a WALKABLE trade - a non-walkable trade at zero still
+        # has a ceiling basis of exactly zero, so it still cannot move
+        # (WHAT THIS DOES NOT MODEL item 2's genuine limit, unchanged).
+        workforce = labour_market.Workforce({"labourer": 120_000.0, "optician": 0.0})
+        required = {"labourer": 70_000.0, "optician": 1_000_000.0}
+        flows = workforce.step(required, walkable_trades=labour_market.WALKABLE_TRADES)
+        self.assertEqual(flows["optician"].hours_moved_in, 0.0)
+
+
+class TechnologyGatedWalkabilityTests(unittest.TestCase):
+    """Stakeholder point 8 (module docstring): 'is the current labour
+    market making it impossible for new trades to appear ... does this
+    make blacksmiths impossible?' and 'you can't just make a nuclear
+    engineer in Rome, so some limits are needed'. `trades_reachable_
+    given_technology` is the general mechanism WALKABLE_TRADES is now
+    built from - these are hand-built, synthetic production fixtures (this
+    file's own EXACT ARITHMETIC discipline for a fixture it controls
+    itself), so a re-authoring of the REAL data/production/ files cannot
+    change what these tests prove."""
+
+    def test_a_recipe_needing_no_technology_at_all_makes_its_trade_reachable(self):
+        production = {"axe_kg": _entry({"axe_kg": 10.0}, {"smith": 5.0})}
+        production["axe_kg"]["requires_node"] = None
+        self.assertIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production))
+
+    def test_a_recipe_gated_behind_an_unreached_node_is_not_reachable(self):
+        production = {"steel_kg": _entry({"steel_kg": 10.0}, {"smith": 5.0})}
+        production["steel_kg"]["requires_node"] = "cementation_steel"
+        self.assertNotIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production))
+
+    def test_reaching_the_gating_node_makes_the_trade_reachable(self):
+        production = {"steel_kg": _entry({"steel_kg": 10.0}, {"smith": 5.0})}
+        production["steel_kg"]["requires_node"] = "cementation_steel"
+        self.assertIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids={"cementation_steel"}, production=production))
+
+    def test_an_unclassified_entry_missing_requires_node_grants_no_walkability(self):
+        # No `requires_node` key at all - "nobody has classified this
+        # entry", per data/production/_SCHEMA.md's own rule, which grants
+        # no walkability at ANY reached_node_ids, not even the empty one.
+        production = {"mystery_kg": _entry({"mystery_kg": 10.0}, {"smith": 5.0})}
+        self.assertNotIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production))
+        self.assertNotIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids={"anything"}, production=production))
+
+    def test_a_capital_items_build_labour_hours_trade_is_covered_too(self):
+        production = {"pot_kg": _entry(
+            {"pot_kg": 10.0}, {"potter": 5.0},
+            capital=[{"service_life_years": 10.0, "annual_output_at_basis": 10.0,
+                     "build_labour_hours": {"mason": 20.0}}])}
+        production["pot_kg"]["requires_node"] = None
+        reachable = labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production)
+        self.assertIn("potter", reachable)
+        self.assertIn("mason", reachable)
+
+    def test_one_walkable_recipe_is_enough_even_if_others_for_the_same_trade_are_gated(self):
+        # A smith with ONE hand-forging recipe needing no technology and
+        # ANOTHER, more advanced recipe that does is still a smith a
+        # civilisation can grow from zero - this module aggregates a
+        # trade's hours across every recipe everywhere else, so it is
+        # equally coarse here.
+        production = {
+            "iron_sheet_kg": _entry({"iron_sheet_kg": 10.0}, {"smith": 5.0}),
+            "fine_steel_kg": _entry({"fine_steel_kg": 10.0}, {"smith": 5.0}),
+        }
+        production["iron_sheet_kg"]["requires_node"] = None
+        production["fine_steel_kg"]["requires_node"] = "cementation_steel"
+        self.assertIn("smith", labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production))
+
+    def test_more_reached_nodes_never_shrinks_the_walkable_set(self):
+        production = {
+            "a": _entry({"a_kg": 1.0}, {"labourer": 1.0}),
+            "b": _entry({"b_kg": 1.0}, {"smith": 1.0}),
+            "c": _entry({"c_kg": 1.0}, {"electrician": 1.0}),
+        }
+        production["a"]["requires_node"] = None
+        production["b"]["requires_node"] = "blast_furnace"
+        production["c"]["requires_node"] = "dynamo"
+        with_none_reached = labour_market.trades_reachable_given_technology(
+            reached_node_ids=(), production=production)
+        with_one_reached = labour_market.trades_reachable_given_technology(
+            reached_node_ids={"blast_furnace"}, production=production)
+        with_both_reached = labour_market.trades_reachable_given_technology(
+            reached_node_ids={"blast_furnace", "dynamo"}, production=production)
+        self.assertLessEqual(with_none_reached, with_one_reached)
+        self.assertLessEqual(with_one_reached, with_both_reached)
+        self.assertEqual(with_none_reached, {"labourer"})
+        self.assertEqual(with_one_reached, {"labourer", "smith"})
+        self.assertEqual(with_both_reached, {"labourer", "smith", "electrician"})
+        # "You can't just make a nuclear engineer in Rome" - the genuine
+        # limit stays a limit until its own node is actually reached.
+        self.assertNotIn("electrician", with_none_reached)
+        self.assertNotIn("electrician", with_one_reached)
+
+
+class EarlyCivilisationBlacksmithTests(unittest.TestCase):
+    """QUESTION ONE the stakeholder asked, answered with a measurement
+    against the REAL data/production/ files (a light touch, like
+    RealProductionDataSmokeTests above, never asserting a number that data/
+    production/'s own owner could re-author without breaking this suite):
+    an early civilisation with EXACTLY ZERO smiths, that wants iron goods,
+    is not stuck at zero forever."""
+
+    def test_smith_is_walkable_with_no_technology_reached_at_all(self):
+        # Grounded in a real, named entry: data/production/10_ferrous.json's
+        # `iron_sheet_kg` needs no invented technology to hand-forge a
+        # sheet from a bar (`requires_node: null`) - this is the measured
+        # fact this whole mechanism is built from, not an assumption this
+        # module makes about smiths.
+        self.assertIn("smith", labour_market.WALKABLE_TRADES)
+
+    def test_a_civilisation_with_zero_smiths_grows_one_from_nothing(self):
+        production = labour_market.production_data()
+        early_civilisation_workforce = {"labourer": 200_000.0, "smith": 0.0}
+        iron_goods_hours_required, _ = labour_market.labour_hours_required_by_trade(
+            {"iron_sheet_kg": 100_000.0}, production)
+        self.assertGreater(iron_goods_hours_required.get("smith", 0.0), 0.0)
+        outcome = labour_market.solve_to_stable_allocation(
+            early_civilisation_workforce, iron_goods_hours_required,
+            tolerance_hours=1.0, maximum_periods=200)
+        self.assertGreater(outcome.workforce.hours_by_trade.get("smith", 0.0), 0.0)
+        self.assertTrue(outcome.stabilized)
+        self.assertLess(outcome.unmet_demand_by_trade.get("smith", 0.0),
+                        iron_goods_hours_required["smith"])
+
+    def test_a_trade_with_no_production_data_at_all_still_cannot(self):
+        # The genuine limit named alongside the blacksmith question: a
+        # trade this project has recorded NOTHING about (no data/
+        # production/ entry at all - unlike smith, which has several) is
+        # unclassified, not gate-satisfied, and stays unreachable at any
+        # reached_node_ids. `optician` is this module's own worked-example
+        # stand-in for exactly that case (see SCENARIO 3).
+        self.assertNotIn("optician", labour_market.WALKABLE_TRADES)
+        self.assertNotIn("optician", labour_market.trades_reachable_given_technology(
+            reached_node_ids={"anything", "everything"}))
 
 
 class SkillFamilyProximityTests(unittest.TestCase):
@@ -745,6 +981,7 @@ class ModuleRunsCleanlyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("SCENARIO 1", result.stdout)
         self.assertIn("SCENARIO 2", result.stdout)
+        self.assertIn("SCENARIO 5", result.stdout)
         self.assertIn("smith", result.stdout)
         self.assertIn("labourer", result.stdout)
 

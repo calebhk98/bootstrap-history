@@ -144,6 +144,34 @@ THE STAKEHOLDER'S OWN REMAINING FIVE POINTS, AND WHERE EACH IS ANSWERED.
      cultivable land and shows NEED rising while HAVE sits still until
      something calls `Workforce.step`.
 
+  8. "Is the current labour market making it impossible for new trades to
+     appear? If we simulate early civilization, does this make blacksmiths
+     impossible? ... you can't just make a nuclear engineer in Rome, so
+     some limits are needed, so IDK if it's good or not." Both halves were
+     right about the OLD mechanism: `WALKABLE_TRADES` was a hand-written
+     two-name frozenset (`labourer`, `miner`), so every OTHER trade -
+     including `smith` - could never grow from zero, however large the
+     shortage, which really would have made the first blacksmith
+     impossible in a civilisation that starts with none. But the
+     stakeholder's own "no nuclear engineer in Rome" limit is also real,
+     and a rule that lifts it for every trade at once (or picks trades by
+     hand) gets neither answer right. `trades_reachable_given_technology`
+     below replaces the hand list with a computation off `data/production/
+     `'s own `requires_node` field - the tech tree, whose nodes this
+     project already builds AS the knowledge a civilisation has (see
+     `data/production/_SCHEMA.md`'s own WHEN A TECHNIQUE BECOMES AVAILABLE
+     section). A trade with at least one recipe that needs NO technology
+     at all (`requires_node: null` - `data/production/10_ferrous.json`'s
+     own `iron_sheet_kg`, hand-forging a sheet from a bar, is exactly one)
+     is learnable from zero; a trade whose every recipe sits behind a node
+     nobody has reached (an `electrician` recipe gated behind `dynamo`) is
+     not, and stays not, until that node is reached - which is the correct
+     shape of "some limits are needed" the stakeholder asked for, drawn
+     from the tree instead of a guess. See WALKABLE_TRADES below for the
+     mechanism and SCENARIO 5 in the worked example, which runs exactly
+     this case: an early civilisation with precisely zero smiths, wanting
+     iron goods, growing a smith trade from nothing.
+
 WHY THIS IS A STEP PROCESS AND NOT AN INSTANT FIXED POINT, UNLIKE
 `sim/solve_prices.py`'s PRICES. A price can update the instant a recipe's
 inputs change; nothing physical stops it. A WORKER cannot: a farmer does not
@@ -158,11 +186,11 @@ tenure, wartime mobilisation drives and gold-rush boomtowns, and every other
 real friction this project does not yet model individually (see each
 constant's own declaration for what it approximates and how weak the
 evidence behind its specific figure is). A trade with ZERO current workers
-CAN grow under this mechanism now, but only if it is the kind of trade a
-person can walk into without a master - see WALKABLE_TRADES - and even then
-bounded by a seed reference, not by an invented absolute number: you still
-cannot train the first optician by bidding hours at him, someone has to
-found THAT trade, which is exactly what `sim/engine/labour.py`'s own
+CAN grow under this mechanism now, but only if the tech tree already
+contains a way to do it that needs no master - see WALKABLE_TRADES - and
+even then bounded by a seed reference, not by an invented absolute number:
+you still cannot train the first optician by bidding hours at him, someone
+has to found THAT trade, which is exactly what `sim/engine/labour.py`'s own
 `TRADES_ABSENT` and `trade_schools` machinery is for (see WHAT THIS DOES NOT
 MODEL below and this module's WIRING section for how the two would meet).
 
@@ -181,12 +209,16 @@ data and the same loading pattern `sim/world/demand.py`'s own
 `production_data()` already uses (duplicated here rather than imported, for
 the same reason) - reading a data file that already exists is not an
 import of the module that will eventually read the same file. `WALKABLE_
-TRADES` and `TRADE_SKILL_FAMILY` below are the same discipline applied to a
-classification instead of a JSON file: `sim/engine/data.py` keeps its own
-`TRADE_FAMILY` (three buckets: scholar, labour, craft) for a different
-purpose (staffing two aggregate institution pools); this module keeps a
-separate, finer one of its own rather than importing that file, for the
-identical STANDALONE reason.
+TRADES` is now COMPUTED from that same production data (its own
+`requires_node` field - see `trades_reachable_given_technology`), the same
+discipline applied to a derived classification instead of a hand-picked
+one; `TRADE_SKILL_FAMILY` remains a hand-stated classification, for the
+identical STANDALONE reason this module keeps its own copy of anything it
+cannot yet compute: `sim/engine/data.py` keeps its own `TRADE_FAMILY`
+(three buckets: scholar, labour, craft) for a different purpose (staffing
+two aggregate institution pools); this module keeps a separate, finer one
+of its own rather than importing that file, for the identical STANDALONE
+reason.
 
 WHAT THIS DOES NOT MODEL, STATED PLAINLY (CLAUDE.md's "be honest about what
 is missing").
@@ -200,16 +232,25 @@ is missing").
      budget shares) would answer; this module only answers the across-trade
      question the stakeholder actually asked.
 
-  2. WHERE A BRAND NEW, NON-WALKABLE TRADE'S FIRST WORKER COMES FROM. A
-     trade that needs an apprenticeship (everything not in `WALKABLE_
-     TRADES`) still cannot grow from zero under `Workforce.step` alone,
-     however large its shortage, and this module still invents no number
-     for that first worker. `sim/engine/labour.py` already has the concept
-     this module lacks (`TRADES_ABSENT`, `trade_schools`,
+  2. WHERE A BRAND NEW TRADE'S FIRST WORKER COMES FROM, WHEN NO RECIPE OF
+     ITS OWN IS REACHABLE YET. A trade every one of whose data/production/
+     recipes sits behind a tech-tree node nobody has reached (not in
+     `trades_reachable_given_technology`'s result - see WALKABLE_TRADES)
+     still cannot grow from zero under `Workforce.step` alone, however
+     large its shortage, and this module still invents no number for that
+     first worker: an `electrician` recipe gated behind `dynamo` stays
+     exactly as unreachable as it always was until `dynamo` itself is
+     reached. `sim/engine/labour.py` already has the concept this module
+     lacks (`TRADES_ABSENT`, `trade_schools`,
      `SCHOOL_FOUNDED_HIRING_COEFFICIENT`) - a founder-built institution that
      seeds a trade society could not otherwise reach. `Workforce.step`'s
      `minimum_absorption_hours_by_trade` parameter is the seam where that
-     seeding would enter this mechanism.
+     seeding would enter this mechanism. A trade with NO data/production/
+     entry at all (this module's own synthetic `optician`, in SCENARIO 3
+     below - chosen because this project genuinely has no data for it) is
+     unclassified by definition and stays unwalkable at any
+     `reached_node_ids`, which is the correct answer for a trade this
+     project has recorded nothing about.
 
   3. SKILL DISTANCE IS STILL A HANDFUL OF FAMILIES, NOT A REAL MATRIX. A
      smith and a scribe are now farther apart than a smith and a
@@ -259,14 +300,17 @@ WORKED EXAMPLE, AND HOW TO REPRODUCE IT. Run this file directly:
 
     python3 sim/world/labour_market.py
 
-for four scenarios end to end: a food shortfall that pulls hours into
+for five scenarios end to end: a food shortfall that pulls hours into
 farming and stabilises with the shortfall still unmet; a war that pulls
 hours into smithing, now several times faster than the old flat rate; monster
 towers seeding an `adventurer` trade from zero because walking into it needs
 no master, right next to a brand-new `optician` trade that still cannot,
-because that one does; and cultivable land growing while nothing tells the
+because that one does; cultivable land growing while nothing tells the
 workforce to reallocate, so NEED moves and HAVE does not until it is asked
-to.
+to; and an early civilisation with precisely zero smiths growing one from
+nothing because data/production/'s own tech-tree gates say hand-forging
+needs none - the module docstring's stakeholder point 8, answered with a
+measurement rather than an argument.
 """
 import collections
 import json
@@ -686,17 +730,126 @@ def _gap_responsive_mobility_rate(
 # SKILL DISTANCE: WHICH TRADES ARE "CLOSE", AND WHICH TRADES NEED NO MASTER
 # ----------------------------------------------------------------------------
 
-WALKABLE_TRADES = frozenset({"labourer", "miner"})
-# Trades this module treats as needing NO apprenticeship to enter at all -
-# general manual labour a person can simply start doing. Everything else
-# defaults to requiring the master-and-apprentice pathway WHAT THIS DOES NOT
-# MODEL item 2 describes, and can only start from zero via a caller-supplied
-# `minimum_absorption_hours_by_trade` (sim/engine/labour.py's own `TRADES_
-# ABSENT`/`trade_schools` machinery is the natural source of that number).
-# A caller wiring in a trade this set does not know about (the worked
-# example's own `adventurer`, for a sudden and genuinely unskilled calling)
-# passes its own `walkable_trades` to `Workforce.step` - this frozenset is a
-# default for the trades `data/production/*.json` actually names, not a
+_UNCLASSIFIED_TECHNOLOGY_GATE = object()
+# A private sentinel, not `None`. `entry.get("requires_node", ...)` has to
+# tell "the field is `null`" (the technique needs NO technology at all)
+# apart from "the field is missing" (nobody has classified this entry -
+# data/production/_SCHEMA.md's own rule: "a gated solve drops it") - and
+# `None` cannot serve as its own missing-value marker, because `None` is
+# itself the meaningful value this field takes when a technique is already
+# available on day one.
+
+
+def trades_reachable_given_technology(reached_node_ids=(), production=None):
+    """Every trade a person could pick up WITHOUT an existing master of
+    that trade to learn from, given which tech-tree nodes this
+    civilisation has already reached - the general mechanism behind
+    WALKABLE_TRADES below, built from the vocabulary this project already
+    has for "the knowledge exists": data/production/*.json's own
+    `requires_node` field, read exactly the way that field's own schema
+    defines it (`data/production/_SCHEMA.md`'s WHEN A TECHNIQUE BECOMES
+    AVAILABLE section) - `requires_node: null` means a technique needs NO
+    technology at all (anyone can work it out from first principles and
+    local materials); `requires_node: "some_node_id"` means that node must
+    be REACHED before anyone, anywhere, can run it; a missing field means
+    nobody has classified the entry, and per that same schema's own rule
+    ("a gated solve drops it") grants no walkability either way - no data
+    is not license to assume either answer.
+
+    A trade is in the returned frozenset if data/production/ names it in
+    AT LEAST ONE recipe's `labour_hours` (or a `capital` item's own
+    `build_labour_hours`) whose gate is satisfied - `requires_node` is
+    `null`, or is a member of `reached_node_ids`. One walkable recipe is
+    enough: a smith who can only hand-forge a sheet from bar stock, with
+    none of the smith's OTHER, more advanced recipes reachable yet, is
+    still a smith a civilisation can grow from zero - this module already
+    aggregates a trade's hours across every recipe that names it
+    everywhere else (`labour_hours_required_by_trade`), so being equally
+    coarse here, in the opposite direction, is the consistent choice, not
+    a new one.
+
+    `reached_node_ids` is taken as a PARAMETER, never read from the tech
+    tree itself, for the identical STANDALONE reason `hours_required_by_
+    trade` and `minimum_absorption_hours_by_trade` are parameters: this
+    module has no access to `sim/engine/`'s own tree state and does not
+    import it (see the module docstring's STANDALONE section). A caller
+    that DOES have the tree in scope computes the reached set once per
+    year and passes it in; the empty default is exactly "a civilisation
+    that has reached no technology at all yet" - day one of the scenario
+    this whole project simulates, and what `WALKABLE_TRADES` below is
+    fixed to.
+
+    THE GENUINE LIMIT STAYS A LIMIT. A trade whose every recipe sits
+    behind a node nobody has reached (an `electrician` recipe gated behind
+    `dynamo`) is not reachable before `dynamo` is, whatever `reached_node_
+    ids` this function is called with elsewhere - "you can't just make a
+    nuclear engineer in Rome" (the module docstring's stakeholder point 8)
+    is exactly as true after this function exists as before it. What
+    changes is that the boundary is now READ OFF THE TECH TREE, per trade
+    and per recipe, instead of guessed once for the whole module and
+    frozen into a two-name list with no way to grow as a civilisation
+    actually reaches new nodes.
+
+    LABELLED, NOT A MEASUREMENT (CLAUDE.md SS3.4). Treating "this recipe's
+    own technology gate is satisfied" as sufficient for "a person could
+    pick up this trade without an existing master" folds two different
+    claims into one - what technique is KNOWN, and whether it can be
+    TAUGHT without a living practitioner - because this project has no
+    separate data for the second (WHAT THIS DOES NOT MODEL item 3 already
+    admits skill transfer is a stated rule, not measured data). It is
+    still a strictly more defensible boundary than a hand-picked list: it
+    is measured against the SAME tech tree that gates whether a recipe can
+    run at all, it moves as the tree is reached instead of staying frozen
+    at two names forever, and it cannot be tuned to make any one trade
+    walkable without editing data/production/ itself - exactly where
+    CLAUDE.md SS3.1 says a boundary like this belongs.
+    """
+    production = production if production is not None else production_data()
+    reached = set(reached_node_ids)
+    reachable_trades = set()
+    for entry in production.values():
+        gate = entry.get("requires_node", _UNCLASSIFIED_TECHNOLOGY_GATE)
+        if gate is _UNCLASSIFIED_TECHNOLOGY_GATE:
+            continue   # unclassified - "no data" claims no walkability either way
+        if gate is not None and gate not in reached:
+            continue   # a real gate, and it has not been reached
+        for trade in (entry.get("labour_hours") or {}):
+            reachable_trades.add(trade)
+        for capital_item in entry.get("capital") or []:
+            for trade in (capital_item.get("build_labour_hours") or {}):
+                reachable_trades.add(trade)
+    return frozenset(reachable_trades)
+
+
+WALKABLE_TRADES = trades_reachable_given_technology()
+# `trades_reachable_given_technology` evaluated with NO nodes reached at
+# all - a civilisation on day one of this project's own scenario. This is
+# the module's DEFAULT for `Workforce.step`'s `walkable_trades=` parameter,
+# COMPUTED from data/production/'s own `requires_node` field rather than
+# hand-picked: whatever the data says needs no technology at all comes out
+# walkable, and nothing else does, with no list for a future editor to
+# remember to update as data/production/ grows (this is measurably a
+# bigger set than the old hand-written {"labourer", "miner"} - it now also
+# contains, among others, `smith`, because data/production/10_ferrous.
+# json's own `iron_sheet_kg` needs no invented technology to hand-forge a
+# sheet from a bar; see the module docstring's stakeholder point 8 and
+# SCENARIO 5 below). Everything not in this set defaults to requiring the
+# master-and-apprentice pathway WHAT THIS DOES NOT MODEL item 2 describes,
+# and can only start from zero via a caller-supplied `minimum_absorption_
+# hours_by_trade` (sim/engine/labour.py's own `TRADES_ABSENT`/`trade_
+# schools` machinery is the natural source of that number).
+#
+# A caller that HAS the tech tree in scope (sim/engine/ - this module never
+# does, see STANDALONE) grows this default as the civilisation reaches new
+# nodes, by calling `trades_reachable_given_technology(reached_node_ids)`
+# itself and handing the result to `Workforce.step` as `walkable_trades=` -
+# the same seam the worked example's own synthetic `adventurer` trade
+# already used to extend WALKABLE_TRADES by hand (SCENARIO 3 below), now
+# generalised from "a caller invents a name" to "a caller reads the tree".
+# A caller wiring in a trade no data/production/ entry names at all (that
+# same `adventurer`, for a sudden and genuinely unskilled calling this
+# project's data has never heard of) still passes its own extra name in by
+# hand - this frozenset is a default for what the DATA already says, not a
 # closed list the mechanism enforces.
 
 TRADE_SKILL_FAMILY = {
@@ -871,19 +1024,33 @@ class Workforce(object):
              without the mechanism ever exceeding a stated ceiling.
 
           3. The BASIS that rate applies to is the trade's own `hours_
-             before`, UNLESS the trade is in `walkable_trades` (general
-             manual labour needing no master - see WALKABLE_TRADES) AND its
-             own `hours_before` is smaller than `walkable_trade_seed_
+             before`, UNLESS the trade is in `walkable_trades` (a trade the
+             tech tree already has a no-master way into - see WALKABLE_
+             TRADES and `trades_reachable_given_technology`), in which case
+             the basis is `max(hours_before, seed_reference)` - the LARGER
+             of the trade's own current size or `walkable_trade_seed_
              share_of_economy_hours` times the WHOLE economy's current
-             hours, in which case that seed reference is used instead. This
-             is the direct answer to the stakeholder's point 5: a walkable
-             trade at exactly zero hours has a basis of zero from its own
-             size but a positive one from the seed reference, so it CAN
-             start moving; a non-walkable trade at zero hours still cannot,
-             which `Workforce.step`'s own `minimum_absorption_hours_by_
-             trade` remains the seam for (see WHAT THIS DOES NOT MODEL item
-             2) - a real constraint (nobody can apprentice under a master
-             who does not exist yet), not an oversight.
+             hours, not a hard switch from one to the other. Taking the
+             maximum, rather than switching the instant `hours_before`
+             turns positive, is itself the answer to a second worked
+             question (the stakeholder's own suspicion that a percentage
+             of the whole economy in year one and a percentage of the
+             trade's own, still-small size in year two would make year two
+             move LESS): so long as the trade is smaller than the seed
+             reference, the seed reference stays the basis and the amount
+             moved in stays flat rather than collapsing - `python3 -m sim.
+             world.labour_market`'s SCENARIO 5 and `sim.tests.test_labour_
+             market.py`'s `test_seed_reference_basis_persists_while_the_
+             trade_is_smaller_than_it` both measure this directly. This is
+             also the direct answer to the stakeholder's point 5: a
+             walkable trade at exactly zero hours has a basis of zero from
+             its own size but a positive one from the seed reference, so
+             it CAN start moving; a non-walkable trade at zero hours still
+             cannot, which `Workforce.step`'s own `minimum_absorption_
+             hours_by_trade` remains the seam for (see WHAT THIS DOES NOT
+             MODEL item 2) - a real constraint (nobody can apprentice under
+             a master who does not exist yet, or pick up a technique the
+             tree has not reached), not an oversight.
 
           4. Each trade's outflow or inflow is that rate times that basis,
              capped at the trade's own actual gap either way (a trade
@@ -1481,3 +1648,58 @@ if __name__ == "__main__":
              outcome_4.periods_used, outcome_4.workforce.hours_by_trade["labourer"],
              grown_hours_required["labourer"],
              100.0 * outcome_4.workforce.hours_by_trade["labourer"] / grown_hours_required["labourer"]))
+
+    print()
+    print("=" * 78)
+    print("SCENARIO 5: AN EARLY CIVILISATION WITH ZERO SMITHS WANTS IRON "
+         "GOODS - THE STAKEHOLDER'S BLACKSMITH QUESTION, ANSWERED WITH A "
+         "MEASUREMENT")
+    print("=" * 78)
+    # Directly answers "is the current labour market making it impossible
+    # for new trades to appear ... does this make blacksmiths impossible?"
+    # A civilisation on day one of this project's own scenario (NO tech
+    # reached yet - trades_reachable_given_technology()'s own default,
+    # which is exactly what WALKABLE_TRADES already equals) that has NEVER
+    # had a smith still has `smith` in WALKABLE_TRADES, because data/
+    # production/10_ferrous.json's own `iron_sheet_kg` needs no invented
+    # technology at all (`requires_node: null` - hammering an iron bar
+    # into a sheet is mechanical, learnable by trial with a hammer and a
+    # fire, not a secret only an existing smith can pass down) - a real,
+    # measured fact about this project's own data, not an assumption this
+    # module makes about smiths.
+    print("`smith` in WALKABLE_TRADES (no technology reached yet): %s" % (
+        "smith" in WALKABLE_TRADES,))
+    early_civilisation_workforce = {"labourer": 200_000.0, "smith": 0.0}
+    iron_goods_output_levels = {"iron_sheet_kg": 100_000.0}
+    iron_goods_hours_required, iron_goods_contributors = labour_hours_required_by_trade(
+        iron_goods_output_levels, production)
+    print("Wanting 100,000 kg/year of hand-forged iron sheet requires %.0f h "
+         "of smith labour a year (%r) - and this early civilisation starts "
+         "with EXACTLY ZERO smiths." % (
+             iron_goods_hours_required.get("smith", 0.0),
+             iron_goods_contributors.get("smith"),))
+    outcome_5 = solve_to_stable_allocation(
+        early_civilisation_workforce, iron_goods_hours_required, tolerance_hours=1.0)
+    print("smith, year by year, from a standing start of nobody:")
+    shown_periods_5 = sorted(set(min(index, outcome_5.periods_used - 1)
+                                for index in (0, 1, 2, 4, 9, outcome_5.periods_used - 1)))
+    for year_index in shown_periods_5:
+        print(" year %2d: %s" % (year_index + 1, hours_line(outcome_5.history[year_index]["smith"])))
+    final_smith_hours = outcome_5.workforce.hours_by_trade.get("smith", 0.0)
+    smith_required = iron_goods_hours_required.get("smith", 0.0)
+    print("Stabilised after %d year(s) (stabilized=%s): smith reaches %.0f h "
+         "against %.0f h required (%.1f%% closed) - starting from a "
+         "civilisation that had never had one. Under the OLD, hand-written "
+         "WALKABLE_TRADES = {\"labourer\", \"miner\"}, `smith` would have "
+         "stayed at exactly 0.0 h forever, however large this demand grew: "
+         "that is the defect the stakeholder's question named, and this "
+         "run is the measurement that it is fixed." % (
+             outcome_5.periods_used, outcome_5.stabilized, final_smith_hours,
+             smith_required, 100.0 * final_smith_hours / smith_required))
+    print("The genuine limit the stakeholder also named is still real: "
+         "`optician` (SCENARIO 3 above) has NO data/production/ entry at "
+         "all, so it is unclassified rather than gate-satisfied, and stays "
+         "out of WALKABLE_TRADES at any reached_node_ids - this project "
+         "records nothing that would make it otherwise. The line between "
+         "the two is now the tech tree's own `requires_node` field, not a "
+         "hand-written list of exactly two names.")
