@@ -112,13 +112,13 @@ def cpm(nodes, need):
     order says (see the module docstring).
     """
     order = topo_order(nodes, need)
-    earliest_start, ef = {}, {}
+    earliest_start, earliest_finish = {}, {}
     for node_id in order:
         node = nodes[node_id]
-        pred_ef = [ef[prereq] for prereq in node["pre"] if prereq in need]
+        pred_ef = [earliest_finish[prereq] for prereq in node["pre"] if prereq in need]
         earliest_start[node_id] = max(pred_ef) if pred_ef else 0.0
-        ef[node_id] = earliest_start[node_id] + duration(node)
-    total = max(ef.values()) if ef else 0.0
+        earliest_finish[node_id] = earliest_start[node_id] + duration(node)
+    total = max(earliest_finish.values()) if earliest_finish else 0.0
     # Dependants WITHIN `need`, computed once rather than rescanning every
     # node for every k - closure(nodes, goal) is an ANCESTOR set, so every
     # member other than the goal itself has at least one dependant also in
@@ -128,13 +128,13 @@ def cpm(nodes, need):
         for prereq in nodes[dependant_id]["pre"]:
             if prereq in need:
                 deps[prereq].append(dependant_id)
-    ls, latest_finish, slack = {}, {}, {}
+    latest_start, latest_finish, slack = {}, {}, {}
     for node_id in reversed(order):
-        dep_ls = [ls[dependant_id] for dependant_id in deps[node_id]]
+        dep_ls = [latest_start[dependant_id] for dependant_id in deps[node_id]]
         latest_finish[node_id] = min(dep_ls) if dep_ls else total
-        ls[node_id] = latest_finish[node_id] - duration(nodes[node_id])
-        slack[node_id] = ls[node_id] - earliest_start[node_id]
-    return {"es": earliest_start, "ef": ef, "ls": ls, "lf": latest_finish, "slack": slack, "total": total}
+        latest_start[node_id] = latest_finish[node_id] - duration(nodes[node_id])
+        slack[node_id] = latest_start[node_id] - earliest_start[node_id]
+    return {"es": earliest_start, "ef": earliest_finish, "ls": latest_start, "lf": latest_finish, "slack": slack, "total": total}
 
 
 # SORTING BY (slack, earliest start) IS NOT ITSELF A TOPOLOGICAL ORDER, and
@@ -237,7 +237,7 @@ def pick_side_branches(nodes, need, s, limit):
         if net <= 0:
             continue
         cands.append(((net / max(1.0, node["_total_cost"])), node_id))
-    cands.sort(key=lambda x: (-x[0], nodes[x[1]]["_total_cost"], x[1]))
+    cands.sort(key=lambda candidate: (-candidate[0], nodes[candidate[1]]["_total_cost"], candidate[1]))
     return [node_id for _, node_id in cands[:limit]]
 
 
@@ -287,7 +287,7 @@ def pick_staffing(nodes, need, s):
         if nodes[key]["cat"] == "unobtainable" or s._is_foreign_only(key):
             continue
         want.append(key)
-    want.sort(key=lambda k: (nodes[k]["_total_cost"], k))
+    want.sort(key=lambda node_id: (nodes[node_id]["_total_cost"], node_id))
     return want
 
 
@@ -406,9 +406,9 @@ def _capture_winner_order(nodes, goal, need, results):
     won = [run for run in results if run.goal_year]
     if not won:
         return None, None
-    best = min(won, key=lambda r: r.goal_year)
+    best = min(won, key=lambda run: run.goal_year)
     seq = sorted((node_id for node_id in best.done if node_id in need and node_id not in best.granted),
-                 key=lambda k: (best.done_year.get(k, 0), k))
+                 key=lambda node_id: (best.done_year.get(node_id, 0), node_id))
     return seq, best
 
 

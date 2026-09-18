@@ -318,8 +318,8 @@ def cmd_merge(a):
         for e in errs[:40]:
             print("   " + e)
         print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
-        for c in collisions:
-            print("   COLLISION " + c)
+        for collision in collisions:
+            print("   COLLISION " + collision)
         print("\nFix the branch files so each id has exactly one definition (rename one "
               "side, delete a stale duplicate, or fold them into a single node), then "
               "re-run merge. Nothing was written.")
@@ -581,18 +581,18 @@ def cmd_judge(a):
     for code, value in defects.most_common():
         print("   %-12s %4d  (%.0f%% of nodes)" % (code, value, 100.0 * value / len(nodes)))
     print("\nWORST NODES")
-    worst = sorted(results.items(), key=lambda x: x[1][0])[:20]
+    worst = sorted(results.items(), key=lambda entry: entry[1][0])[:20]
     for node_id, (score, node_defects) in worst:
         print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects[:4])))
     if a.grade:
         floor = "FDCBA".index(a.grade.upper())
         print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
-        for node_id, (score, node_defects) in sorted(results.items(), key=lambda x: x[1][0]):
+        for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
             if "FDCBA".index(grade(score)) <= floor:
                 print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects)))
     if a.full:
         print("\nFULL REPORT")
-        for node_id, (score, node_defects) in sorted(results.items(), key=lambda x: x[1][0]):
+        for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
             if node_defects:
                 print("\n%s  %d %s" % (node_id, score, grade(score)))
                 for code, message in node_defects:

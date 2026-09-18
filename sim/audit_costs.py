@@ -189,9 +189,9 @@ def report(a, show_materials=False):
     print("INPUT SIDE - what every process consumes. Already physical:")
     for field, unit in (("lab", "hours by trade"), ("mat", "kg / units"),
                     ("ph", "founder hours")):
-        c = a["fields_populated"][field]
+        count = a["fields_populated"][field]
         print("  %-4s %-16s %5d nodes  %5.1f%%  %s"
-              % (field, unit, c, 100.0 * c / node_count, _bar(c / node_count)))
+              % (field, unit, count, 100.0 * count / node_count, _bar(count / node_count)))
     print()
 
     print("OUTPUT SIDE - what anything produces:")
@@ -227,32 +227,32 @@ def report(a, show_materials=False):
     print()
 
     print("STILL PRICED FROM A BOOK - where the denarii come from today:")
-    cb = a["cost_base_denarii"]
-    total = sum(cb.values()) or 1.0
+    cost_base = a["cost_base_denarii"]
+    total = sum(cost_base.values()) or 1.0
     for cost_key, label in (("materials", "materials (mat, physical)"),
                      ("capital_lump", "capital lump (cap, denarii)"),
                      ("labour", "hired labour (lab, physical)")):
         print("  %-28s %14s  %5.1f%%  %s"
-              % (label, format(cb[cost_key], ",.0f"), 100.0 * cb[cost_key] / total,
-                 _bar(cb[cost_key] / total)))
+              % (label, format(cost_base[cost_key], ",.0f"), 100.0 * cost_base[cost_key] / total,
+                 _bar(cost_base[cost_key] / total)))
     print("  %-28s %14s" % ("TOTAL", format(total, ",.0f")))
     print()
     print("  Materials and labour are already physical quantities, so pricing")
     print("  them endogenously converts %.1f%% of the cost base without editing"
-          % (100.0 * (cb["materials"] + cb["labour"]) / total))
+          % (100.0 * (cost_base["materials"] + cost_base["labour"]) / total))
     print("  a single node. The capital lump is %.1f%% and needs converting to a"
-          % (100.0 * cb["capital_lump"] / total))
+          % (100.0 * cost_base["capital_lump"] / total))
     print("  bill of buildings, tools and land.")
     print()
 
-    c = a["price_confidence"]
-    confidence_total = sum(c.values()) or 1
+    confidence = a["price_confidence"]
+    confidence_total = sum(confidence.values()) or 1
     print("CONFIDENCE IN THE BOOK ITSELF (data/prices.json):")
     for grade, meaning in (("A", "well attested"),
                            ("B", "probable, contested in detail"),
                            ("C", "the author's own estimate")):
         print("  %s  %-32s %4d  %5.1f%%"
-              % (grade, meaning, c.get(grade, 0), 100.0 * c.get(grade, 0) / confidence_total))
+              % (grade, meaning, confidence.get(grade, 0), 100.0 * confidence.get(grade, 0) / confidence_total))
     print()
 
     if show_materials:

@@ -79,9 +79,9 @@ def main():
             if match:
                 cur = match.group(1)
                 continue
-            a = re.match(r"^\s*(?:\*\*)?Also covers:?(?:\*\*)?\s*(.+)$", line, re.I)
-            if a and cur:
-                for tid in re.findall(r"[A-Za-z][A-Za-z0-9_]{2,}", a.group(1)):
+            also_covers_match = re.match(r"^\s*(?:\*\*)?Also covers:?(?:\*\*)?\s*(.+)$", line, re.I)
+            if also_covers_match and cur:
+                for tid in re.findall(r"[A-Za-z][A-Za-z0-9_]{2,}", also_covers_match.group(1)):
                     anchors[filename].add(tid)
                     slugs[filename].setdefault(tid, slugs[filename].get(cur, cur))
 
@@ -93,7 +93,7 @@ def main():
     broken_file, broken_anchor, prose = [], [], []
     bydesign, gap = [], []
     for node in nodes:
-        filename, _, a = node["kb"].partition("#")
+        filename, _, anchor = node["kb"].partition("#")
         filename = os.path.basename(filename)
         if not filename:
             # Capability rungs, materials and unobtainables are DEFINED by the
@@ -102,10 +102,10 @@ def main():
             (bydesign if node["cat"] in ("capability", "material", "unobtainable")
              else gap).append(node["id"])
         elif filename in parent_files:
-            prose.append((node, filename, a))
+            prose.append((node, filename, anchor))
         elif filename in anchors:
-            by_file[filename].append((node, a))
-            if a and a not in anchors[filename]:
+            by_file[filename].append((node, anchor))
+            if anchor and anchor not in anchors[filename]:
                 broken_anchor.append((node["id"], node["kb"]))
         else:
             broken_file.append((node["id"], node["kb"]))
@@ -142,7 +142,7 @@ def main():
             "strategy, not a procedure, so it lives outside the recipe library.",
             "",
             "| Node | Your hours | Documented in |", "|---|---:|---|"]
-    for node, filename, a in sorted(prose, key=lambda x: (x[0]["id"], x[0]["ph"])):
+    for node, filename, anchor in sorted(prose, key=lambda entry: (entry[0]["id"], entry[0]["ph"])):
         out.append("| `%s` | %s | [`%s`](../%s) |" %
                    (node["id"], f"{node['ph']:,}", filename, filename))
 
@@ -156,9 +156,9 @@ def main():
             continue
         out += ["### %s" % filename, "",
                 "| Node | Your hours | Recipe |", "|---|---:|---|"]
-        for node, a in sorted(by_file[filename], key=lambda x: (x[0]["id"], x[0]["ph"])):
-            link = ("[`%s`](%s#%s)" % (a, filename, slugs[filename].get(a, a))) if a else "_(module has no anchor)_"
-            mark = "" if (not a or a in anchors[filename]) else " **BROKEN**"
+        for node, anchor in sorted(by_file[filename], key=lambda entry: (entry[0]["id"], entry[0]["ph"])):
+            link = ("[`%s`](%s#%s)" % (anchor, filename, slugs[filename].get(anchor, anchor))) if anchor else "_(module has no anchor)_"
+            mark = "" if (not anchor or anchor in anchors[filename]) else " **BROKEN**"
             out.append("| `%s` | %s | %s%s |" %
                        (node["id"], f"{node['ph']:,}", link, mark))
         out.append("")
@@ -184,8 +184,8 @@ def main():
 
     out += ["## Documentation coverage", "",
             "| status | nodes |", "|---|---:|",
-            "| linked to a specific recipe entry | %d |" % sum(1 for filename in files for node, a in by_file.get(filename, []) if a),
-            "| linked to a domain module, no specific entry | %d |" % sum(1 for filename in files for node, a in by_file.get(filename, []) if not a),
+            "| linked to a specific recipe entry | %d |" % sum(1 for filename in files for node, anchor in by_file.get(filename, []) if anchor),
+            "| linked to a domain module, no specific entry | %d |" % sum(1 for filename in files for node, anchor in by_file.get(filename, []) if not anchor),
             "| documented in a top-level prose file | %d |" % len(prose),
             "| no link BY DESIGN (capability rungs, materials, unobtainables) | %d |" % len(bydesign),
             "| **undocumented, a real gap** | **%d** |" % len(gap), ""]

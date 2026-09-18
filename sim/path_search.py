@@ -246,7 +246,7 @@ def diagnose_capital_trap(s, need, min_closure_frac=0.9):
         return None
     if s.scholars > 1.0 or s.artisans > 1.0:
         return None
-    done_frac = sum(1 for k in need if k in s.done) / max(1, len(need))
+    done_frac = sum(1 for node_id in need if node_id in s.done) / max(1, len(need))
     if done_frac >= min_closure_frac:
         return None
     return {"capital": s.capital, "scholars": s.scholars, "artisans": s.artisans,
@@ -318,7 +318,7 @@ def spt_within_slack_bands(order, nodes, need, c, scarce):
         while band_end < count and order[band_end] in need and round(slack.get(order[band_end], 0.0), 3) == band:
             group.append(order[band_end])
             band_end += 1
-        group.sort(key=lambda x: (0, _scarce_hours(nodes, x, scarce)) if _needs(nodes, x, scarce)
+        group.sort(key=lambda node_id: (0, _scarce_hours(nodes, node_id, scarce)) if _needs(nodes, node_id, scarce)
                                   else (1, 0.0))
         out.extend(group)
         i = band_end
@@ -362,7 +362,7 @@ def grow_supply(nodes, goal, need, s0, cur_order, cur_extras, civ, horizon,
     tried = []
     for node_id in candidates:
         trial_extras = extras + [node_id]
-        spine = [x for x in cur_order if x in need]
+        spine = [node_id for node_id in cur_order if node_id in need]
         trial_order = _planner.interleave(spine, trial_extras, side_branch_every)
         full = _planner._repaired(nodes, goal, trial_order)
         sim = deterministic_sim(nodes, full, goal, civ, horizon)
@@ -556,7 +556,7 @@ def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
                                     rounds, horizon, backlog_ratio,
                                     seed_order=seed_order,
                                     grow_supply_moves=not no_grow_supply, log=log)
-    tree, _p, nodes, _w, _g = load()
+    tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, goal)
     last = history[-1]
     grown = [round_entry for round_entry in history if round_entry["grow_supply_tried"]]

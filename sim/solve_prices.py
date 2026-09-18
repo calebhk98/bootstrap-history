@@ -1922,7 +1922,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
         for recipe_id in recipe_ids_in_order:
             entry = production_entries[recipe_id]
             outputs = entry.get("outputs") or {}
-            if not outputs or not all(o in resolvable_materials for o in outputs):
+            if not outputs or not all(output_material in resolvable_materials for output_material in outputs):
                 continue
             result = recipe_cost_and_allocation(
                 recipe_id, entry, prices, wage_by_trade,
@@ -2400,8 +2400,8 @@ def main(argv=None):
         return 0
 
     if arguments.compare:
-        book_prices = {k: v["p"] for k, v in prices_json["purchase_prices_denarii"].items()
-                       if not k.startswith("_")}
+        book_prices = {material: entry["p"] for material, entry in prices_json["purchase_prices_denarii"].items()
+                       if not material.startswith("_")}
         unskilled_wage_denarii_per_hour = \
             prices_json["wage_rates_denarii_per_hour"][NUMERAIRE_TRADE]["rate"]
         rows = []
@@ -2453,10 +2453,10 @@ def main(argv=None):
           % (NUMERAIRE_TRADE, arguments.civ or DEFAULT_LAND_CIVILIZATION))
     print()
     if rent_hours_per_kg_by_material:
-        ore_rent = {k: v for k, v in rent_hours_per_kg_by_material.items()
-                   if k in RENT_BEARING_ORE_MATERIALS}
-        land_rent = {k: v for k, v in rent_hours_per_kg_by_material.items()
-                    if k not in RENT_BEARING_ORE_MATERIALS}
+        ore_rent = {material: rent_hours for material, rent_hours in rent_hours_per_kg_by_material.items()
+                   if material in RENT_BEARING_ORE_MATERIALS}
+        land_rent = {material: rent_hours for material, rent_hours in rent_hours_per_kg_by_material.items()
+                    if material not in RENT_BEARING_ORE_MATERIALS}
         print("RENT NOW PRICED for %d of the %d ore materials named in "
               "RENT_BEARING_ORE_MATERIALS this era's gate leaves reachable "
               "(the rest fell out of the gate along with every recipe that "
