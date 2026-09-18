@@ -203,15 +203,24 @@ SLOW_TOPICS = {
     # years, to see a policy or a hazard option actually play out long run
     # rather than just accept in year one.
     "round2_policy_hazards_options",
-    # 8.57s, 7.9% - round eight's fixes are checked by driving the real
-    # protocol end to end: 25 `proto()` subprocess sessions in this one file,
-    # and a subprocess spawn is not something this test file can make
-    # cheaper.
-    "round8_fixes",
-    # 8.39s, 7.7% - round nine's fixes are checked the same way: 11
-    # `proto()` subprocess sessions, most of them multi-command sessions
-    # rather than one-shot calls.
-    "round9",
+    # `round8_fixes` (8.57s) and `round9` (8.39s) USED TO BE LISTED HERE AND
+    # ARE GONE, because the topics themselves are gone: both were named for
+    # the development round that produced them rather than for anything they
+    # test, and their checks now live in the fifteen subject-named topics
+    # that replaced them. Re-timed after that move, the most expensive piece
+    # either of them left behind is player_guidance_commands at 5.29s, then
+    # knowledge_risk_and_sacking at 4.10s, and the other thirteen are under
+    # two seconds each. Neither is worth opting 394 checks out of a default
+    # run, so nothing inherited the slow tag: regrouping by subject spread
+    # the subprocess cost thin enough that the concentration this set exists
+    # to manage stopped existing. The default suite went from 45s to 62s in
+    # exchange, which is those checks now running every time instead of only
+    # under --slow.
+    #
+    # A name in here that matches no topic is silent: it skips nothing and
+    # says nothing, which is exactly how these two went on looking like they
+    # were saving time after the topics had been deleted underneath them.
+    # sim/tests/test_suite_portability.py now fails if that happens again.
     # 8.18s, 7.5% - Complaints/47's fix (weather drawn per home region and
     # pooled by cultivable-land share, not one draw for a whole civilisation)
     # can only be told apart from the old single-draw behaviour by actually

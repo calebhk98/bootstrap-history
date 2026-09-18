@@ -3024,8 +3024,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "measured.")
 
     def step(self):
-        cfg = self.cfg
-        year = self.year
         # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED. `state` prints the
         # chance of being denounced from the CURRENT scandal, and scandal moves
         # DURING the step - so a break tester read "scandal 21.9 ... 0% chance
@@ -3036,6 +3034,39 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # this is the only place that knows both.
         self.household.scandal_last_year = self.household.scandal
 
+        # step() is a readable sequence of phase calls, in the same order the
+        # phases always ran in; the phases themselves are below, and each still
+        # reads and writes exactly the self.* state it always did. Only a
+        # handful of values flow forward between phases as arguments/returns
+        # rather than through self.*: pool and hired_left (start_projects into
+        # progress), and remaining/remaining_after_projects/hours_effective_total
+        # (progress into wage_fallback and reputation).
+        self._step_apprenticeships()          # 0.  people whose apprenticeship ended
+        self._step_staff()                     # 1.  staff, attrition
+        self._step_money()                     # 2.  money (and 2c. threshold goals)
+        if self._step_dated_shocks():          # 3.  dated shocks
+            return
+        self._step_teach_trades()              # 4a. teach the trades this society does not have
+        self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
+        pool, hired_left = self._step_start_projects()   # 4b. start new projects
+        self._step_materials()                 # 4c. materials
+        # 5. progress, director hours
+        remaining, remaining_after_projects, hours_effective_total = (
+            self._step_progress(pool, hired_left))
+        # 5b. if there is no work and no money, take a job
+        remaining = self._step_wage_fallback(remaining)
+        # 6. reputation, familiarity, protection, scandal
+        self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
+        self._step_bondage()                   # 6b. serving out a debt
+        self._step_founder_mortality()          # 7. founder mortality
+
+        # 8. random events
+        if self.events and not self.dead_reason:
+            self._random_events(self.year)
+
+        self.year += 1
+
+    def _step_apprenticeships(self):
         # 0. PEOPLE WHOSE APPRENTICESHIP ENDED. This block used to sit at the
         #    very BOTTOM of step(), after the year's work had already been
         #    handed out - so machinists promised "ready in 102" were not usable
@@ -3073,7 +3104,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self.household.training = still
             self._resync_pools()
 
-
+    def _step_staff(self):
         # 1. staff. ATTRITION IS UNCONDITIONAL: people die, are poached and grow
         #    old whatever your policy is. GROWTH IS NOT. It used to be, and that
         #    was the same fault as buying people without being asked: a player
@@ -3119,7 +3150,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # The rate is right (measured at 0.825 survival over five years against
         # 0.837 expected, across forty seeds); the reporting was missing.
         if _lost:
-            self.household.log.append((year, "you lose %s to death and to better offers"
+            self.household.log.append((self.year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                          for trade_id, count in sorted(_lost.items()))))
         self._resync_pools()
@@ -3196,7 +3227,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.household.log.append((year, "you cannot pay everyone: %.1f of your staff "
+                self.household.log.append((self.year, "you cannot pay everyone: %.1f of your staff "
                                      "leave for work that pays" % gone))
         # NOT `capital > 0`. This is the same catch-22 auto_open_ventures was
         # already caught by and had fixed: a household in arrears could never
@@ -3338,13 +3369,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _whole = int(self.household.directors_extra)
         if _whole > int(getattr(self.household, "_said_deputies", 0)):
             self.household._said_deputies = _whole
-            self.household.log.append((year, "you now have %d deput%s directing work in "
+            self.household.log.append((self.year, "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
                                 "{:,.0f}".format(self.director_pool()),
                                 "{:,.0f}".format(self.cfg["founder_hours_per_year"]))))
 
+    def _step_money(self):
         # 2. money
         self.economy = self.economy_index()
         living_cost = self.living_cost()
@@ -3381,17 +3413,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # short and closed again. See reopen_restaffed_ventures's own
         # docstring for why this is not gated by auto_open - three
         # playtesters spent most of a run on the treadmill this closes.
-        self.reopen_restaffed_ventures(year)
-        self.close_unstaffed_ventures(year)
+        self.reopen_restaffed_ventures(self.year)
+        self.close_unstaffed_ventures(self.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
         if self.policy.get("auto_open", not self.manual):
             self.auto_open_ventures()
-        self.charge_interest(year)
+        self.charge_interest(self.year)
         if self.policy.get("auto_shed", True):
-            self.shed_loss_makers(year)
-        self.warn_near_the_limit(year)
-        self.enforce_credit_limit(year)
+            self.shed_loss_makers(self.year)
+        self.warn_near_the_limit(self.year)
+        self.enforce_credit_limit(self.year)
 
         # INSOLVENCY. A playtester ran to minus 4.12 million denarii over eighty
         # years and nothing whatever happened: no event, no block, no attrition.
@@ -3432,7 +3464,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 self.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.household.artisans * (1.0 - bleed))
                 self.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
                 if self.household.insolvent_years in (3, 6, 12, 25):
-                    self.household.log.append((year, "IN ARREARS for %d years: staff are leaving "
+                    self.household.log.append((self.year, "IN ARREARS for %d years: staff are leaving "
                                          "because you cannot pay them" % self.household.insolvent_years))
                 # ABANDONMENT, and this is what makes insolvency survivable.
                 # The failed Norse run carried 3,920 denarii of upkeep against
@@ -3485,7 +3517,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                         # the creditors' seizure below: a bare count does not
                         # tell a player what they lost or why it later
                         # reappeared mothballed rather than gone for good.
-                        self.household.log.append((year, "ABANDONED %d works you could no longer "
+                        self.household.log.append((self.year, "ABANDONED %d works you could no longer "
                                              "maintain; they have fallen into disrepair: %s"
                                              % (len(shed), ", ".join(shed))))
         else:
@@ -3503,12 +3535,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             if self.household.capital > 6000 and self.household.artisans < 12 and self.running("workshop_first"):
                 got = self.buy_slaves(min(6, int(self.household.capital // 1500)))
                 if got:
-                    self.household.log.append((year, "bought %d people for the workshop" % got))
+                    self.household.log.append((self.year, "bought %d people for the workshop" % got))
         if self.policy.get("auto_manumit", not self.manual) and self.household.slaves:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
                 freed = self.manumit(max(1, self.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
-                    self.household.log.append((year, "freed %d people" % freed))
+                    self.household.log.append((self.year, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
         if self.output_factor < 1.0:
@@ -3530,14 +3562,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
         # to add a fresh deficit - see _demographic_recovery for why.
-        self._demographic_recovery(year)
+        self._demographic_recovery(self.year)
         # Literacy and taught-trade naturalisation move on the same kind of
         # slow, generational clock as population above - see
         # SocietyMixin.advance_society (society.py) for the mechanism. Run
         # here, before 4a2's auto_train reads literate_capacity() below, so
         # a year's schooling gain is visible to this same year's teaching
         # decisions rather than lagging a full step behind them.
-        self.advance_society(year)
+        self.advance_society(self.year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
         # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
         # using one) is never built - start_reason refuses it outright -
@@ -3546,14 +3578,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # same measurement usually depends on has moved for the year, so a
         # threshold crossed this year is seen this year rather than lagging
         # a full step behind it.
-        self._check_win_conditions(year)
+        self._check_win_conditions(self.year)
 
+    def _step_dated_shocks(self):
         # 3. dated shocks
         if self.events:
-            self._shocks(year)
+            self._shocks(self.year)
             if self.dead_reason:
-                return
+                return True
+        return False
 
+    def _step_teach_trades(self):
         # 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to
         #      do this for itself or half the tree is unreachable; a player does
         #      it with `train`, or turns this on.
@@ -3667,7 +3702,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # half of every year for ever.
             _taught = self.household.last_taught
             want = {trade_id: value for trade_id, value in want.items()
-                    if year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
+                    if self.year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
             # AND ONLY IF YOU CAN PAY THEM. train() checked hours, literacy and
             # household room and never once looked at money - so a Rome
             # household earning 1,232 a year taught itself two engineers at
@@ -3699,12 +3734,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # twenty-five years, so the run went on needing machinists and
                 # never asked again.
                 if ok:
-                    _taught[trade_id] = year
-                    self.household.log.append((year, "you begin teaching the first %ss this "
+                    _taught[trade_id] = self.year
+                    self.household.log.append((self.year, "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
                                      "more" % trade_id))
 
+    def _step_standing_work_directive(self):
         # 4a(ii). THE STANDING "WORK" DIRECTIVE. `work` (protocol.py) sells
         # hours for wages the moment a player types it; `allocate` lets them
         # say "sell N hours a year this way" ONCE and have it happen every
@@ -3741,7 +3777,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # either went unsold or went somewhere the player never
                 # chose.
                 if _wd - (_already + _got) > 1.0:
-                    self.household.log.append((year, "DIRECTED HOURS UNUSED: your standing "
+                    self.household.log.append((self.year, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
                                          "'allocate' changes or clears it"
@@ -3754,6 +3790,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                         "nobody here will pay for that trade "
                                         "any longer" )))
 
+    def _step_start_projects(self):
         # 4b. start new projects
         pool = max(0.0, self.director_pool() - self.director_hours_committed())
         hired_left = self.hired_cap()
@@ -3768,7 +3805,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # human or a script. Everything below this block (materials, staff,
         # money, hazards, the calendar) is untouched by `manual` and keeps
         # running exactly as before.
-        if not self.manual and year >= self.household.credit_frozen_until:
+        if not self.manual and self.year >= self.household.credit_frozen_until:
             # More directors means more things in hand at once, and a big trained staff
             # lets routine work proceed without the founder watching it.
             # How many things can be in hand at once. I tried doubling this on
@@ -3880,7 +3917,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                       cost_left=self.project_cost(node_id),
                                       lab_left=dict(node["lab"]))
                 _non_bountied_active += 1
+        return pool, hired_left
 
+    def _step_materials(self):
         # 4c. materials. Buy the woodland and dig the beds BEFORE the shortage
         #     bites, which is what a competent manager does and what the old
         #     model never had to think about at all.
@@ -3976,7 +4015,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 spend = min(self.household.capital * 0.05, 2000)
                 self.household.capital -= spend
                 self.household.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
-                self.household.log.append((year, "laid down %d square metres of nitre bed "
+                self.household.log.append((self.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
         if thr < 0.6 and self.household.binding:
@@ -3984,10 +4023,407 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # work at 5% of plan" for thirty years and could not find out what
             # saltpetre was for, who wanted it, or what would fix it. A number
             # that low with no remedy attached reads as the game being stuck.
-            self.household.log.append((year, "SHORT OF %s: work running at %d%% of plan. %s"
+            self.household.log.append((self.year, "SHORT OF %s: work running at %d%% of plan. %s"
                              % (self.household.binding.upper(), thr * 100,
                                 self.shortage_remedy(self.household.binding))))
 
+    def _step_progress_project(self, node_id, pool_rank, pool_total_this_year,
+                              pool_active_count_this_year, remaining, hired_left,
+                              arrears_hours_lost, directed_hours_unused):
+        # One project's share of this year's director hours and money, pulled
+        # out of the priority loop in _step_progress() so the loop itself reads
+        # as "for each active project, in priority order, give it its turn"
+        # rather than burying that in 374 lines of one project's turn. Threads
+        # remaining/hired_left through by argument and return, the same shared
+        # pool every project in the loop draws from in order; arrears_hours_lost
+        # and directed_hours_unused are the two logging lists _step_progress()
+        # reports from once, after every project has had its turn, and are
+        # appended to here exactly where the original inline code appended to
+        # them.
+        _pool_rank = pool_rank
+        _pool_total_this_year = pool_total_this_year
+        _pool_active_count_this_year = pool_active_count_this_year
+        _arrears_hours_lost = arrears_hours_lost
+        _directed_hours_unused = directed_hours_unused
+        project_state = self.household.active[node_id]
+        node = self.nodes[node_id]
+        project_state["pool_total_this_year"] = _pool_total_this_year
+        project_state["pool_active_count_this_year"] = _pool_active_count_this_year
+        project_state["pool_rank_this_year"] = _pool_rank
+        project_state["pool_remaining_before_this_year"] = round(remaining, 1)
+        # IS THERE ANYBODY TO DO THE WORK? If a trade this project needs
+        # has vanished since it started (the machinists you taught died
+        # out, say), nothing can be done on it this year, and your own
+        # hours should go somewhere they are useful rather than into a
+        # project that cannot absorb them.
+        #
+        # This matters more than it sounds. Without it a project whose
+        # trade had disappeared sat in `active` for ever: hours went in,
+        # no money was spent because no work was done, so the bill was
+        # never paid, so it could never complete, so it never released
+        # the slot. Four of those deadlocked a run at 98 technologies for
+        # two hundred and fifty years.
+        #
+        # ONLY A TRADE THIS PROJECT STILL OWES SOMETHING TO. This used to
+        # test n["lab"]'s ORIGINAL total (`want > 0`), which never goes
+        # back to zero no matter how much of that trade's hours the
+        # project has already drawn - lab_year_draw and trade_draw_plan
+        # both correctly stop asking a trade for more once lab_left hits
+        # zero, but this check kept vetoing the project on it forever. A
+        # Han playtester fired a specialist whose hired-labour line
+        # already read "0% owed" - the trade had nothing left to give
+        # this project - and the very next step killed it anyway with
+        # "no engineer here", a reason `why` had never shown because
+        # `_waiting_on` (protocol.py) already knew, correctly, that
+        # lab_left made this trade a non-issue. Two places answering
+        # "does this project still need this trade" differently; this
+        # makes the stall check agree with the one that draws the hours.
+        _lab_left = project_state.get("lab_left")
+        if _lab_left is None:
+            _lab_left = node["lab"]
+        blocked = [trade_id for trade_id, want in node["lab"].items()
+                   if want > 0 and _lab_left.get(trade_id, want) > 0
+                   and self.market_supply(trade_id) <= 0.0]
+        if blocked:
+            project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
+            project_state["blocked_on_trades"] = blocked
+            if project_state["stalled_years"] >= 4:
+                self.household.log.append((self.year, "HALTED %s: there is nobody here who can "
+                                     "do this work (%s). What you spent is lost"
+                                 % (node_id, ", ".join(blocked[:2]))))
+                self.household.active.pop(node_id, None)
+                self.household.bountied.discard(node_id)
+            else:
+                # WARN BEFORE THE MONEY GOES. Six projects were wiped in
+                # one year for a play tester who had no way to list what
+                # was at risk: the countdown ran silently for three years
+                # and then took everything spent. Say it each year, with
+                # the number of years left and what would fix it.
+                _left = 4 - project_state["stalled_years"]
+                self.household.log.append((self.year, "%s cannot go on: no %s here. It has "
+                                     "%d year%s before it is abandoned and "
+                                     "what you spent on it is lost. Teach "
+                                     "the trade, or 'stop %s' now and keep "
+                                     "your hours"
+                                 % (node_id, " or ".join(blocked[:2]), _left,
+                                    "" if _left == 1 else "s", node_id)))
+                # Nothing happened here this year - say so, rather than
+                # leaving last year's hours_offered/effective sitting on
+                # the entry looking like they still applied.
+                project_state["hours_offered_this_year"] = 0.0
+                project_state["hours_effective_this_year"] = 0.0
+            return remaining, hired_left, 0.0
+        project_state["stalled_years"] = 0
+        # project_hour_pace (projects.py) is this same formula, read
+        # rather than re-derived, so 'work's own pre-sale warning
+        # about starving an active project can never disagree with
+        # what this loop actually offers it.
+        #
+        # A STANDING ALLOCATION IS A CEILING, NOT A FLOOR. hour_
+        # allocations.get(k) is only ever a THIRD candidate in this
+        # min() - never a reason to offer MORE than remaining or the
+        # project's own pace would otherwise allow - so a directed
+        # project can still never outrun the pool it shares with
+        # everything else, and never get hours faster than its own
+        # calendar floor could ever use. What it changes is ORDER
+        # (active_sorted, above) and that an undirected project
+        # never crowds this one out of the share the player asked
+        # for it to have.
+        _dir_hours = self.household.hour_allocations.get(node_id)
+        _pace_cap = self.project_hour_pace(node_id)
+        _project_throttle = self.project_resource_throttle(node_id)
+        if _dir_hours and _dir_hours > 0:
+            per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
+        else:
+            per = min(remaining, _pace_cap) * _project_throttle
+        remaining -= per
+        # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
+        # offered: `per` is allowed to exceed ph_left (the max() above
+        # offers a full year's worth even to a project with an hour to
+        # run), and the subtraction clamps at zero. The refunds below
+        # were computed from `per` regardless, so a project with 10
+        # hours left could be offered 500, have its 10 taken, and be
+        # handed 200 back - ending the year with twenty times the hours
+        # it began with. A playtester found the far end of that: a
+        # progress bar reading "-67% of your hours spent", with
+        # founder_hours_left larger than founder_hours_total. You cannot
+        # be refunded work you never did.
+        spent_hours = min(per, project_state["ph_left"])
+        project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
+        self.director_hours_spent_founder += per if self.founder_alive else 0
+        # Hours OFFERED this year vs hours that actually did anything.
+        # `refunded` tracks the difference: hours credited back to
+        # ph_left below because a trade or the money to pay for it
+        # fell short. Four projects each showed EXACTLY HALF their
+        # founder hours left after one year and a tester called it
+        # "confusing and feels artificial" - it was: nothing told them
+        # `per` had been offered in full and half of it handed straight
+        # back. See hours_this_year in `state`.
+        project_state["hours_offered_this_year"] = round(per, 1)
+        # WHAT THE PLAYER ACTUALLY ASKED FOR, READ BACK AT THE END OF
+        # THE YEAR - `portfolio` and `why` print this field verbatim,
+        # same reasoning as pool_total_this_year and its neighbours
+        # just above: never recompute a number a player is told,
+        # always read the one this loop actually used.
+        project_state["hours_directed_this_year"] = (round(_dir_hours, 1)
+                                          if _dir_hours else None)
+        # SAY SO WHEN THE PROMISE ITSELF WAS NOT KEPT, before any
+        # trade or money shortfall even has a chance to bite further
+        # in. A directive can be cut short right here, two ways: the
+        # POOL had already given the rest away (to a higher-priority
+        # directed project, or simply was not big enough for every
+        # standing order at once), or this project's OWN pace -
+        # what is left to do, or its calendar floor - could not use
+        # that many hours even with the whole pool behind it. Either
+        # is a real, nameable reason; "it disappeared" is not.
+        if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
+            if (_project_throttle < 0.98 and self.household.binding
+                    and _pace_cap >= _dir_hours - 0.5):
+                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                    "a shortage of %s has every project (this one "
+                    "included) running at %d%% of the pace its "
+                    "hours alone would allow"
+                    % (self.household.binding, round(_project_throttle * 100))))
+            elif _pace_cap * _project_throttle < _dir_hours - 0.5:
+                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                    "its own pace this year - at most %s hours, set "
+                    "by how much of it is left to do or its "
+                    "calendar floor, not by your hours - could not "
+                    "use the rest" % "{:,.0f}".format(
+                        _pace_cap * _project_throttle)))
+            else:
+                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                    "your other standing allocations and active "
+                    "work already claimed the rest of this year's "
+                    "%s hours before this one's turn came"
+                    % "{:,.0f}".format(_pool_total_this_year)))
+        refunded = 0.0
+        project_state["yrs"] += 1
+        frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
+        # Diagnostic callers can construct active-project dictionaries
+        # directly, so initialise an omitted bill defensively.
+        if project_state.get("cost_left") is None:
+            project_state["cost_left"] = max(0.0, self.project_cost(node_id) - project_state["spent"])
+        # LABOUR BY TRADE. The old model pooled every trade into one
+        # bucket of hired hours, so 450 hours of engineer and 450 hours
+        # of labourer were the same resource. They are not, and the wage
+        # table has said so all along. What binds now is the scarcest
+        # trade this project actually needs.
+        #
+        # HOURS ARE A TOTAL AND A CEILING NOW, NOT A FIXED ANNUAL TOLL.
+        # See ProjectsMixin.lab_year_draw (projects.py) for the finding
+        # that forced this and the reasoning behind the new shape; this
+        # call site only has to act on what it returns.
+        hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
+        if _abandon:
+            self.household.log.append((self.year, "ABANDONED %s: %s" % (node_id, _abandon)))
+            self.household.active.pop(node_id, None)
+            self.household.bountied.discard(node_id)
+            return remaining, hired_left, 0.0
+        if worst < 1.0:
+            # NEVER ALL OF IT. The refund says "hours offered but not
+            # usable, because the trade was booked" - and with no floor
+            # under it, it could hand back every hour that had actually
+            # gone in. A break tester watched a project's founder-hours
+            # sit unchanged for ever because its scarcest trade was
+            # short, the bill fully paid, the calendar long past, making
+            # no progress at all while holding an entire trade's pool
+            # and freezing other projects behind it.
+            #
+            # If a fraction `worst` of the work could be done, then a
+            # fraction `worst` of it WAS done, and that much can never
+            # be given back. Progress is now strictly positive whenever
+            # anybody at all can be found.
+            give_back = min(spent_hours - refunded,
+                            per * 0.4 * (1.0 - worst),
+                            spent_hours * (1.0 - worst))
+            project_state["ph_left"] += max(0.0, give_back)
+            refunded += max(0.0, give_back)
+            # Remember it. A tester sat on 696,350 denarii watching three
+            # projects report waiting_on "money" with 2.3, 84 and 158
+            # denarii left to pay, and reasonably concluded the spend cap
+            # was broken. It was not: the trades those projects needed
+            # were fully booked, so almost nothing could be paid FOR. The
+            # mechanic was right and the label was a lie. (short_of_trade
+            # itself is now set inside lab_year_draw, against the same
+            # pace this comment describes.)
+        if hired_hours > hired_left:
+            frac *= hired_left / max(hired_hours, 1e-9)
+            hired_hours = hired_left
+        # THE INSTALMENT IS WHAT A CONSTRAINED YEAR CAN DO; THE BILL IS
+        # WHAT IS LEFT. This used to work the payment out first and then
+        # multiply it by each shortage in turn, so once the remaining
+        # balance was smaller than a year's instalment you paid a
+        # FRACTION OF WHAT WAS LEFT every year, for ever: a geometric
+        # decay that approaches zero and never reaches it, while
+        # completion needs the bill down to half a denarius. A
+        # playtester watched one project sit at "71% done" for
+        # twenty-five years with cash in hand and no idea why. Working
+        # it out from the already-scaled `frac` means a shortage sets
+        # how FAST you can pay and never stops the last payment landing.
+        money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
+        hired_left -= hired_hours
+        # You may spend into debt, up to what someone will lend you, and
+        # no further. Beyond that the work simply does not get paid for
+        # this year, and a year nobody was paid for is a year of little
+        # progress. What must NOT happen is the bill being forgiven.
+        #
+        # The margin is deliberate. Spending to the last denarius of your
+        # credit means next year's rent breaches the limit and the
+        # creditors halt every project you have, which turns "I was
+        # ambitious" into "everything I had in hand was destroyed". A
+        # lender who will advance you a thousand will not let you draw
+        # the last two hundred of it against a half-built balloon.
+        # Reserve next year's fixed costs AND most of the credit line.
+        # Drawing the line to its last denarius is how one ambitious
+        # project destroyed everything else a tester had in hand: the
+        # limit itself falls as reputation and revenue fall, so a balance
+        # exactly at the limit this year is over it next year, and over
+        # the line every project in progress is halted at once.
+        # Reserve only the SHORTFALL, not the whole running cost. This
+        # year's rent and wages have already been taken out of capital at
+        # the top of step(); reserving them again left a household with
+        # 6,670 in hand and 31,000 of costs covered by 31,600 of income
+        # unable to spend a single denarius on its own projects, so four
+        # of them sat unpayable and unfinished for two hundred years.
+        fixed = self.living_cost() + self.upkeep() + self.mine_operating_cost()
+        reserve = max(0.0, fixed - self.revenue())
+        purse = self.household.capital + self.credit_limit() * 0.6 - reserve
+        # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE. A
+        # project with cost_left already at zero asks for money=0
+        # this year, and money(0) > purse was still true whenever
+        # purse itself had gone negative - deep arrears, not this
+        # project's own bill - so a FULLY PAID project, needing not
+        # one more denarius, was refunded nearly all of per anyway
+        # (funded_frac forced to 0.0 below whenever money <= 0) and
+        # made zero hour progress purely calendar-waiting projects
+        # should still be free to make. Three playtesters on three
+        # civilisations hit this as "arrears freezes ALL
+        # founder-hour progress, even on fully-paid work" - and they
+        # were exactly right: the gate was on the household's purse,
+        # not on whether this project needed anything from it.
+        if money > 0 and money > purse:
+            # PROPORTIONAL, not a flat half. This used to refund
+            # exactly per*0.5 whenever the purse fell short AT ALL,
+            # whether by one denarius or by the whole bill, which is
+            # what produced the "exactly half" a tester flagged as
+            # arbitrary-looking: four unrelated projects each showing
+            # precisely half their founder hours left after one year
+            # is not a coincidence, it is this constant. A project
+            # funded to 95% of what it needed lost the same fixed
+            # half of its hour's progress as one funded to 5%; the
+            # trade-shortage case two blocks up already scales its
+            # refund by how much of the need went unmet (worst), and
+            # this should too.
+            funded_frac = 0.0 if money <= 0 else max(0.0, min(1.0, purse / money))
+            money = max(0.0, purse)
+            # Capped at what was actually taken off, and at what has not
+            # already been handed back by the trade-shortage refund
+            # above. See spent_hours: you cannot be refunded work you
+            # never did, and you cannot be refunded the same hour twice.
+            give_back = min(spent_hours - refunded, per * (1.0 - funded_frac))
+            project_state["ph_left"] += max(0.0, give_back)
+            refunded += max(0.0, give_back)
+            project_state["underfunded_this_year"] = True
+            # WHY, not just that. A playtester ran deep into debt and
+            # watched every project report hours "offered" and none
+            # "effective", with nothing in help, why, money or risk
+            # explaining it. Arrears are the reason: the purse a project
+            # may draw on is what you hold plus part of your credit,
+            # less what your fixed costs need, and in arrears that is
+            # nothing at all.
+            project_state["why_underfunded"] = (
+                "in arrears: after fixed costs there is nothing left to "
+                "draw on, so the hours offered this year did almost "
+                "nothing" if self.household.capital < 0 else
+                "this year's instalment is more than the purse will bear")
+            # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
+            # the project and answers the question if a player thinks
+            # to check `why` or `portfolio` - but the founder-hours lost
+            # here never come back, whatever the player does next, and
+            # nothing prompted them to look. Recorded here (only the
+            # arrears case, only if it actually cost real hours) and
+            # logged once below, after the loop.
+            if self.household.capital < 0 and give_back > 1.0:
+                _arrears_hours_lost.append((node_id, round(give_back, 0)))
+        else:
+            project_state.pop("underfunded_this_year", None)
+            project_state.pop("why_underfunded", None)
+        self.household.capital -= money
+        self.household.total_spend += money
+        project_state["spent"] += money
+        project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
+        # spent_hours, NOT per. `per` is what was OFFERED, and it is
+        # allowed to exceed the hours the project actually had left; the
+        # refunds above are capped at spent_hours for exactly that
+        # reason, and this line was left uncapped. A sweep of the
+        # playtest notes found a project reporting 387.2 effective hours
+        # a year for four consecutive years while founder_hours_left sat
+        # unchanged at 112.8 - work reported that provably did not
+        # happen, about the one resource the whole game is built on.
+        project_state["hours_effective_this_year"] = round(max(0.0, spent_hours - refunded), 1)
+        # Accumulated into hours_effective_total by the caller, _step_progress,
+        # which sums this project's own returned effective hours into the
+        # year's running total - see the return at the end of this method.
+        # THE SECOND WAY A DIRECTIVE GOES UNHONOURED: OFFERED, THEN
+        # HANDED BACK. Unlike the check above this one, it must NOT
+        # fire just because spent_hours fell short of `per` - a
+        # project a few hours from finished is offered a whole
+        # year's pace and only needs a sliver of it, which is not a
+        # shortage of anything, it is the project ending. Gated on
+        # why_underfunded/short_of_trade actually being SET this
+        # year - fields only the money and trade-shortage branches
+        # above ever write - so this can only ever name a real
+        # shortfall, never mistake "it finished" for one.
+        if _dir_hours and _dir_hours > 0:
+            _inner_gap = project_state["hours_offered_this_year"] - project_state["hours_effective_this_year"]
+            # DEEP ARREARS ALREADY GETS ITS OWN LINE, BELOW - "IN
+            # ARREARS: ... did almost nothing this year" - and it is
+            # the sharper warning of the two. Saying the same
+            # shortfall twice in two different voices is not
+            # clearer, it is just noise; this fires only for the
+            # money-short case arrears does NOT already cover (the
+            # purse-can-only-absorb-so-much-a-year pace, which is
+            # real money trouble without capital actually being
+            # negative).
+            if _inner_gap > 1.0 and project_state.get("why_underfunded") and self.household.capital >= 0:
+                _directed_hours_unused.append(
+                    (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
+            elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
+                _directed_hours_unused.append((node_id, round(_inner_gap, 0),
+                    "trade hours already booked: " + ", ".join(
+                        sorted(project_state["short_of_trade"])[:2])))
+        # Count it HERE, after the hired-hours scaling and the
+        # affordability clamp, not before them. Accumulating the
+        # notional figure made project_spend_last_year disagree with
+        # the actual capital movement by a factor of 89, which a tester
+        # caught by comparing three numbers in a single `state` reply.
+        self.household._spend_this_year = self.household._spend_this_year + money
+        # calendar_floor(k), NOT a second copy of this formula -
+        # expected_calendar_years (projects.py) needs the identical
+        # figure to project retries honestly, and a rule living in
+        # two places is how this kind of arithmetic drifts apart.
+        floor = self.calendar_floor(node_id)
+        # THE BILL HAS TO BE PAID. Hours done and years elapsed are not
+        # enough; if the money never arrived, the thing was never built.
+        # HALF AN HOUR IS NOTHING LEFT TO DO. The give-back hands back a
+        # fraction of what was offered, so on a throttled project
+        # ph_left decays geometrically towards zero and never reaches
+        # it: a break tester's `logarithms` sat at 1.29e-25 founder-hours
+        # with the bill paid and thirty years elapsed, complete in every
+        # sense except the comparison. The bill already had this exact
+        # fix and this exact reason (see `money` just above, and
+        # cost_left <= 0.5 on the same line); hours never got it.
+        if project_state["ph_left"] < 0.5:
+            project_state["ph_left"] = 0.0
+        if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
+            self._complete(node_id)
+        elif project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] > 0.5:
+            project_state["waiting_on_money"] = True
+
+        return remaining, hired_left, project_state["hours_effective_this_year"]
+
+    def _step_progress(self, pool, hired_left):
         # 5. progress. Director hours go to the HIGHEST-PRIORITY active projects
         #    first, not spread evenly: a director who gives every project equal
         #    attention finishes nothing, which is a real failure mode but not the
@@ -4084,380 +4520,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _pool_total_this_year = pool
         _pool_active_count_this_year = len(active_sorted)
         for _pool_rank, node_id in enumerate(active_sorted, start=1):
-                project_state = self.household.active[node_id]
-                node = self.nodes[node_id]
-                project_state["pool_total_this_year"] = _pool_total_this_year
-                project_state["pool_active_count_this_year"] = _pool_active_count_this_year
-                project_state["pool_rank_this_year"] = _pool_rank
-                project_state["pool_remaining_before_this_year"] = round(remaining, 1)
-                # IS THERE ANYBODY TO DO THE WORK? If a trade this project needs
-                # has vanished since it started (the machinists you taught died
-                # out, say), nothing can be done on it this year, and your own
-                # hours should go somewhere they are useful rather than into a
-                # project that cannot absorb them.
-                #
-                # This matters more than it sounds. Without it a project whose
-                # trade had disappeared sat in `active` for ever: hours went in,
-                # no money was spent because no work was done, so the bill was
-                # never paid, so it could never complete, so it never released
-                # the slot. Four of those deadlocked a run at 98 technologies for
-                # two hundred and fifty years.
-                #
-                # ONLY A TRADE THIS PROJECT STILL OWES SOMETHING TO. This used to
-                # test n["lab"]'s ORIGINAL total (`want > 0`), which never goes
-                # back to zero no matter how much of that trade's hours the
-                # project has already drawn - lab_year_draw and trade_draw_plan
-                # both correctly stop asking a trade for more once lab_left hits
-                # zero, but this check kept vetoing the project on it forever. A
-                # Han playtester fired a specialist whose hired-labour line
-                # already read "0% owed" - the trade had nothing left to give
-                # this project - and the very next step killed it anyway with
-                # "no engineer here", a reason `why` had never shown because
-                # `_waiting_on` (protocol.py) already knew, correctly, that
-                # lab_left made this trade a non-issue. Two places answering
-                # "does this project still need this trade" differently; this
-                # makes the stall check agree with the one that draws the hours.
-                _lab_left = project_state.get("lab_left")
-                if _lab_left is None:
-                    _lab_left = node["lab"]
-                blocked = [trade_id for trade_id, want in node["lab"].items()
-                           if want > 0 and _lab_left.get(trade_id, want) > 0
-                           and self.market_supply(trade_id) <= 0.0]
-                if blocked:
-                    project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
-                    project_state["blocked_on_trades"] = blocked
-                    if project_state["stalled_years"] >= 4:
-                        self.household.log.append((year, "HALTED %s: there is nobody here who can "
-                                             "do this work (%s). What you spent is lost"
-                                         % (node_id, ", ".join(blocked[:2]))))
-                        self.household.active.pop(node_id, None)
-                        self.household.bountied.discard(node_id)
-                    else:
-                        # WARN BEFORE THE MONEY GOES. Six projects were wiped in
-                        # one year for a play tester who had no way to list what
-                        # was at risk: the countdown ran silently for three years
-                        # and then took everything spent. Say it each year, with
-                        # the number of years left and what would fix it.
-                        _left = 4 - project_state["stalled_years"]
-                        self.household.log.append((year, "%s cannot go on: no %s here. It has "
-                                             "%d year%s before it is abandoned and "
-                                             "what you spent on it is lost. Teach "
-                                             "the trade, or 'stop %s' now and keep "
-                                             "your hours"
-                                         % (node_id, " or ".join(blocked[:2]), _left,
-                                            "" if _left == 1 else "s", node_id)))
-                        # Nothing happened here this year - say so, rather than
-                        # leaving last year's hours_offered/effective sitting on
-                        # the entry looking like they still applied.
-                        project_state["hours_offered_this_year"] = 0.0
-                        project_state["hours_effective_this_year"] = 0.0
-                    continue
-                project_state["stalled_years"] = 0
-                # project_hour_pace (projects.py) is this same formula, read
-                # rather than re-derived, so 'work's own pre-sale warning
-                # about starving an active project can never disagree with
-                # what this loop actually offers it.
-                #
-                # A STANDING ALLOCATION IS A CEILING, NOT A FLOOR. hour_
-                # allocations.get(k) is only ever a THIRD candidate in this
-                # min() - never a reason to offer MORE than remaining or the
-                # project's own pace would otherwise allow - so a directed
-                # project can still never outrun the pool it shares with
-                # everything else, and never get hours faster than its own
-                # calendar floor could ever use. What it changes is ORDER
-                # (active_sorted, above) and that an undirected project
-                # never crowds this one out of the share the player asked
-                # for it to have.
-                _dir_hours = self.household.hour_allocations.get(node_id)
-                _pace_cap = self.project_hour_pace(node_id)
-                _project_throttle = self.project_resource_throttle(node_id)
-                if _dir_hours and _dir_hours > 0:
-                    per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
-                else:
-                    per = min(remaining, _pace_cap) * _project_throttle
-                remaining -= per
-                # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
-                # offered: `per` is allowed to exceed ph_left (the max() above
-                # offers a full year's worth even to a project with an hour to
-                # run), and the subtraction clamps at zero. The refunds below
-                # were computed from `per` regardless, so a project with 10
-                # hours left could be offered 500, have its 10 taken, and be
-                # handed 200 back - ending the year with twenty times the hours
-                # it began with. A playtester found the far end of that: a
-                # progress bar reading "-67% of your hours spent", with
-                # founder_hours_left larger than founder_hours_total. You cannot
-                # be refunded work you never did.
-                spent_hours = min(per, project_state["ph_left"])
-                project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-                self.director_hours_spent_founder += per if self.founder_alive else 0
-                # Hours OFFERED this year vs hours that actually did anything.
-                # `refunded` tracks the difference: hours credited back to
-                # ph_left below because a trade or the money to pay for it
-                # fell short. Four projects each showed EXACTLY HALF their
-                # founder hours left after one year and a tester called it
-                # "confusing and feels artificial" - it was: nothing told them
-                # `per` had been offered in full and half of it handed straight
-                # back. See hours_this_year in `state`.
-                project_state["hours_offered_this_year"] = round(per, 1)
-                # WHAT THE PLAYER ACTUALLY ASKED FOR, READ BACK AT THE END OF
-                # THE YEAR - `portfolio` and `why` print this field verbatim,
-                # same reasoning as pool_total_this_year and its neighbours
-                # just above: never recompute a number a player is told,
-                # always read the one this loop actually used.
-                project_state["hours_directed_this_year"] = (round(_dir_hours, 1)
-                                                  if _dir_hours else None)
-                # SAY SO WHEN THE PROMISE ITSELF WAS NOT KEPT, before any
-                # trade or money shortfall even has a chance to bite further
-                # in. A directive can be cut short right here, two ways: the
-                # POOL had already given the rest away (to a higher-priority
-                # directed project, or simply was not big enough for every
-                # standing order at once), or this project's OWN pace -
-                # what is left to do, or its calendar floor - could not use
-                # that many hours even with the whole pool behind it. Either
-                # is a real, nameable reason; "it disappeared" is not.
-                if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-                    if (_project_throttle < 0.98 and self.household.binding
-                            and _pace_cap >= _dir_hours - 0.5):
-                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                            "a shortage of %s has every project (this one "
-                            "included) running at %d%% of the pace its "
-                            "hours alone would allow"
-                            % (self.household.binding, round(_project_throttle * 100))))
-                    elif _pace_cap * _project_throttle < _dir_hours - 0.5:
-                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                            "its own pace this year - at most %s hours, set "
-                            "by how much of it is left to do or its "
-                            "calendar floor, not by your hours - could not "
-                            "use the rest" % "{:,.0f}".format(
-                                _pace_cap * _project_throttle)))
-                    else:
-                        _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                            "your other standing allocations and active "
-                            "work already claimed the rest of this year's "
-                            "%s hours before this one's turn came"
-                            % "{:,.0f}".format(_pool_total_this_year)))
-                refunded = 0.0
-                project_state["yrs"] += 1
-                frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
-                # Diagnostic callers can construct active-project dictionaries
-                # directly, so initialise an omitted bill defensively.
-                if project_state.get("cost_left") is None:
-                    project_state["cost_left"] = max(0.0, self.project_cost(node_id) - project_state["spent"])
-                # LABOUR BY TRADE. The old model pooled every trade into one
-                # bucket of hired hours, so 450 hours of engineer and 450 hours
-                # of labourer were the same resource. They are not, and the wage
-                # table has said so all along. What binds now is the scarcest
-                # trade this project actually needs.
-                #
-                # HOURS ARE A TOTAL AND A CEILING NOW, NOT A FIXED ANNUAL TOLL.
-                # See ProjectsMixin.lab_year_draw (projects.py) for the finding
-                # that forced this and the reasoning behind the new shape; this
-                # call site only has to act on what it returns.
-                hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
-                if _abandon:
-                    self.household.log.append((year, "ABANDONED %s: %s" % (node_id, _abandon)))
-                    self.household.active.pop(node_id, None)
-                    self.household.bountied.discard(node_id)
-                    continue
-                if worst < 1.0:
-                    # NEVER ALL OF IT. The refund says "hours offered but not
-                    # usable, because the trade was booked" - and with no floor
-                    # under it, it could hand back every hour that had actually
-                    # gone in. A break tester watched a project's founder-hours
-                    # sit unchanged for ever because its scarcest trade was
-                    # short, the bill fully paid, the calendar long past, making
-                    # no progress at all while holding an entire trade's pool
-                    # and freezing other projects behind it.
-                    #
-                    # If a fraction `worst` of the work could be done, then a
-                    # fraction `worst` of it WAS done, and that much can never
-                    # be given back. Progress is now strictly positive whenever
-                    # anybody at all can be found.
-                    give_back = min(spent_hours - refunded,
-                                    per * 0.4 * (1.0 - worst),
-                                    spent_hours * (1.0 - worst))
-                    project_state["ph_left"] += max(0.0, give_back)
-                    refunded += max(0.0, give_back)
-                    # Remember it. A tester sat on 696,350 denarii watching three
-                    # projects report waiting_on "money" with 2.3, 84 and 158
-                    # denarii left to pay, and reasonably concluded the spend cap
-                    # was broken. It was not: the trades those projects needed
-                    # were fully booked, so almost nothing could be paid FOR. The
-                    # mechanic was right and the label was a lie. (short_of_trade
-                    # itself is now set inside lab_year_draw, against the same
-                    # pace this comment describes.)
-                if hired_hours > hired_left:
-                    frac *= hired_left / max(hired_hours, 1e-9)
-                    hired_hours = hired_left
-                # THE INSTALMENT IS WHAT A CONSTRAINED YEAR CAN DO; THE BILL IS
-                # WHAT IS LEFT. This used to work the payment out first and then
-                # multiply it by each shortage in turn, so once the remaining
-                # balance was smaller than a year's instalment you paid a
-                # FRACTION OF WHAT WAS LEFT every year, for ever: a geometric
-                # decay that approaches zero and never reaches it, while
-                # completion needs the bill down to half a denarius. A
-                # playtester watched one project sit at "71% done" for
-                # twenty-five years with cash in hand and no idea why. Working
-                # it out from the already-scaled `frac` means a shortage sets
-                # how FAST you can pay and never stops the last payment landing.
-                money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
-                hired_left -= hired_hours
-                # You may spend into debt, up to what someone will lend you, and
-                # no further. Beyond that the work simply does not get paid for
-                # this year, and a year nobody was paid for is a year of little
-                # progress. What must NOT happen is the bill being forgiven.
-                #
-                # The margin is deliberate. Spending to the last denarius of your
-                # credit means next year's rent breaches the limit and the
-                # creditors halt every project you have, which turns "I was
-                # ambitious" into "everything I had in hand was destroyed". A
-                # lender who will advance you a thousand will not let you draw
-                # the last two hundred of it against a half-built balloon.
-                # Reserve next year's fixed costs AND most of the credit line.
-                # Drawing the line to its last denarius is how one ambitious
-                # project destroyed everything else a tester had in hand: the
-                # limit itself falls as reputation and revenue fall, so a balance
-                # exactly at the limit this year is over it next year, and over
-                # the line every project in progress is halted at once.
-                # Reserve only the SHORTFALL, not the whole running cost. This
-                # year's rent and wages have already been taken out of capital at
-                # the top of step(); reserving them again left a household with
-                # 6,670 in hand and 31,000 of costs covered by 31,600 of income
-                # unable to spend a single denarius on its own projects, so four
-                # of them sat unpayable and unfinished for two hundred years.
-                fixed = self.living_cost() + self.upkeep() + self.mine_operating_cost()
-                reserve = max(0.0, fixed - self.revenue())
-                purse = self.household.capital + self.credit_limit() * 0.6 - reserve
-                # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE. A
-                # project with cost_left already at zero asks for money=0
-                # this year, and money(0) > purse was still true whenever
-                # purse itself had gone negative - deep arrears, not this
-                # project's own bill - so a FULLY PAID project, needing not
-                # one more denarius, was refunded nearly all of per anyway
-                # (funded_frac forced to 0.0 below whenever money <= 0) and
-                # made zero hour progress purely calendar-waiting projects
-                # should still be free to make. Three playtesters on three
-                # civilisations hit this as "arrears freezes ALL
-                # founder-hour progress, even on fully-paid work" - and they
-                # were exactly right: the gate was on the household's purse,
-                # not on whether this project needed anything from it.
-                if money > 0 and money > purse:
-                    # PROPORTIONAL, not a flat half. This used to refund
-                    # exactly per*0.5 whenever the purse fell short AT ALL,
-                    # whether by one denarius or by the whole bill, which is
-                    # what produced the "exactly half" a tester flagged as
-                    # arbitrary-looking: four unrelated projects each showing
-                    # precisely half their founder hours left after one year
-                    # is not a coincidence, it is this constant. A project
-                    # funded to 95% of what it needed lost the same fixed
-                    # half of its hour's progress as one funded to 5%; the
-                    # trade-shortage case two blocks up already scales its
-                    # refund by how much of the need went unmet (worst), and
-                    # this should too.
-                    funded_frac = 0.0 if money <= 0 else max(0.0, min(1.0, purse / money))
-                    money = max(0.0, purse)
-                    # Capped at what was actually taken off, and at what has not
-                    # already been handed back by the trade-shortage refund
-                    # above. See spent_hours: you cannot be refunded work you
-                    # never did, and you cannot be refunded the same hour twice.
-                    give_back = min(spent_hours - refunded, per * (1.0 - funded_frac))
-                    project_state["ph_left"] += max(0.0, give_back)
-                    refunded += max(0.0, give_back)
-                    project_state["underfunded_this_year"] = True
-                    # WHY, not just that. A playtester ran deep into debt and
-                    # watched every project report hours "offered" and none
-                    # "effective", with nothing in help, why, money or risk
-                    # explaining it. Arrears are the reason: the purse a project
-                    # may draw on is what you hold plus part of your credit,
-                    # less what your fixed costs need, and in arrears that is
-                    # nothing at all.
-                    project_state["why_underfunded"] = (
-                        "in arrears: after fixed costs there is nothing left to "
-                        "draw on, so the hours offered this year did almost "
-                        "nothing" if self.household.capital < 0 else
-                        "this year's instalment is more than the purse will bear")
-                    # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
-                    # the project and answers the question if a player thinks
-                    # to check `why` or `portfolio` - but the founder-hours lost
-                    # here never come back, whatever the player does next, and
-                    # nothing prompted them to look. Recorded here (only the
-                    # arrears case, only if it actually cost real hours) and
-                    # logged once below, after the loop.
-                    if self.household.capital < 0 and give_back > 1.0:
-                        _arrears_hours_lost.append((node_id, round(give_back, 0)))
-                else:
-                    project_state.pop("underfunded_this_year", None)
-                    project_state.pop("why_underfunded", None)
-                self.household.capital -= money
-                self.household.total_spend += money
-                project_state["spent"] += money
-                project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
-                # spent_hours, NOT per. `per` is what was OFFERED, and it is
-                # allowed to exceed the hours the project actually had left; the
-                # refunds above are capped at spent_hours for exactly that
-                # reason, and this line was left uncapped. A sweep of the
-                # playtest notes found a project reporting 387.2 effective hours
-                # a year for four consecutive years while founder_hours_left sat
-                # unchanged at 112.8 - work reported that provably did not
-                # happen, about the one resource the whole game is built on.
-                project_state["hours_effective_this_year"] = round(max(0.0, spent_hours - refunded), 1)
-                hours_effective_total += project_state["hours_effective_this_year"]
-                # THE SECOND WAY A DIRECTIVE GOES UNHONOURED: OFFERED, THEN
-                # HANDED BACK. Unlike the check above this one, it must NOT
-                # fire just because spent_hours fell short of `per` - a
-                # project a few hours from finished is offered a whole
-                # year's pace and only needs a sliver of it, which is not a
-                # shortage of anything, it is the project ending. Gated on
-                # why_underfunded/short_of_trade actually being SET this
-                # year - fields only the money and trade-shortage branches
-                # above ever write - so this can only ever name a real
-                # shortfall, never mistake "it finished" for one.
-                if _dir_hours and _dir_hours > 0:
-                    _inner_gap = project_state["hours_offered_this_year"] - project_state["hours_effective_this_year"]
-                    # DEEP ARREARS ALREADY GETS ITS OWN LINE, BELOW - "IN
-                    # ARREARS: ... did almost nothing this year" - and it is
-                    # the sharper warning of the two. Saying the same
-                    # shortfall twice in two different voices is not
-                    # clearer, it is just noise; this fires only for the
-                    # money-short case arrears does NOT already cover (the
-                    # purse-can-only-absorb-so-much-a-year pace, which is
-                    # real money trouble without capital actually being
-                    # negative).
-                    if _inner_gap > 1.0 and project_state.get("why_underfunded") and self.household.capital >= 0:
-                        _directed_hours_unused.append(
-                            (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
-                    elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
-                        _directed_hours_unused.append((node_id, round(_inner_gap, 0),
-                            "trade hours already booked: " + ", ".join(
-                                sorted(project_state["short_of_trade"])[:2])))
-                # Count it HERE, after the hired-hours scaling and the
-                # affordability clamp, not before them. Accumulating the
-                # notional figure made project_spend_last_year disagree with
-                # the actual capital movement by a factor of 89, which a tester
-                # caught by comparing three numbers in a single `state` reply.
-                self.household._spend_this_year = self.household._spend_this_year + money
-                # calendar_floor(k), NOT a second copy of this formula -
-                # expected_calendar_years (projects.py) needs the identical
-                # figure to project retries honestly, and a rule living in
-                # two places is how this kind of arithmetic drifts apart.
-                floor = self.calendar_floor(node_id)
-                # THE BILL HAS TO BE PAID. Hours done and years elapsed are not
-                # enough; if the money never arrived, the thing was never built.
-                # HALF AN HOUR IS NOTHING LEFT TO DO. The give-back hands back a
-                # fraction of what was offered, so on a throttled project
-                # ph_left decays geometrically towards zero and never reaches
-                # it: a break tester's `logarithms` sat at 1.29e-25 founder-hours
-                # with the bill paid and thirty years elapsed, complete in every
-                # sense except the comparison. The bill already had this exact
-                # fix and this exact reason (see `money` just above, and
-                # cost_left <= 0.5 on the same line); hours never got it.
-                if project_state["ph_left"] < 0.5:
-                    project_state["ph_left"] = 0.0
-                if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
-                    self._complete(node_id)
-                elif project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] > 0.5:
-                    project_state["waiting_on_money"] = True
-
+            remaining, hired_left, _effective = self._step_progress_project(
+                node_id, _pool_rank, _pool_total_this_year, _pool_active_count_this_year,
+                remaining, hired_left, _arrears_hours_lost, _directed_hours_unused)
+            hours_effective_total += _effective
         # ARREARS COSTS YOU THE YEAR'S HOURS, NOT JUST THE MONEY - SAY SO. This
         # is the Rome playtester's sharpest complaint: "the arrears mechanic
         # silently wastes founder-hours, not just money", discovered only
@@ -4473,7 +4539,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _total_lost = sum(hours for _, hours in _arrears_hours_lost)
             _names = ", ".join("%s (%s hr)" % (node_id, "{:,.0f}".format(hours))
                                 for node_id, hours in _arrears_hours_lost)
-            self.household.log.append((year, "IN ARREARS: %s founder-hours meant for %s did "
+            self.household.log.append((self.year, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
                                  "- that time does not come back, arrears or not. "
                                  "'work' sells idle hours for wages instead of "
@@ -4491,7 +4557,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # several projects can be cut short in the same year.
         if _directed_hours_unused:
             for _node_id, _hr, _why in sorted(_directed_hours_unused):
-                self.household.log.append((year, "DIRECTED HOURS UNUSED: you allocated hours "
+                self.household.log.append((self.year, "DIRECTED HOURS UNUSED: you allocated hours "
                                      "to %s this year that it could not use - "
                                      "%s of them went begging because %s. "
                                      "'portfolio' shows the rest; 'allocate' "
@@ -4503,7 +4569,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # offered_to_projects below double-counts wage hours as though they had
         # been offered to projects too, since 5b draws from the same pool.
         remaining_after_projects = remaining
+        return remaining, remaining_after_projects, hours_effective_total
 
+    def _step_wage_fallback(self, remaining):
         # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
         #     with four hundred denarii and a lens does not sit watching his
         #     savings run out; he teaches, or writes, or sets bones for money. It
@@ -4541,7 +4609,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # not count hours sold for wages here as still unused.
                 if err is None:
                     remaining -= hours
+        return remaining
 
+    def _step_reputation(self, pool, remaining, remaining_after_projects, hours_effective_total):
         # 6. reputation, familiarity, protection, scandal
         #
         # Reputation DECAYS TOWARD WHAT YOU ARE ACTUALLY KNOWN FOR, not toward
@@ -4608,7 +4678,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             _band = int(self.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
                 self.household._said_eminence = _band
-                self.household.log.append((year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.household.log.append((self.year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
@@ -4626,7 +4696,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # causes and the eminence-driven one further down are never
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
-        self._state_pressure(year)
+        self._state_pressure(self.year)
         self.household.scandal *= self.SCANDAL_DECAY_RATE
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot
@@ -4652,12 +4722,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # same screen where eminence carefully explains that it is "dangerous
         # above 26 ... 0% chance the run ENDS this year". Two hazards of the
         # same shape, one of them legible.
-        _sd = cfg["suspicion_danger"]
+        _sd = self.cfg["suspicion_danger"]
         if self.household.scandal > _sd * 0.75:
             _band = int(self.household.scandal / max(1.0, _sd * 0.15))
             if _band > int(getattr(self.household, "_said_scandal", 0)):
                 self.household._said_scandal = _band
-                self.household.log.append((year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+                self.household.log.append((self.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
@@ -4667,16 +4737,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                                     100.0 * max(0.0, (self.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.household.scandal < _sd * 0.5:
             self.household._said_scandal = 0
-        if self.events and self.household.scandal > cfg["suspicion_danger"]:
-            probability = (self.household.scandal - cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
+        if self.events and self.household.scandal > self.cfg["suspicion_danger"]:
+            probability = (self.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:
                 self._catastrophe("denounced: %s" % ("as a sorcerer" if self.w["w_magic_fear"] > 0.5
                                                      else "as a subversive"))
         # The eminence hazard is separate and unbribable. Its usual outcome is a
         # bad year rather than a death: a confiscation, a patron destroyed in
         # someone else's quarrel, a forced withdrawal from public life.
-        if self.events and self.household.eminence > cfg["eminence_danger"]:
-            probability = (self.household.eminence - cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
+        if self.events and self.household.eminence > self.cfg["eminence_danger"]:
+            probability = (self.household.eminence - self.cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
             if self.rng.random() < probability:
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
@@ -4684,14 +4754,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     self.household.capital -= take
                     self.household.reputation = max(0.0, self.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
                     self.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
-                    self.household.log.append((year, "PROMINENCE: property confiscated, %d den lost, "
+                    self.household.log.append((self.year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in ("patron_imperial", "patron_senatorial"):
                         if pat in self.household.done:
                             self.household.done.discard(pat)
                             self._done_changed()
-                            self.household.log.append((year, "PROMINENCE: your patron is destroyed in "
+                            self.household.log.append((self.year, "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
                     self.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
@@ -4700,12 +4770,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     self._catastrophe("too eminent: brought down not for what you built "
                                       "but for how large you had become")
 
+    def _step_bondage(self):
         # 6b. serving out a debt. The hours you owe go to the creditor and the
         #     debt falls; when it is done you are free, and you keep everything
         #     you know.
         if self.household.bondage_years_left > 0:
             self.household.bondage_years_left -= 1
-            paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE * \
+            paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
                 (WAGES.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
             self.household.bondage_debt = max(0.0, self.household.bondage_debt - paid)
             if self.household.bondage_debt <= 0 and self.household.bondage_years_left > 0:
@@ -4713,9 +4784,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             if self.household.bondage_years_left <= 0:
                 self.household.bondage_years_left = 0.0
                 self.household.bondage_debt = 0.0
-                self.household.log.append((year, "your term is served and the debt is discharged; "
+                self.household.log.append((self.year, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
+    def _step_founder_mortality(self):
         # 7. founder mortality
         if self.founder_alive:
             self.life_left -= 1
@@ -4733,8 +4805,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 # and with none the programme dissolves over twelve years - but
                 # nothing ever told the player either half of that.
                 _dep = self.household.directors_extra
-                self.household.log.append((year, "THE FOUNDER DIES, aged about %d. %s"
-                                 % (self.cfg["founder_arrival_age"] + year
+                self.household.log.append((self.year, "THE FOUNDER DIES, aged about %d. %s"
+                                 % (self.cfg["founder_arrival_age"] + self.year
                                     - self.cfg["start_year"],
                                     ("Your %.1f deputies direct the work in your "
                                      "name and the programme goes on without you: "
@@ -4767,7 +4839,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # itself, so a tester read the losses as unexplained and the run as
             # merely unlucky rather than finished.
             if self.household.stalled in (3, 6, 9, 11):
-                self.household.log.append((year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                self.household.log.append((self.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
                                      "since the founder died with no deputy to "
                                      "take over. What you built is being "
                                      "forgotten. The run ends at twelve."
@@ -4778,11 +4850,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         else:
             self.household.stalled = 0
 
-        # 8. random events
-        if self.events and not self.dead_reason:
-            self._random_events(year)
-
-        self.year += 1
 
     # ---- THRESHOLD GOALS: completed by measurement, not by labour ---------
     # A goal need not be a thing you build. "Raise literacy past a fifth" or

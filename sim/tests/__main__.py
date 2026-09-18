@@ -41,9 +41,26 @@ TOPICS = [
     "round2_policy_hazards_options",
     "literacy_market_pricing",
     "commodities_wired_in",
-    "round8_fixes",
-    "round9",
-    "round10",
+    # round8_fixes/round9/round10/round12_naive15 were named for WHEN they
+    # were written (development rounds), not what they test, which made a
+    # behaviour impossible to find by name. Regrouped by theme instead - see
+    # each module's own docstring for which round-file(s) it came from and
+    # the exact original line range.
+    "ventures_lifecycle",
+    "project_pacing",
+    "affordability_and_credit",
+    "labour_hiring_and_wages",
+    "household_capacity_and_literacy",
+    "eminence_scandal_and_reputation",
+    "hazard_and_event_messaging",
+    "knowledge_risk_and_sacking",
+    "demographics_and_plague",
+    "civilisation_data_integrity",
+    "player_guidance_commands",
+    "material_production_commands",
+    "save_load_fog_mismatch",
+    "run_reproducibility",
+    "cross_screen_consistency",
     "historical_events",
     "names_and_fog",
     "player_log",
@@ -63,7 +80,6 @@ TOPICS = [
     "five_things_winner",
     "industrial_dashboard",
     "scanners_and_scheduling",
-    "round12_naive15",
     "affordability_warning",
     "arrears_visibility",
     "allocate",

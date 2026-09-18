@@ -32,11 +32,24 @@ check("money also states the real financing ceiling, the same number "
 # reading committed_spend()/funding_capacity(), not a private copy of the
 # same arithmetic that could quietly disagree with it.
 import inspect as _insp3
-_step_src = _insp3.getsource(S.Sim.step)
+# STEP() PLUS ITS OWN PHASES, NOT step() ALONE. This read `getsource(Sim.step)`
+# while step() was a single 1,760-line method and every phase of the year was
+# inside it. step() is now a short sequence of `_step_*` phase methods, so the
+# gate this check is about lives in `_step_start_projects` rather than in
+# step()'s own body, and reading only step() fails this check by finding
+# nothing, which says the phases moved rather than that the gate went private.
+# The property being asserted has
+# not changed: whichever phase runs the director's start heuristic must reach
+# for the shared helpers rather than re-derive the same arithmetic privately.
+# Gathering the phases by prefix keeps that true across any future re-split.
+_step_src = "".join(
+    [_insp3.getsource(S.Sim.step)]
+    + [_insp3.getsource(getattr(S.Sim, name)) for name in sorted(dir(S.Sim))
+       if name.startswith("_step_") and callable(getattr(S.Sim, name, None))])
 check("step()'s own affordability gate calls the shared funding_capacity() "
       "and committed_spend(), not a second inline formula",
       "self.funding_capacity()" in _step_src and "self.committed_spend()" in _step_src,
-      "checked step()'s own source")
+      "checked step() and its _step_* phase methods")
 
 # --- THE ROME OPENING, REPRODUCED EXACTLY: scientific_method (230) then
 # units_standards (444) on a poor_scholar's 400 denarii. Individually,
