@@ -309,19 +309,55 @@ def priced_goods_table(held_technology_ids, book_goods_denarii, prices_json,
     """(goods_denarii, provenance) - the book's own goods table with a
     solved price substituted wherever the solver can produce one for a
     material this held-technology set already prices in the book, and
-    provenance is {material: "solved" | "book"} for every material the book
-    prices, which is the burndown THE GOAL asks to make measurable: as more
-    of `data/production/` gets `requires_node` labels, more materials
-    resolve, and the "book" count in this dict falls. See the module
-    docstring for what this deliberately does not do (add new materials the
-    book never had, or treat a minor joint byproduct any differently).
+    provenance is the burndown THE GOAL asks to make measurable, and it has
+    THREE states rather than two, because a straight solved/book split
+    measures the wrong thing and this was reported once before it was
+    noticed:
+
+      "solved"     - a computed price replaced the book's.
+      "gated"      - something DOES make this material, and nothing this
+                     era can run. Not a gap. A Roman cannot smelt aluminium
+                     and no amount of authoring will change that.
+      "no_recipe"  - nothing anywhere makes it. The real gap, and the only
+                     one of the three that authoring can close.
+
+    The distinction matters because the first measurement of this reported
+    "85 book" for rome_100ad, which read as 85 missing recipes. Sixty-eight
+    of them had recipes and were correctly gated out by era; the real gap
+    was nine, and five of THOSE want deleting rather than filling (two are
+    people rather than materials, two are dead keys nothing consumes any
+    more, one is a stale duplicate). Quoting the undifferentiated number
+    overstates the remaining work by roughly an order of magnitude.
+
+    A caveat this function cannot fix, recorded where the next reader will
+    meet it: a "gated" material still falls back to the BOOK price, which
+    is its own modelling question. If Rome cannot make aluminium, the
+    honest answer is probably that Rome cannot have it at any price, or
+    that it arrives at an import price - not that it costs what a modern
+    author guessed. That is a decision about trade and availability, not
+    about this table.
+
+    See the module docstring for what this deliberately does not do (add
+    new materials the book never had, or treat a minor joint byproduct any
+    differently).
     """
     solved = solved_prices(held_technology_ids, prices_json,
                            production_entries=production_entries)
     rate = denarii_per_labour_hour(prices_json)
 
+    # Everything any recipe anywhere can make, ignoring era entirely. This
+    # is what separates "nothing makes it" from "nothing HERE makes it".
+    all_entries = (production_entries if production_entries is not None
+                   else _default_production_entries())
+    makeable_by_someone = set(all_entries)
+    for entry in all_entries.values():
+        makeable_by_someone.update((entry.get("outputs") or {}))
+
     goods_denarii = dict(book_goods_denarii)
-    provenance = dict.fromkeys(book_goods_denarii, "book")
+    provenance = {}
+    for material in book_goods_denarii:
+        provenance[material] = ("gated" if material in makeable_by_someone
+                                else "no_recipe")
     for material in solved.resolvable_materials:
         if material not in book_goods_denarii:
             continue

@@ -1,0 +1,190 @@
+{
+ "_note": "Additions closing part of the book-price burndown recorded in the ENDOGENOUS_COSTS_AND_DOMAINS milestones: materials priced in data/prices.json that had NO production entry anywhere in this directory. Every entry here uses only material keys, trades and tech-tree node ids that already exist elsewhere in this directory/tree - no new intermediate material is invented. See each entry's own yield_basis for its physical grounding; nothing here is tuned against data/prices.json's book figure for the same key, per this directory's own governing rule.",
+ "materials": {
+  "mortar_kg": {
+   "outputs": {
+    "mortar_kg": 1000.0
+   },
+   "inputs": {
+    "lime_kg": 189.0,
+    "sand_kg": 750.0,
+    "water_kg": 61.0
+   },
+   "labour_hours": {
+    "labourer": 2.0
+   },
+   "basis": "per tonne of fresh, mixed lime mortar (slaked lime, sand and mixing water, ready to lay, before it sets)",
+   "yield_basis": "Two separate physical facts, chained: (1) the classical masonry recipe of roughly 1 part lime to 3 parts sand - quoted here as a MASS ratio (250 kg lime-equivalent : 750 kg sand per tonne) rather than the more commonly cited volume ratio, because this file's units are mass-based throughout and the volume-to-mass conversion is sensitive to how wet the lime putty is, which is not a fact this entry can pin down; (2) STOICHIOMETRY for getting that 250 kg of slaked lime (Ca(OH)2, 74.10 g/mol) from lime_kg's own quicklime (CaO, 56.08 g/mol): CaO + H2O -> Ca(OH)2 needs 56.08/74.10 = 0.757 kg of quicklime and 18.02/74.10 = 0.243 kg of water per kg of slaked lime, giving 189 kg lime_kg and 61 kg water_kg for the 250 kg share, which is where those two figures come from exactly rather than by estimate. Workability water added at the trowel (beyond the stoichiometric slaking water) is not counted - it is free and evaporates in curing, the same convention this file already uses for not costing curing water elsewhere. Labour is only the mixing itself, since lime_kg and sand_kg already carry their own full production cost. NOT to be confused with the tech-tree node `cn_mortar`: that node's name refers to the ARTILLERY WEAPON (its own `pre` is `mil_artillery_piece` and it consumes bronze_kg to cast a mortar tube), a real naming collision between the construction material and the weapon that this entry deliberately does not gate on.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "plaster_kg": {
+   "outputs": {
+    "plaster_kg": 1000.0
+   },
+   "inputs": {},
+   "thermal_mj": 5850.0,
+   "labour_hours": {
+    "labourer": 6.0,
+    "furnaceman": 3.0
+   },
+   "extracted_from": "quarry (gypsum deposits)",
+   "basis": "per tonne of calcined gypsum plaster (plaster of Paris, CaSO4.1/2H2O), from raw gypsum rock quarried and calcined at the same site",
+   "yield_basis": "STOICHIOMETRY for the core ratio: gypsum (CaSO4.2H2O, 172.18 g/mol) loses 1.5 water molecules on calcining to the hemihydrate (CaSO4.1/2H2O, 145.15 g/mol), so 145.15/172.18 = 84.3% of the raw mineral's mass survives as finished plaster; inverted and inflated by a modest 8% margin for the clay and anhydrite impurity typical of quarried gypsum rock (assayed purity taken at ~92%), that is about 1.3 tonnes of raw gypsum per tonne of finished plaster - never traded raw for the same reason sulfur_kg gives (a low-value mineral not worth moving before its one useful transformation is done). THERMAL: releasing bound water from the gypsum lattice takes roughly 90 kJ/mol of water (dehydration binds it more tightly than free water's ~41 kJ/mol latent heat), i.e. 1.5 * 90 = 135 kJ per 172 g of gypsum = 0.785 MJ/kg, plus sensible heat raising the charge from ambient to the ~150 C calcining temperature (specific heat ~1.0 kJ/kg.K, DeltaT ~130 K) at about 0.13 MJ/kg, for a theoretical minimum near 0.91 MJ/kg of raw gypsum. Applying the same conservative ~20% pre-modern kiln efficiency this file's lime_kg entry uses (gypsum's much lower firing temperature than lime's ~900 C could plausibly do better, but there is no specific figure to justify a rosier number, so the same factor is reused rather than invented) gives about 4.5 MJ/kg of gypsum processed, or 5.85 GJ (5850 MJ) per tonne of finished plaster once the 1.3:1 input ratio is applied. Quarrying labour is set below limestone's (lime_kg, quarried at a harder, tougher rock) because gypsum is markedly softer (Mohs ~2 against limestone's ~3-4); calcining labour is likewise lower than lime's because the firing is shorter and cooler and does not need to be watched for the risk of overburning that a 900 C lime kiln carries.",
+   "conf": "C",
+   "requires_node": "mat_gypsum"
+  },
+  "glue_kg": {
+   "outputs": {
+    "glue_kg": 1.0
+   },
+   "inputs": {
+    "hide_kg": 5.5,
+    "firewood_kg": 3.5
+   },
+   "labour_hours": {
+    "labourer": 4.0
+   },
+   "basis": "per kg of dried technical (hide) glue",
+   "yield_basis": "The same collagen-extraction chemistry this file's own gelatin_kg entry already uses - long, hot-water simmering (not boiling dry) breaks down collagen into soluble glue, extracting a fraction of what is physically present in the raw material and leaving the rest in a discarded spent residue - applied here to hide scrap and trimmings (ears, tails, hooves-adjacent skin) rather than bone, because raw hide/skin is a substantially richer collagen source than bone: bone is roughly a fifth to a quarter collagen by dry weight, where skin is upwards of 90% collagen once its water content is allowed for. Net yield taken at about 18% of raw wet hide-scrap weight (1/5.5), somewhat better than gelatin_kg's bone-based 1/6.5 for exactly that reason, and technical (non-food) glue skips the fine clarification/filtering steps a food-grade gelatin needs, which is why this entry's labour is lower than gelatin_kg's. The multi-hour simmer itself is calendar time tying up a kettle and fire, not labour, matching gelatin_kg's own reasoning; firewood covers the fuel for that simmer scaled down from gelatin_kg's own bone:firewood ratio.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "rosin_kg": {
+   "outputs": {
+    "rosin_kg": 1000.0
+   },
+   "inputs": {
+    "resin_kg": 1389.0
+   },
+   "thermal_mj": 1650.0,
+   "labour_hours": {
+    "labourer": 25.0
+   },
+   "basis": "per tonne of solid rosin (colophony) distilled from raw pine oleoresin",
+   "yield_basis": "Raw pine oleoresin (this file's own resin_kg, tapped from standing trees) is heated in a still; the volatile monoterpene fraction (turpentine spirit, on the order of a quarter of the raw resin's mass) boils off below rosin's own decomposition point and the non-volatile residue left behind - roughly 70-75% of the original mass, taken at 72% - solidifies on cooling as rosin. That gives about 1.39 tonnes of raw resin_kg per tonne of finished rosin. Turpentine is a genuinely valuable co-product of this same distillation that this file does not yet price (it has no material key of its own), so - consistent with how this file already treats an untracked fraction elsewhere (e.g. the water and connective tissue tallow_kg's rendering discards) - its share of the resin's cost is simply not separated out; this entry charges rosin for the whole batch of resin distilled rather than attempting a joint-cost split with a co-product that has no price to split against. THERMAL: driving off the turpentine fraction and holding the residue at working temperature needs on the order of 0.36 MJ per kg of raw resin theoretically (turpentine's own latent heat of vaporisation plus sensible heat to bring the charge to its ~160 C working range); a simple open still run over a wood fire, taken conservatively at ~30% thermal efficiency, brings that to about 1.2 MJ/kg of resin processed, or 1.65 GJ per tonne of finished rosin once the 1.39:1 ratio is applied. Labour is tending the still and ladling off the solidifying rosin, a real but not especially skilled task historically associated with the naval-stores trade.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "twine_kg": {
+   "outputs": {
+    "twine_kg": 1.0
+   },
+   "inputs": {
+    "hemp_fiber_kg": 1.1
+   },
+   "labour_hours": {
+    "labourer": 15.0
+   },
+   "basis": "per kg of hand-twisted thin twine/string",
+   "yield_basis": "Fibre is hand-twisted (on a spindle, a thigh, or a simple twisting hook) into fine string, with no weaving and no rope-walk apparatus - the oldest cordage technology there is, older than the loom. Twine is FINER than the heavy laid rope this file's own cordage_kg entry describes, which - by the same logic canvas_kg's own entry gives for why coarse cloth needs fewer hours per kilogram than fine cloth - means twine needs MORE labour hours per kilogram than cordage, because a given mass of thin cord has far more total length to twist than the same mass laid up thick. A modest 9% combing/twisting waste (input 1.1 kg fibre per kg finished twine) matches the same order of loss canvas_kg and hemp_fiber_kg's own downstream uses already carry.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "cordage_kg": {
+   "outputs": {
+    "cordage_kg": 1.0
+   },
+   "inputs": {
+    "hemp_fiber_kg": 1.15
+   },
+   "labour_hours": {
+    "labourer": 6.0
+   },
+   "basis": "per kg of heavy laid rope, rope-walk grade",
+   "yield_basis": "Hemp fibre laid up (twisted in multiple strands against each other, the technique a rope walk exists to do at length and consistent tension) into thick rope. Mirrors canvas_kg's own reasoning exactly: a thick rope has far less total twisted/laid length per kilogram than a fine thread or thin twine, so it needs FEWER labour hours per kilogram despite the more elaborate multi-strand construction - the same physical trade-off canvas_kg's entry gives for why heavy sailcloth was historically cheaper per kilogram than fine linen. The 15% processing loss is taken directly from canvas_kg's own figure for the same fibre going through a comparable mechanical process. Gated on the rope-walk apparatus itself, rather than left ungated, because consistent long heavy rope of uniform lay is what that apparatus specifically buys over ad hoc hand-twisting (this file's own twine_kg).",
+   "conf": "C",
+   "requires_node": "tex_rope_walk"
+  },
+  "sailcloth_kg": {
+   "outputs": {
+    "sailcloth_kg": 1.0
+   },
+   "inputs": {
+    "hemp_fiber_kg": 1.15
+   },
+   "labour_hours": {
+    "labourer": 8.0
+   },
+   "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",
+   "yield_basis": "This is the SAME physical product and process this file's own canvas_kg entry already describes - heavy, coarse, tightly twisted-thread hemp canvas - priced under a second material key because data/prices.json carries `sailcloth_kg` and `canvas_kg` as two separate priced goods for what is, physically, one good. Rather than inventing a second, different recipe to justify a second key, this entry copies canvas_kg's own numbers and reasoning directly: coarse thread needs far fewer spinning/weaving hours per kilogram than fine cloth thread, and hemp is the traditional canvas/sail fibre for its strength and rot-resistance at sea, with a 15% processing loss through coarse spinning and weaving. Gated on the tree's own `tex_sailcloth` node, which names this exact material.",
+   "conf": "C",
+   "requires_node": "tex_sailcloth"
+  },
+  "vellum_kg": {
+   "outputs": {
+    "vellum_kg": 1.0
+   },
+   "inputs": {
+    "hide_kg": 3.6
+   },
+   "labour_hours": {
+    "artisan": 25.0
+   },
+   "basis": "per kg of finished vellum (fine calfskin parchment, scraped thin and stretched)",
+   "yield_basis": "Uses this file's own parchment_sheet entry's technique unchanged - liming to loosen the hair, then scraping thin on both sides while stretched taut on a frame so it dries flat under tension, a mechanical thinning-and-drying process rather than tanning, with no oak_bark_kg or other tanning agent involved. Vellum is the FINER premium grade of the same product, made from young calfskin and scraped thinner and more evenly than an ordinary parchment sheet, so a larger share of the raw skin's mass ends up scraped away and discarded: taken at 72% loss here against parchment_sheet's own ~67%, giving about 3.6 kg of raw hide per kg of finished vellum (parchment_sheet's 0.35 kg of hide per sheet is consistent with this order of magnitude once a sheet's own small finished mass is allowed for, though the two entries are not cross-calibrated to match, only cross-checked for the same order of magnitude). Labour per kilogram is set higher than a plain scribe's parchment-preparation rate to reflect the slower, more careful scraping a thinner, more even sheet demands. Gated on `mat_parchment`, the base parchment/vellum-making technology, rather than on `prn_parchment_sheets`, which governs cutting prepared material down to standard sheet sizes and is what parchment_sheet's own entry already uses - vellum_kg is priced as bulk prepared material by weight, a stage earlier than a cut sheet.",
+   "conf": "C",
+   "requires_node": "mat_parchment"
+  },
+  "peat_kg": {
+   "outputs": {
+    "peat_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 12.0
+   },
+   "extracted_from": "peat bog",
+   "basis": "per tonne of air-dried peat (turf) fuel, cut and stacked at the bog",
+   "yield_basis": "EXTRACTED, not made: peat is cut from a bog with a simple turf spade (a slane), a much easier material to work than a stone quarry or a coal seam since it sits at or near the surface, needs no blasting or shaft timbering, and offers no resistance beyond its own wet weight - set below coal_kg's combined hewing-and-haulage labour for that reason, though bog work is wet and awkward enough that it is not cut to nothing either. The bulk of a peat's original weight is water; driving that off is weeks of open-air stacked drying, CALENDAR TIME rather than labour, the same convention this file already applies to hemp's retting and gelatin's simmering. No capital is listed, unlike coal_kg's shaft timbering and winding gear, because a peat bog is worked open and shallow with no lasting structure to amortise - closer to sand_kg's or limestone_kg's simple extraction than to a mine.",
+   "conf": "C",
+   "requires_node": "pwr_peat"
+  },
+  "ammonium_nitrate_kg": {
+   "outputs": {
+    "ammonium_nitrate_kg": 1000.0
+   },
+   "inputs": {
+    "ammonia_kg": 215.0,
+    "nitric_acid_kg": 800.0
+   },
+   "thermal_mj": 500.0,
+   "labour_hours": {
+    "chemist": 15.0,
+    "labourer": 40.0
+   },
+   "basis": "per tonne of ammonium nitrate (NH4NO3)",
+   "yield_basis": "STOICHIOMETRY for the core ratio: NH3 (17.03 g/mol) + HNO3 (63.01 g/mol) -> NH4NO3 (80.04 g/mol), a straight acid-base neutralisation with no by-product to allocate against. Per tonne of product that is 213 kg of ammonia and 787 kg of nitric acid at perfect conversion; taken here at 215 and 800 kg with a small margin for the imperfect conversion and minor liquor losses any real neutralisation and crystallisation run carries. THERMAL: the neutralised liquor is a dilute aqueous solution that must be evaporated to crystallise solid ammonium nitrate out of it; taken at a modest 500 MJ/tonne for that evaporation, well below sodium_carbonate_solvay_kg's own 500 MJ/tonne evaporative figure in this file scaled to a comparable order of magnitude rather than independently measured, which is the softest number in this entry and the reason it is marked C rather than B despite the exact stoichiometric core. Gated on `nitric_acid` (rather than on `mat_ammonia`, which this recipe also genuinely needs) because nitric acid is the harder-won of the two precursors - it needs BOTH a nitre-bed supply and a sulfuric-acid lead chamber already working, a taller and later compound requirement than ammonia's own gate - matching this schema's own instruction to name the later, real bottleneck rather than the earliest node the process happens to touch.",
+   "conf": "C",
+   "requires_node": "nitric_acid"
+  },
+  "ox": {
+   "outputs": {
+    "ox": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 120.0
+   },
+   "extracted_from": "pasture (rough grazing, raised to draft size as part of ordinary cattle-keeping)",
+   "basis": "per one mature, trained draft ox (a castrated bull, roughly 4 years old, ready for the yoke)",
+   "yield_basis": "A draft ox is a live animal reared over roughly 4 years on rough grazing before it is strong and heavy enough for the yoke, not a thing manufactured in a season. Cattle need far more forage per head than sheep (this file's wool_kg and milk_kg both use sheep/goat stocking rates on the order of 1.5-6 animals per hectare of rough Mediterranean pasture); a full-grown ox's intake is on the order of 8-10 times a sheep's, so raising one ties up roughly 3-5 hectares of grazing for the whole rearing period. That land-tenure cost is a genuine rent on grazing land, exactly the kind timber_m3 already earns on forest, but this file's rent mechanism is fixed at zero this round (see this directory's own schema note on what is not yet modelled) - so only the herding labour is priced here, and the true cost is understated until grazing rent is priced. Labour is a herder's time apportioned across a mixed herd over the full rearing period (not four years of full-time attention on one animal), plus the short habituation period training an ox to the yoke, folded in as a small addition to the multi-year herding total. No `_kg` unit because the tree and prices.json both price this as one whole animal, matching how it is actually bought and sold.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "mule": {
+   "outputs": {
+    "mule": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "extracted_from": "pasture (bred from a jack donkey and a horse mare, reared to working size on rough grazing)",
+   "basis": "per one mature, trained pack/draft mule",
+   "yield_basis": "A mule is a sterile F1 hybrid of a male donkey and a female horse - a genetic fact, not a modelling choice - so, unlike cattle or sheep, a mule herd cannot breed itself: every mule has to be produced afresh by keeping a jack donkey and horse mares as permanent breeding stock, a real added husbandry cost on top of the ordinary grazing and rearing any equid needs. This entry folds that extra breeding overhead (maintaining stud stock, the mare's own gestation, a real chance of a failed cross or a foal that does not survive) into a higher labour figure than this file's own ox entry, on top of a broadly similar few years of grazing and rearing to working size. As with ox, no `_kg` unit because a mule is bought and sold as one whole animal, and the grazing-land rent this rearing genuinely uses is not yet priced (see this directory's own schema note on what is not yet modelled), so only labour is charged here.",
+   "conf": "C",
+   "requires_node": null
+  }
+ }
+}

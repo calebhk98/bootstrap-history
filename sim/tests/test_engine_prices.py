@@ -177,7 +177,11 @@ class PricedGoodsTableTests(unittest.TestCase):
             set(), book_goods, prices_json, production_entries=entries)
 
         self.assertEqual(provenance["straw_kg"], "solved")
-        self.assertEqual(provenance["unrelated_kg"], "book")
+        # "no_recipe", not merely "book": nothing in this entry set makes
+        # unrelated_kg at all, which is a different finding from a material
+        # some era could make and this one cannot. See priced_goods_table's
+        # docstring for why the split exists.
+        self.assertEqual(provenance["unrelated_kg"], "no_recipe")
         # 3 labour-hours at 2 denarii/hour = 6 denarii, replacing the book's
         # invented 999.
         self.assertAlmostEqual(goods["straw_kg"], 6.0)
@@ -193,7 +197,10 @@ class PricedGoodsTableTests(unittest.TestCase):
         book_goods = {"widget_kg": 42.0}
         goods, provenance = engine_prices.priced_goods_table(
             set(), book_goods, prices_json, production_entries=entries)
-        self.assertEqual(provenance["widget_kg"], "book")
+        # A recipe for widget_kg exists, so this is NOT "no_recipe" - the
+        # recipe simply cannot be costed, because one of its inputs has no
+        # price of its own. Either way the book value stands.
+        self.assertEqual(provenance["widget_kg"], "gated")
         self.assertEqual(goods["widget_kg"], 42.0)
 
     def test_the_solver_never_invents_a_material_the_book_never_had(self):
@@ -258,7 +265,20 @@ class RealDataIntegrationTests(unittest.TestCase):
 
         provenance = data.goods_provenance(starting_techs)
         solved_count = sum(1 for source in provenance.values() if source == "solved")
-        book_count = sum(1 for source in provenance.values() if source == "book")
+        # Anything not solved still comes from the book, whether because no
+        # recipe exists or because this era cannot run the one that does.
+        book_count = sum(1 for source in provenance.values() if source != "solved")
+        gated_count = sum(1 for source in provenance.values() if source == "gated")
+        no_recipe_count = sum(1 for source in provenance.values() if source == "no_recipe")
+        # The two reasons must BOTH be represented, or the three-state split
+        # has quietly collapsed back into the two-state one it replaced.
+        self.assertGreater(gated_count, 0,
+                           "nothing came back 'gated', so era gating is not "
+                           "reaching this table at all")
+        self.assertGreater(no_recipe_count, 0,
+                           "nothing came back 'no_recipe' - either every "
+                           "material really is made by something now, or the "
+                           "distinction has collapsed")
 
         self.assertGreater(solved_count, 0,
                            "the solver resolved nothing under Rome's own "
