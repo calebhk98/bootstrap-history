@@ -76,11 +76,57 @@ input (CLAUDE.md SS3.1). It is also the one number this fix turns on, so it
 gets a sourced value, a confidence marker, and a sensitivity run across its
 plausible range rather than a single figure presented as settled.
 
-## What this does not claim
+## It is variance, and only variance - measured, not argued
 
-That the fix brings all five civilisations above 100%. Rome gained 22.1
-points from an effective N near 5.6, so a single-region civilisation gaining
-a comparable effective N should gain comparably - but Norse Scandinavia
-holds 97,600 km2 of arable land against Rome's 1,205,170, and if it is
-short of food for reasons that have nothing to do with variance, this will
-not be what fixes it. Measure it; do not assume it.
+This section originally warned that Norse Scandinavia might be failing for
+reasons variance has nothing to do with, and said to measure it rather than
+assume. Measured, the warning was wrong, and the real answer is much
+stronger than the complaint above claims.
+
+First, the three failing civilisations are not underfed. Mean nutrition
+ratio over the unshocked century, against the population that ends it:
+
+    civilisation       mean nutrition   worst year   pstdev   century
+    rome_100ad                 1.0042       0.8909   0.0310    107.6%
+    england_1300               1.0241       0.6236   0.0911    105.3%
+    han_china_100ad            1.0222       0.3511   0.1537     83.8%
+    mexica_1500                1.0139       0.5314   0.1357     77.9%
+    norse_900ad                0.9908       0.4603   0.0947     71.8%
+
+Han China eats BETTER than Rome on average - 1.0222 against 1.0042 - and
+loses a quarter of its population anyway. What separates them is the third
+and fourth columns: Rome's worst year in a century is 0.8909 of subsistence
+and Han China's is 0.3511.
+
+Second, and decisively: with weather variance removed entirely (
+`draw_weather_multiplier` patched to return 1.0, in BOTH module objects -
+`world.agriculture` and `sim.world.agriculture` are the same file loaded
+under two roots, which is a trap CLAUDE.md SS6 records someone already
+falling into), ALL FIVE CIVILISATIONS LAND AT 109.0%:
+
+    civilisation       no variance   actual   lost to variance
+    rome_100ad              109.0%   107.6%                1.4
+    england_1300            109.0%   105.3%                3.7
+    han_china_100ad         109.0%    83.8%               25.2
+    mexica_1500             109.0%    77.9%               31.1
+    norse_900ad             109.0%    71.8%               37.2
+
+Identical, to the precision printed. That is the expected result rather than
+a suspicious one: with steady weather every civilisation's nutrition ratio
+sits at or above subsistence, the mortality and fertility responses saturate
+at their well-fed values, and what is left is the demographic model's own
+unconstrained rate under an ancient disease burden - the same for everyone,
+because nothing civilisation-specific is left to differ.
+
+So every one of these societies has the food to grow. The entire gap between
+109.0% and where each actually lands is harvest variance, and the variance
+each one suffers is set by how many rows its territory occupies in a JSON
+file.
+
+This is Jensen's inequality on a one-sided response curve, the same
+mechanism `Complaints/45` and the demography work already record: a convex
+mortality response against symmetric weather means eating 18% extra in a
+good year saves far fewer lives than eating 65% less in a bad year costs.
+Averaging N independent draws divides the spread by about sqrt(N), which is
+why the fix is worth 25 to 37 points to the three civilisations that
+currently get N = 1, and only 1.4 to Rome, which already has seven.
