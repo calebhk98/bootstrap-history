@@ -235,6 +235,15 @@ TOPICS = [
     # Off by default; sim/engine/data.py's load() only calls it when
     # use_solved_prices=True. See that module's own docstring.
     "engine_prices",
+    # Complaints/46, the engine half: forest_land_ceiling scaled how much
+    # coppice woodland a civilisation can organise by len(home_regions) - the
+    # COUNT of labels its territory is filed under. Han China is 9,597,000 km2
+    # filed as one region and Rome is 9,517,500 km2 filed as seven, so China
+    # could reach a seventh of Rome's firewood on the same ground. Now per
+    # million km2 of real home land, which also pins that the count cannot
+    # come back: two territories of equal area get equal ceilings whatever
+    # their region count.
+    "complaint_46_forest_area_not_region_count",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
     # both directions, so the count can only move deliberately.

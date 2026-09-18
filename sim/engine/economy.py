@@ -6162,49 +6162,96 @@ class EconomyMixin:
             "at all, per the comment above.")
     # Land bounds woodland too, not only mines. geography.json carries no
     # per-region forest figure to read the way minerals has one, so this is
-    # built from the signal that IS there: how much territory you actually
-    # hold (home_regions, a land-area proxy in the absence of a real
-    # hectare-of-forest number) and how good your state is at organising
-    # land tenure at all (state_capacity) -- a coppice is not a metalla, so
-    # no imperial concession gates it, but fencing off and managing a
-    # woodland at scale still takes an administration capable of holding
-    # the tenure. [C], sized against the one real anchor available:
-    # resources.json's empire-wide 500,000 t/yr of charcoal implies roughly
-    # 667,000 ha under management across the WHOLE Roman world (at
-    # CHARCOAL_PER_HA=0.75 t/ha/yr); Rome's own ceiling below tops out
-    # around 190,000 ha even at full revenue-driven scale-up, comfortably
-    # under that -- no private holding should rival the entire empire's own
-    # managed woodland.
-    FOREST_HA_PER_REGION_BASE = declare(
-        "FOREST_HA_PER_REGION_BASE", 1500.0, kind="engineering_estimate",
-        unit="hectares/region (base, before state capacity)", source=
-        "Sized, per the comment above, against resources.json's "
-        "empire-wide 500,000 t/yr of charcoal - implying roughly 667,000 "
-        "ha under management across the whole Roman world at "
-        "CHARCOAL_PER_HA=0.75 t/ha/yr - so Rome's own ceiling stays "
-        "comfortably under that total even at full revenue-driven scale-up.",
+    # built from the signal that IS there: how much GROUND you actually hold
+    # and how good your state is at organising land tenure at all
+    # (state_capacity) -- a coppice is not a metalla, so no imperial
+    # concession gates it, but fencing off and managing a woodland at scale
+    # still takes an administration capable of holding the tenure.
+    #
+    # THIS USED TO BE PER HOME REGION (a count of labels: len(home_regions)),
+    # not per unit of land. Complaint 46 caught the same failure here that it
+    # named for rent: a region is a filing label, not a unit of area, and
+    # the labels range 86x in size (americas_north 19.8M km2 down to
+    # britannia's 230,000 -- data/world/geography.json). Under the old
+    # formula, re-filing Rome's SAME seven regions as, say, fourteen tiles
+    # would have doubled its woodland ceiling with no forest gaining or
+    # losing a single hectare, and Han China's one enormous but singular
+    # region (9.6M km2, bigger than Rome's whole seven put together) priced
+    # out at less than a seventh of Rome's ceiling for holding MORE ground.
+    # Both are the map's filing system leaking into the economics, exactly
+    # as Complaint 46 describes for rent. Fixed by reading
+    # geography.json's own `land.land_area_km2` per home region (see
+    # home_land_area_km2() below) and keying the rate on AREA instead.
+    #
+    # [C], sized against the one real anchor available: resources.json's
+    # empire-wide 500,000 t/yr of charcoal implies roughly 667,000 ha under
+    # management across the WHOLE Roman world (at CHARCOAL_PER_HA=0.75
+    # t/ha/yr); Rome's own ceiling below tops out around 190,000 ha even at
+    # full revenue-driven scale-up, comfortably under that -- no private
+    # holding should rival the entire empire's own managed woodland. The
+    # per-area rate is re-derived from that SAME anchor, using Rome's own
+    # home land area (9.5175 million km2, from geography.json) as the one
+    # data point available to convert "hectares per home region" into
+    # "hectares per million km2 of home land" -- so Rome's own ceiling barely
+    # moves (its real, mapped land area is what the old per-region figure was
+    # already tuned against, just via the region count as a proxy for it),
+    # while a civilization whose true land area disagrees sharply with its
+    # region count moves a great deal, which is the entire point of the fix.
+    FOREST_HA_PER_MILLION_KM2_BASE = declare(
+        "FOREST_HA_PER_MILLION_KM2_BASE", 1100.0, kind="engineering_estimate",
+        unit="hectares/(million km2 of home land) (base, before state capacity)",
+        source=
+        "Re-derived from the same empire-wide charcoal anchor as the old "
+        "FOREST_HA_PER_REGION_BASE (500,000 t/yr implying ~667,000 ha "
+        "managed empire-wide at CHARCOAL_PER_HA=0.75 t/ha/yr), converted "
+        "from hectares-per-region to hectares-per-million-km2 using Rome's "
+        "own home land area (9.5175 million km2 across its seven home "
+        "regions, data/world/geography.json) as the calibration point, so "
+        "that Rome's own pre-revenue ceiling is essentially unchanged by "
+        "the switch from counting labels to reading area.",
         confidence="C",
-        why="Base standing-woodland ceiling per home region before state "
-            "capacity is applied. geography.json carries no per-region "
-            "forest figure the way it does for minerals, so this is built "
-            "from a proxy (region count) and checked against the one real "
-            "empire-wide anchor available, not measured region by region.")
-    FOREST_HA_PER_REGION_PER_SC = declare(
-        "FOREST_HA_PER_REGION_PER_SC", 3500.0, kind="engineering_estimate",
-        unit="hectares/region per unit of state_capacity", source=
-        "Same empire-wide charcoal anchor as FOREST_HA_PER_REGION_BASE.",
+        why="Base standing-woodland ceiling per million km2 of home land "
+            "held, before state capacity is applied. geography.json carries "
+            "no per-region forest figure the way it does for minerals, so "
+            "this is still built from a proxy and checked against the one "
+            "real empire-wide anchor available, not measured region by "
+            "region -- but the proxy is now land area (a physical quantity "
+            "every region already carries) rather than a count of however "
+            "many labels that area happens to be filed under.")
+    FOREST_HA_PER_MILLION_KM2_PER_SC = declare(
+        "FOREST_HA_PER_MILLION_KM2_PER_SC", 2575.0, kind="engineering_estimate",
+        unit="hectares/(million km2 of home land) per unit of state_capacity",
+        source="Same empire-wide charcoal anchor and Rome-area calibration "
+        "as FOREST_HA_PER_MILLION_KM2_BASE.",
         confidence="C",
         why="How much a more capable state (able to hold woodland tenure "
-            "at scale) extends the per-region woodland ceiling - checked "
+            "at scale) extends the per-area woodland ceiling - checked "
             "against the same empire-wide total as the base figure, not "
             "independently measured.")
 
+    def home_land_area_km2(self):
+        """Total land area, in km2, of this civilization's own home_regions --
+        read from geography.json's per-region `land.land_area_km2`, not
+        counted by how many region labels that ground happens to be filed
+        under (see forest_land_ceiling()'s own comment for why the count
+        was wrong). Falls back to Italia's area, the same fallback
+        _compute_home_centroid() uses for a civ file with no valid
+        home_regions at all, so this never divides by zero or crashes on a
+        malformed civ file."""
+        home = [r for r in (self.civ.get("home_regions") or []) if r in self._regions]
+        area = sum(float((self._regions[r].get("land") or {}).get("land_area_km2", 0.0))
+                   for r in home)
+        if area > 0.0:
+            return area
+        fallback = self._regions.get("italia") or next(iter(self._regions.values()), {})
+        return float((fallback.get("land") or {}).get("land_area_km2", 0.0)) or 1.0
+
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
-        n_regions = max(1, len(self.civ.get("home_regions") or ()))
+        home_land_million_km2 = self.home_land_area_km2() / 1.0e6
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
-        base = ((self.FOREST_HA_PER_REGION_BASE
-                 + self.FOREST_HA_PER_REGION_PER_SC * state_capacity) * n_regions)
+        base = ((self.FOREST_HA_PER_MILLION_KM2_BASE
+                 + self.FOREST_HA_PER_MILLION_KM2_PER_SC * state_capacity) * home_land_million_km2)
         return base * (1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE,
                                   max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII))
 
