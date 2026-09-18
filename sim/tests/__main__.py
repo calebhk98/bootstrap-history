@@ -75,6 +75,10 @@ TOPICS = [
     "complaints_09_16",
     "complaint_13_specialist_supervision",
     "complaints_17_24",
+    # Complaints/34: commissioned SCHOLAR hours bought nothing, because the
+    # project gate read the standing headcount. The same defect
+    # craft_hands_available() was written to fix, never extended to scholars.
+    "complaint_34_scholar_hours",
     # Complaints/38: `path` printed one founder-hours budget and judged
     # feasibility against a different one. The test asserts the printed and
     # judged figures share a SOURCE, not merely that they currently agree.

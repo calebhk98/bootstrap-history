@@ -1675,6 +1675,36 @@ class LabourMixin:
         """You are your own natural philosopher; everyone else is hired."""
         return self.household.scholars + (1.0 if self.founder_alive else 0.0)
 
+    def scholar_hands_available(self):
+        """Scholars you can actually put on a project this year: the ones on
+        your own staff, yourself, plus the ones whose time you have already
+        bought under contract.
+
+        THE SAME FIX craft_hands_available() GOT, ARRIVING LATE. That
+        function's own comment records the bug: a gate that read the payroll
+        alone, so work you had already paid an outside shop to do could not
+        satisfy the requirement - and the refusal's advice was to go and
+        commission it. `commission` could not unblock the gate that
+        recommended commission.
+
+        It was fixed for craft trades and never extended to scholars, so the
+        identical defect survived for them and was reported as
+        Complaints/34: buying labourer hours works, buying SCHOLAR hours
+        does nothing. Reproduced against the live protocol - a 2,000-hour
+        scholar commission succeeded, took the money, and left the refusal
+        byte-identical.
+
+        A year of a scholar's time IS a scholar, for the purpose of whether
+        you may attempt a thing that needs one. Buying the work rather than
+        the person is the whole point of `commission`, and it is what
+        somebody in this position actually did.
+        """
+        contracted = sum(hours for trade, hours
+                         in getattr(self.household, "contract_hours", {}).items()
+                         if trade_family(trade) == "scholar")
+        return (self.effective_scholars()
+                + contracted / self.HOURS_PER_PERSON_YEAR)
+
     def trade_available(self, t):
         """Can this trade be had here at all, at any price?
 
@@ -2009,13 +2039,16 @@ class LabourMixin:
         """
         if not self.trade_available(t):
             return 0.0
-        reference_pop = float(self.civ.get("population", 0.0))
-        # pop_scale is expressed relative to Rome's 65m reference, while this
-        # civilisation's configured population is its own unshocked baseline.
-        # The ratio therefore exposes both mortality and subsequent growth.
-        scale_from_baseline = (self.pop_scale / self._pop_scale_base
-                               if self._pop_scale_base else 1.0)
-        pop = reference_pop * scale_from_baseline
+        # WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md SS1.1):
+        # this used to reconstruct an absolute headcount from
+        # civ["population"] (a fixed config number) times a ratio of two
+        # scalar fields (pop_scale/_pop_scale_base) - the one place in the
+        # engine that tried to answer "how many people are actually here" as
+        # a headcount rather than a ratio, built entirely out of ratios.
+        # self.population.total (sim/world/demography.py's age-cohort
+        # model, now the engine's own running headcount) IS that number
+        # directly - no reconstruction needed.
+        pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if t == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION

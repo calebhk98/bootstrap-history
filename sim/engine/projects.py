@@ -2150,13 +2150,27 @@ class ProjectsMixin:
                            "so is finishing or stopping what is running."
                            % (getattr(self.household, "insolvent_years", 0), -self.household.capital))
                            if _why else None)
-        if node["sch"] > self.effective_scholars():
+        # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
+        # effective_scholars(), the standing headcount, so scholar hours you
+        # had already bought and paid for could not satisfy the requirement,
+        # and the refusal's own advice was to go and commission them.
+        # Reproduced against the live protocol: a 2,000-hour commission
+        # succeeded, took the money, and left this refusal byte-identical.
+        #
+        # Exactly the bug the craft gate below was fixed for, never extended
+        # to scholars - see scholar_hands_available() in labour.py, which is
+        # craft_hands_available() with the trade family changed.
+        if node["sch"] > self.scholar_hands_available():
             # _staff_advice is pure (labour.py: no rng, no log, no mutation -
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
             # it is skipped along with the rest of the sentence.
-            return False, (("needs %d trained scholars, you have %.1f (you are one of them). %s"
-                           % (node["sch"], self.effective_scholars(), self._staff_advice("scholars")))
+            return False, (("needs %d trained scholars, and you have %.1f - "
+                            "counting people on your staff and yourself, plus "
+                            "any hours already bought under contract as that "
+                            "share of one more. %s"
+                           % (node["sch"], self.scholar_hands_available(),
+                              self._staff_advice("scholars")))
                            if _why else None)
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
