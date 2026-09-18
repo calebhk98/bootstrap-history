@@ -1,0 +1,142 @@
+{
+ "_note": "MACHINES, not energy. Complaints/40-machines-are-not-goods.md is the whole brief: a water wheel, a heat engine, a dynamo, a motor and a photovoltaic module are manufactured goods that happen to produce energy, not kinds of energy themselves. Their build bills used to be inlined as `capital` sub-objects inside data/production/70_energy.json's energy-conversion entries, which meant nothing else could buy one, the same machine could not be shared between uses (a water wheel drives a mill, a trip hammer, a bellows AND a dynamo), and a machine could never be improved by one edit that reached every process built on it. Each entry here is an ordinary production recipe like any other in this directory - `inputs`, `labour_hours`, `yield_basis`, `conf` - whose single output is one complete machine, referenced by data/production/70_energy.json's own `capital.build_materials` exactly the way any other capital good in this file is built from real materials rather than a lump of currency (see CAPITAL in _SCHEMA.md). This is a PURE RESHAPE: nothing about what a machine is made of changed, only where that bill of materials lives, so it changes nothing about the price of energy - the same materials and labour go in either way. `requires_node` on each entry copies the gate its energy-consuming entry already carried (they were already labelled), except photovoltaic_panel_m2, which is deliberately left absent because the tech tree has no node for a power-generating cell at all - see that entry's own note. None of these entries carries a `capital` of its own: building one machine is a one-off manufacturing job, not a continuously-run process with its own fixed plant to amortise.",
+ "materials": {
+
+  "waterwheel_unit": {
+   "outputs": {
+    "waterwheel_unit": 1.0
+   },
+   "inputs": {
+    "timber_m3": 12.0,
+    "iron_bloom_kg": 400.0,
+    "stone_kg": 8000.0
+   },
+   "labour_hours": {
+    "millwright": 300.0,
+    "carpenter": 250.0,
+    "mason": 150.0,
+    "labourer": 300.0
+   },
+   "basis": "per one complete water wheel (undershot or overshot): timber wheel and frame, iron axle and gearing, leat and sluice masonry, ready to run",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_waterwheel per Complaints/40 (that entry keeps the POWER and LIFE facts that belong to running one, not building one). Timber for the wheel, buckets and frame; iron for the axle, gearing and bearings; stone for the leat and sluice masonry - the same three materials and the same rough order of magnitude as this file's other water-powered plant (iron_bar_kg's finery hearth and hammer; wire_drawn_kg's draw-bench, both in 10_ferrous.json), scaled for a free-standing wheel with its own leat rather than one bolted onto an existing forge. DEFECT FOUND AND FIXED DURING THIS RESHAPE: the axle and gudgeons are bloomery iron (iron_bloom_kg, requires_node mat_wrought_iron), NOT puddled/finery-hearth wrought iron (iron_bar_kg, requires_node finery_puddling, Cort's process, 1784) - a medieval or Roman millwright had no access to Cort's reverberatory hearth at all, and did not need it: bloomery iron, consolidated and hammered, is exactly what a wheel's axle and gearing were historically made of. The old iron_bar_kg figure meant no civilisation before 1784 could build a water wheel in this simulation, despite Domesday recording 5,624 English watermills in 1086 - see Complaints/40. Reported and fixed as a separate step from the pure reshape, exactly as that complaint asks: this single-line change moves the solved price of mechanical_mj and electrical_mj (see the module's own before/after record) because it makes a real technique newly available to England 1300's gated solve, not because any physical quantity here changed - iron_bloom_kg is still 400 kg of iron by mass, just correctly gated iron.",
+   "requires_node": "cap_power_water",
+   "conf": "C"
+  },
+
+  "heat_engine_atmospheric_unit": {
+   "outputs": {
+    "heat_engine_atmospheric_unit": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 2000.0,
+    "timber_m3": 8.0,
+    "stone_kg": 5000.0
+   },
+   "labour_hours": {
+    "smith": 300.0,
+    "carpenter": 200.0,
+    "mason": 150.0
+   },
+   "basis": "per one complete Newcomen-type atmospheric steam engine: cast/wrought iron cylinder and piston, timber beam, boiler, masonry engine house",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_atmospheric per Complaints/40 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). Heavy ironwork for the cylinder, piston and fittings; substantial timber for the rocking beam; a masonry house for the boiler and beam - an engine that was large and crude for its power output, exactly the historical character of the type, which is why it is the FUEL figure on the energy entry, not this build bill, that dominates why this technique never competes with a water wheel.",
+   "requires_node": "steam_atmospheric",
+   "conf": "C"
+  },
+
+  "heat_engine_compound_unit": {
+   "outputs": {
+    "heat_engine_compound_unit": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1500.0,
+    "copper_kg": 150.0,
+    "stone_kg": 1500.0
+   },
+   "labour_hours": {
+    "machinist": 200.0,
+    "smith": 100.0,
+    "mason": 60.0
+   },
+   "basis": "per one complete compound (multi-expansion) reciprocating steam engine: higher-pressure boiler, two or more cylinders, condenser, structural ironwork",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_compound per Complaints/40 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). Copper appears for boiler tubes and condenser fittings that a low-pressure atmospheric engine did not need; the machinist hours (rather than mostly smith hours, unlike heat_engine_atmospheric_unit) reflect the tighter tolerances real expansive working requires - a substantially larger and more capable machine than a Newcomen, sized to the tens-of-kilowatts output the energy entry's own POWER figure states.",
+   "requires_node": "en_compound_engine",
+   "conf": "C"
+  },
+
+  "heat_engine_modern_steam_unit": {
+   "outputs": {
+    "heat_engine_modern_steam_unit": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 6000.0,
+    "copper_kg": 400.0,
+    "stone_kg": 3000.0
+   },
+   "labour_hours": {
+    "machinist": 600.0,
+    "smith": 200.0,
+    "mason": 150.0
+   },
+   "basis": "per one complete modern high-pressure reheat steam turbine set: boiler, turbine, condenser, generator foundation, structural steel",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_heat_engine_modern_steam per Complaints/40 (that entry keeps the POWER and THERMAL-EFFICIENCY facts that belong to running one, not building one). The much higher iron and copper figures than either other heat engine here reflect a turbine casing, condenser and generator that a reciprocating engine's build bill does not need, for a megawatt-class continuous machine (the energy entry's own POWER figure).",
+   "requires_node": "en_steam_turbine_reaction",
+   "conf": "C"
+  },
+
+  "dynamo_unit": {
+   "outputs": {
+    "dynamo_unit": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 300.0,
+    "copper_wire_kg": 200.0
+   },
+   "labour_hours": {
+    "electrician": 80.0,
+    "machinist": 40.0
+   },
+   "basis": "per one complete dynamo (DC generator): laminated iron core and frame, copper armature and field windings, commutator, bearings",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's electrical_mj_dynamo per Complaints/40 (that entry keeps the CONVERSION-EFFICIENCY and sizing-to-a-typical-water-wheel facts that belong to running one, not building one). A dynamo of this class is a modest machine relative to the heat-engine entries above - an iron frame and core, copper windings, a commutator and bearings - not a structure, which is why its build bill is far smaller than any of the three heat engines'.",
+   "requires_node": "dynamo",
+   "conf": "C"
+  },
+
+  "motor_unit": {
+   "outputs": {
+    "motor_unit": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 250.0,
+    "copper_wire_kg": 150.0
+   },
+   "labour_hours": {
+    "electrician": 60.0,
+    "machinist": 30.0
+   },
+   "basis": "per one complete electric motor: laminated iron core and frame, copper armature and field windings, bearings - the same machine as dynamo_unit above, run in reverse",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's mechanical_mj_motor per Complaints/40 (that entry keeps the CONVERSION-EFFICIENCY facts that belong to running one, not building one). A DC motor and a DC dynamo are, to a first approximation, the same physical machine run with the current flowing the other way - a real engineering fact, not a modelling convenience - so this entry's build bill mirrors dynamo_unit's own, slightly lighter since a motor sized to deliver the same shaft power a dynamo there consumed needs a little less copper and iron.",
+   "requires_node": "tl_motor_dc",
+   "conf": "C"
+  },
+
+  "photovoltaic_panel_m2": {
+   "outputs": {
+    "photovoltaic_panel_m2": 1.0
+   },
+   "inputs": {
+    "glass_raw_kg": 10.0,
+    "aluminium_kg": 1.8,
+    "copper_kg": 0.15,
+    "silicon_kg": 0.5
+   },
+   "labour_hours": {
+    "electrician": 3.0,
+    "machinist": 1.5
+   },
+   "basis": "per one square metre of installed photovoltaic module (crystalline-silicon solar panel): tempered-glass cover, aluminium frame, copper wiring and junction box, and the silicon photovoltaic cells themselves",
+   "yield_basis": "BUILD BILL, split out of data/production/70_energy.json's electrical_mj_photovoltaic per Complaints/40 (that entry keeps the POWER and SERVICE-LIFE facts that belong to running one square metre, not building it). Glass cover, aluminium frame and copper wiring/junction box are real, modest per-square-metre quantities for a module of this class; the silicon figure (0.5 kg/m2) is a wafer-mass allowance including sawing losses, priced through the silicon_kg entry in 20_nonferrous.json. THE HONEST CAVEAT, carried over unchanged: silicon_kg's own yield_basis is explicit that it omits crystal growth, wafer sawing, cell doping/metallisation and module lamination - real, individually energy-intensive steps in making an actual photovoltaic cell - so this entry's resulting price is a LOWER BOUND by a margin this file cannot yet quantify, not a claim that a panel is already this cheap to build in full. Tag: GAP, not a heuristic, per CLAUDE.md 3.4. requires_node is deliberately ABSENT, not null: the tech tree has no node for a power-generating cell at all (no node marks the transition from 'we understand the photovoltaic effect' to 'we can manufacture a cell'), so classifying this as available-with-no-technology (null) would be as wrong as inventing a gate that does not exist - absence here means what the schema says it means, an honest gap that drops this entry from every gated solve until the tree grows that node, exactly matching data/production/70_energy.json's electrical_mj_photovoltaic, which has always left the same field absent for the same reason.",
+   "conf": "C"
+  }
+
+ }
+}

@@ -1,5 +1,5 @@
 {
- "_note": "THE ENERGY MARKET (Complaints/32's third gap, then a real defect in how that gap was closed - see THE ALUMINIUM DEFECT below). `thermal_mj`, `mechanical_mj` and `electrical_mj` are not tree materials - nothing in data/tech_tree.json consumes them - they are the THREE energy CARRIERS every other entry in this directory can draw on once it needs process heat, shaft work or a current beyond what a fuel already listed in its own `inputs` supplies. Splitting one field into three is the schema change sim/solve_prices.py's module docstring calls for: a kilogram of charcoal, a turning shaft and a flow of electrons are not substitutes for each other (you cannot smelt with a turning shaft, you cannot draw wire with a fire, and - the piece that was missing before this round - you cannot run an electrolysis cell off a shaft without first turning it into a current), so pricing any two of them as one undifferentiated pool would let the cheaper of the two silently stand in for the other. PRIMARY entries below each supply one carrier from a genuinely different physical source (burning a fuel; a water wheel or human muscle; sunlight on a panel with no shaft at all); CONVERSION entries turn one carrier into another (a heat engine, a dynamo, a motor, resistance/arc heating, friction), so the three carriers form one connected market rather than three separate ones - sim/solve_prices.py picks whichever technique, or chain of conversions, is cheapest at current prices, so the choice between muscle and water, between charcoal and coal, or between hydro-and-a-dynamo and a solar panel, is an OUTPUT of the solve, not an input to it. THE ALUMINIUM DEFECT: this file used to carry every electrical need (aluminium's Hall-Heroult current included) as `mechanical_mj`, on the reasoning that electricity is a carrier for shaft work rather than a source of its own - true of a waterwheel-and-dynamo civilisation and false in general, since a photovoltaic panel makes electricity with no shaft anywhere in the chain. `electrical_mj` and its two conversions (`electrical_mj_dynamo`, `electrical_mj_photovoltaic`) fix that; `aluminium_kg` and the new `silicon_kg` now draw on `electrical_mj` directly, and `quartz_tube_kg` (whose 1700-2000 C need no combustion route here reaches) does too, bypassing the temperature-blind generic `thermal_mj` pool on purpose - see TEMPERATURE in sim/solve_prices.py's module docstring. See ENERGY in that file's module docstring for the full reasoning, and Complaints/32 for why energy was the last of the three original gaps.",
+ "_note": "THE ENERGY MARKET (Complaints/32's third gap, then a real defect in how that gap was closed - see THE ALUMINIUM DEFECT below). `thermal_mj`, `mechanical_mj` and `electrical_mj` are not tree materials - nothing in data/tech_tree.json consumes them - they are the THREE energy CARRIERS every other entry in this directory can draw on once it needs process heat, shaft work or a current beyond what a fuel already listed in its own `inputs` supplies. Splitting one field into three is the schema change sim/solve_prices.py's module docstring calls for: a kilogram of charcoal, a turning shaft and a flow of electrons are not substitutes for each other (you cannot smelt with a turning shaft, you cannot draw wire with a fire, and - the piece that was missing before this round - you cannot run an electrolysis cell off a shaft without first turning it into a current), so pricing any two of them as one undifferentiated pool would let the cheaper of the two silently stand in for the other. PRIMARY entries below each supply one carrier from a genuinely different physical source (burning a fuel; a water wheel or human muscle; sunlight on a panel with no shaft at all); CONVERSION entries turn one carrier into another (a heat engine, a dynamo, a motor, resistance/arc heating, friction), so the three carriers form one connected market rather than three separate ones - sim/solve_prices.py picks whichever technique, or chain of conversions, is cheapest at current prices, so the choice between muscle and water, between charcoal and coal, or between hydro-and-a-dynamo and a solar panel, is an OUTPUT of the solve, not an input to it. THE ALUMINIUM DEFECT: this file used to carry every electrical need (aluminium's Hall-Heroult current included) as `mechanical_mj`, on the reasoning that electricity is a carrier for shaft work rather than a source of its own - true of a waterwheel-and-dynamo civilisation and false in general, since a photovoltaic panel makes electricity with no shaft anywhere in the chain. `electrical_mj` and its two conversions (`electrical_mj_dynamo`, `electrical_mj_photovoltaic`) fix that; `aluminium_kg` and the new `silicon_kg` now draw on `electrical_mj` directly, and `quartz_tube_kg` (whose 1700-2000 C need no combustion route here reaches) does too, bypassing the temperature-blind generic `thermal_mj` pool on purpose - see TEMPERATURE in sim/solve_prices.py's module docstring. See ENERGY in that file's module docstring for the full reasoning, and Complaints/32 for why energy was the last of the three original gaps. MACHINES ARE NOT GOODS (Complaints/40): a water wheel, a heat engine, a dynamo, a motor and a photovoltaic module are manufactured goods that happen to produce energy, not kinds of energy themselves, so their build bills used to be inlined as `capital` sub-objects here are now their own production entries in data/production/80_machines.json (waterwheel_unit, heat_engine_atmospheric_unit, heat_engine_compound_unit, heat_engine_modern_steam_unit, dynamo_unit, motor_unit, photovoltaic_panel_m2), referenced from this file's own `capital.build_materials` exactly the way any other capital good references the materials it is built from - a machine can now be named, bought, shared between uses and improved once, instead of drifting apart across several inline copies. This is a pure reshape: the same materials and labour go in either way, so it changes nothing about what any of the three carrier prices come out to (see the acceptance test recorded in Complaints/40).",
  "materials": {
 
   "thermal_mj_charcoal": {
@@ -60,21 +60,13 @@
    "extracted_from": "the kinetic energy of a river or stream (an existing head and flow; the SITE is a natural endowment exactly like an ore deposit, and this round fixes its rent at zero along with every other extracted material's - see RENT_IS_ZERO in this file's own module docstring)",
    "capital": [
     {
-     "good": "water wheel (undershot or overshot), timber wheel and frame, iron axle and gearing, leat and sluice masonry",
+     "good": "one water wheel (undershot or overshot), complete - the machine itself is a manufactured good other processes can also buy; see waterwheel_unit in data/production/80_machines.json for its build bill (Complaints/40 - a waterwheel is not a kind of energy, it is a machine that produces energy, and its bill of materials was promoted out of this file so other consumers can name it too)",
      "build_materials": {
-      "timber_m3": 12.0,
-      "iron_bar_kg": 400.0,
-      "stone_kg": 8000.0
-     },
-     "build_labour_hours": {
-      "millwright": 300.0,
-      "carpenter": 250.0,
-      "mason": 150.0,
-      "labourer": 300.0
+      "waterwheel_unit": 1.0
      },
      "service_life_years": 15,
      "annual_output_at_basis": 126144.0,
-     "capital_basis": "Power, then build bill, then life - three separate physical facts. POWER: data/world/resources.json's constraints.water_power gives a typical wheel at 4.0 kW continuous (conf C there; 'a good Roman overshot wheel is a few kilowatts', bracketed by Barbegal's 16 wheels totalling 30-60 kW). 4000 W * 31,536,000 s/year = 1.26144e11 J = 126,144 MJ/year, taken here as running continuously - a real wheel is idled by drought, ice, flood and repair, so this is an upper bound on annual output and therefore, once divided into the build cost, a LOWER bound on the price of mechanical_mj from this route; a duty-cycle factor belongs on the list of things to tighten, not a number invented to fill it now. BUILD BILL: timber for the wheel, buckets and frame; iron for the axle, gearing and bearings; stone for the leat and sluice masonry - the same three materials and the same rough order of magnitude as this file's other water-powered plant (iron_bar_kg's finery hearth and hammer; wire_drawn_kg's draw-bench), scaled for a free-standing wheel with its own leat rather than one bolted onto an existing forge. LIFE: fifteen years follows iron_bar_kg's own precedent for a capital entry mixing components of different endurance - blend them under one service life set by the FASTEST-wearing part, which here is the submerged timber wheel and frame (the masonry leat and the iron gearing both easily outlast it).",
+     "capital_basis": "Power, then life - two physical facts; the BUILD BILL that used to sit here now lives on waterwheel_unit itself (data/production/80_machines.json), priced through this same solved system exactly as before, just under its own name. POWER: data/world/resources.json's constraints.water_power gives a typical wheel at 4.0 kW continuous (conf C there; 'a good Roman overshot wheel is a few kilowatts', bracketed by Barbegal's 16 wheels totalling 30-60 kW). 4000 W * 31,536,000 s/year = 1.26144e11 J = 126,144 MJ/year, taken here as running continuously - a real wheel is idled by drought, ice, flood and repair, so this is an upper bound on annual output and therefore, once divided into the build cost, a LOWER bound on the price of mechanical_mj from this route; a duty-cycle factor belongs on the list of things to tighten, not a number invented to fill it now. LIFE: fifteen years follows iron_bar_kg's own precedent for a capital entry mixing components of different endurance - blend them under one service life set by the FASTEST-wearing part, which here is the submerged timber wheel and frame (the masonry leat and the iron gearing both easily outlast it) - see waterwheel_unit's own yield_basis for the build bill this life figure is amortising.",
      "conf": "C"
     }
    ],
@@ -96,20 +88,13 @@
    "thermal_mj": 100000.0,
    "capital": [
     {
-     "good": "Newcomen-type atmospheric steam engine: cast/wrought iron cylinder and piston, timber beam, boiler, masonry engine house",
+     "good": "one Newcomen-type atmospheric steam engine, complete - see heat_engine_atmospheric_unit in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "iron_bar_kg": 2000.0,
-      "timber_m3": 8.0,
-      "stone_kg": 5000.0
-     },
-     "build_labour_hours": {
-      "smith": 300.0,
-      "carpenter": 200.0,
-      "mason": 150.0
+      "heat_engine_atmospheric_unit": 1.0
      },
      "service_life_years": 20,
      "annual_output_at_basis": 157680.0,
-     "capital_basis": "A real Newcomen engine (from 1712) delivered on the order of a few kilowatts at the pump, crude and hugely fuel-hungry but mechanically simple - a single iron cylinder, a timber rocking beam, a low-pressure boiler. Taken here at 5 kW continuous: 5000 W * 31,536,000 s/year = 1.5768e11 J = 157,680 MJ/year. The build bill (heavy ironwork, substantial timber, a masonry house for the boiler and beam) reflects an engine that was large and crude for its power output, exactly the historical character of the type - it is the FUEL figure below, not this one, that dominates why it never competes with a water wheel.",
+     "capital_basis": "Power, then life - the BUILD BILL now lives on heat_engine_atmospheric_unit itself (data/production/80_machines.json), priced through this same solved system exactly as before. A real Newcomen engine (from 1712) delivered on the order of a few kilowatts at the pump, crude and hugely fuel-hungry but mechanically simple - a single iron cylinder, a timber rocking beam, a low-pressure boiler. Taken here at 5 kW continuous: 5000 W * 31,536,000 s/year = 1.5768e11 J = 157,680 MJ/year. It is the FUEL figure below (thermal_mj), not this build cost, that dominates why this technique never competes with a water wheel.",
      "conf": "C"
     }
    ],
@@ -131,20 +116,13 @@
    "thermal_mj": 10000.0,
    "capital": [
     {
-     "good": "compound (multi-expansion) reciprocating steam engine: higher-pressure boiler, two or more cylinders, condenser, structural ironwork",
+     "good": "one compound (multi-expansion) reciprocating steam engine, complete - see heat_engine_compound_unit in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "iron_bar_kg": 1500.0,
-      "copper_kg": 150.0,
-      "stone_kg": 1500.0
-     },
-     "build_labour_hours": {
-      "machinist": 200.0,
-      "smith": 100.0,
-      "mason": 60.0
+      "heat_engine_compound_unit": 1.0
      },
      "service_life_years": 25,
      "annual_output_at_basis": 1576800.0,
-     "capital_basis": "A good later-19th-century compound engine, expanding steam in stages and running at real (rather than merely atmospheric) pressure, was a substantially larger and more capable machine than a Newcomen - representative industrial units delivered tens of kilowatts continuously. Taken here at 50 kW: 50,000 W * 31,536,000 s/year = 1.5768e12 J = 1,576,800 MJ/year. Copper appears for boiler tubes and condenser fittings that a low-pressure atmospheric engine did not need; the machinist hours (rather than mostly smith hours) reflect the tighter tolerances real expansive working requires.",
+     "capital_basis": "Power, then life - the BUILD BILL now lives on heat_engine_compound_unit itself (data/production/80_machines.json), priced through this same solved system exactly as before. A good later-19th-century compound engine, expanding steam in stages and running at real (rather than merely atmospheric) pressure, was a substantially larger and more capable machine than a Newcomen - representative industrial units delivered tens of kilowatts continuously. Taken here at 50 kW: 50,000 W * 31,536,000 s/year = 1.5768e12 J = 1,576,800 MJ/year.",
      "conf": "C"
     }
    ],
@@ -166,20 +144,13 @@
    "thermal_mj": 2500.0,
    "capital": [
     {
-     "good": "modern high-pressure reheat steam turbine set: boiler, turbine, condenser, generator foundation, structural steel",
+     "good": "one modern high-pressure reheat steam turbine set, complete - see heat_engine_modern_steam_unit in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "iron_bar_kg": 6000.0,
-      "copper_kg": 400.0,
-      "stone_kg": 3000.0
-     },
-     "build_labour_hours": {
-      "machinist": 600.0,
-      "smith": 200.0,
-      "mason": 150.0
+      "heat_engine_modern_steam_unit": 1.0
      },
      "service_life_years": 30,
      "annual_output_at_basis": 31536000.0,
-     "capital_basis": "A modern reheat steam turbine set is a megawatt-class continuous machine - taken here at a modest 1 MW (small by real utility standards, chosen so the annual-output figure stays comparable in kind to the other two heat engines rather than jumping to a full power-station scale that would need its own grid to matter to anything else in this file): 1,000,000 W * 31,536,000 s/year = 3.1536e13 J = 31,536,000 MJ/year. The much higher iron and copper figures reflect a turbine casing, condenser and generator that a reciprocating engine's build bill does not need; the sharply lower labour per unit of output reflects real turbine plant running with a small crew relative to its output, the same substitution zinc_electrolytic_kg's own yield_basis notes for continuous electrolytic plant.",
+     "capital_basis": "Power, then life - the BUILD BILL now lives on heat_engine_modern_steam_unit itself (data/production/80_machines.json), priced through this same solved system exactly as before. A modern reheat steam turbine set is a megawatt-class continuous machine - taken here at a modest 1 MW (small by real utility standards, chosen so the annual-output figure stays comparable in kind to the other two heat engines rather than jumping to a full power-station scale that would need its own grid to matter to anything else in this file): 1,000,000 W * 31,536,000 s/year = 3.1536e13 J = 31,536,000 MJ/year. The sharply lower labour per unit of output than the other two heat engines reflects real turbine plant running with a small crew relative to its output, the same substitution zinc_electrolytic_kg's own yield_basis notes for continuous electrolytic plant - see heat_engine_modern_steam_unit's own yield_basis for the build bill that gives rise to it.",
      "conf": "C"
     }
    ],
@@ -200,18 +171,13 @@
    "mechanical_mj": 1081.1,
    "capital": [
     {
-     "good": "dynamo (DC generator): laminated iron core and frame, copper armature and field windings, commutator, bearings",
+     "good": "one dynamo (DC generator), complete - see dynamo_unit in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "iron_bar_kg": 300.0,
-      "copper_wire_kg": 200.0
-     },
-     "build_labour_hours": {
-      "electrician": 80.0,
-      "machinist": 40.0
+      "dynamo_unit": 1.0
      },
      "service_life_years": 20,
      "annual_output_at_basis": 116700.0,
-     "capital_basis": "Sized to the same prime mover this file already prices - a typical water wheel (data/world/resources.json's water_power.kw_per_wheel_typical, 4 kW) driving this dynamo at its own 92.5% conversion efficiency gives 4000 W * 0.925 = 3700 W of continuous electrical output: 3700 * 31,536,000 s/year = 1.167e11 J = 116,700 MJ/year. A dynamo of this class is a modest machine relative to the heat-engine capital above - an iron frame and core, copper windings, a commutator and bearings - not a structure, which is why its build bill is far smaller than any of the three heat engines'.",
+     "capital_basis": "Sized to the same prime mover this file already prices - a typical water wheel (data/world/resources.json's water_power.kw_per_wheel_typical, 4 kW) driving this dynamo at its own 92.5% conversion efficiency gives 4000 W * 0.925 = 3700 W of continuous electrical output: 3700 * 31,536,000 s/year = 1.167e11 J = 116,700 MJ/year. The BUILD BILL itself (an iron frame and core, copper windings, a commutator and bearings - a modest machine relative to the heat-engine capital above, not a structure) now lives on dynamo_unit itself (data/production/80_machines.json), priced through this same solved system exactly as before.",
      "conf": "C"
     }
    ],
@@ -232,18 +198,13 @@
    "electrical_mj": 1081.1,
    "capital": [
     {
-     "good": "electric motor: laminated iron core and frame, copper armature and field windings, bearings - the same machine as electrical_mj_dynamo above, run in reverse",
+     "good": "one electric motor, complete - the same machine as electrical_mj_dynamo above, run in reverse; see motor_unit in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "iron_bar_kg": 250.0,
-      "copper_wire_kg": 150.0
-     },
-     "build_labour_hours": {
-      "electrician": 60.0,
-      "machinist": 30.0
+      "motor_unit": 1.0
      },
      "service_life_years": 20,
      "annual_output_at_basis": 116700.0,
-     "capital_basis": "A DC motor and a DC dynamo are, to a first approximation, the same physical machine run with the current flowing the other way - a real engineering fact, not a modelling convenience - so this entry's build bill mirrors electrical_mj_dynamo's own (slightly lighter, since a motor sized to deliver the same shaft power it there consumed needs a little less copper and iron) rather than being independently invented, and its annual_output_at_basis is carried over unchanged for the same reason: a motor built to run at this dynamo's own scale.",
+     "capital_basis": "A DC motor and a DC dynamo are, to a first approximation, the same physical machine run with the current flowing the other way - a real engineering fact, not a modelling convenience - so motor_unit's own build bill mirrors dynamo_unit's own (slightly lighter, since a motor sized to deliver the same shaft power a dynamo there consumed needs a little less copper and iron) rather than being independently invented, and this entry's annual_output_at_basis is carried over unchanged for the same reason: a motor built to run at this dynamo's own scale. The BUILD BILL itself now lives on motor_unit (data/production/80_machines.json), priced through this same solved system exactly as before.",
      "conf": "C"
     }
    ],
@@ -288,20 +249,13 @@
    "extracted_from": "solar insolation - sunlight striking the panel. Unlike every other entry in this file, the resource itself needs no labour, no fuel and no prime mover to gather at all; only the fixed panel that intercepts it is a real cost, which is why labour_hours is empty here and nowhere else in this file.",
    "capital": [
     {
-     "good": "photovoltaic module (crystalline-silicon solar panel), per square metre of installed panel: tempered-glass cover, aluminium frame, copper wiring and junction box, and the silicon photovoltaic cells themselves",
+     "good": "one square metre of installed photovoltaic module (crystalline-silicon solar panel), complete - see photovoltaic_panel_m2 in data/production/80_machines.json for its build bill (Complaints/40)",
      "build_materials": {
-      "glass_raw_kg": 10.0,
-      "aluminium_kg": 1.8,
-      "copper_kg": 0.15,
-      "silicon_kg": 0.5
-     },
-     "build_labour_hours": {
-      "electrician": 3.0,
-      "machinist": 1.5
+      "photovoltaic_panel_m2": 1.0
      },
      "service_life_years": 25,
      "annual_output_at_basis": 1180.0,
-     "capital_basis": "THE CASE THAT PROVES THE OLD MODEL WRONG (see THE ALUMINIUM DEFECT in sim/solve_prices.py's module docstring): no shaft, no flame, no water wheel anywhere in this chain, only a fixed panel and sunlight. POWER: standard solar test conditions take insolation at 1000 W/m2 (AM1.5 spectrum, the universal engineering reference, not a figure tuned for this file); a representative Mediterranean/mid-latitude climate averages on the order of 5 kWh/m2/day of actual insolation over a year, and a modern crystalline-silicon panel converts roughly 18% of that to electricity. Annual output per square metre: 5 kWh/m2/day * 365 days/year * 0.18 = 328.5 kWh/m2/year = 1182.6 MJ/m2/year, rounded to 1180. This insolation figure belongs beside data/world/resources.json's own water_power and human_power constraints for the same reason those two live there rather than being invented inline, but that file is outside this round's scope, so it is cited here instead, flagged as where it should move. SERVICE LIFE: 25 years is a standard, well-documented panel degradation/warranty figure, not tuned to any price. BUILD BILL: glass cover, aluminium frame and copper wiring/junction box are real, modest per-square-metre quantities for a module of this class; the silicon figure (0.5 kg/m2) is a wafer-mass allowance including sawing losses, priced through the new silicon_kg entry in 20_nonferrous.json. THE HONEST CAVEAT: silicon_kg's own yield_basis is explicit that it omits crystal growth, wafer sawing, cell doping/metallisation and module lamination - real, individually energy-intensive steps in making an actual photovoltaic cell - so this technique's resulting price is a LOWER BOUND by a margin this file cannot yet quantify, not a claim that solar has already overtaken hydro. Tag: GAP, not a heuristic, per CLAUDE.md 3.4.",
+     "capital_basis": "THE CASE THAT PROVES THE OLD MODEL WRONG (see THE ALUMINIUM DEFECT in sim/solve_prices.py's module docstring): no shaft, no flame, no water wheel anywhere in this chain, only a fixed panel and sunlight. POWER: standard solar test conditions take insolation at 1000 W/m2 (AM1.5 spectrum, the universal engineering reference, not a figure tuned for this file); a representative Mediterranean/mid-latitude climate averages on the order of 5 kWh/m2/day of actual insolation over a year, and a modern crystalline-silicon panel converts roughly 18% of that to electricity. Annual output per square metre: 5 kWh/m2/day * 365 days/year * 0.18 = 328.5 kWh/m2/year = 1182.6 MJ/m2/year, rounded to 1180. This insolation figure belongs beside data/world/resources.json's own water_power and human_power constraints for the same reason those two live there rather than being invented inline, but that file is outside this round's scope, so it is cited here instead, flagged as where it should move. SERVICE LIFE: 25 years is a standard, well-documented panel degradation/warranty figure, not tuned to any price. The BUILD BILL itself (tempered glass cover, aluminium frame, copper wiring/junction box and the silicon cells) now lives on photovoltaic_panel_m2 (data/production/80_machines.json), priced through this same solved system exactly as before, including its own honest lower-bound caveat about crystal growth, wafer sawing, doping and lamination not being counted.",
      "conf": "C"
     }
    ],
