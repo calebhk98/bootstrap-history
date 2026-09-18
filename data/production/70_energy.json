@@ -13,6 +13,7 @@
    "energy_mj": 0.0,
    "basis": "per 1000 MJ of usable process heat delivered to a charge, burning charcoal in an ordinary open or simply-enclosed furnace",
    "yield_basis": "Two physical facts, chained: charcoal's calorific value (dry lump charcoal, being nearly pure carbon with its water and volatiles already driven off in the burn, releases on the order of 29 MJ per kg on combustion - the same order of magnitude as bituminous coal, and taken at the same 29 MJ/kg this file already uses for coal's calorific value in lime_kg's and the activated-carbon steam note's yield_basis, since both are predominantly-carbon solid fuels and the choice between them here should turn on which is CHEAPER to produce, not on an invented energy-density gap between them); and how much of that heat actually reaches the material rather than going up the flue or through the furnace wall, which this file's own lime_kg entry puts at a documented 20% for a simple kiln and its brine-boiling salt_kg entry puts at 30% for an open pan - an enclosed process furnace of the kind that needs this generic thermal_mj entry (a still, a carbonating tower, a calciner) sits between those two, taken here at a round 25%. 29 * 0.25 = 7.25 usable MJ per kg of charcoal burned, so 1000 usable MJ needs 1000 / 7.25 = 137.93 kg of charcoal. No labour is charged here beyond the charcoal's own price - fire-tending labour belongs to whichever consuming recipe needs the heat (see e.g. salt_brine_kg's own 'fuel-gathering labour belongs to firewood_kg's own entry, not this one', the same separation of concerns applied to a shared input two entries up its own supply chain), not to this shared fuel-to-heat conversion step, or it would be counted twice.",
+   "requires_node": null,
    "conf": "C"
   },
 
@@ -27,6 +28,7 @@
    "energy_mj": 0.0,
    "basis": "per 1000 MJ of usable process heat delivered to a charge, burning coal in an ordinary open or simply-enclosed furnace",
    "yield_basis": "Identical physics to thermal_mj_charcoal, and deliberately kept at the SAME calorific value (29 MJ/kg) and the SAME 25% furnace efficiency, so that whichever fuel sim/solve_prices.py actually picks for a given material is decided purely by charcoal_kg's price against coal_kg's price at the solved fixed point - both of which already carry their own real cost of production (charcoal's felling-plus-clamp-burn labour and the 4:1 wood ratio; coal's hewing labour and shaft-timbering capital) - rather than by an assumed difference in how hot the two fuels burn. This is the choice of technique the module docstring's own worked example (data/world/resources.json's iron_blast_furnace_coke note: 'coke decouples iron output from forest area... that decoupling is what makes an iron age into an industrial one') describes in prose; here it is the same choice, made by the solver instead of stated as history.",
+   "requires_node": "pwr_coal_seam",
    "conf": "C"
   },
 
@@ -42,6 +44,7 @@
    "extracted_from": "human muscular effort (a treadmill, capstan, crank or hand-mill)",
    "basis": "per hour of one labourer's sustained muscular effort at a treadmill, capstan or crank",
    "yield_basis": "data/world/resources.json's constraints.human_power gives a sustained human mechanical power output of 75 W (conf B there) - the standard engineering figure for continuous, all-day muscular work (well below a short sprint's peak output). 75 J/s * 3600 s = 270,000 J = 0.27 MJ of USEFUL shaft work per hour. No separate feed cost is added: the labourer's wage (this script's own numeraire - see NUMERAIRE above) already prices their subsistence, the same reasoning that lets any other labour_hours entry in this file skip a feed input for the worker doing it. This is therefore a pure unit conversion (W to MJ/hour) plus the wage this file already has a price for, not a new physical assumption - the only judgement call is treating resources.json's w_sustained as already a NET external output figure rather than a gross metabolic intake, which is the ordinary reading of a 'sustained power' figure in the draught-animal and human-factors literature (contrast sim/world/transport.py's draught animals, whose feed IS metabolic intake and therefore does need the extra MUSCULAR_EFFICIENCY_OF_DRAUGHT_WORK discount - a human paid a wage rather than fed a ration does not need that second step here).",
+   "requires_node": null,
    "conf": "B"
   },
 
@@ -77,6 +80,7 @@
    ],
    "basis": "per year of continuous operation of one typical water wheel (data/world/resources.json's water_power.kw_per_wheel_typical)",
    "yield_basis": "The annual output figure IS the power-to-energy conversion described in this entry's own capital_basis above (4 kW sustained, continuous operation assumed and flagged as an upper bound) - restated here as the recipe's own basis output so that recipe_cost_and_allocation's per-unit capital charge (build cost / (service_life_years * annual_output_at_basis)) lands on the same footing as every other unit in this file. The only running cost beyond the wheel's own amortised build is a millwright's periodic attention - checking gearing, clearing the leat, working the sluice - taken at a modest 40 hours a year for a single wheel, distinct from the one-off build labour above.",
+   "requires_node": "cap_power_water",
    "conf": "C"
   },
 
@@ -111,6 +115,7 @@
    ],
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "CARNOT-LIMITED, and this is the WORST end of the historical range on purpose - the thermal-to-mechanical conversion whose improvement over two centuries IS a large part of what the industrial revolution physically was, so it is modelled as a genuine range of competing techniques (this entry, mechanical_mj_heat_engine_compound and mechanical_mj_heat_engine_modern_steam) rather than one number. A Newcomen atmospheric engine condensed steam to create a vacuum and let atmospheric pressure do the work, with no attempt at thermodynamic efficiency at all - commonly cited overall efficiency is on the order of 1%, sometimes quoted as low as 0.5%, reflecting both the working principle itself and the total absence of insulation, expansive working or condenser separation that later engines added one at a time. Taken here at 1%: 1000 MJ of mechanical output needs 1000 / 0.01 = 100,000 MJ of thermal_mj input. Labour is the engine-house crew - stoking, watching the beam, greasing - not the fuel itself, which is priced through thermal_mj.",
+   "requires_node": "steam_atmospheric",
    "conf": "C"
   },
 
@@ -145,6 +150,7 @@
    ],
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "A good compound engine of the later 19th century - multiple expansion stages, a real condenser recovering vacuum properly, higher steam pressure than an atmospheric engine could use at all - is commonly cited at roughly 10% overall thermal efficiency, an order of magnitude past a Newcomen and still an order of magnitude short of a modern cycle, which is exactly the point of carrying this as a distinct middle technique rather than interpolating between the other two. 1000 / 0.10 = 10,000 MJ of thermal_mj input per 1000 MJ of mechanical output.",
+   "requires_node": "en_compound_engine",
    "conf": "C"
   },
 
@@ -179,6 +185,7 @@
    ],
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a heat engine of this class",
    "yield_basis": "A modern high-pressure, reheat steam cycle (the kind behind most fossil and nuclear generating capacity today) commonly reaches on the order of 40% thermal efficiency - itself well short of the roughly 60% Carnot ceiling a boiler-to-condenser temperature spread of this kind implies, the gap being real irreversibilities (throttling, finite heat-transfer temperature differences, turbine blade losses) rather than an achievable target left on the table. 1000 / 0.40 = 2500 MJ of thermal_mj input per 1000 MJ of mechanical output - and even at this, the best end of the historical range, this technique still cannot beat mechanical_mj_waterwheel for any material in this file (see ENERGY in sim/solve_prices.py's module docstring): 2500 MJ of thermal_mj at coal's solved price is comfortably more than 1000 MJ of mechanical_mj at the water wheel's, so water keeps winning on the arithmetic, not by assumption.",
+   "requires_node": "en_steam_turbine_reaction",
    "conf": "C"
   },
 
@@ -210,6 +217,7 @@
    ],
    "basis": "per 1000 MJ of electrical energy delivered by a dynamo converting mechanical (shaft) input",
    "yield_basis": "A real dynamo/generator converts shaft work to electrical output at roughly 90-95% efficiency, the loss being resistive heating in the windings and friction in the bearings - taken here at the range's midpoint, 92.5%. 1000 / 0.925 = 1081.1 MJ of mechanical_mj input per 1000 MJ of electrical output. This is the conversion this round's fix routes aluminium_kg's 46,000 MJ/tonne electrolysis current through, in place of the old, direct mechanical_mj charge - see THE ALUMINIUM DEFECT in sim/solve_prices.py's module docstring. Attendant labour (0.1 electrician-hours per 1000 MJ) is calibrated against mechanical_mj_waterwheel's own millwright figure in THIS file (40 hours per 126,144 MJ/year = 0.317 h per 1000 MJ) rather than invented independently: a dynamo bolted onto an already-tended wheel needs a modest ADDITION to that existing attendance, not a separate, larger labour charge of its own - an earlier draft of this entry charged a full 1.0 h/1000 MJ, which on its own accounted for most of the technique's cost and was an internal inconsistency (dynamos do not need three times the tending the prime mover driving them needs), not a physical fact, so it was corrected against this file's own water-wheel entry rather than against any price.",
+   "requires_node": "dynamo",
    "conf": "B"
   },
 
@@ -241,6 +249,7 @@
    ],
    "basis": "per 1000 MJ of mechanical (shaft) work delivered by a motor converting electrical input",
    "yield_basis": "A real induction or DC motor converts electrical input to shaft output at roughly 90-95% efficiency, resistive and frictional losses again setting the ceiling - taken here at the same 92.5% midpoint as electrical_mj_dynamo, since it is the same class of machine. 1000 / 0.925 = 1081.1 MJ of electrical_mj input per 1000 MJ of mechanical output. Attendant labour (0.05 electrician-hours per 1000 MJ) is kept smaller again than the dynamo's own, matching electrical_mj_dynamo's own reasoning for why that figure is calibrated against this file's water-wheel millwright attendance rather than invented independently.",
+   "requires_node": "tl_motor_dc",
    "conf": "B"
   },
 
@@ -253,6 +262,7 @@
    "electrical_mj": 1020.4,
    "basis": "per 1000 MJ of usable process heat delivered to a charge by resistance or arc heating",
    "yield_basis": "Resistance and arc heating convert electrical input to heat with almost no loss at the point of use - there is no flue gas or furnace wall carrying heat away the way a combustion route has, which is WHY an arc furnace reaches temperatures no fuel fire does (see calcium_carbide_kg's own yield_basis for a real entry that already depends on exactly this fact, and quartz_tube_kg for the one this round newly prices through electrical_mj directly rather than this shared pool - see TEMPERATURE in sim/solve_prices.py's module docstring for why those two differ). Taken here at 98%, allowing a small margin for radiative loss beyond the heated charge and minor losses in the supply itself: 1000 / 0.98 = 1020.4 MJ of electrical_mj input per 1000 MJ of usable heat. No capital is charged here, deliberately kept comparable to thermal_mj_charcoal and thermal_mj_coal above, neither of which carries a capital charge for its own furnace either - this technique is being compared to them on the same basis, not given an unfair advantage or disadvantage by a modelling choice unrelated to the physics. Despite reaching any temperature, this technique competes for the shared thermal_mj POOL PRICE on ordinary running cost alone, and loses today: electrical_mj's own cheapest route (a water wheel through a dynamo) costs more per MJ than coal already does, so thermal_mj_coal remains the solved choice for the undifferentiated pool - see the module docstring's TEMPERATURE section for why that is the correct outcome, not a sign this technique is pointless.",
+   "requires_node": "cap_heat_3000",
    "conf": "C"
   },
 
@@ -265,6 +275,7 @@
    "mechanical_mj": 1020.4,
    "basis": "per 1000 MJ of usable process heat delivered to a charge by mechanical friction",
    "yield_basis": "MODELLED SPECIFICALLY BECAUSE IT WAS ASKED ABOUT, not because it was expected to matter: friction converts shaft work to heat with no theoretical loss at all - every joule of work done against friction ends up as heat, which is literally how a mechanical brake works - taken here at a practical 98% (a small allowance for heat lost to the surrounding air and machinery rather than the charge). 1000 / 0.98 = 1020.4 MJ of mechanical_mj input per 1000 MJ of usable heat. No capital is charged, for the same comparability reason thermal_mj_electrical_resistance gives. THE PREDICTION THIS ENTRY LETS THE SOLVER MAKE RATHER THAN ASSUME: mechanical_mj is already pricier per MJ than coal (see mechanical_mj's own note in sim/solve_prices.py's module docstring), so turning it into heat this way can never undercut simply burning the fuel directly - thermal_mj_friction should never appear as the chosen technique for thermal_mj (`chosen_recipe_by_material[\"thermal_mj\"]` should read thermal_mj_coal both before and after this entry exists), which is exactly the stakeholder's own intuition that 'mechanical to thermal' is real but economically pointless, now demonstrated by the choice-of-technique mechanism itself rather than merely asserted in this paragraph.",
+   "requires_node": null,
    "conf": "B"
   },
 

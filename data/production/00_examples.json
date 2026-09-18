@@ -12,6 +12,7 @@
    "extracted_from": "ore deposit",
    "basis": "per tonne of run-of-mine sulphide ore at the pit head",
    "yield_basis": "EXTRACTED, so there are no material inputs and no cost of production - only labour, and a rent on the deposit set by the poorest ore still worth hauling. The labour figure is the physical work of breaking and moving rock: an ancient miner with hammer, gad and fire-setting moves on the order of 50-60 kg of hard rock per hour in a worked adit, so a tonne is roughly 18 hours. Grade is NOT in this number - it belongs to the smelting entry that consumes this ore, because the same tonne of rock costs the same to dig whether it assays 2% or 4%.",
+   "requires_node": null,
    "conf": "C"
   },
   "copper_kg": {
@@ -61,6 +62,7 @@
    "extracted_from": "forest",
    "basis": "per cubic metre of squared, seasoned construction timber delivered at the wood yard",
    "yield_basis": "HARVESTED, so the limit is the forest's annual growth rather than a recipe, and the entry earns a rent on woodland rather than a cost of production. A managed temperate broadleaf woodland puts on roughly 3-5 cubic metres per hectare per year, which is the real constraint on how much timber a region can supply indefinitely. The labour is felling, cross-cutting, hauling and squaring by axe and pit saw; roughly a third of the standing volume is lost to kerf, taper, sapwood and defect, so a cubic metre of usable squared timber starts as about 1.5 standing. Seasoning is time, not labour, and belongs in the build calendar rather than here.",
+   "requires_node": null,
    "conf": "C"
   }
  }
