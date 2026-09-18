@@ -151,9 +151,10 @@ without seeing the tree's own heuristics, and it is the more trustworthy
 read of tree quality than the score above. 398 nodes still carry a
 `[AUDIT: capability prerequisite(s) ... were inferred ... Treat them as a
 floor, not a specification.]` marker in their `_internal` field from before
-that inference was turned off; `_internal` is for auditors, not players -
-`note` is what a player reads, and these markers once lived there instead,
-which is how a first-time tester found one inside the win condition itself.
+that inference was turned off (`python3 -c "import json; nodes=json.load(open('data/tech_tree.json'))['nodes']; print(sum(1 for n in nodes if 'AUDIT' in str(n.get('_internal',''))))"`
+counts them); `_internal` is for auditors, not players - `note` is what a
+player reads, and these markers once lived there instead, which is how a
+first-time tester found one inside the win condition itself.
 
 ## Simulator changes
 
