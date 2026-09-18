@@ -108,6 +108,18 @@ TOPICS = [
     # for why, and sim/world/__init__.py for the package as a whole. Also
     # unittest.TestCase-style.
     "demography",
+    # WIRING MILESTONE 4's seam: sim/engine/core.py's Sim._demographic_
+    # recovery now feeds sim/world/agriculture.py's real land+labour+weather
+    # harvest to sim/world/demography.py's Population.step, replacing a
+    # stand-in that assumed nutrition_ratio == 1.0 every year. Neither
+    # agriculture nor demography's own standalone suite can see this seam -
+    # each proves its own module correct in isolation, and the seam does
+    # not exist inside either module - so this is the one place a famine
+    # actually falling out of land/labour/weather/population, rather than
+    # a scripted hazard, is checked end to end. Depends on sim/engine/, so
+    # unlike agriculture/demography above it is NOT standalone. Also
+    # unittest.TestCase-style.
+    "agriculture_wiring",
     # sim/world/military_logistics.py: rations, fodder, baggage-train range
     # and firearm ammunition/maintenance as consumption arithmetic,
     # standalone and with no import of sim/engine/ or the other sim/world/
@@ -119,6 +131,11 @@ TOPICS = [
     # import of sim/engine/ or the other sim/world/ modules - see that
     # module's own docstring for why. Also unittest.TestCase-style.
     "transport",
+    # sim/tests/test_material_freight.py: the crossing that wires transport.py
+    # into sim/engine/economy.py - a live Sim, through geography.json's own
+    # per-region `minerals` table, not standalone like "transport" above.
+    # Flat check()-at-import style, like most other topics.
+    "material_freight",
     # sim/world/deposits.py: Ricardian rent (marginal-deposit pricing) from
     # ore grade, depth and hardness, standalone and with no import of
     # sim/engine/ or the other sim/world/ modules - see that module's own

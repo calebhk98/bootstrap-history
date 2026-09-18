@@ -1488,7 +1488,7 @@ def max_hectares_reapable_by_crew(worker_count, hours_per_worker_day=None,
 
 def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
                       weather_multiplier=1.0, crop=None, toolkit=None,
-                      rotation=None):
+                      rotation=None, worker_count=None, hours_per_worker_day=None):
     """Grain (or `crop`) reaped from `land` this season, in kilograms,
     BEFORE seed is paid back or anything is eaten or spoiled - the same
     "gross" the module docstring's DISAGREEMENT section discusses.
@@ -1529,6 +1529,33 @@ def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
     enter as plain multipliers on top of the land/labour curve - none of
     them changes its SHAPE (the diminishing-returns property holds at any
     quality, technique or weather draw), only its level.
+
+    `worker_count`/`hours_per_worker_day` are the SAME override
+    `_max_hectares_harvestable_by_labour` already accepts, threaded through
+    here rather than left reachable only from that private helper. WHY A
+    CALLER WHO KNOWS ITS WORKFORCE SHOULD ALWAYS PASS `worker_count`, NOT
+    ONLY WHEN THE ACTORS ARE UNUSUAL: `_max_hectares_harvestable_by_labour`
+    otherwise has to GUESS the workforce back out of `labour_hours` by
+    dividing by ANNUAL_LABOUR_HOURS_PER_FARM_WORKER (1,400) - a guess that
+    is only exact when `labour_hours` was ITSELF built as `worker_count *
+    1,400`. `labour_hours` here also drives the Cobb-Douglas LABOUR term,
+    which sim/tests/test_agriculture.py's own
+    HarvestWindowBindsGrossHarvestTests calibrates in the OTHER convention -
+    hours actually worked, `REFERENCE_LABOUR_HOURS_PER_HECTARE` (150) times
+    hectares actually worked - and 150 h/ha and 1,400 h/worker/year do not
+    agree (that gap IS the module's own "harvest window leaves the annual-
+    hours ceiling slack by 4:1" finding). A caller that sizes `labour_hours`
+    to satisfy one convention and lets this function guess the workforce
+    from it via the OTHER is silently double-counting or under-counting the
+    window cap - not a bug in either convention alone, only in combining
+    them without saying which one a known workforce should be read against.
+    Passing `worker_count` explicitly (when it is known - engine-side
+    callers with an actual headcount, not the module's own scalar tests)
+    sidesteps the guess entirely: `worker_count` alone decides the window
+    cap, `labour_hours` alone decides the labour-term intensity, and a
+    caller is then responsible for making the two agree - see
+    sim/engine/core.py's `_demographic_recovery` for the one place this
+    project does that today.
     """
     crop = crop or DEFAULT_CROP
     toolkit = toolkit or DEFAULT_TOOLKIT
@@ -1537,7 +1564,9 @@ def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
         return 0.0
     effective_hectares = min(
         land.hectares,
-        _max_hectares_harvestable_by_labour(labour_hours, crop, toolkit))
+        _max_hectares_harvestable_by_labour(
+            labour_hours, crop, toolkit, worker_count=worker_count,
+            hours_per_worker_day=hours_per_worker_day))
     if effective_hectares <= 0.0:
         return 0.0
 
@@ -1562,7 +1591,8 @@ def marginal_product_of_labour_kg_per_hour(land, labour_hours,
                                             technique_multiplier=1.0,
                                             weather_multiplier=1.0,
                                             crop=None, toolkit=None,
-                                            rotation=None):
+                                            rotation=None, worker_count=None,
+                                            hours_per_worker_day=None):
     """Extra kilograms of grain the NEXT hour of labour on `land` would add,
     at the current `labour_hours` already applied.
 
@@ -1605,7 +1635,9 @@ def marginal_product_of_labour_kg_per_hour(land, labour_hours,
     if labour_hours <= 0.0:
         raise ValueError("marginal product is undefined at zero labour hours")
     harvest = gross_harvest_kg(land, labour_hours, technique_multiplier,
-                               weather_multiplier, crop, toolkit, rotation)
+                               weather_multiplier, crop, toolkit, rotation,
+                               worker_count=worker_count,
+                               hours_per_worker_day=hours_per_worker_day)
     return LABOUR_OUTPUT_ELASTICITY * harvest / labour_hours
 
 
@@ -1639,7 +1671,8 @@ class Storage(object):
 
     def step(self, land, labour_hours, population, technique_multiplier=1.0,
              hectares_next_year=None, crop=None, soil=None, rotation=None,
-             toolkit=None, storage_technique=None):
+             toolkit=None, storage_technique=None, worker_count=None,
+             hours_per_worker_day=None):
         """Advance one year: sow, grow, harvest, eat, spoil, retain next
         year's seed, bank whatever is left. Mutates `self.stock_kg` and
         returns the exact flows that moved it.
@@ -1649,6 +1682,12 @@ class Storage(object):
         sickle/pit-silo combination (see the CROP/SOIL/ROTATION/TOOLKIT/
         STORAGE-TECHNIQUE TABLE sections) so calling `step` exactly as
         before reproduces exactly what it always computed.
+
+        `worker_count`/`hours_per_worker_day` are forwarded verbatim to
+        `gross_harvest_kg` - see that function's own docstring for why a
+        caller that knows its actual workforce should pass `worker_count`
+        rather than let the harvest-window cap guess one back out of
+        `labour_hours`.
 
         ORDER OF OPERATIONS (fixed, so the same inputs always give the same
         answer regardless of what order someone might otherwise compute
@@ -1707,7 +1746,9 @@ class Storage(object):
         weather_multiplier = draw_weather_multiplier(
             self._random, soil.weather_stdev_fraction)
         harvest_kg = gross_harvest_kg(land, labour_hours, technique_multiplier,
-                                      weather_multiplier, crop, toolkit, rotation)
+                                      weather_multiplier, crop, toolkit, rotation,
+                                      worker_count=worker_count,
+                                      hours_per_worker_day=hours_per_worker_day)
         self.stock_kg += harvest_kg
 
         food_demand_kg = population * annual_food_demand_kg_per_person(crop)
@@ -1727,7 +1768,8 @@ class Storage(object):
         if labour_hours > 0.0:
             marginal_product = marginal_product_of_labour_kg_per_hour(
                 land, labour_hours, technique_multiplier, weather_multiplier,
-                crop, toolkit, rotation)
+                crop, toolkit, rotation, worker_count=worker_count,
+                hours_per_worker_day=hours_per_worker_day)
         else:
             marginal_product = 0.0
 
@@ -1879,6 +1921,92 @@ def fraction_of_population_that_must_farm(crop=None, soil=None, rotation=None,
     output_per_worker_kg = (
         hectares_cropped_per_farm_worker(crop, toolkit) * food_available_per_ha_kg)
     return annual_food_demand_kg_per_person(crop) / output_per_worker_kg
+
+
+# ============================================================================
+# SIZING A CIVILISATION'S FARM FROM ITS POPULATION - THE ENGINE'S OWN SEAM
+# ============================================================================
+# The two functions below are what `sim/engine/core.py` calls to turn "how
+# many people are there" into "how much land, worked by how many hands" -
+# the wiring this module's own docstring names as the day someone connects
+# it to sim/world/demography.py. They live here, not in core.py, on the
+# same reasoning as everything else in this module (CLAUDE.md SS4's "make
+# the founder's mechanisms general enough that other actors can use them"):
+# sizing a plausible farm from a population is a fact about AGRICULTURE, not
+# about the engine, and putting it here means any future actor (a rival
+# household, a second civilisation, a what-if branch) gets the same sizing
+# logic for free rather than a second copy living in core.py.
+#
+# `adult_equivalent_population` IN BOTH FUNCTIONS, DELIBERATELY NOT A FLAT
+# HEADCOUNT. See sim/engine/core.py's `_adult_equivalent_population` for the
+# full reasoning (WIRING_MILESTONE_4.md SS4.3): a caller is expected to pass
+# `self.children * CHILD_CALORIE_EQUIVALENT + self.working_age + self.elderly
+# * ELDERLY_CALORIE_EQUIVALENT` (sim/world/demography.py's own weighting),
+# not `Population.total`. Nothing here enforces that - this module still
+# does not import demography.py (see the module docstring's STANDALONE ON
+# PURPOSE section) - so a caller that passes a flat headcount instead gets a
+# workforce and a landholding sized for MORE people than actually need
+# feeding, not a crash; the two functions below cannot detect the
+# difference from a plain float, which is exactly why the decision has to
+# be documented at the boundary that CAN see both conventions.
+
+def farm_workers_fte_for_population(adult_equivalent_population, crop=None, soil=None,
+                                    rotation=None, toolkit=None, storage_technique=None):
+    """How many full-time-equivalent farm workers a population of
+    `adult_equivalent_population` needs, at reference technique and an
+    average weather year, to feed itself: `fraction_of_population_that_
+    must_farm() * adult_equivalent_population`.
+
+    NO FURTHER DEPENDENCY-RATIO CORRECTION BELONGS HERE (see
+    `fraction_of_population_that_must_farm`'s own docstring, reason (a),
+    for the gap this resolves). That reason exists only when comparing this
+    module's FTE-worker share against the HISTORICAL_FARM_POPULATION_SHARE_
+    LOW/HIGH calibration target, which counts every person living in a
+    farming household. This function is not doing that comparison - it is
+    answering "how many workers does this module's own production function
+    say are needed", and `fraction_of_population_that_must_farm`'s
+    numerator (workers) and denominator (population) are already both
+    anchored to the same flat-ration convention `annual_food_demand_kg_per_
+    person` uses, so multiplying straight through is consistent as long as
+    the population handed in uses that SAME convention - which is exactly
+    what passing an adult-equivalent count (see the section note above),
+    not a flat headcount, achieves.
+    """
+    fraction = fraction_of_population_that_must_farm(
+        crop, soil, rotation, toolkit, storage_technique)
+    return fraction * adult_equivalent_population
+
+
+def farmland_for_population(adult_equivalent_population, crop=None, soil=None,
+                            rotation=None, toolkit=None, storage_technique=None):
+    """A `Land` parcel sized so that the workforce
+    `farm_workers_fte_for_population` implies can each crop their full
+    `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding
+    constraint at reference labour, technique and an average weather year,
+    only the harvest window and diminishing returns to labour are (the
+    module's own headline finding). This is the natural way to seed a
+    civilisation's arable endowment from nothing but its population: an
+    INITIAL CONDITION (how much land is already cleared and worked - see
+    CLAUDE.md SS3.1's own allowed category, the same one a starting
+    population or a starting set of open mines belongs to), not a result
+    this module computes on its own account from anything the game
+    measures. A caller that wants extensive-margin land scarcity to bite
+    later should hold this `Land` fixed rather than resizing it as
+    population changes - see sim/engine/core.py's own comment on why
+    `farm_land` is constructed once, not every year.
+
+    `land.quality` is left at the default (1.0, decent land) here
+    regardless of `soil`: `soil.quality_multiplier` is a YIELD multiplier on
+    however many hectares exist, not a LAND-AREA requirement, so it plays no
+    part in how much land gets allocated - see the SOIL TABLE section and
+    `Land`'s own docstring. A caller modelling worse land should build the
+    `Land` directly with `quality=soil.quality_multiplier` instead of
+    relying on this function to do it implicitly.
+    """
+    workers_fte = farm_workers_fte_for_population(
+        adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
+    hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
+    return Land(hectares)
 
 
 if __name__ == "__main__":

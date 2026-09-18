@@ -27,6 +27,11 @@ if _REPO_ROOT not in sys.path:
 # and relying on `sim/` itself already being on sys.path by the time this
 # module loads (true for every real entry point today).
 from world import demography
+# WIRING MILESTONE 4's parallel track (docs/architecture/WIRING_MILESTONE_4.md
+# SS6, "Agriculture wiring is a parallel track"): `sim/world/agriculture.py`'s
+# land/labour/weather harvest model, imported the same bare, same-sys.path
+# way as demography just above.
+from world import agriculture
 
 
 from .economy import EconomyMixin
@@ -161,6 +166,38 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.population = demography.Population.stationary(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
+        # WIRING MILESTONE 4'S OTHER HALF (docs/architecture/
+        # WIRING_MILESTONE_4.md SS6, "Agriculture wiring is a parallel
+        # track"): how much arable land this civilisation starts with.
+        # `agriculture.farmland_for_population` sizes a `Land` so that, at
+        # DEFAULT crop/soil/rotation/toolkit and an AVERAGE weather year,
+        # the farm workforce that fraction implies can feed exactly this
+        # starting population - i.e. the civilisation starts neither
+        # land-rich nor land-starved, which is the only starting point that
+        # does not itself hand a fresh run a scripted feast or a scripted
+        # famine. This is an INITIAL CONDITION (how much land is already
+        # cleared and worked - CLAUDE.md SS3.1's own allowed category,
+        # alongside the starting population above), not a result computed
+        # from anything the game measures: `farm_land.hectares` is fixed
+        # for the life of a run, exactly like `_pop_scale_base`'s reference
+        # denominator above, and needs no SAVE_FIELDS entry for the same
+        # reason - `Sim.__init__` recomputes it identically, from
+        # `self.civ`'s own unchanging config, on every construction,
+        # before `load_state` (if any) runs. See `_demographic_recovery`
+        # for the one thing this initial condition deliberately does NOT
+        # do: grow as the population does. A civilisation whose population
+        # outgrows this fixed endowment gets LESS food per head over time
+        # from ordinary diminishing returns to labour on fixed land (see
+        # agriculture.py's `gross_harvest_kg`), not from any mechanism
+        # added here - the extensive margin (bringing more land under the
+        # plough) is real future work agriculture.py's own docstring names
+        # as missing mechanism (b), not something invented in this file.
+        self.farm_land = agriculture.farmland_for_population(
+            self._adult_equivalent_population(self.population))
+        # Diagnostic only - see `_demographic_recovery`'s own comment on
+        # `_last_farm_year` for why this is not a SAVE_FIELDS member.
+        self._last_farm_year = None
+        self._last_demographic_step = None
         # Population-raising technologies (sanitation, antisepsis, crop
         # rotation, canning...) queue their effect here instead of applying
         # it the year they complete - see apply_tech_effects in society.py.
@@ -1501,28 +1538,187 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         population.elderly -= population.elderly * min(
             1.0, scale * demography.STARVATION_VULNERABILITY_ELDERLY)
 
-    def _demographic_recovery(self, yr):
-        """Advance `self.population` by one year, and let population-raising
-        technologies build their queued gain into `_pop_scale_base` - the
-        same two jobs the old scalar `_demographic_recovery` did, now with
-        the age-cohort model doing the population half.
+    def _adult_equivalent_population(self, population):
+        """`population`'s food need in ADULT-EQUIVALENT units - the same
+        weighting demography.py's own `Population.nutrition_ratio` (and,
+        via `_subsistence_food`, `Population.stationary`) already use
+        internally: a child counts as `CHILD_CALORIE_EQUIVALENT` of an
+        adult, an elderly person as `ELDERLY_CALORIE_EQUIVALENT`, exactly
+        so this file never has its own, second opinion on what a "person"
+        is worth in calories.
 
-        NO REAL FOOD SUPPLY EXISTS YET (agriculture.py is wired in a
-        separate, parallel track - see WIRING_MILESTONE_4.md SS6's own
-        note that it "can start any time after Commit 1 ... does not need
-        to wait for Commits 3-5"). Until it is, this feeds `self.population`
-        exactly enough calories to sit at nutrition_ratio == 1.0 every year
-        - "no shortage is currently modelled" stated honestly as "no
-        shortage", not as a silently-assumed abundance. TEMPORARY_HEURISTIC
-        (CLAUDE.md SS3.4): `Population.step` is not perfectly self-
-        replicating even at exact subsistence (see demography.py's own
-        docstring: net drift under -0.1%/century), so this still produces a
-        small, genuine, non-hardcoded year-to-year movement rather than the
-        old model's bit-exact stationarity absent a hazard - see
-        WIRING_MILESTONE_4.md SS5 for why that is the CORRECT behaviour to
-        see in perf_fingerprint, not a bug. Replace the subsistence-food
-        computation below with agriculture.Storage.step's own
-        food_available_kcal_per_day the day that wiring lands.
+        WIRING_MILESTONE_4.md SS4.3's UNIT MISMATCH, AND HOW THIS RESOLVES
+        IT. `agriculture.Storage.step` takes a plain `population` argument
+        and uses it exactly once: `food_demand_kg = population *
+        annual_food_demand_kg_per_person(crop)`. Nothing in agriculture.py
+        assumes that number is a flat headcount beyond that one line - it
+        is "however many ration-equivalents need feeding" - so the fix
+        needs no change to agriculture.py's signature at all: this engine
+        computes the SAME adult-equivalent number demography.py already
+        relies on and hands THAT to `Storage.step`'s `population` argument
+        instead of `self.population.total`. Checked against SS4.3's own
+        worked example: if the harvest fed in is exactly enough to meet
+        `food_demand_kg` computed this way, then (since
+        `HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY` and
+        `SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY` are the same 2,200
+        kcal/day figure, declared independently in each module for exactly
+        this reason - see either module's own comment) `food_available_
+        kcal_per_day` comes back at precisely `adult_equivalent_population
+        * 2,200`, which is exactly the denominator `nutrition_ratio`
+        divides by - so an exactly-met harvest reads back as
+        `nutrition_ratio == 1.0`, not persistently 10-15% "too generous",
+        by construction rather than by a tuned fudge factor. The SAME
+        method also sizes `farm_land` at `__init__` and the farm workforce
+        every year in `_demographic_recovery`, so all three uses of
+        "how big is this population" at the agriculture boundary agree.
+        """
+        return (population.children * demography.CHILD_CALORIE_EQUIVALENT
+                + population.working_age
+                + population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
+
+    def _farm_year_weather_seed(self, yr):
+        """A deterministic seed for one year's harvest weather draw, a pure
+        function of this civilisation's id and the calendar year - NOT one
+        long-lived `random.Random` advanced sequentially year over year.
+
+        WHY, AND WHAT IT SIDESTEPS: `sim/engine/proto/saveload.py` owns
+        `SAVE_FIELDS` and is being edited by another agent concurrently
+        with this milestone (see this file's own file-ownership rule for
+        this piece of work), so this file cannot add a new persisted slot
+        for a running weather generator's state - and CLAUDE.md SS5/this
+        milestone's own brief are explicit that new engine state must
+        round-trip through a save, not silently reset on the next
+        `--session` command the way the pre-Milestone-4 demographic
+        deficit used to (docs/architecture/WIRING_MILESTONE_4.md SS3). A
+        seed computed fresh from `(civilisation id, year)` has no sequential
+        state to lose in the first place: year N's harvest draws the same
+        weather whether it is reached by one unbroken run or by N separate
+        `--session` commands, which is what actually matters, and it costs
+        nothing to guarantee. The trade-off this accepts is named at
+        `farm_land`'s own construction and at the top of
+        `_demographic_recovery`: this year's granary does not remember last
+        year's surplus (see there for why, and for the direction that
+        trade-off biases the model).
+
+        Multiplier/offset are arbitrary mixing constants (not physical
+        facts), chosen only so two different years, or two civilisations
+        whose ids happen to share a common prefix, do not collide - the
+        same non-`declare()`d role `_population_seed`'s own formula plays
+        just above in `__init__`.
+        """
+        civ_component = sum((index + 1) * ord(character) for index, character
+                            in enumerate(str(self.civ.get("id", "civ"))))
+        return (civ_component * 1000003 + int(yr) * 97) % (2 ** 32)
+
+    def _demographic_recovery(self, yr):
+        """Advance `self.population` by one year, from a REAL harvest, and
+        let population-raising technologies build their queued gain into
+        `_pop_scale_base` - the same two jobs the old scalar
+        `_demographic_recovery` did, now with the age-cohort model doing
+        the population half and `agriculture.py` doing the food half.
+
+        WIRING MILESTONE 4'S SPECIFIC HOLE, NOW CLOSED: this used to feed
+        `self.population` exactly enough calories to sit at
+        nutrition_ratio == 1.0 every year, computed from the cohort counts
+        themselves - "is there enough food" was assumed, not simulated, so
+        a famine could not happen for a physical reason at all. It now
+        computes one year of `agriculture.Storage.step` - land, labour and
+        an independent weather draw - and feeds ITS
+        `food_available_kcal_per_day` to `Population.step` instead. A bad
+        weather draw (or, later, a hazard that damages farmland or labour)
+        can now leave `food_demand_kg` short, which lowers
+        `nutrition_ratio` below 1.0, which raises mortality and lowers
+        fertility through `Population.step`'s own, already-existing
+        machinery - no new "famine" code path, exactly as demography.py's
+        own module docstring requires (CLAUDE.md SS3.1).
+
+        THE GRANARY DOES NOT CARRY OVER BETWEEN YEARS - TEMPORARY_HEURISTIC
+        (CLAUDE.md SS3.4), FLAGGED RATHER THAN HIDDEN. `agriculture.Storage`
+        is built to bank a good year's surplus against a future bad one
+        (see its own class docstring), but doing that here would mean this
+        civilisation's granary stock has to survive a save, and
+        `SAVE_FIELDS` (`sim/engine/proto/saveload.py`) belongs to another
+        agent for the duration of this milestone - see
+        `_farm_year_weather_seed`'s own docstring for why. So each year
+        constructs its OWN `Storage` starting at zero stock: this year's
+        harvest has to cover this year's demand on its own, with no
+        buffer from a better year before it and no debt carried into a
+        worse one after it. That is a real simplification, and it biases
+        the model in the OVERSTATING-famine direction (a real granary
+        would smooth some of this out), never the understating one that
+        would let a shortage go unmodelled - so it cannot be the reason a
+        famine that should not happen does. Revisit once a farm-stock
+        field can be added to `SAVE_FIELDS`.
+
+        LABOUR AND LAND UNIT DECISIONS (WIRING_MILESTONE_4.md SS4.1/4.2),
+        MADE HERE RATHER THAN LEFT IMPLICIT. The farm workforce is sized
+        every year as `agriculture.farm_workers_fte_for_population` of
+        THIS YEAR'S adult-equivalent population (see
+        `_adult_equivalent_population` - resolves SS4.1: no separate
+        dependency-ratio correction is needed at this boundary because
+        that helper's numerator and denominator are already anchored to
+        the same convention once an adult-equivalent count, not a flat
+        headcount, is what goes in).
+
+        RESOLVES SS4.2 MORE COMPLETELY THAN "PICK 1,400 OVER 2,000" DOES.
+        The first version of this wiring did exactly that - fed
+        `farm_workers_fte * agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER`
+        to `Storage.step` as `labour_hours` - and it was WRONG, not merely
+        using the less-preferred of two constants: `agriculture.py`'s own
+        `gross_harvest_kg` reads `labour_hours` TWICE, for two DIFFERENT
+        purposes that do not share a convention. `_max_hectares_
+        harvestable_by_labour` divides it by `ANNUAL_LABOUR_HOURS_PER_
+        FARM_WORKER` to recover a worker count for the harvest-window cap
+        (a 1,400-hours-per-worker convention); the Cobb-Douglas labour
+        term is calibrated against `REFERENCE_LABOUR_HOURS_PER_HECTARE`
+        (150) - HOURS ACTUALLY WORKED PER HECTARE, not hours per worker-
+        year - exactly the reference-labour-intensity convention sim/
+        tests/test_agriculture.py's own HarvestWindowBindsGrossHarvestTests
+        uses. Those two per-worker figures (1,400 and, at this module's own
+        binding harvest-window ceiling, 150 x 2.1 = 315) disagree by the
+        same ~4.4x the module's own docstring names as "the annual-hours
+        ceiling is slack by more than four to one" - so a `labour_hours`
+        pool built the first way satisfies the CAP's convention while
+        overshooting the LABOUR TERM's, inflating a year's harvest by
+        roughly the square root of that gap (confirmed empirically: at
+        Rome's own population this produced a harvest 2-3x the reference
+        figure `farmland_for_population` was sized against, in EVERY
+        weather draw, never binding a famine at all - wrong-different, not
+        right-different, and caught by exactly the probe this task asked
+        for).
+
+        THE FIX uses `gross_harvest_kg`'s `worker_count` parameter (added
+        to this module by this same change) to stop asking it to guess a
+        workforce back out of `labour_hours` at all: `worker_count=
+        farm_workers_fte` decides the harvest-window cap directly, from
+        the actual number this engine already computed, and `labour_hours`
+        is built the OTHER function's way instead - REFERENCE_LABOUR_
+        HOURS_PER_HECTARE times `hectares_worked`, the hectares this many
+        workers can actually crop (capped at whatever `farm_land` physically
+        holds). The two agree by construction: at the population `farm_land`
+        was originally sized for, `hectares_worked == farm_land.hectares`
+        exactly, reproducing `fraction_of_population_that_must_farm`'s own
+        reference yield bit for bit (before weather is applied) - this is
+        the "right-different" identity the module's own calibration function
+        implies, now actually reproduced by the engine call site rather than
+        only by the closed-form calibration check. `agriculture.py`'s
+        `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER` (1,400) still governs
+        `hectares_cropped_per_farm_worker` internally (and so still decides
+        whether the harvest window or the annual-hours ceiling binds); what
+        this resolves is that NEITHER it nor economy.py's own
+        `HOURS_PER_PERSON_YEAR` (2,000) is used to build the `labour_hours`
+        crossing this boundary - only a worker COUNT crosses it, and
+        agriculture.py's own functions decide, on their own terms, how many
+        hours that implies for each of the two different things it is used
+        for. `farm_land` itself is NOT resized here - see its own
+        construction comment in `__init__` for why fixed land, not fixed
+        workforce share, is what is allowed to be a hard constraint: once
+        `farm_workers_fte` implies more hectares than `farm_land` holds,
+        `hectares_worked` saturates at `farm_land.hectares` and additional
+        population stops buying this civilisation any more food from
+        agriculture at all - a harder ceiling than ordinary diminishing
+        returns would give, and an honest consequence of not (yet) modelling
+        within-hectare labour intensification beyond reference technique.
         """
         if self._pop_tech_pending:
             still = []
@@ -1531,13 +1727,53 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if years_left > 1:
                     still.append((per_year, years_left - 1))
             self._pop_tech_pending = still
-        adult_equivalent_population = (
-            self.population.children * demography.CHILD_CALORIE_EQUIVALENT
-            + self.population.working_age
-            + self.population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
-        subsistence_food_kcal_per_day = (
-            adult_equivalent_population * demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY)
-        self.population.step(subsistence_food_kcal_per_day, jitter=False)
+
+        adult_equivalent_population = self._adult_equivalent_population(self.population)
+        farm_workers_fte = agriculture.farm_workers_fte_for_population(
+            adult_equivalent_population)
+        hectares_worked = min(
+            self.farm_land.hectares,
+            farm_workers_fte * agriculture.hectares_cropped_per_farm_worker())
+        farm_labour_hours = hectares_worked * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
+        # AREA. `Storage.step` charges seed (and next year's seed reservation)
+        # against `land.hectares` directly, with no cap of its own - it is
+        # meant to be handed exactly the area actually being cropped. Passing
+        # `self.farm_land` itself here, unshrunk, would sow (and pay for)
+        # seed across this civilisation's FULL historical endowment even in
+        # a year `hectares_worked` is far smaller (a population that has lost
+        # people has fewer hands, not less land per surviving hand) - a real
+        # bug this task's own probe caught: population fell, workers_fte and
+        # therefore `hectares_worked` fell with it, but an EARLIER version of
+        # this method still sowed the whole original `farm_land.hectares`
+        # every year regardless, so the seed bill outgrew the shrinking
+        # workforce's own shrinking harvest and manufactured a runaway
+        # collapse that had nothing to do with weather - the textbook
+        # wrong-different result this task's fingerprint probe exists to
+        # catch. A `Land` sized to `hectares_worked` (this year's actually-
+        # cropped area) fixes it: unworked land beyond that is fallow-by-
+        # absence-of-hands, not sown, not seed-costed, not harvested.
+        worked_land = agriculture.Land(hectares_worked, quality=self.farm_land.quality)
+        farm_storage = agriculture.Storage(
+            stock_kg=0.0, seed=self._farm_year_weather_seed(yr))
+        farm_year = farm_storage.step(
+            worked_land, farm_labour_hours, adult_equivalent_population,
+            worker_count=farm_workers_fte)
+        # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
+        # reply never reads this) - NOT a SAVE_FIELDS member and does not
+        # need to be one: it is recomputed fresh every year from state that
+        # already round-trips (self.population, self.farm_land, self.civ),
+        # so a stale or missing value right after a fresh `Sim()` (before
+        # this method has run once) costs nothing correctness-sensitive.
+        self._last_farm_year = farm_year
+
+        # Same diagnostic-only status as `_last_farm_year` just above (not a
+        # SAVE_FIELDS member, recomputed fresh every year) - kept so a test
+        # or a future player-facing message can read THIS year's
+        # nutrition_ratio without re-deriving it from the cohort counts by
+        # hand a second time.
+        self._last_demographic_step = self.population.step(
+            farm_year.food_available_kcal_per_day, jitter=False)
         self._refresh_demographic_indexes(yr)
 
     def _refresh_demographic_indexes(self, yr):
