@@ -24,6 +24,70 @@ import json, math, os, sys
 sys.setrecursionlimit(20000)
 import collections
 from collections import deque
+from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+
+# TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
+# dictionary read straight from a JSON file (tech_tree.json, prices.json,
+# geography.json, resources.json, a civilization file) with no schema
+# object anywhere in the codebase to check it against, so `Dict[str, Any]`
+# is the true type, not a placeholder for one this pass ran out of time to
+# write: see the long note beside `Node`, below, for why a tech-tree node in
+# particular is not given a `TypedDict` despite CLAUDE.md SS7 naming a core
+# set of its fields (lab, mat, cap, rev, up, ph, sch, art, sus, gov, conf,
+# pre, yrs, kb) - those are the fields every node shares, but the full key
+# set actually present (35 distinct keys across data/tech_tree.json, some
+# only on nodes of one particular `kind`) is wider and genuinely
+# kind-dependent, which is exactly the "open and data-driven" case the
+# task's own instructions say stays a plain mapping.
+JSONDict = Dict[str, Any]
+
+# A tech-tree node record: `nodes[node_id]` for any node in the tree. See
+# the JSONDict comment above for why this is a plain mapping rather than a
+# TypedDict - a node's key set depends on its `kind` (a `win_condition`
+# threshold node has no `traits`; a `traits`-bearing node has no
+# `win_condition`; only some nodes carry `req_any`), and this module never
+# reads that `kind` field to narrow which shape it is looking at, so
+# declaring one fixed shape here would describe nodes that do not exist
+# rather than the ones that do.
+Node = JSONDict
+
+# node id -> that node's record. The KEY set here is exactly the open,
+# data-driven case CLAUDE.md's TypedDict guidance calls out by name (keyed
+# by node id, not a fixed handful of named fields), so a plain mapping is
+# correct on that axis too.
+Nodes = Dict[str, Node]
+
+
+class StartingKit(TypedDict):
+    """One entry of `STARTING_KITS`, below - a fixed two-field schema every
+    entry actually has (checked against every kit in this module and every
+    read site in cli.py/cli_interactive.py/cli_agent.py, all of which read
+    exactly `["den"]` and/or `["desc"]` and nothing else)."""
+    den: int
+    desc: str
+
+
+class SimulationDefaults(TypedDict):
+    """`DEFAULTS`, below - the run-configuration knobs every `Sim` starts
+    from before a civilization file or a CLI flag overrides any of them.
+    Fixed at exactly these thirteen keys (read individually by name at
+    every call site in cli.py, cli_interactive.py and core.py), unlike the
+    `cfg` dict callers build FROM it, which also carries whatever a
+    civilization file or the command line adds and stays a plain mapping
+    for that reason."""
+    immortal: bool
+    founder_life_mean: float
+    founder_life_sd: float
+    start_year: int
+    start_capital: int
+    founder_arrival_age: int
+    founder_hours_per_year: int
+    director_hours_per_year: int
+    hired_hours_cap_base: int
+    revenue_ramp_years: int
+    suspicion_danger: float
+    eminence_danger: float
+    horizon_years: int
 
 # This file lives in sim/engine/, one level deeper than simulator.py used
 # to, so the data directory is two parents up rather than one. Everything that
@@ -43,10 +107,10 @@ CIVDIR = os.path.join(ROOT, "data", "civilizations")
 RESFILE = os.path.join(ROOT, "data", "world", "resources.json")
 GEOFILE = os.path.join(ROOT, "data", "world", "geography.json")
 
-def load_resources():
+def load_resources() -> JSONDict:
     return json.load(open(RESFILE))
 
-def load_geography():
+def load_geography() -> JSONDict:
     """Where things are, not just what they cost.
 
     geography.json used to carry a single hard-coded `reach` per region,
@@ -61,7 +125,7 @@ def load_geography():
     return json.load(open(GEOFILE))
 
 
-def haversine_km(lat1, lon1, lat2, lon2):
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance between two lat/lon points, in kilometres.
 
     Coarse on purpose: geography.json's coordinates are region centroids, not
@@ -76,7 +140,7 @@ def haversine_km(lat1, lon1, lat2, lon2):
                     + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlmb / 2) ** 2)
     return 2 * earth_radius_km * math.asin(math.sqrt(angular_term))
 
-def _load_tech_effects():
+def _load_tech_effects() -> JSONDict:
     path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
     try:
         with open(path) as source:
@@ -86,10 +150,10 @@ def _load_tech_effects():
         return {}
 
 
-TECH_EFFECTS = _load_tech_effects()
+TECH_EFFECTS: JSONDict = _load_tech_effects()
 
 
-def _load_wages():
+def _load_wages() -> Dict[str, float]:
     """The wage table, skipping the _note entry that is a bare string.
 
     My first version did `v["rate"]` over every entry, hit the explanatory
@@ -104,10 +168,10 @@ def _load_wages():
             if isinstance(value, dict) and "rate" in value}
 
 
-WAGES = _load_wages()
+WAGES: Dict[str, float] = _load_wages()
 
 
-def _load_annual_wages():
+def _load_annual_wages() -> Dict[str, float]:
     """What a year of one person of each trade actually costs.
 
     Two columns in prices.json disagree with each other by about half: `rate` is
@@ -119,7 +183,7 @@ def _load_annual_wages():
     """
     with open(PRICES) as source:
         prices_data = json.load(source)
-    out = {}
+    out: Dict[str, float] = {}
     for trade, value in prices_data["wage_rates_denarii_per_hour"].items():
         if not isinstance(value, dict):
             continue
@@ -130,37 +194,37 @@ def _load_annual_wages():
     return out
 
 
-ANNUAL_WAGE = _load_annual_wages()
+ANNUAL_WAGE: Dict[str, float] = _load_annual_wages()
 
 
-def _load_trade_notes():
+def _load_trade_notes() -> Dict[str, str]:
     with open(PRICES) as source:
         prices_data = json.load(source)
     return {key: (value.get("note") or "") for key, value in prices_data["wage_rates_denarii_per_hour"].items()
             if isinstance(value, dict)}
 
 
-TRADE_NOTES = _load_trade_notes()
+TRADE_NOTES: Dict[str, str] = _load_trade_notes()
 
 # Trades that DO NOT EXIST in a pre-industrial society. The wage table already
 # says so, in its own notes, for every one of them ("does not exist yet; you
 # must create this trade"), so read it rather than keeping a second list that
 # can drift out of step with the first.
-TRADES_ABSENT = frozenset(trade for trade, note in TRADE_NOTES.items()
+TRADES_ABSENT: FrozenSet[str] = frozenset(trade for trade, note in TRADE_NOTES.items()
                           if "does not exist" in note.lower())
 
 # What kind of person a trade is, for the two aggregate pools the tech tree asks
 # for. A tester put the objection exactly: "a skilled blacksmith is not a skilled
 # writer, but the game treats all as artisans". These are not interchangeable and
 # from here on the model does not pretend they are.
-TRADE_FAMILY = {
+TRADE_FAMILY: Dict[str, str] = {
     "scholar": "scholar", "chemist": "scholar", "engineer": "scholar",
     "scribe": "scholar", "merchant": "scholar",
     "labourer": "labour", "miner": "labour", "sailor": "labour",
 }   # everything else is a craft: smith, carpenter, mason, glassblower, ...
 
 
-def trade_family(t):
+def trade_family(t: str) -> str:
     return TRADE_FAMILY.get(t, "craft")
 
 
@@ -174,7 +238,7 @@ def trade_family(t):
 # The map is from the `currency` field to the form that reads correctly in a
 # sentence like "you have 400 ___". A civilisation whose currency is not listed
 # falls back to its own field, and then to denarii.
-MONEY_WORDS = {
+MONEY_WORDS: Dict[str, str] = {
     "denarius": "denarii",
     "sterling penny": "pence",
     "wu zhu cash": "cash",
@@ -189,24 +253,24 @@ MONEY_WORDS = {
 # have 612 den" - one clause localised from the payload, the next from the
 # renderer - which a break tester quite reasonably filed as the currency
 # drifting between three names.
-MONEY_SHORT_WORDS = {
+MONEY_SHORT_WORDS: Dict[str, str] = {
     "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
     "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
 }
 
 
-def money_word(civ):
+def money_word(civ: Optional[JSONDict]) -> str:
     cur = (civ or {}).get("currency") or "denarius"
     return MONEY_WORDS.get(cur, cur)
 
 
-def money_short(civ):
+def money_short(civ: Optional[JSONDict]) -> str:
     """The abbreviation used in compact lines: "400 den", "net +12 den/yr"."""
     cur = (civ or {}).get("currency") or "denarius"
     return MONEY_SHORT_WORDS.get(cur, MONEY_WORDS.get(cur, "den"))
 
 
-def load_civ(name="rome_100ad"):
+def load_civ(name: str = "rome_100ad") -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
@@ -245,7 +309,10 @@ def load_civ(name="rome_100ad"):
     return civ
 
 
-def load(use_solved_prices=False, held_technology_ids=(), civilization_id=None):
+def load(use_solved_prices: bool = False,
+         held_technology_ids: Iterable[str] = (),
+         civilization_id: Optional[str] = None
+         ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
     """Load the tree and `prices.json`, and derive each node's cost.
 
     `use_solved_prices` is OFF BY DEFAULT and every existing call site calls
@@ -306,7 +373,8 @@ def load(use_solved_prices=False, held_technology_ids=(), civilization_id=None):
     return tree, prices, nodes, wages, goods
 
 
-def goods_provenance(held_technology_ids=(), civilization_id=None):
+def goods_provenance(held_technology_ids: Iterable[str] = (),
+                      civilization_id: Optional[str] = None) -> Dict[str, str]:
     """{material: "solved" | "gated" | "no_recipe"} for every material
     `prices.json` prices, from `sim.engine.prices.priced_goods_table` - the
     burndown that measures "prices.json slowly deleted" one entry at a time
@@ -346,10 +414,10 @@ def goods_provenance(held_technology_ids=(), civilization_id=None):
 # integers, computed once per tree and cached. Ordinary set unions would be
 # 2,831 sets of up to 2,831 ids; an int OR is the same operation with the
 # machine doing the work.
-_DESC_CACHE = {}
+_DESC_CACHE: Dict[int, Tuple[Nodes, Dict[str, int], Dict[str, int]]] = {}
 
 
-def descendants(nodes):
+def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     """{id: bitmask of everything downstream of it}, plus the index it uses."""
     # KEYED ON id(nodes) BUT VALIDATED BY IDENTITY, not by len(nodes).
     #
@@ -370,28 +438,35 @@ def descendants(nodes):
     hit = _DESC_CACHE.get(id(nodes))
     if hit is not None and hit[0] is nodes:
         return hit[1], hit[2]
-    index = {node_id: i for i, node_id in enumerate(sorted(nodes))}
-    kids = {node_id: [] for node_id in nodes}
-    for m in nodes:
-        for prereq_id in nodes[m]["pre"]:
+    index: Dict[str, int] = {node_id: i for i, node_id in enumerate(sorted(nodes))}
+    kids: Dict[str, List[str]] = {node_id: [] for node_id in nodes}
+    for node_id in nodes:
+        for prereq_id in nodes[node_id]["pre"]:
             if prereq_id in kids:
-                kids[prereq_id].append(m)
+                kids[prereq_id].append(node_id)
     # Iterative post-order DFS rather than topo_order(): that one rescans every
     # key for every key it pops, which is 8 million comparisons on this tree and
     # three and a half seconds of stall the first time anybody typed
     # "available". A DFS visits each edge once.
-    masks = {}
+    masks: Dict[str, int] = {}
     for root in sorted(nodes):
         if root in masks:
             continue
-        stack = [(root, False)]
+        stack: List[Tuple[str, bool]] = [(root, False)]
         while stack:
             node_id, expanded = stack.pop()
             if expanded:
-                m = 0
+                # RENAMED from the single-letter `m` this loop used to
+                # share with the "for m in nodes" loop above (a pure local
+                # rename - see CLAUDE.md SS7 - that also happened to be
+                # what mypy needed: reusing `m` for both a node id, a str,
+                # and this bitmask accumulator, an int, in the same
+                # function is exactly the kind of collision a type checker
+                # catches and a reader has to untangle by hand).
+                node_mask = 0
                 for child_id in kids[node_id]:
-                    m |= (1 << index[child_id]) | masks.get(child_id, 0)
-                masks[node_id] = m
+                    node_mask |= (1 << index[child_id]) | masks.get(child_id, 0)
+                masks[node_id] = node_mask
                 continue
             if node_id in masks:
                 continue
@@ -403,13 +478,13 @@ def descendants(nodes):
     return masks, index
 
 
-def downstream_count(nodes, k):
+def downstream_count(nodes: Nodes, k: str) -> int:
     """How many nodes are downstream of k. Cheap after the first call."""
     masks, _index = descendants(nodes)
     return bin(masks.get(k, 0)).count("1")
 
 
-def is_downstream(nodes, k, target):
+def is_downstream(nodes: Nodes, k: str, target: str) -> bool:
     """Is `target` downstream of `k`?"""
     masks, index = descendants(nodes)
     if target not in index:
@@ -417,7 +492,7 @@ def is_downstream(nodes, k, target):
     return bool(masks.get(k, 0) >> index[target] & 1)
 
 
-def hard_pre(nodes, k):
+def hard_pre(nodes: Nodes, k: str) -> List[str]:
     """Every edge that is genuinely mandatory: `pre`, plus the `req_any` groups
     that offer exactly one real node and are therefore not a choice at all.
 
@@ -459,7 +534,7 @@ def hard_pre(nodes, k):
     return out
 
 
-def topo_order(nodes, subset=None):
+def topo_order(nodes: Nodes, subset: Optional[Iterable[str]] = None) -> List[str]:
     """Kahn topological sort. `subset` restricts to a set of ids.
 
     Was O(V^2 log V + V^2 E): every one of the (up to) 2,849 iterations of
@@ -491,7 +566,7 @@ def topo_order(nodes, subset=None):
     # Reverse index: for each key, the OTHER keys that name it as a hard
     # prerequisite, in sorted order - the same relative order `sorted(keys)`
     # would have visited them in, since it is a subsequence of that sort.
-    dependents = {node_id: [] for node_id in keys}
+    dependents: Dict[str, List[str]] = {node_id: [] for node_id in keys}
     for dependent_id in sorted(keys):
         for prereq_id in hard_pre_by_node[dependent_id]:
             if prereq_id in keys:
@@ -510,7 +585,7 @@ def topo_order(nodes, subset=None):
     return out
 
 
-def closure(nodes, goal):
+def closure(nodes: Nodes, goal: str) -> Set[str]:
     """Everything the goal needs, following `pre` AND the `req_any` groups
     that are not really alternatives at all.
 
@@ -553,7 +628,7 @@ def closure(nodes, goal):
     return need
 
 
-def critical_path(nodes, goal):
+def critical_path(nodes: Nodes, goal: str) -> Tuple[float, List[str]]:
     """Longest chain by minimum calendar years plus director-hours at one director.
 
     Iterative, over a topological order. The recursive version blew the stack once
@@ -562,8 +637,8 @@ def critical_path(nodes, goal):
     """
     need = closure(nodes, goal)
     order = topo_order(nodes, need)
-    best = {}
-    chain = {}
+    best: Dict[str, float] = {}
+    chain: Dict[str, List[str]] = {}
     for node_id in order:
         node = nodes[node_id]
         own = max(node["yrs"], node["ph"] / 2000.0)
@@ -594,7 +669,7 @@ def critical_path(nodes, goal):
 # of modelling a threshold as a node rather than as a second mechanism.
 # ----------------------------------------------------------------------------
 
-def goal_catalog(tree, nodes=None):
+def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict]:
     """The roster of selectable goals, in the order tech_tree.json lists
     them. Pass `nodes` to check every entry actually names a real node - a
     cheap check worth making once, in `validate`, rather than trusting the
@@ -608,7 +683,7 @@ def goal_catalog(tree, nodes=None):
     return goals
 
 
-def goal_lookup(tree, node_id):
+def goal_lookup(tree: JSONDict, node_id: str) -> Optional[JSONDict]:
     """The goal_catalog entry for `node_id`, or None if it is not one of the
     named, selectable goals (an arbitrary node id is still a legal --goal
     for `path`/`plan` - see resolve_goal - it just has no menu entry)."""
@@ -618,7 +693,7 @@ def goal_lookup(tree, node_id):
     return None
 
 
-def resolve_goal(tree, nodes, name):
+def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
     """The node id a `--goal` flag should resolve to: `name` itself if it
     names a real node, the tree's own default (meta.goal_node) if `name` is
     falsy, or a clear refusal naming the selectable goals otherwise. One
@@ -647,7 +722,7 @@ def resolve_goal(tree, nodes, name):
 # metric here is a 0..1 fraction, which is the only shape `win_condition`
 # currently supports and the only one either of the two current threshold
 # goals needs.
-WIN_CONDITION_LABELS = {
+WIN_CONDITION_LABELS: Dict[str, str] = {
     "literacy_general": "the general population's literacy reaches %s",
     "literacy_elite": "the lettered and propertied class's literacy reaches %s",
     "epidemic_relief": ("the measures you have built have cut %s of what "
@@ -655,16 +730,24 @@ WIN_CONDITION_LABELS = {
 }
 
 
-def win_condition_describe(n):
+def win_condition_describe(n: JSONDict) -> str:
     """The player-facing sentence for a node's win_condition, or a plain
     fallback for a metric this table does not yet name - never a KeyError,
     the same reasoning validate's own required-field check gives for why a
     missing piece of display data must degrade, not crash, a player's
     session."""
-    win_condition = n.get("win_condition") or {}
+    win_condition: JSONDict = n.get("win_condition") or {}
     metric, comparison_op, val = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
     pct = "%d%%" % round((val or 0.0) * 100)
-    tmpl = WIN_CONDITION_LABELS.get(metric)
+    # metric is read straight from data (win_condition["metric"]), so its
+    # static type is Any, same as every other field read off a node - see
+    # the JSONDict/Node comment at the top of this file for why. `cast` to
+    # `str` here (not `Optional[str]`) is what `dict.get`'s own stub
+    # requires for its key argument even though, at runtime, `dict.get`
+    # accepts any hashable key - including None - and just returns None on
+    # a miss, exactly as this line already did before this pass. Nothing
+    # about the runtime call changes.
+    tmpl = WIN_CONDITION_LABELS.get(cast(str, metric))
     if tmpl:
         return tmpl % pct
     return "a measurement (%s %s %s) is met" % (metric, comparison_op, val)
@@ -674,7 +757,7 @@ def win_condition_describe(n):
 # Simulation
 # ----------------------------------------------------------------------------
 
-STARTING_KITS = {
+STARTING_KITS: Dict[str, StartingKit] = {
     "destitute":   {"den": 0,     "desc": "the clothes you stand in. You must earn your first meal."},
     "poor_scholar":{"den": 400,   "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
     "artisan":     {"den": 1200,  "desc": "enough to rent a workshop and buy a first set of tools."},
@@ -695,7 +778,7 @@ STARTING_KITS = {
     "absurd":      {"den": 1000000,"desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
-DEFAULTS = dict(
+DEFAULTS: SimulationDefaults = dict(
     # IMMORTALITY IS THE DEFAULT. The point of this simulator is to test the TREE,
     # and a mortality lottery that ends one run in five drowns the signal from the
     # technology in noise about how long one man happened to live. Turn death back

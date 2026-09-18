@@ -393,7 +393,8 @@ class FreightMixin:
         GENERALISED: this used to return exactly 1.0, immediately, for any
         commodity id not already sitting in the hand-written MARKET_SHARE
         dict above - the actual mechanism by which COMMODITY_DYNAMISM.md's
-        149 inert material keys never moved at all ("the function's own
+        149 inert material keys (146 of 159 today, the tree having since
+        dropped three) never moved at all ("the function's own
         code explains why... it returns 1.0 immediately"). That early
         return is gone: `market` now falls back through
         _material_market_tonnes' own generic default, so an arbitrary
@@ -495,7 +496,7 @@ class FreightMixin:
 
         A PLAYER MUST SEE IT. Before this pass a material's price response
         was invisible even for the 9 tracked commodities (nothing
-        aggregated it for `money`) and non-existent for the other 149; now
+        aggregated it for `money`) and non-existent for the other 146; now
         that every material key responds (see material_price_factor's own
         comment), a player whose project costs rose because they are
         buying a lot of one thing, or fell because they sank their own
@@ -518,7 +519,7 @@ class FreightMixin:
                 rows.append((emp_key, factor))
         if not rows:
             return None
-        rows.sort(key=lambda kv: -kv[1])
+        rows.sort(key=lambda entry: -entry[1])
         worst = rows[0]
         return ("%d material%s trading above book price because your own "
                 "demand is leaning on what the market will sell: worst is "

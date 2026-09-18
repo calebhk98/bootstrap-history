@@ -240,12 +240,12 @@ class HazardsMixin:
             seen.add(node_id)
             if getattr(self, "fog", False) and not self.is_visible(node_id, _memo=memo):
                 continue
-            ok, why = self.start_reason(node_id)
+            can_start, why = self.start_reason(node_id)
             entry = {"id": node_id, "name": self.nodes[node_id]["name"],
                      "cost": round(self.project_cost(node_id), 1),
                      "because_it_gives_you": leads_to.get(node_id),
-                     "can_begin_now": bool(ok),
-                     "waiting_on": None if ok else why}
+                     "can_begin_now": bool(can_start),
+                     "waiting_on": None if can_start else why}
             # THE WHOLE ROAD, not just this one node's own calendar floor. A
             # step that "can begin now" and costs little reads as quick; for
             # a HAZARD_COUNTERS entry itself (not one of its prerequisites)
@@ -260,7 +260,7 @@ class HazardsMixin:
             if len(out) >= limit:
                 break
         # What you can start comes first: it is the part you can act on today.
-        out.sort(key=lambda e: not e["can_begin_now"])
+        out.sort(key=lambda entry: not entry["can_begin_now"])
         return out
 
     # ---- A TIMELINE, NOT A WALL OF TEXT THAT NEVER CHANGES -----------------
@@ -421,7 +421,7 @@ class HazardsMixin:
             rows.append({"name": name, "years_until": years_until,
                          "in_progress": in_progress, "urgency": urgency,
                          "headline": headline})
-        rows.sort(key=lambda r: (0 if r["in_progress"] else 1, r["years_until"]))
+        rows.sort(key=lambda row: (0 if row["in_progress"] else 1, row["years_until"]))
         rows = rows[:limit]
         # COMPACT EXCEPT WHERE IT IS ACTUALLY A WARNING, same reasoning
         # knowledge_risk's own known_hazards_ahead already applies to its
@@ -595,6 +595,8 @@ class HazardsMixin:
             "SACK_STAFF_RETENTION on the reasoning that the institutions "
             "producing deputies are more resilient than ordinary staff on "
             "the ground. Tuned, not measured.")
+
+    # -- driver -------------------------------------------------------------
 
     def _shocks(self, yr):
         """Dated catastrophes, read from the CIVILIZATION file.
@@ -1217,5 +1219,3 @@ class HazardsMixin:
     def _catastrophe(self, why):
         self.dead_reason = why
         self.household.log.append((self.year, "RUN ENDS: " + why))
-
-    # -- driver -------------------------------------------------------------

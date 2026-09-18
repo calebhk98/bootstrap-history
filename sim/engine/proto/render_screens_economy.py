@@ -9,25 +9,38 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 
 from .util import _factor, _fmt_num, _pct, _wrap
 
-def render_capacity(out):
-    lines = ["THE INDUSTRIAL DASHBOARD"]
+# render_capacity is split into one function per screen section - resources,
+# power, mines, project portfolio, spare capacity - moved verbatim, in the
+# same order they always ran in, concatenated by render_capacity itself,
+# which decides nothing the pieces did not already decide. Each section
+# returns its own LINES rather than a dict: the ordering between and within
+# sections IS the output a player reads, and merging dicts the way
+# _agent_state's own screens do would lose exactly that (see render_state,
+# render_screens_big.py, for the same split on the `state` screen).
+
+def _capacity_resources(out):
+    lines = []
     res = out.get("resources") or []
-    if res:
-        lines.append("")
-        lines.append("  RESOURCES")
-        lines.append("  %-14s %12s %12s %12s" % ("MATERIAL", "CAPACITY/YR",
-                                             "DEMAND/YR", "SURPLUS/YR"))
-        for row in res:
-            lines.append("  %-14s %12s %12s %12s%s"
-                     % (row["material"], _fmt_num(row["capacity_t_per_yr"]),
-                        _fmt_num(row["demand_t_per_yr"]),
-                        _fmt_num(row["surplus_t_per_yr"]),
-                        "  SHORT" if row["surplus_t_per_yr"] < 0 else ""))
-            if row.get("yield_note"):
-                lines.append(_wrap(row["yield_note"], indent="      "))
-    power = out.get("power") or {}
+    if not res:
+        return lines
     lines.append("")
-    lines.append("  POWER")
+    lines.append("  RESOURCES")
+    lines.append("  %-14s %12s %12s %12s" % ("MATERIAL", "CAPACITY/YR",
+                                         "DEMAND/YR", "SURPLUS/YR"))
+    for row in res:
+        lines.append("  %-14s %12s %12s %12s%s"
+                 % (row["material"], _fmt_num(row["capacity_t_per_yr"]),
+                    _fmt_num(row["demand_t_per_yr"]),
+                    _fmt_num(row["surplus_t_per_yr"]),
+                    "  SHORT" if row["surplus_t_per_yr"] < 0 else ""))
+        if row.get("yield_note"):
+            lines.append(_wrap(row["yield_note"], indent="      "))
+    return lines
+
+
+def _capacity_power(out):
+    power = out.get("power") or {}
+    lines = ["", "  POWER"]
     tiers = power.get("power_tiers_you_have_discovered")
     if isinstance(tiers, list) and tiers:
         for tier in tiers:
@@ -61,9 +74,12 @@ def render_capacity(out):
         lines.append("    waiting on the grid: " + ", ".join(power["waiting_on_grid_scale_power"]))
     if power.get("note"):
         lines.append(_wrap(power["note"], indent="    "))
+    return lines
+
+
+def _capacity_mines(out):
     mines = (out.get("mines") or {}).get("mines_you_own")
-    lines.append("")
-    lines.append("  MINES  (see 'mines' for the full table)")
+    lines = ["", "  MINES  (see 'mines' for the full table)"]
     if isinstance(mines, list) and mines:
         for row in mines:
             commissioned_year = row.get("commissioned_year")
@@ -76,9 +92,12 @@ def render_capacity(out):
                         "yes" if row.get("actually_supplying_demand") else "no"))
     else:
         lines.append("    none")
+    return lines
+
+
+def _capacity_portfolio(out):
     port = out.get("portfolio") or []
-    lines.append("")
-    lines.append("  PROJECT PORTFOLIO")
+    lines = ["", "  PROJECT PORTFOLIO"]
     if port:
         for row in port:
             lines.append("    %-28s [%s]  %s hrs left, %s yrs left, risk %s"
@@ -88,9 +107,12 @@ def render_capacity(out):
             lines.append(_wrap("waiting on: " + str(row["waiting_on"]), indent="      "))
     else:
         lines.append("    nothing in hand")
+    return lines
+
+
+def _capacity_spare(out):
     spare = out.get("spare_capacity") or {}
-    lines.append("")
-    lines.append("  SPARE CAPACITY")
+    lines = ["", "  SPARE CAPACITY"]
     lines.append("    founder-hours free this year: %s"
              % _fmt_num(spare.get("founder_hours_available")))
     fam = spare.get("spare_by_trade_family")
@@ -103,6 +125,16 @@ def render_capacity(out):
                 _fmt_num(spare.get("standing_net_per_year"))))
     if spare.get("free_hours_going_unused"):
         lines.append(_wrap("  " + spare["free_hours_going_unused"]))
+    return lines
+
+
+def render_capacity(out):
+    lines = ["THE INDUSTRIAL DASHBOARD"]
+    lines += _capacity_resources(out)
+    lines += _capacity_power(out)
+    lines += _capacity_mines(out)
+    lines += _capacity_portfolio(out)
+    lines += _capacity_spare(out)
     return "\n".join(lines)
 
 
@@ -200,37 +232,67 @@ def render_economy(out):
     return "\n".join(lines)
 
 
-def render_changes(out):
-    lines = ["WHAT CHANGED, %s to %s AD" % (out.get("from_year"), out.get("to_year"))]
+# render_changes is split into one function per section, same reasoning and
+# same order as render_capacity above.
+
+def _changes_moved_lines(out):
     moved = out.get("moved") or {}
-    lines.append("  price index %+.3f   wage index %+.3f   literacy %+.3f (general)"
+    lines = ["  price index %+.3f   wage index %+.3f   literacy %+.3f (general)"
              % (moved.get("price_index", 0.0), moved.get("wage_index", 0.0),
-                moved.get("literacy_general", 0.0)))
+                moved.get("literacy_general", 0.0))]
     lines.append("  capital %s%s   revenue %s%s/yr   %s technologies completed"
              % ("+" if moved.get("capital", 0) >= 0 else "", _fmt_num(moved.get("capital")),
                 "+" if moved.get("revenue", 0) >= 0 else "", _fmt_num(moved.get("revenue")),
                 _fmt_num(moved.get("technologies_completed"))))
+    return lines
+
+
+def _changes_bottleneck_line(out):
     bottleneck = out.get("bottleneck") or {}
     if bottleneck.get("then") != bottleneck.get("now"):
-        lines.append("  bottleneck moved: %s -> %s" % (bottleneck.get("then"), bottleneck.get("now")))
-    elif bottleneck.get("now"):
-        lines.append("  bottleneck unchanged: %s" % bottleneck.get("now"))
+        return ["  bottleneck moved: %s -> %s" % (bottleneck.get("then"), bottleneck.get("now"))]
+    if bottleneck.get("now"):
+        return ["  bottleneck unchanged: %s" % bottleneck.get("now")]
+    return []
+
+
+def _changes_capacity_line(out):
     cap = out.get("capacity_gained_or_lost")
     if isinstance(cap, list) and cap:
-        lines.append("  capacity: " + ", ".join(
-            "%s %+.1f t/yr" % (row["material"], row["change_t_per_yr"]) for row in cap))
+        return ["  capacity: " + ", ".join(
+            "%s %+.1f t/yr" % (row["material"], row["change_t_per_yr"]) for row in cap)]
+    return []
+
+
+def _changes_tech_lines(out):
+    lines = []
     for label, key in (("built", "technologies_completed"),
                        ("newly heard of", "technologies_newly_heard_of"),
                        ("opened", "concerns_opened"), ("closed", "concerns_closed")):
         value = out.get(key)
         if isinstance(value, list) and value:
             lines.append("  %s: %s" % (label, ", ".join(value)))
+    return lines
+
+
+def _changes_events_block(out):
     events = out.get("notable_events")
+    lines = []
     if isinstance(events, list) and events:
         lines.append("")
         lines.append("  NOTABLE EVENTS")
         for event in events:
             lines.append(_wrap("%d: %s" % (event["year"], event["message"]), indent="    "))
+    return lines
+
+
+def render_changes(out):
+    lines = ["WHAT CHANGED, %s to %s AD" % (out.get("from_year"), out.get("to_year"))]
+    lines += _changes_moved_lines(out)
+    lines += _changes_bottleneck_line(out)
+    lines += _changes_capacity_line(out)
+    lines += _changes_tech_lines(out)
+    lines += _changes_events_block(out)
     return "\n".join(lines)
 
 

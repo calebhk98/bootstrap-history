@@ -393,36 +393,82 @@ VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS = declare(
         "is a meaningful ceiling on what a real trial might need.")
 
 
-def cmd_validate(a):
-    tree, prices, nodes, wages, goods = load()
+def _check_node_prereqs(node_id, node_record, nodes):
+    errs = []
+    for prereq_id in node_record["pre"]:
+        if prereq_id not in nodes: errs.append("%s: unknown prereq %s" % (node_id, prereq_id))
+    return errs
+
+
+def _check_node_materials(node_id, node_record, goods):
+    errs = []
+    for material_id in node_record["mat"]:
+        if material_id not in goods: errs.append("%s: unpriced material %s" % (node_id, material_id))
+    return errs
+
+
+def _check_node_trades(node_id, node_record, wages):
+    errs = []
+    for trade_id in node_record["lab"]:
+        if trade_id not in wages: errs.append("%s: unknown trade %s" % (node_id, trade_id))
+    return errs
+
+
+def _check_node_risk(node_id, node_record):
+    errs = []
+    if not 0 <= node_record["risk"] <= 1: errs.append("%s: risk out of range" % node_id)
+    return errs
+
+
+def _check_node_confidence(node_id, node_record):
+    warns = []
+    if node_record["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (node_id, node_record["conf"]))
+    return warns
+
+
+def _check_node_required_fields(node_id, node_record):
+    # A `why` on seven hand-written nodes killed the process with KeyError
+    # 'sus' because I added them without the v1 scalars the explain path
+    # still reads. Catch a missing field here, where it is a warning, rather
+    # than in a player's session, where it is the end of their game.
+    errs = []
+    for field_name in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
+        if field_name not in node_record:
+            errs.append("%s: missing required field '%s'" % (node_id, field_name))
+    return errs
+
+
+def _validate_nodes(nodes, goods, wages):
+    """Run every per-node check and gather what each one finds. One function
+    per check, so a check that finds nothing just contributes nothing -
+    nobody has to remember to guard the call site."""
     errs, warns = [], []
     for node_id, node_record in nodes.items():
-        for prereq_id in node_record["pre"]:
-            if prereq_id not in nodes: errs.append("%s: unknown prereq %s" % (node_id, prereq_id))
-        for material_id in node_record["mat"]:
-            if material_id not in goods: errs.append("%s: unpriced material %s" % (node_id, material_id))
-        for trade_id in node_record["lab"]:
-            if trade_id not in wages: errs.append("%s: unknown trade %s" % (node_id, trade_id))
-        if not 0 <= node_record["risk"] <= 1: errs.append("%s: risk out of range" % node_id)
-        if node_record["conf"] not in "ABC": warns.append("%s: odd confidence %s" % (node_id, node_record["conf"]))
-        # A `why` on seven hand-written nodes killed the process with KeyError
-        # 'sus' because I added them without the v1 scalars the explain path
-        # still reads. Catch a missing field here, where it is a warning, rather
-        # than in a player's session, where it is the end of their game.
-        for field_name in ("sus", "gov", "cat", "pre", "ph", "cap", "up", "risk"):
-            if field_name not in node_record:
-                errs.append("%s: missing required field '%s'" % (node_id, field_name))
+        errs += _check_node_prereqs(node_id, node_record, nodes)
+        errs += _check_node_materials(node_id, node_record, goods)
+        errs += _check_node_trades(node_id, node_record, wages)
+        errs += _check_node_risk(node_id, node_record)
+        warns += _check_node_confidence(node_id, node_record)
+        errs += _check_node_required_fields(node_id, node_record)
+    return errs, warns
+
+
+def _validate_topo_order(nodes):
     try:
         topo_order(nodes)
     except RuntimeError as e:
-        errs.append(str(e))
+        return [str(e)]
+    return []
 
+
+def _validate_goal_rows(tree, nodes):
     # EVERY SELECTABLE GOAL, not just the default. meta.goals is the single
     # roster `goals`, the new-game wizard and every --goal flag all read
     # (see data.py's goal_catalog/resolve_goal) - a goal naming a node that
     # does not exist would not fail anywhere else until a player actually
     # picked it, which is exactly the kind of bug this command exists to
     # catch before that.
+    errs = []
     default_goal = tree["meta"]["goal_node"]
     if default_goal not in nodes:
         errs.append("meta.goal_node %r does not exist" % default_goal)
@@ -436,7 +482,10 @@ def cmd_validate(a):
         need = closure(nodes, node)
         yrs, chain = critical_path(nodes, node)
         goal_rows.append((goal, node, need, yrs, chain))
+    return errs, default_goal, goal_rows
 
+
+def _print_validate_summary(nodes, goal_rows, default_goal):
     print("nodes            : %d" % len(nodes))
     print("edges            : %d" % sum(len(node_record["pre"]) for node_record in nodes.values()))
     print("total capital     : %s den across all %d nodes" % (f"{sum(node_record['_total_cost'] for node_record in nodes.values()):,.0f}", len(nodes)))
@@ -450,11 +499,16 @@ def cmd_validate(a):
               % (goal.get("name", node)[:34], len(need), yrs, node,
                  "  <- DEFAULT" if node == default_goal else ""))
     print()
+
+
+def _print_validate_findings(errs, warns):
     if errs:
         print("ERRORS:"); [print("  " + message) for message in errs]
     if warns:
         print("WARNINGS:"); [print("  " + message) for message in warns]
 
+
+def _validate_reachability(a, errs, nodes, goal_rows):
     # REACHABILITY, PER CIVILISATION - opt in with --deep, because this runs
     # a real dice-free Sim (see path_search.deterministic_sim) once per
     # civilisation for every goal above, and that is seconds of real work
@@ -491,10 +545,25 @@ def cmd_validate(a):
                                          else "not within %dy" % probe_horizon))
             print("  %-30s %s" % (goal.get("name", node)[:30], "  |  ".join(cells)))
 
+
+def _print_validate_ok(errs):
     if not errs:
         print()
         print("OK: tree is a valid DAG, fully priced, every selectable goal's "
               "closure and critical path compute cleanly.")
+
+
+def cmd_validate(a):
+    tree, prices, nodes, wages, goods = load()
+    errs, warns = _validate_nodes(nodes, goods, wages)
+    errs += _validate_topo_order(nodes)
+    goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
+    errs += goal_errs
+
+    _print_validate_summary(nodes, goal_rows, default_goal)
+    _print_validate_findings(errs, warns)
+    _validate_reachability(a, errs, nodes, goal_rows)
+    _print_validate_ok(errs)
     return 1 if errs else 0
 
 
@@ -650,10 +719,7 @@ def _fmt_rate_ci(successes, n):
 _MIN_SUCCESSES_FOR_QUANTILES = 10
 
 
-def _summarise(results, label):
-    run_count = len(results)
-    finished = [run for run in results if run.goal_year]
-    success_count = len(finished)
+def _summarise_header(label, run_count):
     print("\n=== %s ===" % label)
     print("runs                : %d" % run_count)
     # WHAT THIS COMMAND ACTUALLY MEASURES, SAID ONCE, UP FRONT, BEFORE ANY
@@ -670,6 +736,9 @@ def _summarise(results, label):
           "'search' (dice-free, relaxed against the binding constraint) are "
           "the commands that do that."
           % (run_count, "" if run_count == 1 else "s"))
+
+
+def _summarise_tech_completed(results, run_count, quantile_of):
     # AGGREGATE PROGRESS, LEADING - not the success rate. A batch this small
     # against a multi-century, near-certain-to-fail-or-succeed goal can be a
     # ~1% event either way (this project's own default invocation has
@@ -678,12 +747,14 @@ def _summarise(results, label):
     # batch can actually support saying. How far every run got - not only
     # the ones that finished - is informative at any N, including this one.
     tech = sorted(len(run.done) for run in results)
-    quantile_of = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
     print()
     print("technologies completed (whole tree, across all %d run%s):"
           % (run_count, "" if run_count == 1 else "s"))
     print("   worst %d | p25 %d | median %d | p75 %d | best %d"
           % (tech[0], quantile_of(tech, .25), quantile_of(tech, .5), quantile_of(tech, .75), tech[-1]))
+
+
+def _summarise_goal_closure(results, quantile_of):
     need = closure(results[0].nodes, results[0].goal)
     needed_count = len(need)
     progress = sorted(len(need & run.done) for run in results)
@@ -692,6 +763,9 @@ def _summarise(results, label):
     print("   worst %d/%d | p25 %d | median %d | p75 %d | best %d/%d"
           % (progress[0], needed_count, quantile_of(progress, .25), quantile_of(progress, .5), quantile_of(progress, .75),
              progress[-1], needed_count))
+
+
+def _summarise_failure_modes(results):
     causes = defaultdict(int)
     for run in results:
         if run.dead_reason: causes[run.dead_reason.split(":")[0]] += 1
@@ -700,6 +774,9 @@ def _summarise(results, label):
         print("failure modes       :")
         for cause, value in sorted(causes.items(), key=lambda x: -x[1]):
             print("   %-58s %3d (%.0f%%)" % (cause, value, 100.0 * value / len(results)))
+
+
+def _summarise_stuck_nodes(results):
     # where do runs get stuck. PRECISE EVEN AT N=25: almost every run that
     # does not reach the goal is blocked on one of a small handful of nodes,
     # which is a near-certain event rather than the ~1% one the success rate
@@ -715,6 +792,9 @@ def _summarise(results, label):
         print("first blocked node  :")
         for node_id, value in sorted(stuck.items(), key=lambda x: -x[1])[:6]:
             print("   %-58s %3d" % (node_id, value))
+
+
+def _summarise_success_rate(label, run_count, success_count):
     # THE SUCCESS RATE, BELOW THE FOLD, NOT AS THE HEADLINE - see the "what
     # this measures" line above for why, and this project's own diagnosis
     # (planner.py's docstring) for the number that made the point concrete:
@@ -758,6 +838,9 @@ def _summarise(results, label):
               % run_count)
         print("                      is no luck left for more trials to re-roll. This")
         print("                      is the order's single dice-free outcome, repeated.")
+
+
+def _summarise_year_reached(results, finished, success_count, run_count):
     if success_count == 0:
         pass  # already said above, plainly, before the rate line itself
     elif success_count < _MIN_SUCCESSES_FOR_QUANTILES:
@@ -776,6 +859,9 @@ def _summarise(results, label):
               % (years_reached[0], year_at_percentile(.25), year_at_percentile(.5), year_at_percentile(.75), years_reached[-1]))
         start = results[0].cfg["start_year"]
         print("elapsed from %d AD  : median %d years" % (start, year_at_percentile(.5) - start))
+
+
+def _summarise_shortages(results, run_count):
     shortage_counter = collections.Counter()
     for run in results:
         shortage_counter.update(run.shortages)
@@ -791,6 +877,9 @@ def _summarise(results, label):
         print("years spent short of a raw material (SUM across %d runs, not a median):" % run_count)
         for material, value in shortage_counter.most_common(5):
             print("   %-12s %d run-years" % (material, value))
+
+
+def _summarise_misc_stats(results):
     forest_hectares = sorted(run.forest_ha for run in results)
     print("coppice woodland owned: median %.0f hectares" % forest_hectares[len(forest_hectares) // 2])
     reputations = sorted(run.reputation for run in results)
@@ -798,6 +887,22 @@ def _summarise(results, label):
     bounty_payments = [run.bounties_paid for run in results]
     if any(bounty_payments):
         print("bounties posted     : mean %.1f per run" % (sum(bounty_payments) / len(bounty_payments)))
+
+
+def _summarise(results, label):
+    run_count = len(results)
+    finished = [run for run in results if run.goal_year]
+    success_count = len(finished)
+    quantile_of = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]
+    _summarise_header(label, run_count)
+    _summarise_tech_completed(results, run_count, quantile_of)
+    _summarise_goal_closure(results, quantile_of)
+    _summarise_failure_modes(results)
+    _summarise_stuck_nodes(results)
+    _summarise_success_rate(label, run_count, success_count)
+    _summarise_year_reached(results, finished, success_count, run_count)
+    _summarise_shortages(results, run_count)
+    _summarise_misc_stats(results)
 
 
 def cmd_run(a):

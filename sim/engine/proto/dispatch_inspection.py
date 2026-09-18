@@ -216,47 +216,42 @@ def _cmd_values(s, nodes, cmd, ended):
 
 
 
-def _cmd_stuck(s, nodes, cmd, ended):
-    # THE QUESTION EVERY TESTER ASKED, in different words. "There's no 'why
-    # am I stuck?' view - three separate 90-250-year stalls, each caused by
-    # one node blocked on one thing, each found by typing `why` at a
-    # guess." The pieces were all here; nothing put them in one place, and
-    # stall_diagnosis only spoke after eight years of insolvency.
-    _fog = getattr(s, "fog", False)
-    reasons = []
-    _startable = [node_id for node_id in nodes
-                  if node_id not in s.done and node_id not in s.active
-                  and (not _fog or s.is_visible(node_id))
-                  and s.start_reason(node_id)[0]]
-    _afford = [node_id for node_id in _startable
-               if s.project_cost(node_id) <= s.spending_power("start")]
-    if s.active:
-        _waits = {}
-        _why_underfunded = {}
-        for node_id, progress in sorted(s.active.items()):
-            bill = progress.get("cost_left")
-            if bill is None:
-                bill = max(0.0, s.project_cost(node_id) - progress["spent"])
-            _waits[node_id] = _waiting_on(s, nodes, node_id, progress, bill)
-            # SAME GAP AS `why` AND `state`: arrears gives unspendable
-            # founder hours back, so this can say "waiting on your hours"
-            # for a project that is really stuck on money, on the exact
-            # screen a player checks first when something is stalled.
-            # why_underfunded, already computed onto st by core.py, is
-            # the real reason - carry it per project, not just the string
-            # above.
-            if progress.get("why_underfunded"):
-                _why_underfunded[node_id] = progress["why_underfunded"]
-        reasons.append({"what": "work in hand",
-                        "how_many": len(s.active),
-                        "each_waiting_on": _waits,
-                        **({"each_why_underfunded": _why_underfunded}
-                           if _why_underfunded else {})})
+def _stuck_work_in_hand(s, nodes):
+    if not s.active:
+        return None
+    _waits = {}
+    _why_underfunded = {}
+    for node_id, progress in sorted(s.active.items()):
+        bill = progress.get("cost_left")
+        if bill is None:
+            bill = max(0.0, s.project_cost(node_id) - progress["spent"])
+        _waits[node_id] = _waiting_on(s, nodes, node_id, progress, bill)
+        # SAME GAP AS `why` AND `state`: arrears gives unspendable
+        # founder hours back, so this can say "waiting on your hours"
+        # for a project that is really stuck on money, on the exact
+        # screen a player checks first when something is stalled.
+        # why_underfunded, already computed onto st by core.py, is
+        # the real reason - carry it per project, not just the string
+        # above.
+        if progress.get("why_underfunded"):
+            _why_underfunded[node_id] = progress["why_underfunded"]
+    return {"what": "work in hand",
+            "how_many": len(s.active),
+            "each_waiting_on": _waits,
+            **({"each_why_underfunded": _why_underfunded}
+               if _why_underfunded else {})}
+
+
+def _stuck_road_to_goal(s, nodes, _fog):
     # THE ROAD TO THE GOAL, not the tree at large. A play tester with fifty
     # nodes left and nothing startable was told "you have work in hand,
     # money to pay for it and people to do it", because two hundred
     # unrelated things elsewhere in the tree were startable. Nobody is
     # stuck for want of a bottling shed.
+    #
+    # Returns (reason_or_None, goal_routing_off_under_fog) - the caller needs
+    # the flag even on the years this has no reason to report, to explain at
+    # the end why nothing here spoke about the goal at all.
     _goal = getattr(s, "goal", None)
     _goal_routing_off_under_fog = False
     if _goal in nodes and not _fog:
@@ -264,13 +259,13 @@ def _cmd_stuck(s, nodes, cmd, ended):
         _road_open = [node_id for node_id in _road if s.start_reason(node_id)[0]]
         if _road and not _road_open:
             _near = sorted(_road, key=lambda k: len(closure(nodes, k) - s.done))
-            reasons.append({
+            return ({
                 "what": "the road to the goal",
                 "why": "%d of its nodes are still to build and NONE of them "
                        "is startable today. The nearest is %s: %s"
                        % (len(_road), _near[0],
                           s.start_reason(_near[0])[1]),
-                "the_nearest_few": _near[:5]})
+                "the_nearest_few": _near[:5]}, _goal_routing_off_under_fog)
     elif _goal in nodes and _fog:
         # SAY SO, THE WAY `rush` DOES. A blind Han run with the goal set
         # to the junction transistor hit hundreds of affordable things
@@ -285,129 +280,206 @@ def _cmd_stuck(s, nodes, cmd, ended):
         # this did not run". A player should be told that, not left to
         # infer it from an unhelpful reply.
         _goal_routing_off_under_fog = True
+    return (None, _goal_routing_off_under_fog)
+
+
+def _stuck_started_nothing(s, _startable, _afford):
     # STARTING NOTHING IS THE COMMONEST WAY TO GET NOWHERE, and this
     # command - whose whole job is "why you are not getting on" - said
     # "nothing: you have work in hand, money to pay for it and people to do
     # it" to a play tester on turn one, with no project running at all. It
     # was the first thing they typed and it was false.
-    if not s.active:
-        _cheap = (min(_afford or _startable, key=lambda k: s.project_cost(k))
-                  if (_afford or _startable) else None)
-        reasons.append({"what": "you have started nothing",
-                        "why": ("no project is in hand, so no year of yours "
-                                "is being spent on one. %s"
-                                % ("'start %s' would begin the cheapest "
-                                   "thing you can pay for today." % _cheap
-                                   if _cheap else
-                                   "and nothing in front of you can be "
-                                   "begun, which the rows below explain."))})
+    if s.active:
+        return None
+    _cheap = (min(_afford or _startable, key=lambda k: s.project_cost(k))
+              if (_afford or _startable) else None)
+    return {"what": "you have started nothing",
+            "why": ("no project is in hand, so no year of yours "
+                    "is being spent on one. %s"
+                    % ("'start %s' would begin the cheapest "
+                       "thing you can pay for today." % _cheap
+                       if _cheap else
+                       "and nothing in front of you can be "
+                       "begun, which the rows below explain."))}
+
+
+def _stuck_shut_ventures(s, nodes):
     # AND WHAT YOU HAVE BUILT AND NEVER SWITCHED ON. A break tester read
     # "NOTHING YOU COULD BEGIN" while two concerns sat finished and closed
     # that between them raised their revenue by 71%.
     _shut = sorted(node_id for node_id in s.done
                    if s.is_venture(node_id) and node_id not in s.operating
                    and nodes[node_id]["rev"] > nodes[node_id]["up"])
-    if _shut:
-        # DO NOT RECOMMEND A COMMAND THAT WILL FAIL. This used to pick
-        # the best-margin shut concern by revenue minus upkeep alone and
-        # tell the player to 'open' it, without ever checking whether
-        # open_venture would actually let them. A household deep in the
-        # credit-exhaustion/named-trade trap (see PATH_SEARCH.md) sits
-        # with free_art at 0.00-0.03 for centuries: this command was
-        # measured telling such a household "open lens_grinding", which
-        # needs 2.13 craftsmen to supervise and fails outright - advice
-        # that spends a turn on a refusal and reads as the game having
-        # lied about what it just told you to do.
-        _sch_free, _art_free = s.venture_staff_free()
-        _shut_for_staff = getattr(s, "shut_for_staff", {})
-        def _capex_now(_k):
-            _fee = s.venture_capex(_k)
-            if (_k in _shut_for_staff
-                    and s.year - _shut_for_staff[_k] <= s.STAFF_CLOSURE_GRACE):
-                _fee *= 0.1
-            return _fee
-        def _openable(_k):
-            _need_sch, _need_art = s.venture_hands(_k)
-            return (_need_sch <= _sch_free + 0.01
-                    and _need_art <= _art_free + 0.01
-                    and _capex_now(_k) <= s.spending_power("buy"))
-        _really_openable = [node_id for node_id in _shut if _openable(node_id)]
-        if _really_openable:
-            _best = max(_really_openable,
-                       key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
-            reasons.append({"what": "things you built and never opened",
-                            "why": "%d finished concern(s) are shut and "
-                                   "earning nothing. The best you could "
-                                   "actually open right now is %s, which "
-                                   "would earn %s a year against %s of "
-                                   "upkeep: 'open %s'"
-                                   % (len(_shut), _best,
-                                      "{:,.0f}".format(nodes[_best]["rev"]),
-                                      "{:,.0f}".format(nodes[_best]["up"]),
-                                      _best)})
-        else:
-            _best = max(_shut, key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
-            _need_sch, _need_art = s.venture_hands(_best)
-            if _need_sch > _sch_free + 0.01 or _need_art > _art_free + 0.01:
-                _why = ("it needs the full-time equivalent of %.2f "
-                        "scholars and %.2f craftsmen to supervise it "
-                        "(a continuous share of their year, not a "
-                        "headcount), and you have %.2f and %.2f not "
-                        "already watching something else"
-                        % (_need_sch, _need_art, _sch_free, _art_free))
-            else:
-                _why = ("opening it costs %s denarii, and between cash "
-                        "and what anyone will advance you can raise %s"
-                        % ("{:,.0f}".format(_capex_now(_best)),
-                           "{:,.0f}".format(s.spending_power("buy"))))
-            reasons.append({"what": "things you built and cannot open yet",
-                            "why": "%d finished concern(s) are shut and "
-                                   "earning nothing, and none of them can "
-                                   "be opened right now. The best is %s, "
-                                   "which would earn %s a year against "
-                                   "%s of upkeep, but %s. Hire, teach, or "
-                                   "close something to free the hands, "
-                                   "or raise the money, and try again"
-                                   % (len(_shut), _best,
-                                      "{:,.0f}".format(nodes[_best]["rev"]),
-                                      "{:,.0f}".format(nodes[_best]["up"]),
-                                      _why)})
+    if not _shut:
+        return None
+    # DO NOT RECOMMEND A COMMAND THAT WILL FAIL. This used to pick
+    # the best-margin shut concern by revenue minus upkeep alone and
+    # tell the player to 'open' it, without ever checking whether
+    # open_venture would actually let them. A household deep in the
+    # credit-exhaustion/named-trade trap (see PATH_SEARCH.md) sits
+    # with free_art at 0.00-0.03 for centuries: this command was
+    # measured telling such a household "open lens_grinding", which
+    # needs 2.13 craftsmen to supervise and fails outright - advice
+    # that spends a turn on a refusal and reads as the game having
+    # lied about what it just told you to do.
+    _sch_free, _art_free = s.venture_staff_free()
+    _shut_for_staff = getattr(s, "shut_for_staff", {})
+    def _capex_now(_k):
+        _fee = s.venture_capex(_k)
+        if (_k in _shut_for_staff
+                and s.year - _shut_for_staff[_k] <= s.STAFF_CLOSURE_GRACE):
+            _fee *= 0.1
+        return _fee
+    def _openable(_k):
+        _need_sch, _need_art = s.venture_hands(_k)
+        return (_need_sch <= _sch_free + 0.01
+                and _need_art <= _art_free + 0.01
+                and _capex_now(_k) <= s.spending_power("buy"))
+    _really_openable = [node_id for node_id in _shut if _openable(node_id)]
+    if _really_openable:
+        _best = max(_really_openable,
+                   key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
+        return {"what": "things you built and never opened",
+                "why": "%d finished concern(s) are shut and "
+                       "earning nothing. The best you could "
+                       "actually open right now is %s, which "
+                       "would earn %s a year against %s of "
+                       "upkeep: 'open %s'"
+                       % (len(_shut), _best,
+                          "{:,.0f}".format(nodes[_best]["rev"]),
+                          "{:,.0f}".format(nodes[_best]["up"]),
+                          _best)}
+    _best = max(_shut, key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
+    _need_sch, _need_art = s.venture_hands(_best)
+    if _need_sch > _sch_free + 0.01 or _need_art > _art_free + 0.01:
+        _why = ("it needs the full-time equivalent of %.2f "
+                "scholars and %.2f craftsmen to supervise it "
+                "(a continuous share of their year, not a "
+                "headcount), and you have %.2f and %.2f not "
+                "already watching something else"
+                % (_need_sch, _need_art, _sch_free, _art_free))
+    else:
+        _why = ("opening it costs %s denarii, and between cash "
+                "and what anyone will advance you can raise %s"
+                % ("{:,.0f}".format(_capex_now(_best)),
+                   "{:,.0f}".format(s.spending_power("buy"))))
+    return {"what": "things you built and cannot open yet",
+            "why": "%d finished concern(s) are shut and "
+                   "earning nothing, and none of them can "
+                   "be opened right now. The best is %s, "
+                   "which would earn %s a year against "
+                   "%s of upkeep, but %s. Hire, teach, or "
+                   "close something to free the hands, "
+                   "or raise the money, and try again"
+                   % (len(_shut), _best,
+                      "{:,.0f}".format(nodes[_best]["rev"]),
+                      "{:,.0f}".format(nodes[_best]["up"]),
+                      _why)}
+
+
+def _stuck_nothing_or_money(s, _startable, _afford):
     if not _startable:
-        reasons.append({"what": "nothing you could begin",
-                        "why": "everything in front of you is either built, "
-                               "already running, or waiting on something. "
-                               "'available' says which."})
-    elif not _afford:
-        reasons.append({"what": "money",
-                        "why": "%d things are startable and the cheapest of "
-                               "them costs %s, against the %s you could "
-                               "raise"
-                               % (len(_startable),
-                                  "{:,.0f}".format(min(s.project_cost(node_id)
-                                                       for node_id in _startable)),
-                                  "{:,.0f}".format(s.spending_power("start")))})
+        return {"what": "nothing you could begin",
+                "why": "everything in front of you is either built, "
+                       "already running, or waiting on something. "
+                       "'available' says which."}
+    if not _afford:
+        return {"what": "money",
+                "why": "%d things are startable and the cheapest of "
+                       "them costs %s, against the %s you could "
+                       "raise"
+                       % (len(_startable),
+                          "{:,.0f}".format(min(s.project_cost(node_id)
+                                               for node_id in _startable)),
+                          "{:,.0f}".format(s.spending_power("start")))}
+    return None
+
+
+def _stuck_raw_material(s):
     if s.binding and s.resource_throttle() < 0.95:
-        reasons.append({"what": "a raw material",
-                        "why": "%s: work is running at %d%% of plan. %s"
-                               % (s.binding, s.resource_throttle() * 100,
-                                  s.shortage_remedy(s.binding))})
+        return {"what": "a raw material",
+                "why": "%s: work is running at %d%% of plan. %s"
+                       % (s.binding, s.resource_throttle() * 100,
+                          s.shortage_remedy(s.binding))}
+    return None
+
+
+def _stuck_room_for_people(s):
     _room = s.household_room()
     if _room < 1.0:
-        reasons.append({"what": "room for people",
-                        "why": "you can take %.2f more people. %s"
-                               % (max(0.0, _room), s._room_advice())})
+        return {"what": "room for people",
+                "why": "you can take %.2f more people. %s"
+                       % (max(0.0, _room), s._room_advice())}
+    return None
+
+
+def _stuck_arrears(s):
     if s.capital < 0:
-        reasons.append({"what": "arrears",
-                        "why": "you owe %s of the %s anyone will advance "
-                               "you, and the interest is %s a year"
-                               % ("{:,.0f}".format(-s.capital),
-                                  "{:,.0f}".format(s.credit_limit()),
-                                  "{:,.0f}".format(-s.capital
-                                                   * s.debt_interest_rate()))})
+        return {"what": "arrears",
+                "why": "you owe %s of the %s anyone will advance "
+                       "you, and the interest is %s a year"
+                       % ("{:,.0f}".format(-s.capital),
+                          "{:,.0f}".format(s.credit_limit()),
+                          "{:,.0f}".format(-s.capital
+                                           * s.debt_interest_rate()))}
+    return None
+
+
+def _stuck_credit_freeze(s):
     if s.year < getattr(s, "credit_frozen_until", 0):
-        reasons.append({"what": "a credit freeze",
-                        "why": "nobody will fund new work until %d"
-                               % int(s.credit_frozen_until)})
+        return {"what": "a credit freeze",
+                "why": "nobody will fund new work until %d"
+                       % int(s.credit_frozen_until)}
+    return None
+
+
+def _cmd_stuck(s, nodes, cmd, ended):
+    # THE QUESTION EVERY TESTER ASKED, in different words. "There's no 'why
+    # am I stuck?' view - three separate 90-250-year stalls, each caused by
+    # one node blocked on one thing, each found by typing `why` at a
+    # guess." The pieces were all here; nothing put them in one place, and
+    # stall_diagnosis only spoke after eight years of insolvency.
+    _fog = getattr(s, "fog", False)
+    reasons = []
+    _startable = [node_id for node_id in nodes
+                  if node_id not in s.done and node_id not in s.active
+                  and (not _fog or s.is_visible(node_id))
+                  and s.start_reason(node_id)[0]]
+    _afford = [node_id for node_id in _startable
+               if s.project_cost(node_id) <= s.spending_power("start")]
+    # Every check below is independent, and GATHERS into `reasons`: each one
+    # that has something to say is appended, none of them stop the others
+    # from running. More than one usually applies at once, and a player
+    # deciding what to fix first needs to see all of them, not just
+    # whichever is checked first - see _compact_stuck in dispatch.py, which
+    # already assumes this list can hold several entries.
+    _work_reason = _stuck_work_in_hand(s, nodes)
+    if _work_reason:
+        reasons.append(_work_reason)
+    _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(s, nodes, _fog)
+    if _goal_reason:
+        reasons.append(_goal_reason)
+    _started_nothing_reason = _stuck_started_nothing(s, _startable, _afford)
+    if _started_nothing_reason:
+        reasons.append(_started_nothing_reason)
+    _shut_reason = _stuck_shut_ventures(s, nodes)
+    if _shut_reason:
+        reasons.append(_shut_reason)
+    _availability_reason = _stuck_nothing_or_money(s, _startable, _afford)
+    if _availability_reason:
+        reasons.append(_availability_reason)
+    _material_reason = _stuck_raw_material(s)
+    if _material_reason:
+        reasons.append(_material_reason)
+    _room_reason = _stuck_room_for_people(s)
+    if _room_reason:
+        reasons.append(_room_reason)
+    _arrears_reason = _stuck_arrears(s)
+    if _arrears_reason:
+        reasons.append(_arrears_reason)
+    _freeze_reason = _stuck_credit_freeze(s)
+    if _freeze_reason:
+        reasons.append(_freeze_reason)
     _stall = s.stall_diagnosis()
     out = {"ok": True,
            "you_could_begin": len(_startable),

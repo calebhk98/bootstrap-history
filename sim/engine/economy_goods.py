@@ -1072,7 +1072,7 @@ class GoodsMixin:
                 rows.append((node_id, factor))
         if not rows:
             return None
-        rows.sort(key=lambda kv: kv[1])
+        rows.sort(key=lambda entry: entry[1])
         worst = rows[0]
         cats_sharing = sorted({self.nodes[node_id].get("cat") for node_id, _factor in rows
                                if (self._goods_category_state(self.nodes[node_id].get("cat")) or (1,))[0] > 1})

@@ -59,6 +59,176 @@ def _cmd_bounty(s, nodes, cmd, ended):
 
 
 
+def _buy_forest(s, cmd, quantity):
+    got = s.buy_forest(quantity)
+    if got <= 0:
+        return {"ok": False, "error": "cannot afford %.0f ha of coppice woodland "
+                                      "(you have %.0f denarii)" % (quantity, s.capital)}
+    return {"ok": True, "bought_ha": got, "forest_ha": round(s.forest_ha, 1),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_nitre(s, cmd, quantity):
+    got = s.build_nitre(quantity)
+    if got <= 0:
+        return {"ok": False,
+                "error": "cannot afford %.0f square metres of nitre bed "
+                         "(that is %s denarii and you have %s). Nothing "
+                         "was changed."
+                         % (quantity, "{:,.0f}".format(quantity * s.NITRE_COST_PER_M2
+                                                * s.price_index),
+                            "{:,.0f}".format(s.capital))}
+    return {"ok": True, "laid_m2": got,
+            "nitre_bed_m2": round(s.nitre_bed_m2, 1),
+            "saltpetre_it_yields_per_year_tonnes":
+                round(s.nitre_bed_m2 * s.NITRE_YIELD_T_PER_M2, 3),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_farm(s, cmd, quantity):
+    got = s.invest_farm(quantity)
+    if got <= 0:
+        return {"ok": False, "error": "cannot afford that farmland"}
+    return {"ok": True, "bought_farm_hectares": got,
+            "farm_hectares": round(s.farm_hectares, 1),
+            "food_cost_factor": round(s.essential_price_ratio(), 3),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_housing(s, cmd, quantity):
+    got = s.build_worker_housing(quantity)
+    if got <= 0:
+        return {"ok": False, "error": "cannot afford that worker housing"}
+    return {"ok": True, "built_worker_housing_places": got,
+            "worker_housing_places": round(s.worker_housing_places, 1),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_school(s, cmd, quantity):
+    trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
+    ok, why = s.found_trade_school(trade, quantity)
+    if not ok:
+        return {"ok": False, "error": why}
+    return {"ok": True, "trade": trade, "new_training_seats": quantity,
+            "trade_school_seats": s.trade_schools[trade],
+            "market_supply_hours_per_year": round(s.market_supply(trade), 1),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_material(s, cmd, quantity):
+    material = cmd.get("material")
+    got = s.buy_material_stock(material, quantity)
+    if got <= 0:
+        return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
+    return {"ok": True, "material": material, "bought_tonnes": got,
+            "stock_on_hand_tonnes": s.material_stock_t(material),
+            "capital": round(s.capital, 1)}
+
+
+def _buy_mine(s, cmd, quantity):
+    mat = cmd.get("material")
+    # GENERALISED beyond the seven hand-named metals (see
+    # economy.py's mineable()/mine_catalog_hint(), and
+    # COMMODITY_DYNAMISM.md for why the closed list was the actual
+    # bug: "no mine, no supply lever" for anything else the tree
+    # ever asks a node to buy). This is the one gate that used to
+    # make that literally true at the command surface, even though
+    # the seven-name dict membership check lived here, not in
+    # economy.py, which is why the fix has to touch this file.
+    if not s.mineable(mat):
+        return {"ok": False, "error": "material must be one of: "
+                                      + s.mine_catalog_hint()}
+    # partial=False: a mine you asked for by name is bought in full or
+    # not at all. It used to spend every denarius you had and hand back
+    # a fraction, without asking.
+    price = s.mine_quote(mat, quantity).get("to_sink_it") if hasattr(s, "mine_quote") else None
+    got = s.open_mine(mat, quantity, partial=False)
+    if got <= 0:
+        if price is not None and price > s.capital:
+            return {"ok": False,
+                    "error": "%.0f tonnes a year of %s costs %s denarii to "
+                             "sink and you have %s. Nothing was changed - ask "
+                             "for what you can pay for, or check the price "
+                             'first with {"cmd":"quote","what":"mine",'
+                             '"material":"%s","n":%g}.'
+                             % (float(quantity), mat, "{:,.0f}".format(price),
+                                "{:,.0f}".format(s.capital), mat, float(quantity))}
+        return {"ok": False, "error": "could not commission any %s capacity right now "
+                                      "(ceiling reached, or standing too low for a "
+                                      "concession that size)" % mat}
+    # Say what was actually commissioned and WHEN it arrives. A tester
+    # asked for 999,999,999 tonnes a year, silently got 59, and found
+    # ready_year was always null so there was no way to know whether the
+    # workings would appear in four years or ninety-five. Both of those
+    # are the model being coy about its own arithmetic.
+    tranche = [entry for entry in getattr(s, "mine_tranches", []) if entry[0] == mat]
+    ready = min((entry[2] for entry in tranche), default=None)
+    asked = float(quantity)
+    reply = {"ok": True, "material": mat,
+             "you_asked_for_t_per_yr": asked,
+             "commissioned_t_per_yr": round(got, 2),
+             "ready_year": ready,
+             "years_until_producing": (None if ready is None
+                                       else round(ready - s.year, 1)),
+             "already_producing_t_per_yr": round(s.mine_capacity.get(mat, 0.0), 2),
+             "capital": round(s.capital, 1)}
+    if got < asked * 0.999:
+        reply["note"] = ("less than you asked for: limited by capital, by the "
+                         "ceiling your standing supports, or both. Nothing was "
+                         "wasted, you paid only for what was sunk.")
+    return reply
+
+
+def _buy_slaves(s, cmd, quantity):
+    s._last_buy_refusal = None
+    got = s.buy_slaves(int(quantity))
+    if got <= 0 and getattr(s, "_last_buy_refusal", None):
+        return {"ok": False, "error": s._last_buy_refusal}
+    if got <= 0:
+        # Quote the price actually asked. It is no longer 300 flat: a
+        # large purchase bids the local market up, and saying "300 each"
+        # while charging far more is the model lying to the player.
+        quote = s.slave_quote(int(quantity))
+        return {"ok": False,
+                "error": "cannot afford %d slaves: %.0f denarii "
+                         "(%.0f each after the market moves against a purchase "
+                         "this size) and you have %.0f"
+                         % (int(quantity), quote, quote / max(1, int(quantity)), s.capital)}
+    return {"ok": True, "bought": got, "slaves": s.slaves, "capital": round(s.capital, 1)}
+
+
+def _buy_manumit(s, cmd, quantity):
+    got = s.manumit(int(quantity))
+    if got <= 0:
+        return {"ok": False, "error": "you have no slaves to free"}
+    return {"ok": True, "manumitted": got, "freedmen": s.freedmen, "slaves": s.slaves}
+
+
+# Dispatch over what is being bought: one small handler per kind, keyed by
+# every spelling '_cmd_buy' used to match with its own "what in (...)" test.
+# Same pattern as _parse_command_body's own table - see that one's docstring
+# for why a dict beats a long if/elif chain here too.
+_BUY_HANDLERS = {
+    "forest": _buy_forest,
+    "nitre": _buy_nitre,
+    "nitre_bed": _buy_nitre,
+    "saltpetre": _buy_nitre,
+    "nitre beds": _buy_nitre,
+    "farm": _buy_farm,
+    "food": _buy_farm,
+    "housing": _buy_housing,
+    "houses": _buy_housing,
+    "school": _buy_school,
+    "trade_school": _buy_school,
+    "trade school": _buy_school,
+    "material": _buy_material,
+    "stock": _buy_material,
+    "mine": _buy_mine,
+    "slaves": _buy_slaves,
+    "manumit": _buy_manumit,
+}
+
+
 def _cmd_buy(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
@@ -78,134 +248,10 @@ def _cmd_buy(s, nodes, cmd, ended):
     if not (quantity > 0):
         return {"ok": False,
                 "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
-    if what == "forest":
-        got = s.buy_forest(quantity)
-        if got <= 0:
-            return {"ok": False, "error": "cannot afford %.0f ha of coppice woodland "
-                                          "(you have %.0f denarii)" % (quantity, s.capital)}
-        return {"ok": True, "bought_ha": got, "forest_ha": round(s.forest_ha, 1),
-                "capital": round(s.capital, 1)}
-    if what in ("nitre", "nitre_bed", "saltpetre", "nitre beds"):
-        got = s.build_nitre(quantity)
-        if got <= 0:
-            return {"ok": False,
-                    "error": "cannot afford %.0f square metres of nitre bed "
-                             "(that is %s denarii and you have %s). Nothing "
-                             "was changed."
-                             % (quantity, "{:,.0f}".format(quantity * s.NITRE_COST_PER_M2
-                                                    * s.price_index),
-                                "{:,.0f}".format(s.capital))}
-        return {"ok": True, "laid_m2": got,
-                "nitre_bed_m2": round(s.nitre_bed_m2, 1),
-                "saltpetre_it_yields_per_year_tonnes":
-                    round(s.nitre_bed_m2 * s.NITRE_YIELD_T_PER_M2, 3),
-                "capital": round(s.capital, 1)}
-    if what in ("farm", "food"):
-        got = s.invest_farm(quantity)
-        if got <= 0:
-            return {"ok": False, "error": "cannot afford that farmland"}
-        return {"ok": True, "bought_farm_hectares": got,
-                "farm_hectares": round(s.farm_hectares, 1),
-                "food_cost_factor": round(s.essential_price_ratio(), 3),
-                "capital": round(s.capital, 1)}
-    if what in ("housing", "houses"):
-        got = s.build_worker_housing(quantity)
-        if got <= 0:
-            return {"ok": False, "error": "cannot afford that worker housing"}
-        return {"ok": True, "built_worker_housing_places": got,
-                "worker_housing_places": round(s.worker_housing_places, 1),
-                "capital": round(s.capital, 1)}
-    if what in ("school", "trade_school", "trade school"):
-        trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
-        ok, why = s.found_trade_school(trade, quantity)
-        if not ok:
-            return {"ok": False, "error": why}
-        return {"ok": True, "trade": trade, "new_training_seats": quantity,
-                "trade_school_seats": s.trade_schools[trade],
-                "market_supply_hours_per_year": round(s.market_supply(trade), 1),
-                "capital": round(s.capital, 1)}
-    if what in ("material", "stock"):
-        material = cmd.get("material")
-        got = s.buy_material_stock(material, quantity)
-        if got <= 0:
-            return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
-        return {"ok": True, "material": material, "bought_tonnes": got,
-                "stock_on_hand_tonnes": s.material_stock_t(material),
-                "capital": round(s.capital, 1)}
-    if what == "mine":
-        mat = cmd.get("material")
-        # GENERALISED beyond the seven hand-named metals (see
-        # economy.py's mineable()/mine_catalog_hint(), and
-        # COMMODITY_DYNAMISM.md for why the closed list was the actual
-        # bug: "no mine, no supply lever" for anything else the tree
-        # ever asks a node to buy). This is the one gate that used to
-        # make that literally true at the command surface, even though
-        # the seven-name dict membership check lived here, not in
-        # economy.py, which is why the fix has to touch this file.
-        if not s.mineable(mat):
-            return {"ok": False, "error": "material must be one of: "
-                                          + s.mine_catalog_hint()}
-        # partial=False: a mine you asked for by name is bought in full or
-        # not at all. It used to spend every denarius you had and hand back
-        # a fraction, without asking.
-        price = s.mine_quote(mat, quantity).get("to_sink_it") if hasattr(s, "mine_quote") else None
-        got = s.open_mine(mat, quantity, partial=False)
-        if got <= 0:
-            if price is not None and price > s.capital:
-                return {"ok": False,
-                        "error": "%.0f tonnes a year of %s costs %s denarii to "
-                                 "sink and you have %s. Nothing was changed - ask "
-                                 "for what you can pay for, or check the price "
-                                 'first with {"cmd":"quote","what":"mine",'
-                                 '"material":"%s","n":%g}.'
-                                 % (float(quantity), mat, "{:,.0f}".format(price),
-                                    "{:,.0f}".format(s.capital), mat, float(quantity))}
-            return {"ok": False, "error": "could not commission any %s capacity right now "
-                                          "(ceiling reached, or standing too low for a "
-                                          "concession that size)" % mat}
-        # Say what was actually commissioned and WHEN it arrives. A tester
-        # asked for 999,999,999 tonnes a year, silently got 59, and found
-        # ready_year was always null so there was no way to know whether the
-        # workings would appear in four years or ninety-five. Both of those
-        # are the model being coy about its own arithmetic.
-        tranche = [entry for entry in getattr(s, "mine_tranches", []) if entry[0] == mat]
-        ready = min((entry[2] for entry in tranche), default=None)
-        asked = float(quantity)
-        reply = {"ok": True, "material": mat,
-                 "you_asked_for_t_per_yr": asked,
-                 "commissioned_t_per_yr": round(got, 2),
-                 "ready_year": ready,
-                 "years_until_producing": (None if ready is None
-                                           else round(ready - s.year, 1)),
-                 "already_producing_t_per_yr": round(s.mine_capacity.get(mat, 0.0), 2),
-                 "capital": round(s.capital, 1)}
-        if got < asked * 0.999:
-            reply["note"] = ("less than you asked for: limited by capital, by the "
-                             "ceiling your standing supports, or both. Nothing was "
-                             "wasted, you paid only for what was sunk.")
-        return reply
-    if what == "slaves":
-        s._last_buy_refusal = None
-        got = s.buy_slaves(int(quantity))
-        if got <= 0 and getattr(s, "_last_buy_refusal", None):
-            return {"ok": False, "error": s._last_buy_refusal}
-        if got <= 0:
-            # Quote the price actually asked. It is no longer 300 flat: a
-            # large purchase bids the local market up, and saying "300 each"
-            # while charging far more is the model lying to the player.
-            quote = s.slave_quote(int(quantity))
-            return {"ok": False,
-                    "error": "cannot afford %d slaves: %.0f denarii "
-                             "(%.0f each after the market moves against a purchase "
-                             "this size) and you have %.0f"
-                             % (int(quantity), quote, quote / max(1, int(quantity)), s.capital)}
-        return {"ok": True, "bought": got, "slaves": s.slaves, "capital": round(s.capital, 1)}
-    if what == "manumit":
-        got = s.manumit(int(quantity))
-        if got <= 0:
-            return {"ok": False, "error": "you have no slaves to free"}
-        return {"ok": True, "manumitted": got, "freedmen": s.freedmen, "slaves": s.slaves}
-    return {"ok": False, "error": "what must be one of: forest, farm, housing, school, material, mine, slaves, manumit"}
+    handler = _BUY_HANDLERS.get(what)
+    if handler is None:
+        return {"ok": False, "error": "what must be one of: forest, farm, housing, school, material, mine, slaves, manumit"}
+    return handler(s, cmd, quantity)
 
 
 

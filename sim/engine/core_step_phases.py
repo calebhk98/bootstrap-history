@@ -1028,6 +1028,43 @@ class StepPhasesMixin:
         project_state["pool_active_count_this_year"] = _pool_active_count_this_year
         project_state["pool_rank_this_year"] = _pool_rank
         project_state["pool_remaining_before_this_year"] = round(remaining, 1)
+        # A PIPELINE, ONE STAGE PER CONCERN, IN THE SAME ORDER THIS METHOD
+        # ALWAYS RAN THEM: is there anybody to do the work, how many hours
+        # does the project get this year, what labour and bill follow from
+        # that, can the household afford the bill, then the bookkeeping and
+        # completion check. Split out so this method reads as five sentences
+        # instead of 374 lines of one project's turn; every comment below
+        # moved verbatim with the code it was explaining, and every
+        # self.rng-touching call these stages make (lab_year_draw is the
+        # only one that plausibly draws) still runs exactly once, in exactly
+        # this order, for exactly this project - the stages are called
+        # unconditionally in sequence and only the two `continue`-turned-
+        # early-returns below skip any of them, both preserved from the
+        # original loop.
+        if self._project_progress_trade_gate(node_id, project_state, node):
+            return remaining, hired_left, 0.0
+        remaining, per, spent_hours, _dir_hours = self._project_progress_offer_hours(
+            node_id, project_state, remaining, _pool_total_this_year, _directed_hours_unused)
+        _labour = self._project_progress_labour_and_bill(
+            node_id, project_state, node, hired_left, per, spent_hours)
+        if _labour is None:
+            return remaining, hired_left, 0.0
+        hired_left, money, refunded = _labour
+        money, refunded = self._project_progress_afford_gate(
+            node_id, project_state, money, refunded, spent_hours, per, _arrears_hours_lost)
+        self._project_progress_finish(
+            node_id, project_state, money, refunded, spent_hours, _dir_hours,
+            _directed_hours_unused)
+
+        return remaining, hired_left, project_state["hours_effective_this_year"]
+
+    def _project_progress_trade_gate(self, node_id, project_state, node):
+        # Stage 1 of _step_progress_project: is there anybody to do the
+        # work. Returns True when the project is stalled or just halted
+        # this year, in which case the caller returns immediately with no
+        # hours or money spent - the first of the two `continue`-turned-
+        # early-returns the original loop already had. Returns False, and
+        # clears stalled_years, when the project can proceed.
         # IS THERE ANYBODY TO DO THE WORK? If a trade this project needs
         # has vanished since it started (the machinists you taught died
         # out, say), nothing can be done on it this year, and your own
@@ -1089,8 +1126,18 @@ class StepPhasesMixin:
                 # the entry looking like they still applied.
                 project_state["hours_offered_this_year"] = 0.0
                 project_state["hours_effective_this_year"] = 0.0
-            return remaining, hired_left, 0.0
+            return True
         project_state["stalled_years"] = 0
+        return False
+
+    def _project_progress_offer_hours(self, node_id, project_state, remaining,
+                                     _pool_total_this_year, _directed_hours_unused):
+        # Stage 2: how many hours the project gets this year (`per`), what
+        # that leaves of the shared pool (`remaining`), and the first of the
+        # two places a standing allocation can go unhonoured. Returns the
+        # updated remaining, per, spent_hours (for the give-backs later
+        # stages compute) and _dir_hours (read again by stage 5's inner-gap
+        # check).
         # project_hour_pace (projects.py) is this same formula, read
         # rather than re-derived, so 'work's own pre-sale warning
         # about starving an active project can never disagree with
@@ -1174,6 +1221,15 @@ class StepPhasesMixin:
                     "work already claimed the rest of this year's "
                     "%s hours before this one's turn came"
                     % "{:,.0f}".format(_pool_total_this_year)))
+        return remaining, per, spent_hours, _dir_hours
+
+    def _project_progress_labour_and_bill(self, node_id, project_state, node,
+                                          hired_left, per, spent_hours):
+        # Stage 3: the labour this project can actually hire this year and
+        # the bill that follows from it. Returns None when the project was
+        # abandoned this year - the second of the two `continue`-turned-
+        # early-returns - in which case the caller returns immediately.
+        # Otherwise returns the updated hired_left, money and refunded.
         refunded = 0.0
         project_state["yrs"] += 1
         frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
@@ -1196,7 +1252,7 @@ class StepPhasesMixin:
             self.household.log.append((self.year, "ABANDONED %s: %s" % (node_id, _abandon)))
             self.household.active.pop(node_id, None)
             self.household.bountied.discard(node_id)
-            return remaining, hired_left, 0.0
+            return None
         if worst < 1.0:
             # NEVER ALL OF IT. The refund says "hours offered but not
             # usable, because the trade was booked" - and with no floor
@@ -1240,6 +1296,12 @@ class StepPhasesMixin:
         # how FAST you can pay and never stops the last payment landing.
         money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
         hired_left -= hired_hours
+        return hired_left, money, refunded
+
+    def _project_progress_afford_gate(self, node_id, project_state, money, refunded,
+                                     spent_hours, per, _arrears_hours_lost):
+        # Stage 4: can the household actually afford this year's bill.
+        # Returns the updated money and refunded.
         # You may spend into debt, up to what someone will lend you, and
         # no further. Beyond that the work simply does not get paid for
         # this year, and a year nobody was paid for is a year of little
@@ -1326,6 +1388,14 @@ class StepPhasesMixin:
         else:
             project_state.pop("underfunded_this_year", None)
             project_state.pop("why_underfunded", None)
+        return money, refunded
+
+    def _project_progress_finish(self, node_id, project_state, money, refunded,
+                                spent_hours, _dir_hours, _directed_hours_unused):
+        # Stage 5: spend the money, record the hours actually done, the
+        # second place a standing allocation can go unhonoured, and the
+        # completion check. Nothing to return - project_state carries every
+        # result the caller (and the rest of the game) reads back.
         self.household.capital -= money
         self.household.total_spend += money
         project_state["spent"] += money
@@ -1397,8 +1467,6 @@ class StepPhasesMixin:
             self._complete(node_id)
         elif project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] > 0.5:
             project_state["waiting_on_money"] = True
-
-        return remaining, hired_left, project_state["hours_effective_this_year"]
 
     def _step_progress(self, pool, hired_left):
         # 5. progress. Director hours go to the HIGHEST-PRIORITY active projects

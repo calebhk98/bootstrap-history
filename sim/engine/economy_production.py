@@ -401,7 +401,7 @@ class ProductionMixin:
         # reported that the accounts do not add up - two running earners were
         # simply not shown, and the workshop's own output and the saturation
         # that caps the whole figure were never rows at all.
-        ranked = sorted(rows.items(), key=lambda kv: -kv[1])
+        ranked = sorted(rows.items(), key=lambda entry: -entry[1])
         out = dict(ranked[:15])
         rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
@@ -430,7 +430,7 @@ class ProductionMixin:
             if out and abs(resid) > 0.049:
                 # sorted(): a tie in max() over a dict falls back to insertion
                 # order, which came from a set.
-                big = max(sorted(out), key=lambda k: abs(out[k]))
+                big = max(sorted(out), key=lambda key: abs(out[key]))
                 out[big] = round(out[big] + resid, 1)
         return out
 
@@ -472,7 +472,7 @@ class ProductionMixin:
                 young.append((node_id, ramp))
         if not young:
             return None
-        young.sort(key=lambda kv: kv[1])
+        young.sort(key=lambda entry: entry[1])
         return ("%s%s at %d%% of full takings. A concern you open reaches its "
                 "full figure over %g years, so what the ledger shows is not "
                 "what it will be."

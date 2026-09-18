@@ -608,7 +608,7 @@ class CreditMixin:
                              if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
                              and node_id not in self.household.granted
                              and not self.never_abandon(node_id)),
-                            key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
+                            key=lambda node_id: (self.nodes[node_id]["rev"] - self.nodes[node_id]["up"]))
             taken = []
             for node_id in burden:
                 if self.household.capital >= -limit:
@@ -822,7 +822,7 @@ class CreditMixin:
             # so this cost you 50". Advice that does not say which job to take
             # is advice that can be followed into a loss.
             trades = [trade for trade in WAGES if self.trade_available(trade)]
-            best_t = max(trades, key=lambda t: ANNUAL_WAGE.get(t, self.DEFAULT_ANNUAL_WAGE_FALLBACK),
+            best_t = max(trades, key=lambda trade: ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK),
                          default=None)
             if best_t:
                 rate = ANNUAL_WAGE[best_t] / self.HOURS_PER_PERSON_YEAR
@@ -844,7 +844,7 @@ class CreditMixin:
                                    "{:,.0f}".format(would_earn - would_cost)))
         losers = sorted((node_id for node_id in self.household.operating
                          if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
-                        key=lambda k: self.nodes[k]["rev"] - self.nodes[k]["up"])
+                        key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
         if losers:
             ways.append("close what costs more than it brings in: %s"
                         % ", ".join("%s (%+.0f a year)"

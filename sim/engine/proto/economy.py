@@ -123,6 +123,81 @@ _POWER_LADDER = (
     ("cap_power_grid", "grid electric power, MW scale (central generation)"))
 
 
+def _power_tiers(s, nodes):
+    """Which rungs of _POWER_LADDER are visible to this player yet, and the
+    highest one actually built - the fog rule from _power_status's own
+    docstring (a rung is named only once built, active, or revealed)
+    applied, and nothing else.
+    """
+    tiers = []
+    highest = None
+    for nid, label in _POWER_LADDER:
+        if nid not in nodes or not s.is_visible(nid):
+            continue
+        built = s.has(nid)
+        tiers.append({"capability": label, "id": nid, "built": built})
+        if built:
+            highest = label
+    return tiers, highest
+
+
+def _power_generation_block(s):
+    """Real generation and demand figures in kilowatts, once at least one
+    power tier is visible - generation_kw, demand_kw, reserve_margin,
+    transmission_capacity_kw, the optional mechanical-shaft breakdown, the
+    optional binding-constraint flag, and the closing note. See
+    _power_status's own docstring for where these numbers come from and why
+    they are safe to show under fog; this only reads them.
+    """
+    gen = s.generation_breakdown_kw()
+    demand_kw = s._electricity_demand_kw()
+    total_kw = gen["total_kw"]
+    block = {
+        "generation_kw": {"local_workshop_scale": round(gen["local_kw"], 1),
+                          "grid_scale": round(gen["grid_kw"], 1),
+                          "total": round(total_kw, 1)},
+        "demand_kw": round(demand_kw, 1),
+        "reserve_margin": (None if demand_kw <= 1e-9 else
+                           round((total_kw - demand_kw) / demand_kw, 3)),
+        "transmission_capacity_kw": round(gen["transmission_kw"], 1),
+    }
+    mech = gen["mechanical_kw"]
+    if mech.get("water") or mech.get("steam"):
+        block["mechanical_shaft_power_kw"] = {mechanism: round(value, 1)
+                                              for mechanism, value in sorted(mech.items()) if value}
+    if s.binding == "electricity":
+        block["electricity_is_the_binding_constraint"] = True
+        block["throttle"] = round(s.throttle, 3)
+    block["note"] = ("generation and demand are both averaged continuous "
+                     "kilowatts, the same annual-flow convention every other "
+                     "tracked resource in this engine uses - not an "
+                     "instantaneous or peak reading.")
+    return block
+
+
+def _power_waiting_on(s, nodes, grid_known):
+    """Which not-yet-built, visible projects are waiting on workshop-scale
+    power versus the grid specifically - called only once the player has
+    themselves discovered workshop-scale electricity; see _power_status's
+    own docstring for why the grid split waits on grid_known too.
+    """
+    workshop_scale, grid_scale = [], []
+    for node_id, node in nodes.items():
+        if node_id in s.done or not s.is_visible(node_id):
+            continue
+        pre = node.get("pre") or []
+        if grid_known and not s.has("cap_power_grid") and "cap_power_grid" in pre:
+            grid_scale.append(node_id)
+        elif not s.has("cap_power_electric") and "cap_power_electric" in pre:
+            workshop_scale.append(node_id)
+    out = {}
+    if workshop_scale:
+        out["waiting_on_workshop_scale_power"] = sorted(workshop_scale)
+    if grid_scale:
+        out["waiting_on_grid_scale_power"] = sorted(grid_scale)
+    return out
+
+
 def _power_status(s, nodes):
     """What this society can generate, transmit and draw, in real kilowatts,
     and - once electrification has actually begun for THIS player - which
@@ -152,15 +227,7 @@ def _power_status(s, nodes):
     prerequisite; here nothing is named until it is not a prerequisite the
     player would be seeing for the first time.
     """
-    tiers = []
-    highest = None
-    for nid, label in _POWER_LADDER:
-        if nid not in nodes or not s.is_visible(nid):
-            continue
-        built = s.has(nid)
-        tiers.append({"capability": label, "id": nid, "built": built})
-        if built:
-            highest = label
+    tiers, highest = _power_tiers(s, nodes)
     out = {
         "power_tiers_you_have_discovered": tiers or "none yet",
         "highest_you_have_built": highest,
@@ -168,44 +235,119 @@ def _power_status(s, nodes):
     if not tiers:
         out["note"] = ("nothing discovered yet: no generation, no demand.")
         return out
-    gen = s.generation_breakdown_kw()
-    demand_kw = s._electricity_demand_kw()
-    total_kw = gen["total_kw"]
-    out["generation_kw"] = {"local_workshop_scale": round(gen["local_kw"], 1),
-                             "grid_scale": round(gen["grid_kw"], 1),
-                             "total": round(total_kw, 1)}
-    out["demand_kw"] = round(demand_kw, 1)
-    out["reserve_margin"] = (None if demand_kw <= 1e-9 else
-                             round((total_kw - demand_kw) / demand_kw, 3))
-    out["transmission_capacity_kw"] = round(gen["transmission_kw"], 1)
-    mech = gen["mechanical_kw"]
-    if mech.get("water") or mech.get("steam"):
-        out["mechanical_shaft_power_kw"] = {mechanism: round(value, 1)
-                                            for mechanism, value in sorted(mech.items()) if value}
-    if s.binding == "electricity":
-        out["electricity_is_the_binding_constraint"] = True
-        out["throttle"] = round(s.throttle, 3)
-    out["note"] = ("generation and demand are both averaged continuous "
-                   "kilowatts, the same annual-flow convention every other "
-                   "tracked resource in this engine uses - not an "
-                   "instantaneous or peak reading.")
+    out.update(_power_generation_block(s))
     elec_known = s.is_visible("cap_power_electric")
     grid_known = s.is_visible("cap_power_grid")
     if elec_known:
-        workshop_scale, grid_scale = [], []
-        for node_id, node in nodes.items():
-            if node_id in s.done or not s.is_visible(node_id):
-                continue
-            pre = node.get("pre") or []
-            if grid_known and not s.has("cap_power_grid") and "cap_power_grid" in pre:
-                grid_scale.append(node_id)
-            elif not s.has("cap_power_electric") and "cap_power_electric" in pre:
-                workshop_scale.append(node_id)
-        if workshop_scale:
-            out["waiting_on_workshop_scale_power"] = sorted(workshop_scale)
-        if grid_scale:
-            out["waiting_on_grid_scale_power"] = sorted(grid_scale)
+        out.update(_power_waiting_on(s, nodes, grid_known))
     return out
+
+
+# copper_wire_kg/wire_drawn_kg and gold_kg: economy.py's MATERIAL_CHECKS now
+# tracks these against the same copper/gold supply the `mines` row is about
+# (see that table's own comment); this key map has to agree or "you actually
+# need" would silently exclude what 36 electrical nodes and a central bank
+# draw.
+_MINE_DEMAND_KEYS = {"coal": ("coal_kg",), "iron": ("iron_bar_kg", "iron_ore_kg"),
+                     "copper": ("copper_kg", "copper_wire_kg", "wire_drawn_kg"),
+                     "lead": ("lead_kg",),
+                     "tin": ("tin_kg",), "silver": ("silver_kg",),
+                     "gold": ("gold_kg",)}
+
+
+def _mine_pending_workings(s):
+    """Shafts already paid for but not yet in production, summed by
+    material. PENDING WORKINGS COUNT: a shaft takes years to come into
+    production and is paid for the moment you sink it, so a player who has
+    just bought one and types `mines` must not be told they own none. Not
+    yet a working - it has no commissioning year until commission_mines()
+    actually makes it one - so these stay grouped by material, as before.
+    """
+    pending = {}
+    for tranche in sorted(getattr(s, "mine_tranches", [])):
+        material, amt, ready = tranche[0], tranche[1], tranche[2]
+        pending.setdefault(material, [0.0, ready])
+        pending[material][0] += amt
+        pending[material][1] = min(pending[material][1], ready)
+    return pending
+
+
+def _mine_rows_for_material(s, material, workings, want):
+    """One row per actual working of this material, ordered by commissioning
+    year so several workings of the same seam read as a chronology, not a
+    jumble - see _agent_mines' own docstring for the full rationale behind
+    every column.
+    """
+    total_rated = sum(working["capacity"] for working in workings)
+    rows = []
+    for working in sorted(workings, key=lambda w: (
+            w.get("opened_year") if w.get("opened_year") is not None
+            else -1)):
+        # ACTUAL yield, not the nominal tonnage sunk: THIS working's own
+        # depletion (the easy ore going, aged from its own commissioning
+        # year - see economy.py's class comment above _workings_of) and
+        # current mining technology both move this away from rated
+        # capacity, and a player whose coal yield has halved over eighty
+        # years has to be able to see that here, not just infer it from a
+        # lower revenue somewhere else.
+        actual = s.mine_yield_t_for(working)
+        # UTILISATION: rated capacity against what is really being drawn -
+        # the question the player actually asked. Demand for this material
+        # is shared across its workings in proportion to their own rated
+        # capacity (the model has no finer-grained way to say which working
+        # feeds which furnace); what a working can actually be drawn on for
+        # is capped by its OWN yield, so a fully depleted working shows low
+        # utilisation even when every tonne it can still raise is being
+        # used, and an unused one shows 0% however healthy its seam is -
+        # exactly the distinction between a real supply and an economic
+        # asset the player asked to see.
+        share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
+        drawn = min(share, actual)
+        util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
+        rows.append({
+            "material": material,
+            "commissioned_year": working.get("opened_year") if working.get("opened_year")
+                                 is not None else "unknown (from a save "
+                                 "written before per-working tracking "
+                                 "existed)",
+            "rated_capacity_t_per_yr": round(working["capacity"], 2),
+            "actual_output_t_per_yr": round(actual, 2),
+            "material_demand_t_per_yr": round(want, 2),
+            "costs_you_a_year": round(s.mine_operating_cost_for(working), 1),
+            "utilization": ("%d%%" % round(100.0 * util))
+                           if working["capacity"] > 0 else "-",
+            # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
+            # not only as a percentage a reader has to interpret. A
+            # tester's own question was exactly this: does the game count
+            # a mine as real supply, or only as an economic asset sitting
+            # on the books?
+            "actually_supplying_demand": bool(drawn > 1e-9),
+            "yield_note": s.mine_depletion_note_for(working),
+            "shut_it_with": "close %s" % material})
+    return rows
+
+
+def _mine_pending_rows(dem, pending):
+    """One row per material still being sunk, standing in for a working
+    that does not exist yet - see _mine_pending_workings for how these are
+    gathered."""
+    rows = []
+    for material, (amt, ready) in sorted(pending.items()):
+        rows.append({
+            "material": material,
+            "commissioned_year": "pending",
+            "rated_capacity_t_per_yr": 0.0,
+            "actual_output_t_per_yr": 0.0,
+            "material_demand_t_per_yr":
+                round(sum(dem.get(demand_key, 0.0)
+                          for demand_key in _MINE_DEMAND_KEYS.get(material, (material,))), 2),
+            "costs_you_a_year": 0.0,
+            "utilization": "sinking",
+            "actually_supplying_demand": False,
+            "ready_in": ready,
+            "tonnes_a_year_when_it_is_ready": round(amt, 2),
+            "shut_it_with": "close %s" % material})
+    return rows
 
 
 def _agent_mines(s):
@@ -238,110 +380,33 @@ def _agent_mines(s):
     existed; nothing showed you the books.
     """
     dem = s.annual_material_demand()
-    # copper_wire_kg/wire_drawn_kg and gold_kg: economy.py's MATERIAL_CHECKS
-    # now tracks these against the same copper/gold supply this row is
-    # about (see that table's own comment); this local key map has to
-    # agree or "you actually need" would silently exclude what 36
-    # electrical nodes and a central bank draw.
-    _keys = {"coal": ("coal_kg",), "iron": ("iron_bar_kg", "iron_ore_kg"),
-             "copper": ("copper_kg", "copper_wire_kg", "wire_drawn_kg"),
-             "lead": ("lead_kg",),
-             "tin": ("tin_kg",), "silver": ("silver_kg",),
-             "gold": ("gold_kg",)}
     # GENERALISED (COMMODITY_DYNAMISM.md, economy.py's open_mine() is no
-    # longer limited to these seven names): for a mine in a material
-    # outside the curated list above, the material key IS its own demand
-    # key (see economy.py's _material_tag(), same convention), so a
+    # longer limited to the seven names in _MINE_DEMAND_KEYS): for a mine in
+    # a material outside the curated list, the material key IS its own
+    # demand key (see economy.py's _material_tag(), same convention), so a
     # default of "look up the key by its own name" covers it rather than
-    # silently reporting 0 tonnes needed for anything not in `_keys`.
-    rows = []
-    # PENDING WORKINGS COUNT. A shaft takes years to come into production
-    # and is paid for the moment you sink it, so a player who has just
-    # bought one and types `mines` must not be told they own none. Not yet
-    # a working - it has no commissioning year until commission_mines()
-    # actually makes it one - so these stay grouped by material, as before.
-    _pending = {}
-    for _tranche in sorted(getattr(s, "mine_tranches", [])):
-        _material, _amt, _ready = _tranche[0], _tranche[1], _tranche[2]
-        _pending.setdefault(_material, [0.0, _ready])
-        _pending[_material][0] += _amt
-        _pending[_material][1] = min(_pending[_material][1], _ready)
-    # GROUPED BY MATERIAL, ordered by commissioning year within it, so
-    # several workings of the same seam read as a chronology, not a jumble.
-    # self.mines is a list (append/commission order), not a set, so the
-    # groupby itself needs no sorted() to be deterministic across hash
-    # seeds - only the final row order does, hence the explicit sort key.
+    # silently reporting 0 tonnes needed for anything not in the table.
+    pending = _mine_pending_workings(s)
+    # GROUPED BY MATERIAL, ordered by commissioning year within it (done in
+    # _mine_rows_for_material), so several workings of the same seam read as
+    # a chronology, not a jumble. self.mines is a list (append/commission
+    # order), not a set, so the groupby itself needs no sorted() to be
+    # deterministic across hash seeds - only the final row order does,
+    # hence the explicit sort key below.
     by_mat = {}
     for working in getattr(s, "mines", ()):
         by_mat.setdefault(working["material"], []).append(working)
+    rows = []
     for material in sorted(by_mat):
-        workings = by_mat[material]
-        want = sum(dem.get(demand_key, 0.0) for demand_key in _keys.get(material, (material,)))
-        total_rated = sum(working["capacity"] for working in workings)
-        for working in sorted(workings, key=lambda w: (
-                w.get("opened_year") if w.get("opened_year") is not None
-                else -1)):
-            # ACTUAL yield, not the nominal tonnage sunk: THIS working's
-            # own depletion (the easy ore going, aged from its own
-            # commissioning year - see economy.py's class comment above
-            # _workings_of) and current mining technology both move this
-            # away from rated capacity, and a player whose coal yield has
-            # halved over eighty years has to be able to see that here,
-            # not just infer it from a lower revenue somewhere else.
-            actual = s.mine_yield_t_for(working)
-            # UTILISATION: rated capacity against what is really being
-            # drawn - the question the player actually asked. Demand for
-            # this material is shared across its workings in proportion to
-            # their own rated capacity (the model has no finer-grained way
-            # to say which working feeds which furnace); what a working
-            # can actually be drawn on for is capped by its OWN yield, so
-            # a fully depleted working shows low utilisation even when
-            # every tonne it can still raise is being used, and an unused
-            # one shows 0% however healthy its seam is - exactly the
-            # distinction between a real supply and an economic asset the
-            # player asked to see.
-            share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
-            drawn = min(share, actual)
-            util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
-            rows.append({
-                "material": material,
-                "commissioned_year": working.get("opened_year") if working.get("opened_year")
-                                     is not None else "unknown (from a save "
-                                     "written before per-working tracking "
-                                     "existed)",
-                "rated_capacity_t_per_yr": round(working["capacity"], 2),
-                "actual_output_t_per_yr": round(actual, 2),
-                "material_demand_t_per_yr": round(want, 2),
-                "costs_you_a_year": round(s.mine_operating_cost_for(working), 1),
-                "utilization": ("%d%%" % round(100.0 * util))
-                               if working["capacity"] > 0 else "-",
-                # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
-                # not only as a percentage a reader has to interpret. A
-                # tester's own question was exactly this: does the game
-                # count a mine as real supply, or only as an economic asset
-                # sitting on the books?
-                "actually_supplying_demand": bool(drawn > 1e-9),
-                "yield_note": s.mine_depletion_note_for(working),
-                "shut_it_with": "close %s" % material})
-    for material, (amt, ready) in sorted(_pending.items()):
-        rows.append({
-            "material": material,
-            "commissioned_year": "pending",
-            "rated_capacity_t_per_yr": 0.0,
-            "actual_output_t_per_yr": 0.0,
-            "material_demand_t_per_yr":
-                round(sum(dem.get(demand_key, 0.0) for demand_key in _keys.get(material, (material,))), 2),
-            "costs_you_a_year": 0.0,
-            "utilization": "sinking",
-            "actually_supplying_demand": False,
-            "ready_in": ready,
-            "tonnes_a_year_when_it_is_ready": round(amt, 2),
-            "shut_it_with": "close %s" % material})
+        want = sum(dem.get(demand_key, 0.0)
+                   for demand_key in _MINE_DEMAND_KEYS.get(material, (material,)))
+        rows.extend(_mine_rows_for_material(s, material, by_mat[material], want))
+    rows.extend(_mine_pending_rows(dem, pending))
     return {"ok": True,
             "mines_you_own": rows or "none",
             "they_cost_you_a_year_in_all": round(s.mine_operating_cost(), 1),
             "your_revenue_is": round(s.revenue(), 1),
-            "still_being_sunk": {material: value[1] for material, value in sorted(_pending.items())},
+            "still_being_sunk": {material: value[1] for material, value in sorted(pending.items())},
             "note": "Workings are charged every year they stand, whether or "
                     "not you use what they raise. One you no longer need is "
                     "money going out for nothing: 'close <material>'. "
@@ -673,31 +738,42 @@ def _agent_economy(s, cmd=None):
     return out
 
 
-def _agent_changes(s, nodes, cmd=None):
-    """What materially changed over the last N years - the diff a player
-    otherwise has to work out by holding two screens in their head, which is
-    exactly what one of our own testers had to do to diagnose a bug. Reads
-    the yearly snapshots `step` records (_dashboard_snapshot) rather than
-    recomputing anything; see that function for what is actually stored.
+def _uniq(seq):
+    """Preserve order, drop repeats - list(dict.fromkeys(seq)) under a name
+    that says what it is for."""
+    return list(dict.fromkeys(seq))
+
+
+def _parse_changes_years(raw):
+    """Validate the `years` argument for `changes`, the four checks the
+    original inline code ran in order. Returns (years, None) once valid, or
+    (None, error_dict) on the first check that fails.
     """
-    raw = (cmd or {}).get("years", 5)
     if isinstance(raw, bool):
-        return {"ok": False, "error": "years must be a number, not true or false"}
+        return None, {"ok": False, "error": "years must be a number, not true or false"}
     try:
         years = int(raw)
     except (TypeError, ValueError):
-        return {"ok": False, "error": "years must be an integer"}
+        return None, {"ok": False, "error": "years must be an integer"}
     if float(raw) != years:
-        return {"ok": False, "error": "years must be a whole number of years. "
-                                      "Nothing was changed."}
+        return None, {"ok": False, "error": "years must be a whole number of years. "
+                                            "Nothing was changed."}
     if years < 1:
-        return {"ok": False, "error": "years must be >= 1"}
-    hist = getattr(s, "_dashboard_history", None) or []
+        return None, {"ok": False, "error": "years must be >= 1"}
+    return years, None
+
+
+def _changes_baseline(hist, cutoff, current_year):
+    """Find the snapshot at least `cutoff`'s worth of years back from now, or
+    an error dict explaining why there is not one yet - the two
+    history-availability checks the original inline code ran before it had
+    anything to diff. Returns (now, baseline, None) when found, or
+    (None, None, error_dict) when not.
+    """
     if not hist:
-        return {"ok": False, "error": "nothing has been recorded yet; step "
-                                      "forward a year first, then ask again"}
+        return None, None, {"ok": False, "error": "nothing has been recorded yet; step "
+                                                    "forward a year first, then ask again"}
     now = hist[-1]
-    cutoff = s.year - years
     baseline = None
     for rec in hist:
         if rec["year"] <= cutoff:
@@ -706,11 +782,17 @@ def _agent_changes(s, nodes, cmd=None):
             break
     if baseline is None:
         earliest = hist[0]["year"]
-        return {"ok": False,
+        return None, None, {"ok": False,
                 "error": ("this run's own record only goes back to %d AD, %d "
                           "years ago; ask for %d or fewer"
-                          % (earliest, s.year - earliest, s.year - earliest))}
-    moved = {
+                          % (earliest, current_year - earliest, current_year - earliest))}
+    return now, baseline, None
+
+
+def _changes_moved(baseline, now):
+    """The per-metric deltas between the baseline snapshot and now - one
+    subtraction per tracked figure, nothing conditional about any of them."""
+    return {
         "price_index": round(now["price_index"] - baseline["price_index"], 4),
         "wage_index": round(now["wage_index"] - baseline["wage_index"], 4),
         "literacy_general": round(
@@ -730,17 +812,25 @@ def _agent_changes(s, nodes, cmd=None):
         "reputation": round(now["reputation"] - baseline["reputation"], 1),
         "eminence": round(now["eminence"] - baseline["eminence"], 2),
     }
+
+
+def _changes_capacity(baseline, now):
+    """Which mined materials' capacity moved by more than a rounding error
+    over the window, as {"material", "change_t_per_yr"} rows."""
     then_cap = baseline.get("mine_capacity") or {}
     now_cap = now.get("mine_capacity") or {}
-    cap_changes = []
+    rows = []
     for material in sorted(set(then_cap) | set(now_cap)):
         change = round(now_cap.get(material, 0.0) - then_cap.get(material, 0.0), 1)
         if abs(change) > 0.05:
-            cap_changes.append({"material": material, "change_t_per_yr": change})
+            rows.append({"material": material, "change_t_per_yr": change})
+    return rows
 
-    def _uniq(seq):
-        return list(dict.fromkeys(seq))
 
+def _changes_tech_gather(hist, cutoff):
+    """Concatenate each year's own record of completions, reveals, and
+    concern opens/closes over the window - deduplication happens in the
+    caller, _changes_tech_events."""
     completed, revealed, opened, closed = [], [], [], []
     for rec in hist:
         if rec["year"] <= cutoff:
@@ -749,29 +839,63 @@ def _agent_changes(s, nodes, cmd=None):
         revealed.extend(rec.get("revealed_added") or [])
         opened.extend(rec.get("concerns_opened") or [])
         closed.extend(rec.get("concerns_closed") or [])
+    return completed, revealed, opened, closed
+
+
+def _changes_tech_events(hist, cutoff):
+    """Which technologies completed or were newly heard of, and which
+    concerns opened or closed, over the window - each year's own snapshot
+    already lists these; this only concatenates and de-duplicates them."""
+    completed, revealed, opened, closed = _changes_tech_gather(hist, cutoff)
     completed = _uniq(completed)
     revealed = _uniq([node_id for node_id in revealed if node_id not in completed])
     opened = _uniq(opened)
     closed = _uniq([node_id for node_id in closed if node_id not in opened])
-    # A HANDFUL OF WORDS, NOT THE WHOLE LOG. Anything the engine already
-    # logged as happening TO this player over the window, filtered to the
-    # kind of thing a player would call a political event rather than
-    # ordinary bookkeeping ("hired a smith"). The log itself is already
-    # player-facing prose (see `log`); this only picks out a slice of it.
-    _MARKERS = ("sack", "denounced", "founder dies", "plague", "crisis",
-               "scandal", "credit exhausted", "insolvency", "war", "revolt",
-               "famine", "fire", "died", "denunciation")
-    events = [{"year": year, "message": message} for year, message in s.log
-             if cutoff < year <= s.year and any(marker in message.lower() for marker in _MARKERS)]
     return {
-        "ok": True,
-        "from_year": baseline["year"], "to_year": now["year"],
-        "moved": moved,
-        "bottleneck": {"then": baseline.get("binding"), "now": now.get("binding")},
-        "capacity_gained_or_lost": cap_changes or "none",
         "technologies_completed": completed or "none",
         "technologies_newly_heard_of": revealed or "none",
         "concerns_opened": opened or "none",
         "concerns_closed": closed or "none",
-        "notable_events": events or "none",
     }
+
+
+def _changes_notable_events(s, cutoff):
+    """A handful of words, not the whole log. Anything the engine already
+    logged as happening TO this player over the window, filtered to the
+    kind of thing a player would call a political event rather than
+    ordinary bookkeeping ("hired a smith"). The log itself is already
+    player-facing prose (see `log`); this only picks out a slice of it.
+    """
+    _MARKERS = ("sack", "denounced", "founder dies", "plague", "crisis",
+               "scandal", "credit exhausted", "insolvency", "war", "revolt",
+               "famine", "fire", "died", "denunciation")
+    return [{"year": year, "message": message} for year, message in s.log
+            if cutoff < year <= s.year and any(marker in message.lower() for marker in _MARKERS)]
+
+
+def _agent_changes(s, nodes, cmd=None):
+    """What materially changed over the last N years - the diff a player
+    otherwise has to work out by holding two screens in their head, which is
+    exactly what one of our own testers had to do to diagnose a bug. Reads
+    the yearly snapshots `step` records (_dashboard_snapshot) rather than
+    recomputing anything; see that function for what is actually stored.
+    """
+    raw = (cmd or {}).get("years", 5)
+    years, error = _parse_changes_years(raw)
+    if error:
+        return error
+    hist = getattr(s, "_dashboard_history", None) or []
+    cutoff = s.year - years
+    now, baseline, error = _changes_baseline(hist, cutoff, s.year)
+    if error:
+        return error
+    result = {
+        "ok": True,
+        "from_year": baseline["year"], "to_year": now["year"],
+        "moved": _changes_moved(baseline, now),
+        "bottleneck": {"then": baseline.get("binding"), "now": now.get("binding")},
+        "capacity_gained_or_lost": _changes_capacity(baseline, now) or "none",
+    }
+    result.update(_changes_tech_events(hist, cutoff))
+    result["notable_events"] = _changes_notable_events(s, cutoff) or "none"
+    return result

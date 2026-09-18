@@ -921,7 +921,7 @@ class MiningMixin:
         rather than removing whole workings outright, so the ones that
         survive keep their own real commissioning year and depletion clock
         instead of the newest or oldest being arbitrarily preferred."""
-        order = sorted(self.mine_capacity, key=lambda m: -self._mine_opex(m))
+        order = sorted(self.mine_capacity, key=lambda material: -self._mine_opex(material))
         for material in order:
             if self.household.capital >= 0:
                 break
@@ -1034,9 +1034,9 @@ class MiningMixin:
         _compute_home_centroid() uses for a civ file with no valid
         home_regions at all, so this never divides by zero or crashes on a
         malformed civ file."""
-        home = [r for r in (self.civ.get("home_regions") or []) if r in self._regions]
-        area = sum(float((self._regions[r].get("land") or {}).get("land_area_km2", 0.0))
-                   for r in home)
+        home = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
+        area = sum(float((self._regions[region_id].get("land") or {}).get("land_area_km2", 0.0))
+                   for region_id in home)
         if area > 0.0:
             return area
         fallback = self._regions.get("italia") or next(iter(self._regions.values()), {})

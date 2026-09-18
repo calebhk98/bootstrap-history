@@ -1,9 +1,12 @@
 """Raw-material supply: the nine hand-named commodities, and the generic
-mechanism that covers the other ~153.
+mechanism that covers the other ~150 (159 distinct material keys in
+data/tech_tree.json today minus the 9 named ones; see the
+GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES comment below for the
+precise 146-of-159 count against the 13 MATERIAL_CHECKS keys).
 
 Split out of economy_market.py (see economy.py's own docstring for the
 whole split's history): every method here answers how much of a raw
-material - ore, charcoal, saltpetre, or any of the 162 tracked material
+material - ore, charcoal, saltpetre, or any of the 159 material
 keys - you can actually get your hands on this year, whether that is
 your own production, a purchase against the empire's market, or stock
 carried over from an earlier year. Covers: CHARCOAL_PER_HA/MARKET_SHARE
@@ -157,10 +160,16 @@ class MaterialSupplyMixin:
     # ---- GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES --------------------
     #
     # data/review/COMMODITY_DYNAMISM.md, an audit run directly against
-    # this engine: 149 of the 162 distinct material keys the tech tree uses
-    # (about 92%) had a price read once from prices.json at load time and
-    # never revisited for scarcity, surplus or anything else, because
-    # MATERIAL_CHECKS/MARKET_SHARE above only ever named 13 keys by hand.
+    # this engine, found 149 of the then 162 distinct material keys the
+    # tech tree used (about 92%) had a price read once from prices.json at
+    # load time and never revisited for scarcity, surplus or anything else,
+    # because MATERIAL_CHECKS/MARKET_SHARE above only ever named 13 keys by
+    # hand. The tree has since dropped to 159 distinct material keys, all
+    # 13 MATERIAL_CHECKS keys still among them, so the live count today is
+    # 146 of 159 (still about 92%) - counted by intersecting MATERIAL_CHECKS
+    # against every `mat` key in data/tech_tree.json; COMMODITY_DYNAMISM.md's
+    # own audit script is not committed to the repo (same status as
+    # NAMING_PLAN.md's scanner), so this is measured, not scriptable here.
     # Its own worked case was aluminium: "no mine, no supply lever of any
     # kind... nothing in economy.py even contains the string aluminium."
     #
@@ -170,7 +179,7 @@ class MaterialSupplyMixin:
     # prices.json (every material key a node's `mat` dict names MUST have a
     # prices.json entry already, or data.py's own load() would have raised
     # building `_material_cost` in the first place - so this genuinely
-    # covers all 162, not just the ones anyone thought to add). A cheap,
+    # covers all 159, not just the ones anyone thought to add). A cheap,
     # plentiful material gets assumed to have a large national output and a
     # wide buyable share; a dear, rare one gets less of both - fitted, not
     # guessed, from the curated figures the 9 tracked commodities already
@@ -193,7 +202,7 @@ class MaterialSupplyMixin:
         "number, which the fit never saw.",
         confidence="C",
         why="The anchor point of a fitted output-vs-price curve used to "
-            "guess national output for any of the 149 material keys this "
+            "guess national output for any of the 146 material keys this "
             "file has no curated resources.json figure for. A real answer "
             "needs an actual output figure per material, which is exactly "
             "what data/production/'s coverage work is building toward "
@@ -297,9 +306,11 @@ class MaterialSupplyMixin:
         as a one-member commodity of itself - "aluminium_kg" becomes the
         commodity "aluminium_kg" (its own price identifies it; no reverse
         lookup needed). This is the actual generalisation
-        COMMODITY_DYNAMISM.md's finding describes: 149 of 162 material
-        keys got no price response at all because nothing but membership
-        in a 13-entry hand list was ever asked.
+        COMMODITY_DYNAMISM.md's finding describes: 149 of the then 162
+        material keys got no price response at all because nothing but
+        membership in a 13-entry hand list was ever asked - 146 of 159
+        today (see the GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES
+        comment earlier in this file for how that re-count was done).
         """
         pair = self.MATERIAL_CHECKS.get(mat_key)
         if pair:
@@ -726,7 +737,7 @@ class MaterialSupplyMixin:
         look each one up in `demand`, so any OTHER key `demand` carried was
         silently never looked at - not grouped wrong, simply never
         consulted, which is the exact gap COMMODITY_DYNAMISM.md measured
-        (149 of 162 material keys). annual_material_demand() was already
+        (149 of the then 162 material keys; 146 of 159 today). annual_material_demand() was already
         generic over every material key a node's `mat` dict names; this now
         is too, routing each one through _material_tag (curated grouping
         where one exists, the material's own bare key otherwise) instead of

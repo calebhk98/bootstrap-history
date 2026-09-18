@@ -408,6 +408,30 @@ class StaffingMixin:
         staff and the money available. Default ON for the optimizer and OFF
         for a player, like every other automation in this game."""
         opened = []
+        cands = self._auto_open_ordinary_candidates()
+        # "open", NOT "buy", AND THE DIFFERENCE IS LOAD-BEARING - see
+        # _auto_open_check_deep_arrears' own comment for the reasoning this
+        # line is a witness to; a regression test reads this function's own
+        # source for exactly this call, asking the right one of the two
+        # spending_power questions rather than reimplementing the arithmetic.
+        _room = self.spending_power("open")
+        _deep_arrears = self._auto_open_check_deep_arrears()
+        caps = self._auto_open_institution_candidates(_deep_arrears)
+        _surplus, _bleed_room = self._auto_open_institution_budget()
+        newly_opened, _surplus, _bleed_room = self._auto_open_institutions(
+            caps, _surplus, _bleed_room)
+        opened.extend(newly_opened)
+        newly_opened, _surplus = self._auto_expand_institutions(_surplus, _deep_arrears)
+        opened.extend(newly_opened)
+        newly_opened, blocked = self._auto_open_ordinary_ventures(cands, _deep_arrears)
+        opened.extend(newly_opened)
+        self._auto_open_log_blocked(blocked, opened)
+        return opened
+
+    def _auto_open_ordinary_candidates(self):
+        """Ordinary, completed, net-positive concerns not yet running,
+        best margin for the money they tie up first - see the section
+        comment below for what "for the money" means and why."""
         # BEST MARGIN FOR THE MONEY IT TIES UP, not best margin outright. When
         # what you can raise is the binding constraint - which is exactly when
         # this matters - a 400-a-year shop that opens for 60 is worth more than
@@ -419,6 +443,14 @@ class StaffingMixin:
                         and self.nodes[node_id]["rev"] > self.nodes[node_id]["up"]),
                        key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
                                        / max(1.0, self.venture_capex(k))))
+        return cands
+
+    def _auto_open_check_deep_arrears(self):
+        """Whether the household is deep enough in arrears that a NEW
+        institution's standing bleed is gated - see the long comment
+        below for why this is measured against arrears at all, and why
+        an ordinary concern (cands) is answered on its own payback
+        instead, further down in _auto_open_ordinary_ventures."""
         # DEEP IN ARREARS IS NOT "IN ARREARS". Removing the old `capital <= 0`
         # gate broke the catch-22 that trapped England - a household in the red
         # could never open the shop that would dig it out - but with no gate at
@@ -465,9 +497,14 @@ class StaffingMixin:
         # reasonable-looking grounds that it was the same arithmetic written
         # twice. It is not. It is the same arithmetic answering a different
         # question, and the regression suite caught it.
-        _room = self.spending_power("open")
         _deep_arrears = (self.household.capital < 0
                          and -self.household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
+        return _deep_arrears
+
+    def _auto_open_institution_candidates(self, _deep_arrears):
+        """Capability institutions not yet running, that a founder could
+        open at a loss the household can carry - see the comment below
+        for why these are worth opening below their own break-even."""
         # AND THE ONES WHOSE WORTH IS NOT AT THE DOOR. A school takes 2,500 a
         # year and hands back 800, so the margin test above shuts it out for
         # ever - and a school is where twelve of your scholars come from.
@@ -486,6 +523,13 @@ class StaffingMixin:
                        and self.nodes[node_id]["rev"] <= self.nodes[node_id]["up"]),
                       key=lambda k: (self.nodes[k]["up"] - self.nodes[k]["rev"],
                                      self.venture_capex(k), k))
+        return caps
+
+    def _auto_open_institution_budget(self):
+        """How much real surplus, and how much standing bleed against it,
+        a new institution may be opened or grown with this year - see the
+        comment below for why an institution may borrow against what it
+        could raise and not only against what is already clearing."""
         # WHAT IS LEFT AFTER EVERYTHING YOU ARE ALREADY COMMITTED TO. Opening
         # an institution you cannot feed is how a household ends up abandoning
         # the works it already had.
@@ -512,6 +556,14 @@ class StaffingMixin:
         _deep = self.household.capital < 0 and -self.household.capital > _line * self.AUTO_OPEN_INSTITUTION_ARREARS_SHARE
         _bleed_room = (max(0.0, _surplus) * self.AUTO_OPEN_SURPLUS_SHARE_FOR_BLEED
                        + (0.0 if _deep else _line * self.AUTO_OPEN_CREDIT_LINE_BLEED_SHARE))
+        return _surplus, _bleed_room
+
+    def _auto_open_institutions(self, caps, _surplus, _bleed_room):
+        """Open institution candidates that fit inside this year's bleed
+        room, at full size if it fits or as a smaller starter founding
+        if it does not - see the inline comment for the starter-founding
+        case."""
+        opened = []
         for node_id in caps:
             _bleed = self.institution_upkeep(node_id) - self.nodes[node_id]["rev"]
             if _bleed <= _bleed_room:
@@ -539,6 +591,9 @@ class StaffingMixin:
                 _spent = _bleed * starter
                 _surplus -= _spent
                 _bleed_room -= _spent
+        return opened, _surplus, _bleed_room
+
+    def _auto_expand_institutions(self, _surplus, _deep_arrears):
         # AND CLIMB THE LADDER ONCE IT IS OPEN - BUT ONLY ON REAL MONEY AND
         # REAL DEMAND, NOT ON THE STARTER FOUNDING'S CREDIT ALLOWANCE. A break
         # tester traced Rome under captured_han_386.json straight into the
@@ -555,6 +610,7 @@ class StaffingMixin:
         # place is actually full enough to want more room - a household with
         # 14 people is not short of a 12-place workshop, whatever it can
         # technically still borrow.
+        opened = []
         if _surplus > 0.01 and not _deep_arrears:
             for node_id in sorted(self.SCALABLE_INSTITUTIONS):
                 if node_id not in self.household.operating or _surplus <= 0.01:
@@ -580,6 +636,9 @@ class StaffingMixin:
                     opened.append(node_id)
                     _spent = max(0.0, per_unit) * step
                     _surplus -= _spent
+        return opened, _surplus
+
+    def _auto_open_ordinary_ventures(self, cands, _deep_arrears):
         # A CONCERN THAT PAYS FOR ITS OWN DOOR WITHIN A SEASON OR TWO IS NOT
         # WHAT THE ABANDONED-206 HISTORY IS ABOUT. That history is ventures
         # whose capex is large against their annual net - borrow to the hilt,
@@ -591,6 +650,7 @@ class StaffingMixin:
         # anything whose capex cannot actually be raised or whose supervision
         # cannot actually be staffed - this only widens what is even offered
         # to it while the household is deep in arrears.
+        opened = []
         PAYBACK_LIMIT_YEARS = self.AUTO_OPEN_PAYBACK_LIMIT_YEARS
         blocked = None
         for node_id in cands:
@@ -622,6 +682,12 @@ class StaffingMixin:
                 opened.append(node_id)
             elif blocked is None:
                 blocked = (node_id, why)
+        return opened, blocked
+
+    def _auto_open_log_blocked(self, blocked, opened):
+        """Say why the best candidate stayed shut, if nothing at all
+        opened this year - see the comment below for why silence here
+        is indistinguishable from a broken policy."""
         # SAY WHY THE BEST ONE STAYED SHUT. A break tester watched a concern
         # earning 150 a year against 15 of upkeep sit closed for six years with
         # the policy switched on, because auto_open threw away every refusal
@@ -639,7 +705,6 @@ class StaffingMixin:
                                  % (node_id, "{:,.0f}".format(self.nodes[node_id]["rev"]),
                                     "{:,.0f}".format(self.nodes[node_id]["up"]),
                                     why or "something is in the way")))
-        return opened
 
     def mothball_work(self, k):
         """Shut a completed work down to stop paying its upkeep.

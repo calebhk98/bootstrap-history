@@ -18,7 +18,12 @@ and those have never been the same thing.
 """
 
 
-def hazards_not_yet_past(civilization, current_year):
+from typing import Any, Dict, Iterator, Tuple
+
+
+def hazards_not_yet_past(
+        civilization: Dict[str, Any],
+        current_year: int) -> Iterator[Tuple[Dict[str, Any], int, int, bool]]:
     """Yield every hazard whose window has not closed, oldest window first.
 
     Yields `(hazard, year_start, year_end, in_progress)` for each hazard in
