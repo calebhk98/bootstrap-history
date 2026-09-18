@@ -194,6 +194,29 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # as missing mechanism (b), not something invented in this file.
         self.farm_land = agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population))
+        # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md).
+        # Started at zero, not at some invented reserve: this is an INITIAL
+        # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
+        # `farm_land` just above), and the honest initial condition for "how
+        # much surplus this civilisation has banked at the moment the
+        # simulation begins observing it" is "none recorded" rather than a
+        # figure picked to soften the first few years - see
+        # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (agriculture.py)
+        # for where a sourced, physically-grounded number DOES enter this
+        # mechanism (the CEILING on how large a buffer can grow, not the
+        # starting point). What actually fixes Complaints/45 is not this
+        # starting value - it is that `_demographic_recovery` below now
+        # carries whatever THIS ATTRIBUTE holds forward from year to year,
+        # instead of rebuilding an `agriculture.Storage` at stock_kg=0.0
+        # every single year regardless of what the previous year harvested.
+        # SAVE_FIELDS ("farm_stock_kg", sim/engine/proto/saveload.py) is
+        # what makes that survive a --session save/load, exactly the same
+        # concern `pop_children`/`pop_working_age`/`pop_elderly` were added
+        # for a milestone earlier - state a hazard or a harvest can move
+        # away from its constructor default has to round-trip, or a player
+        # who saves and resumes plays a quietly different, easier game than
+        # one who does not.
+        self.farm_stock_kg = 0.0
         # Diagnostic only - see `_demographic_recovery`'s own comment on
         # `_last_farm_year` for why this is not a SAVE_FIELDS member.
         self._last_farm_year = None
@@ -1581,24 +1604,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         function of this civilisation's id and the calendar year - NOT one
         long-lived `random.Random` advanced sequentially year over year.
 
-        WHY, AND WHAT IT SIDESTEPS: `sim/engine/proto/saveload.py` owns
-        `SAVE_FIELDS` and is being edited by another agent concurrently
-        with this milestone (see this file's own file-ownership rule for
-        this piece of work), so this file cannot add a new persisted slot
-        for a running weather generator's state - and CLAUDE.md SS5/this
-        milestone's own brief are explicit that new engine state must
-        round-trip through a save, not silently reset on the next
-        `--session` command the way the pre-Milestone-4 demographic
-        deficit used to (docs/architecture/WIRING_MILESTONE_4.md SS3). A
-        seed computed fresh from `(civilisation id, year)` has no sequential
-        state to lose in the first place: year N's harvest draws the same
-        weather whether it is reached by one unbroken run or by N separate
-        `--session` commands, which is what actually matters, and it costs
-        nothing to guarantee. The trade-off this accepts is named at
-        `farm_land`'s own construction and at the top of
-        `_demographic_recovery`: this year's granary does not remember last
-        year's surplus (see there for why, and for the direction that
-        trade-off biases the model).
+        WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, YEAR) RATHER
+        THAN A STORED GENERATOR, EVEN NOW THAT THE GRANARY ITSELF DOES
+        PERSIST (see `_demographic_recovery` and `farm_stock_kg` below -
+        Complaints/45 is what made the stock persist; the weather draw
+        never needed to). A seed computed fresh from `(civilisation id,
+        year)` has no sequential state to lose in the first place: year N's
+        harvest draws the same weather whether it is reached by one
+        unbroken run or by N separate `--session` commands, which is what
+        actually matters, and it costs nothing to guarantee - so there was
+        never a reason to give the weather generator itself a `SAVE_FIELDS`
+        slot, independent of whatever else about a year's harvest does or
+        does not round-trip. `self.farm_stock_kg` is the thing that
+        actually needed one, and now has it (see
+        `sim/engine/proto/saveload.py`'s `SAVE_FIELDS` tuple).
 
         Multiplier/offset are arbitrary mixing constants (not physical
         facts), chosen only so two different years, or two civilisations
@@ -1632,23 +1651,60 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         machinery - no new "famine" code path, exactly as demography.py's
         own module docstring requires (CLAUDE.md SS3.1).
 
-        THE GRANARY DOES NOT CARRY OVER BETWEEN YEARS - TEMPORARY_HEURISTIC
-        (CLAUDE.md SS3.4), FLAGGED RATHER THAN HIDDEN. `agriculture.Storage`
-        is built to bank a good year's surplus against a future bad one
-        (see its own class docstring), but doing that here would mean this
-        civilisation's granary stock has to survive a save, and
-        `SAVE_FIELDS` (`sim/engine/proto/saveload.py`) belongs to another
-        agent for the duration of this milestone - see
-        `_farm_year_weather_seed`'s own docstring for why. So each year
-        constructs its OWN `Storage` starting at zero stock: this year's
-        harvest has to cover this year's demand on its own, with no
-        buffer from a better year before it and no debt carried into a
-        worse one after it. That is a real simplification, and it biases
-        the model in the OVERSTATING-famine direction (a real granary
-        would smooth some of this out), never the understating one that
-        would let a shortage go unmodelled - so it cannot be the reason a
-        famine that should not happen does. Revisit once a farm-stock
-        field can be added to `SAVE_FIELDS`.
+        THE GRANARY NOW CARRIES OVER BETWEEN YEARS - Complaints/45-no-
+        granary-so-the-baseline-collapses.md, closed by this change.
+        `agriculture.Storage` was always built to bank a good year's
+        surplus against a future bad one (see its own class docstring), but
+        until now each year threw that away and constructed a fresh
+        `Storage` at stock_kg=0.0 regardless of what the previous year
+        harvested. That is not a harmless simplification: demography.py's
+        own `NUTRITION_YEAR_TO_YEAR_NOISE_STD` declaration names exactly
+        this failure mode by name (Jensen's inequality on a one-sided
+        response curve) - mortality and fertility both floor at
+        nutrition_ratio == 1.0, so a good year's excess calories buy
+        nothing while a bad year's shortfall costs real people in full,
+        and averaging weather that is symmetric around 1.0 over a
+        population that responds asymmetrically to it manufactures a
+        ONE-DIRECTIONAL decline with no scripted cause. This engine's own
+        per-year weather draw (`_farm_year_weather_seed`) hit that same
+        failure mode through a different door than the `jitter` flag
+        demography.py guards it behind - the guard was bypassed, not
+        removed, and Complaints/45 measured the result: rome_100ad with
+        events=False fell to 21.9% of its starting population over a
+        century with no hazard of any kind. Real agrarian societies damp
+        exactly this with grain storage; this wiring now has it.
+
+        `self.farm_stock_kg` (`SAVE_FIELDS`, sim/engine/proto/saveload.py)
+        is the persisted state: each year's `Storage` is constructed at
+        THAT stock, not zero, and whatever it holds after this year's
+        sowing/harvest/consumption/spoilage/reseeding is written back to it
+        - capped at `agriculture.granary_capacity_kg` (see that function
+        and GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration in
+        agriculture.py for the physical basis of the cap: a granary is a
+        built structure with a finite floor area, not an unlimited ledger,
+        and the cap is sized off documented historical grain-reserve
+        targets, not off whatever makes the population curve look right -
+        CLAUDE.md SS3.1). The cap is applied HERE, at the engine boundary,
+        never inside `Storage.step` itself, so that class's own one-year
+        conservation identity (sim/tests/test_agriculture.py's own check)
+        is untouched: what changes is how much of one year's `stock_after_
+        kg` the civilisation's actual storage infrastructure lets survive
+        into next year's opening stock, not anything about how one year's
+        flows balance.
+
+        WHAT THIS DOES NOT CLAIM TO FIX. The nutrition-ratio response is
+        still floored at 1.0 on both the mortality and fertility side (see
+        demography.py's `_excess_mortality_multiplier` and
+        `_fertility_multiplier`) - a granary damps the ASYMMETRY OF INPUT
+        weather reaching the population, it does not change the asymmetry
+        of the population's OWN RESPONSE to whatever reaches it. Whether
+        that response-side floor should also change is a separate
+        question, investigated rather than assumed - see demography.py's
+        `_fertility_multiplier` docstring for what was checked (a bounded
+        benefit above 1.0 was designed and passed the stakeholder's own
+        growth-rate sanity check, but was not wired in here: the change
+        needs sim/tests/test_demography.py's own pinned assertion updated
+        alongside it, and that file is outside this task's ownership).
 
         LABOUR AND LAND UNIT DECISIONS (WIRING_MILESTONE_4.md SS4.1/4.2),
         MADE HERE RATHER THAN LEFT IMPLICIT. The farm workforce is sized
@@ -1754,11 +1810,55 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # cropped area) fixes it: unworked land beyond that is fallow-by-
         # absence-of-hands, not sown, not seed-costed, not harvested.
         worked_land = agriculture.Land(hectares_worked, quality=self.farm_land.quality)
+        # THE GRANARY: opens the year at whatever `self.farm_stock_kg`
+        # carried in from last year's close, not at zero - see this
+        # method's own docstring section on Complaints/45 for why that
+        # single word ("carried" rather than "constructed fresh") is the
+        # entire fix, and `farm_stock_kg` in SAVE_FIELDS
+        # (sim/engine/proto/saveload.py) for why it survives a save.
         farm_storage = agriculture.Storage(
-            stock_kg=0.0, seed=self._farm_year_weather_seed(yr))
+            stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(yr))
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
             worker_count=farm_workers_fte)
+        # CLOSE THE YEAR: write what this year's Storage call actually
+        # leaves on hand back as next year's opening stock, capped at what
+        # this civilisation's storage infrastructure can physically hold
+        # (agriculture.granary_capacity_kg - see GRANARY_CAPACITY_YEARS_OF_
+        # DEMAND's own declaration in agriculture.py for the physical basis
+        # of the cap, and this method's docstring for why the cap is
+        # applied HERE rather than inside Storage.step).
+        #
+        # `agriculture.stock_to_carry_forward_kg`, NOT `farm_year.stock_
+        # after_kg` ALONE - see that function's own docstring and Storage.
+        # step's docstring section on carrying stock across years for why:
+        # `stock_after_kg` has already had NEXT year's seed reservation
+        # (`seed_retained_kg`) removed from it, so persisting `stock_after_
+        # kg` alone throws that reserved seed away and then charges an
+        # identical amount again as next year's `seed_sown_kg` - a genuine
+        # bug this task's own fingerprint probe caught empirically (a
+        # near-total-extinction result on ordinary weather, no fingerprint
+        # divergence a hazard or land loss would explain) the first time
+        # persistence was tried without this correction. Adding
+        # `seed_retained_kg` back in is what makes the two calls agree:
+        # what THIS call earmarked for sowing is exactly what NEXT call's
+        # own `seed_sown_kg` computation will draw down, once and only
+        # once.
+        #
+        # `min()` only clips the UPPER side - a negative carry-forward
+        # (this year ate into seed corn it did not have; see Storage.
+        # step's own docstring on why that is allowed to happen rather
+        # than being silently floored at zero) passes through unclipped
+        # and genuinely carries into next year's sowing, which is
+        # Storage's own documented "one bad harvest becomes two" mechanism
+        # actually operating across years for the first time - a real
+        # behavioural change from before this fix, and a correct one: it
+        # was always the model's own intended design (Storage.step's class
+        # docstring), just inert while every year discarded the previous
+        # year's ending stock outright.
+        capacity_kg = agriculture.granary_capacity_kg(farm_year.food_demand_kg)
+        self.farm_stock_kg = min(
+            agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that

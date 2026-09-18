@@ -191,6 +191,12 @@ TOPICS = [
     # depletes and a field does not. Complaints/43 - land solved to exactly
     # 0.0 and land scarcity is what drives a pre-industrial economy.
     "land",
+    # Complaints/45: the unshocked baseline collapsed because Storage was
+    # rebuilt empty every year, so a good harvest was discarded while a bad
+    # one still cost lives. Pins the granary, the double-seed-deduction bug
+    # that was hiding behind it, and the proof that the farm workforce share
+    # does NOT respond to a famine.
+    "granary_persistence",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology

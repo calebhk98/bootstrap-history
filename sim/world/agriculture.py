@@ -545,6 +545,51 @@ GRAIN_SPOILAGE_RATE_PER_YEAR = declare(
         "after this year's consumption is drawn, to whatever is left "
         "sitting in storage - see Storage.step.")
 
+GRANARY_CAPACITY_YEARS_OF_DEMAND = declare(
+    "GRANARY_CAPACITY_YEARS_OF_DEMAND", 1.0,
+    kind="engineering_estimate",
+    unit="years of a population's own annual food demand (dimensionless)",
+    source="Documented pre-modern and early-modern grain-reserve stocking "
+           "targets cluster in the six-to-twelve-month range - e.g. an "
+           "1886 proposal for a government-held UK wheat reserve specified "
+           "6 or alternatively 12 months' consumption, and Egyptian and "
+           "Roman practice (storing surplus 'years of plenty' against "
+           "'years of scarcity'; the annona's horrea) describes the same "
+           "kind of target without giving a precise figure. Taken at the "
+           "generous (12-month) end of that documented range, the same "
+           "'generous reading' convention HARVEST_WINDOW_DAYS's own "
+           "declaration uses when a range rather than a point is all the "
+           "sourcing gives.",
+    confidence="C",
+    why="A granary is a physical structure, not an unlimited ledger entry: "
+        "past some size, more grain does not fit in the pits and raised "
+        "floors a settlement has actually built, and a surplus beyond that "
+        "is not banked - it is sold off, fed to livestock, left to rot in "
+        "the open, or (mechanically the same to this module) simply never "
+        "harvested in from the field. This is DIFFERENT from "
+        "GRAIN_SPOILAGE_RATE_PER_YEAR just above: spoilage is the ongoing "
+        "cost of keeping grain that IS stored; this is the ceiling on how "
+        "much can be stored in the first place. Expressed as a multiple of "
+        "annual demand (rather than a fixed tonnage) so it scales with "
+        "population automatically, the same way farmland_for_population "
+        "does. Applied at the engine boundary (Sim._demographic_recovery in "
+        "sim/engine/core.py), not inside Storage.step itself: whether a "
+        "surplus fits in existing storage infrastructure is a fact about "
+        "the CIVILISATION's built capacity, not about the abstract "
+        "sow-grow-harvest-eat-spoil cycle this class models, and keeping it "
+        "out of Storage.step also keeps that class's own conservation "
+        "identity (stock_before_kg + harvest - seed - consumption - "
+        "spoilage - seed_retained == stock_after_kg, sim/tests/"
+        "test_agriculture.py's own check) exactly as it always was - the "
+        "cap is a policy choice about what carries INTO next year's "
+        "Storage, not a new term inside one year's accounting. TEMPORARY_"
+        "HEURISTIC IN SPIRIT EVEN THOUGH THE SOURCE IS REAL (CLAUDE.md "
+        "SS3.4): the 6-12 month figures above are policy TARGETS people "
+        "recommended holding, not a measured archaeological capacity for "
+        "Roman-Italian farm storage specifically. Replace with an actual "
+        "capacity figure (horreum floor area per capita, or a peasant "
+        "household's granary volume) if one is ever sourced.")
+
 # ============================================================================
 # HUMAN FOOD DEMAND
 # ============================================================================
@@ -1328,6 +1373,31 @@ def annual_food_demand_kg_per_person(crop=None):
             / crop.energy_kcal_per_kg)
 
 
+def granary_capacity_kg(food_demand_kg, capacity_years=None):
+    """How much grain a population's storage infrastructure can physically
+    hold, given `food_demand_kg` (that population's OWN annual food need -
+    see `annual_food_demand_kg_per_person`, usually multiplied up by however
+    many people there are).
+
+    This is a ceiling on the STOCK a granary can carry into next year, not a
+    term inside `Storage.step`'s own one-year accounting - see
+    GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration for why the cap lives
+    here, as a plain function callers apply to whatever they carry forward,
+    rather than inside `Storage` itself. A caller (sim/engine/core.py) that
+    ignores this entirely just gets an uncapped granary - nothing in
+    `Storage.step` enforces it - so applying it is the caller's choice, the
+    same way applying `storage_technique` at all is.
+
+    `capacity_years` defaults to GRANARY_CAPACITY_YEARS_OF_DEMAND; a caller
+    exploring a different storage infrastructure (a state granary system
+    built for multi-year reserves, or a village with no real granary at all)
+    passes its own figure.
+    """
+    if capacity_years is None:
+        capacity_years = GRANARY_CAPACITY_YEARS_OF_DEMAND
+    return food_demand_kg * capacity_years
+
+
 class Land(object):
     """A parcel of ground: how big, and how good.
 
@@ -1729,6 +1799,36 @@ class Storage(object):
         adds to `self.stock_kg` or subtracts from it, and nothing is
         double-counted) - see sim/tests/test_agriculture.py's conservation
         check.
+
+        A CALLER THAT CARRIES `stock_after_kg` ACROSS YEARS MUST ALSO CARRY
+        `seed_retained_kg` BACK IN, OR IT WILL DOUBLE-CHARGE SEED EVERY
+        SINGLE YEAR. This was invisible for as long as every caller (see
+        Complaints/45-no-granary-so-the-baseline-collapses.md) constructed
+        a fresh `Storage` at stock_kg=0.0 every year and threw `stock_after_
+        kg` away unused - a bug in a number nothing ever reads cannot bite.
+        The instant a caller starts persisting `stock_kg`, it does: step 5
+        above SUBTRACTS `seed_retained_kg` from `self.stock_kg` (the class
+        docstring's own "set aside" language means exactly that - it is
+        REMOVED from the ledger, not merely labelled), which is correct
+        ONLY if that removed amount is handed back at the top of NEXT
+        year's `step` call as part of `stock_before_kg`, where it is
+        immediately spent again as THAT year's `seed_sown_kg`. Persist
+        `stock_after_kg` alone (without adding `seed_retained_kg` back in)
+        and every single year permanently loses one full season's seed
+        requirement from the ledger - not a weather effect, not a real
+        famine, a bookkeeping amount that vanishes into the void and never
+        returns, compounding without bound over a multi-year run. This is
+        exactly the failure this task's own probe caught empirically (a
+        near-total-extinction result on ordinary weather, once persistence
+        was first tried without this correction) - `stock_to_carry_forward_
+        kg`, just below this class, is the one-line fix: it returns
+        `stock_after_kg + seed_retained_kg`, and a caller that wants to
+        persist a granary across years should carry THAT value forward as
+        next year's `stock_kg`, never `stock_after_kg` alone. The
+        conservation identity above is unaffected either way - this is
+        about what a MULTI-YEAR caller does with `stock_after_kg` after
+        `step` returns it, not about anything `step` itself computes
+        wrongly.
         """
         crop = crop or DEFAULT_CROP
         soil = soil or DEFAULT_SOIL
@@ -1791,6 +1891,34 @@ class Storage(object):
             stock_after_kg=stock_after_kg,
             food_available_kcal_per_day=food_available_kcal_per_day,
             marginal_product_last_hour_kg_per_hour=marginal_product)
+
+
+def stock_to_carry_forward_kg(flows):
+    """What a caller that persists `Storage` across years should use as
+    NEXT year's opening `stock_kg` - `flows.stock_after_kg`, the free
+    surplus `Storage.step` computed, PLUS `flows.seed_retained_kg`, the
+    amount that same call earmarked for next year's sowing and then
+    removed from the ledger.
+
+    See `Storage.step`'s own docstring, the paragraph on carrying
+    `stock_after_kg` across years, for why omitting `seed_retained_kg`
+    here double-charges one whole season's seed requirement every single
+    year (once as this call's own `seed_retained_kg` deduction, again as
+    NEXT call's `seed_sown_kg` deduction, with nothing in between ever
+    replacing what the first deduction removed) - a bug invisible for as
+    long as nothing persisted `stock_kg` at all, and the specific,
+    measured cause of a near-total-extinction result the first attempt at
+    Complaints/45's granary fix produced on perfectly ordinary weather,
+    with no famine, no hazard and no land loss of any kind.
+
+    A caller that does NOT intend to persist `Storage` across years (one
+    that still rebuilds it fresh at stock_kg=0.0 every step, as this
+    module's whole test suite still does for calls that are not
+    specifically testing multi-year carry) has no reason to call this at
+    all - it exists for exactly one job, the one Sim._demographic_recovery
+    (sim/engine/core.py) now does.
+    """
+    return flows.stock_after_kg + flows.seed_retained_kg
 
 
 def hectares_per_worker_annual_hours_ceiling(crop=None, toolkit=None):

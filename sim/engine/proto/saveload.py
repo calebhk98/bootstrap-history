@@ -84,6 +84,25 @@ SAVE_FIELDS = (
     # wiped by the very next --session command because nothing carried it
     # across a save/load cycle.
     "pop_children", "pop_working_age", "pop_elderly",
+    # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md):
+    # agriculture.Storage's carried-forward stock, in kilograms of grain.
+    # A plain float, not an object - same reasoning as the three pop_*
+    # fields just above (JSON has no `Storage` either, and `Sim.__init__`
+    # always sets a default of 0.0 before `load_state` runs, so only the
+    # one number needs to round-trip). Before this field existed, a fresh
+    # `agriculture.Storage(stock_kg=0.0, ...)` was constructed every single
+    # year regardless of what the previous year's harvest banked, which is
+    # the missing-buffer bug Complaints/45 measured (rome_100ad,
+    # events=False, falling to 21.9% of its starting population over a
+    # century with no hazard of any kind - Jensen's inequality on
+    # demography.py's own one-sided mortality/fertility response to
+    # symmetric weather noise, with nothing damping it). Without this in
+    # SAVE_FIELDS, a --session game would silently re-lose its entire
+    # banked surplus on every single command, the exact "every command is
+    # a save and a load, so an unsaved field breaks the game in normal
+    # play" fault CLAUDE.md SS3.5 calls out pop_children/pop_working_age/
+    # pop_elderly as the precedent for.
+    "farm_stock_kg",
     # TONNES ON HAND. Own production a year did not use banks here instead of
     # evaporating, which is what lets a twenty-gram gold demand be met by
     # buying twenty grams rather than by commissioning a mine. It has to
