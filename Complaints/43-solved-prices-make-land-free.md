@@ -113,3 +113,74 @@ rent model for land, which is a different mechanism from a mineral deposit:
 a mine depletes and a field does not, so land rent comes from location and
 fertility against a margin of cultivation rather than from a grade that
 falls as you dig.
+
+## Update: land rent landed, and Han China's land is still free
+
+`sim/world/land.py` now prices `iugerum_land` as Ricardian rent at the margin
+of cultivation - a civilisation's held regions sorted best-first and filled
+until its population is fed, with everything better than the marginal region
+earning the difference. `data/world/geography.json` gained an arable area and
+a fertility multiplier for all 21 real regions, anchored so Italia is exactly
+1.0 because `wheat_kg`'s own yield figure IS Roman-Italian dry-farmed wheat.
+
+    rome_100ad        9.141 hours per iugerum   (was 0.0)
+    han_china_100ad   0.0
+    england_1300      0.0
+    norse_900ad       0.0
+    mexica_1500       0.0
+
+Rome's margin sits at hispania; north_africa, levant_mesopotamia and italia
+all earn rent above it. The mechanism works and it is genuinely
+per-civilisation, which ore rent still is not.
+
+### But only half of Ricardo is built
+
+Rent has two sources and this has one.
+
+The EXTENSIVE margin is better land against worse land, and that is what
+landed. The INTENSIVE margin is diminishing returns to more labour on the
+SAME land - the second and third ploughing of one field yielding less than
+the first - and it is missing. With only the extensive margin, a
+civilisation holding a single uniform region has free land no matter how
+many people are on it.
+
+That is why Han China comes out at zero while feeding 58 million people. It
+is not that Chinese land was abundant; it is that the model has no way to
+express a field being worked harder. A fertile island with ten million
+people on it has expensive land, and this model would say it is free.
+
+The project already knows this distinction: `sim/world/deposits.py` has both
+margins, and its intensive one is the declining ore grade as a deposit is
+worked out. Land has the extensive half and is missing the half deposits
+already has.
+
+So the honest reading of the table above is not "Rome has scarce land and
+China does not". It is "Rome holds regions of differing quality and the
+others do not", which is a statement about the model's resolution rather
+than about the world. The `_doc` note and the solver's own printed message
+both say this, which is the right handling - the number is wrong and the
+tool says why.
+
+### And it is a flow priced against a stock
+
+`--compare` puts computed 9.141 hours against a book price of 3,333 hours,
+which reads as a 365x disagreement and is not one. The computed figure is
+one year's RENT. The book figure is a PURCHASE PRICE. Land sold for
+something like twenty to twenty-five years' rent historically, so the
+comparable annual figure is nearer 130-165 hours, and the computed rent is
+then roughly fifteen times too low rather than 365 times.
+
+Capitalising a flow into a stock needs a discount rate, and this project has
+none anywhere - the existing capital mechanism spreads a build cost over a
+service life with no interest at all. So this is not a land problem, it is a
+missing mechanism that land is the first thing to need. Recorded rather than
+invented.
+
+### The switch still stays off
+
+For a smaller reason than before. Land is no longer free for Rome, ore rent
+landed last round, and the extracted materials that started this complaint
+have real numbers now. What remains is that four of five civilisations still
+price their land at zero for a structural reason, and that no rent anywhere
+is capitalised. That is much closer than "land is free", and it is not there
+yet.

@@ -610,6 +610,7 @@ sys.path.insert(0, REPO_ROOT)
 import simulator                                # noqa: E402  (see sys.path above)
 from validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
+from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 
 NUMERAIRE_TRADE = "labourer"
 
@@ -1322,6 +1323,73 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
     return rent_by_ore_material
 
 
+# See sim/world/land.py's own module docstring for the mechanism (the
+# margin of cultivation over a civilization's own regions, not an ore
+# deposit's grade) and for why this defaults to Rome's own territory when
+# no --civ is given: mirroring rent_hours_per_kg_by_ore_material's own
+# Rome-anchored default (data/world/resources.json's empire_output_100ad
+# has no per-civilization breakdown either), even though land's OWN
+# mechanism, unlike ore's, is genuinely per-civilization the moment --civ
+# names one.
+DEFAULT_LAND_CIVILIZATION = "rome_100ad"
+
+
+def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
+                                civilization_id=None):
+    """{"iugerum_land": hours of rent per iugerum}, or {} if there is no
+    reference crop price or no priceable land to convert into one this
+    round - see sim/world/land.py's own module docstring for the mechanism
+    (the Ricardian margin of cultivation over a civilization's own held
+    regions) and for why a civilization holding only one region prices
+    land at exactly zero (a real finding, not a bug: no differential rent
+    without at least two regions of different quality to compare).
+
+    THE ALGEBRA. sim/world/land.py's own `margin_outcome_for_civilization`
+    returns a supply-weighted average rent in kilograms of grain-equivalent
+    per iugerum - a PHYSICAL quantity, not a price (see that module's own
+    WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py, NOT HERE
+    section for why the conversion happens here rather than there).
+    Multiplying by wheat_kg's own ZERO-RENT price (labour only - wheat_kg
+    has no `inputs` of its own, so this is a fixed number that does not
+    depend on this solve's own iteration, exactly like
+    rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`) turns
+    that physical surplus into the labour-hour unit this file prices
+    everything else in. `iugerum_land` itself has no `inputs` and no
+    `labour_hours` of its own (data/production/40_organics.json's own
+    entry says so directly), so this rent figure becomes its WHOLE solved
+    price with nothing else added - see recipe_cost_and_allocation's own
+    rent_hours term.
+    """
+    civilization_id = civilization_id or DEFAULT_LAND_CIVILIZATION
+    wheat_entry = production_entries.get("wheat_kg")
+    if wheat_entry is None:
+        # Gated out of this era, or (should not happen - wheat_kg carries
+        # requires_node: null, admitted to every era) simply absent. Either
+        # way there is no reference crop price to convert the physical rent
+        # into hours with, so land keeps the old RENT_IS_ZERO answer.
+        return {}
+    wheat_cost = recipe_cost_and_allocation("wheat_kg", wheat_entry, {}, wage_by_trade)
+    if wheat_cost is None:
+        return {}
+    _wheat_total_hours, wheat_output_prices = wheat_cost
+    wheat_price_per_kg = wheat_output_prices.get("wheat_kg")
+    if not wheat_price_per_kg:
+        return {}
+
+    try:
+        outcome = land.margin_outcome_for_civilization(civilization_id)
+    except (FileNotFoundError, KeyError):
+        # An unknown civilization id, or one missing a population field -
+        # should not happen for this project's own data/civilizations/
+        # files, handled the same way a missing ore recipe is: no rent
+        # guessed, the old zero-rent answer stands.
+        return {}
+    if outcome.price_kg_grain_equivalent_per_iugerum <= 0.0:
+        return {}
+    rent_hours = outcome.price_kg_grain_equivalent_per_iugerum * wheat_price_per_kg
+    return {"iugerum_land": rent_hours}
+
+
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None):
@@ -1464,7 +1532,13 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
     rent_by_kg = rent_hours_per_kg_by_material or {}
     if entry.get("extracted_from"):
         material_rent_per_kg = rent_by_kg.get(material)
-        if material_rent_per_kg:
+        if material_rent_per_kg and material == "iugerum_land":
+            print("%s  EXTRACTED from %s - no cost of production, only a "
+                  "Ricardian rent of %s h/iugerum from sim/world/land.py's "
+                  "margin of cultivation over a civilization's own held "
+                  "regions (see RENT ON ARABLE LAND)."
+                  % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
+        elif material_rent_per_kg:
             print("%s  EXTRACTED from %s - labour plus a Ricardian rent of "
                   "%s h/kg from sim/world/deposits.py's marginal-deposit "
                   "supply curve (see RENT ON EXTRACTED MATERIALS)."
@@ -1473,7 +1547,9 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
             print("%s  EXTRACTED from %s - no cost of production, only "
                   "labour and a rent this round fixed at 0.0 (see RENT ON "
                   "EXTRACTED MATERIALS - this material is not one of the "
-                  "six ores sim/world/deposits.py covers)."
+                  "six ores sim/world/deposits.py covers, nor land priced "
+                  "above zero for this civilization's own territory - see "
+                  "sim/world/land.py)."
                   % (pad, entry["extracted_from"]))
 
     candidates = sorted(set(producers_of.get(material, [])) - {recipe_id})
@@ -1677,6 +1753,18 @@ def main(argv=None):
     rent_hours_per_kg_by_material = rent_hours_per_kg_by_ore_material(
         production_entries, wage_by_trade)
 
+    # RENT ON ARABLE LAND (see sim/world/land.py's own module docstring).
+    # A separate mechanism from ore's - the margin of cultivation over a
+    # civilization's own held regions, not a deposit's grade - but wired in
+    # the SAME dict, because recipe_cost_and_allocation does not care which
+    # mechanism produced a material's rent, only that one exists. Uses
+    # `arguments.civ` when given (land, unlike ore, is genuinely per-
+    # civilization) and Rome's own territory otherwise - see
+    # land_rent_hours_per_iugerum's own docstring for why.
+    rent_hours_per_kg_by_material.update(
+        land_rent_hours_per_iugerum(production_entries, wage_by_trade,
+                                    civilization_id=arguments.civ))
+
     unproductive_cycles = []
     resolvable_materials = compute_resolvable_materials(
         production_entries, producers_of, diagnostics=unproductive_cycles,
@@ -1751,23 +1839,49 @@ def main(argv=None):
           "labour. Rent on the ore of iron, copper, tin, lead, silver and "
           "mercury is now priced from sim/world/deposits.py's Ricardian "
           "marginal-deposit supply curve (see RENT ON EXTRACTED MATERIALS "
-          "in the module docstring); every other extracted material "
-          "(forest, quarry, salt pan, gold's placer-and-amalgamation step) "
-          "still prices at zero rent. thermal_mj, mechanical_mj and "
-          "electrical_mj are all priced via the three-way energy market "
-          "and its conversion recipes in data/production/70_energy.json; "
-          "energy_mj is still not priced (see module docstring)."
-          % NUMERAIRE_TRADE)
+          "in the module docstring); rent on iugerum_land is now priced "
+          "from sim/world/land.py's margin of cultivation over %s's own "
+          "held regions (pass --civ to price another civilization's "
+          "territory instead); every other extracted material (forest, "
+          "quarry, salt pan, gold's placer-and-amalgamation step) still "
+          "prices at zero rent. thermal_mj, mechanical_mj and electrical_mj "
+          "are all priced via the three-way energy market and its "
+          "conversion recipes in data/production/70_energy.json; energy_mj "
+          "is still not priced (see module docstring)."
+          % (NUMERAIRE_TRADE, arguments.civ or DEFAULT_LAND_CIVILIZATION))
     print()
     if rent_hours_per_kg_by_material:
+        ore_rent = {k: v for k, v in rent_hours_per_kg_by_material.items()
+                   if k in RENT_BEARING_ORE_MATERIALS}
+        land_rent = {k: v for k, v in rent_hours_per_kg_by_material.items()
+                    if k not in RENT_BEARING_ORE_MATERIALS}
         print("RENT NOW PRICED for %d of the %d ore materials named in "
               "RENT_BEARING_ORE_MATERIALS this era's gate leaves reachable "
               "(the rest fell out of the gate along with every recipe that "
               "would have consumed them):"
-              % (len(rent_hours_per_kg_by_material), len(RENT_BEARING_ORE_MATERIALS)))
-        for ore_material in sorted(rent_hours_per_kg_by_material):
+              % (len(ore_rent), len(RENT_BEARING_ORE_MATERIALS)))
+        for ore_material in sorted(ore_rent):
             print("   %-26s %10s h/kg rent"
-                  % (ore_material, format_hours(rent_hours_per_kg_by_material[ore_material])))
+                  % (ore_material, format_hours(ore_rent[ore_material])))
+        if land_rent:
+            print("RENT NOW PRICED on land, for %s (%d region(s) held):"
+                  % (arguments.civ or DEFAULT_LAND_CIVILIZATION,
+                     len(land.cultivable_land_for_civilization(
+                         arguments.civ or DEFAULT_LAND_CIVILIZATION))))
+            for land_material in sorted(land_rent):
+                print("   %-26s %10s h/iugerum rent"
+                      % (land_material, format_hours(land_rent[land_material])))
+        elif "iugerum_land" not in rent_hours_per_kg_by_material:
+            civilization_for_land = arguments.civ or DEFAULT_LAND_CIVILIZATION
+            region_count = len(land.cultivable_land_for_civilization(civilization_for_land))
+            print("iugerum_land priced at zero rent this run - %s holds "
+                  "%d region(s), and none of its worse ones are needed to "
+                  "feed its own stated population, so nothing better-than-"
+                  "the-margin is actually being worked yet (see sim/world/"
+                  "land.py's own module docstring - a single held region "
+                  "always lands here too, since it has no worse region of "
+                  "its own to earn a differential rent over)."
+                  % (civilization_for_land, region_count))
         print()
     print("convergence: %s after %d iteration(s), final max relative change "
           "%.3e (tolerance %.0e, damping %.2f)"

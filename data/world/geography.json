@@ -7,7 +7,8 @@
    "CONQUEST or COLONY: take the source. Largest capital, largest risk, largest moral cost, and it is what actually happened historically for rubber, saltpetre, spices and silver."
   ],
   "note_on_ubiquity": "Materials with ubiquity 'everywhere' are not modelled as located: wood, clay, sand, stone, water, common earths. They only matter if a SPECIFIC variety is local, which is flagged per material.",
-  "note_on_reach_from_italia_and_geometry": "THIS FILE USED TO BE ROME-CENTRIC AND THAT WAS A BUG. Every region carried one hard-coded 'reach' number measured from Italy, and the simulator's `civs` command printed it and did nothing else: `reach` was never read anywhere that computed a cost. Play Han China and the model still treated Chinese silk as 'reach 3, far away' and Malaya, which Chinese and Malay traders already sail to routinely, as an exotic reach-3 frontier, while it treated ITALY as reach 0 for a civilization that has never seen Italy. That is backwards for any civilization but Rome. The fix: every region now carries a `lat`/`lon` centroid, a `coastal` flag and a `route_difficulty` multiplier, so sim/simulator.py can compute a great-circle distance from ANY civilization's own home centroid and derive a reach band for THAT civilization, modified by how far it already routinely travels (`base_reach` in the civilization file) and by whether the destination is reachable by sea. The old per-region `reach` field is kept, renamed to `reach_from_italia`, purely as the historical Roman special case: it is what a Roman-centric build of this file used to call 'reach', it is no longer read as if it applied to every civilization, and it also serves as the calibration anchor for material cost multipliers below (see `located_materials._note`)."
+  "note_on_reach_from_italia_and_geometry": "THIS FILE USED TO BE ROME-CENTRIC AND THAT WAS A BUG. Every region carried one hard-coded 'reach' number measured from Italy, and the simulator's `civs` command printed it and did nothing else: `reach` was never read anywhere that computed a cost. Play Han China and the model still treated Chinese silk as 'reach 3, far away' and Malaya, which Chinese and Malay traders already sail to routinely, as an exotic reach-3 frontier, while it treated ITALY as reach 0 for a civilization that has never seen Italy. That is backwards for any civilization but Rome. The fix: every region now carries a `lat`/`lon` centroid, a `coastal` flag and a `route_difficulty` multiplier, so sim/simulator.py can compute a great-circle distance from ANY civilization's own home centroid and derive a reach band for THAT civilization, modified by how far it already routinely travels (`base_reach` in the civilization file) and by whether the destination is reachable by sea. The old per-region `reach` field is kept, renamed to `reach_from_italia`, purely as the historical Roman special case: it is what a Roman-centric build of this file used to call 'reach', it is no longer read as if it applied to every civilization, and it also serves as the calibration anchor for material cost multipliers below (see `located_materials._note`).",
+  "note_on_land": "Added for Complaints/43's second half: iugerum_land solving to 0.0 because nothing modelled WHERE arable land is or how good it is. Each region's own `land` block gives land_area_km2 (the region's real, coarse land area), arable_fraction (the share of that area physically capable of supporting pre-industrial rain-fed or simple-irrigation farming - a terrain/climate fact, not a farmed-today fact) and fertility_quality_multiplier (a yield multiplier on the arable share, 1.0 being data/production/40_organics.json's own Roman-Italian wheat_kg baseline - the SAME convention sim/world/agriculture.py's Land(hectares, quality=...) already uses, chosen deliberately so a later integration between the two needs no rename). Both are COUNTRY-SCALE APPROXIMATIONS from general geography (land area of the modern states each region coarsely groups; arable share and fertility from well-known climate/terrain/soil facts about those same places), not a surveyed GIS/soil dataset this project does not have - see each region's own `land.source` and sim/world/land.py's own module docstring for what a more precise version would need. A civilisation's own cultivable land is the SUM of this over the regions named in its `home_regions` (data/civilizations/*.json), never a constant - see sim/world/land.py."
  },
  "regions": {
   "_note": "lat/lon are coarse centroids in degrees (negative = south / west), good enough for great-circle banding, not for navigation. coastal marks whether the region is reachable and workable by sea rather than only overland; a landlocked region can still be reached, just more slowly and without the sea-going discount a coastal society gets. route_difficulty multiplies the raw great-circle distance to approximate a real voyage's difficulty where straight-line distance badly understates it (ice, blue-water crossings with no coastal stepping-stones, hostile mountain and desert relay routes) or slightly overstates it (a fast, reliable, wind-assisted route like the monsoon crossing to India). minerals gives each region's rough share of a material's total output AT THIS TECHNOLOGICAL LEVEL, normalised so Rome's own home regions sum to about 1.0 per metal -- this reproduces data/world/resources.json's Roman totals for a Roman-home-region civilization exactly, and gives every other civilization the same yardstick for ITS OWN ground instead of the population-scaled guess the simulator used to make.",
@@ -27,7 +28,14 @@
     "silver": 0.02,
     "saltpetre": 0.0
    },
-   "note": "Home, if you are Rome. Nobody else's home."
+   "note": "Home, if you are Rome. Nobody else's home.",
+   "land": {
+    "land_area_km2": 301000,
+    "arable_fraction": 0.23,
+    "fertility_quality_multiplier": 1.0,
+    "conf": "C",
+    "source": "Land area is modern Italy's. arable_fraction (~23%) is the commonly-cited modern national arable-land share, taken as a proxy for the terrain/climate constraint (Apennine spine versus the Po valley and coastal plains) rather than for anything about who farms it today. fertility_quality_multiplier is DEFINITIONAL, not estimated: data/production/40_organics.json's own wheat_kg entry (577.5 kg/ha net) IS Roman/Italian dry-farmed wheat, so Italia is the 1.0 reference point sim/world/agriculture.py's own Land(hectares, quality=1.0) already uses 'ordinary Mediterranean loam' for - every other region's multiplier is stated relative to this one."
+   }
   },
   "gaul_germania": {
    "name": "Gaul and the Germanies",
@@ -45,7 +53,14 @@
     "silver": 0.0,
     "saltpetre": 0.0
    },
-   "note": "Noricum steel is famous; this is also the Rhineland and Ruhr coal country long before anyone calls it that, which is why it matters so much to whoever holds it in 1300."
+   "note": "Noricum steel is famous; this is also the Rhineland and Ruhr coal country long before anyone calls it that, which is why it matters so much to whoever holds it in 1300.",
+   "land": {
+    "land_area_km2": 981000,
+    "arable_fraction": 0.3,
+    "fertility_quality_multiplier": 0.9,
+    "conf": "D",
+    "source": "Land area sums modern France, Germany and the Low Countries, this region's rough modern equivalents. arable_fraction ~30% reflects temperate lowland (Paris Basin, north German plain) against the Alps, Massif Central and Black Forest. fertility below Italia's 1.0: real loess and river-valley soils here are good, but a cooler, wetter, shorter growing season than the Mediterranean holds ancient dry-farmed grain yield somewhat below it - direction well attested, size a placeholder."
+   }
   },
   "britannia": {
    "name": "Britain",
@@ -63,7 +78,14 @@
     "silver": 0.05,
     "saltpetre": 0.0
    },
-   "note": "Cornish tin, Mendip and Pennine lead, Wealden iron, and coalfields the Romans barely touch. THIS is where the coal actually is; a civilization that HOLDS Britain should not be treated as coal-poor just because it has few people."
+   "note": "Cornish tin, Mendip and Pennine lead, Wealden iron, and coalfields the Romans barely touch. THIS is where the coal actually is; a civilization that HOLDS Britain should not be treated as coal-poor just because it has few people.",
+   "land": {
+    "land_area_km2": 230000,
+    "arable_fraction": 0.25,
+    "fertility_quality_multiplier": 0.85,
+    "conf": "D",
+    "source": "Land area is Great Britain's. arable_fraction ~25% (much of Scotland and Wales is upland moor, per this region's own note about it being pastoral country too). fertility below temperate-Continental gaul_germania: a cooler, cloudier maritime climate than even northern Gaul, well attested qualitatively; the multiplier's size is not."
+   }
   },
   "hispania": {
    "name": "Iberia",
@@ -81,7 +103,14 @@
     "silver": 0.65,
     "saltpetre": 0.0
    },
-   "note": "Rio Tinto and Cartagena. The single richest metal ground in the Roman world and the reason the denarius exists."
+   "note": "Rio Tinto and Cartagena. The single richest metal ground in the Roman world and the reason the denarius exists.",
+   "land": {
+    "land_area_km2": 596000,
+    "arable_fraction": 0.25,
+    "fertility_quality_multiplier": 0.95,
+    "conf": "D",
+    "source": "Land area sums modern Spain and Portugal. arable_fraction ~25% (fertile Guadalquivir/Ebro valleys and coastal plains against the arid Meseta interior). fertility close to Italia's: genuinely Mediterranean climate, slightly below on account of the drier interior plateau this one region-wide average has to include."
+   }
   },
   "north_africa": {
    "name": "North Africa and Egypt",
@@ -98,6 +127,13 @@
     "lead": 0.0,
     "silver": 0.0,
     "saltpetre": 0.0
+   },
+   "land": {
+    "land_area_km2": 5750000,
+    "arable_fraction": 0.04,
+    "fertility_quality_multiplier": 1.35,
+    "conf": "D",
+    "source": "Land area sums modern Morocco, Algeria, Tunisia, Libya and Egypt - overwhelmingly Sahara desert, which is why arable_fraction is only ~4% even though it sums each country's own (very unequal) modern arable share (Morocco and Tunisia's Mediterranean coastal strips are in the high teens per cent; Egypt and Libya are a few per cent, almost entirely the Nile ribbon). fertility is high, not low, because this field prices ONLY the arable sliver, and that sliver is dominated by Nile silt - among the most fertile soil on Earth, the reason Egypt was Rome's breadbasket. 1.35 sits just under sim/world/agriculture.py's own NILE_FLOOD_RECESSION_SOIL_FERTILITY_YIELD_MULTIPLIER (1.4, independently re-derived here rather than imported - see this module's own STANDALONE note), pulled down slightly by the Maghreb coastal share, which is good land but not Nile-grade."
    }
   },
   "greece_anatolia": {
@@ -116,7 +152,14 @@
     "silver": 0.3,
     "saltpetre": 0.0
    },
-   "note": "Laurion silver funded the Athenian navy long before Rome got here."
+   "note": "Laurion silver funded the Athenian navy long before Rome got here.",
+   "land": {
+    "land_area_km2": 915500,
+    "arable_fraction": 0.28,
+    "fertility_quality_multiplier": 0.85,
+    "conf": "D",
+    "source": "Land area sums modern Greece and Turkey. arable_fraction ~28% (Anatolian plateau against genuinely mountainous, thin-soiled Greece). fertility below Italia's: Mediterranean climate, but rockier terrain and thinner soils than the Po valley or Campania - Greek grain dependence on imported (including Egyptian and Black Sea) wheat is the historical symptom of exactly this."
+   }
   },
   "levant_mesopotamia": {
    "name": "Syria and Mesopotamia",
@@ -134,7 +177,14 @@
     "silver": 0.0,
     "saltpetre": 0.0
    },
-   "note": "Cyprus copper (the metal is named after the island) sits at this end of the Mediterranean."
+   "note": "Cyprus copper (the metal is named after the island) sits at this end of the Mediterranean.",
+   "land": {
+    "land_area_km2": 744000,
+    "arable_fraction": 0.2,
+    "fertility_quality_multiplier": 1.25,
+    "conf": "D",
+    "source": "Land area sums modern Syria, Iraq, Lebanon, Jordan and Israel/Palestine. arable_fraction ~20% (river valleys and the Levantine coast against the Syrian and Jordanian desert). fertility is high: the Tigris-Euphrates floodplain is the literal Fertile Crescent, agriculture's own place of origin, and irrigated Mesopotamian yields were historically excellent - below north_africa's Nile figure because Nile silt is replenished by an annual flood essentially free of labour, where Mesopotamian irrigation needs continuous canal maintenance to keep delivering it."
+   }
   },
   "scandinavia": {
    "name": "Scandinavia and the Baltic",
@@ -152,7 +202,14 @@
     "silver": 0.05,
     "saltpetre": 0.0
    },
-   "note": "Outside the Empire but reachable by trade. Amber road is ancient. Bog iron, smelted from ore raked out of lakebeds, is real and is what the Norse actually work with (met_bloomery_bog_iron); it is decent for tools and blades and no substitute for a coalfield."
+   "note": "Outside the Empire but reachable by trade. Amber road is ancient. Bog iron, smelted from ore raked out of lakebeds, is real and is what the Norse actually work with (met_bloomery_bog_iron); it is decent for tools and blades and no substitute for a coalfield.",
+   "land": {
+    "land_area_km2": 1220000,
+    "arable_fraction": 0.08,
+    "fertility_quality_multiplier": 0.65,
+    "conf": "D",
+    "source": "Land area sums Sweden, Norway, Denmark and Finland. arable_fraction ~8% (Denmark alone is flat and largely farmable, but it is small; Norway and much of Sweden/Finland are forest, mountain or lake). fertility below Britannia's: a shorter, cooler growing season and more podzolic soils, but this is boreal-temperate farmland actually worked for millennia (southern Sweden, Denmark), not the tundra sim/world/agriculture.py's own ARCTIC_TUNDRA (0.05) describes - the two must not be confused, which is why this number sits well above it."
+   }
   },
   "arabia_horn": {
    "name": "Arabia and the Horn of Africa",
@@ -169,6 +226,13 @@
     "lead": 0.0,
     "silver": 0.02,
     "saltpetre": 0.0
+   },
+   "land": {
+    "land_area_km2": 4950000,
+    "arable_fraction": 0.02,
+    "fertility_quality_multiplier": 0.5,
+    "conf": "D",
+    "source": "Land area sums the Arabian Peninsula and the Horn of Africa. arable_fraction ~2% (the Peninsula is almost entirely desert but for a few oases and Yemen's terraced highlands; the Horn's Ethiopian highlands are the real exception). fertility 0.50 blends genuinely decent highland farmland (Ethiopia's volcanic highland soil and reliable highland rainfall historically supported dense population) with marginal desert-margin and oasis farming elsewhere in the region, which is most of its small arable share by area."
    }
   },
   "india": {
@@ -187,7 +251,14 @@
     "silver": 0.05,
     "saltpetre": 1.0
    },
-   "note": "ALREADY REACHABLE IN 100 AD by the monsoon route, Berenice to Muziris. Rome runs this trade annually and Pliny complains about the bullion drain. route_difficulty is BELOW 1 here on purpose: the monsoon is a scheduled, reliable wind system, not an obstacle, and treating it as ordinary distance understates how easy this crossing actually is once you know the timing. Also the world's dominant saltpetre source (Bengal), see located_materials."
+   "note": "ALREADY REACHABLE IN 100 AD by the monsoon route, Berenice to Muziris. Rome runs this trade annually and Pliny complains about the bullion drain. route_difficulty is BELOW 1 here on purpose: the monsoon is a scheduled, reliable wind system, not an obstacle, and treating it as ordinary distance understates how easy this crossing actually is once you know the timing. Also the world's dominant saltpetre source (Bengal), see located_materials.",
+   "land": {
+    "land_area_km2": 3350000,
+    "arable_fraction": 0.5,
+    "fertility_quality_multiplier": 1.2,
+    "conf": "D",
+    "source": "Land area sums the Indian subcontinent and Ceylon. arable_fraction ~50% is unusually high among large regions in this file - the Indo-Gangetic plain is one of the largest contiguous alluvial lowlands on Earth, and modern India is repeatedly cited as having one of the highest arable-land shares of any large country, a terrain fact rather than a modern-farming one. fertility is high: Gangetic alluvium plus a monsoon that (unlike Mediterranean dry farming) supports rice, which yields more calories per hectare than wheat under comparable technology - below the Nile's annual-flood figure because monsoon rainfall is a less reliable input than an annual silt flood."
+   }
   },
   "persia_centralasia": {
    "name": "Persia and Central Asia",
@@ -205,7 +276,14 @@
     "silver": 0.1,
     "saltpetre": 0.05
    },
-   "note": "Silk Road via Palmyra. Parthia is hostile but trade passes. Not coastal in this model: the Persian Gulf littoral exists but the bulk of the region, and the route through it, is overland relay across mountains and desert, which is why route_difficulty is above 1."
+   "note": "Silk Road via Palmyra. Parthia is hostile but trade passes. Not coastal in this model: the Persian Gulf littoral exists but the bulk of the region, and the route through it, is overland relay across mountains and desert, which is why route_difficulty is above 1.",
+   "land": {
+    "land_area_km2": 3580000,
+    "arable_fraction": 0.1,
+    "fertility_quality_multiplier": 0.55,
+    "conf": "D",
+    "source": "Land area sums Iran, Afghanistan and the Central Asian states this region's own note describes as reached by Silk Road relay. arable_fraction ~10% (river-valley oases - the Oxus and Jaxartes basins above all - against the Iranian plateau's aridity and Afghanistan's mountains). fertility 0.55: oasis irrigation is genuinely productive where it exists, well above true desert, but this is still a water-constrained region overall, not a soil-rich one."
+   }
   },
   "china": {
    "name": "China",
@@ -223,7 +301,14 @@
     "silver": 0.15,
     "saltpetre": 0.1
    },
-   "note": "Reachable by Silk Road relay and by sea via India. Roman embassy recorded at the Han court in 166 AD. Shanxi coal and iron are enormous by any pre-modern standard, which is exactly why Han China starts this simulator already holding the blast furnace and cast iron: the ground supports it."
+   "note": "Reachable by Silk Road relay and by sea via India. Roman embassy recorded at the Han court in 166 AD. Shanxi coal and iron are enormous by any pre-modern standard, which is exactly why Han China starts this simulator already holding the blast furnace and cast iron: the ground supports it.",
+   "land": {
+    "land_area_km2": 9597000,
+    "arable_fraction": 0.13,
+    "fertility_quality_multiplier": 1.3,
+    "conf": "D",
+    "source": "Land area is modern China's. arable_fraction ~13% (the Tibetan plateau, the Gobi and Xinjiang's deserts, and the western mountains dominate China's total area; the arable share is concentrated in the North China Plain, the Loess Plateau and the Yangtze basin). fertility is high, matching this file's own note that 'Shanxi coal and iron are enormous... which is exactly why Han China starts this simulator already holding the blast furnace': Yellow River loess and Yangtze rice-paddy country are both historically exceptional farmland, comparable to the Nile or the Fertile Crescent."
+   }
   },
   "west_africa": {
    "name": "West and Central Africa",
@@ -241,7 +326,14 @@
     "silver": 0.0,
     "saltpetre": 0.0
    },
-   "note": "Coastal. Hanno the Carthaginian sailed down this coast c. 500 BC. Not hard, merely not done. West African iron-working (the Nok tradition and its successors) is real and older than most people assume; it is not a large exportable surplus by Roman-scale demand, hence the modest share."
+   "note": "Coastal. Hanno the Carthaginian sailed down this coast c. 500 BC. Not hard, merely not done. West African iron-working (the Nok tradition and its successors) is real and older than most people assume; it is not a large exportable surplus by Roman-scale demand, hence the modest share.",
+   "land": {
+    "land_area_km2": 6000000,
+    "arable_fraction": 0.15,
+    "fertility_quality_multiplier": 0.6,
+    "conf": "D",
+    "source": "Land area sums the major states of West and Central Africa this region groups (Nigeria, Ghana, Cote d'Ivoire, Senegal, Mali, Cameroon, DR Congo and neighbours). arable_fraction ~15% is a rough share cultivable outside dense rainforest interior and Sahel desert fringe. fertility below Italia's despite abundant rainfall: tropical rainforest soils are well documented in agronomy as heavily leached and nutrient-poor beneath a lush canopy, a genuine pedological fact, not a climate-severity one."
+   }
   },
   "southeast_asia": {
    "name": "Malaya, Indonesia, the Spice Islands",
@@ -259,7 +351,14 @@
     "silver": 0.0,
     "saltpetre": 0.0
    },
-   "note": "Malayan tin is real and additional to the Cornwall/Iberia figures above, not a slice of them."
+   "note": "Malayan tin is real and additional to the Cornwall/Iberia figures above, not a slice of them.",
+   "land": {
+    "land_area_km2": 2240000,
+    "arable_fraction": 0.12,
+    "fertility_quality_multiplier": 1.1,
+    "conf": "D",
+    "source": "Land area sums Indonesia and Malaysia, this region's own 'Malaya, Indonesia, the Spice Islands' description. arable_fraction ~12% (dense equatorial rainforest limits cleared cropland at this era's technology). fertility above Italia's: volcanic soils on Java and Sumatra are repeatedly cited among the most fertile in the tropics, which is also why Java alone has historically supported extremely dense population."
+   }
   },
   "east_africa_south": {
    "name": "East Africa and the Cape",
@@ -277,7 +376,14 @@
     "silver": 0.02,
     "saltpetre": 0.0
    },
-   "note": "Herodotus reports a Phoenician circumnavigation of Africa under Necho II. Contested, but the voyage is physically possible with era-appropriate ships; route_difficulty reflects a long, mostly unprecedented coastal haul, not an ocean crossing."
+   "note": "Herodotus reports a Phoenician circumnavigation of Africa under Necho II. Contested, but the voyage is physically possible with era-appropriate ships; route_difficulty reflects a long, mostly unprecedented coastal haul, not an ocean crossing.",
+   "land": {
+    "land_area_km2": 4700000,
+    "arable_fraction": 0.1,
+    "fertility_quality_multiplier": 0.7,
+    "conf": "D",
+    "source": "Land area sums South Africa, Zimbabwe, Zambia, Mozambique, Tanzania and Kenya - this region's own 'East Africa and the Cape' span. arable_fraction ~10% (savanna and semi-arid bushland, much of it historically tsetse-affected and poor for cultivation, dominate; the East African highlands and the Cape's own Mediterranean-climate corner are the exceptions). fertility 0.70: decent highland and highveld grassland soils, below the best alluvial regions but well above true desert or leached rainforest."
+   }
   },
   "siberia_urals": {
    "name": "The Urals and Siberia",
@@ -295,7 +401,14 @@
     "silver": 0.05,
     "saltpetre": 0.0
    },
-   "note": "Overland-reachable through Scythian and Sarmatian trade (see platinum in located_materials). Genuinely mineral-rich ground; genuinely hard to get a wagon to."
+   "note": "Overland-reachable through Scythian and Sarmatian trade (see platinum in located_materials). Genuinely mineral-rich ground; genuinely hard to get a wagon to.",
+   "land": {
+    "land_area_km2": 13000000,
+    "arable_fraction": 0.03,
+    "fertility_quality_multiplier": 0.5,
+    "conf": "D",
+    "source": "Land area is a round figure for Siberia and the Urals. arable_fraction ~3% (permafrost and boreal taiga dominate; only the southern steppe fringe near the Urals and the West Siberian Plain is workable). fertility 0.50: the workable southern fringe includes real steppe soil related to the same chernozem belt sim/world/agriculture.py's own UKRAINIAN_CHERNOZEM describes further west, but a short growing season this far north and this file's own coarse regional average keep it well below that entry's 1.4."
+   }
   },
   "americas_carib": {
    "name": "The Caribbean and Mesoamerica",
@@ -313,7 +426,14 @@
     "silver": 0.15,
     "saltpetre": 0.0
    },
-   "note": "No draught animals and no iron-working tradition here, but the ore exists in the ground; copper and gold are what the Mexica actually work, which is why iron is a small share and copper a large one."
+   "note": "No draught animals and no iron-working tradition here, but the ore exists in the ground; copper and gold are what the Mexica actually work, which is why iron is a small share and copper a large one.",
+   "land": {
+    "land_area_km2": 2700000,
+    "arable_fraction": 0.14,
+    "fertility_quality_multiplier": 0.95,
+    "conf": "D",
+    "source": "Land area sums Mexico, Central America and the Caribbean islands. arable_fraction ~14% (the Mexican highland valleys and Caribbean coastal plains against arid northern Mexico and tropical forest further south). fertility close to Italia's: the volcanic soils of the Valley of Mexico historically supported one of the densest pre-industrial populations anywhere via chinampa cultivation, offset by the region's large arid and tropical-forest shares elsewhere."
+   }
   },
   "americas_south": {
    "name": "South America, Amazonia and the Andes",
@@ -331,7 +451,14 @@
     "silver": 0.4,
     "saltpetre": 0.0
    },
-   "note": "Andean silver (Potosi and its neighbours) is one of the largest silver endowments on Earth; the share here is deliberately generous rather than conservative."
+   "note": "Andean silver (Potosi and its neighbours) is one of the largest silver endowments on Earth; the share here is deliberately generous rather than conservative.",
+   "land": {
+    "land_area_km2": 17840000,
+    "arable_fraction": 0.06,
+    "fertility_quality_multiplier": 0.9,
+    "conf": "D",
+    "source": "Land area is the South American continent's. arable_fraction is low (~6%) because Amazonia - most of the continent's area - is rainforest whose soil, like West Africa's, is thin and heavily leached beneath the canopy, a well-documented ecological fact; the true farmland is concentrated in the Andean terraces and the Pampas. fertility reflects that smaller arable share rather than Amazonia's much larger area: Andean terracing is workmanlike but not exceptional, the Pampas grassland is excellent (comparable to a prairie Mollisol), and the blend lands close to Italia's baseline."
+   }
   },
   "americas_north": {
    "name": "North America",
@@ -348,6 +475,13 @@
     "lead": 0.05,
     "silver": 0.05,
     "saltpetre": 0.0
+   },
+   "land": {
+    "land_area_km2": 19800000,
+    "arable_fraction": 0.12,
+    "fertility_quality_multiplier": 1.1,
+    "conf": "D",
+    "source": "Land area sums the United States and Canada. arable_fraction ~12% (the Great Plains and eastern woodlands against the Canadian Shield's boreal forest and the northern tundra fringe). fertility above Italia's: North American prairie soils (Mollisols) are geologically comparable to the Ukrainian chernozem sim/world/agriculture.py's own table already treats as exceptional (1.4) - held below that figure here because this region's average also has to include its large boreal and eastern-woodland shares, which are ordinary rather than exceptional."
    }
   },
   "australia_pacific": {
@@ -365,6 +499,13 @@
     "lead": 0.0,
     "silver": 0.0,
     "saltpetre": 0.0
+   },
+   "land": {
+    "land_area_km2": 7700000,
+    "arable_fraction": 0.06,
+    "fertility_quality_multiplier": 0.6,
+    "conf": "D",
+    "source": "Land area is Australia's (Pacific islands add negligibly to it). arable_fraction is small (~6%) because the interior is arid to semi-arid desert; the workable land is a coastal fringe, mostly in the southeast and southwest. fertility, for that fringe, is below Italia's: Australian soils are geologically among the oldest and most weathered, and therefore most mineral-depleted, in the world, a well documented pedological fact distinct from the aridity arable_fraction already charges for."
    }
   },
   "greenland_arctic": {
@@ -383,7 +524,14 @@
     "silver": 0.0,
     "saltpetre": 0.0
    },
-   "note": "route_difficulty is the highest in the file on purpose: raw distance from most of Eurasia is not actually that large (Greenland is closer to Rome in a straight line than India is), but the ice-bound approach is what makes it hard, and only ships built for exactly this (Norse clinker hulls, base_reach 4) shrug it off. Distance alone would badly under-price this region."
+   "note": "route_difficulty is the highest in the file on purpose: raw distance from most of Eurasia is not actually that large (Greenland is closer to Rome in a straight line than India is), but the ice-bound approach is what makes it hard, and only ships built for exactly this (Norse clinker hulls, base_reach 4) shrug it off. Distance alone would badly under-price this region.",
+   "land": {
+    "land_area_km2": 2166000,
+    "arable_fraction": 0.002,
+    "fertility_quality_multiplier": 0.05,
+    "conf": "D",
+    "source": "Land area is Greenland's. arable_fraction is close to zero (~80% ice-capped; the ice-free fringe is tundra, of which only a handful of low-Arctic fjord meadows in the far south were ever used at all, historically for hay and grazing rather than grain). fertility matches sim/world/agriculture.py's own ARCTIC_TUNDRA quality multiplier (0.05) exactly, for the same reason that module gives: the limiting factor is growing-season length, not soil fertility, which this single scalar cannot separate from fertility any better here than it can there."
+   }
   }
  },
  "reach_levels": {

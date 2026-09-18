@@ -305,6 +305,7 @@ def _import_declaring_modules():
                    "sim.world.transport",
                    "sim.world.military_logistics",
                    "sim.world.deposits",
+                   "sim.world.land",
                    "sim.world.demand"):
         try:
             __import__(module)
