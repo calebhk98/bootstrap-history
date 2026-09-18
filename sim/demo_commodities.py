@@ -59,7 +59,6 @@ def main():
     demand_t = 20000.0    # an illustrative economy-wide demand for cloth, not derived
                             # from any one project's bill of materials -- see COMMODITIES.md
                             # section 4.2 for why this is a separate, aggregate figure.
-    cloth = led.commodities["cloth"]
     for built, label in ([], "no loom beyond the baseline"), (["tex_power_loom"], "power loom built"):
         country = led.country_output("cloth", built)
         supply = led.market_available("cloth", built)

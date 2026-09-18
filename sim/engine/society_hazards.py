@@ -605,7 +605,6 @@ class HazardsMixin:
         are not a fair fight. None of it is hardcoded here any more.
         """
         rng = self.rng
-        prep = self.running("plague_preparedness")
         for hazard in self.civ.get("hazards", []):
             hazard_start, hazard_end = hazard.get("years", [0, 0])
             if not (hazard_start <= yr <= hazard_end):

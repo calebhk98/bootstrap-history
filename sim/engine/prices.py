@@ -427,7 +427,6 @@ def priced_goods_table(held_technology_ids, book_goods_denarii, prices_json,
     solved = solved_prices(held_technology_ids, prices_json,
                            production_entries=production_entries,
                            civilization_id=civilization_id)
-    rate = denarii_per_labour_hour(prices_json)
 
     # Everything any recipe anywhere can make, ignoring era entirely. This
     # is what separates "nothing makes it" from "nothing HERE makes it".

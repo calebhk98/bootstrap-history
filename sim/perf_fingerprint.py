@@ -132,7 +132,7 @@ def record(path):
 def check(path):
     with open(path) as handle:
         base = json.load(handle)
-    bad, total, btotal = [], 0.0, 0.0
+    bad, total = [], 0.0
     for name, entry in base.items():
         scenario = entry["scenario"]
         want = entry["years"]

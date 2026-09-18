@@ -196,12 +196,10 @@ import collections
 import json
 import math
 import os
-import sys
 import time
 import zipfile
 import io
 import urllib.request
-import ssl
 
 # ============================================================================
 # CACHE AND DOWNLOAD - Natural Earth's public-domain vector layers, fetched

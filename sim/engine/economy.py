@@ -4,23 +4,8 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections, json, math, os, random
-from collections import defaultdict
-
-from .data import (ANNUAL_WAGE, hard_pre, haversine_km, trade_family, WAGES)
-from . import commodities as _commod
+import math
 from constants import declare
-
-# sim/world/transport.py: freight cost per tonne-km from draught-animal
-# metabolism, rolling resistance and a road surface - see material_freight_
-# cost_per_kg() below for what it is used for. Bare `from world import`, not
-# `from ..world import` or `from sim.world import`: this file loads as
-# top-level `engine.economy` (see core.py's own header comment on the exact
-# same point for `world.demography`/`world.agriculture`), and core.py -
-# the only importer of this module - already guarantees both `sim/` itself
-# and the repository root are on sys.path before it imports EconomyMixin
-# from here, so this needs no sys.path setup of its own.
-from world import transport as freight_physics
 
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin

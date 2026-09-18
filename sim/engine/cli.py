@@ -23,11 +23,11 @@ reads with no REPL or protocol machinery of their own. See cmd_sweep's own
 placement note and cli_analysis.py's module docstring for the specific,
 tested reason `cmd_sweep` could not follow `cmd_plan` out of this file.
 """
-import collections, json, math, os, random, time
+import collections, json, math, os, random
 from collections import defaultdict
 
 from .data import (CIVDIR, closure, critical_path, DEFAULTS, goal_catalog,
-                   hard_pre, load, load_civ, load_geography, resolve_goal,
+                   hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
 
@@ -36,11 +36,13 @@ import argparse, sys
 from .core import Sim
 from . import protocol as _protocol
 from . import settings
-from .data import money_word, money_short
-from .protocol import (
-    _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
-    _agent_state, _node_explain, civ_of_save, goal_of_save, final_report,
-    load_state, parse_typed, render_final, render_pretty, save_state)
+# civ_of_save/goal_of_save are the only names this file still reads from
+# .protocol: `cmd_agent`, which used to read the rest of this import
+# (_agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
+# _agent_state, _node_explain, final_report, load_state, parse_typed,
+# render_final, render_pretty, save_state), moved to cli_agent.py, which
+# imports its own copies of what it needs straight from .protocol.
+from .protocol import civ_of_save, goal_of_save
 from constants import declare
 
 

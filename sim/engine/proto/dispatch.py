@@ -1,20 +1,15 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
-import json, re
+import re
 
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                    downstream_count, load, money_word, topo_order,
-                    trade_family)
+from ..data import money_word
 
-from .economy import (_agent_capacity, _agent_changes, _agent_economy, _agent_mines, _agent_portfolio, _agent_values, _dashboard_snapshot)
+from .economy import _dashboard_snapshot
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
-from .score import score_report
-from .state import (_agent_end_reason, _agent_log, _agent_state, _staff_fraction_note, _waiting_on)
-from .techtree import _agent_available, _brief, _node_explain
-from .util import (_clean, _flag, _localise_money, _localise_words, _num, _qty, _unsafe_path)
-from .ventures import _VENTURE_SUPERVISION_NOTE
+from .state import (_agent_end_reason, _agent_state)
+from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 # The four handler groups moved out of this module, by subject - see each
 # one's own docstring. This stays the composition point: the command table

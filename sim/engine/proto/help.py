@@ -1,9 +1,5 @@
 """The {"cmd":"help"} topic tree."""
 
-import json
-
-from ..data import load
-
 from ..core import Sim
 
 # TYPED_HINTS is NOT imported here: cli.py patches engine.protocol.TYPED_HINTS
