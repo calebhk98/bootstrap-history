@@ -195,18 +195,28 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
-- **`Sim` is one god object** - **165** instance attributes (re-measured; the
-  ~157 in `sim/ARCHITECTURE.md` misses 8 reached only as `s.X` from `proto/`
-  and 3 hidden behind `self.__dict__[...]`), ~314 methods, six mixins that
-  all talk through `self`. A full decomposition has been considered and
-  rejected with reasons in `sim/ARCHITECTURE.md`. Do not silently restart it.
+- **`Sim` is one god object** - **165** instance attributes CARRIED
+  (re-measured; a scan of `__init__` misses 8 reached only as `s.X` from
+  `proto/` and 3 hidden behind `self.__dict__[...]`), **523** methods across
+  `Sim` and its six mixins, all talking through `self`. Say which count you
+  mean: `sim/ARCHITECTURE.md` quotes **43** attributes, which is what
+  `__init__` ASSIGNS, and both numbers are right - that file reconciles them
+  and gives the script for each. The 523 supersedes the ~314 this line
+  carried until 2026-09-18 (`Sim` 231, EconomyMixin 121, SocietyMixin 61,
+  LabourMixin 50, ProjectsMixin 46, FogMixin 8, GeographyMixin 6). A full
+  decomposition has been considered and rejected with reasons in
+  `sim/ARCHITECTURE.md`. Do not silently restart it.
 - **Much of the engine is majority comment, and the comments are
   load-bearing.** They are how agents hand each other the reason a thing is
   the way it is. Do not strip them to "clean up". (The old "five of eight"
   figure was stale and, worse, unreproducible - it never recorded whether a
-  docstring counted as comment or code. Counting docstrings as
-  documentation it is four of eight; as code, one. `sim/ARCHITECTURE.md`
-  now states the rule and gives the command.)
+  docstring counted as comment or code. Re-measured 2026-09-18 with BOTH
+  rules scripted: it is **one of eight** counting docstrings as
+  documentation - core.py at 54% - and **zero of eight** counting them as
+  code. That supersedes the four-and-one this line carried, and the
+  direction matters: the engine added far more code than prose, so the
+  files got denser rather than better documented. `sim/ARCHITECTURE.md`
+  states both rules and gives the script for each.)
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 
