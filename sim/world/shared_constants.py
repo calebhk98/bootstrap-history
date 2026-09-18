@@ -216,6 +216,71 @@ ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
         "population into a civilization-wide labour-hours supply.")
 
 # ============================================================================
+# WEATHER SPATIAL CORRELATION - Complaints/50-one-label-draws-one-coin.md
+# ============================================================================
+# How far apart two points on the ground have to be before one year's
+# growing-season weather at one stops predicting the other's. This is the
+# ONE number sim/engine/core.py's per-cell pooled harvest weather (WIRING
+# THREE) turns on: it is what tells Gaul and Hispania (close, correlated)
+# apart from Britannia and Mesopotamia (far, nearly independent), replacing
+# the two assumptions Complaints/50 measured as both wrong in the same
+# direction - a region record is one weather system, and two region records
+# draw independently. Declared here, not in sim/world/agriculture.py (which
+# already owns WEATHER_YIELD_STDEV_FRACTION and the clip bounds this same
+# mechanism also reads), because this task's own ownership boundary is
+# sim/engine/core.py and sim/world/shared_constants.py, not agriculture.py -
+# see CLAUDE.md's own "own ONLY" convention. It is nonetheless a genuine
+# sim/world/ climate fact, not an engine heuristic, so it belongs in this
+# file's registry rather than as a bare literal in core.py.
+
+GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM = declare(
+    "GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM", 600.0,
+    kind="physical_constant",
+    unit="km (e-folding distance of an exponential spatial correlation "
+         "kernel: correlation between two points = exp(-distance / this))",
+    source="NOT a single citable figure for the exact quantity this "
+           "constant stands for - the correlation length of a full GROWING "
+           "SEASON's cumulative weather anomaly, at a pre-industrial "
+           "regional scale. No study measuring that exact quantity was "
+           "found, and this value is not presented as one; it is chained "
+           "from three narrower, real figures instead. (1) DAILY "
+           "precipitation fields: published global correlation-length "
+           "analyses of gauge/satellite precipitation datasets put the "
+           "mean e-folding distance at roughly 250-300 km over land "
+           "(order 262 km land mean, order 281 km land median, 10th-90th "
+           "percentile roughly 145-342 km). (2) SEASONAL-to-decadal "
+           "precipitation TOTALS decorrelate over a longer distance than "
+           "single days do, because summing a season averages out the "
+           "day-to-day passage of individual storms and leaves the "
+           "slower, larger-scale circulation regime that steered them; "
+           "regional studies of monthly-to-decadal precipitation report "
+           "correlation lengths on the order of 500-700 km. (3) Synoptic "
+           "meteorology's own characteristic scale for the weather "
+           "systems (mid-latitude frontal cyclones and their rain bands) "
+           "that a growing season is built out of is of order 1,000 km "
+           "(the mid-latitude Rossby radius of deformation and the "
+           "synoptic wavelength are both this order of magnitude). This "
+           "constant is set at figure (2), a season-scale total - the "
+           "quantity a harvest actually integrates over - sitting below "
+           "the full synoptic wavelength of (3) because a season's "
+           "cumulative anomaly still decorrelates faster than the single "
+           "largest circulation pattern that produced any one part of "
+           "it. Sourced from open-web search of the spatial-statistics "
+           "and precipitation-dataset literature during this task, not "
+           "from a specific paper kept on file - see this task's own "
+           "report for the search queries used and what they returned.",
+    confidence="D",
+    why="The single number that separates a compact, correlated empire "
+        "(Gaul and Hispania, which growing-season weather should mostly "
+        "agree between) from a spread-out, decorrelated one (Britannia "
+        "and Mesopotamia, which it should not) - see sim/engine/core.py's "
+        "_compute_farm_weather_cells and _pooled_farm_weather_multiplier, "
+        "which this feeds, and this task's own report for a sensitivity "
+        "sweep across the roughly 150-1,500 km range this docstring's own "
+        "chain of reasoning spans, rather than trusting this one point "
+        "estimate alone.")
+
+# ============================================================================
 # LAND USE - fallow
 # ============================================================================
 # THE HARD CASE THIS MODULE IS ALSO FOR. Unlike the constants above, which

@@ -33,6 +33,7 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `electrical_mj` | Electrical energy not already accounted for by `inputs` - a current, or heat/work reached only because electricity supplies it (electrolysis; arc or resistance heating, which alone reaches temperatures no fuel here does; a motor). Priced through the same file's electrical energy market (a water wheel through a dynamo, a heat engine through a dynamo, or a photovoltaic panel with no shaft at all - whichever is cheaper). Use this, not `mechanical_mj`, for any process whose PHYSICAL requirement is electricity itself, so the choice-of-technique mechanism can pick photovoltaic over hydro-plus-dynamo once that route is actually cheaper, rather than that choice being foreclosed by which field an entry happened to use. |
 | `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
+| `land_iugera_years` | Optional. For a material whose real constraint is GROUND rather than a process (a crop, a fleece, a felled tree) - how many iugerum-years of `iugerum_land` this recipe's WHOLE BATCH ties up, priced against `iugerum_land`'s own solved rent exactly like an ordinary `inputs` entry. See LAND below for the unit, the mechanism, and which materials got it. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
@@ -144,6 +145,152 @@ recipe cycles once this is read - `iron_bar_kg`'s own hammer fittings are
 resolve correctly because `sim/solve_prices.py`'s resolvability pass now
 tests cycles for productiveness instead of refusing every one outright; see
 Complaints/31 and Complaints/32.
+
+## LAND
+
+`Complaints/49` found that two rounds of work built a real, per-civilisation
+Ricardian rent on arable land in `sim/world/land.py` - both margins of it,
+extensive (better land against worse) and intensive (diminishing returns to
+more labour on the same ground) - and that NOTHING in this directory ever
+consumed `iugerum_land`: `wheat_kg` had `inputs={}`, `wool_kg` had
+`inputs={}`, and so on for every material whose own prose already said it
+came "from arable land" or "from pasture" or "from forest". The rent was
+computed and then discarded; no loaf of bread was ever dearer for it.
+`land_iugera_years` is the fix.
+
+WHY A NEW FIELD RATHER THAN AN `inputs` ENTRY. Land is not consumed the way
+ore or fuel is - the same iugerum grows wheat again next year - so folding
+it into `inputs` (which this schema's own rule reads as "consumed making
+one batch") would misdescribe what is actually happening: a crop OCCUPIES
+land for a season, the way `capital` above already says a smelting recipe
+OCCUPIES a furnace rather than consuming it batch by batch. `land_iugera_years`
+gets its own field for exactly the reason `capital`'s build bill does not
+get hand-added to `inputs` either: naming what a cost IS matters as much as
+computing it right.
+
+WHY THE UNIT IS IUGERA-YEARS, NOT BARE IUGERA. `sim/world/land.py`'s own
+`margin_outcome_for_civilization` returns a rent that is a FLOW - kilograms
+of grain-equivalent per iugerum PER YEAR, exactly the way `data/production/
+40_organics.json`'s own `wheat_kg` states its yield as kg per hectare PER
+YEAR, not kg per hectare full stop. A flow only becomes a cost once
+multiplied by how long the land is drawn on, the same way an hourly wage
+only becomes a wage bill once multiplied by hours worked. Land held for two
+years costs twice what the same land held for one year does - `capital`'s
+own `service_life_years` makes the identical point for a furnace above -
+so the natural field is IUGERA TIMES YEARS, stated once per recipe as a
+single number rather than as an area and a duration that would have to be
+multiplied out downstream every time the price is used.
+
+WHAT THE NUMBER MEANS, CONCRETELY. `land_iugera_years` is a BATCH-level
+quantity, exactly like `labour_hours` or a capital good's `build_materials`
+- stated against the SAME batch `basis` already describes, not against one
+unit of output. For every entry in this file whose `basis` is already "per
+hectare ... per year" (`wheat_kg`, `wool_kg`, `milk_kg`, `olive_oil_kg`,
+`wine_common_kg`, `cotton_kg`, `hemp_fiber_kg`, `linen_kg`, `silk_kg`,
+`rose_petals_kg`, `cork_kg`, `oak_bark_kg`, `shellac_kg`, `rubber_kg`), the
+whole batch already IS one hectare-year, so `land_iugera_years` is simply
+that one hectare converted into `iugerum_land`'s own unit: 1 ha /
+0.2523 ha/iugerum (this directory's own `iugerum_land` entry, the standard
+Roman conversion) = 3.9635 iugera-years, THE SAME CONSTANT for every one of
+those entries - not a new area estimate per material, only a unit
+conversion of the yield each entry already states. `timber_m3` (basis: per
+finished cubic metre, not per hectare-year) needs an actual conversion
+instead: 1.5 standing m3 per finished m3 (its own stated felling loss) /
+4 m3/ha/yr (the midpoint of its own stated 3-5 m3/ha/yr mean annual
+increment) = 0.375 ha-years/m3 = 1.4863 iugera-years, and `wood_kg`/
+`firewood_kg` (basis: per tonne) reuse that SAME forest's mean annual
+increment against their own stated density to get 1.6515 iugera-years/
+tonne. `dye_kg`'s own `yield_basis` already computes 1.39 ha-years of
+cultivation per tonne directly, so its `land_iugera_years` is just that
+figure converted (5.5093). `ox` and `mule` (draft animals, not crops) use
+their own already-stated "roughly 3-5 hectares of grazing for the whole
+[~4-year] rearing period" - midpoint 4 ha x 4 yr = 16 ha-years = 63.417
+iugera-years - closing a gap those two entries' own `yield_basis` used to
+flag explicitly ("this land-tenure cost is a genuine rent on grazing land
+... but this file's rent mechanism is fixed at zero this round"). Every
+entry's own `yield_basis` states its derivation and cites the physical
+figure (a mean annual increment, a stocking density, a stated ha-years
+figure) it came from - see each entry's own LAND paragraph rather than
+re-deriving it here.
+
+HOW IT IS PRICED. `sim/solve_prices.py`'s `recipe_cost_and_allocation`
+multiplies `land_iugera_years` by `iugerum_land`'s own solved price (set,
+as it always was, by `land_rent_hours_per_iugerum` from `sim/world/land.py`'s
+Ricardian margin for the civilisation being solved) and adds the result to
+the recipe's cost, exactly the way an `inputs` entry is priced - see RENT ON
+GROWN AND LAND-LIMITED MATERIALS in that file's module docstring for the
+full mechanism, including why this does NOT create a new cycle (the
+reference price used to convert land.py's physical rent into hours is
+computed rent-free, once, before land-consuming recipes are priced at all).
+
+WHICH MATERIALS GOT IT, AND WHICH DID NOT. Every material considered:
+
+**Given `land_iugera_years`:** the food and fibre crops (`wheat_kg`,
+`olive_oil_kg`, `wine_common_kg`, `cotton_kg`, `hemp_fiber_kg`, `linen_kg`,
+`silk_kg`, `rose_petals_kg`, `dye_kg`), the pasture products (`wool_kg`,
+`milk_kg`), the forest products (`timber_m3`, `wood_kg`, `firewood_kg`,
+`cork_kg`, `oak_bark_kg`, `shellac_kg`, `rubber_kg`), and the two draft
+animals (`ox`, `mule`) - every one of them a material whose `extracted_from`
+already named arable land, pasture or forest and whose own `yield_basis`
+already stated (or, for `dye_kg` and `timber_m3`, straightforwardly
+implied) a land requirement in physical terms.
+
+**Considered and excluded, with reasons:**
+
+- Livestock byproducts (`hide_kg`, `bone_kg`, `bristles_kg`, `horsehair_kg`,
+  `fat_kg`, `manure_kg`) - each one's own `yield_basis` already says the
+  animal's land/feed cost belongs to whatever eventually prices meat, not to
+  the byproduct, and explicitly declines to charge it to avoid double-
+  counting once a meat entry exists. Adding land here would either double-
+  count (if a share of the animal's own grazing were charged to hide AND to
+  a future meat entry) or need a `cattle_kg`/`meat_kg` material this
+  directory does not have to divide the joint cost against - out of this
+  round's scope, and reported as a gap rather than closed. `milk_kg` is
+  different: it is extracted DIRECTLY from pasture in its own right (not a
+  slaughter byproduct of another priced good), so it got the field.
+- `beeswax_kg` - its own `yield_basis` states directly that an apiary is
+  NOT land-limited ("bees forage over several kilometres of surrounding
+  countryside well beyond any land the beekeeper holds... what limits it is
+  the number of hives someone can build and tend"). Taking its own stated
+  physical reasoning at face value means no field, not a guessed one.
+- `papyrus_sheet` - its own `yield_basis` states directly that the marsh
+  reed bed is not the bottleneck ("a stand of papyrus vastly outproduces
+  what a small workshop can slice, lay and press in a day"). Same reasoning
+  as `beeswax_kg`: the entry's own text says land is not binding.
+- Every ORE, QUARRY, SALT-PAN and other MINERAL extraction (`iron_ore_kg`,
+  `stone_kg`, `salt_kg`, `clay_kg`, and the rest of `20_nonferrous.json` and
+  `30_fuel_stone.json`'s deposit entries) - a mine or a quarry is not a
+  field (see `sim/world/land.py`'s own module docstring for why: a
+  deposit's margin is set by GRADE, which falls as it is worked, while a
+  field's margin is set by location and fertility, fixed and not consumed
+  by use). These already have their OWN rent mechanism, `sim/world/
+  deposits.py`'s marginal-deposit supply curve for the six named ores, or
+  price at zero rent pending one - see RENT ON EXTRACTED MATERIALS in
+  `sim/solve_prices.py`'s module docstring. Mixing the two mechanisms would
+  misprice both.
+- Every MANUFACTURED, downstream material that consumes one of the entries
+  above (`leather_kg`, `thread_kg`, `fabric_kg`, `cloth_kg`, `paper_kg`,
+  `ink_kg`, `essential_oil_kg`, and the rest of the textile and byproduct
+  chain) - these already inherit their land cost through the price of the
+  land-carrying material they consume (`leather_kg` pays for land through
+  `oak_bark_kg`'s price, `essential_oil_kg` through `rose_petals_kg`'s), the
+  same way a smelted metal inherits its ore's rent without a `capital` or
+  rent term of its own. Giving them a SECOND `land_iugera_years` on top
+  would double-count.
+
+PASTURE AND FOREST PAY ARABLE LAND'S OWN RENT, AND THAT IS A HEURISTIC.
+`sim/world/land.py` computes ONE rent, from the margin of cultivation over
+ARABLE cropland, because this project tracks only one `iugerum_land`
+material. Every pasture and forest entry above pays that SAME rent for its
+own grazing or woodland, when real pasture and woodland were commonly land
+unfit for the plough and would earn a lower rent of their own at their own
+margin - this overstates wool's, milk's, timber's and every forest
+product's true land cost. Tag: TEMPORARY HEURISTIC (CLAUDE.md 3.4); fixing
+it needs `sim/world/land.py` to carry a separate margin for pasture and
+forest, out of this round's scope. The AREA figures themselves (a mean
+annual increment, a stocking density) are physical facts, not part of this
+heuristic - only the RENT PER IUGERUM they get multiplied by is borrowed
+from arable land's own margin.
 
 ## ENERGY
 
@@ -331,7 +478,7 @@ structural rather than a matter of precision:
 | missing | status |
 |---|---|
 | **capital** | field exists now (see CAPITAL above), populated for the ~13 materials where it plausibly dominates, and read by `sim/solve_prices.py` |
-| rent | `extracted_from` marks it; the solver fixes it at zero this round |
+| rent | `extracted_from` marks it. **Priced now for two of its three routes.** Ore: `sim/world/deposits.py`'s marginal-deposit supply curve prices `cassiterite_kg` and `galena_kg` (the other four named ores still solve to zero rent this era - Complaints/32). Land: `land_iugera_years` (see LAND above) now lets a GROWN or land-limited material pay `sim/world/land.py`'s Ricardian rent on `iugerum_land` through the ordinary price solve - Complaints/49. Every OTHER extracted material (quarry, salt pan, gold's placer-and-amalgamation step, most metals) still solves at exactly zero rent, unconditionally |
 | energy | **priced now, as three connected carriers.** `thermal_mj`, `mechanical_mj` and `electrical_mj` are all read by `sim/solve_prices.py` through the energy market in `data/production/70_energy.json`, linked by conversion techniques (heat engine, dynamo, motor, resistance/arc, friction, photovoltaic - see ENERGY in that file's module docstring); `energy_mj` remains for the rare case none of the three carriers reaches, currently used by no entry in this directory. TEMPERATURE within `thermal_mj` is now graded PER CONSUMER (Complaints/44, continued) - every thermal_mj-supplying technique states what it can reach, and every distinct requirement this era's own consumers actually state gets its OWN separately solved price, rather than one shared floor across every consumer of the carrier; the carrier stays ONE NAME (no `thermal_mj_below_X` split - that would need every other consuming entry, most outside this directory's per-file ownership, rewritten to name a band), which is a considered trade-off rather than a deferred gap; see TEMPERATURE in the solver's module docstring for the mechanism and the trade-off in full |
 | transport | not modelled anywhere |
 | margin, risk, failed batches | not modelled anywhere |
@@ -384,7 +531,7 @@ delete the second.
   degree.** The thing it describes is not a material, or has no mass, or is a
   person. The numbers are there to hold the slot and must not be trusted or
   refined - the entry wants deleting once whatever consumes it is fixed. See
-  `Complaints/28-material-keys-that-are-not-materials.md`.
+  `Complaints/closed/28-material-keys-that-are-not-materials.md`.
 
 A `D` is not a worse `C`. It is a different statement: a `C` says *I do not
 know this number well*, a `D` says *this number should not exist*. Refining a
@@ -393,8 +540,9 @@ know this number well*, a `D` says *this number should not exist*. Refining a
 ## Worked examples
 
 `00_examples.json` holds one entry of each shape - extracted,
-smelted, harvested - plus `copper_kg` now also carrying a `capital` entry, as
-the worked example of that field's shape. Copy the shape, not the numbers.
+smelted, harvested - plus `copper_kg` now also carrying a `capital` entry and
+`timber_m3` now also carrying a `land_iugera_years` entry, as the worked
+examples of those fields' shapes. Copy the shape, not the numbers.
 
 Run `python3 sim/validate_production.py` after every edit, and
 `--todo` to see what is still missing, worst first.

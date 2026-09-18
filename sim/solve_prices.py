@@ -106,14 +106,99 @@ deposit or grade each recipe draws on, which is out of this file's scope
 and out of this task's ownership (`data/production/` is owned elsewhere
 right now).
 
-WHAT THIS DOES NOT REACH. Every OTHER extracted material - forest timber,
-quarried stone, salt, gold's placer-and-amalgamation step, and every metal
-`sim/world/deposits.py` has no named-deposit list for - still prices at
-exactly zero rent, unconditionally, exactly as before. Zero rent there is
-still not "no answer" - it is the same honest lower bound this section
-used to claim for everything: whatever the true price is, it is at least
-the labour it takes. Tag: HEURISTIC, not a physical fact, tracked against
-Milestone 1's provenance ledger.
+WHAT THIS DOES NOT REACH. Quarried stone, salt, gold's placer-and-
+amalgamation step, and every metal `sim/world/deposits.py` has no named-
+deposit list for still price at exactly zero rent, unconditionally - a
+mine's grade-based margin is not a fact this file has for them yet. Zero
+rent there is still not "no answer" - it is the same honest lower bound
+this section used to claim for everything: whatever the true price is, it
+is at least the labour it takes. Tag: HEURISTIC, not a physical fact,
+tracked against Milestone 1's provenance ledger. Forest timber and every
+other GROWN or land-limited material used to belong on this list too -
+see RENT ON GROWN AND LAND-LIMITED MATERIALS immediately below for why it
+no longer does.
+
+RENT ON GROWN AND LAND-LIMITED MATERIALS (Complaints/49 - "land rent
+reaches no crop"). `sim/world/land.py` computes a real, per-civilization
+Ricardian rent on arable land - both margins of it, extensive (better
+land against worse) and intensive (diminishing returns to more labour on
+the same ground) - and `land_rent_hours_per_iugerum` above turns that into
+`iugerum_land`'s own solved price. Before this round, nothing else in
+`data/production/` ever looked that price up: `wheat_kg` had `inputs={}`,
+so its price was mathematically guaranteed to be labour cost alone,
+whatever an iugerum was worth, and the same was true of wool, timber,
+olives, wine and every other material a recipe's own prose said came
+"from arable land", "from pasture" or "from forest" without a single
+recipe actually consuming any. Two rounds of rent calculation reached no
+price anybody paid. This is the fix.
+
+A FIELD IS NOT A MINE (see sim/world/land.py's own module docstring), so
+this needed its own route into a recipe's cost rather than reusing
+RENT_BEARING_ORE_MATERIALS' ore-grade mechanism above: a crop is not the
+material that earns a rent, the LAND it grows on is, and the crop merely
+OCCUPIES that land for a season rather than consuming it the way a
+smelter consumes ore. `land_iugera_years` (data/production/_SCHEMA.md) is
+the field that says so - a BATCH-level quantity, exactly like
+`labour_hours` or a capital good's `build_materials` above, of how many
+land-area-YEARS this recipe's whole batch ties up on `iugerum_land`.
+LAND-AREA-YEARS, not bare area, because land held for two years costs
+twice what the same land held for one year does - the same reasoning
+`capital`'s own `service_life_years` already applies to a furnace, and
+the natural unit once yield (kg per iugerum per YEAR) and rent (hours per
+iugerum per YEAR) are both already flows: multiplying a flow by however
+long it is drawn on is what turns it into a cost, exactly as an hourly
+wage times hours worked is what turns it into a wage bill.
+
+HOW IT IS WIRED. `recipe_cost_and_allocation` reads `land_iugera_years`
+and multiplies it by `current_prices["iugerum_land"]` exactly the way it
+already prices an ordinary `inputs` entry - a NEW term
+(`land_cost_hours`), not folded into `material_cost_hours` itself, for
+the same reason CAPITAL's build bill gets its own term rather than being
+hand-added to `inputs`: naming what a cost IS matters as much as
+computing it right. `_dependency_materials` and `_has_external_anchor`
+both now see `iugerum_land` as a dependency whenever `land_iugera_years`
+is nonzero, so the resolvability and cycle-productiveness passes above
+treat a land-consuming recipe exactly like one that consumes any other
+extracted material - no separate code path, because land-as-an-input and
+ore-as-an-input are the same shape once `iugerum_land` has a price.
+
+WHY THIS DOES NOT CLOSE A CYCLE BACK ON ITSELF. `iugerum_land`'s own price
+never depends on the crop prices `land_iugera_years` feeds into:
+`land_rent_hours_per_iugerum` fixes it, once, before the main iteration
+starts, from land.py's PHYSICAL rent and wheat_kg's ZERO-LAND-RENT
+reference price (see that function's own docstring for why seeding
+`{"iugerum_land": 0.0}` into that ONE reference call keeps it that way
+even though wheat_kg now states a `land_iugera_years` of its own). wheat's
+ACTUAL solved price - what bread, and every other consumer of wheat, pays
+- does include land rent, computed by the ordinary Jacobi iteration below;
+it is only the one-off unit-conversion call that stays rent-free, and it
+runs once, not every round. So the arrow runs one way: land.py's physical
+inputs (population, territory, fertility - no price anywhere in them) ->
+`iugerum_land`'s hours price (fixed) -> every land-consuming material's
+own solved price (iterated) - never back around to land.py itself or to
+wheat's own reference price.
+
+WHICH MATERIALS GOT IT, AND WHICH DID NOT. See data/production/_SCHEMA.md's
+own LAND section for the full considered list and the reasoning on each -
+every material whose `extracted_from` names arable land, pasture or
+forest and whose own `yield_basis` already states (or straightforwardly
+implies, for `dye_kg`'s already-computed hectare-years and `timber_m3`'s
+mean annual increment) a land requirement now carries it; livestock
+byproducts with no independent land claim of their own, and the apiary
+and marsh entries whose OWN yield_basis says land is not their binding
+constraint, do not.
+
+PASTURE AND FOREST PAY ARABLE LAND'S OWN RENT, AND THAT IS A HEURISTIC.
+sim/world/land.py computes ONE rent, from the margin of cultivation over
+ARABLE cropland; wool, milk, timber and every forest good above pay that
+SAME rent for their own pasture or woodland, because this project tracks
+only one `iugerum_land` material and one margin. Real pasture and
+woodland were commonly land unfit for the plough and would earn a lower
+rent of their own at their own margin, so this overstates their true land
+cost. Tag: TEMPORARY HEURISTIC (CLAUDE.md 3.4), tracked against the same
+provenance ledger as the ore-rent approximations above; fixing it needs
+sim/world/land.py to carry a separate margin for pasture and forest,
+which is out of this round's scope.
 
 ENERGY IS NOW PRICED, AS THREE MARKETS - THERMAL, MECHANICAL AND ELECTRICAL -
 CONNECTED BY CONVERSION RECIPES, NOT TWO MARKETS WITH ELECTRICITY GLUED TO
@@ -1051,11 +1136,13 @@ def _dependency_materials(entry):
     the module docstring's CAPITAL section), every capital good's own
     `build_materials`, plus, now that energy is wired in (see ENERGY),
     `thermal_mj` and/or `mechanical_mj` themselves whenever the entry needs
-    a nonzero amount of either. Resolvability has to see all three, or a
-    capital-only cycle - `iron_bar_kg` priced partly in `iron_bar_kg`, via
-    its own finery hammer's iron fittings - or an energy dependency that
-    happened not to resolve, would never appear in the graph that decides
-    whether a price exists at all.
+    a nonzero amount of either, plus, now that land is wired in (see RENT ON
+    GROWN AND LAND-LIMITED MATERIALS), `iugerum_land` itself whenever the
+    entry states a nonzero `land_iugera_years`. Resolvability has to see all
+    four, or a capital-only cycle - `iron_bar_kg` priced partly in
+    `iron_bar_kg`, via its own finery hammer's iron fittings - or an energy
+    or land dependency that happened not to resolve, would never appear in
+    the graph that decides whether a price exists at all.
     """
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
@@ -1063,6 +1150,8 @@ def _dependency_materials(entry):
     for energy_key in ENERGY_CARRIER_FIELDS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
+    if entry.get("land_iugera_years"):
+        dependencies.add("iugerum_land")
     return dependencies
 
 
@@ -1202,13 +1291,14 @@ def _entries_relevant_to_component(production_entries, component, resolved_so_fa
 
 def _has_external_anchor(entry, resolved_so_far):
     """True if this recipe's cost includes something that is NOT another
-    member of its own cycle: ordinary labour, capital build-labour, or a
+    member of its own cycle: ordinary labour, capital build-labour, a
     material dependency that is already resolved (ultimately an extracted
-    good, priced at labour plus zero rent). A cycle where every relevant
-    recipe fails this never bottoms out in labour or an extracted good at
-    all - see the module docstring's CYCLES section - so there is nothing to
-    price it FROM, independent of whether the arithmetic happens to
-    converge.
+    good, priced at labour plus zero rent), or land (ultimately priced by
+    the Ricardian rent on `iugerum_land`, another extracted good in
+    everything but name). A cycle where every relevant recipe fails this
+    never bottoms out in labour or an extracted good at all - see the
+    module docstring's CYCLES section - so there is nothing to price it
+    FROM, independent of whether the arithmetic happens to converge.
     """
     if sum((entry.get("labour_hours") or {}).values()) > 0:
         return True
@@ -1220,6 +1310,8 @@ def _has_external_anchor(entry, resolved_so_far):
         if any(material in resolved_so_far
                for material in (capital_good.get("build_materials") or {})):
             return True
+    if entry.get("land_iugera_years") and "iugerum_land" in resolved_so_far:
+        return True
     return False
 
 
@@ -1451,6 +1543,27 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     rent_hours = sum(output_quantity * rent_by_kg.get(output_material, 0.0)
                      for output_material, output_quantity in outputs.items())
 
+    # LAND (Complaints/49 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
+    # the module docstring). `land_iugera_years` is a BATCH-level quantity,
+    # exactly like `inputs` and `labour_hours` above, of iugera-years this
+    # whole batch ties up `iugerum_land` for - priced through this same
+    # `current_prices` vector rather than a separate rent table, because
+    # `iugerum_land` is an ORDINARY material once its own price is set (by
+    # the rent term above, on ITS OWN recipe in data/production/
+    # 40_organics.json) and a crop paying for the land it grows on is no
+    # different from a furnace paying for the ore it smelts. Kept as its
+    # own named term rather than folded into `material_cost_hours` for the
+    # same reason CAPITAL's build bill is not hand-added to `inputs`: this
+    # is land OCCUPIED for a season, not a material CONSUMED making one
+    # batch, and the field name should say so.
+    land_iugera_years = entry.get("land_iugera_years") or 0.0
+    land_cost_hours = 0.0
+    if land_iugera_years:
+        land_price = current_prices.get("iugerum_land")
+        if land_price is None:
+            return None
+        land_cost_hours = land_iugera_years * land_price
+
     capital_cost_hours = 0.0
     for capital_good in (entry.get("capital") or []):
         build_materials = capital_good.get("build_materials") or {}
@@ -1491,6 +1604,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
             energy_cost_hours += energy_quantity_per_batch * energy_price
 
     total_process_cost_hours = (material_cost_hours + labour_cost_hours + rent_hours
+                                + land_cost_hours
                                 + capital_cost_hours * batch_output_quantity
                                 + energy_cost_hours)
 
@@ -1672,16 +1786,36 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
     per iugerum - a PHYSICAL quantity, not a price (see that module's own
     WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py, NOT HERE
     section for why the conversion happens here rather than there).
-    Multiplying by wheat_kg's own ZERO-RENT price (labour only - wheat_kg
-    has no `inputs` of its own, so this is a fixed number that does not
-    depend on this solve's own iteration, exactly like
-    rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`) turns
-    that physical surplus into the labour-hour unit this file prices
+    Multiplying by wheat_kg's own ZERO-LAND-RENT price (labour only, exactly
+    like rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`)
+    turns that physical surplus into the labour-hour unit this file prices
     everything else in. `iugerum_land` itself has no `inputs` and no
     `labour_hours` of its own (data/production/40_organics.json's own
     entry says so directly), so this rent figure becomes its WHOLE solved
     price with nothing else added - see recipe_cost_and_allocation's own
     rent_hours term.
+
+    THE ZERO-LAND-RENT REFERENCE PRICE, AND WHY IT STAYS ZERO-RENT EVEN NOW
+    THAT wheat_kg CONSUMES LAND (Complaints/49). Before this round wheat_kg
+    truly had no `inputs` at all, so calling `recipe_cost_and_allocation`
+    with an empty price dict gave its labour-only price by construction.
+    wheat_kg now also states a `land_iugera_years` (see RENT ON GROWN AND
+    LAND-LIMITED MATERIALS above), so the SAME call would otherwise return
+    None the moment it tries to look up a price for `iugerum_land` that this
+    empty dict does not have. The fix is to seed exactly that one price at
+    0.0 rather than leave it absent - `{"iugerum_land": 0.0}` - which
+    reproduces the pre-Complaints/49 answer exactly (0.0 hours/iugerum times
+    any `land_iugera_years` is 0.0, so the land term drops out and only
+    labour remains) rather than changing what this reference price MEANS.
+    This is deliberately NOT circular: the reference price answers "what
+    would wheat cost if land were free", which this function needs as a
+    pure UNIT CONVERSION for land.py's physical rent, and it is computed
+    once, outside the main iteration, the same way it always was - wheat's
+    ACTUAL solved price (what every other recipe that consumes wheat_kg
+    pays, and what bread is costed from) is computed by the ordinary
+    Jacobi iteration in `solve()` below, WITH land_iugera_years priced in,
+    using `iugerum_land`'s price that THIS function's own return value
+    fixes beforehand. See WHY NO NEW CYCLE in the module docstring.
     """
     civilization_id = civilization_id or DEFAULT_LAND_CIVILIZATION
     wheat_entry = production_entries.get("wheat_kg")
@@ -1691,7 +1825,8 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
         # way there is no reference crop price to convert the physical rent
         # into hours with, so land keeps the old RENT_IS_ZERO answer.
         return {}
-    wheat_cost = recipe_cost_and_allocation("wheat_kg", wheat_entry, {}, wage_by_trade)
+    wheat_cost = recipe_cost_and_allocation(
+        "wheat_kg", wheat_entry, {"iugerum_land": 0.0}, wage_by_trade)
     if wheat_cost is None:
         return {}
     _wheat_total_hours, wheat_output_prices = wheat_cost
@@ -1937,13 +2072,24 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                   "%s h/kg from sim/world/deposits.py's marginal-deposit "
                   "supply curve (see RENT ON EXTRACTED MATERIALS)."
                   % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
+        elif entry.get("land_iugera_years"):
+            # GROWN/land-limited (Complaints/49): this material's OWN
+            # extracted_from rent term (the ore-style mechanism above) is
+            # zero, as it always is for anything that is not one of the six
+            # named ores - but that is not the same as "no rent at all" any
+            # more, because this recipe also consumes iugerum_land, whose
+            # own rent shows up in the LAND line below rather than here.
+            print("%s  EXTRACTED from %s - no separate cost of production "
+                  "of its own; its land cost is priced through iugerum_land "
+                  "(see the LAND line below and RENT ON GROWN AND LAND-"
+                  "LIMITED MATERIALS)."
+                  % (pad, entry["extracted_from"]))
         else:
             print("%s  EXTRACTED from %s - no cost of production, only "
                   "labour and a rent this round fixed at 0.0 (see RENT ON "
                   "EXTRACTED MATERIALS - this material is not one of the "
-                  "six ores sim/world/deposits.py covers, nor land priced "
-                  "above zero for this civilization's own territory - see "
-                  "sim/world/land.py)."
+                  "six ores sim/world/deposits.py covers, nor a material "
+                  "that consumes iugerum_land - see sim/world/land.py)."
                   % (pad, entry["extracted_from"]))
 
     candidates = sorted(set(producers_of.get(material, [])) - {recipe_id})
@@ -2016,6 +2162,18 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                      if total_process_cost > 0 else "n/a")
         print("%s  rent (Ricardian, see RENT ON EXTRACTED MATERIALS): "
               "%10s h  (%s)" % (pad, format_hours(rent_this_batch), share_text))
+
+    land_iugera_years = entry.get("land_iugera_years") or 0.0
+    if land_iugera_years:
+        land_price = prices.get("iugerum_land")
+        land_cost = land_iugera_years * land_price if land_price is not None else None
+        share_text = ("%.1f%% of process cost" % (100.0 * land_cost / total_process_cost)
+                     if land_cost is not None and total_process_cost > 0 else "n/a")
+        print("%s  land (see RENT ON GROWN AND LAND-LIMITED MATERIALS): "
+              "%10.4g iugera-yrs @ %10s h/iugerum-yr = %10s h  (%s)" % (
+              pad, land_iugera_years,
+              format_hours(land_price) if land_price is not None else "NO PRICE",
+              format_hours(land_cost) if land_cost is not None else "?", share_text))
 
     capital_goods = entry.get("capital") or []
     if capital_goods:
@@ -2116,7 +2274,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
     # redundant, so it is skipped rather than recursed into.
     energy_dependencies = [energy_key for energy_key in ENERGY_CARRIER_FIELDS
                           if entry.get(energy_key) and energy_key not in graded_energy_keys]
-    for input_material in sorted(inputs) + energy_dependencies:
+    land_dependencies = ["iugerum_land"] if land_iugera_years and material != "iugerum_land" else []
+    for input_material in sorted(inputs) + energy_dependencies + land_dependencies:
         print()
         print_why(input_material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,

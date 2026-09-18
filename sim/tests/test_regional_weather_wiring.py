@@ -1,4 +1,4 @@
-"""WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md): does the
+"""WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md): does the
 engine actually draw one weather multiplier PER HOME REGION and pool them
 weighted by cultivable land share, or does the whole territory still share
 a single draw?
@@ -18,7 +18,8 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.core import agriculture, land
+from sim.engine.core import agriculture
+from sim.engine import data
 
 
 def _rome_sim(events=False):
@@ -26,34 +27,57 @@ def _rome_sim(events=False):
 
 
 class RegionWeightsTests(unittest.TestCase):
-    """`Sim._farm_region_weights`, precomputed once in `__init__` - see its
+    """`Sim._farm_weather_cells`, precomputed once in `__init__` - see its
     own docstring for why this does not recompute every year.
     """
 
-    def test_weights_sum_to_one_over_romes_seven_home_regions(self):
+    def test_weights_sum_to_one_and_every_cell_sits_in_a_home_region(self):
+        # RENAMED AND REWRITTEN for Complaints/50. This used to assert that
+        # the cell ids WERE Rome's seven home_regions, which is precisely
+        # the equation the complaint is about - one row in a data file was
+        # one weather draw. Cells are now geography.json's 150,000 km2
+        # land_tiles, so the identity check becomes a containment check:
+        # every cell must belong to a region Rome actually holds, and no
+        # cell may come from a region it does not.
         test_sim = _rome_sim()
-        regions = [region for region, _weight in test_sim._farm_region_weights]
-        self.assertEqual(sorted(regions), sorted(test_sim.civ["home_regions"]))
-        self.assertAlmostEqual(
-            sum(weight for _region, weight in test_sim._farm_region_weights),
-            1.0, places=9)
+        cells = list(test_sim._farm_weather_cells)
+        home_regions = set(test_sim.civ["home_regions"])
+        tiles = data.load_geography()["land_tiles"]["tiles"]
+        for cell in cells:
+            self.assertIn(tiles[cell.cell_id]["old_region"], home_regions,
+                          "cell %s is not in any region Rome holds" % cell.cell_id)
+        self.assertGreater(len(cells), len(home_regions),
+                           "Rome's territory should break into more cells "
+                           "than it has region records, or nothing about "
+                           "Complaints/50 has changed")
+        self.assertAlmostEqual(sum(cell.weight for cell in cells), 1.0, places=9)
 
-    def test_weights_are_proportional_to_lands_own_arable_iugera_not_an_equal_split(self):
+    def test_weights_are_a_genuine_land_share_not_an_equal_split(self):
+        # REWRITTEN for Complaints/50. This used to compare each weight
+        # against land.cultivable_land_for_civilization's per-REGION
+        # arable_iugera. Cells are now geography.json's 150,000 km2
+        # land_tiles, which carry their own arable_fraction, so land.py no
+        # longer feeds this mechanism at all and that comparison would be
+        # asserting against a source the code does not read. What the test
+        # is FOR survives unchanged: the weighting must be by land, not by
+        # counting.
         test_sim = _rome_sim()
-        weights = dict(test_sim._farm_region_weights)
-        parcels = land.cultivable_land_for_civilization("rome_100ad")
-        total_arable = sum(parcel.arable_iugera for parcel in parcels)
-        for parcel in parcels:
-            self.assertAlmostEqual(
-                weights[parcel.region], parcel.arable_iugera / total_arable, places=9)
-        # A genuine land-share weighting is NOT an equal 1/7 split - Egypt
-        # (north_africa) and Britannia are nowhere near the same size.
-        self.assertNotAlmostEqual(weights["north_africa"], weights["britannia"], places=2)
+        weights = [cell.weight for cell in test_sim._farm_weather_cells]
+        self.assertGreater(len(weights), 7,
+                           "Rome's territory should break into many more "
+                           "cells than its seven region records")
+        self.assertAlmostEqual(sum(weights), 1.0, places=9)
+        # An equal split would make every weight identical. A real
+        # land-share weighting does not - a desert cell and a Nile cell
+        # are not the same size of harvest.
+        self.assertGreater(max(weights), min(weights),
+                           "every cell carries the same weight, which means "
+                           "the weighting is a count and not an area")
 
-    def test_a_civilisation_with_no_home_regions_gets_an_empty_weight_list(self):
+    def test_a_civilisation_with_no_home_regions_gets_no_cells(self):
         test_sim = _rome_sim()
         test_sim.civ = dict(test_sim.civ, home_regions=[])
-        self.assertEqual(test_sim._compute_farm_region_weights(), [])
+        self.assertEqual(list(test_sim._compute_farm_weather_cells()), [])
 
 
 class PooledWeatherMultiplierTests(unittest.TestCase):
@@ -83,7 +107,7 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
 
     def test_falls_back_to_the_old_single_draw_when_there_are_no_region_weights(self):
         test_sim = _rome_sim()
-        test_sim._farm_region_weights = []
+        test_sim._farm_weather_cells = []
         year = 137
         expected = agriculture.draw_weather_multiplier(
             random.Random(test_sim._farm_year_weather_seed(year)),
@@ -93,13 +117,14 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
     def test_each_region_actually_draws_independently_not_the_same_number_repeated(self):
         test_sim = _rome_sim()
         year = 150
-        draws = {region: agriculture.draw_weather_multiplier(
-                    random.Random(test_sim._farm_year_weather_seed(year, region=region)),
+        draws = {cell.cell_id: agriculture.draw_weather_multiplier(
+                    random.Random(
+                        test_sim._farm_year_weather_seed(year, region=cell.cell_id)),
                     agriculture.DEFAULT_SOIL.weather_stdev_fraction)
-                 for region, _weight in test_sim._farm_region_weights}
-        # Seven independent draws landing on the exact same float by chance
-        # is vanishingly unlikely - if this ever fires, region is not
-        # actually reaching the seed.
+                 for cell in test_sim._farm_weather_cells}
+        # Dozens of independent draws landing on the exact same float by
+        # chance is vanishingly unlikely - if this ever fires, the cell id
+        # is not actually reaching the seed.
         self.assertGreater(len(set(draws.values())), 1, draws)
 
 

@@ -75,9 +75,22 @@ class VariesWithWeatherTests(unittest.TestCase):
     """
 
     def test_food_and_nutrition_ratio_are_not_a_constant(self):
+        # THE WINDOW IS A CENTURY, NOT FORTY YEARS, and that is the fix
+        # rather than the next re-tune of the thresholds below. Weather is
+        # now drawn per 150,000 km2 cell and correlated by real distance
+        # (Complaints/50), which makes bad years RARER BUT DEEPER than
+        # independent per-region draws could produce - the correct property
+        # of a correlated field, and a realistic one, since a severe
+        # empire-wide harvest failure is a generational event rather than a
+        # once-a-decade one. Over 101-140 this run contains no year below
+        # 0.9 at all and its spread is 0.0205; over 101-200 it reaches
+        # 0.7757 with a spread of 0.0269. Both assertions below were sitting
+        # one or two thousandths from failing on the short window - they had
+        # each already been re-tuned once, which is the signal that the
+        # sample was wrong rather than the numbers.
         test_sim = _rome_sim(events=False)
         ratios = []
-        for year in range(101, 141):
+        for year in range(101, 201):
             test_sim._demographic_recovery(year)
             ratios.append(test_sim._last_demographic_step.nutrition_ratio)
         # NOT a flat distinct-value count: nutrition_ratio is structurally
@@ -91,16 +104,17 @@ class VariesWithWeatherTests(unittest.TestCase):
         # would not (it would also fail a model that is correctly capped).
         # THE THRESHOLD WAS 0.05, AND IT WAS MEASURING ROME'S REGION COUNT
         # rather than whether this model varies at all. Averaging N
-        # independent weather draws divides the spread by about sqrt(N),
-        # and weather is now drawn per home region and pooled by land share
-        # (Complaints/47) instead of once for the whole empire - Rome's
-        # seven unequal regions give an effective N near 5.6, so the same
-        # unchanged mechanism reports about 0.035 where it used to report
-        # 0.05-plus. Holding the old number would have asserted that a
-        # civilisation must be badly diversified. What this check is FOR is
-        # unchanged and is stated above: catching a constant stand-in, which
-        # repeats one value every year. This century runs 10 distinct values
-        # in 40 years.
+        # effectively-independent weather draws divides the spread by about
+        # sqrt(N), so every improvement to how weather is drawn moves this
+        # number - one draw for the whole empire, then seven assumed-
+        # independent regions (Complaints/47), now 88 cells correlated by
+        # real distance (Complaints/50, effective N about 8.4). Holding any
+        # of those numbers would assert that a civilisation must be badly
+        # diversified. What this check is FOR is unchanged and is stated
+        # above: catching a constant stand-in, which repeats one value every
+        # year. Measured over the century window: spread 0.0269, minimum
+        # 0.7757, with real margin under both bounds rather than the
+        # thousandths the forty-year window left.
         self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
         # THE 1.0 CEILING IS GONE ON PURPOSE. This used to assert

@@ -32,16 +32,35 @@ from world import demography
 # land/labour/weather harvest model, imported the same bare, same-sys.path
 # way as demography just above.
 from world import agriculture
-# WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md): READ ONLY.
-# This file does not own sim/world/land.py (see this task's own brief) and
-# changes nothing in it - `cultivable_land_for_civilization` is called
-# exactly the way `demography`/`agriculture` above already are, as a
-# pre-existing module this engine reads from rather than a mechanism this
-# wiring invents. What it is used for: each home region's SHARE of this
-# civilisation's cultivable land, so a weather draw can be pooled across
-# regions weighted by how much land each one actually holds, rather than
-# by an unweighted headcount of regions (see _compute_farm_region_weights).
-from world import land
+# WIRING THREE (Complaints/50-one-label-draws-one-coin.md) REPLACES WIRING
+# TWO'S OWN `from world import land` HERE. WIRING TWO (Complaints/47) read
+# sim/world/land.py's `cultivable_land_for_civilization` for each home
+# REGION's share of cultivable land; Complaints/50 measured that "region"
+# to be the wrong unit of area (a region record is not one weather system,
+# and two region records are not independent draws - see that complaint)
+# and replaced it with a draw per GEOGRAPHY.JSON TILE instead (see
+# `_compute_farm_weather_cells` below), which reads geography.json's own
+# `land_tiles` block directly rather than land.py's region-parcel
+# abstraction. land.py is consequently no longer imported by this file -
+# nothing else here used it - and this task's own ownership boundary
+# (sim/engine/core.py, sim/world/shared_constants.py - see this task's own
+# brief) still holds: sim/world/land.py itself is untouched, this file
+# simply stopped being one of its callers.
+#
+# Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
+# `from world import X` style `agriculture`/`demography` above use, and
+# deliberately so: `agriculture` and `land` (sim/world/) both already do
+# `from sim.world.shared_constants import (...)` at their own top (see that
+# file's own "HOW A CONSUMER USES ONE OF THESE" section), so by the time
+# this line runs, `sim.world.shared_constants` already exists in
+# sys.modules as ONE object. A bare `from world import shared_constants`
+# here would load `world/shared_constants.py` a SECOND time under a
+# DIFFERENT sys.modules key (`world.shared_constants`, not
+# `sim.world.shared_constants`) - the exact "same file, two module
+# objects" trap CLAUDE.md SS6 records for `world.agriculture` vs
+# `sim.world.agriculture`, avoided here on purpose rather than repeated.
+from sim.world.shared_constants import (
+    GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
 
 
 from .economy import EconomyMixin
@@ -51,6 +70,45 @@ from .labour import LabourMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .actors import Household
+
+
+_EARTH_RADIUS_KM = 6371.0
+# Same figure `haversine_km` (sim/engine/data.py) already uses for great-
+# circle distance - not re-declared as a physical constant of its own (a
+# planet's radius is a fact of nature, not a modelling choice this project
+# has any latitude over), just given a private module-level name here
+# rather than a bare literal, since `_cell_chordal_position_km` below needs
+# it and this file does not own sim/engine/data.py to add a shared export
+# there instead.
+
+def _cell_chordal_position_km(lat_degrees, lon_degrees):
+    """A cell's lat/lon centroid, converted to (x, y, z) kilometres on a
+    sphere of Earth's radius - the CHORDAL (straight-line) position two
+    cells' positions are differenced to get a chordal DISTANCE from, inside
+    `Sim._compute_farm_weather_correlation_cholesky`.
+
+    WHY THIS EXISTS ALONGSIDE `haversine_km` RATHER THAN JUST CALLING IT.
+    `haversine_km` (imported into this module via `from .data import *`,
+    see this file's own top) gives the GREAT-CIRCLE distance between two
+    lat/lon points - the right answer for `region_reach`/`material_reach`'s
+    travel-time modelling, which is what it was built for. It is the WRONG
+    choice for a spatial correlation kernel's distance argument: an
+    isotropic exponential kernel of great-circle distance is not
+    guaranteed positive semi-definite for an arbitrary set of points on a
+    sphere (a known result in the spatial-statistics literature on
+    covariance functions on spheres - see Cholesky's own docstring for the
+    fuller version of this argument), while the SAME kernel of CHORDAL
+    (straight-line, through-the-earth) distance is - it is an ordinary
+    Euclidean-space Matern kernel, valid in any dimension. Returning
+    Cartesian positions here, rather than a distance function directly,
+    lets the caller build every pairwise distance from `len(cells)`
+    conversions instead of `len(cells) ** 2`.
+    """
+    lat_radians = math.radians(lat_degrees)
+    lon_radians = math.radians(lon_degrees)
+    return (_EARTH_RADIUS_KM * math.cos(lat_radians) * math.cos(lon_radians),
+            _EARTH_RADIUS_KM * math.cos(lat_radians) * math.sin(lon_radians),
+            _EARTH_RADIUS_KM * math.sin(lat_radians))
 
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
@@ -225,20 +283,29 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # as missing mechanism (b), not something invented in this file.
         self.farm_land = agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population))
-        # WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md): each
-        # home region this civilisation holds gets its OWN weather draw
-        # (`_demographic_recovery` below), pooled weighted by that region's
-        # own share of the cultivable land - see `_compute_farm_region_
-        # weights`'s own docstring. Precomputed ONCE here, not every year:
-        # `home_regions` and each region's `arable_iugera` are both fixed
-        # for the life of a run (the same reasoning `farm_land` just above
-        # is precomputed for), so recomputing this every
-        # `_demographic_recovery` call would rebuild the identical list 100
-        # times over a century for nothing. Needs no SAVE_FIELDS entry for
-        # the same reason `farm_land` needs none: `Sim.__init__`
-        # reconstructs it identically, from `self.civ`'s own unchanging
-        # `home_regions`, on every construction, before `load_state` runs.
-        self._farm_region_weights = self._compute_farm_region_weights()
+        # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
+        # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
+        # weights` (Complaints/47): this civilisation's territory is broken
+        # into geography.json `land_tiles` cells (see `_compute_farm_
+        # weather_cells`'s own docstring for why tiles rather than region
+        # records), each cell's SHARE of the civilisation's cultivable land,
+        # and the CORRELATION between every pair of cells given how far
+        # apart they sit - both precomputed ONCE here, not every year, for
+        # the same reason `farm_land` just above is: `home_regions`, the
+        # tile geometry and each tile's own arable-land figure are all fixed
+        # for the life of a run, so recomputing either every
+        # `_demographic_recovery` call would rebuild the identical result
+        # 100 times over a century for nothing. The correlation step is the
+        # expensive one of the two (a Cholesky factorisation, O(cells^3)),
+        # which is exactly why it belongs here and not inside the per-year
+        # draw. Needs no SAVE_FIELDS entry for the same reason `farm_land`
+        # needs none: `Sim.__init__` reconstructs both identically, from
+        # `self.civ`'s own unchanging `home_regions` and the geography data
+        # file (neither of which a save mutates), on every construction,
+        # before `load_state` runs.
+        self._farm_weather_cells = self._compute_farm_weather_cells()
+        self._farm_weather_correlation_cholesky = (
+            self._compute_farm_weather_correlation_cholesky(self._farm_weather_cells))
         # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md).
         # Started at zero, not at some invented reserve: this is an INITIAL
         # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
@@ -1671,7 +1738,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         collide - the same non-`declare()`d role `_population_seed`'s own
         formula plays just above in `__init__`.
 
-        WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md):
+        WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md):
         `region` defaults to `None`, reproducing the OLD (civilisation id,
         year) seed bit for bit - every caller that predates per-region
         weather (there are none left in this engine, but a test or a
@@ -1691,110 +1758,327 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         return (civ_component * 1000003 + region_component * 7919
                 + int(yr) * 97) % (2 ** 32)
 
-    def _compute_farm_region_weights(self):
-        """[(region_id, weight), ...] over this civilisation's own
-        `home_regions`, weight being that region's SHARE of the total
-        cultivable land (`arable_iugera`, sim/world/land.py) among the
-        regions this civilisation actually holds - Complaints/47's own
-        "a region's harvest should scale with that region's own share of
-        the cultivable land... or a tiny province counts as much as
-        Egypt" requirement, checked directly against the measured
-        arable-land figures rather than assumed equal.
+    _WeatherCell = collections.namedtuple(
+        "_WeatherCell", ("cell_id", "lat", "lon", "weight"))
+    # A cell's identity is its own `cell_id` string (a land_tiles tile id,
+    # e.g. "italy_02" - already globally unique across every region, per
+    # geography.json's own `land_tiles.tiles` keys), not a (region, index)
+    # pair. That is what lets `_farm_year_weather_seed(yr, region=cell_id)`
+    # below reuse that method completely unchanged (Complaints/47's WIRING
+    # TWO): the parameter is documented there as "an optional region", but
+    # nothing about the seed formula actually requires the string passed to
+    # BE a region key - it only needs to uniquely name what is being drawn
+    # weather for, which a tile id does exactly as well as a region key did.
 
-        READS sim/world/land.py, DOES NOT MODIFY IT (this task's own
-        ownership boundary) - `cultivable_land_for_civilization` is called
-        exactly the way `demography`/`agriculture` are already imported
-        and read from above, a pre-existing module this engine consumes.
+    def _compute_farm_weather_cells(self):
+        """[Sim._WeatherCell(cell_id, lat, lon, weight), ...] over this
+        civilisation's own `home_regions`, broken into geography.json's
+        150,000 km2 `land_tiles` cells rather than left as whole region
+        records - Complaints/50-one-label-draws-one-coin.md, replacing
+        Complaints/47's own `_compute_farm_region_weights`.
 
-        USES THE EXISTING 21 `home_regions`, NOT THE 1,139 `land_tiles` -
-        see this method's own call site in `__init__` and this task's own
-        brief for why: civilisations still name `home_regions`, and
-        `economy.py`'s own `len(home_regions)` forest-ceiling scaling would
-        silently multiply about thirteenfold if this reached for tile
-        granularity instead. Tiles are a later change with their own
-        before-and-after measurement, not something to fold in here.
+        WHY TILES, NOT "subdivide each region by area around its centroid"
+        (this task's brief offered both). `land_tiles` already exists,
+        already carries an independently-generated `arable_fraction` and
+        `fertility_quality_multiplier` per cell (see tools/generate_
+        geography_tiles.py's own generation_rule_summary, stored on the
+        data file itself), and already covers every one of the 21 shipped
+        regions via `land_tiles.region_to_tiles` - building a fresh
+        centroid-radius subdivision here would either re-derive the same
+        equal-area grid geography.json's own tiles already are (pure
+        duplication) or invent a DIFFERENT one with no basis for choosing
+        its cell size over 150,000 km2, which is itself an arbitrary but at
+        least ALREADY-CHOSEN-BY-SOMEONE-ELSE constant this task does not
+        need to relitigate. Weight is each cell's OWN arable land area
+        (land_area_km2 * arable_fraction, i.e. the same physical quantity
+        `_compute_farm_region_weights` weighted by, at tile grain instead
+        of region grain) as a share of this civilisation's TOTAL cell
+        arable land - so, exactly as before, a tiny cell does not count as
+        much as a large fertile one, only now "large" is measured in
+        actual square kilometres instead of in how many rows a region
+        occupies in geography.json (Complaints/50's own finding: region
+        count, not land area, was predicting the old mechanism's outcome).
 
-        Falls back to an EQUAL split across `home_regions` if geography.json
-        carries no arable-land figure for any region this civilisation
-        holds (should not happen for any of the 21 shipped regions, all of
-        which carry a `land` block - see land.py's own module docstring -
-        but a future or test civilisation naming an unlisted region should
-        degrade rather than crash). A civilisation with no `home_regions`
-        at all gets an empty list, which `_pooled_farm_weather_multiplier`
-        below reads as "fall back to the old civilisation-wide draw".
+        DOES NOT READ sim/world/land.py (WIRING TWO did; this file no
+        longer imports it at all - see the import comment at this file's
+        own top). `land.py`'s `arable_iugera` and geography.json's own
+        `land`/`land_tiles` blocks are two independently-sourced estimates
+        of the same physical quantity (arable land area) that happen to
+        agree to within a fixed unit conversion for the 21 shipped regions
+        (both ultimately cite the same `land_area_km2`/`arable_fraction`
+        pair per region - see land.py's RegionLand and geography.json's own
+        `land` block), so reading geography.json's tile-level breakdown
+        directly, instead of land.py's region-level aggregate of the same
+        numbers, does not introduce a second, independent estimate to drift
+        out of step - it is the same source at finer grain.
+
+        NOTE (per this task's own coordination thread, Complaints/52-every-
+        civilisation-farms-italian-soil.md): these weights are PROPORTIONS
+        that sum to 1.0 over one civilisation's own cells, so a
+        civilisation's ABSOLUTE arable endowment cancels out of them
+        entirely - two civilisations with wildly different total farmland
+        can have identically-SHAPED weight lists. That is Complaints/52's
+        own finding (farm_land's total SIZE not reflecting soil quality or
+        real arable area), not a defect in this pooling mechanism, which
+        only ever needed relative shares; left alone here, deliberately.
+
+        Falls back to ONE cell at a region's own centroid, weighted by that
+        region's own `land` block, for any home region NOT found in
+        `land_tiles.region_to_tiles` (should not happen for any of the 21
+        shipped regions - every one appears there - but a future or test
+        civilisation naming an unmapped region should degrade rather than
+        silently drop that region's harvest). If NO cell anywhere ends up
+        with a positive arable-land figure (every candidate region missing
+        both a tile mapping and a `land` block), falls back further to an
+        EQUAL split across whatever cells were found. A civilisation with
+        no `home_regions` at all gets an empty list, which
+        `_pooled_farm_weather_multiplier` below reads as "fall back to the
+        old, pre-Complaints/47 civilisation-wide single draw".
         """
         home_regions = list(self.civ.get("home_regions") or [])
         if not home_regions:
             return []
-        civ_id = self.civ.get("id", "civ")
-        parcels = land.cultivable_land_for_civilization(
-            civ_id, civilizations={civ_id: self.civ})
-        arable_iugera_by_region = {
-            parcel.region: parcel.arable_iugera for parcel in parcels}
-        total_arable_iugera = sum(arable_iugera_by_region.values())
-        if total_arable_iugera > 0.0:
-            return [(region, arable_iugera_by_region[region] / total_arable_iugera)
-                    for region in home_regions if region in arable_iugera_by_region]
-        equal_weight = 1.0 / len(home_regions)
-        return [(region, equal_weight) for region in home_regions]
+        # Loaded directly here, NOT via `self.geo` (set later in
+        # `__init__`, after this method's own call site - see that call
+        # site's comment): a second, independent `load_geography()` call is
+        # a second cheap JSON parse, not a second SOURCE OF TRUTH, and
+        # costs far less than reordering `__init__` while other agents are
+        # concurrently editing this same method (this task's own file-
+        # ownership note).
+        geography = load_geography()
+        land_tiles = geography.get("land_tiles") or {}
+        tiles_by_id = land_tiles.get("tiles") or {}
+        region_to_tiles = land_tiles.get("region_to_tiles") or {}
+        regions = geography.get("regions") or {}
+        raw_cells = []
+        for region in home_regions:
+            tile_ids = region_to_tiles.get(region) or []
+            if tile_ids:
+                for tile_id in tile_ids:
+                    tile = tiles_by_id.get(tile_id)
+                    if not tile:
+                        continue
+                    arable_km2 = (tile.get("land_area_km2", 0.0)
+                                  * tile.get("arable_fraction", 0.0))
+                    raw_cells.append(Sim._WeatherCell(
+                        cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
+                        weight=arable_km2))
+            else:
+                region_record = regions.get(region)
+                if not region_record:
+                    continue
+                land_block = region_record.get("land") or {}
+                arable_km2 = (land_block.get("land_area_km2", 0.0)
+                              * land_block.get("arable_fraction", 0.0))
+                raw_cells.append(Sim._WeatherCell(
+                    cell_id=region, lat=region_record.get("lat", 0.0),
+                    lon=region_record.get("lon", 0.0), weight=arable_km2))
+        if not raw_cells:
+            return []
+        total_weight = sum(cell.weight for cell in raw_cells)
+        if total_weight > 0.0:
+            return [cell._replace(weight=cell.weight / total_weight)
+                    for cell in raw_cells]
+        equal_weight = 1.0 / len(raw_cells)
+        return [cell._replace(weight=equal_weight) for cell in raw_cells]
+
+    def _compute_farm_weather_correlation_cholesky(self, cells):
+        """The lower-triangular Cholesky factor `matrix_low` of this
+        civilisation's cell-to-cell growing-season weather CORRELATION
+        matrix, such that `matrix_low @ matrix_low_transpose` reproduces
+        that correlation matrix exactly - the one-time linear-algebra setup
+        `_pooled_farm_weather_multiplier` spends every year turning a
+        vector of INDEPENDENT standard-normal draws into a vector of
+        CORRELATED ones (see that method's own docstring for why that is
+        the actual mechanism this task exists to build).
+
+        THE KERNEL: correlation(cell_a, cell_b) = exp(-distance_km(cell_a,
+        cell_b) / GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM), i.e. an
+        exponential (Matern, smoothness 1/2) spatial correlation kernel -
+        the standard geostatistics choice for a field with no reason to
+        expect it to be any smoother than that, and the same shape
+        `sim/world/shared_constants.py`'s own declaration of that constant
+        cites the empirical precipitation-correlation literature for.
+        `distance_km` is the CHORDAL (straight-line, through-the-earth)
+        distance between the two cells' lat/lon centroids projected onto a
+        sphere of Earth's radius, DELIBERATELY NOT `haversine_km`'s
+        great-circle distance despite that function already existing in
+        this file (`from .data import *`, used elsewhere in this class):
+        an isotropic exponential-family kernel of CHORDAL distance is
+        guaranteed positive semi-definite for any configuration of points
+        (it is an ordinary Euclidean-space Matern kernel, valid in any
+        dimension including the 3-D space the sphere sits in), which the
+        SAME kernel evaluated on great-circle distance is NOT guaranteed to
+        be for an arbitrary set of points on a sphere (a known result in
+        the spatial-statistics literature on covariance functions on the
+        sphere) - a real risk here given some civilisations' cells are
+        spread across a large fraction of a hemisphere. Chordal and
+        great-circle distance agree closely at the scales any one
+        civilisation's cells actually span (a few percent apart even at
+        several thousand km), so this loses essentially nothing in
+        practice while removing a genuine correctness risk in principle.
+
+        NUMERICAL SAFETY NET, NOT A PHYSICAL MECHANISM: each diagonal pivot
+        is floored at a tiny positive epsilon before the square root, so a
+        configuration that is only PSD up to floating-point error (rather
+        than not PSD at all) still factorises instead of crashing on a
+        negative-square-root. This is standard "nugget" practice in
+        geostatistics for exactly this situation, not a tuned fudge on the
+        actual correlation values.
+
+        `cells` is `self._farm_weather_cells`'s own return value, passed in
+        (rather than read off `self` directly) so this method has no
+        hidden dependency on init order - it only needs the list itself.
+        An empty or single-cell list gets a trivial 0x0/1x1 factor; the
+        caller (`_pooled_farm_weather_multiplier`) never asks for one
+        unless `cells` is non-empty in the first place.
+
+        COST: O(len(cells) ** 3) FLOPs, paid ONCE per `Sim.__init__` (see
+        that method's own comment on why), not per year. The largest civ
+        this project ships (rome_100ad, 7 home regions) resolves to 88
+        cells - under 700,000 elementary operations, not a measurable cost
+        against everything else `Sim.__init__` already does.
+        """
+        cell_count = len(cells)
+        correlation = [[0.0] * cell_count for _ in range(cell_count)]
+        positions_km = [_cell_chordal_position_km(cell.lat, cell.lon) for cell in cells]
+        decorrelation_length_km = GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM
+        for row in range(cell_count):
+            correlation[row][row] = 1.0
+            row_x, row_y, row_z = positions_km[row]
+            for col in range(row):
+                col_x, col_y, col_z = positions_km[col]
+                distance_km = math.sqrt((row_x - col_x) ** 2
+                                         + (row_y - col_y) ** 2
+                                         + (row_z - col_z) ** 2)
+                value = math.exp(-distance_km / decorrelation_length_km)
+                correlation[row][col] = value
+                correlation[col][row] = value
+        lower = [[0.0] * cell_count for _ in range(cell_count)]
+        pivot_floor = 1e-12
+        for row in range(cell_count):
+            for col in range(row + 1):
+                total = sum(lower[row][k] * lower[col][k] for k in range(col))
+                if row == col:
+                    pivot = correlation[row][row] - total
+                    lower[row][col] = math.sqrt(max(pivot, pivot_floor))
+                else:
+                    lower[row][col] = (correlation[row][col] - total) / lower[col][col]
+        return lower
 
     def _pooled_farm_weather_multiplier(self, yr, weather_stdev_fraction=None):
         """This year's harvest weather multiplier, pooled across this
-        civilisation's own home regions instead of one draw for the whole
-        territory - Complaints/47-one-weather-draw-for-a-continent.md.
+        civilisation's own growing-season weather cells instead of one
+        draw for the whole territory (Complaints/47-one-weather-draw-for-
+        a-continent.md) and instead of one INDEPENDENT draw per home
+        region record (Complaints/50-one-label-draws-one-coin.md, the
+        replacement this method now is).
 
-        Each region in `self._farm_region_weights` draws its OWN
-        independent `agriculture.draw_weather_multiplier`, seeded from
-        `_farm_year_weather_seed(yr, region=...)` (still a pure function of
-        civilisation id, region and year - see that method's own docstring
-        on why this has to stay true for determinism), and the civilisation
-        as a whole gets the ARABLE-LAND-SHARE-WEIGHTED AVERAGE of those
-        draws, not an unweighted one - a tiny province's weather does not
-        get to count as much as Egypt's.
+        THE MECHANISM, IN ONE SENTENCE: draw one independent standard-
+        normal number per cell, CORRELATE them by distance using
+        `self._farm_weather_correlation_cholesky`, turn each correlated
+        number into a clipped yield multiplier the same way `agriculture.
+        draw_weather_multiplier` would, and take the arable-land-share-
+        weighted average - answering Complaints/50's own question ("over
+        what distance does growing-season weather stop agreeing with
+        itself?") with an actual number instead of the two hardcoded
+        answers ("one region = perfectly correlated with itself, zero
+        correlation with every other region") the old mechanism assumed.
 
-        A civilisation with no region weights at all (empty `home_regions`,
-        or none of them carry land data - see `_compute_farm_region_
-        weights`) falls back to exactly the OLD behaviour: one draw, seeded
-        from `_farm_year_weather_seed(yr)` with no region, applied to the
-        whole territory. This is what keeps a civilisation file this
-        wiring was never meant to touch (one with no `home_regions` at all)
-        running exactly as before rather than silently losing its harvest
-        variance.
+        STEP BY STEP.
+        1. `independent_draws[i] = Random(_farm_year_weather_seed(yr,
+           region=cells[i].cell_id)).gauss(0.0, 1.0)` - one standard normal
+           per cell, EACH ONE a pure function of (civilisation id, cell id,
+           year), reusing `_farm_year_weather_seed` completely unchanged
+           (see `_WeatherCell`'s own comment on why a tile id is a valid
+           thing to pass as that method's `region` argument). This is
+           still, exactly as before Complaints/50, "no long-lived
+           generator, no `id()` as identity" (CLAUDE.md SS6): nothing here
+           is constructed once and advanced across years or across cells:
+           every single number is its own fresh `random.Random(seed)`.
+        2. `correlated = cholesky_lower @ independent_draws` - a lower-
+           triangular matrix-vector product (see `_compute_farm_weather_
+           correlation_cholesky`'s own docstring for why this specific
+           matrix reproduces the intended correlation structure exactly).
+           `correlated[i]` is no longer standard normal in isolation - it
+           is one COORDINATE of a draw from the multivariate normal whose
+           correlation matches how far apart the cells actually are.
+        3. Each cell's own multiplier is `clip(1.0 + stdev *
+           correlated[i], WEATHER_FLOOR_MULTIPLIER, WEATHER_CEILING_
+           MULTIPLIER)` - the same shape `agriculture.draw_weather_
+           multiplier` uses (mean-1.0 Gaussian, same two clip constants,
+           read directly off that module rather than re-declared here),
+           just fed a correlated `z` instead of calling `rng.gauss` itself
+           (drawing the pooled result FROM a raw `z` vector, rather than
+           calling `draw_weather_multiplier` once per cell and then trying
+           to correlate the results, is what lets the clip apply to each
+           cell's OWN realistic multiplier before the weighted average, not
+           to the average itself).
+        4. The civilisation's pooled multiplier is the ARABLE-LAND-SHARE-
+           WEIGHTED AVERAGE of those per-cell multipliers - unchanged from
+           Complaints/47's own weighting principle, just computed over
+           cells (`self._farm_weather_cells`) instead of region records.
 
-        LABELLED APPROXIMATION (CLAUDE.md SS3.4): this treats every
-        region's weather draw as INDEPENDENT of every other region's. Real
-        regions do not draw independently - a drought over Italia is not
-        statistically unrelated to one over Greece, and neighbouring
-        regions genuinely do share weather systems. Averaging N
-        independent draws divides the effective standard deviation by
-        sqrt(N) (Complaints/47's own measurement table), which is the
-        correct answer for N independent regions and an OPTIMISTIC one for
-        N correlated, geographically compact regions - the real benefit of
-        holding a spread-out empire sits somewhere between "one draw" and
-        "N independent draws", closer to the independent end the more the
-        regions are climatically unrelated (Britannia and Mesopotamia)
-        and closer to the one-draw end the more they neighbour each other
-        (Gaul and Hispania). A distance-based correlation, sitting on
-        geography.json's own region centroids, is the fix Complaints/47
-        names and defers - not built here, so this number is real
-        directionally (pooling territory is a genuine, historically
-        attested risk-reducing mechanism - the Roman grain fleet existed
-        for exactly this reason) but somewhat too generous in magnitude
-        until that correlation exists.
+        WHAT THIS FIXES, PRECISELY. The old mechanism's own docstring
+        (still readable in this method's git history) admitted two errors
+        in the same direction: (a) a region record was treated as ONE
+        weather system regardless of its real size (Complaints/50: North
+        Africa at 5,750,000 km2 is not one growing season, and neither is
+        China at 9,597,000 km2 held as a single region), and (b) two
+        region records were treated as fully INDEPENDENT regardless of how
+        close they sit (Gaul and Hispania share weather; Britannia and
+        Mesopotamia do not). Breaking territory into fixed-area cells fixes
+        (a) - a civilisation's effective cell count now tracks its actual
+        farmed area, not how many rows a data file happens to give it - and
+        the distance-based correlation fixes (b) - two adjacent cells (or
+        two cells in neighbouring regions) now draw NEARLY the same
+        weather, while two cells continents apart draw NEARLY independent
+        weather, exactly the "closer to one draw for Gaul/Hispania, closer
+        to independent for Britannia/Mesopotamia" spectrum the old
+        docstring named as the fix it was deferring.
+
+        WHAT THIS DOES NOT CLAIM. `GROWING_SEASON_WEATHER_DECORRELATION_
+        LENGTH_KM` (sim/world/shared_constants.py) is not a precisely
+        measured figure for this exact quantity - see its own declaration
+        for the chain of reasoning behind its value and this task's own
+        report for a sensitivity sweep across its plausible range. This
+        mechanism is only as good as that one number; it is a large
+        improvement in KIND over "one region = one system, all regions
+        independent" regardless of the exact figure, because unlike that
+        assumption it can be checked and revised as a single number rather
+        than by re-deriving the whole mechanism.
+
+        A civilisation with no usable cells at all (empty `home_regions`,
+        or `_compute_farm_weather_cells` otherwise came back empty) falls
+        back to exactly the OLD, pre-Complaints/47 behaviour: one draw,
+        seeded from `_farm_year_weather_seed(yr)` with no region, applied
+        to the whole territory - unchanged from what Complaints/47's own
+        fallback already did, kept here for the same reason (a civilisation
+        file this wiring was never meant to touch runs exactly as before).
         """
         soil = agriculture.DEFAULT_SOIL
         stdev = (soil.weather_stdev_fraction if weather_stdev_fraction is None
                  else weather_stdev_fraction)
-        weights = self._farm_region_weights
-        if not weights:
-            # No usable region weights - the old, single-draw behaviour,
-            # bit-identical to what this engine did before Complaints/47.
+        cells = self._farm_weather_cells
+        if not cells:
+            # No usable cells - the old, single-draw behaviour, bit-
+            # identical to what this engine did before Complaints/47.
             return agriculture.draw_weather_multiplier(
                 random.Random(self._farm_year_weather_seed(yr)), stdev)
-        return sum(
-            weight * agriculture.draw_weather_multiplier(
-                random.Random(self._farm_year_weather_seed(yr, region=region)), stdev)
-            for region, weight in weights)
+        independent_draws = [
+            random.Random(self._farm_year_weather_seed(yr, region=cell.cell_id))
+            .gauss(0.0, 1.0)
+            for cell in cells]
+        cholesky_lower = self._farm_weather_correlation_cholesky
+        pooled_multiplier = 0.0
+        for row, cell in enumerate(cells):
+            correlated_z = sum(cholesky_lower[row][col] * independent_draws[col]
+                                for col in range(row + 1))
+            draw = 1.0 + stdev * correlated_z
+            clipped = max(agriculture.WEATHER_FLOOR_MULTIPLIER,
+                          min(agriculture.WEATHER_CEILING_MULTIPLIER, draw))
+            pooled_multiplier += cell.weight * clipped
+        return pooled_multiplier
 
     def _demographic_recovery(self, yr):
         """Advance `self.population` by one year, from a REAL harvest, and
@@ -1890,7 +2174,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         nutrition_ratio CAN and DOES exceed 1.0 now, in a good year with a
         full granary, and the fertility ramp is live, not dead.
 
-        WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md) is
+        WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md) is
         what makes this matter in practice rather than only in principle.
         Under the OLD single civilisation-wide weather draw, a granary
         rarely stayed above its reserve target for long: the next bad year
@@ -2059,7 +2343,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # have sat there and spoiled.
         reserve_target_kg = agriculture.granary_capacity_kg(
             adult_equivalent_population * agriculture.annual_food_demand_kg_per_person())
-        # WIRING TWO (Complaints/47-one-weather-draw-for-a-continent.md):
+        # WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md):
         # THE PER-REGION WEATHER DRAW. `_pooled_farm_weather_multiplier`
         # draws one independent weather multiplier per home region this
         # civilisation holds and returns the arable-land-share-weighted

@@ -255,6 +255,19 @@ TOPICS = [
     # -out territory is worth something - which is what the grain fleet was
     # for. Pins that the seed stays a pure function of (civ, region, year).
     "regional_weather_wiring",
+    # Complaints/50: a region record was one weather draw, so Han China -
+    # the same size as the Roman Empire, with more cultivable land - flipped
+    # ONE coin where Rome flipped seven. Territory is now broken into
+    # geography.json's 150,000 km2 land_tiles and correlated by real
+    # distance through an exponential kernel, so diversification comes from
+    # being spread out rather than from row count.
+    "growing_season_weather_correlation",
+    # Complaints/49: not one recipe consumed iugerum_land, so two rounds of
+    # land-rent work reached no price anybody paid. Grown and land-limited
+    # materials now state land_iugera_years and the solver charges rent for
+    # it. Pins the property that matters: wheat priced identically in all
+    # five civilisations before, and must now rank with each one's own rent.
+    "price_solver_land",
     "complaint_46_forest_area_not_region_count",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in

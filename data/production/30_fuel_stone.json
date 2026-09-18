@@ -9,9 +9,10 @@
    "labour_hours": {
     "labourer": 8.0
    },
+   "land_iugera_years": 1.6515,
    "extracted_from": "forest",
    "basis": "per tonne of green roundwood, felled and hauled from woodland, not squared or seasoned",
-   "yield_basis": "EXTRACTED, so labour is the physical work of felling and dragging logs rather than a recipe. This is raw feedstock wood (for charcoal-burning, distillation, pulping and the like), not the squared and seasoned construction timber already defined as timber_m3 - no squaring loss applies because nothing here needs precise faces. Air-dry mixed temperate wood runs roughly 550-650 kg per standing cubic metre, so a tonne is a little over 1.5 m3 of standing wood; felling, delimbing and hauling that much by axe and hand-cart is on the order of 8 hours, well under timber_m3's 9+3 hours because there is no squaring or precision cross-cutting to do.",
+   "yield_basis": "EXTRACTED, so labour is the physical work of felling and dragging logs rather than a recipe. This is raw feedstock wood (for charcoal-burning, distillation, pulping and the like), not the squared and seasoned construction timber already defined as timber_m3 - no squaring loss applies because nothing here needs precise faces. Air-dry mixed temperate wood runs roughly 550-650 kg per standing cubic metre, so a tonne is a little over 1.5 m3 of standing wood; felling, delimbing and hauling that much by axe and hand-cart is on the order of 8 hours, well under timber_m3's 9+3 hours because there is no squaring or precision cross-cutting to do. LAND (Complaints/49): a tonne needs 1000 kg / 600 kg/standing-m3 (this entry's own midpoint density) = 1.667 standing m3, drawn from the same forest whose 3-5 m3/ha/yr mean annual increment (midpoint 4) already sets timber_m3's own land figure in data/production/00_examples.json - 1.667 / 4 = 0.4167 ha-years/tonne = 1.6515 iugera-years, charged against iugerum_land's own solved rent like any other input. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) for the rent VALUE, same forest-vs-arable caveat as timber_m3's own LAND note.",
    "conf": "C",
    "requires_node": null
   },
@@ -23,9 +24,10 @@
    "labour_hours": {
     "labourer": 9.0
    },
+   "land_iugera_years": 1.6515,
    "extracted_from": "forest",
    "basis": "per tonne of cordwood, felled, cross-cut to stove length and split, air-dried",
-   "yield_basis": "EXTRACTED and close kin to wood_kg, but cut short and split for burning rather than left as long roundwood - the extra hour over wood_kg's 8 is the splitting. Density and felling effort are the same physical wood; the difference is entirely in what happens to it after felling, which is why the two entries are nearly identical instead of unrelated.",
+   "yield_basis": "EXTRACTED and close kin to wood_kg, but cut short and split for burning rather than left as long roundwood - the extra hour over wood_kg's 8 is the splitting. Density and felling effort are the same physical wood; the difference is entirely in what happens to it after felling, which is why the two entries are nearly identical instead of unrelated. LAND (Complaints/49): identical felling of identical forest to wood_kg, so the same land figure applies unchanged - see wood_kg's own LAND note for the derivation (1.6515 iugera-years/tonne).",
    "conf": "C",
    "requires_node": null
   },
