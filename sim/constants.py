@@ -302,6 +302,7 @@ def _import_declaring_modules():
                    "engine.projects",
                    "sim.world.agriculture",
                    "sim.world.demography",
+                   "sim.world.shared_constants",
                    "sim.world.transport",
                    "sim.world.military_logistics",
                    "sim.world.deposits",

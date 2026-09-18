@@ -228,6 +228,33 @@ import collections
 import random
 
 from sim.constants import declare
+from sim.world.shared_constants import (
+    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
+    FALLOW_SHARE_OF_HOLDING,
+    LABOUR_OUTPUT_ELASTICITY,
+    REFERENCE_LABOUR_HOURS_PER_HECTARE,
+    SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
+    WHEAT_ENERGY_KCAL_PER_KG,
+)
+# THE SIX NAMES ABOVE ARE NOT RE-DECLARED BELOW (one of them,
+# SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY, is given this file's
+# own historical public name, HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
+# by a plain assignment where it used to be declared - see that spot
+# below). Each used to be its own
+# `declare()` call in this file, independently, with a value that happened
+# to match sim/world/land.py's own independent copy of the same physical
+# fact under a DIFFERENT name (LABOUR_OUTPUT_ELASTICITY /
+# LAND_LABOUR_OUTPUT_ELASTICITY, and three more pairs like it - see
+# sim/world/shared_constants.py's own module docstring for the incident and
+# the full inventory). Importing them from one shared declaration means
+# there is exactly one number to change and no second copy that can
+# silently disagree with it - the STANDALONE property this file and
+# land.py both keep (see this file's own docstring) is unaffected, because
+# sim/world/shared_constants.py imports nothing but sim.constants.declare,
+# the same as this file already does. This file's own historical public
+# names for these five values (assigned just below, where each used to be
+# declared) are kept unchanged, so every existing caller and test that
+# reads e.g. `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
 
 # ============================================================================
 # SEED AND YIELD BIOLOGY
@@ -282,63 +309,28 @@ GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA = (
 # LABOUR AND TECHNIQUE
 # ============================================================================
 
-REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
-    "REFERENCE_LABOUR_HOURS_PER_HECTARE", 150.0,
-    kind="engineering_estimate",
-    unit="labourer-hours/hectare/season",
-    source="data/production/40_organics.json wheat_kg entry, "
-           "labour_hours.labourer: \"cross-ploughing, broadcast sowing, "
-           "weeding, sickle reaping, and threshing/winnowing by flail or "
-           "ox-treading\" aggregated to about 150 hours/ha.",
-    confidence="B",
-    why="The labour intensity GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA is "
-        "quoted at, and the anchor the Cobb-Douglas yield curve below is "
-        "calibrated against. See the module docstring's headline-number "
-        "section: this is this module's leading suspect for why the "
-        "computed farm-population share comes out far below the "
-        "historical 80-90% - a figure covering only cross-ploughing "
-        "through winnowing, with no line for cartage, tool upkeep, fallow-"
-        "field ploughing or seasonal idle time, is a plausible way to "
-        "undercount total pre-mechanical field labour by several times.")
-
-LABOUR_OUTPUT_ELASTICITY = declare(
-    "LABOUR_OUTPUT_ELASTICITY", 0.5,
-    kind="temporary_heuristic",
-    unit="dimensionless (Cobb-Douglas exponent on labour)",
-    source=None,
-    confidence="C",
-    why="The curve shape that makes doubling labour on fixed land yield "
-        "less than double the output - Cobb-Douglas in land and labour, "
-        "constant returns to the two together, is the standard textbook "
-        "way to model exactly that, and agricultural-economics estimates "
-        "of labour's output elasticity typically fall in the 0.3-0.6 "
-        "range. 0.5 (output scales with the square root of labour hours) "
-        "is the midpoint of that range, not a number derived for Roman "
-        "wheat specifically - the mechanism that would derive it (an "
-        "actual labour-allocation study across ploughing/weeding/harvest "
-        "sub-tasks) does not exist yet, which is what makes this a "
-        "temporary_heuristic rather than an engineering_estimate.")
-
-ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
-    "ANNUAL_LABOUR_HOURS_PER_FARM_WORKER", 1400.0,
-    kind="temporary_heuristic",
-    unit="hours/worker/year",
-    source=None,
-    confidence="C",
-    why="How many hours one adult can give to field work across a year, "
-        "used only to turn a per-hectare labour requirement into a "
-        "hectares-per-worker figure for the headline calibration check. "
-        "Pre-industrial farm labour is famously seasonal - concentrated "
-        "bursts at ploughing, sowing and harvest separated by slack winter "
-        "and midsummer stretches - and 1,200-1,500 hours/year is the "
-        "rough order of magnitude that shows up across historical "
-        "agricultural-labour estimates for that pattern; 1,400 is a "
-        "round midpoint, not a sourced figure for Roman Italy, and is "
-        "marked temporary_heuristic rather than engineering_estimate for "
-        "exactly that reason - a real seasonal labour calendar (a fixed "
-        "number of ploughing days, sowing days, harvest days that cannot "
-        "be worked around by adding hands) would derive this instead of "
-        "assuming it.")
+# REFERENCE_LABOUR_HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER used to each be declared here. All
+# three are now imported from sim.world.shared_constants (see this file's
+# top-of-file import comment) because sim/world/land.py's own LABOUR
+# INTENSITY section needs the identical Cobb-Douglas physics and used to
+# duplicate all three under LAND_-prefixed names rather than import this
+# file (land.py is STANDALONE and may not). One declaration, imported by
+# both, replaces two that had to be kept equal by hand. The names below are
+# unchanged from this module's history - REFERENCE_LABOUR_HOURS_PER_HECTARE
+# is still the labour intensity GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA
+# is quoted at and the anchor the Cobb-Douglas yield curve below is
+# calibrated against (see the module docstring's headline-number section
+# for why it is this module's leading suspect for the computed
+# farm-population share coming out far below the historical 80-90%);
+# LABOUR_OUTPUT_ELASTICITY is still the curve shape that makes doubling
+# labour on fixed land yield less than double the output;
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER is still how many hours one adult can
+# give to field work across a year, used only to turn a per-hectare labour
+# requirement into a hectares-per-worker figure for the headline
+# calibration check. See sim/world/shared_constants.py for the full
+# provenance and why paragraphs, which are not duplicated here for the same
+# reason the numbers themselves no longer are.
 
 # ============================================================================
 # SEASONALITY: THE HARVEST WINDOW
@@ -459,24 +451,21 @@ HECTARES_REAPED_PER_WORKER_DAY = declare(
 # fraction_of_population_that_must_farm(), and wiring it in there would be
 # double-counting a constraint that is not yet binding.
 
-FALLOW_SHARE_OF_HOLDING = declare(
-    "FALLOW_SHARE_OF_HOLDING", 0.5,
-    kind="engineering_estimate",
-    unit="fraction of holding idle in any one year (dimensionless)",
-    source="The two-field rotation - one year cropped, one year bare "
-           "fallow - is the standard Mediterranean practice of this "
-           "period, named in data/production/40_organics.json's wheat_kg "
-           "yield_basis. The later three-field rotation drops the idle "
-           "share to one third, which is why this is a property of the "
-           "TECHNIQUE and a thing an agricultural improvement should be "
-           "able to change, not a constant of nature.",
-    confidence="B",
-    why="Converts cropped area into the land a farm must actually hold. "
-        "Nitrogen and weed pressure, not custom, are why the idle year "
-        "exists, so a civilisation that gets legume rotation or reliable "
-        "manuring should get this number down and free the land - which "
-        "is only representable if the fallow is a named share rather than "
-        "baked into a yield figure.")
+# FALLOW_SHARE_OF_HOLDING used to be declared here. It is now imported from
+# sim.world.shared_constants (see this file's top-of-file import comment):
+# sim/world/land.py needs this exact fraction too, and used to declare its
+# own reciprocal transform of it (FALLOW_HOLDING_MULTIPLIER = 1 / (1 -
+# fallow_share)) as an independently-set number rather than a derived one -
+# the HARD case of the same quantity duplicated under a different name AND
+# a different unit, not merely a different name. See
+# sim/world/shared_constants.py's own LAND USE section for the full
+# provenance and why land.py's copy is now arithmetic on this declaration
+# instead of a second `declare()` call. This name and its role are
+# otherwise unchanged: it still converts cropped area into the land a farm
+# must actually hold, and the later three-field rotation's own, DIFFERENT
+# idle share is still THREE_FIELD_FALLOW_SHARE_OF_HOLDING below, declared
+# separately because it names a different technique, not a duplicate of
+# this one.
 
 # ============================================================================
 # WEATHER
@@ -624,35 +613,24 @@ DAYS_PER_YEAR = declare(
         "rate - in particular, what Storage.step hands demography.py as "
         "food_available_calories_per_day.")
 
-HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY = declare(
-    "HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY", 2200.0,
-    kind="biological_parameter",
-    unit="kcal/adult/day",
-    source="FAO minimum dietary energy requirement, adult average - the "
-           "same figure and source sim/world/demography.py's own "
-           "SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY uses. Declared "
-           "again here under a different name, deliberately, rather than "
-           "imported from that module: the two modules are built and "
-           "tested standalone (see this module's docstring), and a cross-"
-           "import between them would be exactly the wiring neither of "
-           "them is supposed to do yet.",
-    confidence="B",
-    why="The denominator of how much land one person's diet requires. "
-        "Kept independent of demography.py's identical constant so this "
-        "module has no import-time dependency on a file another agent is "
-        "actively writing.")
+# HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY keeps this module's own
+# historical public name, but the VALUE now comes from sim.world.
+# shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY (see
+# this file's top-of-file import) rather than a second `declare()` call.
+# sim/world/land.py needs the identical figure (formerly under its own
+# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY name) and now imports the same
+# shared declaration; sim/world/demand.py, sim/world/demography.py and
+# sim/world/military_logistics.py still declare it independently under
+# their own names (out of this change's ownership - see
+# sim/world/shared_constants.py's own WHAT DOES NOT BELONG HERE section and
+# sim/tests/test_shared_constants.py for how a future drift there is still
+# caught).
+HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY = (
+    SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY)
 
-WHEAT_ENERGY_KCAL_PER_KG = declare(
-    "WHEAT_ENERGY_KCAL_PER_KG", 3400.0,
-    kind="biological_parameter",
-    unit="kcal/kg",
-    source="Standard food-composition figures for whole wheat grain "
-           "(on the order of 3,300-3,400 kcal/kg); matches the figure "
-           "named in the task that produced this module.",
-    confidence="A",
-    why="Converts between kilograms of grain (what this module produces "
-        "and moves through storage) and calories (what a person, and "
-        "demography.py's nutrition ratio, actually needs).")
+# WHEAT_ENERGY_KCAL_PER_KG used to be declared here too; it is now imported
+# directly under this same name from sim.world.shared_constants (see the
+# top-of-file import), for the identical reason.
 
 # ============================================================================
 # CROP, SOIL, ROTATION, TOOLKIT AND STORAGE-TECHNIQUE TABLES

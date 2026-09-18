@@ -301,6 +301,26 @@ import json
 import os
 
 from sim.constants import declare
+from sim.world.shared_constants import (
+    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER as _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
+    FALLOW_SHARE_OF_HOLDING as _SHARED_FALLOW_SHARE_OF_HOLDING,
+    LABOUR_OUTPUT_ELASTICITY as _SHARED_LABOUR_OUTPUT_ELASTICITY,
+    REFERENCE_LABOUR_HOURS_PER_HECTARE as _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE,
+    SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY as _SHARED_SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
+    WHEAT_ENERGY_KCAL_PER_KG,
+)
+# THE FIVE NAMES ABOVE IMPORTED UNDER A LEADING-UNDERSCORE ALIAS keep this
+# module's own historical public names (LAND_HUMAN_CALORIC_NEED_KCAL_PER_
+# DAY, LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, LAND_LABOUR_OUTPUT_
+# ELASTICITY, LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER) or a derived one
+# (FALLOW_HOLDING_MULTIPLIER) rather than the shared module's own names -
+# see each assignment below, at the exact spot each used to be its own
+# independent `declare()` call, for why. This module's own STANDALONE
+# property is unaffected by importing a shared value: sim/world/
+# shared_constants.py imports nothing but sim.constants.declare, exactly
+# like this file already did - see that module's own docstring.
+# WHEAT_ENERGY_KCAL_PER_KG keeps the exact same name it always had; see its
+# own assignment below for why it is imported directly rather than aliased.
 
 # ============================================================================
 # DATA FILE LOCATIONS - same pattern as sim/world/deposits.py's own, for the
@@ -374,60 +394,52 @@ def reference_yield_kg_per_iugerum(fertility_quality_multiplier,
 # to any civilization's outcome.
 # ============================================================================
 
-LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY = declare(
-    "LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY", 2200.0,
-    kind="biological_parameter",
-    unit="kcal/person/day",
-    source="FAO minimum dietary energy requirement, adult average - the "
-           "same figure sim/world/demand.py's own HUMAN_SUBSISTENCE_"
-           "CALORIES_PER_CAPITA_DAY, sim/world/agriculture.py's own HUMAN_"
-           "ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY and sim/world/"
-           "demography.py's SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY "
-           "all already use. Declared again here under its own, LAND_-"
-           "prefixed name rather than imported, per this module's own "
-           "STANDALONE section (see sim/world/demand.py's own HUMAN_"
-           "SUBSISTENCE_CALORIES_PER_CAPITA_DAY declaration for the exact "
-           "same reasoning applied there first) - `declare()` shares one "
-           "registry keyed by name, so re-using the SAME name across "
-           "independent modules with a DIFFERENT value fails loudly at "
-           "import time, and re-using it with the SAME value would still "
-           "leave the two modules coupled to a name neither owns.",
-    confidence="B",
-    why="Sets how much grain-equivalent a population needs before this "
-        "module can say how much land that requires - see WHEAT_ENERGY_"
-        "KCAL_PER_KG for the other half of that conversion.")
+# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY used to be its own `declare()` call
+# here. It is now this module's own historical public name for
+# sim/world/shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_
+# ADULT_DAY (see this file's top-of-file import) - sim/world/agriculture.py
+# needs the identical figure (formerly under its own HUMAN_ENERGY_
+# REQUIREMENT_KCAL_PER_ADULT_DAY name) and now imports the same shared
+# declaration. sim/world/demand.py's HUMAN_SUBSISTENCE_CALORIES_PER_
+# CAPITA_DAY and sim/world/demography.py's SUBSISTENCE_CALORIES_PER_ADULT_
+# EQUIVALENT_DAY still declare it independently, out of this change's
+# ownership - see sim/world/shared_constants.py's own WHAT DOES NOT BELONG
+# HERE section and sim/tests/test_shared_constants.py for how a future
+# drift there is still caught.
+LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY = (
+    _SHARED_SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY)
+# Sets how much grain-equivalent a population needs before this module can
+# say how much land that requires - see WHEAT_ENERGY_KCAL_PER_KG for the
+# other half of that conversion.
 
-WHEAT_ENERGY_KCAL_PER_KG = declare(
-    "WHEAT_ENERGY_KCAL_PER_KG", 3400.0,
-    kind="biological_parameter",
-    unit="kcal/kg of threshed whole wheat grain",
-    source="Same figure and same name as sim/world/agriculture.py's own "
-           "WHEAT_ENERGY_KCAL_PER_KG and sim/world/demand.py's own "
-           "(re-)declaration of it - unlike the caloric-need figure above, "
-           "this one is safe to share the EXACT name for because the value "
-           "genuinely is the same physical fact (wheat's own calorie "
-           "density) rather than three modules independently landing on a "
-           "coincidentally-equal number.",
-    confidence="B",
-    why="Turns a caloric requirement into a mass of grain, the unit this "
-        "module's regional yields are already stated in.")
+# WHEAT_ENERGY_KCAL_PER_KG used to be its own `declare()` call here too; it
+# is now imported directly under this same name from sim.world.
+# shared_constants (see the top-of-file import) - already safe to share the
+# exact name for, since (per this module's history) the value genuinely is
+# the same physical fact (wheat's own calorie density), not three modules
+# independently landing on a coincidentally-equal number. Turns a caloric
+# requirement into a mass of grain, the unit this module's regional yields
+# are already stated in.
 
-FALLOW_HOLDING_MULTIPLIER = declare(
-    "FALLOW_HOLDING_MULTIPLIER", 2.0,
-    kind="engineering_estimate",
-    unit="multiplier, holding hectares per cropped hectare (dimensionless)",
-    source="data/production/40_organics.json's own wheat_kg entry states "
-           "this directly: 'under the two-field rotation of this period an "
-           "equal area lies fallow, so a holding is about twice this area'. "
-           "Duplicated here rather than imported, per this module's own "
-           "STANDALONE section.",
-    confidence="C",
-    why="quantity_demanded_kg_grain_equivalent asks how much LAND a "
-        "population's grain need requires, and REFERENCE_WHEAT_YIELD_KG_"
-        "PER_HECTARE is a CROPPED-hectare figure; without this multiplier "
-        "the demand side would understate land need by roughly half "
-        "relative to the supply side this module also measures in whole "
-        "regions, not cropped-only slivers of them.")
+# FALLOW_HOLDING_MULTIPLIER used to be its own, independently-set
+# `declare()` call here (2.0, holding hectares per cropped hectare). It is
+# now DERIVED arithmetic from sim.world.shared_constants's
+# FALLOW_SHARE_OF_HOLDING (0.5, the fraction of a holding idle in any one
+# year) instead - see that module's own LAND USE section for why this pair
+# is the HARD duplication case (the same physical fact under a different
+# name AND a different unit, not merely a different name) and
+# sim/world/agriculture.py's own comment at its FALLOW_SHARE_OF_HOLDING
+# import for the other side of it. Not a `declare()` of its own: it is
+# arithmetic on one already-declared number, the same convention this
+# module already uses for LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA below.
+FALLOW_HOLDING_MULTIPLIER = 1.0 / (1.0 - _SHARED_FALLOW_SHARE_OF_HOLDING)
+# 2.0, exactly reproducing this module's own historical value: a two-field
+# rotation with an even 50/50 split makes a holding twice its cropped area.
+# quantity_demanded_kg_grain_equivalent asks how much LAND a population's
+# grain need requires, and REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is a
+# CROPPED-hectare figure; without this multiplier the demand side would
+# understate land need by roughly half relative to the supply side this
+# module also measures in whole regions, not cropped-only slivers of them.
 
 DIET_DIVERSITY_LAND_MULTIPLIER = declare(
     "DIET_DIVERSITY_LAND_MULTIPLIER", 1.3,
@@ -528,65 +540,37 @@ def quantity_demanded_kg_grain_equivalent(population):
 # `margin_outcome_for_civilization`'s own docstring for exactly where this
 # seam is and what closing it would require.
 
-LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
-    "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE", 150.0,
-    kind="engineering_estimate",
-    unit="labourer-hours/hectare/season, at REFERENCE_WHEAT_YIELD_KG_PER_HECTARE",
-    source="Same figure and same source as sim/world/agriculture.py's own "
-           "REFERENCE_LABOUR_HOURS_PER_HECTARE: data/production/"
-           "40_organics.json wheat_kg entry's labour_hours.labourer "
-           "(cross-ploughing, broadcast sowing, weeding, sickle reaping, "
-           "threshing/winnowing) aggregated to about 150 hours/ha. "
-           "Declared again here under a LAND_-prefixed name rather than "
-           "imported or given the identical name, per this module's own "
-           "STANDALONE section and the same declare()-registry reasoning "
-           "LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY's own declaration "
-           "already gives for a different constant.",
-    confidence="B",
-    why="The labour intensity REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is "
-        "quoted at - the anchor point (fertility 1.0, this many hours)  "
-        "yield_kg_per_iugerum_at_intensity's own Cobb-Douglas curve is "
-        "calibrated to reproduce exactly.")
+# LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, LAND_LABOUR_OUTPUT_ELASTICITY
+# and LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER used to each be their own,
+# independently-set `declare()` call here, duplicating sim/world/
+# agriculture.py's REFERENCE_LABOUR_HOURS_PER_HECTARE, LABOUR_OUTPUT_
+# ELASTICITY and ANNUAL_LABOUR_HOURS_PER_FARM_WORKER under LAND_-prefixed
+# names - THE EXACT PAIR OF DUPLICATIONS THAT PROMPTED sim/world/
+# shared_constants.py TO EXIST (see that module's own docstring and
+# Complaints/46). All three are now this module's own historical public
+# names for that single shared declaration (see this file's top-of-file
+# import), so there is exactly one number behind each and no second copy
+# that can silently disagree with it.
+LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE = (
+    _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE)
+# The labour intensity REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is quoted at -
+# the anchor point (fertility 1.0, this many hours)
+# yield_kg_per_iugerum_at_intensity's own Cobb-Douglas curve is calibrated
+# to reproduce exactly.
 
-LAND_LABOUR_OUTPUT_ELASTICITY = declare(
-    "LAND_LABOUR_OUTPUT_ELASTICITY", 0.5,
-    kind="temporary_heuristic",
-    unit="dimensionless (Cobb-Douglas exponent on labour)",
-    source="Same figure and same reasoning as sim/world/agriculture.py's "
-           "own LABOUR_OUTPUT_ELASTICITY: agricultural-economics estimates "
-           "of labour's output elasticity typically fall in the 0.3-0.6 "
-           "range, and 0.5 (output scales with the square root of labour "
-           "hours) is the midpoint of that range, not a number derived "
-           "for any crop or region this module prices specifically. "
-           "Declared again here under a LAND_-prefixed name for the same "
-           "declare()-registry reason LAND_REFERENCE_LABOUR_HOURS_PER_"
-           "HECTARE's own declaration gives.",
-    confidence="C",
-    why="The curve shape that makes doubling labour on fixed land yield "
-        "less than double the output - the whole mechanism this section "
-        "exists to add. Without it, output would scale linearly with "
-        "labour and crowding could never raise a region's own yield, let "
-        "alone its rent.")
+LAND_LABOUR_OUTPUT_ELASTICITY = _SHARED_LABOUR_OUTPUT_ELASTICITY
+# The curve shape that makes doubling labour on fixed land yield less than
+# double the output - the whole mechanism this section exists to add.
+# Without it, output would scale linearly with labour and crowding could
+# never raise a region's own yield, let alone its rent.
 
-LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
-    "LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER", 1400.0,
-    kind="temporary_heuristic",
-    unit="hours/worker/year",
-    source="Same figure and same reasoning as sim/world/agriculture.py's "
-           "own ANNUAL_LABOUR_HOURS_PER_FARM_WORKER: 1,200-1,500 hours/"
-           "year is the rough order of magnitude historical agricultural-"
-           "labour estimates give for a seasonal farm calendar (bursts at "
-           "ploughing, sowing and harvest, slack in between); 1,400 is a "
-           "round midpoint, not a figure sourced to any one civilization "
-           "this module prices. Declared again here under a LAND_-"
-           "prefixed name for the same declare()-registry reason given "
-           "above.",
-    confidence="C",
-    why="How many hours ONE farm worker can give to the land in a year - "
-        "the first of two facts LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA "
-        "multiplies together to get how much labour a whole POPULATION "
-        "(not just its farm workers) supplies; see that constant's own "
-        "declaration for the second.")
+LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = (
+    _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER)
+# How many hours ONE farm worker can give to the land in a year - the
+# first of two facts LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA multiplies
+# together to get how much labour a whole POPULATION (not just its farm
+# workers) supplies; see LAND_AGRARIAN_POPULATION_SHARE just below for the
+# second.
 
 LAND_AGRARIAN_POPULATION_SHARE = declare(
     "LAND_AGRARIAN_POPULATION_SHARE", 0.85,

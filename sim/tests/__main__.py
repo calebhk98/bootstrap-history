@@ -215,6 +215,12 @@ TOPICS = [
     # rather than 21 hand-written regions sized by what they are called.
     # Complaints/46. Added ALONGSIDE `regions`, which is untouched.
     "geography_tiles",
+    # sim/world/shared_constants.py: one home for a physical fact several
+    # domains need, after land.py and agriculture.py were found holding six
+    # of them apiece - including one under a different name AND a different
+    # unit (fallow as a multiplier of 2.0 in one, a share of 0.5 in the
+    # other). Also the net that catches a future re-duplication.
+    "shared_constants",
     # sim/engine/prices.py: the first wiring of the price solver into the
     # engine - given a set of held technology ids, ask the solver for a
     # price, cached on the gate nodes held rather than the full technology
