@@ -70,6 +70,20 @@ SAVE_FIELDS = (
     # THE COUNTRY'S OWN ADOPTION OF WHAT YOU BUILT. See
     # SocietyMixin._advance_food_diffusion_population (society.py).
     "_food_pop_bonus_applied",
+    # THE COUNTRY'S OWN AGE-COHORT POPULATION (sim/world/demography.py's
+    # `Population`, wired in by docs/architecture/WIRING_MILESTONE_4.md).
+    # Three plain floats, not the object itself - JSON has no `Population`,
+    # and Sim.__init__ always builds one before load_state runs (see
+    # core.py's pop_children/pop_working_age/pop_elderly properties), so
+    # only the three cohort counts need to round-trip, the same way
+    # `mine_tranches` stores structured-but-flat data rather than an object.
+    # NONE of the nine attributes _demographic_recovery's scalar model
+    # replaced were ever in this tuple - this is not a rename of an
+    # existing save field, it is the fix for a live bug (see the properties'
+    # own comment in core.py): a demographic shock's effect was silently
+    # wiped by the very next --session command because nothing carried it
+    # across a save/load cycle.
+    "pop_children", "pop_working_age", "pop_elderly",
     # TONNES ON HAND. Own production a year did not use banks here instead of
     # evaporating, which is what lets a twenty-gram gold demand be met by
     # buying twenty grams rather than by commissioning a mine. It has to

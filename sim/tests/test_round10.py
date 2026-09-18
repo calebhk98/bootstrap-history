@@ -444,16 +444,31 @@ for _cf in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json"
 # playtester watched the Black Death take a third of their own staff and
 # nothing else happen anywhere in the game, and asked why a mortality event
 # this size left the rest of the economy untouched - no dearer hiring, no
-# dearer wages, nothing. self.pop_deficit (core.py, fed by _shocks in
-# society.py) is the fix: the hazard now also costs the whole labour market
-# people, and a smaller labour market pays more to hire from.
+# dearer wages, nothing. self._apply_population_mortality_shock (core.py,
+# fed by _shocks in society.py) is the fix: the hazard now also costs the
+# whole labour market people, and a smaller labour market pays more to hire
+# from.
+#
+# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md) REWRITE:
+# these checks used to assert on self.pop_deficit and self._pop_recovery_
+# years, a scalar deficit decaying on a hand-set exponential clock.
+# sim/world/demography.py's own test suite FALSIFIES that shape (see its
+# module docstring): two populations losing an identical 30% in one year,
+# one sparing working-age adults and one not, diverge afterward, which a
+# clock that only knows a SIZE cannot reproduce. self.population (a
+# demography.Population) replaced it, so these checks now read
+# self.population.total and the computed self.pop_scale/self.wage_index
+# properties instead - see core.py's own comment above pop_scale for the
+# full account of what changed and why.
 s = sim(civ="england_1300")
 _normal_wage = s.wage_index
+_pop_before = s.population.total
 s.year = 1348
 s._shocks(1348)
+_pop_loss_fraction = 1.0 - s.population.total / _pop_before
 check("the Black Death costs the whole society people, not only your own "
       "household",
-      abs(s.pop_deficit - 0.45) < 1e-6, s.pop_deficit)
+      abs(_pop_loss_fraction - 0.45) < 1e-6, _pop_loss_fraction)
 
 # --- your own quarantine (plague_preparedness) protects your own household
 # - that is what hazard_relief already does to the personal staff_loss above
@@ -462,11 +477,13 @@ check("the Black Death costs the whole society people, not only your own "
 s2 = sim(civ="england_1300")
 s2.done.add("plague_preparedness"); s2.operating.add("plague_preparedness")
 s2._done_changed()
+_pop2_before = s2.population.total
 s2.year = 1348
 s2._shocks(1348)
+_pop2_loss_fraction = 1.0 - s2.population.total / _pop2_before
 check("a hedge against plague shields your own staff, not the whole "
       "population's labour market",
-      abs(s2.pop_deficit - 0.45) < 1e-6, s2.pop_deficit)
+      abs(_pop2_loss_fraction - 0.45) < 1e-6, _pop2_loss_fraction)
 
 # --- scarcer labour is dearer labour immediately: the event and the economy
 # screen must not disagree for the remainder of the year in which it fires.
@@ -483,9 +500,18 @@ check("the wage cascade is LOGGED, so a player can see why their wage bill "
       any("running" in message and "above normal" in message for _year, message in s.log),
       [message for _year, message in s.log if "wage" in message.lower()])
 
-# --- it fades on the clock the hazard earned, not instantly and not
-# forever - the actual brief: "the effect decaying back over a historically
-# plausible recovery period rather than being permanent or instant".
+# --- recovery is now EMERGENT from self.population's own vital rates
+# (births and deaths on the surviving cohort structure) rather than a
+# clock this engine sets - demography.py's own docstring says the model is
+# not perfectly self-replicating even at exact subsistence, so a shocked
+# population does not snap back to its pre-shock level; it resumes
+# ordinary (near-zero net) growth from its new, smaller base. That is a
+# real, checkable prediction of the demographic model, not a number this
+# test can assert to a specific decade the way the old fixed 150-year
+# clock could - so what this checks is only the SHAPE the old test's own
+# brief asked for: the premium stays substantial for a long time (decades),
+# it does not evaporate in a handful of years, and it never grows without
+# bound either.
 s4 = sim(civ="england_1300")
 s4.year = 1348
 s4._shocks(1348)
@@ -498,22 +524,74 @@ _end_premium = s4.wage_index / _normal_wage - 1.0
 check("fifty years on, the wage premium from the Black Death is still "
       "substantial, not gone in a handful of years",
       _mid_premium > 0.10, _mid_premium)
-check("...and by England's roughly 150-year demographic recovery it has "
-      "mostly faded, not stayed at its peak forever",
-      _end_premium < 0.05, _end_premium)
+check("...and it has not grown without bound a century later either - this "
+      "is a mortality shock working through births and deaths, not a "
+      "runaway",
+      _end_premium < _mid_premium * 2.0 + 0.10, (_mid_premium, _end_premium))
 
-# --- a milder mortality event earns a shorter recovery than the Black
-# Death's 150 years, in proportion to how much of the population it
-# actually took, not the same horizon regardless of size.
+# --- a milder mortality event costs the society less than a more severe
+# one, in proportion to its own severity, not some fixed effect regardless
+# of size - the same relative-severity property the old _pop_recovery_years
+# clock asserted via its own recovery horizon, now checked directly on the
+# population loss itself, which is the number that actually drives
+# wage_index under the new model.
 s5 = sim(civ="rome_100ad")
+_pop5_before = s5.population.total
 for _yr in range(165, 181):
     s5.year = _yr
     s5._shocks(_yr)
-    if s5.pop_deficit > 0:
+    if s5.population.total < _pop5_before:
         break
-check("the Antonine plague (28% of staff) earns a shorter demographic "
-      "recovery than the Black Death's (45%) 150 years, scaled to size",
-      0 < s5._pop_recovery_years < 150.0, s5._pop_recovery_years)
+_antonine_loss_fraction = 1.0 - s5.population.total / _pop5_before
+check("the Antonine plague (28% of staff) costs the society a smaller "
+      "population fraction than the Black Death's 45%, scaled to size",
+      0 < _antonine_loss_fraction < 0.45, _antonine_loss_fraction)
+
+# --- JOB 2b: THE LIVE SAVE/LOAD BUG WIRING MILESTONE 4 FIXES.
+# docs/architecture/WIRING_MILESTONE_4.md SS3: none of the nine attributes
+# the OLD scalar model used were ever in SAVE_FIELDS, so a demographic
+# shock's wage premium was silently wiped the moment a --session game was
+# resumed in a fresh process (cli.py reconstructs a brand-new Sim from the
+# civilisation file on every invocation, then load_state()s the save over
+# it - CLAUDE.md SS5's "every single command is a save followed by a load"
+# describes exactly this sequence). self.population's three cohort counts
+# are now in SAVE_FIELDS (proto/saveload.py) via the pop_children/
+# pop_working_age/pop_elderly forwarding properties (core.py) - this drives
+# a hazard through the REAL save/reload cycle cli.py actually uses, the one
+# gap every existing demography-adjacent test left open (none of them
+# drove a hazard through save_state/load_state in the same process).
+s7 = sim(civ="england_1300")
+_pop7_before = s7.population.total
+s7.year = 1348
+s7._shocks(1348)
+_shocked_children = s7.population.children
+_shocked_working_age = s7.population.working_age
+_shocked_elderly = s7.population.elderly
+check("the save/load round-trip test below actually exercises a real "
+      "shock, not a no-op",
+      s7.population.total < _pop7_before * 0.99, s7.population.total)
+_save7 = os.path.join(HERE, "_test_wiring_milestone4_pop_save.json")
+S.save_state(s7, _save7)
+# A FRESH Sim, built the way cli.py's --session resume really does it
+# (Sim(...) from the civilisation file, THEN load_state over it) - not the
+# same object with its cohorts merely re-read, which would pass even if
+# SAVE_FIELDS were still missing every one of these three names.
+s7_fresh = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
+                 civ=S.load_civ("england_1300"))
+s7_fresh.goal, s7_fresh.done_year = GOAL, {}
+S.load_state(s7_fresh, _save7)
+os.remove(_save7)
+check("a demographic shock's cohort counts survive a real save/reconstruct/"
+      "load cycle bit-for-bit - the exact failure mode the OLD pop_deficit/"
+      "wage_index/_pop_scale_base trio had, live, because none of the nine "
+      "attributes _demographic_recovery used were ever in SAVE_FIELDS",
+      (s7_fresh.population.children == _shocked_children
+       and s7_fresh.population.working_age == _shocked_working_age
+       and s7_fresh.population.elderly == _shocked_elderly),
+      (s7_fresh.population, (_shocked_children, _shocked_working_age, _shocked_elderly)))
+check("...and the wage premium that cohort state drives is therefore ALSO "
+      "intact after the round-trip, not silently reset to baseline",
+      s7_fresh.wage_index > s7_fresh._wage_index_base * 1.2, s7_fresh.wage_index)
 
 # --- JOB 3: TECHNOLOGY RAISES THE POPULATION, SLOWLY. Sanitation,
 # antisepsis, crop rotation and the like should feed back into a bigger

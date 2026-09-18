@@ -2093,10 +2093,15 @@ class LabourMixin:
         about whether that is most of the trade or a rounding error
         against it. This says both, next to each other, once.
         """
+        # WIRING MILESTONE 4: see national_trade_population's own comment,
+        # just above - the same reconstruction-by-ratio used to happen here,
+        # and self.population.total (the age-cohort model) is now the
+        # direct answer. `reference_pop`/`scale_from_baseline` are kept as
+        # the screen's own "before simulated changes" comparison, not as
+        # inputs to `pop` any more.
         reference_pop = float(self.civ.get("population", 0.0))
-        scale_from_baseline = (self.pop_scale / self._pop_scale_base
-                               if self._pop_scale_base else 1.0)
-        pop = reference_pop * scale_from_baseline
+        pop = self.population.total
+        scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
         urban_frac = float(self.civ.get("urban_fraction", 0.0))
         trades = []
         for trade in sorted(WAGES):

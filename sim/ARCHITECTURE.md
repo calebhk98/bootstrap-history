@@ -76,6 +76,25 @@ reached as `s.X` from `engine/proto/`) and three more hide behind
 `self.__dict__[...]`. See `docs/architecture/SIM_STATE_INVENTORY.md` for the
 full table and the counting method.
 
+THAT 165 IS NOW STALE, AND IS DELIBERATELY NOT REPLACED HERE. Wiring
+`sim/world/demography.py` into the engine deleted `pop_deficit` and
+`_pop_recovery_years`, turned `pop_scale` and `wage_index` from stored
+attributes into computed properties, and added one new attribute
+(`self.population`) and three forwarding properties for its cohorts. So the
+true figure moved by roughly four, downward - but quoting `165 - 4` would be
+arithmetic on a number rather than a measurement, and this file's whole
+point is that the counts are measured.
+
+The obstacle is that the counting method behind 165 is described in
+`docs/architecture/SIM_STATE_INVENTORY.md` but is not scripted anywhere, and
+it is NOT the number a runtime `vars(sim_instance)` returns: a live `Sim`
+carries 42 instance attributes and 110 properties, because most of the
+fields the 165 counts now live on sub-objects behind forwarding properties.
+Two different questions, two different right answers - exactly the trap
+CLAUDE.md section 7 describes for the naming counts. Whoever next needs this
+number should script the static method first, so the re-measurement is
+repeatable, and then quote it saying which one it is.
+
 The method count is now **411** across the mixins, up from 314, which is
 almost entirely the forwarding properties.
 

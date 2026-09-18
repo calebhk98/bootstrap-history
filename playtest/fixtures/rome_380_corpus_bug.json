@@ -2412,6 +2412,9 @@
   "auto_shed": false,
   "auto_train": false
  },
+ "pop_children": 20142218.562122766,
+ "pop_elderly": 14863186.645299831,
+ "pop_working_age": 29994594.792577397,
  "protection": 0.0,
  "reputation": 5.0,
  "revealed": {

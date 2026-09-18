@@ -307,7 +307,31 @@ _before_price = s_db.project_cost("horse_collar")
 while s_db.year < 210:
     s_db.step()
 check("debasement does not move a real price quote (the model is real terms)",
-      abs(s_db.project_cost("horse_collar") - _before_price) < 1e-6,
+      # TOLERANCE RESHAPED BY WIRING MILESTONE 4, AND MEASURED RATHER THAN
+      # GUESSED. This window (100-210 AD, events=True) runs the Antonine
+      # plague's staff_loss hazard through several annual waves, and
+      # self.population - the age-cohort model that replaced the old scalar
+      # pop_deficit - recovers between waves only through ordinary births
+      # and deaths, with no separate exponential decay clock. Two waves a
+      # few years apart therefore compound onto a slightly larger surviving
+      # shortfall than the old arithmetic left, wage_index follows, and
+      # horse_collar's residual labour sensitivity carries a little of that
+      # into its quote.
+      #
+      # Measured, and identical on three consecutive runs (the simulation is
+      # deterministic): 709.41000062578 -> 709.4100052577509, which is
+      # 4.63e-06 absolute and 6.53e-09 RELATIVE.
+      #
+      # RELATIVE, not absolute. The old 1e-6 was an absolute bound on a
+      # ~709-denarius quote, so its real strictness was 1.4e-09 relative and
+      # would have drifted silently the moment horse_collar's cost changed
+      # magnitude for any unrelated reason. 1e-7 relative keeps 15x headroom
+      # over the measured residual and is still roughly six orders of
+      # magnitude below a real debasement-scale move - Rome's own
+      # real_erosion is 0.06, which on this quote would be ~42 denarii. The
+      # check's actual point is covered at full strength by the two checks
+      # below, which read the log's own words.
+      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 1e-7,
       (_before_price, s_db.project_cost("horse_collar")))
 _dbm = [message for _, message in s_db.log if "coin is worth" in message]
 check("...and the announcement says so, rather than leaving it to be found",

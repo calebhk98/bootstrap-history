@@ -307,6 +307,19 @@ check("...accepting starts a genuinely new game through the same wizard, "
 # Rome save); it is read here, never written to, and its own sha256 is
 # checked below precisely so a future edit to this file notices immediately
 # if it ever became something this test touches instead of merely reads.
+#
+# THE HASH BELOW CHANGED ONCE, DELIBERATELY: docs/architecture/
+# WIRING_MILESTONE_4.md added pop_children/pop_working_age/pop_elderly to
+# SAVE_FIELDS (proto/saveload.py), and CLAUDE.md SS3.5 ("there is no
+# save-format migration, ever") means an old fixture simply stops loading
+# under the new schema rather than being shimmed - load_state's own
+# REQUIRED_SAVE_FIELDS check refused this exact file with "missing
+# pop_children, pop_working_age, pop_elderly" until the three fields were
+# added to it (a stationary age structure for Rome's configured 65,000,000,
+# the same split Sim.__init__ would build fresh - the fixture predates the
+# demographic model entirely, so there is no "real" recorded cohort state
+# to preserve, only a value that satisfies the current schema). Every other
+# byte of the file is unchanged.
 import hashlib
 import shutil
 _corpus_fixture = os.path.join(ROOT, "playtest", "fixtures",
@@ -317,7 +330,7 @@ check("the corpus-bug fixture this check borrows is the exact file another "
       "fixture changed underneath this check and it is reading the wrong "
       "thing",
       _corpus_sha_before ==
-      "60052a5183f1b887a501a0c1d45e2eef543e435dc074865908d144f21bda648f",
+      "35b38ef8a908df20f7b05466d478bec97d15193c28b15eee860fc03c2ab1dd79",
       _corpus_sha_before)
 _corpus_ckpt_dir = tempfile.mkdtemp()
 # A FRESH COPY, NAMED LIKE A MILESTONE - the fixture itself is never opened

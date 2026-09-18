@@ -1,10 +1,32 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, json, math, os, random
+import collections, json, math, os, random, sys
 
 from constants import declare
 from .data import *          # the shared tables and loaders
 from .data import (ANNUAL_WAGE, DEFAULTS, WAGES, load_civ, load_geography,
                    load_resources, trade_family)
+
+# sim/world/demography.py imports `sim.constants` fully-qualified (see that
+# module's own header), which only resolves if the REPOSITORY ROOT is on
+# sys.path so `sim` itself is importable as a namespace package (it has no
+# __init__.py - see sim/test_regressions.py's own comment on that). Whatever
+# put `sim/` itself on sys.path (simulator.py, cli.py, or sim/tests/harness.py
+# for the test suite) does not also add the repository root, so this file
+# adds it itself rather than relying on the entry point to have done so -
+# see docs/architecture/WIRING_MILESTONE_4.md SS6, Commit 1, for why a bare
+# `from ..world import demography` fails outright: this module loads as
+# top-level `engine.core`, not `sim.engine.core` (`engine` has no parent
+# package under simulator.py's existing sys.path scheme), so a leading `..`
+# has nowhere to go. Guarded and deduplicated, the same pattern
+# sim/test_regressions.py already uses for its own `_ROOT`.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+# Bare, not `sim.world.demography` - matching this package's own existing
+# style (`from constants import declare` above, not `from ..constants`),
+# and relying on `sim/` itself already being on sys.path by the time this
+# module loads (true for every real entry point today).
+from world import demography
 
 
 from .economy import EconomyMixin
@@ -87,31 +109,71 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
-        self.wage_index = float(self.civ.get("wage_index", 1.0))
-        self._wage_index_base = self.wage_index
+        self._wage_index_base = float(self.civ.get("wage_index", 1.0))
         self.state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT))
-        self.pop_scale = max(self.POP_SCALE_FLOOR,
-                              float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
-                              / self.DEFAULT_POPULATION_100AD)
         # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
         # playtester watched the Black Death take a third of their own staff
         # and nothing else happen to the world around them, and asked why a
         # mortality event this size left everybody ELSE's wages untouched.
-        # self._pop_scale_base is this civilization's steady-state size;
-        # self.pop_deficit is how far below it the whole society currently
-        # sits, and self.pop_scale (read everywhere else in the engine) is
-        # always base * (1 - deficit). _demographic_recovery() below is the
-        # only place that moves deficit, wage_index or pop_scale_base after
-        # today; _shocks() in society.py only ever adds to the deficit.
-        self._pop_scale_base = self.pop_scale
-        self.pop_deficit = 0.0
-        self._pop_recovery_years = 0.0
+        # self._pop_scale_base is this civilisation's OWN trend size - its
+        # configured population against the same 65,000,000 reference every
+        # downstream formula was calibrated to (see pop_scale's own comment
+        # below) - nudged upward over time by population-raising technology
+        # and food-diffusion (apply_tech_effects/_advance_food_diffusion_
+        # population, society.py). Those two write sites do not yet feed
+        # self.population itself (Commit 4's own open question - see
+        # docs/architecture/WIRING_MILESTONE_4.md SS1.3), so nothing reads
+        # this attribute back in Commit 3 - see wage_index's own comment for
+        # why it deliberately does NOT compare against this mutable value.
+        # self.pop_scale itself (read everywhere else in the engine) is a
+        # COMPUTED PROPERTY off self.population, not stored here - see
+        # WIRING MILESTONE 4, COMMIT 3 below for why: a staff_loss hazard in
+        # _shocks() (society.py) now cuts self.population's cohorts directly
+        # instead of touching a scalar deficit.
+        self._pop_scale_base = max(
+            self.POP_SCALE_FLOOR,
+            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
+            / self.DEFAULT_POPULATION_100AD)
+        # WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md SS6): an
+        # age-cohort population, built and proven standalone in
+        # sim/world/demography.py. Commit 1 only constructed this and read it
+        # nowhere else (provably inert - a scenario run before and after that
+        # commit alone came back byte-identical under sim/perf_fingerprint.py);
+        # Commit 3 is what made pop_scale/wage_index (below) and _shocks()
+        # (society.py) actually read and mutate it, which is expected to move
+        # every fingerprint scenario from year index 0 - see WIRING_MILESTONE_
+        # 4.md SS5 for why that is the predicted, correct result rather than a
+        # regression. `Population.stationary()` finds the model's OWN stable
+        # age structure for a population of this civilisation's configured
+        # size, rather than an independently invented split - see that
+        # method's own docstring for why.
+        #
+        # SEEDED, DELIBERATELY NOT FROM self.rng: Population owns its own
+        # generator (for the `jitter=True` path only - see demography.py's
+        # NUTRITION_YEAR_TO_YEAR_NOISE_STD), and nothing in this engine ever
+        # passes jitter=True (see _advance_population below), so this seed
+        # never actually gets drawn from. It is derived from the
+        # civilisation's own id, not Python's randomised string hash() (which
+        # would depend on PYTHONHASHSEED and break determinism across
+        # processes), purely so two civilisations do not happen to share one.
+        _population_seed = sum((index + 1) * ord(character) for index, character
+                               in enumerate(str(self.civ.get("id", "civ")))) % (2 ** 32)
+        self.population = demography.Population.stationary(
+            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
+            seed=_population_seed)
         # Population-raising technologies (sanitation, antisepsis, crop
         # rotation, canning...) queue their effect here instead of applying
         # it the year they complete - see apply_tech_effects in society.py.
         # Each entry is [fraction-of-baseline added per year, years left to
         # add it]: a lower death rate shows up in a headcount a generation
-        # later, not the day a latrine opens.
+        # later, not the day a latrine opens. STILL DRAINED INTO
+        # `_pop_scale_base` (unchanged) rather than into `self.population`
+        # directly - giving a technology an actual per-instance effect on
+        # this civilisation's mortality/fertility needs a mechanism
+        # sim/world/demography.py does not have yet (its rates are module-
+        # level constants), which is Commit 4's own open design question in
+        # docs/architecture/WIRING_MILESTONE_4.md SS1.3/SS6, deliberately
+        # left undone by this milestone's Commit 3.
         self._pop_tech_pending = []
         self.year = self.cfg["start_year"]
         config = self.cfg
@@ -1254,77 +1316,214 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     def revealed(self, value):
         self.household.revealed = value
 
-    MIN_RECOVERY_TAU_YEARS = declare(
-        "MIN_RECOVERY_TAU_YEARS", 10.0, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Floor on the demographic-recovery time constant, so a tiny "
-            "recorded _pop_recovery_years does not make the deficit "
-            "vanish in an implausible single year. Guard value, not a "
-            "measured recovery floor.")
-    DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS = declare(
-        "DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS", 3.0, kind="temporary_heuristic",
-        unit="dimensionless (time constants)", source=
-        "e**-3 ~= 0.05, the standard 'three time constants' rule of "
-        "thumb for exponential decay.",
-        confidence="B",
-        why="How many exponential time constants _pop_recovery_years is "
-            "defined to span, so that by that year the deficit has decayed "
-            "to about 5% of its post-shock value - a standard mathematical "
-            "convention for defining 'recovered', not itself a free "
-            "parameter of the demographic model.")
+    # WIRING MILESTONE 4, COMMIT 2 (docs/architecture/WIRING_MILESTONE_4.md
+    # SS3, SS6): three forwarding properties, same shape as the household
+    # ones just above, so `self.population`'s three cohort floats each get a
+    # SAVE_FIELDS slot without a save format that has ever seen a nested
+    # object (see that section for why three flat floats, not one struct).
+    # Before this, none of the nine attributes _demographic_recovery's
+    # scalar model used were ever saved at all - a live, currently-shipping
+    # bug (a --session game silently wiped a demographic shock's wage
+    # premium on the very next command, because cli.py reconstructs a fresh
+    # Sim and load_state()s the save over it) which this fixes for the
+    # REPLACEMENT model rather than reproducing it. `Population` itself is
+    # never constructed by `load_state` - `Sim.__init__` already built one
+    # (with the civilisation's UNSHOCKED baseline size) before load_state
+    # runs, and these three setters overwrite its cohort counts in place
+    # with whatever the save recorded, the same "setattr over a live
+    # default" shape every other field in SAVE_FIELDS already uses.
+    @property
+    def pop_children(self):
+        return self.population.children
+
+    @pop_children.setter
+    def pop_children(self, value):
+        self.population.children = float(value)
+
+    @property
+    def pop_working_age(self):
+        return self.population.working_age
+
+    @pop_working_age.setter
+    def pop_working_age(self, value):
+        self.population.working_age = float(value)
+
+    @property
+    def pop_elderly(self):
+        return self.population.elderly
+
+    @pop_elderly.setter
+    def pop_elderly(self, value):
+        self.population.elderly = float(value)
+
     WAGE_SCARCITY_ELASTICITY = declare(
         "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_outcome",
-        unit="dimensionless (wage premium per unit of population deficit)",
+        unit="dimensionless (wage premium per unit of population shortfall)",
         source="Phelps Brown and Hopkins' English real-wage index shows "
              "roughly a doubling across the century after 1348.",
         confidence="C",
-        why="How much scarcer labour raises its own price - see the "
-            "comment above: at this elasticity, a Black-Death-sized "
-            "deficit compounding over the century it takes to decay "
-            "reproduces roughly the cited real-wage doubling. FLAGGED AS "
-            "A CLAUDE.md SS3.1/3.2 RISK: chosen specifically to land in "
-            "the range that reproduces a known historical wage-index "
-            "outcome (Phelps Brown and Hopkins), rather than derived from "
-            "labour supply and demand fundamentals - the same shape as "
-            "economy.py's DEBT_BASE_RATE, a real attested figure standing "
-            "in for a market mechanism this project has not built. It is "
-            "not fitted to the series numerically, but it was picked "
-            "because it lands near the answer, which is the thing SS3.2 "
-            "asks a baseline to reach independently rather than by "
-            "construction.")
+        why="How much scarcer labour raises its own price - see pop_scale/"
+            "wage_index below: at this elasticity, a Black-Death-sized "
+            "shortfall reproduces roughly the cited real-wage doubling over "
+            "the timescale sim/world/demography.py's own vital rates take "
+            "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
+            "specifically to land in the range that reproduces a known "
+            "historical wage-index outcome (Phelps Brown and Hopkins), "
+            "rather than derived from labour supply and demand "
+            "fundamentals - the same shape as economy.py's DEBT_BASE_RATE, "
+            "a real attested figure standing in for a market mechanism "
+            "this project has not built. It is not fitted to the series "
+            "numerically, but it was picked because it lands near the "
+            "answer, which is the thing SS3.2 asks a baseline to reach "
+            "independently rather than by construction.")
+
+    # WIRING MILESTONE 4, COMMIT 3 (docs/architecture/WIRING_MILESTONE_4.md
+    # SS6): `pop_scale` and `wage_index` are COMPUTED PROPERTIES now, not
+    # stored attributes a hand-written recovery clock advanced. This is the
+    # "one new attribute plus two computed properties" shape that section's
+    # own SS7 recommends, precedented by the household extraction's own
+    # forwarding properties - it lets the ~19+16 call sites across economy/
+    # labour/geography/projects that already read `self.pop_scale`/
+    # `self.wage_index` keep doing so, unchanged, while what backs them
+    # changes underneath.
+    #
+    # WHAT THIS REPLACES, AND WHY IT IS DELETED RATHER THAN KEPT ALONGSIDE:
+    # `_demographic_recovery` used to decay a hand-set `pop_deficit` on a
+    # fixed exponential clock (`_pop_recovery_years`, `MIN_RECOVERY_TAU_
+    # YEARS`, `DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS` - all now gone, along
+    # with `PLAGUE_RECOVERY_YEARS_REFERENCE`/`_REFERENCE_SEVERITY` in
+    # society.py). sim/world/demography.py's OWN test suite falsifies that
+    # shape directly: two populations that lose an identical 30% in one
+    # year, one sparing working-age adults and one not, diverge sharply
+    # afterwards, which a scalar deficit decaying on a clock that knows
+    # nothing about WHO was lost cannot ever produce. `self.population`
+    # (sim/world/demography.py's `Population`, constructed in __init__,
+    # Commit 1) tracks who is what age, so this replaces the recovery clock
+    # rather than adding a second mechanism beside it.
+    #
+    # `pop_scale` keeps the SAME reference constant
+    # (`DEFAULT_POPULATION_100AD`, 65,000,000 - Rome's own configured
+    # population) that every downstream formula calibrated against, so
+    # `pop_scale == 1.0` still means "a Rome-sized labour market" exactly as
+    # before - only the numerator changed, from a hand-multiplied scalar to
+    # `self.population.total`, the age-cohort model's own running headcount.
+    @property
+    def pop_scale(self):
+        return max(self.POP_SCALE_FLOOR, self.population.total / self.DEFAULT_POPULATION_100AD)
+
+    # `wage_index`: LABOUR SCARCER, SO DEARER, exactly as before, but the
+    # scarcity signal is now "how far the age-cohort model's actual
+    # `pop_scale` sits below this civilisation's UNSHOCKED starting trend"
+    # rather than a hand-decayed deficit fraction. A hazard no longer needs
+    # to touch `wage_index` at all: cutting `self.population`'s cohorts (see
+    # `_apply_population_mortality_shock` below) lowers `pop_scale`
+    # directly, and this property reads the gap that opens.
+    #
+    # DELIBERATELY NOT `self._pop_scale_base` - a real trap this milestone's
+    # own Commit 3 found and is recorded here rather than left for Commit 4
+    # to rediscover. `_pop_scale_base` is still incremented by population-
+    # raising technology and food-technology diffusion (`_pop_tech_pending`/
+    # `_advance_food_diffusion_population`, society.py), UNCHANGED, but
+    # those two write sites do not yet feed `self.population` itself
+    # (that rewiring is Commit 4's own open design question - see
+    # docs/architecture/WIRING_MILESTONE_4.md SS1.3). Reading the mutable
+    # `_pop_scale_base` here would have made a population-raising
+    # technology look like it made labour SCARCER, not more abundant: it
+    # would raise the trend line that `pop_scale` is compared against
+    # while `pop_scale` itself (self.population.total, untouched by these
+    # two mechanisms in Commit 3) stays exactly where it was, widening
+    # the apparent shortfall instead of leaving it alone. Comparing
+    # against this civilisation's ORIGINAL configured trend instead - the
+    # same expression `_pop_scale_base` was seeded with in __init__, before
+    # any technology could touch it - keeps those two write sites
+    # genuinely inert with respect to wage_index until Commit 4 gives them
+    # a real effect on self.population to be inert ABOUT.
+    #
+    # RECOVERY IS NOW EMERGENT, NOT A CLOCK: as `self.population.step()`
+    # (called once a year, below) runs its own births and deaths on the
+    # SURVIVING cohort structure, `pop_scale` moves back toward this trend
+    # (or does not, if the surviving population's own vital rates do not
+    # support catch-up growth above replacement - which is itself a real,
+    # checkable prediction of the demographic model rather than a number
+    # this engine asserts) - see WIRING_MILESTONE_4.md SS5 for the
+    # fingerprint behaviour this predicts.
+    @property
+    def wage_index(self):
+        unshocked_trend = max(
+            self.POP_SCALE_FLOOR,
+            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
+            / self.DEFAULT_POPULATION_100AD)
+        shortfall = max(0.0, 1.0 - self.pop_scale / unshocked_trend)
+        return self._wage_index_base * (1.0 + self.WAGE_SCARCITY_ELASTICITY * shortfall)
+
+    def _apply_population_mortality_shock(self, raw):
+        """Cut `self.population`'s cohorts by `raw` (a fraction of the whole,
+        e.g. 0.45 for the Black Death), unevenly by age - called from
+        _shocks() (society.py) in place of the old scalar `pop_deficit`
+        accumulation.
+
+        AGE-DIFFERENTIATED BY THE SAME STARVATION_VULNERABILITY_* RATIOS
+        sim/world/demography.py already declares for its own nutrition-
+        driven excess mortality (children hit 1.6x as hard as working-age
+        adults, the elderly 1.4x - see that module for the sourcing), scaled
+        so the POPULATION-WEIGHTED AVERAGE loss equals `raw` exactly. This
+        is what makes two equal-headcount losses diverge afterward depending
+        on who survived - the property sim/tests/test_demography.py's own
+        falsification test demands and the scalar model this replaces could
+        never produce (see the comment above pop_scale).
+
+        TEMPORARY_HEURISTIC (CLAUDE.md SS3.4), and flagged as such rather
+        than presented as settled: STARVATION_VULNERABILITY_* was sourced
+        for CALORIC shortfall (Watkins & Menken 1985), not epidemic disease
+        or war mortality, which is what most staff_loss hazards actually
+        are. The direction (children and the elderly are more vulnerable
+        than working-age adults to most mass-mortality events, disease
+        included) is well supported in the historical demography literature
+        generally; reusing this SPECIFIC magnitude for a non-caloric shock
+        is the invented part. docs/architecture/WIRING_MILESTONE_4.md SS1.3
+        names the more principled alternative - routing a food-availability
+        hazard through `Population.step`'s own nutrition_ratio and letting
+        excess mortality fall out of THAT, instead of cutting cohorts
+        directly - as future work, once a hazard can be expressed in
+        calories rather than in a bare staff_loss fraction.
+        """
+        population = self.population
+        weighted = (population.children * demography.STARVATION_VULNERABILITY_CHILD
+                   + population.working_age * demography.STARVATION_VULNERABILITY_WORKING_AGE
+                   + population.elderly * demography.STARVATION_VULNERABILITY_ELDERLY)
+        if weighted <= 0.0 or raw <= 0.0:
+            return
+        scale = raw * population.total / weighted
+        population.children -= population.children * min(
+            1.0, scale * demography.STARVATION_VULNERABILITY_CHILD)
+        population.working_age -= population.working_age * min(
+            1.0, scale * demography.STARVATION_VULNERABILITY_WORKING_AGE)
+        population.elderly -= population.elderly * min(
+            1.0, scale * demography.STARVATION_VULNERABILITY_ELDERLY)
 
     def _demographic_recovery(self, yr):
-        """Mortality shocks fade and population-raising technologies build in.
+        """Advance `self.population` by one year, and let population-raising
+        technologies build their queued gain into `_pop_scale_base` - the
+        same two jobs the old scalar `_demographic_recovery` did, now with
+        the age-cohort model doing the population half.
 
-        Two unrelated inputs move the same two numbers, self.pop_scale and
-        self.wage_index, and they are handled together because both ARE the
-        same underlying thing: how many people this society has to work with
-        this year. A staff_loss hazard in _shocks() (society.py) adds to
-        self.pop_deficit, the fraction the whole society currently sits
-        below its baseline size. A population-raising technology adds to
-        self._pop_scale_base through self._pop_tech_pending, queued by
-        apply_tech_effects() (society.py).
-
-        The deficit decays EXPONENTIALLY rather than healing on a fixed
-        clock, so a run always reads "a little better than last year" rather
-        than sitting frozen until some cliff-edge recovery date:
-        deficit *= exp(-1/tau), with tau set so that after
-        self._pop_recovery_years the deficit is down to about 5% of where
-        the shock left it (e**-3 ~= 0.05, the standard "three time
-        constants" rule of thumb). England's population took roughly 150
-        years to regain its pre-Black-Death level (Broadberry et al.,
-        British Economic Growth, 2015), and england_1300.json's Black Death
-        entry is staff_loss 0.45, so 150 years is calibrated to THAT hazard
-        specifically; every other hazard's recovery horizon scales off it in
-        proportion to how much of the population it actually took, so the
-        Antonine plague (0.28) gets a shorter, gentler recovery than the
-        Black Death, not the same 150 years regardless of size.
+        NO REAL FOOD SUPPLY EXISTS YET (agriculture.py is wired in a
+        separate, parallel track - see WIRING_MILESTONE_4.md SS6's own
+        note that it "can start any time after Commit 1 ... does not need
+        to wait for Commits 3-5"). Until it is, this feeds `self.population`
+        exactly enough calories to sit at nutrition_ratio == 1.0 every year
+        - "no shortage is currently modelled" stated honestly as "no
+        shortage", not as a silently-assumed abundance. TEMPORARY_HEURISTIC
+        (CLAUDE.md SS3.4): `Population.step` is not perfectly self-
+        replicating even at exact subsistence (see demography.py's own
+        docstring: net drift under -0.1%/century), so this still produces a
+        small, genuine, non-hardcoded year-to-year movement rather than the
+        old model's bit-exact stationarity absent a hazard - see
+        WIRING_MILESTONE_4.md SS5 for why that is the CORRECT behaviour to
+        see in perf_fingerprint, not a bug. Replace the subsistence-food
+        computation below with agriculture.Storage.step's own
+        food_available_kcal_per_day the day that wiring lands.
         """
-        if self.pop_deficit > 1e-6:
-            tau = max(self.MIN_RECOVERY_TAU_YEARS, self._pop_recovery_years) / self.DEMOGRAPHIC_RECOVERY_TIME_CONSTANTS
-            self.pop_deficit *= math.exp(-1.0 / tau)
-        else:
-            self.pop_deficit = 0.0
         if self._pop_tech_pending:
             still = []
             for per_year, years_left in self._pop_tech_pending:
@@ -1332,42 +1531,39 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 if years_left > 1:
                     still.append((per_year, years_left - 1))
             self._pop_tech_pending = still
+        adult_equivalent_population = (
+            self.population.children * demography.CHILD_CALORIE_EQUIVALENT
+            + self.population.working_age
+            + self.population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
+        subsistence_food_kcal_per_day = (
+            adult_equivalent_population * demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY)
+        self.population.step(subsistence_food_kcal_per_day, jitter=False)
         self._refresh_demographic_indexes(yr)
 
     def _refresh_demographic_indexes(self, yr):
-        """Apply the current demographic shortfall to population and wages.
-
-        Kept separate from recovery so a shock can make its announced effects
-        visible immediately, without also granting a free year of recovery.
+        """Say why the wage bill moved, if it moved enough to be worth
+        saying - the only job left here once pop_scale/wage_index became
+        computed properties (see above). Kept as its own method, called
+        both after a year's ordinary advance and immediately after a
+        hazard fires, for the same reason it always was: a shock's
+        announced effects should be visible immediately, not lag a step.
         """
-        self.pop_scale = max(self.POP_SCALE_FLOOR, self._pop_scale_base * (1.0 - self.pop_deficit))
-        # LABOUR SCARCER, SO DEARER. Elasticity 0.9 means a population still a
-        # third below trend (deficit 0.33) carries about a 30% wage premium;
-        # run for a century, as the Black Death's deficit roughly does before
-        # it has decayed away, and that compounds into the rough doubling
-        # Phelps Brown and Hopkins' English real-wage index shows across the
-        # century after 1348, without the elasticity itself needing to be
-        # implausibly large. wage_index is what ANNUAL_WAGE, WAGES and every
-        # hiring, teaching and payroll cost in the engine are already
-        # multiplied by, so this one number is the whole of "higher wages
-        # raise the cost of everything built with labour" - nothing else
-        # downstream needs to change.
-        self.wage_index = self._wage_index_base * (1.0 + self.WAGE_SCARCITY_ELASTICITY * self.pop_deficit)
-        # SAY WHY THE WAGE BILL MOVED. A plague that quietly doubles every
-        # hiring and teaching cost for decades and never says so reads as the
-        # economy drifting for no reason - exactly the complaint this whole
-        # mechanism exists to answer. Throttled the same way the debasement
-        # and output_factor messages are (see _shocks): once when it is worth
-        # mentioning, then a reminder at most every 15 years, not every year
-        # of a shortfall that can run for a century.
         premium = (self.wage_index / self._wage_index_base - 1.0) * 100
+        # The message wants the SAME shortfall wage_index's own property
+        # just computed, not a second, separately-derived copy of it - see
+        # wage_index's own comment for why it is measured against this
+        # civilisation's unshocked configured trend rather than the
+        # (still tech-mutable) `_pop_scale_base`. Recovered algebraically
+        # from `premium` rather than recomputed, so the two can never drift
+        # apart: premium == elasticity * shortfall * 100, by construction.
+        shortfall = (premium / 100.0) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and yr - self._said_wage_cascade >= 15:
             self._said_wage_cascade = yr
             self.household.log.append((yr, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
                                  "as the population does"
-                             % (round(self.pop_deficit * 100), round(premium))))
+                             % (round(shortfall * 100), round(premium))))
 
     # -- helpers ------------------------------------------------------------
 

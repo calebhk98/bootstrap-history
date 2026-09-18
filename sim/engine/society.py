@@ -3082,40 +3082,18 @@ class SocietyMixin:
             "market as well as the workshop (see comment above). Tuned to "
             "make the cash loss proportionate to the staff loss, not "
             "measured against any attested plague-year revenue collapse.")
-    PLAGUE_RECOVERY_YEARS_REFERENCE = declare(
-        "PLAGUE_RECOVERY_YEARS_REFERENCE", 150.0, kind="hardcoded_outcome",
-        unit="years", source="Broadberry et al., British Economic Growth, "
-             "2015: England's population took roughly 150 years to regain "
-             "its pre-Black-Death level.",
-        confidence="B",
-        why="Reference recovery time for a hazard of "
-            "PLAGUE_RECOVERY_REFERENCE_SEVERITY's own severity - other "
-            "hazards' recovery horizons scale off this reference in "
-            "proportion to how much of the population they actually took "
-            "(see core.py's _demographic_recovery). FLAGGED AS A CLAUDE.md "
-            "SS3.1/3.2 RISK, the same shape as economy.py's DEBT_BASE_RATE: "
-            "it is a real, attested demographic OUTCOME (how long England "
-            "specifically took to recover from one specific plague) used "
-            "directly as the model's recovery-speed parameter, rather than "
-            "a rate derived from fertility, mortality decline and the "
-            "land-labour ratio the way CLAUDE.md SS3.1 asks a recovery "
-            "dynamic to be derived. It looks sourced, which is what makes "
-            "it dangerous in the same way DEBT_BASE_RATE was: the citation "
-            "is genuine, and the number is still the answer, not an input "
-            "to a demographic model that does not exist yet.")
-    PLAGUE_RECOVERY_REFERENCE_SEVERITY = declare(
-        "PLAGUE_RECOVERY_REFERENCE_SEVERITY", 0.45, kind="hardcoded_outcome",
-        unit="dimensionless (staff_loss fraction)", source=
-        "england_1300.json's own Black Death entry (staff_loss 0.45).",
-        confidence="B",
-        why="The staff_loss severity PLAGUE_RECOVERY_YEARS_REFERENCE's "
-            "150 years is calibrated to specifically - so the Antonine "
-            "plague (0.28) gets a shorter, gentler recovery than the "
-            "Black Death, not the same 150 years regardless of size. Read "
-            "directly off england_1300.json rather than duplicated by "
-            "hand, but kept as its own declared number because this file "
-            "cannot import that civilisation file's data at class-body "
-            "time.")
+    # PLAGUE_RECOVERY_YEARS_REFERENCE / PLAGUE_RECOVERY_REFERENCE_SEVERITY
+    # used to live here: a fixed 150-year recovery horizon, itself flagged
+    # as a CLAUDE.md SS3.1/3.2 risk (a real attested demographic OUTCOME -
+    # how long England specifically took to recover from one specific
+    # plague - used directly as the model's recovery-speed parameter,
+    # rather than a rate derived from fertility, mortality decline and the
+    # land-labour ratio). WIRING MILESTONE 4 (docs/architecture/
+    # WIRING_MILESTONE_4.md) removes both: recovery is now whatever
+    # self.population's own vital rates produce on the surviving cohort
+    # structure (core.py's _apply_population_mortality_shock/pop_scale/
+    # wage_index), not a number this hazard hands out at the moment it
+    # fires - the exact CLAUDE.md SS3.1 fix their own "why" asked for.
     SACK_CAPITAL_LOSS = declare(
         "SACK_CAPITAL_LOSS", 0.60, kind="temporary_heuristic",
         unit="dimensionless (fraction of capital)", source=None,
@@ -3195,12 +3173,15 @@ class SocietyMixin:
                 # nobody else, and asked why their wage bill never moved
                 # afterward the way the real Black Death moved England's.
                 # This uses the hazard's RAW rate, never `loss` above, which
-                # is personal and already reduced by your own hedges; and it
-                # compounds onto any deficit still open from an earlier,
-                # unfinished recovery rather than overwriting it, because two
-                # plagues in one lifetime are worse than either alone.
-                # _demographic_recovery() in core.py is what reads this back
-                # out into pop_scale and wage_index, and lets it decay.
+                # is personal and already reduced by your own hedges; and
+                # cutting self.population's actual cohorts (rather than
+                # accumulating a scalar deficit) naturally compounds two
+                # plagues in one lifetime onto whatever the first left
+                # behind, because the second cut is a fraction of the
+                # ALREADY-REDUCED population, not of some separately tracked
+                # deficit - see _apply_population_mortality_shock (core.py),
+                # which is what actually moves self.population; pop_scale
+                # and wage_index (also core.py) read it back out on demand.
                 #
                 # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S - the
                 # one thing `raw` never used to answer to. med_relief is
@@ -3217,14 +3198,11 @@ class SocietyMixin:
                 historical = hazard["staff_loss"]
                 med_relief = self.medical_diffusion_relief()
                 raw = historical * (1.0 - med_relief)
-                self.pop_deficit = 1.0 - (1.0 - self.pop_deficit) * (1.0 - raw)
-                self._pop_recovery_years = max(
-                    self._pop_recovery_years,
-                    self.PLAGUE_RECOVERY_YEARS_REFERENCE
-                    * (raw / self.PLAGUE_RECOVERY_REFERENCE_SEVERITY))
+                self._apply_population_mortality_shock(raw)
                 # The event has happened NOW.  Do not leave the population
                 # and wage screens at their pre-plague values until the next
-                # annual resolution; refresh without advancing recovery.
+                # annual resolution; refresh (log-only now - see
+                # _refresh_demographic_indexes's own docstring) immediately.
                 self._refresh_demographic_indexes(yr)
                 # SEVERITY HONESTY: the words have to match `loss`, the
                 # number the mechanic just applied above, not `raw`, the
@@ -3263,9 +3241,14 @@ class SocietyMixin:
                 # that came through nearly untouched does not read this
                 # empire-wide toll as its own.
                 if raw > 0.01:
+                    # NO FIXED RECOVERY HORIZON TO QUOTE ANY MORE - see
+                    # core.py's _apply_population_mortality_shock/pop_scale:
+                    # recovery is now whatever self.population's own vital
+                    # rates produce on the surviving cohort structure, not a
+                    # number this hazard hands out at the moment it fires.
                     msg += (". Empire-wide, population -%d%%%s - wages (and "
-                            "everything paid in them) stay dear for roughly "
-                            "the next %d years either way"
+                            "everything paid in them) stay dear until the "
+                            "population does, either way"
                             % (raw * 100,
                                (" (the country's own public health has "
                                 "spread far enough to hold this below the "
@@ -3273,8 +3256,7 @@ class SocietyMixin:
                                 "%d%% softer)"
                                 % (round(historical * 100),
                                    round(med_relief * 100)))
-                               if med_relief > 0.02 else "",
-                               round(self._pop_recovery_years)))
+                               if med_relief > 0.02 else ""))
                 elif med_relief > 0.02 and historical > 0.01:
                     # THE COUNTRY CHANGED, SAY SO EVEN WHEN THE NUMBER
                     # ROUNDS TO NOTHING. A founder whose diffused medicine

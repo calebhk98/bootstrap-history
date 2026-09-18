@@ -3,8 +3,13 @@ from .harness import *  # noqa: F401,F403
 
 
 # A mortality shock changes the screens and hiring multiplier immediately.
+# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md): pop_deficit
+# no longer exists - a hazard now cuts self.population's own cohorts (see
+# core.py's _apply_population_mortality_shock), and pop_scale/wage_index
+# are computed properties that read the gap this opens, so this test drives
+# the same shock through the real mechanism instead of poking a scalar.
 _plague = sim(civ="rome_100ad")
-_plague.pop_deficit = 0.28
+_plague._apply_population_mortality_shock(0.28)
 _plague._refresh_demographic_indexes(_plague.year)
 _population = _plague.population_report()
 check("plague mortality immediately lowers displayed current population",
