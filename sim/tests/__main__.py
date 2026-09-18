@@ -75,6 +75,10 @@ TOPICS = [
     "complaints_09_16",
     "complaint_13_specialist_supervision",
     "complaints_17_24",
+    # Complaints/38: `path` printed one founder-hours budget and judged
+    # feasibility against a different one. The test asserts the printed and
+    # judged figures share a SOURCE, not merely that they currently agree.
+    "complaint_38_founder_lifetime",
     # sim/engine/proto/: the agent-oriented compact output mode asked for in
     # Complaints/35 section 1 - structured state WITHOUT losing the
     # reason-carrying prose. Includes the byte-identical proof that the

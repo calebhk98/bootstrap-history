@@ -397,18 +397,85 @@ def total_income(bins):
 # ratio of subsistence floor to quantity bought approaches 0, the
 # constant-expenditure-share case); a good with a subsistence floor large
 # relative to what people actually buy has most of its demand INSENSITIVE
-# to price by construction, because the floor is bought first regardless
-# of what it costs, right up to the point income cannot cover it at all
-# (see the below-subsistence branch below). Silver (subsistence floor
-# zero) and food (subsistence floor positive) therefore behave differently
-# here because one is a biological requirement and the other is not - not
-# because two different elasticities were chosen to make them differ.
+# to price above the subsistence line, because the floor is bought first
+# regardless of what it costs - see the below-subsistence branch below for
+# what happens once income can no longer cover it. Silver (subsistence
+# floor zero) and food (subsistence floor positive) therefore behave
+# differently here because one is a biological requirement and the other
+# is not - not because two different elasticities were chosen to make them
+# differ.
+#
+# THE SUBSISTENCE FLOOR IS TRADEABLE, NOT ABSOLUTE, ONCE INCOME FALLS SHORT
+# OF IT. docs/architecture/DEMAND_AT_SCALE.md section 1 measured what the
+# textbook below-subsistence branch actually does: it pays every good's
+# floor down by the same proportional scale factor, so a good with a zero
+# floor (a phone; silver; anything nobody needs to survive) gets scaled-down
+# quantity zero times any factor, which is zero regardless of the factor.
+# A household short of its own food floor therefore demanded EXACTLY zero
+# of every other good, at any price however cheap, with a step jump to a
+# specific positive quantity the instant income crossed the floor - not a
+# description of any real household, and specifically contradicted by
+# Banerjee and Duflo, "The Economic Lives of the Poor" (Journal of Economic
+# Perspectives, 2007), which finds households living under one to two
+# dollars a day, measurably calorie-short by any common subsistence
+# threshold, still spending a meaningful share of income on festivals,
+# tobacco and alcohol - and by mobile-phone adoption reaching a majority of
+# Kenyan households whose income sits well under any reasonable subsistence
+# line for a basket like this one's (Jack and Suri, "Risk Sharing and
+# Transactions Costs: Evidence from Kenya's Mobile Money Revolution",
+# American Economic Review, 2014).
+#
+# The fix keeps the formula above completely unchanged whenever a household
+# can cover its committed subsistence bundle (surplus at or above zero) -
+# that half of the model was not wrong, and DEMAND_AT_SCALE.md's own scale
+# check already relies on it being untouched. Only the below-subsistence
+# branch changes, and it changes by treating a share of the committed
+# subsistence bundle as NEGOTIABLE rather than absolute: a household that
+# cannot afford its full subsistence bundle still protects most of its
+# spending for the subsistence good (see FLOOR_TRADEABLE_SHARE below), but
+# treats a shrinking slice of what it cannot afford to protect as ordinary
+# flexible income, split across every good in the basket by the same
+# marginal budget shares the household would use above the floor - so a
+# cheap non-subsistence good draws real demand even from a household that
+# cannot fully feed itself, and an expensive one does not, exactly the
+# missing price sensitivity DEMAND_AT_SCALE.md flags. See
+# _below_subsistence_quantity_demanded_per_capita for the closed form and
+# why it meets the formula above with no jump at the subsistence line.
 
 Good = collections.namedtuple("Good", [
     "name",
     "subsistence_quantity_per_capita_per_year",   # the PHYSICAL floor
     "marginal_budget_share",                      # share of SURPLUS spending
 ])
+
+FLOOR_TRADEABLE_SHARE = declare(
+    "FLOOR_TRADEABLE_SHARE", 0.5,
+    kind="temporary_heuristic",
+    unit="dimensionless (fraction of a below-subsistence household's income "
+         "shortfall that becomes flexible, non-subsistence spending rather "
+         "than staying committed to the subsistence bundle)",
+    source=None,
+    confidence="D",
+    why="How readily a household short of its own subsistence bundle "
+        "trades some of that shortfall for ordinary discretionary spending "
+        "(festivals, tobacco, a phone) instead of buying as much of the "
+        "subsistence good as it possibly can - see "
+        "_below_subsistence_quantity_demanded_per_capita for exactly what "
+        "this multiplies. Zero would recover the old, textbook hard floor "
+        "(and its zero-demand defect); one would let a starving household "
+        "spend as freely on luxuries as a comfortable one, which the "
+        "'food still dominates when poor' property this module is tested "
+        "against forbids regardless of this number's value (see "
+        "sim/tests/test_demand_at_scale.py). A round middle value, chosen "
+        "once and not adjusted after seeing what it does to any headline "
+        "figure - CLAUDE.md 3.4's own discipline, in the same spirit as "
+        "FOOD_SURPLUS_BUDGET_SHARE's own provenance note. What would "
+        "derive this instead of assuming it: a measured marginal "
+        "propensity to spend on non-subsistence goods conditional on "
+        "income below a caloric-adequacy line, from a digitised household "
+        "expenditure survey for a comparable economy (Banerjee and Duflo's "
+        "own survey tables are the nearest real candidate and are not yet "
+        "digitised into this project's data).")
 
 
 def validate_basket(basket):
@@ -436,14 +503,16 @@ def household_quantity_demanded_per_capita(good, prices, income_per_capita, bask
     committed basket (income_per_capita less than the cost of every
     good's own subsistence floor, summed across the basket), the Stone-
     Geary formula above goes negative, which is not a quantity. This
-    function instead scales every committed quantity down proportionally
-    to what income actually covers - a starvation regime this module
-    FLAGS by returning a below-floor quantity rather than raising, but
-    does not model further: what actually happens to a population that
-    cannot feed itself is sim/world/demography.py's mechanism
-    (STARVATION_MORTALITY_CEILING_MULTIPLIER and its neighbours), not
-    this one, and the two are deliberately not wired together - see this
-    module's own STANDALONE section.
+    function instead hands off to
+    _below_subsistence_quantity_demanded_per_capita, which treats part of
+    the shortfall as flexible spending rather than forcing every good's
+    quantity down by the same scale factor - see that function's own
+    docstring and this module's own HOUSEHOLD DEMAND section for why. This
+    module still does not model what actually happens to a population that
+    cannot feed itself beyond that: that is sim/world/demography.py's
+    mechanism (STARVATION_MORTALITY_CEILING_MULTIPLIER and its
+    neighbours), not this one, and the two are deliberately not wired
+    together - see this module's own STANDALONE section.
     """
     committed_per_capita = sum(
         prices[basket_good.name] * basket_good.subsistence_quantity_per_capita_per_year
@@ -452,10 +521,82 @@ def household_quantity_demanded_per_capita(good, prices, income_per_capita, bask
     if surplus_per_capita < 0.0:
         if committed_per_capita <= 0.0:
             return 0.0
-        scale = max(0.0, income_per_capita / committed_per_capita)
-        return good.subsistence_quantity_per_capita_per_year * scale
+        return _below_subsistence_quantity_demanded_per_capita(
+            good, prices[good.name], income_per_capita, committed_per_capita)
     return (good.subsistence_quantity_per_capita_per_year
             + (good.marginal_budget_share / prices[good.name]) * surplus_per_capita)
+
+
+def _below_subsistence_quantity_demanded_per_capita(
+        good, price, income_per_capita, committed_per_capita):
+    """`good`'s quantity demanded for a household whose income cannot cover
+    the whole basket's committed subsistence bundle (committed_per_capita >
+    income_per_capita > 0, and committed_per_capita > 0 - the caller
+    already handled the degenerate committed_per_capita <= 0.0 case).
+
+    THE MECHANISM: a shrinking share of the shortfall becomes flexible
+    spending. Let income_as_share_of_committed_floor be how much of the
+    full committed bundle this household's income could cover if it spent
+    everything on it (1.0 exactly at the subsistence line, falling toward
+    0.0 as income falls toward nothing). This household is asked to commit
+    only part of its income to buying AS MUCH of the full subsistence
+    bundle, in the bundle's own proportions, as that reduced commitment
+    covers; the rest of its income becomes flexible spending, split across
+    every good in the basket by the SAME marginal budget shares the
+    household above the subsistence line uses for its surplus.
+
+    How much becomes flexible is FLOOR_TRADEABLE_SHARE times this
+    household's shortfall (1 minus income_as_share_of_committed_floor)
+    times its own income - a share of income, not a share of the missing
+    money, which is why it is well short of income for a household near
+    the subsistence line (shortfall near zero) and returns to zero at
+    income_per_capita = 0.0 (nothing to make flexible, no matter the
+    share) as it must for the household's total spending to still equal
+    its income. It is deliberately NOT the largest amount that would keep
+    the household solvent - see this function's own module-level constant,
+    FLOOR_TRADEABLE_SHARE, for why a share of income rather than a share of
+    the shortfall keeps this a smooth, single-parameter change to the
+    algebra rather than a new state variable.
+
+    CONTINUITY WITH THE FORMULA ABOVE THE LINE, PROVEN RATHER THAN ASSUMED.
+    At income_per_capita = committed_per_capita exactly (the subsistence
+    line), income_as_share_of_committed_floor is 1.0, the shortfall is
+    0.0, flexible spending is 0.0, and this function returns exactly
+    good.subsistence_quantity_per_capita_per_year - precisely what the
+    formula above the line returns there too (its own surplus term is
+    zero at that same point). The two formulas meet at that value with no
+    jump; sim/tests/test_demand_at_scale.py walks income finely across
+    this exact point and checks it.
+
+    WHY FOOD STILL DOMINATES WHEN POOR, BY CONSTRUCTION RATHER THAN BY
+    CHOOSING FLOOR_TRADEABLE_SHARE CAREFULLY. Every unit of flexible
+    spending is split by the SAME marginal budget shares used above the
+    line, so a basket whose subsistence good already keeps most of the
+    marginal budget share above the line (food's own share in
+    DEFAULT_BASKET) keeps most of the newly-flexible spending too, on top
+    of the protected share it already had - a household well short of its
+    own floor still spends the large majority of its income on the
+    subsistence good, for any FLOOR_TRADEABLE_SHARE strictly less than
+    one, not because that number was tuned to make it so.
+
+    BUDGET BALANCE, THE PROPERTY THAT MAKES THIS A REAL RE-ALLOCATION
+    RATHER THAN INVENTED SPENDING. Summed in money terms across every good
+    in the basket (protected floor purchases at the reduced commitment,
+    plus flexible spending split by marginal budget share, which itself
+    sums to 1 across the basket), this function's quantities cost exactly
+    income_per_capita - the household spends its whole income and no
+    more, exactly like the formula above the line - see
+    sim/tests/test_demand_at_scale.py for the direct check.
+    """
+    income_as_share_of_committed_floor = income_per_capita / committed_per_capita
+    shortfall_as_share_of_committed_floor = 1.0 - income_as_share_of_committed_floor
+    flexible_spending_per_capita = (
+        FLOOR_TRADEABLE_SHARE * shortfall_as_share_of_committed_floor
+        * income_per_capita)
+    protected_spending_per_capita = income_per_capita - flexible_spending_per_capita
+    floor_purchase_scale = protected_spending_per_capita / committed_per_capita
+    return (good.subsistence_quantity_per_capita_per_year * floor_purchase_scale
+            + (good.marginal_budget_share / price) * flexible_spending_per_capita)
 
 
 def aggregate_household_demand(good, prices, bins, basket):

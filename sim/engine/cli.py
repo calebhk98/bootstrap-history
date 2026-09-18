@@ -472,34 +472,53 @@ def cmd_validate(a):
     return 1 if errs else 0
 
 
-# A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say how big a
-# number is, never to gate anything a player can actually do. FLAGGED: this
-# does NOT match the "2000/yr for 30 yrs: 60,000" figure printed two lines
-# above its own use in cmd_path, below. DEFAULTS["founder_hours_per_year"]
-# (data.py) is 2,000 specifically because an earlier version used 2,400 "with
-# no illness, no travel, no administration and no bad weather" (see that
-# field's own comment) - and 2,400 * 30 = 72,000 exactly, while 2,000 * 30 =
-# 60,000. This constant looks like a leftover from the 2,400/yr era that was
-# never updated when the per-year figure changed; the honest value under
-# today's model is 60,000, not this. Left AT ITS SOURCE VALUE here (migrating
-# a literal into declare() must not also silently fix what it says - see
-# CLAUDE.md 3.4's neighbour, "this is not a refactor of the logic"); flagged
-# for whoever picks up the burndown to reconcile against the 60,000 figure
-# instead of computing it fresh from DEFAULTS.
-FOUNDER_LIFETIME_HOURS = declare(
-    "FOUNDER_LIFETIME_HOURS", 72000, kind="temporary_heuristic",
-    unit="founder-hours", source=None, confidence="D",
-    why="How many hours a founder's whole working life is treated as "
-        "holding, for two purely informational uses: what percentage of a "
-        "life a node's founder-hours requirement costs (cmd_why), and "
-        "whether a path's total founder-hours demand could conceivably be "
-        "done by one person alone (cmd_path). Neither use gates anything a "
-        "player can do - the game does not stop you starting a project past "
-        "this many hours - so this is a claim made TO the player, not a rule "
-        "enforced on them. See the discrepancy noted above: this value "
-        "appears to be stale against the founder_hours_per_year DEFAULTS "
-        "actually uses, which is exactly the kind of drift a single "
-        "declared name existing only here cannot yet prevent.")
+# Complaints/38: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
+# how big a number is, never to gate anything a player can actually do
+# (neither cmd_path nor cmd_why stops a player starting a project past this
+# many hours; this is a claim made TO the player, not a rule enforced on
+# them). USED to be a separately typed 72,000, two lines below a SEPARATE
+# printed sentence deriving 60,000 from "2000/yr for 30 yrs" - both wrong,
+# because both were literals and DEFAULTS["founder_hours_per_year"] is DATA a
+# civilisation can set (see that field's own "2,000, NOT 2,400" comment for
+# why it moved off the 2,400 that made 72,000 exact). Typing a corrected
+# 60,000 in its place would only move the drift, not close it: if a scenario
+# ever sets founder_hours_per_year (or the expected working-life figure
+# below) to something else, a typed number is wrong again the moment it
+# does.
+#
+# So there is no typed lifetime figure any more. `_founder_lifetime_hours()`
+# computes it from the same two DEFAULTS entries the rest of the engine
+# reads for exactly this founder: `founder_hours_per_year` (how many hours a
+# year the founder works, same figure a hired man is paid by) and
+# `founder_life_mean` (the founder's EXPECTED REMAINING WORKING LIFE IN
+# YEARS - not a new "expected working years" invented for this print
+# statement, but the existing DEFAULTS entry core.py itself uses as the mean
+# of the founder's mortality draw: "founder remaining lifespan, elite male
+# already aged 35", see core.py's `life_left`). Multiplying those two is the
+# expression that used to disagree with itself across two printed lines;
+# now cmd_path's printed budget, cmd_path's feasibility judgement and
+# cmd_why's "% of a life" figure all call this one function, so whatever
+# DEFAULTS says, they cannot say two different things about it again.
+#
+# (2,000 * 28 = 56,000 today - neither of the two old literals. That is not
+# a third guess: it is what the honest expression above comes to under
+# today's DEFAULTS, and it is smaller than the "corrected" 60,000 the
+# complaint itself flagged as the obvious-but-wrong fix, because 28 years
+# is the figure the mortality model actually uses, not the round 30 the old
+# print statement typed.)
+def _founder_lifetime_hours(cfg=None):
+    """Founder-hours a whole working life holds: hours/year * expected
+    working years, both read from `cfg` if given (a live Sim's config, which
+    may override either) and otherwise from DEFAULTS - the same source
+    core.py reads `founder_hours_per_year` and `founder_life_mean` from for
+    the founder's real hours ledger and real mortality draw. No caller of
+    this function may re-derive or re-type either input; that duplication is
+    exactly what let the two numbers drift apart before.
+    """
+    cfg = cfg or {}
+    hours_per_year = cfg.get("founder_hours_per_year", DEFAULTS["founder_hours_per_year"])
+    expected_working_years = cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
+    return hours_per_year * expected_working_years
 
 
 def cmd_path(a):
@@ -523,10 +542,18 @@ def cmd_path(a):
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
     for node_id in chain:
         print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
-    print("\nFounder-hours available in one lifetime at 2000/yr for 30 yrs: 60,000")
+    # Complaints/38: the printed budget and the feasibility judgement below
+    # used to be two separately typed numbers (60,000 printed, 72,000
+    # judged) that could disagree, and did. Both now come from one call, so
+    # they say the same thing about the same DEFAULTS whatever those are.
+    lifetime_hours = _founder_lifetime_hours()
+    print("\nFounder-hours available in one lifetime at %s/yr for %s yrs: %s" %
+          (f"{DEFAULTS['founder_hours_per_year']:,.0f}",
+           f"{DEFAULTS['founder_life_mean']:,.0f}",
+           f"{lifetime_hours:,.0f}"))
     print("Founder-hours demanded by this path                          : %s" % f"{cum_ph:,.0f}")
     print("=> %s" % ("feasible alone in principle, but not with the calendar floors"
-                     if cum_ph < FOUNDER_LIFETIME_HOURS else
+                     if cum_ph < lifetime_hours else
                      "IMPOSSIBLE for one person. You must convert your hours into other people's hours."))
 
 
@@ -2094,10 +2121,11 @@ WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
         "the mechanic this line describes may no longer exist in the engine "
         "at all, and this could be describing a consequence that does not "
         "happen. Left at its source value rather than silently removed or "
-        "changed (see FOUNDER_LIFETIME_HOURS's own comment on why a literal "
-        "migration must not also fix what it says); worth an actual read of "
-        "whether 'sus' still does anything before the next hand touches "
-        "this line.")
+        "changed - a literal migration must not also fix what it says, the "
+        "same discipline _founder_lifetime_hours()'s own comment explains "
+        "for a case that WAS worth fixing (Complaints/38); worth an actual "
+        "read of whether 'sus' still does anything before the next hand "
+        "touches this line.")
 
 
 def cmd_why(a):
@@ -2113,7 +2141,14 @@ def cmd_why(a):
     print(node_record["note"])
     print()
     print("Recipe          : knowledge/%s" % node_record["kb"])
-    print("Your hours      : %s   (%.1f%% of a 72,000-hour life)" % (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / FOUNDER_LIFETIME_HOURS))
+    # Complaints/38: same computed budget cmd_path prints and judges against
+    # - see _founder_lifetime_hours()'s own comment - so this percentage
+    # cannot go stale against either of those the way a separately typed
+    # "72,000-hour life" did.
+    lifetime_hours = _founder_lifetime_hours()
+    print("Your hours      : %s   (%.1f%% of a %s-hour life)" %
+          (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / lifetime_hours,
+           f"{lifetime_hours:,.0f}"))
     print("Hired labour    : %s" % (", ".join("%s %s h" % (trade, f"{hours:,}") for trade, hours in node_record["lab"].items()) or "none"))
     print("Materials       : %s" % (", ".join("%s %s" % (material, f"{quantity:,}") for material, quantity in node_record["mat"].items()) or "none"))
     print("Cost            : %s den labour + %s materials + %s capital = %s TOTAL"
@@ -2175,29 +2210,18 @@ def cmd_why(a):
         print("   INCLUDING THE GOAL. This node is on the critical path.")
 
 
-# THE MORTALITY SWEEP'S OWN STANDARD DEVIATION, NOT DEFAULTS'. cmd_sweep's
-# "mortality" axis sweeps founder_life_mean and needs a spread to draw around
-# each mean point, and this value does NOT match
-# DEFAULTS["founder_life_sd"] (data.py: 8.0) that every ordinary game and
-# every other place in this engine that turns mortality on actually uses
-# (see core.py's own founder-lifespan draw and this file's own
-# _ingame_options, which both read DEFAULTS rather than hardcoding a
-# figure). A sweep meant to show how the OUTCOME moves as the mean lifespan
-# moves is, right now, doing so under half the lifespan variance a real game
-# would have - narrower variance means a narrower spread of outcomes at
-# every point on this sweep than an actual playthrough would show. FLAGGED,
-# not changed: fixing which number is right is a behaviour change outside
-# this migration's scope (see FOUNDER_LIFETIME_HOURS's own comment on why a
-# literal's value is preserved exactly, discrepancy and all).
-SWEEP_MORTALITY_FOUNDER_LIFE_SD = declare(
-    "SWEEP_MORTALITY_FOUNDER_LIFE_SD", 4.0, kind="temporary_heuristic",
-    unit="years (std dev of founder lifespan)", source=None, confidence="D",
-    why="Standard deviation used only inside cmd_sweep's 'mortality' axis, "
-        "so each swept mean lifespan has SOME spread to show a distribution "
-        "of outcomes rather than one deterministic year per point. Picked "
-        "for this sweep specifically, apparently without reference to "
-        "DEFAULTS['founder_life_sd'] (8.0) that governs every other mortal "
-        "run in the game - see the discrepancy noted above.")
+# Complaints/38 section 2: cmd_sweep's "mortality" axis sweeps
+# founder_life_mean and needs a spread to draw around each mean point. This
+# USED to be a separately declared 4.0, half of DEFAULTS["founder_life_sd"]
+# (8.0) - the standard deviation every ordinary game, core.py's own
+# founder-lifespan draw, and this file's own _ingame_options all actually
+# use. A sweep whose whole purpose is to show how the OUTCOME is distributed
+# under mortality was doing so at half the real variance, understating the
+# tail in both directions - exactly the thing a sweep is for. Fixed by
+# deleting the second number: the mortality axis below now reads
+# DEFAULTS["founder_life_sd"] directly, the same way it already reads
+# DEFAULTS["founder_life_mean"] for its central values, so there is only one
+# place left that can disagree with itself.
 
 
 def cmd_sweep(a):
@@ -2228,7 +2252,7 @@ def cmd_sweep(a):
         cfg, life = {}, None
         if key == "founder_life_mean":
             cfg = {"immortal": False, "founder_life_mean": value,
-                   "founder_life_sd": SWEEP_MORTALITY_FOUNDER_LIFE_SD}
+                   "founder_life_sd": DEFAULTS["founder_life_sd"]}
         elif key == "founder_life":
             life = value
         else:

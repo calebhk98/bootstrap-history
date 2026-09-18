@@ -526,3 +526,51 @@ police. If SS1.3's recommended fix is built, whatever number it introduces
 declared inside `sim/world/demand.py` itself with `kind="temporary_heuristic"`,
 using the existing `KINDS` vocabulary in `sim/constants.py` - no new kind is
 needed for it, so no change to that file is needed for this either.
+
+---
+
+## Follow-up: the income distribution cannot produce a poor household
+
+The subsistence cliff described above is now fixed - the floor is tradeable,
+price bites below the line, and a household at 0.99 of its floor buys 1,000
+times more of a good made 1,000 times cheaper where before it bought exactly
+zero at any price.
+
+The headline figures did not move, and the reason is a second defect.
+
+`income_bins` draws from a **Pareto Type I** distribution, which has a HARD
+MINIMUM: no draw can fall below it, by construction. At the illustrative
+Roman scenario - 55 million people, mean income 550 labour-hours a year,
+Gini 0.40, twenty bins - the poorest bin sits at
+
+    poorest bin   239.17 hours/capita/year   (43.5% of the mean)
+    richest bin  3046.55
+    cost of all subsistence floors: 61.39
+
+So the poorest fifth of a pre-industrial population is modelled at nearly
+four times subsistence, and **the share of the population below the
+subsistence line is exactly zero**. Not small - zero, and zero for any
+parameters that leave the Pareto minimum above the floor.
+
+That is wrong about the world in a way that matters. A pre-industrial
+economy has people at and below subsistence continuously; that is what makes
+a bad harvest a famine rather than an inconvenience. It is also why the
+cliff fix, though correct and tested, changes nothing in the demo: the
+scenario never enters the regime it repairs.
+
+**The cause is a known bad fit rather than a bad parameter.** Pareto Type I
+describes the TOP tail of an income distribution well - that is what Pareto
+observed and what it is for - and describes the bottom badly, because a hard
+lower bound is exactly the wrong shape there. The standard alternative is
+lognormal for the body of the distribution, or a lognormal body with a
+Pareto tail spliced above some threshold, which is the usual empirical
+compromise.
+
+Fixing it would make the cliff repair observable, would let famine
+mortality connect to income rather than only to harvest, and is a
+prerequisite for asking the stakeholder's own question - whether a
+subsistence farmer can buy a phone - of a population that actually contains
+subsistence farmers.
+
+Not done here. Recorded with its measurement so the next person does not
+have to find it twice.
