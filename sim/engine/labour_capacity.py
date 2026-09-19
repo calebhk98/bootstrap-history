@@ -509,7 +509,7 @@ class CapacityMixin:
             return ("Room comes from institutions and heavy industry, and you "
                     "have every one of them this society offers; what is left "
                     "grows on its own as they run.")
-        _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id)[0]]
+        _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id, _why=False)[0]]
         return ("Room is not bought, it is built: %s%s. Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
                 % (_reopen_bit,

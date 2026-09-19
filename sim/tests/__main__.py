@@ -89,6 +89,7 @@ TOPICS = [
     "five_things_winner",
     "industrial_dashboard",
     "scanners_and_scheduling",
+    "perf_optimizations",
     "affordability_warning",
     "arrears_visibility",
     "allocate",

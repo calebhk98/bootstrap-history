@@ -20,7 +20,7 @@ Timing comes free with it: `record` and `check` both print the CPU time each
 scenario took, so the same command that proves you broke nothing also tells
 you how much faster it got.
 """
-import hashlib, json, os, random, sys, time
+import argparse, concurrent.futures, hashlib, json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -82,6 +82,14 @@ SCENARIOS = [
     dict(civ="rome_100ad",      seed=7, years=400, events=True,  fog=False),
 ]
 
+# FAST DEVELOPER ITERATION MODE SUBSET (--quick).
+QUICK_SCENARIOS = [
+    dict(civ="rome_100ad",      seed=1, years=100, events=True,  fog=False),
+    dict(civ="rome_100ad",      seed=2, years=100, events=True,  fog=True),
+    dict(civ="han_china_100ad", seed=1, years=100, events=True,  fog=False),
+    dict(civ="england_1300",    seed=1, years=100, events=True,  fog=False),
+]
+
 
 def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
@@ -99,7 +107,7 @@ def name_of(scenario):
 
 
 def run(scenario, keep_states=False):
-    """Return (per-year digests, cpu seconds, final full state)."""
+    """Return (per-year digests, cpu seconds, final full states list)."""
     sim = build(scenario)
     start_time = time.process_time()
     per_year, states = [], []
@@ -114,60 +122,129 @@ def run(scenario, keep_states=False):
     return per_year, time.process_time() - start_time, states
 
 
-def record(path):
-    out, total = {}, 0.0
-    for scenario in SCENARIOS:
+def _run_scenario_worker(arg):
+    """Worker function for ProcessPoolExecutor."""
+    scenario, keep_states = arg
+    per_year, cpu_time, states = run(scenario, keep_states=keep_states)
+    return scenario, per_year, cpu_time, states
+
+
+def record(path, scenarios=None, jobs=None):
+    if scenarios is None:
+        scenarios = SCENARIOS
+    if jobs is None:
+        jobs = min(len(scenarios), os.cpu_count() or 1)
+
+    out, cpu_total = {}, 0.0
+    start_wall = time.time()
+
+    if jobs > 1:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
+            results = list(executor.map(_run_scenario_worker, [(s, False) for s in scenarios]))
+    else:
+        results = [_run_scenario_worker((s, False)) for s in scenarios]
+
+    wall_total = time.time() - start_wall
+
+    for scenario, years, cpu, _ in results:
         name = name_of(scenario)
-        years, cpu, _ = run(scenario)
-        total += cpu
+        cpu_total += cpu
         out[name] = {"scenario": scenario, "years": years}
         print("  %-42s %5d years  %7.2fs cpu" % (name, len(years), cpu))
-    print("  %-42s %18.2fs cpu TOTAL" % ("", total))
+
+    print("  %-42s %18.2fs cpu  %7.2fs wall TOTAL" % ("", cpu_total, wall_total))
     with open(path, "w") as handle:
         json.dump(out, handle, indent=1)
     print("written to %s" % path)
     return 0
 
 
-def check(path):
+def check(path, scenarios=None, jobs=None):
     with open(path) as handle:
         base = json.load(handle)
-    bad, total = [], 0.0
-    for name, entry in base.items():
+
+    if scenarios is not None:
+        target_names = {name_of(s) for s in scenarios}
+        base_items = [(name, entry) for name, entry in base.items() if name in target_names]
+        if not base_items:
+            base_items = []
+            for name, entry in base.items():
+                sc = entry["scenario"]
+                if any(s["civ"] == sc["civ"] and s["seed"] == sc["seed"] for s in scenarios):
+                    base_items.append((name, entry))
+    else:
+        base_items = list(base.items())
+
+    target_scenarios = [entry["scenario"] for _, entry in base_items]
+    if jobs is None:
+        jobs = min(len(target_scenarios), os.cpu_count() or 1)
+
+    start_wall = time.time()
+    # Keep keep_states=False on initial check run to avoid memory overhead
+    if jobs > 1:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
+            results = list(executor.map(_run_scenario_worker, [(s, False) for s in target_scenarios]))
+    else:
+        results = [_run_scenario_worker((s, False)) for s in target_scenarios]
+
+    wall_total = time.time() - start_wall
+    bad, cpu_total = [], 0.0
+    result_map = {name_of(s): (years, cpu) for s, years, cpu, _ in results}
+
+    for name, entry in base_items:
         scenario = entry["scenario"]
         want = entry["years"]
-        # keep_states only for the re-run, so a divergence can be explained
-        # without a second run of the whole thing.
-        got, cpu, states = run(scenario, keep_states=True)
-        total += cpu
-        if got == want:
+        if name not in result_map:
+            continue
+        got, cpu = result_map[name]
+        cpu_total += cpu
+
+        want_cmp = want[:scenario["years"]]
+
+        if got == want_cmp:
             print("  %-42s SAME  %5d years  %7.2fs cpu" % (name, len(got), cpu))
             continue
-        # FIRST divergent year, not all of them: after the first one every
-        # later year differs too and listing them buries the one that matters.
-        diverged_at = next((index for index in range(min(len(got), len(want)))
-                  if got[index] != want[index]), min(len(got), len(want)))
+
+        diverged_at = next((index for index in range(min(len(got), len(want_cmp)))
+                            if got[index] != want_cmp[index]), min(len(got), len(want_cmp)))
         bad.append((name, diverged_at))
         print("  %-42s DIVERGED at year index %d (of %d/%d)"
-              % (name, diverged_at, len(got), len(want)))
-        if len(got) != len(want):
-            print("      run length changed: %d -> %d" % (len(want), len(got)))
+              % (name, diverged_at, len(got), len(want_cmp)))
+        if len(got) != len(want_cmp):
+            print("      run length changed: %d -> %d" % (len(want_cmp), len(got)))
+
+        # Rerun ONLY the failing scenario with keep_states=True for diagnostic state
+        _, _, _, states = run(scenario, keep_states=True)
         if diverged_at < len(states):
             print("      re-run this scenario under a debugger; changed state "
                   "is in %s year %d" % (name, diverged_at))
+
     print()
     if bad:
-        print("FAIL: %d of %d scenarios diverged" % (len(bad), len(base)))
+        print("FAIL: %d of %d scenarios diverged" % (len(bad), len(base_items)))
         return 1
-    print("OK: all %d scenarios byte-identical.  %.2fs cpu total" % (len(base), total))
+    print("OK: all %d scenarios byte-identical.  %.2fs cpu  %.2fs wall TOTAL"
+          % (len(base_items), cpu_total, wall_total))
     return 0
 
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ("record", "check"):
-        print(__doc__)
-        return 2
-    return (record if sys.argv[1] == "record" else check)(sys.argv[2])
+    parser = argparse.ArgumentParser(description="Prove an optimisation changed nothing.")
+    parser.add_argument("mode", choices=["record", "check"], help="Mode: record or check")
+    parser.add_argument("path", help="Path to JSON baseline file")
+    parser.add_argument("--jobs", "-j", type=int, default=None, help="Number of parallel processes")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--quick", action="store_true", help="Run fast subset of scenarios")
+    group.add_argument("--full", action="store_true", help="Run full scenario set (default)")
+
+    args = parser.parse_args()
+    scenarios = QUICK_SCENARIOS if args.quick else SCENARIOS
+    jobs = args.jobs if args.jobs is not None else min(len(scenarios), os.cpu_count() or 1)
+
+    if args.mode == "record":
+        return record(args.path, scenarios=scenarios, jobs=jobs)
+    else:
+        return check(args.path, scenarios=scenarios, jobs=jobs)
 
 
 if __name__ == "__main__":

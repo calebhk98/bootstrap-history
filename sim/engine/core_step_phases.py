@@ -592,7 +592,7 @@ class StepPhasesMixin:
                 node = self.nodes[node_id]
                 if not any(_is_gone(trade_id) for trade_id in node["lab"]):
                     continue
-                if not self.start_reason(node_id, ignore_trade=True)[0]:
+                if not self.start_reason(node_id, ignore_trade=True, _why=False)[0]:
                     continue
                 for trade_id in node["lab"]:
                     if _is_gone(trade_id):
@@ -1219,9 +1219,19 @@ class StepPhasesMixin:
         # the top of step(), so reserving them again would leave a
         # household whose income comfortably covers its costs unable to
         # spend a single denarius on its own projects.
-        fixed = self.living_cost() + self.upkeep() + self.mine_operating_cost()
-        reserve = max(0.0, fixed - self.revenue())
-        purse = self.household.capital + self.credit_limit() * 0.6 - reserve
+        revenue = self.revenue()
+        upkeep = self.upkeep()
+        fixed = (
+            self.living_cost(_rev=revenue, _upkeep=upkeep)
+            + upkeep
+            + self.mine_operating_cost()
+        )
+        reserve = max(0.0, fixed - revenue)
+        purse = (
+            self.household.capital
+            + self.credit_limit(_rev=revenue, _upkeep=upkeep) * 0.6
+            - reserve
+        )
         # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE: a project
         # with cost_left already at zero asks for money=0 this year, and
         # the money>purse test must not fire just because purse itself has

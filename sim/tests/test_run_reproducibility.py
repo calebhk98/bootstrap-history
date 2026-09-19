@@ -34,7 +34,8 @@ def _one_run(seed=9, years=180, civ="rome_100ad"):
 # builds two independent runs back to back the way this one does.
 def _same_seed_same_run():
     first_result = _one_run()
-    return _one_run() == first_result, (first_result, _one_run())
+    second_result = _one_run()
+    return second_result == first_result, (first_result, second_result)
 
 slow_check("the same seed gives the same run, twice in one process",
            _same_seed_same_run)
