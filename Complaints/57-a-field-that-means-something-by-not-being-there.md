@@ -40,11 +40,21 @@ absence of an attribute. That channel has four properties nobody chose:
    look like nothing. The file's own comment says the eight "have been
    checked against `SAVE_FIELDS`", which is a check somebody did once, by
    hand, and which nothing re-runs.
-3. **Every read site pays for it, in code and in speed.** The value is
+3. **Every read site has to spell the default the same way.** The value is
    reconstructed through `getattr(obj, name, default)` at every call site,
-   in paths that run every step, and the default has to be spelled the same
-   way at each one. `getattr` with three arguments on a missing attribute is
-   also the slow path.
+   and nothing checks that the twenty-three sites agree on what the default
+   is. One site defaulting to `0` where another defaults to `None` is a
+   disagreement about whether the thing has happened, and it is invisible.
+   Speed is not the argument. Builtin `getattr` costs about 25ns against
+   8ns for a direct attribute read, and every getattr call in the engine
+   together is 1.4% of a 60-year run - 0.049s of 3.608s over 418,703 calls:
+
+       python3 -m cProfile -s cumtime sim/simulator.py run --horizon 60 --mc 1 --seed 1
+
+   and read the `builtins.getattr` row. The 50x figure that gets quoted for
+   getattr is a class defining `__getattr__` and paying a Python-level
+   dispatch on every miss; no class in `sim/` defines one
+   (`grep -rn "def __getattr__" sim/`).
 4. **A correct-looking change breaks it silently.** The constructor's comment
    records exactly this: promoting one of these to a real `__init__`
    attribute "passed the whole test suite while silently breaking save-file
@@ -88,17 +98,27 @@ read site before the old encoding is removed. Whoever does this should decide
 that up front, because "the fingerprint differs" will otherwise look like a
 bug for the whole of the work.
 
-**Every read site has to be found and converted together.** 132 `getattr(s,
-...)` / `getattr(self, ...)` reads exist across `sim/engine/`:
+**Every read site has to be found and converted together, and there are 23
+of them.** The eight fields are read through `getattr(owner, "name",
+default)` at exactly this many places:
 
-    grep -rn 'getattr(s, "\|getattr(self, "\|getattr(sim, "' --include=*.py sim/engine/ | wc -l
-    132
+    grep -rnE 'getattr\([A-Za-z_][A-Za-z0-9_.]*, *"(insolvent_years|wage_hours_this_year|_said_deputies|_said_scandal|last_withdrawal|_said_near_limit|_said_autoopen|_said_parallelism)" *,' --include=*.py sim/ | wc -l
+    23
 
-Most are unrelated to these eight fields (`getattr(self, "fog", False)` and
-similar), so the real count is smaller and nobody has measured it. Measure it
-first. A half-converted field is worse than either encoding, because one site
+split `insolvent_years` 8, `wage_hours_this_year` 8, `last_withdrawal` 2, and
+one each for the five `_said_*` flags, across eleven files
+(`grep -rl` the same pattern), concentrated in `core_step_phases.py`,
+`projects_starting.py` and `labour_*.py`.
+
+Twenty-three sites is the whole cost, and it is small enough that the
+conversion is an afternoon. Scope the grep to the eight field names. A grep
+for every `getattr` on `self`, `sim` or `s` across `sim/engine/` answers 132
+and measures something else entirely: `fog` alone accounts for 31 of those
+reads and has nothing to do with this complaint.
+
+A half-converted field is still worse than either encoding, because one site
 reading absence and another reading `None` disagree about whether a thing has
-happened.
+happened. Convert a field's sites in one commit, not a file's.
 
 ## Not being fixed now
 
