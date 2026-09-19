@@ -96,16 +96,16 @@ def _pick_milestone_filename(civ_id):
             return candidate
 
 
-def _ingame_save_milestone(s, session):
+def _ingame_save_milestone(sim, session):
     """'save', typed bare mid-game (no filename): a snapshot of exactly this
     moment, kept in the managed save directory alongside whatever --session
     is already autosaving to - so a player can come back to THIS point
     later even after the ongoing game has moved well past it. 'save <file>'
     with a name is untouched: that is still the JSON protocol's own
     sandboxed save, a relative path beside wherever the game was started."""
-    path = _pick_milestone_filename(s.civ.get("id") or "game")
+    path = _pick_milestone_filename(sim.civ.get("id") or "game")
     try:
-        save_state(s, path)
+        save_state(sim, path)
     except OSError as e:
         print("   -- could not write there: %s" % e)
         return
@@ -117,13 +117,13 @@ def _ingame_save_milestone(s, session):
     # already carries a sidecar's fields to the new name
     # (settings.move_session_meta).
     settings.save_session_meta(path, {"checkpoint": True})
-    print("   -- saved a copy of %d AD to %s" % (s.year, path))
+    print("   -- saved a copy of %d AD to %s" % (sim.year, path))
     if session:
         print("      (this game's ongoing save at %s is untouched, and keeps "
               "saving after every command as before)" % session)
 
 
-def _ingame_load(cfg, s, session, a):
+def _ingame_load(cfg, sim, session, a):
     """'load', typed bare mid-game: switch this running game to a different
     save in the managed directory, without going back to the main menu.
     Returns the session path to use from here on - unchanged if nothing was
@@ -157,7 +157,7 @@ def _ingame_load(cfg, s, session, a):
         return session
     chosen = rows[int(raw) - 1]["path"]
     try:
-        load_state(s, chosen)
+        load_state(sim, chosen)
     except Exception as e:
         print("   -- could not load %s: %s" % (chosen, e))
         return session
@@ -169,8 +169,8 @@ def _ingame_load(cfg, s, session, a):
     meta = settings.load_session_meta(chosen)
     horizon_years = meta.get("horizon_years")
     if isinstance(horizon_years, (int, float)) and horizon_years > 0:
-        s.cfg["horizon_years"] = int(horizon_years)
-        s.end_year = s.cfg["start_year"] + int(horizon_years)
+        sim.cfg["horizon_years"] = int(horizon_years)
+        sim.end_year = sim.cfg["start_year"] + int(horizon_years)
     # A STALE "already said the ending" FLAG WOULD LIE HERE TWICE OVER: it
     # could suppress the scoreboard for a save that HAD already ended, or
     # (after this session later ends on its own) skip announcing THAT ending
@@ -185,14 +185,14 @@ def _ingame_load(cfg, s, session, a):
     # besides cmd_play/cmd_agent that can point the ongoing autosave at a
     # file, so it needs the identical fork.
     if settings.is_checkpoint(chosen):
-        forked = _pick_session_filename(s.civ.get("id") or "game")
-        save_state(s, forked)
+        forked = _pick_session_filename(sim.civ.get("id") or "game")
+        save_state(sim, forked)
         print("   -- switched to the checkpoint at %s: %d AD. A checkpoint "
               "stays exactly as it is - nothing you do now writes back into "
               "it. From here on, this game is autosaving to %s instead."
-              % (chosen, s.year, forked))
+              % (chosen, sim.year, forked))
         return forked
-    print("   -- switched to %s: %d AD." % (chosen, s.year))
+    print("   -- switched to %s: %d AD." % (chosen, sim.year))
     return chosen
 
 

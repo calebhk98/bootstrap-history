@@ -50,8 +50,9 @@ from world import agriculture
 # here would load `world/shared_constants.py` a SECOND time under a
 # DIFFERENT sys.modules key (`world.shared_constants`, not
 # `sim.world.shared_constants`) - the exact "same file, two module
-# objects" trap CLAUDE.md SS6 records for `world.agriculture` vs
-# `sim.world.agriculture`, avoided here on purpose rather than repeated.
+# objects" trap sim/ARCHITECTURE.md's "Two package roots, and what breaks
+# when you forget" section describes, avoided here on purpose rather than
+# repeated.
 from sim.world.shared_constants import (
     GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
 # Same fully-qualified convention as shared_constants.py just above, for the

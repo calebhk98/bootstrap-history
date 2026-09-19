@@ -12,7 +12,7 @@ HELP_TOPICS = ("commands", "labour", "population", "economy", "money",
                "protection", "stuck", "log")
 
 
-def _agent_help(s, topic=None):
+def _agent_help(sim, topic=None):
     """Everything a player needs, from inside the game, a topic at a time.
 
     A player should not have to be told the commands out of band. The
@@ -25,7 +25,7 @@ def _agent_help(s, topic=None):
     # rather than the plain imported name.
     from .. import protocol as _protocol
     TYPED_HINTS = _protocol.TYPED_HINTS
-    fog = getattr(s, "fog", False)
+    fog = getattr(sim, "fog", False)
     topic = (topic or "").strip().lower()
 
     if not topic:
@@ -37,7 +37,7 @@ def _agent_help(s, topic=None):
                 "%d. Knowing how a thing works is free. Building it is not: it "
                 "takes your own hours, other people's hours, money, materials, "
                 "and years."
-                % (s.civ.get("name", "a society"), s.cfg["start_year"])),
+                % (sim.civ.get("name", "a society"), sim.cfg["start_year"])),
             "how a turn works": (
                 "You begin projects, then advance time. Nothing happens unless "
                 "you make it. You are charged for food, rent and appearances "
@@ -51,11 +51,11 @@ def _agent_help(s, topic=None):
                 "Build %s, before the horizon at %d. You know what it is and "
                 "what it is for; what you cannot see is the road there, only "
                 "the next step of it."
-                % (s.nodes[s.goal]["name"].lower() if s.goal in s.nodes else "it",
-                   s.end_year)
+                % (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes else "it",
+                   sim.end_year)
                 if fog else
                 "Reach %s, and see the rest of what you can build on the way."
-                % s.goal),
+                % sim.goal),
             "you arrive alone": (
                 "No employees, no slaves, nobody who owes you anything. Anyone "
                 'who works for you is hired, taught, commissioned or bought. See '

@@ -197,21 +197,27 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
-- **`Sim` is one god object.** `Sim.__init__` assigns **44** instance
-  attributes, unchanged by the mixin split described in `sim/ARCHITECTURE.md`
-  (that split touched `step()`, not `__init__`). `Sim` and its mixins have
-  **538** methods between them, all talking through `self`.
-  `sim/ARCHITECTURE.md`'s "runtime graph is one god object" section gives the
-  script for both numbers and the per-mixin breakdown. A full decomposition
-  of the god object has been considered and rejected, with reasons, in the
-  same file - do not silently restart it.
+- **`Sim` is one god object.** Every mixin method talks through `self`, so
+  the coupling is real however the files are arranged. A full decomposition
+  has been considered and rejected, with reasons, in `sim/ARCHITECTURE.md` -
+  do not silently restart it.
+
+  For the attribute and method counts, run the scripts in that file's
+  "runtime graph is one god object" section. **They are deliberately not
+  repeated here.** This bullet used to carry them, and every one went stale
+  the next time somebody split a mixin, because a figure quoted in two
+  places drifts in one of them and nothing notices. A number belongs next to
+  the script that produces it, in one file, and everywhere else points.
 - **Much of the engine is majority comment, and the comments are
   load-bearing.** They are how agents hand each other the reason a thing is
-  the way it is. Do not strip them to "clean up". Measured on the eight
-  largest engine files: **one of eight** (`core.py`, 55%) is majority
-  comment counting docstrings as documentation; **zero of eight** is,
-  counting docstrings as code. `sim/ARCHITECTURE.md` states both counting
-  rules and gives the script and the current file list for each.
+  the way it is. Do not strip them to "clean up".
+
+  How many of the largest files are majority comment depends on whether a
+  docstring counts as documentation or as code, and the answer differs under
+  the two rules. `sim/ARCHITECTURE.md` states both rules, gives the script
+  for each, and derives its own file list rather than hardcoding one. Run it
+  rather than quoting a figure from here; this bullet held one and it was
+  wrong within a fortnight.
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 
@@ -297,8 +303,10 @@ and a cheaper one than it looks. Measured: **739 read sites across 13 files**
 (no command reproduces this figure today; it is not scripted anywhere in the
 repo, so treat it the same as the naming counts above, unverifiable until
 someone commits the scan), plus the **2,864 nodes**
-(`python3 sim/simulator.py validate`) and the **39**
-`data/branches/*.json` sources (`ls data/branches/*.json | wc -l`). No save
+(`python3 sim/simulator.py validate`) and the branch sources
+(`ls data/branches/*.json | wc -l`; this line said 39 while that command
+answered 40, which is the one failure mode worse than an unverifiable
+number - a figure with its own refutation printed beside it). No save
 migration is needed at all - saves store node ids, never node records - and
 the JSON protocol already translates these to readable keys on the way out
 (`n["ph"]` becomes `"founder_hours_total"`), so nothing on the wire changes.

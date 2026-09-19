@@ -149,7 +149,7 @@ def _unlocked_by(k, nodes):
     return list(_unlocked_by_index(nodes).get(k, []))
 
 
-def _did_you_mean(k, nodes, limit=8, s=None):
+def _did_you_mean(k, nodes, limit=8, sim=None):
     """Names close to what was typed.
 
     A plain substring test alone helps with a truncation and not at all
@@ -184,7 +184,7 @@ def _did_you_mean(k, nodes, limit=8, s=None):
     # loose enough query (a two-letter prefix, say) could otherwise
     # reconstruct the entire tree one suggestion at a time. A suggestion is
     # still a statement about what exists.
-    if s is not None and getattr(s, "fog", False):
+    if sim is not None and getattr(sim, "fog", False):
         memo = {}
-        near = [result_id for result_id in near if s.is_visible(result_id, _memo=memo)]
+        near = [result_id for result_id in near if sim.is_visible(result_id, _memo=memo)]
     return near[:limit]

@@ -1,7 +1,7 @@
 """The engine, split by subject.
 
-simulator.py had grown to 5,600 lines, most of it one class. Nothing here
-changes what the model does; it changes where you have to look to find it.
+The split is about where you look to find something; it changes nothing
+about what the model does.
 
     data       loading the tree, prices, geography and civilisations
     geography  where things are, and what that costs to reach
@@ -20,6 +20,14 @@ on staff, staff on money, money on hazards, hazards on what you have built -
 and pretending otherwise by handing each module its own object would have meant
 threading the same state through in pieces. The mixin lets each subject live in
 its own file without inventing boundaries the model does not have.
+
+`Sim` inherits from eight mixins rather than six. The other two,
+`ForwardingPropertiesMixin` (core_properties.py) and `StepPhasesMixin`
+(core_step_phases.py), are not subjects: they are mechanical lifts of
+`core.py`'s own bulk into files of their own, so `core.py` holds the class
+and one year's loop rather than every property and every phase of that loop
+as well. See `sim/ARCHITECTURE.md` for the current base list and the script
+that derives it.
 
 Enter through simulator.py, which is what every note, test and instruction in
 this project refers to.

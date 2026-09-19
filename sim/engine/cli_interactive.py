@@ -527,7 +527,7 @@ INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS = declare(
         "the draw.")
 
 
-def _ingame_options(s, session):
+def _ingame_options(sim, session):
     """The 'options' command, typed mid-game. Returns the session path to use
     from here on (unchanged, unless 'move this save' was used).
 
@@ -559,17 +559,17 @@ def _ingame_options(s, session):
     offered here either - see the menu below, which only ever offers "on".
     """
     while True:
-        mortal_on = not s.cfg.get("immortal", True)
-        cur_end = getattr(s, "end_year",
-                          s.cfg["start_year"] + s.cfg.get("horizon_years", 500))
+        mortal_on = not sim.cfg.get("immortal", True)
+        cur_end = getattr(sim, "end_year",
+                          sim.cfg["start_year"] + sim.cfg.get("horizon_years", 500))
         print()
         print("-" * 78)
         print("   OPTIONS")
         print("-" * 78)
         print("   civilisation : %s, %d AD                (fixed for this game)"
-              % (s.civ.get("name", s.civ.get("id", "?")), s.cfg["start_year"]))
+              % (sim.civ.get("name", sim.civ.get("id", "?")), sim.cfg["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
-              % ("on" if getattr(s, "fog", False) else "off"))
+              % ("on" if getattr(sim, "fog", False) else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))
@@ -578,11 +578,11 @@ def _ingame_options(s, session):
         # ENDLESS_HORIZON_YEARS describes (see its own comment on why); this
         # is the one screen in cli.py that knows that and says the honest
         # thing instead of the literal one.
-        if _is_endless_horizon(cur_end, s.cfg["start_year"]):
+        if _is_endless_horizon(cur_end, sim.cfg["start_year"]):
             print("   horizon      : none - Endless. Play until you choose to stop.")
         else:
             print("   horizon      : ends %d AD  (now %d AD, %d years left)"
-                  % (cur_end, s.year, max(0, cur_end - s.year)))
+                  % (cur_end, sim.year, max(0, cur_end - sim.year)))
         print("   this save    : %s"
               % (session or "(not being saved anywhere - restart with --session "
                             "to change that)"))
@@ -607,7 +607,7 @@ def _ingame_options(s, session):
             try:
                 raw2 = input("   New end year (a whole number of AD, > %d), "
                              "or 'endless' for no deadline at all: "
-                             % s.year).strip()
+                             % sim.year).strip()
             except (EOFError, KeyboardInterrupt):
                 print(); continue
             if not raw2:
@@ -615,7 +615,7 @@ def _ingame_options(s, session):
                 continue
             if raw2.lower() in ("endless", "none", "forever", "no deadline",
                                "no limit", "unlimited"):
-                new_end = s.year + ENDLESS_HORIZON_YEARS
+                new_end = sim.year + ENDLESS_HORIZON_YEARS
             else:
                 try:
                     new_end = int(raw2)
@@ -623,20 +623,20 @@ def _ingame_options(s, session):
                     print("   -- that is not a whole number of years, or "
                           "'endless'.")
                     continue
-                if new_end <= s.year:
+                if new_end <= sim.year:
                     print("   -- %d AD has already passed (or is now); the "
                           "game would end the moment you left this menu. Pick "
                           "a later year." % new_end)
                     continue
-            new_horizon = new_end - s.cfg["start_year"]
-            s.end_year = new_end
-            s.cfg["horizon_years"] = new_horizon
+            new_horizon = new_end - sim.cfg["start_year"]
+            sim.end_year = new_end
+            sim.cfg["horizon_years"] = new_horizon
             if session:
                 meta = settings.load_session_meta(session)
                 meta["horizon_years"] = new_horizon
                 settings.save_session_meta(session, meta)
             print("   -- done. This game now has no deadline (Endless)."
-                  if _is_endless_horizon(new_end, s.cfg["start_year"]) else
+                  if _is_endless_horizon(new_end, sim.cfg["start_year"]) else
                   "   -- done. This game now ends in %d AD." % new_end)
 
         elif word in ("2", "mortal", "mortality") and not mortal_on:
@@ -655,13 +655,13 @@ def _ingame_options(s, session):
                 # choosing to become mortal partway through it. See core.py
                 # around "founder remaining lifespan" for the line this
                 # mirrors.
-                mean = s.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
-                std_dev = s.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
-                s.cfg["immortal"] = False
-                s.life_left = max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS,
-                                  s.rng.gauss(mean, std_dev))
-                s.founder_alive = True
-                print("   -- done. Mortality is on from %d AD." % s.year)
+                mean = sim.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
+                std_dev = sim.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
+                sim.cfg["immortal"] = False
+                sim.life_left = max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS,
+                                  sim.rng.gauss(mean, std_dev))
+                sim.founder_alive = True
+                print("   -- done. Mortality is on from %d AD." % sim.year)
             else:
                 print("   -- unchanged.")
 
@@ -687,7 +687,7 @@ def _ingame_options(s, session):
                 parent = os.path.dirname(os.path.abspath(newp))
                 if parent and not os.path.isdir(parent):
                     os.makedirs(parent, exist_ok=True)
-                save_state(s, newp)
+                save_state(sim, newp)
             except OSError as e:
                 print("   -- could not write there: %s" % e)
                 continue

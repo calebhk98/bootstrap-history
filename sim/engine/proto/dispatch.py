@@ -60,7 +60,7 @@ _NAME_COMMANDS = _ID_COMMANDS + ("open",)
 
 
 
-def _cmd_save(s, nodes, cmd, ended):
+def _cmd_save(sim, nodes, cmd, ended):
     command = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
     path = cmd.get("file") or cmd.get("path")
     if not isinstance(path, str) or not path:
@@ -75,16 +75,16 @@ def _cmd_save(s, nodes, cmd, ended):
         return {"ok": False, "error": bad}
     try:
         if command == "save":
-            save_state(s, path)
-            return {"ok": True, "saved": path, "year": s.year}
-        load_state(s, path)
-        return {"ok": True, "loaded": path, "year": s.year}
+            save_state(sim, path)
+            return {"ok": True, "saved": path, "year": sim.year}
+        load_state(sim, path)
+        return {"ok": True, "loaded": path, "year": sim.year}
     except Exception as e:
         return {"ok": False, "error": "could not %s %r: %s" % (command, path, e)}
 
 
 
-def _cmd_step(s, nodes, cmd, ended):
+def _cmd_step(sim, nodes, cmd, ended):
     # Must refuse to advance the clock once the run has ended: doing so
     # silently would look identical to a working game that has simply
     # stopped progressing.
@@ -115,13 +115,13 @@ def _cmd_step(s, nodes, cmd, ended):
     # Nothing is gained by accepting a number of years larger than the
     # game can contain: a typo that silently ends your run without saying
     # so is the worst kind of accepted input.
-    left = max(0, s.end_year - s.year)
+    left = max(0, sim.end_year - sim.year)
     if years > left:
         return {"ok": False,
                 "error": "there are only %d years left before the horizon at "
                          "%d. Ask for %d or fewer, or fewer still if you want "
                          "to see what happens on the way."
-                         % (left, s.end_year, left)}
+                         % (left, sim.end_year, left)}
     # WARN BEFORE, NOT AFTER, A MULTI-YEAR STEP WASTES HOURS. "Founder-
     # hours do not bank. A player can have long calendar-floor projects
     # running, use `step 5`, and unintentionally throw away thousands of
@@ -135,7 +135,7 @@ def _cmd_step(s, nodes, cmd, ended):
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
     if years > 1:
-        _pre_state = _agent_state(s, nodes)
+        _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")
         if _idle_note:
             # A STARTABLE PROJECT HAS TO EXIST, or the warning would be
@@ -145,8 +145,8 @@ def _cmd_step(s, nodes, cmd, ended):
             # reason: nothing cheaper tells you whether ANYTHING at all
             # is startable right now.
             _could_start = next(
-                (node_id for node_id in nodes if node_id not in s.done and node_id not in s.active
-                 and s.can_start(node_id)), None)
+                (node_id for node_id in nodes if node_id not in sim.done and node_id not in sim.active
+                 and sim.can_start(node_id)), None)
             if _could_start:
                 # DOES IT ACTUALLY BANK? Checked against step()'s own
                 # code, not assumed: core.py's step() computes `pool`
@@ -203,30 +203,30 @@ def _cmd_step(s, nodes, cmd, ended):
     completed, lost, events = [], [], []
     founder_died_this_step = None
     stopped_early = None
-    end_year = s.end_year
+    end_year = sim.end_year
     ran = 0
     for _ in range(years):
-        if s.dead_reason or s.year >= end_year:
+        if sim.dead_reason or sim.year >= end_year:
             break
-        before_done, before_log = set(s.done), len(s.log)
+        before_done, before_log = set(sim.done), len(sim.log)
         # FOR `changes`: what a bare node-or-concern-set diff cannot tell
         # you on its own - WHEN it changed. revealed/operating only ever
         # grow or lose members silently; snapshotting the sets either
         # side of this one year's step() is the one place that year's
         # own diff can still be taken, cheaply, before it is gone.
-        before_revealed = set(getattr(s, "revealed", set()))
-        before_operating = set(s.operating)
-        s.step()
+        before_revealed = set(getattr(sim, "revealed", set()))
+        before_operating = set(sim.operating)
+        sim.step()
         ran += 1
-        hist = getattr(s, "_dashboard_history", None)
+        hist = getattr(sim, "_dashboard_history", None)
         if hist is None:
-            hist = s._dashboard_history = []
-        _snap = _dashboard_snapshot(s)
+            hist = sim._dashboard_history = []
+        _snap = _dashboard_snapshot(sim)
         _snap["revealed_added"] = sorted(
-            set(getattr(s, "revealed", set())) - before_revealed)
-        _snap["concerns_opened"] = sorted(s.operating - before_operating)
-        _snap["concerns_closed"] = sorted(before_operating - s.operating)
-        _snap["completed"] = sorted(s.done - before_done)
+            set(getattr(sim, "revealed", set())) - before_revealed)
+        _snap["concerns_opened"] = sorted(sim.operating - before_operating)
+        _snap["concerns_closed"] = sorted(before_operating - sim.operating)
+        _snap["completed"] = sorted(sim.done - before_done)
         hist.append(_snap)
         # sorted(), because this is a set difference and a set of strings
         # iterates in an order that depends on PYTHONHASHSEED. Two runs of
@@ -235,19 +235,19 @@ def _cmd_step(s, nodes, cmd, ended):
         # own output impossible to diff. Caught by fingerprinting the
         # engine before and after being split into modules: every number
         # matched and this list did not.
-        for node_id in sorted(s.done - before_done):
+        for node_id in sorted(sim.done - before_done):
             # YOURS OR THE SOCIETY'S: anything in `granted` is this
             # civilisation's own work, credited free, and has to be
             # marked apart from a project the player paid for and waited
             # years on, or the same "COMPLETED" line reads as the player
             # having built something on turn one they never started.
             completed.append({"id": node_id, "name": nodes[node_id]["name"],
-                              "year": s.done_year.get(node_id),
-                              "granted": node_id in s.granted})
-        for node_id in sorted(before_done - s.done):
-            lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": s.year,
-                         "can_be_restored": node_id in getattr(s, "mothballed", set())})
-        _this_year = s.log[before_log:]
+                              "year": sim.done_year.get(node_id),
+                              "granted": node_id in sim.granted})
+        for node_id in sorted(before_done - sim.done):
+            lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
+                         "can_be_restored": node_id in getattr(sim, "mothballed", set())})
+        _this_year = sim.log[before_log:]
         for year, message in _this_year:
             events.append({"year": year, "message": message})
             if "founder dies" in message.lower():
@@ -257,12 +257,12 @@ def _cmd_step(s, nodes, cmd, ended):
                 # SAVED, NOT ONLY LOGGED - see _founder_death_info's own
                 # comment on why the log alone cannot be trusted to
                 # survive a save and a resume.
-                s._founder_death_aged, s._founder_death_year = _age_n, year
+                sim._founder_death_aged, sim._founder_death_year = _age_n, year
         # AND STOP THE YEAR YOU WIN: reaching the goal does not end the
         # run, so without this a `step 50` that crosses the finish line
         # would run on for the remaining years and mention it only in
         # passing. It is the one moment in a run most worth handing back.
-        if ran < years and s.goal_year == s.year:
+        if ran < years and sim.goal_year == sim.year:
             stopped_early = ("stopped after %d of the %d years you asked "
                              "for: you reached it. Step again when you "
                              "have had a look around."
@@ -283,12 +283,12 @@ def _cmd_step(s, nodes, cmd, ended):
         out["stopped_early"] = stopped_early
     if multi_year_hours_warning:
         out["multi_year_hours_warning"] = multi_year_hours_warning
-    out.update(_agent_state(s, nodes))
+    out.update(_agent_state(sim, nodes))
     return out
 
 
 
-def _cmd_quit(s, nodes, cmd, ended):
+def _cmd_quit(sim, nodes, cmd, ended):
     return {"ok": True, "bye": True}
 
 
@@ -490,10 +490,10 @@ def _add_compact_fields(command, out):
     return enrich(out) if enrich else out
 
 
-def _agent_dispatch(s, nodes, cmd):
+def _agent_dispatch(sim, nodes, cmd):
     """Every reply, in the money of the place you are standing in."""
-    _out = _localise_money(_agent_dispatch_inner(s, nodes, cmd), money_word(s.civ))
-    _out = _localise_words(_out, ((s.civ.get("local_words") or {}).get("pairs")))
+    _out = _localise_money(_agent_dispatch_inner(sim, nodes, cmd), money_word(sim.civ))
+    _out = _localise_words(_out, ((sim.civ.get("local_words") or {}).get("pairs")))
     # COMPACT MODE IS OPT-IN AND ADDITIVE ONLY - see typed.py's own long
     # comment on the 'compact' word for why it is a field distinct from
     # 'json'. Applied LAST, after both localisations, so anything it copies
@@ -507,7 +507,7 @@ def _agent_dispatch(s, nodes, cmd):
     return _out
 
 
-def _agent_dispatch_inner(s, nodes, cmd):
+def _agent_dispatch_inner(sim, nodes, cmd):
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}
@@ -524,14 +524,14 @@ def _agent_dispatch_inner(s, nodes, cmd):
             and cmd["cmd"].strip().lower() in _NAME_COMMANDS
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
-        if getattr(s, "fog", False):
+        if getattr(sim, "fog", False):
             # ONLY WHAT THE PLAYER HAS ACTUALLY HEARD OF. Two nodes can share
             # a name where one is built and the other is still beyond the
             # fog; handing back the hidden one as a candidate to disambiguate
             # between is exactly the leak the fog guard below exists to close,
             # so the filter runs before a player ever sees the list, not after.
             _name_memo = {}
-            _goal = getattr(s, "goal", None)
+            _goal = getattr(sim, "goal", None)
             # THE GOAL'S NAME GETS THE SAME NARROW EXCEPTION ITS ID ALREADY
             # HAS, on `why` alone - see the fog guard's own comment on
             # _goal_why just below. Without this, a player who only ever
@@ -546,7 +546,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
             _op_lc = cmd["cmd"].strip().lower()
             _name_cands = [
                 node_id for node_id in _name_cands
-                if s.is_visible(node_id, _memo=_name_memo)
+                if sim.is_visible(node_id, _memo=_name_memo)
                 or (node_id == _goal and _op_lc == "why" and node_id in _exact_here)]
         if len(_name_cands) == 1:
             cmd = dict(cmd, id=_name_cands[0])
@@ -570,7 +570,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
     # Patching one command alone would leave the next command that grows
     # an id to make the same mistake, so the check lives here, once,
     # before any handler sees the id.
-    if getattr(s, "fog", False) and isinstance(cmd.get("cmd"), str):
+    if getattr(sim, "fog", False) and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
         _node_id = cmd.get("id")
         # THE SAME ANSWER WHETHER OR NOT IT EXISTS: refusing an unheard-of
@@ -590,10 +590,10 @@ def _agent_dispatch_inner(s, nodes, cmd):
         # recursively into the hidden dependency graph. `why` under fog
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
-        _goal_why = (_op == "why" and _node_id == getattr(s, "goal", None))
+        _goal_why = (_op == "why" and _node_id == getattr(sim, "goal", None))
         if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
-                _node_id not in nodes or not s.is_visible(_node_id)):
-            if _node_id == getattr(s, "goal", None):
+                _node_id not in nodes or not sim.is_visible(_node_id)):
+            if _node_id == getattr(sim, "goal", None):
                 # You know its name; you were handed it on arrival. Telling you
                 # that you have never heard of the thing you are aiming at, and
                 # then guessing you meant fin_contract_law, is absurd on its
@@ -603,7 +603,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
                                  "act on it yet: everything it rests on is still "
                                  "beyond what you have heard of. 'why %s' is all "
                                  "of it you can see from here." % _node_id}
-            near = _did_you_mean(_node_id, nodes, s=s)
+            near = _did_you_mean(_node_id, nodes, sim=sim)
             # SAY WHERE THE SUGGESTIONS COME FROM: the suggestions are
             # already filtered through is_visible, so nothing hidden is
             # ever named - but listing ids right after saying "nothing
@@ -618,10 +618,10 @@ def _agent_dispatch_inner(s, nodes, cmd):
                              % ((" Among the things you DO know, did you mean: "
                                  + ", ".join(near)) if near else "")}
     command = cmd.get("cmd")
-    ended = _agent_end_reason(s)
+    ended = _agent_end_reason(sim)
 
     if command in ("help", "?", "commands"):
-        return {"ok": True, "help": _agent_help(s, cmd.get("topic"))}
+        return {"ok": True, "help": _agent_help(sim, cmd.get("topic"))}
 
     # One central guard rather than five: an id that is not a string (a
     # dict or list, say) would crash on `k not in nodes` with an
@@ -642,7 +642,7 @@ def _agent_dispatch_inner(s, nodes, cmd):
 
     _handler = _AGENT_DISPATCH_TABLE.get(command)
     if _handler is not None:
-        return _handler(s, nodes, cmd, ended)
+        return _handler(sim, nodes, cmd, ended)
 
     # THE LIST MUST NOT GO STALE. This was ten commands hard-coded into a
     # string while the game had grown to twenty-four, so a player who mistyped

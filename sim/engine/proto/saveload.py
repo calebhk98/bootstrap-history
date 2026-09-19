@@ -155,7 +155,7 @@ SAVE_FIELDS = (
 )
 
 
-def save_state(s, path):
+def save_state(sim, path):
     """Write the whole game to a file.
 
     A long session held across many calls by an external driver script is
@@ -164,26 +164,26 @@ def save_state(s, path):
     """
     blob = {}
     for field_name in SAVE_FIELDS:
-        value = getattr(s, field_name, None)
+        value = getattr(sim, field_name, None)
         if isinstance(value, set):
             value = {"__set__": sorted(value)}
         blob[field_name] = value
-    blob["_civ"] = s.civ.get("id")
+    blob["_civ"] = sim.civ.get("id")
     # THE GOAL YOU CHOSE, same reasoning as _fog/_immortal just below: it is
     # a choice the menu asked about when this game began, not a flag that
     # should silently reset to the transistor because a resume happened to
     # omit --goal. See load_state.
-    blob["_goal"] = getattr(s, "goal", None)
-    blob["_civ_live"] = {attr: s.civ.get(attr) for attr in
+    blob["_goal"] = getattr(sim, "goal", None)
+    blob["_civ_live"] = {attr: sim.civ.get(attr) for attr in
                          ("literacy_general", "literacy_elite", "state_capacity")}
-    blob["_weights"] = dict(s.w)
-    blob["_fog"] = getattr(s, "fog", False)
+    blob["_weights"] = dict(sim.w)
+    blob["_fog"] = getattr(sim, "fog", False)
     # WHETHER THE FOUNDER AGES, saved for the same reason fog is: they are
     # choices the menu asks you to make about what game this is, and resuming
     # into the other one is resuming into a different game. _fog was already
     # written here and never read back, so every resumed game silently had the
     # whole tree in view; see load_state.
-    blob["_immortal"] = bool(s.cfg.get("immortal", True))
+    blob["_immortal"] = bool(sim.cfg.get("immortal", True))
     # THE DICE, TOO: without saving the random state, every resume would
     # restart it from the seed and re-roll everything the world does. A
     # project sitting at its completion threshold re-rolls its failure
@@ -194,7 +194,7 @@ def save_state(s, path):
     # player comes back to a save, which is a different game from the one
     # they left.
     try:
-        rng_state = s.rng.getstate()
+        rng_state = sim.rng.getstate()
         blob["_rng"] = [rng_state[0], list(rng_state[1]), rng_state[2]]
     except Exception:
         blob["_rng"] = None
@@ -274,13 +274,13 @@ def _check_save_version(blob):
     return None
 
 
-def _check_save_scalars(blob, s):
+def _check_save_scalars(blob, sim):
     """None if the save's simple top-level fields - goal, civilisation-live
     state, weights, random-number state, year, capital, and the
     civilisation id itself - are shaped and valued the way the running game
     `s` needs; otherwise the refusal message. See _check_save_shape.
     """
-    if blob["_goal"] not in s.nodes:
+    if blob["_goal"] not in sim.nodes:
         return "this save's goal is not in the current technology tree"
     if not isinstance(blob["_civ_live"], dict) or not isinstance(blob["_weights"], dict):
         return "this save is corrupt: civilization state should be objects"
@@ -296,7 +296,7 @@ def _check_save_scalars(blob, s):
             return "this save is corrupt: '%s' should be a number, got %r" % (field_name, value)
 
     civ_id = blob.get("_civ")
-    have_civ = s.civ.get("id")
+    have_civ = sim.civ.get("id")
     if civ_id != have_civ:
         return ("this save is from a different civilisation (%r); this game "
                 "is running %r. Start the agent with --civ %s to load it."
@@ -334,7 +334,7 @@ def _check_save_done(blob):
     return None
 
 
-def _check_save_node_id_references(blob, s):
+def _check_save_node_id_references(blob, sim):
     """The refusal message if any _SET_FIELDS_OF_NODE_IDS field is shaped
     wrong; otherwise (None, the set of node ids the save refers to that the
     currently loaded tree does not have - `active`'s ids included). See
@@ -351,8 +351,8 @@ def _check_save_node_id_references(blob, s):
         ids = value.get("__set__") if isinstance(value, dict) else None
         if ids is None or not all(isinstance(node_id, str) for node_id in ids):
             return "this save is corrupt: '%s' should be a set of id strings" % field_name, None
-        unknown |= {node_id for node_id in ids if node_id not in s.nodes}
-    unknown |= {node_id for node_id in blob.get("active", {}) if node_id not in s.nodes}
+        unknown |= {node_id for node_id in ids if node_id not in sim.nodes}
+    unknown |= {node_id for node_id in blob.get("active", {}) if node_id not in sim.nodes}
     return None, unknown
 
 
@@ -375,7 +375,7 @@ def _check_save_trade_name_sets(blob):
     return None
 
 
-def _validate_save(blob, s):
+def _validate_save(blob, sim):
     """None if `blob` looks like a save this game could have produced and can
     be loaded into `s` as it stands right now; otherwise a short, plain
     sentence saying why not.
@@ -403,7 +403,7 @@ def _validate_save(blob, s):
     message = _check_save_version(blob)
     if message:
         return message
-    message = _check_save_scalars(blob, s)
+    message = _check_save_scalars(blob, sim)
     if message:
         return message
     message = _check_save_active(blob)
@@ -412,7 +412,7 @@ def _validate_save(blob, s):
     message = _check_save_done(blob)
     if message:
         return message
-    message, unknown = _check_save_node_id_references(blob, s)
+    message, unknown = _check_save_node_id_references(blob, sim)
     if message:
         return message
     message = _check_save_trade_name_sets(blob)
@@ -458,7 +458,7 @@ def goal_of_save(path):
         return None
 
 
-def load_state(s, path):
+def load_state(sim, path):
     """Read a save from `path` and apply it to `s`, or raise ValueError with
     a clear reason and leave `s` completely untouched.
 
@@ -467,7 +467,7 @@ def load_state(s, path):
     worse than a refused one.
     """
     blob = json.load(open(path))
-    bad = _validate_save(blob, s)
+    bad = _validate_save(blob, sim)
     if bad:
         raise ValueError(bad)
     # FOG IS A PROPERTY OF THE GAME YOU CHOSE, NOT A FIELD IN A FILE, and this
@@ -479,7 +479,7 @@ def load_state(s, path):
     # in a game whose own help says there is no way to view the whole tree.
     # A save may resume the fog it was played with; it may not switch the
     # fog off underneath you.
-    if getattr(s, "fog", False) and blob.get("_fog") is False:
+    if getattr(sim, "fog", False) and blob.get("_fog") is False:
         raise ValueError("that save was played without fog of war and this "
                          "game is being played with it. A save cannot turn the "
                          "fog off; start a new game without it if that is what "
@@ -499,7 +499,7 @@ def load_state(s, path):
             continue
         if isinstance(value, dict) and "__set__" in value:
             value = set(value["__set__"])
-        setattr(s, field_name, value)
+        setattr(sim, field_name, value)
     # PROMOTE THE ACCUMULATORS BACK, before anything adds to one. JSON has no
     # defaultdict and no Counter, so the loop above has just put plain dicts
     # where projects.py does `self.failed_attempts[k] += 1` and economy.py
@@ -507,9 +507,9 @@ def load_state(s, path):
     # key in a plain dict. Same shape as economy.py's own _material_stock
     # promotion, done here rather than lazily because these two are written
     # to directly rather than through an accessor.
-    s.failed_attempts = collections.defaultdict(
-        int, {node_id: int(value) for node_id, value in (getattr(s, "failed_attempts", None) or {}).items()})
-    s.shortages = collections.Counter(getattr(s, "shortages", None) or {})
+    sim.failed_attempts = collections.defaultdict(
+        int, {node_id: int(value) for node_id, value in (getattr(sim, "failed_attempts", None) or {}).items()})
+    sim.shortages = collections.Counter(getattr(sim, "shortages", None) or {})
     # `operating` JUST WENT BACK TO BEING A PLAIN SET. The generic setattr
     # above has no idea self.operating is normally an _InvalidatingSet (see
     # economy.py) and replaced it with whatever plain `set(...)` came out of
@@ -519,18 +519,18 @@ def load_state(s, path):
     # JSON protocol runs this against the SAME long-lived Sim a session goes
     # on playing in, not a fresh one, and every open/close/mothball after
     # this point mutates .operating directly. Re-wrap it, once, here.
-    s._reset_operating()
+    sim._reset_operating()
     # The game this save IS, not whatever the command line happened to say.
-    s.fog = bool(blob["_fog"])
-    s.cfg["immortal"] = bool(blob["_immortal"])
-    s.goal = blob["_goal"]
+    sim.fog = bool(blob["_fog"])
+    sim.cfg["immortal"] = bool(blob["_immortal"])
+    sim.goal = blob["_goal"]
     rng_version, _keys, rng_gaussian = blob["_rng"]
-    s.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))
+    sim.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))
 
     for attr, value in blob["_civ_live"].items():
         if value is not None:
-            s.civ[attr] = value
-    s.w.update(blob["_weights"])
-    s.state_capacity = float(s.civ.get("state_capacity", s.state_capacity))
-    s.fog = bool(blob.get("_fog", False))
-    return s
+            sim.civ[attr] = value
+    sim.w.update(blob["_weights"])
+    sim.state_capacity = float(sim.civ.get("state_capacity", sim.state_capacity))
+    sim.fog = bool(blob.get("_fog", False))
+    return sim
