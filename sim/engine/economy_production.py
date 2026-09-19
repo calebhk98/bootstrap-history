@@ -62,7 +62,7 @@ class ProductionMixin:
                 * (1.0 + max(0.0, self.household.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
 
-    def venture_ramp(self, k):
+    def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.
 
         FROM THE YEAR YOU OPENED IT, not the year you worked out how: a
@@ -71,9 +71,9 @@ class ProductionMixin:
         doors open, or delaying `open` would be strictly better than
         opening promptly. Custom takes time to find whoever owns the shop.
         """
-        started = (getattr(self.household, "opened_year", None) or {}).get(k)
+        started = (getattr(self.household, "opened_year", None) or {}).get(node_id)
         if started is None:
-            started = self.household.done_year.get(k, self.year)
+            started = self.household.done_year.get(node_id, self.year)
         age = self.year - started
         return min(1.0, (age + 1) / self.cfg["revenue_ramp_years"])
 
@@ -434,9 +434,9 @@ class ProductionMixin:
     PRACTISABLE_CATS = {"surgery", "obstetrics", "pharmacology", "medicine",
                         "diagnosis", "dentistry"}
 
-    def _practisable(self, k):
+    def _practisable(self, node_id):
         """Is this granted node a skill YOU can practise for a fee?"""
-        return self.nodes[k].get("cat") in self.PRACTISABLE_CATS
+        return self.nodes[node_id].get("cat") in self.PRACTISABLE_CATS
 
     def still_ramping(self):
         """Earners that are not yet paying their full figure, and how far along.
@@ -598,7 +598,7 @@ class ProductionMixin:
             "per-head cost), which this file does not have; 20% is a "
             "round, plausible fixed share, not derived from one.")
 
-    def institution_upkeep(self, k):
+    def institution_upkeep(self, node_id):
         """What this concern actually costs to keep open THIS year.
 
         For almost everything, its upkeep. For an establishment whose purpose is
@@ -615,7 +615,7 @@ class ProductionMixin:
         founded it: a flat full-upkeep charge on day one would kill the
         first rung of the ladder.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         # A THIRD SCHOOL COSTS THREE SCHOOLS' UPKEEP, at three schools' worth
         # of places to fill it against - both sides of this scale together so
         # a run that never founds more than the original single unit sees
@@ -630,12 +630,12 @@ class ProductionMixin:
         # zero - free, in effect - and let the affordability gate through
         # on nothing. _units must fall back to 1.0 for anything not yet
         # operating.
-        _units = (self.institution_units(k) if k in self.household.operating else 1.0) \
-            if k in self.SCALABLE_INSTITUTIONS else 1.0
+        _units = (self.institution_units(node_id) if node_id in self.household.operating else 1.0) \
+            if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         upkeep_amount = node["up"] * _units
-        if k not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0:
+        if node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0:
             return upkeep_amount
-        places = self.institution_places(k) * _units
+        places = self.institution_places(node_id) * _units
         if places <= 0:
             return upkeep_amount
         used = min(1.0, self.headcount() / max(1.0, places))
@@ -734,7 +734,7 @@ class ProductionMixin:
             "of magnitude for a building whose cost is its people, not a "
             "specific attested wage.")
 
-    def institution_places(self, k):
+    def institution_places(self, node_id):
         """Roughly how many people ONE UNIT of this establishment is built to
         support - see institution_upkeep, which multiplies this by
         institution_units(k) itself, so callers wanting the total should read
@@ -745,6 +745,6 @@ class ProductionMixin:
         apart. Anything absent is sized by its own upkeep at about a wage a
         head, the right order for a building whose cost is its people.
         """
-        if k in self.INSTITUTION_PLACES:
-            return self.INSTITUTION_PLACES[k]
-        return max(1.0, self.nodes[k]["up"] / self.INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD)
+        if node_id in self.INSTITUTION_PLACES:
+            return self.INSTITUTION_PLACES[node_id]
+        return max(1.0, self.nodes[node_id]["up"] / self.INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD)

@@ -79,8 +79,8 @@ def _cmd_save(sim, nodes, cmd, ended):
             return {"ok": True, "saved": path, "year": sim.year}
         load_state(sim, path)
         return {"ok": True, "loaded": path, "year": sim.year}
-    except Exception as e:
-        return {"ok": False, "error": "could not %s %r: %s" % (command, path, e)}
+    except Exception as error:
+        return {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
 
 
 

@@ -287,17 +287,17 @@ def _stuck_shut_ventures(sim, nodes):
     # it would pay.
     _sch_free, _art_free = sim.venture_staff_free()
     _shut_for_staff = getattr(sim, "shut_for_staff", {})
-    def _capex_now(_k):
-        _fee = sim.venture_capex(_k)
-        if (_k in _shut_for_staff
-                and sim.year - _shut_for_staff[_k] <= sim.STAFF_CLOSURE_GRACE):
+    def _capex_now(_node_id):
+        _fee = sim.venture_capex(_node_id)
+        if (_node_id in _shut_for_staff
+                and sim.year - _shut_for_staff[_node_id] <= sim.STAFF_CLOSURE_GRACE):
             _fee *= 0.1
         return _fee
-    def _openable(_k):
-        _need_sch, _need_art = sim.venture_hands(_k)
+    def _openable(_node_id):
+        _need_sch, _need_art = sim.venture_hands(_node_id)
         return (_need_sch <= _sch_free + 0.01
                 and _need_art <= _art_free + 0.01
-                and _capex_now(_k) <= sim.spending_power("buy"))
+                and _capex_now(_node_id) <= sim.spending_power("buy"))
     _really_openable = [node_id for node_id in _shut if _openable(node_id)]
     if _really_openable:
         _best = max(_really_openable,

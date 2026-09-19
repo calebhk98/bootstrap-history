@@ -414,7 +414,7 @@ _RESTS_SHORT = {"almost everything": "ALL", "a great deal": "much",
                 "nothing else; this is worth having for itself": "-"}
 
 
-def _cost_marker(e, purse):
+def _cost_marker(entry, purse):
     """A row you cannot pay for today gets its cost marked.
 
     "MOST RESTS ON THESE" can head its list with items well beyond an
@@ -422,43 +422,43 @@ def _cost_marker(e, purse):
     everything rests on - and the reader still needs to know which of
     them they can act on this year.
     """
-    cost = e.get("cost")
+    cost = entry.get("cost")
     if purse is None or not isinstance(cost, (int, float)):
         return ""
     return "" if cost <= purse else "*"
 
 
-def _available_row(e, w=None, purse=None):
+def _available_row(entry, width=None, purse=None):
     # THE FLOOR SCALES WITH DISPLAY_WIDTH, NOT A BARE 34. render_available
     # already grows this per-table to fit the longest id on the page (see
     # its own comment on _w below), so a narrow default never truncated one;
     # this only gives a wide terminal the same extra breathing room _wrap
     # gets, and reproduces exactly 34 at DISPLAY_WIDTH's own old default
     # (76), so nothing here moves for a player who has changed nothing.
-    if w is None:
+    if width is None:
         # LIVE, NOT A SNAPSHOT: see _wrap's own comment on DISPLAY_WIDTH,
         # in engine/proto/util.py, for why this goes through the protocol
         # module rather than the plain imported name.
         from .. import protocol as _protocol
-        w = max(34, _protocol.DISPLAY_WIDTH - 42)
-    hours = e.get("founder_hours", e.get("your_hours"))
-    years = e.get("calendar_floor_years", e.get("least_years"))
-    risk = e.get("risk", e.get("chance_of_failure"))
-    downstream_count = e.get("downstream_count")
+        width = max(34, _protocol.DISPLAY_WIDTH - 42)
+    hours = entry.get("founder_hours", entry.get("your_hours"))
+    years = entry.get("calendar_floor_years", entry.get("least_years"))
+    risk = entry.get("risk", entry.get("chance_of_failure"))
+    downstream_count = entry.get("downstream_count")
     rests = (_fmt_num(downstream_count) if downstream_count is not None
-             else _RESTS_SHORT.get(e.get("how_much_rests_on_this"), "?"))
+             else _RESTS_SHORT.get(entry.get("how_much_rests_on_this"), "?"))
     # THE ID IS NOT DECORATION, IT IS THE NEXT THING YOU TYPE: truncating
     # it would mean the longest ids could not be copied out of the table
     # at all, and `start` would refuse an id the table had just printed
     # incomplete. Names get cut instead; nobody has to retype a name.
-    staff = e.get("needs_staff") or "-"
-    if e.get("short_of_staff"):
+    staff = entry.get("needs_staff") or "-"
+    if entry.get("short_of_staff"):
         staff += "*"
     return "%-*s %-20s %9s %7s %5s %5s %8s %7s %6s %6s" % (
-        w, (e.get("id") or ""), (e.get("name") or "")[:20],
-        _fmt_num(e.get("cost")) + _cost_marker(e, purse),
+        width, (entry.get("id") or ""), (entry.get("name") or "")[:20],
+        _fmt_num(entry.get("cost")) + _cost_marker(entry, purse),
         _fmt_num(hours), _fmt_num(years), _pct(risk),
-        _fmt_range(e.get("earns_per_year")), _fmt_num(e.get("costs_per_year_after")),
+        _fmt_range(entry.get("earns_per_year")), _fmt_num(entry.get("costs_per_year_after")),
         staff, rests)
 
 

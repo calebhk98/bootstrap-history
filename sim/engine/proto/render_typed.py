@@ -115,8 +115,8 @@ def _typed_deep(obj):
 def to_typed_hints(text):
     """Rewrite every {"cmd":...} example in rendered text as a typed command.
     Best-effort: anything that will not parse is left exactly as it was."""
-    def sub(m):
-        raw = m.group(0)
+    def sub(match):
+        raw = match.group(0)
         try:
             obj = json.loads(raw)
         except ValueError:
@@ -134,7 +134,7 @@ def to_typed_hints(text):
 _DEN_RE = re.compile(r"\bden\b")
 
 
-def render_pretty(op, resp):
+def render_pretty(command_name, resp):
     """The human rendering of one reply. Never touches stdout or the JSON
     itself - see cli.py, which prints this to stderr alongside the unchanged
     JSON line, only when --pretty is on.
@@ -157,7 +157,7 @@ def render_pretty(op, resp):
         if isinstance(resp, dict) and resp.get("ok") is False:
             err = render_error(resp)
             return to_typed_hints(err) if TYPED_HINTS else err
-        renderer = _RENDERERS.get((op or "").strip().lower(), render_generic)
+        renderer = _RENDERERS.get((command_name or "").strip().lower(), render_generic)
         # REWRITE THE HINTS BEFORE WRAPPING, NOT AFTER: wrapping around a
         # long {"cmd":"hire","trade":"smith","n":3} and only then replacing
         # it with `hire smith 3` leaves a ragged half-width block wherever
@@ -171,5 +171,5 @@ def render_pretty(op, resp):
             # for MONEY_SHORT, or the reply mixes units.
             out = _DEN_RE.sub(MONEY_SHORT, out)
         return to_typed_hints(out) if TYPED_HINTS else out
-    except Exception as e:
-        return "(could not render a readable view of this reply: %s: %s)" % (type(e).__name__, e)
+    except Exception as error:
+        return "(could not render a readable view of this reply: %s: %s)" % (type(error).__name__, error)

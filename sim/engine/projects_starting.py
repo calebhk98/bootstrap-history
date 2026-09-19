@@ -141,7 +141,7 @@ class StartingMixin:
             "for 'measurably good', not derived from any real skill "
             "assessment.")
 
-    def bounty_eligible(self, k):
+    def bounty_eligible(self, node_id):
         """Can this be bought as a prize instead of built with your own hands?
 
         A public prize ("ten thousand sesterces to the first glassworker who
@@ -151,7 +151,7 @@ class StartingMixin:
         artisan can recognise success without understanding the theory. You
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         # THE ALLOW-LIST IS ROME'S CRAFTS, BUT NOT THE WHOLE RULE: anything
         # this society is measurably GOOD at (its own cost multipliers say
         # so) can be recognised by its own craftsmen, whatever Rome's craft
@@ -161,7 +161,7 @@ class StartingMixin:
         if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
             return all(prereq_id in self.household.done for prereq_id in node["pre"])
-        if self.civ_cost_factor(k) < self.BOUNTY_ELIGIBLE_COST_ADVANTAGE:
+        if self.civ_cost_factor(node_id) < self.BOUNTY_ELIGIBLE_COST_ADVANTAGE:
             return all(prereq_id in self.household.done for prereq_id in node["pre"])
         return False
 
@@ -185,23 +185,23 @@ class StartingMixin:
             "own hours', this method's own docstring). Tuned split, not "
             "measured.")
 
-    def post_bounty(self, k):
+    def post_bounty(self, node_id):
         """Pay well over the odds, save 65% of your own hours, gain visibility."""
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         # BOUNTY_PRICE_MULTIPLIER x the cost THIS society would actually
         # incur, not x an abstract base: applying the multiplier to a base
         # cost that ignores the civilization and price factors the build
         # applies would make `bounty` quote a wildly different price than
         # `why` does for the same node.
-        price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(k)
-                 * self.material_cost_factor(k) * self.cost_money_factor())
+        price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(node_id)
+                 * self.material_cost_factor(node_id) * self.cost_money_factor())
         if price > self.household.capital:
             return False
         self.household.capital -= price
         self.household.total_spend += price
         self.household.bounties_paid += 1
-        self.household.active[k] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
-        self.household.bountied.add(k)
+        self.household.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
+        self.household.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
         self.household.log.append((self.year, "posted a public bounty for %s (%s den)"
@@ -218,20 +218,20 @@ class StartingMixin:
             "not quite as good as having built the specific thing the "
             "tree names. Tuned discount, not measured.")
 
-    def substitution_quality(self, k):
+    def substitution_quality(self, node_id):
         """Resolve `req_any` groups: for each, the best option you actually have.
 
         A steam engine does not REQUIRE coal and steel. It requires a fuel and a
         pressure vessel. Wood in a bronze boiler works. It is just bad, and the
         quality factor is how bad: it multiplies output and divides efficiency.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         groups = node.get("req_any") or []
         if not groups:
             return 1.0, True
         quality = 1.0
         for group in groups:
-            best = self._substitution_group_best(k, group)
+            best = self._substitution_group_best(node_id, group)
             if best <= 0:
                 self._record_substitution_gap(group)
                 return 0.0, False        # no option in this group is available
@@ -239,11 +239,11 @@ class StartingMixin:
         self.household._last_subst_gap = None
         return quality, True
 
-    def _substitution_group_best(self, k, group):
+    def _substitution_group_best(self, node_id, group):
         """The best quality any option in one `req_any` group actually offers."""
         best = 0.0
         for opt, qual in (group.get("options") or {}).items():
-            if opt in self.household.done or opt in self.nodes.get(k, {}).get("mat", {}):
+            if opt in self.household.done or opt in self.nodes.get(node_id, {}).get("mat", {}):
                 best = max(best, float(qual))
             elif opt not in self.nodes:
                 best = max(best, float(qual) * self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)   # a purchasable commodity
@@ -340,7 +340,7 @@ class StartingMixin:
             "Tuned so protection is a real alternative route, not "
             "measured.")
 
-    def start_reason(self, k, ignore_trade=False, _memo=None, _why=True):
+    def start_reason(self, node_id, ignore_trade=False, _memo=None, _why=True):
         """Same legality test as `can_start`, but explains a refusal instead of
         just returning False. `can_start` is a thin wrapper around this;
         the wrapper exists because the optimizer's inner loop calls it a huge
@@ -386,16 +386,16 @@ class StartingMixin:
         _START_REASON_CHECKS's own comment for why the order is the one
         contract this split cannot touch.
         """
-        if k not in self.nodes:
+        if node_id not in self.nodes:
             return False, ("no such node" if _why else None)
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         for check in self._START_REASON_CHECKS:
-            verdict = check(self, k, node, ignore_trade, _memo, _why)
+            verdict = check(self, node_id, node, ignore_trade, _memo, _why)
             if verdict is not None:
                 return verdict
         return True, None
 
-    def _check_win_condition(self, k, node, ignore_trade, _memo, _why):
+    def _check_win_condition(self, node_id, node, ignore_trade, _memo, _why):
         if node.get("win_condition"):
             # A THRESHOLD GOAL, NOT A PROJECT. This is measured, not built:
             # nobody ever spends hours or money on it, so it is never
@@ -414,15 +414,15 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_already_done(self, k, node, ignore_trade, _memo, _why):
-        if k in self.household.done:
+    def _check_already_done(self, node_id, node, ignore_trade, _memo, _why):
+        if node_id in self.household.done:
             # A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already
             # done" either: you know how, and the plant is gone. `restore`
             # puts it back at a fraction of the cost, so this branch must be
             # checked BEFORE the flat "already done" case below, or a
             # mothballed work gets swallowed by the wrong, less useful
             # advice.
-            if k in getattr(self.household, "mothballed", set()):
+            if node_id in getattr(self.household, "mothballed", set()):
                 # project_cost() is pure (no rng, no log, no mutation - see
                 # its own docstring and the factor functions it calls) but
                 # it is real arithmetic over several factor tables, and
@@ -431,27 +431,27 @@ class StartingMixin:
                                'know how, so restoring it is cheaper than '
                                'starting over: {"cmd":"restore","id":"%s"} for '
                                "about %.0f denarii"
-                               % (k, self.project_cost(k) * self.RESTORE_COST_SHARE_OF_BUILD)) if _why else None)
+                               % (node_id, self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD)) if _why else None)
             return False, ("already done" if _why else None)
         return None
 
-    def _check_already_active(self, k, node, ignore_trade, _memo, _why):
-        if k in self.household.active:
+    def _check_already_active(self, node_id, node, ignore_trade, _memo, _why):
+        if node_id in self.household.active:
             return False, ("already active" if _why else None)
         return None
 
-    def _check_needs_first(self, k, node, ignore_trade, _memo, _why):
+    def _check_needs_first(self, node_id, node, ignore_trade, _memo, _why):
         # NOT DEAR HERE, IMPOSSIBLE HERE. See SocietyMixin.needs_first.
         # needs_first() itself is always called: `_nf` IS the answer, not
         # just words about it. Only the sentence built from the two strings
         # it hands back is skippable.
-        _nf, _why_nf = self.needs_first(k)
+        _nf, _why_nf = self.needs_first(node_id)
         if _nf:
             return False, (("%s. Build %s first and this opens with it"
                            % (_why_nf, _nf)) if _why else None)
         return None
 
-    def _check_unobtainable(self, k, node, ignore_trade, _memo, _why):
+    def _check_unobtainable(self, node_id, node, ignore_trade, _memo, _why):
         # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY: it must
         # fall through to the ordinary checks below, not be refused here and
         # sent to `restore`, which answers "you no longer know how" and
@@ -462,15 +462,15 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_foreign_only(self, k, node, ignore_trade, _memo, _why):
-        if self._is_foreign_only(k):
+    def _check_foreign_only(self, node_id, node, ignore_trade, _memo, _why):
+        if self._is_foreign_only(node_id):
             return False, (("that is an institution of a different society. %s has "
                            "no such thing, and it is not something you can build "
                            "here" % self.civ.get("name", "this society"))
                            if _why else None)
         return None
 
-    def _check_missing_prereqs(self, k, node, ignore_trade, _memo, _why):
+    def _check_missing_prereqs(self, node_id, node, ignore_trade, _memo, _why):
         missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done]
         if missing:
             # NAME ONLY WHAT YOU HAVE HEARD OF: printing every missing
@@ -494,8 +494,8 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_substitution(self, k, node, ignore_trade, _memo, _why):
-        if not self.substitution_quality(k)[1]:
+    def _check_substitution(self, node_id, node, ignore_trade, _memo, _why):
+        if not self.substitution_quality(node_id)[1]:
             # substitution_quality(k) ITSELF is always called, above - it is
             # not just words, it sets self.household._last_subst_gap as a side effect
             # (read a few lines down) and its second return value is the
@@ -547,7 +547,7 @@ class StartingMixin:
     # in the optimizer's own start loop would let a person at the keyboard
     # be frozen out on paper while carrying on borrowing and starting
     # things regardless.
-    def _check_credit_frozen(self, k, node, ignore_trade, _memo, _why):
+    def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
         if self.year < getattr(self.household, "credit_frozen_until", 0):
             # SAY IF IT WILL NEVER LIFT IN TIME: a freeze date past the
             # run's own horizon is not a date, it is the end of the run
@@ -566,11 +566,11 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_arrears(self, k, node, ignore_trade, _memo, _why):
+    def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
         if getattr(self.household, "insolvent_years", 0) >= self.ARREARS_GRACE_YEARS:
             surplus = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())
-            cheap_enough = (self.project_cost(k) <= max(self.ARREARS_CHEAP_PROJECT_FLOOR,
+            cheap_enough = (self.project_cost(node_id) <= max(self.ARREARS_CHEAP_PROJECT_FLOOR,
                                                           surplus * self.ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE))
         else:
             cheap_enough = True
@@ -586,7 +586,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_scholar_staff(self, k, node, ignore_trade, _memo, _why):
+    def _check_scholar_staff(self, node_id, node, ignore_trade, _memo, _why):
         # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
         # effective_scholars(), the standing headcount, so scholar hours you
         # had already bought and paid for could not satisfy the requirement,
@@ -611,7 +611,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_craft_staff(self, k, node, ignore_trade, _memo, _why):
+    def _check_craft_staff(self, node_id, node, ignore_trade, _memo, _why):
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
         # satisfy the requirement - and the refusal's own advice was to go and
@@ -645,7 +645,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_absent_trades(self, k, node, ignore_trade, _memo, _why):
+    def _check_absent_trades(self, node_id, node, ignore_trade, _memo, _why):
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
         # engineer: the wage table says so itself. You make one by teaching one.
@@ -659,7 +659,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_none_left_trades(self, k, node, ignore_trade, _memo, _why):
+    def _check_none_left_trades(self, node_id, node, ignore_trade, _memo, _why):
         # AND SOMEBODY HAS TO BE LEFT: a trade you taught still counts as
         # existing after the last of them has died or been poached, so a
         # check that only asks whether the trade exists, never whether
@@ -681,7 +681,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
-    def _check_social_approval(self, k, node, ignore_trade, _memo, _why):
+    def _check_social_approval(self, node_id, node, ignore_trade, _memo, _why):
         # SOCIAL APPROVAL GATE. Some things the State does not want built, and no
         # amount of money substitutes for someone powerful being willing to be
         # associated with it. See 03_SOCIAL_POLITICS.md section 4.
@@ -759,18 +759,18 @@ class StartingMixin:
         _check_social_approval,
     )
 
-    def _patron_advice(self, k, in_world):
+    def _patron_advice(self, node_id, in_world):
         """What to tell a player who needs `k` before they may begin.
 
         The id and the command only when they have heard of it; the same
         advice in plain words when they have not, which under fog is most of
         the time this fires. `in_world` is that plain-words version.
         """
-        if not self.is_visible(k):
+        if not self.is_visible(node_id):
             return "you will need %s before anyone here will let you begin" % in_world
-        if k in self.household.done:
+        if node_id in self.household.done:
             return ("get %s: you have built it already, so 'open %s' to put "
-                    "it behind you" % (in_world, k))
+                    "it behind you" % (in_world, node_id))
         # AND IT HAS TO BE STARTABLE, or this is still a refusal recommending
         # a refusal. patron_local itself needs identity_cover, so even with
         # the fog off, "get a local patron first: 'start patron_local'" sent
@@ -780,23 +780,23 @@ class StartingMixin:
         # is a recursion this line does not need: the missing-prereq case is
         # the one that actually bit, and the fog filter for naming them
         # already exists.
-        missing = [prereq_id for prereq_id in self.nodes[k]["pre"] if prereq_id not in self.household.done]
+        missing = [prereq_id for prereq_id in self.nodes[node_id]["pre"] if prereq_id not in self.household.done]
         if missing:
             seen = [prereq_id for prereq_id in missing if self.is_visible(prereq_id)]
             return ("get %s first, which itself wants %s"
                     % (in_world,
                        ", ".join(seen) if seen
                        else "something you have not heard of yet"))
-        return "get %s first: 'start %s'" % (in_world, k)
+        return "get %s first: 'start %s'" % (in_world, node_id)
 
-    def can_start(self, k, _memo=None):
+    def can_start(self, node_id, _memo=None):
         # _why=False: this discards the message anyway, and it is the
         # optimizer's own per-year loop that calls this for every node in
         # the tree - the single hottest path in the engine (see
         # start_reason's own docstring on _why for what this skips).
-        return self.start_reason(k, _memo=_memo, _why=False)[0]
+        return self.start_reason(node_id, _memo=_memo, _why=False)[0]
 
-    def start_project(self, k):
+    def start_project(self, node_id):
         """PLAYER-CHOSEN start. This is the whole reason `--manual` and the
         `agent` JSON protocol exist: the old `play` command let you type a
         node id, but all that did was move it to the front of `order`, the
@@ -810,8 +810,8 @@ class StartingMixin:
         mode the optimizer's loop is switched off entirely (see step(), 4b),
         so this becomes the only way anything ever starts.
         """
-        ok, why = self.start_reason(k)
-        if not ok:
+        may_start, why = self.start_reason(node_id)
+        if not may_start:
             return False, why
         # YOU MAY COMMIT PAST WHAT YOU HOLD, AND NOT PAST WHAT ANYONE WILL
         # LEND: `help economy` states exactly that contract, and it has to
@@ -820,13 +820,13 @@ class StartingMixin:
         # times what anyone will advance you is not a plan, it is an
         # accounting fiction, and the limit the player read a moment
         # earlier has to mean something.
-        price = self.project_cost(k)
+        price = self.project_cost(node_id)
         # WHAT IS LEFT TO PAY, not the whole bill. Money already sunk into this
         # node - by you stopping it, or by the creditors stopping it - comes
         # off, and testing against the gross would refuse a project that is
         # nearly paid for. See stop_project.
         _paid_now = min(price, max(0.0, (getattr(self.household, "paid_towards", None)
-                                         or {}).get(k, 0.0)))
+                                         or {}).get(node_id, 0.0)))
         price -= _paid_now
         # sorted(): summing floats over a dict whose keys came from a set.
         owed = sum(project_state.get("cost_left") or 0.0
@@ -844,18 +844,18 @@ class StartingMixin:
                            "you can raise %s. Finish or stop something first."
                            % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
                               "{:,.0f}".format(ceiling)))
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the
         # creditors stop a project the money already sunk into it is kept
         # against the node, and this is where it comes back off the bill.
         _paid = getattr(self.household, "paid_towards", None) or {}
-        _paid.pop(k, None)          # spent once; the figure is _paid_now above
+        _paid.pop(node_id, None)          # spent once; the figure is _paid_now above
         _already = _paid_now
         # A THING YOU ARE REBUILDING IS NOT A THING SITTING IDLE. If the
         # knowledge was destroyed and only the mothball entry survived, that
         # entry is stale the moment you begin again - and while it stands,
         # `available` hides the node and `restore` claims it can reopen it.
-        self.household.mothballed.discard(k)
+        self.household.mothballed.discard(node_id)
         # lab_left STARTS FULL, SET HERE - not lazily the first time
         # lab_year_draw runs. step() reduces ph_left for THIS year before it
         # ever reaches the labour section, so a lazy init reading ph_left at
@@ -863,7 +863,7 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.household.active[k] = dict(ph_left=float(node["ph"]), yrs=0.0,
+        self.household.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0,
                               spent=_already, cost_left=price,
                               lab_left=dict(node["lab"]))
         # A genuinely instantaneous capability should not need an otherwise
@@ -871,23 +871,23 @@ class StartingMixin:
         # Keep anything with money, labour, risk, or a calendar floor on the
         # normal path: those are projects even when founder-hours happen to be
         # zero.
-        if (node["ph"] <= 0 and self.calendar_floor(k) <= 0 and price <= 0.5
-                and not node["lab"] and self.effective_risk(k) <= 0):
-            self._complete(k)
+        if (node["ph"] <= 0 and self.calendar_floor(node_id) <= 0 and price <= 0.5
+                and not node["lab"] and self.effective_risk(node_id) <= 0):
+            self._complete(node_id)
             return True, None
         if _already > 0.5:
             self.household.log.append((self.year, "%s begun again; the %s denarii already "
                                         "paid on it before comes off the bill"
-                             % (k, "{:,.0f}".format(_already))))
+                             % (node_id, "{:,.0f}".format(_already))))
         # Director hours in step() 5 are handed out by priority in `order`.
         # A thing you just chose to work on should get first call on your own
         # hours, exactly as the old (cosmetic) reprioritisation implied it did.
-        if k in self.order:
-            self.order.remove(k)
-        self.order.insert(0, k)
+        if node_id in self.order:
+            self.order.remove(node_id)
+        self.order.insert(0, node_id)
         return True, None
 
-    def stop_project(self, k):
+    def stop_project(self, node_id):
         """Stop a project you started. Your HOURS are gone; the money stands.
 
         Money already spent must stand against the node - the same credit
@@ -898,16 +898,16 @@ class StartingMixin:
         the right move. The site does not un-dig itself either way. The
         hours really are gone: that is your year, and you spent it.
         """
-        if k not in self.household.active:
+        if node_id not in self.household.active:
             return False, "not active"
-        project_state = self.household.active.pop(k)
-        self.household.bountied.discard(k)
+        project_state = self.household.active.pop(node_id)
+        self.household.bountied.discard(node_id)
         _paid = getattr(self.household, "paid_towards", None)
         if _paid is None:
             _paid = self.household.paid_towards = {}
         kept = max(0.0, project_state.get("spent", 0.0))
         if kept > 0.5:
-            _paid[k] = _paid.get(k, 0.0) + kept
+            _paid[node_id] = _paid.get(node_id, 0.0) + kept
         return True, ("stopped. The %s denarii already paid stands to your "
                       "credit and comes off the bill if you begin again; the "
                       "hours are gone" % "{:,.0f}".format(kept)

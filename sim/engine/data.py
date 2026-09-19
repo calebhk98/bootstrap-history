@@ -222,8 +222,8 @@ TRADE_FAMILY: Dict[str, str] = {
 }   # everything else is a craft: smith, carpenter, mason, glassblower, ...
 
 
-def trade_family(t: str) -> str:
-    return TRADE_FAMILY.get(t, "craft")
+def trade_family(trade: str) -> str:
+    return TRADE_FAMILY.get(trade, "craft")
 
 
 # WHAT MONEY IS CALLED WHERE YOU ARE. Every civilisation file has carried a
@@ -472,21 +472,21 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     return masks, index
 
 
-def downstream_count(nodes: Nodes, k: str) -> int:
+def downstream_count(nodes: Nodes, node_id: str) -> int:
     """How many nodes are downstream of k. Cheap after the first call."""
     masks, _index = descendants(nodes)
-    return bin(masks.get(k, 0)).count("1")
+    return bin(masks.get(node_id, 0)).count("1")
 
 
-def is_downstream(nodes: Nodes, k: str, target: str) -> bool:
+def is_downstream(nodes: Nodes, node_id: str, target: str) -> bool:
     """Is `target` downstream of `k`?"""
     masks, index = descendants(nodes)
     if target not in index:
         return False
-    return bool(masks.get(k, 0) >> index[target] & 1)
+    return bool(masks.get(node_id, 0) >> index[target] & 1)
 
 
-def hard_pre(nodes: Nodes, k: str) -> List[str]:
+def hard_pre(nodes: Nodes, node_id: str) -> List[str]:
     """Every edge that is genuinely mandatory: `pre`, plus the `req_any` groups
     that offer exactly one real node and are therefore not a choice at all.
 
@@ -512,7 +512,7 @@ def hard_pre(nodes: Nodes, k: str) -> List[str]:
     # that can only ever subtract one. The first version of this reported a
     # "cycle" among ten nodes that have no cycle between them at all: they
     # were simply the nodes Kahn's algorithm could never finish emitting.
-    node = nodes[k]
+    node = nodes[node_id]
     out, seen = [], set()
     for prereq_id in node["pre"]:
         if prereq_id not in seen:
@@ -720,13 +720,13 @@ WIN_CONDITION_LABELS: Dict[str, str] = {
 }
 
 
-def win_condition_describe(n: JSONDict) -> str:
+def win_condition_describe(node_record: JSONDict) -> str:
     """The player-facing sentence for a node's win_condition, or a plain
     fallback for a metric this table does not yet name - never a KeyError,
     the same reasoning validate's own required-field check gives for why a
     missing piece of display data must degrade, not crash, a player's
     session."""
-    win_condition: JSONDict = n.get("win_condition") or {}
+    win_condition: JSONDict = node_record.get("win_condition") or {}
     metric, comparison_op, val = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
     pct = "%d%%" % round((val or 0.0) * 100)
     # metric is read straight from data (win_condition["metric"]), so its

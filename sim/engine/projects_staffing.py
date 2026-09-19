@@ -34,7 +34,7 @@ class StaffingMixin:
             "disagree about where the line is. Tuned to stop the flapping, "
             "not measured.")
 
-    def close_unstaffed_ventures(self, yr):
+    def close_unstaffed_ventures(self, year):
         """Shut what nobody is left to watch, dearest to supervise first.
 
         Not a policy and not an automation you can switch off: it is the same
@@ -94,11 +94,11 @@ class StaffingMixin:
             self.household.operating.discard(worst)
             self.household.mothballed.add(worst)
             _sfs = getattr(self.household, "shut_for_staff", {})
-            _sfs[worst] = yr
+            _sfs[worst] = year
             self.household.shut_for_staff = _sfs
             closed.append(worst)
         if closed:
-            self.household.log.append((yr, "nobody left to keep an eye on %d concern%s, so "
+            self.household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
                                  "%s closed. You still know how; reopen with "
                                  "'open' once you have the people. The premises "
                                  "and the stock stand for a few years yet, so "
@@ -108,7 +108,7 @@ class StaffingMixin:
                                 + (" and others" if len(closed) > 4 else ""))))
         return closed
 
-    def reopen_restaffed_ventures(self, yr):
+    def reopen_restaffed_ventures(self, year):
         """Bring back what the staffing rule shut, the moment you have the
         people to watch it again - not a policy, the other half of one.
 
@@ -144,11 +144,11 @@ class StaffingMixin:
             sch_free, art_free = self.venture_staff_free()
             if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
                 continue
-            ok, _msg = self.open_venture(node_id)
-            if ok:
+            did_open, _msg = self.open_venture(node_id)
+            if did_open:
                 reopened.append(node_id)
         if reopened:
-            self.household.log.append((yr, "you have the people again: %s reopen%s on "
+            self.household.log.append((year, "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s"
                              % (", ".join(sorted(reopened)[:4])
@@ -556,8 +556,8 @@ class StaffingMixin:
         for node_id in caps:
             _bleed = self.institution_upkeep(node_id) - self.nodes[node_id]["rev"]
             if _bleed <= _bleed_room:
-                ok, _message = self.open_venture(node_id)
-                if ok:
+                did_open, _message = self.open_venture(node_id)
+                if did_open:
                     opened.append(node_id)
                     _surplus -= _bleed
                     _bleed_room -= _bleed
@@ -574,8 +574,8 @@ class StaffingMixin:
             starter = max(0.0, min(1.0, _bleed_room / _bleed))
             if starter < self.STARTER_FOUNDING_MIN_UNITS:
                 continue
-            ok, _message = self.open_venture(node_id, units=starter)
-            if ok:
+            did_open, _message = self.open_venture(node_id, units=starter)
+            if did_open:
                 opened.append(node_id)
                 _spent = _bleed * starter
                 _surplus -= _spent
@@ -618,8 +618,8 @@ class StaffingMixin:
                     max(0.0, min(1.0, room, afford_room / per_unit))
                 if step < self.AUTO_EXPAND_MIN_STEP_UNITS:
                     continue
-                ok, _message = self.open_venture(node_id, units=step)
-                if ok:
+                did_open, _message = self.open_venture(node_id, units=step)
+                if did_open:
                     opened.append(node_id)
                     _spent = max(0.0, per_unit) * step
                     _surplus -= _spent
@@ -664,8 +664,8 @@ class StaffingMixin:
                                        "quicker against what you can raise"
                                        % (_payback, PAYBACK_LIMIT_YEARS)))
                     continue
-            ok, why = self.open_venture(node_id)
-            if ok:
+            did_open, why = self.open_venture(node_id)
+            if did_open:
                 opened.append(node_id)
             elif blocked is None:
                 blocked = (node_id, why)
@@ -693,7 +693,7 @@ class StaffingMixin:
                                     "{:,.0f}".format(self.nodes[node_id]["up"]),
                                     why or "something is in the way")))
 
-    def mothball_work(self, k):
+    def mothball_work(self, node_id):
         """Shut a completed work down to stop paying its upkeep.
 
         The lever for a finished, running institution that is a drag on
@@ -703,11 +703,11 @@ class StaffingMixin:
         the work gave you, and restoring it costs a fraction of building
         it.
         """
-        if k not in self.nodes:
+        if node_id not in self.nodes:
             return False, "no such node"
-        if k not in self.household.done:
+        if node_id not in self.household.done:
             return False, "you have not built that"
-        if k in self.household.granted:
+        if node_id in self.household.granted:
             return False, ("that is something the society has, not something you "
                            "maintain; there is no upkeep of yours to stop")
         # MONEY IS NOT THE ONLY THING THIS TOOL CAN FREE: refusing whenever
@@ -719,8 +719,8 @@ class StaffingMixin:
         # short of even when there is "nothing to save" in money terms. Ask
         # what THIS tool actually releases (money upkeep, and, if it is
         # running, supervision time) rather than asking about money alone.
-        sch_held, art_held = self.venture_hands(k) if k in self.household.operating else (0.0, 0.0)
-        if self.nodes[k]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
+        sch_held, art_held = self.venture_hands(node_id) if node_id in self.household.operating else (0.0, 0.0)
+        if self.nodes[node_id]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
             return False, ("that has no money upkeep of yours to stop paying, and "
                            "nobody of yours is tied up supervising it either; "
                            "there is nothing to save")
@@ -733,7 +733,7 @@ class StaffingMixin:
         # stop paying for, turning a bad year into an unrecoverable
         # softlock. Knowledge still cannot be unlearned; a building can
         # always be shut.
-        if self.never_abandon(k) and self.nodes[k]["cat"] in self.NEVER_ABANDON:
+        if self.never_abandon(node_id) and self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
             return False, ("that is knowledge, or it is who you are here. "
                            "You cannot un-know a thing to save its upkeep")
         # SHUTTING A SHOP DOWN IS NOT FORGETTING HOW IT WORKED: this touches
@@ -742,29 +742,29 @@ class StaffingMixin:
         # tree, forcing "you will have to restore or rebuild it before you
         # can go on" for a concern that was only ever switched off, not
         # forgotten.
-        was_running = k in self.household.operating
-        self.household.operating.discard(k)
-        self.household.mothballed.add(k)
+        was_running = node_id in self.household.operating
+        self.household.operating.discard(node_id)
+        self.household.mothballed.add(node_id)
         if not was_running:
             return True, ("%s was not running, so there was nothing to stop "
-                          "paying for. You still know how to do it." % k)
+                          "paying for. You still know how to do it." % node_id)
         # SAY WHAT WAS ACTUALLY FREED, not only the money: a concern held
         # together by staff time alone (up<=0, sch_held/art_held>0, the
         # exact case above) is reachable by this method, so the confirmation
         # has to say so, or freeing 0.75 craftsmen would read as a no-op
         # that happened to succeed.
         _freed = []
-        if self.nodes[k]["up"] > 0 or self.nodes[k]["rev"] > 0:
+        if self.nodes[node_id]["up"] > 0 or self.nodes[node_id]["rev"] > 0:
             _freed.append("you stop paying %s a year for it and stop earning "
                           "the %s a year it brought in"
-                          % ("{:,.0f}".format(self.nodes[k]["up"]),
-                             "{:,.0f}".format(self.nodes[k]["rev"])))
+                          % ("{:,.0f}".format(self.nodes[node_id]["up"]),
+                             "{:,.0f}".format(self.nodes[node_id]["rev"])))
         if sch_held > 0.005 or art_held > 0.005:
             _freed.append("it frees %.2f scholars and %.2f craftsmen who were "
                           "tied up supervising it" % (sch_held, art_held))
         return True, ("%s shut down: %s. You still know how to do it, and "
                       "'restore %s' opens it again"
-                      % (k, "; ".join(_freed), k))
+                      % (node_id, "; ".join(_freed), node_id))
 
     RESTORE_COST_MIN_UPKEEP_YEARS = declare(
         "RESTORE_COST_MIN_UPKEEP_YEARS", 2.0, kind="temporary_heuristic",
@@ -777,7 +777,7 @@ class StaffingMixin:
             "own mothball-reversal already implies is not free either; "
             "tuned, not measured.")
 
-    def restore_work(self, k):
+    def restore_work(self, node_id):
         """Bring a mothballed work back, and open its doors again.
 
         It costs about twice what `open` costs on its own, because it does two
@@ -785,13 +785,13 @@ class StaffingMixin:
         and it starts the concern trading. `open` alone assumes the plant is
         still there.
         """
-        if k not in getattr(self.household, "mothballed", set()):
+        if node_id not in getattr(self.household, "mothballed", set()):
             return False, "you have not shut that down"
-        if k not in self.household.done:
+        if node_id not in self.household.done:
             return False, ('you no longer know how to do that, so there is '
                            'nothing to reopen: build it again with '
-                           '{"cmd":"start","id":"%s"}' % k)
-        node = self.nodes[k]
+                           '{"cmd":"start","id":"%s"}' % node_id)
+        node = self.nodes[node_id]
         # A FLOOR FROM THE UPKEEP, not only a share of the build cost: thirty
         # per cent of nothing is nothing, so a node that costs nothing to
         # build while costing 20 a year to keep could otherwise be shut down
@@ -801,7 +801,7 @@ class StaffingMixin:
         # reverse, because the shaft floods and the crew disperses. Two
         # years of the upkeep avoided is what it costs to find the people
         # and the plant again.
-        fee = max(self.project_cost(k) * self.RESTORE_COST_SHARE_OF_BUILD,
+        fee = max(self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD,
                   node["up"] * self.RESTORE_COST_MIN_UPKEEP_YEARS)
         # THE SAME GRACE `open` GIVES: a concern the staffing rule shut is a
         # shop whose keeper was lost, not a work that was abandoned.
@@ -810,7 +810,7 @@ class StaffingMixin:
         # actually reaches for - must honour that same discount, or a
         # player pays double what the closing message promised.
         _shut = getattr(self.household, "shut_for_staff", {})
-        _in_grace = k in _shut and self.year - _shut[k] <= self.STAFF_CLOSURE_GRACE
+        _in_grace = node_id in _shut and self.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE
         # SAY WHICH CASE THIS IS, not just a number: the closing message
         # promises "reopening soon costs a tenth of what opening did", so a
         # player who comes back to `restore` after the grace window has
@@ -819,20 +819,20 @@ class StaffingMixin:
         # account of itself reads as broken whether it is wrong or merely
         # unexplained.
         _grace_note = None
-        if k in _shut:
+        if node_id in _shut:
             if _in_grace:
                 fee *= self.STAFF_CLOSURE_DISCOUNT
                 _grace_note = ("the staffing window is still open (shut %d "
                                "years ago, of %d allowed), so this is the "
                                "discounted tenth, not the full price"
-                               % (self.year - _shut[k], self.STAFF_CLOSURE_GRACE))
+                               % (self.year - _shut[node_id], self.STAFF_CLOSURE_GRACE))
             else:
                 _grace_note = ("the staffing discount only lasts %d years "
                                "after a closure, and it has been %d - too "
                                "long for the tenth, so this is the full "
                                "price, the same as rebuilding the plant "
                                "from nothing"
-                               % (self.STAFF_CLOSURE_GRACE, self.year - _shut[k]))
+                               % (self.STAFF_CLOSURE_GRACE, self.year - _shut[node_id]))
         if fee > self.spending_power("buy"):
             return False, ("bringing it back costs %s denarii%s, and between "
                            "%s in cash and what anyone will advance against a "
@@ -845,15 +845,15 @@ class StaffingMixin:
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done))
         self.household.capital -= fee
-        self.household.done.add(k)
+        self.household.done.add(node_id)
         self._done_changed()
-        self.household.mothballed.discard(k)
+        self.household.mothballed.discard(node_id)
         # Back in service means back in OPERATION: restore is what a player
         # types to reopen something they shut, so it must put it back on the
         # books rather than leaving it known-but-closed.
-        if self.is_venture(k):
-            self.household.operating.add(k)
+        if self.is_venture(node_id):
+            self.household.operating.add(node_id)
         return True, ("%s back in service for %s denarii%s"
-                      % (k, "{:,.0f}".format(fee),
+                      % (node_id, "{:,.0f}".format(fee),
                          (" (%s)" % _grace_note) if _grace_note else ""))
 

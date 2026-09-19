@@ -106,8 +106,8 @@ def _ingame_save_milestone(sim, session):
     path = _pick_milestone_filename(sim.civ.get("id") or "game")
     try:
         save_state(sim, path)
-    except OSError as e:
-        print("   -- could not write there: %s" % e)
+    except OSError as error:
+        print("   -- could not write there: %s" % error)
         return
     # MARKED AS FROZEN, in the file's own sidecar - not only by its name. See
     # settings.is_checkpoint for why both signals exist: the filename alone
@@ -123,7 +123,7 @@ def _ingame_save_milestone(sim, session):
               "saving after every command as before)" % session)
 
 
-def _ingame_load(cfg, sim, session, a):
+def _ingame_load(cfg, sim, session, args):
     """'load', typed bare mid-game: switch this running game to a different
     save in the managed directory, without going back to the main menu.
     Returns the session path to use from here on - unchanged if nothing was
@@ -158,8 +158,8 @@ def _ingame_load(cfg, sim, session, a):
     chosen = rows[int(raw) - 1]["path"]
     try:
         load_state(sim, chosen)
-    except Exception as e:
-        print("   -- could not load %s: %s" % (chosen, e))
+    except Exception as error:
+        print("   -- could not load %s: %s" % (chosen, error))
         return session
     # THE HORIZON, AGAIN, THE SAME WAY _resolve_horizon DOES AT STARTUP. It
     # is not part of what load_state restores (see settings.py's module
@@ -176,7 +176,7 @@ def _ingame_load(cfg, sim, session, a):
     # (after this session later ends on its own) skip announcing THAT ending
     # because some earlier game's flag was still set. Either way, a load is
     # a new look at a position this process has not narrated yet.
-    a._said_end = False
+    args._said_end = False
     # A CHECKPOINT SWITCHED TO IS STILL A CHECKPOINT - same guarantee as a
     # checkpoint named on the command line (see cmd_play's own comment on
     # `checkpoint_source`, right above the equivalent check there): switching
@@ -243,7 +243,7 @@ def _save_listing(cfg):
     return save_dir, rows, civ_index, _default_need
 
 
-def _print_save_row(i, r, civ_index, need, marker=None):
+def _print_save_row(i, row, civ_index, need, marker=None):
     """The lines `_load_game`, `_ingame_saves` and `_ingame_load` all print
     for one save: which civilisation, how far along, when it was last
     touched. A save played WITH fog does not get the goal-progress fraction
@@ -252,44 +252,44 @@ def _print_save_row(i, r, civ_index, need, marker=None):
     knowing before they have earned it, and a listing screen is not exempt
     from that just because no Sim object exists yet.
     """
-    if not r["readable"]:
-        print("   %d) %s" % (i, r["filename"]))
+    if not row["readable"]:
+        print("   %d) %s" % (i, row["filename"]))
         print("      could not be read as a save from this game; skipping "
               "its details")
         print()
         return
-    civ_record = civ_index.get(r["civ_id"], {})
-    name = civ_record.get("name", r["civ_id"] or "unknown civilisation")
+    civ_record = civ_index.get(row["civ_id"], {})
+    name = civ_record.get("name", row["civ_id"] or "unknown civilisation")
     start = civ_record.get("year")
-    year = r["year"]
+    year = row["year"]
     elapsed = ("  (%d years in)" % (year - start)
               if isinstance(start, (int, float)) and isinstance(year, (int, float))
               else "")
-    print("   %d) %s%s" % (i, r["filename"], "   %s" % marker if marker else ""))
+    print("   %d) %s%s" % (i, row["filename"], "   %s" % marker if marker else ""))
     print("      %s  -  now %s AD%s" % (name, year, elapsed))
     status = []
-    if r.get("goal_year"):
+    if row.get("goal_year"):
         # NAMED, because there are seventeen goals now and "reached the
         # transistor" is wrong for sixteen of them. Safe to name even for a
         # fogged save: this one was finished, so the player knows what it was.
         status.append("REACHED %s in %s AD"
-                      % ((r.get("goal_name") or "its goal").upper(),
-                         r["goal_year"]))
-    elif r.get("dead_reason"):
-        status.append("ended: %s" % r["dead_reason"])
-    elif r.get("founder_alive") is False:
+                      % ((row.get("goal_name") or "its goal").upper(),
+                         row["goal_year"]))
+    elif row.get("dead_reason"):
+        status.append("ended: %s" % row["dead_reason"])
+    elif row.get("founder_alive") is False:
         status.append("founder has died")
-    done = r.get("done") or []
-    if r["fog"]:
+    done = row.get("done") or []
+    if row["fog"]:
         status.append("%d technologies built" % len(done))
     else:
-        _need = r.get("goal_need") or need
+        _need = row.get("goal_need") or need
         progress = len(_need.intersection(done))
         status.append("%d/%d toward %s"
-                      % (progress, len(_need), r.get("goal_name") or "the goal"))
-    status.append("fog %s" % ("on" if r["fog"] else "off"))
-    if r.get("reputation") is not None:
-        status.append("rep %.0f" % r["reputation"])
+                      % (progress, len(_need), row.get("goal_name") or "the goal"))
+    status.append("fog %s" % ("on" if row["fog"] else "off"))
+    if row.get("reputation") is not None:
+        status.append("rep %.0f" % row["reputation"])
     print("      " + "  |  ".join(status))
-    print("      last played %s" % settings.humanize_age(r["mtime"]))
+    print("      last played %s" % settings.humanize_age(row["mtime"]))
     print()

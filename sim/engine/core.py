@@ -815,7 +815,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 + population.working_age
                 + population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
 
-    def _farm_year_weather_seed(self, yr, region=None):
+    def _farm_year_weather_seed(self, year, region=None):
         """A deterministic seed for one year's harvest weather draw, a pure
         function of this civilisation's id, an optional region, and the
         calendar year - NOT one long-lived `random.Random` advanced
@@ -858,7 +858,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             (index + 1) * ord(character) for index, character
             in enumerate(str(region)))
         return (civ_component * 1000003 + region_component * 7919
-                + int(yr) * 97) % (2 ** 32)
+                + int(year) * 97) % (2 ** 32)
 
     _WeatherCell = collections.namedtuple(
         "_WeatherCell", ("cell_id", "lat", "lon", "weight"))
@@ -1155,7 +1155,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         pivot_floor = 1e-12
         for row in range(cell_count):
             for col in range(row + 1):
-                total = sum(lower[row][k] * lower[col][k] for k in range(col))
+                total = sum(lower[row][inner_index] * lower[col][inner_index] for inner_index in range(col))
                 if row == col:
                     pivot = correlation[row][row] - total
                     lower[row][col] = math.sqrt(max(pivot, pivot_floor))
@@ -1163,7 +1163,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                     lower[row][col] = (correlation[row][col] - total) / lower[col][col]
         return lower
 
-    def _pooled_farm_weather_multiplier(self, yr, weather_stdev_fraction=None):
+    def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None):
         """This year's harvest weather multiplier, pooled across this
         civilisation's own growing-season weather cells instead of one
         draw for the whole territory (Complaints/47-one-weather-draw-for-
@@ -1255,9 +1255,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         if not cells:
             # No usable cells - fall back to a single civilisation-wide draw.
             return agriculture.draw_weather_multiplier(
-                random.Random(self._farm_year_weather_seed(yr)), stdev)
+                random.Random(self._farm_year_weather_seed(year)), stdev)
         independent_draws = [
-            random.Random(self._farm_year_weather_seed(yr, region=cell.cell_id))
+            random.Random(self._farm_year_weather_seed(year, region=cell.cell_id))
             .gauss(0.0, 1.0)
             for cell in cells]
         cholesky_lower = self._farm_weather_correlation_cholesky
@@ -1271,7 +1271,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             pooled_multiplier += cell.weight * clipped
         return pooled_multiplier
 
-    def _demographic_recovery(self, yr):
+    def _demographic_recovery(self, year):
         """Advance `self.population` by one year, from a REAL harvest, and
         let population-raising technologies build their queued gain into
         `_pop_scale_base`: the age-cohort model handles the population
@@ -1465,7 +1465,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # as the civ-wide fallback inside `_pooled_farm_weather_multiplier`
         # itself.
         farm_storage = agriculture.Storage(
-            stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(yr))
+            stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(year))
         # `reserve_target_kg` is the SAME figure the carry-forward is capped
         # at below, and passing it is what lets a population eat above bare
         # subsistence in a good year. Without it, Storage.step reverts to
@@ -1495,7 +1495,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             worked_land, farm_labour_hours, adult_equivalent_population,
             worker_count=farm_workers_fte,
             reserve_target_kg=reserve_target_kg,
-            weather_multiplier=self._pooled_farm_weather_multiplier(yr))
+            weather_multiplier=self._pooled_farm_weather_multiplier(year))
         # CLOSE THE YEAR: write what this year's Storage call actually
         # leaves on hand back as next year's opening stock, capped at what
         # this civilisation's storage infrastructure can physically hold
@@ -1542,7 +1542,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._last_demographic_step = self.population.step(
             farm_year.food_available_kcal_per_day, jitter=False,
             disease_burden=self._disease_burden())
-        self._refresh_demographic_indexes(yr)
+        self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
         """WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-
@@ -1592,7 +1592,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             return demography.PRE_INDUSTRIAL_DISEASE_BURDEN
         return max(0.0, min(1.0, 1.0 - unlocked_weight / total_weight))
 
-    def _refresh_demographic_indexes(self, yr):
+    def _refresh_demographic_indexes(self, year):
         """Say why the wage bill moved, if it moved enough to be worth
         saying - the only job left here once pop_scale/wage_index became
         computed properties (see above). Kept as its own method, called
@@ -1609,9 +1609,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # from `premium` rather than recomputed, so the two can never drift
         # apart: premium == elasticity * shortfall * 100, by construction.
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
-        if premium > 0.5 and yr - self._said_wage_cascade >= 15:
-            self._said_wage_cascade = yr
-            self.household.log.append((yr, "population still %d%% below trend: wages "
+        if premium > 0.5 and year - self._said_wage_cascade >= 15:
+            self._said_wage_cascade = year
+            self.household.log.append((year, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
                                  "as the population does"
@@ -1629,8 +1629,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "a habit the optimizer leans on every year. Round number, not "
             "measured.")
 
-    def has(self, k):
-        return k in self.household.done
+    def has(self, node_id):
+        return node_id in self.household.done
 
     # THE ONE PLACE that answers "what is my corpus worth against a
     # sacking" - called from both SocietyMixin._shocks (the sack itself)
@@ -2222,7 +2222,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             return 1.0 - self.hazard_relief("staff_loss")[0]
         raise ValueError("unknown win_condition metric %r" % metric)
 
-    def _check_win_conditions(self, yr):
+    def _check_win_conditions(self, year):
         """Once a year: every node carrying a `win_condition` that is not
         already done gets checked against the live measurement it names,
         and completes itself - exactly like a normal completion (done,
@@ -2254,10 +2254,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
                 continue
             self.household.done.add(node_id)
             self._done_changed()
-            self.household.done_year[node_id] = yr
-            self.household.log.append((yr, "achieved: " + self.nodes[node_id]["name"]))
+            self.household.done_year[node_id] = year
+            self.household.log.append((year, "achieved: " + self.nodes[node_id]["name"]))
             if node_id == self.goal and self.household.goal_year is None:
-                self.household.goal_year = yr
+                self.household.goal_year = year
 
     def run(self, goal, horizon=None):
         self.goal = goal

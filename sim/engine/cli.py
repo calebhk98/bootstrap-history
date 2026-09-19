@@ -449,8 +449,8 @@ def _validate_nodes(nodes, goods, wages):
 def _validate_topo_order(nodes):
     try:
         topo_order(nodes)
-    except RuntimeError as e:
-        return [str(e)]
+    except RuntimeError as error:
+        return [str(error)]
     return []
 
 
@@ -501,7 +501,7 @@ def _print_validate_findings(errs, warns):
         print("WARNINGS:"); [print("  " + message) for message in warns]
 
 
-def _validate_reachability(a, errs, nodes, goal_rows):
+def _validate_reachability(args, errs, nodes, goal_rows):
     # REACHABILITY, PER CIVILISATION - opt in with --deep, because this runs
     # a real dice-free Sim (see path_search.deterministic_sim) once per
     # civilisation for every goal above, and that is seconds of real work
@@ -512,7 +512,7 @@ def _validate_reachability(a, errs, nodes, goal_rows):
     # transistor itself - a goal this reports as "not reached" may still be
     # reachable with a smarter order (see plan --search-rounds) or more
     # calendar time than the capped probe horizon below allows.
-    if getattr(a, "deep", False) and not errs:
+    if getattr(args, "deep", False) and not errs:
         print()
         print("REACHABILITY (dice-free, immortal, one CPM-ordered trial per "
               "civilisation, capped horizon - a lower bound, see above)")
@@ -546,7 +546,7 @@ def _print_validate_ok(errs):
               "closure and critical path compute cleanly.")
 
 
-def cmd_validate(a):
+def cmd_validate(args):
     tree, prices, nodes, wages, goods = load()
     errs, warns = _validate_nodes(nodes, goods, wages)
     errs += _validate_topo_order(nodes)
@@ -555,7 +555,7 @@ def cmd_validate(a):
 
     _print_validate_summary(nodes, goal_rows, default_goal)
     _print_validate_findings(errs, warns)
-    _validate_reachability(a, errs, nodes, goal_rows)
+    _validate_reachability(args, errs, nodes, goal_rows)
     _print_validate_ok(errs)
     return 1 if errs else 0
 
@@ -608,9 +608,9 @@ def _founder_lifetime_hours(cfg=None):
     return hours_per_year * expected_working_years
 
 
-def cmd_path(a):
+def cmd_path(args):
     tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, a.goal)
+    goal = resolve_goal(tree, nodes, args.goal)
     need = closure(nodes, goal)
     order = topo_order(nodes, need)
     cum_cost = cum_ph = 0.0
@@ -643,9 +643,9 @@ def cmd_path(a):
                      "IMPOSSIBLE for one person. You must convert your hours into other people's hours."))
 
 
-def cmd_costs(a):
+def cmd_costs(args):
     tree, prices, nodes, wages, goods = load()
-    rows = sorted(nodes.values(), key=lambda n: -n["_total_cost"])[:a.top]
+    rows = sorted(nodes.values(), key=lambda n: -n["_total_cost"])[:args.top]
     print("%-34s %10s %10s %10s %8s %6s" % ("node", "labour", "materials", "capital", "TOTAL", "rev/yr"))
     print("-" * 84)
     for node_record in rows:
@@ -663,7 +663,7 @@ def cmd_costs(a):
 _Z95 = 1.959963984540054  # two-sided 95% normal quantile, to stdlib float precision
 
 
-def _wilson_interval(successes, n, z=_Z95):
+def _wilson_interval(successes, trial_count, z_score=_Z95):
     """95% (by default) Wilson score confidence interval for a binomial rate.
 
     NOT the textbook p +/- z*sqrt(p(1-p)/n) normal-approximation interval.
@@ -678,27 +678,27 @@ def _wilson_interval(successes, n, z=_Z95):
     including at p=0 and p=1, and is the standard textbook fix for this exact
     failure mode (see e.g. Agresti & Coull 1998). Stdlib-only: math.sqrt.
     """
-    if n <= 0:
+    if trial_count <= 0:
         return (0.0, 1.0)
-    rate = successes / n
-    z_squared = z * z
-    denom = 1.0 + z_squared / n
-    centre = rate + z_squared / (2 * n)
-    margin = z * math.sqrt((rate * (1.0 - rate) + z_squared / (4 * n)) / n)
+    rate = successes / trial_count
+    z_squared = z_score * z_score
+    denom = 1.0 + z_squared / trial_count
+    centre = rate + z_squared / (2 * trial_count)
+    margin = z_score * math.sqrt((rate * (1.0 - rate) + z_squared / (4 * trial_count)) / trial_count)
     lower = (centre - margin) / denom
     upper = (centre + margin) / denom
     return (max(0.0, lower), min(1.0, upper))
 
 
-def _fmt_rate_ci(successes, n):
+def _fmt_rate_ci(successes, trial_count):
     """'k/n (p%)  95% CI [lo%, hi%]' - the point estimate never appears alone
     anywhere in this file's output. A bare percentage from a few dozen
     Monte Carlo trials invites a reader to treat it as a measurement with no
     error bar, which is exactly the failure this function exists to close."""
-    lower, upper = _wilson_interval(successes, n)
-    rate = 100.0 * successes / n if n else 0.0
+    lower, upper = _wilson_interval(successes, trial_count)
+    rate = 100.0 * successes / trial_count if trial_count else 0.0
     return ("%d/%d (%.1f%%)  95%% CI [%.1f%%, %.1f%%] (Wilson score)"
-            % (successes, n, rate, 100.0 * lower, 100.0 * upper))
+            % (successes, trial_count, rate, 100.0 * lower, 100.0 * upper))
 
 
 # How few successes is too few to trust a median/quartile year-to-goal? There
@@ -891,17 +891,17 @@ def _summarise(results, label):
     _summarise_misc_stats(results)
 
 
-def _run_trials(nodes, order, bounties, goal, a, deterministic):
+def _run_trials(nodes, order, bounties, goal, args, deterministic):
     """Run a.mc trials of Sim under the strategy already loaded by the
     caller, and return their results in trial order."""
     res = []
-    for i in range(a.mc):
-        rng = DetRNG(a.seed + i) if deterministic else random.Random(a.seed + i)
-        run_result = Sim(nodes, order, rng, events=not a.no_events,
-                cfg={"immortal": not a.mortal,
-                     "start_capital": STARTING_KITS[a.kit]["den"]},
-                civ=load_civ(a.civ),
-                bounty_set=(set() if a.no_bounties else bounties)).run(goal, a.horizon)
+    for i in range(args.mc):
+        rng = DetRNG(args.seed + i) if deterministic else random.Random(args.seed + i)
+        run_result = Sim(nodes, order, rng, events=not args.no_events,
+                cfg={"immortal": not args.mortal,
+                     "start_capital": STARTING_KITS[args.kit]["den"]},
+                civ=load_civ(args.civ),
+                bounty_set=(set() if args.no_bounties else bounties)).run(goal, args.horizon)
         res.append(run_result)
     return res
 
@@ -918,7 +918,7 @@ def _run_trials(nodes, order, bounties, goal, a, deterministic):
 # would have to start it in. Granted technologies are dropped because they
 # are not choices anybody made, and ties within a year are broken by id so
 # the file is reproducible.
-def _save_winning_order(res, nodes, goal, a):
+def _save_winning_order(res, nodes, goal, args):
     won = [run_result for run_result in res if run_result.goal_year]
     if not won:
         sys.stderr.write("no trial reached the goal, so there is no winning "
@@ -942,17 +942,17 @@ def _save_winning_order(res, nodes, goal, a):
                "Not designed. Observed: trial seed %d of a --mc %d run on "
                "%s reached %s in %d AD, and this is the sequence it "
                "finished things in."
-               % (a.seed + res.index(best), a.mc, a.civ, goal,
+               % (args.seed + res.index(best), args.mc, args.civ, goal,
                   best.goal_year),
                "A captured order is a floor on what is achievable, not a "
                "recommendation: it carries whatever luck that trial had, "
                "and it includes side branches that trial happened to "
                "build and may not have needed."],
            "order": seq}
-    with open(a.save_winner, "w") as save_file:
+    with open(args.save_winner, "w") as save_file:
         json.dump(out, save_file, indent=1)
     sys.stderr.write("saved the winning order (%d nodes, goal in %d AD) "
-                     "to %s\n" % (len(seq), best.goal_year, a.save_winner))
+                     "to %s\n" % (len(seq), best.goal_year, args.save_winner))
 
 
 def _print_run_trace(res):
@@ -962,24 +962,24 @@ def _print_run_trace(res):
         print("  %4d  %s" % (year, message))
 
 
-def cmd_run(a):
+def cmd_run(args):
     tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
-    deterministic = getattr(a, "deterministic", False)
-    res = _run_trials(nodes, order, bounties, goal, a, deterministic)
+    goal = resolve_goal(tree, nodes, getattr(args, "goal", None))
+    label, order, bounties = load_strategy(args.strategy, nodes, goal)
+    deterministic = getattr(args, "deterministic", False)
+    res = _run_trials(nodes, order, bounties, goal, args, deterministic)
     _summarise(res, "%s%s%s" % (label,
-                                "  [events disabled]" if a.no_events else "",
+                                "  [events disabled]" if args.no_events else "",
                                 "  [deterministic]" if deterministic else ""))
-    if getattr(a, "save_winner", None):
-        _save_winning_order(res, nodes, goal, a)
-    if a.trace:
+    if getattr(args, "save_winner", None):
+        _save_winning_order(res, nodes, goal, args)
+    if args.trace:
         _print_run_trace(res)
 
 
-def cmd_compare(a):
+def cmd_compare(args):
     tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
+    goal = resolve_goal(tree, nodes, getattr(args, "goal", None))
     for name in ["rush", "topo", "recommended"]:
         try:
             label, order, bounties = load_strategy(name, nodes, goal)
@@ -989,7 +989,7 @@ def cmd_compare(a):
         # line, and without the flushes below, the command looks hung: stdout
         # is block-buffered when redirected, so nothing at all appeared until
         # the very end.
-        sys.stderr.write("  running %s: %d trials...\n" % (name, a.mc))
+        sys.stderr.write("  running %s: %d trials...\n" % (name, args.mc))
         sys.stderr.flush()
         # COMMON RANDOM NUMBERS, ON PURPOSE. random.Random(a.seed + i) is
         # reseeded identically for trial i under EVERY strategy in this loop,
@@ -1003,21 +1003,21 @@ def cmd_compare(a):
         # "fix" this by drawing a fresh, unseeded RNG per strategy - that
         # would look more random and measure less: it would reintroduce the
         # between-strategy noise this line exists to cancel out.
-        deterministic = getattr(a, "deterministic", False)
+        deterministic = getattr(args, "deterministic", False)
         res = [Sim(nodes, order,
-                   DetRNG(a.seed + i) if deterministic else random.Random(a.seed + i),
+                   DetRNG(args.seed + i) if deterministic else random.Random(args.seed + i),
                    events=True,
-                   cfg={"immortal": not getattr(a, "mortal", False),
-                        "start_capital": STARTING_KITS.get(getattr(a,"kit","poor_scholar"),
+                   cfg={"immortal": not getattr(args, "mortal", False),
+                        "start_capital": STARTING_KITS.get(getattr(args,"kit","poor_scholar"),
                                                            STARTING_KITS["poor_scholar"])["den"]},
-                   civ=load_civ(getattr(a, "civ", "rome_100ad")),
-                   bounty_set=bounties).run(goal, a.horizon)
-               for i in range(a.mc)]
+                   civ=load_civ(getattr(args, "civ", "rome_100ad")),
+                   bounty_set=bounties).run(goal, args.horizon)
+               for i in range(args.mc)]
         _summarise(res, "%s%s" % (label, "  [deterministic]" if deterministic else ""))
         sys.stdout.flush()
 
 
-def _civ_for_session(a):
+def _civ_for_session(args):
     """Which civilisation to start, honouring the save above the command line.
 
     A save says what game it is. Resuming should not need the flag repeated,
@@ -1025,8 +1025,8 @@ def _civ_for_session(a):
     wrong game over the top of it, even when the contradicting command line
     is one the game itself printed for the player to reuse.
     """
-    session = getattr(a, "session", None)
-    asked = getattr(a, "civ", None)
+    session = getattr(args, "session", None)
+    asked = getattr(args, "civ", None)
     if session and os.path.exists(session) and not _is_claimed_slot(session):
         saved = civ_of_save(session)
         if saved:
@@ -1042,7 +1042,7 @@ def _civ_for_session(a):
     return asked or "rome_100ad"
 
 
-def _goal_for_session(a, tree, nodes):
+def _goal_for_session(args, tree, nodes):
     """Which goal to start the strategy order for, honouring the save above
     the command line - same reasoning and same shape as _civ_for_session
     just above, and for the same reason: the order `load_strategy` hands
@@ -1050,8 +1050,8 @@ def _goal_for_session(a, tree, nodes):
     argument), so a resumed game has to know its goal BEFORE that call, not
     only after load_state runs.
     """
-    session = getattr(a, "session", None)
-    asked = getattr(a, "goal", None)
+    session = getattr(args, "session", None)
+    asked = getattr(args, "goal", None)
     if session and os.path.exists(session) and not _is_claimed_slot(session):
         saved = goal_of_save(session)
         if saved and saved in nodes:
@@ -1073,7 +1073,7 @@ def _horizon_explicit():
               for tok in sys.argv)
 
 
-def _resolve_horizon(a, session):
+def _resolve_horizon(args, session):
     """How many years this sitting gets: the --horizon flag if it was
     actually typed, otherwise whatever the horizon was last set to for this
     save (see the in-game 'options' command and the New Game wizard, both of
@@ -1088,18 +1088,18 @@ def _resolve_horizon(a, session):
         horizon_years = meta.get("horizon_years")
         if isinstance(horizon_years, (int, float)) and horizon_years > 0:
             return int(horizon_years)
-    return a.horizon
+    return args.horizon
 
 
-def cmd_sensitivity(a):
+def cmd_sensitivity(args):
     """Ablation study: how much is each defensive or institutional node worth?
 
     Removes one node from the strategy (so it is never built) and re-runs. Nodes
     that are prerequisites of the goal cannot be ablated and are reported as such.
     """
     tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
+    goal = resolve_goal(tree, nodes, getattr(args, "goal", None))
+    label, order, bounties = load_strategy(args.strategy, nodes, goal)
     need = closure(nodes, goal)
 
     # COMMON RANDOM NUMBERS: trial() reseeds random.Random(a.seed + i)
@@ -1108,15 +1108,15 @@ def cmd_sensitivity(a):
     # cmd_compare for the full rationale; do not randomise this per call.
     def trial(drop=None):
         trimmed_order = [node_id for node_id in order if node_id != drop]
-        res = [Sim(nodes, trimmed_order, random.Random(a.seed + i), events=True,
-                   bounty_set=bounties).run(goal, a.horizon)
-               for i in range(a.mc)]
+        res = [Sim(nodes, trimmed_order, random.Random(args.seed + i), events=True,
+                   bounty_set=bounties).run(goal, args.horizon)
+               for i in range(args.mc)]
         succ = sum(1 for result in res if result.goal_year)
         successful_years = sorted(result.goal_year for result in res if result.goal_year)
         return (100.0 * succ / len(res), successful_years[len(successful_years) // 2] if successful_years else None, succ, len(res))
 
     base_rate, base_med, base_succ, base_n = trial()
-    print("baseline (%s): %s" % (a.strategy, _fmt_rate_ci(base_succ, base_n)))
+    print("baseline (%s): %s" % (args.strategy, _fmt_rate_ci(base_succ, base_n)))
     print("  median year reached: %s AD" % base_med)
     if 0 < base_succ < _MIN_SUCCESSES_FOR_QUANTILES:
         print("  (that median is %d observation%s wearing a statistic's clothing -"
@@ -1195,7 +1195,7 @@ def _print_ablation_table(scored):
 # place left that can disagree with itself.
 
 
-def cmd_sweep(a):
+def cmd_sweep(args):
     """Sweep a starting condition and show how the outcome and the FAILURE MODE move.
 
     The failure mode moving is the interesting part. More starting capital does
@@ -1204,28 +1204,28 @@ def cmd_sweep(a):
     visibility, and visibility in Trajanic Rome is dangerous.
     """
     tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
+    goal = resolve_goal(tree, nodes, getattr(args, "goal", None))
+    label, order, bounties = load_strategy(args.strategy, nodes, goal)
     sweeps = {
         "capital":  ("start_capital", [2000, 5000, 10320, 25000, 50000, 200000, 1000000]),
         "lifespan": ("founder_life",  [10, 15, 20, 28, 35, 45, 60]),
         "hours":    ("founder_hours_per_year", [1000, 1500, 2000, 2500, 3000]),
         "mortality":("founder_life_mean", [10, 15, 20, 28, 40, 60]),
     }
-    key, values = sweeps[a.axis]
-    print("sweeping %s under strategy '%s', %d runs per point\n" % (a.axis, a.strategy, a.mc))
+    key, values = sweeps[args.axis]
+    print("sweeping %s under strategy '%s', %d runs per point\n" % (args.axis, args.strategy, args.mc))
     print("%-12s %8s %16s %8s %8s   %s" %
-          (a.axis, "success", "95% CI", "median", "p25", "dominant failure"))
+          (args.axis, "success", "95% CI", "median", "p25", "dominant failure"))
     print("-" * 92)
     any_thin = False
     any_success = False
     for value in values:
         cfg, life = _sweep_point_cfg(key, value)
-        res = _run_sweep_point(nodes, order, bounties, goal, a, cfg, life)
+        res = _run_sweep_point(nodes, order, bounties, goal, args, cfg, life)
         thin, succeeded = _print_sweep_row(value, res)
         any_thin = any_thin or thin
         any_success = any_success or succeeded
-    _print_sweep_footer(any_thin, any_success, a.axis, a.strategy)
+    _print_sweep_footer(any_thin, any_success, args.axis, args.strategy)
 
 
 def _sweep_point_cfg(key, value):
@@ -1243,19 +1243,19 @@ def _sweep_point_cfg(key, value):
     return cfg, life
 
 
-def _run_sweep_point(nodes, order, bounties, goal, a, cfg, life):
+def _run_sweep_point(nodes, order, bounties, goal, args, cfg, life):
     """Run a.mc trials at one sweep point and return their results."""
     res = []
-    for i in range(a.mc):
+    for i in range(args.mc):
         # COMMON RANDOM NUMBERS across the points of this sweep, same
         # reasoning as cmd_compare: trial i sees the same shocks at every
         # value of v, so a change down this column is the swept variable
         # acting, not a different draw of luck. Do not reseed per v.
-        sim = Sim(nodes, order, random.Random(a.seed + i), events=True, cfg=cfg,
+        sim = Sim(nodes, order, random.Random(args.seed + i), events=True, cfg=cfg,
                   bounty_set=bounties)
         if life is not None:
             sim.life_left = float(life)
-        res.append(sim.run(goal, a.horizon))
+        res.append(sim.run(goal, args.horizon))
     return res
 
 
@@ -1312,7 +1312,7 @@ def _print_sweep_footer(any_thin, any_success, axis, strategy):
         print("    the binding constraint) to compute a different order, then sweep that.")
 
 
-def cmd_goals(a):
+def cmd_goals(args):
     """List every selectable goal: the transistor and every alternative in
     data/tech_tree.json meta.goals, with its closure size and dice-free
     critical-path floor - the same pair of numbers 'validate' prints, on

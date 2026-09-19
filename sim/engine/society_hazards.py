@@ -323,9 +323,9 @@ class HazardsMixin:
         {"happening now", "too late to hedge", "stopgap only", "begin hedge now"})
 
     @staticmethod
-    def _yr_words(n):
-        n = round(n)
-        return "%d year" % n if n == 1 else "%d years" % n
+    def _yr_words(years):
+        years = round(years)
+        return "%d year" % years if years == 1 else "%d years" % years
 
     def hazard_timeline(self, limit=4):
         """What is coming, how many years off, and whether what stands
@@ -461,7 +461,7 @@ class HazardsMixin:
         self.household.capital -= lost
         return lost
 
-    def _resolve_hazard_condition(self, h, yr, a):
+    def _resolve_hazard_condition(self, hazard, year, hazard_start):
         """History on rails, but the household is allowed to have changed
         the ground it runs on.
 
@@ -496,32 +496,32 @@ class HazardsMixin:
         opens (`yr == a`), keyed on the hazard's own name so a multi-year
         window does not repeat itself every year it stays open.
         """
-        cond = h.get("condition")
+        cond = hazard.get("condition")
         if not cond:
-            return h
+            return hazard
         field = cond.get("field")
         need = cond.get("requires_all") or []
         met = all(self.has(tech_id) for tech_id in need)
-        if yr == a:
+        if year == hazard_start:
             said = self._said_condition
-            key = h.get("name", "hazard")
+            key = hazard.get("name", "hazard")
             if key not in said:
                 said.add(key)
                 msg = cond.get("met_message" if met else "unmet_message")
                 if msg:
-                    self.household.log.append((yr, msg))
-        if not met or field not in h:
-            return h
-        adjusted = dict(h)
+                    self.household.log.append((year, msg))
+        if not met or field not in hazard:
+            return hazard
+        adjusted = dict(hazard)
         outcome = cond.get("outcome")
         scale = cond.get("alter_scale", 1.0)
         if outcome == "avert":
             del adjusted[field]
         elif outcome == "alter":
             if field == "output_factor":
-                adjusted[field] = 1.0 - (1.0 - h[field]) * scale
+                adjusted[field] = 1.0 - (1.0 - hazard[field]) * scale
             else:
-                adjusted[field] = h[field] * scale
+                adjusted[field] = hazard[field] * scale
         return adjusted
 
     STAFF_LOSS_HAZARD_ANNUAL_CHANCE = declare(
@@ -585,7 +585,7 @@ class HazardsMixin:
 
     # -- driver -------------------------------------------------------------
 
-    def _shocks(self, yr):
+    def _shocks(self, year):
         """Dated catastrophes, read from the CIVILIZATION file.
 
         Rome gets the Antonine plague and the third century crisis. England 1300
@@ -602,16 +602,16 @@ class HazardsMixin:
         """
         for hazard in self.civ.get("hazards", []):
             hazard_start, hazard_end = hazard.get("years", [0, 0])
-            if not (hazard_start <= yr <= hazard_end):
+            if not (hazard_start <= year <= hazard_end):
                 continue
-            hazard = self._resolve_hazard_condition(hazard, yr, hazard_start)
-            self._shock_staff_loss(hazard, yr)
-            self._shock_sack_chance(hazard, yr)
-            self._shock_output_factor(hazard, yr)
-            self._shock_real_erosion(hazard, yr)
-            self._shock_values(hazard, yr, hazard_start, hazard_end)
+            hazard = self._resolve_hazard_condition(hazard, year, hazard_start)
+            self._shock_staff_loss(hazard, year)
+            self._shock_sack_chance(hazard, year)
+            self._shock_output_factor(hazard, year)
+            self._shock_real_erosion(hazard, year)
+            self._shock_values(hazard, year, hazard_start, hazard_end)
 
-    def _shock_staff_loss(self, hazard, yr):
+    def _shock_staff_loss(self, hazard, year):
         """The staff_loss branch of _shocks: disease and famine years.
 
         The self.rng draws here must stay in the exact order _shocks calls
@@ -674,7 +674,7 @@ class HazardsMixin:
             # and wage screens at their pre-plague values until the next
             # annual resolution; refresh (log-only now - see
             # _refresh_demographic_indexes's own docstring) immediately.
-            self._refresh_demographic_indexes(yr)
+            self._refresh_demographic_indexes(year)
             # SEVERITY HONESTY: the words have to match `loss`, the
             # number the mechanic just applied above, not `raw`, the
             # historical hazard's own unmitigated figure - a tester
@@ -740,9 +740,9 @@ class HazardsMixin:
                         "this, historically a %d%% loss, barely "
                         "registers"
                         % round(historical * 100))
-            self.household.log.append((yr, msg))
+            self.household.log.append((year, msg))
 
-    def _shock_sack_chance(self, hazard, yr):
+    def _shock_sack_chance(self, hazard, year):
         """The sack_chance branch of _shocks: a site sacked.
 
         The self.rng draws here must stay in the exact order _shocks calls
@@ -756,12 +756,12 @@ class HazardsMixin:
             relief, why = self.hazard_relief("sack_chance")
             probability = hazard["sack_chance"] * relief
             if why and rng.random() < hazard["sack_chance"] - probability:
-                self.household.log.append((yr, "%s: an attack comes to nothing (%s)"
+                self.household.log.append((year, "%s: an attack comes to nothing (%s)"
                                  % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
             if rng.random() < probability:
-                self._sack_site(hazard, yr)
+                self._sack_site(hazard, year)
 
-    def _sack_site(self, hazard, yr):
+    def _sack_site(self, hazard, year):
         """What a sack itself takes: capital, staff, projects reset - then,
         maybe, the corpus.
 
@@ -809,7 +809,7 @@ class HazardsMixin:
         if _act0:
             _took.append("%d project%s back to the beginning"
                          % (_act0, "" if _act0 == 1 else "s"))
-        self.household.log.append((yr, "%s: a site is sacked - %s"
+        self.household.log.append((year, "%s: a site is sacked - %s"
                          % (hazard.get("name", "crisis"),
                             ", ".join(_took)
                             or "you had nothing it could take")))
@@ -819,9 +819,9 @@ class HazardsMixin:
         # table could disagree with each other.
         corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
         if rng.random() < corpus_loss_probability:
-            self._sack_corpus_loss(yr, frac, _hedge_before)
+            self._sack_corpus_loss(year, frac, _hedge_before)
 
-    def _sack_corpus_loss(self, yr, frac, _hedge_before):
+    def _sack_corpus_loss(self, year, frac, _hedge_before):
         """The corpus lost to a sack: which technologies, and what it does to
         the goal road.
 
@@ -859,11 +859,11 @@ class HazardsMixin:
                 # KEPT, so `risk` can list what you have to
                 # build again. Otherwise the only record is a
                 # log line a century back.
-                _lost[node_id] = yr
+                _lost[node_id] = year
             self._done_changed()
-            self._log_corpus_loss(yr, drop, _hedge_before)
+            self._log_corpus_loss(year, drop, _hedge_before)
 
-    def _log_corpus_loss(self, yr, drop, _hedge_before):
+    def _log_corpus_loss(self, year, drop, _hedge_before):
         """Name what a sack's corpus loss took, and what it does to the goal
         road.
 
@@ -897,7 +897,7 @@ class HazardsMixin:
                 _on_road = sum(1 for tech_id in drop if tech_id in _gc)
             except Exception:
                 _on_road = 0
-        self.household.log.append((yr, "KNOWLEDGE LOST: %d technolog%s "
+        self.household.log.append((year, "KNOWLEDGE LOST: %d technolog%s "
                              "forgotten - %s%s%s%s"
             % (len(drop), "y" if len(drop) == 1 else "ies",
                ", ".join(_named[:8])
@@ -926,7 +926,7 @@ class HazardsMixin:
                 "shape of it" % _on_road)
                if _on_road else "")))
 
-    def _shock_output_factor(self, hazard, yr):
+    def _shock_output_factor(self, hazard, year):
         """The output_factor branch of _shocks: wars and the administrative
         aftermath of one.
 
@@ -948,21 +948,21 @@ class HazardsMixin:
             # message.
             said = getattr(self, "_said_output", {})
             key = hazard.get("name", "crisis")
-            if before > self.output_factor and yr - said.get(key, -99) >= 20:
-                said[key] = yr
+            if before > self.output_factor and year - said.get(key, -99) >= 20:
+                said[key] = year
                 self._said_output = said
                 # SAY WHAT HELD: every other hazard message in this file
                 # names its hedges - staff_loss says "would have been";
                 # sack_chance says "comes to nothing (%s)". Saying nothing
                 # here would be indistinguishable from a military branch
                 # that did nothing.
-                self.household.log.append((yr, "%s: trade and output fall to %d%% of "
+                self.household.log.append((year, "%s: trade and output fall to %d%% of "
                                      "normal%s"
                                  % (key, self.output_factor * 100,
                                     " (your own strength holds off worse: %s)"
                                     % "; ".join(why[:3]) if why else "")))
 
-    def _shock_real_erosion(self, hazard, yr):
+    def _shock_real_erosion(self, hazard, year):
         """The real_erosion branch of _shocks: currency debasement.
 
         Makes no self.rng draws.
@@ -974,8 +974,8 @@ class HazardsMixin:
             had = max(0.0, self.household.capital)
             self.lose_capital(bite)
             lost = had - max(0.0, self.household.capital)
-            if not getattr(self, "_said_debasement", 0) or yr - self._said_debasement >= 15:
-                self._said_debasement = yr
+            if not getattr(self, "_said_debasement", 0) or year - self._said_debasement >= 15:
+                self._said_debasement = year
                 # SAY WHAT IT DID TO YOU, and say what it did NOT do: every
                 # price in this game is what a thing really costs in labour
                 # and materials, which debasement does not change, so a
@@ -983,7 +983,7 @@ class HazardsMixin:
                 # correct, not evidence the debasement did nothing. What it
                 # destroys is the money you are HOLDING. Quoting the bite in
                 # coin makes that the visible half.
-                self.household.log.append((yr, "%s: the coin is worth %d%% less than it "
+                self.household.log.append((year, "%s: the coin is worth %d%% less than it "
                                      "was%s. Quoted costs are what a thing "
                                      "really takes to make, so they do not "
                                      "move; what debases is the money in "
@@ -997,7 +997,7 @@ class HazardsMixin:
                                     "were holding none",
                                     " denarii" if lost > 0.5 else "")))
 
-    def _shock_values(self, hazard, yr, hazard_start, hazard_end):
+    def _shock_values(self, hazard, year, hazard_start, hazard_end):
         """The values branch of _shocks: gradual shifts in what the society
         believes, spread evenly across the hazard's own window.
 
@@ -1037,8 +1037,8 @@ class HazardsMixin:
             # is throttled to the first year, the last, and every tenth
             # in between -- the same spirit as the debasement throttle
             # just above, which exists for the same reason.
-            if changed and (yr == hazard_start or yr == hazard_end or (yr - hazard_start) % 10 == 0):
-                self.household.log.append((yr, "%s: the society's values are shifting (%s)"
+            if changed and (year == hazard_start or year == hazard_end or (year - hazard_start) % 10 == 0):
+                self.household.log.append((year, "%s: the society's values are shifting (%s)"
                                  % (hazard.get("name", "hazard"),
                                     ", ".join("%s now %.2f" % (field, value)
                                               for field, value in sorted(changed.items())))))
@@ -1106,7 +1106,7 @@ class HazardsMixin:
             "smaller than FIRE_CAPITAL_LOSS, a supply disruption rather "
             "than outright destruction. Tuned, not measured.")
 
-    def _random_events(self, yr):
+    def _random_events(self, year):
         rng = self.rng
         # A patron dies ONCE and then you have courted his heir. The old model
         # rolled 4% every year forever, so a long run logged the same line six
@@ -1117,8 +1117,8 @@ class HazardsMixin:
         # five per cent a year for ever, which is precisely the behaviour the
         # fix was written to stop. (The save list carried the unread name too.)
         if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running("patron_local")
-                and yr - getattr(self, "last_patron_death", -99) > self.PATRON_DEATH_COOLDOWN_YEARS):
-            self.last_patron_death = yr
+                and year - getattr(self, "last_patron_death", -99) > self.PATRON_DEATH_COOLDOWN_YEARS):
+            self.last_patron_death = year
             self.household.scandal += self.PATRON_DEATH_SCANDAL
             was = self.household.protection
             self.household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
@@ -1143,7 +1143,7 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, self.household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            self.household.log.append((yr, msg))
+            self.household.log.append((year, msg))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, self.household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS)
@@ -1151,13 +1151,13 @@ class HazardsMixin:
             # instead of reading self.civ["fire_quarter"] would print
             # "insula district" in a Han game too. Every civilization file
             # names its own quarter.
-            self.household.log.append((yr, "fire in the %s: it destroyed %s"
+            self.household.log.append((year, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, self.household.capital)
             self.lose_capital(self.BANDITRY_CAPITAL_LOSS)
-            self.household.log.append((yr, "banditry or a frontier war disrupts supply: "
+            self.household.log.append((year, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 
     def _loss_words(self, had_before):

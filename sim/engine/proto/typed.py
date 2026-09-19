@@ -213,8 +213,8 @@ def parse_typed(line):
     if text.startswith("{"):
         try:
             obj = json.loads(text)
-        except ValueError as e:
-            return None, "that looked like JSON but would not parse: %s" % e
+        except ValueError as error:
+            return None, "that looked like JSON but would not parse: %s" % error
         if isinstance(obj, dict) and "cmd" in obj:
             return obj, None
         return None, "a JSON command needs a 'cmd' field."

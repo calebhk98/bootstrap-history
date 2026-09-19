@@ -303,10 +303,10 @@ def render_policy(out):
     # and remove the ambiguity: what is running, and what is not.
     pol = out.get("policy") or {}
     does = out.get("what_each_does") or {}
-    on = [switch for switch in sorted(pol) if pol[switch]]
+    switches_on = [switch for switch in sorted(pol) if pol[switch]]
     off = [switch for switch in sorted(pol) if not pol[switch]]
     for head, keys, empty in (
-            ("RUNNING NOW:", on, "  nothing is automatic just now: every one "
+            ("RUNNING NOW:", switches_on, "  nothing is automatic just now: every one "
                                  "of these is off, and the game does only "
                                  "what you tell it to."),
             ("NOT RUNNING - these describe what each WOULD do if you turned "

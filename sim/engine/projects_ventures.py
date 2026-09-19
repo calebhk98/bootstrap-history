@@ -37,14 +37,14 @@ class VenturesMixin:
             "always costs at least one year of its own running upkeep. "
             "Tuned floor, not measured.")
 
-    def venture_capex(self, k):
+    def venture_capex(self, node_id):
         """What it costs to open the doors, over and above having worked out
         how. Stock, premises, the first year's materials: a fraction of what
         the work itself cost, and never less than a year of its running cost,
         so that a thing which is cheap to invent and expensive to run cannot
         be opened for nothing."""
-        node = self.nodes[k]
-        return max(self.project_cost(k) * self.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
+        node = self.nodes[node_id]
+        return max(self.project_cost(node_id) * self.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
                    node["up"] * self.VENTURE_CAPEX_MIN_UPKEEP_YEARS)
 
     # SUPERVISION, NOT OPERATION: a node's sch/art figures are what it takes
@@ -88,9 +88,9 @@ class VenturesMixin:
             "constant's own comment describes); not a measured "
             "supervisor-to-revenue ratio for any real enterprise.")
 
-    def venture_hands(self, k):
+    def venture_hands(self, node_id):
         """(scholars, craftsmen) of your own that running this ties up."""
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         # A SCHOOL DOES NOT COST YOU SCHOLARS. What these establishments take
         # is money - a patron's cultivation, a school's stipends - and what
         # they hand back is exactly the people every other concern is
@@ -101,7 +101,7 @@ class VenturesMixin:
         # the school and the staffing rule shut it the same turn, for ever.
         # Only the ones that lose money qualify: a blast furnace is in this set
         # too, and a blast furnace certainly needs somebody watching it.
-        if (k in self.CAPABILITY_INSTITUTIONS and node["rev"] <= node["up"]):
+        if (node_id in self.CAPABILITY_INSTITUTIONS and node["rev"] <= node["up"]):
             return 0.0, 0.0
         supervision_share = self.VENTURE_SUPERVISION
         by_size = max(0.0, node["rev"]) / self.VENTURE_HANDS_PER_REVENUE
@@ -115,7 +115,7 @@ class VenturesMixin:
             "oversee at most four ordinary concerns of that kind. Tuned "
             "game balance, not a measured foreman-to-shop ratio.")
 
-    def venture_foreman(self, k):
+    def venture_foreman(self, node_id):
         """Return the skilled trade and FTE needed to supervise a concern.
 
         A concern whose build crew mixes generic artisans with a skilled trade
@@ -125,9 +125,9 @@ class VenturesMixin:
         generic concerns and knowledge/capability institutions keep the older
         scholar/craftsman rule.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         lab = node.get("lab") or {}
-        if (k in self.CAPABILITY_INSTITUTIONS or node.get("rev", 0) <= 0
+        if (node_id in self.CAPABILITY_INSTITUTIONS or node.get("rev", 0) <= 0
                 or lab.get("artisan", 0) <= 0):
             return None, 0.0
         skilled = [(hours, trade) for trade, hours in lab.items()
@@ -201,7 +201,7 @@ class VenturesMixin:
                 max(0.0, self.household.artisans + own - art_used))
 
 
-    def open_venture(self, k, pay=True, units=None):
+    def open_venture(self, node_id, pay=True, units=None):
         """Start actually running something you have worked out how to do.
 
         `units` only means anything for SCALABLE_INSTITUTIONS (see that set's
@@ -215,13 +215,13 @@ class VenturesMixin:
         something ALREADY open and you are asking to expand it - see
         _expand_institution.
         """
-        if k not in self.nodes:
+        if node_id not in self.nodes:
             return False, "no such node"
-        if k not in self.household.done:
+        if node_id not in self.household.done:
             return False, ("you have not worked out how to do that yet, so there "
                            "is nothing to open")
-        if k in self.household.granted:
-            if self._practisable(k):
+        if node_id in self.household.granted:
+            if self._practisable(node_id):
                 # The SKILL is the society's, and you are already practising
                 # it - which is why it pays, and why there is nothing here
                 # to open. `money` itemises this as your revenue, and the
@@ -234,16 +234,16 @@ class VenturesMixin:
                                "nothing to close")
             return False, ("that is something the society has, not a concern of "
                            "yours to run")
-        if not self.is_venture(k):
+        if not self.is_venture(node_id):
             return False, ("that is knowledge, not a going concern: there is "
                            "nothing to open and nothing it would earn. It has "
                            "already changed what you can build")
-        if k in self.household.operating:
-            if k in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
-                return self._expand_institution(k, float(units), pay)
+        if node_id in self.household.operating:
+            if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
+                return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
-        node = self.nodes[k]
-        scalable = k in self.SCALABLE_INSTITUTIONS
+        node = self.nodes[node_id]
+        scalable = node_id in self.SCALABLE_INSTITUTIONS
         # A STARTER FOUNDING IS STILL A FOUNDING, NOT A TOY. Below a fifth of
         # the ordinary size there would be nothing left standing between "a
         # schoolroom" and "no school at all", so this is a floor on what
@@ -255,13 +255,13 @@ class VenturesMixin:
         if scalable and units is not None:
             unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
         elif scalable:
-            unit_count = getattr(self.household, "inst_units", {}).get(k, 1.0)
+            unit_count = getattr(self.household, "inst_units", {}).get(node_id, 1.0)
         else:
             unit_count = 1.0
         sch_free, art_free = self.venture_staff_free()
-        need_sch, need_art = self.venture_hands(k)
+        need_sch, need_art = self.venture_hands(node_id)
         need_sch, need_art = need_sch * unit_count, need_art * unit_count
-        foreman_trade, foreman_fte = self.venture_foreman(k)
+        foreman_trade, foreman_fte = self.venture_foreman(node_id)
         foreman_fte *= unit_count
         # A HUNDREDTH OF A PERSON IS NOBODY: comparing exact floats while
         # rounding the message to one decimal can print "it needs 0.0
@@ -284,7 +284,7 @@ class VenturesMixin:
                            % (foreman_fte, foreman_trade,
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
-        fee = self.venture_capex(k) * (unit_count if scalable else 1.0)
+        fee = self.venture_capex(node_id) * (unit_count if scalable else 1.0)
         # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN:
         # staff attrition runs at 3.5% a year, so a household sitting near
         # the supervision line can lose a concern in most years. The
@@ -293,7 +293,7 @@ class VenturesMixin:
         # within a few years must cost the difference, not the whole thing
         # again.
         _shut = getattr(self.household, "shut_for_staff", {})
-        if k in _shut and self.year - _shut[k] <= self.STAFF_CLOSURE_GRACE:
+        if node_id in _shut and self.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE:
             fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
@@ -308,15 +308,15 @@ class VenturesMixin:
                                   "{:,.0f}".format(self.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
             self.household.capital -= fee
-        self.household.operating.add(k)
-        self.household.mothballed.discard(k)
-        _shut.pop(k, None)
+        self.household.operating.add(node_id)
+        self.household.mothballed.discard(node_id)
+        _shut.pop(node_id, None)
         self.household.shut_for_staff = _shut
         if scalable:
             inst_units = getattr(self.household, "inst_units", None)
             if inst_units is None:
                 inst_units = self.household.inst_units = {}
-            inst_units[k] = unit_count
+            inst_units[node_id] = unit_count
         # WHEN THE DOORS OPENED, which is when custom starts to find you: see
         # venture_ramp, which reads this rather than the year the capability
         # was worked out, so opening late does not skip the ramp. Reopening
@@ -324,7 +324,7 @@ class VenturesMixin:
         _oy = getattr(self.household, "opened_year", None)
         if _oy is None:
             _oy = self.household.opened_year = {}
-        _oy.setdefault(k, self.year)
+        _oy.setdefault(node_id, self.year)
         rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
         # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE: a newly opened
         # concern takes revenue_ramp_years to reach the figure just quoted -
@@ -349,12 +349,12 @@ class VenturesMixin:
             " !! this costs more than it earns (%s a year net), even once "
             "it is fully ramped up - that may be the right call for what it "
             "unlocks, but check 'why %s' if it is not what you meant."
-            % ("{:,.0f}".format(up_now - rev_now), k)
-            if up_now > rev_now and k not in self.CAPABILITY_INSTITUTIONS
+            % ("{:,.0f}".format(up_now - rev_now), node_id)
+            if up_now > rev_now and node_id not in self.CAPABILITY_INSTITUTIONS
             else "")
         return True, ("%s open%s: it earns %s a year and costs %s a year to "
                       "run.%s%s"
-                      % (k, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
+                      % (node_id, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now),
                          _ramp_note, _loss_note))
 
@@ -366,21 +366,21 @@ class VenturesMixin:
     # save and an agent that has never heard of expansion still speaks a
     # protocol that works: the field is simply absent from every call it never
     # makes.
-    def _expand_institution(self, k, add_units, pay=True):
+    def _expand_institution(self, node_id, add_units, pay=True):
         """Found more of an institution that is already open."""
-        have = self.institution_units(k)
-        ceiling = self.institution_unit_ceiling(k)
+        have = self.institution_units(node_id)
+        ceiling = self.institution_unit_ceiling(node_id)
         room = max(0.0, ceiling - have)
         if room < 0.02:
             return False, ("%s is already as big as this many people can fill: "
                            "about %.1f units of it, bounded by the population "
                            "(and, for a school or an academy, by how much of it "
                            "literacy says is not needed on the land)"
-                           % (k, ceiling))
+                           % (node_id, ceiling))
         add_units = min(add_units, room)
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         sch_free, art_free = self.venture_staff_free()
-        need_sch, need_art = self.venture_hands(k)
+        need_sch, need_art = self.venture_hands(node_id)
         need_sch, need_art = need_sch * add_units, need_art * add_units
         if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
             return False, ("nobody free to keep an eye on the extra %.2f units "
@@ -388,34 +388,34 @@ class VenturesMixin:
                            "craftsmen to supervise, and you have %.2f and %.2f "
                            "not already watching something else"
                            % (add_units, need_sch, need_art, sch_free, art_free))
-        fee = self.institution_unit_cost(k, have, add_units)
+        fee = self.institution_unit_cost(node_id, have, add_units)
         if pay:
             if fee > self.spending_power("buy"):
                 return False, ("expanding %s by %.2f units costs %s denarii, and "
                                "between %s in cash and what anyone will advance "
                                "against a purchase you can raise %s"
-                               % (k, add_units, "{:,.0f}".format(fee),
+                               % (node_id, add_units, "{:,.0f}".format(fee),
                                   "{:,.0f}".format(self.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
             self.household.capital -= fee
         inst_units = getattr(self.household, "inst_units", None)
         if inst_units is None:
             inst_units = self.household.inst_units = {}
-        inst_units[k] = have + add_units
-        rev_now, up_now = node["rev"] * inst_units[k], node["up"] * inst_units[k]
+        inst_units[node_id] = have + add_units
+        rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
         return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
                       "now earns about %s a year and costs about %s to run"
-                      % (k, have, inst_units[k], "{:,.0f}".format(fee),
+                      % (node_id, have, inst_units[node_id], "{:,.0f}".format(fee),
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now)))
 
-    def close_venture(self, k):
+    def close_venture(self, node_id):
         """Stop running it. You keep the knowledge; you stop paying for it and
         stop being paid by it."""
-        if k not in self.household.operating:
+        if node_id not in self.household.operating:
             return False, "you are not running that"
-        self.household.operating.discard(k)
-        self.household.mothballed.add(k)
-        node = self.nodes[k]
+        self.household.operating.discard(node_id)
+        self.household.mothballed.add(node_id)
+        node = self.nodes[node_id]
         return True, ("%s closed: you stop paying %s a year and stop earning %s"
-                      % (k, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))
+                      % (node_id, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))
 

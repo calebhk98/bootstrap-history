@@ -77,8 +77,8 @@ def _cmd_start(sim, nodes, cmd, ended):
                 % (_trade, "{:,.0f}".format(_new_total), "{:,.0f}".format(_supply),
                    _competitors, "" if _competitors == 1 else "s",
                    "{:,.0f}".format(_plan["desired"])))
-    ok, why = sim.start_project(node_id)
-    if not ok:
+    started, why = sim.start_project(node_id)
+    if not started:
         return {"ok": False, "error": why}
     node = nodes[node_id]
     # SAY SO, FOR THE PLAYER'S OWN RECORD: start_project itself only logs
@@ -287,8 +287,8 @@ def _cmd_start(sim, nodes, cmd, ended):
 
 def _cmd_stop(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
-    ok, why = sim.stop_project(node_id)
-    if not ok:
+    stopped, why = sim.stop_project(node_id)
+    if not stopped:
         return {"ok": False, "error": why}
     # stop_project ITSELF never touches self.log - see its own docstring,
     # which is entirely about what the hours and money do, not about
@@ -410,8 +410,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
 
 def _cmd_mothball(sim, nodes, cmd, ended):
     _mb_id = cmd.get("id")
-    ok, msg = sim.mothball_work(_mb_id)
-    if not ok:
+    mothballed, msg = sim.mothball_work(_mb_id)
+    if not mothballed:
         return {"ok": False, "error": msg}
     # mothball_work does not log either - a deliberate shutdown reads no
     # differently from one the creditors forced on you (see economy.py's
@@ -439,8 +439,8 @@ def _cmd_mothball(sim, nodes, cmd, ended):
 
 def _cmd_restore(sim, nodes, cmd, ended):
     _rs_id = cmd.get("id")
-    ok, msg = sim.restore_work(_rs_id)
-    if not ok:
+    restored, msg = sim.restore_work(_rs_id)
+    if not restored:
         return {"ok": False, "error": msg}
     sim.log.append((sim.year, "restored: %s (%s)"
                  % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg)))
@@ -468,8 +468,8 @@ def _cmd_open(sim, nodes, cmd, ended):
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
         return {"ok": False, "error": "units must be a number"}
-    ok, msg = sim.open_venture(node_id, units=_units)
-    if not ok:
+    opened, msg = sim.open_venture(node_id, units=_units)
+    if not opened:
         return {"ok": False, "error": msg}
     # The single rule `help` calls out as the one that catches everybody -
     # finishing something earns nothing until you open it - deserves a
@@ -487,8 +487,8 @@ def _cmd_ventures(sim, nodes, cmd, ended):
     idle = sorted(node_id for node_id in sim.done
                   if sim.is_venture(node_id) and node_id not in sim.operating)
 
-    def _vrow(k):
-        node = nodes[k]
+    def _vrow(node_id):
+        node = nodes[node_id]
         # AT THE FIGURE THE LEDGER USES: printing the tree's raw revenue
         # would understate every concern by a uniform factor against what
         # `money` actually credits, since the ledger applies the economy,
@@ -497,16 +497,16 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
         _scale = (sim.economy ** 0.75) * sim.output_factor * sim.price_index
-        _sup_s, _sup_a = sim.venture_hands(k)
-        _foreman_trade, _foreman_fte = sim.venture_foreman(k)
+        _sup_s, _sup_a = sim.venture_hands(node_id)
+        _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         # AT THE SAME MARKET PRICE `money` credits, for a goods-producing
         # concern: goods_market_factor() is 1.0 for anything not in
         # GOODS_CATEGORIES and for anything not yet open, so this changes
         # nothing for every other row. See that method's own comment.
-        _mkt = sim.goods_market_factor(k) if k in sim.operating else 1.0
-        row = {"id": k, "name": node["name"],
+        _mkt = sim.goods_market_factor(node_id) if node_id in sim.operating else 1.0
+        row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(node["rev"] * _scale
-                                      * (sim.venture_ramp(k) if k in sim.operating
+                                      * (sim.venture_ramp(node_id) if node_id in sim.operating
                                          else 1.0) * _mkt, 1),
                 "costs_a_year": round(node["up"] * sim.price_index, 1),
                 "needs": {"scholars": round(_sup_s, 2),
@@ -514,7 +514,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                 "specialist_foreman": (
                     {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
                     if _foreman_trade else None)}
-        _note = sim.goods_market_note(k)
+        _note = sim.goods_market_note(node_id)
         if _note:
             row["market"] = _note
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
@@ -525,8 +525,8 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # it, identity_cover and workshop_first (real capabilities) would
         # be indistinguishable from an ordinary shuttered business in
         # this exact table.
-        if k in sim.CAPABILITY_INSTITUTIONS:
-            row["capability"] = ("yes - more than income; see 'why %s'" % k)
+        if node_id in sim.CAPABILITY_INSTITUTIONS:
+            row["capability"] = ("yes - more than income; see 'why %s'" % node_id)
         return row
 
     # CAPABILITY INSTITUTIONS GET THEIR OWN LIST. Sorting them into the

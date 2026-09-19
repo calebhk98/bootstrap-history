@@ -115,15 +115,15 @@ ALARM_IDENTITY_COVER_MULTIPLIER = declare(
 
 
 class StatePressureMixin:
-    def state_interest(self, n):
+    def state_interest(self, node_record):
         weights = self.w
         state_weights = dict(self.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
                   "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})
-        return sum(state_weights.get(trait, 0.0) for trait in n.get("traits", []))
+        return sum(state_weights.get(trait, 0.0) for trait in node_record.get("traits", []))
 
-    def alarm_of(self, n):
+    def alarm_of(self, node_record):
         """How alarming this technology is TO THIS CIVILIZATION, before defences.
 
         Note what is NOT in here: speed, and money. Building fast does not make
@@ -131,7 +131,7 @@ class StatePressureMixin:
         """
         weights = self.w
         alarm = 0.0
-        for trait in n.get("traits", []):
+        for trait in node_record.get("traits", []):
             if   trait == "inexplicable":        alarm += ALARM_WEIGHT_INEXPLICABLE * weights["w_magic_fear"]
             elif trait == "spectacle":           alarm += ALARM_WEIGHT_SPECTACLE  * weights["w_magic_fear"]
             elif trait == "religious_adjacent":  alarm += ALARM_WEIGHT_RELIGIOUS_ADJACENT  * weights["w_religious_rigidity"]
@@ -1304,7 +1304,7 @@ class StatePressureMixin:
             "humiliation. Tuned to be a real, noticeable hit alongside "
             "STANDING_* figures elsewhere in this engine; not measured.")
 
-    def _state_pressure(self, yr):
+    def _state_pressure(self, year):
         """Once a year: the state notices what this household has become,
         and acts on it. See the section comment above `household_scale` for
         the full argument; this is only the yearly application of the four
@@ -1320,8 +1320,8 @@ class StatePressureMixin:
         if took > 0.5:
             self.household.capital -= took
             last = self.household._said_requisition
-            if yr - last >= 15:
-                self.household._said_requisition = yr
+            if year - last >= 15:
+                self.household._said_requisition = year
                 bits = ["%s takes %s this year" % (
                     state_pressure_cfg.get("requisition_name", "the state"),
                     "{:,.0f}".format(req_share * rev))]
@@ -1331,7 +1331,7 @@ class StatePressureMixin:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
                                 % (off_name, "{:,.0f}".format(off_share * rev)))
-                self.household.log.append((yr, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
+                self.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
             # eminence's own "YOU ARE BECOMING CONSPICUOUS" warning in
@@ -1341,7 +1341,7 @@ class StatePressureMixin:
             band = int(notice / max(0.01, self.STATE_NOTICE_THRESHOLD * 0.1))
             if band > self.household._said_notice_approach:
                 self.household._said_notice_approach = band
-                self.household.log.append((yr, "this household is becoming large enough "
+                self.household.log.append((year, "this household is becoming large enough "
                                      "for the state to take an interest: "
                                      "notice %.2f against a line of %.2f. A "
                                      "patron or standing, and holdings that "
@@ -1351,9 +1351,9 @@ class StatePressureMixin:
 
         if self.events and self.military_demand_eligible():
             last = self.household.last_military_demand
-            if (yr - last >= self.MILITARY_DEMAND_COOLDOWN_YEARS
+            if (year - last >= self.MILITARY_DEMAND_COOLDOWN_YEARS
                     and self.rng.random() < self.MILITARY_DEMAND_ANNUAL_CHANCE):
-                self.household.last_military_demand = yr
+                self.household.last_military_demand = year
                 lev = self.military_leverage()
                 take = (rev * (self.MILITARY_DEMAND_BASE_SHARE
                                + self.MILITARY_DEMAND_LEVERAGE_SHARE * lev)
@@ -1361,7 +1361,7 @@ class StatePressureMixin:
                 take = max(0.0, take)
                 self.household.capital -= take
                 name = state_pressure_cfg.get("military_name", "the arsenal")
-                self.household.log.append((yr, "%s asks for your output: %s handed over "
+                self.household.log.append((year, "%s asks for your output: %s handed over "
                                      "in powder, iron or finished pieces. "
                                      "Refusing a state that can still fight "
                                      "is not free, and this was the cheaper "
@@ -1374,7 +1374,7 @@ class StatePressureMixin:
             last_band = self.household._said_confiscation_band
             if band > last_band:
                 self.household._said_confiscation_band = band
-                self.household.log.append((yr, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
+                self.household.log.append((year, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
                                      "a %d%% chance this year of outright "
                                      "confiscation, against a scale that "
                                      "only keeps climbing while this "
@@ -1390,7 +1390,7 @@ class StatePressureMixin:
                 lost = had - max(0.0, self.household.capital)
                 self.household.reputation = max(0.0, self.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
-                self.household.log.append((yr, "%s: the state takes what it judges a "
+                self.household.log.append((year, "%s: the state takes what it judges a "
                                      "fortune too large to go on merely "
                                      "taxing - %s gone"
                                  % (name, "{:,.0f}".format(lost)

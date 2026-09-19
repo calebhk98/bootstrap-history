@@ -117,7 +117,7 @@ class PopulationMixin:
         return self._labour_price_factor_from(self.labour_pressure(trade),
                                                self.market_supply(trade))
 
-    def labour_price_factor_after_hiring(self, trade, n=1.0):
+    def labour_price_factor_after_hiring(self, trade, hire_count=1.0):
         """What labour_price_factor(trade) becomes the INSTANT you hire n
         more - not the market as it stands, the hire you are contemplating.
 
@@ -138,12 +138,12 @@ class PopulationMixin:
         running total, not a function of current headcount - so n more
         hours are simply added to it, exactly as _add_labour_pressure would.
         """
-        n = max(0.0, n)
-        if n <= 0:
+        hire_count = max(0.0, hire_count)
+        if hire_count <= 0:
             return self.labour_price_factor(trade)
-        add_hours = n * self.HOURS_PER_PERSON_YEAR
+        add_hours = hire_count * self.HOURS_PER_PERSON_YEAR
         before = self.household.employees.get(trade, 0.0)
-        self.household.employees[trade] = before + n
+        self.household.employees[trade] = before + hire_count
         try:
             supply_after = self.market_supply(trade)
         finally:
@@ -188,17 +188,17 @@ class PopulationMixin:
         return (self.effective_scholars()
                 + contracted / self.HOURS_PER_PERSON_YEAR)
 
-    def trade_available(self, t):
+    def trade_available(self, trade):
         """Can this trade be had here at all, at any price?
 
         Rome has masons and plumbers in abundance and no machinists whatever.
         An absent trade is not expensive, it is absent, and the only way to have
         one is to teach somebody the trade yourself.
         """
-        if t not in TRADES_ABSENT:
+        if trade not in TRADES_ABSENT:
             return True
-        return (t in self.household.trades_created
-                or getattr(self.household, "trade_schools", {}).get(t, 0.0) > 0)
+        return (trade in self.household.trades_created
+                or getattr(self.household, "trade_schools", {}).get(trade, 0.0) > 0)
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
@@ -217,7 +217,7 @@ class PopulationMixin:
         self.household.trades_created.add(trade)
         return True, None
 
-    def _trade_market_class(self, t):
+    def _trade_market_class(self, trade):
         """Which reachable-labour-pool class a trade falls in - read ONCE,
         here, so market_supply's own hiring ceiling and
         national_trade_population's country-wide estimate (used by the
@@ -229,14 +229,14 @@ class PopulationMixin:
         Unchanged in substance from the keyword/list check this replaced;
         only pulled out to one place instead of being reasoned about twice.
         """
-        note = TRADE_NOTES.get(t, "").lower()
+        note = TRADE_NOTES.get(trade, "").lower()
         if "abundance" in note or "abundant" in note or "numerous" in note:
             return "abundant"
         if "scarcest" in note:
             return "scarce"
-        if trade_family(t) == "scholar":
+        if trade_family(trade) == "scholar":
             return "scholar"
-        if t in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
+        if trade in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
                  "sailor", "miner", "furnaceman"):
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
@@ -421,7 +421,7 @@ class PopulationMixin:
         why="As SCARCE_TRADE_HIRING_SHARE, for the 'uncommon' class "
             "(glassblowers, engravers, masters).")
 
-    def market_supply(self, t):
+    def market_supply(self, trade):
         """Hours a year of this trade the local labour market can actually supply.
 
         THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
@@ -432,18 +432,18 @@ class PopulationMixin:
         town's worth' of each trade actually is; national_trade_population
         answers the country-wide question this number is not trying to.
         """
-        if not self.trade_available(t):
+        if not self.trade_available(trade):
             return 0.0
         base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
                                                      + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
-        school_hours = (getattr(self.household, "trade_schools", {}).get(t, 0.0)
+        school_hours = (getattr(self.household, "trade_schools", {}).get(trade, 0.0)
                         * self.HOURS_PER_PERSON_YEAR)
-        if t in TRADES_ABSENT:
+        if trade in TRADES_ABSENT:
             # Only the people you taught, plus the ones they have taught since.
-            return (self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+            return (self.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
                     * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                     + school_hours)
-        cls = self._trade_market_class(t)
+        cls = self._trade_market_class(trade)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
             # this function's own docstring and the comment above
@@ -470,12 +470,12 @@ class PopulationMixin:
         # (engineer, chemist, machinist, optician) are all in TRADES_ABSENT
         # and returned above, bounded instead by literate_capacity() in
         # train().
-        if t in self.LITERATE_TRADES:
-            cap *= self.literacy_factor(t)
-        return (cap + self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
+        if trade in self.LITERATE_TRADES:
+            cap *= self.literacy_factor(trade)
+        return (cap + self.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
                 + school_hours)
 
-    def reachable_trade_population(self, t):
+    def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
         trade, your own employees included - the 'population' command's
         "within your reach" column; see national_trade_population for the
@@ -492,11 +492,11 @@ class PopulationMixin:
         player hire one - exactly the kind of false "nobody's there"
         reading literate_capacity's own floor exists to prevent.
         """
-        if t in ("scholar", "scribe"):
-            return self.literate_capacity(t)
-        return self.market_supply(t) / self.HOURS_PER_PERSON_YEAR
+        if trade in ("scholar", "scribe"):
+            return self.literate_capacity(trade)
+        return self.market_supply(trade) / self.HOURS_PER_PERSON_YEAR
 
-    def national_trade_population(self, t):
+    def national_trade_population(self, trade):
         """A rough ESTIMATE of how many people ply this trade across the
         WHOLE COUNTRY - not this household's reach (reachable_trade_
         population, above) and not a second population model: the same
@@ -513,7 +513,7 @@ class PopulationMixin:
         Scandinavia, and TRADE_DENSITY's own comment already says, for two
         of its four classes, that no comparable figure was found at all.
         """
-        if not self.trade_available(t):
+        if not self.trade_available(trade):
             return 0.0
         # self.population.total (sim/world/demography.py's age-cohort
         # model) IS this civilisation's actual running headcount, and must
@@ -524,19 +524,19 @@ class PopulationMixin:
         # actually here" as a headcount built entirely out of ratios.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
-        if t == "scholar":
+        if trade == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
-        if t == "scribe":
+        if trade == "scribe":
             return pop * float(self.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
-        if t == "merchant":
+        if trade == "merchant":
             return urban * self.MERCHANT_DENSITY
-        if t in TRADES_ABSENT:
+        if trade in TRADES_ABSENT:
             # engineer, chemist, machinist, optician, electrician: taught
             # into existence by you alone (trade_available already checked
             # this is now true), so "the country's" population of the trade
             # IS what you have taught - there is no wider pool to estimate.
-            return self.household.employees.get(t, 0.0)
-        return urban * self.TRADE_DENSITY.get(self._trade_market_class(t), 0.0)
+            return self.household.employees.get(trade, 0.0)
+        return urban * self.TRADE_DENSITY.get(self._trade_market_class(trade), 0.0)
 
     def home_town_population_estimate(self):
         """How big the single town TOWN_POPULATION_REFERENCE represents

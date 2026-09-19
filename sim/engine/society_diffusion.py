@@ -131,7 +131,7 @@ class DiffusionMixin:
             "between diffusion_share and _diffusion_pace; tuned, not "
             "measured.")
 
-    def diffusion_share(self, k):
+    def diffusion_share(self, node_id):
         """0..VENTURE_DIFFUSION_CAP: how much of what running venture `k`
         earns has already leaked to competitors who watched you run it and
         went into the same business themselves.
@@ -157,12 +157,12 @@ class DiffusionMixin:
         with self.household.done regardless of this function, so the two are additive,
         not double-counting the same escape.
         """
-        if k not in self.household.operating:
+        if node_id not in self.household.operating:
             return 0.0
-        node = self.nodes.get(k)
+        node = self.nodes.get(node_id)
         if not node or node.get("rev", 0) <= 0:
             return 0.0
-        started = self.household.opened_year.get(k, self.household.done_year.get(k, self.year))
+        started = self.household.opened_year.get(node_id, self.household.done_year.get(node_id, self.year))
         age = max(0.0, self.year - started)
         pace = 1.0
         if self.running("corpus_dispersed"):
@@ -280,8 +280,8 @@ class DiffusionMixin:
         "information": DIFFUSION_HALF_LIFE_INFORMATION_YEARS,
     }
 
-    def _diffusion_category(self, n):
-        traits = n.get("traits") or ()
+    def _diffusion_category(self, node_record):
+        traits = node_record.get("traits") or ()
         for trait in self.DIFFUSION_TRAIT_PRIORITY:
             if trait in traits:
                 return trait
@@ -362,7 +362,7 @@ class DiffusionMixin:
             "literacy (see this method's own docstring). Tuned, not "
             "measured.")
 
-    def civ_diffusion(self, k):
+    def civ_diffusion(self, node_id):
         """0..1: how much of the WHOLE SOCIETY, not this household, has
         adopted technology `k` - the number behind every consequence below.
 
@@ -376,9 +376,9 @@ class DiffusionMixin:
         (_state_has_a_patron): the government cannot be using cannon the
         founder never showed to anyone with soldiers.
         """
-        if k not in self.household.done:
+        if node_id not in self.household.done:
             return 0.0
-        node = self.nodes.get(k)
+        node = self.nodes.get(node_id)
         if not node:
             return 0.0
         cat = self._diffusion_category(node)
@@ -386,7 +386,7 @@ class DiffusionMixin:
             return 0.0
         if cat == "military" and not self._state_has_a_patron():
             return 0.0
-        age = max(0.0, self.year - self.household.done_year.get(k, self.year))
+        age = max(0.0, self.year - self.household.done_year.get(node_id, self.year))
         half_life = (self.DIFFUSION_HALF_LIFE_YEARS[cat]
                      / max(0.4, self._diffusion_pace(cat)))
         return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
@@ -463,7 +463,7 @@ class DiffusionMixin:
             "this, is the slow part a player actually watches. Tuned, not "
             "measured.")
 
-    def _advance_food_diffusion_population(self, yr):
+    def _advance_food_diffusion_population(self, year):
         target = self.FOOD_DIFFUSION_POP_BONUS_MAX * self.food_diffusion_index()
         applied = getattr(self, "_food_pop_bonus_applied", 0.0)
         gap = target - applied
@@ -477,9 +477,9 @@ class DiffusionMixin:
         # gain this small, reported every year of a centuries-long run, is
         # the same noise that throttle was written to stop.
         last = self._food_diffusion_said
-        if applied > 0.005 and yr - last >= 25:
-            self._food_diffusion_said = yr
-            self.household.log.append((yr, "what you grew is no longer only on your "
+        if applied > 0.005 and year - last >= 25:
+            self._food_diffusion_said = year
+            self.household.log.append((year, "what you grew is no longer only on your "
                              "own land: the crops and rotations you "
                              "introduced have spread far enough into the "
                              "country's own fields that the population is "
@@ -588,7 +588,7 @@ class DiffusionMixin:
     # what you have built in full, what you could start next as a one line
     # summary, and nothing at all about where any of it leads.
 
-    def _is_foreign_institution(self, k):
+    def _is_foreign_institution(self, node_id):
         # CACHED FOREVER, not per-year, and ONLY for civs that actually pay
         # for the string search below. Rome's own answer is unconditionally
         # False without looking at k at all - that branch was already as
@@ -606,14 +606,14 @@ class DiffusionMixin:
         if self.civ.get("id") == "rome_100ad":
             return False
         cache = self.__dict__.setdefault("_foreign_institution_cache", {})
-        value = cache.get(k)
+        value = cache.get(node_id)
         if value is None:
-            hay = (k + " " + self.nodes[k].get("name", "")).lower()
+            hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
             value = any(marker in hay for marker in self.FOREIGN_MARKERS)
-            cache[k] = value
+            cache[node_id] = value
         return value
 
-    def _is_foreign_only(self, k):
+    def _is_foreign_only(self, node_id):
         """A legal or civic institution of a society that is not this one."""
         # CACHED FOREVER, for the same reason as _is_foreign_institution just
         # above, and with the same Rome fast path kept outside the cache.
@@ -622,14 +622,14 @@ class DiffusionMixin:
         if self.civ.get("id") == "rome_100ad":
             return False
         cache = self.__dict__.setdefault("_foreign_only_cache", {})
-        value = cache.get(k)
+        value = cache.get(node_id)
         if value is None:
-            hay = (k + " " + self.nodes[k].get("name", "")).lower()
+            hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
             value = any(marker in hay for marker in self.FOREIGN_INSTITUTIONS)
-            cache[k] = value
+            cache[node_id] = value
         return value
 
-    def needs_first(self, k):
+    def needs_first(self, node_id):
         """(node, why) this society must have before it can begin `k` at all.
 
         cost_multipliers say a domain is DEARER here. Some things are not dear,
@@ -644,14 +644,14 @@ class DiffusionMixin:
         for key, ent in spec.items():
             if key.startswith("_") or not isinstance(ent, dict):
                 continue
-            if k in (ent.get("ids") or ()):
+            if node_id in (ent.get("ids") or ()):
                 node = ent.get("node")
                 if node and node not in self.household.done:
                     return node, (ent.get("because") or
                                   "this society has no %s" % key)
         return None, None
 
-    def civ_cost_factor(self, k):
+    def civ_cost_factor(self, node_id):
         """What this society is unusually good or bad at building.
 
         Every civilization differs in population, prices, values and reach,
@@ -673,7 +673,7 @@ class DiffusionMixin:
         # A remedy lifts a handicap once you have built the thing that answers
         # it, read from `handicap_remedies` in the civ file.
         rem = self.civ.get("handicap_remedies") or {}
-        node = self.nodes[k]
+        node = self.nodes[node_id]
 
         def mult(key):
             multiplier = float(mults[key])

@@ -868,7 +868,7 @@ class GoodsMixin:
             "see this method's own docstring. Not reached today; a "
             "placeholder bound, not a measured one.")
 
-    def goods_market_factor(self, k):
+    def goods_market_factor(self, node_id):
         """How a goods-producing concern's revenue has moved, relative to
         the day it opened, as the market it sells into fills up - shared
         with every OTHER concern selling the same kind of good, and lifted
@@ -901,8 +901,8 @@ class GoodsMixin:
         combined capacity finds buyers for, not what any one concern
         alone would.
         """
-        cat = self.nodes[k].get("cat")
-        if k not in self.household.operating:
+        cat = self.nodes[node_id].get("cat")
+        if node_id not in self.household.operating:
             return 1.0
         ratios = self._goods_category_ratios(cat)
         if ratios is None:
@@ -913,7 +913,7 @@ class GoodsMixin:
             factor *= self.income_factor()
         return factor
 
-    def goods_market_factor_if_opened(self, k):
+    def goods_market_factor_if_opened(self, node_id):
         """What goods_market_factor(k) would read on the day you actually
         opened k, if you opened it today - unlike goods_market_factor(k)
         itself, which answers a flat 1.0 for anything not yet `operating`
@@ -934,12 +934,12 @@ class GoodsMixin:
         real first mover really does get the tree's own figure, the same
         identity goods_market_factor() itself preserves.
         """
-        cat = self.nodes[k].get("cat")
+        cat = self.nodes[node_id].get("cat")
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        if k in self.household.operating:
-            return self.goods_market_factor(k)
+        if node_id in self.household.operating:
+            return self.goods_market_factor(node_id)
         ratios = self._goods_category_ratios(cat, extra=1)
         if ratios is None:
             return 1.0
@@ -949,7 +949,7 @@ class GoodsMixin:
             factor *= self.income_factor()
         return factor
 
-    def goods_market_note(self, k):
+    def goods_market_note(self, node_id):
         """One sentence on why THIS concern's earnings have moved (or, for
         one not yet opened, WOULD move) from the tree's own figure - so a
         player sees why a concern that opened at 400 a year now earns 280,
@@ -966,17 +966,17 @@ class GoodsMixin:
         goods_market_factor_if_opened's own comment for the mechanism this
         surfaces early.
         """
-        cat = self.nodes[k].get("cat")
+        cat = self.nodes[node_id].get("cat")
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        opened = k in self.household.operating
-        factor = (self.goods_market_factor(k) if opened
-                  else self.goods_market_factor_if_opened(k))
+        opened = node_id in self.household.operating
+        factor = (self.goods_market_factor(node_id) if opened
+                  else self.goods_market_factor_if_opened(node_id))
         if factor is None or abs(factor - 1.0) < 0.01:
             return None
-        node = self.nodes[k]
-        quoted = node["rev"] * (self.venture_ramp(k) if opened else 1.0) * self.price_index
+        node = self.nodes[node_id]
+        quoted = node["rev"] * (self.venture_ramp(node_id) if opened else 1.0) * self.price_index
         now = quoted * factor
         floor_factor = cfg["floor"] ** (1.0 - cfg["eta"])
         direction = ("fallen, because supply of it - yours and everyone "

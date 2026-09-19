@@ -249,7 +249,7 @@ class CreditMixin:
                 + self.credit_limit(_rev=rev, _upkeep=upkeep_amount) * self.SPENDING_DRAW_SHARE_ORDINARY
                 + max(0.0, rev - fixed) * self.CREDIT_SURPLUS_YEARS_MULTIPLE)
 
-    def shed_loss_makers(self, yr):
+    def shed_loss_makers(self, year):
         """In arrears, stop maintaining anything that costs more than it returns.
 
         This is what finally answers the reviewer's objection, which was the right
@@ -318,7 +318,7 @@ class CreditMixin:
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
-            self.household.log.append((yr, "in arrears, so closed %d concern%s that cost more "
+            self.household.log.append((year, "in arrears, so closed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
                              % (len(shed), "" if len(shed) == 1 else "s",
@@ -420,7 +420,7 @@ class CreditMixin:
                     max(0.0, self.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
         return max(0.0, rate)
 
-    def charge_interest(self, yr):
+    def charge_interest(self, year):
         """Arrears accrue. They did not before, which made debt free money."""
         if self.household.capital >= 0:
             return 0.0
@@ -429,11 +429,11 @@ class CreditMixin:
         self.household.capital -= owed
         self.household.interest_paid = getattr(self.household, "interest_paid", 0.0) + owed
         if owed > 0 and (getattr(self.household, "insolvent_years", 0) in (1, 5, 15)):
-            self.household.log.append((yr, "interest on %0.f denarii of arrears at %.1f%% a year"
+            self.household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
                                  % (-self.household.capital, rate * 100)))
         return owed
 
-    def warn_near_the_limit(self, yr):
+    def warn_near_the_limit(self, year):
         """Say it BEFORE the creditors do, while there is still a decision left.
 
         A limit you can only discover by crossing it is not a limit, it is
@@ -463,7 +463,7 @@ class CreditMixin:
         if getattr(self.household, "_said_near_limit", False):
             return
         self.household._said_near_limit = True
-        self.household.log.append((yr, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+        self.household.log.append((year, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
                              "here will advance you (%d%%). Past it every "
                              "project in hand is halted unfinished and nobody "
                              "funds new work for some years. 'stop' a project, "
@@ -544,7 +544,7 @@ class CreditMixin:
             "default is worse than a temporary halt, but the specific "
             "figure is tuned game feel, not a lending-market estimate.")
 
-    def enforce_credit_limit(self, yr):
+    def enforce_credit_limit(self, year):
         """Nobody lends past the limit, so past the limit you simply stop.
 
         The order matters and is the realistic one: first you stop paying for new
@@ -574,8 +574,8 @@ class CreditMixin:
                     _paid[node_id] = _paid.get(node_id, 0.0) + max(0.0, state.get("spent", 0.0))
                     _kept += max(0.0, state.get("spent", 0.0))
                 self.household.bountied.discard(node_id)
-            self.household.credit_frozen_until = yr + self.CREDIT_FREEZE_YEARS_AFTER_HALT
-            self.household.log.append((yr, "CREDIT EXHAUSTED: %d project%s stopped, "
+            self.household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
+            self.household.log.append((year, "CREDIT EXHAUSTED: %d project%s stopped, "
                                  "unfinished: %s. The %s denarii already paid "
                                  "stands to your credit and comes off the "
                                  "bill if you begin again. Nobody will fund new "
@@ -583,7 +583,7 @@ class CreditMixin:
                              % (len(dropped), "" if len(dropped) == 1 else "s",
                                 ", ".join(dropped[:4])
                                 + (" and others" if len(dropped) > 4 else ""),
-                                "{:,.0f}".format(_kept), yr + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+                                "{:,.0f}".format(_kept), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
         # let go of what you cannot maintain
         if self.household.capital < -limit:
             self.mothball_mines()
@@ -627,7 +627,7 @@ class CreditMixin:
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
-                self.household.log.append((yr, "creditors took what they could: %d concerns "
+                self.household.log.append((year, "creditors took what they could: %d concerns "
                                      "closed and sold up: %s. You keep the "
                                      "knowledge; reopening means paying for the "
                                      "premises again"
@@ -645,7 +645,7 @@ class CreditMixin:
             self.household.freedmen = 0
             self.household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
                                           self.household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
-            self.household.log.append((yr, "the household disperses: %d people leave, because "
+            self.household.log.append((year, "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed))
 
         # DEBT BONDAGE, where the society had it, modelled as a TERM OF
@@ -665,7 +665,7 @@ class CreditMixin:
             self.household.bondage_years_left = term
             self.household.bondage_debt = -self.household.capital
             self.household.capital = 0.0
-            self.household.log.append((yr, "BONDAGE: you cannot pay, and you enter service for "
+            self.household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
                                  "worked off, and then you are free again" % term))
@@ -680,8 +680,8 @@ class CreditMixin:
         # dramatic event over and over. A write-off is a once-in-a-life
         # humiliation, not an annual accounting entry, and between them you
         # are simply in arrears, which already has consequences of its own.
-        if self.household.capital < -limit and yr - getattr(self.household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
-            self.household.last_settlement = yr
+        if self.household.capital < -limit and year - getattr(self.household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
+            self.household.last_settlement = year
             self.household.capital = -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say
@@ -695,7 +695,7 @@ class CreditMixin:
             # grows back. A person who has just been written off does not get
             # a fresh line of credit the following morning.
             _frozen_before = getattr(self.household, "credit_frozen_until", 0)
-            self.household.credit_frozen_until = max(_frozen_before, yr + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
+            self.household.credit_frozen_until = max(_frozen_before, year + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
             # SAY WHAT ACTUALLY HAPPENED: "the debt is written off" while
             # leaving the player owing a third of their credit line
             # contradicts the number on the next line. Most of it goes;
@@ -713,9 +713,9 @@ class CreditMixin:
             # before/after VALUES said a date had moved on every first-ever
             # settlement (0 -> yr+12 is a bigger number, by that test, same
             # as a real extension).
-            _moved = (_frozen_before > yr
+            _moved = (_frozen_before > year
                      and self.household.credit_frozen_until > _frozen_before)
-            self.household.log.append((yr, "INSOLVENCY SETTLED: most of the debt is written "
+            self.household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
                                  "off and you still owe about %s denarii. Your "
                                  "name is worth less for it (reputation %s), and "
                                  "you keep your knowledge and your practice%s"

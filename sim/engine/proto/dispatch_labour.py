@@ -147,18 +147,18 @@ def _cmd_labour(sim, nodes, cmd, ended):
     if one and one not in WAGES:
         return {"ok": False, "error": "no such trade: %s. They are: %s"
                 % (one, ", ".join(sorted(WAGES)))}
-    def row(t, long=False):
+    def row(trade, long=False):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
-        _lpf = sim.labour_price_factor(t)
-        entry = {"trade": t,
-             "a_year_of_one": round(sim.annual_wage(t), 0),
-             "you_employ": round(sim.employees.get(t, 0.0), 2)}
+        _lpf = sim.labour_price_factor(trade)
+        entry = {"trade": trade,
+             "a_year_of_one": round(sim.annual_wage(trade), 0),
+             "you_employ": round(sim.employees.get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
-                "base_for_skill_and_difficulty": ANNUAL_WAGE.get(t, 375.0),
-                **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(t).items()},
+                "base_for_skill_and_difficulty": ANNUAL_WAGE.get(trade, 375.0),
+                **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(sim.price_index, 3),
@@ -179,11 +179,11 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # something only discoverable by walking into a refusal deep into
         # a run. A wall you can only discover by walking into it is not a
         # wall, it is a trap.
-        if t in sim.LITERATE_TRADES:
+        if trade in sim.LITERATE_TRADES:
             entry["most_this_society_can_ever_supply"] = round(
-                sim.literate_capacity(t), 1)
+                sim.literate_capacity(trade), 1)
             entry["you_have_or_are_teaching"] = round(
-                sim._trade_headcount_pending(t), 2)
+                sim._trade_headcount_pending(trade), 2)
             entry["what_widens_it"] = ("printing, paper, schools and academies - "
                                    "they raise how many people here can "
                                    "read, and this ceiling rises with it")
@@ -200,26 +200,26 @@ def _cmd_labour(sim, nodes, cmd, ended):
                             "population command shows how the two "
                             "compare. Teaching more of the trade, or "
                             "anything that widens the supply, brings it "
-                            "back down" % t)
+                            "back down" % trade)
         if long:
-            entry.update({"kind": trade_family(t),
-                      "wage_per_hour": round(WAGES[t] * sim.wage_index
+            entry.update({"kind": trade_family(trade),
+                      "wage_per_hour": round(WAGES[trade] * sim.wage_index
                                              * sim.price_index, 3),
                       # SPLIT, because the total includes your own people
                       # and calling all of it "the market" made hiring look
                       # like it created smiths out of nothing.
-                      "hours_the_market_can_supply": round(sim.market_supply_split(t)[0], 0),
-                      "hours_your_own_people_add": round(sim.market_supply_split(t)[1], 0),
+                      "hours_the_market_can_supply": round(sim.market_supply_split(trade)[0], 0),
+                      "hours_your_own_people_add": round(sim.market_supply_split(trade)[1], 0),
                       # AND THE SECOND CHANNEL: there are two distinct
                       # capacities, who you can HIRE here and what an
                       # outside shop will take on at a premium, and both
                       # must be shown or a reader treats one ceiling as
                       # the only one and commissions past it.
-                      "hours_you_have_commissioned": round(sim.hours_reserved(t), 0),
+                      "hours_you_have_commissioned": round(sim.hours_reserved(trade), 0),
                       "hours_you_could_still_commission": round(
-                          max(0.0, sim.market_supply(t) - sim.hours_reserved(t)), 0),
+                          max(0.0, sim.market_supply(trade) - sim.hours_reserved(trade)), 0),
                       "hours_available_to_you_in_all": round(
-                          sim.hours_you_can_call_on(t), 0),
+                          sim.hours_you_can_call_on(trade), 0),
                       # THE NOTE IS STATIC AND THE WORLD IS NOT: TRADE_NOTES
                       # is a fixed string about the society as it started,
                       # so if the trade has since been taught into
@@ -230,9 +230,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
                       # happened.
                       "note": (("you taught this trade into existence here; "
                                 "the only %ss in this society are yours and "
-                                "the ones they have taught since" % t)
-                               if t in sim.trades_created
-                               else TRADE_NOTES.get(t, ""))})
+                                "the ones they have taught since" % trade)
+                               if trade in sim.trades_created
+                               else TRADE_NOTES.get(trade, ""))})
             # THE HIRE YOU ARE CONTEMPLATING, NOT THE MARKET AS IT STANDS.
             # a_year_of_one above is true the instant it is quoted and can
             # be false one command later: hiring is what moves
@@ -243,10 +243,10 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # labour_price_factor_after_hiring's own docstring for the
             # full account; this is that forecast, priced and put on the
             # one screen a player actually reads before committing.
-            if sim.trade_available(t):
-                _lpf_after = sim.labour_price_factor_after_hiring(t, 1.0)
+            if sim.trade_available(trade):
+                _lpf_after = sim.labour_price_factor_after_hiring(trade, 1.0)
                 _rate_after = round(
-                    sim.annual_wage(t, include_local_scarcity=False) * _lpf_after, 0)
+                    sim.annual_wage(trade, include_local_scarcity=False) * _lpf_after, 0)
                 # ALWAYS SHOWN, QUIETLY: this is the number the task is
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
@@ -266,7 +266,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 # thin-market trade and false of a common one like
                 # labourer or smith.
                 if _lpf_after > 1.05:
-                    _have = sim.employees.get(t, 0.0)
+                    _have = sim.employees.get(trade, 0.0)
                     entry["hiring_moves_the_price"] = True
                     # NOT JUST THE NEW HIRE. The whole point is that this
                     # rate applies to everyone you already have too, the
@@ -377,8 +377,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, err = sim.hire(cmd.get("trade"), quantity)
-    if not ok:
+    hired, err = sim.hire(cmd.get("trade"), quantity)
+    if not hired:
         return {"ok": False, "error": err}
     # HIRING AND LETTING GO ARE DECISIONS, not standing facts the way
     # payroll is - neither labour.py nor core.py logs either one, so a
@@ -399,8 +399,8 @@ def _cmd_fire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, err = sim.fire(cmd.get("trade"), quantity)
-    if not ok:
+    fired, err = sim.fire(cmd.get("trade"), quantity)
+    if not fired:
         return {"ok": False, "error": err}
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
@@ -420,8 +420,8 @@ def _cmd_train(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, msg = sim.train(cmd.get("trade"), quantity, cmd.get("from"))
-    if not ok:
+    trained, msg = sim.train(cmd.get("trade"), quantity, cmd.get("from"))
+    if not trained:
         return {"ok": False, "error": msg}
     out = {"ok": True, "training": msg, "capital": round(sim.capital, 1),
            "your_hours_left_this_year": round(
@@ -454,8 +454,8 @@ def _cmd_commission(sim, nodes, cmd, ended):
     hours, err = _qty(cmd, "hours")
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, msg = sim.commission(cmd.get("trade"), hours)
-    if not ok:
+    commissioned, msg = sim.commission(cmd.get("trade"), hours)
+    if not commissioned:
         return {"ok": False, "error": msg}
     return {"ok": True, "commissioned": msg, "capital": round(sim.capital, 1),
             "note": "These hours are available to your projects this year only."}

@@ -67,7 +67,7 @@ def _resolve_by_name(text):
     return []
 
 
-def _downstream_of(k, nodes):
+def _downstream_of(node_id, nodes):
     """Everything that depends on this node, however far away, following hard
     prerequisites AND substitution groups alike.
 
@@ -79,14 +79,14 @@ def _downstream_of(k, nodes):
     because something really would be harder or impossible without it. The
     chinampa read "TOTAL DOWNSTREAM: 0" while genuinely feeding terracing.
     """
-    seen, stack = set(), [k]
+    seen, stack = set(), [node_id]
     while stack:
         cur = stack.pop()
         for dependent_id in _unlocked_by(cur, nodes):
             if dependent_id not in seen:
                 seen.add(dependent_id)
                 stack.append(dependent_id)
-    seen.discard(k)
+    seen.discard(node_id)
     return seen
 
 
@@ -135,7 +135,7 @@ def _unlocked_by_index(nodes):
     return idx
 
 
-def _unlocked_by(k, nodes):
+def _unlocked_by(node_id, nodes):
     """Everything that needs this node, whether hard or as one option of a
     substitution group. sorted() because a set of ids iterates in an order
     that depends on PYTHONHASHSEED - here, sorted once when the reverse
@@ -146,10 +146,10 @@ def _unlocked_by(k, nodes):
     so handing it out directly would let one caller's in-place edit corrupt
     what the next caller sees. list(...) is a cheap copy of a small
     dependents list, not another tree scan."""
-    return list(_unlocked_by_index(nodes).get(k, []))
+    return list(_unlocked_by_index(nodes).get(node_id, []))
 
 
-def _did_you_mean(k, nodes, limit=8, sim=None):
+def _did_you_mean(node_id, nodes, limit=8, sim=None):
     """Names close to what was typed.
 
     A plain substring test alone helps with a truncation and not at all
@@ -158,7 +158,7 @@ def _did_you_mean(k, nodes, limit=8, sim=None):
     partial name is the common case and an exact prefix is a better guess
     than anything fuzzy, then difflib for the rest.
     """
-    query = str(k).lower()
+    query = str(node_id).lower()
     near = [result_id for result_id in nodes if query in result_id.lower()]
     if len(near) < limit:
         import difflib

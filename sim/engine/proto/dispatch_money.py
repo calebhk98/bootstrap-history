@@ -99,8 +99,8 @@ def _buy_housing(sim, cmd, quantity):
 
 def _buy_school(sim, cmd, quantity):
     trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
-    ok, why = sim.found_trade_school(trade, quantity)
-    if not ok:
+    school_founded, why = sim.found_trade_school(trade, quantity)
+    if not school_founded:
         return {"ok": False, "error": why}
     return {"ok": True, "trade": trade, "new_training_seats": quantity,
             "trade_school_seats": sim.trade_schools[trade],
@@ -422,8 +422,8 @@ def _cmd_quote(sim, nodes, cmd, ended):
 def _cmd_close(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    ok, msg = sim.close_mine(cmd.get("material") or cmd.get("what"))
-    if not ok:
+    mine_closed, msg = sim.close_mine(cmd.get("material") or cmd.get("what"))
+    if not mine_closed:
         return {"ok": False, "error": msg}
     return {"ok": True, "closed": msg,
             "mine_operating_cost": round(sim.mine_operating_cost(), 1)}
@@ -433,8 +433,8 @@ def _cmd_close(sim, nodes, cmd, ended):
 def _cmd_withdraw(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    ok, msg = sim.withdraw_from_public_life()
-    if not ok:
+    withdrew, msg = sim.withdraw_from_public_life()
+    if not withdrew:
         return {"ok": False, "error": msg}
     return {"ok": True, "withdrew": msg,
             "eminence": round(sim.eminence, 2),
@@ -449,7 +449,7 @@ def _cmd_bribe(sim, nodes, cmd, ended):
     amount, err = _qty(cmd, "amount")
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    ok, msg = sim.bribe(amount)
-    if not ok:
+    bribed, msg = sim.bribe(amount)
+    if not bribed:
         return {"ok": False, "error": msg}
     return {"ok": True, "bribed": msg, "capital": round(sim.capital, 1)}

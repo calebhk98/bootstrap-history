@@ -1043,11 +1043,11 @@ class MiningMixin:
         return base * (1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE,
                                   max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII))
 
-    def buy_forest(self, ha):
+    def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
         nobody thinks to buy, and the one that decides whether a furnace runs."""
         room = max(0.0, self.forest_land_ceiling() - self.household.forest_ha)
-        if ha > room:
+        if hectares > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
             # and a log line, which the player DOES see, is the honest way
@@ -1055,13 +1055,13 @@ class MiningMixin:
             self.household.log.append((self.year,
                              "you can hold at most %.0f hectares of coppice here; "
                              "bought %.0f, not %.0f" % (self.forest_land_ceiling(),
-                                                        room, ha)))
-            ha = room
-        if ha <= 0:
+                                                        room, hectares)))
+            hectares = room
+        if hectares <= 0:
             return 0.0
-        cost = ha * self.FOREST_COST_PER_HA * self.price_index
+        cost = hectares * self.FOREST_COST_PER_HA * self.price_index
         if cost > self.household.capital:
             return 0.0
         self.household.capital -= cost
-        self.household.forest_ha += ha
-        return ha
+        self.household.forest_ha += hectares
+        return hectares

@@ -74,14 +74,14 @@ class GeographyMixin:
         this model: regions are already coarse political/geographic blocks,
         not points, so a coarse average of them is the right level of detail.
         """
-        homes = [r for r in (self.civ.get("home_regions") or []) if r in self._regions]
+        homes = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
         if not homes:
             # A civ file with no valid home_regions would otherwise crash
             # region_reach for everyone; falling back to Italy or to
             # whatever region exists keeps this from being a hard wall.
             homes = ["italia"] if "italia" in self._regions else list(self._regions)[:1]
-        lat = sum(self._regions[r]["lat"] for r in homes) / len(homes)
-        lon = sum(self._regions[r]["lon"] for r in homes) / len(homes)
+        lat = sum(self._regions[region_id]["lat"] for region_id in homes) / len(homes)
+        lon = sum(self._regions[region_id]["lon"] for region_id in homes) / len(homes)
         return lat, lon
 
     # Straight-line kilometres (after geography.json's route_difficulty and
@@ -146,9 +146,9 @@ class GeographyMixin:
         coastal = bool(reg.get("coastal", True))
         effective = dist / speed if coastal else dist / (speed ** 0.5)
         band = 6
-        for edge, b in self.RAW_DISTANCE_BANDS:
+        for edge, band_value in self.RAW_DISTANCE_BANDS:
             if effective <= edge:
-                band = b
+                band = band_value
                 break
         return max(1, min(6, band))
 
@@ -179,12 +179,12 @@ class GeographyMixin:
         goes negative or hits exactly zero.
         """
         materials = self.geo.get("located_materials") or {}
-        md = materials.get(material_key)
-        if not md:
+        material_entry = materials.get(material_key)
+        if not material_entry:
             return 0, 1.0
-        base_mult = float(md.get("cost_multiplier", 1.0))
+        base_mult = float(material_entry.get("cost_multiplier", 1.0))
         best = None
-        for rid in (md.get("regions") or []):
+        for rid in (material_entry.get("regions") or []):
             reg = self._regions.get(rid)
             if not reg:
                 continue
@@ -215,7 +215,7 @@ class GeographyMixin:
         # something defensible, and the ceiling stays only as a backstop.
         return civ_r, min(raw ** 0.6, 45.0)
 
-    def material_cost_factor(self, k: str) -> float:
+    def material_cost_factor(self, node_id: str) -> float:
         """Cost multiplier a located-material tech node picks up from
         geography, for the civilization in play.
 
@@ -227,10 +227,10 @@ class GeographyMixin:
         Han China, and the entire India-and-east trade advantage a
         China-based civilization actually has is invisible to the model.
         """
-        mk = self._mat_unlock.get(k)
-        if not mk:
+        material_key = self._mat_unlock.get(node_id)
+        if not material_key:
             return 1.0
-        _, mult = self.material_reach(mk)
+        _, mult = self.material_reach(material_key)
         return mult
 
     def _compute_mineral_scale(self, material: str) -> float:
@@ -266,13 +266,13 @@ class GeographyMixin:
             # `cast` here changes nothing at runtime, same as `float()`
             # itself already did on the line below before this pass.
             minerals: MineralShares = reg.get("minerals") or {}
-            ab = float(cast(float, minerals.get(material, 0.0)))
-            if ab <= 0:
+            share = float(cast(float, minerals.get(material, 0.0)))
+            if share <= 0:
                 continue
             if rid in home:
-                total += ab
+                total += share
             else:
-                total += ab * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
+                total += share * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
         return max(0.05, total)
 
     def mineral_scale(self, material: str) -> float:

@@ -19,11 +19,11 @@ from constants import declare
 
 
 class CapabilityMixin:
-    def is_venture(self, k):
+    def is_venture(self, node_id):
         """Is this something you could run as a going concern, as opposed to a
         piece of knowledge that simply changes what you can do?"""
-        node = self.nodes.get(k)
-        if node is None or k in self.household.granted:
+        node = self.nodes.get(node_id)
+        if node is None or node_id in self.household.granted:
             return False
         return node["rev"] > 0 or node["up"] > 0
 
@@ -113,7 +113,7 @@ class CapabilityMixin:
         return out
 
 
-    def institution_units(self, k):
+    def institution_units(self, node_id):
         """How much of this institution is actually running, as a number
         rather than a flag.
 
@@ -128,11 +128,11 @@ class CapabilityMixin:
         For anything not in SCALABLE_INSTITUTIONS this is just running() cast
         to a float, because there is nothing to found a second of.
         """
-        if k not in self.SCALABLE_INSTITUTIONS:
-            return 1.0 if self.running(k) else 0.0
-        if k not in self.household.operating:
+        if node_id not in self.SCALABLE_INSTITUTIONS:
+            return 1.0 if self.running(node_id) else 0.0
+        if node_id not in self.household.operating:
             return 0.0
-        return max(0.0, getattr(self.household, "inst_units", {}).get(k, 1.0))
+        return max(0.0, getattr(self.household, "inst_units", {}).get(node_id, 1.0))
 
     LITERACY_GENERAL_FLOOR = declare(
         "LITERACY_GENERAL_FLOOR", 0.02, kind="temporary_heuristic",
@@ -164,7 +164,7 @@ class CapabilityMixin:
             "population and craftsmen rather than literacy (workshops, "
             "collegia, a freedman staff).")
 
-    def institution_unit_ceiling(self, k):
+    def institution_unit_ceiling(self, node_id):
         """The most units of this institution the empire can actually fill.
 
         Bounded by population, and - the user's own instinct, and a real,
@@ -191,9 +191,9 @@ class CapabilityMixin:
         # the same abstraction a "tonnes_per_year" mine already uses for
         # however many actual shafts that tonnage comes out of.
         """
-        if k not in self.SCALABLE_INSTITUTIONS:
+        if node_id not in self.SCALABLE_INSTITUTIONS:
             return 1.0
-        if k in ("school_founded", "academy_network"):
+        if node_id in ("school_founded", "academy_network"):
             lit = max(self.LITERACY_GENERAL_FLOOR,
                       float(self.civ.get("literacy_general", self.LITERACY_REFERENCE_GENERAL)))
             return max(1.0, self.SCHOOL_CEILING_BASE_UNITS * self.pop_scale ** self.INSTITUTION_CEILING_POP_EXPONENT
@@ -224,18 +224,18 @@ class CapabilityMixin:
             "ceiling rather than brute-force spending, not fitted to any "
             "real institution's actual expansion cost.")
 
-    def institution_unit_cost(self, k, have_units, add_units):
+    def institution_unit_cost(self, node_id, have_units, add_units):
         """Denarii to take this institution from `have_units` to
         `have_units + add_units`, where 1.0 unit costs exactly what founding
         it has always cost (venture_capex) - so a run that only ever founds
         the original single unit pays exactly what it always paid.
         """
-        base = self.venture_capex(k)
+        base = self.venture_capex(node_id)
         convexity = self.INSTITUTION_EXPANSION_CONVEXITY
 
-        def f(u):
-            return u + convexity * 0.5 * max(0.0, u - 1.0) ** 2
-        return base * max(0.0, f(have_units + add_units) - f(have_units))
+        def cumulative_cost(units):
+            return units + convexity * 0.5 * max(0.0, units - 1.0) ** 2
+        return base * max(0.0, cumulative_cost(have_units + add_units) - cumulative_cost(have_units))
 
     # ---- BUILT, versus BUILT AND STILL RUNNING ----------------------------
     # `has` answers "do you know how / did you build it", and for a piece of
@@ -251,16 +251,16 @@ class CapabilityMixin:
     #
     # This is the honest test, and it is `has` for everything that has no doors
     # to shut: a technique costs nothing to keep and cannot be closed.
-    def running(self, k):
+    def running(self, node_id):
         """Built, and still being maintained - which is what a capability needs.
 
         True for anything you have done that is not a going concern (knowledge
         does not close), for this society's own crafts, and for a concern you
         actually have open.
         """
-        if k not in self.household.done:
+        if node_id not in self.household.done:
             return False
-        if k in self.household.granted or not self.is_venture(k):
+        if node_id in self.household.granted or not self.is_venture(node_id):
             return True
         # UNPARKED. This returned True unconditionally for a long time, with a
         # comment recording why: requiring the doors to be open sent Rome from
@@ -288,5 +288,5 @@ class CapabilityMixin:
         # reached and median technologies built held, where requiring the
         # doors open with institutions still booleans had cost Rome the run
         # outright.
-        return k in self.household.operating
+        return node_id in self.household.operating
 

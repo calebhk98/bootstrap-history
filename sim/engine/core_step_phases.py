@@ -78,7 +78,7 @@ class StepPhasesMixin:
         #    runs are calibrated against. With it off, the only things that
         #    change the staff are hire, fire, train, buy and manumit.
         sc_cap, ar_cap, di_cap = self.staff_capacity()
-        ATTRITION = self.STAFF_ATTRITION_RATE
+        attrition_rate = self.STAFF_ATTRITION_RATE
         # PEOPLE ARE WHOLE: attrition rolls each actual person on the books
         # individually against self.rng, sorted by trade name so the draws
         # happen in the same order whatever PYTHONHASHSEED the process
@@ -93,7 +93,7 @@ class StepPhasesMixin:
         _lost = {}
         for trade_id in sorted(self.household.employees):
             head = int(round(self.household.employees[trade_id]))
-            survivors = sum(1 for _ in range(head) if self.rng.random() >= ATTRITION)
+            survivors = sum(1 for _ in range(head) if self.rng.random() >= attrition_rate)
             if head - survivors > 0:
                 _lost[trade_id] = head - survivors
             if survivors > 0:
@@ -280,7 +280,7 @@ class StepPhasesMixin:
         # the same dead end wearing a different hat.
         if self.policy.get("auto_commission", not self.manual):
             self.auto_commission_for_blocked()
-        self.household.directors_extra += (di_cap - self.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.household.directors_extra * ATTRITION
+        self.household.directors_extra += (di_cap - self.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.household.directors_extra * attrition_rate
         self.household.artisans = max(0.0, self.household.artisans)
         self.household.scholars = max(0.0, self.household.scholars)
         self.household.directors_extra = max(0.0, self.household.directors_extra)
@@ -514,15 +514,15 @@ class StepPhasesMixin:
             # block ends, so it needs no invalidation logic at all: nothing
             # outside this block ever reads it, so it cannot go stale.
             _ms_memo, _ta_memo = {}, {}
-            def _market_supply(t):
-                value = _ms_memo.get(t)
+            def _market_supply(trade):
+                value = _ms_memo.get(trade)
                 if value is None:
-                    value = _ms_memo[t] = self.market_supply(t)
+                    value = _ms_memo[trade] = self.market_supply(trade)
                 return value
-            def _trade_avail(t):
-                value = _ta_memo.get(t)
+            def _trade_avail(trade):
+                value = _ta_memo.get(trade)
                 if value is None:
-                    value = _ta_memo[t] = self.trade_available(t)
+                    value = _ta_memo[trade] = self.trade_available(trade)
                 return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
@@ -578,13 +578,13 @@ class StepPhasesMixin:
             # and reused for every later node that names it, rather than
             # recomputed from scratch each time.
             _gone_memo = {}
-            def _is_gone(t):
-                value = _gone_memo.get(t)
+            def _is_gone(trade):
+                value = _gone_memo.get(trade)
                 if value is None:
-                    value = _gone_memo[t] = (
-                        not _trade_avail(t)
-                        or (_market_supply(t) <= 0.0
-                            and self._trade_headcount_pending(t) <= 0.0))
+                    value = _gone_memo[trade] = (
+                        not _trade_avail(trade)
+                        or (_market_supply(trade) <= 0.0
+                            and self._trade_headcount_pending(trade) <= 0.0))
                 return value
             for node_id in self.order:
                 if node_id in self.household.done or node_id in self.household.active:
@@ -626,13 +626,13 @@ class StepPhasesMixin:
                 if _wages > _budget:
                     continue
                 _first = trade_id not in self.household.trades_created
-                ok, _msg = self.train(trade_id, 2)
+                taught, _msg = self.train(trade_id, 2)
                 # THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
                 # attempt meant a refusal - no room in the household, no hours
                 # left, nobody to teach from - burned the trade's whole
                 # twenty-five years, so the run went on needing machinists and
                 # never asked again.
-                if ok:
+                if taught:
                     _taught[trade_id] = self.year
                     self.household.log.append((self.year, "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else

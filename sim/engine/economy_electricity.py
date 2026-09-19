@@ -346,23 +346,23 @@ class ElectricityMixin:
         tokens = self._ELECTRICITY_GATE_TOKENS
         memo = {}
 
-        def gated(k, on_stack):
-            if k in memo:
-                return memo[k]
-            if k in tokens:
-                memo[k] = True
+        def gated(node_id, on_stack):
+            if node_id in memo:
+                return memo[node_id]
+            if node_id in tokens:
+                memo[node_id] = True
                 return True
-            if k in on_stack or k not in self.nodes:
+            if node_id in on_stack or node_id not in self.nodes:
                 # Cycle guard: hard_pre's own single-option req_any edges are
                 # acyclic tree-wide (see closure()'s own comment), but this
                 # walk is defensive of that invariant rather than trusting
                 # it silently - an unexpected cycle answers "not gated"
                 # rather than recursing forever.
                 return False
-            on_stack.add(k)
-            result = any(gated(parent_id, on_stack) for parent_id in hard_pre(self.nodes, k))
-            on_stack.discard(k)
-            memo[k] = result
+            on_stack.add(node_id)
+            result = any(gated(parent_id, on_stack) for parent_id in hard_pre(self.nodes, node_id))
+            on_stack.discard(node_id)
+            memo[node_id] = result
             return result
 
         # UPKEEP IS NOT THE TEST OF WHETHER WORK DRAWS POWER. This required
@@ -386,7 +386,7 @@ class ElectricityMixin:
         self._electricity_load_ids_cache = ids
         return ids
 
-    def _node_annual_tonnes(self, k, mat_key):
+    def _node_annual_tonnes(self, node_id, mat_key):
         """Tonnes/yr of mat_key ONE node draws, using the exact per-node
         annualisation annual_material_demand() applies when it sums this
         across every node in one pass - factored out so the curated
@@ -395,16 +395,16 @@ class ElectricityMixin:
         - iron_ore_kg in particular is drawn by many non-electrical nodes,
         and reusing the tree-wide total would attribute every blast furnace
         and forge's ore to arc_furnace_ferroalloys' electric arc)."""
-        node = self.nodes.get(k)
+        node = self.nodes.get(node_id)
         if node is None:
             return 0.0
         quantity = float((node.get("mat") or {}).get(mat_key, 0.0))
         if quantity <= 0:
             return 0.0
         span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
-        if k in self.household.active:
+        if node_id in self.household.active:
             return quantity / span / KILOGRAMS_PER_TONNE
-        if k in self.household.done and float(node.get("up") or 0) > 0:
+        if node_id in self.household.done and float(node.get("up") or 0) > 0:
             return self.STANDING_MATERIAL_DRAW_SHARE * quantity / span / KILOGRAMS_PER_TONNE
         return 0.0
 
@@ -560,7 +560,7 @@ class ElectricityMixin:
             self.household.shortages[who] += 1
         return worst
 
-    def project_resource_throttle(self, k):
+    def project_resource_throttle(self, node_id):
         """Material throttle applicable to one active project.
 
         ``resource_throttle`` still performs the portfolio-level supply and
@@ -575,9 +575,9 @@ class ElectricityMixin:
         if factor >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":
-            return factor if k in self._electricity_load_node_ids() else 1.0
-        node = self.nodes.get(k) or {}
-        coke = self.chosen_fuel(k) == "coke"
+            return factor if node_id in self._electricity_load_node_ids() else 1.0
+        node = self.nodes.get(node_id) or {}
+        coke = self.chosen_fuel(node_id) == "coke"
         for mat in (node.get("mat") or {}):
             effective_mat = ("coal_kg" if coke
                              and mat in ("charcoal_kg", "firewood_kg") else mat)

@@ -29,7 +29,7 @@ from sim.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
 from .cli import _founder_lifetime_hours
 
 
-def cmd_plan(a):
+def cmd_plan(args):
     """Work backward from the goal instead of walking a hand-written list.
 
     `run`/`compare` measure how well an `order` copes with bad luck; this is
@@ -51,20 +51,20 @@ def cmd_plan(a):
         sys.path.insert(0, _simdir)
     import planner as _planner
     tree, _prices, nodes, _wages, _goods = load()
-    goal = resolve_goal(tree, nodes, a.goal)
-    if not a.search_rounds:
+    goal = resolve_goal(tree, nodes, args.goal)
+    if not args.search_rounds:
         # UNCHANGED FROM BEFORE. Purely structural CPM, optionally refined
         # against real trials - the path every existing caller and test
         # already exercises.
         order, rationale, _cpm_result = _planner.plan(
-            civ=a.civ, goal=a.goal, seed_strategy=a.seed_strategy,
-            side_branches=a.side_branches, side_branch_every=a.side_branch_every,
-            refine_rounds=a.refine_rounds, mc=a.mc, horizon=a.horizon, seed=a.seed)
+            civ=args.civ, goal=args.goal, seed_strategy=args.seed_strategy,
+            side_branches=args.side_branches, side_branch_every=args.side_branch_every,
+            refine_rounds=args.refine_rounds, mc=args.mc, horizon=args.horizon, seed=args.seed)
         label = ("PLANNED (CPM): backward-chained from %s over its "
-                "prerequisite closure for %s%s" % (goal, a.civ,
-                ", refined against real trials" if a.refine_rounds else ""))
-        _planner.write_strategy(a.out, label, rationale, order)
-        print("wrote %d nodes to %s" % (len(order), a.out))
+                "prerequisite closure for %s%s" % (goal, args.civ,
+                ", refined against real trials" if args.refine_rounds else ""))
+        _planner.write_strategy(args.out, label, rationale, order)
+        print("wrote %d nodes to %s" % (len(order), args.out))
         for line in rationale:
             print("  - " + line)
         return 0
@@ -77,20 +77,20 @@ def cmd_plan(a):
     # the spine, undoing the one relaxation move that does that.
     import path_search as _search
     _search.ensure_fixed_hash_seed()
-    seed_order = _planner.load_seed(a.seed_strategy, nodes)
+    seed_order = _planner.load_seed(args.seed_strategy, nodes)
     order, extras, history = _search.search(
-        civ=a.civ, goal=a.goal, side_branches=a.side_branches,
-        side_branch_every=a.side_branch_every, rounds=a.search_rounds,
-        horizon=a.search_horizon, backlog_ratio=a.search_backlog_ratio,
+        civ=args.civ, goal=args.goal, side_branches=args.side_branches,
+        side_branch_every=args.side_branch_every, rounds=args.search_rounds,
+        horizon=args.search_horizon, backlog_ratio=args.search_backlog_ratio,
         seed_order=seed_order,
-        grow_supply_moves=not a.search_no_grow_supply)
+        grow_supply_moves=not args.search_no_grow_supply)
     last = history[-1]
     rationale = [
         "Deterministic search (path_search.py): critical-path order, then "
         "%d round(s) of diagnosing the binding constraint against a "
         "dice-free trial (no events, no project failures, immortal "
         "founder, %d-year horizon) and relaxing it, keeping whichever "
-        "round scored best." % (len(history), a.search_horizon),
+        "round scored best." % (len(history), args.search_horizon),
         "Final round %d: %d/%d closure nodes done%s. Scarce trade(s) "
         "diagnosed: %s."
         % (last["round"], last["closure_done"], len(closure(nodes, goal)),
@@ -108,33 +108,33 @@ def cmd_plan(a):
             "it than without. Kept: %s."
             % (_n_tried, ", ".join(_kept) if _kept else "none - no "
                "institution measured better than the order without it"))
-    if a.refine_rounds:
+    if args.refine_rounds:
         # SAME RELATIONSHIP `plan()` ALREADY HAS TO `refine()`: the search's
         # own order and side branches become what gets measured and
         # advanced round by round, instead of planner.plan() deriving a
         # fresh CPM pass that does not know about the search's relaxation.
-        probe_sim = Sim(nodes, [], random.Random(a.seed), events=False, civ=load_civ(a.civ))
+        probe_sim = Sim(nodes, [], random.Random(args.seed), events=False, civ=load_civ(args.civ))
         order, extras, score = _planner.refine(
-            nodes, goal, probe_sim, order, extras, a.civ, a.mc, a.horizon, a.seed,
-            a.refine_rounds, a.side_branch_every)
+            nodes, goal, probe_sim, order, extras, args.civ, args.mc, args.horizon, args.seed,
+            args.refine_rounds, args.side_branch_every)
         if score is not None:
             rationale.append(
                 "Refined over %d round(s) of %d trials each at a %d-year "
                 "horizon (seed %d), starting from the search's own order: "
                 "%d/%d trials reached the goal in the final round."
-                % (a.refine_rounds, a.mc, a.horizon, a.seed, score[0], a.mc))
+                % (args.refine_rounds, args.mc, args.horizon, args.seed, score[0], args.mc))
     label = ("PLANNED (CPM + deterministic search%s): backward-chained from "
             "%s over its prerequisite closure for %s" % (
-                ", refined against real trials" if a.refine_rounds else "",
-                goal, a.civ))
-    _planner.write_strategy(a.out, label, rationale, order)
-    print("wrote %d nodes to %s" % (len(order), a.out))
+                ", refined against real trials" if args.refine_rounds else "",
+                goal, args.civ))
+    _planner.write_strategy(args.out, label, rationale, order)
+    print("wrote %d nodes to %s" % (len(order), args.out))
     for line in rationale:
         print("  - " + line)
     return 0
 
 
-def cmd_search(a):
+def cmd_search(args):
     """`path_search.py`'s own dice-free search, reached directly instead of
     only through `plan --search-rounds`.
 
@@ -165,9 +165,9 @@ def cmd_search(a):
         sys.path.insert(0, _simdir)
     import path_search as _search
     order, rationale = _search.plan_and_write(
-        a.civ, a.goal, a.out, a.side_branches, a.side_branch_every, a.rounds,
-        a.horizon, a.backlog_ratio, a.seed_strategy, a.no_grow_supply)
-    print("wrote %d nodes to %s" % (len(order), a.out))
+        args.civ, args.goal, args.out, args.side_branches, args.side_branch_every, args.rounds,
+        args.horizon, args.backlog_ratio, args.seed_strategy, args.no_grow_supply)
+    print("wrote %d nodes to %s" % (len(order), args.out))
     for line in rationale:
         print("  - " + line)
     return 0
@@ -239,12 +239,12 @@ WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
         "touches this line.")
 
 
-def cmd_why(a):
+def cmd_why(args):
     """Explain one node: what it needs, what needs it, and what it costs."""
     tree, prices, nodes, wages, goods = load()
-    node_id = a.node
+    node_id = args.node
     if node_id not in nodes:
-        near = [candidate_id for candidate_id in nodes if a.node.lower() in candidate_id.lower()]
+        near = [candidate_id for candidate_id in nodes if args.node.lower() in candidate_id.lower()]
         raise SystemExit("unknown node. did you mean: %s" % (", ".join(near[:EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN]) or "no idea"))
     node_record = nodes[node_id]
     print("%s  [%s, confidence %s]" % (node_record["name"], node_record["cat"], node_record["conf"]))
@@ -316,6 +316,6 @@ def cmd_why(a):
     from .protocol import _downstream_of
     blocks = _downstream_of(node_id, nodes)
     print("\nTOTAL DOWNSTREAM: %d nodes depend on this, directly or indirectly." % len(blocks))
-    _goal_here = resolve_goal(tree, nodes, getattr(a, "goal", None))
+    _goal_here = resolve_goal(tree, nodes, getattr(args, "goal", None))
     if _goal_here in blocks or _goal_here == node_id:
         print("   INCLUDING THE GOAL. This node is on the critical path.")

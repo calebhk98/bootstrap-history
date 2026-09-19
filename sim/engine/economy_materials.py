@@ -458,7 +458,7 @@ class MaterialSupplyMixin:
             "that decided whether an industrialising civilisation is bound "
             "by grown fuel or dug fuel.")
 
-    def chosen_fuel(self, k):
+    def chosen_fuel(self, node_id):
         """Which fuel this node would actually burn, given what you have.
 
         Must actually swap the material demand, not only a quality factor:
@@ -466,7 +466,7 @@ class MaterialSupplyMixin:
         leaves the charcoal demand untouched can never show the one
         substitution that actually decided industrial history.
         """
-        for group in (self.nodes[k].get("req_any") or []):
+        for group in (self.nodes[node_id].get("req_any") or []):
             if "fuel" not in str(group.get("group", "")).lower():
                 continue
             best, pick = 0.0, None

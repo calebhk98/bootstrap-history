@@ -75,11 +75,11 @@ def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
         return text
     parts = re.split(r'(?<=[.!?]) ', text)
 
-    def _is_self_play(p: str) -> bool:
-        low = p.lower()
+    def _is_self_play(sentence: str) -> bool:
+        low = sentence.lower()
         if any(phrase in low for phrase in _SELF_PLAY_PHRASES):
             return True
-        return bool(_SELF_PLAY_META.search(p) and _SELF_PLAY_RANK.search(p))
+        return bool(_SELF_PLAY_META.search(sentence) and _SELF_PLAY_RANK.search(sentence))
 
     return " ".join(sentence for sentence in parts if not _is_self_play(sentence)).strip()
 
@@ -131,20 +131,20 @@ class FogMixin:
     hazard_timeline: Callable[..., List[Dict[str, Any]]]
     capability_gaps: Callable[[], List[Dict[str, Any]]]
 
-    def reveal_from(self, k: str) -> None:
+    def reveal_from(self, node_id: str) -> None:
         """Completing something teaches you what it leads towards, vaguely."""
         if not getattr(self, "fog", False):
             return
         self.household.revealed = set(getattr(self.household, "revealed", set()))
-        self.household.revealed.add(k)
+        self.household.revealed.add(node_id)
         for other, node in self.nodes.items():
-            if k in node.get("pre", []):
+            if node_id in node.get("pre", []):
                 self.household.revealed.add(other)
             for group in node.get("req_any", []):
-                if k in (group.get("options") or {}):
+                if node_id in (group.get("options") or {}):
                     self.household.revealed.add(other)
 
-    def is_visible(self, k: str, _memo: Optional[Dict[str, bool]] = None) -> bool:
+    def is_visible(self, node_id: str, _memo: Optional[Dict[str, bool]] = None) -> bool:
         """Can the player see this node at all?
 
         _memo: an optional dict shared across one recursive descent. is_visible
@@ -165,14 +165,14 @@ class FogMixin:
         """
         if not getattr(self, "fog", False):
             return True
-        if k in self.household.done or k in self.household.active:
+        if node_id in self.household.done or node_id in self.household.active:
             return True
-        if k in getattr(self.household, "revealed", set()):
+        if node_id in getattr(self.household, "revealed", set()):
             return True
         memo = {} if _memo is None else _memo
-        if k in memo:
-            return memo[k]
-        memo[k] = False        # provisional: the tree is a DAG so this should
+        if node_id in memo:
+            return memo[node_id]
+        memo[node_id] = False        # provisional: the tree is a DAG so this should
                                 # never actually be read back, but a cycle must
                                 # not recurse forever if one ever sneaks in.
         # anything you could start right now is visible by definition: you can
@@ -185,8 +185,8 @@ class FogMixin:
         # prerequisite, which calls back into start_reason...) from building
         # a player-facing sentence at every single level into building one
         # only at the outermost call that actually asked for it.
-        result = self.start_reason(k, _memo=memo, _why=False)[0]
-        memo[k] = result
+        result = self.start_reason(node_id, _memo=memo, _why=False)[0]
+        memo[node_id] = result
         return result
 
     def missing_prereq_message(self, missing: List[str],
@@ -278,16 +278,16 @@ class FogMixin:
                 scrubbed = scrubbed.replace(node_id, "something you have not heard of")
         return scrubbed
 
-    def fog_summary(self, k: str) -> str:
+    def fog_summary(self, node_id: str) -> str:
         """One sentence. Deliberately not the whole note, and never the unlocks."""
         # Stripped before the first sentence is taken, not after: school_
         # founded's note OPENS with "The pivot of the entire game." - the
         # exact sentence fog_summary would otherwise hand back as the whole
         # answer, under fog, for the one command whose entire job is to stay
         # vague. See strip_self_play_advice above.
-        note = strip_self_play_advice((self.nodes[k].get("note") or "").strip())
+        note = strip_self_play_advice((self.nodes[node_id].get("note") or "").strip())
         if not note:
-            return self.nodes[k]["name"]
+            return self.nodes[node_id]["name"]
         for sep in (". ", "? ", "! "):
             if sep in note:
                 note = note.split(sep)[0].strip() + "."
@@ -476,7 +476,7 @@ class FogMixin:
                      "algebra", "geometry", "probability", "analysis",
                      "theory", "knowledge"}
 
-    def never_abandon(self, k: str) -> bool:
+    def never_abandon(self, node_id: str) -> bool:
         """Protected: knowledge, and anything the goal actually needs.
 
         Keying the softlock guard on the GOAL CLOSURE rather than on a list of
@@ -484,14 +484,14 @@ class FogMixin:
         and rebuild him later; you cannot have the game quietly delete a step
         you need and then refuse to fund rebuilding it.
         """
-        if self.nodes[k]["cat"] in self.NEVER_ABANDON:
+        if self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
             return True
         if not hasattr(self, "_goal_closure"):
             try:
                 self._goal_closure = closure(self.nodes, self.goal)
             except Exception:
                 self._goal_closure = set()
-        return k in self._goal_closure
+        return node_id in self._goal_closure
 
     FOREIGN_MARKERS = ("_roman", "_rome", "annona", "insula", "societas",
                        "collegium", "argentarii", "latifundi",

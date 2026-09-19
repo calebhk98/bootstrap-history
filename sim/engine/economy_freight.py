@@ -456,7 +456,7 @@ class FreightMixin:
         self.household._demand_by_emp_key_cache = (demand, grouped)
         return grouped
 
-    def material_market_factor(self, k):
+    def material_market_factor(self, node_id):
         """A project's price pressure from the materials it buys, weighted
         by how many kilograms of each -- the same weighting `_material_cost`
         already uses implicitly by summing kilogram costs.
@@ -471,7 +471,7 @@ class FreightMixin:
         a price for those materials; now it can (_material_tag /
         material_price_factor's own generalisation), so it does.
         """
-        mat = self.nodes[k].get("mat") or {}
+        mat = self.nodes[node_id].get("mat") or {}
         if not mat:
             return 1.0
         total_kg, weighted = 0.0, 0.0
@@ -572,7 +572,7 @@ class FreightMixin:
             "comment above), a qualitative target rather than a measured "
             "rate.")
 
-    def build_nitre(self, m2):
+    def build_nitre(self, square_metres):
         """Lay down nitre beds. Saltpetre is not dug and not grown; it is made.
 
         There was no way for a player to do this at all. The only thing that
@@ -581,15 +581,15 @@ class FreightMixin:
         turned the automatic policies off. A shortage the game will not let you
         act on is not a constraint, it is a wall.
         """
-        m2 = float(m2)
-        if m2 <= 0:
+        square_metres = float(square_metres)
+        if square_metres <= 0:
             return 0.0
-        cost = m2 * self.NITRE_COST_PER_M2 * self.price_index
+        cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
         if cost > self.household.capital:
             return 0.0
         self.household.capital -= cost
-        self.household.nitre_bed_m2 += m2
-        return m2
+        self.household.nitre_bed_m2 += square_metres
+        return square_metres
 
     NITRE_SHORTAGE_SAFETY_BUFFER = declare(
         "NITRE_SHORTAGE_SAFETY_BUFFER", 1.20, kind="temporary_heuristic",

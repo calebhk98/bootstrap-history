@@ -492,8 +492,8 @@ class CapacityMixin:
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
-        def _distance(k):
-            return len(closure(self.nodes, k) - self.household.done)
+        def _distance(node_id):
+            return len(closure(self.nodes, node_id) - self.household.done)
         want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "

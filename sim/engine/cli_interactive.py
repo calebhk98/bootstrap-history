@@ -62,7 +62,7 @@ from .cli_interactive_saveload import (_ingame_load, _ingame_save_milestone,
                                        _print_save_row, _save_listing)
 
 
-def cmd_play(a):
+def cmd_play(args):
     """The game, typed, for a person at a keyboard.
 
     Parses a typed line into the SAME command the JSON protocol takes
@@ -75,7 +75,7 @@ def cmd_play(a):
     regardless of what a player typed would make the player's choices not
     count. `run --trace` is still the way to watch the optimizer work.
     """
-    result = _play_init(a)
+    result = _play_init(args)
     if result == 1:
         return 1
     sim, nodes, session, app_cfg, fresh, kit = result
@@ -101,7 +101,7 @@ def cmd_play(a):
         _tokens = line.strip().split()
         _word0 = _tokens[0].lower() if _tokens else ""
         handled, session, should_exit, exit_value = _play_handle_session_command(
-            _word0, _tokens, sim, session, app_cfg, a)
+            _word0, _tokens, sim, session, app_cfg, args)
         if handled:
             if should_exit:
                 return exit_value
@@ -116,11 +116,11 @@ def cmd_play(a):
             break
         if cmd.get("cmd") == "quit":
             break
-        _play_report_end_if_new(sim, nodes, a)
-    return _play_finish(sim, nodes, a, session)
+        _play_report_end_if_new(sim, nodes, args)
+    return _play_finish(sim, nodes, args, session)
 
 
-def _play_init(a):
+def _play_init(args):
     """Everything cmd_play needs before its loop can start. See
     _play_build_sim and _play_resolve_session for the two halves of this:
     building the Sim, then working out which save it resumes (if any).
@@ -129,15 +129,15 @@ def _play_init(a):
     integer 1 if the sitting cannot start at all - cmd_play returns that
     straight through.
     """
-    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(a)
-    result = _play_resolve_session(a, sim, session)
+    sim, nodes, session, app_cfg, kit, horizon = _play_build_sim(args)
+    result = _play_resolve_session(args, sim, session)
     if result == 1:
         return 1
     session, fresh = result
     return sim, nodes, session, app_cfg, fresh, kit
 
 
-def _play_build_sim(a):
+def _play_build_sim(args):
     """Build the Sim this sitting will play: apply the application's
     display/welcome preferences, load the tree, and construct the Sim from
     --strategy/--seed/--kit/--mortal/--fog. Returns
@@ -156,28 +156,28 @@ def _play_build_sim(a):
     # collide.
     app_cfg = _apply_display_prefs()
     tree, prices, nodes, wages, goods = load()
-    goal = _goal_for_session(a, tree, nodes)
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
-    session = getattr(a, "session", None)
+    goal = _goal_for_session(args, tree, nodes)
+    label, order, bounties = load_strategy(args.strategy, nodes, goal)
+    session = getattr(args, "session", None)
     # HOW MANY YEARS THIS SITTING GETS. Ordinarily just the --horizon flag,
     # but a save the New Game wizard started or the in-game 'options' command
     # touched remembers its own horizon between sittings - see
     # _resolve_horizon and settings.py's module docstring for why that is not
     # simply part of the save file. A flag typed by hand always wins.
-    horizon = _resolve_horizon(a, session)
-    cfg = {"immortal": not getattr(a, "mortal", False),
+    horizon = _resolve_horizon(args, session)
+    cfg = {"immortal": not getattr(args, "mortal", False),
            "horizon_years": horizon}
-    kit = getattr(a, "kit", None)
+    kit = getattr(args, "kit", None)
     if kit:
         cfg["start_capital"] = STARTING_KITS[kit]["den"]
     sim = Sim(nodes, order,
-            DetRNG(a.seed) if getattr(a, "deterministic", False) else random.Random(a.seed),
+            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
             events=True, bounty_set=set(),
-            manual=True, civ=load_civ(_civ_for_session(a)), cfg=cfg)
+            manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
-    sim.fog = bool(getattr(a, "fog", False))
+    sim.fog = bool(getattr(args, "fog", False))
     sim.revealed = set()
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
@@ -186,7 +186,7 @@ def _play_build_sim(a):
     return sim, nodes, session, app_cfg, kit, horizon
 
 
-def _play_resolve_session(a, sim, session):
+def _play_resolve_session(args, sim, session):
     """Resolve which save this sitting is actually playing: reject a
     --session path that does not exist and names no --civ (a typo, not an
     invitation to start fresh), load an existing save into sim, and fork a
@@ -205,7 +205,7 @@ def _play_resolve_session(a, sim, session):
     # command risks destroying a real, long-running save to a simple typo
     # in the path. Starting a new game is what you do by naming a
     # civilisation, so require that to be explicit.
-    if session and not os.path.exists(session) and not getattr(a, "civ", None):
+    if session and not os.path.exists(session) and not getattr(args, "civ", None):
         print("there is no save at %r, and no --civ given, so I do not know "
               "what game you meant. To resume, check the path; to start a new "
               "game there, say which civilisation with --civ." % session)
@@ -225,8 +225,8 @@ def _play_resolve_session(a, sim, session):
     if not fresh:
         try:
             load_state(sim, session)
-        except Exception as e:
-            print("could not read the save file %r: %s" % (session, e))
+        except Exception as error:
+            print("could not read the save file %r: %s" % (session, error))
             return 1
         if settings.is_checkpoint(session):
             checkpoint_source = session
@@ -352,7 +352,7 @@ def _play_prompt(sim):
                  sim.reputation))
 
 
-def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, a):
+def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
     """The six commands cmd_play answers itself, before a line ever reaches
     parse_typed/_agent_dispatch: bare "options"/"settings", bare "saves",
     bare "save", bare "load", bare "menu" and bare "restart". Everything
@@ -390,7 +390,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, a):
         _ingame_save_milestone(sim, session)
         return True, session, False, None
     if _word0 == "load" and len(_tokens) == 1:
-        return True, _ingame_load(app_cfg, sim, session, a), False, None
+        return True, _ingame_load(app_cfg, sim, session, args), False, None
     if _word0 == "menu" and len(_tokens) == 1:
         # NOT A LOSS. This game has already been saved after every
         # command that reached this point (see "SAVE FIRST, THEN SPEAK"
@@ -399,7 +399,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, a):
         # Load screen (or a bare resume with --session) is how to come
         # straight back to it.
         print()
-        return True, session, True, cmd_menu(a)
+        return True, session, True, cmd_menu(args)
     if _word0 == "restart" and len(_tokens) == 1:
         _confirm = _ask("   Start a different game? This one stays "
                         "exactly as saved, and you can resume it later. "
@@ -431,11 +431,11 @@ def _play_run_one_command(sim, nodes, cmd, session):
     _t0 = time.time()
     try:
         resp = _agent_dispatch(sim, nodes, cmd)
-    except Exception as e:            # never lose a session to a bug
+    except Exception as error:            # never lose a session to a bug
         resp = {"ok": False,
                 "error": "internal error handling that command: %s: %s. "
                          "The game is intact; try something else."
-                         % (type(e).__name__, e)}
+                         % (type(error).__name__, error)}
     # SAVE FIRST, THEN SPEAK. The state change is already committed by the
     # time we get here, so writing it must not be contingent on the output
     # succeeding: a closed stdout pipe killing the process on the first
@@ -474,7 +474,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
     return False
 
 
-def _play_report_end_if_new(sim, nodes, a):
+def _play_report_end_if_new(sim, nodes, args):
     """Print the scoreboard the first time this sitting notices the game
     has ended (horizon reached, goal won, or founder dead). Fires at most
     once per sitting; a._said_end marks that it already has.
@@ -485,8 +485,8 @@ def _play_report_end_if_new(sim, nodes, a):
     # the game on once it has ended; what is left is looking at it, which
     # is the whole point of finishing.
     end = _agent_end_reason(sim)
-    if end and not getattr(a, "_said_end", False):
-        a._said_end = True
+    if end and not getattr(args, "_said_end", False):
+        args._said_end = True
         # THE SCOREBOARD, not one sentence. See protocol.final_report.
         print(render_final(final_report(sim, nodes)))
         print()
@@ -495,13 +495,13 @@ def _play_report_end_if_new(sim, nodes, a):
         print()
 
 
-def _play_finish(sim, nodes, a, session):
+def _play_finish(sim, nodes, args, session):
     """What cmd_play prints and returns once its loop has actually ended -
     'quit', or a piped reader hanging up. Shows the scoreboard if the game
     reached its end and this sitting has not already shown it, then the
     same closing lines cmd_play has always ended with.
     """
-    if _agent_end_reason(sim) and not getattr(a, "_said_end", False):
+    if _agent_end_reason(sim) and not getattr(args, "_said_end", False):
         print(render_final(final_report(sim, nodes)))
         print()
     print("Ended %d AD. %s" % (sim.year, _agent_end_reason(sim) or "stopped"))
@@ -688,8 +688,8 @@ def _ingame_options(sim, session):
                 if parent and not os.path.isdir(parent):
                     os.makedirs(parent, exist_ok=True)
                 save_state(sim, newp)
-            except OSError as e:
-                print("   -- could not write there: %s" % e)
+            except OSError as error:
+                print("   -- could not write there: %s" % error)
                 continue
             settings.move_session_meta(session, newp)
             old = session
@@ -724,7 +724,7 @@ CIVS_EMINENCE_DANGER_DEFAULT = declare(
         "alone can see this number is not invented for display.")
 
 
-def cmd_civs(a):
+def cmd_civs(args):
     """List the civilizations you can play, and what makes each one different.
 
     home_regions and base_reach are shown here because they actually drive
@@ -1358,8 +1358,8 @@ def _options_menu(cfg):
                 with open(probe, "w"):
                     pass
                 os.remove(probe)
-            except OSError as e:
-                print("   -- could not use that directory: %s" % e)
+            except OSError as error:
+                print("   -- could not use that directory: %s" % error)
                 continue
             cfg["save_dir"] = newdir
             settings.save_config(cfg)
@@ -1434,7 +1434,7 @@ def _options_menu(cfg):
             print("   -- 1 to 4, or b.")
 
 
-def cmd_menu(a):
+def cmd_menu(args):
     """The front door for a person, rather than for a script.
 
     Everything here can be done with command-line flags, and the flags are

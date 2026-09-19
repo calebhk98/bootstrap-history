@@ -51,14 +51,14 @@ class ProgressMixin:
             "calibrated pace still go to waste. Tuned ceiling, not "
             "measured against any real crew-size elasticity.")
 
-    def project_hour_pace(self, k):
+    def project_hour_pace(self, node_id):
         """How many of YOUR OWN hours active project `k` would draw this year
         if nothing else competed for the pool - step()'s own uncapped want,
         read here rather than re-derived, so anything reporting on it before
         the allocation runs (the 'work' warning below) cannot silently
         disagree with what step() actually offers.
         """
-        project_state, node = self.household.active[k], self.nodes[k]
+        project_state, node = self.household.active[node_id], self.nodes[node_id]
         # THE THROTTLE IS NOT APPLIED HERE, and must not be. step() spends
         # `min(remaining, this) * throttle`, and folding the throttle in
         # changes that to `min(remaining, this * throttle)`, which is a
@@ -114,7 +114,7 @@ class ProgressMixin:
             "its own floor, rather than an unbounded wait. Tuned "
             "multiple, not measured.")
 
-    def lab_max_span(self, k):
+    def lab_max_span(self, node_id):
         """The most years a project may spend trying to find enough of a
         hired trade before it is given up on.
 
@@ -130,10 +130,10 @@ class ProgressMixin:
         step() - so it earns proportionately more room, to a ceiling of four
         times its own floor rather than an unbounded one.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         return max(self.LAB_MAX_SPAN_FLOOR_YEARS, float(node["yrs"]) * self.LAB_MAX_SPAN_MULTIPLE)
 
-    def _effective_lab_left(self, k, st):
+    def _effective_lab_left(self, node_id, project_state):
         """What is left of each hired trade's total for active project `k`,
         read-only: never writes st["lab_left"], unlike lab_year_draw (the
         only place that is allowed to initialise it for real, because doing
@@ -143,14 +143,14 @@ class ProgressMixin:
         Hand-built simulations and diagnostic callers may omit the field; in
         that case estimate the remaining trade work from founder-hour progress.
         """
-        lab_left = st.get("lab_left")
+        lab_left = project_state.get("lab_left")
         if lab_left is not None:
             return lab_left
-        node = self.nodes[k]
-        left_frac = min(1.0, st.get("ph_left", node["ph"]) / max(1.0, node["ph"]))
+        node = self.nodes[node_id]
+        left_frac = min(1.0, project_state.get("ph_left", node["ph"]) / max(1.0, node["ph"]))
         return {trade: want * left_frac for trade, want in node["lab"].items()}
 
-    def trade_draw_plan(self, k, lab_left=None):
+    def trade_draw_plan(self, node_id, lab_left=None):
         """What project `k` would like to draw from each hired trade this
         year, if the trade could supply it without limit - the DEMAND side
         of lab_year_draw's per-trade loop, read-only and with no knowledge of
@@ -170,7 +170,7 @@ class ProgressMixin:
         the same way, so a forecast and the real allocator can disagree
         about what a project GETS, never about what it WANTS.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         out = {}
         for trade_id, want in node["lab"].items():
             left = want if lab_left is None else lab_left.get(trade_id, 0.0)
@@ -214,7 +214,7 @@ class ProgressMixin:
                       "projects_drawing_on_it": sorted(by_trade[trade_id])}
         return out
 
-    def lab_year_draw(self, k, st, frac, hired_left):
+    def lab_year_draw(self, node_id, project_state, frac, hired_left):
         """This year's hired-labour draw for active project `k`.
 
         Returns (hh, worst, frac, abandon): `hh` is the total hired hours
@@ -235,13 +235,13 @@ class ProgressMixin:
         are done here, which is the real allocation and happens exactly once
         a year, inside step().
         """
-        node = self.nodes[k]
-        if st.get("lab_left") is None:
-            st["lab_left"] = self._effective_lab_left(k, st)
-        lab_left = st["lab_left"]
+        node = self.nodes[node_id]
+        if project_state.get("lab_left") is None:
+            project_state["lab_left"] = self._effective_lab_left(node_id, project_state)
+        lab_left = project_state["lab_left"]
         hired_hours = 0.0
         worst = 1.0
-        plan = self.trade_draw_plan(k, lab_left)
+        plan = self.trade_draw_plan(node_id, lab_left)
         for trade_id, plan_entry in plan.items():
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
@@ -265,25 +265,25 @@ class ProgressMixin:
                 worst = min(worst, drawn / target)
         if worst < 1.0:
             frac *= worst
-            st["short_of_trade"] = sorted(
+            project_state["short_of_trade"] = sorted(
                 trade_id for trade_id, left in lab_left.items()
                 if left > 0 and (self.hours_you_can_call_on(trade_id)
                                   - self.household.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
         else:
-            st.pop("short_of_trade", None)
+            project_state.pop("short_of_trade", None)
         # THE DEADLINE: without one, a trade that never clears its balance
         # would let a project creep forward forever at whatever sliver of
         # progress could be found - technically still moving, never
         # actually finishing, and never SAID to have failed. People die
         # and what they knew goes with them; nothing here pretends
         # otherwise.
-        if st["yrs"] >= self.lab_max_span(k) and any(value > 0.5 for value in lab_left.values()):
+        if project_state["yrs"] >= self.lab_max_span(node_id) and any(value > 0.5 for value in lab_left.values()):
             unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
             return hired_hours, worst, frac, (
                 "after %d years there was still not enough %s here to finish "
                 "it. What was spent is lost; you still know what you learned "
-                "along the way" % (int(self.lab_max_span(k)), " or ".join(unmet[:2])))
+                "along the way" % (int(self.lab_max_span(node_id)), " or ".join(unmet[:2])))
         return hired_hours, worst, frac, None
 
     # ---- A FAILED ATTEMPT TEACHES YOU SOMETHING -----------------------------
@@ -342,8 +342,8 @@ class ProgressMixin:
             "the most learning and every one after buys less. Tuned decay "
             "rate, not fitted to any real learning-curve data.")
 
-    def _retry_risk_multiplier(self, k):
-        attempt_count = self.household.failed_attempts.get(k, 0)
+    def _retry_risk_multiplier(self, node_id):
+        attempt_count = self.household.failed_attempts.get(node_id, 0)
         if attempt_count <= 0:
             return 1.0
         return (self.RETRY_RISK_FLOOR
@@ -380,15 +380,15 @@ class ProgressMixin:
             "decay rate, not fitted to any real social-diffusion recovery "
             "curve.")
 
-    def _retry_calendar_retain(self, k, m=None):
+    def _retry_calendar_retain(self, node_id, attempt_index=None):
         # See _retry_risk_multiplier's comment on `m` - same reason, same
         # contract: the real failure count still drives every actual retry;
         # `m` only lets a projection ask about a hypothetical one.
-        if m is None:
-            m = self.household.failed_attempts.get(k, 0)
-        if m <= 0:
+        if attempt_index is None:
+            attempt_index = self.household.failed_attempts.get(node_id, 0)
+        if attempt_index <= 0:
             return 0.0
-        return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** m)
+        return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** attempt_index)
 
     # CONTROL RELIEF: a player who holds a working process controller faces
     # a lower chance of failing any node whose OWN stated failure mode is
@@ -441,14 +441,14 @@ class ProgressMixin:
             "figure for early control systems.")
     CONTROL_RELIEF_CAPABILITY = "ctl_pneumatic_process_controller"
 
-    def _control_relief_multiplier(self, k):
-        if self.nodes[k].get("failure_kind") != "process_control":
+    def _control_relief_multiplier(self, node_id):
+        if self.nodes[node_id].get("failure_kind") != "process_control":
             return 1.0
         if self.CONTROL_RELIEF_CAPABILITY not in self.household.done:
             return 1.0
         return self.CONTROL_RELIEF_FACTOR
 
-    def effective_risk(self, k):
+    def effective_risk(self, node_id):
         """This node's actual chance of failing on its NEXT attempt, after
         whatever retry-learning its past failures have already bought (see
         _retry_risk_multiplier just above) AND whatever control-theory relief
@@ -459,8 +459,8 @@ class ProgressMixin:
         the controller is done, should read THIS, not the tree's bare
         n["risk"] - that number is no longer what the dice use.
         """
-        return (self.nodes[k]["risk"] * self._retry_risk_multiplier(k)
-                * self._control_relief_multiplier(k))
+        return (self.nodes[node_id]["risk"] * self._retry_risk_multiplier(node_id)
+                * self._control_relief_multiplier(node_id))
 
     # ---- WHAT A RISKY NODE ACTUALLY COSTS IN CALENDAR TIME -----------------
     # `effective_risk` and `calendar_floor` answer two separate questions -
@@ -501,7 +501,7 @@ class ProgressMixin:
             "REPUTATION_EASE_SCALE (120.0) for a related but distinct "
             "effect; not fitted to any measured diffusion-speed curve.")
 
-    def calendar_floor(self, k):
+    def calendar_floor(self, node_id):
         """Calendar years THIS attempt needs to elapse before a completion
         roll can fire at all - the SAME formula step() uses to gate
         `_complete` (see core.py, where a project's own `st["yrs"]` is
@@ -510,14 +510,14 @@ class ProgressMixin:
         already does a hundred complicated things does not start the social
         diffusion of the hundred-and-first from zero credibility.
         """
-        node = self.nodes[k]
+        node = self.nodes[node_id]
         floor = node["yrs"]
         if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
             floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
                         node["yrs"] / (1.0 + self.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
         return floor
 
-    def expected_calendar_years(self, k, _max_extra_attempts=500):
+    def expected_calendar_years(self, node_id, _max_extra_attempts=500):
         """Expected calendar years to SUCCEED at k, counting every retry the
         dice force - not the bare calendar_floor, and not a plain geometric
         series on the raw risk field either. A failure does not roll the
@@ -562,10 +562,10 @@ class ProgressMixin:
            learning (failed_attempts is never reset) - a real, separate
            wrinkle, and the player's own choice, not the dice's.
         """
-        floor = self.calendar_floor(k)
-        initial_failed_attempts = self.household.failed_attempts.get(k, 0)
-        _had_key = k in self.household.failed_attempts
-        _active = self.household.active.get(k) if k in self.household.active else None
+        floor = self.calendar_floor(node_id)
+        initial_failed_attempts = self.household.failed_attempts.get(node_id, 0)
+        _had_key = node_id in self.household.failed_attempts
+        _active = self.household.active.get(node_id) if node_id in self.household.active else None
         total = 0.0
         survive = 1.0
         attempt_index = initial_failed_attempts
@@ -583,20 +583,20 @@ class ProgressMixin:
                     # so the next attempt pays the full floor either way.
                     years_this_attempt = floor
                 else:
-                    years_this_attempt = floor * (1.0 - self._retry_calendar_retain(k, attempt_index))
+                    years_this_attempt = floor * (1.0 - self._retry_calendar_retain(node_id, attempt_index))
                 total += survive * years_this_attempt
                 # STAND IN FOR "i FAILURES SO FAR", ask effective_risk, then
                 # move on - the real count is restored in `finally` below,
                 # not here, so an exception mid-loop can never leave it wrong.
-                self.household.failed_attempts[k] = attempt_index
-                survive *= self.effective_risk(k)
+                self.household.failed_attempts[node_id] = attempt_index
+                survive *= self.effective_risk(node_id)
                 attempt_index += 1
                 if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
             if _had_key:
-                self.household.failed_attempts[k] = initial_failed_attempts
+                self.household.failed_attempts[node_id] = initial_failed_attempts
             else:
-                self.household.failed_attempts.pop(k, None)
+                self.household.failed_attempts.pop(node_id, None)
         return total
 

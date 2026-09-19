@@ -92,7 +92,7 @@ class AdoptionMixin:
             "reinforced somewhat past its natural 1.0 ceiling by repeated "
             "tech effects. Tuned, not derived.")
 
-    def apply_tech_effects(self, k):
+    def apply_tech_effects(self, node_id):
         """Building something changes what this society is like.
 
         This is what applies _TECH_EFFECTS.json, and it is called from
@@ -108,7 +108,7 @@ class AdoptionMixin:
         that it is fixed will be read as current, because that is the only
         sensible way to read it.
         """
-        eff = TECH_EFFECTS.get(k)
+        eff = TECH_EFFECTS.get(node_id)
         if not eff:
             return
         changed = []
@@ -158,13 +158,13 @@ class AdoptionMixin:
                 # `population` field (crop_rotation, fud_three_field_
                 # rotation, fud_seed_drill, mat_newworld_crops, ag2_canning)
                 # are unaffected and still queue exactly as before.
-                if k not in self.DISEASE_BURDEN_TECH_IDS:
+                if node_id not in self.DISEASE_BURDEN_TECH_IDS:
                     self._pop_tech_pending.append(
                         (delta / self.POP_TECH_RAMP_YEARS, self.POP_TECH_RAMP_YEARS))
                 changed.append(field)
         if changed:
             self.household.log.append((self.year, "%s changes the society: %s"
-                             % (self.nodes[k]["name"], ", ".join(sorted(changed)))))
+                             % (self.nodes[node_id]["name"], ", ".join(sorted(changed)))))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
     # "Can we make the whole country's literacy rates improve? What if we
@@ -188,7 +188,7 @@ class AdoptionMixin:
     AGRI_MECHANISATION_CATS = frozenset(
         {"agriculture", "field_machinery", "crops", "soil"})
 
-    def _is_agri_mechanisation(self, k):
+    def _is_agri_mechanisation(self, node_id):
         """Is `k` one of the technologies that lets a farm feed the same
         number of mouths with fewer hands - the thing that frees a child
         for a classroom instead of the harvest?
@@ -213,10 +213,10 @@ class AdoptionMixin:
         rather than with the rest of agriculture, and a tractor is exactly
         what the user asked for by name.
         """
-        node = self.nodes.get(k)
+        node = self.nodes.get(node_id)
         if not node:
             return False
-        if k == "tl_tractor":
+        if node_id == "tl_tractor":
             return True
         if "labour_saving" not in (node.get("traits") or ()):
             return False
@@ -430,7 +430,7 @@ class AdoptionMixin:
             "visible boost without letting a country of diffused printing "
             "teach anyone by itself (still requires flow>0); not measured.")
 
-    def _advance_literacy(self, yr):
+    def _advance_literacy(self, year):
         """Once a year: let running schools and academies close part of the
         gap between this society's literacy and what it could now reach.
 
@@ -480,8 +480,8 @@ class AdoptionMixin:
         # on a rounded-value change, so it fires on the same schedule whether
         # a run is barely investing or investing heavily.
         last = self._literacy_said
-        if yr - last >= 25:
-            self._literacy_said = yr
+        if year - last >= 25:
+            self._literacy_said = year
             bits = []
             if "literacy_general" in changed:
                 bits.append("general reading is now %d%% of the population"
@@ -489,7 +489,7 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            self.household.log.append((yr, "a generation of schooling shows in the "
+            self.household.log.append((year, "a generation of schooling shows in the "
                              "census: %s" % "; ".join(bits)))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
@@ -557,7 +557,7 @@ class AdoptionMixin:
             "the whole span is century-scale. Tuned to that target pace, "
             "not measured.")
 
-    def _advance_trade_absorption(self, yr):
+    def _advance_trade_absorption(self, year):
         for trade in sorted(TRADES_ABSENT):
             if trade not in self.household.trades_created:
                 continue          # never taught here; nothing to naturalise
@@ -570,7 +570,7 @@ class AdoptionMixin:
                 # at worst one step later than the true year, which cannot
                 # matter against a minimum absorption time measured in
                 # decades.
-                self.household.trade_introduced_year[trade] = yr
+                self.household.trade_introduced_year[trade] = year
                 continue
             if trade in self.household.trades_endemic:
                 self._grow_endemic_trade(trade)
@@ -578,20 +578,20 @@ class AdoptionMixin:
             flow = self._schooling_flow()
             if flow <= 0.0:
                 continue
-            if yr - intro >= self._trade_absorption_years(flow):
+            if year - intro >= self._trade_absorption_years(flow):
                 self.household.trades_endemic.add(trade)
                 # IN-WORLD, NOT A CHANGE-LOG. This narrates a census fact -
                 # the trade is no longer one household's secret - the same
                 # way every other log line in this file narrates an event
                 # the founder would actually observe, never a note about the
                 # code that produced it.
-                self.household.log.append((yr, "%s is no longer only your trade: "
+                self.household.log.append((year, "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
                                  "%ss now, the way it always had smiths"
                                  % (trade, trade)))
 
-    def _grow_endemic_trade(self, t):
+    def _grow_endemic_trade(self, trade):
         """Let a naturalised trade's own headcount drift toward the same
         ceiling literate_capacity() already enforces on a founder hiring or
         teaching it by hand - so this never hands out a person the rest of
@@ -604,26 +604,26 @@ class AdoptionMixin:
         protocol.py), so this is consistent with a number the player already
         sees fluctuate this way from hiring, training and attrition alike.
         """
-        ceiling = self.literate_capacity(t)
+        ceiling = self.literate_capacity(trade)
         if not (ceiling < float("inf")):
             return
-        have = self.household.employees.get(t, 0.0)
+        have = self.household.employees.get(trade, 0.0)
         room = ceiling - have
         if room <= 1e-6:
             return
-        self.household.employees[t] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
+        self.household.employees[trade] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
         self._resync_pools()
 
-    def advance_society(self, yr):
+    def advance_society(self, year):
         """Once a year: everything in this file that moves on the society's
         own slow clock rather than on a project's. Called from step() right
         alongside _demographic_recovery(), which is the same kind of thing -
         a population figure that ramps in over generations - for population
         instead of literacy and trades.
         """
-        self._advance_literacy(yr)
-        self._advance_trade_absorption(yr)
+        self._advance_literacy(year)
+        self._advance_trade_absorption(year)
         # THE COUNTRY, NOT ONLY THE FOUNDER'S OWN CENSUS ENTRY. See
         # "THE COUNTRY CHANGES TOO" above for why this is additional to,
         # never a replacement for, apply_tech_effects' own population queue.
-        self._advance_food_diffusion_population(yr)
+        self._advance_food_diffusion_population(year)

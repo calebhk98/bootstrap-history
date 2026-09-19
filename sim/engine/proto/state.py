@@ -52,11 +52,11 @@ def _agent_end_reason(sim):
     return None
 
 
-def _risk_without_the_essays(kr):
+def _risk_without_the_essays(knowledge_risk):
     """knowledge_risk with the hazard prose stripped, for embedding in state."""
-    if not isinstance(kr, dict):
-        return kr
-    out = dict(kr)
+    if not isinstance(knowledge_risk, dict):
+        return knowledge_risk
+    out = dict(knowledge_risk)
     ahead = out.get("known_hazards_ahead")
     if isinstance(ahead, list):
         out["known_hazards_ahead"] = [
@@ -92,9 +92,9 @@ def _staff_fraction_note(sim):
             "wage and output of one artisan plus a third of another's.")
 
 
-def _waiting_on(sim, nodes, k, st, bill):
+def _waiting_on(sim, nodes, node_id, progress, bill):
     """What is ACTUALLY holding this project up, checked against today."""
-    node = nodes[k]
+    node = nodes[node_id]
     frac = min(1.0, 1.0 / max(1.0, node["yrs"]))
     # WHAT IS LEFT OF EACH TRADE'S TOTAL, not the flat annual figure: see
     # ProjectsMixin.lab_year_draw (projects.py), hired-labour hours are a
@@ -102,7 +102,7 @@ def _waiting_on(sim, nodes, k, st, bill):
     # own balance the true ask is smaller than its nominal pace, and saying
     # "short" against the bigger, already-paid-down figure would name a
     # shortfall that does not actually exist.
-    lab_left = st.get("lab_left") or node["lab"]
+    lab_left = progress.get("lab_left") or node["lab"]
     # TWO DIFFERENT FACTS, NOT ONE: "this society can field 3.5 scribes" and
     # "the scribes here can supply 8,750 but your other work has them
     # booked" need different remedies - a shortage no amount of portfolio
@@ -156,7 +156,7 @@ def _waiting_on(sim, nodes, k, st, bill):
         # Teaching or hiring more does nothing here - 'portfolio' (the
         # aggregate demand-vs-supply view) or stopping something else does.
         return "trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
-    if st["ph_left"] <= 0 and bill > 0.5:
+    if progress["ph_left"] <= 0 and bill > 0.5:
         # MONEY YOU HAVE IS NOT MONEY YOU ARE SHORT OF: step() pays at most
         # one year's instalment - the cost divided by the node's calendar
         # floor - so a ten-year work absorbs a tenth of its bill a year
@@ -164,7 +164,7 @@ def _waiting_on(sim, nodes, k, st, bill):
         # holding far more than what is owed is not a diagnosis, it is a
         # contradiction; what it is actually waiting on is the calendar
         # pace, and that has to be said.
-        per_year = sim.project_cost(k) * frac
+        per_year = sim.project_cost(node_id) * frac
         if per_year > 0.5 and sim.spending_power("buy") >= per_year:
             return ("the pace it can absorb money: at most %s a year goes into "
                     "this (%s still owed, about %.0f more year%s at that rate). "
@@ -181,7 +181,7 @@ def _waiting_on(sim, nodes, k, st, bill):
                 "arrives this year: %s still owed and the next instalment of "
                 "%s is more than you can raise at this moment"
                 % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
-    if st["ph_left"] <= 0:
+    if progress["ph_left"] <= 0:
         return "the calendar"
     # MATERIALS. A shortage scales only projects consuming its supply pool -
     # see core.py step() 5 - so a project with
@@ -190,7 +190,7 @@ def _waiting_on(sim, nodes, k, st, bill):
     # reason that is neither staffing, money nor the calendar. Only said when
     # it is genuinely biting (2% is noise); resource_throttle() itself is the
     # one place that number is computed, read here rather than re-derived.
-    _thr = sim.project_resource_throttle(k)
+    _thr = sim.project_resource_throttle(node_id)
     if _thr < 0.98 and sim.binding:
         return ("materials: this project consumes %s, whose shortage has it "
                 "running at %d%% of the pace its hours alone "
@@ -203,9 +203,9 @@ def _waiting_on(sim, nodes, k, st, bill):
     # step()'s own bookkeeping (core.py, "pool_rank_this_year" and
     # neighbours) - never recomputed - so this sentence and what actually
     # happened cannot disagree.
-    _rank = st.get("pool_rank_this_year")
-    _count = st.get("pool_active_count_this_year")
-    _total = st.get("pool_total_this_year")
+    _rank = progress.get("pool_rank_this_year")
+    _count = progress.get("pool_active_count_this_year")
+    _total = progress.get("pool_total_this_year")
     if _rank and _count and _count > 1:
         return ("your hours: priority #%d of %d active projects sharing "
                 "this year's %s directed hours; 'portfolio' shows what "

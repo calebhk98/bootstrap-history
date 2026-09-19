@@ -98,13 +98,13 @@ class CompletionMixin:
         why="As GRANT_STAFF_FREEDMAN_ARTISANS, for academy_network's "
             "one-time artisan grant.")
 
-    def _complete(self, k):
-        node = self.nodes[k]
-        _risk_this_attempt = self.effective_risk(k)
+    def _complete(self, node_id):
+        node = self.nodes[node_id]
+        _risk_this_attempt = self.effective_risk(node_id)
         if self.rng.random() < _risk_this_attempt:
-            _yrs_before = self.household.active[k]["yrs"]
-            self.household.failed_attempts[k] += 1
-            self.household.active[k]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
+            _yrs_before = self.household.active[node_id]["yrs"]
+            self.household.failed_attempts[node_id] += 1
+            self.household.active[node_id]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
             # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
             # reset the multi-year diffusion clock to zero, restarting the
             # whole process from nothing. Even ONE failed attempt already
@@ -117,8 +117,8 @@ class CompletionMixin:
             # returns, as failed_attempts[k] grows, and is capped well
             # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
             # programme is only ever readier, never instantly ready.
-            _retain = self._retry_calendar_retain(k)
-            self.household.active[k]["yrs"] = _yrs_before * _retain
+            _retain = self._retry_calendar_retain(node_id)
+            self.household.active[node_id]["yrs"] = _yrs_before * _retain
             _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
             self.household.capital -= _lost
             # SAY SO: a failed attempt must announce itself in the log - a
@@ -136,8 +136,8 @@ class CompletionMixin:
             # (chance of failure quoted for next time) and some of the
             # groundwork survives (years already banked toward the next
             # attempt's own floor).
-            _next_risk = self.effective_risk(k)
-            _banked = self.household.active[k]["yrs"]
+            _next_risk = self.effective_risk(node_id)
+            _banked = self.household.active[node_id]["yrs"]
             self.household.log.append((self.year,
                              "FAILED at %s: it did not work. %d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
@@ -149,27 +149,27 @@ class CompletionMixin:
                              % (node["name"], round(self.FAILURE_RESET_SHARE * 100),
                                 "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
                                 "{:,.0f}".format(max(0.0, _lost)),
-                                self.household.failed_attempts[k] + 1,
+                                self.household.failed_attempts[node_id] + 1,
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
                                 _banked, _yrs_before)))
             return
-        del self.household.active[k]
-        self.household.bountied.discard(k)
+        del self.household.active[node_id]
+        self.household.bountied.discard(node_id)
         # A FINISHED PROJECT CANNOT BE GIVEN MORE HOURS. Unlike stopping or
         # halting one - both of which carry what was already paid forward
         # if the player starts the same id again, see start_project's own
         # `_paid_now` - there is no "again" once it is done, so a standing
         # order aimed at this id would otherwise sit in `allocate`'s list
         # for ever, pointed at nothing.
-        self.household.hour_allocations.pop(k, None)
-        self.household.done.add(k)
+        self.household.hour_allocations.pop(node_id, None)
+        self.household.done.add(node_id)
         self._done_changed()
-        self.household.done_year[k] = self.year
+        self.household.done_year[node_id] = self.year
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
-        self.apply_tech_effects(k)
-        self.reveal_from(k)
+        self.apply_tech_effects(node_id)
+        self.reveal_from(node_id)
         # Visible, useful, State-approved work builds standing. Obscure laboratory
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
@@ -195,22 +195,22 @@ class CompletionMixin:
         # would double-count every one of these three institutions against
         # a tree calibrated to open up much more slowly.
         if not self.policy.get("auto_hire", not self.manual):
-            if k == "freedman_staff":     self._grant_staff(artisans=self.GRANT_STAFF_FREEDMAN_ARTISANS)
-            if k == "school_founded":     self._grant_staff(scholars=self.GRANT_STAFF_SCHOOL_SCHOLARS)
-            if k == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
+            if node_id == "freedman_staff":     self._grant_staff(artisans=self.GRANT_STAFF_FREEDMAN_ARTISANS)
+            if node_id == "school_founded":     self._grant_staff(scholars=self.GRANT_STAFF_SCHOOL_SCHOLARS)
+            if node_id == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
                                                               artisans=self.GRANT_STAFF_ACADEMY_ARTISANS)
-        if k == "mining_concession":  pass
+        if node_id == "mining_concession":  pass
         # SAY THAT IT IS NOT YET RUNNING: completing something that could be
         # a going concern does not start it earning, and a player who is
         # not told will reasonably conclude the money is broken rather
         # than that they have not opened the doors.
-        if self.is_venture(k) and not self.policy.get("auto_open", not self.manual):
+        if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             self.household.log.append((self.year, "completed: %s. You know how; nothing "
                                         "is earning yet - 'open %s' to run it"
-                                        % (node["name"], k)))
+                                        % (node["name"], node_id)))
         else:
             self.household.log.append((self.year, "completed: " + node["name"]))
-        if k == self.goal and self.household.goal_year is None:
+        if node_id == self.goal and self.household.goal_year is None:
             self.household.goal_year = self.year
 
     # -- shocks -------------------------------------------------------------

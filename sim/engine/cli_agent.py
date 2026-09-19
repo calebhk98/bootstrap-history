@@ -34,7 +34,7 @@ from .cli import (DetRNG, _civ_for_session, _goal_for_session,
 # ----------------------------------------------------------------------------
 
 
-def cmd_agent(a):
+def cmd_agent(args):
     """Machine-playable driver: JSON in, JSON out. See the module docstring for
     the protocol. Runs in Sim.manual mode ALWAYS, regardless of any other flag:
     the entire point of this command is that a script chooses the research
@@ -43,32 +43,32 @@ def cmd_agent(a):
     human at a keyboard; `agent` is that guarantee for a script or an LLM.
     """
     tree, prices, nodes, wages, goods = load()
-    goal = _goal_for_session(a, tree, nodes)
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
+    goal = _goal_for_session(args, tree, nodes)
+    label, order, bounties = load_strategy(args.strategy, nodes, goal)
     # `run`/`compare`/`play` all take --mortal, so `agent` must accept it
     # too, or the founder is immortal in every scripted or JSON-driven game
     # no matter what was asked for.
-    cfg = {"start_capital": STARTING_KITS[a.kit]["den"], "horizon_years": a.horizon,
-           "immortal": not getattr(a, "mortal", False)}
+    cfg = {"start_capital": STARTING_KITS[args.kit]["den"], "horizon_years": args.horizon,
+           "immortal": not getattr(args, "mortal", False)}
     sim = Sim(nodes, order,
-            DetRNG(a.seed) if getattr(a, "deterministic", False) else random.Random(a.seed),
-            events=not a.no_events,
-            cfg=cfg, civ=load_civ(_civ_for_session(a)), bounty_set=set(), manual=True)
+            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
+            events=not args.no_events,
+            cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
     sim.goal = goal
     sim.done_year = {}
-    sim.end_year = sim.cfg["start_year"] + a.horizon
-    sim.fog = bool(getattr(a, "fog", False))
+    sim.end_year = sim.cfg["start_year"] + args.horizon
+    sim.fog = bool(getattr(args, "fog", False))
     sim.revealed = set()
-    pretty = bool(getattr(a, "pretty", False))
+    pretty = bool(getattr(args, "pretty", False))
 
-    session = getattr(a, "session", None)
+    session = getattr(args, "session", None)
     checkpoint_source = None
     if session and os.path.exists(session) and not _is_claimed_slot(session):
         try:
             load_state(sim, session)
-        except Exception as e:
+        except Exception as error:
             sys.stdout.write(json.dumps(
-                {"ok": False, "error": "could not read the save file %r: %s" % (session, e)}
+                {"ok": False, "error": "could not read the save file %r: %s" % (session, error)}
             ) + "\n")
             return 1
         # A FROZEN CHECKPOINT DOES NOT BECOME THE AUTOSAVE TARGET HERE EITHER
@@ -88,7 +88,7 @@ def cmd_agent(a):
                  % (checkpoint_source, session)}) + "\n")
             sys.stderr.flush()
 
-    def emit(obj, op=None):
+    def emit(obj, command_name=None):
         # THE JSON LINE IS UNCHANGED, ALWAYS, REGARDLESS OF --pretty. It is
         # written first, so a script reading only stdout sees byte-identical
         # output whether or not a human also asked for a readable view. The
@@ -103,7 +103,7 @@ def cmd_agent(a):
         sys.stdout.write(json.dumps(obj) + "\n")
         sys.stdout.flush()
         if pretty:
-            sys.stderr.write(render_pretty(op, obj) + "\n\n")
+            sys.stderr.write(render_pretty(command_name, obj) + "\n\n")
             sys.stderr.flush()
 
     # A player who has been told nothing but the path to this file must still be
@@ -120,11 +120,11 @@ def cmd_agent(a):
             indent=1) + "\n")
         sys.stderr.flush()
 
-    if a.script:
+    if args.script:
         try:
-            cmds = json.load(open(a.script))
-        except (OSError, ValueError) as e:
-            emit({"ok": False, "error": "could not read script %r: %s" % (a.script, e)})
+            cmds = json.load(open(args.script))
+        except (OSError, ValueError) as error:
+            emit({"ok": False, "error": "could not read script %r: %s" % (args.script, error)})
             return 1
         if not isinstance(cmds, list):
             emit({"ok": False, "error": "--script file must contain a JSON list of command objects"})
@@ -156,9 +156,9 @@ def cmd_agent(a):
             continue
         try:
             cmd = json.loads(line)
-        except ValueError as e:
+        except ValueError as error:
             try:
-                emit({"ok": False, "error": "invalid JSON: %s" % e})
+                emit({"ok": False, "error": "invalid JSON: %s" % error})
             except BrokenPipeError:
                 break
             continue
@@ -168,11 +168,11 @@ def cmd_agent(a):
         # the dispatcher's guard does not cover it.
         try:
             resp = _agent_dispatch(sim, nodes, cmd)
-        except Exception as e:                      # never lose a session to a bug
+        except Exception as error:                      # never lose a session to a bug
             resp = {"ok": False,
                     "error": "internal error handling that command: %s: %s. "
                              "The game is intact; try something else."
-                             % (type(e).__name__, e)}
+                             % (type(error).__name__, error)}
         # SAVE FIRST, THEN SPEAK - the same fix `play` already has (see its
         # own "SAVE FIRST, THEN SPEAK" comment). By this line
         # `_agent_dispatch` has already mutated `s` in memory - a `step`
