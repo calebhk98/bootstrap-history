@@ -101,6 +101,18 @@ class Household:
     not on `Sim`. The grouping and the comments are carried over unchanged;
     only `self.` now means "this household" rather than "this whole game".
 
+    THE PARAGRAPH BELOW DEFENDS THE CURRENT ENCODING; Complaints/57 ARGUES
+    AGAINST IT. Read both. The complaint accepts that "this has never
+    happened yet" is real information worth keeping and objects to the
+    channel it travels through, which is whether an attribute exists at all:
+    invisible at the definition site, indistinguishable from a field somebody
+    forgot, reconstructed through `getattr(obj, name, default)` at every read
+    site, and enforced by the comment you are reading plus one tool nobody
+    runs by accident. It also notes that the usual reason to keep an
+    absence-means-something encoding, that old saves are already written that
+    way, is explicitly not a reason in this project (CLAUDE.md SS3.5). Left
+    as is for now by decision, not by oversight.
+
     A NOTE ON WHAT IS *ABSENT* HERE, NOT JUST WHAT IS SET: several fields
     below are deliberately never assigned in `__init__` at all, and are
     created lazily, the first time some method does

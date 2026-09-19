@@ -1424,6 +1424,24 @@ if __name__ == "__main__":
     import sys
     sys.path.insert(0, _REPOSITORY_ROOT)
     from sim.world import agriculture
+    # INSIDE THE GUARD, FOR THE SAME REASON agriculture IS. The demo below
+    # needs wheat's reference labour intensity twice, and used to write the
+    # figure out as a bare 150.0 both times - a duplication that
+    # shared_constants.py's own declaration recorded as an open finding,
+    # because the change that gathered the other three copies of this number
+    # did not own this file. The declaration is the one place the figure
+    # lives now.
+    #
+    # It is imported here rather than at module level because the STANDALONE
+    # section's rule is a blanket one: nothing above may import a sibling
+    # sim/world/ module, and sim/tests/test_labour_market.py enforces exactly
+    # that with no carve-out for shared_constants. land.py and agriculture.py
+    # DO import it at module level, and could argue for one (it holds
+    # physical facts and imports nothing but sim.constants.declare, so it
+    # cannot drag a model in behind it). That argument was not needed here:
+    # both uses are in this demo block, so the narrower placement costs
+    # nothing and leaves the rule intact.
+    from sim.world.shared_constants import REFERENCE_LABOUR_HOURS_PER_HECTARE
 
     production = production_data()
 
@@ -1474,7 +1492,10 @@ if __name__ == "__main__":
     # had, which this demo shows below is already true of a comparatively
     # mild 10% bad year.
     reference_land = agriculture.Land(10_000.0)
-    reference_hours = 150.0 * 10_000.0    # wheat_kg's own 150 h/ha, at the reference area
+    # wheat_kg's own reference labour intensity, at the reference area. This
+    # was the bare literal 150.0, one of the two occurrences shared_constants.
+    # py's own declaration names as an outstanding finding.
+    reference_hours = REFERENCE_LABOUR_HOURS_PER_HECTARE * 10_000.0
     harvest_normal = agriculture.gross_harvest_kg(reference_land, reference_hours)
     weather_multiplier = 0.9
     harvest_bad_year = agriculture.gross_harvest_kg(
@@ -1632,7 +1653,7 @@ if __name__ == "__main__":
     # leaves HAVE (the workforce dict) untouched until asked - the exact
     # gap sim.world.agriculture.py's own fixed population share papers over.
     grown_land = agriculture.Land(reference_land.hectares * 1.5)
-    grown_hours = 150.0 * grown_land.hectares
+    grown_hours = REFERENCE_LABOUR_HOURS_PER_HECTARE * grown_land.hectares
     harvest_on_grown_land = agriculture.gross_harvest_kg(grown_land, grown_hours)
     # A fair NEED comparison needs the SAME wage/output convention this
     # module already uses elsewhere: convert the bigger harvest into a

@@ -34,11 +34,16 @@ THREE LAYERS, EACH CATCHING A DIFFERENT SHAPE OF THE SAME MISTAKE.
      ELASTICITY / LABOUR_OUTPUT_ELASTICITY split before this task existed,
      had someone written it down at the time.
   3. UndeclaredLiteralDuplicateTests - the case that does not even show up
-     in the declare() registry: sim/world/labour_market.py's own __main__
-     demo block uses the reference labour-hours-per-hectare figure twice as
-     a bare `150.0` literal rather than a declared name. Not something
-     declare()'s own same-name/different-value check can ever see, since
-     an undeclared literal carries no name to collide on.
+     in the declare() registry, because an undeclared literal carries no
+     name to collide on. sim/world/labour_market.py's own __main__ demo
+     block wrote the reference labour-hours-per-hectare figure out twice as
+     a bare `150.0` rather than reading the declared name. It now imports
+     the declaration, so these tests have been INVERTED: they used to keep
+     the two known copies honest, and now assert that no copy exists. The
+     recurrence half is the one that earns its place - no float anywhere in
+     that file may equal the shared constant's value - because it catches a
+     fifth copy under any name, not only at the two sites somebody thought
+     to list. See that class's own docstring for why it changed.
 
 WHAT THIS DOES NOT CATCH, STATED PLAINLY. A BRAND NEW duplicate - a
 constant some future module declares under a name not yet listed in
@@ -53,6 +58,7 @@ this file's equivalence groups exist for, is the hard half: the SAME
 quantity under a DIFFERENT name, which is exactly what land.py and
 agriculture.py had.
 """
+import ast
 import os
 import re
 import subprocess
@@ -250,54 +256,106 @@ class CrossModuleQuantityEquivalenceTests(unittest.TestCase):
 
 
 class UndeclaredLiteralDuplicateTests(unittest.TestCase):
-    """The one case that never reaches the declare() registry at all:
-    sim/world/labour_market.py's own __main__ demo block uses
-    REFERENCE_LABOUR_HOURS_PER_HECTARE's value twice as a bare `150.0`
-    literal, not a declared name. This cannot be structurally fixed from
-    outside labour_market.py (out of this task's ownership - see the
-    task's own report), so this test only keeps the two known sites honest:
-    if either literal is ever changed without noticing it is the same
-    physical figure land.py and agriculture.py now share, this fails.
+    """The fourth copy of the reference labour intensity, now closed.
 
-    A source-text regex is a poor substitute for an import-time check and
-    is deliberately narrow: it names the exact two lines found when this
-    test was written and fails loudly, with an explanatory message, if
-    neither pattern is found any more (the code moved and this test needs
-    updating) rather than silently passing on zero matches.
+    THIS TEST USED TO ASSERT THE DUPLICATION, AND HAS BEEN INVERTED. When
+    land.py and agriculture.py were gathered onto one declaration of
+    REFERENCE_LABOUR_HOURS_PER_HECTARE, sim/world/labour_market.py's own
+    __main__ demo was found writing the same physical figure out twice as a
+    bare `150.0`. That was outside the gathering change's ownership, so
+    rather than leave it unrecorded, a narrow source-text regex was written
+    here to at least catch the literal drifting, and it said in its own
+    failure message: "drop this check if the literal was declared or
+    removed". It has now been declared - the demo imports the shared
+    constant - so that instruction is being followed.
+
+    What replaces it is the stronger question, and the one the old check
+    could not ask: not "does the duplicate still hold the right value", but
+    "can the duplicate come back". Two assertions, both structural rather
+    than textual:
+
+      1. The demo's two hours figures are each computed FROM the shared
+         name, checked on the parsed syntax tree so that a comment or a
+         string mentioning the name cannot satisfy it.
+      2. No float anywhere in labour_market.py equals the shared constant's
+         value. This is the half that actually prevents recurrence: it
+         fails on a fifth copy appearing anywhere in the file, under any
+         variable name, not only at the two sites somebody thought to list.
+
+    Assertion 2 compares against the constant's live value rather than
+    against a hardcoded 150.0, so changing the declaration re-aims the test
+    instead of breaking it.
     """
 
-    def test_labour_market_demo_literals_still_match_the_shared_constant(self):
-        from sim.world import shared_constants
-        path = os.path.join(_REPOSITORY_ROOT, "sim", "world", "labour_market.py")
-        with open(path) as handle:
-            source = handle.read()
-        patterns = [
-            r"reference_hours\s*=\s*([\d_]+\.\d+)\s*\*\s*10_000\.0",
-            r"grown_hours\s*=\s*([\d_]+\.\d+)\s*\*\s*grown_land\.hectares",
-        ]
-        found_any = False
-        for pattern in patterns:
-            match = re.search(pattern, source)
-            if match is None:
+    _LABOUR_MARKET_PATH = os.path.join(
+        _REPOSITORY_ROOT, "sim", "world", "labour_market.py")
+    _SHARED_NAME = "REFERENCE_LABOUR_HOURS_PER_HECTARE"
+
+    def _parsed_labour_market(self):
+        with open(self._LABOUR_MARKET_PATH) as handle:
+            return ast.parse(handle.read(), filename=self._LABOUR_MARKET_PATH)
+
+    def test_the_demo_computes_both_hours_figures_from_the_shared_name(self):
+        """The two sites that held the bare literal now read the declaration.
+
+        Walks every assignment in the file looking for the two target
+        names, then checks the shared name appears in that assignment's own
+        value expression. A `getsource`-style substring search over the
+        whole file would pass on this very docstring, which names the
+        constant three times.
+        """
+        wanted = {"reference_hours", "grown_hours"}
+        seen = {}
+        for node in ast.walk(self._parsed_labour_market()):
+            if not isinstance(node, ast.Assign):
                 continue
-            found_any = True
-            literal_value = float(match.group(1).replace("_", ""))
-            self.assertEqual(
-                literal_value, shared_constants.REFERENCE_LABOUR_HOURS_PER_HECTARE,
-                "sim/world/labour_market.py's own %r no longer matches "
-                "sim/world/shared_constants.REFERENCE_LABOUR_HOURS_PER_"
-                "HECTARE (%.4g) - the same reference labour-per-hectare "
-                "figure land.py and agriculture.py now share a single "
-                "declaration for is still a bare, undeclared literal here, "
-                "and it has drifted."
-                % (pattern, shared_constants.REFERENCE_LABOUR_HOURS_PER_HECTARE))
-        if not found_any:
-            self.fail(
-                "neither known bare-150.0-literal site in "
-                "sim/world/labour_market.py's __main__ demo block matched "
-                "any more - the code moved. This is not a failure of the "
-                "duplication itself; update this test's patterns (or drop "
-                "this check if the literal was declared or removed).")
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in wanted:
+                    names_used = {inner.id for inner in ast.walk(node.value)
+                                  if isinstance(inner, ast.Name)}
+                    seen[target.id] = names_used
+        missing = sorted(wanted - set(seen))
+        self.assertEqual(
+            missing, [],
+            "sim/world/labour_market.py's demo no longer assigns %s - the "
+            "code moved, so this check is no longer looking at the thing it "
+            "was written about. Re-aim it rather than deleting it: the "
+            "property is that the demo's labour-hours figures come from "
+            "shared_constants, however they are spelled." % missing)
+        for target_name, names_used in sorted(seen.items()):
+            self.assertIn(
+                self._SHARED_NAME, names_used,
+                "sim/world/labour_market.py's demo computes %r without "
+                "reading %s. That is how the bare 150.0 got here the first "
+                "time: the same physical figure written out by hand in a "
+                "fourth place, free to drift away from the three that share "
+                "a declaration." % (target_name, self._SHARED_NAME))
+
+    def test_no_bare_literal_of_that_value_remains_anywhere_in_the_file(self):
+        """The recurrence guard, and the reason this test was inverted.
+
+        Any float in the file equal to the shared constant's value is a
+        fresh undeclared copy, wherever it is and whatever it is called.
+        Checked against the live declaration, so moving the declared value
+        re-aims this test instead of breaking it.
+        """
+        from sim.world import shared_constants
+        expected = getattr(shared_constants, self._SHARED_NAME)
+        offenders = []
+        for node in ast.walk(self._parsed_labour_market()):
+            if (isinstance(node, ast.Constant)
+                    and isinstance(node.value, float)
+                    and node.value == expected):
+                offenders.append(node.lineno)
+        self.assertEqual(
+            offenders, [],
+            "sim/world/labour_market.py writes %.4g as a bare literal at "
+            "line(s) %s. That is %s's value, and land.py, agriculture.py "
+            "and this module's own demo all reach it through the one "
+            "declaration in sim/world/shared_constants.py. A fourth "
+            "hand-written copy is exactly what this file exists to stop: "
+            "import the name instead."
+            % (expected, offenders, self._SHARED_NAME))
 
 
 if __name__ == "__main__":

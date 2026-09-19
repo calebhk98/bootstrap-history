@@ -159,10 +159,11 @@ REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
            "independent names, by sim/world/agriculture.py "
            "(REFERENCE_LABOUR_HOURS_PER_HECTARE) and sim/world/land.py "
            "(LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE); both now import "
-           "this declaration. sim/world/labour_market.py also uses this "
-           "exact figure, twice, as a bare literal (150.0) rather than a "
-           "declared name - out of this change's ownership; see this "
-           "task's own report for the finding.",
+           "this declaration. sim/world/labour_market.py used to repeat the "
+           "figure twice as a bare literal (150.0), recorded here as an "
+           "outstanding finding because it was outside that change's "
+           "ownership; it now imports this declaration too, so all four "
+           "sites are one number.",
     confidence="B",
     why="The labour intensity the reference yield is quoted at, and the "
         "anchor every Cobb-Douglas yield curve in either consuming module "

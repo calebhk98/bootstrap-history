@@ -37,9 +37,26 @@ direction, and their own tests still touch no `Sim` and no save file. But a
 change to `demography.py`'s shape now reaches the engine, so it is no longer
 free. Run the full suite, not just this package's tests.
 
-`agriculture.py` remains genuinely inert - nothing in `sim/engine/` imports
-it yet, and `Sim._demographic_recovery` currently feeds `Population.step` a
-labelled stand-in for food supply rather than `Storage.step`'s real output.
-See that stand-in's own comment for the unit mismatch whoever wires it in
-must resolve first.
+`agriculture.py` IS WIRED IN TOO, and this paragraph used to say the
+opposite. It claimed the module was "genuinely inert - nothing in
+`sim/engine/` imports it yet" and that `Sim._demographic_recovery` fed
+`Population.step` a labelled stand-in for food supply rather than
+`Storage.step`'s real output. Both halves were false by the time anyone read
+them: `sim/engine/core.py:33` does `from world import agriculture`, and
+`_demographic_recovery` computes a real year of `agriculture.Storage.step`
+from land, labour and weather, which is what lets a bad year drive
+`nutrition_ratio` below 1.0. The `agriculture_wiring` test topic exists
+precisely to pin that seam, which neither module's own standalone suite can
+see, because the seam is not inside either of them.
+
+So the same rule now applies to `agriculture.py` as to `demography.py`: it
+stays importable and testable on its own, and a change to its shape is no
+longer free. Run the full suite.
+
+`agriculture.py` is also now a composition point over `agriculture_yield.py`
+(the production function), `agriculture_storage.py` (the granary) and
+`agriculture_labour.py` (sizing a farm from a population); it keeps the
+declared constants and the crop, soil, rotation and toolkit tables, and
+re-exports everything, so no caller changed. See its own docstring for why
+that split looks different from the others in this package.
 """
