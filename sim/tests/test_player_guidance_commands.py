@@ -243,11 +243,10 @@ _rs, _, _ = proto([{"cmd": "stuck"}])
 check("there is one command that answers why you are not getting on",
       _rs and _rs[0].get("ok") and "what_is_holding_you_up" in _rs[0],
       list(_rs[0])[:5] if _rs else None)
-# THIS CHECK USED TO ASSERT THE BUG. It required turn one to report nothing
-# holding you up - and turn one is precisely when nothing is running, which a
-# later play tester typed `stuck` to find out and was told "nothing: you have
-# work in hand, money to pay for it and people to do it". It was the first
-# thing they typed and it was false.
+# THIS CHECK PINS THE FIX, NOT THE BUG IT REPLACED: turn one is precisely
+# when nothing is running, and a play tester who typed `stuck` to find out
+# was told "nothing: you have work in hand, money to pay for it and people
+# to do it" - the first thing they typed, and false.
 check("...and on turn one it says you have started nothing",
       any(reason.get("what") == "you have started nothing"
           for reason in _rs[0]["what_is_holding_you_up"]),

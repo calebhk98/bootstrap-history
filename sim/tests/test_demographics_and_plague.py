@@ -20,16 +20,16 @@ from .harness import *  # noqa: F401,F403
 # from.
 #
 # WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md) REWRITE:
-# these checks used to assert on self.pop_deficit and self._pop_recovery_
-# years, a scalar deficit decaying on a hand-set exponential clock.
-# sim/world/demography.py's own test suite FALSIFIES that shape (see its
-# module docstring): two populations losing an identical 30% in one year,
-# one sparing working-age adults and one not, diverge afterward, which a
-# clock that only knows a SIZE cannot reproduce. self.population (a
-# demography.Population) replaced it, so these checks now read
-# self.population.total and the computed self.pop_scale/self.wage_index
-# properties instead - see core.py's own comment above pop_scale for the
-# full account of what changed and why.
+# these checks read self.population.total and the computed
+# self.pop_scale/self.wage_index properties, not a scalar deficit
+# (self.pop_deficit, self._pop_recovery_years) decaying on a hand-set
+# exponential clock. sim/world/demography.py's own test suite FALSIFIES
+# that scalar shape (see its module docstring): two populations losing an
+# identical 30% in one year, one sparing working-age adults and one not,
+# diverge afterward, which a clock that only knows a SIZE cannot
+# reproduce. self.population (a demography.Population) is the cohort model
+# that can - see core.py's own comment above pop_scale for the full
+# account of what changed and why.
 s = sim(civ="england_1300")
 _normal_wage = s.wage_index
 _pop_before = s.population.total
@@ -170,15 +170,16 @@ check("...and the wage premium that cohort state drives is therefore ALSO "
 # apply_tech_effects must queue the gain rather than apply it the year the
 # node completes.
 #
-# THE VEHICLE USED TO BE `sanitation_antisepsis`, AND THE SWAP IS THE POINT,
-# not a workaround. The eight DISEASE technologies (Sim.DISEASE_BURDEN_TECH_
-# IDS) no longer queue a scalar here at all: they drive `_disease_burden()`
-# live, and the generational lag this ramp was imitating now falls out of the
-# cohort model instead - people stop dying the year the latrine opens, and the
+# THE VEHICLE CANNOT BE A DISEASE TECHNOLOGY, such as `sanitation_
+# antisepsis`: the eight DISEASE technologies (Sim.DISEASE_BURDEN_TECH_IDS)
+# do not queue a scalar here at all - they drive `_disease_burden()` live,
+# and the generational lag this ramp was imitating falls out of the cohort
+# model instead - people stop dying the year the latrine opens, and the
 # headcount answers over the following decades because that is how cohorts
-# work. The forty-year ramp was a hardcoded stand-in for a lag the simulation
-# can now produce (CLAUDE.md SS3.1), so for disease it is gone, and
-# test_disease_burden_wiring.py is what guards the mechanism that replaced it.
+# work. A hardcoded forty-year ramp is not needed where the simulation
+# produces the lag itself (CLAUDE.md SS3.1), so for disease there is none,
+# and test_disease_burden_wiring.py is what guards the mechanism that
+# produces it.
 # The five FOOD entries sharing the `population` field still queue exactly as
 # before, which is what this job tests. `crop_rotation` carries the same 0.02
 # weight `sanitation_antisepsis` did, so every number below is unchanged.

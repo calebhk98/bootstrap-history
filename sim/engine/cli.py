@@ -2,26 +2,27 @@
 commands (run, compare, sensitivity, sweep), the static tree/civilisation
 listings (validate, path, costs, goals), and main() itself.
 
-This file used to hold every CLI command as a top-level function (about
-3,547 lines). It has been split by subject:
+CLI commands are split by subject across four files:
+  - cli.py (this file) - shared infrastructure and the commands above.
   - cli_interactive.py - the human-facing front door: main menu, the New
     Game wizard, civilisation listing, and the `play` game loop/REPL.
   - cli_agent.py        - the machine-playable protocol: `agent`.
   - cli_analysis.py     - planning and diagnostic commands: `plan`, `search`,
     `why`.
-Everything importable from `engine.cli` before the split still is: the
-functions that moved are re-imported below, at the bottom of this file (so
+Everything importable from `engine.cli` is: the functions living in the
+other three files are re-imported below, at the bottom of this file (so
 they can themselves import session/display helpers defined earlier in this
 module - see the comment there for why the order matters).
 
 `cmd_run`, `cmd_compare`, `cmd_sensitivity`, `cmd_sweep`, `cmd_validate`,
-`cmd_path`, `cmd_costs` and `cmd_goals` stayed here rather than moving out:
-the first four all construct `Sim(...)` directly and share the Monte
-Carlo/statistics helpers below (`_wilson_interval`, `_fmt_rate_ci`,
+`cmd_path`, `cmd_costs` and `cmd_goals` live here rather than in one of the
+other three: the first four all construct `Sim(...)` directly and share the
+Monte Carlo/statistics helpers below (`_wilson_interval`, `_fmt_rate_ci`,
 `_summarise`); the last four are simple, self-contained tree/civilisation
 reads with no REPL or protocol machinery of their own. See cmd_sweep's own
 placement note and cli_analysis.py's module docstring for the specific,
-tested reason `cmd_sweep` could not follow `cmd_plan` out of this file.
+tested reason `cmd_sweep` cannot move into cli_analysis.py alongside
+`cmd_plan`.
 """
 import collections, json, math, os, random
 from collections import defaultdict
@@ -36,11 +37,11 @@ import argparse, sys
 from .core import Sim
 from . import protocol as _protocol
 from . import settings
-# civ_of_save/goal_of_save are the only names this file still reads from
-# .protocol: `cmd_agent`, which used to read the rest of this import
-# (_agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
+# civ_of_save/goal_of_save are the only names this file reads from
+# .protocol; `cmd_agent` and everything else that needs
+# _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
 # _agent_state, _node_explain, final_report, load_state, parse_typed,
-# render_final, render_pretty, save_state), moved to cli_agent.py, which
+# render_final, render_pretty or save_state lives in cli_agent.py, which
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from constants import declare
@@ -109,10 +110,10 @@ def ensure_fixed_hash_seed(seed="0"):
     reproducible on its own - but CPython hashes strings differently in every
     process by default (`hash("machinist")` differs run to run unless
     `PYTHONHASHSEED` is fixed), and this engine has at least one documented
-    site (core.py's own comment on `rng.sample(losable, ...)`) that once
-    walked a bare, unsorted `set` of ids and was fixed by sorting it
-    specifically because an earlier version did not - so a --deterministic
-    run whose output depended on iteration order over some other such set
+    site (core.py's own comment on `rng.sample(losable, ...)`) where walking
+    a bare, unsorted `set` of ids would depend on that hash order - so a
+    --deterministic run whose output depended on iteration order over some
+    other such set
     would silently stop being reproducible process to process, for no reason
     a reader of a diff would ever see. `PYTHONHASHSEED` can only be set
     before the interpreter starts, not from inside an already-running one, so
@@ -283,36 +284,28 @@ def topo_stable(nodes, preference, already=()):
     the given order as little as possible.
 
     `already`: nodes that are ALREADY ahead of this list and must count as
-    placed. Leaving this out was a serious and completely invisible bug. The
-    strategy file names 128 nodes explicitly and everything else was sorted
-    goal-critical-first and then handed to this function WITHOUT telling it
-    about those 128 - so every node whose prerequisites lived in the explicit
-    list could never satisfy `all(p in placed)`, fell through to the bulk dump
-    below, and lost its place entirely.
-
-    The effect was not subtle. `cap_heat_1100` - tier 0, 225 denarii, two
-    artisans, and a prerequisite of the goal - sorted to index 4 and came out
-    of here at index 589. Sixty goal-critical nodes were pushed past 400. A Han
-    China run then sat at year 700 holding 3.37 MILLION denarii, 57 scholars
-    and 99 artisans, having never built a 225-denarii node it needed, because
-    the optimizer works down this order and never got that far. Han reached the
-    transistor in 0% of runs and the reason was never economic.
+    placed. Omitting a node from `already` that is genuinely ahead of this
+    list is a serious and completely invisible bug: if a strategy names
+    some nodes explicitly and sorts everything else goal-critical-first,
+    handing this function that remainder WITHOUT telling it about the
+    explicit nodes means every node whose prerequisites live in the
+    explicit list can never satisfy `all(p in placed)`, falls through to
+    the bulk dump below, and loses its place entirely - a cheap,
+    goal-critical node can end up hundreds of places later than it belongs,
+    starving the optimizer of work it needed early.
     """
     placed = set(already)
     out = []
     pref = list(preference)
-    # hard_pre, NOT nodes[k]["pre"]. This function is what decides the order
-    # the engine actually receives, and it was the last place still reading
-    # `pre` alone after closure(), topo_order() and critical_path() had all
-    # learned that a req_any group with exactly one real option is a
-    # prerequisite rather than a choice. The effect was the whole point of
-    # that work going nowhere: mat_manganese was correctly required, and came
-    # out of here at index 187 behind the mat_bulk_steel at index 65 that
-    # cannot be built without it.
+    # hard_pre, NOT nodes[k]["pre"]: this function decides the order the
+    # engine actually receives, and a req_any group with exactly one real
+    # option is a prerequisite, not a choice - reading `pre` alone here
+    # could place a node like mat_bulk_steel ahead of mat_manganese even
+    # though mat_bulk_steel cannot actually be built without it.
     hard_pre_by_node = {node_id: hard_pre(nodes, node_id) for node_id in pref}
     # Index the dependants so each placement only revisits what it could free,
-    # rather than rescanning the whole list: the old loop was O(n^2) with a
-    # list.remove() inside it, over 2,700 nodes.
+    # rather than rescanning the whole list: a list.remove() inside a scan of
+    # the whole list is O(n^2) over 2,700 nodes.
     waiting = {}
     ready = []
     for node_id in pref:
@@ -589,26 +582,25 @@ def cmd_validate(a):
 # YEARS - not a new "expected working years" invented for this print
 # statement, but the existing DEFAULTS entry core.py itself uses as the mean
 # of the founder's mortality draw: "founder remaining lifespan, elite male
-# already aged 35", see core.py's `life_left`). Multiplying those two is the
-# expression that used to disagree with itself across two printed lines;
-# now cmd_path's printed budget, cmd_path's feasibility judgement and
+# already aged 35", see core.py's `life_left`). Multiplying those two must
+# go through one function, not be duplicated separately at each print
+# site: cmd_path's printed budget, cmd_path's feasibility judgement and
 # cmd_why's "% of a life" figure all call this one function, so whatever
-# DEFAULTS says, they cannot say two different things about it again.
+# DEFAULTS says, they cannot say two different things about it.
 #
-# (2,000 * 28 = 56,000 today - neither of the two old literals. That is not
-# a third guess: it is what the honest expression above comes to under
-# today's DEFAULTS, and it is smaller than the "corrected" 60,000 the
-# complaint itself flagged as the obvious-but-wrong fix, because 28 years
-# is the figure the mortality model actually uses, not the round 30 the old
-# print statement typed.)
+# (2,000 * 28 = 56,000 today. This is not a hardcoded literal because a
+# literal drifts the moment DEFAULTS changes, and the drift is easy to get
+# wrong even when "fixed" by hand: 28 years is the figure the mortality
+# model actually uses for founder_life_mean, not a round 30 a hand-typed
+# literal might use instead.)
 def _founder_lifetime_hours(cfg=None):
     """Founder-hours a whole working life holds: hours/year * expected
     working years, both read from `cfg` if given (a live Sim's config, which
     may override either) and otherwise from DEFAULTS - the same source
     core.py reads `founder_hours_per_year` and `founder_life_mean` from for
     the founder's real hours ledger and real mortality draw. No caller of
-    this function may re-derive or re-type either input; that duplication is
-    exactly what let the two numbers drift apart before.
+    this function may re-derive or re-type either input: that duplication
+    is exactly what lets two figures that should agree drift apart.
     """
     cfg = cfg or {}
     hours_per_year = cfg.get("founder_hours_per_year", DEFAULTS["founder_hours_per_year"])
@@ -638,9 +630,8 @@ def cmd_path(a):
     for node_id in chain:
         print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
     # Complaints/38: the printed budget and the feasibility judgement below
-    # used to be two separately typed numbers (60,000 printed, 72,000
-    # judged) that could disagree, and did. Both now come from one call, so
-    # they say the same thing about the same DEFAULTS whatever those are.
+    # both come from one call (_founder_lifetime_hours), so they say the
+    # same thing about the same DEFAULTS whatever those are.
     lifetime_hours = _founder_lifetime_hours()
     print("\nFounder-hours available in one lifetime at %s/yr for %s yrs: %s" %
           (f"{DEFAULTS['founder_hours_per_year']:,.0f}",
@@ -796,14 +787,11 @@ def _summarise_stuck_nodes(results):
 
 def _summarise_success_rate(label, run_count, success_count):
     # THE SUCCESS RATE, BELOW THE FOLD, NOT AS THE HEADLINE - see the "what
-    # this measures" line above for why, and this project's own diagnosis
-    # (planner.py's docstring) for the number that made the point concrete:
-    # recommended.json reached the goal in 0% of trials on Rome at a
-    # 700-year horizon, and a run pointed at a strategy like that used to
-    # print exactly that lone, uninterpreted "0%" as its headline, with the
-    # median-year line blank underneath it and nothing else on the screen to
-    # explain either fact. The progress tables above already say how far
-    # those same trials got; this says how many of them finished.
+    # this measures" line above for why. A lone, uninterpreted "0%" printed
+    # as a headline, with nothing else on the screen to explain it, reads as
+    # the goal being unreachable rather than as one order's bad luck under
+    # one horizon. The progress tables above already say how far those same
+    # trials got; this says how many of them finished.
     print()
     if success_count == 0:
         # DO NOT SILENTLY PRINT A TABLE OF ZEROS. Zero successes out of N is
@@ -866,14 +854,12 @@ def _summarise_shortages(results, run_count):
     for run in results:
         shortage_counter.update(run.shortages)
     if shortage_counter:
-        # RELABELLED, NOT RECOMPUTED. This used to print the same summed
-        # Counter under the label "(median run)" - it is a SUM across every
-        # run, not a median of anything. A true per-material median across
-        # runs would need each run's count (including the runs that were
-        # never short of that material at all, i.e. zero) aligned key by
-        # key, which is a real change to what gets computed, not just what
-        # gets printed - out of scope here. Relabelling the existing number
-        # honestly is the fix that belongs in a "what gets printed" pass.
+        # RELABELLED, NOT RECOMPUTED: this is a SUM across every run, not a
+        # median of anything, so the label must say so. A true per-material
+        # median across runs would need each run's count (including runs
+        # that were never short of that material at all, i.e. zero) aligned
+        # key by key, which is a real change to what gets computed, not
+        # just what gets printed - out of scope here.
         print("years spent short of a raw material (SUM across %d runs, not a median):" % run_count)
         for material, value in shortage_counter.most_common(5):
             print("   %-12s %d run-years" % (material, value))
@@ -939,14 +925,13 @@ def _save_winning_order(res, nodes, goal, a):
                          "order to save\n")
         return
     best = min(won, key=lambda s: s.goal_year)
-    # ONLY WHAT THE GOAL NEEDS. The first version of this saved every
-    # node the winning trial finished - 2,676 of them - and feeding that
-    # back scored 0% against the 25% of the strategy it was captured
-    # from, because the optimizer then ground through hundreds of side
-    # branches the trial had built for revenue before it reached the
-    # work that mattered. A finish order over everything is not a plan.
-    # The 149 nodes of the goal's closure, in the order a run that won
-    # actually completed them, is.
+    # ONLY WHAT THE GOAL NEEDS: the goal's closure, not every node the
+    # winning trial finished. Saving every node a winning trial finished and
+    # feeding that back as a strategy would let the optimizer grind through
+    # hundreds of side branches the trial built for revenue before it
+    # reached the work that mattered - a finish order over everything is
+    # not a plan. The nodes of the goal's closure, in the order a run that
+    # won actually completed them, is.
     _need = closure(nodes, goal)
     seq = sorted((node_id for node_id in best.done
                   if node_id in _need and node_id not in best.granted),
@@ -1599,8 +1584,8 @@ def main():
     subparser.add_argument("--seed", type=int, default=1)
     # DETERMINISTIC SEARCH: solve the dice-free problem first (see
     # sim/path_search.py), instead of only computing one structural CPM
-    # pass. --search-rounds 0 (the default) leaves `plan` exactly as it was;
-    # a nonzero value diagnoses the binding constraint against a dice-free
+    # pass. --search-rounds 0 (the default) leaves `plan` doing only the
+    # structural CPM pass; a nonzero value diagnoses the binding constraint against a dice-free
     # trial of the CPM order (no events, no project failures, immortal
     # founder - see path_search.DetRNG) and relaxes it, round by round,
     # keeping whichever round's order actually scored best.
@@ -1766,10 +1751,9 @@ if __name__ == "__main__":
 
 
 # ----------------------------------------------------------------------------
-# Re-exported from the modules this file was split into, so every name that
-# used to live directly in engine.cli - and that simulator.py, path_search.py,
-# planner.py and this project's own tests import from here by name - still
-# resolves the same way. Deliberately placed at the END of this file, not the
+# Re-exported here so every name that simulator.py, path_search.py,
+# planner.py and this project's own tests import from `engine.cli` by name
+# still resolves. Deliberately placed at the END of this file, not the
 # top: cli_interactive.py and cli_agent.py both do `from .cli import
 # _apply_display_prefs, _wrap, _is_claimed_slot, _pick_session_filename, ...`
 # (session/display helpers defined earlier in THIS file), so those names

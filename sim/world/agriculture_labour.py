@@ -3,11 +3,10 @@ ceilings on how much one worker can crop, the headline farm-population-share
 calibration, and the two functions `sim/engine/core.py` calls to turn "how
 many people are there" into "how much land, worked by how many hands".
 
-Split out of `sim/world/agriculture.py`, which had grown to 2,238 lines and
-was the single file every agent touching farming had to collide in. See that
-file's own docstring, "THIS FILE AND ITS SIBLINGS, AND WHY THIS SPLIT LOOKS
-DIFFERENT", for why the split lands here rather than by line count. This
-module holds the LABOUR DEMAND subject: `hectares_per_worker_annual_hours_
+This module holds the LABOUR DEMAND subject of `sim/world/agriculture.py`'s
+farming domain - see that file's own docstring, "THIS FILE IS A COMPOSITION
+POINT", for the other two subject files and why the constants and tables
+stay in that file instead: `hectares_per_worker_annual_hours_
 ceiling` and `hectares_per_worker_harvest_window_ceiling` (the two ceilings
 on a worker's cropped area, and why the harvest window is the binding one),
 `hectares_cropped_per_farm_worker` (the smaller of the two), `holding_
@@ -26,10 +25,6 @@ builds), and `sim.world.agriculture_storage` (`annual_food_demand_kg_per_
 person`, which `fraction_of_population_that_must_farm` divides by this
 module's own output-per-worker figure). See `sim/world/agriculture.py`'s own
 STANDALONE ON PURPOSE section for why that matters and to whom.
-
-Behaviour is unchanged and verified byte-identical by `sim/perf_fingerprint.
-py`; every docstring below moved verbatim from where it used to live in
-`sim/world/agriculture.py`.
 """
 from typing import Optional
 
@@ -53,10 +48,10 @@ from .agriculture_yield import Land
 def hectares_per_worker_annual_hours_ceiling(
         crop: Optional["Crop"] = None, toolkit: Optional["Toolkit"] = None) -> float:
     """One of the two ceilings on a farm worker's cropped area: total hours
-    in the farming year divided by hours needed per hectare. This is the
-    only ceiling this module originally had, and treating it as the answer
-    is what produced the 4.8% headline figure. See
-    `hectares_cropped_per_farm_worker`.
+    in the farming year divided by hours needed per hectare. Treating this
+    ceiling alone as the answer, ignoring the harvest-window one below,
+    produces a 4.8% headline figure - wrong, because the harvest window
+    binds first. See `hectares_cropped_per_farm_worker`.
 
     `crop` and `toolkit` default to wheat and the ard-and-sickle baseline;
     `toolkit.labour_hours_multiplier` rescales the hours-per-hectare figure

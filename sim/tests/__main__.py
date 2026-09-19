@@ -29,10 +29,11 @@ import unittest
 # via -m, via this file's own __main__ guard, or via the test_regressions.py
 # shim.
 #
-# THE DOTTED NAME USED TO BE `rome.sim.tests`, WHICH MEANT THE SUITE ONLY RAN
-# IF THE CHECKOUT DIRECTORY WAS NAMED `rome`. It is named bootstrap-history on
-# GitHub, so a fresh clone could not run its own tests: the import died on
-# ModuleNotFoundError before a single check executed. `sim` is a PEP 420
+# THE DOTTED NAME MUST NOT DEPEND ON THE CHECKOUT'S DIRECTORY NAME: rooting
+# it at `rome.sim.tests` would mean the suite only runs if the checkout
+# directory is named `rome`. It is named bootstrap-history on GitHub, so a
+# fresh clone would not be able to run its own tests: the import would die
+# on ModuleNotFoundError before a single check executed. `sim` is a PEP 420
 # namespace package (no __init__.py) and `sim.tests` a regular one, so
 # rooting the import at the repository instead of at its parent works from
 # any directory, under any name, with no packaging metadata.
@@ -456,9 +457,9 @@ def main(argv=None):
 
     # Imported here (not at module scope) so --list works even if a topic
     # module fails to import, and so the harness (whose --jobs/--slow parsing
-    # reads sys.argv at import time) sees the same sys.argv main() was called
-    # with, exactly as when this was all one flat script. Absolute dotted
-    # names throughout (never a relative "from . import"), so this runs the
+    # reads sys.argv at import time) sees the real sys.argv main() was
+    # called with. Absolute dotted names throughout (never a relative
+    # "from . import"), so this runs the
     # same way whether reached via -m, via this file's own __main__ guard,
     # or via the test_regressions.py shim.
     from sim.tests import harness
@@ -483,12 +484,10 @@ def main(argv=None):
     # decision harness.SLOW_TOPICS actually encodes, which is whether a WHOLE
     # TOPIC MODULE is worth opting out of a default run.
     #
-    # harness.SLOW_TOPICS' own comment used to cite "a per-topic timing run
-    # (see sim/tests/__main__.py, which is what actually reads this set)" for
-    # its five percentages. This file read the set, and did not produce those
-    # numbers: the run was done by hand, once, and thrown away, so every
-    # figure in that comment was unreproducible from the moment it was
-    # written and drifted silently thereafter. CLAUDE.md section 8 says a
+    # harness.SLOW_TOPICS' own percentages need a real command producing the
+    # number, not a hand-run measurement nothing re-checks: a figure taken by
+    # hand once and thrown away is unreproducible from the moment it is
+    # written and drifts silently thereafter. CLAUDE.md section 8 says a
     # number in prose carries the command that produced it or it does not go
     # in. This loop is that command.
     topic_costs = []

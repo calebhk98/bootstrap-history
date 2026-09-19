@@ -59,18 +59,13 @@ from sim.presentation import (
 
 
 # A material key is a priced line item ("iron_bar_kg"), a node id is not
-# ("mat_iron_bar"). Stripping the unit suffix is how the two vocabularies WERE
-# related, by convention and nothing else, and this file used to say that when
-# the production side was authored properly the guesswork should be replaced
-# by an explicit declaration of what a thing produces.
-#
-# THAT DAY ARRIVED AND THIS TOOL DID NOT NOTICE. `data/production/` states
-# `outputs` explicitly for 196 recipes, and asking it is not a guess. Reading
-# the tree alone, this audit was reporting "no producer at all" for
-# iron_bar_kg, timber_m3, steel_plate_kg, wood_kg, glass_raw_kg and coal_kg -
-# every one of which `sim/solve_prices.py` prices from a real recipe, iron at
-# 0.96 labour-hours per kg. CLAUDE.md points agents here to see where the cost
-# base is, so a stale answer here is a stale answer for everyone.
+# ("mat_iron_bar"). Stripping the unit suffix is a GUESS at which node
+# produces a material, related only by convention - it answers "does the
+# TREE know which node makes this", not "does anything make this".
+# `data/production/` answers the second question directly: it states
+# `outputs` explicitly for 196 recipes, so asking it is not a guess.
+# CLAUDE.md points agents here to see where the cost base is, so a stale
+# answer here is a stale answer for everyone.
 #
 # The node guess is KEPT rather than deleted, because the two questions are
 # different and both worth an answer: "does anything make this" is now settled

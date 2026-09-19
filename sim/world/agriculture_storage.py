@@ -2,11 +2,10 @@
 physically hold, and `Storage.step`'s full sow-grow-harvest-eat-spoil-retain
 cycle for one year.
 
-Split out of `sim/world/agriculture.py`, which had grown to 2,238 lines and
-was the single file every agent touching farming had to collide in. See that
-file's own docstring, "THIS FILE AND ITS SIBLINGS, AND WHY THIS SPLIT LOOKS
-DIFFERENT", for why the split lands here rather than by line count. This
-module holds the STORAGE subject: `annual_food_demand_kg_per_person` and
+This module holds the STORAGE subject of `sim/world/agriculture.py`'s
+farming domain - see that file's own docstring, "THIS FILE IS A COMPOSITION
+POINT", for the other two subject files and why the constants and tables
+stay in that file instead: `annual_food_demand_kg_per_person` and
 `granary_capacity_kg` (what a population needs and what its granary can
 hold), `YearFlows` (the exact accounting of one year's grain), `Storage`
 itself (the running stock and the one-year cycle that moves it - sow, grow,
@@ -26,30 +25,19 @@ product). See `sim/world/agriculture.py`'s own STANDALONE ON PURPOSE section
 for why that matters and to whom.
 
 `draw_weather_multiplier` ITSELF IS CALLED THROUGH THE `agriculture` MODULE
-OBJECT, NOT IMPORTED BY NAME LIKE THE OTHER TWO. `sim/tests/test_
-agriculture.py`'s bad-year test monkeypatches `agriculture.draw_weather_
-multiplier` directly (there is no seed that reliably produces a bad enough
-year on demand, so the test replaces the draw instead of hunting for one) and
-expects `Storage.step` to draw through the patched function. Before this
-split that worked for free, because `Storage.step` and `draw_weather_
-multiplier` were plain names in the SAME module's globals, and reassigning
-`agriculture.draw_weather_multiplier` reassigns exactly the global `Storage.
-step`'s own bare reference resolves. A `from .agriculture_yield import
-draw_weather_multiplier` here would have copied the ORIGINAL function object
-into this module's own globals at import time, permanently, so patching
-`agriculture.draw_weather_multiplier` afterward would no longer reach
-`Storage.step` at all - measured directly: this exact split, done that way
-first, made that one test fail (2153.22 not less than 2153.22 - the bad-year
-weather patch silently stopped applying) while every other check in the
-suite stayed green, which is the "green tests do not mean unchanged
-behaviour" trap CLAUDE.md SS6 warns about, caught here by the one test built
-to catch it. Looking the name up on the module at call time, below, keeps
-monkeypatching `agriculture.draw_weather_multiplier` working exactly as it
-did when this was one file.
-
-Behaviour is unchanged and verified byte-identical by `sim/perf_fingerprint.
-py`; every docstring below moved verbatim from where it used to live in
-`sim/world/agriculture.py`.
+OBJECT, NOT IMPORTED BY NAME LIKE THE OTHER TWO, BECAUSE A NAME IMPORT WOULD
+BREAK MONKEYPATCHING. `sim/tests/test_agriculture.py`'s bad-year test
+monkeypatches `agriculture.draw_weather_multiplier` directly (there is no
+seed that reliably produces a bad enough year on demand, so the test
+replaces the draw instead of hunting for one) and expects `Storage.step` to
+draw through the patched function. A `from .agriculture_yield import
+draw_weather_multiplier` here would copy the ORIGINAL function object into
+this module's own globals at import time, permanently, so patching
+`agriculture.draw_weather_multiplier` afterward would not reach
+`Storage.step` at all - the "green tests do not mean unchanged behaviour"
+trap CLAUDE.md SS6 warns about, which is exactly what the one test built to
+catch it exists to catch. Looking the name up on the module at call time,
+below, keeps monkeypatching `agriculture.draw_weather_multiplier` working.
 """
 import collections
 import random
@@ -290,14 +278,16 @@ class Storage(object):
         self.stock_kg += harvest_kg
 
         food_demand_kg = population * annual_food_demand_kg_per_person(crop)
-        # EATING WELL IN A GOOD YEAR. This used to be min(demand, stock), so
-        # a population ate exactly subsistence or less and never more, which
-        # meant the nutrition ratio handed to demography could not exceed 1.0
-        # however full the granary was. Combined with a mortality and
-        # fertility response that floors at 1.0, that made every good year
-        # worth nothing and every bad year cost real people - the ratchet
-        # Complaints/45 records. The granary alone did not fix it: it banked
-        # the grain and then forbade anyone to eat it.
+        # CONSUMPTION IS NOT CAPPED AT min(demand, stock), BECAUSE THAT WOULD
+        # MAKE EVERY GOOD YEAR WORTH NOTHING. Capping intake at subsistence
+        # regardless of how full the granary is means the nutrition ratio
+        # handed to demography could never exceed 1.0, however full the
+        # granary was; combined with a mortality and fertility response that
+        # floors at 1.0, that turns every bad year into a real population
+        # cost with no good year ever offsetting it - the ratchet
+        # Complaints/45 records. The granary alone does not fix this:
+        # banking grain and then forbidding anyone to eat the surplus solves
+        # nothing.
         #
         # THE RESERVE IS FILLED FIRST, which is the whole point of having
         # one. Extra eating comes only out of what is already beyond the

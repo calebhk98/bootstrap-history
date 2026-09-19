@@ -909,8 +909,7 @@ def cmd_repair(a):
         # computed above, before any of them run) and its own bit of `node`,
         # so the order between them changes nothing except, for the two that
         # both append to node["note"], the order the audit tags land in that
-        # field - preserved here by calling them in the same sequence the
-        # single inlined loop body used to run them in.
+        # field - keep this exact call sequence to keep that order stable.
         _repair_infer_capabilities(node, nodes, codes, counts)
         _repair_documentation_level(node, ident, counts)
         _repair_social_defaults(node, ident, codes, counts)

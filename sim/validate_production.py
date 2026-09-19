@@ -46,8 +46,7 @@ an ill-formed capital good, and so on - each of which can append its own
 problems to the list for that entry. Below, each of those checks is its own
 function, taking exactly the data it needs and returning the problems it
 found; `check()` itself just walks the sorted entries and calls each check
-function in turn, in the same order the checks used to run inline, so the
-order problems are reported in is unchanged.
+function in a fixed order, so the order problems are reported in is stable.
 """
 import argparse
 import collections

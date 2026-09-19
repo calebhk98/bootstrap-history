@@ -55,20 +55,16 @@ values should be gathered somewhere editable, because a person tuning a
 report's shape should not have to go spelunking through three tools to
 find every width and row limit at once) and does not use `declare()` at
 all - see NOT PART OF THE REGISTRY below. sim/constants.py's own docstring
-is amended, in the same change that created this file, to point here
-rather than to keep arguing a position this file exists to make moot.
+points here rather than arguing a position this file exists to make moot.
 
 NOT PART OF THE REGISTRY, DELIBERATELY. Nothing in this file calls
 `declare()`. That is not an oversight: sim/constants.py's `--burndown` is
 the project's progress bar for how much of the simulated MODEL is still
 provenance-tracked or still a promise to keep, and a presentation value
 counted alongside a calorie requirement or a wage elasticity would make
-that bar measure something it was never meant to - see Item 4 of this
-task's own report for the concrete case (a demo-only constant) where
-exactly that kind of miscounting was checked for and, in that instance,
-found NOT to be happening. A plain module-level float with a one-line
-comment is the right amount of ceremony for a number nobody needs to
-defend, only to be able to find.
+that bar measure something it was never meant to. A plain module-level
+float with a one-line comment is the right amount of ceremony for a number
+nobody needs to defend, only to be able to find.
 
 HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.presentation import AUDIT_BAR_WIDTH_CHARS`, the same convention this

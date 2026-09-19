@@ -57,16 +57,16 @@ check("...and says what you are actually up on the trade",
 # --- BREAK: engineers went from 781 a year to 1,094 and the premium appeared
 # in the bill and nowhere else.
 #
-# MILLWRIGHT, NOT SMITH. This used to hire six smiths and call that "leaning
-# hard" on the trade - true only because the old market_supply gave smith a
-# pool of 11.25 people for the whole of Rome. The demographics fix (see
-# labour.py's TOWN_POPULATION_REFERENCE/TRADE_DENSITY) gave smith, a "common"
-# trade by its own wage-table note, a real town's worth instead - roughly
-# 350 at full population scale, anchored on the Ostia fabri tignuarii album
-# (CIL XIV 4569) - so six more smiths against that pool is correctly
-# imperceptible now, which is the fix working, not a regression. Millwright
-# ("the scarcest useful trade you can hire", per its own note) was
-# deliberately left alone by that fix and still demonstrates the same
+# MILLWRIGHT, NOT SMITH: hiring six smiths does not "lean hard" on the
+# trade, because the demographics fix (see labour.py's
+# TOWN_POPULATION_REFERENCE/TRADE_DENSITY) gave smith, a "common" trade by
+# its own wage-table note, a real town's worth of pool rather than the old
+# market_supply's 11.25 people for the whole of Rome - roughly 350 at full
+# population scale, anchored on the Ostia fabri tignuarii album (CIL XIV
+# 4569) - so six more smiths against that pool is correctly imperceptible,
+# which is the fix working, not a regression. Millwright ("the scarcest
+# useful trade you can hire", per its own note) was deliberately left alone
+# by that fix and still demonstrates the same
 # mechanism this check is actually about.
 s_wg = sim(capital=2000000.0)
 _r0, _, _ = proto([{"cmd": "labour", "trade": "millwright"}])

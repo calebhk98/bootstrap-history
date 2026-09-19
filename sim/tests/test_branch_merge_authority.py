@@ -54,11 +54,12 @@ from sim import treetool
 
 
 def _tree(nodes):
-    # merged_duplicate_ids is no longer read from tree meta - it is SOURCE,
-    # read from data/branches/_MERGED_DUPLICATE_IDS.json (see
-    # treetool.load_merged_duplicate_ids). The fixture tree still carries the
-    # key in meta because cmd_merge writes it back there every run; a test
-    # that cares about the retired-id mapping sets it up via
+    # merged_duplicate_ids is read from
+    # data/branches/_MERGED_DUPLICATE_IDS.json (see
+    # treetool.load_merged_duplicate_ids), not from tree meta. The fixture
+    # tree still carries the key in meta because cmd_merge writes it back
+    # there every run; a test that cares about the retired-id mapping
+    # sets it up via
     # BranchMergeAuthorityTests._write_merged_duplicate_ids instead of here.
     return {
         "meta": {"merged_duplicate_ids": {}},
