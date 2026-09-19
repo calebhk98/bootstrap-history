@@ -22,6 +22,7 @@ file it lives in).
 """
 from .data import hard_pre
 from constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
 class ElectricityMixin:
@@ -403,9 +404,9 @@ class ElectricityMixin:
             return 0.0
         span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
         if k in self.household.active:
-            return quantity / span / 1000.0
+            return quantity / span / KILOGRAMS_PER_TONNE
         if k in self.household.done and float(node.get("up") or 0) > 0:
-            return self.STANDING_MATERIAL_DRAW_SHARE * quantity / span / 1000.0
+            return self.STANDING_MATERIAL_DRAW_SHARE * quantity / span / KILOGRAMS_PER_TONNE
         return 0.0
 
     def _electricity_demand_kw(self):
@@ -420,7 +421,7 @@ class ElectricityMixin:
             t_per_yr = self._node_annual_tonnes(node_id, mat_key)
             if t_per_yr <= 0:
                 continue
-            total += (t_per_yr * 1000.0 * kwh_per_kg) / self.HOURS_PER_YEAR
+            total += (t_per_yr * KILOGRAMS_PER_TONNE * kwh_per_kg) / self.HOURS_PER_YEAR
         for node_id in sorted(self._electricity_load_node_ids() - set(curated)):
             node = self.nodes.get(node_id)
             if node is None:

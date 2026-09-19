@@ -256,22 +256,33 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 ## 7. Naming
 
 Identifiers two characters or shorter, measured three ways because the number
-you quote depends on what you count: **4,972 occurrences** (what a rename tool
-must actually touch), **3,813 binding sites**, **3,759 name-per-scope** (what a
-reader meets). Across 176 to 332 distinct names, depending on the same choice,
-in 72 of 83 files. `k` alone is 568 across 53 files.
+you quote depends on what you count. **There is now a command, and this
+paragraph no longer quotes a figure of its own:**
 
-Quote the 4,972 when sizing the work and say which you mean, because the first
-two attempts at this number disagreed and both were right.
+    python3 sim/code_health.py --names
 
-None of the counts in this paragraph, nor the 72.4% Tier-1 share and the
-per-name breakdowns below, currently carry a command you can run in this
-checkout to reproduce them: `docs/architecture/NAMING_PLAN.md` says outright
-that its scanner "is not part of this repo; it is a throwaway analysis
-script, not a shipped tool." Treat them as measured-but-unverifiable until
-that scanner is committed and can be cited here as a command. See
-`docs/architecture/NAMING_PLAN.md`'s own section on how the scan was done
-for the counting method, such as it is.
+This paragraph used to assert 4,972 occurrences, 3,813 binding sites, 3,759
+name-per-scope, 176 to 332 distinct names, 72 of 83 files, `k` at 568 across
+53 files, and a 72.4% Tier-1 share, and to say in the same breath that none
+of them carried a command, because `docs/architecture/NAMING_PLAN.md`'s
+scanner "is not part of this repo; it is a throwaway analysis script, not a
+shipped tool." That condition has been met: the scanner is committed as
+`sim/code_health.py`, with its detectors tested against fixtures in
+`sim/tests/test_code_health.py`.
+
+**Not one of the seven reproduces.** Run the command and it says so, per
+figure, in its own output. What it does NOT say, and what you should not
+conclude, is that the old numbers were wrong: `sim/` has grown from 83 files
+to 194 since that scan, the worst offenders it named have been decomposed,
+and NAMING_PLAN.md's own account says the original scan's exact grammar is
+lost rather than merely uncommitted. So the two are not measuring the same
+tree by the same rule, and the gap cannot be attributed. The scanner reports
+binding sites as unreproducible for exactly this reason, rather than
+inventing a definition and pretending to check it.
+
+What replaces them is the command, run today, whenever you need a number.
+Say which of the three methods you mean when you quote one, because the
+first two attempts at this disagreed and both were right.
 
 This is the single biggest obstacle to anyone reading this code, and it gets
 worse every time someone adds to it.
@@ -312,11 +323,17 @@ never rename a parameter without checking every call site by hand, because
 say so.
 
 A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
-the per-name meanings and the tooling. **72.4% is Tier 1** - purely local
-variables, provably safe. Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one
-thing everywhere; most vary by site (`q` is a function, a quantity, a quality
-score and a price quote in four different places), so there is no global
-find-and-replace for them.
+the per-name meanings and the tooling. `python3 sim/code_health.py --names`
+prints today's Tier-1 share alongside the 72.4% NAMING_PLAN.md recorded, and
+says whether it reproduces; it does not, for the reasons above, so do not
+quote either figure without running it. Tier 1 is a purely local variable,
+provably safe to rename; a function PARAMETER is Tier 2, because
+`prove_rename_safe.py` cannot cover a caller passing by keyword.
+
+Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one thing everywhere; most
+vary by site (`q` is a function, a quantity, a quality score and a price
+quote in four different places), so there is no global find-and-replace for
+them.
 
 `python3 sim/prove_rename_safe.py <ref>` proves a rename changed nothing but
 names, by comparing compiled bytecode: a local's name is not in `co_code`, so

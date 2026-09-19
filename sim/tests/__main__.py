@@ -215,6 +215,18 @@ TOPICS = [
     # depletes and a field does not. Complaints/43 - land solved to exactly
     # 0.0 and land scarcity is what drives a pre-industrial economy.
     "land",
+    # The property Complaints/46 and Complaints/50 were each separately
+    # about, asserted directly for the first time: re-partitioning a
+    # territory must not change a single land figure. Same ground described
+    # as one region, as two, and as four must give the same parcels, the
+    # same price, the same quantity supplied and the same marginal tile.
+    # Both of those complaints were one instance each of a hand-drawn
+    # region being used as if it were a unit of physical quantity when it is
+    # only a label, and both were fixed for their own mechanism without the
+    # map underneath being migrated. This is the check that catches the
+    # third instance. Its fixture is four synthetic tiles rather than real
+    # geography, so regenerating the map cannot make it drift.
+    "land_tile_partition_invariance",
     # Complaints/45: the unshocked baseline collapsed because Storage was
     # rebuilt empty every year, so a good harvest was discarded while a bad
     # one still cost lives. Pins the granary, the double-seed-deduction bug
@@ -303,6 +315,11 @@ TOPICS = [
     # The tool that makes the naming sweep affordable; verified here because a
     # verification tool nobody verified is a rubber stamp.
     "rename_prover",
+    # sim/code_health.py: the naming/duplication/complexity/misc scanner
+    # CLAUDE.md section 7 says does not exist as a committed tool. Tests the
+    # DETECTORS against small fixtures with a known answer, not the current
+    # state of this codebase - see that file's own docstring.
+    "code_health",
     # The suite has to be able to run before anything above it can:
     # this topic checks that it does so from a checkout of any name,
     # in any directory. It is last because it re-runs one cheap topic

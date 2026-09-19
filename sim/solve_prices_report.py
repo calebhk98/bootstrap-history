@@ -560,7 +560,16 @@ def _print_rent_summary(arguments, rent_hours_per_kg_by_material):
             print("   %-26s %10s h/kg rent"
                   % (ore_material, format_hours(ore_rent[ore_material])))
         if land_rent:
-            print("RENT NOW PRICED on land, for %s (%d region(s) held):"
+            # "tile(s)", NOT "region(s)". cultivable_land_for_civilization
+            # now resolves a civilisation's home_regions through
+            # geography.json's land_tiles and returns one parcel per 150,000
+            # km2 TILE, so this count has not meant regions since that
+            # migration. It printed "rome_100ad (88 region(s) held)" for a
+            # civilisation holding seven regions, which is the same
+            # region-label-as-physical-unit confusion Complaints/46 and /50
+            # were each about, surviving in a label after the mechanism
+            # underneath it had been fixed.
+            print("RENT NOW PRICED on land, for %s (%d tile(s) held):"
                   % (arguments.civ or DEFAULT_LAND_CIVILIZATION,
                      len(land.cultivable_land_for_civilization(
                          arguments.civ or DEFAULT_LAND_CIVILIZATION))))

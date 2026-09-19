@@ -409,12 +409,29 @@ class StaffingMixin:
         for a player, like every other automation in this game."""
         opened = []
         cands = self._auto_open_ordinary_candidates()
-        # "open", NOT "buy", AND THE DIFFERENCE IS LOAD-BEARING - see
-        # _auto_open_check_deep_arrears' own comment for the reasoning this
-        # line is a witness to; a regression test reads this function's own
-        # source for exactly this call, asking the right one of the two
-        # spending_power questions rather than reimplementing the arithmetic.
-        _room = self.spending_power("open")
+        # A DEAD `_room = self.spending_power("open")` STOOD HERE, AND ITS OWN
+        # COMMENT SAID WHY: "a regression test reads this function's own
+        # source for exactly this call". That was the line's entire purpose.
+        # It was assigned and never read - not here, not in any of the three
+        # helpers below, each of which computes its own budget (_surplus,
+        # _bleed_room, _line) or calls open_venture(), which runs the real
+        # spending_power("open") gate on its own account.
+        #
+        # So the guard in sim/tests/test_affordability_and_credit.py was
+        # passing on a line that did nothing, which is the exact failure a
+        # substring search over source cannot detect: it sees an assignment
+        # and a use as the same thing. The guard is now behavioural - it
+        # wraps spending_power on a real Sim, forces the answer to zero and
+        # requires each site's refusal to actually follow from it - so a dead
+        # call no longer satisfies it, and this line no longer has a reason
+        # to exist.
+        #
+        # The claim the old line was a witness to is still true and still
+        # matters: auto-opening asks "open", not "buy", because a door on a
+        # concern that is already built and already earning pays for its own
+        # fee, while a wage buys nothing back. See
+        # _auto_open_check_deep_arrears' own comment. That claim is now
+        # carried by open_venture(), where the gate actually runs.
         _deep_arrears = self._auto_open_check_deep_arrears()
         caps = self._auto_open_institution_candidates(_deep_arrears)
         _surplus, _bleed_room = self._auto_open_institution_budget()

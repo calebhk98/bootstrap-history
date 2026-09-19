@@ -67,19 +67,26 @@ and both are exactly this category: numbers fixed by definition rather
 than by measurement. Every declaration below follows that same, already-
 established precedent rather than inventing a parallel one. Definitional
 exactness is captured by `confidence="A"` (the strongest grade the
-registry already has), not by a new `kind` sim/tests/, --burndown's
-reasoning and this module's own callers would then all have to learn
-about for a distinction the registry already expresses another way.
+registry already has), not by a new `kind` - a distinction sim/tests/,
+`--burndown`'s own reasoning, and every future caller would otherwise have
+to learn a whole new category to understand, for a difference the registry
+can already say with the confidence grade alone.
 
 WHAT DOES NOT BELONG HERE. A conversion used at exactly one call site,
-where a bare literal is already perfectly readable, does not need to move
-here just because it happens to be a unit conversion - see this module's
-own DOES NOT COVER note in each section below for a name it deliberately
-leaves as a local literal, and CLAUDE.md's own naming section for the same
-argument applied to identifiers. Formatting widths, retry counts and
-"how many rows to show" are a different kind of number entirely - see
-sim/presentation.py for those - and neither belongs on kind="physical_
-constant" just because both are inputs to arithmetic.
+where a bare literal is already perfectly readable and does not repeat
+anywhere else, does not need to move here just because it happens to be a
+unit conversion - this task's own report names two examples deliberately
+left alone: sim/world/transport.py's GRAVITATIONAL_ACCELERATION_M_PER_S2
+(already its own `declare()`, next to the one function that uses it, and
+not touched by this module) and a rounding-to-the-nearest-hundred step in
+sim/engine/economy_freight.py's own nitre-bed sizing, which divides and
+re-multiplies by 100 to pick a round purchase quantity rather than to
+convert a fraction to a percentage - the same number, a different job,
+and CLAUDE.md's own naming section makes the identical argument for
+identifiers generally. Formatting widths, retry counts and "how many rows
+to show" are a different kind of number entirely - see sim/presentation.py
+for those - and neither belongs on kind="physical_constant" just because
+both are inputs to arithmetic.
 
 HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.unit_conversions import KILOGRAMS_PER_TONNE`, from EVERY caller -
@@ -123,6 +130,20 @@ this module's constants makes that operation read correctly - never the
 reverse operation on a reciprocal, even when the reciprocal is also
 declared here for a different call site's own original direction.
 """
+import os
+import sys
+
+# Guarded, idempotent, and needed only for `python3 sim/unit_conversions.py`
+# itself - run directly, only sim/ (this file's own directory) lands on
+# sys.path for free, not the repository root `from sim.constants import
+# declare` needs. Every OTHER entry point that reaches this file (core.py,
+# commodities.py, and the rest) has already put the repository root on
+# sys.path by the time it imports this module - see this file's own HOW A
+# CONSUMER USES ONE OF THESE section - so this guard is a no-op for them.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from sim.constants import declare
 
 # ============================================================================

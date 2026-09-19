@@ -63,6 +63,7 @@ import math
 from .data import haversine_km, WAGES
 from . import commodities as _commod
 from constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from world import transport as freight_physics
 
@@ -331,7 +332,7 @@ class FreightMixin:
         denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
                                  + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
         denarii_per_tonne = denarii_per_tonne_km * distance_km
-        return denarii_per_tonne / 1000.0
+        return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
     def material_freight_factor(self, emp_key):
         """Multiplicative markup material_price_factor() applies on top of
@@ -622,7 +623,7 @@ class FreightMixin:
             return ""
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / 1000.0 - self.household.forest_ha * self.CHARCOAL_PER_HA)
+                       / KILOGRAMS_PER_TONNE - self.household.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return ("Charcoal is grown, not bought: about %s more hectare%s of "
                     "coppice would cover it ('buy forest %d', roughly %s "
@@ -631,7 +632,7 @@ class FreightMixin:
                        "{:,.0f}".format(hectares_needed * self.FOREST_COST_PER_HA * self.price_index),
                        hectares_needed))
         if binding == "saltpetre":
-            demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / 1000.0
+            demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
             available = (self.household.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))

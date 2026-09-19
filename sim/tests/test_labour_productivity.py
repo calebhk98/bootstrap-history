@@ -648,8 +648,32 @@ check("`money`'s net_per_year is insulated from the same one-year swing, "
 # And stall_diagnosis's own net, which explicitly claims to be "the same
 # net the ledger prints", has to actually be computed the same way now
 # that the ledger's own figure changed.
-import inspect as _insp2
-check("stall_diagnosis computes its net from revenue_capacity(), the same "
-      "call net_per_year now makes, not a second copy of the old bug",
-      "revenue_capacity()" in _insp2.getsource(S.Sim.stall_diagnosis),
-      "checked stall_diagnosis's own source")
+#
+# BEHAVIOURAL, NOT A SOURCE SCAN. This used to grep
+# inspect.getsource(S.Sim.stall_diagnosis) for the literal text
+# "revenue_capacity()". That would have passed on a comment mentioning the
+# call (test_parallelism_note.py records this exact failure mode actually
+# happening to a sibling check) and would not have noticed a call whose
+# return value stall_diagnosis went on to ignore. The claim is the one
+# this whole section is already demonstrating for net_per_year, above:
+# selling the founder's hours for wages this year must not swing the
+# figure. Reproduce that same swing test directly against stall_diagnosis,
+# on a household set up to actually be stalled (capital < 0 and 8+ years
+# in arrears, so it returns a diagnosis instead of None).
+s_stall = sim(capital=-4000.0)
+s_stall.insolvent_years = 20
+_diag_before = s_stall.stall_diagnosis()
+check("set-up: this household really is stalled, so stall_diagnosis "
+      "returns a real diagnosis to compare",
+      bool(_diag_before), _diag_before)
+_capital_before_stall_work = s_stall.capital
+s_stall.work_for_wages("scholar", 1500)
+s_stall.capital = _capital_before_stall_work
+_diag_after = s_stall.stall_diagnosis()
+check("stall_diagnosis's own net is insulated from a one-year wage sale "
+      "the same way net_per_year is - proving it reads revenue_capacity() "
+      "(which zeroes wage_hours_this_year before asking revenue()) rather "
+      "than plain revenue() a second time",
+      _diag_after and _diag_before
+      and _diag_after["you_are_stuck"] == _diag_before["you_are_stuck"],
+      (_diag_before, _diag_after))

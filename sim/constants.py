@@ -76,12 +76,30 @@ THE KINDS, and the two that matter for different reasons
 promise to replace it, and it will always have a tail, because "no mechanism
 exists yet" is a permanent feature of an unfinished migration, not a bug.
 `hardcoded_outcome` is a DIFFERENT progress bar with a different
-target: it is small today (two entries, both in sim/engine/economy.py) and
-`--burndown` expects it to reach EXACTLY ZERO, because unlike an un-derived
-heuristic, a live SS3.1 violation is not something this project tolerates
-having a tail of. Complaints/36 records why these two kinds used to be the
-same bucket and why that made the second, much smaller and much more urgent
-one invisible.
+target: `--burndown` expects it to reach EXACTLY ZERO, because unlike an
+un-derived heuristic, a live SS3.1 violation is not something this project
+tolerates having a tail of. Complaints/36 records why these two kinds used
+to be the same bucket and why that made the second, much smaller and much
+more urgent one invisible.
+
+    python3 sim/constants.py --burndown       prints the live count
+    grep -rn 'kind="hardcoded_outcome"' --include=*.py sim/ | wc -l
+
+THIS PARAGRAPH USED TO SAY "it is small today (two entries, both in
+sim/engine/economy.py)". Measured with the command above: it is ELEVEN,
+across sim/engine/core.py, economy.py, economy_credit.py,
+economy_materials.py, economy_mining.py and labour_bondage.py. Checked
+against this branch's own base commit, it was eleven there too, so nothing
+recently reclassified anything; the sentence had simply been wrong for long
+enough that the number and the file list were both stale, and the count that
+is supposed to be the project's most urgent progress bar was being read off
+prose rather than off the tool.
+
+Deliberately stated as a command rather than a fresh number in prose. A
+figure quoted here is wrong the first time somebody fixes one of the eleven,
+and the whole point of this kind is that the figure should be falling. See
+CLAUDE.md SS8: a number in prose carries the command that produced it, or it
+does not go in.
 
 The remaining kinds are legitimate inputs under CLAUDE.md 3.1 and are not
 expected to go away.

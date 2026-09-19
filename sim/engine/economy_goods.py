@@ -27,6 +27,7 @@ about the rules a number or a comment follows has changed, only which
 file it lives in).
 """
 from constants import declare
+from sim.unit_conversions import PERCENT_SCALE
 
 
 class GoodsMixin:
@@ -1081,7 +1082,7 @@ class GoodsMixin:
                 "supply of what it makes has grown since it opened. "
                 "'ventures' says the same thing for each one"
                 % (len(rows), "" if len(rows) == 1 else "s",
-                   worst[0], round(worst[1] * 100)))
+                   worst[0], round(worst[1] * PERCENT_SCALE)))
         if cats_sharing:
             note += (". You are running more than one concern selling into "
                      "the same market in: %s - they are competing with each "
@@ -1091,7 +1092,7 @@ class GoodsMixin:
         # revenue" a player has to be able to read directly, not infer.
         gap = quoted_total - actual_total
         if quoted_total > 0.5 and abs(gap) > 0.5:
-            pct = round(100.0 * abs(gap) / quoted_total)
+            pct = round(PERCENT_SCALE * abs(gap) / quoted_total)
             if gap > 0:
                 note += (". Altogether, market saturation is taking about %s "
                          "a year from these concerns - %d%% of what their own "

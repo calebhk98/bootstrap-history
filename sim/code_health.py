@@ -277,11 +277,16 @@ class _ScopeVisitor(ast.NodeVisitor):
 
     def _visit_target(self, target, role):
         """A Store-context target: a plain Name, or a Tuple/List of them
-        (`a, b = ...`), possibly nested. Also implements the x/y-together
-        coordinate exemption: a Name is exempt only when its immediate
-        sibling in the SAME tuple/list target is the other of "x"/"y"."""
+        (`a, b = ...`), possibly nested. Also implements both CLAUDE.md
+        section 7 exemptions: "i" as a loop index (any for-target or
+        comprehension-target literally named "i" - the ROLE is what makes
+        it a loop index, not merely the spelling), and the x/y-together
+        coordinate exemption (a Name is exempt only when its immediate
+        sibling in the SAME tuple/list target is the other of "x"/"y")."""
         if isinstance(target, ast.Name):
-            self._record(target.id, role, target.lineno)
+            is_loop_index_i = (target.id == "i"
+                               and role in ("for-target", "comprehension-target"))
+            self._record(target.id, role, target.lineno, exempt=is_loop_index_i)
         elif isinstance(target, (ast.Tuple, ast.List)):
             names_here = [element.id for element in target.elts
                           if isinstance(element, ast.Name)]
@@ -368,10 +373,20 @@ def scan_occurrences(files):
     method docs/architecture/NAMING_PLAN.md's own re-scan describes (its
     "This plan re-scans sim/..." paragraph): every Name(Store), every
     for-target, with-as, except-as, and every function/lambda parameter.
+    NOTE ON EXEMPTIONS. CLAUDE.md section 7's reference figures (4,972
+    occurrences, the 72.4% Tier-1 share) were measured INCLUDING every use
+    of "i" and "x"/"y" - docs/architecture/NAMING_PLAN.md's own per-name
+    table counts "i" among the 4,972 and calls it "CONSISTENT - leave it",
+    it does not remove it. So `total`/`per_name`/`tier1`/`tier2` below
+    include exempt occurrences too, to stay comparable to that figure. A
+    SEPARATE, smaller `flagged_total`/`flagged_per_name` excludes them -
+    that is the "still worth renaming" figure, distinct from "what a rename
+    tool would have to touch if it touched everything".
     """
     per_file = {}
     per_name = collections.Counter()
     per_name_files = collections.defaultdict(set)
+    flagged_per_name = collections.Counter()
     tier_counts = collections.Counter()
     exempt_count = 0
     total = 0
@@ -383,28 +398,32 @@ def scan_occurrences(files):
             continue
         visitor = _ScopeVisitor()
         visitor.visit(tree)
-        counted = [occurrence for occurrence in visitor.occurrences if not occurrence.exempt]
-        if not counted:
+        if not visitor.occurrences:
             continue
         files_with_hits += 1
         file_names = collections.Counter()
-        for occurrence in counted:
+        for occurrence in visitor.occurrences:
             total += 1
             per_name[occurrence.name] += 1
             per_name_files[occurrence.name].add(path)
             file_names[occurrence.name] += 1
             tier_counts[occurrence.tier] += 1
-        exempt_count += sum(1 for occurrence in visitor.occurrences if occurrence.exempt)
+            if occurrence.exempt:
+                exempt_count += 1
+            else:
+                flagged_per_name[occurrence.name] += 1
         per_file[path] = dict(sorted(file_names.items()))
 
     tier1 = tier_counts.get(1, 0)
     tier2 = tier_counts.get(2, 0)
     return {
         "total": total,
+        "flagged_total": total - exempt_count,
         "distinct_names": len(per_name),
         "files_with_hits": files_with_hits,
         "files_scanned": len(files),
         "exempted": exempt_count,
+        "flagged_per_name": {name: count for name, count in flagged_per_name.most_common()},
         "tier1": tier1,
         "tier2": tier2,
         "tier1_share_pct": round(100.0 * tier1 / total, 1) if total else 0.0,
@@ -557,9 +576,10 @@ def print_names_report(report, limit=15):
     print("    CLAUDE.md quotes Tier-1 share: %.1f%% -- reproduces: %s"
           % (ref["tier1_share_pct"], "YES" if rep["tier1_share_pct"] else "NO"))
     if occ["exempted"]:
-        print("  (%d additional occurrence(s) exempted per CLAUDE.md section 7: "
-              "\"i\" as a loop index / \"x\"/\"y\" bound together as a coordinate pair)"
-              % occ["exempted"])
+        print("  (of which %d are exempt per CLAUDE.md section 7: \"i\" as a loop "
+              "index / \"x\"/\"y\" bound together as a coordinate pair - "
+              "%d occurrence(s) remain flagged)"
+              % (occ["exempted"], occ["flagged_total"]))
     print()
     print("  method 2, binding sites (CLAUDE.md's own %d): NOT independently "
           "reproducible - see docs/architecture/NAMING_PLAN.md's own account of "
@@ -613,7 +633,7 @@ _POSITION_FIELDS = frozenset(
 # is a handful of statements INSIDE a larger loop that otherwise differs.
 _BODY_FIELDS = ("body", "orelse", "finalbody")
 
-# A sliding window of this many consecutive statements is the unit compared.
+# A window of this many consecutive statements is the unit compared.
 # Chosen, and verified against a known case, rather than guessed: the
 # hazard-window duplicate that existed before sim/engine/hazard_window.py
 # was extracted (see sim/tests/test_code_health.py and this module's
@@ -624,21 +644,46 @@ _BODY_FIELDS = ("body", "orelse", "finalbody")
 # stayed quiet on trivial code while still catching the real case.
 DUPLICATE_WINDOW_STATEMENTS = 5
 
+# Windows are taken NON-OVERLAPPING (stride == window) rather than sliding by
+# one statement at a time. A sliding-by-one window over an ordinary function
+# produces mostly-overlapping neighbours (window N and window N+1 share 4 of
+# 5 statements), which is not a second instance of duplicated code, it is
+# the same statements counted repeatedly - and on this codebase it was the
+# actual performance problem: candidate count and near-duplicate bucket
+# sizes came down by roughly 4x moving to non-overlapping windows (13,961 ->
+# 3,558 candidates, measured on this checkout), with no change in whether
+# the known hazard-window case (which starts at the FIRST statement of its
+# for-loop body, so a stride-5 window lands on it directly) is still found.
+# The trade is real: a duplicate that straddles two non-overlapping windows
+# (starts at statement 3 of a 10-statement body, say) can be missed. That is
+# an accepted limitation of a fast heuristic instrument, not a soundness
+# claim - see this module's docstring.
+DUPLICATE_STRIDE = DUPLICATE_WINDOW_STATEMENTS
+
 # A normalised window smaller than this many AST nodes is not reported even
 # if it repeats - two one-line `return None` bodies are not the kind of
 # drift risk this detector exists for.
 DUPLICATE_MIN_NODE_SIZE = 15
 
 # Two candidates in the same coarse "shape bucket" (see _shape_signature)
-# whose normalised text similarity is at least this are reported as a
-# diverging pair, even though their exact structure no longer matches.
+# whose normalised token-sequence similarity is at least this are reported
+# as a diverging pair, even though their exact structure no longer matches.
 NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.6
 
 # A shape bucket larger than this is skipped for the O(n^2) near-duplicate
 # pass (exact-hash clustering still applies to it) - generic short shapes
 # like a single `if`/`return` pair recur constantly and comparing all of
 # them pairwise would cost real time for zero interesting findings.
-_NEAR_DUPLICATE_BUCKET_CAP = 60
+_NEAR_DUPLICATE_BUCKET_CAP = 25
+
+# A hard ceiling on how many pairwise comparisons the near-duplicate pass
+# will do in one run, regardless of how many buckets qualify. Without this,
+# a codebase with many mid-sized, same-shaped-but-unrelated buckets could
+# still add up to an impractical runtime even with every individual bucket
+# under the cap above. Exceeding it is reported, not hidden: the summary
+# says the near-duplicate pass stopped early, and exact-clone detection
+# (the cheap hash-based pass) is entirely unaffected either way.
+_NEAR_DUPLICATE_PAIR_BUDGET = 40000
 
 
 def _normalize(node):
@@ -675,6 +720,44 @@ def _node_size(normalized):
     return 0
 
 
+def _flatten_tokens(normalized, out):
+    """A normalised subtree, flattened into a pre-order list of small string
+    tokens (one per AST node type, plus one for each NAME/ARG/CONST leaf) -
+    used for near-duplicate comparison INSTEAD OF a `repr()` string.
+
+    A node's `repr()` carries a lot of Python tuple/string punctuation that
+    has nothing to do with the program's structure and everything to do
+    with how this file happens to represent it; `difflib.SequenceMatcher`
+    over that punctuation-heavy text costs real time (measured on this
+    checkout: tens of seconds for a few thousand large-block comparisons)
+    for no better an answer than comparing the much shorter token sequence
+    directly.
+    """
+    if (isinstance(normalized, tuple) and len(normalized) in (1, 2)
+            and isinstance(normalized[0], str)
+            and (len(normalized) == 1 or not isinstance(normalized[1], tuple)
+                 or all(isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str)
+                        for item in normalized[1]))):
+        # A single AST node: ("TypeName",) for NAME/ARG, ("CONST", "str") for
+        # a constant, or ("TypeName", ((field, value), (field, value), ...))
+        # for everything else. Distinguished from a plain tuple-of-siblings
+        # (whose own first element is itself a node-tuple, never a bare
+        # string) by shape alone - see the docstring above.
+        out.append(normalized[0])
+        rest = normalized[1] if len(normalized) > 1 else ()
+        if isinstance(rest, tuple):
+            for field_name, value in rest:
+                _flatten_tokens(value, out)
+        else:
+            out.append(str(rest))
+    elif isinstance(normalized, tuple):
+        for item in normalized:
+            _flatten_tokens(item, out)
+    else:
+        out.append(repr(normalized))
+    return out
+
+
 def _shape_signature(window):
     """A coarse fingerprint used only to BUCKET candidates before the
     expensive near-duplicate comparison: the statement TYPES in the window,
@@ -682,6 +765,27 @@ def _shape_signature(window):
     plausibly related; two with different signatures are not compared at
     all, which is what keeps the near-duplicate pass affordable."""
     return tuple(type(statement).__name__ for statement in window)
+
+
+def _is_boilerplate_window(stmts):
+    """True for a window that is entirely import statements (and/or a bare
+    string constant - a module or function docstring). Every file in this
+    codebase opens with some mix of these, so they cluster as "duplicates"
+    of each other constantly and mean nothing: two files both starting with
+    a docstring, then `import os`, then `import sys`, then `from x import
+    (...)` are not the kind of drift risk this detector exists to find.
+    Measured:
+    without this filter, the highest-ranked clusters on this checkout were
+    entirely import preambles: filtering them out is what makes the report
+    about the codebase's actual logic rather than its import style."""
+    for statement in stmts:
+        if isinstance(statement, (ast.Import, ast.ImportFrom)):
+            continue
+        if (isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Constant)
+                and isinstance(statement.value.value, str)):
+            continue
+        return False
+    return True
 
 
 def _iter_bodies(tree):
@@ -693,20 +797,20 @@ def _iter_bodies(tree):
 
 
 class _Candidate(object):
-    __slots__ = ("path", "lineno", "end_lineno", "size", "norm_repr", "norm_hash", "shape")
+    __slots__ = ("path", "lineno", "end_lineno", "size", "tokens", "norm_hash", "shape")
 
-    def __init__(self, path, lineno, end_lineno, size, norm_repr, norm_hash, shape):
+    def __init__(self, path, lineno, end_lineno, size, tokens, norm_hash, shape):
         self.path = path
         self.lineno = lineno
         self.end_lineno = end_lineno
         self.size = size
-        self.norm_repr = norm_repr
+        self.tokens = tokens          # tuple of str - see _flatten_tokens
         self.norm_hash = norm_hash
         self.shape = shape
 
 
 def _collect_candidates(files, window=DUPLICATE_WINDOW_STATEMENTS,
-                         min_size=DUPLICATE_MIN_NODE_SIZE):
+                         stride=DUPLICATE_STRIDE, min_size=DUPLICATE_MIN_NODE_SIZE):
     candidates = []
     for path in files:
         _, tree = _parse(path)
@@ -715,17 +819,20 @@ def _collect_candidates(files, window=DUPLICATE_WINDOW_STATEMENTS,
         for body in _iter_bodies(tree):
             if len(body) < window:
                 continue
-            for start in range(len(body) - window + 1):
+            for start in range(0, len(body) - window + 1, stride):
                 stmts = body[start:start + window]
+                if _is_boilerplate_window(stmts):
+                    continue
                 normalized = _normalize(stmts)
                 size = _node_size(normalized)
                 if size < min_size:
                     continue
-                norm_repr = repr(normalized)
-                norm_hash = hashlib.sha256(norm_repr.encode("utf-8")).hexdigest()
+                tokens = tuple(_flatten_tokens(normalized, []))
+                norm_hash = hashlib.sha256("\x1f".join(tokens).encode("utf-8")).hexdigest()
+                end_lineno = getattr(stmts[-1], "end_lineno", stmts[-1].lineno)
                 candidates.append(_Candidate(
-                    path, stmts[0].lineno, stmts[-1].end_lineno if hasattr(stmts[-1], "end_lineno") else stmts[-1].lineno,
-                    size, norm_repr, norm_hash, _shape_signature(stmts)))
+                    path, stmts[0].lineno, end_lineno, size, tokens, norm_hash,
+                    _shape_signature(stmts)))
     return candidates
 
 
@@ -750,14 +857,24 @@ class _UnionFind(object):
 def _cluster_candidates(candidates):
     """Group candidates into connected components: two candidates are in the
     same component when they are an EXACT structural match, or a NEAR match
-    (same coarse shape, high textual similarity of the normalised form).
-    Returns clusters with >= 2 members, each annotated with how many
+    (same coarse shape, high token-sequence similarity of the normalised
+    form). Returns (clusters, near_duplicate_budget_exhausted).
+
+    Every pairwise ratio the near-duplicate pass computes is cached and
+    reused when a cluster's own "how similar are its non-identical members"
+    figure is built afterwards, rather than recomputed - see
+    `_flatten_tokens`'s docstring for why the comparison itself is cheap
+    only once, not for why recomputing it twice would be free.
+
+    Clusters with >= 2 members are returned, each annotated with how many
     distinct exact shapes ("versions") its members have collapsed into -
-    the direct answer to "did 1 place become 3 versions"."""
+    the direct answer to "did 1 place become 3 versions".
+    """
     if not candidates:
-        return []
+        return [], False
     keys = list(range(len(candidates)))
     uf = _UnionFind(keys)
+    ratio_cache = {}
 
     by_hash = collections.defaultdict(list)
     for index, candidate in enumerate(candidates):
@@ -770,19 +887,40 @@ def _cluster_candidates(candidates):
     for index, candidate in enumerate(candidates):
         by_shape[candidate.shape].append(index)
 
-    near_duplicate_pairs = 0
+    pairs_spent = 0
+    budget_exhausted = False
     for indices in by_shape.values():
         if len(indices) < 2 or len(indices) > _NEAR_DUPLICATE_BUCKET_CAP:
             continue
+        if budget_exhausted:
+            break
         for i in range(len(indices)):
+            if budget_exhausted:
+                break
             for j in range(i + 1, len(indices)):
+                if pairs_spent >= _NEAR_DUPLICATE_PAIR_BUDGET:
+                    budget_exhausted = True
+                    break
                 a, b = candidates[indices[i]], candidates[indices[j]]
                 if a.norm_hash == b.norm_hash:
                     continue  # already unioned via the exact pass
-                ratio = difflib.SequenceMatcher(None, a.norm_repr, b.norm_repr).ratio()
+                # A length-ratio prefilter: two blocks whose token counts
+                # differ by more than this cannot reach the similarity
+                # threshold under SequenceMatcher's own definition (ratio is
+                # bounded by 2*min/(len_a+len_b)), so skip the comparison
+                # entirely rather than pay for a SequenceMatcher that could
+                # only ever answer "no".
+                shorter, longer = sorted((len(a.tokens), len(b.tokens)))
+                if longer and (2.0 * shorter / (shorter + longer)) < NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
+                    continue
+                pairs_spent += 1
+                matcher = difflib.SequenceMatcher(None, a.tokens, b.tokens, autojunk=False)
+                if matcher.quick_ratio() < NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
+                    continue
+                ratio = matcher.ratio()
                 if ratio >= NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
                     uf.union(indices[i], indices[j])
-                    near_duplicate_pairs += 1
+                    ratio_cache[(indices[i], indices[j])] = ratio
 
     components = collections.defaultdict(list)
     for index in keys:
@@ -795,16 +933,24 @@ def _cluster_candidates(candidates):
         members = [candidates[i] for i in indices]
         distinct_hashes = {member.norm_hash for member in members}
         # A "diverged" measure: the mean pairwise similarity among members
-        # that do NOT share an exact hash, averaged only over such pairs.
-        # 1.0 (no divergence measured) when every member is an exact
-        # structural clone of every other.
+        # that do NOT share an exact hash, drawn from the cache above - every
+        # pair inside one cluster necessarily shares one shape bucket (an
+        # exact-hash union never crosses shapes, since equal normalised
+        # structure implies equal statement-type shape; a near-duplicate
+        # union never crosses shapes by construction), so a pair with
+        # differing hashes was, if it was ever compared at all, compared
+        # inside THIS pass and its ratio is already in the cache. 1.0 (no
+        # divergence measured) when every member is an exact structural
+        # clone of every other, or when the pair was never compared because
+        # a bucket exceeded the cap or the run hit its budget.
         cross_version_ratios = []
-        for i in range(len(members)):
-            for j in range(i + 1, len(members)):
-                if members[i].norm_hash != members[j].norm_hash:
-                    cross_version_ratios.append(
-                        difflib.SequenceMatcher(
-                            None, members[i].norm_repr, members[j].norm_repr).ratio())
+        for i in range(len(indices)):
+            for j in range(i + 1, len(indices)):
+                left, right = sorted((indices[i], indices[j]))
+                if candidates[left].norm_hash != candidates[right].norm_hash:
+                    cached = ratio_cache.get((left, right))
+                    if cached is not None:
+                        cross_version_ratios.append(cached)
         mean_similarity = (sum(cross_version_ratios) / len(cross_version_ratios)
                            if cross_version_ratios else 1.0)
         clusters.append({
@@ -827,34 +973,41 @@ def _cluster_candidates(candidates):
     # order is fully determined and reproducible run to run.
     clusters.sort(key=lambda cluster: (
         -cluster["distinct_versions"], -cluster["max_member_size"],
-        -cluster["member_count"], cluster["members"]))
-    return clusters
+        -cluster["member_count"],
+        tuple((m["path"], m["line"]) for m in cluster["members"])))
+    return clusters, budget_exhausted
 
 
 def duplication_report(files):
     candidates = _collect_candidates(files)
-    clusters = _cluster_candidates(candidates)
+    clusters, budget_exhausted = _cluster_candidates(candidates)
     exact_only = [c for c in clusters if c["distinct_versions"] == 1]
     diverged = [c for c in clusters if c["distinct_versions"] > 1]
     return {
         "window_statements": DUPLICATE_WINDOW_STATEMENTS,
+        "stride": DUPLICATE_STRIDE,
         "min_node_size": DUPLICATE_MIN_NODE_SIZE,
         "candidates_scanned": len(candidates),
         "cluster_count": len(clusters),
         "exact_clone_clusters": len(exact_only),
         "diverging_clusters": len(diverged),
+        "near_duplicate_budget_exhausted": budget_exhausted,
         "clusters": clusters,
     }
 
 
 def print_duplication_report(report, limit=10):
-    print("DUPLICATION  (sliding window of %d consecutive statements, "
+    print("DUPLICATION  (non-overlapping window of %d consecutive statements, "
           ">= %d normalised AST nodes)"
           % (report["window_statements"], report["min_node_size"]))
     print("  %d candidate blocks scanned, %d cluster(s) with >= 2 members "
           "(%d exact clones, %d showing divergence into more than one version)"
           % (report["candidates_scanned"], report["cluster_count"],
              report["exact_clone_clusters"], report["diverging_clusters"]))
+    if report["near_duplicate_budget_exhausted"]:
+        print("  NOTE: the near-duplicate comparison budget (%d pairs) was used up - "
+              "exact-clone clusters above are unaffected, but some divergent "
+              "clusters may be missing or under-counted." % _NEAR_DUPLICATE_PAIR_BUDGET)
     print()
     print("  top clusters, most-diverged (most distinct versions) first:")
     for cluster in report["clusters"][:limit]:
@@ -1084,10 +1237,22 @@ def lazy_getattr_report(files):
     existed, or a feature only initialised under a flag). Flagged here as
     "genuinely a problem" per the task brief's own live complaint, not
     invented - see the task report for how many real sites this found and
-    the names that cluster (e.g. "fog", read this way from six different
-    files), which is itself evidence of an attribute whose presence isn't
+    the names that cluster (e.g. "fog", read this way from dozens of call
+    sites), which is itself evidence of an attribute whose presence isn't
     guaranteed anywhere central.
     """
+    receiver_names = ("self", "s", "sim")
+
+    def _rooted_in_receiver(expr):
+        """True for `self`/`s`/`sim`, or an attribute chain rooted in one of
+        them (`self.household`, `sim.civ`, ...) - deliberately NOT true for
+        an attribute chain rooted in anything else, so this does not flag
+        `getattr(some_other_module.thing, "x", default)`, which is not a
+        lazy read of the object's OWN field at all."""
+        while isinstance(expr, ast.Attribute):
+            expr = expr.value
+        return isinstance(expr, ast.Name) and expr.id in receiver_names
+
     findings = []
     for path in files:
         _, tree = _parse(path)
@@ -1099,10 +1264,7 @@ def lazy_getattr_report(files):
                 continue
             receiver = node.args[0]
             attribute = node.args[1]
-            is_self_or_receiver = (
-                (isinstance(receiver, ast.Name) and receiver.id in ("self", "s", "sim"))
-                or isinstance(receiver, ast.Attribute))
-            if not (is_self_or_receiver and isinstance(attribute, ast.Constant)
+            if not (_rooted_in_receiver(receiver) and isinstance(attribute, ast.Constant)
                     and isinstance(attribute.value, str)):
                 continue
             findings.append({"path": path, "line": node.lineno, "attribute": attribute.value})

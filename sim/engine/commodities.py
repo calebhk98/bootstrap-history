@@ -37,6 +37,18 @@ from typing import (Any, cast, Dict, Iterable, List, Optional, Protocol,
 # sim/world/shared_constants.py the same way - see either module's own "HOW
 # A CONSUMER USES ONE OF THESE" section for why one spelling everywhere
 # avoids this file loading a second time under a second sys.modules key.
+# Unlike core.py (which is only ever reached through an entry point that
+# has already put the repository root on sys.path - simulator.py, cli.py,
+# sim/tests/harness.py), this file is also imported directly by sim/
+# demo_commodities.py, whose own sys.path setup adds sim/ and sim/engine/
+# but not the repository root - so this file adds it itself, the same
+# guarded, idempotent snippet core.py uses, rather than depending on every
+# caller to have done it first. (`os` is already imported above; only `sys`
+# is new here.)
+import sys
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
@@ -193,14 +205,14 @@ class CommodityLedger:
                 continue
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             for material_key, quantity_kg in (node.get("mat") or {}).items():
-                material_tonnes[material_key] += float(quantity_kg) / span / 1000.0        # kg -> tonnes/yr
+                material_tonnes[material_key] += float(quantity_kg) / span / KILOGRAMS_PER_TONNE        # kg -> tonnes/yr
         for node_id in node_ids:
             node = self.nodes.get(node_id)
             if not node or float(node.get("up", 0) or 0) <= 0 or not node.get("mat"):
                 continue
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             for material_key, quantity_kg in node["mat"].items():
-                material_tonnes[material_key] += 0.5 * float(quantity_kg) / span / 1000.0
+                material_tonnes[material_key] += 0.5 * float(quantity_kg) / span / KILOGRAMS_PER_TONNE
         return material_tonnes
 
     def commodity_demand(self, node_ids: Iterable[str] = (),

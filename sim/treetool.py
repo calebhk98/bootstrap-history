@@ -22,6 +22,20 @@ import argparse, json, os, re, sys, collections, statistics
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+# Guarded, idempotent - see sim/engine/commodities.py's own comment at the
+# identical snippet for why a script that may be reached either directly
+# (`python3 sim/treetool.py`, which only gets sim/ itself on sys.path for
+# free) or through `from sim import treetool` (which gets the repository
+# root but not necessarily sim/ itself) needs to put the repository root on
+# sys.path explicitly rather than trust either caller to have done it.
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from sim.presentation import (                                   # noqa: E402
+    MERGE_ERRORS_SHOWN, MERGE_WARNINGS_SHOWN,
+    JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN, JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN,
+    JUDGE_WORST_NODES_SHOWN, JUDGE_NODE_ID_COLUMN_WIDTH_CHARS,
+    JUDGE_DEFECT_CODES_SHOWN, APPLY_CAPS_SAMPLE_SHOWN,
+    APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS, APPLY_CAPS_REASON_TRUNCATE_CHARS)
 DATA = os.path.join(ROOT, "data")
 BR   = os.path.join(DATA, "branches")
 TREE = os.path.join(DATA, "tech_tree.json")
@@ -389,7 +403,7 @@ def _merge_report_collisions(errs, collisions):
     if not collisions:
         return False
     print("errors  : %d" % len(errs))
-    for e in errs[:40]:
+    for e in errs[:MERGE_ERRORS_SHOWN]:
         print("   " + e)
     print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
     for collision in collisions:
@@ -474,13 +488,13 @@ def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns
     print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
           % (len(nodes), added, updated))
     print("errors  : %d" % len(errs))
-    for e in errs[:40]:
+    for e in errs[:MERGE_ERRORS_SHOWN]:
         print("   " + e)
     print("warnings: %d" % len(warns))
-    for warning in warns[:25]:
+    for warning in warns[:MERGE_WARNINGS_SHOWN]:
         print("   " + warning)
-    if len(warns) > 25:
-        print("   ... %d more" % (len(warns) - 25))
+    if len(warns) > MERGE_WARNINGS_SHOWN:
+        print("   ... %d more" % (len(warns) - MERGE_WARNINGS_SHOWN))
     if dangling:
         print("\nmost-wanted unresolved prereq ids (candidates for new nodes):")
         for prereq_id, value in dangling.most_common(20):
@@ -566,7 +580,7 @@ def _judge_structural_defects(n, ancestry, unob):
                              % (len(n["pre"]), len(ancestry))))
     if unob and n["cat"] != "unobtainable":
         defects.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
-                             % ", ".join(sorted(unob)[:3])))
+                             % ", ".join(sorted(unob)[:JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN])))
     return defects
 
 
@@ -667,7 +681,7 @@ def _judge_print_single_node_report(a, nodes, results):
     """The `judge --id X` report card for one node."""
     if a.id not in nodes:
         near = [node_id for node_id in nodes if a.id.lower() in node_id.lower()]
-        raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:10]) or "none"))
+        raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN]) or "none"))
     node, (score, node_defects) = nodes[a.id], results[a.id]
     print("%s  [%s]" % (node["name"], node["id"]))
     print("=" * 78)
@@ -709,9 +723,9 @@ def _judge_print_summary(nodes, results):
 
 def _judge_print_worst_nodes(results):
     print("\nWORST NODES")
-    worst = sorted(results.items(), key=lambda entry: entry[1][0])[:20]
+    worst = sorted(results.items(), key=lambda entry: entry[1][0])[:JUDGE_WORST_NODES_SHOWN]
     for node_id, (score, node_defects) in worst:
-        print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects[:4])))
+        print("   %-34s %3d %s  %s" % (node_id[:JUDGE_NODE_ID_COLUMN_WIDTH_CHARS], score, grade(score), ", ".join(code for code, _ in node_defects[:JUDGE_DEFECT_CODES_SHOWN])))
 
 
 def _judge_print_grade_filter(a, results):
@@ -722,7 +736,7 @@ def _judge_print_grade_filter(a, results):
     print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
     for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
         if "FDCBA".index(grade(score)) <= floor:
-            print("   %-34s %3d %s  %s" % (node_id[:34], score, grade(score), ", ".join(code for code, _ in node_defects)))
+            print("   %-34s %3d %s  %s" % (node_id[:JUDGE_NODE_ID_COLUMN_WIDTH_CHARS], score, grade(score), ", ".join(code for code, _ in node_defects)))
 
 
 def _judge_print_full_report(a, results):
@@ -963,8 +977,10 @@ def cmd_apply_caps(a):
     print("   edges refused (unknown or cycle) %d" % refused)
     print("   unknown node ids                 %d" % unknown)
     print("\nsample of what was added:")
-    for node_id, (got, why) in list(reasons.items())[:12]:
-        print("   %-34s + %-38s %s" % (node_id[:34], ", ".join(got)[:38], why[:70]))
+    for node_id, (got, why) in list(reasons.items())[:APPLY_CAPS_SAMPLE_SHOWN]:
+        print("   %-34s + %-38s %s" % (node_id[:JUDGE_NODE_ID_COLUMN_WIDTH_CHARS],
+                                       ", ".join(got)[:APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS],
+                                       why[:APPLY_CAPS_REASON_TRUNCATE_CHARS]))
     return 0
 
 

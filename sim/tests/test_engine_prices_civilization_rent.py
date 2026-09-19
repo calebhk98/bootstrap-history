@@ -55,17 +55,42 @@ class RentIsWiredInTests(unittest.TestCase):
             self.prices_json = json.load(source)
 
     def test_iugerum_land_is_no_longer_zero_for_rome(self):
-        # This is exactly the number Complaints/43's last update measured
-        # from the standalone CLI (`python3 sim/solve_prices.py --civ
-        # rome_100ad`): 55.779 hours/iugerum. Reproducing it through
-        # sim/engine/prices.py - not sim/solve_prices.py directly - is the
-        # whole point of this test.
+        # UPDATE (stakeholder maintainability item 6, the two map
+        # systems): this used to be 55.779 hours/iugerum, the number
+        # Complaints/43's last update measured from the standalone CLI
+        # (`python3 sim/solve_prices.py --civ rome_100ad`) back when
+        # sim/world/land.py's extensive margin read Rome's SEVEN hand-drawn
+        # `regions` records. It now reads `land_tiles` instead (see that
+        # module's own docstring, UPDATE (stakeholder maintainability item
+        # 6...) section) - 88 tiles instead of 7 regions for Rome - and
+        # the number moved for two measured, physically sensible reasons,
+        # not because anything here broke:
+        #   1. north_africa's own single blended fertility_quality_
+        #      multiplier (1.35 - Complaints/46's own "96% Sahara, rated on
+        #      the strength of the Nile") does not survive contact with
+        #      its own 47 real tiles: they range 0.546-0.935 (measured
+        #      directly off data/world/geography.json's land_tiles), so
+        #      even the BEST of them is below the old blended 1.35 - the
+        #      extensive margin's own ceiling fertility fell.
+        #   2. Rome's own total arable endowment, summed over real tiles
+        #      rather than one book arable_fraction per region, came out
+        #      about 13% LARGER (measured directly against sim/world/
+        #      land.py's own cultivable_land_for_civilization, region-grain
+        #      vs tile-grain), which thins the intensive margin's own
+        #      labour-per-iugerum figure and so its own rent contribution.
+        # Both effects push the price DOWN, which is what happened: this
+        # task's own report has the full before/after account, including
+        # the same measurement for Han China. This is exactly the kind of
+        # deliberate baseline shift CLAUDE.md SS3.2 describes ("every step
+        # toward endogeneity costs historical match in the short run") -
+        # the number the test pins is UPDATED to match the new, more
+        # physically grounded mechanism, not reverted to the old one.
         result = engine_prices.solved_prices(
             _starting_techs("rome_100ad"), self.prices_json,
             civilization_id="rome_100ad")
         self.assertIn("iugerum_land", result.prices_in_labour_hours)
         self.assertAlmostEqual(
-            result.prices_in_labour_hours["iugerum_land"], 55.779, places=2)
+            result.prices_in_labour_hours["iugerum_land"], 35.986, places=2)
 
     def test_omitting_civilization_id_defaults_to_rome(self):
         with_default = engine_prices.solved_prices(

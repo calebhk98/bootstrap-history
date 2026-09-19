@@ -60,6 +60,10 @@ from world import agriculture
 # `sim.world.agriculture`, avoided here on purpose rather than repeated.
 from sim.world.shared_constants import (
     GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
+# Same fully-qualified convention as shared_constants.py just above, for the
+# same reason - see sim/unit_conversions.py's own "HOW A CONSUMER USES ONE
+# OF THESE" section.
+from sim.unit_conversions import PERCENT_SCALE
 
 
 from .economy import EconomyMixin
@@ -1709,7 +1713,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         hazard fires, for the same reason it always was: a shock's
         announced effects should be visible immediately, not lag a step.
         """
-        premium = (self.wage_index / self._wage_index_base - 1.0) * 100
+        premium = (self.wage_index / self._wage_index_base - 1.0) * PERCENT_SCALE
         # The message wants the SAME shortfall wage_index's own property
         # just computed, not a second, separately-derived copy of it - see
         # wage_index's own comment for why it is measured against this
@@ -1717,14 +1721,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # (still tech-mutable) `_pop_scale_base`. Recovered algebraically
         # from `premium` rather than recomputed, so the two can never drift
         # apart: premium == elasticity * shortfall * 100, by construction.
-        shortfall = (premium / 100.0) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
+        shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and yr - self._said_wage_cascade >= 15:
             self._said_wage_cascade = yr
             self.household.log.append((yr, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
                                  "as the population does"
-                             % (round(shortfall * 100), round(premium))))
+                             % (round(shortfall * PERCENT_SCALE), round(premium))))
 
     # -- helpers ------------------------------------------------------------
 

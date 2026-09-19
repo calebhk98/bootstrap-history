@@ -48,6 +48,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import simulator as S
+# Guarded, idempotent - see sim/engine/commodities.py's own comment at the
+# identical snippet for why this needs adding explicitly rather than
+# trusting a caller to have put the repository root on sys.path already.
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from sim.presentation import (
+    AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
+    AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
 
 
 # A material key is a priced line item ("iron_bar_kg"), a node id is not
@@ -191,7 +199,7 @@ def audit():
     }
 
 
-def _bar(share, width=28):
+def _bar(share, width=AUDIT_BAR_WIDTH_CHARS):
     filled = int(round(share * width))
     return "#" * filled + "." * (width - filled)
 
@@ -229,7 +237,7 @@ def _report_output_side(a):
     unmade = [material for material in mats if not material["made_by_recipes"]]
     if unmade:
         lines.append("  Still nothing makes these, worst first:")
-        for material in unmade[:6]:
+        for material in unmade[:AUDIT_UNPRICED_MATERIALS_SHOWN]:
             lines.append("      %-18s consumed by %4d nodes" % (material["material"],
                                                          material["consumed_by_nodes"]))
         lines.append("")
@@ -301,7 +309,7 @@ def _report_every_material(a):
             state = "one technique"
         lines.append("  %-22s %6d  %-30s %s"
                   % (material["material"], material["consumed_by_nodes"],
-                     ", ".join(recipes)[:30] or "-", state))
+                     ", ".join(recipes)[:AUDIT_RECIPE_LIST_TRUNCATE_CHARS] or "-", state))
     return lines
 
 

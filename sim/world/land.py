@@ -91,11 +91,17 @@ THE MECHANISM, IN ORDER.
      `home_regions` (already a plain list of `data/world/geography.json`
      region keys, in every `data/civilizations/*.json` file - Rome holds
      seven, Han China and the Norse each hold exactly one) and returns that
-     civilization's own list of region-parcels: name, arable iugera, and
+     civilization's own list of TILE-parcels: `land_tiles["region_to_
+     tiles"]` resolves each held region to the physical tiles inside it
+     (dozens to over a hundred per civilization - see the UPDATE section
+     below), and every tile carries its own name, arable iugera, and
      fertility. THIS IS WHERE "PER-CIVILISATION AND CHANGEABLE" LIVES. Two
-     civilizations that hold the same `home_regions` list get the same
-     land; a civilization that holds more, or better, regions gets more or
-     better land, with no other code path involved.
+     civilizations that hold the same `home_regions` list resolve to the
+     same set of tiles and get the same land; a civilization that holds
+     more, or better, regions gets more or better land, with no other code
+     path involved - and, per the UPDATE section below, this no longer
+     depends on how many region LABELS that land happens to be filed
+     under, only on which physical tiles it resolves to.
 
   2. QUANTITY DEMANDED. Exactly like `sim/world/deposits.py`'s own metal
      quantity, this project has no closed food-demand system yet, so this
@@ -252,15 +258,105 @@ list at runtime - out of this module's ownership and this round's scope,
 and exactly the boundary CLAUDE.md's own "own ONLY" instruction for this
 task draws.
 
+UPDATE (stakeholder maintainability item 6, two map systems):
+THE EXTENSIVE MARGIN NOW READS `land_tiles`, NOT `regions`. Everything
+above this paragraph describes the mechanism as it stood when the margin's
+own atomic parcel was one of the 21 hand-drawn `regions` records. That was
+the SAME defect Complaints/46 found in `forest_land_ceiling`
+(`sim/engine/economy_mining.py`) and Complaints/50 found in weather
+pooling (`sim/engine/core.py`, since fixed - see that file's
+`_compute_farm_weather_cells`): a hand-drawn region is a LABEL, sized and
+named by whoever drew the map, not a unit of physical quantity, and using
+it as one made a civilization's own numbers depend on how many boxes its
+territory happened to be filed under rather than on how much land, of
+what quality, it actually holds. `north_africa` (5,750,000 km2, one
+`fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the
+strength of the Nile" per Complaints/46) is the concrete case: one region
+record cannot show a margin between its own good land and its own bad
+land, because it has only one fertility figure to its name.
+
+`data/world/geography.json`'s `land_tiles` block (1,139 equal-area
+150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/46's
+own recommended fix, `region_to_tiles` mapping each of the 21 regions to
+the tiles that fall inside it) already carries the SAME `land` fields a
+region record does - `land_area_km2`, `arable_fraction`,
+`fertility_quality_multiplier` - but per tile instead of per region, at
+roughly a hundredth of a hand-drawn region's typical size. `load_tile_
+lands` reads them the same way `load_region_lands` reads a region's own
+`land` block; `cultivable_land_for_civilization` now resolves a
+civilization's `home_regions` to the UNION of tiles those regions map to
+(via `region_to_tiles`, deduplicated and sorted for determinism regardless
+of `home_regions` order) and hands `find_margin_of_cultivation` THAT list
+of parcels - dozens to over a hundred per civilization instead of one to
+seven. `find_margin_of_cultivation` itself is completely unchanged: it
+already took "a list of parcels" as its input and never assumed anything
+about how many there are or what a parcel is called, which is exactly why
+this migration touches no other function in the LABOUR INTENSITY or
+MARGIN OF CULTIVATION sections below.
+
+WHY THIS IS INVARIANT TO RE-PARTITIONING, WHICH THE OLD MECHANISM WAS NOT.
+The old mechanism's answer for a civilization's territory depended on how
+that territory happened to be split into region records: the SAME ground,
+filed as one big region, gave a flat, blended fertility with no internal
+margin; filed as several smaller, differently-fertile regions, the same
+ground would show a real extensive margin between its own better and
+worse parts. Nothing about the physical land changed between those two
+filings - only the label count did. Reading `land_tiles` instead removes
+this dependency at the source: a civilization's own land figures are now
+the union of PHYSICAL TILES its `home_regions` resolve to, and that union
+does not care how many region labels were used to name it or what those
+labels are called - two civilizations (or the same civilization under a
+hypothetical redrawing of `regions` that split or merged some of its
+territory's labels without moving a single tile from one civilization to
+another) holding the same set of tiles get the same territory, the same
+margin, and the same price. `sim/world/land_tile_partition_invariance_
+test.py` (this task's own new test, alongside this module because
+`sim/tests/` is owned by other agents in the shared checkout - see that
+file's own docstring) asserts exactly this property, and fails against
+the pre-migration `cultivable_land_for_civilization` for exactly the
+reason described above.
+
+WHAT DID NOT MOVE: `load_region_lands` (region-keyed, one parcel per
+region, straight off `geography["regions"]`) is UNCHANGED and still
+present - not because anything in THIS module still calls it (nothing
+does, after this update), but because `sim/tests/test_land.py`'s own
+`RegionDataLoadsCleanlyTests` and part of `CivilizationTerritoryTests`
+call it directly to exercise the region data on its own terms, and
+because `regions` is explicitly kept working for whatever else in the
+engine still reads it (`sim/world/deposits.py`'s deposit locations,
+`sim/engine/geography.py`'s centroid/name lookups, `sim/engine/
+economy_freight.py`'s freight distances, `sim/engine/economy_mining.py`'s
+`forest_land_ceiling` - the last of these already fixed for the
+COUNT-of-labels defect by Complaints/46's own per-km2 rewrite, still on
+`regions` for the land AREA itself). None of those are this task's
+ownership or in its scope; see this task's own final report for the
+measured list of what still reads `regions` after this change.
+
+WHAT STILL DOES NOT MOVE, EVEN NOW: a `land_tiles` tile is still one
+parcel at one fertility, the same simplification a `regions` record used
+to make, just at a grain roughly a hundredth the size - `tools/
+generate_geography_tiles.py`'s own generation rule already documents that
+a tile's own `arable_fraction`/`fertility_quality_multiplier` are not
+independently surveyed either, but read off that tile's own Koppen-class
+sample mix. A future finer grid (Complaints/46 and this module's earlier
+sections both call out the stakeholder's stated 10,000-tile goal) would
+sharpen this further with no further change here, for the same reason a
+conquest mechanism needs no change here (see above): this module reads
+whatever `land_tiles` the geography file hands it, at whatever grain that
+file happens to be generated at.
+
 WHAT THIS MODULE DELIBERATELY DOES NOT DO.
 
-  - No intra-region heterogeneity. `sim/world/deposits.py` lists several
-    NAMED deposits per metal at different grades; this module treats each
-    of the 21 regions as ONE parcel at ONE fertility, per the task's own
-    "22 regions is the right grain" instruction. This is exactly why a
-    civilization holding only one region prices land at zero this round
-    (see above) - the finer grain a real within-region soil survey would
-    need is future work, not a defect in the mechanism.
+  - No intra-tile heterogeneity. Each of the 1,139 `land_tiles` tiles is
+    still ONE parcel at ONE fertility - finer than the 21 `regions` this
+    module used to read (roughly a hundredth the area at the median), but
+    still a single number standing in for whatever real variation exists
+    inside a 150,000 km2 cell. `sim/world/deposits.py` lists several NAMED
+    deposits per metal at different grades; nothing here has that
+    resolution within one tile. This is exactly why a civilization whose
+    entire territory happens to be one uniform Koppen class over every
+    tile it holds can still show a small or zero extensive margin - the
+    tiles are finer than the old regions, not infinitely fine.
   - No transport friction between regions. A civilization's whole
     population is priced against its whole territory as one pooled land
     market, the same simplification `sim/world/deposits.py` already makes
@@ -868,6 +964,74 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
     return out
 
 
+def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
+    """{tile_id: RegionLand}, one entry per `data/world/geography.json`
+    `land_tiles` tile - the TILE-GRAIN sibling of `load_region_lands`
+    above, and what `cultivable_land_for_civilization` now reads instead
+    of it. See the module docstring's UPDATE (stakeholder maintainability
+    item 6...) section for why: a tile is a physical 150,000 km2 cell, not
+    a hand-drawn label, so a civilization's own land figures stop
+    depending on how many region records its territory was filed under.
+
+    RegionLand's own `region` field holds the TILE's id here (e.g.
+    `"north_africa_03"`), not a `regions` key - `find_margin_of_
+    cultivation` never assumed anything about what that field names (it
+    only sorts by fertility and breaks ties by it for determinism), so
+    this is not a change to that function, only to what fills the field.
+
+    NOT RUN THROUGH `declare()`, UNLIKE `load_region_lands` ABOVE, AND
+    THAT IS A DELIBERATE DEPARTURE FROM THIS MODULE'S OWN EARLIER
+    DISCIPLINE, NOT AN OVERSIGHT. `_declare_land_area`/`_declare_arable_
+    fraction`/`_declare_fertility` exist so 21 HAND-SET numbers, each
+    worth a human being able to find and question individually, carry
+    their own provenance in `sim/constants.py`'s registry. `land_tiles`
+    is 1,139 tiles - not hand-set at all, but generated in bulk by ONE
+    stated rule (`tools/generate_geography_tiles.py`: equal-area grid,
+    clipped to Natural Earth coastline, `arable_fraction` and `fertility_
+    quality_multiplier` read off each tile's own Koppen-Geiger sample mix
+    via that generator's `KOPPEN_ARABLE_AND_FERTILITY` table - confirmed
+    NOT constant per climate class, since a tile's own sample mix varies
+    tile to tile even within one class). Running `declare()` 1,139 times
+    over per-tile duplicates of that one rule would not add provenance
+    this file does not already carry (every tile's own `source` field
+    already names the generator and the rule; every tile's own `conf`
+    field already carries a confidence) - it would only bloat `sim/
+    constants.py`'s registry with near-identical entries nobody would
+    usefully browse one at a time, which is the opposite of what that
+    registry is for (see its own module docstring: "One place to LOOK").
+    The rule itself, and where it is declared, is `tools/generate_
+    geography_tiles.py`'s own concern, out of this module's ownership.
+    """
+    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    land_tiles = geography.get("land_tiles")
+    if land_tiles is None:
+        # No land_tiles block at all - real data/world/geography.json
+        # always has one (see the module docstring's UPDATE section), so
+        # this only happens for a hand-built `geography` dict a caller
+        # passed directly (a test fixture, most likely) that predates this
+        # migration. Raising rather than silently returning {} makes that
+        # caller's own missing fixture data visible as a clear error
+        # instead of a mysteriously-always-zero land figure downstream.
+        raise KeyError(
+            "geography has no 'land_tiles' block - the extensive margin "
+            "now reads tile-level land (see sim/world/land.py's module "
+            "docstring), not the 'regions' block alone; a hand-built "
+            "geography dict passed to this function needs one too")
+    out = {}
+    for tile_id, tile_entry in land_tiles.get("tiles", {}).items():
+        land_area_km2 = tile_entry["land_area_km2"]
+        arable_fraction = tile_entry["arable_fraction"]
+        fertility = tile_entry["fertility_quality_multiplier"]
+        arable_km2 = land_area_km2 * arable_fraction
+        arable_iugera = arable_km2 * _KM2_TO_HECTARES / IUGERUM_HECTARES
+        out[tile_id] = RegionLand(
+            region=tile_id, land_area_km2=land_area_km2,
+            arable_fraction=arable_fraction,
+            fertility_quality_multiplier=fertility,
+            arable_iugera=arable_iugera)
+    return out
+
+
 # ============================================================================
 # TERRITORY - per civilization, changeable, per the module docstring
 # ============================================================================
@@ -887,29 +1051,75 @@ def _load_civilization(
     return _load_json(path)
 
 
+def _tile_ids_for_home_regions(home_regions: List[str],
+                               land_tiles: Dict[str, Any]) -> List[str]:
+    """The deduplicated, sorted union of `land_tiles["region_to_tiles"]`
+    over every region in `home_regions` - the set of physical tiles this
+    territory resolves to, regardless of how many region labels
+    `home_regions` names or what order they are given in. Sorted (not just
+    deduplicated) so the RESULT, and therefore everything `find_margin_of_
+    cultivation` computes from it, does not depend on `home_regions`'s own
+    input order either - the same determinism `find_margin_of_cultivation`
+    itself already guarantees by breaking ties on `region` name.
+
+    A `home_regions` entry absent from `region_to_tiles` (should not
+    happen for any of this project's 21 real regions - all 21 are mapped,
+    per `docs/architecture/MAP_AND_WEATHER.md` section 1.1) contributes no
+    tiles rather than raising - the same "a gap here is a future region's
+    problem, not this call's" reasoning `load_region_lands` already
+    applies to a region missing its `land` block.
+    """
+    region_to_tiles = land_tiles.get("region_to_tiles", {})
+    tile_ids = set()
+    for region in home_regions:
+        tile_ids.update(region_to_tiles.get(region, []))
+    return sorted(tile_ids)
+
+
 def cultivable_land_for_civilization(
         civilization_id: str, geography: Optional[Dict[str, Any]] = None,
         civilizations: Optional[Dict[str, Any]] = None) -> List[RegionLand]:
-    """This civilization's own list of RegionLand parcels - the sum over
-    the regions named in its `home_regions`, read fresh every call. See
-    the module docstring's WHAT A LATER CONQUEST MECHANISM WOULD HAVE TO
-    TOUCH section: this function does no caching keyed on civilization_id,
-    so a caller that has updated some civilization's own `home_regions`
-    (however that update eventually happens - out of this module's
-    ownership) gets the new territory back on its very next call, with no
-    change needed here.
+    """This civilization's own list of RegionLand parcels - TILE-grain,
+    not region-grain (see the module docstring's UPDATE (stakeholder
+    maintainability item 6...) section) - resolved from the regions named
+    in its `home_regions` via `land_tiles["region_to_tiles"]`, read fresh
+    every call. See the module docstring's WHAT A LATER CONQUEST MECHANISM
+    WOULD HAVE TO TOUCH section: this function does no caching keyed on
+    civilization_id, so a caller that has updated some civilization's own
+    `home_regions` (however that update eventually happens - out of this
+    module's ownership) gets the new territory back on its very next
+    call, with no change needed here.
 
-    A `home_regions` entry naming a region data/world/geography.json does
-    not carry a `land` block for (should not happen for any of this
-    project's real regions, all 21 of which get one this round) is
-    silently skipped rather than raising - the same "a gap here is a
-    future region's problem, not this call's" reasoning `load_region_lands`
-    already applies.
+    A `home_regions` entry naming a region `land_tiles["region_to_tiles"]`
+    has no tiles for (should not happen for any of this project's 21 real
+    regions) contributes no parcels rather than raising - see
+    `_tile_ids_for_home_regions`'s own docstring.
+
+    A civilization with an EMPTY `home_regions` (the landless case
+    `margin_outcome_for_civilization`'s own tests exercise) returns an
+    empty list without even looking at `geography` - checked before the
+    `land_tiles` presence check below, so a civilization that holds no
+    territory prices at zero without needing a `land_tiles` block to
+    exist at all, the same "nothing to resolve, nothing to raise about"
+    shortcut `_tile_ids_for_home_regions` would reach anyway, taken one
+    call earlier so a caller building a minimal geography fixture for a
+    landless civilization is not forced to give it tile data it will
+    never be asked to read.
     """
     civilization = _load_civilization(civilization_id, civilizations)
-    region_lands = load_region_lands(geography)
     home_regions = civilization.get("home_regions") or []
-    return [region_lands[region] for region in home_regions if region in region_lands]
+    if not home_regions:
+        return []
+    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    land_tiles = geography.get("land_tiles")
+    if land_tiles is None:
+        raise KeyError(
+            "geography has no 'land_tiles' block - see load_tile_lands's "
+            "own docstring for why cultivable_land_for_civilization no "
+            "longer falls back to 'regions' alone")
+    tile_lands = load_tile_lands(geography)
+    tile_ids = _tile_ids_for_home_regions(home_regions, land_tiles)
+    return [tile_lands[tile_id] for tile_id in tile_ids if tile_id in tile_lands]
 
 
 # ============================================================================
@@ -1138,9 +1348,10 @@ if __name__ == "__main__":
     for civilization_id in civilization_ids:
         outcome = margin_outcome_for_civilization(civilization_id)
         civilization = _load_civilization(civilization_id)
-        print("\n%s (population %s, holds %d region(s))"
+        print("\n%s (population %s, holds %d region(s), %d land_tiles parcel(s))"
               % (civilization_id, format(civilization["population"], ","),
-                 len(civilization.get("home_regions") or [])))
+                 len(civilization.get("home_regions") or []),
+                 len(outcome.allocations)))
         print("  quantity demanded: %.4g kg grain-equivalent/yr"
               % outcome.quantity_demanded_kg)
         print("  labour intensity (civ-wide): %.4g hours/iugerum applied "

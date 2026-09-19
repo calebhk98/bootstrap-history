@@ -38,6 +38,18 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, REPO_ROOT)
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
+# DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
+# GUESS_HOURS and GROWTH_BOUND_HOURS moved to sim/algorithm_parameters.py
+# (this task's own item 3) and are imported back here, at their own former
+# names, so every existing `solve_prices_core.NAME` reference - including
+# sim/solve_prices.py's and sim/solve_prices_report.py's own `from
+# solve_prices_core import (..., DAMPING_FACTOR, CONVERGENCE_TOLERANCE,
+# ...)` - keeps resolving unchanged. See that module's own docstring for
+# the full reasoning, including the OUTCOME-SENSITIVE / safety-ceiling-only
+# distinction each one is given there.
+from sim.algorithm_parameters import (           # noqa: E402  (see sys.path above)
+    DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE,
+    INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
 
 
 NUMERAIRE_TRADE = "labourer"
@@ -278,26 +290,18 @@ def _meets_capability_floor(material, entry, floor_by_carrier):
 # so a technique flipping from one iteration to the next (a real possibility
 # early on, when every price still carries the same seed guess) nudges the
 # price rather than slamming it, which is what "damped" buys over a raw
-# reassignment. 0.5 was not tuned against an outcome - it is the textbook
-# midpoint - and the run below reports whether it actually converges rather
-# than assuming a coefficient this arbitrary must be fine.
-DAMPING_FACTOR = 0.5
-MAXIMUM_ITERATIONS = 2000
-CONVERGENCE_TOLERANCE = 1e-10
-
-# Every price starts equal, in labour-hours, before the first iteration.
-# The seed value only matters for how many iterations convergence takes and
-# for which technique looks cheapest in round one (see the joint-production
-# note above); it does not bias where the fixed point ends up, because a
-# fixed point is defined by the equations agreeing with each other, not by
-# where the search started.
-INITIAL_PRICE_GUESS_HOURS = 1.0
-
-# Used only by the cycle-productiveness test in compute_resolvable_materials:
-# a price the restricted iteration crosses only if the component is growing
-# without bound rather than converging. Not a plausible real price for
-# anything - see _component_is_productive.
-GROWTH_BOUND_HOURS = 1e9
+# reassignment.
+#
+# DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
+# GUESS_HOURS and GROWTH_BOUND_HOURS - the five constants that used to sit
+# here, each with its own paragraph (0.5 not tuned against an outcome, the
+# textbook midpoint; the iteration ceiling; the convergence definition; the
+# seed guess; the divergence detector) - moved to sim/algorithm_parameters.py
+# and are imported back above, at these same names, so this section and
+# every function below it read unchanged. See that module's own docstring
+# for the full, unshortened paragraphs and for why they moved (this task's
+# own item 3: "algorithmic and computational parameters get their own
+# file").
 
 
 def wage_ratios_by_trade(prices_json):

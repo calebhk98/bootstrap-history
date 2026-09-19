@@ -56,6 +56,7 @@ import collections, json, os
 
 from . import commodities as _commod
 from constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
 class MaterialSupplyMixin:
@@ -489,9 +490,9 @@ class MaterialSupplyMixin:
             coke = self.chosen_fuel(node_id) == "coke"
             for material, quantity in node["mat"].items():
                 if coke and material in ("charcoal_kg", "firewood_kg"):
-                    demand["coal_kg"] += float(quantity) * self.COKE_PER_CHARCOAL / span / 1000.0
+                    demand["coal_kg"] += float(quantity) * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE
                     continue
-                demand[material] += float(quantity) / span / 1000.0     # kg -> tonnes per year
+                demand[material] += float(quantity) / span / KILOGRAMS_PER_TONNE     # kg -> tonnes per year
         # A furnace does not eat charcoal only while it is being built. It eats
         # charcoal every year it runs, forever. Omitting that was why forest
         # ownership never mattered in the model and always mattered in reality.
@@ -504,9 +505,9 @@ class MaterialSupplyMixin:
             for material, quantity in node["mat"].items():
                 if coke and material in ("charcoal_kg", "firewood_kg"):
                     demand["coal_kg"] += (self.STANDING_MATERIAL_DRAW_SHARE * float(quantity)
-                                           * self.COKE_PER_CHARCOAL / span / 1000.0)
+                                           * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE)
                     continue
-                demand[material] += self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / 1000.0
+                demand[material] += self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / KILOGRAMS_PER_TONNE
         return demand
 
     STANDING_MATERIAL_DRAW_SHARE = declare(
@@ -847,7 +848,7 @@ class MaterialSupplyMixin:
         per_kg = self._book_price_per_kg(material)
         if per_kg is None:
             return None
-        buy = per_kg * 1000.0 * self.price_index * self.material_price_factor(material)
+        buy = per_kg * KILOGRAMS_PER_TONNE * self.price_index * self.material_price_factor(material)
         return {"material": material, "buy_per_tonne": buy,
                 "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
                 "market_available_tonnes_per_year": self._material_market_tonnes(material)}
@@ -928,7 +929,7 @@ class MaterialSupplyMixin:
                 continue
             tag = self._material_tag(mat)
             if mat.endswith(self.LAB_SCALE_SUFFIX) and not mat.endswith("_kg"):
-                lab[tag] += amt / 1000.0
+                lab[tag] += amt / KILOGRAMS_PER_TONNE
             else:
                 industrial[tag] += amt
         return industrial, lab

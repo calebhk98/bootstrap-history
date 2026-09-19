@@ -35,6 +35,7 @@ own section 6 warns against forcing before the footprint is measured.
 import math
 
 from .data import trade_family, WAGES
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
 
 
 class StepPhasesMixin:
@@ -931,7 +932,7 @@ class StepPhasesMixin:
                     # denarius of capital bought a ten-thousandth of a hectare
                     # while the demand was measured in hundreds of tonnes.
                     _need_t = (self.annual_material_demand().get("charcoal_kg", 0.0)
-                               / 1000.0) - self.household.forest_ha * self.CHARCOAL_PER_HA
+                               / KILOGRAMS_PER_TONNE) - self.household.forest_ha * self.CHARCOAL_PER_HA
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
@@ -1779,7 +1780,7 @@ class StepPhasesMixin:
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
                                  % (self.household.scandal, _sd,
-                                    100.0 * max(0.0, (self.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
+                                    PERCENT_SCALE * max(0.0, (self.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.household.scandal < _sd * 0.5:
             self.household._said_scandal = 0
         if self.events and self.household.scandal > self.cfg["suspicion_danger"]:

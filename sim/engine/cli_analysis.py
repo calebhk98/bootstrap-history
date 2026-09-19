@@ -23,6 +23,8 @@ import os, random, sys
 from .data import closure, critical_path, load, load_civ, resolve_goal, topo_order
 from .core import Sim
 from constants import declare
+from sim.unit_conversions import PERCENT_SCALE
+from sim.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
 
 from .cli import _founder_lifetime_hours
 
@@ -243,7 +245,7 @@ def cmd_why(a):
     node_id = a.node
     if node_id not in nodes:
         near = [candidate_id for candidate_id in nodes if a.node.lower() in candidate_id.lower()]
-        raise SystemExit("unknown node. did you mean: %s" % (", ".join(near[:8]) or "no idea"))
+        raise SystemExit("unknown node. did you mean: %s" % (", ".join(near[:EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN]) or "no idea"))
     node_record = nodes[node_id]
     print("%s  [%s, confidence %s]" % (node_record["name"], node_record["cat"], node_record["conf"]))
     print("=" * 78)
@@ -256,7 +258,7 @@ def cmd_why(a):
     # "72,000-hour life" did.
     lifetime_hours = _founder_lifetime_hours()
     print("Your hours      : %s   (%.1f%% of a %s-hour life)" %
-          (f"{node_record['ph']:,}", 100.0 * node_record["ph"] / lifetime_hours,
+          (f"{node_record['ph']:,}", PERCENT_SCALE * node_record["ph"] / lifetime_hours,
            f"{lifetime_hours:,.0f}"))
     print("Hired labour    : %s" % (", ".join("%s %s h" % (trade, f"{hours:,}") for trade, hours in node_record["lab"].items()) or "none"))
     print("Materials       : %s" % (", ".join("%s %s" % (material, f"{quantity:,}") for material, quantity in node_record["mat"].items()) or "none"))

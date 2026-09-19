@@ -41,3 +41,18 @@ ignore = [
 # sim/engine/protocol.py is a re-export shim for the engine/proto/ package
 # split. All 178 of its imports are its public surface.
 "sim/engine/protocol.py" = ["F401"]
+# sim/solve_prices.py became the third file of exactly this shape when the
+# 2,761-line price solver split into solve_prices_core.py (the algebra) and
+# solve_prices_report.py (the reporting front end). It keeps the name every
+# caller and every `python3 sim/solve_prices.py` invocation already uses, and
+# its 64 "unused" imports are the whole point of it.
+#
+# IT WAS MISSING FROM THIS LIST FOR A WHILE, AND NOTHING NOTICED, which is
+# worth recording because it says what this list is worth. The suite's ruff
+# topic only selects F821, so 64 F401 findings sat there reported by nobody
+# until sim/code_health.py was written and counted them. A per-file-ignore
+# that has to be remembered by hand, for a pattern this project has now used
+# three times, will be forgotten a fourth time. If a fourth composition point
+# appears, consider marking the pattern in the files themselves rather than
+# maintaining this list.
+"sim/solve_prices.py" = ["F401"]
