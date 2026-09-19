@@ -171,11 +171,11 @@ def _split_json_flag(rest):
     """rest with any bare 'json'/'compact' token removed, and (want_json,
     want_compact) for what was found - checked and stripped ONCE, for every
     command, before that command's own parser ever sees `rest`. Without
-    this, a player typing either documented word in the wrong place lands
-    exactly on the bug _absorb_key_colons was written to stop happening a
-    fourth time: 'available json' has no case above that recognises the bare
-    word "json", so it fell through to the last branch - "a bare word is a
-    subject" - and became a search for a subject literally spelled "json",
+    this, a player typing either documented word in the wrong place risks
+    the same failure mode an unrecognised bare word falls into:
+    'available json' has no case above that recognises the bare
+    word "json", so it would fall through to the last branch - "a bare word is a
+    subject" - and become a search for a subject literally spelled "json",
     matching nothing, with no hint that the word had been understood as
     anything other than mistyped noise. Filtering both out up front, once,
     means every command's own parser goes on reading exactly the words it
@@ -292,14 +292,12 @@ def _parse_rush(command, rest, words, nums, want_json):
     # highest-leverage first.
     #
     # limit:N IS THE FORM THE HELP TEXT ADVERTISES - "add limit:N to cap
-    # it" - and it was the one form this did not accept. `limit:3` is not
-    # a number, so `nums` came back empty, no limit was set, and the
-    # command went on to start everything startable. A player who read
-    # the help, wanted three things, and typed exactly what it told them
-    # to type got twenty-one projects and every denarius of their credit.
-    # The safest-looking spelling of the most expensive command in the
-    # game was the one that removed the safety, silently. Same key:value
-    # spelling `state full:true` already takes.
+    # it" - and it must be accepted: `limit:3` is not itself a bare number,
+    # so if `nums` alone decided the limit, no limit would be set and the
+    # command would start everything startable. The safest-looking
+    # spelling of the most expensive command in the game must not be the
+    # one that silently removes the safety. Same key:value spelling
+    # `state full:true` already takes.
     out = {"cmd": "rush"}
     if any(str(word).lower() in ("force", "confirm", "yes") for word in rest):
         out["force"] = True
@@ -445,8 +443,8 @@ def _parse_available(command, rest, words, nums, want_json):
     low = [word.lower() for word in rest]
     # THE TOKEN LOOP ITSELF, kept here so the scanning (which token is next,
     # when to stop) stays in one place; what each token MEANS is delegated to
-    # the three helpers above, tried in the same order their bodies used to
-    # sit in a single elif chain.
+    # the three helpers above, tried in a fixed order, as an elif chain
+    # would.
     i = 0
     while i < len(low):
         word = low[i]
@@ -566,7 +564,7 @@ def _parse_log(command, rest, words, nums, want_json):
     low = [word.lower() for word in rest]
     # THE TOKEN LOOP ITSELF, kept here so the scanning stays in one place;
     # what each token MEANS is delegated to the three helpers above, tried
-    # in the same order their bodies used to sit in a single elif chain.
+    # in a fixed order, as an elif chain would.
     i = 0
     while i < len(low):
         word = low[i]
@@ -643,10 +641,9 @@ def _parse_withdraw(command, rest, words, nums, want_json):
 def _parse_portfolio(command, rest, words, nums, want_json):
     # 'portfolio json' (or 'portfolio compact') prints the raw reply
     # instead of the rendered table. A player typing that after reading
-    # the JSON docs should not have it silently ignored the way 'state
-    # full' once would have been had it come second - every player of
-    # this game is an AI agent parsing text, and prose is not a stable
-    # interface to parse. want_json is scanned across the whole line
+    # the JSON docs should not have it silently ignored if it comes second
+    # in the line - every player of this game is an AI agent parsing text,
+    # and prose is not a stable interface to parse. want_json is scanned across the whole line
     # (not just rest[0]) by _split_json_flag, upstream of this function.
     return {"cmd": "portfolio", "json": want_json}, None
 
@@ -675,12 +672,13 @@ def _parse_population(command, rest, words, nums, want_json):
 
 
 def _parse_labour(command, rest, words, nums, want_json):
-    # A PLAYER WHO TYPES THE FIELD NAME MEANS THE FIELD. The help shows
+    # A PLAYER WHO TYPES THE FIELD NAME MEANS THE FIELD: the help shows
     # {"cmd":"labour","trade":"smith"}, so `labour trade smith` is the
-    # obvious typed reading of it, and it was answered with "no such trade:
-    # trade". Same for `available subject metallurgy`, which quietly
-    # searched for a subject literally called "subject metallurgy" and
-    # reported nothing startable.
+    # obvious typed reading of it, and the literal word "trade" must be
+    # stripped before picking a trade name, or it reads as "no such trade:
+    # trade". Same risk `available subject metallurgy` avoids by stripping
+    # "subject": left in, it would quietly search for a subject literally
+    # called "subject metallurgy" and report nothing startable.
     _trade_words = [word for word in words if word.lower() != "trade"]
     return {"cmd": "labour", "trade": (_trade_words[0].lower() if _trade_words else None)}, None
 

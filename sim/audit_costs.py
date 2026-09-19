@@ -224,10 +224,10 @@ def _report_output_side(a):
              "  ...that data/production/ states a recipe for  %5d  %5.1f%%"
                   % (len(made), 100.0 * len(made) / max(1, len(mats))),
              "",
-             "  This used to read 'no producer at all' for iron, timber, coal and",
-             "  most of the rest, because it asked the TREE, which records what a",
-             "  node consumes and never what anything makes. data/production/ does",
-             "  state it, so the question is now answered rather than guessed.",
+             "  Counted from data/production/, not from the tree. The tree",
+             "  records what each node CONSUMES and never what anything makes,",
+             "  so asking it this question can only ever return 'no producer at",
+             "  all' for iron, timber, coal and most of the rest.",
              ""]
     unmade = [material for material in mats if not material["made_by_recipes"]]
     if unmade:

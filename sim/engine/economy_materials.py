@@ -4,8 +4,7 @@ data/tech_tree.json today minus the 9 named ones; see the
 GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES comment below for the
 precise 146-of-159 count against the 13 MATERIAL_CHECKS keys).
 
-Split out of economy_market.py (see economy.py's own docstring for the
-whole split's history): every method here answers how much of a raw
+Every method here answers how much of a raw
 material - ore, charcoal, saltpetre, or any of the 159 material
 keys - you can actually get your hands on this year, whether that is
 your own production, a purchase against the empire's market, or stock
@@ -28,10 +27,9 @@ quoted in the stock-vs-flow section below.
 
 MaterialSupplyMixin is composed into EconomyMixin (economy.py) alongside
 the other economy sub-mixins; see that file for the composition and for
-the grouping evidence (CLAUDE.md's naming/heuristic-labelling
-conventions apply here exactly as they did before the split - nothing
-about the rules a number or a comment follows has changed, only which
-file it lives in).
+the grouping evidence. CLAUDE.md's naming/heuristic-labelling conventions
+apply here exactly as they do everywhere else in the engine, regardless
+of which file a method lives in.
 
 THE CLASS-LEVEL CACHE. _commodity_ledger(), _material_commodity_map()
 and _material_prices() each cache their answer on the bare class object
@@ -41,16 +39,16 @@ CommodityLedger, the mat-key-to-commodity-id map, or prices.json's own
 figures differ between one Sim instance and the next in the same
 process - they are read from disk once and shared, deliberately, the
 same lazy-on-the-class pattern _land_freight_physical_inputs() in
-economy_freight.py uses for the same reason. This used to read
-`EconomyMixin` here, then `MarketMixin` after these methods moved out
-of economy.py into economy_market.py, and each move silently broke the
-cache the moment the identifier stopped naming the class actually
-holding these methods - invisibly to import, to `validate` and to
-compilation, surfacing only when a command that reads a material price
-first ran. Renamed to `MaterialSupplyMixin` here because that is the
-class every one of these three methods, and every getattr/setattr
-against this particular cache, now actually lives on - see economy.py's
-own CRITICAL note on this file's history for the fuller account.
+economy_freight.py uses for the same reason.
+
+TRAP: the literal class name in that getattr/setattr MUST match whatever
+class actually holds these three methods. If they are ever moved to a
+different class or file, the cache key has to move with them - a
+mismatch breaks the cache silently, invisible to import, to `validate`
+and to compilation, surfacing only when a command that reads a material
+price first runs and finds a cache that was never populated. See
+economy.py's own CRITICAL note on this file's history for the fuller
+account.
 """
 import collections, json, os
 
@@ -463,11 +461,10 @@ class MaterialSupplyMixin:
     def chosen_fuel(self, k):
         """Which fuel this node would actually burn, given what you have.
 
-        The tree had a fuel OR-group on the blast furnace and a hard-coded
-        4,500 tonnes of charcoal in its material list. The group was decorative:
-        picking coke changed the quality factor and left the charcoal demand
-        exactly where it was, so the model could never show the one substitution
-        that actually decided industrial history.
+        Must actually swap the material demand, not only a quality factor:
+        a fuel OR-group where picking coke changes the quality factor but
+        leaves the charcoal demand untouched can never show the one
+        substitution that actually decided industrial history.
         """
         for group in (self.nodes[k].get("req_any") or []):
             if "fuel" not in str(group.get("group", "")).lower():
@@ -547,14 +544,13 @@ class MaterialSupplyMixin:
     # nothing wired the two together. gold_g (LEDs, transistors: 1-20 grams)
     # is NOT added here, still: annual_material_demand() assumes every *_kg
     # key is kilograms, so a *_g key divided by 1000 would read as a
-    # thousandth of what it is. That used to be "an error too small to
-    # matter... but wrong in principle." It now matters: resource_throttle()
-    # routes every *_g key through the LAB-SCALE stock path instead (see its
-    # own comment and LAB_SCALE_SUFFIX below), which corrects the grams/
-    # kilograms reading at the one place that was ever misreading it, rather
-    # than by adding gold_g to this dict (that would make grams of gold
-    # compete with fin_central_bank's tonnes for the same ANNUAL FLOW, which
-    # is precisely the stock-vs-flow confusion this path exists to undo).
+    # thousandth of what it is. resource_throttle() routes every *_g key
+    # through the LAB-SCALE stock path instead (see its own comment and
+    # LAB_SCALE_SUFFIX below), which corrects the grams/kilograms reading
+    # at the one place that reads it, rather than by adding gold_g to this
+    # dict (that would make grams of gold compete with fin_central_bank's
+    # tonnes for the same ANNUAL FLOW, which is precisely the stock-vs-flow
+    # confusion this path exists to undo).
     MATERIAL_CHECKS = {
         "charcoal_kg": ("charcoal", "forest1"),
         "firewood_kg": ("charcoal", "forest4"),
@@ -614,15 +610,11 @@ class MaterialSupplyMixin:
         `supply`; material_price_factor() reads it too.
 
         GENERALISED: resources.json's empire_output_100ad table and this
-        file's own MARKET_SHARE only ever named a handful of materials by
-        hand, so a material without an entry there used to answer 0 tonnes
-        a year - not "unknown," an actual hard zero, which is why
-        material_price_factor() had to bail out before ever reaching this
-        function at all (see its own comment). A real figure, when one
-        exists, is used unchanged; _generic_national_output_t_per_yr and
-        _generic_market_share supply a reasoned default for everything
-        else, so a material nobody named still has a market rather than
-        not existing.
+        file's own MARKET_SHARE only ever name a handful of materials by
+        hand. A real figure, when one exists, is used unchanged;
+        _generic_national_output_t_per_yr and _generic_market_share supply
+        a reasoned default for everything else, so a material nobody named
+        still has a market rather than an actual hard zero.
         """
         emp = self.res["empire_output_100ad"]
         entry = emp.get(emp_key)
@@ -642,17 +634,15 @@ class MaterialSupplyMixin:
             elif self.running("patron_senatorial"): share *= self.MARKET_STANDING_PATRON_SENATORIAL
             elif self.has("citizenship"):       share *= self.MARKET_STANDING_CITIZENSHIP
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
-        # GEOLOGY, NOT DEMOGRAPHY. This used to be `* self.pop_scale`:
-        # mineral availability scaled by population, so Norse Scandinavia
-        # got 2.3% of Rome's coal because it has 2.3% of the people, and
-        # England in 1300 got 7%, when England is precisely where the
-        # coal actually is. A coalfield does not care how many people
-        # live near it. mineral_scale() derives this instead from the
-        # regions this civilization actually holds and can trade with
-        # (see _compute_mineral_scale). Charcoal stays on pop_scale: it
-        # is not mined, it is a local wood market, and THAT genuinely
-        # does track how much local economic activity there is to buy
-        # firewood from.
+        # GEOLOGY, NOT DEMOGRAPHY: mineral availability must scale with
+        # mineral_scale() - the regions this civilization actually holds
+        # and can trade with (see _compute_mineral_scale) - not with
+        # self.pop_scale. A coalfield does not care how many people live
+        # near it; England in 1300 gets a large share of Europe's coal
+        # market because England is where the coal is, independent of its
+        # population. Charcoal stays on pop_scale: it is not mined, it is
+        # a local wood market, and THAT genuinely does track how much
+        # local economic activity there is to buy firewood from.
         scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
@@ -712,19 +702,16 @@ class MaterialSupplyMixin:
         SHARED supply it actually draws on -- instead of leaving it split by
         raw material key.
 
-        Before this, resource_throttle() and material_price_factor() both
-        checked each material key against the WHOLE of its supply
-        independently: iron_bar_kg's need was compared to the full iron
-        supply, then iron_ore_kg's need was compared to that SAME full
-        supply again, as though each had it to itself. A plan needing 5 t/yr
-        of ore and 4 t/yr of bar against a 6 t/yr supply passed both checks
-        (neither 5 nor 4 alone exceeds 6) while actually needing 9 -- fifty
-        per cent more than there is. Adding copper_wire_kg and wire_drawn_kg
-        to MATERIAL_CHECKS without fixing this would have made it worse: a
-        wire-heavy electrical age could show copper as fully supplied by
-        three separate lies at once. Grouping by (emp_key, tag) sums every
+        Materials that draw on the SAME supply pool must be summed
+        together, not checked independently against the whole pool each:
+        checking iron_bar_kg's need against the full iron supply, then
+        iron_ore_kg's need against that SAME full supply again, would treat
+        each as though it had the pool to itself - a plan needing 5 t/yr of
+        ore and 4 t/yr of bar against a 6 t/yr supply would pass both
+        checks (neither 5 nor 4 alone exceeds 6) while actually needing 9,
+        fifty per cent more than there is. Grouping by (emp_key, tag) sums every
         material key that draws on the SAME pool (iron_bar_kg + iron_ore_kg;
-        now copper_kg + copper_wire_kg + wire_drawn_kg) while keeping
+        copper_kg + copper_wire_kg + wire_drawn_kg) while keeping
         charcoal_kg and firewood_kg separate, because they draw on the same
         forest at DIFFERENT yields per hectare (forest1 vs forest4, see
         _own_material_supply) and are not simply additive tonne-for-tonne.
@@ -734,15 +721,14 @@ class MaterialSupplyMixin:
         cannot inherit a bug by copying this pattern into a place where it
         is not.
 
-        GENERALISED: this used to iterate MATERIAL_CHECKS's own 13 keys and
-        look each one up in `demand`, so any OTHER key `demand` carried was
-        silently never looked at - not grouped wrong, simply never
-        consulted, which is the exact gap COMMODITY_DYNAMISM.md measured
-        (149 of the then 162 material keys; 146 of 159 today). annual_material_demand() was already
-        generic over every material key a node's `mat` dict names; this now
-        is too, routing each one through _material_tag (curated grouping
-        where one exists, the material's own bare key otherwise) instead of
-        only the hand-listed 13.
+        GENERALISED: must iterate over every material key `demand` itself
+        carries, not just MATERIAL_CHECKS's own 13 keys - looking each of
+        the 13 up in `demand` would leave any OTHER key `demand` carried
+        silently unconsulted, the exact gap COMMODITY_DYNAMISM.md measures
+        (146 of 159 material keys today). annual_material_demand() is
+        already generic over every material key a node's `mat` dict names;
+        this routes each one through _material_tag (curated grouping where
+        one exists, the material's own bare key otherwise) to match.
         """
         by_tag = collections.Counter()
         for mat, amt in sorted(demand.items()):

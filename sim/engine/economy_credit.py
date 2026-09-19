@@ -241,10 +241,10 @@ class CreditMixin:
 
         revenue()/upkeep() computed ONCE, here, and handed to both
         living_cost() and credit_limit() (which itself forwards them to its
-        own living_cost() call) as `_rev`/`_upkeep`, rather than the five
-        further calls between them this used to make for the same two
-        numbers - see living_cost's own docstring for why reusing them is
-        safe: nothing in this whole call graph assigns to self anywhere.
+        own living_cost() call) as `_rev`/`_upkeep`, rather than recomputed
+        by separate calls for the same two numbers - see living_cost's own
+        docstring for why reusing them is safe: nothing in this whole call
+        graph assigns to self anywhere.
         """
         rev = self.revenue()
         upkeep_amount = self.upkeep()
@@ -308,19 +308,17 @@ class CreditMixin:
                     break
             if worst is None:
                 break
-            # CLOSE IT, do not unlearn it. Shedding a loss-maker in ruin is
-            # shutting the doors, and what that saves is its running cost. The
-            # knowledge stays: you cannot forget how a thing works because you
-            # could not pay for it this year. (This used to discard it from
-            # `done` two lines under a comment saying it did not.)
+            # CLOSE IT, do not unlearn it: shedding a loss-maker in ruin is
+            # shutting the doors, and what that saves is its running cost.
+            # The knowledge stays in `done` - you cannot forget how a thing
+            # works because you could not pay for it this year.
             self.household.operating.discard(worst)
             # MOTHBALLED, not merely discarded: this is the plant falling into
             # disrepair, exactly like a deliberate `mothball`, and it must show
             # up the same way - in `state.mothballed`, and NOT back in
-            # `available` looking like research you have never done. Before
-            # this it was a bare discard, so a repossessed work reappeared
-            # indistinguishable from something you had never built, and
-            # `restore` (a fraction of the cost) was never offered.
+            # `available` looking like research you have never done, nor
+            # indistinguishable from something you had never built, with
+            # `restore` (a fraction of the cost) never offered for it.
             self.household.mothballed.add(worst)
             shed.append(worst)
         if shed:
@@ -570,13 +568,11 @@ class CreditMixin:
         # stop everything in progress: you cannot fund it
         if self.household.active:
             dropped = sorted(self.household.active)
-            # WHAT YOU PAID IS NOT BURNED. "Halted" means paused to a reader
-            # and meant deleted here: a break tester watched 795 denarii and
-            # about 800 founder-hours vanish, with scientific_method dying 115
-            # denarii short of done and every hour already spent. A half-built
-            # thing is still half built when the money runs out; the site does
-            # not un-dig itself. What you paid stands to your credit and comes
-            # off the bill when you begin again.
+            # WHAT YOU PAID IS NOT BURNED: "Halted" must mean paused, not
+            # deleted - a half-built thing is still half built when the
+            # money runs out, the site does not un-dig itself. What you
+            # paid stands to your credit and comes off the bill when you
+            # begin again.
             _paid = getattr(self.household, "paid_towards", None)
             if _paid is None:
                 _paid = self.household.paid_towards = {}
@@ -613,16 +609,14 @@ class CreditMixin:
             for node_id in burden:
                 if self.household.capital >= -limit:
                     break
-                # THEY TAKE THE CONCERN, NOT YOUR MEMORY OF HOW IT WORKED.
-                # This discarded the node from `done` and left it in
-                # `operating`, so afterwards it was simultaneously forgotten
-                # and running: `state` said the concern was running, `ventures`
-                # billed 200 a year for it, `money` charged nothing, and all
-                # four verbs refused it on mutually contradictory grounds -
-                # `start` said restore it, `restore` said start it, `open` said
-                # you do not know it, `mothball` said you never built it. A
-                # weird-play tester reached that state in seven years from a
-                # fresh start and could never clear the entry.
+                # THEY TAKE THE CONCERN, NOT YOUR MEMORY OF HOW IT WORKED:
+                # discarding the node from `done` while leaving it in
+                # `operating` would make it simultaneously forgotten and
+                # running - `state` saying the concern is running,
+                # `ventures` billing for it, `money` charging nothing, and
+                # `start`/`restore`/`open`/`mothball` refusing it on
+                # mutually contradictory grounds, with no way to clear the
+                # entry.
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
@@ -634,10 +628,11 @@ class CreditMixin:
                 # (a fraction of the cost) was never offered for it.
                 self.household.mothballed.add(node_id)
                 taken.append(node_id)
-            # Only say it if it happened. This line used to fire every year
-            # whether or not there was anything left to take, so a run with
-            # nothing to lose logged creditors seizing it over and over.
-            # NAME THEM, for the same reason shed_loss_makers now does: a
+            # Only say it if it happened: firing this every year regardless
+            # of whether anything was actually taken would log creditors
+            # seizing something for a run that has nothing left to take,
+            # over and over.
+            # NAME THEM, for the same reason shed_loss_makers does: a
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
@@ -646,12 +641,13 @@ class CreditMixin:
                                      "knowledge; reopening means paying for the "
                                      "premises again"
                                      % (len(taken), ", ".join(taken))))
-        # And the household goes. This was the missing piece: a tester's run sat
-        # pinned at the credit floor making no progress for a century because the
-        # upkeep of a household they could no longer feed consumed every denarius
-        # of income forever. Nobody keeps four hundred dependants they cannot
-        # feed. People are sold or freed and they leave, and the point of modelling
-        # it is that shedding them is how you become solvent again.
+        # AND THE HOUSEHOLD GOES: nobody keeps four hundred dependants they
+        # cannot feed. Without shedding them, the upkeep of a household a
+        # civilisation can no longer feed would consume every denarius of
+        # income forever, pinning a run at the credit floor with no way to
+        # make progress. People are sold or freed and they leave, and the
+        # point of modelling it is that shedding them is how you become
+        # solvent again.
         if self.household.capital < -limit and (self.household.slaves or self.household.freedmen):
             freed = self.household.slaves + self.household.freedmen
             self.manumit(self.household.slaves)          # you do not sell them on
@@ -661,15 +657,13 @@ class CreditMixin:
             self.household.log.append((yr, "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed))
 
-        # DEBT BONDAGE, where the society had it, and worked off, because that is
-        # what it mostly was. A tester asked me to reconsider having refused it:
-        # "I know a lot of slave debt was also something you worked off, so it
-        # wouldn't necessarily be a dead end." That is right, and the general
-        # case matters more than the Roman one: Han debt servitude, the Norse
-        # debt-thrall and Mexica tlacotin were all terms of service that ended,
-        # were redeemable, and in the Mexica case were not heritable. Rome is the
-        # exception, not the rule, because nexum was abolished in 326 BC, so Rome
-        # carries debt_bondage false and goes straight to the write-off below.
+        # DEBT BONDAGE, where the society had it, modelled as a TERM OF
+        # SERVICE that is worked off, because that is what it mostly was:
+        # Han debt servitude, the Norse debt-thrall and Mexica tlacotin
+        # were all terms of service that ended, were redeemable, and in
+        # the Mexica case were not heritable. Rome is the exception, not
+        # the rule, because nexum was abolished in 326 BC, so Rome carries
+        # debt_bondage false and goes straight to the write-off below.
         #
         # In bondage your hours are not your own. That is the whole penalty, and
         # it is a heavy one in a game whose scarcest resource is your hours; but
@@ -689,19 +683,20 @@ class CreditMixin:
         # and the rest is written off. You keep your standing, your knowledge and
         # your practice, which is exactly what you started with.
         #
-        # ONCE A DECADE AT MOST. The first version settled whenever the balance
-        # sat a denarius past the line, so a household whose rent slightly
-        # exceeded its credit was "settled" every single year, logging the same
-        # dramatic event five hundred times. A write-off is a once-in-a-life
-        # humiliation, not an annual accounting entry, and between them you are
-        # simply in arrears, which already has consequences of its own.
+        # ONCE A DECADE AT MOST: settling whenever the balance sits a
+        # denarius past the line would "settle" a household whose rent
+        # slightly exceeds its credit every single year, logging the same
+        # dramatic event over and over. A write-off is a once-in-a-life
+        # humiliation, not an annual accounting entry, and between them you
+        # are simply in arrears, which already has consequences of its own.
         if self.household.capital < -limit and yr - getattr(self.household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             self.household.last_settlement = yr
             self.household.capital = -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION
-            # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED. Two settlements
-            # each said "reputation -12" against a reputation of 4.9, and the
-            # second did nothing at all - a break tester checked, and was right
-            # that a penalty which cannot be paid should not be quoted.
+            # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
+            # fixed "reputation -12" against a reputation of 4.9 would say
+            # the same thing twice while the second application does
+            # nothing at all - a penalty that cannot be paid should not be
+            # quoted as though it were.
             _rep_hit = min(self.SETTLEMENT_REPUTATION_HIT, max(0.0, self.household.reputation))
             self.household.reputation = max(0.0, self.household.reputation - self.SETTLEMENT_REPUTATION_HIT)
             # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
@@ -786,17 +781,16 @@ class CreditMixin:
         """
         if self.household.capital >= 0 or getattr(self.household, "insolvent_years", 0) < 8:
             return None
-        # THE SAME NET THE LEDGER PRINTS. This left out the interest on the
-        # arrears, which is the one cost that exists BECAUSE you are in
-        # arrears: a break tester read "you lose 46 denarii a year" directly
-        # above "Net/yr: -159.5" and reported the banner as quoting a loss that
-        # is not the loss.
+        # THE SAME NET THE LEDGER PRINTS: must include the interest on the
+        # arrears, the one cost that exists BECAUSE you are in arrears -
+        # leaving it out would quote a loss (e.g. "you lose 46 denarii a
+        # year") that disagrees with the ledger's own "Net/yr" figure
+        # directly above it.
         interest = max(0.0, -self.household.capital) * self.debt_interest_rate()
-        # revenue_capacity(), to actually BE "the same net the ledger
-        # prints" above, now that the ledger's own net_per_year reads it
-        # too - both were reading plain revenue() and calling themselves
-        # the standing figure, which is exactly what revenue_capacity()
-        # exists to be instead.
+        # revenue_capacity(), NOT plain revenue(): the ledger's own
+        # net_per_year reads revenue_capacity() too, so this and that net
+        # can only actually be "the same net" if both call the same
+        # standing-figure function.
         standing_revenue = self.revenue_capacity()
         standing_upkeep = self.upkeep()
         standing_living = self.living_cost(
@@ -966,12 +960,12 @@ class CreditMixin:
         # for everything it built and ate at Roman prices, and a cheap one got
         # the discount twice. Bread costs what bread costs where you are.
         price_index = self.price_index
-        # CALLED ONCE, NOT THREE TIMES. revenue() and wage_bill() are each
+        # CALLED ONCE, NOT THREE TIMES: revenue() and wage_bill() are each
         # pure functions of state that does not move within this call (no
         # project completes, no venture opens, nothing is hired between
-        # here and the return), so the two more calls this used to make -
-        # one more of each, below - recomputed the same figures for no
-        # reason. Profiling a 300-year single-seed run found revenue()
+        # here and the return), so recomputing them a second or third time
+        # for the same figures is pure waste. Profiling a 300-year
+        # single-seed run found revenue()
         # alone costing 2.4s of its own time and 21.9s cumulative over
         # 28,423 calls; living_cost() was responsible for two of every
         # three of those calls. See PERFORMANCE.md.
@@ -987,14 +981,14 @@ class CreditMixin:
         if self.running("patron_senatorial"):  status += self.LIVING_COST_STATUS_PATRON_SENATORIAL * price_index
         if self.running("patron_imperial"):    status += self.LIVING_COST_STATUS_PATRON_IMPERIAL * price_index
         status += max(0.0, self.household.capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
-        # A RUINED MAN STOPS KEEPING UP APPEARANCES. This was unconditional and
-        # there was no way to shed it: a Rome run sat at 1,343 of revenue
-        # against 1,391 of living costs, of which 1,100 was the standing upkeep
-        # of a citizenship and a senatorial patron it could no longer afford,
-        # and bled 741 a year for sixty-four years with no lever anywhere. That
-        # is not what happens. You stop giving games, you dismiss the
-        # household, you are seen at fewer dinners - and everyone notices,
-        # which is what the reputation floor is already for.
+        # A RUINED MAN STOPS KEEPING UP APPEARANCES: status spending must be
+        # capped by what is actually left after eating (`room` below), not
+        # carried as a fixed, unconditional cost - an uncapped citizenship
+        # or patron upkeep a household can no longer afford would bleed it
+        # every year with no lever to reduce it. You stop giving games, you
+        # dismiss the household, you are seen at fewer dinners - and
+        # everyone notices, which is what the reputation floor is already
+        # for.
         #
         # You spend on appearances out of what is left after eating; never more
         # than the nominal figure, and never so much that the appearances

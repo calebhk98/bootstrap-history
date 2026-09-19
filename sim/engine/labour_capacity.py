@@ -246,10 +246,9 @@ class CapacityMixin:
         literate men is that a school, an academy or an imperial patron
         hands them over ALREADY TRAINED, on the institution's own payroll -
         which is exactly what staff_capacity()'s `sc` already computes, and
-        already used to justify auto_hire's own math before this function
-        capped hire() and train() at a sixth of it. So the wall a person at
-        a keyboard is held to is the same market-share pool as before PLUS
-        the same institutional pool auto_hire was already trusted to grow
+        what auto_hire's own math already relies on. So the wall a person
+        at a keyboard is held to is the same market-share pool PLUS
+        the same institutional pool auto_hire is already trusted to grow
         toward: a city of a million cannot produce twenty-five idle
         scholars for one household to hire off the street, but it can
         certainly produce them once that household has built the school
