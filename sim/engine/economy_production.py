@@ -737,7 +737,7 @@ class ProductionMixin:
     def institution_places(self, node_id):
         """Roughly how many people ONE UNIT of this establishment is built to
         support - see institution_upkeep, which multiplies this by
-        institution_units(k) itself, so callers wanting the total should read
+        institution_units(node_id) itself, so callers wanting the total should read
         that, not this, for anything in SCALABLE_INSTITUTIONS.
 
         Read off the same table staff_capacity() and supervision_room() use, so

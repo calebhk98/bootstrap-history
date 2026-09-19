@@ -704,14 +704,14 @@ class CreditMixin:
             #
             # AND SAY IF THE UNLOCK DATE JUST MOVED: a second settlement
             # while the first freeze had not yet lifted pushes it from
-            # yr+5 or yr+12 out to a fresh yr+12, and that has to be
+            # year+5 or year+12 out to a fresh year+12, and that has to be
             # announced - a deadline that quietly slides is worse than a
             # longer fixed one would have been.
             # A FREEZE HAS TO HAVE BEEN ACTUALLY IN FORCE to "move" - the
             # default _frozen_before of 0 is "never frozen", not a freeze
             # that this settlement then extended, and comparing only the
             # before/after VALUES said a date had moved on every first-ever
-            # settlement (0 -> yr+12 is a bigger number, by that test, same
+            # settlement (0 -> year+12 is a bigger number, by that test, same
             # as a real extension).
             _moved = (_frozen_before > year
                      and self.household.credit_frozen_until > _frozen_before)

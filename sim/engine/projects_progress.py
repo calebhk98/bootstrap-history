@@ -33,8 +33,8 @@ class ProgressMixin:
     # billion hours in a year - but a company able to field more hands must
     # be able to spend twice as much for half as long, not be held to a
     # fixed yearly toll. lab_year_draw is the honest shape of the
-    # constraint: a TOTAL (n["lab"][t], drawn down in
-    # st["lab_left"]), a per-year CEILING somewhat above the pace the node was
+    # constraint: a TOTAL (node["lab"][trade_id], drawn down in
+    # project_state["lab_left"]), a per-year CEILING somewhat above the pace the node was
     # calibrated at (a site has only so many benches, so extra hands beyond a
     # multiple of that still go to waste), and a maximum calendar SPAN past
     # which the undertaking is abandoned rather than left to drift for
@@ -52,7 +52,7 @@ class ProgressMixin:
             "measured against any real crew-size elasticity.")
 
     def project_hour_pace(self, node_id):
-        """How many of YOUR OWN hours active project `k` would draw this year
+        """How many of YOUR OWN hours active project `node_id` would draw this year
         if nothing else competed for the pool - step()'s own uncapped want,
         read here rather than re-derived, so anything reporting on it before
         the allocation runs (the 'work' warning below) cannot silently
@@ -124,7 +124,7 @@ class ProgressMixin:
         past that, the people who understood the early stages are dead or
         have moved on, and continuing is not finishing the same project, it
         is starting a new one that happens to reuse the site. A
-        node whose OWN calendar floor (n["yrs"]) is already longer than ten
+        node whose OWN calendar floor (node["yrs"]) is already longer than ten
         years is one this tree already marks as diffusion-limited rather than
         personal - see core.py's POP_TECH_RAMP_YEARS and the `floor` logic in
         step() - so it earns proportionately more room, to a ceiling of four
@@ -134,8 +134,8 @@ class ProgressMixin:
         return max(self.LAB_MAX_SPAN_FLOOR_YEARS, float(node["yrs"]) * self.LAB_MAX_SPAN_MULTIPLE)
 
     def _effective_lab_left(self, node_id, project_state):
-        """What is left of each hired trade's total for active project `k`,
-        read-only: never writes st["lab_left"], unlike lab_year_draw (the
+        """What is left of each hired trade's total for active project `node_id`,
+        read-only: never writes project_state["lab_left"], unlike lab_year_draw (the
         only place that is allowed to initialise it for real, because doing
         so is itself a decision - the guess below - that should happen once
         per project, not once per caller that wants to look).
@@ -151,15 +151,15 @@ class ProgressMixin:
         return {trade: want * left_frac for trade, want in node["lab"].items()}
 
     def trade_draw_plan(self, node_id, lab_left=None):
-        """What project `k` would like to draw from each hired trade this
+        """What project `node_id` would like to draw from each hired trade this
         year, if the trade could supply it without limit - the DEMAND side
         of lab_year_draw's per-trade loop, read-only and with no knowledge of
         what any OTHER project wants or what the trade can actually supply.
 
         `lab_left` is what is left of each trade's total: None means a
         project that has not started yet, so the full want is still owed.
-        For an active project pass self._effective_lab_left(k, st) (or
-        st["lab_left"] directly once lab_year_draw has initialised it).
+        For an active project pass self._effective_lab_left(node_id, project_state) (or
+        project_state["lab_left"] directly once lab_year_draw has initialised it).
 
         lab_year_draw calls this for nominal/ceiling/left and then clamps
         each trade to what it can actually supply this year (hours_you_can_
@@ -215,7 +215,7 @@ class ProgressMixin:
         return out
 
     def lab_year_draw(self, node_id, project_state, frac, hired_left):
-        """This year's hired-labour draw for active project `k`.
+        """This year's hired-labour draw for active project `node_id`.
 
         Returns (hh, worst, frac, abandon): `hh` is the total hired hours
         drawn this year (what step() checks against `hired_left`), `worst` is
@@ -227,7 +227,7 @@ class ProgressMixin:
         and `abandon` is None or a reason the project should be dropped
         because it ran out of calendar (see lab_max_span above).
 
-        Mutates st["lab_left"] and self.household.trade_hours_used as a side effect,
+        Mutates project_state["lab_left"] and self.household.trade_hours_used as a side effect,
         exactly where the code this replaced did. The DEMAND side of the
         numbers below (nominal, ceiling, left) comes from trade_draw_plan,
         the same read-only formula anything reporting on the portfolio before
@@ -354,7 +354,7 @@ class ProgressMixin:
     # diminishing, capped shape as the risk term above and for the same
     # reason - RETRY_CALENDAR_CAP is comfortably short of 1.0 so a retried
     # programme is never instantly ready, only readier than the last one.
-    # Read off self.household.active[k]["yrs"] AT THE MOMENT OF FAILURE, not off a
+    # Read off self.household.active[node_id]["yrs"] AT THE MOMENT OF FAILURE, not off a
     # recomputed floor: core.py's own completion gate (the reputation-
     # shrinking floor for diffusion-limited nodes) already decided how many
     # years this attempt actually took before calling here, and banking a
@@ -381,9 +381,9 @@ class ProgressMixin:
             "curve.")
 
     def _retry_calendar_retain(self, node_id, attempt_index=None):
-        # See _retry_risk_multiplier's comment on `m` - same reason, same
+        # See _retry_risk_multiplier's comment on `attempt_index` - same reason, same
         # contract: the real failure count still drives every actual retry;
-        # `m` only lets a projection ask about a hypothetical one.
+        # `attempt_index` only lets a projection ask about a hypothetical one.
         if attempt_index is None:
             attempt_index = self.household.failed_attempts.get(node_id, 0)
         if attempt_index <= 0:
@@ -455,9 +455,9 @@ class ProgressMixin:
         a completed process controller has earned it (see
         _control_relief_multiplier just above). Equal to the bare node risk
         the first time anything is tried, with no controller built. A screen
-        quoting a node's risk once failed_attempts[k] is above zero, or once
+        quoting a node's risk once failed_attempts[node_id] is above zero, or once
         the controller is done, should read THIS, not the tree's bare
-        n["risk"] - that number is no longer what the dice use.
+        node["risk"] - that number is no longer what the dice use.
         """
         return (self.nodes[node_id]["risk"] * self._retry_risk_multiplier(node_id)
                 * self._control_relief_multiplier(node_id))
@@ -504,8 +504,9 @@ class ProgressMixin:
     def calendar_floor(self, node_id):
         """Calendar years THIS attempt needs to elapse before a completion
         roll can fire at all - the SAME formula step() uses to gate
-        `_complete` (see core.py, where a project's own `st["yrs"]` is
-        compared against this), not a second copy of it. Diffusion-limited
+        `_complete` (see core.py, where a project's own
+        `self.household.active[node_id]["yrs"]` is compared against this), not a
+        second copy of it. Diffusion-limited
         nodes (yrs >= 5) shrink as reputation grows: a civilisation that
         already does a hundred complicated things does not start the social
         diffusion of the hundred-and-first from zero credibility.
@@ -518,7 +519,7 @@ class ProgressMixin:
         return floor
 
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
-        """Expected calendar years to SUCCEED at k, counting every retry the
+        """Expected calendar years to SUCCEED at node_id, counting every retry the
         dice force - not the bare calendar_floor, and not a plain geometric
         series on the raw risk field either. A failure does not roll the
         exact same dice again: the per-attempt risk and the per-attempt wait
@@ -526,7 +527,7 @@ class ProgressMixin:
         sum over "the first i attempts all failed" with a shrinking risk and
         a shrinking wait at each step.
 
-        THE RISK TERM IS READ FROM effective_risk(k), NEVER REIMPLEMENTED.
+        THE RISK TERM IS READ FROM effective_risk(node_id), NEVER REIMPLEMENTED.
         effective_risk is the one place allowed to know everything that
         moves a node's odds - today that is only retry learning
         (_retry_risk_multiplier), but it is the designated home for any
@@ -536,11 +537,11 @@ class ProgressMixin:
         those are or duplicating how they combine. To ask "what would
         attempt i+1's odds be" for a hypothetical future i without actually
         recording a failure, this stands in for "i failures so far" by
-        briefly setting failed_attempts[k] to i, reads effective_risk(k),
+        briefly setting failed_attempts[node_id] to i, reads effective_risk(node_id),
         and restores the real count immediately after - in a `finally`, so
         a real failure count is never left clobbered even if something
         above raises. The calendar term has no such second multiplier (see
-        _retry_calendar_retain) and is asked the same way, via its own `m`.
+        _retry_calendar_retain) and is asked the same way, via its own `attempt_index`.
 
         Three assumptions, stated because a wrong number here is worse than
         none:

@@ -114,7 +114,7 @@ class CompletionMixin:
             # of the elapsed clock, not zero - it is the risk term above,
             # not this one, that has nothing to show after only one
             # failure. What this banks keeps growing, with diminishing
-            # returns, as failed_attempts[k] grows, and is capped well
+            # returns, as failed_attempts[node_id] grows, and is capped well
             # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
             # programme is only ever readier, never instantly ready.
             _retain = self._retry_calendar_retain(node_id)

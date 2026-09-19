@@ -175,7 +175,7 @@ def cmd_agent(args):
                              % (type(error).__name__, error)}
         # SAVE FIRST, THEN SPEAK - the same fix `play` already has (see its
         # own "SAVE FIRST, THEN SPEAK" comment). By this line
-        # `_agent_dispatch` has already mutated `s` in memory - a `step`
+        # `_agent_dispatch` has already mutated `sim` in memory - a `step`
         # command has already moved the calendar - so writing that to disk
         # cannot be left waiting on whether the reply is printed
         # successfully: piping `agent` through something like `head` closes

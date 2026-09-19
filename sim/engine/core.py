@@ -865,7 +865,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # A cell's identity is its own `cell_id` string (a land_tiles tile id,
     # e.g. "italy_02" - already globally unique across every region, per
     # geography.json's own `land_tiles.tiles` keys), not a (region, index)
-    # pair. That is what lets `_farm_year_weather_seed(yr, region=cell_id)`
+    # pair. That is what lets `_farm_year_weather_seed(year, region=cell_id)`
     # below reuse that method completely unchanged (Complaints/47's WIRING
     # TWO): the parameter is documented there as "an optional region", but
     # nothing about the seed formula actually requires the string passed to
@@ -1183,7 +1183,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         itself, zero correlation with every other region").
 
         STEP BY STEP.
-        1. `independent_draws[i] = Random(_farm_year_weather_seed(yr,
+        1. `independent_draws[i] = Random(_farm_year_weather_seed(year,
            region=cells[i].cell_id)).gauss(0.0, 1.0)` - one standard normal
            per cell, EACH ONE a pure function of (civilisation id, cell id,
            year), reusing `_farm_year_weather_seed` completely unchanged
@@ -1243,7 +1243,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         A civilisation with no usable cells at all (empty `home_regions`,
         or `_compute_farm_weather_cells` otherwise came back empty) falls
-        back to one draw, seeded from `_farm_year_weather_seed(yr)` with no
+        back to one draw, seeded from `_farm_year_weather_seed(year)` with no
         region, applied to the whole territory - a civilisation file this
         mechanism is not meant to touch runs with a single civilisation-wide
         weather draw.

@@ -550,23 +550,23 @@ class StepPhasesMixin:
             # hundred and forty-six nodes on the road to the goal. This is
             # the same distinction start_reason learned an hour earlier.
             # Hoisted out of the loop below: it closes only over `self` and
-            # the memos above, never over the loop variable `k`, so defining
+            # the memos above, never over the loop variable `node_id`, so defining
             # it fresh on every one of ~2,800 iterations bought nothing.
             #
-            # _gone(t) ITSELF IS NOW MEMOIZED TOO (_gone_memo), for the same
+            # _is_gone(trade) ITSELF IS NOW MEMOIZED TOO (_gone_memo), for the same
             # reason _market_supply/_trade_avail already are: it reads only
-            # _trade_avail(t), _market_supply(t) and
-            # self._trade_headcount_pending(t), and the last of those
+            # _trade_avail(trade), _market_supply(trade) and
+            # self._trade_headcount_pending(trade), and the last of those
             # (labour.py) reads only self.household.training and self.household.employees -
             # neither mutated anywhere in this block; train(), at the very
             # end of it, is the only thing that changes either, exactly as
             # the comment above already established for the other two. So
-            # _gone(t) is just as pure a function of (staff, trades_created)
+            # _is_gone(trade) is just as pure a function of (staff, trades_created)
             # across this whole block as they are, and is safe to cache the
             # same way.
             #
             # Caching matters here: `order` has ~2,800 nodes, many naming the
-            # same handful of distinct trades, so recomputing `_gone(t)` from
+            # same handful of distinct trades, so recomputing `_is_gone(trade)` from
             # scratch for every node that names a trade costs one Python
             # function call per node even after the first node already
             # worked out the answer. `_is_gone` below answers the identical
@@ -752,10 +752,10 @@ class StepPhasesMixin:
             # `self.household.active` and `self.household.bountied` at once), so the fix cannot
             # be "hoist one set outside the loop" - it has to track the two
             # mutations as they happen instead:
-            #   - post_bounty(k) succeeding adds k to self.household.active AND to
+            #   - post_bounty(node_id) succeeding adds node_id to self.household.active AND to
             #     self.household.bountied together, so a bountied project never counts
             #     against max_active: _non_bountied_active is left unchanged.
-            #   - a normal start only adds k to self.household.active, so
+            #   - a normal start only adds node_id to self.household.active, so
             #     _non_bountied_active goes up by one.
             # Nothing else in this loop's body (can_start, project_cost,
             # funding_capacity, committed_spend, bounty_eligible) touches
@@ -795,7 +795,7 @@ class StepPhasesMixin:
                 if self.project_cost(node_id) > room:
                     continue
                 if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
-                    # post_bounty() just added k to both self.household.active and
+                    # post_bounty() just added node_id to both self.household.active and
                     # self.household.bountied - the count of NON-bountied active
                     # projects is unchanged.
                     continue
@@ -982,7 +982,7 @@ class StepPhasesMixin:
         #
         # ONLY A TRADE THIS PROJECT STILL OWES SOMETHING TO: checked against
         # `_lab_left` (how much of each trade's hours remain to be drawn),
-        # NOT n["lab"]'s ORIGINAL total (`want > 0`), which never goes back
+        # NOT node["lab"]'s ORIGINAL total (`want > 0`), which never goes back
         # to zero no matter how much of that trade's hours the project has
         # already drawn. lab_year_draw and trade_draw_plan both correctly
         # stop asking a trade for more once lab_left hits zero; checking the
@@ -1042,7 +1042,7 @@ class StepPhasesMixin:
         # what this loop actually offers it.
         #
         # A STANDING ALLOCATION IS A CEILING, NOT A FLOOR. hour_
-        # allocations.get(k) is only ever a THIRD candidate in this
+        # allocations.get(node_id) is only ever a THIRD candidate in this
         # min() - never a reason to offer MORE than remaining or the
         # project's own pace would otherwise allow - so a directed
         # project can still never outrun the pool it shares with
@@ -1328,7 +1328,7 @@ class StepPhasesMixin:
         # figure instead would make project_spend_last_year disagree with
         # the actual capital movement.
         self.household._spend_this_year = self.household._spend_this_year + money
-        # calendar_floor(k), NOT a second copy of this formula -
+        # calendar_floor(node_id), NOT a second copy of this formula -
         # expected_calendar_years (projects.py) needs the identical
         # figure to project retries honestly, and a rule living in
         # two places is how this kind of arithmetic drifts apart.

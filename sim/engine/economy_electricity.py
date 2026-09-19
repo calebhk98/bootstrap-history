@@ -468,7 +468,7 @@ class ElectricityMixin:
         stock = self._material_stock()
         # IDEMPOTENT WHEN NOTHING HAS ACTUALLY CHANGED. protocol.py's own
         # `why` handler calls this twice in a row to build one message
-        # (s.binding, then s.resource_throttle() again for the percentage)
+        # (sim.binding, then sim.resource_throttle() again for the percentage)
         # with nothing mutated in between - read-only from its point of
         # view, which it always was before this, because there was nothing
         # here a second call could consume. Now there is: the stock this

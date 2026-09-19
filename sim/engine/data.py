@@ -451,12 +451,6 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
         while stack:
             node_id, expanded = stack.pop()
             if expanded:
-                # node_mask, NOT a bare `m`: this function's own "for m in
-                # nodes" loop above uses `m` for a node id (a str);
-                # reusing it here for this bitmask accumulator (an int)
-                # would be exactly the kind of same-name-different-type
-                # collision a type checker catches and a reader has to
-                # untangle by hand.
                 node_mask = 0
                 for child_id in kids[node_id]:
                     node_mask |= (1 << index[child_id]) | masks.get(child_id, 0)
@@ -473,13 +467,13 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
 
 
 def downstream_count(nodes: Nodes, node_id: str) -> int:
-    """How many nodes are downstream of k. Cheap after the first call."""
+    """How many nodes are downstream of node_id. Cheap after the first call."""
     masks, _index = descendants(nodes)
     return bin(masks.get(node_id, 0)).count("1")
 
 
 def is_downstream(nodes: Nodes, node_id: str, target: str) -> bool:
-    """Is `target` downstream of `k`?"""
+    """Is `target` downstream of `node_id`?"""
     masks, index = descendants(nodes)
     if target not in index:
         return False
@@ -538,7 +532,7 @@ def topo_order(nodes: Nodes, subset: Optional[Iterable[str]] = None) -> List[str
 
     Rebuilds to the textbook version - a reverse-adjacency index built once
     (prereq -> the nodes that name it as a hard prerequisite), so emitting
-    `k` only touches k's actual dependents - while reproducing the exact
+    `node_id` only touches node_id's actual dependents - while reproducing the exact
     output order the old quadratic version produced, which the optimiser's
     `order` depends on byte-for-byte:
       (a) the initial ready list is sorted, same as before;

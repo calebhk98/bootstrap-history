@@ -132,7 +132,7 @@ class DiffusionMixin:
             "measured.")
 
     def diffusion_share(self, node_id):
-        """0..VENTURE_DIFFUSION_CAP: how much of what running venture `k`
+        """0..VENTURE_DIFFUSION_CAP: how much of what running venture `node_id`
         earns has already leaked to competitors who watched you run it and
         went into the same business themselves.
 
@@ -208,7 +208,7 @@ class DiffusionMixin:
     # population; give the Roman government cannons and it is not being
     # sacked by tribes; invent the cure or the vaccine for a pandemic and
     # the Black Death becomes a minor period of some sickness rather than a
-    # catastrophe. civ_diffusion(k) is that missing number.
+    # catastrophe. civ_diffusion(node_id) is that missing number.
     #
     # It reuses diffusion_share's own shape just above (age since
     # completion, sped up by a written/
@@ -364,7 +364,7 @@ class DiffusionMixin:
 
     def civ_diffusion(self, node_id):
         """0..1: how much of the WHOLE SOCIETY, not this household, has
-        adopted technology `k` - the number behind every consequence below.
+        adopted technology `node_id` - the number behind every consequence below.
 
         `done`, not `operating` (contrast diffusion_share): a field of New
         World crops or a boiled-water habit is something the country copies
@@ -630,7 +630,7 @@ class DiffusionMixin:
         return value
 
     def needs_first(self, node_id):
-        """(node, why) this society must have before it can begin `k` at all.
+        """(node, why) this society must have before it can begin `node_id` at all.
 
         cost_multipliers say a domain is DEARER here. Some things are not dear,
         they are impossible: a society with no draught animals, no iron and

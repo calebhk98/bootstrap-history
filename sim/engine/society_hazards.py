@@ -486,14 +486,14 @@ class HazardsMixin:
         "avert" drops the field for this hazard entirely, "alter" scales
         it via `alter_scale`, which is how much of the ORIGINAL shortfall
         - 1 minus the field, for output_factor; the field itself for the
-        rest - survives). Returns `h` unchanged, or a SHALLOW COPY with
+        rest - survives). Returns `hazard` unchanged, or a SHALLOW COPY with
         that one field adjusted; every other field on the hazard (a sack
         risk, a values shift) is untouched, because a household that fed
         itself did not thereby also arm itself or convert the Church.
 
         Told, not silent, in all three cases - fires as written, fires
         altered, or is averted - the once, the year the hazard's window
-        opens (`yr == a`), keyed on the hazard's own name so a multi-year
+        opens (`year == hazard_start`), keyed on the hazard's own name so a multi-year
         window does not repeat itself every year it stays open.
         """
         cond = hazard.get("condition")

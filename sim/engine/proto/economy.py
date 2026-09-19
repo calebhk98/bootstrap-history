@@ -220,7 +220,7 @@ def _power_status(sim, nodes):
     revealed) - the ladder itself is not spoiled by naming an unbuilt lower
     rung, since is_visible already governs which rungs qualify. The
     generation/demand FIGURES are safe to show even so: both functions sum
-    only over self.done/self.active, and is_visible(k) is unconditionally
+    only over self.done/self.active, and is_visible(node_id) is unconditionally
     true for anything in either set (fog.py's own definition) - a number is
     never built from a node the player has not already built or started
     themselves. The workshop-versus-grid split on projects goes further: it
@@ -510,7 +510,7 @@ def _portfolio_rows(nodes, active_out):
 def _spare_capacity(sim, state_out):
     """Founder-hours, staff and cash flow not currently spoken for: enough
     to teach parallelism without saying what to build with it. Every figure
-    here is hours_you_can_call_on(t)/trade_hours_used - the same pair
+    here is hours_you_can_call_on(trade)/trade_hours_used - the same pair
     _waiting_on already reads per project - summed by trade family instead
     of read one project at a time, plus the spending figures `money`/`state`
     already compute for their own screens.

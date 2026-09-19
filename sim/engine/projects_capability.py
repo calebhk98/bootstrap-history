@@ -275,7 +275,7 @@ class CapabilityMixin:
         # ever recovering Rome, because neither one touched the actual defect:
         # there was no smaller size to start at.
         #
-        # SCALABLE_INSTITUTIONS is that smaller size. institution_units(k) can
+        # SCALABLE_INSTITUTIONS is that smaller size. institution_units(node_id) can
         # now sit below 1.0 - a starter founding, a fraction of the cost and
         # the yearly bleed of the historically-calibrated full size - and
         # auto_open_ventures founds exactly as much of one as the household's

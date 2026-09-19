@@ -365,7 +365,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
     carries on to parse_typed exactly as before. When "handled" is True and
     "should_exit" is True, cmd_play must return exit_value immediately -
     "menu" and "restart" (once confirmed) each hand back another screen's
-    return code, exactly the way `return cmd_menu(a)` and
+    return code, exactly the way `return cmd_menu(args)` and
     `return _new_game(...)` always have.
     """
     # 'options' IS ANSWERED HERE, NOT BY THE DISPATCHER. It changes
@@ -477,7 +477,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
 def _play_report_end_if_new(sim, nodes, args):
     """Print the scoreboard the first time this sitting notices the game
     has ended (horizon reached, goal won, or founder dead). Fires at most
-    once per sitting; a._said_end marks that it already has.
+    once per sitting; args._said_end marks that it already has.
     """
     # NOT A BREAK: ending the process the moment the horizon is reached
     # would drop a player back to the shell unable to read their own final

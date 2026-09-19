@@ -575,7 +575,7 @@ class GoodsMixin:
         #   risk.
         #   `opened_year` (read below via `started`) is never mutated
         #   anywhere except projects.py's open_venture, and there only ever
-        #   in the same call, immediately after, as `self.household.operating.add(k)`
+        #   in the same call, immediately after, as `self.household.operating.add(node_id)`
         #   - grep the engine for "opened_year" and it is the only
         #   assignment site outside __init__'s empty {} and load_state's
         #   generic setattr (which itself calls _reset_operating(), and so
@@ -711,7 +711,7 @@ class GoodsMixin:
         own floor as supply catches up). None if you operate nothing in
         it - "we do not know," not "assume 1.0" - see essential_price_ratio
         for the caller that turns that None into a neutral default.
-        Independent of any one node, unlike goods_market_factor(k): this
+        Independent of any one node, unlike goods_market_factor(node_id): this
         is the market-wide number income_factor() below needs, since a
         player's disposable income depends on what food costs in general,
         not on one specific cannery."""
@@ -914,8 +914,8 @@ class GoodsMixin:
         return factor
 
     def goods_market_factor_if_opened(self, node_id):
-        """What goods_market_factor(k) would read on the day you actually
-        opened k, if you opened it today - unlike goods_market_factor(k)
+        """What goods_market_factor(node_id) would read on the day you actually
+        opened node_id, if you opened it today - unlike goods_market_factor(node_id)
         itself, which answers a flat 1.0 for anything not yet `operating`
         because it has no day-one to measure yet, and every screen that
         lists a not-yet-opened concern (`ventures`'s "you know how but have

@@ -192,7 +192,7 @@ class AdoptionMixin:
         {"agriculture", "field_machinery", "crops", "soil"})
 
     def _is_agri_mechanisation(self, node_id):
-        """Is `k` one of the technologies that lets a farm feed the same
+        """Is `node_id` one of the technologies that lets a farm feed the same
         number of mouths with fewer hands - the thing that frees a child
         for a classroom instead of the harvest?
 

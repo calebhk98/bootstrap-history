@@ -142,7 +142,7 @@ def _unlocked_by(node_id, nodes):
     index (see _unlocked_by_index above) is built, not on every call.
 
     Returns a fresh list, same as the old per-call scan did: the index's own
-    bucket is shared across every caller and every future call for this `k`,
+    bucket is shared across every caller and every future call for this `node_id`,
     so handing it out directly would let one caller's in-place edit corrupt
     what the next caller sees. list(...) is a cheap copy of a small
     dependents list, not another tree scan."""

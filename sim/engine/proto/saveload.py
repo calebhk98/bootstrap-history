@@ -247,7 +247,7 @@ def _check_save_shape(blob):
     requires; otherwise the refusal message. One of the checks
     _validate_save runs in order, stopping at the first with an opinion -
     see its own docstring for why the whole file is checked before a single
-    attribute of `s` is touched.
+    attribute of `sim` is touched.
     """
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
@@ -278,7 +278,7 @@ def _check_save_scalars(blob, sim):
     """None if the save's simple top-level fields - goal, civilisation-live
     state, weights, random-number state, year, capital, and the
     civilisation id itself - are shaped and valued the way the running game
-    `s` needs; otherwise the refusal message. See _check_save_shape.
+    `sim` needs; otherwise the refusal message. See _check_save_shape.
     """
     if blob["_goal"] not in sim.nodes:
         return "this save's goal is not in the current technology tree"
@@ -377,10 +377,10 @@ def _check_save_trade_name_sets(blob):
 
 def _validate_save(blob, sim):
     """None if `blob` looks like a save this game could have produced and can
-    be loaded into `s` as it stands right now; otherwise a short, plain
+    be loaded into `sim` as it stands right now; otherwise a short, plain
     sentence saying why not.
 
-    Runs to completion BEFORE a single attribute of `s` is touched: a
+    Runs to completion BEFORE a single attribute of `sim` is touched: a
     typo'd filename, an unrelated file, a save from a different
     civilisation, or a save that refers to a node a later edit to the tech
     tree renamed or removed would otherwise go straight into setattr(),
@@ -459,8 +459,8 @@ def goal_of_save(path):
 
 
 def load_state(sim, path):
-    """Read a save from `path` and apply it to `s`, or raise ValueError with
-    a clear reason and leave `s` completely untouched.
+    """Read a save from `path` and apply it to `sim`, or raise ValueError with
+    a clear reason and leave `sim` completely untouched.
 
     Validation (see _validate_save) always runs to completion first; nothing
     below it can execute against a file that failed. A half-loaded game is
@@ -502,7 +502,7 @@ def load_state(sim, path):
         setattr(sim, field_name, value)
     # PROMOTE THE ACCUMULATORS BACK, before anything adds to one. JSON has no
     # defaultdict and no Counter, so the loop above has just put plain dicts
-    # where projects.py does `self.failed_attempts[k] += 1` and economy.py
+    # where projects.py does `self.failed_attempts[node_id] += 1` and economy.py
     # does `self.shortages[who] += 1`, both of which raise KeyError on a new
     # key in a plain dict. Same shape as economy.py's own _material_stock
     # promotion, done here rather than lazily because these two are written

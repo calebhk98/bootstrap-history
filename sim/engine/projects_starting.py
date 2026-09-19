@@ -499,7 +499,7 @@ class StartingMixin:
 
     def _check_substitution(self, node_id, node, ignore_trade, _memo, _why):
         if not self.substitution_quality(node_id)[1]:
-            # substitution_quality(k) ITSELF is always called, above - it is
+            # substitution_quality(node_id) ITSELF is always called, above - it is
             # not just words, it sets self.household._last_subst_gap as a side effect
             # (read a few lines down) and its second return value is the
             # actual test this branch is on. What is skippable is only the
@@ -763,7 +763,7 @@ class StartingMixin:
     )
 
     def _patron_advice(self, node_id, in_world):
-        """What to tell a player who needs `k` before they may begin.
+        """What to tell a player who needs `node_id` before they may begin.
 
         The id and the command only when they have heard of it; the same
         advice in plain words when they have not, which under fog is most of

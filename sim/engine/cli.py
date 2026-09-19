@@ -892,7 +892,7 @@ def _summarise(results, label):
 
 
 def _run_trials(nodes, order, bounties, goal, args, deterministic):
-    """Run a.mc trials of Sim under the strategy already loaded by the
+    """Run args.mc trials of Sim under the strategy already loaded by the
     caller, and return their results in trial order."""
     res = []
     for i in range(args.mc):
@@ -991,7 +991,7 @@ def cmd_compare(args):
         # the very end.
         sys.stderr.write("  running %s: %d trials...\n" % (name, args.mc))
         sys.stderr.flush()
-        # COMMON RANDOM NUMBERS, ON PURPOSE. random.Random(a.seed + i) is
+        # COMMON RANDOM NUMBERS, ON PURPOSE. random.Random(args.seed + i) is
         # reseeded identically for trial i under EVERY strategy in this loop,
         # so "rush" trial 7 and "recommended" trial 7 see the same weather,
         # the same plagues, the same project-failure rolls - only the order
@@ -1067,7 +1067,7 @@ def _goal_for_session(args, tree, nodes):
 def _horizon_explicit():
     """True if --horizon appeared on the actual command line this process was
     started with, as opposed to argparse's default of 500 that is present in
-    `a.horizon` whether or not anyone typed it. A flag typed by hand always
+    `args.horizon` whether or not anyone typed it. A flag typed by hand always
     outranks anything remembered from an earlier sitting."""
     return any(tok == "--horizon" or tok.startswith("--horizon=")
               for tok in sys.argv)
@@ -1080,7 +1080,7 @@ def _resolve_horizon(args, session):
     which write it to session.meta.json - see settings.py's module docstring
     for why that lives beside the save rather than inside it), otherwise the
     flag's ordinary default. A save nobody ever touched 'options' or the menu
-    for has no meta file, so this returns exactly a.horizon and nothing about
+    for has no meta file, so this returns exactly args.horizon and nothing about
     the flag-driven path changes.
     """
     if session and not _horizon_explicit():
@@ -1102,7 +1102,7 @@ def cmd_sensitivity(args):
     label, order, bounties = load_strategy(args.strategy, nodes, goal)
     need = closure(nodes, goal)
 
-    # COMMON RANDOM NUMBERS: trial() reseeds random.Random(a.seed + i)
+    # COMMON RANDOM NUMBERS: trial() reseeds random.Random(args.seed + i)
     # identically for every call - baseline and every ablation see the same
     # per-trial shocks, differing only in which node was dropped. See
     # cmd_compare for the full rationale; do not randomise this per call.
@@ -1244,13 +1244,13 @@ def _sweep_point_cfg(key, value):
 
 
 def _run_sweep_point(nodes, order, bounties, goal, args, cfg, life):
-    """Run a.mc trials at one sweep point and return their results."""
+    """Run args.mc trials at one sweep point and return their results."""
     res = []
     for i in range(args.mc):
         # COMMON RANDOM NUMBERS across the points of this sweep, same
         # reasoning as cmd_compare: trial i sees the same shocks at every
-        # value of v, so a change down this column is the swept variable
-        # acting, not a different draw of luck. Do not reseed per v.
+        # value this sweep visits, so a change down this column is the swept
+        # variable acting, not a different draw of luck. Do not reseed per value.
         sim = Sim(nodes, order, random.Random(args.seed + i), events=True, cfg=cfg,
                   bounty_set=bounties)
         if life is not None:

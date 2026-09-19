@@ -52,7 +52,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # work for a year", from a player who could not see this coming
     # until it had already happened. trade_demand_vs_supply (projects.py)
     # is the CURRENT portfolio's own demand, before this project is
-    # added; trade_draw_plan(k, None) is this project's own full want,
+    # added; trade_draw_plan(node_id, None) is this project's own full want,
     # since it has not started and so owes the whole thing. Same two
     # calls `portfolio` makes to build the aggregate table - reused
     # here, not re-derived, so `start`'s warning and `portfolio`'s own

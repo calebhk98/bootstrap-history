@@ -101,7 +101,7 @@ def _coarse_round(x):
 def _revenue_known_exactly(sim, node_id):
     """Have you actually RUN this long enough to know what it earns?
 
-    Granted knowledge (k in s.granted) is answered True unconditionally: it
+    Granted knowledge (node_id in sim.granted) is answered True unconditionally: it
     is part of the persona you arrived with, not a prospect you are sizing
     up, so there is nothing to guess about. Anything else you have finished
     needs a few years of its own ledger behind it - "a few years" taken
@@ -199,7 +199,7 @@ def _brief(sim, nodes, node_id, fog):
                 "cost": round(sim.project_cost(node_id), 1),
                 "your_hours": node["ph"],
                 "least_years": node["yrs"],
-                # effective_risk, NOT n["risk"]. Once a project has failed
+                # effective_risk, NOT node["risk"]. Once a project has failed
                 # once, retry learning means the tree's bare figure is no
                 # longer what the dice use, and quoting it would understate
                 # what a second attempt is worth.
@@ -1245,7 +1245,7 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # summing the same in every civilisation regardless of a real bill
         # that varies by civilisation. chain_size and chain_founder_hours
         # are unaffected by price; only chain_cost has to go through
-        # s.project_cost().
+        # sim.project_cost().
         "chain_cost": (round(sum(sim.project_cost(node_id) for node_id in sorted(need)), 1)
                        if not getattr(sim, "fog", False) else None),
         "critical_path_years": (critical_path(nodes, node_id)[0]
