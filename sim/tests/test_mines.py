@@ -161,14 +161,14 @@ check("...and mine_depletion_note() explains it in a sentence, not just a "
 def _mine_snapshot(seed_env):
     completed_process = subprocess.run(
         [sys.executable, "-c",
-         "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
+         "import sys; import random; from sim import simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':1e9}); "
          "s.open_mine('coal', s.mine_land_ceiling('coal')*0.8, partial=False); "
          "[s.__setattr__('year', s.year+1) or s.commission_mines() for _ in range(40)]; "
          "print(repr(round(s.mine_depletion_factor('coal'), 12)))"],
-        capture_output=True, text=True, timeout=60, cwd=HERE,
+        capture_output=True, text=True, timeout=60, cwd=ROOT,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return completed_process.stdout.strip()
 _snap_a, _snap_b = _par_map(_mine_snapshot, ("0", "12345"))
@@ -237,7 +237,7 @@ check("...and every coal working is actually gone, not just one of them",
 def _mines_snapshot(seed_env):
     completed_process = subprocess.run(
         [sys.executable, "-c",
-         "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
+         "import sys; import random; from sim import simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':1e9}); "
@@ -251,7 +251,7 @@ def _mines_snapshot(seed_env):
          "print(round(s.mine_yield_t('coal'), 9)); "
          "print(round(s.mine_operating_cost(), 9)); "
          "print(sorted((w['material'], w['opened_year'], round(w['intensity_yrs'], 9)) for w in s.mines))"],
-        capture_output=True, text=True, timeout=60, cwd=HERE,
+        capture_output=True, text=True, timeout=60, cwd=ROOT,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return completed_process.stdout
 _mines_seeds = ("0", "1", "12345", "999983")

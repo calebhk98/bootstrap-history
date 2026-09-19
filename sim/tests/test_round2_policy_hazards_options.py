@@ -662,8 +662,8 @@ check("a wider display width actually produces a longer wrapped line than "
       "the old hardcoded 76 ever could",
       _dw_arrival_lines and len(_dw_arrival_lines[0]) > 76,
       _dw_arrival_lines)
-from engine import cli as _CLI, settings as _SETTINGS
-from engine import protocol as _protocol
+from sim.engine import cli as _CLI, settings as _SETTINGS
+from sim.engine import protocol as _protocol
 _narrow_lines = _CLI._wrap("word " * 40, width=30, indent="   ").splitlines()
 _wide_lines = _CLI._wrap("word " * 40, width=150, indent="   ").splitlines()
 check("...and, directly: cli._wrap actually uses the width it is given "

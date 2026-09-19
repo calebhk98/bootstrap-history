@@ -1,6 +1,6 @@
 """Regression coverage for Complaint 13: specialist venture supervision."""
 from .harness import *
-from engine.proto.render import render_pretty
+from sim.engine.proto.render import render_pretty
 
 
 def prepared(node_id):

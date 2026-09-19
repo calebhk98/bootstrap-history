@@ -20,7 +20,7 @@ else in the engine, regardless of which file a number or a comment lives
 in.
 """
 from .data import hard_pre
-from constants import declare
+from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 

@@ -24,7 +24,7 @@ MiningMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
-from constants import declare
+from sim.constants import declare
 
 
 class MiningMixin:

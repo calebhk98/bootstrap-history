@@ -25,7 +25,7 @@ the grouping evidence. CLAUDE.md's naming/heuristic-labelling
 conventions apply here exactly as they do everywhere else in the
 engine, regardless of which file a method lives in.
 """
-from constants import declare
+from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 
 

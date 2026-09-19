@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 # `history`) shows it, paged, filterable, and searchable, and it is hard-
 # capped so a script asking for everything at once cannot get it.
 # =============================================================================
-from engine.protocol import _agent_log as _AL
+from sim.engine.protocol import _agent_log as _AL
 
 r, _, _ = proto([{"cmd": "start", "id": "units_standards"},
                  {"cmd": "hire", "trade": "smith", "n": 2},
@@ -86,7 +86,7 @@ check("the log screen itself explains how to filter and page it",
 
 # --- typed front end: a player at a keyboard, not a script, has to be able
 # to reach all of this too.
-from engine.protocol import parse_typed as _PT
+from sim.engine.protocol import parse_typed as _PT
 _cmd, _err = _PT("log failures find plague since 200 oldest limit 5")
 check("the typed form reaches every filter the JSON protocol has",
       _cmd == {"cmd": "log", "failures": True, "find": "plague",

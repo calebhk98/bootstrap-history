@@ -71,6 +71,14 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                               methods `step()` (still in core.py) calls, in
                               the order they always ran in. 1,756 lines. See
                               "Sim.step()" below.
+    engine/state.py           authoritative typed simulation state objects:
+                              `ActiveProjectState`, `HouseholdState`,
+                              `ProjectsState`, `EconomyState`,
+                              `GovernanceState`, `FounderState`,
+                              `ScenarioState`, `PopulationState`, and
+                              `SimulationState`, plus recursive state
+                              serialization/deserialization and v2->v3
+                              schema migration.
 
     engine/economy.py   604-line composition point:
                         `EconomyMixin(GoodsMixin, MaterialSupplyMixin,
@@ -973,3 +981,34 @@ reads `step()` concatenated with every `_step_*` phase method on `Sim`
 alone, precisely because the phrase it looks for can live in either.
 Whoever next moves code between methods should run that grep first, not
 discover the list from a failure.
+
+## Authoritative Simulation State & Subsystem Ownership
+
+Historically, `Sim` was a massive object whose state was mixed into a shared namespace across mixins, with active project progress tracked via unstructured `Dict[str, Any]` and save/load maintained via a handwritten 102-field tuple (`SAVE_FIELDS`).
+
+The canonical architecture partitions persistent simulation state into authoritative typed dataclasses in `sim/engine/state.py`, with clear subsystem ownership boundaries:
+
+| State Class | Subsystem Domain | Authoritative Owner | Key State Responsibilities |
+|---|---|---|---|
+| `HouseholdState` | Founder finances & household | `sim.household` (`Household`) | Capital, wages, debt/bondage, reputation, standing, workforce (`employees`), training |
+| `ProjectsState` | Technology research & ventures | `ProjectsMixin` / `sim.household` | Active projects (`active`), completed tech (`done`), `operating`, `mothballed`, `opened_year` |
+| `EconomyState` | Physical plants & flows | `EconomyMixin` | Extraction workings (`mines`), material stock, shortages, market pressure, output factor |
+| `GovernanceState` | Civic institutions & administration | `Sim` / `GovernanceMixin` | Scaled civic units (`inst_units`), administrative capacity (`gov`) |
+| `FounderState` | Biological founder status | `Sim` | Biological lifespan (`life_left`), founder survival (`founder_alive`), living costs |
+| `ScenarioState` | Timeline & scenario context | `Sim` | Simulation year (`year`), goal completion (`goal_year`), milestone warnings (`_said_*`) |
+| `PopulationState` | World demography & agriculture | `sim.population` / `LabourMixin` | Population brackets (`pop_children`, `pop_working_age`, `pop_elderly`), food bonus |
+| `SimulationState` | Root state coordinator | `Sim` | Aggregates all subsystem states, civ identity (`_civ`), goal, fog of war, RNG state |
+
+### ActiveProjectState
+`ActiveProjectState` replaces loose `Dict[str, Any]` entries in `household.active`. It inherits from `_InvalidatingDict` and provides:
+- Explicit typed attributes (`ph_left`, `cost_left`, `lab_left`, `spent`, `directed_ph_this_year`, `arrears_hours_lost`, `hired_ph_used`, `yrs`)
+- Full backward-compatible dictionary mapping interface (`proj["ph_left"]`, `proj.get(...)`, `.items()`, `|=`, `.pop()`, etc.)
+- Automatic cache invalidation: any mutation to an active project's fields or nested dicts automatically bubbles up and increments `sim.household._active_ver`, invalidating memoized revenue and material demand caches.
+
+### Automatic Serialization and Migration
+Save/load is derived directly from authoritative state definitions:
+- `SAVE_FIELDS`: Generated dynamically from dataclass fields (`get_save_fields()`), guaranteeing zero field drift without maintaining handwritten field lists.
+- `serialize_state`: Recursively serializes dataclasses, typed sets (`{"__set__": [...]}`), Counter/defaultdict, and `ActiveProjectState`.
+- `deserialize_state`: Reconstructs typed dataclasses and runtime invalidating wrappers (`_InvalidatingSet`, `_InvalidatingDict`).
+- `_migrate_v2_to_v3`: Transparently partitions flat legacy v2 save files into the 7 modular state sections, ensuring complete backward compatibility for historical saves.
+

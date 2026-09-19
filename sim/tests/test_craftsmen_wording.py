@@ -367,8 +367,10 @@ check("once something has genuinely diffused, world_diffusion_report is no "
 # set) only through a fixed, sorted list of category ids, never a float sum
 # whose order depends on PYTHONHASHSEED.
 _DIFFUSION_SNAPSHOT_SRC = """
-import sys; sys.path.insert(0, '.')
-import random, simulator as S
+import sys
+import random
+from sim import simulator as S
+
 T, P, N, W, G = S.load()
 _l, O, _b = S.load_strategy('recommended', N, T['meta']['goal_node'])
 s = S.Sim(N, O, random.Random(1), events=False, manual=True,
@@ -393,7 +395,7 @@ print(repr((round(s.food_diffusion_index(), 12),
 
 def _diffusion_snapshot(seed_env):
     result = subprocess.run([sys.executable, "-c", _DIFFUSION_SNAPSHOT_SRC],
-                        capture_output=True, text=True, timeout=60, cwd=HERE,
+                        capture_output=True, text=True, timeout=60, cwd=ROOT,
                         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return result.stdout.strip() or ("ERROR: " + result.stderr[-300:])
 

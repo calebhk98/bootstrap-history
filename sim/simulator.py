@@ -27,10 +27,15 @@ and that must not stop being true because the inside was tidied.
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+	sys.path.insert(0, _REPO_ROOT)
+_SIM_DIR = os.path.dirname(os.path.abspath(__file__))
+while _SIM_DIR in sys.path:
+	sys.path.remove(_SIM_DIR)
 
-from engine.data import *            # noqa: F401,F403
-from engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
+from sim.engine.data import *            # noqa: F401,F403
+from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
                          TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, TREE, WAGES,
                          closure, critical_path, haversine_km, load, load_civ,
@@ -43,19 +48,20 @@ from engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
                          # working.
                          _load_annual_wages, _load_tech_effects,
                          _load_trade_notes, _load_wages)      # noqa: F401
-from engine.core import Sim                                  # noqa: F401
-from engine.protocol import (_agent_available, _agent_dispatch,  # noqa: F401
+from sim.engine.core import Sim                                  # noqa: F401
+from sim.engine.protocol import (_agent_available, _agent_dispatch,  # noqa: F401
                              _agent_end_reason, _agent_help, _agent_state,
                              _waiting_on,
                              _brief, _clean, _flag, _full_entry, _node_explain,
                              _num, _subject_of, load_state, save_state,
                              SAVE_FIELDS, SUBJECTS, HELP_TOPICS,
                              KNOWN_COMMANDS)
-from engine.cli import (cmd_agent, cmd_civs, cmd_compare, cmd_costs,  # noqa: F401
+from sim.engine.cli import (cmd_agent, cmd_civs, cmd_compare, cmd_costs,  # noqa: F401
                         cmd_goals, cmd_path, cmd_plan, cmd_play, cmd_run,
                         cmd_search, cmd_sensitivity, cmd_sweep, cmd_validate,
                         cmd_why, cmd_menu, load_strategy, main, topo_stable,
                         _summarise, DetRNG, ensure_fixed_hash_seed)
+
 
 if __name__ == "__main__":
     main()

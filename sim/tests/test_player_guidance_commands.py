@@ -23,7 +23,7 @@ check("available says what standing staff a project needs",
 # anything under contract included - so on turn one, when the founder can do a
 # one-craftsman job themselves, nothing is starred. A break tester read "* means
 # the work waits" beside projects that built at full speed with nobody hired.
-from engine.protocol import _short_of_staff
+from sim.engine.protocol import _short_of_staff
 _s_star = sim()
 check("...and marks exactly the ones the start gate would refuse for staff",
       all(bool(row.get("short_of_staff"))
@@ -40,7 +40,7 @@ _av2, _, _ = proto([{"cmd": "available", "find": "zzzznosuchthing"}])
 check("a search that matches nothing says so instead of printing '1-0'",
       _av2[0].get("nothing_matched") and "1-0" not in str(_av2[0].get("showing")),
       _av2[0].get("showing"))
-from engine.protocol import render_pretty as _RP
+from sim.engine.protocol import render_pretty as _RP
 _pretty = _RP("available", _av2[0])
 check("...and the empty result prints no column headings over no rows",
       "COST" not in _pretty and "matches" in _pretty, _pretty[:120])
@@ -61,7 +61,7 @@ check("why states that a prerequisite must be finished, and stays finished",
 # learn how far along the road they had died.
 s_fin = sim()
 s_fin.year = 600
-from engine.protocol import final_report as _FRPT, render_final as _RF
+from sim.engine.protocol import final_report as _FRPT, render_final as _RF
 _fr = _FRPT(s_fin, NODES)
 check("the end of a run reports how far along the road it got",
       _fr.get("the_whole_road_was", 0) > 100
@@ -199,7 +199,7 @@ check("...and the dearest society's chain really is the dearest",
       max(_chains, key=lambda c: _chains[c]) == "norse_900ad", _chains)
 # The parts have to add up to the whole, at whatever prices.
 _s_ch = sim(civ="norse_900ad")
-from engine.data import closure as _closure
+from sim.engine.data import closure as _closure
 # The chain is what is BEHIND it, so the node itself is not in the bill.
 _behind = sorted(_closure(NODES, "telescope") - {"telescope"})
 check("...and it is the sum of what each of those nodes would actually cost",

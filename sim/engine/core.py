@@ -1,36 +1,12 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, math, os, random, sys
 
-from constants import declare
+from sim.constants import declare
 from .data import (DEFAULTS, load_civ, load_geography, load_resources,
                    TECH_EFFECTS)
 
-# sim/world/demography.py imports `sim.constants` fully-qualified (see that
-# module's own header), which only resolves if the REPOSITORY ROOT is on
-# sys.path so `sim` itself is importable as a namespace package (it has no
-# __init__.py - see sim/test_regressions.py's own comment on that). Whatever
-# put `sim/` itself on sys.path (simulator.py, cli.py, or sim/tests/harness.py
-# for the test suite) does not also add the repository root, so this file
-# adds it itself rather than relying on the entry point to have done so -
-# see docs/architecture/WIRING_MILESTONE_4.md SS6, Commit 1, for why a bare
-# `from ..world import demography` fails outright: this module loads as
-# top-level `engine.core`, not `sim.engine.core` (`engine` has no parent
-# package under simulator.py's existing sys.path scheme), so a leading `..`
-# has nowhere to go. Guarded and deduplicated, the same pattern
-# sim/test_regressions.py already uses for its own `_ROOT`.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
-# Bare, not `sim.world.demography` - matching this package's own existing
-# style (`from constants import declare` above, not `from ..constants`),
-# and relying on `sim/` itself already being on sys.path by the time this
-# module loads (true for every real entry point today).
-from world import demography
-# WIRING MILESTONE 4's parallel track (docs/architecture/WIRING_MILESTONE_4.md
-# SS6, "Agriculture wiring is a parallel track"): `sim/world/agriculture.py`'s
-# land/labour/weather harvest model, imported the same bare, same-sys.path
-# way as demography just above.
-from world import agriculture
+from sim.world import demography
+from sim.world import agriculture
 # Weather is drawn per GEOGRAPHY.JSON TILE (see `_compute_farm_weather_cells`
 # below), reading geography.json's own `land_tiles` block directly rather
 # than sim/world/land.py's region-parcel abstraction: a region record is not

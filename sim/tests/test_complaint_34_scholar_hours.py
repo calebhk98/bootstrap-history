@@ -23,12 +23,8 @@ _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 if _REPOSITORY_ROOT not in sys.path:
     sys.path.insert(0, _REPOSITORY_ROOT)
-_SIM_ROOT = os.path.join(_REPOSITORY_ROOT, "sim")
-if _SIM_ROOT not in sys.path:
-    sys.path.insert(0, _SIM_ROOT)
-
-import simulator                                        # noqa: E402
-from engine.core import Sim                             # noqa: E402
+from sim import simulator
+from sim.engine.core import Sim
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 

@@ -172,56 +172,26 @@ class BurndownActuallyCountsTests(unittest.TestCase):
             "%s" % ", ".join(missing))
 
 
-class OneRegistryAcrossBothImportRootsTests(unittest.TestCase):
-    """This repository has TWO import roots and sim/constants.py sits in both.
+class CanonicalPackageRootTests(unittest.TestCase):
+    """The repository uses `sim` as the single canonical package root.
 
-    The engine is imported rooted at `sim/`, so from inside it the file is
-    reachable as `constants`. The sim/world/ modules and the test runner are
-    rooted at the REPOSITORY, so they reach the same file as `sim.constants`.
-    Running it as a script makes a third, `__main__`.
-
-    Each spelling is a separate module object with its own globals, so a
-    plain module-level dict gives each one its own empty copy - declarations
-    land in one and the report reads another. That is the same bug this
-    file's other tests guard, arriving by a different door, and the engine's
-    migration to declare() is what opens that door.
+    All engine and world modules resolve under `sim.*`.
     """
 
-    def test_both_spellings_share_one_registry_object(self):
-        sys.path.insert(0, _REPOSITORY_ROOT)
-        sys.path.insert(0, os.path.join(_REPOSITORY_ROOT, "sim"))
-        try:
-            import constants as engine_spelling
-            from sim import constants as world_spelling
-        finally:
-            sys.path.remove(os.path.join(_REPOSITORY_ROOT, "sim"))
-            sys.path.remove(_REPOSITORY_ROOT)
-
-        # Two module objects is the NORMAL, expected state - the point is not
-        # to prevent that (you cannot, with two roots), it is that they must
-        # not own two registries.
-        self.assertIs(
-            engine_spelling.REGISTRY, world_spelling.REGISTRY,
-            "`constants` and `sim.constants` have separate REGISTRY objects. "
-            "Anything the engine declares is then invisible to the burndown "
-            "and the total is quietly too low - see this class's docstring.")
+    def test_canonical_constants_registry(self):
+        from sim import constants
+        self.assertIsNotNone(constants.REGISTRY)
 
     def test_an_engine_file_can_be_imported_from_outside_the_repository(self):
-        # The failure this catches is an engine file written as `from
-        # sim.constants import declare`, which works under the test runner's
-        # rooting and raises ModuleNotFoundError under the engine's own. The
-        # suite alone would not notice; sim/solve_prices.py would break.
-        script = ("import sys; sys.path.insert(0, %r); import engine.core; "
-                  "print('ok')" % os.path.join(_REPOSITORY_ROOT, "sim"))
+        script = ("import sys; sys.path.insert(0, %r); from sim.engine import core; "
+                  "print('ok')" % _REPOSITORY_ROOT)
         result = subprocess.run([sys.executable, "-c", script],
                                 cwd=os.path.dirname(_REPOSITORY_ROOT),
                                 capture_output=True, text=True)
         self.assertEqual(
             result.returncode, 0,
-            "the engine cannot be imported rooted at sim/ from outside the "
-            "repository. An engine module is probably importing something as "
-            "`sim.X`; rooted at sim/ the name `sim` does not exist. Use the "
-            "bare spelling in engine files.\n%s" % result.stderr[-600:])
+            "the engine cannot be imported rooted at repository root from outside the "
+            "repository.\n%s" % result.stderr[-600:])
 
 
 class HardcodedHistoricalOutcomeTests(unittest.TestCase):

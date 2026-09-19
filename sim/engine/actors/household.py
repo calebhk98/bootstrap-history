@@ -77,16 +77,7 @@ class MineWorking(TypedDict):
 
 # `self.active[node_id]`'s value type. NOT a TypedDict, on purpose, unlike
 # `MineWorking` just above: `core_step_phases.py` alone (not owned by this
-# task) writes more than a dozen additional keys into one of these over a
-# project's life - `pool_total_this_year`, `blocked_on_trades`,
-# `stalled_years`, `waiting_on_money`, `cost_left`, and others - none of
-# them present at creation (`dict(ph_left=..., yrs=0.0, spent=0.0)` in
-# `projects_starting.py`). A TypedDict would either have to declare all of
-# them NotRequired (in which case it says nothing a plain mapping does not
-# already say) or would be lying about which keys are actually there at any
-# given moment. This is exactly the "open and data-driven" case the task's
-# own instructions distinguish from `MineWorking`'s fixed one.
-ActiveProjectState = Dict[str, Any]
+from sim.engine.state import ActiveProjectState
 
 
 class Household:

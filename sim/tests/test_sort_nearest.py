@@ -123,7 +123,7 @@ check("no developer change-log marker is shipped in player-facing prose",
 # hull - which really has 466 nodes behind it - the Norse bog-iron bloomery,
 # and the Mexica's chinampa. A play tester filed this against the Norse
 # starting kit as "flagship technologies are dead ends in the graph".
-from engine.protocol import _unlocked_by as _UB, _downstream_of as _DS
+from sim.engine.protocol import _unlocked_by as _UB, _downstream_of as _DS
 _ra_cases = ("sea_clinker_hull", "met_bloomery_bog_iron", "fud_chinampa")
 for _k_ra in _ra_cases:
     _un = _UB(_k_ra, NODES)

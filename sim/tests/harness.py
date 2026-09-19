@@ -54,14 +54,17 @@ import tempfile
 # them, and nothing anywhere depends on what the checkout is called.
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
-import simulator as S
+if ROOT not in sys.path:
+	sys.path.insert(0, ROOT)
+while HERE in sys.path:
+	sys.path.remove(HERE)
+from sim import simulator as S
 # PLANNER and COMMOD are unused in harness.py itself for the same reason as
 # the note above: test_people_attrition_scholars.py and test_reputation.py
 # use PLANNER, and test_literacy_market_pricing.py and
 # test_commodities_wired_in.py use COMMOD, bare and without their own import.
-import planner as PLANNER
-from engine import commodities as COMMOD
+from sim import planner as PLANNER
+from sim.engine import commodities as COMMOD
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
@@ -446,15 +449,15 @@ def _mk_loom_sim(n_looms, age_years):
 # _re_rem/_re_names/_shutil/_coll/_IL/_IO/_CTX/_time and the bare hashlib and
 # duplicate shutil) had no such consumer anywhere in sim/tests - genuinely
 # dead, not a re-export, so removed rather than kept "just in case".
-from engine import cli as _CLI
-from engine import protocol as _protocol
-from engine.protocol import render_pretty as _RP
-from engine.protocol import _waiting_on as _WO
-from engine.protocol import final_report as _FRPT, render_final as _RF
-from engine.protocol import parse_typed as _PT
-from engine.protocol import render_state as _RSTATE, render_why as _RWHY
-from engine import protocol as _PROTO
-from engine.protocol import render_portfolio as _RPORT
+from sim.engine import cli as _CLI
+from sim.engine import protocol as _protocol
+from sim.engine.protocol import render_pretty as _RP
+from sim.engine.protocol import _waiting_on as _WO
+from sim.engine.protocol import final_report as _FRPT, render_final as _RF
+from sim.engine.protocol import parse_typed as _PT
+from sim.engine.protocol import render_state as _RSTATE, render_why as _RWHY
+from sim.engine import protocol as _PROTO
+from sim.engine.protocol import render_portfolio as _RPORT
 
 # `from .harness import *` must hand every topic module everything the old
 # flat script had at global scope, including the (many) leading-underscore

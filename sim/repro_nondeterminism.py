@@ -80,10 +80,11 @@ import json
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-import perf_fingerprint as P
-from engine.economy import EconomyMixin
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+from sim import perf_fingerprint as P
+from sim.engine.economy import EconomyMixin
 
 SHARED_CACHES = ("_commod_ledger_cache", "_material_commod_map_cache",
                  "_material_prices_cache")

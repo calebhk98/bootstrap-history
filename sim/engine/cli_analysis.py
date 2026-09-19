@@ -22,7 +22,7 @@ import os, random, sys
 
 from .data import closure, critical_path, load, load_civ, resolve_goal, topo_order
 from .core import Sim
-from constants import declare
+from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 from sim.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
 

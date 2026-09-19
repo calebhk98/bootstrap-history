@@ -20,7 +20,7 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
 from .data import ANNUAL_WAGE, trade_family
-from constants import declare
+from sim.constants import declare
 
 
 class ProductionMixin:

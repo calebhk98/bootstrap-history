@@ -60,10 +60,10 @@ import math
 
 from .data import haversine_km, WAGES
 from . import commodities as _commod
-from constants import declare
+from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from world import transport as freight_physics
+from sim.world import transport as freight_physics
 
 
 class FreightMixin:

@@ -55,8 +55,8 @@ from .harness import *  # noqa: F401,F403
 # of the engine is in on any given day in this shared checkout.
 # ===========================================================================
 
-from engine.proto.typed import parse_typed as _PT, _split_json_flag
-from engine.proto.dispatch import (_add_compact_fields, _compact_why,
+from sim.engine.proto.typed import parse_typed as _PT, _split_json_flag
+from sim.engine.proto.dispatch import (_add_compact_fields, _compact_why,
                                    _compact_state, _compact_stuck)
 
 
@@ -373,7 +373,7 @@ check("typed 'why <id> compact', run through the real dispatcher end to "
 # vocabulary.
 # ===========================================================================
 import inspect
-from engine.proto import dispatch as _dispatch_mod
+from sim.engine.proto import dispatch as _dispatch_mod
 
 _dispatch_src = inspect.getsource(_dispatch_mod._agent_dispatch)
 _i_money = _dispatch_src.index("_localise_money")

@@ -25,7 +25,7 @@ onto a whole person without biasing which way growth heads.
 import math
 
 from .data import closure
-from constants import declare
+from sim.constants import declare
 
 
 class CapacityMixin:

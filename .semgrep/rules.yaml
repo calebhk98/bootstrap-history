@@ -1,0 +1,67 @@
+rules:
+  - id: sim-id-as-cache-key
+    languages: [python]
+    severity: WARNING
+    message: "CLAUDE.md §6: id() is an address, not an identity. Using id() as a dictionary key or cache key causes non-deterministic simulation bugs due to CPython address recycling."
+    patterns:
+      - pattern-either:
+          - pattern: $DICT[id($X)] = $VAL
+          - pattern: $DICT[id($X)]
+          - pattern: $DICT.get(id($X), ...)
+          - pattern: id($X) in $DICT
+    paths:
+      include:
+        - "**/sim/**"
+      exclude:
+        - "**/sim/tests/**"
+
+  - id: sim-getattr-with-default
+    languages: [python]
+    severity: WARNING
+    message: "Commit b46cb0a: Avoid 3-argument getattr(sim, 'attr', default) on known Sim attributes. It masks typos and attribute renames. Prefer direct attribute read or explicit hasattr check."
+    patterns:
+      - pattern-either:
+          - pattern: getattr(self, "...", $DEFAULT)
+          - pattern: getattr(sim, "...", $DEFAULT)
+    paths:
+      include:
+        - "**/sim/engine/**"
+      exclude:
+        - "**/sim/tests/**"
+
+  - id: sim-no-save-format-migration
+    languages: [python]
+    severity: WARNING
+    message: "CLAUDE.md §3.5: Save-format migrations and version stamps are strictly forbidden. There is no backward-compatibility upgrade path across builds."
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if "version" in $DATA:
+                  ...
+          - pattern: |
+              if "save_version" in $DATA:
+                  ...
+          - pattern: |
+              if $DATA.get("version", ...):
+                  ...
+          - pattern: $DATA["version"] = ...
+    paths:
+      include:
+        - "**/sim/engine/proto/saveload.py"
+        - "**/sim/engine/**"
+
+  - id: sim-world-undeclared-constant
+    languages: [python]
+    severity: WARNING
+    message: "CLAUDE.md item 3 / sim/constants.py: Module-level domain physics constants in sim/world/ should be declared using declare(name, value, unit=..., why=...) rather than bare numeric literals."
+    patterns:
+      - pattern: $CONST = $NUM
+      - metavariable-regex:
+          metavariable: $CONST
+          regex: '^[A-Z][A-Z0-9_]{3,}$'
+      - metavariable-regex:
+          metavariable: $NUM
+          regex: '^[0-9]+(\.[0-9]+)?$'
+    paths:
+      include:
+        - "**/sim/world/**"

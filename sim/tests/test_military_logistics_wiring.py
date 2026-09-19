@@ -14,7 +14,7 @@ sim/engine/society.py and cannot be exercised without a real Sim.
 """
 from .harness import *  # noqa: F401,F403
 
-from world import military_logistics as logistics
+from sim.world import military_logistics as logistics
 
 
 # --- the melee-tier floor: at zero military leverage, the reported burden is

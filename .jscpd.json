@@ -1,0 +1,18 @@
+{
+  "threshold": 0,
+  "minTokens": 50,
+  "minLines": 5,
+  "mode": "mild",
+  "reporters": ["console"],
+  "format": ["python"],
+  "ignore": [
+    "**/__pycache__/**",
+    "**/tests/**",
+    "**/data/**",
+    "**/knowledge/**",
+    "**/.git/**",
+    "**/.semgrep/**",
+    "**/log/**"
+  ],
+  "path": ["sim"]
+}

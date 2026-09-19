@@ -1,6 +1,6 @@
 """Endogenous wage foundations: food, housing, tools, skill, and scarcity."""
 from .harness import *
-from engine.data import ANNUAL_WAGE
+from sim.engine.data import ANNUAL_WAGE
 
 
 s = sim()

@@ -1,6 +1,6 @@
 """Focused regressions for the second group of playtest complaints."""
 from .harness import *  # noqa: F401,F403
-from engine.protocol import _waiting_on as _waiting_on
+from sim.engine.protocol import _waiting_on as _waiting_on
 
 
 # Complaint 02 requires two genuinely different states: a project that can

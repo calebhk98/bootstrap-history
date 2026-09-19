@@ -72,7 +72,7 @@ check("no command in KNOWN_COMMANDS prints the raw id of a node this fogged "
 # actually accepts. Generic across every command at once, the same shape
 # as the fog scanner above, so the next stale pointer is caught here.
 # =============================================================================
-from engine.protocol import TYPED_ALIASES as _TYPED_ALIASES
+from sim.engine.protocol import TYPED_ALIASES as _TYPED_ALIASES
 
 
 def _strings_of(obj):
@@ -303,7 +303,7 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # measurement of one policy, and the menu a player reads stays out of the
 # business of telling them what is reachable, because critical_path already
 # tells them that for the goal they actually picked.
-from engine import cli as _CLI
+from sim.engine import cli as _CLI
 
 _hz_notes = " ".join(note for _node_id, _label, _year, note in _CLI.HORIZON_MODES).lower()
 check("no horizon-mode description quotes the dice-free floor or calls any "
@@ -324,7 +324,7 @@ check("the floor table itself is still there, still per-civilisation, and "
 # strategic mitigation visible": the mitigation was there and the save
 # round-trip was deleting it.
 import collections as _coll
-from engine import protocol as _PROTO
+from sim.engine import protocol as _PROTO
 
 _fa_path = os.path.join(HERE, "_fa_roundtrip.json")
 _s_fa = sim()
@@ -396,7 +396,7 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # achievements list. See engine/protocol.py's own block comment above
 # SCORE_WEIGHTS for which field feeds each component and why.
 # =============================================================================
-from engine.protocol import (score_report as _SCORE, render_score as _RSCORE,
+from sim.engine.protocol import (score_report as _SCORE, render_score as _RSCORE,
                              SCORE_WEIGHTS as _SW)
 
 check("score is advertised in KNOWN_COMMANDS, the same way capacity/economy/"
@@ -561,8 +561,8 @@ check("...while dawdling to five thousand years after the start does not",
 def _score_snapshot(seed_env):
     proc = subprocess.run(
         [sys.executable, "-c",
-         "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
-         "from engine.protocol import score_report as SC; "
+         "import sys; import random; from sim import simulator as S; "
+         "from sim.engine.protocol import score_report as SC; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
@@ -575,7 +575,7 @@ def _score_snapshot(seed_env):
          "r = SC(s, N); "
          "print(repr((round(r['components']['institutions']['normalized'], 12), "
          "r['total'])))"],
-        capture_output=True, text=True, timeout=60, cwd=HERE,
+        capture_output=True, text=True, timeout=60, cwd=ROOT,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return proc.stdout.strip()
 _score_seed_a, _score_seed_b = _par_map(_score_snapshot, ("0", "98765"))
@@ -933,7 +933,7 @@ check("the free capability nodes the hint exists for are still free: no "
 # render_portfolio (_RPORT) is not used in this file, only _agent_portfolio
 # (_APORT) below - but it IS used by test_arrears_visibility.py, which gets
 # it from harness.py's own re-export rather than importing it here.
-from engine.protocol import _agent_portfolio as _APORT
+from sim.engine.protocol import _agent_portfolio as _APORT
 
 # --- 1. PER-PROJECT ALLOCATION, READ FROM THE ALLOCATOR ITSELF. core.py's
 # step() (5. progress) now writes pool_total/rank/active_count/remaining_
@@ -1081,7 +1081,7 @@ check("...and it does not block the start - overcommitting is still the "
 # weak spot the player named was specifically the labour cases: an absolute
 # staffing shortage and a trade your OWN other work has booked used to
 # share one label and one remedy-less sentence.
-from engine.protocol import _portfolio_constraint as _PCON
+from sim.engine.protocol import _portfolio_constraint as _PCON
 _s_staff = sim(civ="rome_100ad", capital=1e9)
 _staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
 _n_staff = NODES[_staff_k]

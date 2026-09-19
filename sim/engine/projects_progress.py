@@ -19,7 +19,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 import collections
 
-from constants import declare
+from sim.constants import declare
 
 
 class ProgressMixin:

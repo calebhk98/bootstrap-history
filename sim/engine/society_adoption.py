@@ -16,7 +16,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 """
 import math
 
-from constants import declare
+from sim.constants import declare
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 
 

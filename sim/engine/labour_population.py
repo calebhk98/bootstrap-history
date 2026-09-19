@@ -25,7 +25,7 @@ half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
-from constants import declare
+from sim.constants import declare
 
 
 class PopulationMixin:

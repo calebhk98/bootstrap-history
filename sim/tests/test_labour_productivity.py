@@ -192,7 +192,7 @@ check("a handful of mechanised techniques frees only a little slack, not "
 def _edu_snapshot(seed_env):
     result = subprocess.run(
         [sys.executable, "-c",
-         "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
+         "import sys; import random; from sim import simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
@@ -208,7 +208,7 @@ def _edu_snapshot(seed_env):
          "round(s.civ['literacy_elite'], 12), "
          "'electrician' in s.trades_endemic, "
          "round(s.employees.get('electrician', 0.0), 12))))"],
-        capture_output=True, text=True, timeout=60, cwd=HERE,
+        capture_output=True, text=True, timeout=60, cwd=ROOT,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
     return result.stdout.strip()
 _edu_a, _edu_b = _par_map(_edu_snapshot, ("0", "98765"))

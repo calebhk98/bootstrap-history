@@ -71,13 +71,14 @@ discovered. It is a developer and optimizer tool, the same category
 """
 import argparse, json, os, random, sys, tempfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-from engine.data import (STRATS, closure, downstream_count, load, load_civ,
-                         topo_order, resolve_goal)
-from engine.core import Sim
-from engine.cli import load_strategy
+from sim.engine.data import (STRATS, closure, downstream_count, load, load_civ,
+                             topo_order, resolve_goal)
+from sim.engine.core import Sim
+from sim.engine.cli import load_strategy
 
 
 # ----------------------------------------------------------------------------

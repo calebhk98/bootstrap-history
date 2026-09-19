@@ -19,7 +19,7 @@ worth, without hiring anyone new.
 import math
 
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
-from constants import declare
+from sim.constants import declare
 
 
 class TrainingMixin:

@@ -15,7 +15,7 @@ institution_unit_* functions constantly; nothing here calls back into them.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-from constants import declare
+from sim.constants import declare
 
 
 class CapabilityMixin:

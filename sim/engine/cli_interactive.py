@@ -42,7 +42,7 @@ from . import settings
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
                        save_state)
-from constants import declare
+from sim.constants import declare
 
 # Session/session-file and display-preference helpers live in cli.py because
 # cli_agent.py needs the session helpers too, and _wrap/_apply_display_prefs

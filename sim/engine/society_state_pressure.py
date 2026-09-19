@@ -18,9 +18,9 @@ Behaviour is unchanged and verified byte-identical.
 """
 import math
 
-from constants import declare
+from sim.constants import declare
 
-from world import military_logistics
+from sim.world import military_logistics
 
 
 STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT = declare(

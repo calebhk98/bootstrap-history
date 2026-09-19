@@ -1,7 +1,7 @@
 """Food, housing, trade schools, demographics, and durable material stock."""
 from .harness import *
-from engine.proto.render import render_pretty
-from engine.proto.typed import parse_typed
+from sim.engine.proto.render import render_pretty
+from sim.engine.proto.typed import parse_typed
 
 check("typed economic levers reach their protocol actions",
       parse_typed("buy farm 120")[0] == {"cmd": "buy", "what": "farm", "n": 120}

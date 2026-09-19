@@ -83,7 +83,7 @@ if _fh_target:
     # it, so gathering them off the shim finds nothing, and this check would
     # then pass on prose alone rather than the real assignment.
     # engine.proto.state is where they are defined.
-    from engine.proto import state as _state_module
+    from sim.engine.proto import state as _state_module
     _state_source = "".join(
         [_insp.getsource(_state_module._agent_state)]
         + [_insp.getsource(getattr(_state_module, _name))

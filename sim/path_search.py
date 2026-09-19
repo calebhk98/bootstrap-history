@@ -123,23 +123,15 @@ off the Sim directly.
 """
 import argparse, os, random, sys, time
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-if HERE not in sys.path:
-    sys.path.insert(0, HERE)
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-from engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
-from engine.core import Sim
-# DetRNG AND ensure_fixed_hash_seed LIVE IN engine/cli.py NOW, NOT HERE.
-# `--deterministic` on `run`/`compare`/`play`/`agent` needed the exact same
-# rng and the exact same hash-seed fix this module already had, and a second,
-# separately-typed copy of either is exactly the kind of duplication that
-# drifts the moment one copy is fixed and the other is not - see DetRNG's own
-# docstring, now in engine/cli.py, for the fuller argument. This module
-# already imported `load_strategy`/`topo_stable` from there, so importing
-# these two the same way costs nothing new.
-from engine.cli import DetRNG, ensure_fixed_hash_seed
+from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
+from sim.engine.core import Sim
+from sim.engine.cli import DetRNG, ensure_fixed_hash_seed
 
-import planner as _planner
+from sim import planner as _planner
 
 
 def deterministic_sim(nodes, order, goal, civ, horizon, bounty_set=None):

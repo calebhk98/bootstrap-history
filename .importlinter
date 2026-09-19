@@ -1,0 +1,11 @@
+[importlinter]
+root_packages =
+    sim
+
+[importlinter:contract:world-must-not-import-engine]
+name = Domain physics (sim.world) must not import simulation engine (sim.engine)
+type = forbidden
+source_modules =
+    sim.world
+forbidden_modules =
+    sim.engine

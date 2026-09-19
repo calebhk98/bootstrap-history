@@ -44,7 +44,7 @@ from . import settings
 # render_final, render_pretty or save_state lives in cli_agent.py, which
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
-from constants import declare
+from sim.constants import declare
 
 
 # ----------------------------------------------------------------------------

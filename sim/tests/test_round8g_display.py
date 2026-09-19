@@ -5,7 +5,7 @@ from .harness import *  # noqa: F401,F403
 # ROUND 8g: a five-report playtest sweep of protocol.py / cli.py (display).
 # ======================================================================
 
-from engine.protocol import (render_state as _RSTATE, render_risk as _RRISK,
+from sim.engine.protocol import (render_state as _RSTATE, render_risk as _RRISK,
                              render_why as _RWHY,
                              render_path as _RPATH)
 

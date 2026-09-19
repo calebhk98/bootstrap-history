@@ -17,7 +17,7 @@ because save/load and the fingerprint tests only reproduce a run
 byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
-from constants import declare
+from sim.constants import declare
 from .data import (closure, critical_path)
 from .hazard_window import hazards_not_yet_past
 

@@ -15,7 +15,7 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from .data import (ANNUAL_WAGE, WAGES)
-from constants import declare
+from sim.constants import declare
 
 
 class WagesMixin:

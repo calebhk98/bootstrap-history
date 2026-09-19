@@ -53,7 +53,7 @@ account.
 import collections, json, os
 
 from . import commodities as _commod
-from constants import declare
+from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 

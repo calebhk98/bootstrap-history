@@ -128,23 +128,9 @@ _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPOSITORY_ROOT not in sys.path:
     sys.path.insert(0, _REPOSITORY_ROOT)
 
-# ALSO root at sim/ itself, not only the repository. _import_declaring_modules()
-# below lists engine files by their sim/-rooted dotted name (`engine.data`,
-# `engine.economy`) because that is the name the engine itself uses internally
-# (engine/economy.py does `from constants import declare`, a bare, sim/-rooted
-# import - see this file's own REGISTRY comment for why the engine and
-# sim/world/ use two different roots). `python3 sim/constants.py` gets this
-# for free: Python auto-prepends a script's own directory to sys.path. A
-# caller that instead does `from sim import constants` after only rooting at
-# the REPOSITORY (sim/tests/test_constants_burndown.py's own clean-subprocess
-# check does exactly this) does NOT get sim/ on sys.path any other way, so
-# `engine.data`/`engine.economy` silently fail to import there - invisible
-# for as long as `engine.data` declared nothing, and a real undercount the
-# moment a module that declares something (`engine.economy`) is added to the
-# list without this line.
 _SIM_ROOT = os.path.dirname(os.path.abspath(__file__))
-if _SIM_ROOT not in sys.path:
-    sys.path.insert(0, _SIM_ROOT)
+while _SIM_ROOT in sys.path:
+    sys.path.remove(_SIM_ROOT)
 
 # name -> metadata. Declaration order is preserved, which makes the report
 # stable across runs and diffable.
@@ -318,13 +304,13 @@ def _import_declaring_modules():
     # do NOT belong in this list, because neither calls declare() at all
     # (see either module's own NOT PART OF THE REGISTRY / kind section for
     # why).
-    for module in ("engine.data",
-                   "engine.economy",
-                   "engine.cli",
-                   "engine.core",
-                   "engine.society",
-                   "engine.labour",
-                   "engine.projects",
+    for module in ("sim.engine.data",
+                   "sim.engine.economy",
+                   "sim.engine.cli",
+                   "sim.engine.core",
+                   "sim.engine.society",
+                   "sim.engine.labour",
+                   "sim.engine.projects",
                    "sim.unit_conversions",
                    "sim.world.agriculture",
                    "sim.world.demography",

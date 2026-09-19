@@ -23,9 +23,13 @@ you how much faster it got.
 import argparse, concurrent.futures, hashlib, json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-import simulator as S
-from engine.protocol import SAVE_FIELDS
+REPO_ROOT = os.path.dirname(HERE)
+if REPO_ROOT not in sys.path:
+	sys.path.insert(0, REPO_ROOT)
+while HERE in sys.path:
+	sys.path.remove(HERE)
+from sim import simulator as S
+from sim.engine.protocol import SAVE_FIELDS
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
@@ -42,6 +46,8 @@ FIELDS = tuple(field for field in SAVE_FIELDS if field != "log")
 
 def _canon(value):
     """Make a value comparable and order-independent where order is not real."""
+    if hasattr(value, "to_canon_dict"):
+        value = value.to_canon_dict()
     if isinstance(value, float):
         # repr() rather than round(): a change that alters the last bit of a
         # float IS a change, and this harness exists to catch exactly that.

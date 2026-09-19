@@ -65,8 +65,9 @@ PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 # too would be circular.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
-sys.path.insert(0, HERE)
-import simulator
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from sim import simulator
 
 
 def load_production():

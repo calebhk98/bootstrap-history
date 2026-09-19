@@ -4,7 +4,7 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own.
 """
 import math
-from constants import declare
+from sim.constants import declare
 
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin
@@ -153,10 +153,16 @@ class _InvalidatingDict(dict):
             self._on_change()
 
     def _wrap_value(self, value):
+        from sim.engine.state import ActiveProjectState
+        if isinstance(value, ActiveProjectState):
+            value._on_change = self._fire
+            return value
         if isinstance(value, _InvalidatingDict):
             value._on_change = self._fire
             return value
         if isinstance(value, dict):
+            if "ph_left" in value:
+                return ActiveProjectState.from_dict(value, _on_change=self._fire)
             return _InvalidatingDict(value, on_change=self._fire)
         return value
 

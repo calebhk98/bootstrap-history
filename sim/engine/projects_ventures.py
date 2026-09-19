@@ -17,7 +17,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 """
 import collections
 
-from constants import declare
+from sim.constants import declare
 
 
 class VenturesMixin:

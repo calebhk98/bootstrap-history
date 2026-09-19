@@ -12,7 +12,7 @@ import io
 import re
 
 from .harness import *  # noqa: F401,F403
-import engine.cli as ENGINE_CLI
+import sim.engine.cli as ENGINE_CLI
 
 
 def _run_cmd_path(goal=None):

@@ -12,7 +12,7 @@ from .harness import *  # noqa: F401,F403
 # 45,448 owed. step() pays at most one year's instalment - the cost over the
 # node's calendar floor - so a ten-year work absorbs a tenth a year however
 # rich you are, and nothing anywhere said there was a pace at all.
-from engine.protocol import _waiting_on as _WO
+from sim.engine.protocol import _waiting_on as _WO
 s_pace = sim(capital=50000000.0)
 _slow = "academy_network"
 s_pace.active[_slow] = dict(ph_left=0.0, yrs=1.0, spent=0.0,

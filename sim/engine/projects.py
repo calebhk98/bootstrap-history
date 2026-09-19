@@ -61,7 +61,7 @@ from .projects_staffing import StaffingMixin
 from .projects_starting import StartingMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
-from constants import declare
+from sim.constants import declare
 
 
 class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,

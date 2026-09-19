@@ -17,7 +17,7 @@ rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
 from .data import trade_family
-from constants import declare
+from sim.constants import declare
 
 
 class BondageMixin:
