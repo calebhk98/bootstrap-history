@@ -90,7 +90,7 @@ def python_files(base=None, exclude_dirs=("__pycache__",)):
     base = base if base is not None else os.path.join(ROOT, "sim")
     out = []
     for dirpath, dirnames, filenames in os.walk(base):
-        dirnames[:] = sorted(d for d in dirnames if d not in exclude_dirs)
+        dirnames[:] = sorted(dirname for dirname in dirnames if dirname not in exclude_dirs)
         for filename in filenames:
             if filename.endswith(".py"):
                 out.append(os.path.relpath(os.path.join(dirpath, filename), ROOT))
@@ -848,8 +848,8 @@ class _UnionFind(object):
             self._parent[key], key = root, self._parent[key]
         return root
 
-    def union(self, a, b):
-        root_a, root_b = self.find(a), self.find(b)
+    def union(self, key_a, key_b):
+        root_a, root_b = self.find(key_a), self.find(key_b)
         if root_a != root_b:
             self._parent[root_b] = root_a
 
@@ -873,7 +873,7 @@ def _cluster_candidates(candidates):
     if not candidates:
         return [], False
     keys = list(range(len(candidates)))
-    uf = _UnionFind(keys)
+    union_find = _UnionFind(keys)
     ratio_cache = {}
 
     by_hash = collections.defaultdict(list)
@@ -881,7 +881,7 @@ def _cluster_candidates(candidates):
         by_hash[candidate.norm_hash].append(index)
     for indices in by_hash.values():
         for other in indices[1:]:
-            uf.union(indices[0], other)
+            union_find.union(indices[0], other)
 
     by_shape = collections.defaultdict(list)
     for index, candidate in enumerate(candidates):
@@ -897,12 +897,12 @@ def _cluster_candidates(candidates):
         for i in range(len(indices)):
             if budget_exhausted:
                 break
-            for j in range(i + 1, len(indices)):
+            for other_position in range(i + 1, len(indices)):
                 if pairs_spent >= _NEAR_DUPLICATE_PAIR_BUDGET:
                     budget_exhausted = True
                     break
-                a, b = candidates[indices[i]], candidates[indices[j]]
-                if a.norm_hash == b.norm_hash:
+                candidate_a, candidate_b = candidates[indices[i]], candidates[indices[other_position]]
+                if candidate_a.norm_hash == candidate_b.norm_hash:
                     continue  # already unioned via the exact pass
                 # A length-ratio prefilter: two blocks whose token counts
                 # differ by more than this cannot reach the similarity
@@ -910,21 +910,21 @@ def _cluster_candidates(candidates):
                 # bounded by 2*min/(len_a+len_b)), so skip the comparison
                 # entirely rather than pay for a SequenceMatcher that could
                 # only ever answer "no".
-                shorter, longer = sorted((len(a.tokens), len(b.tokens)))
+                shorter, longer = sorted((len(candidate_a.tokens), len(candidate_b.tokens)))
                 if longer and (2.0 * shorter / (shorter + longer)) < NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
                     continue
                 pairs_spent += 1
-                matcher = difflib.SequenceMatcher(None, a.tokens, b.tokens, autojunk=False)
+                matcher = difflib.SequenceMatcher(None, candidate_a.tokens, candidate_b.tokens, autojunk=False)
                 if matcher.quick_ratio() < NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
                     continue
                 ratio = matcher.ratio()
                 if ratio >= NEAR_DUPLICATE_SIMILARITY_THRESHOLD:
-                    uf.union(indices[i], indices[j])
-                    ratio_cache[(indices[i], indices[j])] = ratio
+                    union_find.union(indices[i], indices[other_position])
+                    ratio_cache[(indices[i], indices[other_position])] = ratio
 
     components = collections.defaultdict(list)
     for index in keys:
-        components[uf.find(index)].append(index)
+        components[union_find.find(index)].append(index)
 
     clusters = []
     for indices in components.values():
@@ -945,8 +945,8 @@ def _cluster_candidates(candidates):
         # a bucket exceeded the cap or the run hit its budget.
         cross_version_ratios = []
         for i in range(len(indices)):
-            for j in range(i + 1, len(indices)):
-                left, right = sorted((indices[i], indices[j]))
+            for other_position in range(i + 1, len(indices)):
+                left, right = sorted((indices[i], indices[other_position]))
                 if candidates[left].norm_hash != candidates[right].norm_hash:
                     cached = ratio_cache.get((left, right))
                     if cached is not None:
@@ -955,14 +955,14 @@ def _cluster_candidates(candidates):
                            if cross_version_ratios else 1.0)
         clusters.append({
             "members": sorted(
-                ({"path": m.path, "line": m.lineno, "end_line": m.end_lineno,
-                  "size": m.size, "version_hash": m.norm_hash[:12]}
-                 for m in members),
+                ({"path": member.path, "line": member.lineno, "end_line": member.end_lineno,
+                  "size": member.size, "version_hash": member.norm_hash[:12]}
+                 for member in members),
                 key=lambda entry: (entry["path"], entry["line"])),
             "member_count": len(members),
             "distinct_versions": len(distinct_hashes),
             "mean_cross_version_similarity": round(mean_similarity, 3),
-            "max_member_size": max(m.size for m in members),
+            "max_member_size": max(member.size for member in members),
         })
 
     # Ranked by how much a cluster has diverged: the more distinct versions
@@ -974,15 +974,15 @@ def _cluster_candidates(candidates):
     clusters.sort(key=lambda cluster: (
         -cluster["distinct_versions"], -cluster["max_member_size"],
         -cluster["member_count"],
-        tuple((m["path"], m["line"]) for m in cluster["members"])))
+        tuple((entry["path"], entry["line"]) for entry in cluster["members"])))
     return clusters, budget_exhausted
 
 
 def duplication_report(files):
     candidates = _collect_candidates(files)
     clusters, budget_exhausted = _cluster_candidates(candidates)
-    exact_only = [c for c in clusters if c["distinct_versions"] == 1]
-    diverged = [c for c in clusters if c["distinct_versions"] > 1]
+    exact_only = [cluster for cluster in clusters if cluster["distinct_versions"] == 1]
+    diverged = [cluster for cluster in clusters if cluster["distinct_versions"] > 1]
     return {
         "window_statements": DUPLICATE_WINDOW_STATEMENTS,
         "stride": DUPLICATE_STRIDE,

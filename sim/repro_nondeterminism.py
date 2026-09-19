@@ -160,10 +160,10 @@ def bisect(attempts=8):
     return 1
 
 
-def _h(v):
+def _hash_of(value):
     try:
         return hashlib.sha256(
-            json.dumps(v, sort_keys=True, default=str).encode()).hexdigest()[:10]
+            json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()[:10]
     except Exception:
         return "unhashable"
 
@@ -177,7 +177,7 @@ def caches():
     print()
     for name in SHARED_CACHES:
         value = getattr(EconomyMixin, name, None)
-        print("  %-32s %s" % (name, "populated, hash " + _h(vars(value) if hasattr(value, "__dict__") else value)))
+        print("  %-32s %s" % (name, "populated, hash " + _hash_of(vars(value) if hasattr(value, "__dict__") else value)))
     print()
     print("These are cached ON THE CLASS, so every Sim built afterwards in this")
     print("process shares them. They are built deterministically from JSON and")

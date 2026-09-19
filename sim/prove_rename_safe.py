@@ -12,8 +12,11 @@ and what else moved.
 
 WHY THIS EXISTS, AND WHY IT IS BETTER THAN THE FINGERPRINT HERE.
 
-This repository has 4,972 occurrences of identifiers two characters or
-shorter. Fixing them means touching nearly every file, and the usual way to
+This repository has a great many identifiers two characters or shorter;
+`python3 sim/code_health.py --names` and `python3 -m pylint sim/` both count
+them, and the figure moves every time a pass like this one runs, so it is
+deliberately not quoted here.
+Fixing them means touching nearly every file, and the usual way to
 show a refactor was safe - run `perf_fingerprint.py` before and after - cannot
 be used, for two separate reasons. It does not currently reproduce its own
 recording (Complaints/27). And even when it does, it is evidence rather than
@@ -260,7 +263,7 @@ def _consts_without_code(code):
     instruction-stream comparison in `_compare_code_pair` would not see a
     docstring edit by itself; this does.
     """
-    return tuple(c for c in code.co_consts if not hasattr(c, "co_code"))
+    return tuple(constant for constant in code.co_consts if not hasattr(constant, "co_code"))
 
 
 def _nested_children(code):
@@ -721,10 +724,47 @@ def _compare_code_pair(old_code, new_code, label, name_may_differ, problems, mat
                                             old_instructions, label))
         problems.extend(_check_free_domain(old_instructions, new_instructions, label))
 
-    if _consts_without_code(old_code) != _consts_without_code(new_code):
-        problems.append("%s: a CONSTANT changed - a literal, a string, a "
-                        "dict key or a docstring. Make prose edits in a "
-                        "separate commit." % label)
+    old_consts = _consts_without_code(old_code)
+    new_consts = _consts_without_code(new_code)
+    if old_consts != new_consts:
+        # NAME WHAT MOVED, BECAUSE THERE ARE TWO VERY DIFFERENT CAUSES AND
+        # THE READER CANNOT TELL THEM APART FROM A BARE "a constant changed".
+        #
+        # The first is the one this message was written for: somebody edited
+        # a literal or a docstring in the same commit as a rename, and the
+        # fix is to separate them.
+        #
+        # The second is not an edit at all. A parameter carrying a PEP 484
+        # annotation has its NAME stored as a string constant in the
+        # ENCLOSING scope, to be built into `__annotations__`, so renaming
+        # `def f(k: str)` to `def f(node_id: str)` moves the enclosing
+        # module's co_consts even though nothing was edited but the name.
+        # Verified directly: two modules differing only in that parameter's
+        # name compile to enclosing co_consts of ('k', 'return') and
+        # ('node_id', 'return'); without the annotation both are empty.
+        # This one is a hole in the proof, exactly like the keyword-argument
+        # hole, and it will widen as annotations spread through this
+        # codebase.
+        #
+        # Printing the difference tells the two apart instantly: a pair of
+        # identifiers is the annotation case, a sentence is the prose case.
+        removed = [const for const in old_consts if const not in new_consts]
+        added = [const for const in new_consts if const not in old_consts]
+
+        def _shown(values):
+            rendered = [repr(value)[:60] for value in values[:4]]
+            if len(values) > 4:
+                rendered.append("... and %d more" % (len(values) - 4))
+            return ", ".join(rendered) or "(none)"
+
+        problems.append(
+            "%s: a CONSTANT changed - gone: %s / added: %s. Either a literal "
+            "or a docstring was edited, in which case make prose edits in a "
+            "separate commit, OR an ANNOTATED parameter was renamed, which "
+            "stores its name as a constant in the enclosing scope and is a "
+            "known hole in this proof rather than a real change. A pair of "
+            "bare identifiers means the second."
+            % (label, _shown(removed), _shown(added)))
 
     if old_code.co_names != new_code.co_names:
         gone = sorted(set(old_code.co_names) - set(new_code.co_names))
@@ -836,7 +876,7 @@ def git_show(ref, path):
 def python_files():
     out = []
     for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "sim")):
-        dirnames[:] = [d for d in dirnames if d != "__pycache__"]
+        dirnames[:] = [dirname for dirname in dirnames if dirname != "__pycache__"]
         for filename in filenames:
             if filename.endswith(".py"):
                 out.append(os.path.relpath(os.path.join(dirpath, filename), ROOT))

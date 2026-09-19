@@ -55,43 +55,43 @@ REQUIRED = ["id","name","cat","pre","note"]
 DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap":200,"up":40,"risk":0.15,"rev":0,
             "sch":0,"art":1,"conf":"C","kb":""}
 
-def _num(v, d=0.0):
+def _num(value, default=0.0):
     """Branch authors sometimes write a number as a string, or as a range like
     '200-400'. Coerce rather than crash, and fall back to the default."""
-    if isinstance(v, (int, float)): return float(v)
-    if isinstance(v, str):
-        match = re.findall(r"-?\d+(?:\.\d+)?", v)
+    if isinstance(value, (int, float)): return float(value)
+    if isinstance(value, str):
+        match = re.findall(r"-?\d+(?:\.\d+)?", value)
         if match: return float(match[0])
-    return float(d)
+    return float(default)
 
 
-def normalise_v2(n):
+def normalise_v2(node):
     for field, value in DEFAULTS.items():
-        n.setdefault(field, json.loads(json.dumps(value)))
+        node.setdefault(field, json.loads(json.dumps(value)))
     for field, default in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
                  ("sch",0),("art",1)):
-        n[field] = _num(n.get(field), default)
-    n["risk"] = min(0.95, max(0.0, n["risk"]))
+        node[field] = _num(node.get(field), default)
+    node["risk"] = min(0.95, max(0.0, node["risk"]))
     for fld in ("lab","mat"):
-        if not isinstance(n.get(fld), dict): n[fld] = {}
-        else: n[fld] = {code: _num(value, 0) for code, value in n[fld].items()}
-    if not isinstance(n.get("pre"), list): n["pre"] = []
-    if not isinstance(n.get("traits"), list): n["traits"] = []
+        if not isinstance(node.get(fld), dict): node[fld] = {}
+        else: node[fld] = {code: _num(value, 0) for code, value in node[fld].items()}
+    if not isinstance(node.get("pre"), list): node["pre"] = []
+    if not isinstance(node.get("traits"), list): node["traits"] = []
     """Accept either schema and leave the node in v2 shape with v1 fields
     backfilled, so the simulator and the audit keep working during the change."""
-    if "build_yrs" not in n and "yrs" in n:
-        years = float(n.get("yrs", 0) or 0)
+    if "build_yrs" not in node and "yrs" in node:
+        years = float(node.get("yrs", 0) or 0)
         if years >= 5:
-            n["build_yrs"], n["adopt_yrs"] = min(3.0, years / 3.0), years
+            node["build_yrs"], node["adopt_yrs"] = min(3.0, years / 3.0), years
         else:
-            n["build_yrs"], n["adopt_yrs"] = years, 0.0
-    n.setdefault("build_yrs", 0.0); n.setdefault("adopt_yrs", 0.0)
-    n["yrs"] = max(float(n["build_yrs"]), float(n["adopt_yrs"]))
-    n.setdefault("req_any", []); n.setdefault("traits", [])
-    n.setdefault("dev_years", None); n.setdefault("dev_people", None)
+            node["build_yrs"], node["adopt_yrs"] = years, 0.0
+    node.setdefault("build_yrs", 0.0); node.setdefault("adopt_yrs", 0.0)
+    node["yrs"] = max(float(node["build_yrs"]), float(node["adopt_yrs"]))
+    node.setdefault("req_any", []); node.setdefault("traits", [])
+    node.setdefault("dev_years", None); node.setdefault("dev_people", None)
     # v1 scalars are derived from traits so old code paths still run
-    n.setdefault("gov", 0); n.setdefault("sus", 0)
-    return n
+    node.setdefault("gov", 0); node.setdefault("sus", 0)
+    return node
 
 # ---------------------------------------------------------------- MERGE
 def load_aliases():
@@ -136,8 +136,8 @@ def load_merged_duplicate_ids():
     return json.load(open(path))["merged_duplicate_ids"]
 
 
-def cmd_merge(a):
-    goods, TRADES, alias, dropset, base, retired, nodes = _merge_load_inputs()
+def cmd_merge(args):
+    goods, valid_trades, alias, dropset, base, retired, nodes = _merge_load_inputs()
     errs, warns, added, updated = [], [], 0, 0
     # STAGE 3 (Complaints/30): which branch file, if any, has already supplied
     # THIS RUN'S definition of an id. Seeding `nodes` from the current tree
@@ -167,7 +167,7 @@ def cmd_merge(a):
         if not filename.endswith(".json") or filename in ("ALIASES.json", MERGED_DUPLICATE_IDS_FILE):
             continue
         file_added, file_updated = _merge_process_branch_file(
-            filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions)
+            filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions)
         added += file_added
         updated += file_updated
 
@@ -196,17 +196,17 @@ def cmd_merge(a):
     # write" shape as the collision refusal above, because this merge
     # already deletes data silently today, and that is the bug Task 1 of
     # this pass exists to close.
-    if _merge_report_losses(losses, getattr(a, "accept_data_loss", False)):
+    if _merge_report_losses(losses, getattr(args, "accept_data_loss", False)):
         return 1
 
-    return _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, a)
+    return _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, args)
 
 
 def _merge_load_inputs():
     """The merge's read side: prices, aliases, the current tree, the dedup record, and
     the seed `nodes` dict (current tree, normalised, with `_src` defaulted to "core")."""
     goods = load_prices()
-    TRADES = load_trades()
+    valid_trades = load_trades()
     alias, dropset = load_aliases()
     base = json.load(open(TREE))
     # Ids retired by deduplication. Branch files still contain both spellings
@@ -221,7 +221,7 @@ def _merge_load_inputs():
     nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
     for node in nodes.values():
         node.setdefault("_src", "core")
-    return goods, TRADES, alias, dropset, base, retired, nodes
+    return goods, valid_trades, alias, dropset, base, retired, nodes
 
 
 def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
@@ -254,13 +254,13 @@ def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
             node["pre"] = fixed
 
 
-def _merge_resolve_labour(node, alias, TRADES, filename, losses):
+def _merge_resolve_labour(node, alias, valid_trades, filename, losses):
     # resolve trade aliases rather than silently dropping the labour,
     # which would make the technology look cheaper than it is
     lab = {}
     for trade, hours in node["lab"].items():
         resolved_trade = alias.get(trade, trade)
-        if resolved_trade in TRADES:
+        if resolved_trade in valid_trades:
             lab[resolved_trade] = lab.get(resolved_trade, 0) + hours
         else:
             losses.append(("unknown_trade",
@@ -305,7 +305,7 @@ def _merge_relocate_kb_prose(node):
     node["kb"] = kb_field
 
 
-def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions):
+def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions):
     """Validate, normalise and fold ONE branch node into `nodes`. Returns "added",
     "updated" or None (nothing ingested - a missing field, a retired id, or a
     same-run collision, each already recorded in errs/warns/collisions)."""
@@ -340,7 +340,7 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, ret
     # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
     # is unobtainable, only elsewhere. A new branch reintroduced it on
     normalise_v2(node)
-    node["lab"] = _merge_resolve_labour(node, alias, TRADES, filename, losses)
+    node["lab"] = _merge_resolve_labour(node, alias, valid_trades, filename, losses)
     node["mat"] = _merge_resolve_materials(node, alias, dropset, goods, filename, losses)
     _merge_relocate_kb_prose(node)
     node["_src"] = filename
@@ -373,13 +373,13 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, ret
     return status
 
 
-def _merge_process_branch_file(filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions):
+def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions):
     """Parse one branches/*.json file, fix its self-referencing prereqs, and ingest
     every node in it. Returns (added, updated) for this file alone."""
     try:
         batch = json.load(open(os.path.join(BR, filename)))
-    except Exception as e:
-        errs.append("%s: unparseable JSON: %s" % (filename, e))
+    except Exception as error:
+        errs.append("%s: unparseable JSON: %s" % (filename, error))
         return 0, 0
     if not isinstance(batch, list):
         errs.append("%s: top level is not a list" % filename)
@@ -389,7 +389,7 @@ def _merge_process_branch_file(filename, nodes, alias, dropset, goods, TRADES, r
 
     added = updated = 0
     for node in batch:
-        status = _merge_ingest_node(node, filename, nodes, alias, dropset, goods, TRADES, retired, branch_origin, errs, warns, losses, collisions)
+        status = _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions)
         if status == "added":
             added += 1
         elif status == "updated":
@@ -403,8 +403,8 @@ def _merge_report_collisions(errs, collisions):
     if not collisions:
         return False
     print("errors  : %d" % len(errs))
-    for e in errs[:MERGE_ERRORS_SHOWN]:
-        print("   " + e)
+    for error in errs[:MERGE_ERRORS_SHOWN]:
+        print("   " + error)
     print("\nMERGE REFUSED: %d id(s) defined in more than one branch file:" % len(collisions))
     for collision in collisions:
         print("   COLLISION " + collision)
@@ -479,17 +479,17 @@ def _merge_report_losses(losses, accept_data_loss):
     return False
 
 
-def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, a):
+def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, args):
     base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
     base["meta"]["merged_duplicate_ids"] = retired
-    _write_json(base, TREE, a)
+    _write_json(base, TREE, args)
 
     print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
           % (len(nodes), added, updated))
     print("errors  : %d" % len(errs))
-    for e in errs[:MERGE_ERRORS_SHOWN]:
-        print("   " + e)
+    for error in errs[:MERGE_ERRORS_SHOWN]:
+        print("   " + error)
     print("warnings: %d" % len(warns))
     for warning in warns[:MERGE_WARNINGS_SHOWN]:
         print("   " + warning)
@@ -527,8 +527,8 @@ ELEC_WORDS = ("dynamo","electric motor","electrolysis","electroplat","arc lamp",
               "generator","alternating current","transformer","electric furnace")
 
 
-def closure(nodes, k):
-    seen, stack = set(), [k]
+def closure(nodes, start_id):
+    seen, stack = set(), [start_id]
     while stack:
         ancestor_id = stack.pop()
         if ancestor_id in seen:
@@ -538,21 +538,21 @@ def closure(nodes, k):
     return seen
 
 
-def _judge_abstract_defects(n):
+def _judge_abstract_defects(node):
     """The abstract-category half of judge_node: only NOTE-THIN and NO-CONF apply."""
     defects = []
-    if len(n["note"]) < 60:
-        defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
-    if n["conf"] not in ("A", "B", "C"):
+    if len(node["note"]) < 60:
+        defects.append(("NOTE-THIN", "note is %d characters" % len(node["note"])))
+    if node["conf"] not in ("A", "B", "C"):
         defects.append(("NO-CONF", "confidence not stated"))
     return defects
 
 
-def _judge_capability_defects(n, caps, ancestry, text):
+def _judge_capability_defects(node, caps, ancestry, text):
     """CAP-NONE plus the per-word capability-rung checks (heat, tolerance, vacuum, purity, power)."""
     defects = []
-    physical = bool(n.get("mat")) or n.get("cap", 0) >= 200
-    if not caps and physical and len(ancestry) >= 3 and n["cat"] not in (
+    physical = bool(node.get("mat")) or node.get("cap", 0) >= 200
+    if not caps and physical and len(ancestry) >= 3 and node["cat"] not in (
             "social", "institution", "mathematics", "physics", "foundation",
             "information", "capability"):
         defects.append(("CAP-NONE", "physical work with no capability rung in its chain "
@@ -571,69 +571,69 @@ def _judge_capability_defects(n, caps, ancestry, text):
     return defects
 
 
-def _judge_structural_defects(n, ancestry, unob):
+def _judge_structural_defects(node, ancestry, unob):
     """SHALLOW (thin direct prerequisites under a deep ancestry) and BLOCKED (depends on
     something marked unobtainable)."""
     defects = []
-    if len(n["pre"]) < 2 and 10 <= len(ancestry) < 25:
+    if len(node["pre"]) < 2 and 10 <= len(ancestry) < 25:
         defects.append(("SHALLOW", "%d direct prerequisite(s) and an ancestry only %d nodes deep"
-                             % (len(n["pre"]), len(ancestry))))
-    if unob and n["cat"] != "unobtainable":
+                             % (len(node["pre"]), len(ancestry))))
+    if unob and node["cat"] != "unobtainable":
         defects.append(("BLOCKED", "depends on %s, which is marked UNOBTAINABLE"
                              % ", ".join(sorted(unob)[:JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN])))
     return defects
 
 
-def _judge_cost_and_hours_defects(n, ancestry, stats):
+def _judge_cost_and_hours_defects(node, ancestry, stats):
     """COST-HIGH, HOURS-HIGH, HOURS-ZERO and NO-FLOOR."""
     defects = []
-    category = n["cat"]
+    category = node["cat"]
     med_cost = stats["cost"].get(category, 1)
-    cost = n["_total_cost"]
+    cost = node["_total_cost"]
     if med_cost > 0 and cost > med_cost * 25:
         defects.append(("COST-HIGH", "costs %s den, about %.0fx the median for category %s"
                                % (f"{cost:,.0f}", cost / med_cost, category)))
-    if n["ph"] > 2000:
+    if node["ph"] > 2000:
         defects.append(("HOURS-HIGH", "%s founder-hours, which is %.1f%% of a working life"
-                                % (f"{n['ph']:,}", 100.0 * n["ph"] / 72000)))
-    if len(ancestry) >= 3 and n["ph"] == 0 and n["cat"] not in ("capability", "material"):
+                                % (f"{node['ph']:,}", 100.0 * node["ph"] / 72000)))
+    if len(ancestry) >= 3 and node["ph"] == 0 and node["cat"] not in ("capability", "material"):
         defects.append(("HOURS-ZERO", "non-foundational work costs the founder no hours"))
-    if n.get("adopt_yrs", 0) >= 5 and n["yrs"] < 1:
+    if node.get("adopt_yrs", 0) >= 5 and node["yrs"] < 1:
         defects.append(("NO-FLOOR", "long adoption has a calendar floor under a year"))
     return defects
 
 
-def _judge_documentation_and_social_defects(n, ancestry):
+def _judge_documentation_and_social_defects(node, ancestry):
     """NOTE-THIN, NO-RECIPE, NO-CONF and SOCIAL-FLAT."""
     defects = []
-    if len(n["note"]) < 60:
-        defects.append(("NOTE-THIN", "note is %d characters" % len(n["note"])))
-    if not n.get("kb") and n["cat"] not in ("capability", "material", "unobtainable"):
+    if len(node["note"]) < 60:
+        defects.append(("NOTE-THIN", "note is %d characters" % len(node["note"])))
+    if not node.get("kb") and node["cat"] not in ("capability", "material", "unobtainable"):
         defects.append(("NO-RECIPE", "no knowledge-base link"))
-    if n["conf"] not in ("A", "B", "C"):
+    if node["conf"] not in ("A", "B", "C"):
         defects.append(("NO-CONF", "confidence not stated"))
-    if len(ancestry) >= 3 and not n.get("traits") and n["sus"] == 0 and n["gov"] == 0 \
-            and n["cat"] not in ("capability", "material", "unobtainable", "mathematics", "physics"):
+    if len(ancestry) >= 3 and not node.get("traits") and node["sus"] == 0 and node["gov"] == 0 \
+            and node["cat"] not in ("capability", "material", "unobtainable", "mathematics", "physics"):
         defects.append(("SOCIAL-FLAT", "no traits and no scalar gov/sus"))
     return defects
 
 
-def judge_node(n, nodes, stats):
+def judge_node(node, nodes, stats):
     """Score one technology using its declared graph and category, not a rank."""
-    if n["cat"] in ABSTRACT_CATS:
-        defects = _judge_abstract_defects(n)
+    if node["cat"] in ABSTRACT_CATS:
+        defects = _judge_abstract_defects(node)
         return max(0, 100 - len(defects) * 12), defects
 
-    ancestry = closure(nodes, n["id"])
+    ancestry = closure(nodes, node["id"])
     caps = {node_id for node_id in ancestry if node_id.startswith(CAP_PREFIX)}
-    text = (n["name"] + " " + n["note"]).lower()
+    text = (node["name"] + " " + node["note"]).lower()
     unob = [node_id for node_id in ancestry if nodes[node_id]["cat"] == "unobtainable"]
 
     defects = []
-    defects += _judge_capability_defects(n, caps, ancestry, text)
-    defects += _judge_structural_defects(n, ancestry, unob)
-    defects += _judge_cost_and_hours_defects(n, ancestry, stats)
-    defects += _judge_documentation_and_social_defects(n, ancestry)
+    defects += _judge_capability_defects(node, caps, ancestry, text)
+    defects += _judge_structural_defects(node, ancestry, unob)
+    defects += _judge_cost_and_hours_defects(node, ancestry, stats)
+    defects += _judge_documentation_and_social_defects(node, ancestry)
 
     weights = {"NO-RECIPE": 1, "CAP-NONE": 3, "CAP-HEAT": 2, "CAP-TOL": 2,
                "CAP-VAC": 2, "CAP-PURITY": 2, "CAP-POWER": 2, "SHALLOW": 3,
@@ -642,8 +642,8 @@ def judge_node(n, nodes, stats):
     penalty = sum(weights.get(code, 1) for code, _ in defects)
     return max(0, int(round(100 - penalty * 6))), defects
 
-def grade(s):
-    return "A" if s >= 90 else "B" if s >= 78 else "C" if s >= 64 else "D" if s >= 50 else "F"
+def grade(score):
+    return "A" if score >= 90 else "B" if score >= 78 else "C" if score >= 64 else "D" if score >= 50 else "F"
 
 
 def _judge_compute_costs(nodes, prices):
@@ -677,21 +677,21 @@ def _judge_build_results(nodes, prices):
     return results
 
 
-def _judge_print_single_node_report(a, nodes, results):
+def _judge_print_single_node_report(args, nodes, results):
     """The `judge --id X` report card for one node."""
-    if a.id not in nodes:
-        near = [node_id for node_id in nodes if a.id.lower() in node_id.lower()]
+    if args.id not in nodes:
+        near = [node_id for node_id in nodes if args.id.lower() in node_id.lower()]
         raise SystemExit("unknown node. near matches: %s" % (", ".join(near[:JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN]) or "none"))
-    node, (score, node_defects) = nodes[a.id], results[a.id]
+    node, (score, node_defects) = nodes[args.id], results[args.id]
     print("%s  [%s]" % (node["name"], node["id"]))
     print("=" * 78)
     print("grade %s (%d/100)   %s   confidence %s"
           % (grade(score), score, node["cat"], node["conf"]))
     print("direct prerequisites : %d   full ancestry : %d nodes"
-          % (len(node["pre"]), len(closure(nodes, a.id)) - 1))
+          % (len(node["pre"]), len(closure(nodes, args.id)) - 1))
     print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
           % (f"{node['_total_cost']:,.0f}", f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
-    caps = sorted(cap_id for cap_id in closure(nodes, a.id) if cap_id.startswith("cap_"))
+    caps = sorted(cap_id for cap_id in closure(nodes, args.id) if cap_id.startswith("cap_"))
     print("capability rungs in its chain: %s" % (", ".join(caps) if caps else "NONE"))
     print("\n%s\n" % node["note"])
     if node_defects:
@@ -728,20 +728,20 @@ def _judge_print_worst_nodes(results):
         print("   %-34s %3d %s  %s" % (node_id[:JUDGE_NODE_ID_COLUMN_WIDTH_CHARS], score, grade(score), ", ".join(code for code, _ in node_defects[:JUDGE_DEFECT_CODES_SHOWN])))
 
 
-def _judge_print_grade_filter(a, results):
+def _judge_print_grade_filter(args, results):
     """`judge --grade X`: every node at or below that grade. No-op unless the flag was passed."""
-    if not a.grade:
+    if not args.grade:
         return
-    floor = "FDCBA".index(a.grade.upper())
-    print("\nALL NODES AT GRADE %s OR WORSE" % a.grade.upper())
+    floor = "FDCBA".index(args.grade.upper())
+    print("\nALL NODES AT GRADE %s OR WORSE" % args.grade.upper())
     for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
         if "FDCBA".index(grade(score)) <= floor:
             print("   %-34s %3d %s  %s" % (node_id[:JUDGE_NODE_ID_COLUMN_WIDTH_CHARS], score, grade(score), ", ".join(code for code, _ in node_defects)))
 
 
-def _judge_print_full_report(a, results):
+def _judge_print_full_report(args, results):
     """`judge --full`: every defect, node by node. No-op unless the flag was passed."""
-    if not a.full:
+    if not args.full:
         return
     print("\nFULL REPORT")
     for node_id, (score, node_defects) in sorted(results.items(), key=lambda entry: entry[1][0]):
@@ -751,29 +751,29 @@ def _judge_print_full_report(a, results):
                 print("    [%s] %s" % (code, message))
 
 
-def _judge_write_judgement(results, a):
+def _judge_write_judgement(results, args):
     _write_json({node_id: {"score": score, "grade": grade(score), "defects": [code for code, _ in node_defects]}
                  for node_id, (score, node_defects) in results.items()},
-                os.path.join(DATA, "judgement.json"), a)
-    if not getattr(a, "dry_run", False):
+                os.path.join(DATA, "judgement.json"), args)
+    if not getattr(args, "dry_run", False):
         print("\nwrote data/judgement.json")
 
 
-def cmd_judge(a):
+def cmd_judge(args):
     tree = json.load(open(TREE))
     nodes = {node["id"]: node for node in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
     results = _judge_build_results(nodes, prices)
 
-    if a.id:
-        _judge_print_single_node_report(a, nodes, results)
+    if args.id:
+        _judge_print_single_node_report(args, nodes, results)
         return 0
 
     _judge_print_summary(nodes, results)
     _judge_print_worst_nodes(results)
-    _judge_print_grade_filter(a, results)
-    _judge_print_full_report(a, results)
-    _judge_write_judgement(results, a)
+    _judge_print_grade_filter(args, results)
+    _judge_print_full_report(args, results)
+    _judge_write_judgement(results, args)
     return 0
 
 
@@ -886,7 +886,7 @@ def _repair_calendar_floor(node, codes, counts):
         node["yrs"] = max(node["yrs"], 2.0); counts["calendar floors raised"] += 1
 
 
-def cmd_repair(a):
+def cmd_repair(args):
     """Fix what the audit can fix mechanically, and MARK every inference.
 
     A tree whose capability prerequisites were inferred by a script is better
@@ -915,14 +915,14 @@ def cmd_repair(a):
         _repair_social_defaults(node, ident, codes, counts)
         _repair_calendar_floor(node, codes, counts)
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, a)
+    _write_json(tree, TREE, args)
     print("REPAIR PASS")
     for ident, value in counts.most_common():
         print("   %-32s %d" % (ident, value))
     return 0
 
 
-def cmd_apply_caps(a):
+def cmd_apply_caps(args):
     """Apply reviewer-assigned capability rungs from data/caps_fix_*.json.
 
     Unlike the keyword heuristic this replaces, every edge here was chosen by a
@@ -938,8 +938,8 @@ def cmd_apply_caps(a):
     for path in sorted(glob.glob(os.path.join(DATA, "review", "caps_fix_*.json"))):
         try:
             fixes = json.load(open(path))
-        except Exception as e:
-            print("unparseable: %s (%s)" % (os.path.basename(path), e))
+        except Exception as error:
+            print("unparseable: %s (%s)" % (os.path.basename(path), error))
             continue
         for node_id, fix in fixes.items():
             if node_id not in nodes:
@@ -969,7 +969,7 @@ def cmd_apply_caps(a):
                     " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, a)
+    _write_json(tree, TREE, args)
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
     print("   nodes judged to need none        %d" % empty)
@@ -996,9 +996,9 @@ def cmd_apply_caps(a):
 # --dry-run says what would be written and writes nothing. The default is
 # unchanged - these commands still write, because that is what they are for
 # and existing callers depend on it - so this only adds a way to be careful.
-def _write_json(obj, path, a, indent=1):
+def _write_json(obj, path, args, indent=1):
     """json.dump, unless --dry-run was asked for."""
-    if getattr(a, "dry_run", False):
+    if getattr(args, "dry_run", False):
         print("would write %s (--dry-run: not written)" % os.path.basename(path))
         return
     json.dump(obj, open(path, "w"), indent=indent)

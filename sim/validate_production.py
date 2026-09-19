@@ -395,8 +395,8 @@ def check_mass_conservation(where, entry):
                           if key.endswith("_kg")
                           and isinstance(quantity, (int, float)))
     if outputs and all(key.endswith("_kg") for key in outputs) and inputs:
-        kilogram_outputs = sum(q for q in outputs.values()
-                               if isinstance(q, (int, float)))
+        kilogram_outputs = sum(quantity for quantity in outputs.values()
+                               if isinstance(quantity, (int, float)))
         if kilogram_inputs > 0:
             if kilogram_outputs > kilogram_inputs:
                 problems.append(

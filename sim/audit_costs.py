@@ -199,25 +199,25 @@ def _bar(share, width=AUDIT_BAR_WIDTH_CHARS):
     return "#" * filled + "." * (width - filled)
 
 
-def _report_header_and_input_side(a):
+def _report_header_and_input_side(audit):
     """Title, node count, and the INPUT SIDE block: what every process consumes,
     already physical."""
-    node_count = a["nodes"]
+    node_count = audit["nodes"]
     lines = ["TECH TREE COST AUDIT", "=" * 72, "%d nodes\n" % node_count,
              "INPUT SIDE - what every process consumes. Already physical:"]
     for field, unit in (("lab", "hours by trade"), ("mat", "kg / units"),
                     ("ph", "founder hours")):
-        count = a["fields_populated"][field]
+        count = audit["fields_populated"][field]
         lines.append("  %-4s %-16s %5d nodes  %5.1f%%  %s"
               % (field, unit, count, 100.0 * count / node_count, _bar(count / node_count)))
     lines.append("")
     return lines
 
 
-def _report_output_side(a):
+def _report_output_side(audit):
     """OUTPUT SIDE block: what anything produces, and (if any) what still has
     no recipe at all."""
-    mats = a["materials"]
+    mats = audit["materials"]
     made = [material for material in mats if material["made_by_recipes"]]
     lines = ["OUTPUT SIDE - what anything produces:",
              "  materials consumed somewhere in the tree      %5d" % len(mats),
@@ -239,12 +239,12 @@ def _report_output_side(a):
     return lines
 
 
-def _report_tree_side_question(a):
+def _report_tree_side_question(audit):
     # THE TREE-SIDE QUESTION, WHICH IS STILL OPEN AND IS NOT THE SAME ONE.
     # Knowing that something makes iron does not say WHICH TECHNOLOGY lets you
     # make it, and that is what a recipe has to be gated on - see
     # Complaints/39 and `requires_node` in data/production/_SCHEMA.md.
-    mats = a["materials"]
+    mats = audit["materials"]
     with_producer = [material for material in mats if material["producer"]]
     return ["  Separately: does the TREE name a node for the material? This is",
             "  the suffix-stripping guess, and it is the link `requires_node`",
@@ -254,9 +254,9 @@ def _report_tree_side_question(a):
             ""]
 
 
-def _report_cost_base(a):
+def _report_cost_base(audit):
     """STILL PRICED FROM A BOOK block: where the denarii come from today."""
-    cost_base = a["cost_base_denarii"]
+    cost_base = audit["cost_base_denarii"]
     total = sum(cost_base.values()) or 1.0
     lines = ["STILL PRICED FROM A BOOK - where the denarii come from today:"]
     for cost_key, label in (("materials", "materials (mat, physical)"),
@@ -277,8 +277,8 @@ def _report_cost_base(a):
     return lines
 
 
-def _report_price_confidence(a):
-    confidence = a["price_confidence"]
+def _report_price_confidence(audit):
+    confidence = audit["price_confidence"]
     confidence_total = sum(confidence.values()) or 1
     lines = ["CONFIDENCE IN THE BOOK ITSELF (data/prices.json):"]
     for grade, meaning in (("A", "well attested"),
@@ -290,11 +290,11 @@ def _report_price_confidence(a):
     return lines
 
 
-def _report_every_material(a):
+def _report_every_material(audit):
     """`--materials`: every material, who consumes it, and what makes it."""
     lines = ["EVERY MATERIAL", "-" * 72,
              "  %-22s %6s  %-30s %s" % ("material", "used", "made by", "state")]
-    for material in a["materials"]:
+    for material in audit["materials"]:
         recipes = material["made_by_recipes"]
         if not recipes:
             state = "NOTHING MAKES IT"
@@ -308,19 +308,19 @@ def _report_every_material(a):
     return lines
 
 
-def report(a, show_materials=False):
-    for line in _report_header_and_input_side(a):
+def report(audit, show_materials=False):
+    for line in _report_header_and_input_side(audit):
         print(line)
-    for line in _report_output_side(a):
+    for line in _report_output_side(audit):
         print(line)
-    for line in _report_tree_side_question(a):
+    for line in _report_tree_side_question(audit):
         print(line)
-    for line in _report_cost_base(a):
+    for line in _report_cost_base(audit):
         print(line)
-    for line in _report_price_confidence(a):
+    for line in _report_price_confidence(audit):
         print(line)
     if show_materials:
-        for line in _report_every_material(a):
+        for line in _report_every_material(audit):
             print(line)
 
 

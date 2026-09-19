@@ -294,8 +294,29 @@ names, by comparing compiled bytecode: a local's name is not in `co_code`, so
 a pure local rename leaves the executed bytes identical, while an attribute or
 global moves `co_names` and a literal moves `co_consts`. That is a proof over
 every possible run rather than a sample of nine, and it does not depend on
-`perf_fingerprint` working. It does NOT cover parameter renames, where a
-caller passing by keyword breaks invisibly - it reports those separately.
+`perf_fingerprint` working.
+
+**It has two holes, and both report as a failure rather than a proof.** A
+reported failure on a rename commit is therefore not automatically a bug;
+read which hole it is before believing it.
+
+1. **A parameter passed by keyword.** The caller's `name=` breaks invisibly,
+   because the caller still compiles. Use `rope`, which updates keyword call
+   sites across files; it was tested on exactly this and got them right.
+2. **An ANNOTATED parameter.** A parameter carrying a PEP 484 annotation has
+   its NAME stored as a string constant in the ENCLOSING scope, for
+   `__annotations__`. So renaming `def f(k: str)` to `def f(node_id: str)`
+   moves the enclosing module's `co_consts` although nothing was edited but
+   the name, and the tool reports "a CONSTANT changed" as if a docstring had
+   been touched. Verified: two modules differing only in that name compile to
+   enclosing `co_consts` of `('k', 'return')` and `('node_id', 'return')`;
+   drop the annotation and both are empty. **This hole widens every time
+   annotations spread further through the engine**, so expect it more often,
+   not less.
+
+The tool prints which constants moved, which tells the two apart at a glance:
+a pair of bare identifiers (`gone: 'k' / added: 'node_id'`) is the annotation
+hole, a sentence is a real prose edit that belongs in its own commit.
 
 The tech-tree DATA schema fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`,
 `sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`, `kb`) are a separate job,

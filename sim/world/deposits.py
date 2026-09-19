@@ -1236,8 +1236,8 @@ def init_deposit_states(
     """
     working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                            if working_life_years is None else working_life_years)
-    return [DepositState(d, d.quantity_tonnes_per_year * working_life_years)
-            for d in deposits]
+    return [DepositState(deposit, deposit.quantity_tonnes_per_year * working_life_years)
+            for deposit in deposits]
 
 
 YearOutcome = collections.namedtuple("YearOutcome", [
@@ -1270,7 +1270,7 @@ def simulate_depletion(
     states = init_deposit_states(deposits, working_life_years)
     outcomes = []
     for year in range(1, int(years) + 1):
-        available = [s for s in states if not s.exhausted]
+        available = [state for state in states if not state.exhausted]
         # Each state's CURRENT grade (declining as its reserve is worked
         # down - the intensive margin) and CURRENT capacity (its usual
         # annual output, capped by whatever remains - the extensive one)
@@ -1279,9 +1279,9 @@ def simulate_depletion(
         # throwaway copy with both fields overridden is built here rather
         # than teaching that function about DepositState at all.
         this_year_deposits = [
-            s.deposit_as_worked()._replace(
-                quantity_tonnes_per_year=s.annual_capacity_tonnes())
-            for s in available]
+            state.deposit_as_worked()._replace(
+                quantity_tonnes_per_year=state.annual_capacity_tonnes())
+            for state in available]
         outcome = find_marginal_deposit(
             this_year_deposits, quantity_demanded_tonnes_per_year,
             working_life_years=working_life_years)

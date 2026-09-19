@@ -250,10 +250,10 @@ def burndown():
     two numbers, so callers should look at it FIRST.
     """
     total = len(REGISTRY)
-    heuristics = [e for e in REGISTRY.values()
-                  if e["kind"] == "temporary_heuristic"]
-    historical_outcomes = [e for e in REGISTRY.values()
-                            if e["kind"] == "hardcoded_outcome"]
+    heuristics = [entry for entry in REGISTRY.values()
+                  if entry["kind"] == "temporary_heuristic"]
+    historical_outcomes = [entry for entry in REGISTRY.values()
+                            if entry["kind"] == "hardcoded_outcome"]
     return {"declared": total, "temporary_heuristics": len(heuristics),
             "share": (len(heuristics) / total) if total else 0.0,
             "outstanding": heuristics,
