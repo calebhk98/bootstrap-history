@@ -140,6 +140,10 @@ import os
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
+# sim.unit_conversions carries the same "imports nothing but sim.constants"
+# property sim.constants itself already has, so importing it is not the
+# cross-domain wiring this module's own STANDALONE section forbids.
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM, PERCENT_SCALE
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -888,7 +892,8 @@ def market_clearing_price(
 # about which output deserves the cost (that question is what
 # joint_output_value_shares answers instead, on price, never on mass).
 
-_KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": 0.001, "_t": 1000.0}
+_KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": KILOGRAMS_PER_GRAM,
+                                  "_t": KILOGRAMS_PER_TONNE}
 
 
 def _kg_equivalent(material_key: str, quantity: float) -> float:
@@ -1247,7 +1252,7 @@ if __name__ == "__main__":
     # never hand-typed.
     with open(os.path.join(_ROOT, "data", "world", "resources.json")) as handle:
         resources = json.load(handle)
-    illustrative_annual_lead_kg = resources["empire_output_100ad"]["lead"]["t_per_yr"] * 1000.0
+    illustrative_annual_lead_kg = resources["empire_output_100ad"]["lead"]["t_per_yr"] * KILOGRAMS_PER_TONNE
     illustrative_annual_silver_kg = (
         illustrative_annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"])
     silver_price = market_clearing_price(
@@ -1263,17 +1268,17 @@ if __name__ == "__main__":
     print("\nillustrative wheat price (recursive labour content): %.4f h/kg"
           % illustrative_wheat_price)
     print("household food budget share at that price: %.1f%%"
-          % (100.0 * food_share))
+          % (PERCENT_SCALE * food_share))
     print("historical calibration target: %.0f-%.0f%%"
-          % (100.0 * HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
-             100.0 * HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
+          % (PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
+             PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
 
     print("\n" + "=" * 72)
     print("COMPLAINTS/29: lead_kg's joint silver output, priced two ways")
     print("recipe outputs (per %s): %s" % (lead_entry["basis"][:40] + "...", outputs))
     mass_shares = joint_output_mass_shares(outputs)
     print("mass shares:  " + ", ".join(
-        "%s=%.4f%%" % (material, 100.0 * share)
+        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
         for material, share in mass_shares.items()))
     print("illustrative lead price (recursive labour content): %.4f h/kg"
           % illustrative_lead_price)
@@ -1281,7 +1286,7 @@ if __name__ == "__main__":
           "the recipe's own ratio: %.4g kg/yr (stated total silver output "
           "including the direct-ore route: %.4g kg/yr)"
           % (illustrative_annual_lead_kg, illustrative_annual_silver_kg,
-             resources["empire_output_100ad"]["silver"]["t_per_yr"] * 1000.0))
+             resources["empire_output_100ad"]["silver"]["t_per_yr"] * KILOGRAMS_PER_TONNE))
     print("demand-cleared silver price at that supply: %.4f h/kg"
           % silver_price)
     print("derived silver:lead price ratio: %.1fx  (historical target: ~%.0fx)"
@@ -1290,7 +1295,7 @@ if __name__ == "__main__":
     value_shares = joint_output_value_shares(
         outputs, {"lead_kg": illustrative_lead_price, "silver_kg": silver_price})
     print("value shares: " + ", ".join(
-        "%s=%.4f%%" % (material, 100.0 * share)
+        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
         for material, share in value_shares.items()))
 
     print("\n" + "=" * 72)

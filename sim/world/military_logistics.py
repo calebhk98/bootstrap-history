@@ -154,6 +154,10 @@ import collections
 from typing import Optional
 
 from sim.constants import declare
+# sim.unit_conversions carries the same "imports nothing but sim.constants"
+# property sim.constants itself already has, so importing it is not the
+# cross-domain wiring this module's own STANDALONE section forbids.
+from sim.unit_conversions import GRAMS_PER_KILOGRAM
 
 # ============================================================================
 # HUMAN RATION
@@ -784,7 +788,7 @@ def ammunition_mass_kg_per_soldier_per_engagement(firearm: "Firearm") -> float:
     """One soldier's ammunition mass burden for one engagement, in
     kilograms - the same MASS the baggage-train functions above have to
     move, whichever Firearm is passed in."""
-    return firearm.consumable_mass_g_per_shot * firearm.rounds_per_engagement / 1000.0
+    return firearm.consumable_mass_g_per_shot * firearm.rounds_per_engagement / GRAMS_PER_KILOGRAM
 
 
 def maintenance_items_per_soldier_per_engagement(firearm: "Firearm") -> float:

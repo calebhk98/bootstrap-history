@@ -265,6 +265,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -672,7 +673,7 @@ def amortized_sinking_cost_labour_hours_per_kg(
     working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                            if working_life_years is None else working_life_years)
     total_reserve_kg = (deposit.quantity_tonnes_per_year * working_life_years
-                         * 1000.0)
+                         * KILOGRAMS_PER_TONNE)
     if total_reserve_kg <= 0.0:
         return float("inf")
     return fixed_hours / total_reserve_kg
@@ -751,7 +752,7 @@ def waste_tonnes_per_kg_metal(deposit: "Deposit") -> float:
     comes up that is NOT the metal: at Las Medulas's 0.0003 kg/t this is
     all but one part in about three million of what is lifted.
     """
-    return material_moved_tonnes_per_kg_metal(deposit) - 0.001
+    return material_moved_tonnes_per_kg_metal(deposit) - 1.0 / KILOGRAMS_PER_TONNE
 
 
 def annual_waste_rock_tonnes(deposit: "Deposit") -> float:
@@ -761,7 +762,7 @@ def annual_waste_rock_tonnes(deposit: "Deposit") -> float:
     Medulas's own case) if this project modelled where waste rock goes,
     which it does not yet - see the module docstring's own judgement.
     """
-    return deposit.quantity_tonnes_per_year * 1000.0 * waste_tonnes_per_kg_metal(deposit)
+    return deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE * waste_tonnes_per_kg_metal(deposit)
 
 
 # ============================================================================
@@ -781,9 +782,9 @@ def byproduct_quantities_tonnes_per_year(deposit: "Deposit") -> Dict[str, float]
     if not deposit.byproducts:
         return {}
     rock_or_gravel_tonnes_per_year = (
-        deposit.quantity_tonnes_per_year * 1000.0 / deposit.ore_grade_kg_per_tonne)
+        deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE / deposit.ore_grade_kg_per_tonne)
     return {
-        spec.metal: rock_or_gravel_tonnes_per_year * spec.ore_grade_kg_per_tonne / 1000.0
+        spec.metal: rock_or_gravel_tonnes_per_year * spec.ore_grade_kg_per_tonne / KILOGRAMS_PER_TONNE
         for spec in deposit.byproducts
     }
 
@@ -799,10 +800,10 @@ def joint_output_quantities_kg(deposit: "Deposit") -> Dict[str, float]:
     instead of a mass split.
     """
     primary_key = "%s_kg" % deposit.metal
-    out = {primary_key: deposit.quantity_tonnes_per_year * 1000.0}
+    out = {primary_key: deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE}
     byproduct_tonnes = byproduct_quantities_tonnes_per_year(deposit)
     for spec in deposit.byproducts:
-        out[spec.material_key] = byproduct_tonnes[spec.metal] * 1000.0
+        out[spec.material_key] = byproduct_tonnes[spec.metal] * KILOGRAMS_PER_TONNE
     return out
 
 
@@ -1125,7 +1126,7 @@ def find_marginal_deposit(
     finished = []
     for allocation in allocations:
         rent_per_kg = max(0.0, price_at_margin - allocation.own_cost_labour_hours_per_kg)
-        rent_total = rent_per_kg * allocation.quantity_supplied_tonnes_per_year * 1000.0
+        rent_total = rent_per_kg * allocation.quantity_supplied_tonnes_per_year * KILOGRAMS_PER_TONNE
         finished.append(allocation._replace(
             rent_labour_hours_per_kg=rent_per_kg,
             rent_total_labour_hours_per_year=rent_total))

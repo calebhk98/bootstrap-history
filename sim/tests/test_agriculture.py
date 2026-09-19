@@ -17,7 +17,6 @@ range WITHOUT retuning anything to close the gap if it does not land there -
 see that class and agriculture.py's own "ON THE HEADLINE NUMBER" docstring
 section for the reading of why it does not.
 """
-import inspect
 import random
 import unittest
 
@@ -356,13 +355,40 @@ class HeadlineCalibrationTests(unittest.TestCase):
             places=9)
         self.assertGreater(holding, cropped)
 
-        source = inspect.getsource(agriculture.fraction_of_population_that_must_farm)
-        self.assertNotIn(
-            "FALLOW", source,
-            "fraction_of_population_that_must_farm() must not read the "
-            "fallow share: land is not the binding constraint in this "
-            "module, so applying it there double-counts. See the ROTATION "
-            "AND FALLOW section in agriculture.py.")
+        # BEHAVIOURAL, NOT A SOURCE SCAN. This used to grep
+        # fraction_of_population_that_must_farm's own source for the literal
+        # string "FALLOW". That would have passed just as happily on a
+        # rewrite that double-counted the idle-land share through a
+        # differently-named field or a derived value with no "FALLOW" in its
+        # spelling, and it would have FAILED a harmless comment that merely
+        # mentions fallow, neither of which is the property this check
+        # actually cares about. The claim is directly observable instead:
+        # fraction_of_population_that_must_farm() takes `rotation` as an
+        # argument, so build one whose fallow share differs sharply from the
+        # default while its OTHER field (the nitrogen/yield multiplier,
+        # which this function DOES legitimately read) is held fixed, and
+        # confirm the output does not move at all. If a future edit divides
+        # output_per_worker_kg by (1 - rotation.fallow_share_of_holding) as
+        # well - the double-count this check exists to catch - this fails
+        # regardless of what that division is spelled like in the source.
+        no_fallow_same_yield = agriculture.DEFAULT_ROTATION._replace(
+            name="test_only_zero_fallow_same_yield_multiplier",
+            fallow_share_of_holding=0.0)
+        self.assertNotAlmostEqual(
+            no_fallow_same_yield.fallow_share_of_holding,
+            agriculture.DEFAULT_ROTATION.fallow_share_of_holding,
+            places=6,
+            msg="the fixture's whole point is a DIFFERENT fallow share")
+        self.assertAlmostEqual(
+            agriculture.fraction_of_population_that_must_farm(
+                rotation=no_fallow_same_yield),
+            agriculture.fraction_of_population_that_must_farm(),
+            places=9,
+            msg="fraction_of_population_that_must_farm() moved when only "
+                "the rotation's fallow share changed and its yield "
+                "multiplier did not - land is not supposed to be a binding "
+                "constraint here, which is the double-count this check "
+                "exists to catch")
 
 
 class HarvestWindowBindsGrossHarvestTests(unittest.TestCase):

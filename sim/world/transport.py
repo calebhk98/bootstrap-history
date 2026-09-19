@@ -101,6 +101,12 @@ import collections
 from typing import Optional
 
 from sim.constants import declare
+# sim.unit_conversions carries the same "imports nothing but sim.constants"
+# property sim.constants itself already has (see that module's own module
+# docstring), so importing it is not the cross-domain wiring this file's own
+# STANDALONE section forbids - it is infrastructure, not a sim/world/ domain
+# module this file would otherwise be coupled to.
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER, PERCENT_SCALE
 
 # ============================================================================
 # PHYSICAL CONSTANTS
@@ -955,11 +961,11 @@ def draught_freight_physical_inputs(
         grade_fraction=grade_fraction)
 
     distance_km = distance_per_day_km(animal)
-    work_joules = tractive_force_n * distance_km * 1000.0
+    work_joules = tractive_force_n * distance_km * METERS_PER_KILOMETER
     feed_kg = _feed_kg_from_work_and_maintenance(
         team_size * maintenance_kcal_per_day(animal), work_joules)
 
-    cargo_tonnes = cargo_kg / 1000.0
+    cargo_tonnes = cargo_kg / KILOGRAMS_PER_TONNE
     tonne_km_per_day = cargo_tonnes * distance_km
     driver_hours_per_day = animal.working_hours_per_day  # one driver; see module docstring
 
@@ -998,7 +1004,7 @@ def pack_climb_work_joules_per_day(
     if grade_fraction <= 0.0:
         return 0.0
     total_mass_kg = team_size * animal.body_mass_kg + cargo_kg
-    vertical_rise_m = distance_km * 1000.0 * grade_fraction
+    vertical_rise_m = distance_km * METERS_PER_KILOMETER * grade_fraction
     return total_mass_kg * GRAVITATIONAL_ACCELERATION_M_PER_S2 * vertical_rise_m
 
 
@@ -1028,7 +1034,7 @@ def pack_freight_physical_inputs(
     feed_kg = _feed_kg_from_work_and_maintenance(
         team_size * maintenance_kcal_per_day(animal), climb_work_joules)
 
-    cargo_tonnes = cargo_kg / 1000.0
+    cargo_tonnes = cargo_kg / KILOGRAMS_PER_TONNE
     tonne_km_per_day = cargo_tonnes * distance_km
     driver_hours_per_day = animal.working_hours_per_day  # one handler; see module docstring
 
@@ -1101,12 +1107,12 @@ def barge_freight_physical_inputs(
         mass_experiencing_gradient_kg=0.0, grade_fraction=0.0)
 
     water_distance_km = distance_per_day_km(animal, hull_speed_through_water_km_per_hour)
-    work_joules = tractive_force_n * water_distance_km * 1000.0
+    work_joules = tractive_force_n * water_distance_km * METERS_PER_KILOMETER
     feed_kg = _feed_kg_from_work_and_maintenance(
         team_size * maintenance_kcal_per_day(animal), work_joules)
 
     ground_distance_km = distance_per_day_km(animal, ground_speed_km_per_hour)
-    cargo_tonnes = cargo_kg / 1000.0
+    cargo_tonnes = cargo_kg / KILOGRAMS_PER_TONNE
     tonne_km_per_day = cargo_tonnes * ground_distance_km
     driver_hours_per_day = animal.working_hours_per_day
 
@@ -1172,7 +1178,7 @@ def maximum_one_way_range_before_self_defeating_km(
         grade_fraction=grade_fraction)
 
     distance_km = distance_per_day_km(animal)
-    work_joules = tractive_force_n * distance_km * 1000.0
+    work_joules = tractive_force_n * distance_km * METERS_PER_KILOMETER
     feed_kg_per_day = _feed_kg_from_work_and_maintenance(
         team_size * maintenance_kcal_per_day(animal), work_joules)
 
@@ -1225,7 +1231,7 @@ if __name__ == "__main__":
           "%.1f kg - the grade nearly defeats the team on its own, before "
           "any cargo (compare to %.0f kg with no grade, and to the mule "
           "pack's unaffected 70 kg above)"
-          % (100.0 * TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION, cart_dirt_cap,
+          % (PERCENT_SCALE * TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION, cart_dirt_cap,
              max_cargo_mass_kg(OX, 2, CART, DIRT_TRACK, 0.0)))
 
     print()

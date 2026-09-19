@@ -124,6 +124,28 @@ class BurndownActuallyCountsTests(unittest.TestCase):
         # both were written by agents who were correctly told not to edit
         # sim/constants.py, so neither could add itself. A rule that depends
         # on the person who cannot follow it is not a rule.
+        # BEHAVIOURAL, NOT A SOURCE SCAN, for the second half of this check.
+        # This used to call inspect.getsource(constants._import_declaring_
+        # modules) and test whether each declaring module's dotted name
+        # appeared as a substring of that text. A substring match cannot
+        # tell a real entry in the tuple from the identical text sitting in
+        # a comment - commenting a module out of the tuple while leaving its
+        # name in a nearby comment would still have passed - and it says
+        # nothing about whether the import actually succeeds or the module's
+        # declare() calls actually run. The claim this check exists for -
+        # "this module's declared numbers make it into the registry the
+        # burndown reads" - is directly observable: run
+        # _import_declaring_modules() for real, in a clean subprocess (a
+        # fresh process, so this is the burndown tool's own view of the
+        # registry, not whatever the rest of this test suite happened to
+        # import first), and read back which modules' declarations actually
+        # landed, using declare()'s own "declared_in" provenance field
+        # rather than re-parsing anything.
+        #
+        # Finding WHICH modules call declare() at all still has to be a
+        # source scan: there is no registry to read before a module is
+        # imported, so this first half stays a directory walk for
+        # "declare(" - a genuine source property, not a stand-in for one.
         world_directory = os.path.join(_REPOSITORY_ROOT, "sim", "world")
         declaring = set()
         for entry in sorted(os.listdir(world_directory)):
@@ -133,20 +155,26 @@ class BurndownActuallyCountsTests(unittest.TestCase):
                 if "declare(" in handle.read():
                     declaring.add("sim.world." + entry[:-3])
 
-        sys.path.insert(0, _REPOSITORY_ROOT)
-        try:
-            import inspect
-            from sim import constants
-            listed = inspect.getsource(constants._import_declaring_modules)
-        finally:
-            sys.path.remove(_REPOSITORY_ROOT)
+        script = (
+            "import sys, json; sys.path.insert(0, %r)\n"
+            "from sim import constants\n"
+            "constants._import_declaring_modules()\n"
+            "constants._adopt_the_canonical_registry()\n"
+            "print(json.dumps(sorted(set(entry['declared_in'] for entry in "
+            "constants.REGISTRY.values()))))\n" % _REPOSITORY_ROOT)
+        result = subprocess.run([sys.executable, "-c", script],
+                                 cwd=_REPOSITORY_ROOT, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        actually_registered = set(json.loads(result.stdout.strip()))
 
-        missing = sorted(name for name in declaring if name not in listed)
+        missing = sorted(name for name in declaring if name not in actually_registered)
         self.assertEqual(
             missing, [],
-            "these sim/world modules call declare() but are not in "
-            "sim/constants.py's _import_declaring_modules() list, so their "
-            "numbers are missing from the burndown: %s" % ", ".join(missing))
+            "these sim/world modules call declare() but "
+            "_import_declaring_modules() never actually gets their numbers "
+            "into the registry (checked by running it for real, not by "
+            "reading its source), so they are missing from the burndown: "
+            "%s" % ", ".join(missing))
 
 
 class OneRegistryAcrossBothImportRootsTests(unittest.TestCase):

@@ -31,6 +31,14 @@ import random
 from typing import (Any, cast, Dict, Iterable, List, Optional, Protocol,
                      TypedDict)
 
+# Imported fully qualified (sim.unit_conversions, not a bare
+# unit_conversions) rather than this package's usual bare sibling-import
+# style, matching sim/engine/core.py's own documented choice to import
+# sim/world/shared_constants.py the same way - see either module's own "HOW
+# A CONSUMER USES ONE OF THESE" section for why one spelling everywhere
+# avoids this file loading a second time under a second sys.modules key.
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
 
 class _RandomSource(Protocol):
     """What `price_with_noise`/`price_series` actually need from `rng`: a

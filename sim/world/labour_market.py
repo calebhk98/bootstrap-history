@@ -320,6 +320,11 @@ from typing import (
 )
 
 from sim.constants import declare
+# sim.unit_conversions carries the same "imports nothing but sim.constants"
+# property sim.constants itself already has, so importing it is not the
+# cross-domain wiring this module's own STANDALONE section forbids.
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM, PERCENT_SCALE
+from sim.algorithm_parameters import MAXIMUM_REALLOCATION_PERIODS, CONVERGENCE_TOLERANCE_HOURS
 
 # ============================================================================
 # DATA FILE LOCATIONS - SAME ROOT-RELATIVE PATTERN AS THE SIBLING MODULES
@@ -381,7 +386,8 @@ def production_data() -> Dict[str, Any]:
 # that is `Workforce.hours_by_trade`, several sections down, computed by an
 # entirely different route.
 
-_KILOGRAM_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": 0.001, "_t": 1000.0}
+_KILOGRAM_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": KILOGRAMS_PER_GRAM,
+                                        "_t": KILOGRAMS_PER_TONNE}
 
 
 def _kilogram_equivalent(material_key: str, quantity: float) -> float:
@@ -1306,18 +1312,13 @@ def have_versus_need(
 # THE FIXED POINT: REPEAT THE STEP UNTIL THE ALLOCATION STOPS MOVING
 # ============================================================================
 
-MAXIMUM_REALLOCATION_PERIODS = 500
-# An algorithmic ceiling on the search, exactly like sim.solve_prices.py's
-# own MAXIMUM_ITERATIONS - not a claim about how long a real reallocation
-# takes (that claim is THE FRICTION section's job), only a guard against a
-# pathological input (a proximity of exactly zero everywhere, say) looping
-# forever without ever registering as stabilised.
-
-CONVERGENCE_TOLERANCE_HOURS = 1e-6
-# Absolute hours, not a ratio - a trade required at 0.0 hours must be able
-# to reach exactly 0.0 tightness, which a ratio-based tolerance cannot
-# express cleanly at that boundary. Used for BOTH stopping conditions
-# `solve_to_stable_allocation` checks - see its own docstring.
+# MAXIMUM_REALLOCATION_PERIODS and CONVERGENCE_TOLERANCE_HOURS moved to
+# sim/algorithm_parameters.py (this task's own item 3: "algorithmic and
+# computational parameters get their own file"), with their own comments
+# carried verbatim - see that module's own section for both, and its own
+# docstring for why solve_to_stable_allocation's default arguments below
+# still resolve exactly as before. Imported above, at this file's own top,
+# rather than re-declared here.
 
 LabourMarketOutcome = collections.namedtuple(
     "LabourMarketOutcome",
@@ -1520,7 +1521,7 @@ if __name__ == "__main__":
          "weather loss, because diminishing returns make the last hour "
          "on already-worked land produce far less than the average hour "
          "did." % (extra_hours_needed,
-                   100.0 * extra_hours_needed / baseline_hours_required["labourer"],
+                   PERCENT_SCALE * extra_hours_needed / baseline_hours_required["labourer"],
                    baseline_hours_required["labourer"]))
 
     craft_slack_hours = sum(settled_workforce[trade] - baseline_hours_required[trade]
@@ -1531,7 +1532,7 @@ if __name__ == "__main__":
          "needs. Even fully drained into farm work, crafts cannot answer "
          "a bad harvest in an economy this farm-heavy; that is not a "
          "limit of the search below, it is the physical shape of the "
-         "economy." % (craft_slack_hours, 100.0 * craft_slack_hours / extra_hours_needed))
+         "economy." % (craft_slack_hours, PERCENT_SCALE * craft_slack_hours / extra_hours_needed))
 
     shocked_hours_required = dict(baseline_hours_required)
     shocked_hours_required["labourer"] += extra_hours_needed
@@ -1558,7 +1559,7 @@ if __name__ == "__main__":
          "MODEL for why crafts are too small a pool to matter much against "
          "a farm-scale shock." % (
              outcome_1.periods_used, outcome_1.stabilized, labourer_unmet,
-             100.0 * labourer_unmet / extra_hours_needed, labourer_unmet))
+             PERCENT_SCALE * labourer_unmet / extra_hours_needed, labourer_unmet))
 
     print()
     print("=" * 78)
@@ -1602,7 +1603,7 @@ if __name__ == "__main__":
          "says how large the gap still is, in unmet_demand_by_trade." % (
              outcome_2.periods_used, outcome_2.stabilized, final_smith_hours,
              war_hours_required["smith"],
-             100.0 * final_smith_hours / war_hours_required["smith"], smith_unmet))
+             PERCENT_SCALE * final_smith_hours / war_hours_required["smith"], smith_unmet))
 
     print()
     print("=" * 78)
@@ -1672,7 +1673,7 @@ if __name__ == "__main__":
          "and a labour coefficient, not from population." % (
              harvest_normal, harvest_on_grown_land,
              baseline_hours_required["labourer"], grown_hours_required["labourer"],
-             100.0 * (grown_hours_required["labourer"] / baseline_hours_required["labourer"] - 1.0)))
+             PERCENT_SCALE * (grown_hours_required["labourer"] / baseline_hours_required["labourer"] - 1.0)))
     print("have_versus_need (before any reallocation): hours_have=%.0f h  "
          "hours_need=%.0f h  gap=%.0f h - HAVE has not moved at all, because "
          "nothing has called Workforce.step yet. This is exactly the "
@@ -1691,7 +1692,7 @@ if __name__ == "__main__":
          "against %.0f h needed (%.1f%% closed)." % (
              outcome_4.periods_used, outcome_4.workforce.hours_by_trade["labourer"],
              grown_hours_required["labourer"],
-             100.0 * outcome_4.workforce.hours_by_trade["labourer"] / grown_hours_required["labourer"]))
+             PERCENT_SCALE * outcome_4.workforce.hours_by_trade["labourer"] / grown_hours_required["labourer"]))
 
     print()
     print("=" * 78)
@@ -1739,7 +1740,7 @@ if __name__ == "__main__":
          "that is the defect the stakeholder's question named, and this "
          "run is the measurement that it is fixed." % (
              outcome_5.periods_used, outcome_5.stabilized, final_smith_hours,
-             smith_required, 100.0 * final_smith_hours / smith_required))
+             smith_required, PERCENT_SCALE * final_smith_hours / smith_required))
     print("The genuine limit the stakeholder also named is still real: "
          "`optician` (SCENARIO 3 above) has NO data/production/ entry at "
          "all, so it is unclassified rather than gate-satisfied, and stays "

@@ -31,25 +31,55 @@ check("money also states the real financing ceiling, the same number "
 # --- the un-manual director's own start heuristic (step(), core.py) is
 # reading committed_spend()/funding_capacity(), not a private copy of the
 # same arithmetic that could quietly disagree with it.
-import inspect as _insp3
-# STEP() PLUS ITS OWN PHASES, NOT step() ALONE. This read `getsource(Sim.step)`
-# while step() was a single 1,760-line method and every phase of the year was
-# inside it. step() is now a short sequence of `_step_*` phase methods, so the
-# gate this check is about lives in `_step_start_projects` rather than in
-# step()'s own body, and reading only step() fails this check by finding
-# nothing, which says the phases moved rather than that the gate went private.
-# The property being asserted has
-# not changed: whichever phase runs the director's start heuristic must reach
-# for the shared helpers rather than re-derive the same arithmetic privately.
-# Gathering the phases by prefix keeps that true across any future re-split.
-_step_src = "".join(
-    [_insp3.getsource(S.Sim.step)]
-    + [_insp3.getsource(getattr(S.Sim, name)) for name in sorted(dir(S.Sim))
-       if name.startswith("_step_") and callable(getattr(S.Sim, name, None))])
-check("step()'s own affordability gate calls the shared funding_capacity() "
-      "and committed_spend(), not a second inline formula",
-      "self.funding_capacity()" in _step_src and "self.committed_spend()" in _step_src,
-      "checked step() and its _step_* phase methods")
+#
+# BEHAVIOURAL, NOT A SOURCE SCAN. This used to concatenate getsource(Sim.step)
+# with every _step_* phase method and grep the text for the two literal call
+# strings "self.funding_capacity()" and "self.committed_spend()". That found
+# the right thing while step() and its phases were laid out exactly as
+# written on the day the check was added, but a substring match cannot tell
+# a real call from the same words sitting in a comment (test_parallelism_
+# note.py records this failure mode actually happening once, to a sibling
+# check in this same style: a split left a comment naming the field above
+# the real assignment, and the check passed on the comment alone). The
+# actual claim - that the year's project-start budget is funding_capacity()
+# minus committed_spend(), not a second formula - is directly observable:
+# normalise every candidate's project_cost() to one known number, then show
+# that a household whose (funding_capacity() - committed_spend()) clears
+# that number gets a new project and one whose does not, does not, with
+# nothing else about the household different between the two runs.
+def _start_room(funding_capacity, committed_spend, project_cost=9000.0):
+    """A fresh un-manual household with funding_capacity(), committed_
+    spend() and project_cost() all pinned to controlled numbers, stepped
+    once. Pinning project_cost() to one number for every candidate removes
+    the confound of some candidates costing nothing at all (a few nodes in
+    the tree need no denarii, only founder-hours, and those always clear
+    any room) - with every candidate priced identically, whether ANYTHING
+    starts is governed purely by whether the pinned room clears the pinned
+    price."""
+    household = sim(capital=1e7, manual=False)
+    household.project_cost = lambda node_id: project_cost
+    household.funding_capacity = lambda: funding_capacity
+    household.committed_spend = lambda: committed_spend
+    household.step()
+    return household
+
+
+_room_clears = _start_room(funding_capacity=10000.0, committed_spend=0.0)
+check("a household whose funding_capacity() - committed_spend() clears "
+      "every candidate's (pinned) project_cost() starts new work this year",
+      len(_room_clears.active) > 0, list(_room_clears.active))
+
+_room_short_on_capacity = _start_room(funding_capacity=8000.0, committed_spend=0.0)
+check("...and the SAME pinned project_cost, with funding_capacity() alone "
+      "trimmed just below it, starts nothing - proving the gate reads "
+      "funding_capacity(), not just capital in hand",
+      len(_room_short_on_capacity.active) == 0, list(_room_short_on_capacity.active))
+
+_room_short_on_committed = _start_room(funding_capacity=1e7, committed_spend=1e7 - 5000.0)
+check("...and a household with huge funding_capacity() but committed_spend() "
+      "eating almost all of it also starts nothing - proving the gate reads "
+      "committed_spend() too, and does not just check funding_capacity() alone",
+      len(_room_short_on_committed.active) == 0, list(_room_short_on_committed.active))
 
 # --- THE ROME OPENING, REPRODUCED EXACTLY: scientific_method (230) then
 # units_standards (444) on a poor_scholar's 400 denarii. Individually,
