@@ -5,8 +5,10 @@ methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
 import re
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from .data import closure
+from .actors import Household
+from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
 
 # THE GAME TELLING YOU WHAT IS IMPORTANT IS THE GAME PLAYING ITSELF. A user
@@ -67,7 +69,7 @@ _SELF_PLAY_RANK = re.compile(
     r"\bhighest\b|\blargest\b|\bpivot\b|\bmost important\b|\bsingle most\b", re.I)
 
 
-def strip_self_play_advice(text):
+def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
     """Drop any sentence that ranks a node against the game or the tree,
     and hand back what is left. See the block comment above for why, and
     for exactly what does and does not qualify.
@@ -76,7 +78,7 @@ def strip_self_play_advice(text):
         return text
     parts = re.split(r'(?<=[.!?]) ', text)
 
-    def _is_self_play(p):
+    def _is_self_play(p: str) -> bool:
         low = p.lower()
         if any(phrase in low for phrase in _SELF_PLAY_PHRASES):
             return True
@@ -113,7 +115,32 @@ class FogMixin:
     # do (HOUSEHOLD_EXTRACTION.md section 2): this is the hot path, not the
     # outside surface.
 
-    def reveal_from(self, k):
+    # -- ATTRIBUTES AND METHODS THIS MIXIN READS BUT DOES NOT DEFINE -------
+    # Set/defined by Sim.__init__ and by sibling mixins (core.py,
+    # projects_starting.py, society_hazards.py, projects_capability.py - not
+    # owned by this task, see the top-level instructions' file list).
+    # Declared here, type-only: a bare annotation binds nothing at runtime
+    # (it only populates FogMixin.__annotations__), and a Callable-typed one
+    # is exactly the same - neither creates a real attribute or method on
+    # this class, so nothing here can shadow the real implementation another
+    # mixin actually provides, the way a `def start_reason(self): ...` stub
+    # placed directly in this class body would risk doing through Sim's own
+    # MRO. See geography.py's identical pattern (and its own comment) for
+    # the non-callable half of this.
+    household: Household
+    nodes: Nodes
+    civ: JSONDict
+    year: int
+    goal: str
+    _goal_closure: Set[str]
+    start_reason: Callable[..., Tuple[bool, Optional[str]]]
+    corpus_hedge: Callable[[], Tuple[float, float, Optional[str]]]
+    hazard_advice: Callable[[str], Dict[str, Any]]
+    hazard_relief: Callable[[str], Tuple[float, List[str]]]
+    hazard_timeline: Callable[..., List[Dict[str, Any]]]
+    capability_gaps: Callable[[], List[Dict[str, Any]]]
+
+    def reveal_from(self, k: str) -> None:
         """Completing something teaches you what it leads towards, vaguely."""
         if not getattr(self, "fog", False):
             return
@@ -126,7 +153,7 @@ class FogMixin:
                 if k in (group.get("options") or {}):
                     self.household.revealed.add(other)
 
-    def is_visible(self, k, _memo=None):
+    def is_visible(self, k: str, _memo: Optional[Dict[str, bool]] = None) -> bool:
         """Can the player see this node at all?
 
         _memo: an optional dict shared across one recursive descent. is_visible
@@ -171,7 +198,8 @@ class FogMixin:
         memo[k] = result
         return result
 
-    def missing_prereq_message(self, missing, _memo=None):
+    def missing_prereq_message(self, missing: List[str],
+                               _memo: Optional[Dict[str, bool]] = None) -> Optional[str]:
         """Format a list of not-yet-done prerequisite ids as one player-facing
         message, filtered through the same visibility test `start_reason`
         (and so `why`) applies. A second caller computing its own missing
@@ -226,10 +254,10 @@ class FogMixin:
     # the refusal was already about: this one is free, start it.
     FREE_PREREQ_NAMED_AT_MOST = 3
 
-    def _free_prereq_hint(self, missing):
+    def _free_prereq_hint(self, missing: List[str]) -> str:
         """", and X costs nothing..." for whichever missing prerequisites are
         free, instant and startable right now - or "" when none are."""
-        ready = []
+        ready: List[str] = []
         for node_id in missing:
             node = self.nodes.get(node_id)
             if not node:
@@ -252,7 +280,7 @@ class FogMixin:
                 "them now (%s)"
                 % (", ".join(ready), ", ".join("start " + node_id for node_id in ready)))
 
-    def fog_scrub(self, text):
+    def fog_scrub(self, text: Optional[str]) -> Optional[str]:
         """Strip node ids the player has not discovered out of a message."""
         if not text or not getattr(self, "fog", False):
             return text
@@ -262,7 +290,7 @@ class FogMixin:
                 scrubbed = scrubbed.replace(node_id, "something you have not heard of")
         return scrubbed
 
-    def fog_summary(self, k):
+    def fog_summary(self, k: str) -> str:
         """One sentence. Deliberately not the whole note, and never the unlocks."""
         # Stripped before the first sentence is taken, not after: school_
         # founded's note OPENS with "The pivot of the entire game." - the
@@ -280,7 +308,7 @@ class FogMixin:
         # thirty entries in a list, is most of the reply.
         return note if len(note) <= 110 else note[:107].rstrip(" ,;") + "..."
 
-    def knowledge_risk(self):
+    def knowledge_risk(self) -> Dict[str, Any]:
         """How exposed your finished work is to being forgotten, and to what.
 
         A playtester read the guide's warning about the Third Century Crisis,
@@ -467,7 +495,7 @@ class FogMixin:
                      "algebra", "geometry", "probability", "analysis",
                      "theory", "knowledge"}
 
-    def never_abandon(self, k):
+    def never_abandon(self, k: str) -> bool:
         """Protected: knowledge, and anything the goal actually needs.
 
         Keying the softlock guard on the GOAL CLOSURE rather than on a list of

@@ -7,11 +7,19 @@ summary line it always has. `--only economy,labour` (comma-separated topic
 names, matching this list) runs just those modules - everything else about
 the run (the harness, --slow, --jobs) is unchanged. `--list` prints the
 topic names and exits.
+
+`--timing` adds a per-topic table to the summary: wall seconds, share of
+the run, and how many checks each topic bought. That table is what decides
+whether a topic belongs in harness.SLOW_TOPICS, and it is the command the
+percentages quoted in SLOW_TOPICS' own comment come from. It changes
+nothing about which checks run, so `--timing` can be added to any
+invocation, including `--only` and `--slow`.
 """
 import importlib
 import json
 import os
 import sys
+import time
 import unittest
 
 # So `python3 sim/tests/__main__.py` (run as a plain script, no package
@@ -366,6 +374,41 @@ def _flatten(suite):
             yield item
 
 
+def _print_topic_timing(topic_costs):
+    """Print what each topic module cost, most expensive first.
+
+    This is the evidence harness.SLOW_TOPICS is supposed to rest on, and
+    until now it did not exist as anything you could run. Three columns:
+    wall seconds, share of the measured total, and how many checks that
+    bought. The third column is the one that stops this table being used
+    badly. A topic costing 8% of the run is worth deferring if it is 6
+    checks; the same 8% is not worth deferring if it is 394, because
+    deferring it means a default run stops proving 394 things, and a suite
+    that is fast because it checks less is not faster, it is weaker. That
+    trade is exactly why the two topics replaced during the subject-based
+    regrouping did NOT get the slow tag passed on to their successors.
+
+    Shares are of the sum of the per-topic figures rather than of the
+    process's own wall clock, so they add to 100% and stay comparable
+    between a full run and an --only run. Everything outside a topic (the
+    harness import, argument parsing, the summary itself) is therefore not
+    in the denominator; it is a fraction of a second and counting it would
+    make two runs with different topic selections incomparable.
+    """
+    measured_total = sum(seconds for _, seconds, _ in topic_costs)
+    if not measured_total:
+        return
+    print("per-topic timing (--timing), most expensive first:")
+    print("   %8s %7s %7s  %s" % ("seconds", "share", "checks", "topic"))
+    for slug, seconds, check_count in sorted(topic_costs,
+                                             key=lambda row: -row[1]):
+        print("   %8.2f %6.1f%% %7d  %s"
+              % (seconds, 100.0 * seconds / measured_total, check_count, slug))
+    print("   %8.2f %6.1f%% %7d  (%d topics measured)"
+          % (measured_total, 100.0,
+             sum(count for _, _, count in topic_costs), len(topic_costs)))
+
+
 def _parse_only(argv):
     for i, a in enumerate(argv):
         if a == "--only" and i + 1 < len(argv):
@@ -415,9 +458,30 @@ def main(argv=None):
     run_now = [slug for slug in selected if slug not in skipped_slow_topics]
 
     print("PLAYTEST REGRESSIONS\n" + "=" * 72)
+    # PER-TOPIC WALL TIME, MEASURED HERE AND NOWHERE ELSE. harness.check()
+    # times each individual CHECK (as the gap since the previous one, which
+    # is why a topic module's import-time work lands on its own first check
+    # rather than vanishing). That is the right grain for finding one
+    # expensive check inside a cheap topic. It is the wrong grain for the
+    # decision harness.SLOW_TOPICS actually encodes, which is whether a WHOLE
+    # TOPIC MODULE is worth opting out of a default run.
+    #
+    # harness.SLOW_TOPICS' own comment used to cite "a per-topic timing run
+    # (see sim/tests/__main__.py, which is what actually reads this set)" for
+    # its five percentages. This file read the set, and did not produce those
+    # numbers: the run was done by hand, once, and thrown away, so every
+    # figure in that comment was unreproducible from the moment it was
+    # written and drifted silently thereafter. CLAUDE.md section 8 says a
+    # number in prose carries the command that produced it or it does not go
+    # in. This loop is that command.
+    topic_costs = []
     for slug in TOPICS:
         if slug in run_now:
+            checks_before = len(harness.CHECKS_RUN)
+            started_at = time.time()
             _run_topic(slug, harness)
+            topic_costs.append((slug, time.time() - started_at,
+                                len(harness.CHECKS_RUN) - checks_before))
 
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"
@@ -433,19 +497,25 @@ def main(argv=None):
         print("%d topic(s) skipped (slow): %s - run with --slow, or name one "
               "with --only to run it anyway"
               % (len(skipped_slow_topics), ", ".join(skipped_slow_topics)))
-    slow = sorted(harness.CHECKS_RUN, key=lambda r: -r[1])[:5]
-    if slow and slow[0][1] >= 5.0:
+    slowest_checks = sorted(harness.CHECKS_RUN,
+                            key=lambda row: -row[1])[:5]
+    if slowest_checks and slowest_checks[0][1] >= 5.0:
         print("slowest:")
-        for nm, t in slow:
-            if t >= 5.0:
-                print("   %5.0fs  %s" % (t, nm))
-    for f in harness.FAILURES:
-        print("   FAILED:", f)
+        for check_name, seconds in slowest_checks:
+            if seconds >= 5.0:
+                print("   %5.0fs  %s" % (seconds, check_name))
+    if "--timing" in argv:
+        _print_topic_timing(topic_costs)
+    for failure in harness.FAILURES:
+        print("   FAILED:", failure)
     print("subprocess spawns: %d calls, %.0fs waiting on child processes"
           % (harness._SUBPROC_CALLS[0], harness._SUBPROC_TIME[0]))
     if harness._PROFILE_OUT:
         with open(harness._PROFILE_OUT, "w") as _pf:
             json.dump({"checks": harness.CHECKS_RUN,
+                       # Same figures --timing prints, so a profile run is
+                       # readable by a script rather than only by eye.
+                       "topics": topic_costs,
                        "subproc_time": harness._SUBPROC_TIME[0],
                        "subproc_calls": harness._SUBPROC_CALLS[0],
                        "total_wall": sum(t for _, t in harness.CHECKS_RUN)}, _pf)

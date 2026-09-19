@@ -641,14 +641,21 @@ def _judge_compute_costs(nodes, prices):
                             + sum(goods.get(material, 0) * quantity for material, quantity in node["mat"].items()) + node["cap"])
 
 
-def _judge_build_results(nodes, prices):
-    """Cost every node, work out the per-category median cost, then judge every node."""
-    _judge_compute_costs(nodes, prices)
+def _judge_cost_stats(nodes):
+    """Per-category median of node["_total_cost"], once _judge_compute_costs has set it.
+    Shared by judge (via _judge_build_results) and repair, which both need the same
+    median-cost baseline that COST-HIGH in judge_node compares against."""
     by_category_cost = collections.defaultdict(list)
     for node in nodes.values():
         by_category_cost[node["cat"]].append(node["_total_cost"])
-    stats = {"cost": {cat: statistics.median(value)
-                      for cat, value in by_category_cost.items()}}
+    return {"cost": {cat: statistics.median(value)
+                     for cat, value in by_category_cost.items()}}
+
+
+def _judge_build_results(nodes, prices):
+    """Cost every node, work out the per-category median cost, then judge every node."""
+    _judge_compute_costs(nodes, prices)
+    stats = _judge_cost_stats(nodes)
 
     results = {}
     for node_id, node in nodes.items():
@@ -796,6 +803,75 @@ SOCIAL_DEFAULT = {
  "communic":(3,3), "glass":(1,2),
 }
 
+def _repair_infer_capabilities(node, nodes, codes, counts):
+    """Capability gaps remain visible for human review. A prose keyword
+    heuristic cannot safely infer engineering prerequisites.
+
+    `add()` below is the machinery for the heuristic that WOULD infer them -
+    kept in this shape, not deleted, because an independent review found a
+    100 percent error rate on the edges it produced (see --infer-caps' help
+    text) and nothing in this function calls it. `added` therefore stays
+    empty and the two blocks below it are always a no-op today; that is
+    intentional, not a bug this pass introduced, and it is left wired exactly
+    as found so a future author who turns --infer-caps back on sees what to
+    call rather than having to reinvent it.
+    """
+    added = []
+    def add(cap_id):
+        # NEVER create a cycle. cap_heat_1100 depends on refractory_fireclay, so
+        # giving refractory_fireclay a furnace rung (its note is full of furnace
+        # words) makes the graph eat itself. An earlier version did exactly that.
+        if not cap_id or cap_id in nodes and cap_id in node["pre"]:
+            return
+        if cap_id not in nodes:
+            return
+        if node["id"] in closure(nodes, cap_id):
+            counts["cycle-forming edges refused"] += 1
+            return
+        node["pre"].append(cap_id); added.append(cap_id)
+    if codes & {"CAP-NONE", "CAP-HEAT", "CAP-TOL", "CAP-VAC", "CAP-PURITY", "CAP-POWER"}:
+        counts["capability gaps LEFT VISIBLE (not guessed at)"] += 1
+    if added:
+        counts["capability edges inferred"] += len(added)
+        node["note"] = node["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
+            "inferred by sim/treetool.py repair, not stated by the author. Treat "
+            "them as a floor, not a specification.]" % ", ".join(added))
+
+
+def _repair_documentation_level(node, ident, counts):
+    # documentation level
+    if not node.get("kb"):
+        if ident.startswith("com_"):
+            doc_module = ("94_computing.md" if any(word in ident for word in COMPUTING_WORDS)
+                   else "50_electricity.md")
+        else:
+            doc_module = next((value for pre, value in PREFIX_MODULE.items() if ident.startswith(pre)), None)
+        if doc_module:
+            node["kb"] = doc_module; node["kb_level"] = "module"; counts["module-level doc links"] += 1
+        else:
+            node["kb_level"] = "none"; counts["still undocumented"] += 1
+    else:
+        node["kb_level"] = "recipe" if "#" in node["kb"] else "module"
+
+
+def _repair_social_defaults(node, ident, codes, counts):
+    # social model
+    if "SOCIAL-FLAT" in codes:
+        haystack = (node["cat"] + " " + ident).lower()
+        for category_marker, (gov_default, sus_default) in SOCIAL_DEFAULT.items():
+            if category_marker in haystack:
+                node["gov"], node["sus"] = gov_default, sus_default
+                counts["social defaults applied"] += 1
+                node["note"] = node["note"].rstrip() + (" [AUDIT: State interest and suspicion "
+                    "were unset and have been defaulted from the category.]")
+                break
+
+
+def _repair_calendar_floor(node, codes, counts):
+    if "NO-FLOOR" in codes:
+        node["yrs"] = max(node["yrs"], 2.0); counts["calendar floors raised"] += 1
+
+
 def cmd_repair(a):
     """Fix what the audit can fix mechanically, and MARK every inference.
 
@@ -806,16 +882,8 @@ def cmd_repair(a):
     tree = json.load(open(TREE))
     nodes = {node["id"]: node for node in tree["nodes"]}
     prices = json.load(open(os.path.join(DATA, "prices.json")))
-    wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
-    goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
-    for node in nodes.values():
-        node["_total_cost"] = (sum(wages.get(trade,0)*hours for trade,hours in node["lab"].items())
-                            + sum(goods.get(material,0)*quantity for material,quantity in node["mat"].items()) + node["cap"])
-    by_category_cost = collections.defaultdict(list)
-    for node in nodes.values():
-        by_category_cost[node["cat"]].append(node["_total_cost"])
-    stats = {"cost": {cat: statistics.median(value)
-                      for cat, value in by_category_cost.items()}}
+    _judge_compute_costs(nodes, prices)
+    stats = _judge_cost_stats(nodes)
 
     counts = collections.Counter()
     for ident, node in list(nodes.items()):
@@ -823,53 +891,16 @@ def cmd_repair(a):
             continue
         score, defects = judge_node(node, nodes, stats)
         codes = {code for code, _ in defects}
-        added = []
-        def add(cap_id):
-            # NEVER create a cycle. cap_heat_1100 depends on refractory_fireclay, so
-            # giving refractory_fireclay a furnace rung (its note is full of furnace
-            # words) makes the graph eat itself. An earlier version did exactly that.
-            if not cap_id or cap_id in nodes and cap_id in node["pre"]:
-                return
-            if cap_id not in nodes:
-                return
-            if node["id"] in closure(nodes, cap_id):
-                counts["cycle-forming edges refused"] += 1
-                return
-            node["pre"].append(cap_id); added.append(cap_id)
-        # Capability gaps remain visible for human review. A prose keyword
-        # heuristic cannot safely infer engineering prerequisites.
-        if codes & {"CAP-NONE", "CAP-HEAT", "CAP-TOL", "CAP-VAC", "CAP-PURITY", "CAP-POWER"}:
-            counts["capability gaps LEFT VISIBLE (not guessed at)"] += 1
-        if added:
-            counts["capability edges inferred"] += len(added)
-            node["note"] = node["note"].rstrip() + (" [AUDIT: capability prerequisite(s) %s were "
-                "inferred by sim/treetool.py repair, not stated by the author. Treat "
-                "them as a floor, not a specification.]" % ", ".join(added))
-        # documentation level
-        if not node.get("kb"):
-            if ident.startswith("com_"):
-                doc_module = ("94_computing.md" if any(word in ident for word in COMPUTING_WORDS)
-                       else "50_electricity.md")
-            else:
-                doc_module = next((value for pre, value in PREFIX_MODULE.items() if ident.startswith(pre)), None)
-            if doc_module:
-                node["kb"] = doc_module; node["kb_level"] = "module"; counts["module-level doc links"] += 1
-            else:
-                node["kb_level"] = "none"; counts["still undocumented"] += 1
-        else:
-            node["kb_level"] = "recipe" if "#" in node["kb"] else "module"
-        # social model
-        if "SOCIAL-FLAT" in codes:
-            haystack = (node["cat"] + " " + ident).lower()
-            for category_marker, (gov_default, sus_default) in SOCIAL_DEFAULT.items():
-                if category_marker in haystack:
-                    node["gov"], node["sus"] = gov_default, sus_default
-                    counts["social defaults applied"] += 1
-                    node["note"] = node["note"].rstrip() + (" [AUDIT: State interest and suspicion "
-                        "were unset and have been defaulted from the category.]")
-                    break
-        if "NO-FLOOR" in codes:
-            node["yrs"] = max(node["yrs"], 2.0); counts["calendar floors raised"] += 1
+        # Four independent repair rules: each reads only `codes` (already
+        # computed above, before any of them run) and its own bit of `node`,
+        # so the order between them changes nothing except, for the two that
+        # both append to node["note"], the order the audit tags land in that
+        # field - preserved here by calling them in the same sequence the
+        # single inlined loop body used to run them in.
+        _repair_infer_capabilities(node, nodes, codes, counts)
+        _repair_documentation_level(node, ident, counts)
+        _repair_social_defaults(node, ident, codes, counts)
+        _repair_calendar_floor(node, codes, counts)
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     _write_json(tree, TREE, a)
     print("REPAIR PASS")
