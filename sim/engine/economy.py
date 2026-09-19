@@ -134,18 +134,34 @@ class _InvalidatingDict(dict):
     changes are reliably invalidated whenever keys or values mutate,
     without requiring scattered callers across the engine to remember
     manual cache resets.
+
+    Nested dictionary values (such as project states in active projects and
+    their nested lab_left trade requirements) are recursively wrapped so that
+    in-place modifications, field updates, and alias mutations automatically
+    bubble invalidation up to the root container's on_change listener.
     """
 
     def __init__(self, *args, on_change=None, **kwargs):
-        super().__init__(*args, **kwargs)
         self._on_change = on_change
+        super().__init__()
+        if args or kwargs:
+            for key, value in dict(*args, **kwargs).items():
+                super().__setitem__(key, self._wrap_value(value))
 
     def _fire(self):
         if self._on_change is not None:
             self._on_change()
 
+    def _wrap_value(self, value):
+        if isinstance(value, _InvalidatingDict):
+            value._on_change = self._fire
+            return value
+        if isinstance(value, dict):
+            return _InvalidatingDict(value, on_change=self._fire)
+        return value
+
     def __setitem__(self, key, value):
-        super().__setitem__(key, value)
+        super().__setitem__(key, self._wrap_value(value))
         self._fire()
 
     def __delitem__(self, key):
@@ -168,15 +184,24 @@ class _InvalidatingDict(dict):
             self._fire()
 
     def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
+        other_items = dict(*args, **kwargs)
+        if not other_items:
+            return
+        for key, value in other_items.items():
+            super().__setitem__(key, self._wrap_value(value))
         self._fire()
 
     def setdefault(self, key, default=None):
         if key not in self:
-            result = super().setdefault(key, default)
+            wrapped = self._wrap_value(default)
+            result = super().setdefault(key, wrapped)
             self._fire()
             return result
-        return super().setdefault(key, default)
+        return super().__getitem__(key)
+
+    def __ior__(self, other):
+        self.update(other)
+        return self
 
 
 
@@ -548,6 +573,26 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """Re-wrap self.household.employees in a fresh `_InvalidatingDict` and invalidate once."""
         self.household.employees = _InvalidatingDict(self.household.employees, on_change=self._workforce_changed)
         self._workforce_changed()
+
+    def _reset_economic_caches(self):
+        """Wipe all transient economic derived-state caches and re-wrap containers on save/load."""
+        self.household._done_seq = None
+        self.household._cap_factor = None
+        self.household._revenue_cache_key = None
+        self.household._revenue_cache_val = None
+        self.household._annual_mat_demand_cache = None
+        self.household._rev_up_candidates_cache = None
+        self.household._practice_cache = None
+        self.household._goods_cat_state_cache = None
+        self.household._goods_category_ratios_cache = None
+        self.household._income_factor_cache = None
+        self.household._goods_mkt_op_factor_cache = None
+        self.household._material_demand_cache = None
+        self.household._demand_by_tag_cache = None
+        self._done_changed()
+        self._reset_operating()
+        self._reset_active()
+        self._reset_workforce()
 
     def done_in_order(self):
         """Everything you have finished, in a FIXED order.

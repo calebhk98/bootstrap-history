@@ -483,7 +483,8 @@ class MaterialSupplyMixin:
         # Cached value: collections.Counter of annual material requirements
         # Dependencies: household active projects (_active_ver), completed projects (_done_ver)
         # Invalidated by: _active_changed(), _done_changed()
-        # Not serialized because: pure transient derived state recomputed on load
+        # Nested mutation concerns: tracked via recursive _InvalidatingDict wrapping on household.active
+        # Serialized: no
         cache_key = (
             getattr(self.household, "_active_ver", 0),
             getattr(self.household, "_done_ver", 0),

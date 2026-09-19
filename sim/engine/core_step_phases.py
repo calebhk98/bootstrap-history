@@ -618,7 +618,9 @@ class StepPhasesMixin:
             # borrowing against: that work is paid for and stops without it.
             # A trade for something you might start one day has to come out of
             # what you are actually clearing.
-            _spare_tr = self.revenue() - self.upkeep() - self.living_cost()
+            _tr_rev = self.revenue()
+            _tr_upkeep = self.upkeep()
+            _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
                 _wages = 2.0 * self.annual_wage(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.household.capital) * 0.10
@@ -722,9 +724,11 @@ class StepPhasesMixin:
             # the same way a human player hunting for cheap revenue nodes
             # would; the goal order resumes the moment there is money to
             # pursue it with.
-            fixed0 = self.upkeep() + self.living_cost() + self.mine_operating_cost()
+            _upkeep0 = self.upkeep()
+            _rev0 = self.revenue()
+            fixed0 = _upkeep0 + self.living_cost(_rev=_rev0, _upkeep=_upkeep0) + self.mine_operating_cost()
             candidates = self.order
-            if self.revenue() - fixed0 < max(400.0, fixed0 * 0.25):
+            if _rev0 - fixed0 < max(400.0, fixed0 * 0.25):
                 earners = [node_id for node_id in self.order
                            if self.nodes[node_id]["rev"] - self.nodes[node_id]["up"] > 0]
                 earners.sort(key=lambda k: self.project_cost(k)
@@ -764,6 +768,7 @@ class StepPhasesMixin:
             # tracked count can move, and it is computed once up front
             # (O(active), not O(order)) rather than every iteration.
             _non_bountied_active = len(self.household.active) - len(self.household.bountied & set(self.household.active))
+            _room = self.funding_capacity() - self.committed_spend()
             for node_id in candidates:
                 if _non_bountied_active >= max_active:
                     break
@@ -791,13 +796,13 @@ class StepPhasesMixin:
                 # warning in `start` (protocol.py) answers the identical
                 # question by calling the same two functions, so the two
                 # cannot drift apart.
-                room = self.funding_capacity() - self.committed_spend()
-                if self.project_cost(node_id) > room:
+                if self.project_cost(node_id) > _room:
                     continue
                 if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
                     # post_bounty() just added node_id to both self.household.active and
                     # self.household.bountied - the count of NON-bountied active
                     # projects is unchanged.
+                    _room = self.funding_capacity() - self.committed_spend()
                     continue
                 # lab_left starts full here too, for the same reason
                 # start_project (projects.py) sets it at creation rather than
@@ -807,6 +812,7 @@ class StepPhasesMixin:
                                       cost_left=self.project_cost(node_id),
                                       lab_left=dict(node["lab"]))
                 _non_bountied_active += 1
+                _room = self.funding_capacity() - self.committed_spend()
         return pool, hired_left
 
     def _step_materials(self):
@@ -910,7 +916,8 @@ class StepPhasesMixin:
 
     def _step_progress_project(self, node_id, pool_rank, pool_total_this_year,
                               pool_active_count_this_year, remaining, hired_left,
-                              arrears_hours_lost, directed_hours_unused):
+                              arrears_hours_lost, directed_hours_unused,
+                              _afford_context=None):
         # One project's share of this year's director hours and money, pulled
         # out of the priority loop in _step_progress() so the loop itself reads
         # as "for each active project, in priority order, give it its turn"
@@ -953,10 +960,11 @@ class StepPhasesMixin:
             return remaining, hired_left, 0.0
         hired_left, money, refunded = _labour
         money, refunded = self._project_progress_afford_gate(
-            node_id, project_state, money, refunded, spent_hours, per, _arrears_hours_lost)
+            node_id, project_state, money, refunded, spent_hours, per, _arrears_hours_lost,
+            _afford_context=_afford_context)
         self._project_progress_finish(
             node_id, project_state, money, refunded, spent_hours, _dir_hours,
-            _directed_hours_unused)
+            _directed_hours_unused, _afford_context=_afford_context)
 
         return remaining, hired_left, project_state["hours_effective_this_year"]
 
@@ -1194,7 +1202,8 @@ class StepPhasesMixin:
         return hired_left, money, refunded
 
     def _project_progress_afford_gate(self, node_id, project_state, money, refunded,
-                                     spent_hours, per, _arrears_hours_lost):
+                                     spent_hours, per, _arrears_hours_lost,
+                                     _afford_context=None):
         # Stage 4: can the household actually afford this year's bill.
         # Returns the updated money and refunded.
         # You may spend into debt, up to what someone will lend you, and
@@ -1219,12 +1228,18 @@ class StepPhasesMixin:
         # the top of step(), so reserving them again would leave a
         # household whose income comfortably covers its costs unable to
         # spend a single denarius on its own projects.
-        revenue = self.revenue()
-        upkeep = self.upkeep()
+        if _afford_context is not None:
+            revenue = _afford_context["revenue"]
+            upkeep = _afford_context["upkeep"]
+            mine_operating = _afford_context["mine_operating"]
+        else:
+            revenue = self.revenue()
+            upkeep = self.upkeep()
+            mine_operating = self.mine_operating_cost()
         fixed = (
             self.living_cost(_rev=revenue, _upkeep=upkeep)
             + upkeep
-            + self.mine_operating_cost()
+            + mine_operating
         )
         reserve = max(0.0, fixed - revenue)
         purse = (
@@ -1284,7 +1299,8 @@ class StepPhasesMixin:
         return money, refunded
 
     def _project_progress_finish(self, node_id, project_state, money, refunded,
-                                spent_hours, _dir_hours, _directed_hours_unused):
+                                spent_hours, _dir_hours, _directed_hours_unused,
+                                _afford_context=None):
         # Stage 5: spend the money, record the hours actually done, the
         # second place a standing allocation can go unhonoured, and the
         # completion check. Nothing to return - project_state carries every
@@ -1357,6 +1373,9 @@ class StepPhasesMixin:
             project_state["ph_left"] = 0.0
         if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
             self._complete(node_id)
+            if _afford_context is not None:
+                _afford_context["revenue"] = self.revenue()
+                _afford_context["upkeep"] = self.upkeep()
         elif project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] > 0.5:
             project_state["waiting_on_money"] = True
 
@@ -1450,10 +1469,16 @@ class StepPhasesMixin:
         # what this loop actually handed out.
         _pool_total_this_year = pool
         _pool_active_count_this_year = len(active_sorted)
+        _afford_context = {
+            "revenue": self.revenue(),
+            "upkeep": self.upkeep(),
+            "mine_operating": self.mine_operating_cost(),
+        }
         for _pool_rank, node_id in enumerate(active_sorted, start=1):
             remaining, hired_left, _effective = self._step_progress_project(
                 node_id, _pool_rank, _pool_total_this_year, _pool_active_count_this_year,
-                remaining, hired_left, _arrears_hours_lost, _directed_hours_unused)
+                remaining, hired_left, _arrears_hours_lost, _directed_hours_unused,
+                _afford_context=_afford_context)
             hours_effective_total += _effective
         # ARREARS COSTS YOU THE YEAR'S HOURS, NOT JUST THE MONEY - SAY SO:
         # a project sitting at "did almost nothing" with no explanation on

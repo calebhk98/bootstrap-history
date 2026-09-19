@@ -120,6 +120,8 @@ class ProductionMixin:
         Cached value: self.revenue()
         Dependencies:
           - self.year: changes annually in sim.step()
+          - self.pop_scale: changes annually in sim.step()
+          - self.economy: changes with state events
           - self.household._operating_ver: changes whenever self.household.operating is mutated
           - self.household._done_ver: changes whenever self.household.done or granted is mutated
           - self.household._workforce_ver: changes whenever self.household.employees is mutated
@@ -131,10 +133,9 @@ class ProductionMixin:
           - self.output_factor: hazard/war output scaling
           - self.reputation: standing affecting state funding
           - self.founder_alive: boolean for physician practice attention
-        Invalidated by:
-          Any change to any element in the composite version key tuple.
-        Not serialized because:
-          Purely derived runtime aggregate cache; easily recomputed on demand.
+        Invalidated by: Any change to any element in the composite version key tuple.
+        Nested mutation concerns: household.employees wrapped in _InvalidatingDict (flat dict); workforce counts tracked in key.
+        Serialized: no
         """
         key = (
             self.year,

@@ -519,9 +519,9 @@ def load_state(sim, path):
     # JSON protocol runs this against the SAME long-lived Sim a session goes
     # on playing in, not a fresh one, and every open/close/mothball after
     # this point mutates .operating directly. Re-wrap it, once, here.
-    sim._reset_operating()
-    sim._reset_active()
-    sim._reset_workforce()
+    # Re-wrap operating, active, and workforce containers, bump version counters,
+    # and ensure all pre-load transient caches are wiped clean.
+    sim._reset_economic_caches()
     # The game this save IS, not whatever the command line happened to say.
     sim.fog = bool(blob["_fog"])
     sim.cfg["immortal"] = bool(blob["_immortal"])
