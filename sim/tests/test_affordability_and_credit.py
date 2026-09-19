@@ -215,8 +215,34 @@ check("commission's cash-short refusal uses the same reasoning too",
 # route through the one function (so the next change to the rule cannot
 # drift again), and that this actually flips what a household in debt is
 # allowed to do.
-import inspect as _insp_sp
-from engine import labour as _sp_labour, projects as _sp_projects
+#
+# BEHAVIOURAL, NOT A SOURCE SCAN. This used to call inspect.getsource() on
+# each of the seven functions and grep the text for
+# 'spending_power("buy")'/'spending_power("open")'. That had three separate
+# holes: it matched a double-quoted literal only (spending_power('buy'),
+# same meaning, would have failed it); it could not tell a call whose RESULT
+# is actually used from one that is computed and dropped (auto_open_ventures
+# turns out to be exactly that case - see the check below and the finding
+# reported for projects_staffing.py); and its negative half matched only one
+# exact spelling of the arithmetic it forbade, so a rewritten copy of the
+# same sum would have passed it. A monkeypatched spy on a real Sim closes
+# all three: it proves the call happens, proves which kind is asked, and -
+# by forcing the number back and watching the site's own pass/fail move with
+# it - proves the number is read, not merely assigned.
+def _spending_power_spy(s, forced=None):
+    """Wrap s.spending_power on a real Sim to record every kind it is
+    asked. With `forced` set, the wrapped call returns that number instead
+    of the real one, so a site's own decision can be driven by a number
+    this test controls - the only way to tell a real read of the value
+    apart from a dead one."""
+    calls = []
+    real = s.spending_power
+    def spy(kind):
+        calls.append(kind)
+        return real(kind) if forced is None else forced
+    s.spending_power = spy
+    return calls
+
 
 # TWO QUESTIONS, NOT ONE, AND THE KIND IS THE WHOLE POINT. "buy" counts the
 # debt already carried, because a wage or a commission buys nothing back.
@@ -224,31 +250,141 @@ from engine import labour as _sp_labour, projects as _sp_projects
 # already earning pays for its own fee - and gating that on arrears is what
 # left a tester's seven finished concerns shut and a Rome run's trade route
 # unopened for 850 years. A site asking the wrong one of these is a bug in
-# either direction, so the guard names the kind rather than merely checking
-# that SOME spending_power call is present.
-_SPENDING_POWER_SITES = [
-    (_sp_labour.LabourMixin._cash_in_hand_refusal, "labour._cash_in_hand_refusal", "buy"),
-    (_sp_labour.LabourMixin.hire, "labour.hire", "buy"),
-    (_sp_labour.LabourMixin.train, "labour.train", "buy"),
-    (_sp_labour.LabourMixin.auto_commission_for_blocked,
-     "labour.auto_commission_for_blocked", "buy"),
-    (_sp_labour.LabourMixin.commission, "labour.commission", "buy"),
-    (_sp_projects.ProjectsMixin.auto_open_ventures, "projects.auto_open_ventures", "open"),
-    (_sp_projects.ProjectsMixin.open_venture, "projects.open_venture", "open"),
-]
-for _sp_fn, _sp_name, _sp_kind in _SPENDING_POWER_SITES:
-    _sp_src = _insp_sp.getsource(_sp_fn)
-    check("%s asks spending_power(%r) - the right one of the two questions - "
-          "and does not reimplement the arithmetic" % (_sp_name, _sp_kind),
-          ('spending_power("%s")' % _sp_kind) in _sp_src
-          and "self.capital + self.credit_limit()" not in _sp_src,
-          "checked %s's own source" % _sp_name)
-_wo_src = _insp_sp.getsource(_WO)
-check("protocol._waiting_on's stalled-project pacing message calls "
-      "spending_power() too, not its own copy of the arithmetic",
-      "spending_power(" in _wo_src
-      and "s.capital + s.credit_limit()" not in _wo_src,
-      "checked _waiting_on's own source")
+# either direction, so each check below asserts the kind by name, not merely
+# that SOME spending_power call happened.
+
+# hire(): a rich household is let through; the identical household with
+# spending_power('buy') starved to zero is refused, and the refusal has to
+# be BECAUSE of that number, which the spy proves by controlling it directly
+# rather than by making the household actually poor (which would leave open
+# the question of whether some OTHER poverty-linked check did the refusing).
+s_hire_ok = sim(capital=1e9)
+_ok_hire, _ = s_hire_ok.hire("smith", 1)
+check("hire() really does succeed on a rich household (the baseline the "
+      "starved case below is a variant of)", _ok_hire is True, _ok_hire)
+s_hire_no = sim(capital=1e9)
+_calls_hire = _spending_power_spy(s_hire_no, forced=0.0)
+_ok_hire_no, _msg_hire_no = s_hire_no.hire("smith", 1)
+check("hire() asks spending_power('buy') and its refusal actually follows "
+      "that answer, on the same rich household that succeeded above",
+      _ok_hire_no is False and _calls_hire and _calls_hire[0] == "buy",
+      (_ok_hire_no, _calls_hire, _msg_hire_no))
+
+# train(): same shape.
+s_train_ok = sim(capital=1e9)
+_ok_train, _ = s_train_ok.train("machinist", 1, "smith")
+check("train() really does succeed on a rich household",
+      _ok_train is True, _ok_train)
+s_train_no = sim(capital=1e9)
+_calls_train = _spending_power_spy(s_train_no, forced=0.0)
+_ok_train_no, _msg_train_no = s_train_no.train("machinist", 1, "smith")
+check("train() asks spending_power('buy') and its refusal actually follows "
+      "that answer",
+      _ok_train_no is False and _calls_train and _calls_train[0] == "buy",
+      (_ok_train_no, _calls_train, _msg_train_no))
+
+# commission(): same shape.
+s_comm_ok = sim(capital=1e9)
+_ok_comm, _ = s_comm_ok.commission("smith", 10.0)
+check("commission() really does succeed on a rich household",
+      _ok_comm is True, _ok_comm)
+s_comm_no = sim(capital=1e9)
+_calls_comm = _spending_power_spy(s_comm_no, forced=0.0)
+_ok_comm_no, _msg_comm_no = s_comm_no.commission("smith", 10.0)
+check("commission() asks spending_power('buy') and its refusal actually "
+      "follows that answer",
+      _ok_comm_no is False and _calls_comm and _calls_comm[0] == "buy",
+      (_ok_comm_no, _calls_comm, _msg_comm_no))
+
+# _cash_in_hand_refusal(): not a gate but a message formatter, so the
+# behavioural claim is different - the room figure it PRINTS has to be the
+# one it was actually handed back by spending_power, not a private
+# recomputation that could silently disagree with it.
+s_cir = sim(capital=1000.0)
+_calls_cir = _spending_power_spy(s_cir, forced=777.0)
+_msg_cir = s_cir._cash_in_hand_refusal("a test fee", 1000.0)
+check("_cash_in_hand_refusal asks spending_power('buy') and prints the "
+      "exact number it got back, not a number of its own",
+      _calls_cir and _calls_cir[0] == "buy" and "777" in _msg_cir,
+      (_calls_cir, _msg_cir))
+
+# auto_commission_for_blocked(): the ONLY spending_power call in this
+# function is the up-front gate ("if spending_power('buy') <= 0: return
+# None"), so forcing it to zero must shut the whole function down
+# immediately, on a household that is otherwise rich enough to do anything.
+s_acfb = sim(capital=1e9)
+_calls_acfb = _spending_power_spy(s_acfb, forced=0.0)
+_result_acfb = s_acfb.auto_commission_for_blocked()
+check("auto_commission_for_blocked asks spending_power('buy') and a zero "
+      "answer really does shut the function down immediately",
+      _result_acfb is None and _calls_acfb and _calls_acfb[0] == "buy",
+      (_result_acfb, _calls_acfb))
+
+# open_venture() and auto_open_ventures(): both are supposed to ask
+# spending_power("open"). A household with an already-built, already-
+# earning, cheap-to-open concern (hom_button: rev 400 (per-year figure
+# below is this civ's own, not the literal 400), up 8, capex ~31 - the same
+# fixture the ABANDONED-206 checks above use) opens it when solvent and
+# does not when spending_power("open") is starved to zero, with nothing
+# else about the household changed.
+_hb = "hom_button"
+assert NODES[_hb]["rev"] > NODES[_hb]["up"], _hb
+s_ov_ok = sim(capital=1e9)
+s_ov_ok.done.add(_hb); s_ov_ok._done_changed()
+_ok_ov, _msg_ov = s_ov_ok.open_venture(_hb)
+check("open_venture() really does open a cheap, earning concern on a rich "
+      "household", _ok_ov is True, (_ok_ov, _msg_ov))
+s_ov_no = sim(capital=1e9)
+s_ov_no.done.add(_hb); s_ov_no._done_changed()
+_calls_ov = _spending_power_spy(s_ov_no, forced=0.0)
+_ok_ov_no, _msg_ov_no = s_ov_no.open_venture(_hb)
+check("open_venture() asks spending_power('open') and its refusal actually "
+      "follows that answer",
+      _ok_ov_no is False and "open" in _calls_ov,
+      (_ok_ov_no, _calls_ov, _msg_ov_no))
+
+s_aov_ok = sim(capital=1e9)
+s_aov_ok.done.add(_hb); s_aov_ok._done_changed()
+_opened_aov = s_aov_ok.auto_open_ventures()
+check("auto_open_ventures() really does open the same concern on a rich "
+      "household", _hb in _opened_aov, _opened_aov)
+s_aov_no = sim(capital=1e9)
+s_aov_no.done.add(_hb); s_aov_no._done_changed()
+_calls_aov = _spending_power_spy(s_aov_no, forced=0.0)
+_opened_aov_no = s_aov_no.auto_open_ventures()
+check("auto_open_ventures() asks spending_power('open') somewhere in its "
+      "own call graph, and starving that answer really does keep the "
+      "concern shut - true even though auto_open_ventures' OWN inline "
+      "spending_power('open') call (projects_staffing.py, the '_room' "
+      "local) is a DEAD assignment nothing downstream reads: the real "
+      "gate this check pins is the one open_venture applies on its own "
+      "account, which auto_open_ventures reaches by calling open_venture "
+      "for each candidate rather than by reading '_room' itself. Reported "
+      "separately as a finding, not fixed here (test files only)",
+      _hb not in _opened_aov_no and "open" in _calls_aov,
+      (_opened_aov_no, _calls_aov))
+
+# protocol._waiting_on(): the stalled-project pacing message. A household
+# with real room reads the PACE as the blocker; the identical household
+# with spending_power('buy') then starved to zero reads MONEY as the
+# blocker instead - same capital, same credit line, same project, only the
+# answer to spending_power('buy') changed.
+_slow_pace_wo = "academy_network"
+s_wo_ok = sim(capital=0.0)
+s_wo_ok.capital = 50000.0
+s_wo_ok.credit_limit = lambda: 2000.0
+s_wo_ok.project_cost = lambda node_id: 9000.0
+s_wo_ok.active[_slow_pace_wo] = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=9000.0)
+_msg_wo_ok = _WO(s_wo_ok, NODES, _slow_pace_wo, s_wo_ok.active[_slow_pace_wo], 9000.0)
+check("_waiting_on reads the pace as the blocker when there is real room",
+      "pace" in _msg_wo_ok, _msg_wo_ok)
+_calls_wo = _spending_power_spy(s_wo_ok, forced=0.0)
+_msg_wo_no = _WO(s_wo_ok, NODES, _slow_pace_wo, s_wo_ok.active[_slow_pace_wo], 9000.0)
+check("...and the SAME household, only spending_power('buy') starved, "
+      "reads money as the blocker instead - proving the sentence actually "
+      "reads that call rather than a second inline formula",
+      "money" in _msg_wo_no and "buy" in _calls_wo,
+      (_msg_wo_no, _calls_wo))
 
 # The bug's own worked example, run for real: a household owing 500 against
 # a 210 credit line. It can raise NOTHING - it is already past the line, and
