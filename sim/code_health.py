@@ -208,7 +208,8 @@ class _ScopeVisitor(ast.NodeVisitor):
         self._record(node.name, "def-or-class-name", node.lineno)
         for arg in _all_args(node.args):
             self._record(arg.arg, "function-param", arg.lineno)
-        for default in list(node.args.defaults) + [d for d in node.args.kw_defaults if d]:
+        for default in (list(node.args.defaults)
+                        + [given for given in node.args.kw_defaults if given]):
             self.visit(default)
         for decorator in node.decorator_list:
             self.visit(decorator)
@@ -222,7 +223,8 @@ class _ScopeVisitor(ast.NodeVisitor):
     def visit_Lambda(self, node):
         for arg in _all_args(node.args):
             self._record(arg.arg, "lambda-param", node.lineno)
-        for default in list(node.args.defaults) + [d for d in node.args.kw_defaults if d]:
+        for default in (list(node.args.defaults)
+                        + [given for given in node.args.kw_defaults if given]):
             self.visit(default)
         self._scope_stack.append("lambda")
         self.visit(node.body)

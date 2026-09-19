@@ -512,7 +512,7 @@ def write_strategy(path, label, rationale, order):
 
 
 def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
-         side_branch_every=8, refine_rounds=0, mc=12, horizon=700, seed=1,
+         side_branch_every=8, refine_rounds=0, trial_count=12, horizon=700, seed=1,
          log=print):
     """The whole pipeline: load the tree, build a throwaway Sim for `civ`
     (never stepped - only used for its own filters: what this civilisation
@@ -529,7 +529,8 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
                                                side_branch_every)
     score = None
     if refine_rounds:
-        order, extras, score = refine(nodes, goal, sim, order, extras, civ, mc,
+        order, extras, score = refine(nodes, goal, sim, order, extras, civ,
+                                      trial_count,
                                       horizon, seed, refine_rounds,
                                       side_branch_every, log)
     need = closure(nodes, goal)
@@ -581,7 +582,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "horizon (seed %d): each round's winning trial's own finish "
             "order was fed back as the next round's tie-break seed. Final "
             "round: %d/%d trials reached the goal."
-            % (refine_rounds, mc, horizon, seed, score[0], mc))
+            % (refine_rounds, trial_count, horizon, seed, score[0], trial_count))
     return order, rationale, cpm_result
 
 

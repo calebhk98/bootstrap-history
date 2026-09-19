@@ -116,7 +116,7 @@ ALARM_IDENTITY_COVER_MULTIPLIER = declare(
 
 class StatePressureMixin:
     def state_interest(self, node_record):
-        weights = self.w
+        weights = self.value_weights
         state_weights = dict(self.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
@@ -129,7 +129,7 @@ class StatePressureMixin:
         Note what is NOT in here: speed, and money. Building fast does not make
         you a sorcerer. Producing an effect a society has no category for does.
         """
-        weights = self.w
+        weights = self.value_weights
         alarm = 0.0
         for trait in node_record.get("traits", []):
             if   trait == "inexplicable":        alarm += ALARM_WEIGHT_INEXPLICABLE * weights["w_magic_fear"]
@@ -434,7 +434,7 @@ class StatePressureMixin:
         endangering you, which is backwards: wealth buys advocates, priesthoods,
         magistracies and, in a society with a bribability of 0.55, verdicts."""
         protection = 0.0
-        weights = self.w
+        weights = self.value_weights
         if self.running("patron_local"):        protection += self.PATRON_PROTECTION_LOCAL * weights["patronage_weight"]
         if self.running("patron_senatorial"):   protection += self.PATRON_PROTECTION_SENATORIAL * weights["patronage_weight"]
         if self.running("patron_imperial"):     protection += self.PATRON_PROTECTION_IMPERIAL * weights["patronage_weight"]
@@ -776,7 +776,7 @@ class StatePressureMixin:
         It feeds scandal rather than killing you outright, because the usual
         outcome is a bad year, a confiscation or a lost patron, not a death.
         """
-        weights = self.w
+        weights = self.value_weights
         rep = max(0.0, self.household.reputation) / self.EMINENCE_REPUTATION_SCALE
         wealth = min(1.0, max(0.0, self.household.capital) / self.EMINENCE_WEALTH_VISIBLE_THRESHOLD)
         hazard = (self.EMINENCE_HAZARD_BASE_SCALE

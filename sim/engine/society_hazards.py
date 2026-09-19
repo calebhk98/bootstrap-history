@@ -1008,7 +1008,8 @@ class HazardsMixin:
             # making a household poorer. Norse Christianisation is none of
             # those: its real effect is on
             # what the society BELIEVES, which is exactly what
-            # alarm_of() and update_protection() read out of self.w. This
+            # alarm_of() and update_protection() read out of
+            # self.value_weights. This
             # is apply_tech_effects' mechanism (see there), aimed at a
             # hazard instead of a technology, with one difference: a
             # technology is a single event and logs once, but a hazard
@@ -1023,12 +1024,14 @@ class HazardsMixin:
             for field, total_delta in hazard["values"].items():
                 if field.startswith("_") or not isinstance(total_delta, (int, float)):
                     continue
-                if field not in self.w:
+                if field not in self.value_weights:
                     continue
-                before = self.w[field]
-                self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
-                if abs(self.w[field] - before) > 1e-9:
-                    changed[field] = self.w[field]
+                before = self.value_weights[field]
+                self.value_weights[field] = max(
+                    self.VALUE_WEIGHT_FLOOR,
+                    min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
+                if abs(self.value_weights[field] - before) > 1e-9:
+                    changed[field] = self.value_weights[field]
             # VISIBLE WHILE IT HAPPENS, not only in hindsight: a tester
             # should be able to watch the society turning against them
             # year by year, not discover it as a lump sum in the future.

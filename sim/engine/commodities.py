@@ -62,6 +62,12 @@ class _RandomSource(Protocol):
     instance. `random.Random` itself is not a supertype of the module, so
     this Protocol, not that class, is the true shared type of what these
     two methods accept."""
+    # `mu` and `sigma` DELIBERATELY, against this project's spell-it-out rule
+    # (CLAUDE.md section 7). This Protocol exists to describe what
+    # `random.Random.gauss` accepts, and the stdlib's own signature names its
+    # parameters `mu` and `sigma`. A Protocol whose parameter names differ
+    # from the thing it describes is wrong for a keyword caller and wrong for
+    # a type checker comparing the two. The names are the stdlib's, not ours.
     def gauss(self, mu: float, sigma: float) -> float: ...
 
 # A commodity record (commodities.json's own per-commodity block) and the
@@ -533,10 +539,10 @@ class CommodityLedger:
         found."""
         out: List[str] = []
 
-        def walk(n: PropagationNode) -> None:
-            if n["bottleneck"]:
-                out.append(n["bottleneck"])
-            for child in n["children"].values():
+        def walk(node: PropagationNode) -> None:
+            if node["bottleneck"]:
+                out.append(node["bottleneck"])
+            for child in node["children"].values():
                 walk(child)
 
         walk(propagation_node)
@@ -590,13 +596,13 @@ class Ledger:
         # annotated that way rather than with typeshed's int-only stub.
         self._stock: Dict[str, float] = cast(Dict[str, float], collections.Counter())
 
-    def add(self, commodity_id: str, kg: float) -> None:
-        self._stock[commodity_id] += kg
+    def add(self, commodity_id: str, kilograms: float) -> None:
+        self._stock[commodity_id] += kilograms
 
-    def remove(self, commodity_id: str, kg: float) -> float:
-        """Take up to `kg`; returns how much was actually available."""
+    def remove(self, commodity_id: str, kilograms: float) -> float:
+        """Take up to `kilograms`; returns how much was actually available."""
         have = self._stock[commodity_id]
-        taken = min(have, kg)
+        taken = min(have, kilograms)
         self._stock[commodity_id] -= taken
         return taken
 

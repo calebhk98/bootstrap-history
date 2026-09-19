@@ -1546,7 +1546,7 @@ class StepPhasesMixin:
                   if set(self.nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
         self.household.familiarity = min(
             self.FAMILIARITY_CEILING,
-            1.0 - math.exp(-self.w["adaptation_rate"]
+            1.0 - math.exp(-self.value_weights["adaptation_rate"]
                            * (self.FAMILIARITY_PUBLICATION_WEIGHT * pub
                               + self.FAMILIARITY_TENURE_WEIGHT * (self.year - 100))))
         # WHERE THE YEAR'S HOURS WENT: captured here, before the tallies
@@ -1622,7 +1622,8 @@ class StepPhasesMixin:
                         self.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
             self.household.capital -= spend
             self.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.household.bribes_ytd + spend
-            self.household.scandal -= spend / self.BRIBE_SCANDAL_REDUCTION_SCALE * self.w["bribability"]
+            self.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
+                                       * self.value_weights["bribability"])
         else:
             self.household.bribes_ytd *= self.BRIBES_YTD_DECAY
         self.household.scandal = max(0.0, self.household.scandal)
@@ -1648,7 +1649,8 @@ class StepPhasesMixin:
         if self.events and self.household.scandal > self.cfg["suspicion_danger"]:
             probability = (self.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:
-                self._catastrophe("denounced: %s" % ("as a sorcerer" if self.w["w_magic_fear"] > 0.5
+                self._catastrophe("denounced: %s" % ("as a sorcerer"
+                                  if self.value_weights["w_magic_fear"] > 0.5
                                                      else "as a subversive"))
         # The eminence hazard is separate and unbribable. Its usual outcome is a
         # bad year rather than a death: a confiscation, a patron destroyed in

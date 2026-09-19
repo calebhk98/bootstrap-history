@@ -4,7 +4,7 @@ from ..data import ANNUAL_WAGE, WAGES, trade_family
 
 from .state import _agent_state
 
-# WHAT EACH TRAIT IN self.w ACTUALLY DOES, in the player's own words. Event
+# WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
 # w_novelty" (see society.apply_tech_effects) - so a command has to exist that
 # tells a player what w_novelty IS, and what it currently is. Not civ-specific
@@ -42,7 +42,14 @@ def _agent_values(sim):
     w_novelty, w_commerce" line, naming fields with no way to see what they
     are or what they are now. This is that way.
     """
-    weights = dict(getattr(sim, "w", {}) or {})
+    # DIRECT, NOT getattr WITH A DEFAULT. This read used to be
+    # `getattr(sim, "w", {})`, and when the attribute was renamed to
+    # `value_weights` the default turned a broken read into an empty list of
+    # values rather than an error: the command kept answering, and only the
+    # test that asserts the list is non-empty noticed. Sim.__init__ always
+    # assigns this, so there is no absent case to defend against, and a
+    # direct read fails loudly if that ever stops being true.
+    weights = dict(sim.value_weights or {})
     rows = [{"field": field, "value": round(weights[field], 3), "means": _VALUE_MEANINGS.get(field)}
             for field in sorted(weights) if not field.startswith("_")]
     return {"ok": True, "values": rows,

@@ -303,7 +303,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
         self.manual = bool(manual)
-        self.w = self.civ["values"]
+        self.value_weights = self.civ["values"]
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))

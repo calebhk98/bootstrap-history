@@ -72,9 +72,12 @@ class StartingMixin:
         if before <= 0.0005:
             spent = self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd + amount
             income = max(1.0, self.revenue())
-            would = min(self.BRIBE_PROTECTION_CAP, (spent / (income * self.BRIBE_INCOME_SHARE)) * self.w["bribability"])
+            would = min(self.BRIBE_PROTECTION_CAP,
+                        (spent / (income * self.BRIBE_INCOME_SHARE))
+                        * self.value_weights["bribability"])
             already = min(self.BRIBE_PROTECTION_CAP,
-                          (self.household.bribes_ytd / (income * self.BRIBE_INCOME_SHARE)) * self.w["bribability"])
+                          (self.household.bribes_ytd / (income * self.BRIBE_INCOME_SHARE))
+                          * self.value_weights["bribability"])
             if would - already < 0.005:
                 # SAY WHICH IT IS: telling somebody they are "already as
                 # protected as money can make you" when in fact one
@@ -82,7 +85,7 @@ class StartingMixin:
                 # is false, and reads as a bug. The two refusals must stay
                 # distinct.
                 _floor = 0.005 * (max(1.0, self.revenue()) * self.BRIBE_INCOME_SHARE) / max(
-                    1e-9, self.w["bribability"])
+                    1e-9, self.value_weights["bribability"])
                 if already < 0.29:
                     return False, ("you have no scandal to answer, and %s "
                                    "denarii is too little to buy any advocacy "
@@ -99,7 +102,7 @@ class StartingMixin:
         # large sum for the same bounded effect would leave a player with
         # nothing for no additional benefit. What a man cannot be paid to
         # do more of, he cannot be paid more for.
-        bribability = max(1e-9, self.w["bribability"])
+        bribability = max(1e-9, self.value_weights["bribability"])
         for_scandal = self.household.scandal * self.BRIBE_DENARII_PER_SCANDAL_POINT / bribability
         income = max(1.0, self.revenue())
         # spent/(income*BRIBE_INCOME_SHARE) * bribability = BRIBE_PROTECTION_CAP, solved for the carried total

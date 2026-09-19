@@ -176,7 +176,7 @@ def save_state(sim, path):
     blob["_goal"] = getattr(sim, "goal", None)
     blob["_civ_live"] = {attr: sim.civ.get(attr) for attr in
                          ("literacy_general", "literacy_elite", "state_capacity")}
-    blob["_weights"] = dict(sim.w)
+    blob["_weights"] = dict(sim.value_weights)
     blob["_fog"] = getattr(sim, "fog", False)
     # WHETHER THE FOUNDER AGES, saved for the same reason fog is: they are
     # choices the menu asks you to make about what game this is, and resuming
@@ -530,7 +530,7 @@ def load_state(sim, path):
     for attr, value in blob["_civ_live"].items():
         if value is not None:
             sim.civ[attr] = value
-    sim.w.update(blob["_weights"])
+    sim.value_weights.update(blob["_weights"])
     sim.state_capacity = float(sim.civ.get("state_capacity", sim.state_capacity))
     sim.fog = bool(blob.get("_fog", False))
     return sim

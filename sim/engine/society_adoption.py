@@ -77,15 +77,16 @@ class AdoptionMixin:
 
     VALUE_WEIGHT_FLOOR = declare(
         "VALUE_WEIGHT_FLOOR", -1.0, kind="temporary_heuristic",
-        unit="dimensionless (bound on any self.w value weight)",
+        unit="dimensionless (bound on any self.value_weights entry)",
         source=None, confidence="D",
-        why="Lower bound any societal value weight (self.w) can be pushed "
+        why="Lower bound any societal value weight (self.value_weights) can "
+            "be pushed "
             "to by a tech effect or a values-shifting hazard - symmetric "
             "with a weight's own natural -1..1 scale. Not derived from "
             "any model of how far a society's values can actually move.")
     VALUE_WEIGHT_CEILING = declare(
         "VALUE_WEIGHT_CEILING", 1.5, kind="temporary_heuristic",
-        unit="dimensionless (bound on any self.w value weight)",
+        unit="dimensionless (bound on any self.value_weights entry)",
         source=None, confidence="D",
         why="Upper bound any societal value weight can be pushed to - "
             "asymmetric with VALUE_WEIGHT_FLOOR, allowing a weight to be "
@@ -115,9 +116,11 @@ class AdoptionMixin:
         for field, delta in eff.items():
             if field.startswith("_") or not isinstance(delta, (int, float)):
                 continue
-            if field in self.w:
-                before = self.w[field]
-                self.w[field] = max(self.VALUE_WEIGHT_FLOOR, min(self.VALUE_WEIGHT_CEILING, before + delta))
+            if field in self.value_weights:
+                before = self.value_weights[field]
+                self.value_weights[field] = max(
+                    self.VALUE_WEIGHT_FLOOR,
+                    min(self.VALUE_WEIGHT_CEILING, before + delta))
                 changed.append(field)
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))

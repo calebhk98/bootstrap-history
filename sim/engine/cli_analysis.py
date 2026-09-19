@@ -59,7 +59,8 @@ def cmd_plan(args):
         order, rationale, _cpm_result = _planner.plan(
             civ=args.civ, goal=args.goal, seed_strategy=args.seed_strategy,
             side_branches=args.side_branches, side_branch_every=args.side_branch_every,
-            refine_rounds=args.refine_rounds, mc=args.mc, horizon=args.horizon, seed=args.seed)
+            refine_rounds=args.refine_rounds, trial_count=args.mc,
+            horizon=args.horizon, seed=args.seed)
         label = ("PLANNED (CPM): backward-chained from %s over its "
                 "prerequisite closure for %s%s" % (goal, args.civ,
                 ", refined against real trials" if args.refine_rounds else ""))

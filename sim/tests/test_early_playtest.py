@@ -94,10 +94,11 @@ check("building a remedy lifts the handicap", after < before,
 
 # --- Norse WIN: _TECH_EFFECTS was never wired
 s = sim()
-f0 = s.w["w_magic_fear"]
+f0 = s.value_weights["w_magic_fear"]
 s.apply_tech_effects("scientific_method")
 check("a technology changes the society that built it",
-      s.w["w_magic_fear"] < f0, "%.2f -> %.2f" % (f0, s.w["w_magic_fear"]))
+      s.value_weights["w_magic_fear"] < f0,
+      "%.2f -> %.2f" % (f0, s.value_weights["w_magic_fear"]))
 
 # --- the user: an organised army is a more capable state, not only a safer
 # founder - general_staff is the same state_capacity field railway and

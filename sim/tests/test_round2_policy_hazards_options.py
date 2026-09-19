@@ -223,9 +223,9 @@ check("Christianisation now carries a values delta, not just a TODO note",
 # --- gradual, not a single jump: one year of a 106-year hazard should move
 # the needle by roughly a hundredth of the total, not all of it at once.
 s = sim(civ="norse_900ad")
-before = dict(s.w)
+before = dict(s.value_weights)
 s._shocks(995)
-step1 = s.w["w_religious_rigidity"] - before["w_religious_rigidity"]
+step1 = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
 total_asked = _christ["values"]["w_religious_rigidity"]
 check("a hazard's values shift lands gradually: one year moves it a fraction "
       "of the total, not the whole amount",
@@ -235,7 +235,7 @@ check("a hazard's values shift lands gradually: one year moves it a fraction "
 # across every year in between (995 already applied above; finish the span).
 for yr in range(996, 1101):
     s._shocks(yr)
-total_moved = s.w["w_religious_rigidity"] - before["w_religious_rigidity"]
+total_moved = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
 check("a hazard's values shift reaches its full stated amount across the "
       "full span of years",
       abs(total_moved - total_asked) < 1e-6,
@@ -259,14 +259,14 @@ s2 = sim(civ="norse_900ad")
 s2.civ = dict(s2.civ)
 s2.civ["hazards"] = [{"name": "values-only test hazard",
                       "values": {"w_novelty": -0.2}, "years": [900, 909]}]
-s2.w = s2.civ["values"] = dict(s2.w)
-f0 = s2.w["w_novelty"]
+s2.value_weights = s2.civ["values"] = dict(s2.value_weights)
+f0 = s2.value_weights["w_novelty"]
 for yr in range(900, 910):
     s2._shocks(yr)
 check("a hazard that carries ONLY a values delta (no staff_loss, sack_chance, "
       "output_factor or real_erosion) still moves the society",
-      abs(s2.w["w_novelty"] - (f0 - 0.2)) < 1e-6,
-      "%.4f -> %.4f" % (f0, s2.w["w_novelty"]))
+      abs(s2.value_weights["w_novelty"] - (f0 - 0.2)) < 1e-6,
+      "%.4f -> %.4f" % (f0, s2.value_weights["w_novelty"]))
 
 # --- foreseeable, not just felt: knowledge_risk must let a player see the
 # shift coming before it starts, the same complaint that section G raised
