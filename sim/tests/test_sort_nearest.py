@@ -197,7 +197,8 @@ def _pre_and_any(node_id):
     # alternative to a technology ("any of lead_kg, mat_lead_sheet ..."), so a
     # walk over these edges has to skip anything that is not a node or it dies
     # on KeyError: 'lead_kg'. _unlocked_by is safe from this by construction,
-    # because it only ever asks whether a node's options mention k.
+    # because it only ever asks whether a node's options mention a given
+    # node id, never walking through one.
     out = [prereq_id for prereq_id in NODES[node_id]["pre"] if prereq_id in NODES]
     for req_group in (NODES[node_id].get("req_any") or []):
         out.extend(option for option in sorted(req_group.get("options") or {}) if option in NODES)

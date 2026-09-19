@@ -225,7 +225,7 @@ check("commission's cash-short refusal uses the same reasoning too",
 # by forcing the number back and watching the site's own pass/fail move with
 # it - proves the number is read, not merely assigned.
 def _spending_power_spy(sim_state, forced=None):
-    """Wrap s.spending_power on a real Sim to record every kind it is
+    """Wrap spending_power on a real Sim to record every kind it is
     asked. With `forced` set, the wrapped call returns that number instead
     of the real one, so a site's own decision can be driven by a number
     this test controls - the only way to tell a real read of the value

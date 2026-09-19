@@ -9,15 +9,11 @@ the break it guards.
 from .harness import *  # noqa: F401,F403
 
 
-# SPLIT-SUITE NOTE (not a content change, see this split's own report): the
-# original monolithic file left a module-level `s` bound to an unrelated Sim
-# from many hundreds of lines earlier (test_literacy_market_pricing.py's own
-# `s = sim(civ="rome_100ad", capital=1e9)`), and the check just below reads
-# `s.NITRE_COST_PER_M2` - a class constant (economy.py), not instance state -
-# rather than `s_ni`, the Sim it actually builds two lines down. Almost
-# certainly a copy-paste slip in the original; left exactly as found rather
-# than silently fixed. Reproduced here (instead of a stray NameError) so the
-# split changes nothing about what this check verifies.
+# THE CLASS, NOT AN INSTANCE. The check below reads NITRE_COST_PER_M2,
+# which economy.py defines on the class rather than per game, so reading it
+# off `_sim_class` says that plainly. Reading it off the Sim this section
+# builds two lines down would work too and would suggest the cost varies
+# with that game's state, which it does not.
 _sim_class = S.Sim
 
 # --- BREAK: `buy nitre`. Saltpetre is made, not mined, and there was no
