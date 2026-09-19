@@ -68,7 +68,7 @@ class _RandomSource(Protocol):
     # parameters `mu` and `sigma`. A Protocol whose parameter names differ
     # from the thing it describes is wrong for a keyword caller and wrong for
     # a type checker comparing the two. The names are the stdlib's, not ours.
-    def gauss(self, mu: float, sigma: float) -> float: ...
+    def gauss(self, mu: float, sigma: float) -> float: ...  # pylint: disable=invalid-name
 
 # A commodity record (commodities.json's own per-commodity block) and the
 # tech-tree node records this class optionally reads `mat`/`up`/`build_yrs`/

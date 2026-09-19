@@ -436,11 +436,11 @@ def _print_topic_timing(topic_costs):
 
 
 def _parse_only(argv):
-    for i, a in enumerate(argv):
-        if a == "--only" and i + 1 < len(argv):
-            return [t.strip() for t in argv[i + 1].split(",") if t.strip()]
-        if a.startswith("--only="):
-            return [t.strip() for t in a.split("=", 1)[1].split(",") if t.strip()]
+    for i, arg in enumerate(argv):
+        if arg == "--only" and i + 1 < len(argv):
+            return [topic.strip() for topic in argv[i + 1].split(",") if topic.strip()]
+        if arg.startswith("--only="):
+            return [topic.strip() for topic in arg.split("=", 1)[1].split(",") if topic.strip()]
     return None
 
 
@@ -457,7 +457,7 @@ def main(argv=None):
         selected = list(TOPICS)
     else:
         selected = only
-        unknown = [t for t in selected if t not in TOPICS]
+        unknown = [topic for topic in selected if topic not in TOPICS]
         if unknown:
             sys.stderr.write("unknown topic(s): %s\n" % ", ".join(unknown))
             sys.stderr.write("run --list to see topic names\n")
@@ -510,7 +510,7 @@ def main(argv=None):
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"
           % (len(harness.CHECKS_RUN), len(harness.FAILURES),
-             sum(t for _, t in harness.CHECKS_RUN),
+             sum(elapsed for _, elapsed in harness.CHECKS_RUN),
              ("   (%d slow checks skipped: run with --slow)" % len(harness.SKIPPED))
              if harness.SKIPPED else ""))
     if skipped_slow_topics:
@@ -542,7 +542,7 @@ def main(argv=None):
                        "topics": topic_costs,
                        "subproc_time": harness._SUBPROC_TIME[0],
                        "subproc_calls": harness._SUBPROC_CALLS[0],
-                       "total_wall": sum(t for _, t in harness.CHECKS_RUN)}, _pf)
+                       "total_wall": sum(elapsed for _, elapsed in harness.CHECKS_RUN)}, _pf)
     return 1 if harness.FAILURES else 0
 
 

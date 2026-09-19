@@ -127,8 +127,8 @@ for _jobs_argi, _jobs_arg in enumerate(sys.argv):
 del _jobs_argi, _jobs_arg
 
 
-def _par_map(fn, items):
-    """Run fn(item) for each item in items, concurrently when --jobs > 1.
+def _par_map(function, items):
+    """Run function(item) for each item in items, concurrently when --jobs > 1.
 
     Only ever used where every call is already known to be independent of
     every other (a fresh subprocess, no shared file) - see each call site's
@@ -139,9 +139,9 @@ def _par_map(fn, items):
     """
     items = list(items)
     if JOBS <= 1 or len(items) <= 1:
-        return [fn(x) for x in items]
+        return [function(item) for item in items]
     with _concurrent_futures.ThreadPoolExecutor(max_workers=min(JOBS, len(items))) as executor:
-        return list(executor.map(fn, items))
+        return list(executor.map(function, items))
 
 
 # --- progress, to stderr only (stdout - the thing diffed against an older
@@ -167,7 +167,7 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False):
     return test_sim
 
 
-def run_it(s, *keys):
+def run_it(sim_state, *keys):
     """Build a concern AND keep its doors open.
 
     Every capability in the engine is gated on running() - built, and still
@@ -176,10 +176,10 @@ def run_it(s, *keys):
     player would.
     """
     for key in keys:
-        s.done.add(key)
-        s.operating.add(key)
-    s._done_changed()
-    return s
+        sim_state.done.add(key)
+        sim_state.operating.add(key)
+    sim_state._done_changed()
+    return sim_state
 
 
 # SLOW CHECKS ARE OPT-IN. Three of these cost 83 of the suite's 89 seconds,
@@ -191,10 +191,10 @@ def run_it(s, *keys):
 SLOW = "--slow" in sys.argv or os.environ.get("ROME_SLOW_TESTS")
 
 
-def slow_check(name, fn):
+def slow_check(name, run_check):
     """Run an expensive check only when asked; otherwise say it was skipped.
 
-    `fn` returns `(ok, detail)`, so the detail comes back with the result and
+    `run_check` returns `(passed, detail)`, so the detail comes back with the result and
     is only built when the check actually runs. This used to take a third
     `detail_fn` argument that nothing read: no caller ever passed one, and a
     caller who did would have watched their detail vanish. Found by vulture.
@@ -202,8 +202,8 @@ def slow_check(name, fn):
     if not SLOW:
         SKIPPED.append(name)
         return
-    ok, detail = fn()
-    check(name, ok, detail)
+    passed, detail = run_check()
+    check(name, passed, detail)
 
 
 # SAME FLAG, ONE LEVEL UP. slow_check() above opts one expensive CHECK out of
@@ -277,7 +277,7 @@ SLOW_TOPICS = {
 }
 
 
-def check(name, ok, detail=""):
+def check(name, passed, detail=""):
     """Record a check, and how long the work before it took.
 
     The elapsed figure is the gap since the previous check, which is near
@@ -296,9 +296,9 @@ def check(name, ok, detail=""):
     # kill the whole suite here on a TypeError, so the one run that had
     # something to report was the one run that reported nothing.
     detail = "" if detail is None else str(detail)
-    print("  %-58s %s%s" % (name, "ok" if ok else "FAIL " + detail,
+    print("  %-58s %s%s" % (name, "ok" if passed else "FAIL " + detail,
                             "   %4.0fs" % took if took >= 1.0 else ""))
-    if not ok:
+    if not passed:
         FAILURES.append(name + " " + detail)
 
 
@@ -402,8 +402,8 @@ def _mk_loom_sim(n_looms, age_years):
         for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():
             loom_sim.employees[trade] = max(loom_sim.employees.get(trade, 0.0),
                                      float(required) * n_looms)
-        ok, msg = loom_sim.open_venture(node_id)
-        assert ok, (node_id, msg)
+        opened, msg = loom_sim.open_venture(node_id)
+        assert opened, (node_id, msg)
     loom_sim.year = 100 + age_years
     return loom_sim, chosen
 
