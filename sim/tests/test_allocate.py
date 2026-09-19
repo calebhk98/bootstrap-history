@@ -1,7 +1,4 @@
-"""allocate: split verbatim from the old test_regressions.py (original lines 13305-13497).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""allocate: regression checks, run individually with `--only allocate`."""
 from .harness import *  # noqa: F401,F403
 
 # ===========================================================================
@@ -14,8 +11,8 @@ from .harness import *  # noqa: F401,F403
 # the same one `portfolio` reads back from - never a second formula that
 # could disagree with what actually happened.
 
-def _zero_lab(n):
-    return {trade: 0.0 for trade in n.get("lab", {})}
+def _zero_lab(node):
+    return {trade: 0.0 for trade in node.get("lab", {})}
 
 
 # --- a directed project jumps the queue, ahead of higher-`order` work that

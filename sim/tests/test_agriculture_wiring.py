@@ -2,15 +2,15 @@
 a famine actually happen because of it?
 
 WIRING MILESTONE 4's SPECIFIC HOLE (docs/architecture/WIRING_MILESTONE_4.md,
-this task's own brief). `Sim._demographic_recovery` (sim/engine/core.py)
-used to hand `self.population.step` exactly enough calories to sit at
-nutrition_ratio == 1.0 every single year, computed from the cohort counts
-themselves - "is there enough food" was ASSUMED, never simulated, so a
-famine could not happen for a physical reason at all, only through the
-civilisation files' own scripted plague/war hazards (society.py's
-_shocks). It now runs one year of sim/world/agriculture.py's land+labour+
-weather harvest model (Sim.farm_land, agriculture.Storage) and feeds ITS
-food_available_kcal_per_day to demography instead. This module is the
+this task's own brief). `Sim._demographic_recovery` (sim/engine/core.py) runs
+one year of sim/world/agriculture.py's land+labour+weather harvest model
+(Sim.farm_land, agriculture.Storage) and feeds ITS food_available_kcal_per_day
+to demography, rather than handing `self.population.step` exactly enough
+calories to sit at nutrition_ratio == 1.0 every single year, computed from the
+cohort counts themselves. That assumption ("is there enough food" ASSUMED,
+never simulated) is the hole this guards against: without it, a famine cannot
+happen for a physical reason at all, only through the civilisation files' own
+scripted plague/war hazards (society.py's _shocks). This module is the
 regression test that hole's fix needed and did not have: sim/tests/
 test_agriculture.py and sim/tests/test_demography.py each prove their own
 module correct in isolation (both still standalone, still green,
@@ -117,16 +117,15 @@ class VariesWithWeatherTests(unittest.TestCase):
         # thousandths the forty-year window left.
         self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
-        # THE 1.0 CEILING IS GONE ON PURPOSE. This used to assert
-        # max(ratios) <= 1.0, because Storage.step capped consumption at
-        # food_demand_kg however full the granary was - so a population
-        # could never eat WELL, only adequately or badly. Combined with a
-        # mortality and fertility response that floors at 1.0, that made
-        # every good year worth nothing and every bad year cost lives,
-        # which is the ratchet Complaints/45 is about. Consumption may now
-        # exceed subsistence, bounded by what a person can physically eat
-        # (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE) and drawn only from
-        # grain already beyond the reserve.
+        # THE 1.0 CEILING IS GONE ON PURPOSE: asserting max(ratios) <= 1.0
+        # here would reintroduce the ratchet Complaints/45 describes. Capping
+        # consumption at food_demand_kg however full the granary was means a
+        # population can never eat WELL, only adequately or badly; combined
+        # with a mortality and fertility response that floors at 1.0, every
+        # good year is worth nothing and every bad year costs lives.
+        # Consumption may exceed subsistence, bounded by what a person can
+        # physically eat (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE) and drawn
+        # only from grain already beyond the reserve.
         #
         # The upper bound asserted here is that physiological ceiling, not
         # 1.0 - a ratio above it would mean people eating more than a human
@@ -191,16 +190,14 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # and not a demand that the no-carryover simplification's own cost
         # be zero.
         self.assertGreater(mean_ratio, 0.7, ratios)
-        # THE UPPER BOUND USED TO BE 1.0. It was wrong in principle and
-        # only passed by accident. A population that grows must on average
-        # be fed at or above subsistence - that is what growth is - so
-        # capping the mean at subsistence forbids the outcome the
-        # demographic milestone exists to produce. It passed because one
-        # weather draw covered the whole empire, which made a surviving
-        # surplus rare enough to round away. Weather is now drawn per home
-        # region and pooled by land share (Complaints/47), so ordinary good
-        # years reach the mean: measured 1.0042 over this century. The
-        # ceiling that actually binds eating is physical, not this number -
+        # THE UPPER BOUND IS NOT 1.0: capping the mean at subsistence would be
+        # wrong in principle. A population that grows must on average be fed
+        # at or above subsistence - that is what growth is - so a ceiling of
+        # 1.0 forbids the outcome the demographic milestone exists to
+        # produce. Weather is drawn per home region and pooled by land share
+        # (Complaints/47), so ordinary good years reach the mean: measured
+        # 1.0042 over this century. The ceiling that actually binds eating is
+        # physical, not this number -
         # MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, 1.75.
         self.assertLess(mean_ratio, 1.1, ratios)
 
@@ -288,11 +285,6 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         before_children = shocked.population.children
         before_working_age = shocked.population.working_age
         shocked._demographic_recovery(101)
-        children_survival = (shocked.population.children
-                             + shocked._last_demographic_step.deaths_children) / before_children
-        working_age_survival = (
-            (shocked.population.working_age + shocked._last_demographic_step.deaths_working_age)
-            / before_working_age)
         # Both are the SAME kind of figure - this year's deaths in a band
         # divided by that band's own starting count - so they are directly
         # comparable shares, and STARVATION_VULNERABILITY_CHILD (1.6x) >

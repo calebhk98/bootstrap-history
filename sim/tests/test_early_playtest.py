@@ -1,7 +1,4 @@
-"""early_playtest: split verbatim from the old test_regressions.py (original lines 202-919).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""early_playtest: regression checks, run individually with `--only early_playtest`."""
 from .harness import *  # noqa: F401,F403
 
 # --- Rome BREAK: negative quantity minted money while reporting failure
@@ -97,10 +94,11 @@ check("building a remedy lifts the handicap", after < before,
 
 # --- Norse WIN: _TECH_EFFECTS was never wired
 s = sim()
-f0 = s.w["w_magic_fear"]
+f0 = s.value_weights["w_magic_fear"]
 s.apply_tech_effects("scientific_method")
 check("a technology changes the society that built it",
-      s.w["w_magic_fear"] < f0, "%.2f -> %.2f" % (f0, s.w["w_magic_fear"]))
+      s.value_weights["w_magic_fear"] < f0,
+      "%.2f -> %.2f" % (f0, s.value_weights["w_magic_fear"]))
 
 # --- the user: an organised army is a more capable state, not only a safer
 # founder - general_staff is the same state_capacity field railway and
@@ -435,19 +433,20 @@ check("no ordinary reply is a wall of text",
 
 # a late-game available must not blow up either: it was 165KB at year 250.
 #
-# THIS USED TO STEP A REAL SIM 150 YEARS to get the tree open enough to be
-# worth measuring - 44s of wall time to populate s.done, for a state that
-# then had only 12 things concurrently startable. But _agent_available is a
-# pure function of s.done/s.operating/fog (via can_start/start_reason,
-# neither of which reads anything about how a node got marked done) - it
-# does not care whether `done` was populated by 150 years of the optimizer's
-# own choices or written directly. Constructing it directly is not a weaker
-# test of the same thing, it is a HARDER one: a natural 150-year run leaves
-# the frontier narrow (12 startable) because the optimizer greedily closes
-# off branches as it goes, while cutting an arbitrary slice of ORDER opens
-# unrelated branches all over the tree at once - 251 things startable at the
-# 30% cut below, 21x what the real run ever produced - which is exactly the
-# case a "stays a summary, never a dump" claim needs to survive. Two
+# CONSTRUCTED DIRECTLY, NOT FROM A 150-YEAR RUN: stepping a real Sim 150
+# years to get the tree open enough to be worth measuring costs 44s of wall
+# time to populate s.done, for a state that then has only 12 things
+# concurrently startable. But _agent_available is a pure function of
+# s.done/s.operating/fog (via can_start/start_reason, neither of which reads
+# anything about how a node got marked done) - it does not care whether
+# `done` was populated by 150 years of the optimizer's own choices or
+# written directly. Constructing it directly is not a weaker test of the
+# same thing, it is a HARDER one: a natural 150-year run leaves the frontier
+# narrow (12 startable) because the optimizer greedily closes off branches
+# as it goes, while cutting an arbitrary slice of ORDER opens unrelated
+# branches all over the tree at once - 251 things startable at the 30% cut
+# below, 21x what a real run produces - which is exactly the case a "stays a
+# summary, never a dump" claim needs to survive. Two
 # fractions, not one: how many nodes cross from locked to startable is not
 # monotonic in how much of the tree is done, so a single cut point could get
 # lucky and land somewhere unusually tame.
@@ -464,7 +463,7 @@ def _tree_opens_up():
         out.append((digest < 12000,
                     "%d bytes at %d%% of tree done with %d things startable"
                     % (digest, int(frac * 100), avail["count"])))
-    return all(ok for ok, _ in out), "; ".join(detail for _, detail in out)
+    return all(passed for passed, _ in out), "; ".join(detail for _, detail in out)
 
 
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
@@ -587,13 +586,13 @@ check("a missing id asks for one rather than naming a Python type",
 # --- reproducibility: the same seed must give the same answer, and it must not
 #     depend on PYTHONHASHSEED.
 #
-# This used to shell out to `run --mc 3 --seed 42` twice and compare stdout,
-# which is six complete 500-year Monte-Carlo runs and took longer than the
-# other seventy-odd checks put together - the whole suite stopped finishing
-# inside fifteen minutes and started getting killed. A check nobody can afford
-# to run is a check that rots, which is the exact thing this file exists to
-# prevent. It also could not pass at all while a second process was editing
-# the tree, because then it was comparing two different programs.
+# NOT A SUBPROCESS COMPARISON OF `run --mc 3 --seed 42` STDOUT: that is six
+# complete 500-year Monte-Carlo runs, costing more wall time than the other
+# seventy-odd checks in this file put together - enough on its own to push
+# the whole suite past fifteen minutes and get it killed. A check nobody can
+# afford to run is a check that rots, which is the exact thing this file
+# exists to prevent. It also cannot pass while a second process is editing
+# the tree, because then it is comparing two different programs.
 #
 # Same property, measured directly: run the model in-process over a short
 # horizon and compare the state, under two different hash seeds. Set

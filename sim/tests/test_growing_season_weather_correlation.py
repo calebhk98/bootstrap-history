@@ -14,7 +14,6 @@ this file does not own it). What that file's other classes still check
 acceptance bar) is NOT re-checked here to avoid duplicating a suite this
 task does not own; this file is additive, focused on what changed.
 """
-import math
 import statistics
 import unittest
 
@@ -98,9 +97,10 @@ class SpatialCorrelationTests(unittest.TestCase):
     """
 
     def _correlation_from_cholesky(self, lower):
-        n = len(lower)
-        return [[sum(lower[row][k] * lower[col][k] for k in range(min(row, col) + 1))
-                 for col in range(n)] for row in range(n)]
+        dimension = len(lower)
+        return [[sum(lower[row][term_index] * lower[col][term_index]
+                      for term_index in range(min(row, col) + 1))
+                 for col in range(dimension)] for row in range(dimension)]
 
     def test_cholesky_factor_reproduces_the_intended_correlation_matrix(self):
         test_sim = _rome_sim()

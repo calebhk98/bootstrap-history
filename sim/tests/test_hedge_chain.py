@@ -1,7 +1,4 @@
-"""hedge_chain: split verbatim from the old test_regressions.py (original lines 9950-10014).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""hedge_chain: regression checks, run individually with `--only hedge_chain`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -39,7 +36,7 @@ check("...and the slowest figure in that range is academy_network's own "
       == _floor_academy, (_range0, _floor_academy))
 
 _steps0 = _haz.hedge_first_steps("sack_chance")
-_academy_step = next((e for e in _steps0 if e["id"] == "academy_network"), None)
+_academy_step = next((step for step in _steps0 if step["id"] == "academy_network"), None)
 check("hedge_first_steps names academy_network's own total years, not just "
       "its own last, short leg (build_yrs 10 of a 30-year chain)",
       _academy_step is not None
@@ -61,7 +58,7 @@ check("...and once scientific_method and corpus_written are actually done, "
       (_floor_partial, _floor_academy))
 check("...and once academy_network is done outright, nothing is left to "
       "wait for at all",
-      "academy_network" not in {e["id"] for e in
+      "academy_network" not in {step["id"] for step in
                                 run_it(sim(civ="han_china_100ad"),
                                        "scientific_method", "corpus_written",
                                        "corpus_dispersed", "endowment_land",

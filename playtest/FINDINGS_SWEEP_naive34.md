@@ -3,17 +3,17 @@
 
 Sources swept, in full:
 
-- `rome/playtest/naive4/A/PLAY_A.md`   (England 1300, fog, "play it properly", 809 lines)
-- `rome/playtest/naive4/B/BREAK_B.md`  (England 1300, fog, "break it", 611 lines)
-- `rome/playtest/naive4/C/WEIRD_C.md`  (England 1300, fog, "play badly on purpose", 483 lines)
-- `rome/playtest/naive3/mexica_1500_PLAY.md`   (847 lines)
-- `rome/playtest/naive3/mexica_1500_BREAK.md`  (229 lines)
-- `rome/playtest/naive3/mexica_1500_WEIRD.md`  (117 lines)
+- `playtest/naive4/A/PLAY_A.md`   (England 1300, fog, "play it properly", 809 lines)
+- `playtest/naive4/B/BREAK_B.md`  (England 1300, fog, "break it", 611 lines)
+- `playtest/naive4/C/WEIRD_C.md`  (England 1300, fog, "play badly on purpose", 483 lines)
+- `playtest/naive3/mexica_1500_PLAY.md`   (847 lines)
+- `playtest/naive3/mexica_1500_BREAK.md`  (229 lines)
+- `playtest/naive3/mexica_1500_WEIRD.md`  (117 lines)
 
 Every finding below was re-run against the build as of this sweep, using
-`python3 rome/sim/simulator.py play --civ <civ> --fog` with commands on stdin, in
+`python3 sim/simulator.py play --civ <civ> --fog` with commands on stdin, in
 throwaway directories outside the repository. No repository file was modified.
-Where the transcript alone was not decisive I read `rome/sim/engine/` to confirm
+Where the transcript alone was not decisive I read `sim/engine/` to confirm
 the mechanism.
 
 **Headline: 26 findings still reproduce. 24 have been fixed. 1 is unclear.**
@@ -57,7 +57,7 @@ Mexica, forced into arrears before the invasion window:
 
 ```
 $ printf 'step 18\nhire smith 6\nhire mason 6\nmoney\nstep 1\nmoney\nstep 1\nmoney\nquit\n' \
-  | python3 rome/sim/simulator.py play --civ mexica_1500 --fog
+  | python3 sim/simulator.py play --civ mexica_1500 --fog
 
 EVENT 1519: INSOLVENCY SETTLED: most of the debt is written off and you still owe about 251 denarii...
 EVENT 1519: Spanish invasion: a site is sacked
@@ -70,7 +70,7 @@ England, in arrears, hit by an ordinary ambient fire:
 
 ```
 $ printf 'hire smith 3\nstep 1\nmoney\nstep 1\nmoney\n...' \
-  | python3 rome/sim/simulator.py play --civ england_1300 --fog
+  | python3 sim/simulator.py play --civ england_1300 --fog
 
 Capital: -629.2 den            (1303)
 EVENT 1304: fire in the thatched lanes behind the market
@@ -78,7 +78,7 @@ Capital: -569.4 den            (1304)
 ```
 The fire paid 59.8 denarii.
 
-**Mechanism (current code).** `rome/sim/engine/society.py`:
+**Mechanism (current code).** `sim/engine/society.py`:
 
 - line ~433, sacking: `self.capital *= 0.40`
 - line ~549, fire: `self.capital *= 0.82`
@@ -161,7 +161,7 @@ day of testing.
 
 **Reported repro:**
 ```
-printf 'state\n' | python3 rome/sim/simulator.py play --session /tmp/does_not_exist_xyz.json
+printf 'state\n' | python3 sim/simulator.py play --session /tmp/does_not_exist_xyz.json
 Reply begins:
    You arrive in 100 AD with 400 denarii ...
 [100 AD | 400 den | ...]
@@ -173,7 +173,7 @@ have been gone with no warning."
 **Re-verified now:**
 ```
 $ cd <empty dir>
-$ printf 'state\nquit\n' | python3 rome/sim/simulator.py play --session nope_does_not_exist.json
+$ printf 'state\nquit\n' | python3 sim/simulator.py play --session nope_does_not_exist.json
    You arrive in 100 AD with 400 denarii and nothing else...
 [100 AD | 400 den | you:2400 hr | sch 0 art 0 | rep 5] >
 YEAR 100   (500 years to the horizon at 600)
@@ -243,13 +243,13 @@ Phase 1 item 2 and Phase 8. B ran six identical fresh games; C ran three.
 
 **Reported repro:**
 ```
-for i in 1..6:  printf '4\ny\npoor_scholar\nn\nstep 60\nstate\n' | python3 rome/sim/simulator.py
+for i in 1..6:  printf '4\ny\npoor_scholar\nn\nstep 60\nstate\n' | python3 sim/simulator.py
 Every one produced: EVENT 1348: Black Death ... and **zero** Great Famine events.
 ```
 
 **Re-verified now.** A pure-idle 60-year run produces no famine:
 ```
-$ printf 'step 60\nstate\nquit\n' | python3 rome/sim/simulator.py play --civ england_1300 --fog
+$ printf 'step 60\nstate\nquit\n' | python3 sim/simulator.py play --civ england_1300 --fog
   COMPLETED 1300: Sails on ships
   EVENT 1304: fire in the thatched lanes behind the market
   ... EVENT 1337: Hundred Years War ...
@@ -263,7 +263,7 @@ $ printf 'start cap_measure_time_s\nstep 500\nquit\n' | ...
   EVENT 1316: Great Famine: staff -12%, and 20 denarii gone with the trade that stopped
 ```
 
-**Mechanism:** `rome/sim/engine/society.py` ~line 405 —
+**Mechanism:** `sim/engine/society.py` ~line 405 —
 `if "staff_loss" in h and r.random() < 0.32:` inside a per-year loop. The Great
 Famine window is `[1315, 1317]`, three years, so P(fires at all) ≈ 0.69, and on
 the default (deterministic) stream of a do-nothing game it lands on the 31%.
@@ -295,16 +295,16 @@ announces a completion.
 **Re-verified now** — it is the first line of the first step of every England
 game:
 ```
-$ printf 'step 1\nquit\n' | python3 rome/sim/simulator.py play --civ england_1300 --fog
+$ printf 'step 1\nquit\n' | python3 sim/simulator.py play --civ england_1300 --fog
   COMPLETED 1300: Sails on ships
 ...
   technologies: 0 built by you, 135 granted for free (135 total)
 ```
 
-**Mechanism:** `rome/sim/engine/protocol.py` ~line 2338 builds the `completed`
+**Mechanism:** `sim/engine/protocol.py` ~line 2338 builds the `completed`
 list as a raw set difference `sorted(s.done - before_done)`. `s.done` also
 receives the ambient grants added each step by `grant_ambient()`
-(`rome/sim/engine/core.py` ~line 495-512), which are separately recorded in
+(`sim/engine/core.py` ~line 495-512), which are separately recorded in
 `s.granted`. The renderer at line 983 prints all of them as `COMPLETED`.
 
 **Judgement: real defect.** The engine already knows the difference — the very
@@ -344,7 +344,7 @@ Capital: 400 den     Revenue: 232.8 den/yr
 ```
 200 quoted, 66.7 paid. A 3x gap on the very first screen a player reads.
 
-**Mechanism:** `rome/sim/engine/economy.py` `revenue()` applies, in order: an
+**Mechanism:** `sim/engine/economy.py` `revenue()` applies, in order: an
 age-based ramp, a `practice_attention()` factor for practices (which is why A saw
 income *rise* year on year and why spending your hours on `work` collapses it), an
 `economy_index()` multiplier, a market-saturation curve, and `output_factor`. The
@@ -376,7 +376,7 @@ Net/yr says +7.8; capital fell 59 denarii. The difference is exactly the arrears
 interest, which the same `money` screen reports on a *separate* line
 ("interest on arrears: 12%   paid so far: N") but does not net off.
 
-**Mechanism:** `rome/sim/engine/protocol.py` ~line 121 —
+**Mechanism:** `sim/engine/protocol.py` ~line 121 —
 `"net_per_year": round(s.revenue() - s.upkeep() - s.living_cost() - s.mine_operating_cost(), 1)`.
 
 **Judgement: real defect.** A `net_after_project_spend` field was already added
@@ -488,7 +488,7 @@ I asked for labourers. It answers about artisans, and its first remedy is
 "hire smith 3" — another hire, which the same rule will refuse for the same
 reason.
 
-**Mechanism:** `rome/sim/engine/labour.py` ~line 500 —
+**Mechanism:** `sim/engine/labour.py` ~line 500 —
 `self._staff_advice("artisans")` is hard-coded regardless of the trade requested,
 and `STAFF_SOURCES["artisans"]` (`society.py` ~138) leads with `HIRE`.
 
@@ -509,7 +509,7 @@ supervise, house and teach 0.2 more people') that appears nowhere else."
 
 **Re-verified now:** `state`, `labour`, `labour <trade>`, `policy`,
 `help labour` and `help commands` were all checked. None of them reports
-`staff_capacity()` or `supervision_room()`. Grepping `rome/sim/engine/protocol.py`
+`staff_capacity()` or `supervision_room()`. Grepping `sim/engine/protocol.py`
 and `cli.py` for `supervision_room` / `staff_capacity` returns nothing — the
 figures are computed in `labour.py` and surfaced only inside the refusal string.
 
@@ -596,7 +596,7 @@ is exactly wrong when I have thirty thousand of it") and `naive4/B/BREAK_B.md`
 FINDING 23 ("Project status says 'waiting on money' for a 10.2-den project while
 holding 1,084 den").
 
-**Mechanism (current code), `rome/sim/engine/core.py` ~line 795:**
+**Mechanism (current code), `sim/engine/core.py` ~line 795:**
 ```python
 money = min(st["cost_left"], self.project_cost(k) * frac)   # frac = 1/n["yrs"]
 ```
@@ -650,7 +650,7 @@ RUNNING (1):
 ```
 `help commands` says "bounty <id>: pay someone else to solve it instead".
 
-**Judgement: real, and half-explicable.** `rome/sim/engine/projects.py` line 149
+**Judgement: real, and half-explicable.** `sim/engine/projects.py` line 149
 sets `ph_left = n["ph"] * 0.35`, i.e. a bounty does 65% of the work and leaves
 you the last 35% — so "65% of your hours spent" is arithmetically the intended
 figure. But calling the bounty-winner's labour *your* hours, on a command
@@ -701,7 +701,7 @@ earned: 281.9                                  <- 0.282 den/hr
 550 den a year at 0.35/hr implies a 1,571-hour year. The model's year is 2,000
 hours (`economy.py`: `HOURS_PER_PERSON_YEAR = 2000.0`), which gives 0.275/hr.
 
-**Mechanism:** `rome/sim/engine/protocol.py` ~line 2079 computes `a_year_of_one`
+**Mechanism:** `sim/engine/protocol.py` ~line 2079 computes `a_year_of_one`
 from `ANNUAL_WAGE` and `wage_per_hour` from a *different* table, `WAGES`.
 `work_for_wages()` (`labour.py` line 362) uses `ANNUAL_WAGE / 2000`. Three
 numbers, two tables, one screen.
@@ -759,9 +759,9 @@ different behaviour from the `economy` topic, which is what A tripped over.
 **Re-verified now**, from a scratch directory:
 ```
 Saved to england_1300.json. Come back with:
-   python3 rome/sim/simulator.py play --session england_1300.json
+   python3 sim/simulator.py play --session england_1300.json
 ```
-The save is written to the CWD; `rome/sim/simulator.py` only resolves from the
+The save is written to the CWD; `sim/simulator.py` only resolves from the
 repository root. There is still no single directory from which the printed line
 runs. (The `--civ` half of this complaint is **fixed** — see F1.)
 
@@ -982,7 +982,7 @@ trained-trade ids no longer poison the file.)
 available in the game and nothing flags it." A lost the run to it.
 
 I could not reproduce it and I believe it is now fixed, but I cannot demonstrate
-the negative cheaply. `rome/sim/engine/projects.py` line 336 now locks the bill at
+the negative cheaply. `sim/engine/projects.py` line 336 now locks the bill at
 `start` time (`cost_left=self.project_cost(k)`), so the total billed is the cost
 as of the moment you commit, not the moment you finish. `why`'s COST line also
 now exposes the multipliers that move — `COST: 3,627 den total (40 labour + 0
@@ -1047,7 +1047,7 @@ tester and each is, in my reading, working as designed.
 
 All re-verification was done through the game's own interface with commands piped
 on stdin, in `/tmp/claude-.../scratchpad/`, exactly as the notes describe. I read
-`rome/sim/engine/` freely to confirm mechanisms and to distinguish "fixed" from
+`sim/engine/` freely to confirm mechanisms and to distinguish "fixed" from
 "did not happen to fire on my seed" — the engine's source carries unusually good
 provenance comments, several of which quote these very testers, which made the
 FIXED column much easier to establish than the STILL PRESENT one. No repository

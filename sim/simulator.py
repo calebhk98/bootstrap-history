@@ -36,10 +36,11 @@ from engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
                          closure, critical_path, haversine_km, load, load_civ,
                          load_geography, load_resources, topo_order,
                          trade_family, goal_catalog, goal_lookup, resolve_goal,
-                         # The private loaders too. They are private, and they
-                         # are also part of what `import simulator` used to
-                         # give you, and a split is not the moment to decide
-                         # somebody's tool should stop working.
+                         # The private loaders too. They are private, but
+                         # `import simulator` still has to give them to any
+                         # caller relying on that surface - a split is not
+                         # the moment to decide somebody's tool should stop
+                         # working.
                          _load_annual_wages, _load_tech_effects,
                          _load_trade_notes, _load_wages)      # noqa: F401
 from engine.core import Sim                                  # noqa: F401

@@ -36,7 +36,8 @@ is how fast a modern capability frontier can be reached, and why.
 
 Three artefacts share one dataset:
 
-- `data/` - the tech tree (2,849 nodes), prices, civilisations, geography.
+- `data/` - the tech tree (2,864 nodes - `python3 sim/simulator.py validate`),
+  prices, civilisations, geography.
 - `knowledge/` - how to physically do each thing the tree names.
 - `sim/` - the engine, the CLI/JSON protocol, and the test suite.
 
@@ -103,7 +104,8 @@ normal play. `SAVE_FIELDS` still matters. Its *history* does not.
 
 ## 4. Architecture direction
 
-`docs/architecture/` holds four documents; read its README first. The live
+`docs/architecture/` holds this project's design documents; read its README
+first, since it says which apply and in what order. The live
 plan is `ENDOGENOUS_COSTS_AND_DOMAINS.md`: how a price gets calculated rather
 than looked up, which domains produce prices and which only consume them, and
 the milestones. `PM_ASSESSMENT.md` is the reasoning behind it. The two
@@ -118,8 +120,8 @@ which - not the existence of `prices.json` - is why every cost bottomed out in
 a book value: there was no physical structure to compute one from.
 
 `data/production/` covers **99.7% of consumption sites** (156 of 159
-materials; re-measured after three `conf: D` entries were deleted rather
-than kept). Read `data/production/_SCHEMA.md` before adding to it. The rule
+materials - `python3 sim/validate_production.py` for current coverage). Read
+`data/production/_SCHEMA.md` before adding to it. The rule
 that governs every number there: a yield is a physical fact - ore grade times
 recovery, reaction stoichiometry, latent heat - and is NEVER derived from what
 the material sells for, nor tuned so a computed price matches `prices.json`.
@@ -156,7 +158,7 @@ python3 sim/test_regressions.py --list     # topic names
 python3 sim/test_regressions.py --only mines,demographics
 python3 sim/perf_fingerprint.py record before.json   # proves behaviour unchanged
 python3 sim/perf_fingerprint.py check before.json
-python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
+python3 sim/treetool.py judge             # judge nodes (reports; --write to commit)
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
 python3 sim/repro_nondeterminism.py        # the determinism bug; now passes, kept as a probe
@@ -192,31 +194,40 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   call; its own allocations were exactly what stopped addresses being
   recycled, so it suppressed the effect it was measuring and reported the
   absence as evidence.
-- **The tree tools write to the repository.** `treetool.py merge|judge|repair|
-  apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
-  meant to look.
-- **`Sim` is one god object** - **165** instance attributes CARRIED
-  (re-measured; a scan of `__init__` misses 8 reached only as `s.X` from
-  `proto/` and 3 hidden behind `self.__dict__[...]`), **523** methods across
-  `Sim` and its six mixins, all talking through `self`. Say which count you
-  mean: `sim/ARCHITECTURE.md` quotes **43** attributes, which is what
-  `__init__` ASSIGNS, and both numbers are right - that file reconciles them
-  and gives the script for each. The 523 supersedes the ~314 this line
-  carried until 2026-09-18 (`Sim` 231, EconomyMixin 121, SocietyMixin 61,
-  LabourMixin 50, ProjectsMixin 46, FogMixin 8, GeographyMixin 6). A full
-  decomposition has been considered and rejected with reasons in
-  `sim/ARCHITECTURE.md`. Do not silently restart it.
+- **The tree tools write to the repository, and now only when asked.**
+  `treetool.py merge|judge|repair|apply-caps` each rewrite a committed data
+  file, and each now reports by default and writes nothing. `--write` is what
+  commits the result.
+
+  This bullet used to say "pass `--dry-run` if you only meant to look", and
+  that was a rule protecting people who had already read it. Two agents wrote
+  `data/judgement.json` by accident anyway, the second of them while running a
+  read-only-sounding `judge` to compare output during an unrelated task. A
+  flag you have to know about does not protect the person who does not know,
+  so the default moved instead. `--dry-run` is still accepted and is now a
+  no-op, because it is written into scripts and into these instructions and
+  every caller using it was asking for what already happens.
+- **`Sim` is one god object.** Every mixin method talks through `self`, so
+  the coupling is real however the files are arranged. A full decomposition
+  has been considered and rejected, with reasons, in `sim/ARCHITECTURE.md` -
+  do not silently restart it.
+
+  For the attribute and method counts, run the scripts in that file's
+  "runtime graph is one god object" section. **They are deliberately not
+  repeated here.** This bullet used to carry them, and every one went stale
+  the next time somebody split a mixin, because a figure quoted in two
+  places drifts in one of them and nothing notices. A number belongs next to
+  the script that produces it, in one file, and everywhere else points.
 - **Much of the engine is majority comment, and the comments are
   load-bearing.** They are how agents hand each other the reason a thing is
-  the way it is. Do not strip them to "clean up". (The old "five of eight"
-  figure was stale and, worse, unreproducible - it never recorded whether a
-  docstring counted as comment or code. Re-measured 2026-09-18 with BOTH
-  rules scripted: it is **one of eight** counting docstrings as
-  documentation - core.py at 54% - and **zero of eight** counting them as
-  code. That supersedes the four-and-one this line carried, and the
-  direction matters: the engine added far more code than prose, so the
-  files got denser rather than better documented. `sim/ARCHITECTURE.md`
-  states both rules and gives the script for each.)
+  the way it is. Do not strip them to "clean up".
+
+  How many of the largest files are majority comment depends on whether a
+  docstring counts as documentation or as code, and the answer differs under
+  the two rules. `sim/ARCHITECTURE.md` states both rules, gives the script
+  for each, and derives its own file list rather than hardcoding one. Run it
+  rather than quoting a figure from here; this bullet held one and it was
+  wrong within a fortnight.
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 
@@ -225,13 +236,42 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 ## 7. Naming
 
 Identifiers two characters or shorter, measured three ways because the number
-you quote depends on what you count: **4,972 occurrences** (what a rename tool
-must actually touch), **3,813 binding sites**, **3,759 name-per-scope** (what a
-reader meets). Across 176 to 332 distinct names, depending on the same choice,
-in 72 of 83 files. `k` alone is 568 across 53 files.
+you quote depends on what you count:
 
-Quote the 4,972 when sizing the work and say which you mean, because the first
-two attempts at this number disagreed and both were right.
+    python3 sim/code_health.py --names
+
+Say which of the three methods you mean when you quote a figure - the first
+two attempts at this disagreed and both were right. `docs/architecture/
+NAMING_PLAN.md` carries figures of its own that this command will not
+reproduce, because `sim/` has grown from the 83 files that scan covered to
+197 today (`find sim -name "*.py" | wc -l`) and
+NAMING_PLAN.md's own account says the original scan's exact grammar is lost,
+not merely uncommitted; treat NAMING_PLAN.md's numbers as historical and this
+command's output as current. The scanner's detectors are tested against
+fixtures in `sim/tests/test_code_health.py`.
+
+**Three commands, and you need all three.** `code_health.py --names` gives
+the burndown total. `.pylintrc` turns pylint into the worklist - every short
+name it can see comes back as a `file:line` somebody can fix:
+
+    python3 -m pylint sim/ | grep -c C0103
+
+That reads 0 today, from 246 when the sweep started, **and a clean pylint is
+not a tree without short names.** Pylint's `invalid-name` check is driven by
+how pylint CLASSIFIES a binding, and three classifications carry no name
+check at all: a module-level name bound to a CALL (`KB = os.path.join(...)`
+is invisible while `QQ = 5` one line below is reported), a module-level loop
+target, and a lambda parameter. Measured:
+
+    python3 sim/pylint_blind_spots.py
+    461   (module-level assignments 254, lambda parameters 117,
+           module-level loop targets 90)
+
+which is nearly twice what pylint found in the first place, because this
+codebase keeps most of its short names exactly where pylint is quietest -
+the test suite is written as module-level script code rather than as
+functions. Use pylint for the worklist and that script for what the worklist
+cannot see. Neither number is the whole problem on its own.
 
 This is the single biggest obstacle to anyone reading this code, and it gets
 worse every time someone adds to it.
@@ -272,24 +312,56 @@ never rename a parameter without checking every call site by hand, because
 say so.
 
 A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
-the per-name meanings and the tooling. **72.4% is Tier 1** - purely local
-variables, provably safe. Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one
-thing everywhere; most vary by site (`q` is a function, a quantity, a quality
-score and a price quote in four different places), so there is no global
-find-and-replace for them.
+the per-name meanings and the tooling. `python3 sim/code_health.py --names`
+prints today's Tier-1 share; quote that, not NAMING_PLAN.md's, for current
+state. Tier 1 is a purely local variable, provably safe to rename; a
+function PARAMETER is Tier 2, because `prove_rename_safe.py` cannot cover a
+caller passing by keyword.
+
+Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one thing everywhere; most
+vary by site (`q` is a function, a quantity, a quality score and a price
+quote in four different places), so there is no global find-and-replace for
+them.
 
 `python3 sim/prove_rename_safe.py <ref>` proves a rename changed nothing but
 names, by comparing compiled bytecode: a local's name is not in `co_code`, so
 a pure local rename leaves the executed bytes identical, while an attribute or
 global moves `co_names` and a literal moves `co_consts`. That is a proof over
 every possible run rather than a sample of nine, and it does not depend on
-`perf_fingerprint` working. It does NOT cover parameter renames, where a
-caller passing by keyword breaks invisibly - it reports those separately.
+`perf_fingerprint` working.
+
+**It has two holes, and both report as a failure rather than a proof.** A
+reported failure on a rename commit is therefore not automatically a bug;
+read which hole it is before believing it.
+
+1. **A parameter passed by keyword.** The caller's `name=` breaks invisibly,
+   because the caller still compiles. Use `rope`, which updates keyword call
+   sites across files; it was tested on exactly this and got them right.
+2. **An ANNOTATED parameter.** A parameter carrying a PEP 484 annotation has
+   its NAME stored as a string constant in the ENCLOSING scope, for
+   `__annotations__`. So renaming `def f(k: str)` to `def f(node_id: str)`
+   moves the enclosing module's `co_consts` although nothing was edited but
+   the name, and the tool reports "a CONSTANT changed" as if a docstring had
+   been touched. Verified: two modules differing only in that name compile to
+   enclosing `co_consts` of `('k', 'return')` and `('node_id', 'return')`;
+   drop the annotation and both are empty. **This hole widens every time
+   annotations spread further through the engine**, so expect it more often,
+   not less.
+
+The tool prints which constants moved, which tells the two apart at a glance:
+a pair of bare identifiers (`gone: 'k' / added: 'node_id'`) is the annotation
+hole, a sentence is a real prose edit that belongs in its own commit.
 
 The tech-tree DATA schema fields (`lab`, `mat`, `cap`, `rev`, `up`, `ph`,
 `sch`, `art`, `sus`, `gov`, `conf`, `pre`, `yrs`, `kb`) are a separate job,
-and a cheaper one than it looks. Measured: **739 read sites across 13 files**,
-plus the 2,864 nodes and the 41 `data/branches/*.json` sources. No save
+and a cheaper one than it looks. Measured: **739 read sites across 13 files**
+(no command reproduces this figure today; it is not scripted anywhere in the
+repo, so treat it the same as the naming counts above, unverifiable until
+someone commits the scan), plus the **2,864 nodes**
+(`python3 sim/simulator.py validate`) and the branch sources
+(`ls data/branches/*.json | wc -l`; this line said 39 while that command
+answered 40, which is the one failure mode worse than an unverifiable
+number - a figure with its own refutation printed beside it). No save
 migration is needed at all - saves store node ids, never node records - and
 the JSON protocol already translates these to readable keys on the way out
 (`n["ph"]` becomes `"founder_hours_total"`), so nothing on the wire changes.
@@ -306,3 +378,12 @@ One real collision: `gov` is both a per-node field and a `Sim` attribute in
   simulator. Prose quotes the data; it never asserts it.
 - Claims about the codebase should be measured, not remembered. If you change
   the shape of the code, re-measure the counts in `sim/ARCHITECTURE.md`.
+- **Standing rule, added after the stakeholder flagged documentation going
+  stale silently: a number in prose carries the command or script that
+  produced it, right next to the number, or it does not go in.** This file
+  has already shipped wrong node counts and wrong file counts that nobody
+  caught because nothing next to the number said how to check it. Where a
+  command genuinely does not exist yet (a throwaway scan that was never
+  committed, for instance), say so explicitly in the same sentence instead
+  of leaving the number to look authoritative. A number with neither a
+  command nor an "unverifiable" label next to it is a bug in this file.

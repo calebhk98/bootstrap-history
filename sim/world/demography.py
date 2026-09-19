@@ -45,32 +45,28 @@ mortality figure and one fertility figure per band, which is a defensible
 amount of invention to own explicitly rather than a hundred hidden guesses
 dressed up as precision.
 
-WHAT THIS MODULE DOES NOT DO. It does not know where food comes from - the
-agriculture model (being built in parallel; see this module's caller-facing
-report for exactly what is stubbed) is expected to hand `step()` a number of
-calories available per day, and this module treats that as an exogenous
-input, the same way it currently treats immigration and emigration. It also
+WHAT THIS MODULE DOES NOT DO. It does not know where food comes from -
+`sim/world/agriculture.py` hands `step()` a number of calories available per
+day (see `sim/engine/core.py`'s `_demographic_recovery` for the wiring), and
+this module treats that as an exogenous input, the same way it currently
+treats immigration and emigration. It also
 does not track sex explicitly (see FEMALE_SHARE_OF_WORKING_AGE_POPULATION's
 declaration for what that costs), or regions.
 
-DISEASE AND SANITATION ARE NOW A SECOND, SEPARATE AXIS, DISTINCT FROM
-NUTRITION - no longer folded into the mortality-vs-nutrition relationship the
-way docs/architecture/CURRENT_CODE_ARCHITECTURE_REVIEW.md SS6.6 once
-described as an acceptable "minimal first version". The stakeholder's own
-diagnosis (see this task's report) was exact: with only a nutrition axis,
-mortality could only ever rise above its pre-industrial baseline, and
-SURVIVAL_TO_WORKING_AGE was a plain constant that unlimited food could never
-move - a model that cannot express clean water, sewered sanitation, germ
-theory or vaccination doing what they actually did. `step()` and
-`Population.stationary()` now also take a `disease_burden` argument, 1.0
-(the default - today's full pre-industrial infectious-disease environment,
-identical to this module's behaviour before this change) down to 0.0 (clean
-water and sanitation, germ theory-informed hygiene and quarantine, and
-vaccination all fully present). See `_disease_mortality_multiplier`,
-`_fertility_ceiling_for_disease_burden` and `child_survival_fraction` below
-for the mechanism, and this task's own report for exactly what the engine
-would have to compute from `data/civilizations/_TECH_EFFECTS.json`'s medical
-entries to drive it - this module still does not import the engine or the
+DISEASE AND SANITATION ARE A SECOND, SEPARATE AXIS, DISTINCT FROM NUTRITION,
+BECAUSE A NUTRITION-ONLY AXIS CANNOT EXPRESS WHAT SANITATION AND GERM THEORY
+ACTUALLY DID. With only a nutrition axis, mortality could only ever rise
+above its pre-industrial baseline, and SURVIVAL_TO_WORKING_AGE was a plain
+constant that unlimited food could never move - clean water, sewered
+sanitation, germ theory and vaccination cannot be expressed that way.
+`step()` and `Population.stationary()` take a `disease_burden` argument, 1.0
+(the default: today's full pre-industrial infectious-disease environment)
+down to 0.0 (clean water and sanitation, germ theory-informed hygiene and
+quarantine, and vaccination all fully present). See
+`_disease_mortality_multiplier`, `_fertility_ceiling_for_disease_burden` and
+`child_survival_fraction` below for the mechanism. Driving `disease_burden`
+from `data/civilizations/_TECH_EFFECTS.json`'s medical entries is an
+engine-side concern: this module still does not import the engine or the
 tech tree, and takes disease burden only as a plain float handed to it.
 """
 import collections
@@ -140,79 +136,54 @@ WORKING_AGE_BAND_WIDTH_YEARS = (
 # life expectancy at birth in the 20s-30s - CLAUDE.md SS3.2's own anchors)
 # rather than a specific dated outcome.
 #
-# THIS CALIBRATION FAILED ITS OWN STATED TEST, AND WAS CAUGHT MEASURING IT
-# PROPERLY RATHER THAN BY EYE. With SURVIVAL_TO_WORKING_AGE at 0.50 (this
-# range's harsh end), the pre-correction BASELINE_ANNUAL_MORTALITY_RATE_
-# WORKING_AGE at 0.014 (its own range's harsh end) and TOTAL_FERTILITY_RATE
-# at 5.0, a population fed EXACTLY at subsistence forever - constant,
-# zero-variance, no jitter, nothing else in play - did not hold flat. It
-# shrank by 0.030%/year, every year, forever: 1,000,000 people became
-# 970,422 over an unshocked century (`sim/tests/test_demography.py`'s
-# `StationarityTests` computed births 33,930.5 against deaths 34,230.7 in a
-# single year at ratio 1.0 - a permanent net deficit, not sampling noise,
-# since nothing here varies). The old comment on this paragraph called the
-# drift "under -0.1%" and treated that as close enough; it is not - over the
-# 500 years this game plays, -0.03%/year compounds to a 14% loss with
-# nothing bad happening, which is not what a "roughly stationary" baseline
-# means and not what CLAUDE.md SS3.2 asks this model to produce.
+# WHY THE JOINT CHOICE, NOT EACH RANGE ALONE, MUST BE CHECKED AGAINST
+# STATIONARITY. Each of SURVIVAL_TO_WORKING_AGE, BASELINE_ANNUAL_MORTALITY_
+# RATE_WORKING_AGE and TOTAL_FERTILITY_RATE stays inside its own documented
+# range, but choosing the pessimistic end of all three simultaneously
+# describes a population more extreme than any one citation supports on its
+# own: solving the exact continuous-age Lotka renewal equation for three
+# harsh-end points together gives a net reproduction ratio of 0.9946, not
+# 1.0 - genuinely, if barely, sub-replacement even before this module's own
+# 3-band coarsening adds anything of its own (a coarse-cohort discretization
+# cost, not a new biological claim - see the paragraph below
+# BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE for why refining that
+# discretization further was tried and rejected). A small, compounding
+# deficit like this is easy to miss by eye: -0.03%/year looks negligible per
+# year, but compounds to a 14% loss over the 500 years this game plays,
+# which is not what a "roughly stationary" baseline means and not what
+# CLAUDE.md SS3.2 asks this model to produce.
 #
-# TWO THINGS WERE CHECKED AND RULED OUT before touching a rate. First,
-# whether `Population.stationary`'s cohort construction disagrees with
-# `step`'s own rates (i.e. seeds an age structure the model's own dynamics
-# would not settle into): it does not. The converged children:working-age
-# ratio `stationary()` finds (0.6714) and the elderly:working-age ratio it
-# finds (0.4956) both solve this module's own transition matrix's dominant-
-# eigenvalue equation to four decimal places - `stationary()` is correctly
-# finding this model's own fixed point, including its (small) built-in
-# decline, not seeding something the step rates then fight. Second, whether
-# jitter/weather variance is required for a decline at all (the mechanism
-# every earlier pass at this problem, including two prior investigations,
-# examined): it is not - the number above has jitter=False and constant
-# food, so Jensen's inequality (see _excess_mortality_multiplier's own
-# docstring, which is the real and separate mechanism behind the FULL
-# engine's larger, weather-driven decline) cannot be what is happening here.
+# BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE THEREFORE SITS AT ITS RANGE'S
+# MIDPOINT, NOT ITS HARSH END, plus a second, smaller and independently
+# sourced correction (DOUBLE_COUNT_CORRECTION_FACTOR, described where that
+# constant is declared). SURVIVAL_TO_WORKING_AGE and TOTAL_FERTILITY_RATE
+# stay at their own range's harsh end: only one of the three stacked
+# harsh-end choices needs to move to stop the stack, and moving the fewest
+# numbers keeps this auditable. None of the three is a free parameter
+# chosen to hit a specific target figure - the only freedom used is where
+# inside each already-sourced range the numbers sit relative to each other.
 #
-# WHAT IS ACTUALLY HAPPENING: solving the exact continuous-age Lotka
-# renewal equation for these same three rates (no band coarsening at all -
-# a closed-form check, independent of this module's own 3-band mechanics)
-# gives a net reproduction ratio of 0.9946, not 1.0 - i.e. the three
-# harshest-defensible points from three independent literature ranges,
-# stacked together, describe a population that is genuinely, if barely,
-# sub-replacement even in principle, before this module's own 3-band
-# coarsening adds anything of its own. Reproducing the identical rates in
-# this module's 3-band transition matrix widens that to the measured
-# -0.030%/year (a coarse-cohort discretization cost, not a new biological
-# claim - see the paragraph below BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
-# for why refining that discretization further was tried and rejected).
-# Stacking three separately-uncertain "toward the harsh end" choices is
-# itself the error the file's own prior comment did not check for: each of
-# the three individually stays inside its citation, but choosing the
-# pessimistic end of all three simultaneously describes a population more
-# extreme than any one citation supports on its own, and the file's own
-# stated goal for this joint choice - a self-replacing NRR near 1, per
-# CLAUDE.md SS3.2's own anchors - was not actually being met. Fixed by
-# moving BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE (below) off its range's
-# harsh end and onto its range's midpoint instead, plus a second, smaller
-# and independently sourced correction described there
-# (DOUBLE_COUNT_CORRECTION_FACTOR). SURVIVAL_TO_WORKING_AGE and
-# TOTAL_FERTILITY_RATE are UNCHANGED - only one of the three stacked harsh-
-# end choices needed to move to stop the stack, and moving the fewest
-# numbers keeps this auditable.
+# `stationary()`'s cohort construction agrees with `step`'s own rates: the
+# converged children:working-age ratio it finds (0.6714) and the
+# elderly:working-age ratio it finds (0.4956) both solve this module's own
+# transition matrix's dominant-eigenvalue equation to four decimal places,
+# so `stationary()` is correctly finding this model's own fixed point,
+# including its (small) built-in decline, rather than seeding something the
+# step rates then fight. That decline is present even with jitter=False and
+# constant food, so Jensen's inequality (see `_excess_mortality_multiplier`'s
+# own docstring, the real and separate mechanism behind the FULL engine's
+# larger, weather-driven decline) is not what produces it here - it is a
+# genuine property of these three rates, not sampling noise or variance.
 #
-# Re-measured at these settings, by this module (see
-# sim/tests/test_demography.py's stationarity check, which prints them):
-# crude birth rate 34.0/1000, crude death rate 33.1/1000, life expectancy at
-# birth 30.3 years, net drift over 300 years at subsistence now +29.5%
-# (+0.086%/year) rather than the earlier, silently-wrong "under -0.1%" this
-# comment used to claim - all still land inside CLAUDE.md SS3.2's targets
-# (25-45/1000 for the crude rates, 18-35 years for e0), and the small
-# positive drift is deliberately far short of the ~9.06%/year biological
-# ceiling GrowthCeilingTests checks against (a population held exactly at
-# subsistence should be slow, not racing toward that ceiling - that ceiling
-# is for unlimited food, checked separately). None of these three numbers
-# is a free parameter chosen to hit this specific figure - the only freedom
-# used, both before and after this fix, is where inside each already-
-# sourced range the numbers sit relative to each other.
+# `sim/tests/test_demography.py`'s `StationarityTests` (constant food, no
+# jitter) prints the measured figures: crude birth rate 34.0/1000, crude
+# death rate 33.1/1000, life expectancy at birth 30.3 years, net drift over
+# 300 years at subsistence +29.5% (+0.086%/year) - all inside CLAUDE.md
+# SS3.2's targets (25-45/1000 for the crude rates, 18-35 years for e0). The
+# small positive drift is deliberately far short of the ~9.06%/year
+# biological ceiling `GrowthCeilingTests` checks against (a population held
+# exactly at subsistence should be slow, not racing toward that ceiling -
+# that ceiling is for unlimited food, checked separately).
 
 SURVIVAL_TO_WORKING_AGE = declare(
     "SURVIVAL_TO_WORKING_AGE", 0.50,
@@ -777,7 +748,7 @@ DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY = declare(
         "between the child and working-age floors.")
 
 
-def _disease_mortality_multiplier(disease_burden, floor_multiplier):
+def _disease_mortality_multiplier(disease_burden: float, floor_multiplier: float) -> float:
     """How much a band's baseline mortality hazard is scaled by, given the
     disease-and-sanitation environment - the disease-axis counterpart to
     `_excess_mortality_multiplier`'s nutrition axis, and the mechanism that
@@ -847,7 +818,7 @@ DISEASE_FERTILITY_CEILING_UPLIFT_FRACTION = declare(
         "(pathological sterility rather than mortality).")
 
 
-def _fertility_ceiling_for_disease_burden(disease_burden):
+def _fertility_ceiling_for_disease_burden(disease_burden: float) -> float:
     """The fertility ramp's ceiling (see `_fertility_multiplier`) as a
     function of the disease-and-sanitation environment, not a fixed number.
 
@@ -875,7 +846,7 @@ def _fertility_ceiling_for_disease_burden(disease_burden):
 # THE FOOD-TO-VITAL-RATES MECHANISM
 # ============================================================================
 
-def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
+def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -> float:
     """How much a band's baseline mortality is scaled by, given nutrition.
 
     This is the one function in the module where "a food shortage raises
@@ -893,9 +864,9 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     this function cannot depress mortality to zero by overfeeding, which a
     naive multiplicative model easily could.
 
-    CHECKED FOR A SOURCED LOWER LIMIT, FOR Complaints/45-no-granary-so-the-
-    baseline-collapses.md, AND NONE WAS FOUND (unlike the fertility side -
-    see _fertility_multiplier and FERTILITY_SURPLUS_CEILING_MULTIPLIER for
+    NO SOURCED LOWER LIMIT EXISTS FOR nutrition_ratio ABOVE 1.0 (unlike the
+    fertility side - see _fertility_multiplier and
+    FERTILITY_SURPLUS_CEILING_MULTIPLIER for
     the ceiling that WAS sourced and applied). The literature on whether
     better-nourished pre-industrial sub-populations had materially lower
     mortality than the general population does not give a clean multiplier
@@ -914,64 +885,58 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     no sourced number here to apply, and inventing one to mirror the
     fertility side just because it would be symmetric is exactly the kind
     of unlabelled heuristic CLAUDE.md SS3.4 forbids. This floor therefore
-    stays exactly as it was. If a future source isolates a nutrition-only
+    stays at baseline (1.0). If a future source isolates a nutrition-only
     mortality elasticity below this baseline, it belongs here.
 
-    A SECOND HYPOTHESIS WAS CHECKED (re-opened for the unshocked-century
-    follow-up to Complaints/45-no-granary-so-the-baseline-collapses.md,
-    after the granary and the fertility ramp above 1.0 had already closed
-    most of the gap but 100 years of rome_100ad with events=False still
-    settled around 74 percent of its starting population - measured on
-    this checkout by running the real engine, not estimated): that the
-    three BASELINE_ANNUAL_MORTALITY_RATE_* / SURVIVAL_TO_WORKING_AGE
-    figures are DOUBLE-COUNTING bad years, because the historical series
-    they are drawn from is itself a multi-century average that already
-    contains ordinary harvest-driven mortality swings, and this module
-    then adds its own harvest-driven excess mortality ON TOP of a number
-    that already has some baked in. The direction of that concern is
-    correct, but its SIZE is not what closes the remaining gap, and this
-    is a case where the literature gives an actual bound rather than
-    silence: Fogel's review of Wrigley & Schofield's own English series
-    (the source BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE cites) puts ALL
-    crisis mortality - famine AND epidemic together - at under 5 percent of
-    total pre-1800 English mortality, and attributes less than 10 percent
-    of even that crisis share to famine specifically (Wrigley & Schofield
-    found year-to-year mortality swings tracked epidemic disease far more
-    than food prices or harvests). Famine's plausible double-counted share
-    of the baseline is therefore bounded above by roughly 5% * 10% = 0.5%
-    of it - about seven parts in one hundred thousand of the working-age
-    rate per year - which `MortalityDragDecompositionTests` below shows is
-    more than an order of magnitude too small to be the residual drag.
-    Real double-counting of ordinary bad years is not zero, but it is not
-    where the missing population went.
+    DOUBLE-COUNTING BAD YEARS IN THE BASELINE RATE IS NOT WHERE THE MODEL'S
+    RESIDUAL POPULATION DRAG COMES FROM (Complaints/45-no-granary-so-the-
+    baseline-collapses.md's unshocked-century follow-up: with the granary
+    and the fertility ramp above 1.0 both in place, 100 years of rome_100ad
+    with events=False still settles around 74 percent of its starting
+    population). The concern is real in direction - the
+    BASELINE_ANNUAL_MORTALITY_RATE_* / SURVIVAL_TO_WORKING_AGE figures are
+    drawn from a historical series that is itself a multi-century average
+    already containing ordinary harvest-driven mortality swings, and this
+    module then adds its own harvest-driven excess mortality ON TOP of a
+    number that already has some baked in - but its SIZE cannot be the
+    residual drag: Fogel's review of Wrigley & Schofield's own English
+    series (the source BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE cites)
+    puts ALL crisis mortality - famine AND epidemic together - at under 5
+    percent of total pre-1800 English mortality, and attributes less than
+    10 percent of even that crisis share to famine specifically
+    (year-to-year mortality swings tracked epidemic disease far more than
+    food prices or harvests). Famine's plausible double-counted share of
+    the baseline is therefore bounded above by roughly 5% * 10% = 0.5% of
+    it - about seven parts in one hundred thousand of the working-age rate
+    per year - which `MortalityDragDecompositionTests` below shows is more
+    than an order of magnitude too small to be the residual drag. Real
+    double-counting of ordinary bad years is not zero, but it is not where
+    the missing population went.
 
-    WHERE THE DRAG ACTUALLY COMES FROM, measured directly from the same
-    engine run: the realized nutrition ratio the engine hands this module
-    has mean close to 1.0 (0.993 in the run measured for this
-    investigation) but real year-to-year variance (its stdev was 0.081 in
-    that run, coming from agriculture.py's weather draw and the granary's
-    only-partial buffering of it, neither owned by this module). Because
-    this function is FLAT at and above 1.0 and RISING below it, it is
-    convex at the ratio-1.0 kink, so by Jensen's inequality the AVERAGE of
-    this function over a varying ratio is strictly greater than this
+    THE DRAG IS JENSEN'S INEQUALITY ACTING ON YEAR-TO-YEAR NUTRITION
+    VARIANCE, NOT A MISSING FLOOR OR DOUBLE-COUNTING. The nutrition ratio
+    this function receives varies year to year (from agriculture.py's
+    weather draw and the granary's only-partial buffering of it, neither
+    owned by this module) even when its long-run MEAN sits at exactly 1.0.
+    Because this function is FLAT at and above 1.0 and RISING below it, it
+    is convex at the ratio-1.0 kink, so by Jensen's inequality the AVERAGE
+    of this function over a varying ratio is strictly greater than this
     function evaluated at the AVERAGE ratio, even when that average ratio
     sits exactly on the subsistence line. `MortalityDragDecompositionTests`
     proves this with the model's own machinery, not a numeric coincidence:
     two populations fed the identical MEAN food, one at a constant ratio of
     1.0 and one alternating symmetrically around it, diverge - the
     alternating one ends smaller, from nothing but the shape of this
-    function. That is the real mechanism, it needs no unsourced floor to
-    produce it, and it is a genuine property of subsistence agriculture
+    function. That is a genuine property of subsistence agriculture
     (storage smooths but cannot fully undo the fact that a bad year costs
-    more than a good year of the same size gives back) rather than an
-    artefact of this module. The remaining lever, to the extent the input
-    side of that asymmetry can still be narrowed, is agriculture.py's own
-    storage/consumption asymmetry (outside this module's ownership; see
-    that module's GRANARY_CAPACITY_YEARS_OF_DEMAND and
-    MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, and the reserve-size experiment
-    in this project's own history showing a bigger reserve narrows the
-    decline further but a bigger intake ceiling does not) - not this
-    function's floor.
+    more than a good year of the same size gives back), not an artefact of
+    this module, and it needs no unsourced floor to produce it. The
+    remaining lever, to the extent the input side of that asymmetry can
+    still be narrowed, is agriculture.py's own storage/consumption
+    asymmetry (outside this module's ownership - see that module's
+    GRANARY_CAPACITY_YEARS_OF_DEMAND and MAXIMUM_INTAKE_MULTIPLE_OF_
+    SUBSISTENCE: a bigger reserve narrows the decline further, a bigger
+    intake ceiling does not), not this function's floor.
 
     Below 1.0, this is linear in the calories the population actually has,
     from 1.0 (at the subsistence line) to STARVATION_MORTALITY_CEILING_
@@ -996,8 +961,9 @@ def _excess_mortality_multiplier(nutrition_ratio, vulnerability):
     return 1.0 + excess * vulnerability
 
 
-def _fertility_multiplier(nutrition_ratio,
-                           fertility_ceiling=FERTILITY_SURPLUS_CEILING_MULTIPLIER):
+def _fertility_multiplier(
+        nutrition_ratio: float,
+        fertility_ceiling: float = FERTILITY_SURPLUS_CEILING_MULTIPLIER) -> float:
     """How much baseline fertility is scaled by, given nutrition.
 
     `fertility_ceiling` defaults to FERTILITY_SURPLUS_CEILING_MULTIPLIER, so
@@ -1113,22 +1079,23 @@ class Population(object):
 
     __slots__ = ("children", "working_age", "elderly", "_random")
 
-    def __init__(self, children, working_age, elderly, seed=0):
+    def __init__(self, children: float, working_age: float, elderly: float,
+                 seed: int = 0) -> None:
         self.children = float(children)
         self.working_age = float(working_age)
         self.elderly = float(elderly)
         self._random = random.Random(seed)
 
     @property
-    def total(self):
+    def total(self) -> float:
         return self.children + self.working_age + self.elderly
 
     @property
-    def working_age_population(self):
+    def working_age_population(self) -> float:
         """The number this whole module exists to be able to answer."""
         return self.working_age
 
-    def copy(self):
+    def copy(self) -> "Population":
         """An independent Population with its own, separately-advancing
         random stream (re-seeded from a draw of this one's), for branching a
         scenario (e.g. 'what if food had NOT been cut') without either copy's
@@ -1138,12 +1105,14 @@ class Population(object):
                             seed=self._random.getrandbits(64))
         return clone
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("Population(children=%.3f, working_age=%.3f, elderly=%.3f, "
                 "total=%.3f)" % (self.children, self.working_age,
                                   self.elderly, self.total))
 
-    def nutrition_ratio(self, food_available_calories_per_day, jitter=False):
+    def nutrition_ratio(
+            self, food_available_calories_per_day: float,
+            jitter: bool = False) -> float:
         """Calories actually available, divided by what this population
         needs, in adult-equivalents. 1.0 means exactly meeting need. This is
         the single number mortality and fertility both respond to - see the
@@ -1169,9 +1138,9 @@ class Population(object):
             ratio *= (1.0 + self._random.gauss(0.0, NUTRITION_YEAR_TO_YEAR_NOISE_STD))
         return max(0.0, ratio)
 
-    def step(self, food_available_calories_per_day, immigration=0.0,
-             emigration=0.0, jitter=False,
-             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+    def step(self, food_available_calories_per_day: float, immigration: float = 0.0,
+             emigration: float = 0.0, jitter: bool = False,
+             disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> "StepFlows":
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -1274,8 +1243,8 @@ class Population(object):
             deaths_elderly=deaths_elderly)
 
     @classmethod
-    def stationary(cls, total_population, seed=0, years=400,
-                    disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+    def stationary(cls, total_population: float, seed: int = 0, years: int = 400,
+                    disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> "Population":
         """A Population of the given total, with an age structure that is
         the model's OWN stable answer to "what age structure does a
         population fed at exactly subsistence, forever, settle into" -
@@ -1314,7 +1283,7 @@ class Population(object):
         return cls(probe.children * scale, probe.working_age * scale,
                     probe.elderly * scale, seed=seed)
 
-    def _subsistence_food(self):
+    def _subsistence_food(self) -> float:
         """Exactly enough calories to put this population's nutrition ratio
         at 1.0 right now, with no noise - the noise-free food level
         `stationary()` iterates against to find a genuine fixed point."""
@@ -1325,8 +1294,9 @@ class Population(object):
         return adult_equivalent_population * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
 
 
-def child_survival_fraction(nutrition_ratio=1.0,
-                             disease_burden=PRE_INDUSTRIAL_DISEASE_BURDEN):
+def child_survival_fraction(
+        nutrition_ratio: float = 1.0,
+        disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN) -> float:
     """The fraction of children who reach working age, if `nutrition_ratio`
     and `disease_burden` were both held constant for an entire CHILD_BAND_
     WIDTH_YEARS-year childhood - the closed-form inverse of the transform

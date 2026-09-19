@@ -217,15 +217,15 @@ ANYWHERE YET. The stakeholder's third observation - "when you make a mine,
 you have waste rock, gravel" - is already arithmetically PRESENT in
 `extraction_cost_labour_hours_per_kg` (dividing hours-per-tonne-of-MATERIAL
 by a grade of kilograms-per-tonne already charges for every tonne of
-material moved, metal or not) but it was invisible: nothing named the
-quantity or let anyone see that a 0.3 g/t placer deposit lifts roughly three
-million tonnes of gravel for every tonne of gold. `material_moved_tonnes_
-per_kg_metal` and `waste_tonnes_per_kg_metal` make that number a first-class,
-queryable fact, and the module's own __main__ block now prints it for a
-sample of deposits. THIS TASK'S OWN JUDGEMENT: computing the QUANTITY of
-waste is cheap and worth doing now, because it is arithmetic this module
-already implicitly does. Modelling WHERE that waste GOES - burying farmland,
-silting a river the way Pliny's "ruina montium" did to whatever lay downstream
+material moved, metal or not), but nothing named the quantity or let anyone
+see that a 0.3 g/t placer deposit lifts roughly three million tonnes of
+gravel for every tonne of gold. `material_moved_tonnes_per_kg_metal` and
+`waste_tonnes_per_kg_metal` make that number a first-class, queryable fact,
+and the module's own __main__ block prints it for a sample of deposits.
+Computing the QUANTITY of waste is worth doing, because it is arithmetic
+this module already implicitly does. Modelling WHERE that waste GOES -
+burying farmland, silting a river the way Pliny's "ruina montium" did to
+whatever lay downstream
 of Las Medulas - is deliberately NOT done here: it needs a place for the
 waste to go (a location, a downstream user of that land or river) that lives
 in data/world/geography.json and whatever eventually represents farmland and
@@ -262,8 +262,10 @@ share.
 import collections
 import json
 import os
+from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -606,7 +608,7 @@ Deposit = collections.namedtuple("Deposit", [
 ], defaults=((),))
 
 
-def extraction_cost_labour_hours_per_kg(deposit):
+def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     """Labour-hours to raise one kilogram of CONTAINED METAL from `deposit`,
     from physical properties alone. Never reads a price anywhere - see the
     module docstring's EXTRACTION COST MECHANICS section for what each of
@@ -642,7 +644,7 @@ def extraction_cost_labour_hours_per_kg(deposit):
 # and (if its depth_class calls for a shaft or an aqueduct) a fixed cost
 # amortised over its assumed lifetime output.
 
-def sinking_cost_labour_hours(deposit):
+def sinking_cost_labour_hours(deposit: "Deposit") -> float:
     """The fixed, ONE-TIME labour-hours to open `deposit`, from depth_class
     alone - never from ore_grade_kg_per_tonne, quantity_tonnes_per_year, or
     anything else about how much metal is down there. Surface workings and
@@ -652,7 +654,8 @@ def sinking_cost_labour_hours(deposit):
     return _DEPTH_SINKING_HOURS[deposit.depth_class]
 
 
-def amortized_sinking_cost_labour_hours_per_kg(deposit, working_life_years=None):
+def amortized_sinking_cost_labour_hours_per_kg(
+        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
     """sinking_cost_labour_hours(deposit), spread over the deposit's whole
     assumed lifetime metal output (quantity_tonnes_per_year *
     working_life_years, the same reserve figure DepositState's own initial
@@ -670,13 +673,14 @@ def amortized_sinking_cost_labour_hours_per_kg(deposit, working_life_years=None)
     working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                            if working_life_years is None else working_life_years)
     total_reserve_kg = (deposit.quantity_tonnes_per_year * working_life_years
-                         * 1000.0)
+                         * KILOGRAMS_PER_TONNE)
     if total_reserve_kg <= 0.0:
         return float("inf")
     return fixed_hours / total_reserve_kg
 
 
-def total_cost_labour_hours_per_kg(deposit, working_life_years=None):
+def total_cost_labour_hours_per_kg(
+        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
     """The deposit's full unit cost: the recurring extraction cost plus its
     fixed sinking cost amortised over its assumed lifetime output. This is
     what supply_curve and find_marginal_deposit actually sort and price by
@@ -693,7 +697,7 @@ def total_cost_labour_hours_per_kg(deposit, working_life_years=None):
 # ============================================================================
 # See the module docstring's own DECLINING GRADE WITHIN A DEPOSIT section.
 
-def current_ore_grade_kg_per_tonne(deposit, fraction_extracted):
+def current_ore_grade_kg_per_tonne(deposit: "Deposit", fraction_extracted: float) -> float:
     """The grade of the ore actually being raised NOW, given that
     `fraction_extracted` (0.0 = untouched, 1.0 = the deposit's whole
     assumed reserve already raised) of `deposit` has already been worked.
@@ -709,7 +713,8 @@ def current_ore_grade_kg_per_tonne(deposit, fraction_extracted):
     return deposit.ore_grade_kg_per_tonne * remaining_share
 
 
-def current_extraction_cost_labour_hours_per_kg(deposit, fraction_extracted):
+def current_extraction_cost_labour_hours_per_kg(
+        deposit: "Deposit", fraction_extracted: float) -> float:
     """extraction_cost_labour_hours_per_kg, but at the grade actually being
     worked at this point in the deposit's life rather than its virgin
     grade. The effort per tonne of ROCK (hardness_class, depth_class) is
@@ -732,7 +737,7 @@ def current_extraction_cost_labour_hours_per_kg(deposit, fraction_extracted):
 # is computed (it was already implicit in the cost arithmetic above) and
 # why disposing of it is deliberately NOT modelled here.
 
-def material_moved_tonnes_per_kg_metal(deposit):
+def material_moved_tonnes_per_kg_metal(deposit: "Deposit") -> float:
     """Tonnes of rock (or gravel) that must be raised to recover one
     kilogram of CONTAINED METAL from `deposit`'s own stated grade - the
     plain inverse of ore_grade_kg_per_tonne, expressed in the units the
@@ -741,23 +746,23 @@ def material_moved_tonnes_per_kg_metal(deposit):
     return 1.0 / deposit.ore_grade_kg_per_tonne
 
 
-def waste_tonnes_per_kg_metal(deposit):
+def waste_tonnes_per_kg_metal(deposit: "Deposit") -> float:
     """material_moved_tonnes_per_kg_metal minus the (usually negligible)
     tonnage the recovered metal itself accounts for - everything that
     comes up that is NOT the metal: at Las Medulas's 0.0003 kg/t this is
     all but one part in about three million of what is lifted.
     """
-    return material_moved_tonnes_per_kg_metal(deposit) - 0.001
+    return material_moved_tonnes_per_kg_metal(deposit) - 1.0 / KILOGRAMS_PER_TONNE
 
 
-def annual_waste_rock_tonnes(deposit):
+def annual_waste_rock_tonnes(deposit: "Deposit") -> float:
     """Tonnes/year of waste rock or gravel `deposit` produces at its own
     quantity_tonnes_per_year (tonnes of METAL/year) - the number that
     would have to go somewhere (spoil heap, tailings pond, a river, in Las
     Medulas's own case) if this project modelled where waste rock goes,
     which it does not yet - see the module docstring's own judgement.
     """
-    return deposit.quantity_tonnes_per_year * 1000.0 * waste_tonnes_per_kg_metal(deposit)
+    return deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE * waste_tonnes_per_kg_metal(deposit)
 
 
 # ============================================================================
@@ -765,7 +770,7 @@ def annual_waste_rock_tonnes(deposit):
 # ============================================================================
 # See the module docstring's own POLYMETALLIC DEPOSITS section.
 
-def byproduct_quantities_tonnes_per_year(deposit):
+def byproduct_quantities_tonnes_per_year(deposit: "Deposit") -> Dict[str, float]:
     """{byproduct metal name: tonnes/year}, for every ByproductSpec
     `deposit` carries - the quantity of each byproduct that necessarily
     comes up if `deposit` is worked for its PRIMARY metal at its own
@@ -777,14 +782,14 @@ def byproduct_quantities_tonnes_per_year(deposit):
     if not deposit.byproducts:
         return {}
     rock_or_gravel_tonnes_per_year = (
-        deposit.quantity_tonnes_per_year * 1000.0 / deposit.ore_grade_kg_per_tonne)
+        deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE / deposit.ore_grade_kg_per_tonne)
     return {
-        spec.metal: rock_or_gravel_tonnes_per_year * spec.ore_grade_kg_per_tonne / 1000.0
+        spec.metal: rock_or_gravel_tonnes_per_year * spec.ore_grade_kg_per_tonne / KILOGRAMS_PER_TONNE
         for spec in deposit.byproducts
     }
 
 
-def joint_output_quantities_kg(deposit):
+def joint_output_quantities_kg(deposit: "Deposit") -> Dict[str, float]:
     """{material_key: kilograms/year} for `deposit`'s primary metal plus
     every byproduct it carries - the SAME {material_key: quantity} shape
     sim.world.demand's joint_output_mass_shares and joint_output_value_
@@ -795,10 +800,10 @@ def joint_output_quantities_kg(deposit):
     instead of a mass split.
     """
     primary_key = "%s_kg" % deposit.metal
-    out = {primary_key: deposit.quantity_tonnes_per_year * 1000.0}
+    out = {primary_key: deposit.quantity_tonnes_per_year * KILOGRAMS_PER_TONNE}
     byproduct_tonnes = byproduct_quantities_tonnes_per_year(deposit)
     for spec in deposit.byproducts:
-        out[spec.material_key] = byproduct_tonnes[spec.metal] * 1000.0
+        out[spec.material_key] = byproduct_tonnes[spec.metal] * KILOGRAMS_PER_TONNE
     return out
 
 
@@ -806,12 +811,13 @@ def joint_output_quantities_kg(deposit):
 # LOADING DEPOSITS
 # ============================================================================
 
-def _load_json(path):
+def _load_json(path: str) -> Any:
     with open(path, "r") as handle:
         return json.load(handle)
 
 
-def _region_share(geography, region, metal):
+def _region_share(
+        geography: Dict[str, Any], region: str, metal: str) -> Optional[float]:
     """geography.json's own regional mineral share for `metal` at `region`,
     or None if that region carries no entry for it at all (as opposed to an
     explicit zero) - used only to tell a genuine gap in geography.json apart
@@ -823,10 +829,10 @@ def _region_share(geography, region, metal):
     return entry.get("minerals", {}).get(metal)
 
 
-_GRADE_DECLARED = set()
+_GRADE_DECLARED: set = set()
 
 
-def _declare_grade(deposit_entry, metal):
+def _declare_grade(deposit_entry: Dict[str, Any], metal: str) -> float:
     """Run every deposit's ore_grade_kg_per_tonne through declare(), with
     the provenance data/world/deposits.json already carries per entry -
     see that file's own _doc for why the grade itself lives in JSON (a
@@ -853,7 +859,9 @@ def _declare_grade(deposit_entry, metal):
             % (deposit_entry["name"], metal))
 
 
-def _declare_byproduct_grade(deposit_entry, byproduct_entry, primary_metal):
+def _declare_byproduct_grade(
+        deposit_entry: Dict[str, Any], byproduct_entry: Dict[str, Any],
+        primary_metal: str) -> float:
     """Run one byproduct's own ore_grade_kg_per_tonne through declare(),
     exactly as _declare_grade does for the primary metal - a byproduct
     grade is just as much a physical fact about the rock as the primary
@@ -887,10 +895,10 @@ def _declare_byproduct_grade(deposit_entry, byproduct_entry, primary_metal):
                primary_metal, byproduct_entry["metal"]))
 
 
-_SHARE_DECLARED = set()
+_SHARE_DECLARED: set = set()
 
 
-def _declare_explicit_share(deposit_entry, metal):
+def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
     """share_of_empire_output, for the two metals (gold, mercury)
     geography.json carries no regional breakdown for at all - see
     data/world/deposits.json's own _doc. Declared for the same reason the
@@ -915,7 +923,10 @@ def _declare_explicit_share(deposit_entry, metal):
             "geography.json lookup." % metal)
 
 
-def load_deposits(metal, geography=None, resources=None, deposits_data=None):
+def load_deposits(
+        metal: str, geography: Optional[Dict[str, Any]] = None,
+        resources: Optional[Dict[str, Any]] = None,
+        deposits_data: Optional[Dict[str, Any]] = None) -> List["Deposit"]:
     """Every named deposit for `metal`, with its extraction-cost inputs and
     its derived `quantity_tonnes_per_year`, built from data/world/
     deposits.json plus (for iron, copper, tin, lead, silver)
@@ -940,6 +951,7 @@ def load_deposits(metal, geography=None, resources=None, deposits_data=None):
     out = []
     for entry in deposits_data["deposits"].get(metal, []):
         grade = _declare_grade(entry, metal)
+        share: Optional[float]
         if "share_of_empire_output" in entry:
             share = _declare_explicit_share(entry, metal)
         else:
@@ -996,7 +1008,9 @@ SupplyCurvePoint = collections.namedtuple("SupplyCurvePoint", [
 ])
 
 
-def supply_curve(deposits, working_life_years=None):
+def supply_curve(
+        deposits: List["Deposit"],
+        working_life_years: Optional[float] = None) -> List["SupplyCurvePoint"]:
     """`deposits`, sorted cheapest-first, each annotated with its own FULL
     unit cost (total_cost_labour_hours_per_kg: recurring extraction plus
     amortised sinking - see the module docstring's SINKING COST section)
@@ -1046,8 +1060,9 @@ MarginalOutcome = collections.namedtuple("MarginalOutcome", [
 ])
 
 
-def find_marginal_deposit(deposits, quantity_demanded_tonnes_per_year,
-                           working_life_years=None):
+def find_marginal_deposit(
+        deposits: List["Deposit"], quantity_demanded_tonnes_per_year: float,
+        working_life_years: Optional[float] = None) -> "MarginalOutcome":
     """The Ricardian rent calculation this module exists for.
 
     Walks `deposits` cheapest-first, filling `quantity_demanded_tonnes_per_
@@ -1111,7 +1126,7 @@ def find_marginal_deposit(deposits, quantity_demanded_tonnes_per_year,
     finished = []
     for allocation in allocations:
         rent_per_kg = max(0.0, price_at_margin - allocation.own_cost_labour_hours_per_kg)
-        rent_total = rent_per_kg * allocation.quantity_supplied_tonnes_per_year * 1000.0
+        rent_total = rent_per_kg * allocation.quantity_supplied_tonnes_per_year * KILOGRAMS_PER_TONNE
         finished.append(allocation._replace(
             rent_labour_hours_per_kg=rent_per_kg,
             rent_total_labour_hours_per_year=rent_total))
@@ -1146,7 +1161,7 @@ class DepositState(object):
     __slots__ = ("deposit", "remaining_reserve_tonnes_metal",
                  "initial_reserve_tonnes_metal")
 
-    def __init__(self, deposit, remaining_reserve_tonnes_metal):
+    def __init__(self, deposit: "Deposit", remaining_reserve_tonnes_metal: float) -> None:
         if remaining_reserve_tonnes_metal < 0:
             raise ValueError("reserve cannot be negative: %r"
                               % (remaining_reserve_tonnes_metal,))
@@ -1155,11 +1170,11 @@ class DepositState(object):
         self.initial_reserve_tonnes_metal = float(remaining_reserve_tonnes_metal)
 
     @property
-    def exhausted(self):
+    def exhausted(self) -> bool:
         return self.remaining_reserve_tonnes_metal <= 0.0
 
     @property
-    def fraction_extracted(self):
+    def fraction_extracted(self) -> float:
         """0.0 for an untouched deposit, rising toward 1.0 as its reserve
         is worked down - the input current_ore_grade_kg_per_tonne needs. A
         deposit given zero initial reserve is treated as already fully
@@ -1170,7 +1185,7 @@ class DepositState(object):
         return 1.0 - (self.remaining_reserve_tonnes_metal
                        / self.initial_reserve_tonnes_metal)
 
-    def current_grade_kg_per_tonne(self):
+    def current_grade_kg_per_tonne(self) -> float:
         """The grade actually being worked right now, given how much of
         this state's reserve has already been extracted - see module-level
         current_ore_grade_kg_per_tonne.
@@ -1178,7 +1193,7 @@ class DepositState(object):
         return current_ore_grade_kg_per_tonne(
             self.deposit, min(1.0, max(0.0, self.fraction_extracted)))
 
-    def deposit_as_worked(self):
+    def deposit_as_worked(self) -> "Deposit":
         """This state's own Deposit, with ore_grade_kg_per_tonne replaced
         by the grade actually being worked at this point in its life (the
         INTENSIVE margin) rather than its virgin, richest grade - the
@@ -1190,7 +1205,7 @@ class DepositState(object):
         return self.deposit._replace(
             ore_grade_kg_per_tonne=self.current_grade_kg_per_tonne())
 
-    def annual_capacity_tonnes(self):
+    def annual_capacity_tonnes(self) -> float:
         """This deposit's usual annual output, capped by whatever is left
         in the ground - the number find_marginal_deposit actually sees for
         a deposit that is running low.
@@ -1198,20 +1213,22 @@ class DepositState(object):
         return min(self.deposit.quantity_tonnes_per_year,
                     self.remaining_reserve_tonnes_metal)
 
-    def extract(self, tonnes):
+    def extract(self, tonnes: float) -> float:
         if tonnes < 0:
             raise ValueError("cannot extract a negative quantity: %r" % (tonnes,))
         tonnes = min(tonnes, self.remaining_reserve_tonnes_metal)
         self.remaining_reserve_tonnes_metal -= tonnes
         return tonnes
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "DepositState(%s, remaining=%.4g t, fraction_extracted=%.3f)" % (
             self.deposit.name, self.remaining_reserve_tonnes_metal,
             self.fraction_extracted)
 
 
-def init_deposit_states(deposits, working_life_years=None):
+def init_deposit_states(
+        deposits: List["Deposit"],
+        working_life_years: Optional[float] = None) -> List["DepositState"]:
     """One DepositState per deposit, with an initial reserve of
     `quantity_tonnes_per_year * working_life_years` - see
     DEPOSIT_ASSUMED_WORKING_LIFE_YEARS's own declaration for exactly what
@@ -1219,8 +1236,8 @@ def init_deposit_states(deposits, working_life_years=None):
     """
     working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                            if working_life_years is None else working_life_years)
-    return [DepositState(d, d.quantity_tonnes_per_year * working_life_years)
-            for d in deposits]
+    return [DepositState(deposit, deposit.quantity_tonnes_per_year * working_life_years)
+            for deposit in deposits]
 
 
 YearOutcome = collections.namedtuple("YearOutcome", [
@@ -1232,8 +1249,9 @@ YearOutcome = collections.namedtuple("YearOutcome", [
 ])
 
 
-def simulate_depletion(deposits, quantity_demanded_tonnes_per_year, years,
-                        working_life_years=None):
+def simulate_depletion(
+        deposits: List["Deposit"], quantity_demanded_tonnes_per_year: float, years: float,
+        working_life_years: Optional[float] = None) -> List["YearOutcome"]:
     """`years` of constant demand, working the cheapest available deposits
     first each year and retiring a deposit once its reserve runs out - the
     demonstration DEPLETION in the module docstring's item 4 promises. Each
@@ -1252,7 +1270,7 @@ def simulate_depletion(deposits, quantity_demanded_tonnes_per_year, years,
     states = init_deposit_states(deposits, working_life_years)
     outcomes = []
     for year in range(1, int(years) + 1):
-        available = [s for s in states if not s.exhausted]
+        available = [state for state in states if not state.exhausted]
         # Each state's CURRENT grade (declining as its reserve is worked
         # down - the intensive margin) and CURRENT capacity (its usual
         # annual output, capped by whatever remains - the extensive one)
@@ -1261,19 +1279,19 @@ def simulate_depletion(deposits, quantity_demanded_tonnes_per_year, years,
         # throwaway copy with both fields overridden is built here rather
         # than teaching that function about DepositState at all.
         this_year_deposits = [
-            s.deposit_as_worked()._replace(
-                quantity_tonnes_per_year=s.annual_capacity_tonnes())
-            for s in available]
+            state.deposit_as_worked()._replace(
+                quantity_tonnes_per_year=state.annual_capacity_tonnes())
+            for state in available]
         outcome = find_marginal_deposit(
             this_year_deposits, quantity_demanded_tonnes_per_year,
             working_life_years=working_life_years)
 
         # find_marginal_deposit sorts internally (supply_curve), so
         # outcome.allocations is NOT in `available`'s order - matching by
-        # position here previously credited each state with a DIFFERENT
-        # deposit's allocation whenever the sort reordered them, which
-        # silently mis-depletes every deposit but the cheapest. Match by
-        # name instead.
+        # position would credit each state with a DIFFERENT deposit's
+        # allocation whenever the sort reorders them, silently
+        # mis-depleting every deposit but the cheapest. Match by name
+        # instead.
         supplied_by_name = {
             allocation.deposit.name: allocation.quantity_supplied_tonnes_per_year
             for allocation in outcome.allocations}

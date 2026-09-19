@@ -114,7 +114,8 @@ class GeneratedFileShapeTests(unittest.TestCase):
     def test_every_one_of_the_21_hand_written_regions_still_has_its_own_land_block(self):
         # This script never touches `regions` - if this ever fails, something
         # else edited geography.json's own region data, not this file.
-        real_regions = [r for r in self.geography["regions"] if not r.startswith("_")]
+        real_regions = [region_id for region_id in self.geography["regions"]
+                        if not region_id.startswith("_")]
         self.assertEqual(len(real_regions), 21)
         for region_id in real_regions:
             self.assertIn("land", self.geography["regions"][region_id])
@@ -199,8 +200,8 @@ class TileStructureTests(unittest.TestCase):
         # A trivial but real property: a world with only one or the other
         # would mean the coastal rule itself is broken, not a fact about
         # geography.
-        coastal_count = sum(1 for t in self.tiles.values() if t["coastal"])
-        inland_count = sum(1 for t in self.tiles.values() if not t["coastal"])
+        coastal_count = sum(1 for tile in self.tiles.values() if tile["coastal"])
+        inland_count = sum(1 for tile in self.tiles.values() if not tile["coastal"])
         self.assertGreater(coastal_count, 0)
         self.assertGreater(inland_count, 0)
 
@@ -229,13 +230,15 @@ class RegionToTilesMappingTests(unittest.TestCase):
         # THE ANCHOR CLAIM Complaints/46 is about: Rome's seven regions
         # should now visibly be a much bigger territory than China's one,
         # in TILE COUNT, not just in the old single land_area_km2 number.
-        with open(os.path.join(_REPO_ROOT, "data", "civilizations", "rome_100ad.json")) as f:
-            rome = json.load(f)
-        with open(os.path.join(_REPO_ROOT, "data", "civilizations", "han_china_100ad.json")) as f:
-            han = json.load(f)
+        with open(os.path.join(_REPO_ROOT, "data", "civilizations", "rome_100ad.json")) as handle:
+            rome = json.load(handle)
+        with open(os.path.join(_REPO_ROOT, "data", "civilizations", "han_china_100ad.json")) as handle:
+            han = json.load(handle)
         region_to_tiles = self.land_tiles["region_to_tiles"]
-        rome_tile_count = sum(len(region_to_tiles.get(r, [])) for r in rome["home_regions"])
-        han_tile_count = sum(len(region_to_tiles.get(r, [])) for r in han["home_regions"])
+        rome_tile_count = sum(
+            len(region_to_tiles.get(region_id, [])) for region_id in rome["home_regions"])
+        han_tile_count = sum(
+            len(region_to_tiles.get(region_id, [])) for region_id in han["home_regions"])
         self.assertGreater(rome_tile_count, han_tile_count)
 
 
@@ -253,11 +256,12 @@ class ItaliaAnchorTests(unittest.TestCase):
     def test_italia_tiles_average_close_to_the_wheat_kg_anchor(self):
         geography = _load_geography()
         tiles = geography["land_tiles"]["tiles"]
-        italia_tiles = [t for t in tiles.values() if t["old_region"] == "italia"]
+        italia_tiles = [tile for tile in tiles.values() if tile["old_region"] == "italia"]
         self.assertTrue(italia_tiles, "no tile mapped back to italia at all")
-        total_area = sum(t["land_area_km2"] for t in italia_tiles)
+        total_area = sum(tile["land_area_km2"] for tile in italia_tiles)
         weighted_fertility = sum(
-            t["fertility_quality_multiplier"] * t["land_area_km2"] for t in italia_tiles
+            tile["fertility_quality_multiplier"] * tile["land_area_km2"]
+            for tile in italia_tiles
         ) / total_area
         self.assertGreater(weighted_fertility, 0.7,
                            "italia's tiles drifted too far below the wheat_kg anchor")

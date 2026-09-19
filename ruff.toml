@@ -1,0 +1,161 @@
+# Static checks for this repository, chosen for what they actually caught here
+# rather than for tidiness.
+#
+# THE RULE THAT PAYS FOR THE REST IS F821, undefined-name. When
+# sim/engine/economy.py was split, six call sites went on using the bare class
+# object `EconomyMixin` as a process-wide cache slot, from a module that no
+# longer had that name in scope. `python3 -c "import simulator"` succeeded,
+# `simulator.py validate` passed, every module compiled, and the failure
+# surfaced only when the first protocol command executed that line. F821 finds
+# it by reading the file. See sim/tests/test_static_checks.py, which runs it as
+# part of the suite so a future split cannot reintroduce that shape.
+#
+# Line length is deliberately not enforced. This codebase is roughly a third
+# to a half prose by line, the comments are how agents hand each other the
+# reason a thing is the way it is, and a formatter that reflows them would do
+# more damage than the inconsistency costs.
+
+target-version = "py311"
+line-length = 100
+
+exclude = [".git", "__pycache__"]
+
+[lint]
+select = [
+    "F",      # pyflakes: undefined names, unused imports, redefinitions
+    "B905",   # zip() without an explicit strict= - see below
+    "B007",   # a for-loop variable that is bound but never read
+    "SIM115", # a file opened without a context manager
+    "RUF100", # a `# noqa` comment that no longer suppresses anything
+]
+ignore = [
+    # `from harness import *` is the established idiom in sim/tests/, where a
+    # topic module is meant to open with the whole harness in scope. Until
+    # that changes these two rules report 4,318 findings that are all one
+    # decision, and they drown everything worth reading.
+    "F403",   # star import used
+    "F405",   # name may be undefined, or defined from a star import
+]
+
+# WHY THESE FOUR AND NOT THE REST OF `B`/`SIM`/OTHER FAMILIES.
+# python3 sim/code_health.py and its sibling tools already found what this
+# repo's actual maintainability problems are (docs/architecture/
+# CODE_ANALYSIS_TOOLING.md has the survey). Everything below is a rule this
+# project measured, on this codebase, and kept BECAUSE each one is a finding
+# a developer can act on - not a family enabled because the ecosystem offers
+# it.
+#
+#   B905 zip-without-explicit-strict (19 findings). Python's zip() silently
+#   truncates to the shorter iterable. Every finding here is a real decision
+#   a developer has not yet made explicit: does this zip's inputs being
+#   different lengths mean a bug, or is the shorter one intentional? Fix is
+#   `strict=True` (the common case - two sequences that must line up) or
+#   `strict=False` (the deliberate-truncation case, spelled out instead of
+#   implied). Neither fix is guessable by the tool; a person reads the call
+#   and decides.
+#
+#   B007 unused-loop-control-variable (16 findings). A `for k, v in
+#   d.items():` that never reads `v` is usually leftover from an edit, and
+#   the rest of the time it is a `for _, v in ...` waiting to be spelled
+#   that way. Fix is renaming the unused one to `_name` (still descriptive,
+#   marked as deliberately unused) or using it. Genuinely two-sided: some of
+#   the 16 are real leftovers, some are legitimate "I only need one of this
+#   pair" - a developer decides which per site, same as B905.
+#
+#   SIM115 open-file-with-context-handler (52 findings). A file opened with
+#   plain `open(...)` and no `with` leaks the file descriptor until the
+#   object is garbage-collected, which on CPython is usually promptly but is
+#   never guaranteed - PyPy or a reference cycle can hold it open far
+#   longer. Fix is wrapping the call in `with open(...) as handle:`, always
+#   the same shape, usually mechanical.
+#
+#   RUF100 unused-noqa (85 findings, matching the count `python3 sim/
+#   code_health.py --misc` already reports independently - see
+#   CODE_ANALYSIS_TOOLING.md). A `# noqa: F401` on a line ruff does not
+#   currently flag is either stale (the code it was guarding moved or was
+#   fixed) or wrong (guarding a different rule than the one that actually
+#   fires there) - both are worth knowing, and `ruff check --fix` removes
+#   the stale ones mechanically. Verified against this repo's REAL select+
+#   ignore list, not `--isolated`, since RUF100's answer depends on which
+#   other rules are actually enabled: an isolated run reports every noqa in
+#   the file as unused (nothing else is enabled to justify them), which is
+#   not the same finding.
+#
+# REJECTED, WITH WHY, SO THE NEXT AGENT DOES NOT RE-PROPOSE THEM BLIND:
+#
+#   N (naming convention - N812, N806, N816, N803; 90 findings). Checks
+#   CASING (snake_case, PascalCase), not LENGTH - it does not see a
+#   two-character name as a problem at all, so it does not answer this
+#   project's actual naming complaint (CLAUDE.md section 7). The tool that
+#   does is `pylint`'s `invalid-name` with a length-based regex, configured
+#   in this repo's `.pylintrc` - see CODE_ANALYSIS_TOOLING.md.
+#
+#   PL (627 findings, 627 of which are PLR2004 magic-value-comparison). A
+#   simulation whose entire subject is comparing computed quantities against
+#   thresholds writes `if age > 65:` and `if year >= 1200:` constantly and on
+#   purpose; forcing every numeric literal in a comparison into a named
+#   constant would not make any of those readers safer, only make the
+#   thresholds harder to find. Same shape of decision this file already
+#   made about F403/F405: one rule, one dominant finding, all the same
+#   already-made call.
+#
+#   ARG (unused-function-argument; 178 findings, dominated by ARG001).
+#   Measured: the great majority are `def cmd_something(a):` in
+#   sim/engine/cli.py and sim/engine/proto/ - every CLI command handler is
+#   called through one dispatcher with a fixed `(a)` signature, so a handler
+#   that does not read its own argparse namespace is not a bug, it is the
+#   uniform shape the dispatcher requires. Same "one deliberate decision"
+#   reasoning this file already applies to F403/F405.
+#
+#   PERF (54 findings, all PERF401 manual-list-comprehension). A real
+#   optimisation opportunity in a tight loop, and noise everywhere else;
+#   this codebase's loops are rarely the bottleneck the simulator's own
+#   profiling has found (see sim/perf_fingerprint.py), and rewriting a
+#   readable `for` loop into a comprehension for a speed difference nobody
+#   has measured is exactly the kind of "check nobody will act on" this
+#   section exists to avoid enabling.
+#
+#   C90 complex-structure (mccabe via ruff; 49 findings at ruff's own
+#   default threshold of 10). This project already has a complexity check -
+#   `sim/code_health.py --complexity`, which imports `radon.complexity`
+#   directly rather than reimplementing it (see that file's own docstring)
+#   - and it uses threshold 15, chosen and recorded there, not ruff's
+#   default of 10. Enabling C90 here as well would give the codebase two
+#   disagreeing definitions of "too complex" advertised in two different
+#   places; one is enough, and the existing one already composes a real
+#   library rather than mccabe's ruff port.
+#
+#   The rest of `B` and `SIM` beyond the four rules above (e.g. B007's
+#   sibling B905 aside, SIM300 yoda-conditions, SIM105
+#   suppressible-exception): individually small counts (1-11 each),
+#   individually plausible, but SIM300 in particular is a bad fit here - it
+#   flags this codebase's own convention of writing numeric bounds checks as
+#   `0.0 < value` (interval-notation order, used throughout sim/world/ for
+#   readability), which is a style choice already made, not a bug. Selecting
+#   rule families at the family level would pull that in along with the
+#   rules worth having; selecting the two genuinely load-bearing SIM/B rules
+#   individually (as done above) gets the value without it.
+
+[lint.per-file-ignores]
+# sim/simulator.py is the documented front door. Its imports exist to re-export
+# names so that `import simulator` keeps giving callers what it always gave
+# them, so an "unused" import there is the file doing its job.
+"sim/simulator.py" = ["F401"]
+# sim/engine/protocol.py is a re-export shim for the engine/proto/ package
+# split. All 178 of its imports are its public surface.
+"sim/engine/protocol.py" = ["F401"]
+# sim/solve_prices.py became the third file of exactly this shape when the
+# 2,761-line price solver split into solve_prices_core.py (the algebra) and
+# solve_prices_report.py (the reporting front end). It keeps the name every
+# caller and every `python3 sim/solve_prices.py` invocation already uses, and
+# its 64 "unused" imports are the whole point of it.
+#
+# IT WAS MISSING FROM THIS LIST FOR A WHILE, AND NOTHING NOTICED, which is
+# worth recording because it says what this list is worth. The suite's ruff
+# topic only selects F821, so 64 F401 findings sat there reported by nobody
+# until sim/code_health.py was written and counted them. A per-file-ignore
+# that has to be remembered by hand, for a pattern this project has now used
+# three times, will be forgotten a fourth time. If a fourth composition point
+# appears, consider marking the pattern in the files themselves rather than
+# maintaining this list.
+"sim/solve_prices.py" = ["F401"]

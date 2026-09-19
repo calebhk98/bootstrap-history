@@ -1,7 +1,4 @@
-"""names_and_fog: split verbatim from the old test_regressions.py (original lines 6722-6867).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""names_and_fog: regression checks, run individually with `--only names_and_fog`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

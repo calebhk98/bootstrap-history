@@ -91,14 +91,14 @@ class DiseaseBurdenRespondsToUnlockedTechnologyTests(unittest.TestCase):
 
 
 class DiseaseBurdenIsLiveNotQueuedTests(unittest.TestCase):
-    """The eight disease technologies used to feed `_pop_tech_pending`
-    (apply_tech_effects, society.py) exactly like every other `population`-
-    carrying entry, ramping into `_pop_scale_base` over POP_TECH_RAMP_YEARS
-    - a path WIRING_MILESTONE_4.md SS1.3 already established is read by
-    nothing. WIRING ONE stops queuing these eight (they now drive
-    `_disease_burden` LIVE, off `self.has()`, instead) so the same
-    tree-author weight is not doing two jobs at once. The five FOOD-effect
-    technologies are untouched and still queue exactly as before.
+    """The eight disease technologies drive `_disease_burden` LIVE, off
+    `self.has()`, rather than feeding `_pop_tech_pending` (apply_tech_effects,
+    society.py) like every other `population`-carrying entry and ramping into
+    `_pop_scale_base` over POP_TECH_RAMP_YEARS - a path WIRING_MILESTONE_4.md
+    SS1.3 already established is read by nothing, so queuing these eight
+    there as well would have the same tree-author weight doing two jobs at
+    once for no reason. The five FOOD-effect technologies are untouched and
+    still queue as normal.
     """
 
     def test_completing_a_disease_technology_does_not_queue_pop_tech_pending(self):

@@ -1,7 +1,4 @@
-"""industrial_dashboard: split verbatim from the old test_regressions.py (original lines 10883-11085).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""industrial_dashboard: regression checks, run individually with `--only industrial_dashboard`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -15,15 +12,12 @@ from .harness import *  # noqa: F401,F403
 # what moved over the last N years. See protocol.py's own block comment
 # above _material_capacity_rows for the full design note.
 # =============================================================================
-from engine.protocol import (_agent_capacity as _ACAP, _agent_economy as _AECO,
-                             _agent_changes as _ACHG, _agent_mines as _AMINES,
-                             render_capacity as _RCAP, render_economy as _REECO,
-                             render_changes as _RCHG)
+from engine.protocol import _agent_capacity as _ACAP, _agent_economy as _AECO
 
 check("the three new commands are advertised in KNOWN_COMMANDS, the same "
       "way every other command has to be - a command nobody can discover "
       "by typing 'help' does not really exist",
-      all(c in S.KNOWN_COMMANDS for c in ("capacity", "economy", "changes")),
+      all(command in S.KNOWN_COMMANDS for command in ("capacity", "economy", "changes")),
       S.KNOWN_COMMANDS)
 
 # --- `capacity` shares ONE underlying summary for resources, power, mines,
@@ -52,9 +46,9 @@ check("`capacity` reports a material's own capacity, demand and surplus, "
       "the whole point of the request was being able to reason about a "
       "bottleneck without it being hidden inside one aggregate number",
       isinstance(_dash.get("resources"), list)
-      and any(r["material"] == "iron" for r in _dash["resources"]),
+      and any(resource_row["material"] == "iron" for resource_row in _dash["resources"]),
       _dash.get("resources"))
-_iron_row = next(r for r in _dash["resources"] if r["material"] == "iron")
+_iron_row = next(resource_row for resource_row in _dash["resources"] if resource_row["material"] == "iron")
 check("...and capacity/demand/surplus actually add up the way the labels "
       "say they do",
       abs(_iron_row["surplus_t_per_yr"]
@@ -106,7 +100,7 @@ _s_fogpow = sim(capital=10_000.0)
 _s_fogpow.fog = True
 _s_fogpow.revealed = set()
 _powout = _ACAP(_s_fogpow, NODES)["power"]
-_powids = {t["id"] for t in _powout["power_tiers_you_have_discovered"]
+_powids = {tier["id"] for tier in _powout["power_tiers_you_have_discovered"]
           if isinstance(_powout["power_tiers_you_have_discovered"], list)}
 check("a fresh fogged founder's power ladder names only tiers they have "
       "actually discovered (muscle power, granted to everyone), never "
@@ -162,7 +156,7 @@ check("a window wider than the run's own recorded history is refused by "
       _chg_far.get("ok") is False and "only goes back to" in _chg_far["error"],
       _chg_far)
 _before_built = set(_s_chg.done)
-_to_start = [k for k in _s_chg.order if _s_chg.can_start(k)]
+_to_start = [node_id for node_id in _s_chg.order if _s_chg.can_start(node_id)]
 _to_start.sort(key=lambda k: NODES[k]["_total_cost"])
 for _k in _to_start[:2]:
     S._agent_dispatch(_s_chg, NODES, {"cmd": "start", "id": _k})

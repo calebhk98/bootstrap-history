@@ -1,13 +1,13 @@
 """Commodities as first-class things: iron, wool, coffee, copper, gold...
 
-THIS MODULE IS NOW IMPORTED. `economy.py`'s `wire_chain_report()` calls
+THIS MODULE IS IMPORTED: `economy.py`'s `wire_chain_report()` calls
 `CommodityLedger.propagate_demand()` -- the one mechanism here with no
 analogue anywhere in the existing code (COMMODITIES.md section 7: a
 recipe-chain demand walk that names WHICH link broke, not one flat
 throttle) -- handed THIS CIVILISATION'S ACTUAL copper numbers via
-`supply_override` below, instead of the independent national estimate
-`commodities.json` would otherwise guess. `core.py` still does not import
-this module and `Sim` still has no inventory (`Ledger`, the stock-tracking
+`supply_override` below, rather than the independent national estimate
+`commodities.json` would otherwise guess. `core.py` does not import
+this module and `Sim` has no inventory (`Ledger`, the stock-tracking
 class below, is exercised by the demo and the regression suite only): see
 `data/world/COMMODITIES.md` section "What was decided" for why a full
 swap of `resource_throttle()`/`MARKET_SHARE`/`material_price_factor()` for
@@ -28,6 +28,105 @@ import json
 import math
 import os
 import random
+from typing import (Any, cast, Dict, Iterable, List, Optional, Protocol,
+                     TypedDict)
+
+# Imported fully qualified (sim.unit_conversions, not a bare
+# unit_conversions) rather than this package's usual bare sibling-import
+# style, matching sim/engine/core.py's own documented choice to import
+# sim/world/shared_constants.py the same way - see either module's own "HOW
+# A CONSUMER USES ONE OF THESE" section for why one spelling everywhere
+# avoids this file loading a second time under a second sys.modules key.
+# Unlike core.py (which is only ever reached through an entry point that
+# has already put the repository root on sys.path - simulator.py, cli.py,
+# sim/tests/harness.py), this file is also imported directly by sim/
+# demo_commodities.py, whose own sys.path setup adds sim/ and sim/engine/
+# but not the repository root - so this file adds it itself, the same
+# guarded, idempotent snippet core.py uses, rather than depending on every
+# caller to have done it first. (`os` is already imported above; only `sys`
+# is new here.)
+import sys
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+
+
+class _RandomSource(Protocol):
+    """What `price_with_noise`/`price_series` actually need from `rng`: a
+    `gauss(mu, sigma)` method. Both a `random.Random` instance (what
+    `price_series`'s own fallback, `random.Random(1)`, passes down) and the
+    bare `random` MODULE (what `price_with_noise`'s own fallback, `rng or
+    random`, uses when called directly) satisfy this - the module exposes
+    the same functions as free functions bound to its own internal default
+    instance. `random.Random` itself is not a supertype of the module, so
+    this Protocol, not that class, is the true shared type of what these
+    two methods accept."""
+    # `mu` and `sigma` DELIBERATELY, against this project's spell-it-out rule
+    # (CLAUDE.md section 7). This Protocol exists to describe what
+    # `random.Random.gauss` accepts, and the stdlib's own signature names its
+    # parameters `mu` and `sigma`. A Protocol whose parameter names differ
+    # from the thing it describes is wrong for a keyword caller and wrong for
+    # a type checker comparing the two. The names are the stdlib's, not ours.
+    def gauss(self, mu: float, sigma: float) -> float: ...  # pylint: disable=invalid-name
+
+# A commodity record (commodities.json's own per-commodity block) and the
+# tech-tree node records this class optionally reads `mat`/`up`/`build_yrs`/
+# `yrs` off of. Both stay `Dict[str, Any]` rather than a TypedDict: this
+# module is deliberately STANDALONE (no relative import of sim/engine/data.py
+# or anywhere else - see the module docstring's own account of what imports
+# it and what it does not import), so it never sees `data.py`'s own `Node`
+# alias, and COMMODITIES.md documents a genuinely per-commodity-kind schema
+# (a mined commodity's block and a manufactured one's do not share every
+# field) the same way `sim/engine/data.py`'s own Node comment explains for
+# tech-tree nodes - see that file for the fuller version of this reasoning.
+JSONDict = Dict[str, Any]
+Commodities = Dict[str, JSONDict]
+NodeMap = Dict[str, JSONDict]
+
+
+class TradePartners(TypedDict):
+    """`trade_partners()`'s own return shape - fixed at exactly these four
+    keys, spelled out in that method's own dict literal and nowhere else."""
+    regions: List[str]
+    cost_multiplier: Optional[float]
+    reach_adjusted: bool
+    note: str
+
+
+class PropagationNode(TypedDict):
+    """One node of the tree `propagate_demand()` returns - fixed at exactly
+    the eight fields that method's own docstring documents by name, one
+    bullet per key. `children` recurses (a manufactured commodity's own
+    inputs, each itself one of these), which is why this class refers to
+    its own name in a quoted forward reference rather than needing
+    `from __future__ import annotations`."""
+    commodity: str
+    requested_t: float
+    own_capacity_t: float
+    upstream_capacity_t: float
+    delivered_t: float
+    met_fraction: float
+    bottleneck: Optional[str]
+    children: Dict[str, "PropagationNode"]
+
+
+class CommodityExplanation(TypedDict):
+    """`explain()`'s own return shape - "the brief's own bullet list...
+    answered in one call," fixed at exactly the keys that method's own
+    dict literal builds."""
+    commodity: str
+    you_produce_t_per_yr: float
+    you_can_buy_t_per_yr: float
+    country_produces_t_per_yr: float
+    produced_by: List[JSONDict]
+    consumed_by: Dict[str, Dict[str, float]]
+    trade_partners: TradePartners
+    monopoly_possible: bool
+    demand_t_per_yr: float
+    price_denarii_per_kg: float
+    base_price_denarii_per_kg: Optional[float]
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))        # sim/engine
 SIMDIR = os.path.dirname(HERE)                            # sim
@@ -35,7 +134,7 @@ ROOT = os.path.dirname(SIMDIR)                            # rome
 COMMODITIES_FILE = os.path.join(ROOT, "data", "world", "commodities.json")
 
 
-def load_commodities():
+def load_commodities() -> Commodities:
     """The commodities table, keyed by commodity id. See commodities.json's
     own `_doc` for what each field means, and COMMODITIES.md for why."""
     return json.load(open(COMMODITIES_FILE))["commodities"]
@@ -55,9 +154,11 @@ class CommodityLedger:
     recipes, prices) lives in commodities.json and needs no tech tree at all.
     """
 
-    def __init__(self, commodities=None, nodes=None, supply_override=None):
-        self.commodities = commodities if commodities is not None else load_commodities()
-        self.nodes = nodes or {}
+    def __init__(self, commodities: Optional[Commodities] = None,
+                 nodes: Optional[NodeMap] = None,
+                 supply_override: Optional[Dict[str, float]] = None) -> None:
+        self.commodities: Commodities = commodities if commodities is not None else load_commodities()
+        self.nodes: NodeMap = nodes or {}
         # A LIVE SIM KNOWS ITS OWN NUMBERS BETTER THAN THIS FILE DOES. Without
         # this, country_output() always answers from commodities.json's own
         # (separately-sourced) national_output_t_per_yr, which is a second
@@ -72,11 +173,11 @@ class CommodityLedger:
         # from the Norse. Absent for a commodity (wool, coffee, cotton...)
         # Sim does not track at all, so those fall back to commodities.json's
         # own figure exactly as before -- this is additive, not a takeover.
-        self.supply_override = supply_override or {}
+        self.supply_override: Dict[str, float] = supply_override or {}
         # Reverse index: a material key like "copper_kg" answers for at most
         # one commodity. Built once, not per call -- annual_material_demand()
         # in economy.py has the same shape of cache for the same reason.
-        self._material_to_commodity = {}
+        self._material_to_commodity: Dict[str, str] = {}
         for commodity_id, commodity in self.commodities.items():
             for material_key in commodity.get("material_keys", []):
                 self._material_to_commodity[material_key] = commodity_id
@@ -90,47 +191,57 @@ class CommodityLedger:
     # furnace does not stop burning charcoal once it is finished being
     # built. See economy.py's own comment on that halving for why.
 
-    def material_kg_per_yr(self, node_ids=(), active_ids=()):
+    def material_kg_per_yr(self, node_ids: Iterable[str] = (),
+                            active_ids: Iterable[str] = ()) -> Dict[str, float]:
         """Tonnes/yr of raw material KEYS (as they appear in `mat`, e.g.
         "copper_kg") demanded by these nodes. One level below commodities;
         commodity_demand() rolls this up."""
-        material_tonnes = collections.Counter()
+        # `Dict[str, float]`, not `collections.Counter[str]`: typeshed's own
+        # `Counter` stub fixes VALUES at `int` (it models counting hashable
+        # items), so a `Counter[str]` annotation would itself be false for
+        # this accumulator, which only ever holds tonnes (`float`). The
+        # object at runtime is still a real `collections.Counter` -
+        # `Counter` IS a `dict` subclass, so nothing about `+=`, `.items()`
+        # or any other call this file makes on it changes; `cast` is
+        # type-checking only.
+        material_tonnes: Dict[str, float] = cast(Dict[str, float], collections.Counter())
         for node_id in active_ids:
             node = self.nodes.get(node_id)
             if not node:
                 continue
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             for material_key, quantity_kg in (node.get("mat") or {}).items():
-                material_tonnes[material_key] += float(quantity_kg) / span / 1000.0        # kg -> tonnes/yr
+                material_tonnes[material_key] += float(quantity_kg) / span / KILOGRAMS_PER_TONNE        # kg -> tonnes/yr
         for node_id in node_ids:
             node = self.nodes.get(node_id)
             if not node or float(node.get("up", 0) or 0) <= 0 or not node.get("mat"):
                 continue
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             for material_key, quantity_kg in node["mat"].items():
-                material_tonnes[material_key] += 0.5 * float(quantity_kg) / span / 1000.0
+                material_tonnes[material_key] += 0.5 * float(quantity_kg) / span / KILOGRAMS_PER_TONNE
         return material_tonnes
 
-    def commodity_demand(self, node_ids=(), active_ids=()):
+    def commodity_demand(self, node_ids: Iterable[str] = (),
+                          active_ids: Iterable[str] = ()) -> Dict[str, float]:
         """Tonnes/yr of each tracked commodity DIRECTLY named in some node's
         `mat` dict. This is direct demand only: a node needing copper_wire_kg
         counts as demand for `copper_wire`, not (via the recipe) as demand
         for `copper` -- that indirect, chained demand is what
         propagate_demand() is for, deliberately kept separate. See
         COMMODITIES.md section 7."""
-        commodity_totals = collections.Counter()
+        commodity_totals: Dict[str, float] = cast(Dict[str, float], collections.Counter())  # see material_kg_per_yr's own comment on this annotation
         for material_key, tonnes in self.material_kg_per_yr(node_ids, active_ids).items():
             commodity_id = self._material_to_commodity.get(material_key)
             if commodity_id:
                 commodity_totals[commodity_id] += tonnes
         return commodity_totals
 
-    def commodity_consumers(self, commodity_id):
+    def commodity_consumers(self, commodity_id: str) -> Dict[str, Dict[str, float]]:
         """Every node id whose `mat` dict draws on this commodity, and the
         raw (un-annualised) kilograms it asks for. "What consumes it,"
         answered by name rather than by number."""
         keys = set(self.commodities[commodity_id].get("material_keys", []))
-        consumers_by_node = {}
+        consumers_by_node: Dict[str, Dict[str, float]] = {}
         for node_id, node in self.nodes.items():
             matched = {material_key: quantity_kg for material_key, quantity_kg in (node.get("mat") or {}).items() if material_key in keys}
             if matched:
@@ -153,7 +264,7 @@ class CommodityLedger:
     # (7x) = 21x, precisely because both are multiplier entries. See
     # commodities.json's gold.notes.
 
-    def best_multiplier(self, commodity_id, built):
+    def best_multiplier(self, commodity_id: str, built: Iterable[str]) -> float:
         """The output multiplier this commodity's production currently runs
         at, given a set of built node ids. 1.0 if nothing built changes it."""
         commodity = self.commodities[commodity_id]
@@ -172,7 +283,7 @@ class CommodityLedger:
                 route_best = max(route_best, mult)
         return route_best * boost
 
-    def country_output(self, commodity_id, built=()):
+    def country_output(self, commodity_id: str, built: Iterable[str] = ()) -> float:
         """Tonnes/yr the WHOLE COUNTRY produces of this commodity: "how much
         the country has," as a flow (see COMMODITIES.md section 8 for why a
         flow and not a stockpile). For a manufactured commodity (one with a
@@ -192,7 +303,7 @@ class CommodityLedger:
             base = commodity.get("import_capacity_t_per_yr", 0.0)
         return base * self.best_multiplier(commodity_id, built)
 
-    def _manufacturing_capacity_t_per_yr(self, commodity_id, built):
+    def _manufacturing_capacity_t_per_yr(self, commodity_id: str, built: Iterable[str]) -> float:
         """The PLANT/LABOUR throughput ceiling alone, before any upstream
         material cap is applied. Used both by _manufactured_output() (for the
         national aggregate) and by propagate_demand() (for a player's own
@@ -204,18 +315,19 @@ class CommodityLedger:
         base = float(commodity.get("national_manufacturing_capacity_t_per_yr", 0.0))
         return base * self.best_multiplier(commodity_id, built)
 
-    def _manufactured_output(self, commodity_id, built):
+    def _manufactured_output(self, commodity_id: str, built: Iterable[str]) -> float:
         commodity = self.commodities[commodity_id]
         cap = self._manufacturing_capacity_t_per_yr(commodity_id, built)
         recipe = commodity.get("recipe") or {}
-        limits = []
+        limits: List[float] = []
         for input_id, ratio in recipe.items():
             if ratio <= 0:
                 continue
             limits.append(self.country_output(input_id, built) / ratio)
         return min([cap] + limits) if limits else cap
 
-    def market_available(self, commodity_id, built=(), standing_multiplier=1.0):
+    def market_available(self, commodity_id: str, built: Iterable[str] = (),
+                          standing_multiplier: float = 1.0) -> float:
         """Tonnes/yr an ORDINARY buyer (you, with no special standing) can
         actually purchase out of the country's output. `standing_multiplier`
         stands in for what economy.py's MARKET_SHARE escalation by patronage
@@ -234,8 +346,9 @@ class CommodityLedger:
         share = float(commodity.get("market_share", 0.03))
         return self.country_output(commodity_id, built) * min(1.0, share * standing_multiplier)
 
-    def player_supply(self, commodity_id, own_production_t=0.0, built=(),
-                       standing_multiplier=1.0):
+    def player_supply(self, commodity_id: str, own_production_t: float = 0.0,
+                       built: Iterable[str] = (),
+                       standing_multiplier: float = 1.0) -> float:
         """What you can lay hands on this year: what you make yourself (a
         mine you sank, a farm you hold) plus what the market will sell you."""
         return own_production_t + self.market_available(commodity_id, built, standing_multiplier)
@@ -247,7 +360,7 @@ class CommodityLedger:
     # that function cannot represent "automated looms make cloth cheaper,"
     # and section 4.2 for the worked example this enables.
 
-    def price(self, commodity_id, demand_t, supply_t):
+    def price(self, commodity_id: str, demand_t: float, supply_t: float) -> float:
         """Denarii per kg, from how hard `demand_t` leans on `supply_t`,
         bounded by this commodity's own floor and ceiling (section 2's
         `price_floor_factor` / `price_ceiling_factor`)."""
@@ -260,7 +373,8 @@ class CommodityLedger:
         factor = max(floor, min(ceil_, ratio ** elastic))
         return base * factor
 
-    def price_with_noise(self, commodity_id, demand_t, supply_t, rng=None, sigma=0.08):
+    def price_with_noise(self, commodity_id: str, demand_t: float, supply_t: float,
+                          rng: Optional[_RandomSource] = None, sigma: float = 0.08) -> float:
         """The same price, with a year's worth of ordinary market wobble on
         top: the "+/- fluctuation" the brief asks for, literally. See
         COMMODITIES.md section 4.3 for what this is (decoration on the
@@ -275,7 +389,9 @@ class CommodityLedger:
         noisy = fundamental * math.exp(rng.gauss(0.0, sigma))
         return max(floor, min(ceil_, noisy))
 
-    def price_series(self, commodity_id, demand_t, supply_t, years, rng=None, sigma=0.08):
+    def price_series(self, commodity_id: str, demand_t: float, supply_t: float,
+                      years: int, rng: Optional[_RandomSource] = None,
+                      sigma: float = 0.08) -> List[float]:
         """`years` of price_with_noise(), independently drawn each year
         around the same fundamental. A market under no shifting pressure
         still wobbles year to year rather than sitting on one number
@@ -289,8 +405,9 @@ class CommodityLedger:
 
     # ---- monopoly -----------------------------------------------------
 
-    def monopoly_price(self, commodity_id, marginal_cost, alternative_price=None,
-                        max_margin=6.0, min_margin=1.1):
+    def monopoly_price(self, commodity_id: str, marginal_cost: float,
+                        alternative_price: Optional[float] = None,
+                        max_margin: float = 6.0, min_margin: float = 1.1) -> float:
         """What a sole supplier charges: not the market-clearing price, but
         whatever a buyer with no alternative will pay, capped by the cost of
         their NEXT-BEST alternative (`alternative_price`), or by
@@ -303,7 +420,7 @@ class CommodityLedger:
 
     # ---- trade ----------------------------------------------------------
 
-    def trade_partners(self, commodity_id):
+    def trade_partners(self, commodity_id: str) -> TradePartners:
         """Regions this commodity can be had from, and the flat (Roman-
         calibrated) cost multiplier geography.json already carries for it.
         NOT adjusted for a specific civilization's reach -- that needs a
@@ -330,8 +447,10 @@ class CommodityLedger:
     # file with no analogue anywhere in the existing code. See
     # COMMODITIES.md section 7 for the full worked example.
 
-    def propagate_demand(self, commodity_id, quantity_t, built=(), own_production=None,
-                          standing_multiplier=1.0):
+    def propagate_demand(self, commodity_id: str, quantity_t: float,
+                          built: Iterable[str] = (),
+                          own_production: Optional[Dict[str, float]] = None,
+                          standing_multiplier: float = 1.0) -> PropagationNode:
         """Ask for `quantity_t` tonnes/yr of `commodity_id`, and find out how
         much of it you can ACTUALLY get, walking the recipe graph down to raw
         materials and reporting back up which link broke.
@@ -365,9 +484,9 @@ class CommodityLedger:
         _manufacturing_capacity_t_per_yr()'s own comment.
         """
         own_production = own_production or {}
-        report = {}
+        report: Dict[str, PropagationNode] = {}
 
-        def own_capacity(cid):
+        def own_capacity(cid: str) -> float:
             # A LEAF commodity named in supply_override skips this file's
             # own national-output guess entirely: economy.py's
             # wire_chain_report() passes THIS civilisation's actual copper
@@ -377,20 +496,21 @@ class CommodityLedger:
             if cid in self.supply_override:
                 return own_production.get(cid, 0.0) + float(self.supply_override[cid])
             commodity = self.commodities[cid]
+            base: float
             if commodity.get("recipe"):
                 base = self._manufacturing_capacity_t_per_yr(cid, built)
             else:
-                base = commodity.get("national_output_t_per_yr")
-                if base is None:
-                    base = commodity.get("import_capacity_t_per_yr", 0.0)
-                base *= self.best_multiplier(cid, built)
+                national = commodity.get("national_output_t_per_yr")
+                if national is None:
+                    national = commodity.get("import_capacity_t_per_yr", 0.0)
+                base = float(national) * self.best_multiplier(cid, built)
             share = float(commodity.get("market_share", 0.03))
             return own_production.get(cid, 0.0) + base * min(1.0, share * standing_multiplier)
 
-        def visit(cid, requested_t):
+        def visit(cid: str, requested_t: float) -> PropagationNode:
             commodity = self.commodities[cid]
             recipe = commodity.get("recipe") or {}
-            children = {}
+            children: Dict[str, PropagationNode] = {}
             upstream_cap_t = float("inf")
             for input_id, ratio in recipe.items():
                 if ratio <= 0:
@@ -403,7 +523,7 @@ class CommodityLedger:
             delivered_t = min(requested_t, capacity_t)
             met = (delivered_t / requested_t) if requested_t > 0 else 1.0
             bottleneck = cid if (supply_t < requested_t - 1e-9 and supply_t <= upstream_cap_t + 1e-9) else None
-            node = {
+            node: PropagationNode = {
                 "commodity": cid, "requested_t": requested_t, "own_capacity_t": supply_t,
                 "upstream_capacity_t": upstream_cap_t, "delivered_t": delivered_t,
                 "met_fraction": met, "bottleneck": bottleneck, "children": children,
@@ -413,16 +533,16 @@ class CommodityLedger:
 
         return visit(commodity_id, quantity_t)
 
-    def bottlenecks(self, propagation_node):
+    def bottlenecks(self, propagation_node: PropagationNode) -> List[str]:
         """Every commodity id propagate_demand() flagged as the ORIGIN of a
         shortfall (not merely a commodity that inherited one), in the order
         found."""
-        out = []
+        out: List[str] = []
 
-        def walk(n):
-            if n["bottleneck"]:
-                out.append(n["bottleneck"])
-            for child in n["children"].values():
+        def walk(node: PropagationNode) -> None:
+            if node["bottleneck"]:
+                out.append(node["bottleneck"])
+            for child in node["children"].values():
                 walk(child)
 
         walk(propagation_node)
@@ -430,8 +550,9 @@ class CommodityLedger:
 
     # ---- the one-call answer to the brief's own bullet list --------------
 
-    def explain(self, commodity_id, built=(), own_production_t=0.0, demand_t=None,
-                standing_multiplier=1.0):
+    def explain(self, commodity_id: str, built: Iterable[str] = (),
+                own_production_t: float = 0.0, demand_t: Optional[float] = None,
+                standing_multiplier: float = 1.0) -> CommodityExplanation:
         """"how much you have, how much the country has, what produces it,
         what consumes it, who can we trade it for, market value for it
         (+/- fluctuation)" -- in the brief's own words, answered in one call.
@@ -469,18 +590,21 @@ class Ledger:
     for real is second-pass work, not done here.
     """
 
-    def __init__(self):
-        self._stock = collections.Counter()
+    def __init__(self) -> None:
+        # Dict[str, float], not Counter[str]: see material_kg_per_yr's own
+        # comment above on why this file's own float-valued Counters are
+        # annotated that way rather than with typeshed's int-only stub.
+        self._stock: Dict[str, float] = cast(Dict[str, float], collections.Counter())
 
-    def add(self, commodity_id, kg):
-        self._stock[commodity_id] += kg
+    def add(self, commodity_id: str, kilograms: float) -> None:
+        self._stock[commodity_id] += kilograms
 
-    def remove(self, commodity_id, kg):
-        """Take up to `kg`; returns how much was actually available."""
+    def remove(self, commodity_id: str, kilograms: float) -> float:
+        """Take up to `kilograms`; returns how much was actually available."""
         have = self._stock[commodity_id]
-        taken = min(have, kg)
+        taken = min(have, kilograms)
         self._stock[commodity_id] -= taken
         return taken
 
-    def on_hand(self, commodity_id):
+    def on_hand(self, commodity_id: str) -> float:
         return self._stock[commodity_id]

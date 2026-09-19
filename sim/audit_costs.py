@@ -48,21 +48,24 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import simulator as S
+# Guarded, idempotent - see sim/engine/commodities.py's own comment at the
+# identical snippet for why this needs adding explicitly rather than
+# trusting a caller to have put the repository root on sys.path already.
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from sim.presentation import (
+    AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
+    AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
 
 
 # A material key is a priced line item ("iron_bar_kg"), a node id is not
-# ("mat_iron_bar"). Stripping the unit suffix is how the two vocabularies WERE
-# related, by convention and nothing else, and this file used to say that when
-# the production side was authored properly the guesswork should be replaced
-# by an explicit declaration of what a thing produces.
-#
-# THAT DAY ARRIVED AND THIS TOOL DID NOT NOTICE. `data/production/` states
-# `outputs` explicitly for 196 recipes, and asking it is not a guess. Reading
-# the tree alone, this audit was reporting "no producer at all" for
-# iron_bar_kg, timber_m3, steel_plate_kg, wood_kg, glass_raw_kg and coal_kg -
-# every one of which `sim/solve_prices.py` prices from a real recipe, iron at
-# 0.96 labour-hours per kg. CLAUDE.md points agents here to see where the cost
-# base is, so a stale answer here is a stale answer for everyone.
+# ("mat_iron_bar"). Stripping the unit suffix is a GUESS at which node
+# produces a material, related only by convention - it answers "does the
+# TREE know which node makes this", not "does anything make this".
+# `data/production/` answers the second question directly: it states
+# `outputs` explicitly for 196 recipes, so asking it is not a guess.
+# CLAUDE.md points agents here to see where the cost base is, so a stale
+# answer here is a stale answer for everyone.
 #
 # The node guess is KEPT rather than deleted, because the two questions are
 # different and both worth an answer: "does anything make this" is now settled
@@ -109,15 +112,11 @@ def wage_table(prices):
     return out
 
 
-def audit():
-    tree, prices, nodes, _wages, _goods = S.load()
-    if not isinstance(nodes, dict):
-        nodes = {node["id"]: node for node in nodes}
-    wages = wage_table(prices)
-    mat_price = {material_key: float(value["p"])
-                 for material_key, value in (prices.get("purchase_prices_denarii") or {}).items()
-                 if isinstance(value, dict) and "p" in value}
-
+def _audit_materials_table(nodes, mat_price):
+    """{material -> consumption/production facts}, one entry per material any
+    node consumes. The OUTPUT SIDE the module docstring is about: what makes it
+    (from data/production/, not a guess) and whether the TREE names a node for
+    it (still a guess, see guessed_producer_node)."""
     consumers = collections.Counter()
     for node in nodes.values():
         for key in (node.get("mat") or {}):
@@ -141,7 +140,10 @@ def audit():
             "producer_declares_output": bool(producer and producer.get("annual_output_t")),
             "book_price_denarii": mat_price.get(key),
         })
+    return materials
 
+
+def _audit_cost_totals(nodes, wages, mat_price):
     # Where the denarii actually are. `cap` is documented as capital BEYOND
     # labour and materials, so these three are additive, not overlapping.
     totals = collections.Counter()
@@ -153,123 +155,173 @@ def audit():
                                    for material_key, quantity in (node.get("mat") or {}).items()
                                    if material_key in mat_price)
         totals["capital_lump"] += float(node.get("cap") or 0.0)
+    return totals
 
+
+def _audit_price_confidence(prices):
     conf = collections.Counter()
     for section in ("purchase_prices_denarii", "wage_rates_denarii_per_hour",
                     "transport_multipliers", "starting_kit_options"):
         for value in (prices.get(section) or {}).values():
             if isinstance(value, dict) and "conf" in value:
                 conf[value["conf"]] += 1
+    return conf
 
+
+def _audit_fields_populated(nodes):
     def populated(field):
         return sum(1 for node in nodes.values()
                    if node.get(field) not in (None, 0, 0.0, "", {}, []))
+    return {field: populated(field)
+            for field in ("lab", "mat", "ph", "cap", "rev", "up")}
+
+
+def audit():
+    tree, prices, nodes, _wages, _goods = S.load()
+    if not isinstance(nodes, dict):
+        nodes = {node["id"]: node for node in nodes}
+    wages = wage_table(prices)
+    mat_price = {material_key: float(value["p"])
+                 for material_key, value in (prices.get("purchase_prices_denarii") or {}).items()
+                 if isinstance(value, dict) and "p" in value}
 
     return {
         "nodes": len(nodes),
-        "fields_populated": {field: populated(field)
-                             for field in ("lab", "mat", "ph", "cap", "rev", "up")},
-        "cost_base_denarii": dict(totals),
-        "price_confidence": dict(conf),
-        "materials": materials,
+        "fields_populated": _audit_fields_populated(nodes),
+        "cost_base_denarii": dict(_audit_cost_totals(nodes, wages, mat_price)),
+        "price_confidence": dict(_audit_price_confidence(prices)),
+        "materials": _audit_materials_table(nodes, mat_price),
     }
 
 
-def _bar(share, width=28):
+def _bar(share, width=AUDIT_BAR_WIDTH_CHARS):
     filled = int(round(share * width))
     return "#" * filled + "." * (width - filled)
 
 
-def report(a, show_materials=False):
-    node_count = a["nodes"]
-    print("TECH TREE COST AUDIT")
-    print("=" * 72)
-    print("%d nodes\n" % node_count)
-
-    print("INPUT SIDE - what every process consumes. Already physical:")
+def _report_header_and_input_side(audit):
+    """Title, node count, and the INPUT SIDE block: what every process consumes,
+    already physical."""
+    node_count = audit["nodes"]
+    lines = ["TECH TREE COST AUDIT", "=" * 72, "%d nodes\n" % node_count,
+             "INPUT SIDE - what every process consumes. Already physical:"]
     for field, unit in (("lab", "hours by trade"), ("mat", "kg / units"),
                     ("ph", "founder hours")):
-        c = a["fields_populated"][field]
-        print("  %-4s %-16s %5d nodes  %5.1f%%  %s"
-              % (field, unit, c, 100.0 * c / node_count, _bar(c / node_count)))
-    print()
+        count = audit["fields_populated"][field]
+        lines.append("  %-4s %-16s %5d nodes  %5.1f%%  %s"
+              % (field, unit, count, 100.0 * count / node_count, _bar(count / node_count)))
+    lines.append("")
+    return lines
 
-    print("OUTPUT SIDE - what anything produces:")
-    mats = a["materials"]
+
+def _report_output_side(audit):
+    """OUTPUT SIDE block: what anything produces, and (if any) what still has
+    no recipe at all."""
+    mats = audit["materials"]
     made = [material for material in mats if material["made_by_recipes"]]
-    print("  materials consumed somewhere in the tree      %5d" % len(mats))
-    print("  ...that data/production/ states a recipe for  %5d  %5.1f%%"
-          % (len(made), 100.0 * len(made) / max(1, len(mats))))
-    print()
-    print("  This used to read 'no producer at all' for iron, timber, coal and")
-    print("  most of the rest, because it asked the TREE, which records what a")
-    print("  node consumes and never what anything makes. data/production/ does")
-    print("  state it, so the question is now answered rather than guessed.")
-    print()
+    lines = ["OUTPUT SIDE - what anything produces:",
+             "  materials consumed somewhere in the tree      %5d" % len(mats),
+             "  ...that data/production/ states a recipe for  %5d  %5.1f%%"
+                  % (len(made), 100.0 * len(made) / max(1, len(mats))),
+             "",
+             "  Counted from data/production/, not from the tree. The tree",
+             "  records what each node CONSUMES and never what anything makes,",
+             "  so asking it this question can only ever return 'no producer at",
+             "  all' for iron, timber, coal and most of the rest.",
+             ""]
     unmade = [material for material in mats if not material["made_by_recipes"]]
     if unmade:
-        print("  Still nothing makes these, worst first:")
-        for material in unmade[:6]:
-            print("      %-18s consumed by %4d nodes" % (material["material"],
+        lines.append("  Still nothing makes these, worst first:")
+        for material in unmade[:AUDIT_UNPRICED_MATERIALS_SHOWN]:
+            lines.append("      %-18s consumed by %4d nodes" % (material["material"],
                                                          material["consumed_by_nodes"]))
-        print()
+        lines.append("")
+    return lines
 
+
+def _report_tree_side_question(audit):
     # THE TREE-SIDE QUESTION, WHICH IS STILL OPEN AND IS NOT THE SAME ONE.
     # Knowing that something makes iron does not say WHICH TECHNOLOGY lets you
     # make it, and that is what a recipe has to be gated on - see
     # Complaints/39 and `requires_node` in data/production/_SCHEMA.md.
+    mats = audit["materials"]
     with_producer = [material for material in mats if material["producer"]]
-    print("  Separately: does the TREE name a node for the material? This is")
-    print("  the suffix-stripping guess, and it is the link `requires_node`")
-    print("  now replaces with something explicit (Complaints/39).")
-    print("  ...a node id that plausibly matches the key   %5d  %5.1f%%"
-          % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))))
-    print()
+    return ["  Separately: does the TREE name a node for the material? This is",
+            "  the suffix-stripping guess, and it is the link `requires_node`",
+            "  now replaces with something explicit (Complaints/39).",
+            "  ...a node id that plausibly matches the key   %5d  %5.1f%%"
+                  % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))),
+            ""]
 
-    print("STILL PRICED FROM A BOOK - where the denarii come from today:")
-    cb = a["cost_base_denarii"]
-    total = sum(cb.values()) or 1.0
+
+def _report_cost_base(audit):
+    """STILL PRICED FROM A BOOK block: where the denarii come from today."""
+    cost_base = audit["cost_base_denarii"]
+    total = sum(cost_base.values()) or 1.0
+    lines = ["STILL PRICED FROM A BOOK - where the denarii come from today:"]
     for cost_key, label in (("materials", "materials (mat, physical)"),
                      ("capital_lump", "capital lump (cap, denarii)"),
                      ("labour", "hired labour (lab, physical)")):
-        print("  %-28s %14s  %5.1f%%  %s"
-              % (label, format(cb[cost_key], ",.0f"), 100.0 * cb[cost_key] / total,
-                 _bar(cb[cost_key] / total)))
-    print("  %-28s %14s" % ("TOTAL", format(total, ",.0f")))
-    print()
-    print("  Materials and labour are already physical quantities, so pricing")
-    print("  them endogenously converts %.1f%% of the cost base without editing"
-          % (100.0 * (cb["materials"] + cb["labour"]) / total))
-    print("  a single node. The capital lump is %.1f%% and needs converting to a"
-          % (100.0 * cb["capital_lump"] / total))
-    print("  bill of buildings, tools and land.")
-    print()
+        lines.append("  %-28s %14s  %5.1f%%  %s"
+              % (label, format(cost_base[cost_key], ",.0f"), 100.0 * cost_base[cost_key] / total,
+                 _bar(cost_base[cost_key] / total)))
+    lines.append("  %-28s %14s" % ("TOTAL", format(total, ",.0f")))
+    lines.append("")
+    lines.append("  Materials and labour are already physical quantities, so pricing")
+    lines.append("  them endogenously converts %.1f%% of the cost base without editing"
+          % (100.0 * (cost_base["materials"] + cost_base["labour"]) / total))
+    lines.append("  a single node. The capital lump is %.1f%% and needs converting to a"
+          % (100.0 * cost_base["capital_lump"] / total))
+    lines.append("  bill of buildings, tools and land.")
+    lines.append("")
+    return lines
 
-    c = a["price_confidence"]
-    confidence_total = sum(c.values()) or 1
-    print("CONFIDENCE IN THE BOOK ITSELF (data/prices.json):")
+
+def _report_price_confidence(audit):
+    confidence = audit["price_confidence"]
+    confidence_total = sum(confidence.values()) or 1
+    lines = ["CONFIDENCE IN THE BOOK ITSELF (data/prices.json):"]
     for grade, meaning in (("A", "well attested"),
                            ("B", "probable, contested in detail"),
                            ("C", "the author's own estimate")):
-        print("  %s  %-32s %4d  %5.1f%%"
-              % (grade, meaning, c.get(grade, 0), 100.0 * c.get(grade, 0) / confidence_total))
-    print()
+        lines.append("  %s  %-32s %4d  %5.1f%%"
+              % (grade, meaning, confidence.get(grade, 0), 100.0 * confidence.get(grade, 0) / confidence_total))
+    lines.append("")
+    return lines
 
-    if show_materials:
-        print("EVERY MATERIAL")
-        print("-" * 72)
-        print("  %-22s %6s  %-30s %s" % ("material", "used", "made by", "state"))
-        for material in mats:
-            recipes = material["made_by_recipes"]
-            if not recipes:
-                state = "NOTHING MAKES IT"
-            elif len(recipes) > 1:
-                state = "%d techniques compete" % len(recipes)
-            else:
-                state = "one technique"
-            print("  %-22s %6d  %-30s %s"
+
+def _report_every_material(audit):
+    """`--materials`: every material, who consumes it, and what makes it."""
+    lines = ["EVERY MATERIAL", "-" * 72,
+             "  %-22s %6s  %-30s %s" % ("material", "used", "made by", "state")]
+    for material in audit["materials"]:
+        recipes = material["made_by_recipes"]
+        if not recipes:
+            state = "NOTHING MAKES IT"
+        elif len(recipes) > 1:
+            state = "%d techniques compete" % len(recipes)
+        else:
+            state = "one technique"
+        lines.append("  %-22s %6d  %-30s %s"
                   % (material["material"], material["consumed_by_nodes"],
-                     ", ".join(recipes)[:30] or "-", state))
+                     ", ".join(recipes)[:AUDIT_RECIPE_LIST_TRUNCATE_CHARS] or "-", state))
+    return lines
+
+
+def report(audit, show_materials=False):
+    for line in _report_header_and_input_side(audit):
+        print(line)
+    for line in _report_output_side(audit):
+        print(line)
+    for line in _report_tree_side_question(audit):
+        print(line)
+    for line in _report_cost_base(audit):
+        print(line)
+    for line in _report_price_confidence(audit):
+        print(line)
+    if show_materials:
+        for line in _report_every_material(audit):
+            print(line)
 
 
 def main(argv=None):

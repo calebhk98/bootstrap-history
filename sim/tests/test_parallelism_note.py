@@ -1,7 +1,4 @@
-"""parallelism_note: split verbatim from the old test_regressions.py (original lines 8787-8854).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""parallelism_note: regression checks, run individually with `--only parallelism_note`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -16,8 +13,8 @@ from .harness import *  # noqa: F401,F403
 # every active project is purely waiting on the calendar.
 # =============================================================================
 _par = sim(capital=1_000_000.0)
-_par_target = next((k for k in _par.order
-                    if NODES[k]["yrs"] >= 2 and _par.can_start(k)), None)
+_par_target = next((node_id for node_id in _par.order
+                    if NODES[node_id]["yrs"] >= 2 and _par.can_start(node_id)), None)
 check("a real startable multi-year project exists to test the tutorial "
       "note against",
       _par_target is not None, _par_target)
@@ -30,8 +27,8 @@ if _par_target:
           "a_calendar_floor_is_not_exclusive_research_time" in _par_out
           and "else" in _par_note,
           _par_note)
-    _par_target2 = next((k for k in _par.order
-                         if NODES[k]["yrs"] >= 2 and _par.can_start(k)), None)
+    _par_target2 = next((node_id for node_id in _par.order
+                         if NODES[node_id]["yrs"] >= 2 and _par.can_start(node_id)), None)
     if _par_target2:
         _par_out2 = S._agent_dispatch(_par, NODES, {"cmd": "start", "id": _par_target2})
         check("...but only once - a second long project in the same run "
@@ -41,9 +38,9 @@ if _par_target:
 
 # --- free hours, shouted, when everything running is calendar-bound.
 _fh = sim(capital=1_000_000.0)
-_fh_target = next((k for k in _fh.order
-                   if NODES[k]["yrs"] >= 3 and NODES[k]["ph"] > 0
-                   and _fh.can_start(k)), None)
+_fh_target = next((node_id for node_id in _fh.order
+                   if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0
+                   and _fh.can_start(node_id)), None)
 check("a startable project with real founder-hours AND a real calendar "
       "floor exists to test this against",
       _fh_target is not None, _fh_target)
@@ -65,10 +62,38 @@ if _fh_target:
     # here, which would advance the year and recompute ph_left out from
     # under the fixture this check depends on.
     import inspect as _insp
-    check("...and the field is assigned inside _agent_state() itself, which "
-          "`step`'s own reply is built from - not something 'state' adds on "
-          "top afterward",
-          "free_hours_going_unused" in _insp.getsource(_protocol._agent_state),
-          "checked _agent_state's own source")
+    # _agent_state() PLUS ITS OWN SECTION HELPERS, NOT _agent_state() ALONE:
+    # _agent_state() is a short assembler over `_agent_state_*` helpers, one
+    # per section of the reply, and the assignment this check is about lives
+    # in _agent_state_training_and_hours.
+    #
+    # Reading only the assembler's own source would let this check pass on a
+    # COMMENT that happens to name the field - a substring search cannot tell
+    # that from a real assignment, and a check that passes on prose is worse
+    # than no check, because it still reads as evidence. Gathering the
+    # helpers by prefix puts the real assignment back in scope, and keeps it
+    # there across any future re-split.
+    #
+    # The property being asserted: whichever part of _agent_state's own call
+    # graph produces this field, it must be that call graph, so that `step`'s
+    # reply - built from the same _agent_state() call - gets the field
+    # without anyone maintaining a second copy.
+    # READ THE DEFINING MODULE, NOT THE SHIM: engine/protocol.py re-exports a
+    # fixed list of public protocol names and the section helpers are not on
+    # it, so gathering them off the shim finds nothing, and this check would
+    # then pass on prose alone rather than the real assignment.
+    # engine.proto.state is where they are defined.
+    from engine.proto import state as _state_module
+    _state_source = "".join(
+        [_insp.getsource(_state_module._agent_state)]
+        + [_insp.getsource(getattr(_state_module, _name))
+           for _name in sorted(dir(_state_module))
+           if _name.startswith("_agent_state_")
+           and callable(getattr(_state_module, _name, None))])
+    check("...and the field is assigned inside _agent_state()'s own call "
+          "graph, which `step`'s own reply is built from - not something "
+          "'state' adds on top afterward",
+          "free_hours_going_unused" in _state_source,
+          "checked _agent_state and its _agent_state_* section helpers")
 
 

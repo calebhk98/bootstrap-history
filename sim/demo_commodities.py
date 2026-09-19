@@ -59,7 +59,6 @@ def main():
     demand_t = 20000.0    # an illustrative economy-wide demand for cloth, not derived
                             # from any one project's bill of materials -- see COMMODITIES.md
                             # section 4.2 for why this is a separate, aggregate figure.
-    cloth = led.commodities["cloth"]
     for built, label in ([], "no loom beyond the baseline"), (["tex_power_loom"], "power loom built"):
         country = led.country_output("cloth", built)
         supply = led.market_available("cloth", built)
@@ -148,11 +147,11 @@ def main():
     print("   handed a live Sim's reachable copper instead of commodities.json's own")
     print("   separate national estimate (CommodityLedger's supply_override). Rome")
     print("   and the Norse do not share one number, because they do not share one coastline.")
-    _TREE, _PRICES, S_NODES, _WAGES, _GOODS = S.load()
-    GOAL = _TREE["meta"]["goal_node"]
-    _LAB, ORDER, _B = S.load_strategy("recommended", S_NODES, GOAL)
+    tree, prices, sim_nodes, wages, goods = S.load()
+    goal = tree["meta"]["goal_node"]
+    strategy_label, order, bounties = S.load_strategy("recommended", sim_nodes, goal)
     for civ in ("rome_100ad", "norse_900ad"):
-        sim_s = S.Sim(S_NODES, ORDER, random.Random(1), events=False, manual=True,
+        sim_s = S.Sim(sim_nodes, order, random.Random(1), events=False, manual=True,
                       civ=S.load_civ(civ))
         report = sim_s.wire_chain_report(500.0)
         print("   %-14s: reachable copper %7.1f t/yr -> wire delivered %6.1f t/yr "

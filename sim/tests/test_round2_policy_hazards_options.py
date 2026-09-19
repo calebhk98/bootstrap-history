@@ -1,7 +1,4 @@
-"""round2_policy_hazards_options: split verbatim from the old test_regressions.py (original lines 920-3156).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""round2_policy_hazards_options: regression checks, run individually with `--only round2_policy_hazards_options`."""
 from .harness import *  # noqa: F401,F403
 
 # ============================================================================
@@ -16,11 +13,11 @@ import time as _time
 # rest of abstract science) were not, even though several of those nodes carry
 # real upkeep the same way Newton's laws does. A loss-making node that is
 # neither is the control: it SHOULD still be shed.
-# hom_eraser_breadcrumb used to be that control, but the JOB 1 upkeep audit
-# correctly zeroed its upkeep (a rubber eraser is a technique, not an
-# establishment), so it stopped bleeding money and stopped exercising this
-# path. md2_sand_filtration is a real establishment kind of node (it
-# stayed in the audit's kept "mining" category) that still carries upkeep.
+# The control must be a real establishment node that still carries upkeep
+# under the JOB 1 upkeep audit - a technique such as hom_eraser_breadcrumb has
+# zero upkeep there (a rubber eraser is a technique, not an establishment) and
+# so never exercises this path. md2_sand_filtration stayed in the audit's
+# kept "mining" category and still carries upkeep.
 _KNOW1, _KNOW2, _LOSS = "md2_cell_theory", "md2_dna", "md2_sand_filtration"
 s = sim()
 check("theory and knowledge categories are protected the same way physics is",
@@ -213,9 +210,9 @@ check("available returns quickly under fog, not in tens of seconds",
 # ============================================================================
 # Round two, section P: a hazard can carry a `values` delta, the same way a
 # technology does, and it must land gradually and be visible while it is
-# happening. Norse Christianisation (995-1100) is the case in point: it now
-# carries a `values` block in the civ file instead of the ENGINE TODO note
-# that used to stand in for it.
+# happening. Norse Christianisation (995-1100) is the case in point: it
+# carries a `values` block in the civ file, not a placeholder ENGINE TODO
+# note.
 # ============================================================================
 
 _christ = next(hazard for hazard in S.load_civ("norse_900ad")["hazards"]
@@ -226,9 +223,9 @@ check("Christianisation now carries a values delta, not just a TODO note",
 # --- gradual, not a single jump: one year of a 106-year hazard should move
 # the needle by roughly a hundredth of the total, not all of it at once.
 s = sim(civ="norse_900ad")
-before = dict(s.w)
+before = dict(s.value_weights)
 s._shocks(995)
-step1 = s.w["w_religious_rigidity"] - before["w_religious_rigidity"]
+step1 = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
 total_asked = _christ["values"]["w_religious_rigidity"]
 check("a hazard's values shift lands gradually: one year moves it a fraction "
       "of the total, not the whole amount",
@@ -238,7 +235,7 @@ check("a hazard's values shift lands gradually: one year moves it a fraction "
 # across every year in between (995 already applied above; finish the span).
 for yr in range(996, 1101):
     s._shocks(yr)
-total_moved = s.w["w_religious_rigidity"] - before["w_religious_rigidity"]
+total_moved = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
 check("a hazard's values shift reaches its full stated amount across the "
       "full span of years",
       abs(total_moved - total_asked) < 1e-6,
@@ -262,14 +259,14 @@ s2 = sim(civ="norse_900ad")
 s2.civ = dict(s2.civ)
 s2.civ["hazards"] = [{"name": "values-only test hazard",
                       "values": {"w_novelty": -0.2}, "years": [900, 909]}]
-s2.w = s2.civ["values"] = dict(s2.w)
-f0 = s2.w["w_novelty"]
+s2.value_weights = s2.civ["values"] = dict(s2.value_weights)
+f0 = s2.value_weights["w_novelty"]
 for yr in range(900, 910):
     s2._shocks(yr)
 check("a hazard that carries ONLY a values delta (no staff_loss, sack_chance, "
       "output_factor or real_erosion) still moves the society",
-      abs(s2.w["w_novelty"] - (f0 - 0.2)) < 1e-6,
-      "%.4f -> %.4f" % (f0, s2.w["w_novelty"]))
+      abs(s2.value_weights["w_novelty"] - (f0 - 0.2)) < 1e-6,
+      "%.4f -> %.4f" % (f0, s2.value_weights["w_novelty"]))
 
 # --- foreseeable, not just felt: knowledge_risk must let a player see the
 # shift coming before it starts, the same complaint that section G raised
@@ -415,11 +412,10 @@ _menu_cfg_dir = tempfile.mkdtemp()
 _menu_cfg = os.path.join(_menu_cfg_dir, "menu_default_cfg.json")
 _menu_env = dict(os.environ, ROME_SIM_CONFIG=_menu_cfg)
 _menu_env.pop("ROME_SAVE_DIR", None)
-# THE MENU NOW DROPS INTO `play`, NOT `agent`. It used to hand a person a JSON
-# prompt, which is the right front end for a script and the wrong one for the
-# human the menu exists to greet; `play` speaks typed words over the same
-# dispatcher. So the commands fed here are typed, and what comes back is the
-# rendered view rather than JSON.
+# THE MENU DROPS INTO `play`, NOT `agent`: a JSON prompt is the right front
+# end for a script and the wrong one for the human the menu exists to greet;
+# `play` speaks typed words over the same dispatcher. So the commands fed
+# here are typed, and what comes back is the rendered view rather than JSON.
 _menu_input = "1\n1\ny\n\ny\n\n\nstate\nquit\n"
 _pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                      input=_menu_input, capture_output=True, text=True, timeout=120,
@@ -607,17 +603,16 @@ check("...and carries its remembered horizon along with it",
       os.path.exists(_mv_to + ".meta.json"), os.listdir(_mv_dir))
 
 # =============================================================================
-# THE CORRECTION: Options is for the APPLICATION, not for any one game. The
-# main-menu Options screen used to hold defaults for the NEXT new game
-# (civilisation, starting kit, fog, mortality, horizon) - the wrong things,
-# by the owner's own words: "change where saves are, change language, change
-# window size, etc? Not about each save, like fog or mortality?" It now holds
-# save location (unchanged), display width, rows per table, and whether the
-# welcome/tutorial text prints. The five per-game defaults are not deleted -
-# they move to "whatever the New Game wizard was told last time", written
-# back silently the moment a game actually starts (cli.py's _new_game), with
-# no settings screen of their own; horizon/mortality's own mid-game-changeable
-# capability stays exactly where it was, the in-game 'options' command.
+# THE PRINCIPLE: Options is for the APPLICATION, not for any one game. The
+# main-menu Options screen holds save location, display width, rows per
+# table, and whether the welcome/tutorial text prints - never per-game
+# choices such as civilisation, starting kit, fog, mortality or horizon, by
+# the owner's own words: "change where saves are, change language, change
+# window size, etc? Not about each save, like fog or mortality?" Those five
+# per-game defaults live in "whatever the New Game wizard was told last
+# time", written back silently the moment a game actually starts (cli.py's
+# _new_game), with no settings screen of their own; horizon and mortality
+# stay mid-game-changeable through the in-game 'options' command.
 # =============================================================================
 
 _appopt_dir = tempfile.mkdtemp()
@@ -1129,7 +1124,7 @@ def _hazard_advice_names_hedges():
     hazard_sim = sim(civ="mexica_1500", manual=False)
     hazard_sim.fog = True
     hazard_sim.revealed = set()
-    for _i in range(45):
+    for _year in range(45):
         hazard_sim.step()
     counters = {node_id for node_id, _s2, _hazard_label in hazard_sim.HAZARD_COUNTERS["staff_loss"]}
     near = counters | {prereq_id for node_id in counters if node_id in NODES
@@ -1185,10 +1180,11 @@ check("the mining commands the help gives actually parse",
 #    goal's seven missing prerequisites by name. The tester crawled that error
 #    recursively and recovered 134 hidden ids and the whole graph to the
 #    transistor, in six rounds, with fog on throughout.
-# GOAL, not the name of whichever node the goal used to be. These pinned
-# point_contact_transistor, which stopped being the goal when the 1947 device
-# became a milestone on the way to the 1951 one, and the checks then asserted
-# the goal's fog exception about a node that no longer has it.
+# GOAL, not a hardcoded node id: which node is the goal can change (the 1947
+# device point_contact_transistor became a milestone on the way to the 1951
+# one rather than the goal itself), and a check that names a node directly
+# would then assert the goal's fog exception about a node that does not
+# carry it.
 _bt, _, _ = proto([{"cmd": "bounty", "id": GOAL},
                    {"cmd": "start", "id": GOAL},
                    {"cmd": "mothball", "id": GOAL},
@@ -1422,21 +1418,21 @@ check("you cannot commit to more work than cash and credit could ever cover",
 # S14. A node that costs nothing to build and 20 a year to keep could be shut
 # down and brought back around the annual tick for nothing, so its upkeep was
 # optional. The engine already gets this right for mines.
-# This used to pick its own candidate by filter (up>0, no prerequisite,
-# project_cost under 1 denarius); the JOB 1 upkeep audit zeroed `up` on every
-# node that filter used to find (they were all techniques, correctly), and
-# every remaining up>0/no-prerequisite/near-free node turned out to be
-# something auto-granted on turn one (a capability rung, a road network) -
-# excluded by `not in s.granted` and so invisible to the filter too. There is
-# also a sharper reason to stop computing this dynamically: `s.done.add`
-# below bypasses `start`'s own prerequisite check, but restore_work has its
-# OWN separate check ("you no longer have what it stands on") that reads real
+# The candidate is named directly rather than found by filter (up>0, no
+# prerequisite, project_cost under 1 denarius): the JOB 1 upkeep audit zeros
+# `up` on every technique that filter would match, and every remaining
+# up>0/no-prerequisite/near-free node turns out to be something auto-granted
+# on turn one (a capability rung, a road network) - excluded by `not in
+# s.granted` and so invisible to the filter too. There is also a sharper
+# reason not to compute this dynamically: `s.done.add` below bypasses
+# `start`'s own prerequisite check, but restore_work has its OWN separate
+# check ("you no longer have what it stands on") that reads real
 # prerequisites regardless of how `done` was populated, so a candidate with
 # unmet prerequisites makes restore_work silently refuse and charge nothing -
 # which reads as exactly the bug this check exists to catch, for a completely
-# different reason. md2_sand_filtration has no prerequisite, was not
-# auto-granted (its `ph` is not zero), and kept its upkeep in the audit as
-# real mining-establishment cost, so it is named directly rather than found.
+# different reason. md2_sand_filtration has no prerequisite, is not
+# auto-granted (its `ph` is not zero), and keeps real mining-establishment
+# upkeep under the audit, so it is named directly rather than found.
 s = sim(civ="england_1300", capital=50000.0)
 _free = ["md2_sand_filtration"]
 s.done.add(_free[0])
@@ -1640,8 +1636,8 @@ check("commission can unblock the gate whose own advice is to commission",
 # never built it. The entry could never be cleared. Every one of those symptoms
 # is the same broken invariant: you cannot be running something you do not know
 # how to do.
-def _operating_subset_of_done(s_):
-    return sorted(s_.operating - s_.done)
+def _operating_subset_of_done(sim_state):
+    return sorted(sim_state.operating - sim_state.done)
 
 
 s = sim(capital=-100000.0, civ="norse_900ad")

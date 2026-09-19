@@ -137,8 +137,7 @@ from engine.core import Sim
 # docstring, now in engine/cli.py, for the fuller argument. This module
 # already imported `load_strategy`/`topo_stable` from there, so importing
 # these two the same way costs nothing new.
-from engine.cli import (load_strategy, topo_stable, DetRNG,
-                        ensure_fixed_hash_seed)
+from engine.cli import DetRNG, ensure_fixed_hash_seed
 
 import planner as _planner
 
@@ -152,7 +151,7 @@ def deterministic_sim(nodes, order, goal, civ, horizon, bounty_set=None):
     return sim
 
 
-def fitness(s, need):
+def fitness(sim, need):
     """Higher is better. Reaching the goal beats not reaching it outright;
     among runs that reach it, earlier beats later; among runs that do not,
     more of the goal's own closure finished beats less, and surplus capital
@@ -161,15 +160,15 @@ def fitness(s, need):
     tune, which is the whole reason it is shaped this way rather than as one
     blended score.
     """
-    done = sum(1 for node_id in need if node_id in s.done)
-    return (1 if s.goal_year else 0, -(s.goal_year or 10 ** 9), done, s.capital)
+    done = sum(1 for node_id in need if node_id in sim.done)
+    return (1 if sim.goal_year else 0, -(sim.goal_year or 10 ** 9), done, sim.capital)
 
 
 # ----------------------------------------------------------------------------
 # Diagnose the binding constraint FROM the simulator's own state
 # ----------------------------------------------------------------------------
 
-def diagnose_scarce_trades(s, nodes, outstanding, backlog_ratio=6.0):
+def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
     """Which of the five taught trades (TRADES_ABSENT) are actually the
     thing holding this run up, read off a simulated household rather than
     guessed at.
@@ -193,22 +192,22 @@ def diagnose_scarce_trades(s, nodes, outstanding, backlog_ratio=6.0):
         if len(contested) < 2:
             continue
         backlog = sum(nodes[node_id]["lab"][trade] for node_id in contested)
-        supply = max(1.0, s.hours_you_can_call_on(trade))
+        supply = max(1.0, sim.hours_you_can_call_on(trade))
         if backlog / supply > backlog_ratio:
             scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,
-                         "employees": s.employees.get(trade, 0.0)}
+                         "employees": sim.employees.get(trade, 0.0)}
     return scarce
 
 
-def stuck_active(s, need):
+def stuck_active(sim, need):
     """Nodes the goal needs that have been active a while and are making
     little or no headway - the visible symptom `diagnose_scarce_trades`
     explains the cause of. Purely descriptive (used for the report, not the
     search itself), read straight off `s.active`.
     """
     out = []
-    for node_id, state in s.active.items():
+    for node_id, state in sim.active.items():
         if node_id not in need:
             continue
         if state.get("stalled_years", 0) > 0 or state.get("short_of_trade") or state.get("waiting_on_money"):
@@ -216,7 +215,7 @@ def stuck_active(s, need):
     return sorted(out)
 
 
-def diagnose_capital_trap(s, need, min_closure_frac=0.9):
+def diagnose_capital_trap(sim, need, min_closure_frac=0.9):
     """Is this dice-free household caught in the insolvency cycle
     `engine/projects.py` (`enforce_credit_limit`/`auto_open_ventures`) itself
     documents as a known risk - "half the credit line is the line: below it
@@ -243,14 +242,14 @@ def diagnose_capital_trap(s, need, min_closure_frac=0.9):
     goal still undone - that marks a household stuck rather than simply
     early.
     """
-    if s.capital >= 0:
+    if sim.capital >= 0:
         return None
-    if s.scholars > 1.0 or s.artisans > 1.0:
+    if sim.scholars > 1.0 or sim.artisans > 1.0:
         return None
-    done_frac = sum(1 for k in need if k in s.done) / max(1, len(need))
+    done_frac = sum(1 for node_id in need if node_id in sim.done) / max(1, len(need))
     if done_frac >= min_closure_frac:
         return None
-    return {"capital": s.capital, "scholars": s.scholars, "artisans": s.artisans,
+    return {"capital": sim.capital, "scholars": sim.scholars, "artisans": sim.artisans,
             "closure_done_frac": done_frac}
 
 
@@ -258,12 +257,12 @@ def diagnose_capital_trap(s, need, min_closure_frac=0.9):
 # The moves
 # ----------------------------------------------------------------------------
 
-def _needs(nodes, k, trades):
-    return any(nodes[k]["lab"].get(trade, 0.0) > 0 for trade in trades)
+def _needs(nodes, node_id, trades):
+    return any(nodes[node_id]["lab"].get(trade, 0.0) > 0 for trade in trades)
 
 
-def _scarce_hours(nodes, k, trades):
-    return sum(nodes[k]["lab"].get(trade, 0.0) for trade in trades)
+def _scarce_hours(nodes, node_id, trades):
+    return sum(nodes[node_id]["lab"].get(trade, 0.0) for trade in trades)
 
 
 def pull_scarce_extras(order, nodes, need, scarce):
@@ -286,7 +285,7 @@ def pull_scarce_extras(order, nodes, need, scarce):
     return keep + pulled
 
 
-def spt_within_slack_bands(order, nodes, need, c, scarce):
+def spt_within_slack_bands(order, nodes, need, cpm_result, scarce):
     """Move 2: within each tied CPM slack band (planner.py's own definition
     of "the graph cannot tell these apart"), nodes that draw on a currently
     scarce trade move to the front of the band, smallest total scarce-trade
@@ -297,7 +296,7 @@ def spt_within_slack_bands(order, nodes, need, c, scarce):
     """
     if not scarce:
         return list(order)
-    slack = c["slack"]
+    slack = cpm_result["slack"]
     out = []
     i = 0
     count = len(order)
@@ -319,14 +318,14 @@ def spt_within_slack_bands(order, nodes, need, c, scarce):
         while band_end < count and order[band_end] in need and round(slack.get(order[band_end], 0.0), 3) == band:
             group.append(order[band_end])
             band_end += 1
-        group.sort(key=lambda x: (0, _scarce_hours(nodes, x, scarce)) if _needs(nodes, x, scarce)
+        group.sort(key=lambda node_id: (0, _scarce_hours(nodes, node_id, scarce)) if _needs(nodes, node_id, scarce)
                                   else (1, 0.0))
         out.extend(group)
         i = band_end
     return out
 
 
-def grow_supply(nodes, goal, need, s0, cur_order, cur_extras, civ, horizon,
+def grow_supply(nodes, goal, need, baseline_sim, cur_order, cur_extras, civ, horizon,
                  side_branch_every, base_fit, log):
     """Move 3: GROW THE SUPPLY, rather than only resequence what is already
     named - the move the brief itself asked for and the first two moves
@@ -356,14 +355,14 @@ def grow_supply(nodes, goal, need, s0, cur_order, cur_extras, civ, horizon,
     not kept is not tried again the same way; the order is exactly as if it
     had never been offered.
     """
-    candidates = [node_id for node_id in _planner.pick_staffing(nodes, need, s0)
+    candidates = [node_id for node_id in _planner.pick_staffing(nodes, need, baseline_sim)
                   if node_id not in cur_extras]
     extras = list(cur_extras)
     fit = base_fit
     tried = []
     for node_id in candidates:
         trial_extras = extras + [node_id]
-        spine = [x for x in cur_order if x in need]
+        spine = [node_id for node_id in cur_order if node_id in need]
         trial_order = _planner.interleave(spine, trial_extras, side_branch_every)
         full = _planner._repaired(nodes, goal, trial_order)
         sim = deterministic_sim(nodes, full, goal, civ, horizon)
@@ -557,7 +556,7 @@ def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
                                     rounds, horizon, backlog_ratio,
                                     seed_order=seed_order,
                                     grow_supply_moves=not no_grow_supply, log=log)
-    tree, _p, nodes, _w, _g = load()
+    tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, goal)
     last = history[-1]
     grown = [round_entry for round_entry in history if round_entry["grow_supply_tried"]]

@@ -21,31 +21,25 @@ module-level variables this module's VALUES end up in - DISPLAY_WIDTH,
 DEFAULT_AVAILABLE_LIMIT - but cli.py is what copies them there; this module
 still never imports protocol.py, nor the reverse.)
 
-THE CONFIG IS FOR THE APPLICATION, NOT FOR ANY ONE GAME. An earlier version
-of this file, and of the main-menu Options screen built on it, held
-"defaults for the next new game" here too - which civilisation, which
-starting kit, fog of war, mortality, the horizon - on the reasoning that a
-player who always starts the same way shouldn't have to retype it. That
-reasoning was sound, but CONFIG_PATH is the wrong place for it: these are
-facts about a PLAYTHROUGH, the same way fog and mortality are, and a player
-asking "why is the save location next to 'which civilisation' on the same
-settings screen" was asking the right question - the owner's own words, on
-being shown that screen, were "change where saves are, change language,
-change window size, etc? Not about each save, like fog or mortality?" So
-the Options screen now holds only what is actually about the PROGRAM: where
-saves go, how wide a line is, how many rows a table shows before paging,
-and whether the welcome/tutorial text prints for a game that has not
-started yet.
+THE CONFIG IS FOR THE APPLICATION, NOT FOR ANY ONE GAME: which
+civilisation, starting kit, fog of war, mortality and horizon a player
+favours are facts about a PLAYTHROUGH, the same way fog and mortality
+themselves are, not facts about the PROGRAM - CONFIG_PATH must not hold
+them even though a player who always starts the same way should not have
+to retype them. The Options screen holds only what is actually about the
+PROGRAM: where saves go, how wide a line is, how many rows a table shows
+before paging, and whether the welcome/tutorial text prints for a game
+that has not started yet.
 
 The "remembered default civilisation/kit/fog/mortality/horizon" capability
-is not deleted, because a player who favours one civilisation and one kit
-still should not have to retype them - it just no longer has a settings
-screen of its own. _new_game (cli.py) still prefills its five questions from
-whatever was chosen LAST TIME, and silently writes this sitting's answers
-back as the new "last time" the moment the wizard finishes, the same way a
-text editor remembers your last file dialog folder without asking you to
-configure it. DEFAULT_CIV etc., below, are that memory; nothing edits them
-directly any more.
+lives elsewhere rather than being dropped, because a player who favours
+one civilisation and one kit still should not have to retype them:
+_new_game (cli.py) prefills its five questions from whatever was chosen
+LAST TIME, and silently writes this sitting's answers back as the new
+"last time" the moment the wizard finishes, the same way a text editor
+remembers your last file dialog folder without asking you to configure
+it. DEFAULT_CIV etc., below, are that memory; nothing outside _new_game
+edits them directly.
 
 Changing the horizon mid-game, or turning mortality on mid-game, are
 reasonable things a player reaches for WHILE PLAYING, not before - that
@@ -68,14 +62,14 @@ survives in a given environment works:
      else
 
 DISPLAY WIDTH - "change window size": the renderers in protocol.py wrap text
-and size tables to a number of columns that used to be a bare constant
-(76, in most places), which is exactly the "terminal of a particular size"
-assumption that cost players truncated ids on a narrower terminal. A player
-can set an explicit width from Options; left alone (None), resolve_
-display_width below asks the terminal itself via shutil.get_terminal_size,
-and only falls back to the old hardcoded number when there is no terminal
-to ask (a pipe, a redirected file, the test suite) - so nothing a script or
-a regression check reads changes because this preference exists.
+and size tables to a number of columns, which must never be just one fixed
+constant assuming a "terminal of a particular size" - that assumption
+costs players truncated ids on a narrower terminal. A player can set an
+explicit width from Options; left alone (None), resolve_display_width
+below asks the terminal itself via shutil.get_terminal_size, and only
+falls back to a hardcoded number when there is no terminal to ask (a
+pipe, a redirected file, the test suite) - so nothing a script or a
+regression check reads changes because this preference exists.
 
 LANGUAGE - deliberately absent. The natural fourth item on a "window size,
 save location" list is "language", and it is not here: this codebase has no
@@ -97,6 +91,76 @@ import os
 import re
 import shutil
 import time
+from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
+
+
+class Config(TypedDict):
+    """The application-preferences file this module reads and writes
+    (CONFIG_DEFAULTS, below, and load_config()'s/save_config()'s own
+    shape). Fixed at exactly these ten keys: `load_config` builds every
+    result by copying CONFIG_DEFAULTS and overwriting only keys already in
+    that dict (`for key in CONFIG_DEFAULTS: if key in raw: ...`), and
+    `save_config` writes back exactly `{key: ... for key in
+    CONFIG_DEFAULTS}` - so a config dict handed to any function in this
+    file, or read from one, never has a key outside this list nor lacks
+    one of them, whatever an old or hand-edited config.json on disk
+    happens to contain."""
+    save_dir: Optional[str]
+    display_width: Optional[int]
+    rows_per_page: int
+    show_welcome: bool
+    default_civ: str
+    default_kit: str
+    default_fog: bool
+    default_mortal: bool
+    default_goal: Optional[str]
+    default_horizon: int
+
+
+class SessionMeta(TypedDict):
+    """The per-session sidecar `load_session_meta`/`save_session_meta`
+    read and write (see the module docstring's PER-SESSION META section).
+    Both fields NotRequired: every write site in cli.py/cli_interactive.py/
+    cli_interactive_saveload.py (not owned by this task) either writes just
+    one of them fresh (`{"checkpoint": True}`, `{"horizon_years":
+    horizon}`) or reads the sidecar first and sets one field on the result
+    before writing it back - never a dict guaranteed to carry both."""
+    checkpoint: NotRequired[bool]
+    horizon_years: NotRequired[int]
+
+
+class SaveSummary(TypedDict):
+    """One row of `list_saves()`, below. The first four keys are always
+    present, set before the save's own JSON is even opened; the rest are
+    added together, by one `row.update(...)`, only once that JSON has been
+    read and confirmed to look like a save (`isinstance(blob, dict) and
+    "_civ" in blob`) - so they are genuinely NotRequired, not merely
+    unfilled, on a row for a file that fails that check. Every NotRequired
+    value's own type is `Any`: it is read with `.get()` off `blob`, an
+    arbitrary parsed JSON object that might be an old build's save (see
+    CLAUDE.md SS3.5 - there is no format migration, so an old save's shape
+    is whatever that old build wrote) or a hand-edited file a player broke
+    on purpose; this function's whole reason to exist (see its own
+    docstring) is to show something even when that guess is wrong, so
+    claiming a precise type for data it deliberately does not validate
+    would be exactly the decorative annotation the task's own instructions
+    warn against."""
+    path: str
+    filename: str
+    mtime: float
+    readable: bool
+    civ_id: NotRequired[Any]
+    year: NotRequired[Any]
+    fog: NotRequired[bool]
+    founder_alive: NotRequired[Any]
+    dead_reason: NotRequired[Any]
+    goal_year: NotRequired[Any]
+    goal: NotRequired[Any]
+    reputation: NotRequired[Any]
+    scholars: NotRequired[Any]
+    artisans: NotRequired[Any]
+    capital: NotRequired[Any]
+    done: NotRequired[List[Any]]
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +191,7 @@ _DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".rome-sim-config.j
 # show_welcome: whether the one-time-per-new-game arrival paragraph and
 #   starter-verb tutorial print. A player on their fifth new game does not
 #   need the five starter verbs explained again; see cmd_play and cmd_menu.
-CONFIG_DEFAULTS = {
+CONFIG_DEFAULTS: Config = {
     "save_dir": None,          # None means "use the rule above"
     "display_width": None,     # None means "ask the terminal; see below"
     "rows_per_page": 30,
@@ -156,7 +220,7 @@ FALLBACK_DISPLAY_WIDTH = 76
 FALLBACK_ROWS_PER_PAGE = 30
 
 
-def resolve_display_width(cfg=None):
+def resolve_display_width(cfg: Optional[Config] = None) -> int:
     """How many columns to wrap text to and size tables for: an explicit
     player override (cfg['display_width']) if one is set, otherwise the
     terminal's own width via shutil.get_terminal_size().
@@ -181,7 +245,7 @@ def resolve_display_width(cfg=None):
         fallback=(FALLBACK_DISPLAY_WIDTH, 24)).columns
 
 
-def resolve_rows_per_page(cfg=None):
+def resolve_rows_per_page(cfg: Optional[Config] = None) -> int:
     """How many rows a long table pages by before a player has to ask for
     more (see protocol.DEFAULT_AVAILABLE_LIMIT). A bare positive integer
     from the config, or FALLBACK_ROWS_PER_PAGE if it is missing or not one -
@@ -195,15 +259,15 @@ def resolve_rows_per_page(cfg=None):
     return rows if rows > 0 else FALLBACK_ROWS_PER_PAGE
 
 
-def config_path():
+def config_path() -> str:
     return os.environ.get(CONFIG_PATH_ENV) or _DEFAULT_CONFIG_PATH
 
 
-def load_config():
+def load_config() -> Config:
     """The player's saved preferences, or CONFIG_DEFAULTS if there are none
     yet or the file cannot be read. Never raises: a corrupt or missing
     config is a fresh install, not an error a player should see."""
-    config = dict(CONFIG_DEFAULTS)
+    config: Dict[str, Any] = dict(CONFIG_DEFAULTS)
     try:
         with open(config_path()) as handle:
             raw = json.load(handle)
@@ -213,10 +277,10 @@ def load_config():
                     config[key] = raw[key]
     except (OSError, ValueError):
         pass
-    return config
+    return cast(Config, config)
 
 
-def save_config(cfg):
+def save_config(cfg: Config) -> bool:
     """Write the preferences back. Atomic, like the game's own save_state,
     for the same reason: a crash mid-write must not leave a config file that
     loads as neither the old preferences nor the new ones."""
@@ -227,7 +291,16 @@ def save_config(cfg):
             os.makedirs(parent, exist_ok=True)
         except OSError:
             return False
-    payload = {key: cfg.get(key, CONFIG_DEFAULTS[key]) for key in CONFIG_DEFAULTS}
+    # Both `cfg` and `CONFIG_DEFAULTS` are looked up by a variable `key`
+    # here, not a string literal, which is exactly the case TypedDict
+    # indexing cannot type-check (mypy needs to see the literal key at the
+    # call site) - see Config's own docstring for why this iteration is
+    # still guaranteed to only ever see one of Config's own ten keys.
+    # `cast` changes nothing at runtime; `.get`/`[]` below are the same
+    # calls this line already made.
+    _cfg_untyped = cast(Dict[str, Any], cfg)
+    _defaults_untyped = cast(Dict[str, Any], CONFIG_DEFAULTS)
+    payload = {key: _cfg_untyped.get(key, _defaults_untyped[key]) for key in CONFIG_DEFAULTS}
     tmp = path + ".tmp"
     try:
         with open(tmp, "w") as handle:
@@ -238,7 +311,7 @@ def save_config(cfg):
         return False
 
 
-def resolve_save_dir(cfg=None, ensure=True):
+def resolve_save_dir(cfg: Optional[Config] = None, ensure: bool = True) -> str:
     """Where saves go right now, in order: ROME_SAVE_DIR, the config file's
     save_dir, then ~/.rome-saves. Creates the directory if it does not exist
     yet and `ensure` is true; falls back to "." if it cannot be created or
@@ -271,11 +344,11 @@ def resolve_save_dir(cfg=None, ensure=True):
 # Per-session meta: the one field (horizon) a save's own file cannot carry.
 # ---------------------------------------------------------------------------
 
-def _meta_path(session):
+def _meta_path(session: Optional[str]) -> Optional[str]:
     return session + ".meta.json" if session else None
 
 
-def load_session_meta(session):
+def load_session_meta(session: Optional[str]) -> SessionMeta:
     """{} if there is no sidecar yet, or it cannot be read - never raises,
     the same policy as load_config: an absent or corrupt sidecar is exactly
     what an ordinary flag-driven save (never touched by the menu or the
@@ -286,12 +359,12 @@ def load_session_meta(session):
     try:
         with open(path) as handle:
             value = json.load(handle)
-        return value if isinstance(value, dict) else {}
+        return cast(SessionMeta, value) if isinstance(value, dict) else {}
     except (OSError, ValueError):
         return {}
 
 
-def save_session_meta(session, meta):
+def save_session_meta(session: Optional[str], meta: SessionMeta) -> bool:
     path = _meta_path(session)
     if not path:
         return False
@@ -305,7 +378,7 @@ def save_session_meta(session, meta):
         return False
 
 
-def move_session_meta(old_session, new_session):
+def move_session_meta(old_session: Optional[str], new_session: Optional[str]) -> None:
     """Carry the sidecar along when a save is moved to a new path. Losing it
     silently would not corrupt anything - see load_session_meta - it would
     just quietly forget a horizon the player deliberately changed, which is
@@ -329,13 +402,12 @@ def move_session_meta(old_session, new_session):
 # ongoing game - it is the one file that is always the LATEST word on where
 # that game stands. A milestone (cli.py's bare 'save', mid-game) is a
 # different thing on purpose: a moment a player chose to be able to come back
-# to. Before this existed, "come back to it" meant pointing --session (or the
-# main menu's Load screen, or the in-game bare 'load') AT the milestone file,
-# which is exactly what turned it into the new autosave target - the very
-# next command overwrote it, and a player who saved 380 AD to return to found
-# it quietly became 420 AD the first time they looked. A player deep into a
-# long campaign, using checkpoints to isolate a bug, discovered this the hard
-# way: the first reload had already moved the evidence.
+# to. Resuming from it must not turn it into the new autosave target: pointing
+# --session (or the main menu's Load screen, or the in-game bare 'load') AT a
+# milestone file, and then letting the very next command overwrite it, would
+# silently move a player's fixed point forward every time they resumed from
+# it - a milestone saved at 380 AD quietly becoming 420 AD the first time it
+# is reopened.
 #
 # is_checkpoint below is what the three resume paths (cli.py's cmd_play,
 # cmd_agent, and _ingame_load) all check before deciding whether resuming a
@@ -345,7 +417,7 @@ def move_session_meta(old_session, new_session):
 _MILESTONE_RE = re.compile(r"_saved_\d+\.json$")
 
 
-def is_checkpoint(path):
+def is_checkpoint(path: Optional[str]) -> bool:
     """Whether `path` names a frozen checkpoint rather than an ordinary,
     freely-autosaved session file.
 
@@ -385,7 +457,7 @@ def is_checkpoint(path):
 # Listing saves, for "Load a saved game".
 # ---------------------------------------------------------------------------
 
-def list_saves(save_dir):
+def list_saves(save_dir: str) -> List[SaveSummary]:
     """One summary dict per save file in `save_dir`, newest-written first.
 
     Reads the JSON directly rather than going through the engine's
@@ -395,7 +467,7 @@ def list_saves(save_dir):
     shown, with what little can be read from it, rather than silently
     dropped from the list a player is choosing a filename out of.
     """
-    rows = []
+    rows: List[SaveSummary] = []
     try:
         names = os.listdir(save_dir)
     except OSError:
@@ -414,7 +486,7 @@ def list_saves(save_dir):
             # save; skip it rather than show a player an entry that errors
             # the moment they pick it.
             continue
-        row = {"path": path, "filename": filename, "mtime": file_stat.st_mtime,
+        row: SaveSummary = {"path": path, "filename": filename, "mtime": file_stat.st_mtime,
                "readable": False}
         try:
             with open(path) as handle:
@@ -443,7 +515,7 @@ def list_saves(save_dir):
     return rows
 
 
-def humanize_age(mtime):
+def humanize_age(mtime: float) -> str:
     """'3 minutes ago', 'yesterday', 'on 2026-03-01' - roughly, not exactly:
     a player choosing between saves wants a sense of how stale one is, not a
     timestamp to do arithmetic on."""

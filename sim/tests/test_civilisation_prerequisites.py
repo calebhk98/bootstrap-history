@@ -94,7 +94,7 @@ def measure_violations():
             node = nodes.get(node_id)
             if node is None:
                 continue
-            missing = sorted(p for p in (node.get("pre") or []) if p not in held)
+            missing = sorted(prereq_id for prereq_id in (node.get("pre") or []) if prereq_id not in held)
             if missing:
                 found[(name, node_id)] = missing
     return found

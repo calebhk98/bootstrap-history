@@ -1,7 +1,4 @@
-"""labour_productivity: split verbatim from the old test_regressions.py (original lines 9210-9850).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""labour_productivity: regression checks, run individually with `--only labour_productivity`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -371,8 +368,8 @@ check("`state` reports how much of what you run has diffused to competitors",
 # example already noted elsewhere in this tree) - a visited set is not
 # optional here, it is the difference between this check finishing and an
 # OOM kill.
-def _full_ancestors(k, _nodes=NODES):
-    seen, stack = set(), [k]
+def _full_ancestors(node_id, _nodes=NODES):
+    seen, stack = set(), [node_id]
     while stack:
         cur = stack.pop()
         if cur in seen:
@@ -388,7 +385,7 @@ def _full_ancestors(k, _nodes=NODES):
             for opt in (req_group.get("options") or {}):
                 if opt in _nodes and opt not in seen:
                     stack.append(opt)
-    seen.discard(k)
+    seen.discard(node_id)
     return seen
 
 
@@ -497,25 +494,25 @@ check("a pure-knowledge node (no revenue, no upkeep) carries no "
 # `open`, for ever. "Most of the mid and late game was a repetitive
 # hire-then-reopen treadmill rather than fresh decisions."
 s = sim(capital=50000.0)
-_k = "cementation_steel"
-s.done.add(_k)
+_node_id = "cementation_steel"
+s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
 s._resync_pools()
-ok, _ = s.open_venture(_k)
+ok, _ = s.open_venture(_node_id)
 check("set-up: cementation_steel opens with six craftsmen on staff", ok)
 s.employees["artisan"] = 0.0
 s._resync_pools()
 closed = s.close_unstaffed_ventures(s.year)
 check("losing every craftsman shuts a concern that needs them to supervise",
-      closed == [_k] and _k in s.mothballed and _k in getattr(s, "shut_for_staff", {}),
+      closed == [_node_id] and _node_id in s.mothballed and _node_id in getattr(s, "shut_for_staff", {}),
       closed)
 s.employees["artisan"] = 6.0
 s._resync_pools()
 reopened = s.reopen_restaffed_ventures(s.year)
 check("...and it comes back on its own once restaffed, with no 'open' typed",
-      reopened == [_k] and _k in s.operating and _k not in s.mothballed
-      and _k not in getattr(s, "shut_for_staff", {}), reopened)
+      reopened == [_node_id] and _node_id in s.operating and _node_id not in s.mothballed
+      and _node_id not in getattr(s, "shut_for_staff", {}), reopened)
 
 # --- BREAK: the closing message promises "reopening soon costs a tenth of
 # what opening did" - a player who instead reaches for `restore` (the verb
@@ -648,8 +645,32 @@ check("`money`'s net_per_year is insulated from the same one-year swing, "
 # And stall_diagnosis's own net, which explicitly claims to be "the same
 # net the ledger prints", has to actually be computed the same way now
 # that the ledger's own figure changed.
-import inspect as _insp2
-check("stall_diagnosis computes its net from revenue_capacity(), the same "
-      "call net_per_year now makes, not a second copy of the old bug",
-      "revenue_capacity()" in _insp2.getsource(S.Sim.stall_diagnosis),
-      "checked stall_diagnosis's own source")
+#
+# BEHAVIOURAL, NOT A SOURCE SCAN: a grep of
+# inspect.getsource(S.Sim.stall_diagnosis) for the literal text
+# "revenue_capacity()" would pass on a comment mentioning the call
+# (test_parallelism_note.py records this exact failure mode actually
+# happening to a sibling check) and would not notice a call whose return
+# value stall_diagnosis went on to ignore. The claim is the one
+# this whole section is already demonstrating for net_per_year, above:
+# selling the founder's hours for wages this year must not swing the
+# figure. Reproduce that same swing test directly against stall_diagnosis,
+# on a household set up to actually be stalled (capital < 0 and 8+ years
+# in arrears, so it returns a diagnosis instead of None).
+s_stall = sim(capital=-4000.0)
+s_stall.insolvent_years = 20
+_diag_before = s_stall.stall_diagnosis()
+check("set-up: this household really is stalled, so stall_diagnosis "
+      "returns a real diagnosis to compare",
+      bool(_diag_before), _diag_before)
+_capital_before_stall_work = s_stall.capital
+s_stall.work_for_wages("scholar", 1500)
+s_stall.capital = _capital_before_stall_work
+_diag_after = s_stall.stall_diagnosis()
+check("stall_diagnosis's own net is insulated from a one-year wage sale "
+      "the same way net_per_year is - proving it reads revenue_capacity() "
+      "(which zeroes wage_hours_this_year before asking revenue()) rather "
+      "than plain revenue() a second time",
+      _diag_after and _diag_before
+      and _diag_after["you_are_stuck"] == _diag_before["you_are_stuck"],
+      (_diag_before, _diag_after))

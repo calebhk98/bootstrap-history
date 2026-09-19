@@ -40,28 +40,28 @@ _LAB, ORDER, _B = S.load_strategy("recommended", NODES, GOAL)
 FIELDS = tuple(field for field in SAVE_FIELDS if field != "log")
 
 
-def _canon(v):
+def _canon(value):
     """Make a value comparable and order-independent where order is not real."""
-    if isinstance(v, float):
+    if isinstance(value, float):
         # repr() rather than round(): a change that alters the last bit of a
         # float IS a change, and this harness exists to catch exactly that.
-        return repr(v)
-    if isinstance(v, set):
-        return ["__set__"] + sorted(_canon(item) for item in v)
-    if isinstance(v, dict):
-        return {str(key): _canon(v[key]) for key in sorted(v, key=str)}
-    if isinstance(v, (list, tuple)):
-        return [_canon(item) for item in v]
-    return v
+        return repr(value)
+    if isinstance(value, set):
+        return ["__set__"] + sorted(_canon(item) for item in value)
+    if isinstance(value, dict):
+        return {str(key): _canon(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_canon(item) for item in value]
+    return value
 
 
-def state_of(s):
-    return {field: _canon(getattr(s, field, None)) for field in FIELDS}
+def state_of(sim):
+    return {field: _canon(getattr(sim, field, None)) for field in FIELDS}
 
 
-def digest(d):
+def digest(data):
     return hashlib.sha256(
-        json.dumps(d, sort_keys=True, default=str).encode()).hexdigest()[:16]
+        json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()[:16]
 
 
 # THE REFERENCE RUNS. Five civilisations, because several hot functions
@@ -83,28 +83,28 @@ SCENARIOS = [
 ]
 
 
-def build(sc):
-    sim = S.Sim(NODES, ORDER, random.Random(sc["seed"]), events=sc["events"],
-              manual=False, civ=S.load_civ(sc["civ"]))
+def build(scenario):
+    sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
+              manual=False, civ=S.load_civ(scenario["civ"]))
     sim.goal, sim.done_year = GOAL, {}
-    if sc["fog"]:
+    if scenario["fog"]:
         sim.fog = True
     return sim
 
 
-def name_of(sc):
-    return "%s/seed%d/%dy/%s%s" % (sc["civ"], sc["seed"], sc["years"],
-                                   "events" if sc["events"] else "noevents",
-                                   "+fog" if sc["fog"] else "")
+def name_of(scenario):
+    return "%s/seed%d/%dy/%s%s" % (scenario["civ"], scenario["seed"], scenario["years"],
+                                   "events" if scenario["events"] else "noevents",
+                                   "+fog" if scenario["fog"] else "")
 
 
-def run(sc, keep_states=False):
+def run(scenario, keep_states=False):
     """Return (per-year digests, cpu seconds, final full state)."""
-    sim = build(sc)
+    sim = build(scenario)
     start_time = time.process_time()
     per_year, states = [], []
-    for _ in range(sc["years"]):
-        if getattr(sim, "dead_reason", None):
+    for _ in range(scenario["years"]):
+        if sim.dead_reason:
             break
         sim.step()
         state = state_of(sim)
@@ -132,7 +132,7 @@ def record(path):
 def check(path):
     with open(path) as handle:
         base = json.load(handle)
-    bad, total, btotal = [], 0.0, 0.0
+    bad, total = [], 0.0
     for name, entry in base.items():
         scenario = entry["scenario"]
         want = entry["years"]

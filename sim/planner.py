@@ -84,7 +84,7 @@ from engine.cli import load_strategy
 # Critical-path method over the goal's closure
 # ----------------------------------------------------------------------------
 
-def duration(n):
+def duration(node):
     """Calendar years a node occupies if money and staff are no constraint at
     all: the larger of its own calendar floor (`yrs`, which the schema itself
     says "labour cannot buy down") and what one director's hours alone would
@@ -94,7 +94,7 @@ def duration(n):
     repeated here rather than reused, to get it for every node in the closure
     at once instead of one target at a time.
     """
-    return max(n["yrs"], n["ph"] / 2000.0)
+    return max(node["yrs"], node["ph"] / 2000.0)
 
 
 def cpm(nodes, need):
@@ -112,13 +112,13 @@ def cpm(nodes, need):
     order says (see the module docstring).
     """
     order = topo_order(nodes, need)
-    earliest_start, ef = {}, {}
+    earliest_start, earliest_finish = {}, {}
     for node_id in order:
         node = nodes[node_id]
-        pred_ef = [ef[prereq] for prereq in node["pre"] if prereq in need]
+        pred_ef = [earliest_finish[prereq] for prereq in node["pre"] if prereq in need]
         earliest_start[node_id] = max(pred_ef) if pred_ef else 0.0
-        ef[node_id] = earliest_start[node_id] + duration(node)
-    total = max(ef.values()) if ef else 0.0
+        earliest_finish[node_id] = earliest_start[node_id] + duration(node)
+    total = max(earliest_finish.values()) if earliest_finish else 0.0
     # Dependants WITHIN `need`, computed once rather than rescanning every
     # node for every k - closure(nodes, goal) is an ANCESTOR set, so every
     # member other than the goal itself has at least one dependant also in
@@ -128,13 +128,13 @@ def cpm(nodes, need):
         for prereq in nodes[dependant_id]["pre"]:
             if prereq in need:
                 deps[prereq].append(dependant_id)
-    ls, latest_finish, slack = {}, {}, {}
+    latest_start, latest_finish, slack = {}, {}, {}
     for node_id in reversed(order):
-        dep_ls = [ls[dependant_id] for dependant_id in deps[node_id]]
+        dep_ls = [latest_start[dependant_id] for dependant_id in deps[node_id]]
         latest_finish[node_id] = min(dep_ls) if dep_ls else total
-        ls[node_id] = latest_finish[node_id] - duration(nodes[node_id])
-        slack[node_id] = ls[node_id] - earliest_start[node_id]
-    return {"es": earliest_start, "ef": ef, "ls": ls, "lf": latest_finish, "slack": slack, "total": total}
+        latest_start[node_id] = latest_finish[node_id] - duration(nodes[node_id])
+        slack[node_id] = latest_start[node_id] - earliest_start[node_id]
+    return {"es": earliest_start, "ef": earliest_finish, "ls": latest_start, "lf": latest_finish, "slack": slack, "total": total}
 
 
 # SORTING BY (slack, earliest start) IS NOT ITSELF A TOPOLOGICAL ORDER, and
@@ -155,7 +155,7 @@ def cpm(nodes, need):
 # Side branches: revenue that pays for the spine
 # ----------------------------------------------------------------------------
 
-def pick_side_branches(nodes, need, s, limit):
+def pick_side_branches(nodes, need, sim, limit):
     """The `limit` best-return-on-capital nodes OUTSIDE the goal's closure,
     for THIS civilisation specifically.
 
@@ -192,8 +192,8 @@ def pick_side_branches(nodes, need, s, limit):
     ROI, longer-chain ventures (locomotives, boilers, dynamite) civ-pricing
     promotes it to instead, whatever their nominal return on capital. Left
     as is; the real fix for what actually blocks the goal is
-    `closure()` seeing the single-option req_any groups it used to
-    walk straight past, not this.
+    `closure()` seeing the single-option req_any groups it currently
+    walks straight past, not this.
 
     REACHABILITY WAS TRIED HERE, MEASURED, AND REVERTED - recorded because
     the next agent tempted by the same obvious-looking fix should not have
@@ -227,21 +227,21 @@ def pick_side_branches(nodes, need, s, limit):
     """
     cands = []
     for node_id, node in nodes.items():
-        if node_id in need or node_id in s.done or node_id in s.granted:
+        if node_id in need or node_id in sim.done or node_id in sim.granted:
             continue
         if node["cat"] == "unobtainable":
             continue
-        if s._is_foreign_only(node_id):
+        if sim._is_foreign_only(node_id):
             continue
         net = node["rev"] - node["up"]
         if net <= 0:
             continue
         cands.append(((net / max(1.0, node["_total_cost"])), node_id))
-    cands.sort(key=lambda x: (-x[0], nodes[x[1]]["_total_cost"], x[1]))
+    cands.sort(key=lambda candidate: (-candidate[0], nodes[candidate[1]]["_total_cost"], candidate[1]))
     return [node_id for _, node_id in cands[:limit]]
 
 
-def pick_staffing(nodes, need, s):
+def pick_staffing(nodes, need, sim):
     """The institutions that TRAIN PEOPLE, which the goal's own prerequisite
     closure never mentions and a purely structural plan therefore never
     builds.
@@ -272,7 +272,7 @@ def pick_staffing(nodes, need, s):
     for key, scholars_needed, artisans_needed, _di, _scaled, _run in Sim.STAFF_CAPACITY_SOURCES:
         if scholars_needed <= 0 and artisans_needed <= 0:
             continue
-        if key not in nodes or key in need or key in s.done or key in s.granted:
+        if key not in nodes or key in need or key in sim.done or key in sim.granted:
             continue
         # INSTITUTIONS, NOT INDUSTRIAL WORKS. The same table also credits the
         # late game's heavy industry - a railway trains ninety-five artisans,
@@ -284,10 +284,10 @@ def pick_staffing(nodes, need, s):
         # programme can afford it, which the CPM ordering already handles.
         if nodes[key]["cat"] not in ("institution", "social", "information"):
             continue
-        if nodes[key]["cat"] == "unobtainable" or s._is_foreign_only(key):
+        if nodes[key]["cat"] == "unobtainable" or sim._is_foreign_only(key):
             continue
         want.append(key)
-    want.sort(key=lambda k: (nodes[k]["_total_cost"], k))
+    want.sort(key=lambda node_id: (nodes[node_id]["_total_cost"], node_id))
     return want
 
 
@@ -322,7 +322,7 @@ def interleave(order, extras, every=8):
 # The plan itself
 # ----------------------------------------------------------------------------
 
-def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
+def backward_plan(nodes, goal, sim, seed_order=None, side_branches=12,
                    side_branch_every=8):
     """Order the goal's closure by CPM slack, tie-broken by how much of the
     tree a node unlocks and then by a seed order where the graph still
@@ -362,11 +362,11 @@ def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
     cpm_result = cpm(nodes, need)
     seed_rank = {node_id: i for i, node_id in enumerate(seed_order or ())}
     downstream = {node_id: downstream_count(nodes, node_id) for node_id in need}
-    def key(k):
-        return (round(cpm_result["slack"][k], 3), -downstream[k], round(cpm_result["es"][k], 3),
-                seed_rank.get(k, 10 ** 9), nodes[k]["_total_cost"], k)
+    def key(node_id):
+        return (round(cpm_result["slack"][node_id], 3), -downstream[node_id], round(cpm_result["es"][node_id], 3),
+                seed_rank.get(node_id, 10 ** 9), nodes[node_id]["_total_cost"], node_id)
     order = sorted(need, key=key)
-    extras = pick_side_branches(nodes, need, s, side_branches) if side_branches else []
+    extras = pick_side_branches(nodes, need, sim, side_branches) if side_branches else []
     order = interleave(order, extras, side_branch_every)
     # THE STAFFING GAP IS REPORTED, NOT PLANNED AROUND. This is measured, and
     # it went the other way from what it looks like it should.
@@ -389,7 +389,7 @@ def backward_plan(nodes, goal, s, seed_order=None, side_branches=12,
     # household cannot pay for is not staffing; it is a hole, and which of
     # these to found, and when, is a judgement about a specific run's income
     # that a structural pass over the tech tree has no standing to make.
-    staffing = pick_staffing(nodes, need, s)
+    staffing = pick_staffing(nodes, need, sim)
     return order, cpm_result, extras, staffing
 
 
@@ -406,9 +406,9 @@ def _capture_winner_order(nodes, goal, need, results):
     won = [run for run in results if run.goal_year]
     if not won:
         return None, None
-    best = min(won, key=lambda r: r.goal_year)
+    best = min(won, key=lambda run: run.goal_year)
     seq = sorted((node_id for node_id in best.done if node_id in need and node_id not in best.granted),
-                 key=lambda k: (best.done_year.get(k, 0), k))
+                 key=lambda node_id: (best.done_year.get(node_id, 0), node_id))
     return seq, best
 
 
@@ -436,7 +436,7 @@ def _repaired(nodes, goal, order):
     return full
 
 
-def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
+def refine(nodes, goal, sim, order, extras, civ, trial_count, horizon, seed, rounds,
            side_branch_every=8, log=print):
     """CLOSE THE LOOP: plan, measure, capture the winner, re-plan from it.
 
@@ -463,7 +463,7 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
         full = _repaired(nodes, goal, cur_order)
         res = [Sim(nodes, full, random.Random(seed + i), events=True,
                    civ=load_civ(civ)).run(goal, horizon)
-               for i in range(mc)]
+               for i in range(trial_count)]
         wins = sum(1 for run in res if run.goal_year)
         years = sorted(run.goal_year for run in res if run.goal_year)
         med = years[len(years) // 2] if years else None
@@ -472,7 +472,7 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
         # for both halves at once.
         score = (wins, -(med or 10 ** 9))
         log("  round %d: %d/%d reached the goal%s"
-            % (rnd, wins, mc, (", median %d AD" % med) if med else ""))
+            % (rnd, wins, trial_count, (", median %d AD" % med) if med else ""))
         if best_score is None or score > best_score:
             best_score, best_order, best_extras = score, cur_order, cur_extras
         seq, _winner = _capture_winner_order(nodes, goal, need, res)
@@ -484,7 +484,7 @@ def refine(nodes, goal, s, order, extras, civ, mc, horizon, seed, rounds,
             log("  no trial reached the goal this round; stopping refinement early")
             break
         cur_order, _cpm_result, cur_extras, _staff = backward_plan(
-            nodes, goal, s, seed_order=seq,
+            nodes, goal, sim, seed_order=seq,
             side_branches=len(extras), side_branch_every=side_branch_every)
     return best_order, best_extras, best_score
 
@@ -512,7 +512,7 @@ def write_strategy(path, label, rationale, order):
 
 
 def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
-         side_branch_every=8, refine_rounds=0, mc=12, horizon=700, seed=1,
+         side_branch_every=8, refine_rounds=0, trial_count=12, horizon=700, seed=1,
          log=print):
     """The whole pipeline: load the tree, build a throwaway Sim for `civ`
     (never stepped - only used for its own filters: what this civilisation
@@ -529,7 +529,8 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
                                                side_branch_every)
     score = None
     if refine_rounds:
-        order, extras, score = refine(nodes, goal, sim, order, extras, civ, mc,
+        order, extras, score = refine(nodes, goal, sim, order, extras, civ,
+                                      trial_count,
                                       horizon, seed, refine_rounds,
                                       side_branch_every, log)
     need = closure(nodes, goal)
@@ -581,7 +582,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
             "horizon (seed %d): each round's winning trial's own finish "
             "order was fed back as the next round's tie-break seed. Final "
             "round: %d/%d trials reached the goal."
-            % (refine_rounds, mc, horizon, seed, score[0], mc))
+            % (refine_rounds, trial_count, horizon, seed, score[0], trial_count))
     return order, rationale, cpm_result
 
 

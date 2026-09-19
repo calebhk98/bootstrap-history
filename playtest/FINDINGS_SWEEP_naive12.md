@@ -1,12 +1,12 @@
 # Sweep of the first two naive rounds, re-checked against today's engine
 
-Source notes: `rome/playtest/naive/` (rome_100ad A/B/C/BREAK/WEIRD,
-han_china_100ad BREAK/PLAY/WEIRD) and `rome/playtest/naive2/` (norse_900ad
+Source notes: `playtest/naive/` (rome_100ad A/B/C/BREAK/WEIRD,
+han_china_100ad BREAK/PLAY/WEIRD) and `playtest/naive2/` (norse_900ad
 PLAY/WEIRD/BREAK). Every distinct bug, defect, inconsistency or false statement
 the testers reported — or that their transcripts reveal whether or not they
 noticed — is below, de-duplicated across the eleven notes.
 
-Each entry was re-tested against the code in `rome/sim/engine/` as it stands,
+Each entry was re-tested against the code in `sim/engine/` as it stands,
 mostly by running the game. Nothing in the repository was modified.
 
 **Result: 31 STILL PRESENT, 47 FIXED, 4 UNCLEAR.** Most of what the first two
@@ -17,7 +17,7 @@ things the object beside them contradicts.
 
 Verification commands throughout are the JSON agent protocol, e.g.
 
-    printf '{"cmd":"state"}\n' | python3 rome/sim/simulator.py agent \
+    printf '{"cmd":"state"}\n' | python3 sim/simulator.py agent \
         --civ norse_900ad --fog --session /tmp/probe.json
 
 ---
@@ -43,7 +43,7 @@ player's memory, a player can save, build a node, look at what appeared in
 `available`, load back, and keep the knowledge. Fog of war is one command away
 from being off."*
 
-Where: `load_state` / `save_state`, `rome/sim/engine/protocol.py` ~2500-2600;
+Where: `load_state` / `save_state`, `sim/engine/protocol.py` ~2500-2600;
 dispatch at ~2190.
 
 **Judgement: real defect.** Not because saving is wrong, but because the fogged
@@ -76,7 +76,7 @@ living cost against roughly 210/yr *each* to hire the same people, plus a
 reputation dividend. Payback against hiring is about fifteen months and the
 labour is then free for five centuries.
 
-Where: `manumit()` and the freedmen training rows in `rome/sim/engine/labour.py`;
+Where: `manumit()` and the freedmen training rows in `sim/engine/labour.py`;
 `artisans` is credited from `training_pending` rows whose `trade` is null.
 
 **Judgement: real defect, and the sharpest one in the notes.** The welcome text
@@ -100,10 +100,10 @@ refusal text and the eligibility rule were both fixed, and this residue was not.
     {"cmd":"bounty","id":"sea_skeleton_first"}
       -> {"ok": true, "posted": "sea_skeleton_first", "price": 2836.1}
 
-Where: `rome/sim/engine/protocol.py:653` computes `bounty_eligible_by_type` as
+Where: `sim/engine/protocol.py:653` computes `bounty_eligible_by_type` as
 `tier <= 2 and cat in (glass_optics, metallurgy, precision, power, agriculture,
 information, instruments)` — the old Rome-only allow-list. The real rule is
-`Sim.bounty_eligible`, `rome/sim/engine/projects.py:107-132`, which was widened
+`Sim.bounty_eligible`, `sim/engine/projects.py:107-132`, which was widened
 so that anything a civilisation is measurably good at (`civ_cost_factor < 0.95`)
 also qualifies. `why` was never updated to match.
 
@@ -134,8 +134,8 @@ stepped three years into arrears):
                  fin_inn          same
                  fin_trading_post same
 
-Where: `throttle_binding` in `_agent_state`, `rome/sim/engine/protocol.py` ~220;
-set in `rome/sim/engine/core.py` around the material-throttle pass only.
+Where: `throttle_binding` in `_agent_state`, `sim/engine/protocol.py` ~220;
+set in `sim/engine/core.py` around the material-throttle pass only.
 
 **Judgement: real defect, partially mitigated.** The per-project `why_underfunded`
 field (new since these rounds) now tells the truth, so a reader who opens `active`
@@ -157,7 +157,7 @@ Same reproduction as S4. A project reports:
     "why_underfunded": "in arrears: ... the hours offered this year did almost nothing"
 
 The hours were offered and did nothing; money is the constraint. `waiting_on` is
-computed in `rome/sim/engine/protocol.py:60-65` from `ph_left` and the bill alone,
+computed in `sim/engine/protocol.py:60-65` from `ph_left` and the bill alone,
 and falls through to `"your hours"` whenever `ph_left > 0`, regardless of whether
 those hours can actually be spent.
 
@@ -179,7 +179,7 @@ Confirmed as still true and diagnosed:
     tx2_ballpoint_pen 1,232,234.1      ag2_milking_machine  7,001,168.3
 
 All of them, and 22 nodes in total, require `rubber_kg`, priced in
-`rome/data/prices.json:590` at **99,999.0/kg** with the note:
+`data/prices.json:590` at **99,999.0/kg** with the note:
 
 > "UNOBTAINABLE, priced at an absurd number deliberately so that any recipe
 > depending on it shows up instantly as impossible. Natural rubber is American.
@@ -190,7 +190,7 @@ Two problems. First, nothing renders that intent to the player: `why` prints a
 reads as a scaling bug — which is exactly how the tester read it. Second, the
 claim "there is no route" is false in the model: `md2_tourniquet` is `tier 1`,
 `cat surgery`, prerequisite `sanitation_antisepsis` only. It is not tier 9 and
-not `cat: "unobtainable"`, the two things `rome/sim/engine/projects.py:222`
+not `cat: "unobtainable"`, the two things `sim/engine/projects.py:222`
 actually blocks, and none of the 22 rubber nodes requires `mat_synthetic_rubber`
 or an Atlantic crossing. A rich enough player simply pays 210,340 denarii and
 buys 1.5 kg of American rubber in the second century.
@@ -253,7 +253,7 @@ Reproduced now, `rome_100ad --fog`, first command of the game:
 `step 500` on an untouched game likewise returns `civ_amphitheatre` and
 `civ_vault_barrel` in `completed`, neither of which was started.
 
-Where: `rome/sim/engine/protocol.py:2338-2339` builds `completed` from
+Where: `sim/engine/protocol.py:2338-2339` builds `completed` from
 `sorted(s.done - before_done)` with no flag for whether the id is in `s.granted`.
 
 **Judgement: real defect, greatly reduced.** The catastrophic version — 139
@@ -347,7 +347,7 @@ norse_900ad_BREAK and WEIRD both flagged it.
       -> "note": "DOES NOT EXIST. Cannot exist until Module 50 does.",
          "exists_here": false
 
-Where: `rome/data/prices.json:843`. "Module 50" is a knowledge-base file number.
+Where: `data/prices.json:843`. "Module 50" is a knowledge-base file number.
 
 **Judgement: real defect.** Sibling case, the `[AUDIT: ...]` note that
 han_china_100ad_WEIRD found on `water_power_scale`, has been properly fixed —
@@ -364,7 +364,7 @@ pointing at source files I am not supposed to be reading."*
 
     {"cmd":"why","id":"hom_toothbrush"}  ->  "kb": "91_household.md"
 
-Where: `rome/sim/engine/protocol.py:658`.
+Where: `sim/engine/protocol.py:658`.
 
 **Judgement: real but minor.** Under `--fog` the point is that you cannot see
 the shape of the tree; a filename tells you which subject module a node belongs
@@ -411,8 +411,8 @@ norse_900ad_WEIRD's version: *"The same man was sold into debt slavery
 thirty-three times and freed thirty-three times over four hundred years, and
 never aged a day."*
 
-    rome/sim/engine/core.py:133   self.life_left = (1e9 if self.cfg["immortal"] ...)
-    rome/sim/engine/cli.py:957    --mortal  "turn the founder's mortality back on
+    sim/engine/core.py:133   self.life_left = (1e9 if self.cfg["immortal"] ...)
+    sim/engine/cli.py:957    --mortal  "turn the founder's mortality back on
                                              (default: immortal, ...)"
 
 **Judgement: design choice, now honestly disclosed.** The machinery exists
@@ -430,7 +430,7 @@ promises a mortal lifespan it does not model.
 norse_900ad_WEIRD: *"'fire in the longhouses by the shore' took exactly 255
 denarii off me in 926 and the message was four words with no figure."*
 
-Where: `rome/sim/engine/society.py:547-556`
+Where: `sim/engine/society.py:547-556`
 
     if r.random() < 0.03:
         self.capital *= 0.82
@@ -462,7 +462,7 @@ starts in 100:
     {"cmd":"state"}                   -> "year": 50, "capital": 1000000000000.0,
                                          "living_cost": 15000000224.0
 
-Where: `_validate_save`, `rome/sim/engine/protocol.py` ~2495-2555.
+Where: `_validate_save`, `sim/engine/protocol.py` ~2495-2555.
 
 **Judgement: mostly fixed; range checking is the gap.** Validation is now real
 and runs to completion before a single attribute is touched: required fields,
@@ -505,9 +505,9 @@ norse_900ad_WEIRD: *"`"trade": null, "people": null` — the pending-training
 display cannot name what it is training. And five people become '3.66 + 1.34
 artisan capacity'."*
 
-Where: `rome/sim/engine/protocol.py:127-131` reads `row[2]`/`row[3]` defensively
+Where: `sim/engine/protocol.py:127-131` reads `row[2]`/`row[3]` defensively
 and yields null for the two-wide rows that manumission creates
-(`rome/sim/engine/core.py:975-986`, the `else: self.artisans += cap` branch).
+(`sim/engine/core.py:975-986`, the `else: self.artisans += cap` branch).
 
 **Judgement: real, cosmetic.** Manumitted people are still trained through the
 old anonymous path; hired and taught trades now carry their names.
@@ -574,7 +574,7 @@ from outside the program."*
 
 `{"cmd":"nosuchcmd"}` now lists 26 commands (the round-one complaint that the
 error listed 10 while `help` documented 24 is fixed); none of them is `restart`
-or `new`. `rome/sim/simulator.py menu` is the front door added since, which is
+or `new`. `sim/simulator.py menu` is the front door added since, which is
 probably the intended answer.
 
 **Judgement: design choice, with a documentation gap** — the ended-run refusal
@@ -597,7 +597,7 @@ to the most common typo in the game.
 ## S26. `PROTOCOL.md` still describes bounty by the old rule
 **severity: cosmetic documentation drift**
 
-`rome/sim/PROTOCOL.md:69` — *"post a public prize instead of building it yourself
+`sim/PROTOCOL.md:69` — *"post a public prize instead of building it yourself
 (tier <=2 crafts only ...)"*. The rule in `projects.py:107` is tier ≤ 2 **and**
 (a category allow-list **or** the civilisation being measurably good at it).
 norse_900ad_BREAK FINDING 15 caught the discrepancy in its older form.
@@ -708,7 +708,7 @@ and int` — for ever after, with the message *"The game is intact; try somethin
 else"*, which was false. Two testers abandoned the documented workflow and drove
 the game through a FIFO instead. Now: two consecutive processes against one
 session file both answer normally. The cause and the fix are documented in
-`load_state`, `rome/sim/engine/protocol.py`: *"NEVER restore a null over a live
+`load_state`, `sim/engine/protocol.py`: *"NEVER restore a null over a live
 default... A naive tester hit this on the very first save-and-restart."*
 
 **F2. A failing `step` minted money for ever.** rome_100ad_BREAK FINDING 3: 12
@@ -724,7 +724,7 @@ changed."`
 one the tester said he would fix first: at a deficit of -148/yr the engine
 destroyed eleven works earning 2,700/yr, kept `workshop_first` (900/yr upkeep, 0
 revenue) and `identity_cover`, ignored `auto_shed: false`, and refused to
-mothball the thing causing it. `rome/sim/engine/core.py:428-451` now sheds only
+mothball the thing causing it. `sim/engine/core.py:428-451` now sheds only
 `up > rev` works, honours the switch, stops when shedding stops helping, names
 what it took, and adds it to `mothballed` so `restore` can buy it back. The
 comment in place records the tester's verdict verbatim.

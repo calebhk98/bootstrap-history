@@ -1,7 +1,4 @@
-"""round8g_display: split verbatim from the old test_regressions.py (original lines 10077-10531).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""round8g_display: regression checks, run individually with `--only round8g_display`."""
 from .harness import *  # noqa: F401,F403
 
 # ======================================================================
@@ -9,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 # ======================================================================
 
 from engine.protocol import (render_state as _RSTATE, render_risk as _RRISK,
-                             render_why as _RWHY, render_ventures as _RVENT,
+                             render_why as _RWHY,
                              render_path as _RPATH)
 
 # --- FINDING: "finished, stays finished" meant three different things -

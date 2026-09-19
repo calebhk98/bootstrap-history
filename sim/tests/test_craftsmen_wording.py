@@ -1,7 +1,4 @@
-"""craftsmen_wording: split verbatim from the old test_regressions.py (original lines 13498-13961).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""craftsmen_wording: regression checks, run individually with `--only craftsmen_wording`."""
 from .harness import *  # noqa: F401,F403
 
 # ===========================================================================

@@ -36,7 +36,7 @@ check("a named trade school makes its profession more common",
 
 pop = S._agent_dispatch(s, NODES, {"cmd": "population"})
 check("population exposes national, reachable, and employed trade demographics",
-      pop["ok"] and all(k in pop["trades"][0] for k in
+      pop["ok"] and all(field in pop["trades"][0] for field in
                         ("estimated_in_the_country", "within_your_reach", "you_employ")),
       pop)
 
@@ -65,10 +65,10 @@ check("old iron inventory covers later demand without current production",
       (s.throttle, s.material_stock_t("iron")))
 
 report = S._agent_dispatch(s, NODES, {"cmd": "materials"})
-iron = next(r for r in report["materials"] if r["material"] == "iron")
+iron = next(material_row for material_row in report["materials"] if material_row["material"] == "iron")
 check("materials reports stock, flow, demand, and buy/sell values",
       iron["stock_on_hand_tonnes"] == 50.0
-      and all(iron[k] is not None for k in
+      and all(iron[field] is not None for field in
               ("own_production_tonnes_per_year", "current_demand_tonnes_per_year",
                "buy_per_tonne", "sell_per_tonne")), iron)
 check("the readable materials screen exposes inventory",

@@ -13,15 +13,15 @@ instead of an assumption baked into `data/prices.json`.
 
 STANDALONE ON PURPOSE. Nothing here imports from `sim/engine/`, and nothing
 in `sim/engine/` imports this. See `sim/world/__init__.py` for why the
-package as a whole is built this way while other agents edit `sim/engine/`,
-`data/branches/`, `data/production/` and `data/tech_tree.json` concurrently:
-a module with no dependency on those paths cannot be broken by their edits,
-and cannot break their tests either. `sim/world/demography.py` (built in
-parallel, not touched by this file) is the intended CONSUMER on the
-population side: it takes a plain `food_available_calories_per_day` number
-and treats it as exogenous. `Storage.step` below hands back exactly that
-number (`food_available_kcal_per_day` in `YearFlows`) for the day someone
-wires the two together - this file does not do that wiring itself.
+package as a whole is built this way: a module with no dependency on
+`sim/engine/`, `data/branches/`, `data/production/` or `data/tech_tree.json`
+cannot be broken by edits to those paths, and cannot break their tests
+either. `sim/world/demography.py`, not touched by this file, is the intended
+CONSUMER on the population side: it takes a plain
+`food_available_calories_per_day` number and treats it as exogenous.
+`Storage.step` below hands back exactly that number
+(`food_available_kcal_per_day` in `YearFlows`); the actual wiring between the
+two happens in `sim/engine/core.py`, not in this file.
 
 THE TWO CONSUMERS THIS IS SHAPED FOR. (1) The demography model: birth and
 death rates there respond to calories per person, so this module's job is to
@@ -32,38 +32,29 @@ the marginal product of the last hour of farm labour applied - the number a
 labour market would need to decide whether one more hour on the farm is
 worth more than that hour spent elsewhere.
 
-ONE CROP BY DEFAULT, NOT ONE CROP BY CONSTRUCTION. The module started with
-wheat as the only representable crop, following the instruction to not model
-a dozen crops and `data/production/40_organics.json`, which already carries
-the tree's own wheat numbers. That was too rigid: the stakeholder's own
-objection is that fertiliser, rotation, a better crop, better land, better
-draught power and better storage all have to be able to change the answer,
-and a module with every parameter hardcoded to one crop-soil-technique
-combination cannot represent any of them (CLAUDE.md SS3.1). So the numbers
-below are now organised as small tables - `Crop`, `Soil`, `Rotation`,
-`Toolkit`, `StorageTechnique` - each one a named bundle of declared numbers
-for one instance of that axis (wheat vs potatoes vs rice; ordinary
-Mediterranean loam vs Ukrainian chernozem vs arctic tundra; two-field vs
-three-field vs Nile flood-recession farming; ard-and-ox vs horse-collar-and-
-mouldboard vs a mechanical reaper; a pit silo vs a refrigerated store).
-Every function below takes these as optional arguments and defaults to the
-ORIGINAL wheat/ordinary-soil/two-field/ard-and-sickle/pit-silo combination,
-so the headline number this module has always reported is unchanged -
+ONE CROP BY DEFAULT, NOT ONE CROP BY CONSTRUCTION. The numbers below are
+organised as small tables - `Crop`, `Soil`, `Rotation`, `Toolkit`,
+`StorageTechnique` - each one a named bundle of declared numbers for one
+instance of that axis (wheat vs potatoes vs rice; ordinary Mediterranean loam
+vs Ukrainian chernozem vs arctic tundra; two-field vs three-field vs Nile
+flood-recession farming; ard-and-ox vs horse-collar-and-mouldboard vs a
+mechanical reaper; a pit silo vs a refrigerated store), because fertiliser,
+rotation, a better crop, better land, better draught power and better storage
+all have to be able to change the answer, and a module with every parameter
+hardcoded to one crop-soil-technique combination cannot represent any of them
+(CLAUDE.md SS3.1). Every function below takes these as optional arguments and
+defaults to the wheat/ordinary-soil/two-field/ard-and-sickle/pit-silo
+combination, so the headline number this module reports is stable -
 `sim/tests/test_agriculture.py` pins that. Diminishing returns to labour on
-fixed land is still the one property that has to hold at every combination,
-and it does, because every table just rescales the same Cobb-Douglas curve;
-see `gross_harvest_kg`.
+fixed land is the one property that has to hold at every combination, and it
+does, because every table just rescales the same Cobb-Douglas curve; see
+`gross_harvest_kg`.
 
-ARITHMETIC CORRECTION TO data/production/40_organics.json, MADE THERE RATHER
-THAN WORKED AROUND HERE. That file's `wheat_kg` entry used to set its yield
-at 800 kg/ha and call it net of seed, while deriving it in the same paragraph
-as "4-5 fold [return] on the seed sown... at a seeding rate around 150-180
-kg/ha". Fold-return is measured against the seed sown, so that arithmetic
-produces a GROSS harvest and the seed is inside it; 800 was a defensible
-gross figure and an indefensible net one, and the two readings differ by 28%.
-The entry now states 577.5 kg/ha (4.5 fold on 165 kg/ha, less the 165 kg/ha
-of seed corn), which is what this module computes, so the file and this
-module now agree by construction rather than by coincidence -
+NET YIELD MUST MATCH data/production/40_organics.json's `wheat_kg` ENTRY, BY
+CONSTRUCTION. Fold-return is measured against the seed sown, so a fold-return
+figure produces a GROSS harvest with the seed inside it; net of seed, wheat's
+4.5-fold return on 165 kg/ha of seed corn gives 577.5 kg/ha, which is what
+this module computes and what the data file states -
 `sim/tests/test_agriculture.py`'s DataConsistencyTests reads the file and
 checks it, so the two cannot drift apart unnoticed.
 
@@ -82,10 +73,9 @@ much one worker can reap inside it - one full-time farm worker produces
 enough NET food to feed roughly five people, so about 21% of a population
 has to farm. The pre-industrial figure every society actually shows is
 80-90% (CLAUDE.md SS3.2's own calibration target). Nothing here is tuned to
-close that gap, and the gap is now four-fold rather than the seventeen-fold
-this module first computed. What closed the larger part of it was one
-mechanism, added after the fact and worth stating plainly because it is not
-where the first reading looked:
+close that gap, and the gap is a factor of about four. One mechanism
+accounts for most of what closes it, worth stating plainly because it is not
+where a first reading would look:
 
   THE BINDING CONSTRAINT IS THE HARVEST WINDOW, NOT THE FARMING YEAR. Grain
   ripens and is then lost to shattering and lodging within two or three
@@ -145,14 +135,14 @@ likely hiding, in the order this module would bet on:
       to any cost computed from those hours, which is what
       data/production/40_organics.json feeds.
 
-THE HARVEST WINDOW NOW ALSO BINDS gross_harvest_kg, NOT ONLY THE HEADLINE
-CALIBRATION. HARVEST_WINDOW_DAYS and HECTARES_REAPED_PER_WORKER_DAY used to be
-read only by `hectares_per_worker_harvest_window_ceiling`, which feeds the
-headline calibration function - `gross_harvest_kg`, the function `Storage.
-step` actually calls every year, never saw them, so it would gladly turn an
+THE HARVEST WINDOW BINDS gross_harvest_kg DIRECTLY, NOT ONLY THE HEADLINE
+CALIBRATION. HARVEST_WINDOW_DAYS and HECTARES_REAPED_PER_WORKER_DAY are read
+by `gross_harvest_kg` itself, the function `Storage.step` calls every year -
+not only by `hectares_per_worker_harvest_window_ceiling`, which feeds the
+headline calibration function. Without that, `gross_harvest_kg` would turn an
 arbitrarily large pool of labour_hours applied to an arbitrarily large `Land`
 into a harvest no crew could physically have reaped inside a real harvest
-season. `gross_harvest_kg` now converts its `labour_hours` pool into
+season. Instead it converts its `labour_hours` pool into
 worker-year-equivalents (dividing by ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, the
 same conversion `hectares_cropped_per_farm_worker` already uses) and caps the
 LAND that actually contributes to the harvest at what that many workers could
@@ -223,9 +213,55 @@ SHAPE.
                   `YearFlows` is the exact accounting of that cycle - see
                   `Storage.step` for the identity `sim/tests/test_
                   agriculture.py`'s conservation check verifies every year.
+
+THIS FILE IS A COMPOSITION POINT over three sibling files, grouped by
+subject rather than gathered into one large file, so an agent working on one
+part of farming is not forced to collide with one working on another part.
+The three siblings hold the functions and classes:
+
+    agriculture_yield.py     the production function itself: `Land`, one
+                              year's weather draw, the harvest-window
+                              helpers, `gross_harvest_kg` and `marginal_
+                              product_of_labour_kg_per_hour`.
+    agriculture_storage.py   the granary: `annual_food_demand_kg_per_
+                              person`, `granary_capacity_kg`, `YearFlows`,
+                              `Storage` and `stock_to_carry_forward_kg`.
+    agriculture_labour.py    sizing a farm worker's land and a civilisation's
+                              farm from its population: `hectares_cropped_
+                              per_farm_worker` and its two ceilings, `holding_
+                              hectares_required_per_farm_worker`, `fraction_
+                              of_population_that_must_farm`, `farm_workers_
+                              fte_for_population`, `farmland_for_population`.
+
+WHY THIS FILE STILL HOLDS EVERY `declare()` CALL. `sim/constants.py`'s
+`_import_declaring_modules()` keeps an explicit list of every module that
+calls `declare()`, by dotted name, and `sim/tests/test_constants_burndown.py`'s
+`test_every_declaring_module_under_sim_world_is_in_the_list` fails if any
+`sim/world/*.py` file contains the literal text `declare(` without its own
+dotted name in that list - a number declared in an unlisted file goes
+missing from the burndown silently, which is the exact bug that test exists
+to catch (see its own docstring). So every `declare()` call this module
+makes - effectively everything from SEED AND YIELD BIOLOGY below through
+CALIBRATION TARGETS - stays in this file, the one already on that list,
+rather than moving to a sibling. The `Crop`/`Soil`/`Rotation`/`Toolkit`/
+`StorageTechnique` namedtuple types and the named table instances built from
+them (`WHEAT`, `POTATOES`, `RICE`, the soils, the rotations, the toolkits,
+the storage techniques) stay here for the same reason: they are the SAME
+subject as the rest of what this file declares, so moving only the
+instance-construction lines to a sibling would group by file size rather
+than by subject.
+
+THE IMPORT SURFACE MATCHES A SINGLE agriculture.py. Every declared constant,
+`Crop`/`Soil`/`Rotation`/`Toolkit`/`StorageTechnique` and their table
+instances, `Land`, `Storage`, `YearFlows`, and every function this module
+exports is reachable as `agriculture.<name>`. The relative imports just
+above the `if __name__ == "__main__":` block below pull the three siblings'
+names into this module's own namespace for exactly that reason: nothing
+elsewhere in the repository needs to know these three files exist.
 """
 import collections
 import random
+from typing import Optional
 
 from sim.constants import declare
 from sim.world.shared_constants import (
@@ -236,25 +272,20 @@ from sim.world.shared_constants import (
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
     WHEAT_ENERGY_KCAL_PER_KG,
 )
-# THE SIX NAMES ABOVE ARE NOT RE-DECLARED BELOW (one of them,
+# THE SIX NAMES ABOVE ARE IMPORTED, NOT DECLARED, HERE (one of them,
 # SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY, is given this file's
-# own historical public name, HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
-# by a plain assignment where it used to be declared - see that spot
-# below). Each used to be its own
-# `declare()` call in this file, independently, with a value that happened
-# to match sim/world/land.py's own independent copy of the same physical
-# fact under a DIFFERENT name (LABOUR_OUTPUT_ELASTICITY /
-# LAND_LABOUR_OUTPUT_ELASTICITY, and three more pairs like it - see
-# sim/world/shared_constants.py's own module docstring for the incident and
-# the full inventory). Importing them from one shared declaration means
-# there is exactly one number to change and no second copy that can
-# silently disagree with it - the STANDALONE property this file and
-# land.py both keep (see this file's own docstring) is unaffected, because
-# sim/world/shared_constants.py imports nothing but sim.constants.declare,
-# the same as this file already does. This file's own historical public
-# names for these five values (assigned just below, where each used to be
-# declared) are kept unchanged, so every existing caller and test that
-# reads e.g. `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
+# own public name, HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY, by a plain
+# assignment below). sim/world/shared_constants.py is the single declaration
+# for each, so there is exactly one number to change and no second copy that
+# can silently disagree with it, of the kind recorded as an incident in
+# sim/world/shared_constants.py's own module docstring (three more pairs
+# like it are listed there too). Importing them does not break the
+# STANDALONE property this file and sim/world/land.py both keep (see this
+# file's own docstring), because sim/world/shared_constants.py imports
+# nothing but sim.constants.declare, the same as this file already does.
+# This file's own public names for these five values (assigned just below)
+# are kept unchanged, so every existing caller and test that reads e.g.
+# `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
 
 # ============================================================================
 # SEED AND YIELD BIOLOGY
@@ -266,8 +297,8 @@ from sim.world.shared_constants import (
 # the same range the task that produced this module names independently:
 # "Roman wheat returned something like four to five times the seed sown on
 # decent land, around a tonne per hectare gross." See the module docstring's
-# ARITHMETIC CORRECTION section for the gross-versus-net question these
-# two numbers used to disagree on, and where it was settled.
+# NET YIELD MUST MATCH section for the gross-versus-net distinction that
+# governs how these two numbers are used.
 
 SEED_SOWING_RATE_KG_PER_HA = declare(
     "SEED_SOWING_RATE_KG_PER_HA", 165.0,
@@ -310,27 +341,22 @@ GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA = (
 # ============================================================================
 
 # REFERENCE_LABOUR_HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and
-# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER used to each be declared here. All
-# three are now imported from sim.world.shared_constants (see this file's
-# top-of-file import comment) because sim/world/land.py's own LABOUR
-# INTENSITY section needs the identical Cobb-Douglas physics and used to
-# duplicate all three under LAND_-prefixed names rather than import this
-# file (land.py is STANDALONE and may not). One declaration, imported by
-# both, replaces two that had to be kept equal by hand. The names below are
-# unchanged from this module's history - REFERENCE_LABOUR_HOURS_PER_HECTARE
-# is still the labour intensity GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA
-# is quoted at and the anchor the Cobb-Douglas yield curve below is
-# calibrated against (see the module docstring's headline-number section
-# for why it is this module's leading suspect for the computed
-# farm-population share coming out far below the historical 80-90%);
-# LABOUR_OUTPUT_ELASTICITY is still the curve shape that makes doubling
-# labour on fixed land yield less than double the output;
-# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER is still how many hours one adult can
-# give to field work across a year, used only to turn a per-hectare labour
-# requirement into a hectares-per-worker figure for the headline
-# calibration check. See sim/world/shared_constants.py for the full
-# provenance and why paragraphs, which are not duplicated here for the same
-# reason the numbers themselves no longer are.
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER are imported from
+# sim.world.shared_constants (see this file's top-of-file import comment),
+# because sim/world/land.py needs the identical Cobb-Douglas physics and is
+# STANDALONE, so it cannot import this file - one shared declaration,
+# imported by both, replaces two copies that would otherwise have to be kept
+# equal by hand. REFERENCE_LABOUR_HOURS_PER_HECTARE is the labour intensity
+# GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA is quoted at and the anchor the
+# Cobb-Douglas yield curve below is calibrated against (see the module
+# docstring's headline-number section for why it is this module's leading
+# suspect for the computed farm-population share coming out far below the
+# historical 80-90%); LABOUR_OUTPUT_ELASTICITY is the curve shape that makes
+# doubling labour on fixed land yield less than double the output;
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER is how many hours one adult can give to
+# field work across a year, used only to turn a per-hectare labour
+# requirement into a hectares-per-worker figure for the headline calibration
+# check. See sim/world/shared_constants.py for the full provenance.
 
 # ============================================================================
 # SEASONALITY: THE HARVEST WINDOW
@@ -451,21 +477,17 @@ HECTARES_REAPED_PER_WORKER_DAY = declare(
 # fraction_of_population_that_must_farm(), and wiring it in there would be
 # double-counting a constraint that is not yet binding.
 
-# FALLOW_SHARE_OF_HOLDING used to be declared here. It is now imported from
-# sim.world.shared_constants (see this file's top-of-file import comment):
-# sim/world/land.py needs this exact fraction too, and used to declare its
-# own reciprocal transform of it (FALLOW_HOLDING_MULTIPLIER = 1 / (1 -
-# fallow_share)) as an independently-set number rather than a derived one -
-# the HARD case of the same quantity duplicated under a different name AND
-# a different unit, not merely a different name. See
+# FALLOW_SHARE_OF_HOLDING is imported from sim.world.shared_constants (see
+# this file's top-of-file import comment): sim/world/land.py needs this
+# exact fraction too, as FALLOW_HOLDING_MULTIPLIER = 1 / (1 - fallow_share),
+# so land.py computes that ratio from this declaration rather than declaring
+# an independent number that could drift from it - see
 # sim/world/shared_constants.py's own LAND USE section for the full
-# provenance and why land.py's copy is now arithmetic on this declaration
-# instead of a second `declare()` call. This name and its role are
-# otherwise unchanged: it still converts cropped area into the land a farm
-# must actually hold, and the later three-field rotation's own, DIFFERENT
-# idle share is still THREE_FIELD_FALLOW_SHARE_OF_HOLDING below, declared
-# separately because it names a different technique, not a duplicate of
-# this one.
+# provenance. This name and its role are unchanged: it converts cropped area
+# into the land a farm must actually hold, and the three-field rotation's
+# own, DIFFERENT idle share is THREE_FIELD_FALLOW_SHARE_OF_HOLDING below,
+# declared separately because it names a different technique, not a
+# duplicate of this one.
 
 # ============================================================================
 # WEATHER
@@ -614,23 +636,21 @@ DAYS_PER_YEAR = declare(
         "food_available_calories_per_day.")
 
 # HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY keeps this module's own
-# historical public name, but the VALUE now comes from sim.world.
-# shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY (see
-# this file's top-of-file import) rather than a second `declare()` call.
-# sim/world/land.py needs the identical figure (formerly under its own
-# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY name) and now imports the same
-# shared declaration; sim/world/demand.py, sim/world/demography.py and
-# sim/world/military_logistics.py still declare it independently under
-# their own names (out of this change's ownership - see
-# sim/world/shared_constants.py's own WHAT DOES NOT BELONG HERE section and
-# sim/tests/test_shared_constants.py for how a future drift there is still
-# caught).
+# public name, but its VALUE comes from sim.world.shared_constants's
+# SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY (see this file's
+# top-of-file import), so this file and sim/world/land.py cannot silently
+# disagree on it. sim/world/demand.py, sim/world/demography.py and
+# sim/world/military_logistics.py each still declare the same figure
+# independently under their own names - see sim/world/shared_constants.py's
+# own WHAT DOES NOT BELONG HERE section for why those stay separate - and
+# sim/tests/test_shared_constants.py is what catches a future drift between
+# them.
 HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY = (
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY)
 
-# WHEAT_ENERGY_KCAL_PER_KG used to be declared here too; it is now imported
-# directly under this same name from sim.world.shared_constants (see the
-# top-of-file import), for the identical reason.
+# WHEAT_ENERGY_KCAL_PER_KG is imported under this same name from
+# sim.world.shared_constants (see the top-of-file import), for the identical
+# reason: one declaration, no second copy to drift.
 
 # ============================================================================
 # CROP, SOIL, ROTATION, TOOLKIT AND STORAGE-TECHNIQUE TABLES
@@ -1352,835 +1372,57 @@ HISTORICAL_FARM_POPULATION_SHARE_HIGH = declare(
     confidence="B",
     why="The high end of the same range.")
 
-
-def annual_food_demand_kg_per_person(crop=None):
-    """One person's food need for a year, in kilograms of `crop` (default
-    wheat).
-
-    A single-staple simplification, same as the rest of this module: real
-    pre-industrial diets were not 100% grain calories (legumes, oil, wine,
-    some meat and dairy filled in the rest), which this module cannot
-    represent with one crop at a time. That simplification runs in the
-    direction of UNDERSTATING how much land a real diet needs, since grain
-    is generally the highest-yield-per-hectare calorie source available -
-    see the module docstring's headline-number reading for how this bears
-    on the computed farm-population share coming out low rather than high.
-    """
-    crop = crop or DEFAULT_CROP
-    return (HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY * DAYS_PER_YEAR
-            / crop.energy_kcal_per_kg)
-
-
-def granary_capacity_kg(food_demand_kg, capacity_years=None):
-    """How much grain a population's storage infrastructure can physically
-    hold, given `food_demand_kg` (that population's OWN annual food need -
-    see `annual_food_demand_kg_per_person`, usually multiplied up by however
-    many people there are).
-
-    This is a ceiling on the STOCK a granary can carry into next year, not a
-    term inside `Storage.step`'s own one-year accounting - see
-    GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration for why the cap lives
-    here, as a plain function callers apply to whatever they carry forward,
-    rather than inside `Storage` itself. A caller (sim/engine/core.py) that
-    ignores this entirely just gets an uncapped granary - nothing in
-    `Storage.step` enforces it - so applying it is the caller's choice, the
-    same way applying `storage_technique` at all is.
-
-    `capacity_years` defaults to GRANARY_CAPACITY_YEARS_OF_DEMAND; a caller
-    exploring a different storage infrastructure (a state granary system
-    built for multi-year reserves, or a village with no real granary at all)
-    passes its own figure.
-    """
-    if capacity_years is None:
-        capacity_years = GRANARY_CAPACITY_YEARS_OF_DEMAND
-    return food_demand_kg * capacity_years
-
-
-class Land(object):
-    """A parcel of ground: how big, and how good.
-
-    `quality` is a plain multiplier on yield, 1.0 being the "decent land"
-    baseline data/production/40_organics.json's own wheat entry describes.
-    Nothing here enforces a range - a quality of 0.5 (poor, marginal land)
-    or 1.3 (an unusually good river-silt field) are both legitimate inputs.
-    This is deliberately the only place land heterogeneity lives: the
-    EXTENSIVE MARGIN (bringing worse land under the plough once the best
-    land is fully worked) is a real and important later feature, and it
-    only has somewhere to attach because quality is a property of the land,
-    not folded into a single society-wide yield number.
-    """
-
-    __slots__ = ("hectares", "quality")
-
-    def __init__(self, hectares, quality=1.0):
-        if hectares < 0:
-            raise ValueError("hectares cannot be negative: %r" % (hectares,))
-        if quality <= 0:
-            raise ValueError("quality must be positive: %r" % (quality,))
-        self.hectares = float(hectares)
-        self.quality = float(quality)
-
-    def __repr__(self):
-        return "Land(hectares=%.4f, quality=%.4f)" % (self.hectares, self.quality)
-
-
-def draw_weather_multiplier(rng, weather_stdev_fraction=WEATHER_YIELD_STDEV_FRACTION):
-    """One year's weather, as a single multiplier on yield.
-
-    Not a daily process - see the module docstring's SHAPE section for why
-    an annual draw is enough here. `rng` is an ordinary `random.Random`
-    owned by the caller (`Storage` keeps one per instance), so the same
-    seed reproduces the same sequence of years exactly, every time, in the
-    same process - see sim/tests/test_agriculture.py's determinism check.
-
-    `weather_stdev_fraction` defaults to the reference (ordinary
-    Mediterranean loam) figure but is a `Soil` property - see the SOIL
-    TABLE section - since how much one year's weather can move a harvest
-    is a fact about a PLACE, not about agriculture in general. The clip
-    bounds (WEATHER_FLOOR_MULTIPLIER, WEATHER_CEILING_MULTIPLIER) are not
-    parametrised the same way: nothing in the task this module answers to
-    asked for them to vary by place, and they are a safety clip on an
-    otherwise-unbounded Gaussian rather than a climate fact.
-    """
-    draw = rng.gauss(1.0, weather_stdev_fraction)
-    return max(WEATHER_FLOOR_MULTIPLIER, min(WEATHER_CEILING_MULTIPLIER, draw))
-
-
-def _max_hectares_harvestable_by_labour(labour_hours, crop, toolkit,
-                                        worker_count=None,
-                                        hours_per_worker_day=None):
-    """How much land the harvest window and the reaping rate let
-    `labour_hours` worth of workers actually bring in this season - the fix
-    for the defect the module docstring's "THE HARVEST WINDOW NOW ALSO
-    BINDS" section describes.
-
-    `gross_harvest_kg` takes a POOL of hours, but HARVEST_WINDOW_DAYS and
-    HECTARES_REAPED_PER_WORKER_DAY are stated per WORKER-DAY, so the pool
-    has to be converted to worker-equivalents before either ceiling means
-    anything. The conversion used is division by
-    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER - the SAME conversion
-    `hectares_per_worker_annual_hours_ceiling` already uses - on the
-    reasoning that a pool of hours is indistinguishable, in this module,
-    from that many worker-years of a single worker's time; the model has no
-    way to tell "one worker given unlimited hours" apart from "many workers
-    each given a normal year", and does not need to for the answer to be
-    honest: EITHER way, the workers implied by the pool are still each
-    capped at `hectares_cropped_per_farm_worker` hectares, because that cap
-    is itself the smaller of the annual-hours ceiling and the harvest-
-    window ceiling. An actor with unlimited hours (autonomous labour; a
-    robot) gets unlimited worker-equivalents from this division, and can
-    therefore still reap unlimited land in the limit - that is the
-    physically correct answer for adding unlimited WORKERS - but it cannot
-    reap more land than that many worker-equivalents' share of the window
-    allows just by working any one of them harder, which is the bug this
-    replaces: a large `labour_hours` on a large `Land` no longer produces a
-    harvest bigger than the implied crew could have physically reaped.
-
-    THE ABOVE REASONING IS WRONG WHERE IT MATTERS MOST, AND THE CORRECTION
-    IS `worker_count`. "A pool of hours is indistinguishable from that many
-    worker-years" holds for the annual-hours ceiling and fails for the
-    harvest-window one, because the window is CALENDAR TIME. Twenty-one days
-    is twenty-one days however many hours an actor is willing to work; one
-    reaper can only be in one field at a time, and the hours it has outside
-    the window cannot reap anything. Dividing annual hours by a human's
-    annual hours smears a whole year's labour into three weeks.
-
-    Measured, at the constants declared in this file: one actor working
-    every hour of the year (8,760 h) comes out of the division at 6.26
-    worker-equivalents and is allowed 13.14 ha, where the window physics
-    allow 21 days x 24 h x 0.01 ha/h = 5.04 ha. The model overstates by
-    2.61x, and it overstates in exactly the direction that flatters
-    autonomous labour - which is the case this correction was asked for.
-
-    So: pass `worker_count` whenever the actors are not ordinary humans
-    working an ordinary farming year, and the cap is computed from calendar
-    time instead. Leaving it None keeps the worker-equivalent derivation,
-    which is exactly right for the default case and is why every existing
-    number in this module is unmoved by this change.
-    """
-    if labour_hours <= 0.0:
-        return 0.0
-    if worker_count is not None:
-        return max_hectares_reapable_by_crew(
-            worker_count, hours_per_worker_day=hours_per_worker_day,
-            crop=crop, toolkit=toolkit)
-    worker_equivalents = labour_hours / ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
-    return worker_equivalents * hectares_cropped_per_farm_worker(crop, toolkit)
-
-
-def hectares_reaped_per_worker_hour(crop=None, toolkit=None):
-    """The instantaneous reaping rate: hectares one worker brings in per
-    hour actually spent reaping. The per-DAY rate divided by the length of
-    a harvest working day, so the two are the same fact stated twice and
-    neither can drift from the other.
-    """
-    crop = crop or DEFAULT_CROP
-    toolkit = toolkit or DEFAULT_TOOLKIT
-    per_day = (crop.base_hectares_reaped_per_worker_day
-               * toolkit.reaping_rate_multiplier)
-    return per_day / HARVEST_WORKING_DAY_HOURS
-
-
-def max_hectares_reapable_by_crew(worker_count, hours_per_worker_day=None,
-                                  crop=None, toolkit=None):
-    """The physically correct harvest cap: how much a crew of
-    `worker_count` can actually bring in, from calendar time.
-
-        crew size  x  window days  x  hours worked per day  x  ha per hour
-
-    Every term is a real quantity rather than an accounting convenience,
-    which is what makes this the form that answers the awkward questions:
-
-    - AUTONOMOUS LABOUR (a robot, or anything that does not sleep) raises
-      `hours_per_worker_day` toward 24 and gets a proportional gain, capped
-      at 2.4x a ten-hour human. It does NOT get to multiply its capacity by
-      working the other eleven months harder, which is what the
-      worker-equivalent derivation wrongly allowed.
-    - A BETTER TOOL raises the hectares-per-hour term (scythe, cradle,
-      mechanical reaper) and is the only thing that lifts the ceiling
-      without more bodies or longer days.
-    - A CROP WITH A LONGER OR STAGGERED RIPENING raises the window term.
-
-    Passing the default ten-hour day for one worker reproduces
-    `hectares_per_worker_harvest_window_ceiling()` exactly, by construction:
-    21 days x 10 h x 0.01 ha/h = 2.1 ha. That identity is asserted in
-    sim/tests/test_agriculture.py so the two cannot drift apart.
-    """
-    crop = crop or DEFAULT_CROP
-    if hours_per_worker_day is None:
-        hours_per_worker_day = HARVEST_WORKING_DAY_HOURS
-    hours_per_worker_day = min(hours_per_worker_day, HOURS_PER_DAY)
-    return (worker_count * crop.harvest_window_days * hours_per_worker_day
-            * hectares_reaped_per_worker_hour(crop, toolkit))
-
-
-def gross_harvest_kg(land, labour_hours, technique_multiplier=1.0,
-                      weather_multiplier=1.0, crop=None, toolkit=None,
-                      rotation=None, worker_count=None, hours_per_worker_day=None):
-    """Grain (or `crop`) reaped from `land` this season, in kilograms,
-    BEFORE seed is paid back or anything is eaten or spoiled - the same
-    "gross" the module docstring's DISAGREEMENT section discusses.
-
-    The functional form is Cobb-Douglas in land and labour: constant
-    returns to scale in the two together (double both and you double the
-    harvest, which is just saying a second, identical field worked the
-    same way produces the same as the first), but LABOUR_OUTPUT_ELASTICITY
-    < 1 means that on a FIXED parcel, output grows slower than labour does.
-    That is the single most important property this module has to get
-    right: a linear yield-to-labour relationship would never produce a
-    population ceiling, because a large enough population working small
-    enough plots would always find some marginal-but-positive use for one
-    more hour, right up to the point that fails to happen in reality.
-
-    THE LAND SIDE OF THE CURVE IS CAPPED AT WHAT THE LABOUR POOL CAN
-    ACTUALLY REAP INSIDE THE HARVEST WINDOW - see
-    `_max_hectares_harvestable_by_labour`. `land.hectares` is what a farm
-    HOLDS; the smaller of `land.hectares` and that cap is what actually
-    gets reaped and enters the Cobb-Douglas land term. Only the LAND term
-    is capped this way, not `labour_hours` itself: extra hours applied to
-    the land that DOES get reaped (weeding it more, say) still raise
-    output through the ordinary diminishing-returns labour term, only
-    extra hours cannot buy MORE reaped area once the window and rate are
-    already saturated for the given number of worker-equivalents.
-
-    `crop` and `toolkit` (see the CROP TABLE and TOOLKIT TABLE sections)
-    replace what used to be single wheat-and-ard constants: `crop` sets
-    the fold-return, the planting-material rate and the reference labour
-    and reaping-rate baseline; `toolkit` rescales that baseline (labour-
-    hours multiplier, reaping-rate multiplier) and contributes its own
-    ploughing-yield multiplier. `rotation` contributes only its soil-
-    fertility yield multiplier here - its fallow share is a LAND
-    requirement, read by `holding_hectares_required_per_farm_worker`, never
-    by this function (see the ROTATION AND FALLOW section).
-
-    `land.quality`, `technique_multiplier` and `weather_multiplier` all
-    enter as plain multipliers on top of the land/labour curve - none of
-    them changes its SHAPE (the diminishing-returns property holds at any
-    quality, technique or weather draw), only its level.
-
-    `worker_count`/`hours_per_worker_day` are the SAME override
-    `_max_hectares_harvestable_by_labour` already accepts, threaded through
-    here rather than left reachable only from that private helper. WHY A
-    CALLER WHO KNOWS ITS WORKFORCE SHOULD ALWAYS PASS `worker_count`, NOT
-    ONLY WHEN THE ACTORS ARE UNUSUAL: `_max_hectares_harvestable_by_labour`
-    otherwise has to GUESS the workforce back out of `labour_hours` by
-    dividing by ANNUAL_LABOUR_HOURS_PER_FARM_WORKER (1,400) - a guess that
-    is only exact when `labour_hours` was ITSELF built as `worker_count *
-    1,400`. `labour_hours` here also drives the Cobb-Douglas LABOUR term,
-    which sim/tests/test_agriculture.py's own
-    HarvestWindowBindsGrossHarvestTests calibrates in the OTHER convention -
-    hours actually worked, `REFERENCE_LABOUR_HOURS_PER_HECTARE` (150) times
-    hectares actually worked - and 150 h/ha and 1,400 h/worker/year do not
-    agree (that gap IS the module's own "harvest window leaves the annual-
-    hours ceiling slack by 4:1" finding). A caller that sizes `labour_hours`
-    to satisfy one convention and lets this function guess the workforce
-    from it via the OTHER is silently double-counting or under-counting the
-    window cap - not a bug in either convention alone, only in combining
-    them without saying which one a known workforce should be read against.
-    Passing `worker_count` explicitly (when it is known - engine-side
-    callers with an actual headcount, not the module's own scalar tests)
-    sidesteps the guess entirely: `worker_count` alone decides the window
-    cap, `labour_hours` alone decides the labour-term intensity, and a
-    caller is then responsible for making the two agree - see
-    sim/engine/core.py's `_demographic_recovery` for the one place this
-    project does that today.
-    """
-    crop = crop or DEFAULT_CROP
-    toolkit = toolkit or DEFAULT_TOOLKIT
-    rotation = rotation or DEFAULT_ROTATION
-    if labour_hours <= 0.0 or land.hectares <= 0.0:
-        return 0.0
-    effective_hectares = min(
-        land.hectares,
-        _max_hectares_harvestable_by_labour(
-            labour_hours, crop, toolkit, worker_count=worker_count,
-            hours_per_worker_day=hours_per_worker_day))
-    if effective_hectares <= 0.0:
-        return 0.0
-
-    reference_labour_hours_per_hectare = (
-        crop.base_labour_hours_per_hectare * toolkit.labour_hours_multiplier)
-    gross_yield_at_reference_labour_kg_per_ha = (
-        crop.planting_material_kg_per_ha * crop.fold_return_on_planting_material)
-    total_factor_productivity = (
-        gross_yield_at_reference_labour_kg_per_ha
-        / (reference_labour_hours_per_hectare ** LABOUR_OUTPUT_ELASTICITY))
-
-    per_land_component = effective_hectares ** (1.0 - LABOUR_OUTPUT_ELASTICITY)
-    per_labour_component = labour_hours ** LABOUR_OUTPUT_ELASTICITY
-    fertility_multiplier = (
-        toolkit.ploughing_yield_multiplier * rotation.soil_fertility_yield_multiplier)
-    return (total_factor_productivity * per_land_component * per_labour_component
-            * land.quality * fertility_multiplier
-            * technique_multiplier * weather_multiplier)
-
-
-def marginal_product_of_labour_kg_per_hour(land, labour_hours,
-                                            technique_multiplier=1.0,
-                                            weather_multiplier=1.0,
-                                            crop=None, toolkit=None,
-                                            rotation=None, worker_count=None,
-                                            hours_per_worker_day=None):
-    """Extra kilograms of grain the NEXT hour of labour on `land` would add,
-    at the current `labour_hours` already applied.
-
-    Closed form rather than a finite difference. The harvest is
-    Cobb-Douglas in effective hectares and labour hours:
-
-        harvest = productivity
-                * effective_hectares ** (1 - labour_elasticity)
-                * labour_hours ** labour_elasticity
-                * (other multipliers)
-
-    Differentiating with respect to labour_hours, everything that does not
-    depend on it survives untouched, and the power rule turns the labour
-    term into labour_elasticity times itself over labour_hours. So the
-    whole expression collapses to
-
-        extra harvest per extra hour
-            = labour_elasticity * harvest / labour_hours
-
-    which needs no separate evaluation of the production function. This
-    still holds with the harvest-window cap in `gross_harvest_kg`, PROVIDED
-    the extra hour does not itself push `labour_hours` past the point where
-    more worker-equivalents would unlock more reapable land - that is,
-    EFFECTIVE HECTARES is being held fixed for this derivative, exactly as
-    `land.hectares` used to be. That is the ordinary calculus
-    approximation this closed form always made; it is now conditioned on
-    the window not being the very thing about to change, which is true for
-    any actual next hour (an infinitesimal addition to a large pool does
-    not cross a worker-equivalent threshold). This is exactly what the
-    labour market needs to decide whether one more hour of a worker's time
-    is worth more on the farm or somewhere else - "the surplus is what
-    frees a worker to do anything else" only has a hiring boundary once
-    something can say what the marginal farm hour is worth in grain. It
-    falls strictly as labour_hours rises (LABOUR_OUTPUT_ELASTICITY < 1),
-    which is the same diminishing-returns property gross_harvest_kg has,
-    stated as a rate instead of a level - see sim/tests/test_agriculture.
-    py's diminishing-returns check, which tests this function directly
-    rather than inferring monotonicity from harvest totals.
-    """
-    if labour_hours <= 0.0:
-        raise ValueError("marginal product is undefined at zero labour hours")
-    harvest = gross_harvest_kg(land, labour_hours, technique_multiplier,
-                               weather_multiplier, crop, toolkit, rotation,
-                               worker_count=worker_count,
-                               hours_per_worker_day=hours_per_worker_day)
-    return LABOUR_OUTPUT_ELASTICITY * harvest / labour_hours
-
-
-YearFlows = collections.namedtuple(
-    "YearFlows",
-    ["weather_multiplier", "labour_hours_applied", "seed_sown_kg",
-     "gross_harvest_kg", "food_demand_kg", "consumption_kg",
-     "food_shortfall_kg", "spoilage_kg", "seed_retained_kg", "carryover_kg",
-     "stock_before_kg", "stock_after_kg", "food_available_kcal_per_day",
-     "marginal_product_last_hour_kg_per_hour"])
-
-
-class Storage(object):
-    """Grain in the granary, and the one-year cycle that moves it.
-
-    `stock_kg` is the only state. Everything else (which land, how much
-    labour, what technique, how many mouths) is passed into `step()` fresh
-    each year, exactly like sim/world/demography.py's `Population.step` -
-    the two modules were built independently but ended up with the same
-    shape (mutate one small piece of state in place, return an immutable
-    record of the flows that produced the new state) because it is the
-    natural shape for "advance one tick of an otherwise stateless process".
-    """
-
-    def __init__(self, stock_kg=0.0, seed=None):
-        self.stock_kg = float(stock_kg)
-        self._random = random.Random(seed)
-
-    def __repr__(self):
-        return "Storage(stock_kg=%.4f)" % (self.stock_kg,)
-
-    def step(self, land, labour_hours, population, technique_multiplier=1.0,
-             hectares_next_year=None, crop=None, soil=None, rotation=None,
-             toolkit=None, storage_technique=None, worker_count=None,
-             hours_per_worker_day=None, reserve_target_kg=None,
-             weather_multiplier=None):
-        """Advance one year: sow, grow, harvest, eat, spoil, retain next
-        year's seed, bank whatever is left. Mutates `self.stock_kg` and
-        returns the exact flows that moved it.
-
-        `crop`, `soil`, `rotation`, `toolkit` and `storage_technique` each
-        default to the original wheat/ordinary-loam/two-field/ard-and-
-        sickle/pit-silo combination (see the CROP/SOIL/ROTATION/TOOLKIT/
-        STORAGE-TECHNIQUE TABLE sections) so calling `step` exactly as
-        before reproduces exactly what it always computed.
-
-        `worker_count`/`hours_per_worker_day` are forwarded verbatim to
-        `gross_harvest_kg` - see that function's own docstring for why a
-        caller that knows its actual workforce should pass `worker_count`
-        rather than let the harvest-window cap guess one back out of
-        `labour_hours`.
-
-        `weather_multiplier` defaults to `None`, meaning "draw one from
-        `self._random` the way this method always has" (step 2 below). A
-        caller that passes a number instead (sim/engine/core.py's
-        `_pooled_farm_weather_multiplier`, Complaints/47-one-weather-draw-
-        for-a-continent.md) gets that number used AS this year's weather
-        multiplier verbatim, and `self._random`/`draw_weather_multiplier`
-        are not touched at all - this is what lets a caller that already
-        knows how to pool several independent regional draws into one
-        civilisation-wide multiplier (a land-share-weighted average, not a
-        single region's draw) hand the RESULT of that pooling to this
-        method instead of this method drawing its own single, un-pooled
-        multiplier internally. Every existing caller that does not pass
-        this argument is unaffected - this is an additional way IN, not a
-        change to the default path.
-
-        ORDER OF OPERATIONS (fixed, so the same inputs always give the same
-        answer regardless of what order someone might otherwise compute
-        things in - see sim/world/demography.py's `Population.step` for the
-        same discipline applied to births and deaths):
-
-          1. Seed leaves storage to be sown, at `crop.planting_material_kg_
-             per_ha` (SEED_SOWING_RATE_KG_PER_HA by default) times
-             `land.hectares`. This can drive `self.stock_kg` negative
-             if not enough was banked - sowing still happens in full rather
-             than being silently capped, because a household that plants
-             less than it needs to because it already ate its seed corn is
-             not a bug, it is the mechanism by which one bad harvest
-             becomes two. Nothing here forbids that state; it just makes it
-             visible in `carryover_kg` and `stock_after_kg`.
-          2. This year's weather is drawn (`draw_weather_multiplier`) and
-             the harvest is computed from what was just sown, at the given
-             labour and technique. The harvest enters storage.
-          3. Consumption is drawn from storage up to `food_demand_kg`
-             (population's need for the full year, from
-             `annual_food_demand_kg_per_person`) or up to whatever storage
-             actually holds, whichever is smaller - `food_shortfall_kg` is
-             the gap when storage cannot cover the full year's need.
-          4. Spoilage is `storage_technique.spoilage_rate_per_year`
-             (GRAIN_SPOILAGE_RATE_PER_YEAR by default) of whatever remains
-             after consumption - it applies to the SURPLUS sitting in the
-             granary, not to what has already been eaten or was never
-             harvested.
-          5. Next year's seed (`crop.planting_material_kg_per_ha` times
-             `hectares_next_year`, defaulting to this year's `land.hectares`
-             if the planted area is not changing) is set aside. What is
-             left after that is `carryover_kg`: the free buffer this
-             household is banking against a future bad year. It can be
-             negative - see step 1.
-
-        The identity `stock_before_kg + gross_harvest_kg - seed_sown_kg -
-        consumption_kg - spoilage_kg - seed_retained_kg == stock_after_kg`
-        holds EXACTLY, every year, by construction (every step above either
-        adds to `self.stock_kg` or subtracts from it, and nothing is
-        double-counted) - see sim/tests/test_agriculture.py's conservation
-        check.
-
-        A CALLER THAT CARRIES `stock_after_kg` ACROSS YEARS MUST ALSO CARRY
-        `seed_retained_kg` BACK IN, OR IT WILL DOUBLE-CHARGE SEED EVERY
-        SINGLE YEAR. This was invisible for as long as every caller (see
-        Complaints/45-no-granary-so-the-baseline-collapses.md) constructed
-        a fresh `Storage` at stock_kg=0.0 every year and threw `stock_after_
-        kg` away unused - a bug in a number nothing ever reads cannot bite.
-        The instant a caller starts persisting `stock_kg`, it does: step 5
-        above SUBTRACTS `seed_retained_kg` from `self.stock_kg` (the class
-        docstring's own "set aside" language means exactly that - it is
-        REMOVED from the ledger, not merely labelled), which is correct
-        ONLY if that removed amount is handed back at the top of NEXT
-        year's `step` call as part of `stock_before_kg`, where it is
-        immediately spent again as THAT year's `seed_sown_kg`. Persist
-        `stock_after_kg` alone (without adding `seed_retained_kg` back in)
-        and every single year permanently loses one full season's seed
-        requirement from the ledger - not a weather effect, not a real
-        famine, a bookkeeping amount that vanishes into the void and never
-        returns, compounding without bound over a multi-year run. This is
-        exactly the failure this task's own probe caught empirically (a
-        near-total-extinction result on ordinary weather, once persistence
-        was first tried without this correction) - `stock_to_carry_forward_
-        kg`, just below this class, is the one-line fix: it returns
-        `stock_after_kg + seed_retained_kg`, and a caller that wants to
-        persist a granary across years should carry THAT value forward as
-        next year's `stock_kg`, never `stock_after_kg` alone. The
-        conservation identity above is unaffected either way - this is
-        about what a MULTI-YEAR caller does with `stock_after_kg` after
-        `step` returns it, not about anything `step` itself computes
-        wrongly.
-        """
-        crop = crop or DEFAULT_CROP
-        soil = soil or DEFAULT_SOIL
-        rotation = rotation or DEFAULT_ROTATION
-        toolkit = toolkit or DEFAULT_TOOLKIT
-        storage_technique = storage_technique or DEFAULT_STORAGE_TECHNIQUE
-
-        stock_before_kg = self.stock_kg
-        if hectares_next_year is None:
-            hectares_next_year = land.hectares
-
-        seed_sown_kg = crop.planting_material_kg_per_ha * land.hectares
-        self.stock_kg -= seed_sown_kg
-
-        if weather_multiplier is None:
-            weather_multiplier = draw_weather_multiplier(
-                self._random, soil.weather_stdev_fraction)
-        harvest_kg = gross_harvest_kg(land, labour_hours, technique_multiplier,
-                                      weather_multiplier, crop, toolkit, rotation,
-                                      worker_count=worker_count,
-                                      hours_per_worker_day=hours_per_worker_day)
-        self.stock_kg += harvest_kg
-
-        food_demand_kg = population * annual_food_demand_kg_per_person(crop)
-        # EATING WELL IN A GOOD YEAR. This used to be min(demand, stock), so
-        # a population ate exactly subsistence or less and never more, which
-        # meant the nutrition ratio handed to demography could not exceed 1.0
-        # however full the granary was. Combined with a mortality and
-        # fertility response that floors at 1.0, that made every good year
-        # worth nothing and every bad year cost real people - the ratchet
-        # Complaints/45 records. The granary alone did not fix it: it banked
-        # the grain and then forbade anyone to eat it.
-        #
-        # THE RESERVE IS FILLED FIRST, which is the whole point of having
-        # one. Extra eating comes only out of what is already beyond the
-        # reserve a prudent household is holding against next year, so this
-        # cannot empty the granary to feast - it eats the grain that would
-        # otherwise have sat there and spoiled.
-        #
-        # `reserve_target_kg` defaults to None, meaning "no reserve named",
-        # and then no extra is eaten at all and this reduces to exactly the
-        # old line. A caller that persists stock across years should pass
-        # the same figure it caps the granary at.
-        subsistence_consumption_kg = max(0.0, min(food_demand_kg, self.stock_kg))
-        extra_consumption_kg = 0.0
-        if reserve_target_kg is not None:
-            stock_beyond_reserve_kg = max(
-                0.0, self.stock_kg - subsistence_consumption_kg - reserve_target_kg)
-            most_a_person_can_eat_kg = food_demand_kg * (
-                MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE - 1.0)
-            extra_consumption_kg = min(stock_beyond_reserve_kg,
-                                       most_a_person_can_eat_kg)
-        consumption_kg = subsistence_consumption_kg + extra_consumption_kg
-        # Shortfall is measured against SUBSISTENCE demand, never against the
-        # larger amount a well-fed year allows - eating well is not a way to
-        # run a deficit.
-        food_shortfall_kg = max(0.0, food_demand_kg - subsistence_consumption_kg)
-        self.stock_kg -= consumption_kg
-
-        spoilage_kg = max(0.0, self.stock_kg) * storage_technique.spoilage_rate_per_year
-        self.stock_kg -= spoilage_kg
-
-        seed_retained_kg = crop.planting_material_kg_per_ha * hectares_next_year
-        self.stock_kg -= seed_retained_kg
-
-        carryover_kg = self.stock_kg
-        stock_after_kg = self.stock_kg
-
-        if labour_hours > 0.0:
-            marginal_product = marginal_product_of_labour_kg_per_hour(
-                land, labour_hours, technique_multiplier, weather_multiplier,
-                crop, toolkit, rotation, worker_count=worker_count,
-                hours_per_worker_day=hours_per_worker_day)
-        else:
-            marginal_product = 0.0
-
-        food_available_kcal_per_day = (
-            consumption_kg * crop.energy_kcal_per_kg / DAYS_PER_YEAR)
-
-        return YearFlows(
-            weather_multiplier=weather_multiplier,
-            labour_hours_applied=labour_hours,
-            seed_sown_kg=seed_sown_kg,
-            gross_harvest_kg=harvest_kg,
-            food_demand_kg=food_demand_kg,
-            consumption_kg=consumption_kg,
-            food_shortfall_kg=food_shortfall_kg,
-            spoilage_kg=spoilage_kg,
-            seed_retained_kg=seed_retained_kg,
-            carryover_kg=carryover_kg,
-            stock_before_kg=stock_before_kg,
-            stock_after_kg=stock_after_kg,
-            food_available_kcal_per_day=food_available_kcal_per_day,
-            marginal_product_last_hour_kg_per_hour=marginal_product)
-
-
-def stock_to_carry_forward_kg(flows):
-    """What a caller that persists `Storage` across years should use as
-    NEXT year's opening `stock_kg` - `flows.stock_after_kg`, the free
-    surplus `Storage.step` computed, PLUS `flows.seed_retained_kg`, the
-    amount that same call earmarked for next year's sowing and then
-    removed from the ledger.
-
-    See `Storage.step`'s own docstring, the paragraph on carrying
-    `stock_after_kg` across years, for why omitting `seed_retained_kg`
-    here double-charges one whole season's seed requirement every single
-    year (once as this call's own `seed_retained_kg` deduction, again as
-    NEXT call's `seed_sown_kg` deduction, with nothing in between ever
-    replacing what the first deduction removed) - a bug invisible for as
-    long as nothing persisted `stock_kg` at all, and the specific,
-    measured cause of a near-total-extinction result the first attempt at
-    Complaints/45's granary fix produced on perfectly ordinary weather,
-    with no famine, no hazard and no land loss of any kind.
-
-    A caller that does NOT intend to persist `Storage` across years (one
-    that still rebuilds it fresh at stock_kg=0.0 every step, as this
-    module's whole test suite still does for calls that are not
-    specifically testing multi-year carry) has no reason to call this at
-    all - it exists for exactly one job, the one Sim._demographic_recovery
-    (sim/engine/core.py) now does.
-    """
-    return flows.stock_after_kg + flows.seed_retained_kg
-
-
-def hectares_per_worker_annual_hours_ceiling(crop=None, toolkit=None):
-    """One of the two ceilings on a farm worker's cropped area: total hours
-    in the farming year divided by hours needed per hectare. This is the
-    only ceiling this module originally had, and treating it as the answer
-    is what produced the 4.8% headline figure. See
-    `hectares_cropped_per_farm_worker`.
-
-    `crop` and `toolkit` default to wheat and the ard-and-sickle baseline;
-    `toolkit.labour_hours_multiplier` rescales the hours-per-hectare figure
-    (a horse collar needs fewer hours to plough the same land), which is
-    why this ceiling, unlike the harvest-window one below, responds to a
-    labour-saving TOOLKIT and not to a better REAPING tool specifically.
-    """
-    crop = crop or DEFAULT_CROP
-    toolkit = toolkit or DEFAULT_TOOLKIT
-    return (ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
-            / (crop.base_labour_hours_per_hectare * toolkit.labour_hours_multiplier))
-
-
-def hectares_per_worker_harvest_window_ceiling(crop=None, toolkit=None):
-    """The other ceiling: how much a worker can reap before the standing
-    crop is lost. Days in the window times hectares reaped per day - see
-    the SEASONALITY section above for why the window is a fact about the
-    crop rather than about the farmer's schedule.
-
-    `crop` sets both the window's length and the reference reaping rate;
-    `toolkit.reaping_rate_multiplier` rescales the rate (a scythe, a
-    mechanical reaper) without touching the window's length, which is a
-    biological fact about the crop, not something a better tool changes.
-    """
-    crop = crop or DEFAULT_CROP
-    toolkit = toolkit or DEFAULT_TOOLKIT
-    return (crop.harvest_window_days
-            * crop.base_hectares_reaped_per_worker_day
-            * toolkit.reaping_rate_multiplier)
-
-
-def hectares_cropped_per_farm_worker(crop=None, toolkit=None):
-    """How many hectares one farm worker actually brings in, in a year:
-    the smaller of the two ceilings above, because a constraint you can
-    satisfy is not a constraint.
-
-    At the DEFAULT constants declared in this file the harvest window is
-    the binding one by roughly four to one, and that is the substantive
-    finding: adding hours to the farming year, or shifting
-    REFERENCE_LABOUR_HOURS_PER_HECTARE (or a toolkit that only touches
-    `labour_hours_multiplier`, such as HORSE_COLLAR_AND_MOULDBOARD), changes
-    this number not at all while the window binds. Anything that raises
-    output per worker here has to raise the reaping rate (a better tool -
-    SCYTHE_AND_CRADLE, MECHANICAL_REAPER) or lengthen the harvest window
-    (a crop with a longer one, or staggered sowing dates), which is the
-    correct shape: those are what historically moved it. See the
-    ToolkitAxisTests in sim/tests/test_agriculture.py for both directions
-    demonstrated.
-    """
-    return min(hectares_per_worker_annual_hours_ceiling(crop, toolkit),
-               hectares_per_worker_harvest_window_ceiling(crop, toolkit))
-
-
-def holding_hectares_required_per_farm_worker(crop=None, toolkit=None,
-                                               rotation=None):
-    """How much land the farm must HOLD to keep one worker cropping - the
-    cropped area grossed up for the fallow that is idle this year. See the
-    ROTATION AND FALLOW section for why this is a land requirement and not
-    a reduction in output: fraction_of_population_that_must_farm never
-    reads it, deliberately.
-    """
-    rotation = rotation or DEFAULT_ROTATION
-    return (hectares_cropped_per_farm_worker(crop, toolkit)
-            / (1.0 - rotation.fallow_share_of_holding))
-
-
-def fraction_of_population_that_must_farm(crop=None, soil=None, rotation=None,
-                                           toolkit=None, storage_technique=None):
-    """The headline calibration figure: what share of a population must be
-    farmers to feed the whole population, computed purely from this
-    module's declared constants at reference land quality, technique and an
-    average weather year - no calibration_target anywhere in this
-    computation, by construction (HISTORICAL_FARM_POPULATION_SHARE_LOW/HIGH
-    are read by the test that CHECKS this number, never by this function).
-
-    `crop`, `soil`, `rotation`, `toolkit` and `storage_technique` each
-    default to the original wheat/ordinary-loam/two-field/ard-and-sickle/
-    pit-silo combination, so calling this with no arguments reproduces the
-    pinned 0.21181 exactly - see sim/tests/test_agriculture.py's
-    HeadlineCalibrationTests. `soil` and `rotation` here contribute ONLY
-    their yield multipliers (`quality_multiplier`,
-    `soil_fertility_yield_multiplier`); the idle-land share a rotation
-    carries is a LAND requirement, not a food-output one, and is never
-    read here - see holding_hectares_required_per_farm_worker and the
-    module's rotation-and-idle-land section for why applying it here would
-    double-count a constraint that is not binding.
-
-    output_per_worker_kg is how much food (net of seed, net of spoilage) one
-    full-time farm worker produces in a year; annual_food_demand_kg_per_
-    person is how much food one person (including that worker) needs.
-    Their ratio is the number of people one farm worker can feed, and its
-    reciprocal is the fraction of a population that has to farm.
-
-    See the module docstring's ON THE HEADLINE NUMBER section for the
-    result this produces at the defaults (roughly 21%, still well below the
-    80-90% pre-industrial societies actually show) and for the four named
-    reasons the remainder of that gap is not a defect in this
-    arithmetic. Note in particular reason (a): this function counts
-    full-time-equivalent WORKERS, and the 80-90% target counts everyone
-    living in a farming household, so the two are not directly
-    comparable as they stand.
-    """
-    crop = crop or DEFAULT_CROP
-    soil = soil or DEFAULT_SOIL
-    rotation = rotation or DEFAULT_ROTATION
-    toolkit = toolkit or DEFAULT_TOOLKIT
-    storage_technique = storage_technique or DEFAULT_STORAGE_TECHNIQUE
-
-    gross_yield_at_reference_labour_kg_per_ha = (
-        crop.planting_material_kg_per_ha * crop.fold_return_on_planting_material)
-    fertility_multiplier = (
-        toolkit.ploughing_yield_multiplier * rotation.soil_fertility_yield_multiplier
-        * soil.quality_multiplier)
-    net_yield_after_seed_kg_per_ha = (
-        gross_yield_at_reference_labour_kg_per_ha * fertility_multiplier
-        - crop.planting_material_kg_per_ha)
-    food_available_per_ha_kg = (
-        net_yield_after_seed_kg_per_ha
-        * (1.0 - storage_technique.spoilage_rate_per_year))
-    output_per_worker_kg = (
-        hectares_cropped_per_farm_worker(crop, toolkit) * food_available_per_ha_kg)
-    return annual_food_demand_kg_per_person(crop) / output_per_worker_kg
-
-
 # ============================================================================
-# SIZING A CIVILISATION'S FARM FROM ITS POPULATION - THE ENGINE'S OWN SEAM
-# ============================================================================
-# The two functions below are what `sim/engine/core.py` calls to turn "how
-# many people are there" into "how much land, worked by how many hands" -
-# the wiring this module's own docstring names as the day someone connects
-# it to sim/world/demography.py. They live here, not in core.py, on the
-# same reasoning as everything else in this module (CLAUDE.md SS4's "make
-# the founder's mechanisms general enough that other actors can use them"):
-# sizing a plausible farm from a population is a fact about AGRICULTURE, not
-# about the engine, and putting it here means any future actor (a rival
-# household, a second civilisation, a what-if branch) gets the same sizing
-# logic for free rather than a second copy living in core.py.
+# COMPOSITION POINT - the functions and classes below live in three sibling
+# modules, grouped by subject (see this file's own docstring, "THIS FILE IS
+# A COMPOSITION POINT", for what each one holds and why the constants and
+# tables above stay in this file instead). These imports pull every one of
+# those names into THIS module's namespace, so that `agriculture.
+# gross_harvest_kg`, `agriculture.Storage`,
+# `agriculture.fraction_of_population_that_must_farm` and every other name
+# this module exports keep resolving as `agriculture.<name>`, with no edit
+# needed anywhere else in the repository.
 #
-# `adult_equivalent_population` IN BOTH FUNCTIONS, DELIBERATELY NOT A FLAT
-# HEADCOUNT. See sim/engine/core.py's `_adult_equivalent_population` for the
-# full reasoning (WIRING_MILESTONE_4.md SS4.3): a caller is expected to pass
-# `self.children * CHILD_CALORIE_EQUIVALENT + self.working_age + self.elderly
-# * ELDERLY_CALORIE_EQUIVALENT` (sim/world/demography.py's own weighting),
-# not `Population.total`. Nothing here enforces that - this module still
-# does not import demography.py (see the module docstring's STANDALONE ON
-# PURPOSE section) - so a caller that passes a flat headcount instead gets a
-# workforce and a landholding sized for MORE people than actually need
-# feeding, not a crash; the two functions below cannot detect the
-# difference from a plain float, which is exactly why the decision has to
-# be documented at the boundary that CAN see both conventions.
-
-def farm_workers_fte_for_population(adult_equivalent_population, crop=None, soil=None,
-                                    rotation=None, toolkit=None, storage_technique=None):
-    """How many full-time-equivalent farm workers a population of
-    `adult_equivalent_population` needs, at reference technique and an
-    average weather year, to feed itself: `fraction_of_population_that_
-    must_farm() * adult_equivalent_population`.
-
-    NO FURTHER DEPENDENCY-RATIO CORRECTION BELONGS HERE (see
-    `fraction_of_population_that_must_farm`'s own docstring, reason (a),
-    for the gap this resolves). That reason exists only when comparing this
-    module's FTE-worker share against the HISTORICAL_FARM_POPULATION_SHARE_
-    LOW/HIGH calibration target, which counts every person living in a
-    farming household. This function is not doing that comparison - it is
-    answering "how many workers does this module's own production function
-    say are needed", and `fraction_of_population_that_must_farm`'s
-    numerator (workers) and denominator (population) are already both
-    anchored to the same flat-ration convention `annual_food_demand_kg_per_
-    person` uses, so multiplying straight through is consistent as long as
-    the population handed in uses that SAME convention - which is exactly
-    what passing an adult-equivalent count (see the section note above),
-    not a flat headcount, achieves.
-    """
-    fraction = fraction_of_population_that_must_farm(
-        crop, soil, rotation, toolkit, storage_technique)
-    return fraction * adult_equivalent_population
-
-
-def farmland_for_population(adult_equivalent_population, crop=None, soil=None,
-                            rotation=None, toolkit=None, storage_technique=None):
-    """A `Land` parcel sized so that the workforce
-    `farm_workers_fte_for_population` implies can each crop their full
-    `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding
-    constraint at reference labour, technique and an average weather year,
-    only the harvest window and diminishing returns to labour are (the
-    module's own headline finding). This is the natural way to seed a
-    civilisation's arable endowment from nothing but its population: an
-    INITIAL CONDITION (how much land is already cleared and worked - see
-    CLAUDE.md SS3.1's own allowed category, the same one a starting
-    population or a starting set of open mines belongs to), not a result
-    this module computes on its own account from anything the game
-    measures. A caller that wants extensive-margin land scarcity to bite
-    later should hold this `Land` fixed rather than resizing it as
-    population changes - see sim/engine/core.py's own comment on why
-    `farm_land` is constructed once, not every year.
-
-    `land.quality` is left at the default (1.0, decent land) here
-    regardless of `soil`: `soil.quality_multiplier` is a YIELD multiplier on
-    however many hectares exist, not a LAND-AREA requirement, so it plays no
-    part in how much land gets allocated - see the SOIL TABLE section and
-    `Land`'s own docstring. A caller modelling worse land should build the
-    `Land` directly with `quality=soil.quality_multiplier` instead of
-    relying on this function to do it implicitly.
-    """
-    workers_fte = farm_workers_fte_for_population(
-        adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
-    hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
-    return Land(hectares)
+# ORDER MATTERS HERE, AND IS NOT ALPHABETICAL. Each sibling's own top-level
+# imports reach back into THIS module (`sim.world.agriculture` / bare
+# `world.agriculture`, whichever name this file is currently loading under -
+# see sim/world/agriculture.py's own STANDALONE ON PURPOSE section and
+# CLAUDE.md SS6's "world.agriculture vs sim.world.agriculture" note) for the
+# constants and tables declared above. That reach-back only resolves because,
+# by the time Python executes the imports below, every name above this point
+# already exists as an attribute of this (still executing) module - the
+# ordinary, well-understood pattern for a partially-initialized parent
+# handing values to a child it is about to import, not the genuinely broken
+# shape of two siblings each waiting on the other to finish (see
+# agriculture_yield.py's own comment on the one place that shape would have
+# arisen here, and how it is avoided). agriculture_yield has no dependency on
+# the other two siblings at import time and loads first; agriculture_storage
+# depends on agriculture_yield; agriculture_labour depends on both.
+from .agriculture_yield import (
+    Land,
+    _max_hectares_harvestable_by_labour,
+    draw_weather_multiplier,
+    gross_harvest_kg,
+    hectares_reaped_per_worker_hour,
+    marginal_product_of_labour_kg_per_hour,
+    max_hectares_reapable_by_crew,
+)
+from .agriculture_storage import (
+    Storage,
+    YearFlows,
+    annual_food_demand_kg_per_person,
+    granary_capacity_kg,
+    stock_to_carry_forward_kg,
+)
+from .agriculture_labour import (
+    farm_workers_fte_for_population,
+    farmland_for_population,
+    fraction_of_population_that_must_farm,
+    hectares_cropped_per_farm_worker,
+    hectares_per_worker_annual_hours_ceiling,
+    hectares_per_worker_harvest_window_ceiling,
+    holding_hectares_required_per_farm_worker,
+)
 
 
 if __name__ == "__main__":

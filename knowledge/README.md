@@ -1,6 +1,6 @@
 # knowledge/ - the how-to library
 
-**This file is generated. Do not edit it.** Run `python3 rome/sim/build_index.py`.
+**This file is generated. Do not edit it.** Run `python3 sim/build_index.py`.
 
 A tech tree that says *microscope requires glass* is useless to someone who does
 not already know that one melted bead of glass gives 250x. The tree in
@@ -23,29 +23,29 @@ in this directory, read that one.
 | [`00_NONOBVIOUS_TRICKS.md`](00_NONOBVIOUS_TRICKS.md) | The tricks that make everything else buildable. READ FIRST. | 11 | 0 |
 | [`03_SOCIAL_POLITICS.md`](03_SOCIAL_POLITICS.md) |  | 10 | 0 |
 | [`10_metallurgy.md`](10_metallurgy.md) | Metallurgy, fuel and refractories | 19 | 182 |
-| [`20_chemistry.md`](20_chemistry.md) | Chemistry, acids, alkalis and energetics | 16 | 190 |
+| [`20_chemistry.md`](20_chemistry.md) | Chemistry, acids, alkalis and energetics | 16 | 188 |
 | [`30_glass_optics.md`](30_glass_optics.md) | Glass, optics and scientific instruments | 17 | 168 |
-| [`40_power_precision.md`](40_power_precision.md) | Prime movers, machine tools and precision | 21 | 223 |
-| [`50_electricity.md`](50_electricity.md) | Electricity, magnetism and electrical machines | 15 | 194 |
+| [`40_power_precision.md`](40_power_precision.md) | Prime movers, machine tools and precision | 21 | 212 |
+| [`50_electricity.md`](50_electricity.md) | Electricity, magnetism and electrical machines | 15 | 167 |
 | [`55_semiconductors.md`](55_semiconductors.md) | Vacuum, high purity and semiconductors | 13 | 17 |
 | [`60_mathematics_method.md`](60_mathematics_method.md) | Mathematics, physics and the scientific method | 13 | 71 |
 | [`70_medicine_biology.md`](70_medicine_biology.md) | Medicine, public health and biology | 13 | 153 |
-| [`75_agriculture_food.md`](75_agriculture_food.md) | Agriculture, food and surplus | 12 | 58 |
+| [`75_agriculture_food.md`](75_agriculture_food.md) | Agriculture, food and surplus | 12 | 62 |
 | [`76_farming_food_deep.md`](76_farming_food_deep.md) |  | 115 | 112 |
-| [`80_information_printing.md`](80_information_printing.md) | Paper, printing and the survival of knowledge | 11 | 59 |
-| [`85_transport_civil.md`](85_transport_civil.md) | Transport, mining and civil engineering | 12 | 189 |
+| [`80_information_printing.md`](80_information_printing.md) | Paper, printing and the survival of knowledge | 11 | 51 |
+| [`85_transport_civil.md`](85_transport_civil.md) | Transport, mining and civil engineering | 12 | 185 |
 | [`86_transport_deep.md`](86_transport_deep.md) |  | 211 | 192 |
 | [`87_construction.md`](87_construction.md) |  | 101 | 94 |
 | [`88_media_signals.md`](88_media_signals.md) |  | 100 | 80 |
 | [`89_remaining_arts.md`](89_remaining_arts.md) |  | 227 | 197 |
-| [`90_textiles.md`](90_textiles.md) |  | 20 | 198 |
+| [`90_textiles.md`](90_textiles.md) |  | 20 | 201 |
 | [`91_household.md`](91_household.md) |  | 27 | 67 |
 | [`92_vehicles_flight.md`](92_vehicles_flight.md) |  | 29 | 0 |
 | [`93_energy.md`](93_energy.md) |  | 27 | 0 |
-| [`94_computing.md`](94_computing.md) |  | 22 | 0 |
+| [`94_computing.md`](94_computing.md) |  | 22 | 28 |
 | [`95_expeditions.md`](95_expeditions.md) |  | 11 | 12 |
 | [`96_finance.md`](96_finance.md) |  | 34 | 86 |
-| [`97_military.md`](97_military.md) |  | 29 | 109 |
+| [`97_military.md`](97_military.md) |  | 29 | 107 |
 | [`98_power_plants.md`](98_power_plants.md) |  | 115 | 94 |
 | [`99_AUDIT.md`](99_AUDIT.md) | Adversarial audit of the technical modules | 0 | 0 |
 
@@ -447,8 +447,6 @@ Sorted by module, then by node id.
 | `hydrofluoric_acid` | 400.0 | [`hydrofluoric_acid`](20_chemistry.md#hydrofluoric_acid---hydrofluoric-acid-no-established-roman-name) |
 | `lab_apparatus` | 600.0 | [`lab_apparatus`](20_chemistry.md#lab_apparatus---laboratory-apparatus-vasa-chymica) |
 | `lead_chamber` | 900.0 | [`lead_chamber`](20_chemistry.md#lead_chamber---the-lead-chamber-process) |
-| `mat_celluloid` | 150.0 | _(module has no anchor)_ |
-| `mat_nitroglycerin` | 150.0 | _(module has no anchor)_ |
 | `nitre_beds` | 350.0 | [`saltpetre_nitre_beds`](20_chemistry.md#saltpetre_nitre_beds---saltpetre-nitre-beds-no-roman-name-this) |
 | `nitric_acid` | 400.0 | [`nitric_acid`](20_chemistry.md#nitric_acid---nitric-acid-aqua-fortis) |
 | `potash_soda` | 200.0 | [`potash_and_soda`](20_chemistry.md#potash_and_soda---potash-and-soda-ash-soda-overlaps-with-roman) |
@@ -634,20 +632,9 @@ Sorted by module, then by node id.
 | Node | Your hours | Recipe |
 |---|---:|---|
 | `boring_mill` | 600.0 | [`boring_mill`](40_power_precision.md#boring_mill---the-cylinder-boring-machine-no-latin-term) |
+| `clock_mechanical_escapement` | 0.0 | [`clockwork_escapement`](40_power_precision.md#clockwork_escapement---verge-and-foliot-pendulum-and-balance) |
 | `clock_pendulum` | 500.0 | [`clockwork_escapement`](40_power_precision.md#clockwork_escapement---verge-and-foliot-pendulum-and-balance) |
 | `crank_conrod` | 300.0 | [`crank_connecting_rod`](40_power_precision.md#crank_connecting_rod---the-crank-and-connecting-rod-no-attested) |
-| `en_battery_lead_acid` | 250.0 | _(module has no anchor)_ |
-| `en_boiler_cornish` | 250.0 | _(module has no anchor)_ |
-| `en_boiler_haystack` | 180.0 | _(module has no anchor)_ |
-| `en_boiler_lancashire` | 250.0 | _(module has no anchor)_ |
-| `en_boiler_wagon` | 200.0 | _(module has no anchor)_ |
-| `en_boiler_water_tube` | 300.0 | _(module has no anchor)_ |
-| `en_flywheel_storage` | 200.0 | _(module has no anchor)_ |
-| `en_hydroelectric_station` | 400.0 | _(module has no anchor)_ |
-| `en_post_mill` | 250.0 | _(module has no anchor)_ |
-| `en_pumped_storage` | 400.0 | _(module has no anchor)_ |
-| `en_tide_mill` | 200.0 | _(module has no anchor)_ |
-| `en_tower_mill` | 300.0 | _(module has no anchor)_ |
 | `en_transformer` | 250.0 | _(module has no anchor)_ |
 | `interchangeable_parts` | 800.0 | [`interchangeable_parts`](40_power_precision.md#interchangeable_parts---gono-go-gauges-tolerance-jigs-and) |
 | `master_screw` | 700.0 | [`screw_cutting_lathe`](40_power_precision.md#screw_cutting_lathe---the-lead-screw-slide-rest-and-change-gears) |
@@ -862,57 +849,31 @@ Sorted by module, then by node id.
 | Node | Your hours | Recipe |
 |---|---:|---|
 | `arc_light_lamp` | 500.0 | [`incandescent_lamp`](50_electricity.md#incandescent_lamp---filament-lamp-carbon-then-tungsten) |
-| `com_accumulator` | 130.0 | _(module has no anchor)_ |
-| `com_analytical_engine` | 250.0 | _(module has no anchor)_ |
 | `com_antenna_ground` | 60.0 | _(module has no anchor)_ |
-| `com_arithmometer` | 120.0 | _(module has no anchor)_ |
 | `com_baudot_code` | 60.0 | _(module has no anchor)_ |
-| `com_binary_arithmetic` | 100.0 | _(module has no anchor)_ |
-| `com_boolean_algebra` | 120.0 | _(module has no anchor)_ |
 | `com_broadcasting_institution` | 200.0 | _(module has no anchor)_ |
-| `com_compiler_and_language` | 300.0 | _(module has no anchor)_ |
 | `com_continuous_wave` | 120.0 | _(module has no anchor)_ |
-| `com_cryptography_substitution` | 80.0 | _(module has no anchor)_ |
 | `com_crystal_set` | 80.0 | _(module has no anchor)_ |
-| `com_difference_engine` | 200.0 | _(module has no anchor)_ |
 | `com_duplex_telegraph` | 120.0 | _(module has no anchor)_ |
-| `com_error_detecting_code` | 140.0 | _(module has no anchor)_ |
-| `com_flip_flop` | 100.0 | _(module has no anchor)_ |
 | `com_heliograph` | 80.0 | _(module has no anchor)_ |
-| `com_hollerith_tabulation` | 180.0 | _(module has no anchor)_ |
-| `com_information_theory` | 160.0 | _(module has no anchor)_ |
-| `com_integrated_circuit` | 220.0 | _(module has no anchor)_ |
 | `com_jacquard_loom` | 250.0 | _(module has no anchor)_ |
+| `com_led` | 160.0 | _(module has no anchor)_ |
 | `com_loading_coil` | 120.0 | _(module has no anchor)_ |
-| `com_logic_gate` | 100.0 | _(module has no anchor)_ |
-| `com_magnetic_core_memory` | 140.0 | _(module has no anchor)_ |
-| `com_magnetic_drum_storage` | 110.0 | _(module has no anchor)_ |
-| `com_magnetic_tape_storage` | 120.0 | _(module has no anchor)_ |
 | `com_magnetic_wire_storage` | 100.0 | _(module has no anchor)_ |
-| `com_mechanical_calculator` | 150.0 | _(module has no anchor)_ |
 | `com_morse_code` | 60.0 | _(module has no anchor)_ |
-| `com_morse_register` | 100.0 | _(module has no anchor)_ |
 | `com_morse_sounder` | 80.0 | _(module has no anchor)_ |
 | `com_multiplexing` | 120.0 | _(module has no anchor)_ |
-| `com_napiers_bones` | 100.0 | _(module has no anchor)_ |
 | `com_one_time_pad` | 100.0 | _(module has no anchor)_ |
 | `com_optical_codebook` | 100.0 | _(module has no anchor)_ |
 | `com_optical_tower` | 120.0 | _(module has no anchor)_ |
-| `com_photolithography` | 180.0 | _(module has no anchor)_ |
-| `com_public_key_cryptography` | 200.0 | _(module has no anchor)_ |
 | `com_quadruplex_telegraph` | 140.0 | _(module has no anchor)_ |
 | `com_radar_magnetron` | 160.0 | _(module has no anchor)_ |
 | `com_radio_spark_transmitter` | 120.0 | _(module has no anchor)_ |
-| `com_register_computing` | 120.0 | _(module has no anchor)_ |
 | `com_relay` | 100.0 | _(module has no anchor)_ |
-| `com_relay_computer` | 300.0 | _(module has no anchor)_ |
-| `com_ring_counter` | 110.0 | _(module has no anchor)_ |
 | `com_rotor_machine` | 160.0 | _(module has no anchor)_ |
 | `com_semiconductor_diode` | 100.0 | _(module has no anchor)_ |
 | `com_signal_flags` | 40.0 | _(module has no anchor)_ |
-| `com_stepped_drum` | 80.0 | _(module has no anchor)_ |
 | `com_stock_ticker` | 100.0 | _(module has no anchor)_ |
-| `com_stored_program_concept` | 180.0 | _(module has no anchor)_ |
 | `com_submarine_cable` | 200.0 | _(module has no anchor)_ |
 | `com_telegraph_battery` | 60.0 | _(module has no anchor)_ |
 | `com_telephone_carbon_mic` | 100.0 | _(module has no anchor)_ |
@@ -923,7 +884,6 @@ Sorted by module, then by node id.
 | `com_tv_electronic_camera` | 160.0 | _(module has no anchor)_ |
 | `com_tv_mechanical_scanning` | 140.0 | _(module has no anchor)_ |
 | `com_tv_raster_sync` | 120.0 | _(module has no anchor)_ |
-| `com_vacuum_tube_computer` | 400.0 | _(module has no anchor)_ |
 | `com_vacuum_tube_pentode` | 110.0 | _(module has no anchor)_ |
 | `com_vacuum_tube_tetrode` | 100.0 | _(module has no anchor)_ |
 | `com_waveguide` | 80.0 | _(module has no anchor)_ |
@@ -1316,6 +1276,9 @@ Sorted by module, then by node id.
 
 | Node | Your hours | Recipe |
 |---|---:|---|
+| `ag2_guano_deposit_access` | 80.0 | _(module has no anchor)_ |
+| `ag2_hop_stock` | 80.0 | _(module has no anchor)_ |
+| `ag2_pyrethrum_stock` | 80.0 | _(module has no anchor)_ |
 | `crop_rotation` | 450.0 | [`crop_rotation`](75_agriculture_food.md#crop_rotation---three-course-rotation-with-a-legume-break) |
 | `fud_alfalfa` | 100.0 | _(module has no anchor)_ |
 | `fud_beet_sugar_processing` | 200.0 | _(module has no anchor)_ |
@@ -1370,6 +1333,7 @@ Sorted by module, then by node id.
 | `fud_turnips_winter_fodder` | 100.0 | _(module has no anchor)_ |
 | `fud_vegetable_oil_extraction` | 100.0 | _(module has no anchor)_ |
 | `fud_vinegar_production` | 80.0 | _(module has no anchor)_ |
+| `fud_whaling_gear` | 80.0 | _(module has no anchor)_ |
 | `fud_whaling_industry` | 300.0 | _(module has no anchor)_ |
 | `fud_winnowing_machine` | 150.0 | _(module has no anchor)_ |
 | `fud_yeast_pure_culture` | 200.0 | _(module has no anchor)_ |
@@ -1500,14 +1464,6 @@ Sorted by module, then by node id.
 | `corpus_written` | 6,000.0 | _(module has no anchor)_ |
 | `goal_literacy_common` | 0.0 | [`literacy`](80_information_printing.md#literacy) **BROKEN** |
 | `goal_literate_nation` | 0.0 | [`literacy`](80_information_printing.md#literacy) **BROKEN** |
-| `if_cylinder_press` | 250.0 | _(module has no anchor)_ |
-| `if_daguerreotype` | 200.0 | _(module has no anchor)_ |
-| `if_electrotype` | 150.0 | _(module has no anchor)_ |
-| `if_linotype_machine` | 600.0 | _(module has no anchor)_ |
-| `if_lithography` | 200.0 | _(module has no anchor)_ |
-| `if_printing_ink` | 100.0 | _(module has no anchor)_ |
-| `if_rotary_press` | 300.0 | _(module has no anchor)_ |
-| `if_typewriter` | 300.0 | _(module has no anchor)_ |
 | `printing_press` | 900.0 | _(module has no anchor)_ |
 | `prn_calotype_process` | 250.0 | _(module has no anchor)_ |
 | `prn_carbon_ink` | 0.0 | _(module has no anchor)_ |
@@ -1617,6 +1573,7 @@ Sorted by module, then by node id.
 | `civ_caisson_compressed_air` | 200.0 | _(module has no anchor)_ |
 | `civ_canal_pound_lock` | 150.0 | _(module has no anchor)_ |
 | `civ_chorobates` | 25.0 | _(module has no anchor)_ |
+| `civ_circus_racecourse` | 0.0 | _(module has no anchor)_ |
 | `civ_cofferdam` | 60.0 | _(module has no anchor)_ |
 | `civ_dam_arch` | 250.0 | _(module has no anchor)_ |
 | `civ_dam_earth_fill` | 150.0 | _(module has no anchor)_ |
@@ -1653,9 +1610,6 @@ Sorted by module, then by node id.
 | `civ_water_tower` | 100.0 | _(module has no anchor)_ |
 | `civ_water_treatment` | 200.0 | _(module has no anchor)_ |
 | `civ_wire_drawn` | 100.0 | _(module has no anchor)_ |
-| `cn_arch_bridge_steel` | 250.0 | _(module has no anchor)_ |
-| `cn_crane_treadwheel` | 55.0 | _(module has no anchor)_ |
-| `cn_queen_post` | 100.0 | _(module has no anchor)_ |
 | `hot_air_balloon` | 400.0 | _(module has no anchor)_ |
 | `lnd_air_brake` | 250.0 | _(module has no anchor)_ |
 | `lnd_assembly_line` | 600.0 | _(module has no anchor)_ |
@@ -1684,6 +1638,7 @@ Sorted by module, then by node id.
 | `lnd_milestone` | 0.0 | _(module has no anchor)_ |
 | `lnd_motor_road_network` | 250.0 | _(module has no anchor)_ |
 | `lnd_mule_transport` | 0.0 | _(module has no anchor)_ |
+| `lnd_nailed_horseshoe` | 80.0 | _(module has no anchor)_ |
 | `lnd_otto_cycle_four_stroke` | 350.0 | _(module has no anchor)_ |
 | `lnd_ox_transport` | 0.0 | _(module has no anchor)_ |
 | `lnd_paved_road_network` | 0.0 | _(module has no anchor)_ |
@@ -1702,6 +1657,7 @@ Sorted by module, then by node id.
 | `lnd_tyre_iron` | 0.0 | _(module has no anchor)_ |
 | `lnd_wheel_spoked` | 0.0 | _(module has no anchor)_ |
 | `lnd_wheelbarrow` | 30.0 | _(module has no anchor)_ |
+| `lnd_whippletree` | 80.0 | _(module has no anchor)_ |
 | `railway` | 800.0 | _(module has no anchor)_ |
 | `sea_anchor` | 0.0 | _(module has no anchor)_ |
 | `sea_astronomical_tables` | 400.0 | _(module has no anchor)_ |
@@ -1745,10 +1701,6 @@ Sorted by module, then by node id.
 | `sea_sternpost_rudder` | 120.0 | _(module has no anchor)_ |
 | `sea_submarine` | 300.0 | _(module has no anchor)_ |
 | `sea_traverse_board` | 40.0 | _(module has no anchor)_ |
-| `tl_horseshoe` | 40.0 | _(module has no anchor)_ |
-| `tr_fore_aft_rig` | 100.0 | _(module has no anchor)_ |
-| `tr_lateen_sail` | 80.0 | _(module has no anchor)_ |
-| `tr_screw_propeller` | 220.0 | _(module has no anchor)_ |
 
 ### 86_transport_deep.md
 
@@ -2337,8 +2289,6 @@ Sorted by module, then by node id.
 
 | Node | Your hours | Recipe |
 |---|---:|---|
-| `mat_dyes_synthetic` | 200.0 | _(module has no anchor)_ |
-| `mat_linen` | 0.0 | _(module has no anchor)_ |
 | `tex_buttons_buttonholes` | 50.0 | _(module has no anchor)_ |
 | `tex_calico_printing` | 140.0 | _(module has no anchor)_ |
 | `tex_canvas` | 40.0 | _(module has no anchor)_ |
@@ -2386,6 +2336,7 @@ Sorted by module, then by node id.
 | `tex_wool_combing_machinery` | 180.0 | _(module has no anchor)_ |
 | `tx2_acrylic` | 170.0 | _(module has no anchor)_ |
 | `tx2_alum_tanning` | 60.0 | _(module has no anchor)_ |
+| `tx2_angora_goat_stock` | 80.0 | _(module has no anchor)_ |
 | `tx2_asbestos_cloth` | 80.0 | _(module has no anchor)_ |
 | `tx2_automatic_bobbin_changer` | 140.0 | _(module has no anchor)_ |
 | `tx2_automatic_loom` | 180.0 | _(module has no anchor)_ |
@@ -2411,6 +2362,7 @@ Sorted by module, then by node id.
 | `tx2_cardboard_box` | 70.0 | _(module has no anchor)_ |
 | `tx2_carding` | 60.0 | _(module has no anchor)_ |
 | `tx2_cashmere` | 50.0 | _(module has no anchor)_ |
+| `tx2_cashmere_goat_stock` | 80.0 | _(module has no anchor)_ |
 | `tx2_chain_stitch` | 90.0 | _(module has no anchor)_ |
 | `tx2_circular_knitting` | 120.0 | _(module has no anchor)_ |
 | `tx2_clockwork_toy` | 110.0 | _(module has no anchor)_ |
@@ -2456,6 +2408,7 @@ Sorted by module, then by node id.
 | `tx2_jacquard_cards` | 80.0 | _(module has no anchor)_ |
 | `tx2_jacquard_head` | 200.0 | _(module has no anchor)_ |
 | `tx2_jute_fibre` | 50.0 | _(module has no anchor)_ |
+| `tx2_jute_seed_stock` | 80.0 | _(module has no anchor)_ |
 | `tx2_lasting_machine` | 120.0 | _(module has no anchor)_ |
 | `tx2_latch_needle` | 90.0 | _(module has no anchor)_ |
 | `tx2_let_off_motion` | 60.0 | _(module has no anchor)_ |
@@ -2487,6 +2440,7 @@ Sorted by module, then by node id.
 | `tx2_radio_set` | 150.0 | _(module has no anchor)_ |
 | `tx2_raising` | 80.0 | _(module has no anchor)_ |
 | `tx2_ramie_fibre` | 50.0 | _(module has no anchor)_ |
+| `tx2_ramie_plant_stock` | 80.0 | _(module has no anchor)_ |
 | `tx2_rayon_acetate` | 140.0 | _(module has no anchor)_ |
 | `tx2_rayon_cupro` | 150.0 | _(module has no anchor)_ |
 | `tx2_razor_blade` | 100.0 | _(module has no anchor)_ |
@@ -2513,6 +2467,7 @@ Sorted by module, then by node id.
 | `tx2_shoemaking_mechanised` | 150.0 | _(module has no anchor)_ |
 | `tx2_shuttle` | 50.0 | _(module has no anchor)_ |
 | `tx2_silk_fibre` | 40.0 | _(module has no anchor)_ |
+| `tx2_silkworm_stock` | 80.0 | _(module has no anchor)_ |
 | `tx2_singeing` | 60.0 | _(module has no anchor)_ |
 | `tx2_sizing_systems` | 100.0 | _(module has no anchor)_ |
 | `tx2_sliver_preparation` | 40.0 | _(module has no anchor)_ |
@@ -2547,6 +2502,7 @@ Sorted by module, then by node id.
 | `hom_candle_beeswax` | 0.0 | _(module has no anchor)_ |
 | `hom_candle_tallow` | 0.0 | _(module has no anchor)_ |
 | `hom_carpet_sweeper` | 100.0 | _(module has no anchor)_ |
+| `hom_clothes_dryer_electric` | 130.0 | _(module has no anchor)_ |
 | `hom_cosmetics_modern_warning` | 100.0 | _(module has no anchor)_ |
 | `hom_cosmetics_roman` | 20.0 | _(module has no anchor)_ |
 | `hom_deodorant` | 70.0 | _(module has no anchor)_ |
@@ -2559,6 +2515,7 @@ Sorted by module, then by node id.
 | `hom_fireplace_chimney` | 120.0 | _(module has no anchor)_ |
 | `hom_flush_latrine_simple` | 0.0 | _(module has no anchor)_ |
 | `hom_flush_toilet_trap` | 80.0 | _(module has no anchor)_ |
+| `hom_freezer_domestic` | 160.0 | _(module has no anchor)_ |
 | `hom_furniture_wooden` | 0.0 | _(module has no anchor)_ |
 | `hom_gas_lamp` | 140.0 | _(module has no anchor)_ |
 | `hom_hypocaust` | 0.0 | _(module has no anchor)_ |
@@ -2605,25 +2562,56 @@ Sorted by module, then by node id.
 | `hom_washing_machine_electric` | 160.0 | _(module has no anchor)_ |
 | `hom_washing_machine_hand` | 140.0 | _(module has no anchor)_ |
 | `hom_zip_fastener` | 180.0 | _(module has no anchor)_ |
-| `if_fountain_pen` | 130.0 | _(module has no anchor)_ |
-| `mat_ice_artificial` | 200.0 | _(module has no anchor)_ |
+
+### 94_computing.md
+
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `com_accumulator` | 130.0 | _(module has no anchor)_ |
+| `com_analytical_engine` | 250.0 | _(module has no anchor)_ |
+| `com_arithmometer` | 120.0 | _(module has no anchor)_ |
+| `com_binary_arithmetic` | 100.0 | _(module has no anchor)_ |
+| `com_boolean_algebra` | 120.0 | _(module has no anchor)_ |
+| `com_compiler_and_language` | 300.0 | _(module has no anchor)_ |
+| `com_cryptography_substitution` | 80.0 | _(module has no anchor)_ |
+| `com_difference_engine` | 200.0 | _(module has no anchor)_ |
+| `com_error_detecting_code` | 140.0 | _(module has no anchor)_ |
+| `com_flip_flop` | 100.0 | _(module has no anchor)_ |
+| `com_hollerith_tabulation` | 180.0 | _(module has no anchor)_ |
+| `com_information_theory` | 160.0 | _(module has no anchor)_ |
+| `com_integrated_circuit` | 220.0 | _(module has no anchor)_ |
+| `com_logic_gate` | 100.0 | _(module has no anchor)_ |
+| `com_magnetic_core_memory` | 140.0 | _(module has no anchor)_ |
+| `com_magnetic_drum_storage` | 110.0 | _(module has no anchor)_ |
+| `com_magnetic_tape_storage` | 120.0 | _(module has no anchor)_ |
+| `com_mechanical_calculator` | 150.0 | _(module has no anchor)_ |
+| `com_morse_register` | 100.0 | _(module has no anchor)_ |
+| `com_napiers_bones` | 100.0 | _(module has no anchor)_ |
+| `com_photolithography` | 180.0 | _(module has no anchor)_ |
+| `com_public_key_cryptography` | 200.0 | _(module has no anchor)_ |
+| `com_register_computing` | 120.0 | _(module has no anchor)_ |
+| `com_relay_computer` | 300.0 | _(module has no anchor)_ |
+| `com_ring_counter` | 110.0 | _(module has no anchor)_ |
+| `com_stepped_drum` | 80.0 | _(module has no anchor)_ |
+| `com_stored_program_concept` | 180.0 | _(module has no anchor)_ |
+| `com_vacuum_tube_computer` | 400.0 | _(module has no anchor)_ |
 
 ### 95_expeditions.md
 
 | Node | Your hours | Recipe |
 |---|---:|---|
-| `exp_africa_circumnavigation` | 400.0 | _(module has no anchor)_ |
-| `exp_americas_factory` | 500.0 | _(module has no anchor)_ |
-| `exp_atlantic_crossing` | 400.0 | _(module has no anchor)_ |
-| `exp_coastal_africa` | 350.0 | _(module has no anchor)_ |
-| `exp_colony_administration` | 400.0 | _(module has no anchor)_ |
-| `exp_conquest_resource` | 300.0 | _(module has no anchor)_ |
+| `exp_africa_circumnavigation` | 400.0 | [`africa_circumnavigation`](95_expeditions.md#africa_circumnavigation---the-cape-route-and-the-southern-horizon) |
+| `exp_americas_factory` | 500.0 | [`americas_factory`](95_expeditions.md#americas_factory---the-trading-post-and-the-supply-line) |
+| `exp_atlantic_crossing` | 400.0 | [`atlantic_crossing`](95_expeditions.md#atlantic_crossing---the-ocean-barrier-that-is-not-really-there) |
+| `exp_coastal_africa` | 350.0 | [`coastal_africa`](95_expeditions.md#coastal_africa---the-guinea-coast-run) |
+| `exp_colony_administration` | 400.0 | [`colony_administration`](95_expeditions.md#colony_administration---governing-from-a-distance) |
+| `exp_conquest_resource` | 300.0 | [`conquest_resource`](95_expeditions.md#conquest_resource---the-alternatives-that-actually-work) |
 | `exp_import_draught_animals` | 300.0 | [`transplant_botany`](95_expeditions.md#transplant_botany---moving-the-garden) |
-| `exp_oceangoing_hull` | 250.0 | _(module has no anchor)_ |
-| `exp_openocean_navigation` | 300.0 | _(module has no anchor)_ |
-| `exp_provisioning_scurvy` | 200.0 | _(module has no anchor)_ |
-| `exp_trade_route_extend` | 250.0 | _(module has no anchor)_ |
-| `exp_transplant_botany` | 350.0 | _(module has no anchor)_ |
+| `exp_oceangoing_hull` | 250.0 | [`oceangoing_hull`](95_expeditions.md#oceangoing_hull---the-sternpost-rudder-and-why-you-need-it) |
+| `exp_openocean_navigation` | 300.0 | [`openocean_navigation`](95_expeditions.md#openocean_navigation---finding-where-you-are-by-finding-where-you-are-not) |
+| `exp_provisioning_scurvy` | 200.0 | [`provisioning_scurvy`](95_expeditions.md#provisioning_scurvy---vitamin-c-and-the-problem-that-killed-empires) |
+| `exp_trade_route_extend` | 250.0 | [`trade_route_extend`](95_expeditions.md#trade_route_extend---following-the-road-to-the-spice-islands) |
+| `exp_transplant_botany` | 350.0 | [`transplant_botany`](95_expeditions.md#transplant_botany---moving-the-garden) |
 
 ### 96_finance.md
 
@@ -2827,8 +2815,6 @@ Sorted by module, then by node id.
 | `mil_water_jacket` | 90.0 | _(module has no anchor)_ |
 | `mil_wheel_lock` | 80.0 | _(module has no anchor)_ |
 | `mil_wireless_set` | 100.0 | _(module has no anchor)_ |
-| `tl_half_track` | 220.0 | _(module has no anchor)_ |
-| `tr_periscope` | 100.0 | _(module has no anchor)_ |
 
 ### 98_power_plants.md
 
@@ -2933,23 +2919,23 @@ Sorted by module, then by node id.
 
 | status | nodes |
 |---|---:|
-| linked to a specific recipe entry | 871 |
-| linked to a domain module, no specific entry | 1874 |
+| linked to a specific recipe entry | 883 |
+| linked to a domain module, no specific entry | 1843 |
 | documented in a top-level prose file | 13 |
-| no link BY DESIGN (capability rungs, materials, unobtainables) | 88 |
-| **undocumented, a real gap** | **3** |
+| no link BY DESIGN (capability rungs, materials, unobtainables) | 95 |
+| **undocumented, a real gap** | **30** |
 
 The undocumented nodes, listed so the gap is visible rather than hidden:
 
-`com_led`, `hom_clothes_dryer_electric`, `hom_freezer_domestic`
+`cn_arch_bridge_steel`, `cn_crane_treadwheel`, `cn_queen_post`, `en_battery_lead_acid`, `en_boiler_cornish`, `en_boiler_haystack`, `en_boiler_lancashire`, `en_boiler_wagon`, `en_boiler_water_tube`, `en_flywheel_storage`, `en_hydroelectric_station`, `en_post_mill`, `en_pumped_storage`, `en_tide_mill`, `en_tower_mill`, `if_cylinder_press`, `if_daguerreotype`, `if_electrotype`, `if_fountain_pen`, `if_linotype_machine`, `if_lithography`, `if_printing_ink`, `if_rotary_press`, `if_typewriter`, `tl_half_track`, `tl_horseshoe`, `tr_fore_aft_rig`, `tr_lateen_sail`, `tr_periscope`, `tr_screw_propeller`
 
 ## Broken links
 
 - `civ_monumental_stone` points at `87_construction.md#cn_quarry_wedge`, but that module has no such `###` entry
-- `met_bloomery_bog_iron` points at `10_metallurgy.md#bloomery_iron`, but that module has no such `###` entry
-- `mat_rubber_coagulated` points at `89_remaining_arts.md#mat_rubber_coagulated`, but that module has no such `###` entry
-- `phosphor_bronze_alloy` points at `10_metallurgy.md#phosphor_bronze_alloy`, but that module has no such `###` entry
 - `goal_literacy_common` points at `80_information_printing.md#literacy`, but that module has no such `###` entry
 - `goal_literate_nation` points at `80_information_printing.md#literacy`, but that module has no such `###` entry
 - `goal_public_health` points at `70_medicine_biology.md#public_health`, but that module has no such `###` entry
+- `mat_rubber_coagulated` points at `89_remaining_arts.md#mat_rubber_coagulated`, but that module has no such `###` entry
+- `met_bloomery_bog_iron` points at `10_metallurgy.md#bloomery_iron`, but that module has no such `###` entry
+- `phosphor_bronze_alloy` points at `10_metallurgy.md#phosphor_bronze_alloy`, but that module has no such `###` entry
 

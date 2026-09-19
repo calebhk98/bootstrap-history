@@ -12,10 +12,16 @@ is now. None of this is an approved plan yet.
 | `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/engine/actors/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
 | `SIM_STATE_INVENTORY.md` | Every `Sim` instance attribute, measured, classified household / world / scenario / internal. The input to the extraction. | Ours |
 | `NAMING_PLAN.md` | The 3,813 short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
+| `STATE_OF_THE_PROJECT.md` | Every `Complaints/` file and every milestone in `ENDOGENOUS_COSTS_AND_DOMAINS.md`, checked against the current code rather than against what was last said about it. | Ours |
+| `SIM_DECOMPOSITION_REVISITED.md` | Reopens, on the stakeholder's request, the "no full decomposition" decision in `sim/ARCHITECTURE.md`; checks which of that decision's reasons still hold and recommends a staged, partial alternative. | Ours |
+| `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
+| `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
+| `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan;
-`PM_ASSESSMENT.md` is the reasoning that led to it; the two external documents
-are inputs to both.
+`PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
+is where its milestone table is kept current; the two external documents
+are inputs to all of them.
 
 The requirement conflict `PM_ASSESSMENT.md` §4 raised has been settled with the
 stakeholder: **the historical record must be a plausible outcome, not the only

@@ -12,14 +12,12 @@ find every place that decided it, and the project's central question - what
 here is a fundamental fact, and what is a guess we intend to replace - is
 unanswerable while the two are mixed into the same expressions.
 
-HOW IT WORKS, AND WHY IT IS A REGISTRY RATHER THAN A FOLDER. The first design
-for this put physical constants in one file, biological ones in another,
-heuristics in a third, so the file list answered the question by itself. That
-is a nice property and it was the wrong trade: a number wants to live beside
-the formula that uses it, because moving it away loses the one thing that
-makes it defensible, which is the paragraph explaining why it is that number.
-Splitting by file also means two authors working on two domains fight over
-the same file.
+HOW IT WORKS, AND WHY IT IS A REGISTRY RATHER THAN A FOLDER. Grouping
+constants into files by kind - physical constants in one file, biological
+ones in another, heuristics in a third - would separate a number from the
+formula that uses it, losing the one thing that makes it defensible: the
+paragraph explaining why it is that number. It would also mean two authors
+working on two domains fight over the same file.
 
 So declarations live next to their use, and `declare` records them centrally.
 The provenance split is by the `kind` argument rather than by filename, and
@@ -42,7 +40,16 @@ nothing downstream needs to know this module exists.
 THE KINDS, and the two that matter for different reasons
 
     physical_constant        facts about the universe. Densities, melting
-                             points, latent heats, Faraday's constant.
+                             points, latent heats, Faraday's constant. Also
+                             covers exact, definitional unit conversions
+                             (kilograms per tonne, metres per kilometre,
+                             percent) - true by construction rather than by
+                             measurement, but not a distinct kind of their
+                             own: see sim/unit_conversions.py's own module
+                             docstring for why. HOURS_PER_YEAR (sim/
+                             engine/economy_electricity.py) and DAYS_PER_YEAR
+                             (sim/world/demand.py) are declared the same way,
+                             at confidence "A".
     biological_parameter     facts about living things. Calories, gestation,
                              crop growth, mortality curves.
     engineering_estimate     measured facts about technique. Process
@@ -64,19 +71,41 @@ THE KINDS, and the two that matter for different reasons
 promise to replace it, and it will always have a tail, because "no mechanism
 exists yet" is a permanent feature of an unfinished migration, not a bug.
 `hardcoded_outcome` is a DIFFERENT progress bar with a different
-target: it is small today (two entries, both in sim/engine/economy.py) and
-`--burndown` expects it to reach EXACTLY ZERO, because unlike an un-derived
-heuristic, a live SS3.1 violation is not something this project tolerates
-having a tail of. Complaints/36 records why these two kinds used to be the
-same bucket and why that made the second, much smaller and much more urgent
-one invisible.
+target: `--burndown` expects it to reach EXACTLY ZERO, because unlike an
+un-derived heuristic, a live SS3.1 violation is not something this project
+tolerates having a tail of. Complaints/36 records why treating these two
+kinds as one bucket hid the second, much smaller and much more urgent one.
+
+    python3 sim/constants.py --burndown       prints the live count
+    grep -rn 'kind="hardcoded_outcome"' --include=*.py sim/ | wc -l
+
+Deliberately stated as a command rather than a number in prose: the whole
+point of this kind is that the count should be falling, so a figure quoted
+here goes stale the moment somebody fixes one. See CLAUDE.md SS8: a number
+in prose carries the command that produced it, or it does not go in.
 
 The remaining kinds are legitimate inputs under CLAUDE.md 3.1 and are not
 expected to go away.
 
 WHAT DOES NOT BELONG HERE. Numbers that do not change a simulated outcome.
-Column widths, "show the top 5 slowest", retry counts, buffer sizes. Moving
-those away from the code that uses them makes that code worse, not better.
+Column widths, "show the top 5 slowest", retry counts, buffer sizes -
+gathered instead in `sim/presentation.py`, a DIFFERENT kind of file serving
+a DIFFERENT purpose (see that module's own THE TENSION WITH sim/
+constants.py section for why one stakeholder request to "gather these
+somewhere editable" does not actually conflict with the sentence you are
+reading, once the two are told apart). This registry is a provenance tool
+for numbers that make a claim on the simulated world; a column width makes
+no such claim and was never what this paragraph meant to protect by
+staying scattered. Unit conversions (kilograms per tonne, metres per
+kilometre, percent) get the same "not by oversight" treatment in `sim/
+unit_conversions.py`, and solver mechanics (damping factors, convergence
+tolerances, iteration ceilings) in `sim/algorithm_parameters.py` - three
+siblings to this file, none of them calling `declare()`, each explaining in
+its own docstring why its own numbers do not belong in the registry `--
+burndown` measures. Moving a genuine formula-adjacent number away from the
+code that uses it still makes that code worse, not better - that half of
+this paragraph is unchanged and is the reason none of those three files
+holds anything BUT the categories named above.
 
 A `temporary_heuristic` with an empty `why` fails the check in
 sim/tests/test_constants.py. If nobody can say why a number is that number,
@@ -130,12 +159,6 @@ if _SIM_ROOT not in sys.path:
 # declarations land in one and the report reads another, and --burndown prints
 # a number that is quietly too low.
 #
-# That already happened once, cost a real debugging session, and is written up
-# in sim/tests/test_constants_burndown.py. It was fixed then for the __main__
-# case specifically, which was the only one that existed; the engine's
-# migration to declare() adds the `constants` spelling and would have brought
-# it straight back.
-#
 # Stashing the dict in sys.modules under a name nothing else can claim makes
 # every copy of this module share one object, whatever it is imported as. This
 # is not a compatibility shim of the kind CLAUDE.md 3.5 forbids - it is not
@@ -157,23 +180,18 @@ KINDS = (
     "calibration_target",
     "temporary_heuristic",
     # THE TEST IS NOT PROVENANCE, IT IS WHETHER THE QUANTITY IS AN OUTPUT.
-    # This kind was first called `hardcoded_historical_outcome`, and the name
-    # misled the first agent to meet it: asked to classify a flat 300-denarii
-    # list price for a human being, it reasoned that the number was invented
-    # rather than copied from any source, and therefore left it as ordinary
-    # scaffolding. True, and the wrong axis. An INVENTED price is worse than
-    # a copied one, because at least the copied one is right about the world.
-    #
-    # Ask instead: is this quantity something the simulation is supposed to
-    # COMPUTE? A price, a wage, a rent, an interest rate, a city size, a
-    # recovery time - CLAUDE.md §3.1's own headline example is what a Roman
-    # soldier costs. Those are outputs, and asserting one is the violation
-    # however defensible the number. An elasticity, a decay rate, a curve
+    # Ask: is this quantity something the simulation is supposed to COMPUTE?
+    # A price, a wage, a rent, an interest rate, a city size, a recovery
+    # time - CLAUDE.md SS3.1's own headline example is what a Roman soldier
+    # costs - are outputs, and asserting one is the violation however
+    # defensible the number. An INVENTED number is not more defensible than
+    # a copied one; if anything it is worse, because at least a copied
+    # number is right about the world. An elasticity, a decay rate, a curve
     # shape are inputs: nobody expects the model to derive them from
     # anything, so they are temporary_heuristic and always will be.
     #
-    # Renamed to `hardcoded_outcome` for that reason. A label narrower than
-    # its own test is worse than no label, because it reads as permission.
+    # A label narrower than its own test is worse than no label, because it
+    # reads as permission.
     "hardcoded_outcome",
 )
 
@@ -232,10 +250,10 @@ def burndown():
     two numbers, so callers should look at it FIRST.
     """
     total = len(REGISTRY)
-    heuristics = [e for e in REGISTRY.values()
-                  if e["kind"] == "temporary_heuristic"]
-    historical_outcomes = [e for e in REGISTRY.values()
-                            if e["kind"] == "hardcoded_outcome"]
+    heuristics = [entry for entry in REGISTRY.values()
+                  if entry["kind"] == "temporary_heuristic"]
+    historical_outcomes = [entry for entry in REGISTRY.values()
+                            if entry["kind"] == "hardcoded_outcome"]
     return {"declared": total, "temporary_heuristics": len(heuristics),
             "share": (len(heuristics) / total) if total else 0.0,
             "outstanding": heuristics,
@@ -279,20 +297,27 @@ def _import_declaring_modules():
     every import in the project working, and this tool should keep running
     when something else is broken.
     """
-    # HOW THIS BROKE, AND WHY IT MATTERED MORE THAN IT LOOKED. This list read
-    # ("engine.data",) alone, and engine/data.py declares nothing at all. So
-    # --burndown printed "0 numbers declared" while sim/world/ had 32 of them,
-    # 9 marked temporary_heuristic. Zero was the right answer on the day this
-    # was written and stayed the printed answer afterwards, which is the whole
-    # failure mode: a scoreboard that cannot tell progress from no progress is
-    # worse than no scoreboard, because it is quietly believed. Milestone 1 is
-    # "provenance and a burndown" and it was unmeasurable for exactly as long
-    # as this list was one module long.
+    # THE RULE WHEN YOU ADD A MODULE THAT CALLS declare(): add it here in the
+    # same commit, or its numbers do not exist as far as the burndown knows.
+    # A module missing from this list does not error - it silently reports
+    # fewer declared numbers than actually exist, which is worse than an
+    # obvious failure, because a scoreboard that cannot tell progress from no
+    # progress is quietly believed.
     #
     # Still an explicit list rather than a directory walk, for the reason
     # above: this tool should keep reporting when something else is broken.
-    # The rule when you add a module that calls declare(): add it here in the
-    # same commit, or your numbers do not exist as far as the burndown knows.
+    # sim.unit_conversions is at the REPOSITORY root, not under sim/world/,
+    # so sim/tests/test_constants_burndown.py's own
+    # test_every_declaring_module_under_sim_world_is_in_the_list cannot
+    # catch this one going missing the way it catches a sim/world/ file -
+    # there is no directory walk for sim/ root modules, on purpose, for the
+    # same "keep the tool running when something else is broken" reason the
+    # sim/world/ list below is explicit rather than walked. Whoever adds the
+    # next sim/-root file that calls declare() has to add it here by hand.
+    # sim/presentation.py and sim/algorithm_parameters.py are siblings that
+    # do NOT belong in this list, because neither calls declare() at all
+    # (see either module's own NOT PART OF THE REGISTRY / kind section for
+    # why).
     for module in ("engine.data",
                    "engine.economy",
                    "engine.cli",
@@ -300,6 +325,7 @@ def _import_declaring_modules():
                    "engine.society",
                    "engine.labour",
                    "engine.projects",
+                   "sim.unit_conversions",
                    "sim.world.agriculture",
                    "sim.world.demography",
                    "sim.world.shared_constants",
@@ -338,10 +364,10 @@ def main(argv=None):
                  100.0 * result["share"]))
         print()
         # SEPARATE FROM temporary_heuristic, ON PURPOSE, AND REPORTED LOUDLY.
-        # See Complaints/36: the two used to be the same bucket, and a queue
+        # See Complaints/36: treating the two as one bucket meant a queue
         # where "invent a better elasticity eventually" and "a SS3.1
-        # violation is live in the shipping model" sorted identically was
-        # not measurable in the way that matters. Unlike temporary_heuristic
+        # violation is live in the shipping model" sorted identically, which
+        # is not measurable in the way that matters. Unlike temporary_heuristic
         # above - which will always have a tail - THIS COUNT IS EXPECTED TO
         # REACH ZERO. It is a defect list, not a progress bar.
         print("=" * 72)

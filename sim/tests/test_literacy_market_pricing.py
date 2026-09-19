@@ -1,7 +1,4 @@
-"""literacy_market_pricing: split verbatim from the old test_regressions.py (original lines 3157-3534).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""literacy_market_pricing: regression checks, run individually with `--only literacy_market_pricing`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

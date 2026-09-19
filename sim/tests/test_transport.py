@@ -207,10 +207,10 @@ class SelfDefeatingRangeTests(unittest.TestCase):
     """
 
     def test_range_is_positive_and_finite_at_reference_settings(self):
-        km = transport.maximum_one_way_range_before_self_defeating_km(
+        range_km = transport.maximum_one_way_range_before_self_defeating_km(
             transport.OX, 2, transport.CART, transport.DIRT_TRACK)
-        self.assertGreater(km, 0.0)
-        self.assertLess(km, 1.0e7)
+        self.assertGreater(range_km, 0.0)
+        self.assertLess(range_km, 1.0e7)
 
     def test_worse_surface_gives_a_shorter_self_defeating_range(self):
         # More feed burned per tonne-km hauled means the break-even point
@@ -234,10 +234,10 @@ class SelfDefeatingRangeTests(unittest.TestCase):
         self.assertGreater(flat, graded)
 
     def test_a_team_that_cannot_move_its_own_vehicle_has_zero_range(self):
-        km = transport.maximum_one_way_range_before_self_defeating_km(
+        range_km = transport.maximum_one_way_range_before_self_defeating_km(
             transport.OX, 2, transport.CART, transport.DIRT_TRACK,
             grade_fraction=transport.TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION * 3.0)
-        self.assertEqual(km, 0.0)
+        self.assertEqual(range_km, 0.0)
 
 
 class DeterminismTests(unittest.TestCase):

@@ -32,13 +32,13 @@ class RegionWeightsTests(unittest.TestCase):
     """
 
     def test_weights_sum_to_one_and_every_cell_sits_in_a_home_region(self):
-        # RENAMED AND REWRITTEN for Complaints/50. This used to assert that
-        # the cell ids WERE Rome's seven home_regions, which is precisely
-        # the equation the complaint is about - one row in a data file was
-        # one weather draw. Cells are now geography.json's 150,000 km2
-        # land_tiles, so the identity check becomes a containment check:
-        # every cell must belong to a region Rome actually holds, and no
-        # cell may come from a region it does not.
+        # Complaints/50: cell ids are geography.json's 150,000 km2
+        # land_tiles, not Rome's seven home_regions - asserting the cell ids
+        # WERE the home_regions would be precisely the equation that
+        # complaint is about, one row in a data file as one weather draw.
+        # So this is a containment check, not an identity one: every cell
+        # must belong to a region Rome actually holds, and no cell may come
+        # from a region it does not.
         test_sim = _rome_sim()
         cells = list(test_sim._farm_weather_cells)
         home_regions = set(test_sim.civ["home_regions"])
@@ -53,14 +53,13 @@ class RegionWeightsTests(unittest.TestCase):
         self.assertAlmostEqual(sum(cell.weight for cell in cells), 1.0, places=9)
 
     def test_weights_are_a_genuine_land_share_not_an_equal_split(self):
-        # REWRITTEN for Complaints/50. This used to compare each weight
-        # against land.cultivable_land_for_civilization's per-REGION
-        # arable_iugera. Cells are now geography.json's 150,000 km2
-        # land_tiles, which carry their own arable_fraction, so land.py no
-        # longer feeds this mechanism at all and that comparison would be
-        # asserting against a source the code does not read. What the test
-        # is FOR survives unchanged: the weighting must be by land, not by
-        # counting.
+        # Complaints/50: cells are geography.json's 150,000 km2 land_tiles,
+        # which carry their own arable_fraction, so land.py does not feed
+        # this mechanism at all - comparing each weight against
+        # land.cultivable_land_for_civilization's per-REGION arable_iugera
+        # would assert against a source the code does not read. What the
+        # test is FOR survives unchanged: the weighting must be by land,
+        # not by counting.
         test_sim = _rome_sim()
         weights = [cell.weight for cell in test_sim._farm_weather_cells]
         self.assertGreater(len(weights), 7,

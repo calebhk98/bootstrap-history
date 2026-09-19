@@ -1,26 +1,27 @@
-# rome/ - how this project is put together
+# How this project is put together
 
-Three artefacts that share one dataset.
+Three artefacts that share one dataset. This checkout does not have to be
+named anything in particular; every command below is written relative to the
+repository root, whatever you called the directory when you cloned it.
 
 ```
-rome/
-├── 00_BRIEFING.md            your first thousand days
-├── 01_WORLD_STATE_100AD.md   what Rome has and lacks, materials, prices, mindset
-├── 02_STRATEGY.md            the plan, the phases, and the evidence for them
-├── 03_SOCIAL_POLITICS.md     patronage, law, what the State funds, what kills you
-├── 04_ECONOMICS.md           labour, materials, transport, where the money goes
-├── LABOR_LEDGER.md           the founder's hours, and the author's
-├── knowledge/                THE HOW-TO LIBRARY (start at 00_NONOBVIOUS_TRICKS.md)
-├── data/
-│   ├── tech_tree.json        2,833 nodes, 4,745 edges, fully costed
-│   ├── branches/            per-domain source files, CONTRACT and VOCABULARY
-│   ├── judgement.json       per-node scores and defects (generated)
-│   └── prices.json           wages and commodity prices, confidence-tagged
-├── sim/
-│   ├── treetool.py           merge / repair / JUDGE EACH TECH IN ISOLATION
-│   ├── simulator.py          validate / path / costs / run / compare / sensitivity / play
-│   └── strategies/*.json     rush, and the recommended order, with reasoning
-└── log/playthrough_01.md     real traces: lucky, typical, and failed
+00_BRIEFING.md            your first thousand days
+01_WORLD_STATE_100AD.md   what Rome has and lacks, materials, prices, mindset
+02_STRATEGY.md            the plan, the phases, and the evidence for them
+03_SOCIAL_POLITICS.md     patronage, law, what the State funds, what kills you
+04_ECONOMICS.md           labour, materials, transport, where the money goes
+LABOR_LEDGER.md           the founder's hours, and the author's
+knowledge/                THE HOW-TO LIBRARY (start at 00_NONOBVIOUS_TRICKS.md)
+data/
+├── tech_tree.json        the tech tree, fully costed (node and edge counts below)
+├── branches/             per-domain source files, CONTRACT and VOCABULARY
+├── judgement.json        per-node scores and defects (generated)
+└── prices.json           wages and commodity prices, confidence-tagged
+sim/
+├── treetool.py           merge / repair / JUDGE EACH TECH IN ISOLATION
+├── simulator.py          validate / path / costs / run / compare / sensitivity / play
+└── strategies/*.json     rush, and the recommended order, with reasoning
+log/playthrough_01.md     real traces: lucky, typical, and failed
 ```
 
 ## The one rule that keeps it coherent
@@ -41,7 +42,7 @@ anchor, for example:
 "kb": "10_metallurgy.md#zinc_metal",
 ```
 
-and `rome/knowledge/10_metallurgy.md` contains a `### zinc_metal` entry with the
+and `knowledge/10_metallurgy.md` contains a `### zinc_metal` entry with the
 actual procedure: ore, ratios, temperatures, vessel, condenser design, what
 success looks like, how it fails, what it costs, and what it will do to your
 lungs. **That link is the point of the whole project.** A tech tree that says
@@ -53,13 +54,12 @@ non-specialist can actually act on.
 
 ## The three layers, and why the tree is built this way
 
-The first version of this tree had 128 nodes and treated materials as priced
-commodities and capabilities as things you either had or did not. That was the
-central flaw: "grind a lens" did not require "hold one micron", and "smelt zinc"
-did not require "reach 1000 C", so a reader could not see WHY anything was hard.
-The rebuild has three layers.
+The tree is built in three layers so that a reader can see WHY something is
+hard, not just that it is: "grind a lens" requires "hold one micron", and
+"smelt zinc" requires "reach 1000 C", as explicit prerequisites rather than
+implicit difficulty.
 
-**1. CAPABILITY RUNGS (33 nodes, `cap_*`).** Graded, explicit, and cited as
+**1. CAPABILITY RUNGS (34 nodes, `cap_*`).** Graded, explicit, and cited as
 prerequisites by the technologies that need them. These are the answer to
 "did you account for accuracy, furnaces, purity?".
 
@@ -72,31 +72,41 @@ prerequisites by the technologies that need them. These are the answer to
 | Power | muscle - water (Rome has it) - steam - local electric - grid |
 | Measurement | length, mass to 1 mg, temperature, high temperature, time to 1 s, to 1 ms, absolute electrical units, wavelength |
 
-**2. MATERIALS (73 nodes, `mat_*`).** Each is a node with its own prerequisites,
+**2. MATERIALS (74 nodes, `mat_*`).** Each is a node with its own prerequisites,
 not a line item with a price. Rome's starting materials are granted explicitly
-by its civilization profile. **There is no longer an "unobtainable" bucket** - that category
-existed in an earlier version of the tree and it was wrong: rubber is not
-unobtainable, it is in West Africa; saltpetre effloresces on the Gangetic plain,
-on a route Rome already sails. `mat_natural_rubber`, `mat_gutta_percha`,
+by its civilization profile. **There is no "unobtainable" bucket**: rubber is
+not unobtainable, it is in West Africa; saltpetre effloresces on the Gangetic
+plain, on a route Rome already sails. `mat_natural_rubber`, `mat_gutta_percha`,
 `mat_quinine`, `mat_chile_nitrate`, `mat_newworld_crops`, `mat_cryolite` and
 `mat_platinum_bulk` are each gated behind an `exp_*`
 expedition node that prices what going to get it actually costs, exactly like
-every other distant material (see `rome/knowledge/95_expeditions.md`).
+every other distant material (see `knowledge/95_expeditions.md`).
 
-**3. TECHNOLOGIES (2,727 nodes).** What were fifteen domains at the tree's
-last major rebuild have since fragmented into 241 categories as branch authors
-added their own - textiles, food and agriculture, household goods, media and
-printing, land transport, ships, aviation, energy, chemicals, metallurgy and
-mining, precision and machine tools, medicine, civil engineering, optics and
-instruments, communications and computing remain the broad shape, on top of
-the original core spine.
+**3. TECHNOLOGIES (everything that is not a capability rung or a material).**
+Textiles, food and agriculture, household goods, media and printing, land
+transport, ships, aviation, energy, chemicals, metallurgy and mining,
+precision and machine tools, medicine, civil engineering, optics and
+instruments, communications and computing, on top of the core spine - branch
+authors add categories as they add branches, so this list is not exhaustive.
+The exact split between layers moves as branches are added; count it yourself
+rather than trust a number here:
 
-**Scale:** 2,833 nodes, 4,745 edges. Availability and ordering come from the
-prerequisite graph, costs, capability rungs, and civilization starting knowledge.
-**The transistor (`junction_transistor`, the 1951 device) needs 158 of them.
-The other 2,675 are the rest of technology, and that is the point:** a tree
-that only covers the path to a transistor is dishonest about what technology
-is for.
+```bash
+python3 -c "import json,collections
+nodes = json.load(open('data/tech_tree.json'))['nodes']
+prefix = collections.Counter(n['id'].split('_')[0] if n['id'].startswith(('cap_','mat_')) else 'tech' for n in nodes)
+print('cap_*:', prefix['cap'], ' mat_*:', prefix['mat'], ' everything else:', prefix['tech'])"
+```
+
+**Scale:** 2,864 nodes and 5,025 edges as of this writing, confirmed by
+`python3 sim/simulator.py validate`, which prints both on every run.
+Availability and ordering come from the prerequisite graph, costs, capability
+rungs, and civilization starting knowledge. The transistor
+(`junction_transistor`, the 1951 device) needs 169 of those nodes, itself
+included (`python3 sim/simulator.py path junction_transistor`, which lists
+them and stops there). Most of the tree has nothing to do with a transistor,
+and that is the point: a tree that only covers the path to a transistor is
+dishonest about what technology is for.
 
 ## Judging each technology in isolation
 
@@ -105,29 +115,43 @@ The right test is not "what year does the simulation reach a transistor". It is
 actually build it?"** That is what `treetool.py judge` asks, node by node.
 
 ```bash
-python3 rome/sim/treetool.py judge              # score all 2,833, summary
-python3 rome/sim/treetool.py judge --full       # every defect, node by node
-python3 rome/sim/treetool.py judge --id zinc_metal   # one report card
-python3 rome/sim/treetool.py judge --grade C    # everything at C or worse
+# judge, judge --full and judge --grade can write data/judgement.json, but
+# only with --write; without it they report and change nothing. judge --id
+# never writes - it reports on one node and stops.
+python3 sim/treetool.py judge                        # score every node, summary
+python3 sim/treetool.py judge --full                 # every defect, node by node
+python3 sim/treetool.py judge --id zinc_metal        # one report card
+python3 sim/treetool.py judge --grade C              # everything at C or worse
 ```
 
-Defect classes it names: `CAP-NONE` and `CAP-HEAT/TOL/VAC/PURITY/POWER` (needs a
-capability rung it does not declare), `SHALLOW` and `THIN-CHAIN` (narrow at the
-top AND shallow all the way down), `BLOCKED` (depends on something
-unobtainable), `COST-HIGH` / `HOURS-ZERO` (out of proportion for its category or graph
-position), `NO-FLOOR` (long adoption with no diffusion time), `NOTE-THIN`,
-`NO-RECIPE`, `SOCIAL-FLAT`.
+Defect classes it names: `CAP-NONE` and `CAP-HEAT`/`CAP-TOL`/`CAP-VAC`/
+`CAP-PURITY`/`CAP-POWER` (needs a capability rung it does not declare),
+`SHALLOW` (narrow at the top and shallow all the way down), `BLOCKED`
+(depends on something marked unobtainable - currently dormant, since nothing
+in the tree is marked that way any more), `COST-HIGH` / `HOURS-HIGH` /
+`HOURS-ZERO` (out of proportion for its category or graph position),
+`NO-FLOOR` (long adoption with no diffusion time), `NOTE-THIN`, `NO-CONF`,
+`NO-RECIPE`, `SOCIAL-FLAT`. The full, current list is the `defects.append(...)`
+calls in `sim/treetool.py`'s `judge_node`; treat the list above as a reading
+aid, not the authority.
 
-**Read the score with suspicion.** `treetool.py repair` then fixes mechanically
-what it can, and the mean score rises from 80.8 to 98.0. A large part of that is
-my own checker being satisfied by my own repair, which is exactly the trap this
-project is supposed to avoid. Every edge the repair inferred is stamped into the
-node's `_internal` field as `[AUDIT: capability prerequisite(s) ... were
-inferred ... Treat them as a floor, not a specification.]`, so you can find and
-discount all 398 of them. `_internal` is read by nothing in `rome/sim/engine`,
-which is the point: these markers once lived in `note`, the field a player
-reads, and a first-time tester found one in the win condition itself. The trustworthy check is `data/review/INDEPENDENT_AUDIT.md`, where a separate
-reviewer went through a random sample of 70 nodes without seeing my heuristics.
+**Read the score with suspicion.** As of this writing `judge`
+reports a mean of 96.0/100 across all nodes (2,294 A, 473 B, 93 C, 4 D, 0 F -
+rerun the command above for the current figures). `treetool.py repair`
+does not guess at capability prerequisites: it leaves
+gaps visible for a human to review rather than inferring them, because an
+earlier version of this same pass inferred capability floors and an
+independent reviewer who checked a sample of its output by hand found every
+one of them wrong. That reviewer's findings are in
+`data/review/INDEPENDENT_AUDIT.md`, a random sample of 70 nodes checked
+without seeing the tree's own heuristics, and it is the more trustworthy
+read of tree quality than the score above. 398 nodes still carry a
+`[AUDIT: capability prerequisite(s) ... were inferred ... Treat them as a
+floor, not a specification.]` marker in their `_internal` field from before
+that inference was turned off (`python3 -c "import json; nodes=json.load(open('data/tech_tree.json'))['nodes']; print(sum(1 for n in nodes if 'AUDIT' in str(n.get('_internal',''))))"`
+counts them); `_internal` is for auditors, not players - `note` is what a
+player reads, and these markers once lived there instead, which is how a
+first-time tester found one inside the win condition itself.
 
 ## Simulator changes
 
@@ -149,14 +173,20 @@ matter most:
 
 | Field | Meaning |
 |---|---|
-| `ph` | **Your own hours.** The scarce resource. You have about 72,000, ever. |
+| `ph` | **Your own hours.** The scarce resource. Total available in one lifetime, printed by `python3 sim/simulator.py path <any node>` as "Founder-hours available in one lifetime" (currently 56,000). |
 | `lab` | Hired hours by trade, priced from `prices.json` |
-| `yrs` | **Calendar floor.** Curing, growing, maturing, or a generation of economic diffusion. Money cannot buy this down, and this is what sets the 142-year critical path. |
+| `yrs` | **Calendar floor.** Curing, growing, maturing, or a generation of economic diffusion. Money cannot buy this down; `python3 sim/simulator.py path junction_transistor` shows what floor a given goal adds up to (currently 142.2 years for the transistor). |
 | `risk` | Probability an attempt fails outright and must be retried at 40% of cost |
 | `sus` | Suspicion delta. Rome executes magicians and your chemistry looks like magic. |
 | `gov` | State interest, -3 (will suppress) to +3 (will fund and demand) |
 | `sch` / `art` | Trained people required. This is what the greedy strategy runs out of. |
 | `conf` | A well attested, B probable, C the author's estimate |
+
+`sus` and `gov` are contested. Both are present on all nodes and are still
+read (see `sim/engine/cli.py`'s `why` display), but `data/branches/CONTRACT_V2.md`
+§4 is the place to check before relying on them further - it carries the
+authors' current view of where these two fields are headed, and that view
+is more likely to move than this table is to be updated in step with it.
 
 ## Confidence, stated plainly
 

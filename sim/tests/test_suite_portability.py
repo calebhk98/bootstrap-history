@@ -30,7 +30,7 @@ import sys
 import tempfile
 
 from .harness import *
-from .harness import ROOT, HERE, _LOADTEST_DIR, _PLAY_DIR
+from .harness import ROOT, HERE, SLOW_TOPICS, _LOADTEST_DIR, _PLAY_DIR
 from .__main__ import TOPICS
 
 
@@ -39,8 +39,8 @@ from .__main__ import TOPICS
 # not error, they simply address nothing.
 check("harness.ROOT is the repository root, so os.path.join(ROOT, 'data') "
       "addresses this checkout's own data",
-      all(os.path.isdir(os.path.join(ROOT, d))
-          for d in ("data", "sim", "knowledge", "playtest")),
+      all(os.path.isdir(os.path.join(ROOT, directory))
+          for directory in ("data", "sim", "knowledge", "playtest")),
       ROOT)
 
 check("...and it is THIS checkout, the one the harness itself was imported "
@@ -50,8 +50,9 @@ check("...and it is THIS checkout, the one the harness itself was imported "
 
 check("the civilization glob that silently matched nothing now matches every "
       "civilization file",
-      len([f for f in os.listdir(os.path.join(ROOT, "data", "civilizations"))
-           if f.endswith(".json") and not f.startswith("_")]) >= 5,
+      len([filename for filename
+           in os.listdir(os.path.join(ROOT, "data", "civilizations"))
+           if filename.endswith(".json") and not filename.startswith("_")]) >= 5,
       sorted(os.listdir(os.path.join(ROOT, "data", "civilizations"))))
 
 
@@ -90,7 +91,8 @@ _SELF = os.path.abspath(__file__)
 
 _offenders = []
 for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, "sim")):
-    _dirnames[:] = [d for d in _dirnames if d != "__pycache__"]
+    _dirnames[:] = [directory_name for directory_name in _dirnames
+                    if directory_name != "__pycache__"]
     for _fn in _filenames:
         if not _fn.endswith(".py"):
             continue
@@ -152,12 +154,13 @@ check("every topic registered in TOPICS exists on disk, and every topic "
       "module on disk is registered - an unregistered one runs never, and a "
       "registered missing one crashes the run",
       sorted(TOPICS) == sorted(
-          f[len("test_"):-len(".py")]
-          for f in os.listdir(os.path.join(ROOT, "sim", "tests"))
-          if f.startswith("test_") and f.endswith(".py")),
-      sorted(set(TOPICS) ^ {f[5:-3] for f in
+          filename[len("test_"):-len(".py")]
+          for filename in os.listdir(os.path.join(ROOT, "sim", "tests"))
+          if filename.startswith("test_") and filename.endswith(".py")),
+      sorted(set(TOPICS) ^ {filename[5:-3] for filename in
                             os.listdir(os.path.join(ROOT, "sim", "tests"))
-                            if f.startswith("test_") and f.endswith(".py")}))
+                            if filename.startswith("test_")
+                            and filename.endswith(".py")}))
 
 
 # --- The end-to-end proof. Everything above is a claim about the source; this
@@ -193,8 +196,26 @@ try:
 
     check("...and that run left its scratch directories in its own root, not "
           "in this checkout",
-          not any(os.path.exists(os.path.join(_alias_parent, d))
-                  for d in (_LOADTEST_DIR, _PLAY_DIR)),
+          not any(os.path.exists(os.path.join(_alias_parent, directory))
+                  for directory in (_LOADTEST_DIR, _PLAY_DIR)),
           sorted(os.listdir(_alias_parent)))
 finally:
     shutil.rmtree(_alias_parent, ignore_errors=True)
+
+
+# EVERY NAME IN SLOW_TOPICS MUST BE A REAL TOPIC.
+#
+# A slow-topic entry naming nothing is the quietest kind of rot: it skips no
+# topic, prints no warning, and goes on reading like it is saving time. That
+# is exactly what happened when `round8_fixes` and `round9` were regrouped
+# into subject-named topics - the names stayed in the set for a while,
+# matching nothing, while the checks they were supposed to be deferring ran
+# on every default run and the suite got slower with nobody able to say why.
+#
+# The reverse direction is already covered above, by the check that TOPICS
+# and the files on disk agree. This one closes the other half.
+_unknown_slow_topics = sorted(set(SLOW_TOPICS) - set(TOPICS))
+check("every topic named in SLOW_TOPICS actually exists in TOPICS - a stale "
+      "name there defers nothing and says nothing",
+      not _unknown_slow_topics,
+      "names in SLOW_TOPICS matching no topic: %s" % (_unknown_slow_topics,))

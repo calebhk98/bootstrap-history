@@ -4,52 +4,107 @@ Split out of simulator.py, which had grown to 5,600 lines. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections, json, math, os, random
-from collections import defaultdict
 
-from .data import *          # the shared tables and loaders
-from .data import (haversine_km)
+from typing import cast, Dict, NotRequired, Tuple, TypedDict
+
+from .data import (haversine_km, JSONDict)
+
+
+class MineralShares(TypedDict):
+    """One region's rough share of each mineral's total output
+    (geography.json's per-region `minerals` block). Fixed at exactly the
+    seven minerals this simulation ever computes a `mineral_scale` for -
+    see core.py's own `("iron", "coal", "copper", "lead", "tin", "silver",
+    "saltpetre")` tuple, the only place that set is spelled out, and
+    `_compute_mineral_scale` below, the only reader of this dict. Marked
+    NotRequired rather than required outright because `_compute_mineral_scale`
+    already reads every one of them through `.get(material, 0.0)`, i.e. the
+    code was already written to tolerate a region omitting one - even
+    though every region in data/world/geography.json today happens to
+    state all seven explicitly."""
+    iron: NotRequired[float]
+    coal: NotRequired[float]
+    copper: NotRequired[float]
+    lead: NotRequired[float]
+    tin: NotRequired[float]
+    silver: NotRequired[float]
+    saltpetre: NotRequired[float]
+
+
+class RegionRecord(TypedDict):
+    """One entry of geography.json's `regions` block - the shape every
+    method below reads via `self._regions[region_id]`. `land` is read only
+    by sim/world/land.py (a different file, out of this task's ownership),
+    never by this one, so it stays a plain mapping here rather than
+    importing that module's own `LandBlock` TypedDict for a field this
+    file never opens. `note` is the only key genuinely absent on some
+    regions (17 of 21 in data/world/geography.json); every other key here
+    is present on all 21."""
+    name: str
+    land: JSONDict
+    lat: float
+    lon: float
+    coastal: bool
+    route_difficulty: float
+    reach_from_italia: int
+    minerals: MineralShares
+    note: NotRequired[str]
 
 
 class GeographyMixin:
-    def _compute_home_centroid(self):
+    # -- ATTRIBUTES THIS MIXIN READS BUT DOES NOT OWN ----------------------
+    # Set by Sim.__init__ (core.py, not owned by this task - see the
+    # top-level instructions' file list) before any method below runs.
+    # Declared here, type-only (a bare annotation with no assignment binds
+    # nothing at runtime - it only populates GeographyMixin.__annotations__),
+    # purely so mypy knows the shape of every `self.x` this mixin reads
+    # that core.py, not this file, assigns.
+    civ: JSONDict
+    geo: JSONDict
+    _regions: Dict[str, RegionRecord]
+    _home_centroid: Tuple[float, float]
+    _mat_unlock: Dict[str, str]
+    _mineral_scale: Dict[str, float]
+    pop_scale: float
+
+    def _compute_home_centroid(self) -> Tuple[float, float]:
         """Average lat/lon of this civilization's own home_regions.
 
         A crude centroid, not a capital city, but that matches the rest of
         this model: regions are already coarse political/geographic blocks,
         not points, so a coarse average of them is the right level of detail.
         """
-        homes = [r for r in (self.civ.get("home_regions") or []) if r in self._regions]
+        homes = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
         if not homes:
             # A civ file with no valid home_regions would otherwise crash
             # region_reach for everyone; falling back to Italy or to
             # whatever region exists keeps this from being a hard wall.
             homes = ["italia"] if "italia" in self._regions else list(self._regions)[:1]
-        lat = sum(self._regions[r]["lat"] for r in homes) / len(homes)
-        lon = sum(self._regions[r]["lon"] for r in homes) / len(homes)
+        lat = sum(self._regions[region_id]["lat"] for region_id in homes) / len(homes)
+        lon = sum(self._regions[region_id]["lon"] for region_id in homes) / len(homes)
         return lat, lon
 
     # Straight-line kilometres (after geography.json's route_difficulty and
     # this civilization's own travel speed, below, have been applied) banded
     # onto the same 0-6 scale reach_levels already uses. Chosen so that
-    # ROME, at its own base_reach of 2, lands close to its own OLD
-    # hand-authored reach_from_italia numbers across the whole region list
-    # (checked by hand while building this): this is a generalisation of the
-    # old table, not an unrelated replacement for it.
+    # ROME, at its own base_reach of 2, lands close to the hand-authored
+    # reach_from_italia numbers across the whole region list: this is a
+    # generalisation of that table, not an unrelated replacement for it.
     RAW_DISTANCE_BANDS = ((1200.0, 1), (2500.0, 2), (4500.0, 3), (7000.0, 4), (11000.0, 5))
 
     # How much base_reach shortens the EFFECTIVE distance, not the band.
-    # An earlier version of this subtracted base_reach straight off the
-    # band number, which looked right for Rome but broke on the Norse: with
-    # only 6 bands total, subtracting 4 (their base_reach) collapsed nearly
-    # every coastal region in the world, China included, to band 1 -- "as
-    # easy as sailing to Gaul", which overstates even Norse mobility. Dividing
-    # the DISTANCE by a speed factor instead degrades gracefully: closer
-    # places still get much easier, but a civilization does not get to treat
-    # the far side of the planet as next door no matter how good its ships.
+    # Subtracting base_reach straight off the band number looks right for
+    # Rome but breaks for a civilization with a large base_reach: with only
+    # 6 bands total, subtracting 4 (the Norse's own base_reach) would
+    # collapse nearly every coastal region in the world, China included, to
+    # band 1 -- "as easy as sailing to Gaul", which overstates even Norse
+    # mobility. Dividing the DISTANCE by a speed factor instead degrades
+    # gracefully: closer places still get much easier, but a civilization
+    # does not get to treat the far side of the planet as next door no
+    # matter how good its ships.
     REACH_SPEED_COEF = 0.22
 
-    def region_reach(self, region_id):
+    def region_reach(self, region_id: str) -> int:
         """How hard `region_id` is to reach, FOR THIS CIVILIZATION, 0-6.
 
         Three things determine it, none of which the old model had:
@@ -91,9 +146,9 @@ class GeographyMixin:
         coastal = bool(reg.get("coastal", True))
         effective = dist / speed if coastal else dist / (speed ** 0.5)
         band = 6
-        for edge, b in self.RAW_DISTANCE_BANDS:
+        for edge, band_value in self.RAW_DISTANCE_BANDS:
             if effective <= edge:
-                band = b
+                band = band_value
                 break
         return max(1, min(6, band))
 
@@ -102,7 +157,7 @@ class GeographyMixin:
     # than cutting off: nothing in this model is a wall, only a price.
     TRADE_ACCESS_BY_REACH = {0: 1.0, 1: 0.5, 2: 0.3, 3: 0.15, 4: 0.08, 5: 0.04, 6: 0.02}
 
-    def material_reach(self, material_key):
+    def material_reach(self, material_key: str) -> Tuple[int, float]:
         """Reach and cost multiplier for `material_key`, FOR THIS CIVILIZATION.
 
         Looks the material up in geography.json's located_materials, picks
@@ -124,12 +179,12 @@ class GeographyMixin:
         goes negative or hits exactly zero.
         """
         materials = self.geo.get("located_materials") or {}
-        md = materials.get(material_key)
-        if not md:
+        material_entry = materials.get(material_key)
+        if not material_entry:
             return 0, 1.0
-        base_mult = float(md.get("cost_multiplier", 1.0))
+        base_mult = float(material_entry.get("cost_multiplier", 1.0))
         best = None
-        for rid in (md.get("regions") or []):
+        for rid in (material_entry.get("regions") or []):
             reg = self._regions.get(rid)
             if not reg:
                 continue
@@ -152,43 +207,42 @@ class GeographyMixin:
         # your OWN supply, which should cost less per unit than retail, not
         # more. 60 is therefore generous rather than punitive, which is the
         # right way to be wrong here.
-        # Compress rather than clamp. A hard ceiling flattened the very
-        # distinction this function exists to draw: Rome's 235 and Han China's
-        # 60 both hit a cap of 60 and came out identical, so the geography fix
-        # stopped doing anything. Raising to a fractional power keeps the
-        # ORDERING intact while pulling the magnitudes back to something
-        # defensible, and the ceiling stays only as a backstop.
+        # Compress rather than clamp: a hard ceiling would flatten the very
+        # distinction this function exists to draw. If Rome's 235 and Han
+        # China's 60 both hit a cap of 60, they come out identical, and the
+        # geography fix stops doing anything. Raising to a fractional power
+        # keeps the ORDERING intact while pulling the magnitudes back to
+        # something defensible, and the ceiling stays only as a backstop.
         return civ_r, min(raw ** 0.6, 45.0)
 
-    def material_cost_factor(self, k):
+    def material_cost_factor(self, node_id: str) -> float:
         """Cost multiplier a located-material tech node picks up from
         geography, for the civilization in play.
 
         Only applies to nodes geography.json actually names (via
         located_materials.*.unlocks, e.g. mat_gutta_percha, mat_natural_rubber):
-        everything else returns 1.0 and is untouched. This is the wiring the
-        bug report asked for: before this existed, geography.json's
-        cost_multiplier field was read by nobody, so gutta percha cost
-        exactly the same (nothing extra) whether you were playing Rome or
+        everything else returns 1.0 and is untouched. geography.json's
+        cost_multiplier field has to be read here, or gutta percha costs
+        exactly the same (nothing extra) whether you are playing Rome or
         Han China, and the entire India-and-east trade advantage a
-        China-based civilization actually has was invisible to the model.
+        China-based civilization actually has is invisible to the model.
         """
-        mk = self._mat_unlock.get(k)
-        if not mk:
+        material_key = self._mat_unlock.get(node_id)
+        if not material_key:
             return 1.0
-        _, mult = self.material_reach(mk)
+        _, mult = self.material_reach(material_key)
         return mult
 
-    def _compute_mineral_scale(self, material):
+    def _compute_mineral_scale(self, material: str) -> float:
         """Fraction of a mined mineral's reference output this civilization
         can draw on: geology and reach, not population.
 
-        resource_throttle() used to multiply by self.pop_scale here, i.e.
-        "how much coal can you buy" scaled by HOW MANY PEOPLE YOU HAVE. That
-        is backwards twice over: Norse Scandinavia got 2.3% of Rome's coal
-        because it has 2.3% of the people, and England in 1300 got 7%, when
-        England is precisely where the coal actually is. A coalfield does
-        not care how many people live near it.
+        Scaling this by self.pop_scale - "how much coal can you buy" tied
+        to HOW MANY PEOPLE YOU HAVE - would be backwards twice over: Norse
+        Scandinavia would get 2.3% of Rome's coal because it has 2.3% of
+        the people, while England in 1300, precisely where the coal
+        actually is, would get only 7%. A coalfield does not care how many
+        people live near it.
 
         geography.json's per-region `minerals` gives each region's rough
         share of a material's total output, normalised so ROME'S OWN home
@@ -204,16 +258,24 @@ class GeographyMixin:
         home = set(self.civ.get("home_regions") or [])
         total = 0.0
         for rid, reg in self._regions.items():
-            ab = float((reg.get("minerals") or {}).get(material, 0.0))
-            if ab <= 0:
+            # MineralShares's own fields are typed float, but looking one
+            # up by a variable key (`material` is not a string literal
+            # mypy can match against a specific field) only lets mypy infer
+            # `object` for the result, not `float`, even though every
+            # field really is one - see MineralShares's own docstring.
+            # `cast` here changes nothing at runtime, same as `float()`
+            # itself already did on the line below before this pass.
+            minerals: MineralShares = reg.get("minerals") or {}
+            share = float(cast(float, minerals.get(material, 0.0)))
+            if share <= 0:
                 continue
             if rid in home:
-                total += ab
+                total += share
             else:
-                total += ab * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
+                total += share * self.TRADE_ACCESS_BY_REACH.get(self.region_reach(rid), 0.02)
         return max(0.05, total)
 
-    def mineral_scale(self, material):
+    def mineral_scale(self, material: str) -> float:
         """Cached result of _compute_mineral_scale(). Geology and reach do
         not change during a run, so this is computed once in __init__
         rather than recomputed every simulated year."""

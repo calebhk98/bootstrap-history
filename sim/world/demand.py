@@ -137,8 +137,13 @@ concrete numbers this claim rests on.
 import collections
 import json
 import os
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
+# sim.unit_conversions carries the same "imports nothing but sim.constants"
+# property sim.constants itself already has, so importing it is not the
+# cross-domain wiring this module's own STANDALONE section forbids.
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM, PERCENT_SCALE
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -152,7 +157,7 @@ _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
 PRODUCTION_DIR = os.path.join(_ROOT, "data", "production")
 
 
-def _load_production_data():
+def _load_production_data() -> Dict[str, Any]:
     """Every material entry across data/production/*.json, merged by
     material key - the same merge-by-directory shape data/production/
     _SCHEMA.md describes for that directory itself. `_note` keys are
@@ -171,7 +176,7 @@ def _load_production_data():
 _PRODUCTION_CACHE = None
 
 
-def production_data():
+def production_data() -> Dict[str, Any]:
     """Cached, read-only view of data/production/*.json's materials. A
     caller that already has this in hand (a test iterating many functions
     over the same data) can pass it straight to any function below via its
@@ -252,7 +257,7 @@ DEFAULT_NUM_INCOME_BINS = 20
 # conditional mean, only how many of them there are.
 
 
-def _pareto_shape_parameter_from_gini(gini):
+def _pareto_shape_parameter_from_gini(gini: float) -> float:
     """Pareto Type I's shape parameter from its Gini coefficient. For a
     Pareto distribution the two are related in closed form - the Gini
     coefficient equals one over the quantity (two times the shape
@@ -267,7 +272,8 @@ def _pareto_shape_parameter_from_gini(gini):
 
 
 def _pareto_bin_mean_multiple_of_scale(
-        survival_probability_low, survival_probability_high, pareto_shape_parameter):
+        survival_probability_low: float, survival_probability_high: float,
+        pareto_shape_parameter: float) -> float:
     """The mean value, measured as a multiple of the distribution's scale,
     of a Pareto Type I distribution with the given shape parameter, over
     the population's upper-tail-probability interval running from
@@ -303,8 +309,9 @@ IncomeBin = collections.namedtuple("IncomeBin", [
 ])
 
 
-def income_bins(population, mean_income_per_capita_per_year,
-                 gini=None, num_bins=None):
+def income_bins(
+        population: float, mean_income_per_capita_per_year: float,
+        gini: Optional[float] = None, num_bins: Optional[int] = None) -> List["IncomeBin"]:
     """`population` split into `num_bins` equal-population income classes
     whose incomes come from a Pareto Type I distribution with mean
     `mean_income_per_capita_per_year` and the given `gini` - see this
@@ -353,11 +360,11 @@ def income_bins(population, mean_income_per_capita_per_year,
     return bins
 
 
-def total_population(bins):
+def total_population(bins: List["IncomeBin"]) -> float:
     return sum(income_bin.population for income_bin in bins)
 
 
-def total_income(bins):
+def total_income(bins: List["IncomeBin"]) -> float:
     return sum(income_bin.population * income_bin.income_per_capita_per_year
                for income_bin in bins)
 
@@ -478,7 +485,7 @@ FLOOR_TRADEABLE_SHARE = declare(
         "digitised into this project's data).")
 
 
-def validate_basket(basket):
+def validate_basket(basket: Sequence["Good"]) -> None:
     """basket's marginal budget shares must sum to 1 - Stone-Geary's own
     constraint, not a house convention. Raises rather than silently
     renormalising, because a caller whose shares do not sum to 1 has made
@@ -491,7 +498,9 @@ def validate_basket(basket):
             "got %.9f across %s" % (total_share, [good.name for good in basket]))
 
 
-def household_quantity_demanded_per_capita(good, prices, income_per_capita, basket):
+def household_quantity_demanded_per_capita(
+        good: "Good", prices: Dict[str, float], income_per_capita: float,
+        basket: Sequence["Good"]) -> float:
     """One `good`'s Stone-Geary demand for a single representative person
     earning `income_per_capita`, given the full `basket` of goods this
     household allocates a budget across (needed because the committed
@@ -528,7 +537,8 @@ def household_quantity_demanded_per_capita(good, prices, income_per_capita, bask
 
 
 def _below_subsistence_quantity_demanded_per_capita(
-        good, price, income_per_capita, committed_per_capita):
+        good: "Good", price: float, income_per_capita: float,
+        committed_per_capita: float) -> float:
     """`good`'s quantity demanded for a household whose income cannot cover
     the whole basket's committed subsistence bundle (committed_per_capita >
     income_per_capita > 0, and committed_per_capita > 0 - the caller
@@ -599,7 +609,9 @@ def _below_subsistence_quantity_demanded_per_capita(
             + (good.marginal_budget_share / price) * flexible_spending_per_capita)
 
 
-def aggregate_household_demand(good, prices, bins, basket):
+def aggregate_household_demand(
+        good: "Good", prices: Dict[str, float], bins: List["IncomeBin"],
+        basket: Sequence["Good"]) -> float:
     """Total (not per-capita) household quantity demanded for `good` across
     every income bin in `bins` - the sum a market actually sees, since a
     bottom-decile household and a top-decile household do not want the
@@ -611,7 +623,9 @@ def aggregate_household_demand(good, prices, bins, basket):
         for income_bin in bins)
 
 
-def aggregate_household_demand_all_goods(prices, bins, basket):
+def aggregate_household_demand_all_goods(
+        prices: Dict[str, float], bins: List["IncomeBin"],
+        basket: Sequence["Good"]) -> Dict[str, float]:
     """aggregate_household_demand for every good in `basket` at once - the
     per-good quantities a caller pricing a whole basket would actually
     want, in one dict.
@@ -620,7 +634,9 @@ def aggregate_household_demand_all_goods(prices, bins, basket):
             for good in basket}
 
 
-def household_budget_share(good, prices, bins, basket):
+def household_budget_share(
+        good: "Good", prices: Dict[str, float], bins: List["IncomeBin"],
+        basket: Sequence["Good"]) -> float:
     """What fraction of AGGREGATE household spending, across every bin,
     goes to `good` - the number CalibrationTargetsTests checks against the
     60-80%-on-food historical range. Not read by anything in this module
@@ -683,8 +699,20 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
     why="The other half of turning a calorie requirement into a kilogram "
         "quantity of the FOOD good's subsistence floor.")
 
+DAYS_PER_YEAR = declare(
+    "DAYS_PER_YEAR", 365.25,
+    kind="physical_constant",
+    unit="days/year",
+    source="Julian calendar year average, matching sim/world/agriculture.py's "
+           "own DAYS_PER_YEAR (declared independently here for the same "
+           "standalone reason - see this module's own STANDALONE section).",
+    confidence="A",
+    why="Converts the daily subsistence calorie requirement above into an "
+        "annual one, the unit FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_"
+        "YEAR is actually stated in.")
+
 FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR = (
-    HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY * 365.25 / WHEAT_ENERGY_KCAL_PER_KG)
+    HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY * DAYS_PER_YEAR / WHEAT_ENERGY_KCAL_PER_KG)
 # ~236.3 kg/person/year - arithmetic on two already-declared numbers, not a
 # fact of its own, matching agriculture.py's own convention for
 # GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA.
@@ -788,7 +816,9 @@ validate_basket(DEFAULT_BASKET)
 # ClosedFormMatchesDirectSummationTests for the check that this formula
 # and a plain per-bin sum agree to floating-point precision.
 
-def market_clearing_price(good, quantity_supplied, other_prices, bins, basket):
+def market_clearing_price(
+        good: "Good", quantity_supplied: float, other_prices: Dict[str, float],
+        bins: List["IncomeBin"], basket: Sequence["Good"]) -> float:
     """The price of `good` at which AGGREGATE HOUSEHOLD demand (see this
     section's own docstring; producer/derived demand is a separate channel,
     see derived_intermediate_demand) exactly equals `quantity_supplied`,
@@ -862,10 +892,11 @@ def market_clearing_price(good, quantity_supplied, other_prices, bins, basket):
 # about which output deserves the cost (that question is what
 # joint_output_value_shares answers instead, on price, never on mass).
 
-_KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": 0.001, "_t": 1000.0}
+_KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": KILOGRAMS_PER_GRAM,
+                                  "_t": KILOGRAMS_PER_TONNE}
 
 
-def _kg_equivalent(material_key, quantity):
+def _kg_equivalent(material_key: str, quantity: float) -> float:
     for suffix, multiplier in _KG_EQUIVALENT_PER_UNIT_SUFFIX.items():
         if material_key.endswith(suffix):
             return quantity * multiplier
@@ -874,7 +905,7 @@ def _kg_equivalent(material_key, quantity):
                        # flagged in _dominant_output_key's own docstring.
 
 
-def _dominant_output_key(entry):
+def _dominant_output_key(entry: Dict[str, Any]) -> str:
     """Which of `entry`'s outputs its `inputs` and `labour_hours` are
     quoted "per unit of" - see this section's own docstring for why this
     is a mass-based bookkeeping choice, not a value judgement.
@@ -885,7 +916,8 @@ def _dominant_output_key(entry):
     return max(outputs, key=lambda key: _kg_equivalent(key, outputs[key]))
 
 
-def input_coefficients_per_unit_output(recipe_key, production=None):
+def input_coefficients_per_unit_output(
+        recipe_key: str, production: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
     """{material_key: quantity of material consumed per unit of
     `recipe_key`'s own DOMINANT output produced}, from that recipe's
     `inputs` (consumed making one batch) and `capital.build_materials`
@@ -908,7 +940,7 @@ def input_coefficients_per_unit_output(recipe_key, production=None):
         raise ValueError("%r's dominant output %r has a zero or missing "
                           "quantity" % (recipe_key, basis_key))
 
-    coefficients = collections.defaultdict(float)
+    coefficients: collections.defaultdict[str, float] = collections.defaultdict(float)
     for material, quantity in entry.get("inputs", {}).items():
         coefficients[material] += quantity / basis_quantity
     for capital_item in entry.get("capital") or []:
@@ -921,7 +953,9 @@ def input_coefficients_per_unit_output(recipe_key, production=None):
     return dict(coefficients)
 
 
-def derived_intermediate_demand(material_key, planned_output_levels, production=None):
+def derived_intermediate_demand(
+        material_key: str, planned_output_levels: Dict[str, float],
+        production: Optional[Dict[str, Any]] = None) -> Tuple[float, Dict[str, float]]:
     """Total quantity of `material_key` demanded as an INPUT, given
     `planned_output_levels` (a dict of recipe_key -> how much of that
     recipe's own dominant output is being produced per year - the
@@ -949,7 +983,8 @@ def derived_intermediate_demand(material_key, planned_output_levels, production=
     return total, by_recipe
 
 
-def consumers_of(material_key, production=None):
+def consumers_of(
+        material_key: str, production: Optional[Dict[str, Any]] = None) -> List[str]:
     """Every recipe_key whose input_coefficients_per_unit_output includes
     `material_key` at all - which downstream processes would generate
     demand for it if run, independent of any particular output level.
@@ -969,7 +1004,9 @@ def consumers_of(material_key, production=None):
 
 
 def _illustrative_recursive_labour_content_price_per_kg(
-        material_key, production=None, _memo=None, _visiting=None):
+        material_key: str, production: Optional[Dict[str, Any]] = None,
+        _memo: Optional[Dict[str, float]] = None,
+        _visiting: Optional[Set[str]] = None) -> float:
     """The naive "pure labour content" price Complaints/32 says is what
     every price in this model currently is: walk `material_key`'s own
     recipe, add its direct labour_hours, then recurse into every input
@@ -1026,7 +1063,7 @@ def _illustrative_recursive_labour_content_price_per_kg(
 # JOINT OUTPUT VALUE SHARES - THE COMPLAINTS/29 ANSWER
 # ============================================================================
 
-def joint_output_mass_shares(output_quantities):
+def joint_output_mass_shares(output_quantities: Dict[str, float]) -> Dict[str, float]:
     """The split Complaints/29 identifies as wrong: each output's share of
     the joint cost in proportion to its PHYSICAL quantity, regardless of
     unit or value - silver and lead, by this rule, are worth the same per
@@ -1041,7 +1078,8 @@ def joint_output_mass_shares(output_quantities):
     return {name: quantity / total for name, quantity in output_quantities.items()}
 
 
-def joint_output_value_shares(output_quantities, prices):
+def joint_output_value_shares(
+        output_quantities: Dict[str, float], prices: Dict[str, float]) -> Dict[str, float]:
     """Each output's share of a joint process's one cost, in proportion to
     PRICE times quantity - net-realisable-value allocation, made non-
     circular by requiring `prices` to already be given rather than solved
@@ -1063,7 +1101,9 @@ def joint_output_value_shares(output_quantities, prices):
     return {name: value / total for name, value in values.items()}
 
 
-def joint_output_value_shares_for_recipe(recipe_key, prices, production=None):
+def joint_output_value_shares_for_recipe(
+        recipe_key: str, prices: Dict[str, float],
+        production: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
     """joint_output_value_shares, reading `recipe_key`'s own `outputs`
     dict from data/production/ directly rather than making a caller copy
     it out by hand.
@@ -1212,7 +1252,7 @@ if __name__ == "__main__":
     # never hand-typed.
     with open(os.path.join(_ROOT, "data", "world", "resources.json")) as handle:
         resources = json.load(handle)
-    illustrative_annual_lead_kg = resources["empire_output_100ad"]["lead"]["t_per_yr"] * 1000.0
+    illustrative_annual_lead_kg = resources["empire_output_100ad"]["lead"]["t_per_yr"] * KILOGRAMS_PER_TONNE
     illustrative_annual_silver_kg = (
         illustrative_annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"])
     silver_price = market_clearing_price(
@@ -1228,17 +1268,17 @@ if __name__ == "__main__":
     print("\nillustrative wheat price (recursive labour content): %.4f h/kg"
           % illustrative_wheat_price)
     print("household food budget share at that price: %.1f%%"
-          % (100.0 * food_share))
+          % (PERCENT_SCALE * food_share))
     print("historical calibration target: %.0f-%.0f%%"
-          % (100.0 * HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
-             100.0 * HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
+          % (PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
+             PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
 
     print("\n" + "=" * 72)
     print("COMPLAINTS/29: lead_kg's joint silver output, priced two ways")
     print("recipe outputs (per %s): %s" % (lead_entry["basis"][:40] + "...", outputs))
     mass_shares = joint_output_mass_shares(outputs)
     print("mass shares:  " + ", ".join(
-        "%s=%.4f%%" % (material, 100.0 * share)
+        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
         for material, share in mass_shares.items()))
     print("illustrative lead price (recursive labour content): %.4f h/kg"
           % illustrative_lead_price)
@@ -1246,7 +1286,7 @@ if __name__ == "__main__":
           "the recipe's own ratio: %.4g kg/yr (stated total silver output "
           "including the direct-ore route: %.4g kg/yr)"
           % (illustrative_annual_lead_kg, illustrative_annual_silver_kg,
-             resources["empire_output_100ad"]["silver"]["t_per_yr"] * 1000.0))
+             resources["empire_output_100ad"]["silver"]["t_per_yr"] * KILOGRAMS_PER_TONNE))
     print("demand-cleared silver price at that supply: %.4f h/kg"
           % silver_price)
     print("derived silver:lead price ratio: %.1fx  (historical target: ~%.0fx)"
@@ -1255,7 +1295,7 @@ if __name__ == "__main__":
     value_shares = joint_output_value_shares(
         outputs, {"lead_kg": illustrative_lead_price, "silver_kg": silver_price})
     print("value shares: " + ", ".join(
-        "%s=%.4f%%" % (material, 100.0 * share)
+        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
         for material, share in value_shares.items()))
 
     print("\n" + "=" * 72)

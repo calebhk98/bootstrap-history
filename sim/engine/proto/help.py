@@ -1,14 +1,5 @@
 """The {"cmd":"help"} topic tree."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
-
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
 from ..core import Sim
 
 # TYPED_HINTS is NOT imported here: cli.py patches engine.protocol.TYPED_HINTS
@@ -16,29 +7,25 @@ from ..core import Sim
 # itself, live - see _wrap's own comment on the same pattern, in
 # engine/proto/util.py.
 
-
-
-
 HELP_TOPICS = ("commands", "labour", "population", "economy", "money",
                "automatic", "sittings", "fog", "eminence", "risk",
                "protection", "stuck", "log")
 
 
-def _agent_help(s, topic=None):
+def _agent_help(sim, topic=None):
     """Everything a player needs, from inside the game, a topic at a time.
 
-    A tester should not have to be told the commands out of band, and neither
-    should a player. But the whole of it at once was four and a half kilobytes
-    of JSON before a single move had been made, and testers were spending a
-    command just to re-read it. If it is too much for a machine it is far too
-    much for a person. So: a short front page, and topics on request.
+    A player should not have to be told the commands out of band. The
+    whole of it at once runs to several kilobytes of JSON before a single
+    move has been made - too much for a machine to make sense of, let
+    alone a person. So: a short front page, and topics on request.
     """
     # LIVE, NOT A SNAPSHOT: see _wrap's own comment on DISPLAY_WIDTH, in
     # engine/proto/util.py, for why this goes through the protocol module
     # rather than the plain imported name.
     from .. import protocol as _protocol
     TYPED_HINTS = _protocol.TYPED_HINTS
-    fog = getattr(s, "fog", False)
+    fog = sim.fog
     topic = (topic or "").strip().lower()
 
     if not topic:
@@ -50,29 +37,25 @@ def _agent_help(s, topic=None):
                 "%d. Knowing how a thing works is free. Building it is not: it "
                 "takes your own hours, other people's hours, money, materials, "
                 "and years."
-                % (s.civ.get("name", "a society"), s.cfg["start_year"])),
+                % (sim.civ.get("name", "a society"), sim.cfg["start_year"])),
             "how a turn works": (
                 "You begin projects, then advance time. Nothing happens unless "
                 "you make it. You are charged for food, rent and appearances "
                 "every year whether or not you are building anything."),
-            # UNDER FOG TOO. This used to say "there is no score but the state
-            # of what you have built", and a normal-play tester spent five
-            # hundred years optimising breadth on the strength of it, then met
-            # "Getting here from 100 AD is the whole game" on the ending
-            # screen. They had the money and the years to reach it. Fog hides
-            # the SOCIETY's tree; it has no business hiding what a man who
-            # knows how a transistor works is trying to build. The NAME, never
-            # the id: naming the id would hand back the prerequisite crawl that
-            # the visibility guard exists to stop.
+            # UNDER FOG TOO: fog hides the SOCIETY's tree, but it has no
+            # business hiding what a man who knows how a transistor works
+            # is trying to build. The NAME, never the id: naming the id
+            # would hand back the prerequisite crawl that the visibility
+            # guard exists to stop.
             "what you are trying to do": (
                 "Build %s, before the horizon at %d. You know what it is and "
                 "what it is for; what you cannot see is the road there, only "
                 "the next step of it."
-                % (s.nodes[s.goal]["name"].lower() if s.goal in s.nodes else "it",
-                   s.end_year)
+                % (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes else "it",
+                   sim.end_year)
                 if fog else
                 "Reach %s, and see the rest of what you can build on the way."
-                % s.goal),
+                % sim.goal),
             "you arrive alone": (
                 "No employees, no slaves, nobody who owes you anything. Anyone "
                 'who works for you is hired, taught, commissioned or bought. See '
@@ -84,15 +67,11 @@ def _agent_help(s, topic=None):
                 "start <id>": "begin it",
                 "step <years>": "let time pass",
             },
-            # THE ACTUAL WALKTHROUGH, and it used to appear in exactly one
-            # line of `help commands` and nowhere near the five above. An
-            # England player spent about forty minutes guessing before
-            # finding it, and said it "trivially reorganized the rest of
-            # play" once they had. It is also the answer to the single most
-            # requested thing two other players asked for in separate
-            # sessions: what the goal still needs, joined to what you could
-            # start on it today, instead of two separate reports you cross
-            # off against each other by eye.
+            # THE ACTUAL WALKTHROUGH, surfaced here rather than buried in
+            # one line of `help commands`: what the goal still needs,
+            # joined to what you could start on it today, instead of two
+            # separate reports a player has to cross off against each
+            # other by eye.
             **({} if fog else {
                 "and the sixth, once you have a goal in mind": (
                     "{\"cmd\":\"path\",\"id\":\"<goal>\"} - everything still "
@@ -117,7 +96,8 @@ def _agent_help(s, topic=None):
                 "here on."),
             # See cmd_play's opening screen for why this is not buried in a
             # topic: a finished concern earns nothing until its doors open, and
-            # a tester left seven of them shut and went bankrupt in year three.
+            # leaving several shut while their upkeep runs is enough to go
+            # bankrupt on its own.
             "and the one rule that catches everybody": (
                 "Finishing something earns you nothing. A concern earns when "
                 "you 'open' it, and costs its upkeep only then too. "
@@ -289,10 +269,9 @@ def _agent_help(s, topic=None):
             }}
 
     if topic == "money":
-        # `help money` and `help economy` printed the same page, and both were
-        # listed as separate topics, so a play tester read one and expected
-        # something else from the other. Money is where it comes from and where
-        # it goes; economy is what you can buy with it.
+        # `money` and `economy` are listed as separate topics and must stay
+        # distinct rather than printing the same page: money is where it comes
+        # from and where it goes; economy is what you can buy with it.
         return {"where it comes from": (
             "Your practice - the trade this society already had, which you can "
             "do from the first day - plus every concern you have OPENED, plus "

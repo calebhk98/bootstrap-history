@@ -1,18 +1,9 @@
 """Node id and name resolution: looking a technology up by id or by name, and the small graph queries - what depends on it, what it unlocks - built directly on the loaded tree."""
 
-import collections, hashlib, json, math, os, random, re
+import re
 from collections import defaultdict
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
-
-
-
+from ..data import load
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
 # no Sim to ask and runs on every line a player types. One load(), not two -
@@ -28,11 +19,11 @@ def _norm_name(text):
     """Fold case and punctuation, so a typed name matches what the game
     printed however it was capitalised or punctuated.
 
-    Every screen in this game prints the NAME ("Horizontal loom") and every
-    command up to now took only the ID ("tex_horizontal_loom") - testers
-    found that jarring often enough to say so in almost identical words. A
-    player copying a name back exactly, in any case, with or without the
-    comma a name like "Loom, treadle" carries, has to land on the same key.
+    Every screen in this game prints the NAME ("Horizontal loom"), so a
+    command that only accepted the ID ("tex_horizontal_loom") would force
+    a player to translate what they just read. A player copying a name
+    back exactly, in any case, with or without the comma a name like
+    "Loom, treadle" carries, has to land on the same key.
     """
     return re.sub(r"[^a-z0-9]+", " ", str(text).lower()).strip()
 
@@ -76,7 +67,7 @@ def _resolve_by_name(text):
     return []
 
 
-def _downstream_of(k, nodes):
+def _downstream_of(node_id, nodes):
     """Everything that depends on this node, however far away, following hard
     prerequisites AND substitution groups alike.
 
@@ -88,26 +79,25 @@ def _downstream_of(k, nodes):
     because something really would be harder or impossible without it. The
     chinampa read "TOTAL DOWNSTREAM: 0" while genuinely feeding terracing.
     """
-    seen, stack = set(), [k]
+    seen, stack = set(), [node_id]
     while stack:
         cur = stack.pop()
         for dependent_id in _unlocked_by(cur, nodes):
             if dependent_id not in seen:
                 seen.add(dependent_id)
                 stack.append(dependent_id)
-    seen.discard(k)
+    seen.discard(node_id)
     return seen
 
 
-# REVERSE INDEX, BUILT ONCE PER TREE. _unlocked_by used to answer "who needs
-# k" by scanning every one of the tree's 2,849 nodes and all their req_any
-# groups, on EVERY call - and _downstream_of calls it once per node on the
-# frontier of its walk, so one `why`/`path`/`available` could fire it
-# thousands of times. Profiled on a fresh, unfogged rome_100ad game, a single
-# `available` made 6,954 such calls and 23.7 million dict lookups for 11.3s
-# of an 11.33s command. The fix: walk every node ONCE, appending it to the
-# reverse-index bucket for each id in its own `pre` and each `req_any`
-# group's `options`, so `_unlocked_by` becomes a dict lookup.
+# REVERSE INDEX, BUILT ONCE PER TREE: answering "who needs k" by scanning
+# every node and all their req_any groups on EVERY call is not viable
+# here, because _downstream_of calls this once per node on the frontier
+# of its walk, so one `why`/`path`/`available` can fire it thousands of
+# times over a tree of thousands of nodes. Walk every node ONCE instead,
+# appending it to the reverse-index bucket for each id in its own `pre`
+# and each `req_any` group's `options`, so `_unlocked_by` becomes a dict
+# lookup.
 #
 # CACHE KEYED ON id(nodes), WITH A STRONG REFERENCE TO nodes HELD ALONGSIDE
 # THE INDEX. `nodes` is normally the one global tree, loaded once and never
@@ -145,30 +135,30 @@ def _unlocked_by_index(nodes):
     return idx
 
 
-def _unlocked_by(k, nodes):
+def _unlocked_by(node_id, nodes):
     """Everything that needs this node, whether hard or as one option of a
     substitution group. sorted() because a set of ids iterates in an order
     that depends on PYTHONHASHSEED - here, sorted once when the reverse
     index (see _unlocked_by_index above) is built, not on every call.
 
     Returns a fresh list, same as the old per-call scan did: the index's own
-    bucket is shared across every caller and every future call for this `k`,
+    bucket is shared across every caller and every future call for this `node_id`,
     so handing it out directly would let one caller's in-place edit corrupt
     what the next caller sees. list(...) is a cheap copy of a small
     dependents list, not another tree scan."""
-    return list(_unlocked_by_index(nodes).get(k, []))
+    return list(_unlocked_by_index(nodes).get(node_id, []))
 
 
-def _did_you_mean(k, nodes, limit=8, s=None):
+def _did_you_mean(node_id, nodes, limit=8, sim=None):
     """Names close to what was typed.
 
-    This was a plain substring test, so it helped with a truncation and not at
-    all with a typo: one wrong character and the answer was the literal words
-    "did you mean: no idea". Substring first, because a partial name is the
-    common case and an exact prefix is a better guess than anything fuzzy, then
-    difflib for the rest.
+    A plain substring test alone helps with a truncation and not at all
+    with a typo: one wrong character and a substring-only answer is the
+    literal words "did you mean: no idea". Substring first, because a
+    partial name is the common case and an exact prefix is a better guess
+    than anything fuzzy, then difflib for the rest.
     """
-    query = str(k).lower()
+    query = str(node_id).lower()
     near = [result_id for result_id in nodes if query in result_id.lower()]
     if len(near) < limit:
         import difflib
@@ -188,15 +178,13 @@ def _did_you_mean(k, nodes, limit=8, s=None):
                 near.append(result_id)
             if len(near) >= limit:
                 break
-    # NOT THROUGH THE FOG. `help fog` says in as many words that there is no
-    # way to view the whole tree, and `path` is properly disabled - and then a
-    # misspelling was answered out of the complete namespace. A weird-play
-    # tester typed `why transistor` and was handed junction_transistor and
-    # point_contact_transistor; `why vacuum`, `why steam` and `why
-    # semiconductor` each dumped eight hidden ids, and they pointed out that
-    # two-letter prefixes would reconstruct the entire tree. A suggestion is
+    # NOT THROUGH THE FOG: `help fog` says in as many words that there is
+    # no way to view the whole tree, and `path` is properly disabled, so a
+    # misspelling must not be answered out of the complete namespace - a
+    # loose enough query (a two-letter prefix, say) could otherwise
+    # reconstruct the entire tree one suggestion at a time. A suggestion is
     # still a statement about what exists.
-    if s is not None and getattr(s, "fog", False):
+    if sim is not None and sim.fog:
         memo = {}
-        near = [result_id for result_id in near if s.is_visible(result_id, _memo=memo)]
+        near = [result_id for result_id in near if sim.is_visible(result_id, _memo=memo)]
     return near[:limit]

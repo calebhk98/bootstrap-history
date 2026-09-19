@@ -206,7 +206,7 @@ check("_compact_why adds status/blocked/blocked_by/explanation and keeps "
       (_compact["status"] == "blocked" and _compact["blocked"] is True
        and _compact["blocked_by"] == ["units_standards", "patron_local"]
        and _compact["explanation"] == _why_blocked["start_blocked_reason"]
-       and all(_compact[k] == v for k, v in _why_blocked.items())),
+       and all(_compact[key] == value for key, value in _why_blocked.items())),
       _compact)
 
 # --- `why`, startable: blocked is false and blocked_by is empty, not
@@ -277,15 +277,15 @@ _fake_stuck = {
 _compact_stuck_out = _compact_stuck(_fake_stuck)
 _blockers = _compact_stuck_out["blockers"]
 check("_compact_stuck produces one entry per reason, in order",
-      [b["reason"] for b in _blockers] == ["work in hand", "money"], _blockers)
+      [blocker["reason"] for blocker in _blockers] == ["work in hand", "money"], _blockers)
 check("_compact_stuck flattens each_waiting_on into a list of {id, explanation}",
-      sorted((p["id"], p["explanation"]) for p in _blockers[0]["projects"])
+      sorted((project["id"], project["explanation"]) for project in _blockers[0]["projects"])
       == [("proj_a", "your hours"), ("proj_b", "smith-hours")],
       _blockers[0]["projects"])
 check("_compact_stuck folds each_why_underfunded onto the matching project "
       "row instead of leaving it a second dict to cross-reference by hand",
-      next(p["also_why_underfunded"] for p in _blockers[0]["projects"]
-           if p["id"] == "proj_b") == "arrears ate the cash for it")
+      next(project["also_why_underfunded"] for project in _blockers[0]["projects"]
+           if project["id"] == "proj_b") == "arrears ate the cash for it")
 check("_compact_stuck carries the plain 'why' sentence through for a "
       "reason that never had a per-project breakdown",
       _blockers[1]["explanation"]
@@ -301,14 +301,14 @@ check("_compact_stuck carries the plain 'why' sentence through for a "
 # ===========================================================================
 
 _ptest_sim = sim()
-_ptest_blocked = next(k for k in ORDER
-                      if k not in _ptest_sim.done and not _ptest_sim.can_start(k))
+_ptest_blocked = next(node_id for node_id in ORDER
+                      if node_id not in _ptest_sim.done and not _ptest_sim.can_start(node_id))
 _ptest_why_plain = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "why", "id": _ptest_blocked})
 _ptest_why_compact = S._agent_dispatch(
     _ptest_sim, NODES, {"cmd": "why", "id": _ptest_blocked, "compact": True})
 check("live `why` on an actually-blocked node: compact mode is a strict "
       "superset of the plain reply",
-      all(_ptest_why_compact.get(k) == v for k, v in _ptest_why_plain.items()),
+      all(_ptest_why_compact.get(key) == value for key, value in _ptest_why_plain.items()),
       (_ptest_why_plain, _ptest_why_compact))
 check("live `why` compact reply says blocked:true and names what it is "
       "blocked by, for a node this fresh game cannot start yet",
@@ -321,7 +321,7 @@ check("live `why` compact reply is JSON-serialisable (this is what an "
 _ptest_stuck_plain = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck"})
 _ptest_stuck_compact = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck", "compact": True})
 check("live `stuck`: compact mode is a strict superset of the plain reply",
-      all(_ptest_stuck_compact.get(k) == v for k, v in _ptest_stuck_plain.items()),
+      all(_ptest_stuck_compact.get(key) == value for key, value in _ptest_stuck_plain.items()),
       (_ptest_stuck_plain, _ptest_stuck_compact))
 check("live `stuck` compact reply carries a 'blockers' list matching the "
       "number of reasons the plain reply gave",
@@ -431,15 +431,15 @@ def _mirror_with_overrides(src_dir, dst_dir, overrides):
         src = os.path.join(src_dir, name)
         rel = os.path.relpath(src, ROOT)
         dst = os.path.join(dst_dir, name)
-        touches = any(rel == o or rel.startswith(o + os.sep) or o.startswith(rel + os.sep)
-                     for o in overrides)
+        touches = any(rel == override or rel.startswith(override + os.sep) or override.startswith(rel + os.sep)
+                     for override in overrides)
         if not touches:
             os.symlink(src, dst)
         elif os.path.isdir(src):
             _mirror_with_overrides(src, dst, overrides)
         else:
-            with open(dst, "w", encoding="utf-8") as fh:
-                fh.write(overrides[rel])
+            with open(dst, "w", encoding="utf-8") as file:
+                file.write(overrides[rel])
 
 
 def _run_agent(tree_root, lines, civ="rome_100ad", seed=1):

@@ -1,7 +1,4 @@
-"""historical_events: split verbatim from the old test_regressions.py (original lines 6644-6721).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""historical_events: regression checks, run individually with `--only historical_events`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -12,8 +9,8 @@ from .harness import *  # noqa: F401,F403
 # hazards carry no `condition` at all and are untouched by any of this (see
 # the civilization files' own reasoning); these are the ones that do.
 def _hazard(civname, hazard_name):
-    _c = S.load_civ(civname)
-    return next(h for h in _c["hazards"] if h["name"] == hazard_name)
+    _civ = S.load_civ(civname)
+    return next(hazard for hazard in _civ["hazards"] if hazard["name"] == hazard_name)
 
 
 _rome_crossing = _hazard("rome_100ad", "The crossings, and the sack of Rome")

@@ -1,7 +1,4 @@
-"""mines: split verbatim from the old test_regressions.py (original lines 7271-7582).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""mines: regression checks, run individually with `--only mines`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

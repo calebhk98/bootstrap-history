@@ -1,48 +1,37 @@
 """Scoring the run, at any point or at the end: score_report, final_report, and the components behind them."""
 
-import collections, hashlib, json, math, os, random, re
-from collections import defaultdict
+import math
 
-from ..data import *          # the shared tables and loaders
-from ..data import (ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, closure,
-                   critical_path, downstream_count, is_downstream, load, money_word,
-                   topo_order, trade_family)
-from ..fog import strip_self_play_advice
-
-from ..core import Sim
+from ..data import ANNUAL_WAGE, closure, critical_path, topo_order
 
 from .state import _agent_end_reason
 from .util import _fmt_num, _wrap
 
-
-
-
-def final_report(s, nodes):
+def final_report(sim, nodes):
     """The scoreboard, once the run is over.
 
-    Two play testers finished long runs and got one sentence - "you built 1944
-    things and did not reach point-contact transistor" - then a queue of
-    identical refusals. One started a whole second game with the fog off and
-    ran `path` just to learn that the goal is 142 nodes deep and which one
-    they had stopped at. That is a question the game should answer when there
-    is nothing left to spoil: the run is finished, so showing the road is the
-    reward for finishing it, not a leak.
+    Ending with one sentence - "you built N things and did not reach the
+    goal" - leaves a player with no way to learn how deep the goal was or
+    which step they stopped at, short of starting a second game with fog
+    off just to run `path`. That is a question the game should answer when
+    there is nothing left to spoil: the run is finished, so showing the
+    road is the reward for finishing it, not a leak.
     """
-    goal = getattr(s, "goal", None)
-    earned = sorted(s.done - s.granted)
-    out = {"ended_in": s.year, "why": _agent_end_reason(s),
+    goal = sim.goal
+    earned = sorted(sim.done - sim.granted)
+    out = {"ended_in": sim.year, "why": _agent_end_reason(sim),
            "you_built": len(earned),
-           "this_society_already_had": len(s.granted),
-           "money": round(s.capital, 1),
-           "people": round(s.headcount(), 1),
-           "reputation": round(s.reputation, 1),
-           "concerns_you_were_running": len(getattr(s, "operating", ())),
-           "failed_attempts": sum(getattr(s, "failed_attempts", {}).values())}
+           "this_society_already_had": len(sim.granted),
+           "money": round(sim.capital, 1),
+           "people": round(sim.headcount(), 1),
+           "reputation": round(sim.reputation, 1),
+           "concerns_you_were_running": len(sim.operating),
+           "failed_attempts": sum(sim.failed_attempts.values())}
     if goal and goal in nodes:
         need = closure(nodes, goal)
-        left = [node_id for node_id in topo_order(nodes, need) if node_id not in s.done]
+        left = [node_id for node_id in topo_order(nodes, need) if node_id not in sim.done]
         out["the_goal"] = goal
-        out["reached_it"] = bool(s.goal_year)
+        out["reached_it"] = bool(sim.goal_year)
         out["the_whole_road_was"] = len(need)
         out["you_had_%d_of_them" % (len(need) - len(left))] = len(need) - len(left)
         out["still_to_build_when_it_ended"] = len(left)
@@ -56,20 +45,20 @@ def final_report(s, nodes):
     # size is never withheld here (score_report's own reveal_tree_total is
     # (not fog) or ended, and by the time final_report runs it is always
     # ended) - see score_report and _score_components for what feeds it.
-    out["score"] = score_report(s, nodes)
+    out["score"] = score_report(sim, nodes)
     return out
 
 
 # ---------------------------------------------------------------------------
-# THE SCORE. A player who had just won asked for one number, weighted across
-# seven things they named, plus a short list of achievements. Every raw
-# value below is something the engine already tracks for a DIFFERENT reason
-# (state, final_report, the risk and labour screens) - nothing here is a new
-# ledger invented to make the formula prettier. See each component's own
-# comment for exactly which field feeds it and why that is a fair reading of
-# the category the player named, and see the commit/report for which of
-# these are mechanically bounded (no tuning possible) versus anchored by
-# judgement against the one real high-water mark available, the 599 AD save.
+# THE SCORE: one number, weighted across seven things, plus a short list
+# of achievements. Every raw value below is something the engine already
+# tracks for a DIFFERENT reason (state, final_report, the risk and labour
+# screens) - nothing here is a new ledger invented to make the formula
+# prettier. See each component's own comment for exactly which field
+# feeds it and why that is a fair reading of the category it represents,
+# and see the commit/report for which of these are mechanically bounded
+# (no tuning possible) versus anchored by judgement against the one real
+# high-water mark available, the 599 AD save.
 # ---------------------------------------------------------------------------
 
 SCORE_WEIGHTS = {
@@ -83,7 +72,7 @@ SCORE_WEIGHTS = {
 }
 
 
-def _score_goal_floor_years(s, nodes):
+def _score_goal_floor_years(sim, nodes):
     """The goal's own critical-path floor, in years - the fastest any run of
     any civilisation could reach it with unlimited money and one director
     (data.critical_path, civ-independent by construction: see its own
@@ -91,21 +80,21 @@ def _score_goal_floor_years(s, nodes):
     `_goal_closure` already caches the goal's prerequisite set, because this
     walks the whole closure and `score` is meant to be called often.
     """
-    cached = getattr(s, "_goal_critical_floor", None)
+    cached = getattr(sim, "_goal_critical_floor", None)
     if cached is not None:
         return cached
-    goal = getattr(s, "goal", None)
+    goal = sim.goal
     if not goal or goal not in nodes:
         return None
     try:
         yrs, _chain = critical_path(nodes, goal)
     except Exception:
         return None
-    s._goal_critical_floor = yrs
+    sim._goal_critical_floor = yrs
     return yrs
 
 
-def _score_components(s, nodes, reveal_tree_total):
+def _score_components(sim, nodes, reveal_tree_total):
     """The seven weighted components, each {"raw", "normalized", "weight",
     "weighted"} - raw in the quantity's own natural unit, normalized the
     0..1 figure the weight actually multiplies.
@@ -135,13 +124,13 @@ def _score_components(s, nodes, reveal_tree_total):
     # nothing built, 1 with the whole tree - so it needs no further anchor.
     if reveal_tree_total:
         total = len(nodes)
-        raw = len(s.done)
+        raw = len(sim.done)
         normalized = min(1.0, raw / total) if total else 0.0
         out["technology_coverage"] = {"raw": raw, "of_total": total,
                                        "normalized": normalized}
     else:
         out["technology_coverage"] = {
-            "raw": len(s.done), "of_total": None, "normalized": None,
+            "raw": len(sim.done), "of_total": None, "normalized": None,
             "withheld": ("the tree's total size is the one thing fog keeps "
                          "from you; this resolves once the run ends")}
 
@@ -155,10 +144,10 @@ def _score_components(s, nodes, reveal_tree_total):
     # reached, not a raw fraction a civilisation starting with worse
     # schooling could never max out. Weighted equally between the two
     # populations the engine tracks separately.
-    gen = max(0.0, float(s.civ.get("literacy_general", 0.0)))
-    gen_ceiling = max(1e-9, s.literacy_ceiling_general())
-    eli = max(0.0, float(s.civ.get("literacy_elite", 0.0)))
-    eli_ceiling = max(1e-9, s.literacy_ceiling_elite())
+    gen = max(0.0, float(sim.civ.get("literacy_general", 0.0)))
+    gen_ceiling = max(1e-9, sim.literacy_ceiling_general())
+    eli = max(0.0, float(sim.civ.get("literacy_elite", 0.0)))
+    eli_ceiling = max(1e-9, sim.literacy_ceiling_elite())
     lit_norm = 0.5 * min(1.0, gen / gen_ceiling) + 0.5 * min(1.0, eli / eli_ceiling)
     out["literacy"] = {"raw": round(gen, 4),
                         "raw_detail": {"general": round(gen, 4),
@@ -177,7 +166,7 @@ def _score_components(s, nodes, reveal_tree_total):
     # that save's own figure, so the save does not define 100% by
     # construction. 7,000 is ten times 691.7, rounded to a clean figure.
     WORKFORCE_ANCHOR = 7000.0
-    headcount = max(0.0, s.headcount())
+    headcount = max(0.0, sim.headcount())
     work_norm = min(1.0, math.log1p(headcount) / math.log1p(WORKFORCE_ANCHOR))
     out["workforce"] = {"raw": round(headcount, 1), "normalized": work_norm}
 
@@ -198,12 +187,12 @@ def _score_components(s, nodes, reveal_tree_total):
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
     reference_wage = max(1e-6, ANNUAL_WAGE.get("artisan", 250.0)
-                          * max(1e-6, float(getattr(s, "price_index", 1.0)))
-                          * max(1e-6, float(getattr(s, "wage_index", 1.0))))
-    worker_years = max(0.0, s.capital) / reference_wage
+                          * max(1e-6, float(sim.price_index))
+                          * max(1e-6, float(sim.wage_index)))
+    worker_years = max(0.0, sim.capital) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
-    out["economy"] = {"raw": round(s.capital, 1),
+    out["economy"] = {"raw": round(sim.capital, 1),
                        "raw_detail": {"worker_years_equivalent":
                                       round(worker_years, 1)},
                        "normalized": econ_norm}
@@ -218,14 +207,14 @@ def _score_components(s, nodes, reveal_tree_total):
     # achievements rather than a quantity (a patronage, a written corpus, a
     # power grid). sorted() because this sums floats over what would
     # otherwise be a frozenset, and PYTHONHASHSEED must not move the sum.
-    inst_keys = sorted(s.CAPABILITY_INSTITUTIONS)
+    inst_keys = sorted(sim.CAPABILITY_INSTITUTIONS)
     inst_vals = []
     for institution_id in inst_keys:
-        if institution_id in s.SCALABLE_INSTITUTIONS:
-            ceiling = max(1.0, s.institution_unit_ceiling(institution_id))
-            inst_vals.append(min(1.0, s.institution_units(institution_id) / ceiling))
+        if institution_id in sim.SCALABLE_INSTITUTIONS:
+            ceiling = max(1.0, sim.institution_unit_ceiling(institution_id))
+            inst_vals.append(min(1.0, sim.institution_units(institution_id) / ceiling))
         else:
-            inst_vals.append(1.0 if s.running(institution_id) else 0.0)
+            inst_vals.append(1.0 if sim.running(institution_id) else 0.0)
     inst_norm = (sum(inst_vals) / len(inst_vals)) if inst_vals else 0.0
     out["institutions"] = {"raw": sum(1 for value in inst_vals if value > 0.0),
                             "of_total": len(inst_vals),
@@ -252,16 +241,16 @@ def _score_components(s, nodes, reveal_tree_total):
     #     immortal default.
     # Each is already a fraction of a real total, so none of these five
     # needs a chosen anchor the way workforce/economy do.
-    run_years = max(1.0, s.year - s.cfg.get("start_year", s.year))
-    forgotten_n = len(getattr(s, "forgotten", None) or {})
-    ever_completed = len(s.done) + forgotten_n
+    run_years = max(1.0, sim.year - sim.cfg.get("start_year", sim.year))
+    forgotten_n = len(sim.forgotten or {})
+    ever_completed = len(sim.done) + forgotten_n
     corpus_preserved = (1.0 - forgotten_n / ever_completed) if ever_completed else 1.0
-    solvent_share = 1.0 - min(1.0, getattr(s, "insolvent_years", 0) / run_years)
-    shut_years = len(set((getattr(s, "shut_for_staff", None) or {}).values()))
+    solvent_share = 1.0 - min(1.0, getattr(sim, "insolvent_years", 0) / run_years)
+    shut_years = len(set((getattr(sim, "shut_for_staff", None) or {}).values()))
     staffing_share = 1.0 - min(1.0, shut_years / run_years)
-    suspicion_danger = max(1e-9, float(s.cfg.get("suspicion_danger", 25.0)))
-    scandal_margin = 1.0 - min(1.0, max(0.0, s.scandal) / suspicion_danger)
-    founder_share = 1.0 if s.founder_alive else 0.0
+    suspicion_danger = max(1e-9, float(sim.cfg.get("suspicion_danger", 25.0)))
+    scandal_margin = 1.0 - min(1.0, max(0.0, sim.scandal) / suspicion_danger)
+    founder_share = 1.0 if sim.founder_alive else 0.0
     res_parts = [corpus_preserved, solvent_share, staffing_share,
                  scandal_margin, founder_share]
     res_norm = sum(res_parts) / len(res_parts)
@@ -274,7 +263,7 @@ def _score_components(s, nodes, reveal_tree_total):
     # score you want to maximise, where reputation (0..100 by construction;
     # projects.py clamps it at 100) is this engine's own plain measure of
     # standing.
-    rep = max(0.0, min(100.0, s.reputation))
+    rep = max(0.0, min(100.0, sim.reputation))
     out["standing"] = {"raw": round(rep, 1), "normalized": rep / 100.0}
 
     for name, weight in SCORE_WEIGHTS.items():
@@ -285,7 +274,7 @@ def _score_components(s, nodes, reveal_tree_total):
     return out
 
 
-def _score_achievements(s, nodes):
+def _score_achievements(sim, nodes):
     """Won-run achievements, each a plain condition on a field the engine
     already saves across sittings (SAVE_FIELDS, this file) - so each one is
     true of the WHOLE run, not just whatever is in memory right now. None of
@@ -296,51 +285,51 @@ def _score_achievements(s, nodes):
     "flawless" for any run that was ever closed and reopened, which is not
     an achievement, it is a bug in what gets remembered. See the report.
     """
-    goal = getattr(s, "goal", None)
-    won = bool(goal and s.goal_year)
+    goal = sim.goal
+    won = bool(goal and sim.goal_year)
     out = {}
     if not won:
         return out
     out["corpus_intact"] = {
-        "won": len(getattr(s, "forgotten", None) or {}) == 0,
+        "won": len(sim.forgotten or {}) == 0,
         "what": "the corpus was never diminished by a sacking"}
     out["never_understaffed"] = {
-        "won": len(getattr(s, "shut_for_staff", None) or {}) == 0,
+        "won": len(getattr(sim, "shut_for_staff", None) or {}) == 0,
         "what": "no concern ever closed for want of staff"}
     out["clean_ledger"] = {
-        "won": (getattr(s, "insolvent_years", 0) == 0
-                and getattr(s, "interest_paid", 0.0) <= 0.0),
+        "won": (getattr(sim, "insolvent_years", 0) == 0
+                and getattr(sim, "interest_paid", 0.0) <= 0.0),
         "what": "never spent a year insolvent or paid a denarius of interest"}
     out["free_hands_only"] = {
-        "won": (s.slaves == 0 and getattr(s, "manumitted_total", 0) == 0),
+        "won": (sim.slaves == 0 and sim.manumitted_total == 0),
         "what": "built it without ever owning a slave"}
-    floor = _score_goal_floor_years(s, nodes)
+    floor = _score_goal_floor_years(sim, nodes)
     out["outpaced_the_fastest_plan"] = {
-        "won": bool(floor and (s.goal_year - s.cfg["start_year"]) <= 2.0 * floor),
+        "won": bool(floor and (sim.goal_year - sim.cfg["start_year"]) <= 2.0 * floor),
         "what": ("reached the goal within twice its own fastest possible "
                  "timeline (%s years, one director, unlimited money)"
                  % _fmt_num(floor) if floor else "the goal's floor is unknown")}
     return out
 
 
-def score_report(s, nodes):
+def score_report(sim, nodes):
     """The full score: the gate, the seven weighted components, the total,
     and the achievements - read by both the `score` command (any time) and
     the ending screen (final_report, below).
     """
-    end_reason = _agent_end_reason(s)
-    reveal_tree_total = (not getattr(s, "fog", False)) or (end_reason is not None)
-    components = _score_components(s, nodes, reveal_tree_total)
-    goal = getattr(s, "goal", None)
-    goal_reached = bool(goal and s.goal_year)
+    end_reason = _agent_end_reason(sim)
+    reveal_tree_total = (not sim.fog) or (end_reason is not None)
+    components = _score_components(sim, nodes, reveal_tree_total)
+    goal = sim.goal
+    goal_reached = bool(goal and sim.goal_year)
     total = None
     if goal_reached and all(component["normalized"] is not None for component in components.values()):
         total = round(sum(component["weighted"] for component in components.values()), 4)
-    # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE. A player asked
-    # for exactly this: a percentage answers "how much of the possible
-    # score", a point figure answers "how did this run do against that
-    # one", and the second question is what a player comparing two
-    # civilisations or two seeds is actually asking.
+    # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE: a percentage
+    # answers "how much of the possible score", a point figure answers
+    # "how did this run do against that one", and the second question is
+    # what a player comparing two civilisations or two seeds is actually
+    # asking.
     #
     # STILL CAPPED, ON PURPOSE. `total` above can never exceed 1.0: every
     # one of the seven components clamps its own "normalized" figure to
@@ -364,9 +353,9 @@ def score_report(s, nodes):
     # weights honestly has - inventing a bigger scale would imply the
     # model can discriminate finer than it does.
     points = round(total * 1000) if total is not None else None
-    out = {"goal_in_words": (s.nodes[goal]["name"] if goal in getattr(s, "nodes", {})
+    out = {"goal_in_words": (sim.nodes[goal]["name"] if goal in sim.nodes
                              else None),
-           "goal_reached": goal_reached, "goal_year": s.goal_year,
+           "goal_reached": goal_reached, "goal_year": sim.goal_year,
            "end_reason": end_reason,
            "components": components, "total": total, "points": points,
            "points_scale": "0-1000, 1000 for a perfect run across every "
@@ -375,7 +364,7 @@ def score_report(s, nodes):
                            "not a second score computed differently"}
     if not goal_reached:
         out["no_score"] = "the goal was not reached"
-    out["achievements"] = _score_achievements(s, nodes)
+    out["achievements"] = _score_achievements(sim, nodes)
     return out
 
 

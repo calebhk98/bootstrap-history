@@ -6,11 +6,12 @@ on whatever the plain topological pass cannot reach, instead of refusing it
 outright - see the module docstring's CYCLES section and
 `_component_is_productive`.
 
-INVERTED FROM THE ORIGINAL PIN ON PURPOSE. This file used to assert the
-WRONG answer deliberately, with instructions to flip each assertion once the
-pass was fixed rather than delete the test - a red suite gets ignored, a
-green one pinning a known defect does not. The pass is fixed now, so these
-assert the right answer instead, and stay here as regression coverage for
+THESE ASSERTIONS PIN THE FIX, NOT THE ORIGINAL DEFECT: a check that pins a
+known defect while it is unfixed, with instructions to flip the assertion
+once the pass is fixed rather than delete the test, catches a regression a
+deleted test cannot - a red suite gets ignored, a green one pinning a known
+defect does not. These assert the right answer, and stay here as regression
+coverage for
 the same two reproductions.
 
 Written as unittest.TestCase rather than the flat check()-at-import style,

@@ -212,7 +212,7 @@ class PerConsumerGradingTests(unittest.TestCase):
             "labour_hours": {"labourer": 0.001}, "thermal_mj": 1.0,
             "temperature_needed_c": 150.0, "requires_node": None,
         }
-        prices_before, _i, _r, _c = self._solve(without_hot_consumer)
+        prices_before, _iterations, _residual, _chosen = self._solve(without_hot_consumer)
 
         with_hot_consumer = dict(without_hot_consumer)
         with_hot_consumer["fusion_forge"] = {
@@ -220,7 +220,7 @@ class PerConsumerGradingTests(unittest.TestCase):
             "labour_hours": {"labourer": 0.001}, "thermal_mj": 1.0,
             "temperature_needed_c": 2500.0, "requires_node": None,
         }
-        prices_after, _i, _r, _c = self._solve(with_hot_consumer)
+        prices_after, _iterations, _residual, _chosen = self._solve(with_hot_consumer)
 
         self.assertEqual(prices_before["dry_plaster_widget_kg"],
                         prices_after["dry_plaster_widget_kg"])
@@ -384,7 +384,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
         # requirement of its own, so it must be completely insulated from
         # a brand-new, unrelated, 2500 C requirement appearing anywhere
         # else in the same economy.
-        prices_before, _i, _r, _c = self._real_data_solve("england_1300")
+        prices_before, _iterations, _residual, _chosen = self._real_data_solve("england_1300")
         fusion_entry = {
             "synthetic_fusion_forge": {
                 "outputs": {"synthetic_fusion_widget_kg": 1.0}, "inputs": {},
@@ -392,7 +392,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
                 "temperature_needed_c": 2500.0, "requires_node": None,
             }
         }
-        prices_after, _i, _r, _c = self._real_data_solve(
+        prices_after, _iterations, _residual, _chosen = self._real_data_solve(
             "england_1300", extra_entries=fusion_entry)
         self.assertEqual(prices_before["plaster_kg"], prices_after["plaster_kg"])
         self.assertEqual(prices_before["thermal_mj"], prices_after["thermal_mj"])
