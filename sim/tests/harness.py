@@ -37,19 +37,20 @@ import tempfile
 
 # HERE is this repository's sim/ directory; ROOT is the repository itself.
 #
-# ROOT USED TO BE THE REPOSITORY'S PARENT, and the suite only ran at all if
-# that parent happened to contain a directory literally named `rome`. Two
-# things came of that, both bad. Every scratch file the suite writes
-# (_loadtest_tmp, _playtest_tmp, and every subprocess run with cwd=ROOT)
-# landed OUTSIDE the checkout, in whatever directory the checkout happened to
-# sit in. And a check that globbed os.path.join(ROOT, "data", ...) - the
-# natural spelling, and the one build_index.py already used - silently matched
-# nothing, so ten assertions about the civilization files' event coverage ran
-# zero times for as long as they existed without anyone noticing, because a
-# for-loop over an empty glob does not fail, it just says nothing.
+# ROOT MUST BE THE REPOSITORY, NOT ITS PARENT: computing it as the parent
+# only works if that parent happens to contain a directory literally named
+# `rome`, and breaks in two ways the moment it does not. Every scratch file
+# the suite writes (_loadtest_tmp, _playtest_tmp, and every subprocess run
+# with cwd=ROOT) would land OUTSIDE the checkout, in whatever directory the
+# checkout happens to sit in. And a check that globs
+# os.path.join(ROOT, "data", ...) - the natural spelling, and the one
+# build_index.py already uses - would silently match nothing, so assertions
+# about the civilization files' event coverage would run zero times without
+# anyone noticing, because a for-loop over an empty glob does not fail, it
+# just says nothing.
 #
-# ROOT is now the repository, so `os.path.join(ROOT, "data", ...)` means what
-# it reads as, scratch files stay inside the checkout where .gitignore can see
+# ROOT is the repository, so `os.path.join(ROOT, "data", ...)` means what it
+# reads as, scratch files stay inside the checkout where .gitignore can see
 # them, and nothing anywhere depends on what the checkout is called.
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(HERE)
@@ -211,14 +212,11 @@ def slow_check(name, fn):
 # way of working - many full `proto()` subprocess sessions, or many checks
 # that each step a Sim over a century or two, one after another.
 #
-# THE COMMAND, AND WHY THE OLD FIGURES ARE GONE. This comment used to cite
-# "a per-topic timing run (see sim/tests/__main__.py, which is what actually
-# reads this set)" for a claim that these cost 52.7% of the suite between
-# them. That run was done by hand once and thrown away: __main__.py read this
-# set but produced no such measurement, so the figure could not be checked by
-# anyone and had drifted out of contact with the suite long before it was
-# noticed. CLAUDE.md section 8 is explicit that a number in prose carries the
-# command that produced it or it does not go in. The command now exists:
+# THE COMMAND, NOT A HAND-RUN FIGURE: CLAUDE.md section 8 is explicit that a
+# number in prose carries the command that produced it or it does not go in.
+# A measurement taken by hand once and never re-checked drifts out of contact
+# with the suite exactly as silently as any other stale comment, so quote
+# only what this command reproduces:
 #
 #     python3 sim/test_regressions.py --slow --timing
 #
@@ -253,23 +251,17 @@ SLOW_TOPICS = {
     # years, to see a policy or a hazard option actually play out long run
     # rather than just accept in year one.
     "round2_policy_hazards_options",
-    # `round8_fixes` (8.57s) and `round9` (8.39s) USED TO BE LISTED HERE AND
-    # ARE GONE, because the topics themselves are gone: both were named for
-    # the development round that produced them rather than for anything they
-    # test, and their checks now live in the fifteen subject-named topics
-    # that replaced them. Re-timed after that move, the most expensive piece
-    # either of them left behind is player_guidance_commands at 5.29s, then
-    # knowledge_risk_and_sacking at 4.10s, and the other thirteen are under
-    # two seconds each. Neither is worth opting 394 checks out of a default
-    # run, so nothing inherited the slow tag: regrouping by subject spread
-    # the subprocess cost thin enough that the concentration this set exists
-    # to manage stopped existing. The default suite went from 45s to 62s in
-    # exchange, which is those checks now running every time instead of only
-    # under --slow.
+    # `round8_fixes` and `round9` are not listed here, and are not topics at
+    # all: both were named for the development round that produced them
+    # rather than for anything they test, and their checks live in the
+    # fifteen subject-named topics that replaced them. None of those fifteen
+    # is slow enough on its own to be worth opting 394 checks out of a
+    # default run, because regrouping by subject spreads the subprocess cost
+    # thin across them - the concentration this set exists to manage is gone.
     #
     # A name in here that matches no topic is silent: it skips nothing and
-    # says nothing, which is exactly how these two went on looking like they
-    # were saving time after the topics had been deleted underneath them.
+    # says nothing, which is exactly how a stale entry can go on looking like
+    # it is saving time long after the topic it names has been deleted.
     # sim/tests/test_suite_portability.py now fails if that happens again.
     # 8.18s, 7.5% - Complaints/47's fix (weather drawn per home region and
     # pooled by cultivable-land share, not one draw for a whole civilisation)
@@ -329,20 +321,16 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
 
 
 # ============================================================================
-# Everything below this line is NOT part of the original file's top-of-file
-# preamble. Each piece is a reusable, side-effect-free fixture (a pure
+# Everything below this line is a reusable, side-effect-free fixture (a pure
 # function, a pure "from engine.X import Y as Z" alias, or a plain constant
-# plus an idempotent os.makedirs) that the original flat script defined once
-# inline and then called again much later, in what is now a different topic
-# module. See this module's own docstring above for why duplicating the
-# definition (once here, once in the topic module that originally introduced
-# it) exactly reproduces the original behaviour everywhere.
+# plus an idempotent os.makedirs) that some topic modules also define for
+# themselves, verbatim, inside their own namespace. See this module's own
+# docstring above for why that duplication is harmless.
 # ============================================================================
 
-# --- from sim/test_regressions.py's old "load/save" block (originally
-# introduced around its own robustness-checks section): every save/load path
-# used by the tests lives under one relative scratch directory, so that a
-# real player's own relative save path is what's being exercised.
+# Every save/load path used by the tests lives under one relative scratch
+# directory, so that a real player's own relative save path is what's being
+# exercised.
 _LOADTEST_DIR = "_loadtest_tmp"
 _loadtest_abs = os.path.join(ROOT, _LOADTEST_DIR)
 os.makedirs(_loadtest_abs, exist_ok=True)
@@ -360,13 +348,13 @@ _PLAY_DIR = "_playtest_tmp"
 
 # A GREEN RUN LEAVES NOTHING BEHIND; A RED ONE LEAVES THE EVIDENCE.
 #
-# Both scratch directories are created relative to ROOT, and ROOT is now the
+# Both scratch directories are created relative to ROOT, and ROOT is the
 # repository, so they sit inside the checkout where they are visible (and
 # .gitignore'd) rather than being dropped in whatever directory the checkout
-# happened to live in. Visible means they have to be tidied, and `--only`
-# runs never reach the one topic module that used to rmtree _playtest_tmp on
-# its way past. Doing it at interpreter exit covers every entry point and
-# every topic selection.
+# happens to live in. Visible means they have to be tidied, and `--only`
+# runs never reach whichever single topic module would otherwise rmtree
+# _playtest_tmp on its way past. Doing it at interpreter exit covers every
+# entry point and every topic selection.
 #
 # Only on a clean run, though. When a check fails, the save file or session
 # transcript that failed it is usually the fastest way to see why, and

@@ -885,64 +885,58 @@ def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -
     no sourced number here to apply, and inventing one to mirror the
     fertility side just because it would be symmetric is exactly the kind
     of unlabelled heuristic CLAUDE.md SS3.4 forbids. This floor therefore
-    stays exactly as it was. If a future source isolates a nutrition-only
+    stays at baseline (1.0). If a future source isolates a nutrition-only
     mortality elasticity below this baseline, it belongs here.
 
-    A SECOND HYPOTHESIS WAS CHECKED (re-opened for the unshocked-century
-    follow-up to Complaints/45-no-granary-so-the-baseline-collapses.md,
-    after the granary and the fertility ramp above 1.0 had already closed
-    most of the gap but 100 years of rome_100ad with events=False still
-    settled around 74 percent of its starting population - measured on
-    this checkout by running the real engine, not estimated): that the
-    three BASELINE_ANNUAL_MORTALITY_RATE_* / SURVIVAL_TO_WORKING_AGE
-    figures are DOUBLE-COUNTING bad years, because the historical series
-    they are drawn from is itself a multi-century average that already
-    contains ordinary harvest-driven mortality swings, and this module
-    then adds its own harvest-driven excess mortality ON TOP of a number
-    that already has some baked in. The direction of that concern is
-    correct, but its SIZE is not what closes the remaining gap, and this
-    is a case where the literature gives an actual bound rather than
-    silence: Fogel's review of Wrigley & Schofield's own English series
-    (the source BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE cites) puts ALL
-    crisis mortality - famine AND epidemic together - at under 5 percent of
-    total pre-1800 English mortality, and attributes less than 10 percent
-    of even that crisis share to famine specifically (Wrigley & Schofield
-    found year-to-year mortality swings tracked epidemic disease far more
-    than food prices or harvests). Famine's plausible double-counted share
-    of the baseline is therefore bounded above by roughly 5% * 10% = 0.5%
-    of it - about seven parts in one hundred thousand of the working-age
-    rate per year - which `MortalityDragDecompositionTests` below shows is
-    more than an order of magnitude too small to be the residual drag.
-    Real double-counting of ordinary bad years is not zero, but it is not
-    where the missing population went.
+    DOUBLE-COUNTING BAD YEARS IN THE BASELINE RATE IS NOT WHERE THE MODEL'S
+    RESIDUAL POPULATION DRAG COMES FROM (Complaints/45-no-granary-so-the-
+    baseline-collapses.md's unshocked-century follow-up: with the granary
+    and the fertility ramp above 1.0 both in place, 100 years of rome_100ad
+    with events=False still settles around 74 percent of its starting
+    population). The concern is real in direction - the
+    BASELINE_ANNUAL_MORTALITY_RATE_* / SURVIVAL_TO_WORKING_AGE figures are
+    drawn from a historical series that is itself a multi-century average
+    already containing ordinary harvest-driven mortality swings, and this
+    module then adds its own harvest-driven excess mortality ON TOP of a
+    number that already has some baked in - but its SIZE cannot be the
+    residual drag: Fogel's review of Wrigley & Schofield's own English
+    series (the source BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE cites)
+    puts ALL crisis mortality - famine AND epidemic together - at under 5
+    percent of total pre-1800 English mortality, and attributes less than
+    10 percent of even that crisis share to famine specifically
+    (year-to-year mortality swings tracked epidemic disease far more than
+    food prices or harvests). Famine's plausible double-counted share of
+    the baseline is therefore bounded above by roughly 5% * 10% = 0.5% of
+    it - about seven parts in one hundred thousand of the working-age rate
+    per year - which `MortalityDragDecompositionTests` below shows is more
+    than an order of magnitude too small to be the residual drag. Real
+    double-counting of ordinary bad years is not zero, but it is not where
+    the missing population went.
 
-    WHERE THE DRAG ACTUALLY COMES FROM, measured directly from the same
-    engine run: the realized nutrition ratio the engine hands this module
-    has mean close to 1.0 (0.993 in the run measured for this
-    investigation) but real year-to-year variance (its stdev was 0.081 in
-    that run, coming from agriculture.py's weather draw and the granary's
-    only-partial buffering of it, neither owned by this module). Because
-    this function is FLAT at and above 1.0 and RISING below it, it is
-    convex at the ratio-1.0 kink, so by Jensen's inequality the AVERAGE of
-    this function over a varying ratio is strictly greater than this
+    THE DRAG IS JENSEN'S INEQUALITY ACTING ON YEAR-TO-YEAR NUTRITION
+    VARIANCE, NOT A MISSING FLOOR OR DOUBLE-COUNTING. The nutrition ratio
+    this function receives varies year to year (from agriculture.py's
+    weather draw and the granary's only-partial buffering of it, neither
+    owned by this module) even when its long-run MEAN sits at exactly 1.0.
+    Because this function is FLAT at and above 1.0 and RISING below it, it
+    is convex at the ratio-1.0 kink, so by Jensen's inequality the AVERAGE
+    of this function over a varying ratio is strictly greater than this
     function evaluated at the AVERAGE ratio, even when that average ratio
     sits exactly on the subsistence line. `MortalityDragDecompositionTests`
     proves this with the model's own machinery, not a numeric coincidence:
     two populations fed the identical MEAN food, one at a constant ratio of
     1.0 and one alternating symmetrically around it, diverge - the
     alternating one ends smaller, from nothing but the shape of this
-    function. That is the real mechanism, it needs no unsourced floor to
-    produce it, and it is a genuine property of subsistence agriculture
+    function. That is a genuine property of subsistence agriculture
     (storage smooths but cannot fully undo the fact that a bad year costs
-    more than a good year of the same size gives back) rather than an
-    artefact of this module. The remaining lever, to the extent the input
-    side of that asymmetry can still be narrowed, is agriculture.py's own
-    storage/consumption asymmetry (outside this module's ownership; see
-    that module's GRANARY_CAPACITY_YEARS_OF_DEMAND and
-    MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, and the reserve-size experiment
-    in this project's own history showing a bigger reserve narrows the
-    decline further but a bigger intake ceiling does not) - not this
-    function's floor.
+    more than a good year of the same size gives back), not an artefact of
+    this module, and it needs no unsourced floor to produce it. The
+    remaining lever, to the extent the input side of that asymmetry can
+    still be narrowed, is agriculture.py's own storage/consumption
+    asymmetry (outside this module's ownership - see that module's
+    GRANARY_CAPACITY_YEARS_OF_DEMAND and MAXIMUM_INTAKE_MULTIPLE_OF_
+    SUBSISTENCE: a bigger reserve narrows the decline further, a bigger
+    intake ceiling does not), not this function's floor.
 
     Below 1.0, this is linear in the calories the population actually has,
     from 1.0 (at the subsistence line) to STARVATION_MORTALITY_CEILING_

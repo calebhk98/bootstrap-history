@@ -5,13 +5,14 @@ each claim rests on, and the ranked recommendation for what to build next.
 This file only pins the numbers so nobody has to re-derive them before
 checking a fix.
 
-ONE CLASS BELOW USED TO PIN A DEFECT AS A PASSING TEST ON THE WRONG
-BEHAVIOUR, in the style sim/tests/test_price_solver_cycles.py established
-for Complaints/31 (commit 355e9ef pinned the wrong answer with instructions
-to invert rather than delete, and 66e2c94 did exactly that once the defect
-was fixed). `SubsistenceFloorIsNowTradeableTests` below is that inversion:
-docs/architecture/DEMAND_AT_SCALE.md SS1's recommended fix (a). The hard
-floor is gone - a household short of its own subsistence bundle now
+ONE CLASS BELOW PINS THE CORRECTED PROPERTY, NOT THE ORIGINAL DEFECT, in the
+style sim/tests/test_price_solver_cycles.py established for Complaints/31: a
+known defect is pinned as a deliberately failing case, with instructions to
+invert the assertion rather than delete the test once it is fixed, so a red
+suite is not ignored and a green one is not mistaken for evidence the defect
+is still absent. `SubsistenceFloorIsNowTradeableTests` below is that
+inversion: docs/architecture/DEMAND_AT_SCALE.md SS1's recommended fix (a).
+The hard floor is gone - a household short of its own subsistence bundle now
 demands a POSITIVE, price-sensitive quantity of a good with no
 subsistence floor of its own, exactly the property Banerjee and Duflo's
 survey evidence (see this class's own docstring) said the old model could

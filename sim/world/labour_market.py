@@ -860,9 +860,9 @@ WALKABLE_TRADES = trades_reachable_given_technology()
 # does, see STANDALONE) grows this default as the civilisation reaches new
 # nodes, by calling `trades_reachable_given_technology(reached_node_ids)`
 # itself and handing the result to `Workforce.step` as `walkable_trades=` -
-# the same seam the worked example's own synthetic `adventurer` trade
-# already used to extend WALKABLE_TRADES by hand (SCENARIO 3 below), now
-# generalised from "a caller invents a name" to "a caller reads the tree".
+# the same seam the worked example's own synthetic `adventurer` trade uses
+# to extend WALKABLE_TRADES by hand (SCENARIO 3 below): a caller can either
+# invent a name directly or read it off the tree.
 # A caller wiring in a trade no data/production/ entry names at all (that
 # same `adventurer`, for a sudden and genuinely unskilled calling this
 # project's data has never heard of) still passes its own extra name in by
@@ -1426,12 +1426,10 @@ if __name__ == "__main__":
     sys.path.insert(0, _REPOSITORY_ROOT)
     from sim.world import agriculture
     # INSIDE THE GUARD, FOR THE SAME REASON agriculture IS. The demo below
-    # needs wheat's reference labour intensity twice, and used to write the
-    # figure out as a bare 150.0 both times - a duplication that
-    # shared_constants.py's own declaration recorded as an open finding,
-    # because the change that gathered the other three copies of this number
-    # did not own this file. The declaration is the one place the figure
-    # lives now.
+    # needs wheat's reference labour intensity twice; sim.world.shared_
+    # constants's own declaration is the one place the figure lives, so
+    # both uses read the same number rather than each carrying its own
+    # bare 150.0 literal.
     #
     # It is imported here rather than at module level because the STANDALONE
     # section's rule is a blanket one: nothing above may import a sibling

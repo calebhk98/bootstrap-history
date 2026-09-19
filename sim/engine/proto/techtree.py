@@ -72,9 +72,9 @@ def _staff_fields(s, n):
     """The two staff keys, present only when they SAY something.
 
     A row that needs nobody, or that you can already staff, carries neither.
-    `available` has a size budget - it was 165 kilobytes once - and forty
-    bytes of "needs_staff":"-","short_of_staff":false on every one of two
-    hundred rows is eight kilobytes spent saying nothing.
+    `available` has a size budget: forty bytes of "needs_staff":"-",
+    "short_of_staff":false on every one of two hundred rows is eight
+    kilobytes spent saying nothing.
     """
     out = {}
     short = _staff_short(n)
@@ -179,15 +179,14 @@ def _fog_revenue_estimate(s, k):
 
 def _brief(s, nodes, k, fog):
     """One row of `available`.
-    
-    IT USED TO CARRY COST, HOURS, YEARS AND RISK AND NOTHING ELSE, and a
-    normal-play tester who ran the game to its horizon wrote that none of those
-    decide anything: what decides is what a thing EARNS, what it costs you every
-    year afterwards, and how much else rests on it - all of which lived only in
-    `why`, one node at a time. They found the two nodes the whole opening turns
-    on by scripting a hundred `why` calls, and by the end were scripting four
-    hundred and sixty. "Competent play degenerates into writing a scraper" is a
-    fair description of an interface that hides its own decisive numbers.
+
+    Carries the numbers that actually decide whether to start a node: what
+    it EARNS, what it costs every year afterwards, and how much else rests
+    on it - not only cost, hours, years and risk. Those decisive numbers
+    otherwise live only in `why`, one node at a time, forcing a player who
+    wants to compare options to call `why` on every candidate by hand. An
+    interface that hides its own decisive numbers turns competent play into
+    writing a scraper.
     """
     node = nodes[k]
     # The SHORT band in a table row. `why` gets the long sentence, because it
@@ -209,8 +208,7 @@ def _brief(s, nodes, k, fog):
                 # effective_risk, NOT n["risk"]. Once a project has failed
                 # once, retry learning means the tree's bare figure is no
                 # longer what the dice use, and quoting it would understate
-                # what a second attempt is worth - the opposite of the lie
-                # this screen used to tell about failure costing nothing.
+                # what a second attempt is worth.
                 "chance_of_failure": s.effective_risk(k),
                 # WHAT A FAILURE COSTS, not only how likely one is. A failure
                 # takes a flat 40% of the money and sets 40% of the hours to
@@ -275,14 +273,10 @@ def _full_entry(s, nodes, k, fog):
     return entry
 
 
-# EVERY SORT A PLAYER ASKED FOR, one table. Both the paged `available` list
-# and the "heard of but cannot begin" list under it were hard-wired to one
-# order each (cost, and nearest-first) with no way to ask for another, and a
-# play tester paging through "632 more, nearest first" asked outright how to
-# sort by what a thing earns instead of digging through cost order for it.
-# One table serves both lists so a player only has to learn one vocabulary:
-# {"cmd":"available","sort":"risk"} and the heard-of block below it sort the
-# same way.
+# EVERY SORT A PLAYER MIGHT WANT, ONE TABLE, shared by both the paged
+# `available` list and the "heard of but cannot begin" list under it, so a
+# player only has to learn one vocabulary: {"cmd":"available","sort":"risk"}
+# and the heard-of block below it sort the same way.
 _SORT_KEYS = {
     "price": lambda s, n, k: s.project_cost(k),
     "cost": lambda s, n, k: s.project_cost(k),
@@ -300,16 +294,12 @@ _SORT_KEYS = {
     # set. Every node in the STARTABLE list has zero missing by definition,
     # so this only discriminates the heard-of list; asking for it on the
     # startable list is harmless, not an error, and falls back to id order
-    # there, which is exactly what misled a goal-directed player: with the
-    # goal set to the junction transistor, "available sort nearest" kept
-    # opening with agriculture, because id order is what "no missing
-    # prerequisites to discriminate by" falls back to, and nothing about the
-    # name "nearest" said it meant anything other than "nearest to your
-    # goal". `path <goal>` answers that real question - "what could I start
-    # today toward this" - without leaking the hidden tree; this key never
-    # did and was never trying to, so it is renamed to say what it actually
-    # measures. "near"/"nearest" still work, for any script already using
-    # them, but no longer appear in the advertised list below.
+    # there. `path <goal>` answers "what could I start today toward this
+    # goal" without leaking the hidden tree; this key never measures that,
+    # so it is named for what it actually measures rather than "near" or
+    # "nearest", which could be misread as "nearest to your goal". Those two
+    # names still work, for any script already using them, but do not
+    # appear in the advertised list below.
     "fewest_missing": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
     "near": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
     "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
@@ -346,8 +336,8 @@ def _available_params(cmd):
     reverse = bool(cmd.get("reverse"))
     # PAGES THE HEARD-OF LIST, the same way `offset` pages the startable
     # one. Parsed here, once, rather than a second time down inside the fog
-    # block that used to hold it: cmd does not change between the two
-    # reads, so parsing it once instead of twice is not a behaviour change.
+    # block: cmd does not change between the two reads, so parsing it once
+    # instead of twice is not a behaviour change.
     try:
         heard_offset = max(0, int(cmd.get("heard_offset", 0)))
     except (TypeError, ValueError):
@@ -411,13 +401,11 @@ def _sort_startable_list(s, nodes, sel, _sort_fn, reverse):
     cost by default. Shared with the heard-of list below it, per the sort
     table's own docstring.
     """
-    # PAGE IN THE ORDER YOU DISPLAY. Each page was sorted by cost as it was
-    # printed, but the pages were CUT from strategy order, so a break tester
-    # asking for the cheapest work found it at item 31 - and the first page was
-    # a cost-sorted view of an arbitrary thirty. Sort the selection, then cut.
-    # DEFAULT COST, BUT NOT THE ONLY CHOICE. A play tester paging through
-    # "632 more" asked how to see it sorted by what a thing earns instead of
-    # digging cost order for it; `sort` picks any column, `reverse` flips it.
+    # SORT THE FULL SELECTION, THEN CUT: sorting only the current page after
+    # cutting it from strategy order would show a cost-sorted view of an
+    # arbitrary page's worth of nodes, not the true cheapest items overall.
+    # DEFAULT COST, BUT NOT THE ONLY CHOICE: `sort` picks any column,
+    # `reverse` flips it.
     if _sort_fn:
         return sorted(sel, key=lambda k: (_sort_fn(s, nodes, k), k), reverse=reverse)
     else:
@@ -429,25 +417,23 @@ def _heard_all_sorted(s, nodes, find, want_subject, _sort_fn, reverse):
     find/subject the startable list used, sorted nearest-first (or by
     whatever column was asked for). Not yet paged; see _heard_of_block.
     """
-    # CLOSEST FIRST, NOT ALPHABETICALLY. This sorted by id and cut at 25, so
-    # the list a player reads was always the same handful of things
-    # beginning with a, b and c, however many they had heard of and however
-    # near the rest were. A play tester noticed it stopped around "c" and
-    # had no way to page past it. Fewest missing prerequisites first is the
-    # order that answers the question the list is actually asked: what is
-    # nearly within reach?
+    # CLOSEST FIRST, NOT ALPHABETICALLY: sorting by id and cutting at a page
+    # size would always show the same handful of things beginning with a, b
+    # and c, however many the player had heard of and however near the
+    # rest were. Fewest missing prerequisites first is the order that
+    # answers the question the list is actually asked: what is nearly
+    # within reach?
     _heard_all = [node_id for node_id in getattr(s, "revealed", set())
                   if node_id not in s.done and node_id not in s.active
                   and not s.start_reason(node_id)[0]]
-    # THE SAME SEARCH, OR NOTHING. This block used to ignore `find` and
-    # `subject` entirely and print its usual nearest-first twenty-five
-    # regardless of what was typed, so `available find zzz` - a search
-    # that matched nothing startable - still dumped seven things the
-    # player had never asked about, under a heading that gave no sign any
-    # of it was unrelated to the search. A search that matches nothing is
+    # THE SAME SEARCH, OR NOTHING: filtered by the same `find`/`subject` a
+    # player set on the startable list, not the usual nearest-first
+    # regardless of what was typed. Ignoring the search here would dump
+    # unrelated heard-of items under a heading that gives no sign any of it
+    # is unrelated to the search - a search that matches nothing is
     # supposed to look like nothing, and a search that matches something
     # heard-of-but-not-yet-startable is exactly the case this list exists
-    # to answer, so the fix is to search it rather than hide it outright.
+    # to answer.
     if find:
         _heard_all = [node_id for node_id in _heard_all if _matches_find(nodes, find, node_id)]
     elif want_subject:
@@ -472,10 +458,10 @@ def _heard_of_block(s, nodes, fog, find, want_subject, _sort_fn, reverse, heard_
     heard, heard_more, heard_from = [], 0, 0
     if fog:
         _heard_all = _heard_all_sorted(s, nodes, find, want_subject, _sort_fn, reverse)
-        # PAGEABLE, and it says when it is cut. This was a silent slice at 25
-        # in a game where a play tester had a thousand nodes in play: no note
-        # that it was truncated and no way to see the rest. `heard_offset`
-        # pages it, the same way `offset` pages the startable list.
+        # PAGEABLE, and it says when it is cut: a silent slice at 25 with no
+        # note that it was truncated leaves a large heard-of list with no
+        # way to see the rest. `heard_offset` pages it, the same way
+        # `offset` pages the startable list.
         heard = _heard_all[heard_offset:heard_offset + 25]
         heard_more = max(0, len(_heard_all) - heard_offset - len(heard))
         heard_from = heard_offset
@@ -490,10 +476,10 @@ def _list_page(s, nodes, sel, startable, why_these, fog, show_all, offset, limit
     Returns (out, page) - out is the reply built so far, page is the slice
     of `sel` actually shown, which the caller needs again for paging hints.
     """
-    # THIRTY AT A TIME WAS A BARE NUMBER; DEFAULT_AVAILABLE_LIMIT IS THE
-    # SAME NUMBER, now the one a player can raise from the Options
-    # screen - see its own comment, near TYPED_HINTS - instead of typing
-    # limit:N by hand on every page of a long search or subject list.
+    # DEFAULT_AVAILABLE_LIMIT, NOT A BARE NUMBER: a player can raise it from
+    # the Options screen - see its own comment, near TYPED_HINTS - instead
+    # of typing limit:N by hand on every page of a long search or subject
+    # list.
     page = sel if show_all else sel[offset:offset + (limit or DEFAULT_AVAILABLE_LIMIT)]
     out = {"ok": True, "count": len(sel), "of_everything_startable": len(startable),
            # The same figure the digest carries, so a paged list can mark
@@ -510,10 +496,9 @@ def _list_page(s, nodes, sel, startable, why_these, fog, show_all, offset, limit
         # instead - and, under fog, say only what a player is entitled to
         # know: that nothing they can begin TODAY matches. Whether the
         # thing exists at all in the tree is exactly what fog withholds.
-        # SAY WHAT IT SEARCHED. A play tester read `available find cap_`
-        # coming back empty as the search ignoring ids - it does not; it
-        # searches both, and only among what is startable NOW, which at
-        # that point in their run was the true answer.
+        # SAY WHAT IT SEARCHED: an empty result could otherwise read as the
+        # search ignoring ids, when it searches both ids and names, and
+        # only among what is startable NOW.
         out["nothing_matched"] = (
             "Nothing you could begin today matches that. This looks at both "
             "ids and names, but only among what you could start now."
@@ -529,7 +514,7 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
     """DISCOVERABLE, not just possible. `help available` says this too, but
     a naive player reading the table itself should not have to go looking
     for the one line that explains how to change what they are looking at.
-    Mutates `out` in place, the same as the block this was cut from.
+    Mutates `out` in place.
     """
     out["sorted_by"] = sort_by if _sort_fn else "cost"
     if reverse:
@@ -545,8 +530,8 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
 
 
 def _list_heard_hint(out, fog, heard_block, heard_more, heard_from, offset, sort_by, _sort_fn, reverse):
-    """The heard-of block under a paged list - only on the first page, the
-    same as the original's `offset == 0` guard. Mutates `out` in place.
+    """The heard-of block under a paged list - only on the first page
+    (offset == 0). Mutates `out` in place.
     """
     if fog and heard_block and offset == 0:
         out["heard_of_but_cannot_begin"] = heard_block
@@ -710,20 +695,18 @@ def _digest_reply(s, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
 def _agent_available(s, nodes, cmd=None):
     """What you could begin today.
 
-    THIS USED TO RETURN EVERYTHING. At year 250 that was 559 entries and 165
-    kilobytes in a single reply, and even at the start it was 78 entries and 21
-    kilobytes: a wall nobody reads, which testers dealt with by grepping their
-    own scrollback. If it is too much for a machine it is far too much for a
-    person. So the default is now a digest by subject, and you ask for the part
-    you want.
+    The default is a digest by subject, not everything: returning every
+    startable entry in one reply produces hundreds of entries and well over
+    a hundred kilobytes even early in a run - too much for a machine to
+    make sense of, let alone a person. Ask for the part you want.
     """
     cmd = cmd or {}
     # LIVE, NOT A SNAPSHOT: cli.py's _apply_display_prefs patches
     # engine.protocol.DEFAULT_AVAILABLE_LIMIT directly (a module attribute,
     # not a call) - see that name's own comment in engine/proto/util.py.
-    # Reading it back through the protocol module itself, instead of the
-    # plain name this file's own import binds, is what makes that patch
-    # visible here after the split.
+    # Reading it back through the protocol module itself, instead of a
+    # plain name this file would otherwise bind at import time, is what
+    # makes that patch visible here.
     from .. import protocol as _protocol
     DEFAULT_AVAILABLE_LIMIT = _protocol.DEFAULT_AVAILABLE_LIMIT
     fog = getattr(s, "fog", False)
@@ -742,8 +725,8 @@ def _agent_available(s, nodes, cmd=None):
     # sorting the startable nodes, building the heard-of block, and
     # assembling either the paged list or the digest - with this function
     # left as the assembler. Every branch, sentence and ordering below lives
-    # in the piece that owns it, moved verbatim; nothing here decides
-    # anything the pieces did not already decide.
+    # in the piece that owns it; nothing here decides anything the pieces
+    # did not already decide.
     (want_subject, find, show_all, limit, offset, afford, sort_by,
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
 
@@ -777,17 +760,16 @@ def _rests_band(n):
     """How much rests on a node, in the words a person in the year 100 could
     actually use. The exact count is a fog spoiler; the band is not.
 
-    "NOTHING ELSE" HAS TO MEAN ZERO. The bottom band used to cover everything
-    from 0 to 3, so a node with real dependents was described as having none,
-    and a naive Rome player caught the game contradicting itself inside a
-    minute: `why met_ore_crushing_sorting` said "nothing else rests on this"
-    while met_jigging_gravity, sitting visible in their own list, gave
-    "missing prerequisites: met_ore_crushing_sorting". They found the same
-    pair again with in2_tape_measure_steel and
-    in2_baseline_measurement_apparatus. Banding is the right answer to the
-    spoiler problem, since the exact count is a map of the tree; a band whose
-    words are false is not. Vague is allowed here, wrong is not - so 1 to 3
-    gets its own rung and the bottom one means what it says.
+    "NOTHING ELSE" HAS TO MEAN ZERO: the bottom band must cover only n == 0,
+    never a wider range such as 0 to 3, or a node with real dependents gets
+    described as having none - `why met_ore_crushing_sorting` could then
+    say "nothing else rests on this" while met_jigging_gravity, sitting
+    visible in the same list, gives "missing prerequisites:
+    met_ore_crushing_sorting", contradicting itself inside a minute of
+    ordinary play. Banding is the right answer to the spoiler problem,
+    since the exact count is a map of the tree; a band whose words are
+    false is not. Vague is allowed here, wrong is not - so 1 to 3 gets its
+    own rung and the bottom one means what it says.
     """
     return ("almost everything" if n > 1200 else
             "a great deal" if n > 300 else
@@ -838,65 +820,59 @@ def _explain_cost(s, nodes, k, node):
     """The cost breakdown: base cost, every factor project_cost multiplies
     in, and what is left to pay if money is already sunk into this node.
     """
-    # `why` used to quote the BASE cost, identical for every civilization,
-    # while step() charged that base multiplied by this society's domain
-    # factor and by how far it sits from the material's source. A Han
-    # playtester compared `why` across two civs, saw byte-identical numbers,
-    # and reasonably concluded the whole civilization model was inert
-    # flavour text. It is not: the CHARGE has always applied both factors.
-    # The QUOTE was lying, which is the more embarrassing half, because a
-    # player plans against the quote.
+    # THE QUOTE MUST MATCH THE CHARGE: step() bills the base cost multiplied
+    # by this society's domain factor and by how far it sits from the
+    # material's source, so quoting the bare base cost here (identical for
+    # every civilization) would make `why` compare two civilizations as
+    # byte-identical when what they are actually charged differs - a player
+    # plans against the quote, so the quote must not lie about it.
     return {"labour": round(node["_labour_cost"], 1),
                  "materials": round(node["_material_cost"], 1),
                  "capital": node["cap"],
                  "base_total": round(node["_total_cost"], 1),
                  "civ_domain_factor": round(s.civ_cost_factor(k), 3),
                  "material_distance_factor": round(s.material_cost_factor(k), 3),
-                 # THE SCARCITY PREMIUM, which project_cost multiplies in and
-                 # this breakdown did not list. A break tester multiplied the
-                 # shown factors out for clock_pendulum, got 4,747.6 against a
-                 # stated 4,834, and reported it as the one card in the game
-                 # whose arithmetic does not work. It was the only missing
-                 # term: what the market charges you for a material it barely
-                 # sells. Same lesson as price_index below - a breakdown that
-                 # omits a factor is worse than no breakdown, because it
-                 # invites exactly this check and then fails it.
+                 # THE SCARCITY PREMIUM: project_cost multiplies this in, so
+                 # the breakdown must list it too - what the market charges
+                 # for a material it barely sells. Same lesson as
+                 # price_index below - a breakdown that omits a factor
+                 # project_cost actually uses is worse than no breakdown,
+                 # because it invites a player to multiply the shown
+                 # factors out and then fails that check.
                  "scarce_material_premium": round(s.material_market_factor(k), 3),
                  "opposition_factor": round(s.opposition_factor(k), 3),
-                 # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy. This field
-                 # was filled with money_real while project_cost multiplies by
-                 # cost_money_factor(), which is price_index. For Norse, whose
-                 # prices are 1.4x Roman, the breakdown printed 1.0 here and
-                 # hid its largest term: a tester checked seven nodes, found the
-                 # total was 1.4000x the product of the parts every time, and
-                 # reasonably called it an undisclosed overhead multiplier. A
-                 # breakdown offered as the explanation of a total has to
-                 # reconcile with it, or it is worse than no breakdown.
+                 # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
+                 # project_cost multiplies by cost_money_factor()
+                 # (price_index), so this field must report THAT, not
+                 # money_real. Reporting money_real here would print 1.0 for
+                 # a civilization whose prices actually run 1.4x Roman, and
+                 # hide the breakdown's largest term - a breakdown offered
+                 # as the explanation of a total has to reconcile with it,
+                 # or it is worse than no breakdown.
                  "price_index": round(s.cost_money_factor(), 3),
                  "purchasing_power_of_the_coin": round(s.money_real, 3),
                  # The same figure the project will be billed, and must actually
                  # have paid in full before it can complete.
                  "total": round(s.project_cost(k), 1),
-                 # AS OF TODAY. A tester read 106,567 here, started the thing
-                 # forty years later, and was billed 207,811. Both figures were
-                 # correct on their own day: this total moves with prices, the
-                 # coinage, what a material costs to get and what you have
-                 # since built. The bill is fixed at the moment you START, and
-                 # `start` says what it was fixed at.
+                 # AS OF TODAY: this total moves with prices, the coinage,
+                 # what a material costs to get and what you have since
+                 # built, so the same node quoted today and started years
+                 # later can be billed a different amount - both figures
+                 # are correct on their own day. The bill is fixed at the
+                 # moment you START, and `start` says what it was fixed at.
                  "as_of_year": s.year,
                  "note": "today's price. It is fixed when you start, not when "
                          "you read it: quotes move with prices, the coinage "
                          "and what a material costs to get.",
-                 # THE STICKER PRICE IS NOT WHAT `start` WOULD ACTUALLY CHARGE,
-                 # once money is already sunk into this node - start_project's
-                 # own _paid_now discount (see that function) subtracts
-                 # paid_towards[k] before billing a single denarius, but this
-                 # screen kept quoting the gross total forever, for a project
-                 # a creditor or the player's own `stop` had halted partway.
-                 # An England player planning from `why` was planning against
-                 # a number the engine would never actually charge; the real,
-                 # discounted figure showed up only inside a `start` refusal
-                 # or its success line, after the fact.
+                 # THE STICKER PRICE IS NOT WHAT `start` WOULD ACTUALLY
+                 # CHARGE, once money is already sunk into this node:
+                 # start_project's own _paid_now discount (see that
+                 # function) subtracts paid_towards[k] before billing a
+                 # single denarius, for a project a creditor or the
+                 # player's own `stop` had halted partway. `why` must show
+                 # that discounted figure too, or a player planning from it
+                 # is planning against a number the engine would never
+                 # actually charge.
                  **({"already_paid_towards_this": round(
                         min(s.project_cost(k),
                             max(0.0, getattr(s, "paid_towards", {}).get(k, 0.0))), 1),
@@ -973,12 +949,10 @@ def _explain_timing_and_risk(s, nodes, k, node):
         # (RETRY_RISK_FLOOR/DECAY, RETRY_CALENDAR_CAP/DECAY - see
         # expected_calendar_years' own docstring in projects.py) starts
         # moving both the odds and the wait on every attempt after the
-        # first. A player who had already won the game watched
-        # point_contact_transistor fail six times running and estimated it
-        # cost "roughly two dozen years" - this is the number that would
-        # have told them what to expect before the dice started rolling,
-        # computed through the SAME retry rule _complete actually applies,
-        # not a second, looser approximation of it.
+        # first. This must be computed through the SAME retry rule
+        # _complete actually applies, not a second, looser approximation of
+        # it, or the number told to a player before the dice start rolling
+        # understates what a run of failures will actually cost.
         "expected_calendar_years_with_retries": round(
             s.expected_calendar_years(k), 2),
         # WHAT THE FAILURES SO FAR HAVE BOUGHT, said out loud, because a
@@ -1000,13 +974,12 @@ def _staffing_build_crew(s, node):
     """
     return {
         "staff_needed": {"scholars": node["sch"], "artisans": node["art"]},
-        # THE FIGURE THE GAME ACTUALLY TESTS. start_project gates artisans on
+        # THE FIGURE THE GAME ACTUALLY TESTS: start_project gates artisans on
         # craft_hands_available() - staff, plus yourself, plus any hours you
-        # have already bought - and this printed s.artisans, which is only the
-        # first of the three. A play tester read "STAFF NEEDED: 3 artisans
-        # (you have 1, 0)" beside a prompt reading "sch 0 art 0" and could not
-        # tell which of the two numbers, if either, was the one that decided
-        # whether they could begin. Print what decides it.
+        # have already bought - not on s.artisans alone, which is only the
+        # first of the three. Printing s.artisans here would show a number
+        # that disagrees with the one that actually decides whether a
+        # player can begin. Print what decides it.
         "you_have": {"scholars": round(s.effective_scholars(), 1),
                      "artisans": round(s.craft_hands_available(), 1)},
         "you_have_counts": ("counting yourself, and hours you have bought"
@@ -1299,13 +1272,10 @@ def _explain_unlocks(s, nodes, k, unlocks, n_blocks):
     half of lineage, banded rather than counted under fog.
     """
     return {
-        # DOWNSTREAM COUNT IS A SPOILER UNDER FOG, and a tester said so
-        # unprompted: "downstream_count 1276 seems slightly cheaty". They were
-        # right, and worse than cheaty, it was the whole game. Two testers
-        # independently found the same three hub nodes by calling `why` on
-        # guesses and reading the number, and one wrote that after that "the
-        # early strategy is pretty obvious". An exact count of everything a
-        # thing leads to is a map of the tree you were told you could not see.
+        # DOWNSTREAM COUNT IS A SPOILER UNDER FOG: an exact count of
+        # everything a thing leads to is a map of the tree a player was
+        # told they could not see, letting a handful of large numbers give
+        # away the hub nodes the whole early strategy turns on.
         #
         # What survives fog is the thing a person in the year 100 could actually
         # judge: whether this is a foundation others will build on, or an end in
@@ -1342,11 +1312,11 @@ def _explain_status(s, nodes, k, node):
     return {
         "done": k in s.done, "active": k in s.active,
         "can_start_now": (not started) and s.can_start(k),
-        # Under fog this used to name locked prerequisites in full, so a tester
-        # learned the name and description of the printing press from an
-        # unrelated node's explanation while `why` on the press itself said they
-        # had never heard of it. If you cannot see a thing, you cannot see its
-        # name in someone else's sentence either.
+        # FOG-SCRUBBED: naming a locked prerequisite in full here would leak
+        # its name and description through an unrelated node's explanation,
+        # even while `why` on that prerequisite itself says it has never
+        # been heard of. If you cannot see a thing, you cannot see its name
+        # in someone else's sentence either.
         "start_blocked_reason": None if started else s.fog_scrub(s.start_reason(k)[1]),
     }
 
@@ -1433,8 +1403,8 @@ def _node_explain(s, nodes, k):
     Split into one function per concern, matching the sections `why` has
     always had (identity, cost, revenue, timing and risk, staffing,
     classification, lineage, status, and two trailing notes that only
-    apply sometimes) - this function assembles their pieces in the same
-    order the fields used to appear in, and decides nothing itself.
+    apply sometimes) - this function assembles their pieces in that same
+    order, and decides nothing itself.
     """
     node = nodes[k]
     out = {}

@@ -26,9 +26,9 @@ def _one_run(seed=9, years=180, civ="rome_100ad"):
             round(run.reputation, 9))
 
 # THE FIRST OF THESE COSTS 190 OF THE SUITE'S SECONDS, because it simulates
-# 180 years. It is kept exactly as it was: it catches cross-instance state
-# leaking WITHIN one process (two Sim objects built back to back in the same
-# interpreter disagreeing), which is a different bug class from the second
+# 180 years. It catches cross-instance state leaking WITHIN one process (two
+# Sim objects built back to back in the same interpreter disagreeing), which
+# is a different bug class from the second
 # check below and one perf_fingerprint cannot see, because perf_fingerprint
 # always runs its scenarios in the same order in the same process - it never
 # builds two independent runs back to back the way this one does.
@@ -39,17 +39,18 @@ def _same_seed_same_run():
 slow_check("the same seed gives the same run, twice in one process",
            _same_seed_same_run)
 
-# THE SECOND USED TO cost 122s comparing FOUR numbers (capital, len(done),
-# len(operating), reputation) at year 180, for ONE civilisation and ONE seed
-# under ONE alternate hash seed. An experiment that injected a real
-# "iterates an unsorted set feeding a float sum" bug (the exact class this
-# check exists to catch - see ROUND 9's docstring above) measured how well
-# each approach actually detects it:
+# THE SECOND IS NOT A NARROW, HOME-GROWN COMPARISON: comparing FOUR numbers
+# (capital, len(done), len(operating), reputation) at year 180, for ONE
+# civilisation and ONE seed under ONE alternate hash seed, cost 122s and
+# caught its target badly. An experiment that injected a real "iterates an
+# unsorted set feeding a float sum" bug (the exact class this check exists
+# to catch - see ROUND 9's docstring above) measured how well each approach
+# actually detects it:
 #
-#   this check, as it was (180 years, 1 civ, 1 seed): diverged at year 107,
-#       121 or 196 depending which seed was tried, and did not diverge at
-#       ALL within 200 years for 3 of 6 seeds tried - a coin flip, for the
-#       one thing it exists to catch.
+#   the narrow four-number comparison (180 years, 1 civ, 1 seed): diverged
+#       at year 107, 121 or 196 depending which seed was tried, and did not
+#       diverge at ALL within 200 years for 3 of 6 seeds tried - a coin
+#       flip, for the one thing it exists to catch.
 #   sim/perf_fingerprint.py's state_of()/digest() (nine scenarios,
 #       five civilisations, hashing the FULL save-file state every year):
 #       diverged within 1-7 years on ALL NINE scenarios, every time.

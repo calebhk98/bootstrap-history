@@ -217,15 +217,15 @@ ANYWHERE YET. The stakeholder's third observation - "when you make a mine,
 you have waste rock, gravel" - is already arithmetically PRESENT in
 `extraction_cost_labour_hours_per_kg` (dividing hours-per-tonne-of-MATERIAL
 by a grade of kilograms-per-tonne already charges for every tonne of
-material moved, metal or not) but it was invisible: nothing named the
-quantity or let anyone see that a 0.3 g/t placer deposit lifts roughly three
-million tonnes of gravel for every tonne of gold. `material_moved_tonnes_
-per_kg_metal` and `waste_tonnes_per_kg_metal` make that number a first-class,
-queryable fact, and the module's own __main__ block now prints it for a
-sample of deposits. THIS TASK'S OWN JUDGEMENT: computing the QUANTITY of
-waste is cheap and worth doing now, because it is arithmetic this module
-already implicitly does. Modelling WHERE that waste GOES - burying farmland,
-silting a river the way Pliny's "ruina montium" did to whatever lay downstream
+material moved, metal or not), but nothing named the quantity or let anyone
+see that a 0.3 g/t placer deposit lifts roughly three million tonnes of
+gravel for every tonne of gold. `material_moved_tonnes_per_kg_metal` and
+`waste_tonnes_per_kg_metal` make that number a first-class, queryable fact,
+and the module's own __main__ block prints it for a sample of deposits.
+Computing the QUANTITY of waste is worth doing, because it is arithmetic
+this module already implicitly does. Modelling WHERE that waste GOES -
+burying farmland, silting a river the way Pliny's "ruina montium" did to
+whatever lay downstream
 of Las Medulas - is deliberately NOT done here: it needs a place for the
 waste to go (a location, a downstream user of that land or river) that lives
 in data/world/geography.json and whatever eventually represents farmland and
@@ -1288,10 +1288,10 @@ def simulate_depletion(
 
         # find_marginal_deposit sorts internally (supply_curve), so
         # outcome.allocations is NOT in `available`'s order - matching by
-        # position here previously credited each state with a DIFFERENT
-        # deposit's allocation whenever the sort reordered them, which
-        # silently mis-depletes every deposit but the cheapest. Match by
-        # name instead.
+        # position would credit each state with a DIFFERENT deposit's
+        # allocation whenever the sort reorders them, silently
+        # mis-depleting every deposit but the cheapest. Match by name
+        # instead.
         supplied_by_name = {
             allocation.deposit.name: allocation.quantity_supplied_tonnes_per_year
             for allocation in outcome.allocations}

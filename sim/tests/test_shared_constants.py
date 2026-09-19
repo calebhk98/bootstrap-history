@@ -30,16 +30,16 @@ THREE LAYERS, EACH CATCHING A DIFFERENT SHAPE OF THE SAME MISTAKE.
      Explicit, hand-maintained equivalence groups of registry names known
      to describe the same physical fact; asserts they still agree. THIS IS
      WHERE A REAL DUPLICATE THAT NOBODY MIGRATES WOULD BE CAUGHT, and
-     exactly the check that would have caught the LAND_LABOUR_OUTPUT_
+     exactly the kind of check that would have caught the LAND_LABOUR_OUTPUT_
      ELASTICITY / LABOUR_OUTPUT_ELASTICITY split before this task existed,
-     had someone written it down at the time.
+     had it been written down.
   3. UndeclaredLiteralDuplicateTests - the case that does not even show up
      in the declare() registry, because an undeclared literal carries no
      name to collide on. sim/world/labour_market.py's own __main__ demo
      block wrote the reference labour-hours-per-hectare figure out twice as
      a bare `150.0` rather than reading the declared name. It now imports
-     the declaration, so these tests have been INVERTED: they used to keep
-     the two known copies honest, and now assert that no copy exists. The
+     the declaration, so these tests assert that no such copy exists at
+     all, rather than merely keeping two known copies honest. The
      recurrence half is the one that earns its place - no float anywhere in
      that file may equal the shared constant's value - because it catches a
      fifth copy under any name, not only at the two sites somebody thought
@@ -258,21 +258,15 @@ class CrossModuleQuantityEquivalenceTests(unittest.TestCase):
 class UndeclaredLiteralDuplicateTests(unittest.TestCase):
     """The fourth copy of the reference labour intensity, now closed.
 
-    THIS TEST USED TO ASSERT THE DUPLICATION, AND HAS BEEN INVERTED. When
-    land.py and agriculture.py were gathered onto one declaration of
+    NOT A SOURCE-TEXT CHECK ON A LITERAL, A STRUCTURAL ONE ON RECURRENCE.
+    When land.py and agriculture.py were gathered onto one declaration of
     REFERENCE_LABOUR_HOURS_PER_HECTARE, sim/world/labour_market.py's own
     __main__ demo was found writing the same physical figure out twice as a
-    bare `150.0`. That was outside the gathering change's ownership, so
-    rather than leave it unrecorded, a narrow source-text regex was written
-    here to at least catch the literal drifting, and it said in its own
-    failure message: "drop this check if the literal was declared or
-    removed". It has now been declared - the demo imports the shared
-    constant - so that instruction is being followed.
-
-    What replaces it is the stronger question, and the one the old check
-    could not ask: not "does the duplicate still hold the right value", but
-    "can the duplicate come back". Two assertions, both structural rather
-    than textual:
+    bare `150.0`, outside that gathering change's ownership. The demo now
+    imports the shared constant, so this asks the stronger question a
+    source-text match on a bare `150.0` could not: not "does the duplicate
+    still hold the right value", but "can the duplicate come back". Two
+    assertions, both structural rather than textual:
 
       1. The demo's two hours figures are each computed FROM the shared
          name, checked on the parsed syntax tree so that a comment or a
@@ -332,7 +326,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
                 "a declaration." % (target_name, self._SHARED_NAME))
 
     def test_no_bare_literal_of_that_value_remains_anywhere_in_the_file(self):
-        """The recurrence guard, and the reason this test was inverted.
+        """The recurrence guard.
 
         Any float in the file equal to the shared constant's value is a
         fresh undeclared copy, wherever it is and whatever it is called.

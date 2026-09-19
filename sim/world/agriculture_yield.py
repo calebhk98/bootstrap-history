@@ -1,15 +1,14 @@
 """The production function: how much land, labour, weather and technique
 turn into a harvest, and the marginal value of one more hour on it.
 
-Split out of `sim/world/agriculture.py`, which had grown to 2,238 lines and
-was the single file every agent touching farming had to collide in. See that
-file's own docstring, "THIS FILE AND ITS SIBLINGS, AND WHY THIS SPLIT LOOKS
-DIFFERENT", for why the split lands here rather than by line count. This
-module holds the YIELD subject: `Land` (a parcel, its size and its quality),
-one year's weather as a single multiplicative draw, the harvest-window
-helpers that turn a labour pool into the area a crew can actually reap in a
-season, `gross_harvest_kg` (the Cobb-Douglas production function itself,
-capped at what the harvest window lets the labour pool bring in), and
+This module holds the YIELD subject of `sim/world/agriculture.py`'s farming
+domain - see that file's own docstring, "THIS FILE IS A COMPOSITION POINT",
+for the other two subject files and why the constants and tables stay in
+that file instead: `Land` (a parcel, its size and its quality), one year's
+weather as a single multiplicative draw, the harvest-window helpers that
+turn a labour pool into the area a crew can actually reap in a season,
+`gross_harvest_kg` (the Cobb-Douglas production function itself, capped at
+what the harvest window lets the labour pool bring in), and
 `marginal_product_of_labour_kg_per_hour` (the closed-form derivative of that
 same function, which is what a labour market needs to price the last hour of
 farm work against everything else).
@@ -20,10 +19,6 @@ STANDALONE THE SAME WAY THE PARENT MODULE IS. Nothing here imports from
 Crop/Toolkit/Rotation tables this module's functions take as optional
 arguments - see `sim/world/agriculture.py`'s own STANDALONE ON PURPOSE
 section for why that matters and to whom.
-
-Behaviour is unchanged and verified byte-identical by `sim/perf_fingerprint.
-py`; every docstring below moved verbatim from where it used to live in
-`sim/world/agriculture.py`.
 """
 import random
 from typing import Optional
@@ -111,53 +106,43 @@ def _max_hectares_harvestable_by_labour(
         worker_count: Optional[float] = None,
         hours_per_worker_day: Optional[float] = None) -> float:
     """How much land the harvest window and the reaping rate let
-    `labour_hours` worth of workers actually bring in this season - the fix
-    for the defect the module docstring's "THE HARVEST WINDOW NOW ALSO
-    BINDS" section describes.
+    `labour_hours` worth of workers actually bring in this season - the cap
+    the module docstring's "THE HARVEST WINDOW BINDS gross_harvest_kg
+    DIRECTLY" section describes: without it, a large `labour_hours` pool on
+    a large `Land` could produce a harvest bigger than the implied crew
+    could have physically reaped.
 
-    `gross_harvest_kg` takes a POOL of hours, but HARVEST_WINDOW_DAYS and
-    HECTARES_REAPED_PER_WORKER_DAY are stated per WORKER-DAY, so the pool
-    has to be converted to worker-equivalents before either ceiling means
-    anything. The conversion used is division by
-    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER - the SAME conversion
-    `hectares_per_worker_annual_hours_ceiling` already uses - on the
-    reasoning that a pool of hours is indistinguishable, in this module,
-    from that many worker-years of a single worker's time; the model has no
-    way to tell "one worker given unlimited hours" apart from "many workers
-    each given a normal year", and does not need to for the answer to be
-    honest: EITHER way, the workers implied by the pool are still each
-    capped at `hectares_cropped_per_farm_worker` hectares, because that cap
-    is itself the smaller of the annual-hours ceiling and the harvest-
-    window ceiling. An actor with unlimited hours (autonomous labour; a
-    robot) gets unlimited worker-equivalents from this division, and can
-    therefore still reap unlimited land in the limit - that is the
-    physically correct answer for adding unlimited WORKERS - but it cannot
-    reap more land than that many worker-equivalents' share of the window
-    allows just by working any one of them harder, which is the bug this
-    replaces: a large `labour_hours` on a large `Land` no longer produces a
-    harvest bigger than the implied crew could have physically reaped.
+    Leaving `worker_count` as None converts the `labour_hours` pool to
+    worker-equivalents by dividing by ANNUAL_LABOUR_HOURS_PER_FARM_WORKER -
+    the SAME conversion `hectares_per_worker_annual_hours_ceiling` already
+    uses - which is exactly right when the pool represents ordinary humans
+    each working an ordinary farming year: the workers implied by the pool
+    are each still capped at `hectares_cropped_per_farm_worker` hectares,
+    because that cap is itself the smaller of the annual-hours ceiling and
+    the harvest-window ceiling, so more WORKERS genuinely can reap more
+    land without limit.
 
-    THE ABOVE REASONING IS WRONG WHERE IT MATTERS MOST, AND THE CORRECTION
-    IS `worker_count`. "A pool of hours is indistinguishable from that many
-    worker-years" holds for the annual-hours ceiling and fails for the
-    harvest-window one, because the window is CALENDAR TIME. Twenty-one days
-    is twenty-one days however many hours an actor is willing to work; one
-    reaper can only be in one field at a time, and the hours it has outside
-    the window cannot reap anything. Dividing annual hours by a human's
-    annual hours smears a whole year's labour into three weeks.
-
-    Measured, at the constants declared in this file: one actor working
-    every hour of the year (8,760 h) comes out of the division at 6.26
-    worker-equivalents and is allowed 13.14 ha, where the window physics
-    allow 21 days x 24 h x 0.01 ha/h = 5.04 ha. The model overstates by
-    2.61x, and it overstates in exactly the direction that flatters
-    autonomous labour - which is the case this correction was asked for.
+    THAT SAME DIVISION OVERSTATES THE HARVEST FOR ANY ACTOR WHOSE HOURS DO
+    NOT MAP ONTO AN ORDINARY HUMAN WORKING AN ORDINARY YEAR, BECAUSE THE
+    HARVEST WINDOW IS CALENDAR TIME, NOT A POOL OF HOURS. HARVEST_WINDOW_
+    DAYS and HECTARES_REAPED_PER_WORKER_DAY are stated per WORKER-DAY:
+    twenty-one days is twenty-one days however many hours an actor is
+    willing to work, one reaper can only be in one field at a time, and
+    hours outside the window cannot reap anything. Dividing annual hours by
+    a human's annual hours smears a whole year's labour into three weeks -
+    measured at this file's own constants, one actor working every hour of
+    the year (8,760 h) comes out of that division at 6.26
+    worker-equivalents and would be allowed 13.14 ha, where the window
+    physics allow only 21 days x 24 h x 0.01 ha/h = 5.04 ha: an
+    overstatement of 2.61x, in exactly the direction that flatters
+    autonomous or unlimited-hour labour.
 
     So: pass `worker_count` whenever the actors are not ordinary humans
     working an ordinary farming year, and the cap is computed from calendar
-    time instead. Leaving it None keeps the worker-equivalent derivation,
-    which is exactly right for the default case and is why every existing
-    number in this module is unmoved by this change.
+    time instead, via `max_hectares_reapable_by_crew`. Leaving it None
+    keeps the worker-equivalent derivation, which is exactly right for the
+    default case and is why every existing number in this module is
+    unmoved by this function.
     """
     if labour_hours <= 0.0:
         return 0.0
@@ -259,9 +244,10 @@ def gross_harvest_kg(
     already saturated for the given number of worker-equivalents.
 
     `crop` and `toolkit` (see the CROP TABLE and TOOLKIT TABLE sections)
-    replace what used to be single wheat-and-ard constants: `crop` sets
-    the fold-return, the planting-material rate and the reference labour
-    and reaping-rate baseline; `toolkit` rescales that baseline (labour-
+    parametrise what a single wheat-and-ard combination would otherwise
+    hardcode: `crop` sets the fold-return, the planting-material rate and
+    the reference labour and reaping-rate baseline; `toolkit` rescales that
+    baseline (labour-
     hours multiplier, reaping-rate multiplier) and contributes its own
     ploughing-yield multiplier. `rotation` contributes only its soil-
     fertility yield multiplier here - its fallow share is a LAND
@@ -359,12 +345,13 @@ def marginal_product_of_labour_kg_per_hour(
     still holds with the harvest-window cap in `gross_harvest_kg`, PROVIDED
     the extra hour does not itself push `labour_hours` past the point where
     more worker-equivalents would unlock more reapable land - that is,
-    EFFECTIVE HECTARES is being held fixed for this derivative, exactly as
-    `land.hectares` used to be. That is the ordinary calculus
-    approximation this closed form always made; it is now conditioned on
-    the window not being the very thing about to change, which is true for
-    any actual next hour (an infinitesimal addition to a large pool does
-    not cross a worker-equivalent threshold). This is exactly what the
+    EFFECTIVE HECTARES is being held fixed for this derivative, the
+    ordinary calculus approximation of holding the land term fixed while
+    differentiating with respect to labour, applied to the windowed
+    quantity rather than to `land.hectares` directly. It holds provided the
+    window is not itself the thing about to change, which is true for any
+    actual next hour (an infinitesimal addition to a large pool does not
+    cross a worker-equivalent threshold). This is exactly what the
     labour market needs to decide whether one more hour of a worker's time
     is worth more on the farm or somewhere else - "the surplus is what
     frees a worker to do anything else" only has a hiring boundary once

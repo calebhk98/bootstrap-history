@@ -189,13 +189,13 @@ class NutritionResponseTests(unittest.TestCase):
 
     def test_fertility_rises_above_baseline_on_surplus_then_saturates(self):
         # Flipped for Complaints/45-no-granary-so-the-baseline-collapses.md:
-        # this used to pin fertility flat at 1.0 above subsistence, which is
-        # exactly the response-side floor that complaint's diagnosis named
-        # as the reason a granary alone only closed part of the century's
-        # unexplained decline (see _fertility_multiplier's own docstring).
-        # A bounded ramp above subsistence, mirroring the below-subsistence
-        # ramp's shape, is applied instead: fertility rises with abundance,
-        # up to a sourced ceiling, and stays there rather than climbing
+        # pinning fertility flat at 1.0 above subsistence is exactly the
+        # response-side floor that complaint's diagnosis named as the reason
+        # a granary alone only closed part of the century's unexplained
+        # decline (see _fertility_multiplier's own docstring). A bounded
+        # ramp above subsistence, mirroring the below-subsistence ramp's
+        # shape, applies instead: fertility rises with abundance, up to a
+        # sourced ceiling, and stays there rather than climbing
         # without bound.
         self.assertEqual(demography._fertility_multiplier(1.0), 1.0)
         self.assertGreater(demography._fertility_multiplier(1.2), 1.0)

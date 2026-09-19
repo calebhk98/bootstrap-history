@@ -740,13 +740,10 @@ class StepPhasesMixin:
         if not self.manual and self.year >= self.household.credit_frozen_until:
             # More directors means more things in hand at once, and a big trained staff
             # lets routine work proceed without the founder watching it.
-            # How many things can be in hand at once. I tried doubling this on
-            # the theory that money is now the real constraint and attention need
-            # not stand in for a budget. It made every civilization worse,
-            # including Rome, from 33% of runs reaching the transistor to none:
-            # more projects in hand divide the same purse into smaller annual
-            # payments, so everything crawls and nothing finishes. Spreading a
-            # fixed budget across more work is not more work. Left as it was.
+            # How many things can be in hand at once: doubling this would let
+            # more projects divide the same purse into smaller annual
+            # payments, so everything crawls and nothing finishes. Spreading
+            # a fixed budget across more work is not more work.
             max_active = int(self.MAX_ACTIVE_PROJECTS_BASE
                              + self.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
                              + self.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
@@ -970,19 +967,17 @@ class StepPhasesMixin:
         project_state["pool_active_count_this_year"] = _pool_active_count_this_year
         project_state["pool_rank_this_year"] = _pool_rank
         project_state["pool_remaining_before_this_year"] = round(remaining, 1)
-        # A PIPELINE, ONE STAGE PER CONCERN, IN THE SAME ORDER THIS METHOD
-        # ALWAYS RAN THEM: is there anybody to do the work, how many hours
-        # does the project get this year, what labour and bill follow from
-        # that, can the household afford the bill, then the bookkeeping and
-        # completion check. Split out so this method reads as five sentences
-        # instead of 374 lines of one project's turn; every comment below
-        # moved verbatim with the code it was explaining, and every
-        # self.rng-touching call these stages make (lab_year_draw is the
-        # only one that plausibly draws) still runs exactly once, in exactly
-        # this order, for exactly this project - the stages are called
-        # unconditionally in sequence and only the two `continue`-turned-
-        # early-returns below skip any of them, both preserved from the
-        # original loop.
+        # A PIPELINE, ONE STAGE PER CONCERN, IN A FIXED ORDER: is there
+        # anybody to do the work, how many hours does the project get this
+        # year, what labour and bill follow from that, can the household
+        # afford the bill, then the bookkeeping and completion check. Split
+        # so this method reads as five sentences instead of one project's
+        # whole turn in a single block. Every self.rng-touching call these
+        # stages make (lab_year_draw is the only one that plausibly draws)
+        # runs exactly once, in exactly this order, for exactly this
+        # project - the stages are called unconditionally in sequence, and
+        # only the two `continue`-turned-early-returns below skip any of
+        # them.
         if self._project_progress_trade_gate(node_id, project_state, node):
             return remaining, hired_left, 0.0
         remaining, per, spent_hours, _dir_hours = self._project_progress_offer_hours(
@@ -1590,14 +1585,9 @@ class StepPhasesMixin:
         # 6. reputation, familiarity, protection, scandal
         #
         # Reputation DECAYS TOWARD WHAT YOU ARE ACTUALLY KNOWN FOR, not toward
-        # zero. Three testers independently reported the same thing: reputation
-        # slid from 10 to 0.2 over a century and a half with no event ever
-        # explaining it, and one called it "less like a lever I could manage and
-        # more like a clock running out in the background". They were right, and
-        # decaying to zero was also wrong on its own terms. A physician with a
-        # practice, a school and a written corpus does not become a man nobody
-        # has heard of because thirty quiet years passed. What fades is novelty;
-        # what remains is the work.
+        # zero: a physician with a practice, a school and a written corpus
+        # does not become a man nobody has heard of because thirty quiet
+        # years passed. What fades is novelty; what remains is the work.
         floor = self.standing_floor()
         self.household.reputation = floor + (self.household.reputation - floor) * self.REPUTATION_DECAY_TOWARD_FLOOR
         # ADAPTATION. Every year the world has known you, and every visible thing

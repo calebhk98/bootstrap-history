@@ -79,8 +79,39 @@ def syntax_tree_without_docstrings(source, filename):
     return ast.dump(ast.fix_missing_locations(tree))
 
 
+def syntax_tree_with_every_string_blanked(source, filename):
+    """As above, but every string literal anywhere is replaced by a marker.
+
+    This answers the weaker question "did anything change except the TEXT of
+    strings", which is what separates an edited `source=` argument from an
+    edited `if` condition.
+    """
+    tree = ast.parse(source, filename=filename)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            node.value = "<string literal>"
+    return ast.dump(ast.fix_missing_locations(tree))
+
+
 def compare_against_head(path, revision="HEAD"):
-    """Return "prose", "code" or "new" for one file."""
+    """Return "prose", "strings", "code" or "new" for one file.
+
+    THE MIDDLE VERDICT EXISTS BECAUSE OF `declare()`. A docstring is prose in
+    a place the parser recognises as prose. A string ARGUMENT is prose in a
+    place the parser recognises as data, and this project is full of them:
+    every `declare(...)` call carries `why=` and `source=` fields whose whole
+    job is to explain a number in English, and `sim/tests/` passes a
+    sentence-long description as the first argument of every `check(...)`.
+
+    Editing one of those is a prose edit by intent and a data edit by fact,
+    so calling it "code changed" is misleading and calling it "prose only" is
+    false. It gets its own answer, and the distinction matters because the
+    two carry different risk: nothing reads a docstring, whereas a `source=`
+    string is stored in the registry `python3 sim/constants.py` prints, and a
+    `check()` name string is matched on and printed by the suite. A reviewer
+    seeing "strings" should confirm nothing depends on the exact wording;
+    seeing "prose only" they need not.
+    """
     committed = subprocess.run(["git", "show", "%s:%s" % (revision, path)],
                                capture_output=True, text=True)
     if committed.returncode:
@@ -90,6 +121,9 @@ def compare_against_head(path, revision="HEAD"):
     if (syntax_tree_without_docstrings(committed.stdout, path)
             == syntax_tree_without_docstrings(working, path)):
         return "prose"
+    if (syntax_tree_with_every_string_blanked(committed.stdout, path)
+            == syntax_tree_with_every_string_blanked(working, path)):
+        return "strings"
     return "code"
 
 
@@ -102,6 +136,7 @@ def main(argv):
         verdict = compare_against_head(path)
         print("%-44s %s" % (path, {
             "prose": "prose only",
+            "strings": "prose, plus the text of string arguments",
             "code": "*** EXECUTABLE CODE CHANGED ***",
             "new": "new file, nothing at HEAD to compare",
         }[verdict]))
