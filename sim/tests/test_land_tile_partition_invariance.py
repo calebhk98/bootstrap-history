@@ -109,9 +109,9 @@ def _region_block(tile_ids):
     # is unchanged because every tile here shares the same one, and
     # fertility is the true area-weighted average (equal weights, because
     # every tile here has the same area and arable_fraction).
-    n = len(tile_ids)
-    area = _TILE_LAND_AREA_KM2 * n
-    fertility = sum(_TILE_FERTILITY[t] for t in tile_ids) / n
+    tile_count = len(tile_ids)
+    area = _TILE_LAND_AREA_KM2 * tile_count
+    fertility = sum(_TILE_FERTILITY[tile_id] for tile_id in tile_ids) / tile_count
     return {
         "land": {
             "land_area_km2": area,

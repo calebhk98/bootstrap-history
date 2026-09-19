@@ -84,8 +84,8 @@ _shg_emp0 = sum(s_shg.employees.values())
 class _ShgZeroRNG:
     def random(self):
         return 0.0
-    def sample(self, population, k):
-        return list(population)[:k]
+    def sample(self, population, count):
+        return list(population)[:count]
 s_shg.rng = _ShgZeroRNG()
 s_shg.civ = dict(s_shg.civ)
 s_shg.civ["hazards"] = [{"name": "TEST SACK", "years": [s_shg.year, s_shg.year],
@@ -131,8 +131,8 @@ class _AlwaysSackRNG:
     never on luck."""
     def random(self):
         return 0.0
-    def sample(self, population, k):
-        return list(population)[:k]
+    def sample(self, population, count):
+        return list(population)[:count]
 
 
 def _corpus_sack_scenario(hedge_node, n_done=300):
@@ -149,9 +149,9 @@ def _corpus_sack_scenario(hedge_node, n_done=300):
     return household
 
 
-def _expected_losable(s):
-    return sorted(node_id for node_id in s.done
-                  if node_id not in s.granted
+def _expected_losable(sim_state):
+    return sorted(node_id for node_id in sim_state.done
+                  if node_id not in sim_state.granted
                   and node_id != "corpus_dispersed")
 
 
@@ -367,8 +367,8 @@ check("...and the KNOWLEDGE LOST line for this exact save no longer "
 class _AlwaysZeroRNG:
     def random(self):
         return 0.0
-    def sample(self, population, k):
-        return list(population)[:k]
+    def sample(self, population, count):
+        return list(population)[:count]
 s_kr2 = sim(capital=1_000_000.0)
 _gc2 = sorted(S.closure(NODES, GOAL))
 _on_road_cands = [node_id for node_id in _gc2 if node_id not in S.Sim(NODES, PRICES, WAGES, GOODS).granted][:6]

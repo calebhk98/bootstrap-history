@@ -106,9 +106,9 @@ for _r in _RUB:
 # ...and the reason the sentinel existed - that nothing stopped you buying it -
 # is answered where it belongs, in the tree: you cannot use rubber until you
 # have gone and got some.
-def _anc_of(k, seen=None):
+def _anc_of(node_id, seen=None):
     seen = seen if seen is not None else set()
-    for prereq_id in NODES[k]["pre"]:
+    for prereq_id in NODES[node_id]["pre"]:
         if prereq_id not in seen:
             seen.add(prereq_id); _anc_of(prereq_id, seen)
     return seen

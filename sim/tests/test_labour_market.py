@@ -668,9 +668,9 @@ class SkillFamilyProximityTests(unittest.TestCase):
         # labourer -> smith (destination is a skilled, cross-family trade):
         # discounted - the same pair, opposite direction, different answer.
         down = labour_market._flow_proximity("smith", "labourer", destination_is_walkable=True)
-        up = labour_market._flow_proximity("labourer", "smith", destination_is_walkable=False)
+        upward = labour_market._flow_proximity("labourer", "smith", destination_is_walkable=False)
         self.assertEqual(down, 1.0)
-        self.assertLess(up, down)
+        self.assertLess(upward, down)
 
     def test_a_skill_close_shortage_trade_is_favoured_over_a_distant_one(self):
         # furnaceman (metal) is the only surplus trade; smith (metal, same

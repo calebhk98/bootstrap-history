@@ -4,10 +4,10 @@ from engine.proto.render import render_pretty
 
 
 def prepared(node_id):
-    s = sim(capital=1_000_000)
-    s.done.add(node_id)
-    s.artisans = 20.0
-    return s
+    sim_state = sim(capital=1_000_000)
+    sim_state.done.add(node_id)
+    sim_state.artisans = 20.0
+    return sim_state
 
 
 # Plate mirrors have substantial glassblower work. Generic artisans can supply

@@ -1124,7 +1124,7 @@ def _hazard_advice_names_hedges():
     hazard_sim = sim(civ="mexica_1500", manual=False)
     hazard_sim.fog = True
     hazard_sim.revealed = set()
-    for _i in range(45):
+    for _year in range(45):
         hazard_sim.step()
     counters = {node_id for node_id, _s2, _hazard_label in hazard_sim.HAZARD_COUNTERS["staff_loss"]}
     near = counters | {prereq_id for node_id in counters if node_id in NODES
@@ -1636,8 +1636,8 @@ check("commission can unblock the gate whose own advice is to commission",
 # never built it. The entry could never be cleared. Every one of those symptoms
 # is the same broken invariant: you cannot be running something you do not know
 # how to do.
-def _operating_subset_of_done(s_):
-    return sorted(s_.operating - s_.done)
+def _operating_subset_of_done(sim_state):
+    return sorted(sim_state.operating - sim_state.done)
 
 
 s = sim(capital=-100000.0, civ="norse_900ad")

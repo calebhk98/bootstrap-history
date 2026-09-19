@@ -61,6 +61,6 @@ check("the payroll uses the same derived wage quoted for one employee",
 
 detail = S._agent_dispatch(s, NODES, {"cmd": "labour", "trade": "smith"})
 check("labour detail exposes every wage component",
-      all(k in detail["trade"]["wage_foundation"] for k in
+      all(component in detail["trade"]["wage_foundation"] for component in
           ("food", "housing", "tools", "skill_and_difficulty",
            "demographic_scarcity", "local_trade_scarcity")), detail)

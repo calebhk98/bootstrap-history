@@ -12,9 +12,9 @@ from .harness import *  # noqa: F401,F403
 # =============================================================================
 _ms1, _ms1_ids = _mk_loom_sim(1, 60)          # one mature loom
 _k1 = _ms1_ids[0]
-_k2 = next(k for k in sorted(NODES)
-          if NODES[k].get("cat") == "textiles" and NODES[k].get("rev")
-          and k != _k1)
+_k2 = next(node_id for node_id in sorted(NODES)
+          if NODES[node_id].get("cat") == "textiles" and NODES[node_id].get("rev")
+          and node_id != _k1)
 _predicted = _ms1.goods_market_factor_if_opened(_k2)
 check("goods_market_factor_if_opened predicts a SECOND concern's day-one "
       "factor before it is opened, rather than the flat 1.0 every screen "

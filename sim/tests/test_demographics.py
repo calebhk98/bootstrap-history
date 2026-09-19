@@ -93,8 +93,8 @@ check("the population command answers ok and names the civilisation",
       _pop_out.get("ok") and _pop_out.get("civilisation"), _pop_out.get("civilisation"))
 check("every trade in the wage table gets a row, fog or no fog - this is "
       "demography, not the tech tree",
-      {r["trade"] for r in _pop_out.get("trades", [])} == set(WAGES),
-      sorted(set(WAGES) - {r["trade"] for r in _pop_out.get("trades", [])}))
+      {trade_row["trade"] for trade_row in _pop_out.get("trades", [])} == set(WAGES),
+      sorted(set(WAGES) - {trade_row["trade"] for trade_row in _pop_out.get("trades", [])}))
 check("the one-town framing is actually said, not only computed",
       "one household" in (_pop_out.get("what_this_means") or "").lower()
       or "ONE household" in (_pop_out.get("what_this_means") or ""),

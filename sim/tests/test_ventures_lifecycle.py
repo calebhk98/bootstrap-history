@@ -358,8 +358,8 @@ if _ln2_k:
 # there was "nothing to save". The resource actually short was staff time,
 # not money, and mothball asked about money alone.
 _s_mb = sim()
-_mb_id = next(k for k, n in NODES.items()
-              if n.get("up", 0) <= 0 and n.get("rev", 0) > 0 and _s_mb.is_venture(k))
+_mb_id = next(node_id for node_id, node in NODES.items()
+              if node.get("up", 0) <= 0 and node.get("rev", 0) > 0 and _s_mb.is_venture(node_id))
 _s_mb.done.add(_mb_id); _s_mb._done_changed()
 _s_mb.operating.add(_mb_id)
 _mb_sch, _mb_art = _s_mb.venture_hands(_mb_id)
@@ -377,10 +377,10 @@ check("...and says so, rather than only ever talking about money",
 # A concern with genuinely nothing to save - no money upkeep, not running,
 # so no staff held either - must still be refused honestly.
 _s_mb2 = sim()
-_mb2_id = next(k for k, n in NODES.items()
-               if n.get("up", 0) <= 0 and n.get("rev", 0) <= 0
-               and k not in _s_mb2.granted
-               and not (_s_mb2.never_abandon(k) and n["cat"] in _s_mb2.NEVER_ABANDON))
+_mb2_id = next(node_id for node_id, node in NODES.items()
+               if node.get("up", 0) <= 0 and node.get("rev", 0) <= 0
+               and node_id not in _s_mb2.granted
+               and not (_s_mb2.never_abandon(node_id) and node["cat"] in _s_mb2.NEVER_ABANDON))
 _s_mb2.done.add(_mb2_id); _s_mb2._done_changed()
 _mb2_ok, _mb2_msg = _s_mb2.mothball_work(_mb2_id)
 check("...but a thing with genuinely nothing to save (no money, no staff "

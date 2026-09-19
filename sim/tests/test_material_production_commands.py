@@ -18,7 +18,7 @@ from .harness import *  # noqa: F401,F403
 # certainly a copy-paste slip in the original; left exactly as found rather
 # than silently fixed. Reproduced here (instead of a stray NameError) so the
 # split changes nothing about what this check verifies.
-s = S.Sim
+_sim_class = S.Sim
 
 # --- BREAK: `buy nitre`. Saltpetre is made, not mined, and there was no
 # command that made any: only step(), which took 5% of a MANUAL player's
@@ -27,7 +27,7 @@ s_ni = sim(capital=100000.0)
 _laid = s_ni.build_nitre(20000)
 check("nitre beds can be laid by hand, and cost what the quote says",
       _laid == 20000 and abs(s_ni.capital
-                             - (100000.0 - 20000 * s.NITRE_COST_PER_M2
+                             - (100000.0 - 20000 * _sim_class.NITRE_COST_PER_M2
                                 * s_ni.price_index)) < 1e-6,
       (_laid, s_ni.capital))
 check("...and they actually supply saltpetre",

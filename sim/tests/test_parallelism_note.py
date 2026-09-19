@@ -13,8 +13,8 @@ from .harness import *  # noqa: F401,F403
 # every active project is purely waiting on the calendar.
 # =============================================================================
 _par = sim(capital=1_000_000.0)
-_par_target = next((k for k in _par.order
-                    if NODES[k]["yrs"] >= 2 and _par.can_start(k)), None)
+_par_target = next((node_id for node_id in _par.order
+                    if NODES[node_id]["yrs"] >= 2 and _par.can_start(node_id)), None)
 check("a real startable multi-year project exists to test the tutorial "
       "note against",
       _par_target is not None, _par_target)
@@ -27,8 +27,8 @@ if _par_target:
           "a_calendar_floor_is_not_exclusive_research_time" in _par_out
           and "else" in _par_note,
           _par_note)
-    _par_target2 = next((k for k in _par.order
-                         if NODES[k]["yrs"] >= 2 and _par.can_start(k)), None)
+    _par_target2 = next((node_id for node_id in _par.order
+                         if NODES[node_id]["yrs"] >= 2 and _par.can_start(node_id)), None)
     if _par_target2:
         _par_out2 = S._agent_dispatch(_par, NODES, {"cmd": "start", "id": _par_target2})
         check("...but only once - a second long project in the same run "
@@ -38,9 +38,9 @@ if _par_target:
 
 # --- free hours, shouted, when everything running is calendar-bound.
 _fh = sim(capital=1_000_000.0)
-_fh_target = next((k for k in _fh.order
-                   if NODES[k]["yrs"] >= 3 and NODES[k]["ph"] > 0
-                   and _fh.can_start(k)), None)
+_fh_target = next((node_id for node_id in _fh.order
+                   if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0
+                   and _fh.can_start(node_id)), None)
 check("a startable project with real founder-hours AND a real calendar "
       "floor exists to test this against",
       _fh_target is not None, _fh_target)

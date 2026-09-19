@@ -8,10 +8,10 @@ explains the break it guards.
 from .harness import *  # noqa: F401,F403
 
 
-def _big(rep=98.0, em=39.0, yr=250, cap=5000000.0):
+def _big(rep=98.0, eminence=39.0, year=250, cap=5000000.0):
     big_sim = sim(capital=cap)
     big_sim.done.update(list(NODES)[:1400]); big_sim._done_changed()
-    big_sim.reputation, big_sim.eminence, big_sim.year = rep, em, yr
+    big_sim.reputation, big_sim.eminence, big_sim.year = rep, eminence, year
     return big_sim
 
 _em = _big()
@@ -35,7 +35,7 @@ check("...and can be done again once enough years have passed",
 
 # It must not take the price when there is nothing to buy - the same rule
 # `bribe` learned the hard way.
-_quiet = _big(rep=40.0, em=1.0)
+_quiet = _big(rep=40.0, eminence=1.0)
 _rq = _quiet.reputation
 check("withdrawing when nobody is watching is refused, not charged",
       _quiet.withdraw_from_public_life()[0] is False

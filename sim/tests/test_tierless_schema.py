@@ -116,9 +116,9 @@ class TierlessSchemaTests(unittest.TestCase):
         node.pop("tier", None)
         tree["nodes"] = [node]
 
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
-            json.dump(tree, f)
-            path = f.name
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as temp_file:
+            json.dump(tree, temp_file)
+            path = temp_file.name
         try:
             with mock.patch.object(data, "TREE", path):
                 _, _, nodes, _, _ = data.load()

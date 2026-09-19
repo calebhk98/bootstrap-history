@@ -11,8 +11,8 @@ from .harness import *  # noqa: F401,F403
 # the same one `portfolio` reads back from - never a second formula that
 # could disagree with what actually happened.
 
-def _zero_lab(n):
-    return {trade: 0.0 for trade in n.get("lab", {})}
+def _zero_lab(node):
+    return {trade: 0.0 for trade in node.get("lab", {})}
 
 
 # --- a directed project jumps the queue, ahead of higher-`order` work that

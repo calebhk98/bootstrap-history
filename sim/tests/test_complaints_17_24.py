@@ -21,8 +21,8 @@ check("plague mortality immediately raises wages",
 
 # The risk response says that staff loss is an independently repeated wave.
 _risk = S._agent_dispatch(sim(civ="rome_100ad"), NODES, {"cmd": "risk"})
-_antonine = next(h for h in _risk["knowledge_risk"]["known_hazards_ahead"]
-                 if "Antonine" in h["name"])
+_antonine = next(hazard for hazard in _risk["knowledge_risk"]["known_hazards_ahead"]
+                 if "Antonine" in hazard["name"])
 check("plague risk exposes annual wave cadence and cumulative exposure",
       _antonine["staff_loss_wave_chance_per_year"] == 0.32
       and _antonine["remaining_annual_wave_checks"] > 1
@@ -47,7 +47,7 @@ _lap.done.add("patron_local")
 _lap.operating.add("patron_local")
 _found = S._agent_available(_lap, NODES, {"find": "lapping plate", "all": True})
 check("available phrase search includes a currently legal lapping plate",
-      "prc_lapping_plate" in {r["id"] for r in _found["available"]}, _found)
+      "prc_lapping_plate" in {node_entry["id"] for node_entry in _found["available"]}, _found)
 
 # The two power projects require the capabilities claimed by their prose.
 _hp_pre = set(NODES["en_high_pressure_engine"]["pre"])

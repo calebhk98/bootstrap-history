@@ -219,8 +219,8 @@ class WeatherTests(unittest.TestCase):
         # (4.25 standard deviations) and is not expected to be hit by a
         # sample this size; its own correctness is covered by the min()
         # bound above, not by requiring it be exercised here.
-        self.assertTrue(any(d >= agriculture.WEATHER_CEILING_MULTIPLIER - 1e-9
-                            for d in draws))
+        self.assertTrue(any(draw >= agriculture.WEATHER_CEILING_MULTIPLIER - 1e-9
+                            for draw in draws))
 
 
 class DeterminismTests(unittest.TestCase):
@@ -252,8 +252,8 @@ class DeterminismTests(unittest.TestCase):
         # rng argument would pass the identical-seed test above too.
         flows_a, _ = self._run_five_years(seed=1)
         flows_b, _ = self._run_five_years(seed=2)
-        self.assertNotEqual([f.weather_multiplier for f in flows_a],
-                            [f.weather_multiplier for f in flows_b])
+        self.assertNotEqual([flow.weather_multiplier for flow in flows_a],
+                            [flow.weather_multiplier for flow in flows_b])
 
     def test_repeated_calls_in_one_process_do_not_drift(self):
         # Runs the same scenario many times in a row in this one process,

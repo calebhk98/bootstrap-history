@@ -463,7 +463,7 @@ def _tree_opens_up():
         out.append((digest < 12000,
                     "%d bytes at %d%% of tree done with %d things startable"
                     % (digest, int(frac * 100), avail["count"])))
-    return all(ok for ok, _ in out), "; ".join(detail for _, detail in out)
+    return all(passed for passed, _ in out), "; ".join(detail for _, detail in out)
 
 
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
