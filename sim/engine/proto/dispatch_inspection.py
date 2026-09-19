@@ -3,10 +3,10 @@ log, score, risk, values, stuck, mines, capacity, portfolio, economy,
 changes, population, materials - every command whose job is to explain the
 current position rather than to change it.
 
-Split out of dispatch.py (see that file's own docstring for why): dispatch.py
-stays the composition point - the command table, the dispatcher, and every
-name protocol.py's shim re-exports - and imports these handlers back from
-here. Behaviour is unchanged and moved verbatim.
+dispatch.py stays the composition point - the command table, the
+dispatcher, and every name protocol.py's shim re-exports - and imports
+these handlers back from here (see dispatch.py's own docstring for why
+these live in a separate file).
 """
 
 from ..data import closure, topo_order
@@ -55,9 +55,9 @@ def _cmd_why(s, nodes, cmd, ended):
                 if node_id is None else
                 "id must be a name in quotes, not %s" % type(node_id).__name__}
     if node_id not in nodes:
-        # Only blame the fog when there IS any. With it off a break tester
-        # mistyped an id and was told the fog was limiting the suggestions,
-        # in a game they had explicitly started with the whole tree visible.
+        # Only blame the fog when there IS any: with fog off, the error must
+        # not claim fog is limiting the suggestions, in a game started with
+        # the whole tree visible.
         return {"ok": False, "error": "unknown node %r. did you mean: %s"
                 % (node_id, ", ".join(_did_you_mean(node_id, nodes, s=s))
                    or ("no idea, and under fog of war I can only suggest "
@@ -71,12 +71,10 @@ def _cmd_why(s, nodes, cmd, ended):
 
 def _cmd_path(s, nodes, cmd, ended):
     if getattr(s, "fog", False):
-        # THE REASON HAS TO BE THE REAL ONE. This said "you have not
-        # discovered this" for every id, including ones the player had
-        # already finished and could see `done: true` on in the same
-        # session. A player debugging that would go looking for a corrupt
-        # save. The command is switched off wholesale under fog, which is a
-        # different fact and the true one.
+        # THE REASON HAS TO BE THE REAL ONE: the command is switched off
+        # wholesale under fog, regardless of whether this particular node
+        # is already done, and the error must say that rather than implying
+        # any one id has not been discovered.
         return {"ok": False,
                 "error": "route planning is switched off under fog of war: "
                          "nobody can lay out a road to somewhere they have "
@@ -91,14 +89,11 @@ def _cmd_path(s, nodes, cmd, ended):
     remaining = [node_id for node_id in order if node_id not in s.done]
     out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in s.done,
            "remaining_count": len(remaining), "remaining": remaining}
-    # THE JOIN NOBODY HAD: "what the goal still needs" and "what I could
-    # start today" were two separate reports - this one, and `available`
-    # - and by midgame nearly everything on `available`'s several-hundred
-    # row list is irrelevant to any one goal. A Han player wrote their own
-    # regex script outside the game to intersect the two; an England
-    # player asked for exactly this. Do the intersection here, once,
-    # cheapest first, so it never has to be done by eye or by script
-    # again.
+    # THE JOIN: "what the goal still needs" and "what I could start today"
+    # are two separate reports - this one, and `available` - and by
+    # midgame nearly everything on `available`'s several-hundred row list
+    # is irrelevant to any one goal. Do the intersection here, once,
+    # cheapest first, so it never has to be done by eye or by script.
     _startable = sorted((node_id for node_id in remaining if s.can_start(node_id)),
                         key=lambda x: s.project_cost(x))
     out["startable_today_count"] = len(_startable)
@@ -111,42 +106,22 @@ def _cmd_path(s, nodes, cmd, ended):
         out["note"] = ("nothing on the route is startable today - see "
                        "'stuck' for what the nearest of them are waiting on")
     # A ROUTE CAN BE ENTIRELY TRUE AND ENTIRELY UNABLE TO PAY THE RENT.
-    # `path` was promoted into the welcome screen's own starter verbs
-    # because an earlier player called it the thing that reorganised
-    # their whole run - and a second player, who saw it immediately
-    # because of that promotion, reported the half that promotion
-    # exposed: early in any tree the critical path is almost pure
-    # knowledge, zero revenue, and this screen - now the game's own
-    # first suggestion - pointed firmly at it with no word that none of
-    # it earns a denarius. They found a profitable concern only by
-    # guessing to sort `available` by earnings, which nothing here or in
-    # the welcome text mentions. Following the game's own first piece of
-    # advice should not be how a new player walks into the opening debt
-    # trap this engine otherwise warns about everywhere else.
+    # Early in any tree the critical path is almost pure knowledge, zero
+    # revenue; following `path` with no word of that walks a new player
+    # straight into the opening debt trap this engine otherwise warns
+    # about everywhere else, unless this screen says so itself.
     #
-    # PROMOTING THIS SCREEN MADE THE PROBLEM IT REVEALS MORE DAMAGING, NOT
-    # LESS. Three more players hit this once `path` became a starter verb.
-    # One read the income gap correctly and recovered by abandoning `path`
-    # for `available sort earns reverse`, unprompted by anything in the
-    # game. A second started four DIFFERENT path items over five years -
-    # each individually affordable on the day it was started - and spent
-    # the next 24 years in a debt spiral with two insolvencies and a
-    # reputation crash, because each one's own affordability check has no
-    # memory of the others: "nothing warns that several individually
-    # affordable path items can be collectively unaffordable," in their
-    # own words, and they are right - `can_start` asks "could I begin
-    # this, today, on its own", which is a different and smaller question
-    # than "could I finish several of these together". A third reached
-    # the identical trap through `rush` instead.
-    #
-    # So this is not gated on already being insolvent any more - that
-    # caught the damage, never the cause, and by the time recurring
-    # income actually goes negative the debt is often already taken.
-    # Said plainly, every time the route itself cannot pay for itself,
-    # whether or not today's ledger happens to look fine yet; and said
-    # with the COMBINED bill of everything listed above, not each item's
-    # own affordability, which is the exact number these players were
-    # never shown before committing to more than one.
+    # The warning must not be gated on already being insolvent: that
+    # catches the damage, never the cause, and by the time recurring
+    # income actually goes negative the debt is often already taken. It
+    # has to fire every time the route itself cannot pay for itself,
+    # whether or not today's ledger happens to look fine yet - and it has
+    # to be said with the COMBINED bill of everything listed above, not
+    # each item's own affordability, because several individually
+    # affordable path items can be collectively unaffordable: `can_start`
+    # asks "could I begin this, today, on its own", which is a different
+    # and smaller question than "could I finish several of these
+    # together".
     if _startable and all(nodes[node_id]["rev"] <= 0 for node_id in _startable):
         _combined = sum(s.project_cost(node_id) for node_id in _startable)
         _raise = s.spending_power("start")
@@ -158,11 +133,10 @@ def _cmd_path(s, nodes, cmd, ended):
             "finds what actually pays today - building one of those "
             "alongside the route is not a detour from it, it is how you "
             "afford to keep walking it." % len(_startable))
-        # THE COMBINED BILL, not each item's own affordability. Several
-        # individually-affordable starts are not one affordable start;
-        # `can_start` has no memory of its own earlier answers, so the
-        # first time a player can see the total is here, where several
-        # are listed together.
+        # THE COMBINED BILL, not each item's own affordability: several
+        # individually-affordable starts are not one affordable start, and
+        # `can_start` has no memory of its own earlier answers, so this is
+        # where the total has to be added up.
         if _combined > _raise:
             out["these_together_cost_more_than_you_can_raise"] = (
                 "starting everything listed above would cost %s in "
@@ -173,17 +147,13 @@ def _cmd_path(s, nodes, cmd, ended):
                 "not all of them - and see what pays before spending "
                 "the rest."
                 % ("{:,.0f}".format(_combined), "{:,.0f}".format(_raise)))
-    # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW. A
-    # break tester drove a run mechanically from `path` after a sack:
-    # `path` listed lead_chamber as remaining, `start` answered "you built
-    # this once - restore it", and anything downstream said the same node
-    # was a missing prerequisite. They sat at 106 technologies and 760,403
-    # denarii from 460 AD to the horizon, because `path` never mentioned
-    # the one verb that would have moved them.
-    # A node you know but have SHUT does not appear above: it is done, so
-    # it is not remaining, and nothing downstream is blocked by it. It is
-    # still the thing a player driving from `path` most needs to see after
-    # a bad century, because its plant is gone and its income with it.
+    # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW: a
+    # node you know but have SHUT does not appear above (it is done, so it
+    # is not remaining, and nothing downstream is blocked by it), yet
+    # after a bad century it can be exactly the thing standing between the
+    # route and its income, because its plant is gone and its income with
+    # it. Only `restore` reopens it, so `path` has to say so explicitly or
+    # nothing on this screen points at the right verb.
     _shut = sorted(node_id for node_id in need
                    if node_id in getattr(s, "mothballed", set()) and node_id in s.done)
     if _shut:
@@ -243,11 +213,10 @@ def _stuck_work_in_hand(s, nodes):
 
 
 def _stuck_road_to_goal(s, nodes, _fog):
-    # THE ROAD TO THE GOAL, not the tree at large. A play tester with fifty
-    # nodes left and nothing startable was told "you have work in hand,
-    # money to pay for it and people to do it", because two hundred
-    # unrelated things elsewhere in the tree were startable. Nobody is
-    # stuck for want of a bottling shed.
+    # THE ROAD TO THE GOAL, not the tree at large: a report that leans on
+    # whether ANYTHING in the tree is startable is useless when hundreds
+    # of unrelated things are startable but none of them serves the goal.
+    # Nobody is stuck for want of a bottling shed.
     #
     # Returns (reason_or_None, goal_routing_off_under_fog) - the caller needs
     # the flag even on the years this has no reason to report, to explain at
@@ -267,28 +236,24 @@ def _stuck_road_to_goal(s, nodes, _fog):
                           s.start_reason(_near[0])[1]),
                 "the_nearest_few": _near[:5]}, _goal_routing_off_under_fog)
     elif _goal in nodes and _fog:
-        # SAY SO, THE WAY `rush` DOES. A blind Han run with the goal set
-        # to the junction transistor hit hundreds of affordable things
-        # late in the game and was told to open a profitable concern
-        # instead of being pointed at the one real blocker - not because
-        # this command was broken, but because the road-to-the-goal
-        # branch above is switched off under fog of war for exactly the
-        # reason 'path' gives for doing the same: naming what is left on
-        # a route to something not fully discovered would hand over the
-        # hidden tree. The silence read as "everything below is the real
-        # answer" when it was really "the one analysis that could answer
-        # this did not run". A player should be told that, not left to
-        # infer it from an unhelpful reply.
+        # SAY SO, THE WAY `rush` DOES: the road-to-the-goal branch above is
+        # switched off under fog of war for exactly the reason `path`
+        # gives for doing the same - naming what is left on a route to
+        # something not fully discovered would hand over the hidden tree.
+        # Silence here would read as "everything below is the real answer"
+        # when it is really "the one analysis that could answer this did
+        # not run", so the caller is handed _goal_routing_off_under_fog and
+        # must say so rather than leaving a player to infer it from an
+        # unhelpful reply.
         _goal_routing_off_under_fog = True
     return (None, _goal_routing_off_under_fog)
 
 
 def _stuck_started_nothing(s, _startable, _afford):
     # STARTING NOTHING IS THE COMMONEST WAY TO GET NOWHERE, and this
-    # command - whose whole job is "why you are not getting on" - said
-    # "nothing: you have work in hand, money to pay for it and people to do
-    # it" to a play tester on turn one, with no project running at all. It
-    # was the first thing they typed and it was false.
+    # command - whose whole job is "why you are not getting on" - must not
+    # report "you have work in hand, money to pay for it and people to do
+    # it" when no project is actually active.
     if s.active:
         return None
     _cheap = (min(_afford or _startable, key=lambda k: s.project_cost(k))
@@ -304,24 +269,22 @@ def _stuck_started_nothing(s, _startable, _afford):
 
 
 def _stuck_shut_ventures(s, nodes):
-    # AND WHAT YOU HAVE BUILT AND NEVER SWITCHED ON. A break tester read
-    # "NOTHING YOU COULD BEGIN" while two concerns sat finished and closed
-    # that between them raised their revenue by 71%.
+    # AND WHAT YOU HAVE BUILT AND NEVER SWITCHED ON: a report of "nothing
+    # you could begin" is incomplete while a finished, closed concern with
+    # revenue above upkeep sits unopened - reopening it needs no new
+    # building at all.
     _shut = sorted(node_id for node_id in s.done
                    if s.is_venture(node_id) and node_id not in s.operating
                    and nodes[node_id]["rev"] > nodes[node_id]["up"])
     if not _shut:
         return None
-    # DO NOT RECOMMEND A COMMAND THAT WILL FAIL. This used to pick
-    # the best-margin shut concern by revenue minus upkeep alone and
-    # tell the player to 'open' it, without ever checking whether
-    # open_venture would actually let them. A household deep in the
-    # credit-exhaustion/named-trade trap (see PATH_SEARCH.md) sits
-    # with free_art at 0.00-0.03 for centuries: this command was
-    # measured telling such a household "open lens_grinding", which
-    # needs 2.13 craftsmen to supervise and fails outright - advice
-    # that spends a turn on a refusal and reads as the game having
-    # lied about what it just told you to do.
+    # DO NOT RECOMMEND A COMMAND THAT WILL FAIL: picking the best-margin
+    # shut concern by revenue minus upkeep alone and telling the player to
+    # 'open' it is not enough, because a household deep in the
+    # credit-exhaustion/named-trade trap (see PATH_SEARCH.md) can have too
+    # little free staff capacity for open_venture to actually succeed.
+    # The recommendation has to check that it would work, not just that
+    # it would pay.
     _sch_free, _art_free = s.venture_staff_free()
     _shut_for_staff = getattr(s, "shut_for_staff", {})
     def _capex_now(_k):
@@ -444,11 +407,13 @@ def _stuck_startable_and_afford(s, nodes, _fog):
 
 
 def _cmd_stuck(s, nodes, cmd, ended):
-    # THE QUESTION EVERY TESTER ASKED, in different words. "There's no 'why
-    # am I stuck?' view - three separate 90-250-year stalls, each caused by
-    # one node blocked on one thing, each found by typing `why` at a
-    # guess." The pieces were all here; nothing put them in one place, and
-    # stall_diagnosis only spoke after eight years of insolvency.
+    # WHY AM I STUCK: several independent kinds of stall - work blocked, no
+    # road to the goal, nothing started, a shut venture, a binding raw
+    # material, no room for people, arrears, a credit freeze - can each
+    # keep a run motionless for decades, and stall_diagnosis alone only
+    # speaks once insolvency has already set in. This command gathers
+    # every check into one place instead of making a player find each
+    # cause by guessing at `why`.
     _fog = getattr(s, "fog", False)
     _startable, _afford = _stuck_startable_and_afford(s, nodes, _fog)
     _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(s, nodes, _fog)
@@ -458,11 +423,10 @@ def _cmd_stuck(s, nodes, cmd, ended):
     # what to fix first needs to see all of them, not just whichever is
     # checked first - see _compact_stuck in dispatch.py, which already
     # assumes this list can hold several entries. The order below is the
-    # order a player reads them in, and it is the same order the original,
-    # undecomposed version of this command produced them in: work in hand,
-    # the road to the goal, having started nothing, shut ventures, nothing
-    # startable or unaffordable, a binding raw material, no room for people,
-    # arrears, a credit freeze.
+    # fixed order a player reads them in: work in hand, the road to the
+    # goal, having started nothing, shut ventures, nothing startable or
+    # unaffordable, a binding raw material, no room for people, arrears, a
+    # credit freeze.
     _checks = (
         _stuck_work_in_hand(s, nodes),
         _goal_reason,

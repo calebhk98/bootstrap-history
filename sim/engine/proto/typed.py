@@ -379,10 +379,9 @@ def _available_consume_offset_heard_or_sort(out, low, i):
         out["heard_offset"] = int(_typed_number(nxt) or 0)
         return i + 2, True
     # SORT AND REVERSE, spelled the way a person would type them:
-    # 'available sort risk reverse'. A break tester paging through
-    # "632 more, nearest first" by hand, thirty at a time, is exactly
-    # the failure a typed synonym for the JSON 'sort' field exists to
-    # stop.
+    # 'available sort risk reverse'. Paging through a long list by hand,
+    # thirty at a time, is exactly the failure a typed synonym for the
+    # JSON 'sort' field exists to stop.
     if word == "sort" and nxt:
         out["sort"] = nxt
         return i + 2, True
@@ -469,12 +468,12 @@ def _parse_help(command, rest, words, nums, want_json):
 
 
 def _parse_step(command, rest, words, nums, want_json):
-    # A bare 'n' is one year, which is what it has always meant - but
-    # `step abc` is not a bare 'n'. That fell through to the default and
-    # silently advanced a year, while `step 0` and `step -5` were properly
-    # refused: a weird-play tester found the inconsistency and it is the
-    # worst kind, because the accepted case does something other than what
-    # was asked and says nothing.
+    # A bare 'n' is one year - but `step abc` is not a bare 'n', and must
+    # not silently fall through to the default and advance a year anyway
+    # while `step 0` and `step -5` are properly refused. Accepting
+    # unparseable input silently is the worst kind of inconsistency,
+    # because it does something other than what was asked and says
+    # nothing.
     if rest and not nums:
         return None, ("step takes a number of years, e.g. 'step 5', or "
                       "nothing at all for one. %r is not a number."
@@ -608,15 +607,12 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
         return None, ("%s needs the name of a technology, e.g. '%s "
                       "fud_wheelbarrow'. 'available' lists what you can "
                       "begin now." % (command, command))
-    # MATCHED CASE-INSENSITIVELY, NOT LOWERCASED. `WHY AG2_MARLING` was
-    # refused with "did you mean: ag2_marling", the game naming the right
-    # answer and declining to act on it - but flattening the case broke
-    # eleven ids that genuinely carry capitals, among them the whole
+    # MATCHED CASE-INSENSITIVELY, NOT LOWERCASED: flattening the case would
+    # break ids that genuinely carry capitals, among them the whole
     # cap_pure_2N/4N/6N/9N purity ladder, which sits on the critical path
-    # to germanium. A play tester lost the endgame to it and could only get
-    # past it by falling back to the raw JSON form. So: try what was typed,
-    # then try a case-insensitive match against the real ids, and keep
-    # whatever the tree actually calls it.
+    # to germanium. So: try what was typed, then try a case-insensitive
+    # match against the real ids, and keep whatever the tree actually
+    # calls it.
     #
     # THE WHOLE REST OF THE LINE, NOT JUST rest[0]. Every screen in this
     # game prints a NAME - "Horizontal loom", two words - and every one of
@@ -723,10 +719,10 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
         return None, ("%s needs something to %s, e.g. '%s iron 500'."
                       % (command, command, command))
     # 'buy mine coal 500' and 'quote mine iron 200' are the forms the help
-    # itself gives, and the first version of this parser took only the FIRST
-    # word and threw the material away - so every documented three-word buy
-    # failed with an error that listed the material the player had just
-    # typed. A weird-play tester lost the whole mining subsystem to it.
+    # itself gives, so this must read the SECOND word as the material too,
+    # not only the first - dropping it would fail every documented
+    # three-word buy with an error that lists the material the player
+    # just typed.
     out = {"cmd": command, "what": words[0].lower()}
     if len(words) > 1:
         out["material"] = words[1].lower()

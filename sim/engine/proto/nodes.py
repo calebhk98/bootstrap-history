@@ -19,11 +19,11 @@ def _norm_name(text):
     """Fold case and punctuation, so a typed name matches what the game
     printed however it was capitalised or punctuated.
 
-    Every screen in this game prints the NAME ("Horizontal loom") and every
-    command up to now took only the ID ("tex_horizontal_loom") - testers
-    found that jarring often enough to say so in almost identical words. A
-    player copying a name back exactly, in any case, with or without the
-    comma a name like "Loom, treadle" carries, has to land on the same key.
+    Every screen in this game prints the NAME ("Horizontal loom"), so a
+    command that only accepted the ID ("tex_horizontal_loom") would force
+    a player to translate what they just read. A player copying a name
+    back exactly, in any case, with or without the comma a name like
+    "Loom, treadle" carries, has to land on the same key.
     """
     return re.sub(r"[^a-z0-9]+", " ", str(text).lower()).strip()
 
@@ -90,15 +90,14 @@ def _downstream_of(k, nodes):
     return seen
 
 
-# REVERSE INDEX, BUILT ONCE PER TREE. _unlocked_by used to answer "who needs
-# k" by scanning every one of the tree's 2,849 nodes and all their req_any
-# groups, on EVERY call - and _downstream_of calls it once per node on the
-# frontier of its walk, so one `why`/`path`/`available` could fire it
-# thousands of times. Profiled on a fresh, unfogged rome_100ad game, a single
-# `available` made 6,954 such calls and 23.7 million dict lookups for 11.3s
-# of an 11.33s command. The fix: walk every node ONCE, appending it to the
-# reverse-index bucket for each id in its own `pre` and each `req_any`
-# group's `options`, so `_unlocked_by` becomes a dict lookup.
+# REVERSE INDEX, BUILT ONCE PER TREE: answering "who needs k" by scanning
+# every node and all their req_any groups on EVERY call is not viable
+# here, because _downstream_of calls this once per node on the frontier
+# of its walk, so one `why`/`path`/`available` can fire it thousands of
+# times over a tree of thousands of nodes. Walk every node ONCE instead,
+# appending it to the reverse-index bucket for each id in its own `pre`
+# and each `req_any` group's `options`, so `_unlocked_by` becomes a dict
+# lookup.
 #
 # CACHE KEYED ON id(nodes), WITH A STRONG REFERENCE TO nodes HELD ALONGSIDE
 # THE INDEX. `nodes` is normally the one global tree, loaded once and never
@@ -153,11 +152,11 @@ def _unlocked_by(k, nodes):
 def _did_you_mean(k, nodes, limit=8, s=None):
     """Names close to what was typed.
 
-    This was a plain substring test, so it helped with a truncation and not at
-    all with a typo: one wrong character and the answer was the literal words
-    "did you mean: no idea". Substring first, because a partial name is the
-    common case and an exact prefix is a better guess than anything fuzzy, then
-    difflib for the rest.
+    A plain substring test alone helps with a truncation and not at all
+    with a typo: one wrong character and a substring-only answer is the
+    literal words "did you mean: no idea". Substring first, because a
+    partial name is the common case and an exact prefix is a better guess
+    than anything fuzzy, then difflib for the rest.
     """
     query = str(k).lower()
     near = [result_id for result_id in nodes if query in result_id.lower()]
@@ -179,13 +178,11 @@ def _did_you_mean(k, nodes, limit=8, s=None):
                 near.append(result_id)
             if len(near) >= limit:
                 break
-    # NOT THROUGH THE FOG. `help fog` says in as many words that there is no
-    # way to view the whole tree, and `path` is properly disabled - and then a
-    # misspelling was answered out of the complete namespace. A weird-play
-    # tester typed `why transistor` and was handed junction_transistor and
-    # point_contact_transistor; `why vacuum`, `why steam` and `why
-    # semiconductor` each dumped eight hidden ids, and they pointed out that
-    # two-letter prefixes would reconstruct the entire tree. A suggestion is
+    # NOT THROUGH THE FOG: `help fog` says in as many words that there is
+    # no way to view the whole tree, and `path` is properly disabled, so a
+    # misspelling must not be answered out of the complete namespace - a
+    # loose enough query (a two-letter prefix, say) could otherwise
+    # reconstruct the entire tree one suggestion at a time. A suggestion is
     # still a statement about what exists.
     if s is not None and getattr(s, "fog", False):
         memo = {}

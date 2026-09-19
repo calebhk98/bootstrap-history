@@ -310,9 +310,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._wage_index_base = float(self.civ.get("wage_index", 1.0))
         self.state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT))
         # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
-        # playtester watched the Black Death take a third of their own staff
-        # and nothing else happen to the world around them, and asked why a
-        # mortality event this size left everybody ELSE's wages untouched.
+        # mortality event large enough to take a third of one household's
+        # own staff must not leave everybody ELSE's wages untouched, as if
+        # the rest of the world's labour market saw nothing happen.
         # self._pop_scale_base is this civilisation's OWN trend size - its
         # configured population against the same 65,000,000 reference every
         # downstream formula is calibrated to (see pop_scale's own comment

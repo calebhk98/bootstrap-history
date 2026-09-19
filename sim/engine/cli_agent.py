@@ -1,6 +1,6 @@
 """The machine-playable protocol: `agent`.
 
-Split out of engine/cli.py. `cmd_agent` is the JSON-in/JSON-out driver a
+`cmd_agent` is the JSON-in/JSON-out driver a
 script or another process talks to - see the module docstring in cli.py for
 the protocol table. It deliberately does not call `_apply_display_prefs` (a
 human terminal's own cosmetic settings have no business changing what a
@@ -45,11 +45,9 @@ def cmd_agent(a):
     tree, prices, nodes, wages, goods = load()
     goal = _goal_for_session(a, tree, nodes)
     label, order, bounties = load_strategy(a.strategy, nodes, goal)
-    # `run`/`compare`/`play` all take --mortal; `agent` silently did not, so
-    # the founder was immortal in every scripted or JSON-driven game no
-    # matter what was asked for - and the menu (below) was printing a
-    # "--mortal" flag on its suggested agent command line that argparse would
-    # have rejected outright, because the flag did not exist here at all.
+    # `run`/`compare`/`play` all take --mortal, so `agent` must accept it
+    # too, or the founder is immortal in every scripted or JSON-driven game
+    # no matter what was asked for.
     cfg = {"start_capital": STARTING_KITS[a.kit]["den"], "horizon_years": a.horizon,
            "immortal": not getattr(a, "mortal", False)}
     sim = Sim(nodes, order,
@@ -92,10 +90,9 @@ def cmd_agent(a):
 
     def emit(obj, op=None):
         # THE JSON LINE IS UNCHANGED, ALWAYS, REGARDLESS OF --pretty. It is
-        # written first, exactly as before pretty rendering existed, so a
-        # script reading only stdout sees byte-identical output whether or
-        # not a human also asked for a readable view. The readable view - if
-        # asked for - is a SEPARATE line on stderr, alongside the JSON, never
+        # written first, so a script reading only stdout sees byte-identical
+        # output whether or not a human also asked for a readable view. The
+        # readable view - if asked for - is a SEPARATE line on stderr, alongside the JSON, never
         # instead of it, so nothing that parses stdout has to change either.
         #
         # ALLOWED TO RAISE BrokenPipeError, on purpose. Every caller below
@@ -113,8 +110,8 @@ def cmd_agent(a):
     # able to start. On a new game the first line out is the whole briefing,
     # unasked, because there is nowhere else for them to learn it.
     # To STDERR, deliberately. stdout is the protocol and must stay exactly one
-    # reply per command: an unsolicited line there shifts every index and breaks
-    # anything parsing positionally, which it promptly did to my own tests.
+    # reply per command: an unsolicited line there shifts every index and
+    # breaks anything parsing positionally.
     if not (session and os.path.exists(session)):
         sys.stderr.write(json.dumps(
             {"welcome": _agent_help(sim),
@@ -134,11 +131,10 @@ def cmd_agent(a):
             return 1
         for command_obj in cmds:
             resp = _agent_dispatch(sim, nodes, command_obj)
-            # SAVE BEFORE YOU SPEAK. See the stdin loop below for why: the same
-            # ordering bug lived in both loops, and only the stdin one is what a
-            # human normally drives, so it is the one the playtesters actually
-            # hit, but a --script run piped through something that closes early
-            # loses exactly the same way.
+            # SAVE BEFORE YOU SPEAK: see the stdin loop below for why. The
+            # same reasoning applies here too - a --script run piped through
+            # something that closes early must not lose state that already
+            # happened, the same as the stdin loop below.
             if session:
                 save_state(sim, session)
             try:
@@ -166,11 +162,10 @@ def cmd_agent(a):
             except BrokenPipeError:
                 break
             continue
-        # The dispatcher guards non-object input and replies politely, and then
-        # THIS line used to kill the process: cmd.get on a bare null, number,
-        # string or list is an AttributeError. A playtester reopened the
-        # "malformed input ends your game" class through the quit check, one
-        # line after the guard that was supposed to prevent exactly that.
+        # The dispatcher guards non-object input and replies politely, but
+        # cmd.get on a bare null, number, string or list is an
+        # AttributeError, so THIS line needs its own isinstance guard too -
+        # the dispatcher's guard does not cover it.
         try:
             resp = _agent_dispatch(sim, nodes, cmd)
         except Exception as e:                      # never lose a session to a bug
@@ -178,18 +173,18 @@ def cmd_agent(a):
                     "error": "internal error handling that command: %s: %s. "
                              "The game is intact; try something else."
                              % (type(e).__name__, e)}
-        # SAVE FIRST, THEN SPEAK - the same fix `play` already has (see its own
-        # "SAVE FIRST, THEN SPEAK" comment), missing here until now. By this
-        # line `_agent_dispatch` has already mutated `s` in memory - a `step`
+        # SAVE FIRST, THEN SPEAK - the same fix `play` already has (see its
+        # own "SAVE FIRST, THEN SPEAK" comment). By this line
+        # `_agent_dispatch` has already mutated `s` in memory - a `step`
         # command has already moved the calendar - so writing that to disk
-        # cannot be left waiting on whether the reply is printed successfully.
-        # Two testers found the gap independently, the same way: piping `agent`
-        # through `head` closes stdout, SIGPIPE kills the process on the write
-        # below, and whatever had just happened - for one of them, a hundred
-        # years of `step` - was never written to the save at all, though it had
-        # genuinely happened. The game's own help promises you can "close the
-        # terminal, anything" and come back; a promise that holds only when
-        # nobody closes the pipe first is not that promise.
+        # cannot be left waiting on whether the reply is printed
+        # successfully: piping `agent` through something like `head` closes
+        # stdout, SIGPIPE kills the process on the write below, and
+        # whatever had just happened must already be on disk by then, or it
+        # is lost even though it genuinely happened. The game's own help
+        # promises you can "close the terminal, anything" and come back; a
+        # promise that holds only when nobody closes the pipe first is not
+        # that promise.
         if session:
             save_state(sim, session)
         try:

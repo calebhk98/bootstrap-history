@@ -29,12 +29,11 @@ class CapabilityMixin:
 
 
     # ---- DONE VERSUS OPERATING, MADE LOUD --------------------------------
-    # The corpus bug (see core.py's Sim.corpus_hedge, and the commit that
-    # introduced it) was one specific case of a general shape: a screen
-    # promised a running()-gated payout by reading has(). That one case is
-    # fixed now. This is the general case - every OTHER capability in
-    # CAPABILITY_INSTITUTIONS whose running()-gated effect a player can
-    # actually lose without any screen ever saying so.
+    # The corpus bug (see core.py's Sim.corpus_hedge) is one specific case
+    # of a general shape: a screen promising a running()-gated payout while
+    # reading has(). This table covers the general case - every OTHER
+    # capability in CAPABILITY_INSTITUTIONS whose running()-gated effect a
+    # player can actually lose without any screen ever saying so.
     #
     # Each value names what switches off, in the player's own words, not a
     # number - the numbers already live with the one function that computes
@@ -49,20 +48,13 @@ class CapabilityMixin:
     # like corpus, so closing it costs nothing measurable today, and warning
     # about it anyway would be exactly the false alarm this exists to avoid.
     #
-    # THAT REASONING IS SOUND AND ITS PREMISE IS NOW A COMPLAINT. This used to
-    # cite a dead `prep = self.running("plague_preparedness")` local in
-    # _shocks as evidence that nothing gated this on running(); that local has
-    # since been deleted as unused (commit ad627c2), so the citation is gone
-    # rather than merely stale. What it was evidence OF is the open question:
-    # somebody wrote a running() call for this node, in the right function, at
-    # the right point in the year, and whatever would have read it never
-    # landed. Closing a plague plan costs nothing BECAUSE the relief is
+    # Closing a plague plan costs nothing BECAUSE the relief is
     # has()-gated, and whether has() is the right gate for quarantine
-    # procedure and stockpiles, as opposed to for copies of a book already in
-    # other people's hands, was never argued. See
+    # procedure and stockpiles, as opposed to for copies of a book already
+    # in other people's hands, is an open question. See
     # Complaints/55-a-plague-plan-you-closed-still-saves-you.md. If that
-    # complaint resolves towards has(), this entry should become an explicit
-    # "nothing" rather than an absence.
+    # complaint resolves towards has(), this entry should become an
+    # explicit "nothing" rather than an absence.
     NOT_OPERATING_BENEFIT = {
         "academy_network": "Scholar and artisan training, standing, and its "
                            "reduction of eminence risk",
@@ -250,15 +242,12 @@ class CapabilityMixin:
     # knowledge that is the whole story. For an establishment it is not. A
     # school with nobody paid to keep it open trains no scholars; a patron you
     # stopped cultivating does not lend his name; a workshop whose doors are
-    # shut houses nobody. Every capability in this engine was gated on `has`,
-    # which meant a founder collected the twelve scholars a school supports,
-    # the ten household places a workshop adds and the sixty thousand of credit
-    # an imperial patron unlocks WITHOUT EVER OPENING ANY OF THEM - and, since
-    # upkeep follows what you run, without paying a denarius of their running
-    # cost either. A play tester put it exactly right: "I never worked out what
-    # `open` does for a work that earns nothing... paying to open them looked
-    # like pure loss, and I ignored them for two centuries with no visible
-    # penalty." They were correct, and that is the bug.
+    # shut houses nobody. Gating every capability in this engine on `has`
+    # alone would let a founder collect the twelve scholars a school
+    # supports, the ten household places a workshop adds and the sixty
+    # thousand of credit an imperial patron unlocks WITHOUT EVER OPENING ANY
+    # OF THEM - and, since upkeep follows what you run, without paying a
+    # denarius of their running cost either.
     #
     # This is the honest test, and it is `has` for everything that has no doors
     # to shut: a technique costs nothing to keep and cannot be closed.

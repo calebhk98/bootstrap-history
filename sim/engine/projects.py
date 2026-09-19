@@ -1,18 +1,16 @@
 """Starting, stopping, finishing and abandoning a piece of work.
 
-Split out of simulator.py, which had grown to 5,600 lines. These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and verified byte-identical.
+These are methods of Sim; they are a mixin only so that they can live in
+a file of their own.
 
-This file grew to 3,468 lines and 46 methods on its own, the same problem
-simulator.py was: one file nobody could edit without colliding with
-everyone else touching Sim's project mechanics. It is now a pure
-composition point, in the shape sim/engine/society.py and sim/engine/
-economy.py already established for the same reason. The 46 methods live
-in six sibling modules, grouped by subject rather than by size, and this
-file's only job is to compose them back into the single ProjectsMixin
-sim/engine/core.py's `class Sim(...)` already expects, unchanged, to
-inherit from:
+This file is a pure composition point, in the shape sim/engine/society.py
+and sim/engine/economy.py already establish for the same reason: one file
+holding all of a household's project mechanics becomes a file nobody can
+edit without colliding with everyone else touching them, so the 46
+methods live in six sibling modules, grouped by subject rather than by
+size, and this file's only job is to compose them back into the single
+ProjectsMixin sim/engine/core.py's `class Sim(...)` already expects,
+unchanged, to inherit from:
 
     projects_capability.py  is_venture/running/institution_units and the
                              rest of what a capability or scalable

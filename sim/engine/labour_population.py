@@ -241,25 +241,18 @@ class PopulationMixin:
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
 
-    # A PLAYER HIRED FIVE BLACKSMITHS AND WATCHED THE STANDING WAGE JUMP.
-    # Measured on the pre-fix build: market_supply("smith") was 22,500 hours -
-    # 11.25 people - because hired_hours_cap_base (data.py) is 25,000 hours
-    # "at full population scale", by its own comment, "what a provincial
-    # town's labour market can actually supply", and smith's old share of it
-    # was 0.9. Nothing in the game ever said "town"; rome_100ad.json says
-    # population 65,000,000 and urban_fraction 0.12 - about 7,800,000 town
-    # dwellers - so a player reasonably read "11.25 smiths" as a claim about
-    # the Roman Empire's entire smithing capacity, and it is an absurd claim
-    # at that scale.
-    #
-    # THE PLAYER IS RIGHT ABOUT THE SYMPTOM AND WRONG ABOUT ONE MECHANISM.
-    # Hiring five smiths where thousands exist should barely move the price;
-    # the old pool made it move a lot, because the pool was sized for a
-    # hamlet. Buying ten slaves is a DIFFERENT wall - household_room, this
-    # household's own capacity to feed, house and supervise people, checked
-    # in hire() below and nothing to do with market_supply - and is correctly
-    # left alone: a household of one cannot run ten slaves without somewhere
-    # to put them, in any economy, however deep its labour market runs.
+    # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
+    # supply pool sized for a single provincial town, not the whole country,
+    # would make hiring five smiths where thousands actually exist move the
+    # price a lot, because the pool itself is the size of a hamlet -
+    # something the game needs to say out loud rather than leave a player to
+    # infer (see the 'population' command, and the framing note in `hire`,
+    # `labour` and each civ's opening briefing). Buying ten slaves is a
+    # DIFFERENT wall - household_room, this household's own capacity to
+    # feed, house and supervise people, checked in hire() below and nothing
+    # to do with market_supply - and is correctly left alone: a household of
+    # one cannot run ten slaves without somewhere to put them, in any
+    # economy, however deep its labour market runs.
     #
     # TOWN_POPULATION_REFERENCE is the size of the single market this
     # household's reach actually represents, at full population scale (Rome
@@ -522,15 +515,13 @@ class PopulationMixin:
         """
         if not self.trade_available(t):
             return 0.0
-        # WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md SS1.1):
-        # this used to reconstruct an absolute headcount from
-        # civ["population"] (a fixed config number) times a ratio of two
-        # scalar fields (pop_scale/_pop_scale_base) - the one place in the
-        # engine that tried to answer "how many people are actually here" as
-        # a headcount rather than a ratio, built entirely out of ratios.
         # self.population.total (sim/world/demography.py's age-cohort
-        # model, now the engine's own running headcount) IS that number
-        # directly - no reconstruction needed.
+        # model) IS this civilisation's actual running headcount, and must
+        # be read directly rather than reconstructed from civ["population"]
+        # (a fixed config number) times a ratio of two scalar fields
+        # (pop_scale/_pop_scale_base) - that reconstruction would be the
+        # one place in the engine trying to answer "how many people are
+        # actually here" as a headcount built entirely out of ratios.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if t == "scholar":
@@ -570,18 +561,17 @@ class PopulationMixin:
         country, how many are within reach, how many you employ, and what
         share of the reachable pool that is.
 
-        A PLAYER ASKED FOR THIS DIRECTLY, and it dissolves most of the
-        "the labour market is the size of a village" complaint by itself:
-        "market can supply 22,500 hours" (the old number) says nothing
-        about whether that is most of the trade or a rounding error
-        against it. This says both, next to each other, once.
+        This has to say both at once: a bare "market can supply 22,500
+        hours" says nothing about whether that is most of the trade or a
+        rounding error against it, and leaves "the labour market is the
+        size of a village" unanswered.
         """
-        # WIRING MILESTONE 4: see national_trade_population's own comment,
-        # just above - the same reconstruction-by-ratio used to happen here,
-        # and self.population.total (the age-cohort model) is now the
-        # direct answer. `reference_pop`/`scale_from_baseline` are kept as
-        # the screen's own "before simulated changes" comparison, not as
-        # inputs to `pop` any more.
+        # self.population.total (the age-cohort model) is the direct
+        # answer for `pop`, not a reconstruction-by-ratio (see
+        # national_trade_population's own comment, just above).
+        # `reference_pop`/`scale_from_baseline` are kept as the screen's
+        # own "before simulated changes" comparison, not as inputs to
+        # `pop`.
         reference_pop = float(self.civ.get("population", 0.0))
         pop = self.population.total
         scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0

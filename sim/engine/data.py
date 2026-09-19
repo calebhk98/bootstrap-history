@@ -113,14 +113,12 @@ def load_resources() -> JSONDict:
 def load_geography() -> JSONDict:
     """Where things are, not just what they cost.
 
-    geography.json used to carry a single hard-coded `reach` per region,
-    measured from Italy, and nothing in this file ever read it: the `civs`
-    command printed `base_reach` from the civ file and that was the entire
-    effect either number had. Play Han China and the tree still behaved as
-    though Italy were reach 0 and Malaya, which Chinese and Malay traders
-    already sail to routinely, were an exotic reach-3 frontier. That is
-    backwards for every civilization except Rome. See Sim.region_reach and
-    Sim.material_reach for the fix: this loader just hands back the raw data.
+    Reach must be computed per civilization from real geography, never a
+    single hard-coded value measured from Italy: Han China's own distance
+    to Malaya, which Chinese and Malay traders already sail to routinely,
+    is not the same as its distance to Italy, a place that civilization has
+    never seen. See Sim.region_reach and Sim.material_reach for where reach
+    is actually computed; this loader just hands back the raw data.
     """
     return json.load(open(GEOFILE))
 
@@ -214,9 +212,9 @@ TRADES_ABSENT: FrozenSet[str] = frozenset(trade for trade, note in TRADE_NOTES.i
                           if "does not exist" in note.lower())
 
 # What kind of person a trade is, for the two aggregate pools the tech tree asks
-# for. A tester put the objection exactly: "a skilled blacksmith is not a skilled
-# writer, but the game treats all as artisans". These are not interchangeable and
-# from here on the model does not pretend they are.
+# for. A skilled blacksmith and a skilled writer are not interchangeable, so
+# scholar, labour and craft pools stay separate rather than being pooled as one
+# undifferentiated "artisan" figure.
 TRADE_FAMILY: Dict[str, str] = {
     "scholar": "scholar", "chemist": "scholar", "engineer": "scholar",
     "scribe": "scholar", "merchant": "scholar",
@@ -248,11 +246,10 @@ MONEY_WORDS: Dict[str, str] = {
 
 
 # THE SAME WORD IN BOTH FORMS, except for Rome where "den" is the established
-# abbreviation and appears throughout the notes. Having a long form and a
-# different short form produced sentences like "needs about 1959 pence, you
-# have 612 den" - one clause localised from the payload, the next from the
-# renderer - which a break tester quite reasonably filed as the currency
-# drifting between three names.
+# abbreviation and appears throughout the notes. Long form and short form must
+# stay in step: if one clause is localised from the payload and the next from
+# the renderer, a sentence can read "needs about 1959 pence, you have 612 den" -
+# the currency drifting between three names inside one message.
 MONEY_SHORT_WORDS: Dict[str, str] = {
     "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
     "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
@@ -277,10 +274,10 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     path = os.path.join(CIVDIR, name + ".json")
     if not os.path.exists(path):
         # "_"-prefixed files are schema and reference data, not playable
-        # civilizations - the same convention cli.py applies in both the places
-        # it lists this directory, and the one place that did not, which is why
-        # a play tester's typo was answered with "available: _TECH_EFFECTS,
-        # england_1300, ...".
+        # civilizations, so the listing below excludes them - the same
+        # convention cli.py applies everywhere it lists this directory. An
+        # unfiltered listing would answer a typo with "available:
+        # _TECH_EFFECTS, england_1300, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
@@ -401,14 +398,12 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
 
 # How many things rest on each node, for the whole tree at once.
 #
-# The old answer to "what depends on this" was, per node asked about:
+# "what depends on this" answered per node asked about, as
 #     blocks = {m for m in nodes if k in closure(nodes, m)}
-# - a full ancestor closure of every one of 2,831 nodes, every time. That is
-# affordable once, on `why`, and completely unaffordable for a table of thirty
-# rows, which is why the number a normal-play tester said was the only one that
-# decided anything was the one number `available` did not show. They ended up
-# scripting 460 separate `why` calls to recover it, and wrote that "competent
-# play degenerates into writing a scraper".
+# is a full ancestor closure of every one of 2,831 nodes, every time - affordable
+# once, on `why`, but not for a table of thirty rows, where the number of things
+# blocked on a node is exactly the figure a player needs to decide what to work
+# on next and `available` has to show it for every row at once.
 #
 # So: one reverse-topological pass, descendants held as bitmasks in Python
 # integers, computed once per tree and cached. Ordinary set unions would be
@@ -456,13 +451,12 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
         while stack:
             node_id, expanded = stack.pop()
             if expanded:
-                # RENAMED from the single-letter `m` this loop used to
-                # share with the "for m in nodes" loop above (a pure local
-                # rename - see CLAUDE.md SS7 - that also happened to be
-                # what mypy needed: reusing `m` for both a node id, a str,
-                # and this bitmask accumulator, an int, in the same
-                # function is exactly the kind of collision a type checker
-                # catches and a reader has to untangle by hand).
+                # node_mask, NOT a bare `m`: this function's own "for m in
+                # nodes" loop above uses `m` for a node id (a str);
+                # reusing it here for this bitmask accumulator (an int)
+                # would be exactly the kind of same-name-different-type
+                # collision a type checker catches and a reader has to
+                # untangle by hand.
                 node_mask = 0
                 for child_id in kids[node_id]:
                     node_mask |= (1 << index[child_id]) | masks.get(child_id, 0)
@@ -592,31 +586,28 @@ def closure(nodes: Nodes, goal: str) -> Set[str]:
     A `req_any` group is a substitution: any one option satisfies it, so
     counting all of them as required would both overstate the work and cycle
     outright - `junction_transistor -> silicon_path -> point_contact_transistor
-    -> junction_transistor` is a real loop once every option counts, and an
-    earlier attempt to index the tree that way was OOM-killed by it.
+    -> junction_transistor` is a real loop once every option counts, and
+    indexing the tree that way runs out of memory against it.
 
     But 125 of the tree's groups have exactly ONE option naming a real node.
     That is not a choice between routes; it is a prerequisite that happened to
     be authored as a substitution group. `mat_bulk_steel`'s manganese_supply
-    group is `{"mat_manganese": 1.0}` and nothing else, and because this walk
-    used to follow `pre` alone, manganese was not in the goal's closure. A
-    traced Rome run reached year 700 with 111 scholars, 428 artisans and 11.7
-    million denarii and had still not built `mat_bulk_steel` or any of the 51
-    nodes behind it - the whole road to the goal through steel, power and
-    semiconductor purification - because the one tier-4 node in the way was
-    never ranked ahead of the tree's 2,700 optional ones.
+    group is `{"mat_manganese": 1.0}` and nothing else, so following `pre`
+    alone would leave manganese out of the goal's closure - and with it,
+    `mat_bulk_steel` and the 51 nodes behind it: the whole road to the goal
+    through steel, power and semiconductor purification, never ranked ahead
+    of the tree's other, genuinely optional nodes.
 
     Following the single-option groups takes the goal's closure from 158 nodes
     to 185 and cannot introduce a cycle: `pre` plus every single-option
     `req_any` edge in the whole 2,833-node tree is acyclic, checked directly.
 
-    ONE RULEBOOK, deliberately. This lived as a separate `planning_closure` in
-    planner.py for a few hours, on the reasoning that the shared walk had to
-    stay as it was for fog and discovery. That reasoning is backwards: a
-    mandatory prerequisite is mandatory for `validate`'s count, for `why`'s
-    "full chain behind it" and for what the fog reveals, not only for the
-    planner. A second copy of "what does the goal need" is how this project
-    got a household capped at six scholars while its own optimizer held 146.
+    ONE RULEBOOK, deliberately: a mandatory prerequisite is mandatory for
+    `validate`'s count, for `why`'s "full chain behind it" and for what the
+    fog reveals, not only for the planner, so this is the one closure()
+    every one of them calls rather than each keeping its own copy. A
+    second copy of "what does the goal need" is how this project got a
+    household capped at six scholars while its own optimizer held 146.
     """
     need, stack = set(), [goal]
     while stack:
@@ -701,8 +692,7 @@ def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
     on what "no --goal" means and what an unknown one is told, instead of
     each command writing `a.goal or tree["meta"]["goal_node"]` itself and
     drifting - the same "one rulebook" reasoning as closure()'s own
-    docstring, and this project has shipped that exact second-opinion bug
-    enough times this week to stop inviting a sixth.
+    docstring.
     """
     if not name:
         return tree["meta"]["goal_node"]
@@ -764,15 +754,12 @@ STARTING_KITS: Dict[str, StartingKit] = {
     "merchant":    {"den": 4000,  "desc": "a modest trading capital. You can fund one real venture."},
     "rich_merchant":{"den": 20000,"desc": "wealthy but well under the equestrian census of 100,000."},
     "equestrian":  {"den": 100000,"desc": "the equestrian census exactly. Conspicuous."},
-    # "the medians sit inside the noise band" is what this used to claim, and a
-    # break tester called it false. They were right, though their measurement
-    # (technologies built by year 12: 8 destitute, 51 poor_scholar, 143
-    # rich_merchant) was of the OPENING rather than the finish, which is the
-    # part money moves most. Measured on the finish as well - Rome, 8 runs a
+    # "the medians sit inside the noise band" is not true of the whole kit
+    # range: measured on the finish, not just the opening - Rome, 8 runs a
     # kit, one seed - the median year the transistor is reached runs 476
     # destitute, 489 poor_scholar, 468 rich_merchant, 434 absurd. The first
     # three are inside each other's spread; a million denarii is not. So the
-    # claim was true of the middle of the range and false at the top of it,
+    # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
     "absurd":      {"den": 1000000,"desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
@@ -791,26 +778,23 @@ DEFAULTS: SimulationDefaults = dict(
     # premise and the sweep shows it is also a worse one. Pick a kit with --kit.
     start_capital=400,
     founder_arrival_age=35,
-    # 2,000, NOT 2,400. Everyone you HIRE is modelled at HOURS_PER_PERSON_YEAR
-    # = 2,000 - "a 10-hour day, 250 days, less feasts" - and the founder was
-    # given 2,400, twenty per cent more than a hired man, with no illness, no
-    # travel, no administration and no bad weather. There is no story in which
+    # 2,000, NOT 2,400: everyone you HIRE is modelled at HOURS_PER_PERSON_YEAR
+    # = 2,000 - "a 10-hour day, 250 days, less feasts" - and the founder must
+    # match that, not get twenty per cent more hours than a hired man, with
+    # no illness, no travel, no administration and no bad weather. There is no story in which
     # the same person-year is worth more hours for you than for the smith you
     # pay. A modern 40-hour week over 52 weeks with no holiday at all is 2,080.
     founder_hours_per_year=2000,
     director_hours_per_year=1800,
-    # WHAT "A PROVINCIAL TOWN'S LABOUR MARKET CAN SUPPLY" USED TO MEAN FOR
-    # EVERY TRADE ALIKE - smith, scholar, millwright, all sharing one fixed
-    # fraction of this single number. A player hired five blacksmiths and
-    # watched the standing wage jump sharply, reasonably read that as a
-    # claim about the Roman Empire's entire smithing capacity (nothing told
-    # them otherwise) and called it absurd - correctly, for smiths. This is
-    # still the baseline for the trades genuinely meant to be thin (scarce
-    # or literacy-bound ones - see labour.py's market_supply): common, urban
-    # trades now read a realistically-sized town's worth of their own
+    # THIS BASELINE APPLIES ONLY TO SCARCE OR LITERACY-BOUND TRADES (see
+    # labour.py's market_supply), not to every trade alike: common, urban
+    # trades read a realistically-sized town's worth of their own
     # (labour.py's TOWN_POPULATION_REFERENCE and TRADE_DENSITY, cited
-    # there) instead of a fraction of this number, which is why it did not
-    # need to change.
+    # there), never a fraction of this single number. A fixed fraction of
+    # one number shared by smith, scholar and millwright alike would make
+    # hiring five blacksmiths read as a claim about the Roman Empire's
+    # entire smithing capacity, which is absurd for a trade a real town
+    # supports in real depth.
     hired_hours_cap_base=25000,
     revenue_ramp_years=3,
     suspicion_danger=25.0,

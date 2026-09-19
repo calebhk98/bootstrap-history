@@ -87,11 +87,10 @@ class CapacityMixin:
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
-    # literacy_elite, apply_tech_effects (society.py) raises them when paper,
-    # printing, schools and libraries are built, and until now nothing else in
-    # the engine ever read either number. A scribe cost the same to hire in a
-    # society where two people in a hundred could read as in one where nine
-    # could.
+    # literacy_elite, and apply_tech_effects (society.py) raises them when
+    # paper, printing, schools and libraries are built. Nothing else reading
+    # either number would let a scribe cost the same to hire in a society
+    # where two people in a hundred could read as in one where nine could.
     #
     # `scholar` is drawn from the lettered, propertied class - literacy_elite
     # in the civ file, "fraction of the propertied class that can read". The
@@ -100,10 +99,10 @@ class CapacityMixin:
     # wider literacy_general pool of anyone who can read at all. `merchant` is
     # left out on purpose: an agent working on commission is not, in this
     # period, chiefly a reader.
-    # electrician was simply left out, and a play tester found the hole: their
-    # machinists stopped dead at the literacy ceiling while `train electrician
-    # 20` succeeded and handed them twenty-seven. It is a taught trade that
-    # reads drawings, exactly like the other four.
+    # electrician belongs in this set too: it is a taught trade that reads
+    # drawings, exactly like the other four, so excluding it would let it
+    # bypass the literacy ceiling that caps machinists, chemists,
+    # engineers and opticians.
     LITERATE_TRADES = frozenset({"scholar", "scribe", "engineer", "chemist",
                                  "machinist", "optician", "electrician"})
     # The literacy this file's trade shares and staff ceilings were already
@@ -153,13 +152,12 @@ class CapacityMixin:
             lit, ref = self.civ.get("literacy_elite", 0.0), self.LITERACY_REFERENCE_ELITE
         else:
             lit, ref = self.civ.get("literacy_general", 0.0), self.LITERACY_REFERENCE_GENERAL
-        # NOT CLAMPED AT ONE. Rome starts AT the reference, so this returned
-        # exactly 1.0 for Rome for ever: printing, movable type, a school and
-        # three academies raised literacy_general from 0.12 to 0.27 and moved
-        # the specialist ceiling not at all. A play tester watched theirs sit
-        # at "5.9 in total, ever, at any price" through all of it and called
-        # the whole mechanism dead. It is the one thing the argument for
-        # printing rests on: a society that reads more can staff more.
+        # NOT CLAMPED AT ONE: Rome starts AT the reference, so clamping here
+        # would return exactly 1.0 for Rome for ever, no matter how much
+        # printing, movable type, schools and academies raise
+        # literacy_general above it - moving the specialist ceiling not at
+        # all. It is the one thing the argument for printing rests on: a
+        # society that reads more can staff more.
         #
         # Bounded at four, because a lettered pool cannot outgrow the town
         # without the town growing, and because the tech effects that feed it
@@ -297,27 +295,24 @@ class CapacityMixin:
     def _literate_wall_refusal(self, trade, cap, have):
         """The refusal hire() and train() give when literate_capacity() bites.
 
-        SAY HOW MANY YOU CAN HAVE, NOT ONLY THAT YOU CANNOT HAVE SIX. A play
-        tester asked for six machinists against a ceiling of 5.9, holding
-        NONE, and read "will not supply more than 5.9 in total, ever, at any
-        price" as being capped out. They stopped asking, and a run sat
-        frozen for two hundred years with seventeen million denarii in the
-        bank; changing the one number to four started it moving again in
-        four. Say the number they should type.
+        SAY HOW MANY YOU CAN HAVE, NOT ONLY THAT YOU CANNOT HAVE SIX: a
+        ceiling quoted as "will not supply more than 5.9 in total, ever, at
+        any price" reads as being capped out entirely, even when the
+        requester holds none and a smaller request would succeed. Say the
+        number they should type.
 
-        AND DO NOT BLAME LITERACY FOR A WALL IT DID NOT BUILD. The old text
-        read "this society's literacy will not supply more than X" for
-        every trade alike, which is a real description of the Norse scribe
-        case and a false one of the Rome scholar case: Rome's literacy_elite
-        starts at 0.900 against a field capped at 1.0, so literacy itself
-        can never move this ceiling by more than about eight per cent,
-        while the actual quantity doing the work is hired_hours_cap_base -
-        this household's own reach into the labour market - and, for
-        scholar, the institutional pool literate_capacity() now folds in
-        (see its docstring). Both matter; only one is literacy, and saying
-        only "literacy" when the market-reach term is doing most of the
-        work is exactly the kind of statement a play tester built a run
-        around and lost two centuries to.
+        AND DO NOT BLAME LITERACY FOR A WALL IT DID NOT BUILD: "this
+        society's literacy will not supply more than X" for every trade
+        alike is a real description of the Norse scribe case and a false
+        one of the Rome scholar case. Rome's literacy_elite starts at
+        0.900 against a field capped at 1.0, so literacy itself can never
+        move this ceiling by more than about eight per cent, while the
+        actual quantity doing the work is hired_hours_cap_base - this
+        household's own reach into the labour market - and, for scholar,
+        the institutional pool literate_capacity() now folds in (see its
+        docstring). Both matter; only one is literacy, and saying only
+        "literacy" when the market-reach term is doing most of the work
+        misleads a player into pulling the wrong lever.
         """
         _room = max(0.0, cap - have)
         _whole = int(_room + 1e-9)
@@ -436,13 +431,12 @@ class CapacityMixin:
         ("blast_furnace", ROOM_PLACES_BLAST_FURNACE),
         ("telegraph_electric", ROOM_PLACES_TELEGRAPH_ELECTRIC),
         ("steam_high_pressure", ROOM_PLACES_STEAM_HIGH_PRESSURE),
-        # met_open_hearth_furnace, NOT "bessemer_openhearth" - same stale id
-        # STAFF_CAPACITY_SOURCES carried below until it was corrected there;
-        # this second table was not updated in the same pass, so `k in
-        # self.nodes` silently dropped it from every piece of advice this
-        # function gives and the sixty-five places an open-hearth furnace is
-        # actually worth (see staff_capacity(), which DOES use the right id)
-        # were never once offered as a reason to build or reopen one.
+        # met_open_hearth_furnace, NOT "bessemer_openhearth": a stale id
+        # here silently drops out of `k in self.nodes` filtering, from
+        # every piece of advice this function gives, without any error -
+        # the sixty-five places an open-hearth furnace is actually worth
+        # (see staff_capacity(), which uses the right id) then never get
+        # offered as a reason to build or reopen one.
         ("met_open_hearth_furnace", ROOM_PLACES_MET_OPEN_HEARTH_FURNACE),
         ("railway", ROOM_PLACES_RAILWAY),
         ("power_grid", ROOM_PLACES_POWER_GRID),
@@ -472,22 +466,21 @@ class CapacityMixin:
     def _room_advice(self):
         """What raises the CEILING on people, which is not what buys people.
 
-        The household-room refusal handed back _staff_advice, which names
-        hiring, commissioning and buying - every one of which needs room you do
-        not have. A play tester ran into a ceiling of 166.9 against a node
-        wanting 200 craftsmen and wrote that none of the three remedies the
-        game's own message suggests works. They were right: the room comes from
-        institutions and heavy industry, and nothing pointed at those.
+        The household-room refusal must not hand back _staff_advice, which
+        names hiring, commissioning and buying - every one of which needs
+        room you do not have. The room comes from institutions and heavy
+        industry, and this has to point at those instead.
         """
-        # A CLOSED ROOM SOURCE IS NOT A MISSING ONE. staff_capacity() already
+        # A CLOSED ROOM SOURCE IS NOT A MISSING ONE: staff_capacity() already
         # drops a source's places the moment its venture is not running (see
-        # STAFF_CAPACITY_SOURCES's must_be_running), and the advice below used
-        # to filter only on `k not in self.household.done` - so a school built, then
-        # shut for want of a supervisor, vanished from this text entirely: not
-        # counted (correctly), and never named as the cheapest way back,
-        # either. A player who hit the ceiling it had been holding up was
-        # told to build endowment_land or court an imperial patron instead of
-        # simply reopening what they already owned.
+        # STAFF_CAPACITY_SOURCES's must_be_running), so the advice below must
+        # distinguish never-built (`k not in self.household.done`) from
+        # built-but-not-running - a school built, then shut for want of a
+        # supervisor, must still be named as the cheapest way back, not
+        # just dropped from the count. Filtering only on `done` would tell
+        # a player who hit the ceiling it had been holding up to build
+        # endowment_land or court an imperial patron, instead of simply
+        # reopening what they already own.
         reopen = [(node_id, add) for node_id, add in self.ROOM_SOURCES
                   if node_id in self.household.done and node_id in self.nodes and node_id not in self.household.operating
                   and self.is_venture(node_id)]
@@ -698,11 +691,10 @@ class CapacityMixin:
         ("blast_furnace",          0.0,   STAFF_ARTISANS_BLAST_FURNACE, 0.0, False, True),
         ("telegraph_electric",     STAFF_SCHOLARS_TELEGRAPH_ELECTRIC, STAFF_ARTISANS_TELEGRAPH_ELECTRIC, 0.0, False, True),
         ("steam_high_pressure",    0.0,   STAFF_ARTISANS_STEAM_HIGH_PRESSURE, 0.0, False, True),
-        # met_open_hearth_furnace, NOT "bessemer_openhearth", which is the id
-        # this line carried for as long as it existed and which is not in the
-        # tree: self.has() of a node that does not exist is False for ever, so
-        # the sixty-five artisans the late game's biggest single training step
-        # was supposed to hand over were never handed over once.
+        # met_open_hearth_furnace, NOT "bessemer_openhearth", which is not in
+        # the tree: self.has() of a node that does not exist is False
+        # forever, so the sixty-five artisans the late game's biggest single
+        # training step is supposed to hand over would never be handed over.
         ("met_open_hearth_furnace", STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE, STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE, 0.0, False, False),
         ("railway",                STAFF_SCHOLARS_RAILWAY, STAFF_ARTISANS_RAILWAY, 0.0, False, True),
         ("power_grid",            STAFF_SCHOLARS_POWER_GRID, STAFF_ARTISANS_POWER_GRID, STAFF_DIRECTORS_POWER_GRID, False, True),
@@ -710,67 +702,44 @@ class CapacityMixin:
         # people can this household feed, house and oversee" - answered by
         # the tech tree's own finance/organisation branch
         # (data/branches/40_finance_institutions.json) instead of by a
-        # furnace. A player asked to play as Walmart or Amazon, and every
-        # wall they actually hit (see literate_capacity, household_room,
-        # buy_slaves) is this one: supervision and housing, never market
-        # depth. Rome and Han's own dice-free trials already reach several
-        # thousand employees on the INDUSTRIAL entries above alone (see this
-        # commit's own measurement); what they have never been given credit
-        # for needing is the organisational technology history actually used
-        # to run a household that big - books honest enough that a manager
-        # far from you cannot simply lie about what he did with your money,
-        # tied housing, and a network of branches in other towns. These
-        # nodes already sit in the tree, already cost founder-hours and
-        # denarii to build, and until now did nothing but sit there.
+        # furnace. A player asked to play as Walmart or Amazon hits this
+        # wall (see literate_capacity, household_room, buy_slaves):
+        # supervision and housing, never market depth. Rome and Han's own
+        # dice-free trials already reach several thousand employees on the
+        # INDUSTRIAL entries above alone; what a household that big also
+        # needs is the organisational technology history actually used to
+        # run one - books honest enough that a manager far from you cannot
+        # simply lie about what he did with your money, tied housing, and a
+        # network of branches in other towns.
         #
-        # fin_societas ("Partnership... Legally recognised, but partners
-        # remain personally liable") is deliberately NOT here despite being
-        # the most obvious "share the watching" node in the branch: Rome's
-        # own civilisation file grants it for free in year one
-        # (starting_techs, rome_100ad.json), so any effect hung on it would
-        # not be a choice a founder makes, it would be a silent day-one
-        # buff to every single Rome run, dice-free included - exactly the
-        # "materially faster" failure this project's own brief warns
-        # against, and it was CAUGHT this way: a regression test expecting
-        # a fresh sim's director pool at exactly 2,000 hours read 2,216
-        # after one step with a one-line version of this entry that gave
-        # fin_societas a director. No other node touched here is a starting
-        # grant for any of the five civilisations (checked by hand against
-        # every civ file's own starting_techs).
-        #
-        # fin_trial_balance, the top of fin_double_entry -> fin_ledger ->
-        # fin_trial_balance: "the foundation of trust between owner and
-        # manager across distance. Without it, the manager can simply lie."
-        # That sentence is the entire argument for why a Roman household
-        # could field a deputy who runs a concern the founder never visits -
-        # this is the accounting, not a bigger market, so it buys clerks
-        # (ar) and deputies (di), never scholars or the ceiling on craftsmen
-        # a furnace trains.
         # fin_societas ("Partnership between two or more parties to share
         # profits and losses. Legally recognised, but partners remain
-        # personally liable") IS here, and the reasoning that kept it out was
-        # wrong. It was left unwired because Rome grants it in starting_techs
-        # and so any effect would be "a silent day-one buff to every Rome run,
-        # not a player choice". But a starting grant is not a bug to be
-        # routed around, it is the whole mechanism by which these five
-        # civilisations differ from one another: Rome is the only one of the
-        # five whose own file hands it over, and Rome beginning with a legally
-        # recognised partnership form while a Norse or Mexica founder must
-        # build one is exactly the asymmetry the starting_techs list exists to
-        # express. The real fault in a silent buff is the silence, not the
-        # buff, so this is attributed wherever capacity is attributed.
-        #
-        # fin_societas is NOT in this table, though it was tried here first.
-        # A director in this table is a trained deputy who can run something
-        # the founder never visits, and fin_trial_balance below is the node
-        # whose own note argues for exactly that ("the foundation of trust
-        # between owner and manager across distance. Without it, the manager
-        # can simply lie"). A partner is a different thing: somebody beside
-        # you sharing the watching, not somebody you can trust at a distance,
+        # personally liable") is deliberately NOT here, even though Rome's
+        # own civilisation file grants it for free in year one
+        # (starting_techs, rome_100ad.json) and no other node touched here
+        # is a starting grant for any of the five civilisations (checked by
+        # hand against every civ file's own starting_techs) - hanging a
+        # director on a starting grant would be a silent day-one buff to
+        # every single Rome run, not a choice a founder makes. A director in
+        # this table is a trained deputy who can run something the founder
+        # never visits, and fin_trial_balance below is the node whose own
+        # note argues for exactly that ("the foundation of trust between
+        # owner and manager across distance. Without it, the manager can
+        # simply lie"). A partner is a different thing: somebody beside you
+        # sharing the watching, not somebody you can trust at a distance,
         # and the tree already distinguishes the two. So the partnership's
         # effect lives in supervision_room() instead, where it reads as "one
         # more capable person to oversee with" rather than as a deputy the
-        # accounting has not yet been invented to supervise.
+        # accounting has not yet been invented to supervise - and where
+        # Rome beginning with a legally recognised partnership form while a
+        # Norse or Mexica founder must build one is exactly the asymmetry
+        # the starting_techs list exists to express, attributed there rather
+        # than routed around.
+        #
+        # fin_trial_balance, the top of fin_double_entry -> fin_ledger ->
+        # fin_trial_balance, is the accounting, not a bigger market, so it
+        # buys clerks (ar) and deputies (di), never scholars or the ceiling
+        # on craftsmen a furnace trains.
         ("fin_trial_balance",      0.0,   STAFF_ARTISANS_FIN_TRIAL_BALANCE, STAFF_DIRECTORS_FIN_TRIAL_BALANCE, False, False),
         # fin_company_town ("Employer provides housing, food, and goods to
         # workers... Highly profitable but politically dangerous"): the
@@ -886,11 +855,12 @@ class CapacityMixin:
         # STAFF_CAPACITY_SOURCES is the whole list, in one place, because the
         # planner needs to read it too. A plan built from the tech tree alone
         # cannot see any of this: nothing in the goal's prerequisite closure
-        # mentions a school, so a purely structural plan walked into
-        # quantum_solidstate_theory's demand for eight trained scholars with a
-        # society that tops out at 5.9 of them and sat there until the horizon
-        # ran out. The list had to stop being an if-chain only this function
-        # could read before the planner could be taught to build the school.
+        # mentions a school, so a purely structural plan can walk into
+        # quantum_solidstate_theory's demand for eight trained scholars
+        # against a society that tops out at 5.9 of them and sit there
+        # until the horizon runs out, unless the planner can read the same
+        # table this function reads rather than an if-chain only this
+        # function could see.
         for key, _sc, _ar, _di, scaled, must_run in self.STAFF_CAPACITY_SOURCES:
             if not (self.running(key) if must_run else self.has(key)):
                 continue
@@ -910,58 +880,49 @@ class CapacityMixin:
         scholars *= self.literacy_factor("scholar")
         # you cannot keep staff you cannot pay
         # a famous school attracts students and patrons it did not have to pay for
-        # WAGES ARE A REAL CHARGE NOW (see wage_bill), so this ceiling is no
-        # longer "what you could pay for": it is what you can pay for WITHOUT
-        # eating the surplus you need in order to build anything. The first
-        # version of the explicit wage bill hired to the old affordability
-        # ceiling and the household then consumed the entire surplus: revenue
-        # 32,000, upkeep 17,000, wages 12,000, and exactly nothing left to spend
-        # on the work, for two centuries. A programme whose payroll is its whole
-        # income is not a programme.
+        # WAGES ARE A REAL CHARGE (see wage_bill), so this ceiling must be
+        # more than "what you could pay for": it must leave room WITHOUT
+        # eating the surplus needed to build anything, or hiring to the
+        # edge of affordability could let payroll consume the entire
+        # surplus, leaving nothing to spend on the work itself. A
+        # programme whose payroll is its whole income is not a programme.
         #
-        # SPARE USED TO BE revenue() MINUS UPKEEP() ALONE, which is the upkeep of
-        # BUILT WORKS and says nothing about living_cost - rent, appearances, tax
-        # and (via wage_bill) the staff you ALREADY carry. On turn one, with 400
-        # denarii, 232/yr of income and a 230/yr household, that left "spare"
-        # reading a healthy 267 while the true surplus was 3.5. auto_hire spent
-        # against the healthy number, not the true one. Subtracting living_cost
-        # here is what "what you can pay for" has to mean if it is to mean
-        # anything: money already going to rent and to people you already
-        # employ is not there to hire more people with.
+        # SPARE MUST SUBTRACT living_cost() TOO, not just revenue() minus
+        # upkeep() (the upkeep of BUILT WORKS alone): living_cost also
+        # covers rent, appearances, tax and (via wage_bill) the staff
+        # already carried. Subtracting living_cost here is what "what you
+        # can pay for" has to mean if it is to mean anything: money already
+        # going to rent and to people already employed is not there to
+        # hire more people with.
         spare = max(0.0, (self.revenue() - self.upkeep() - self.living_cost())
                     * self.rep_factor()
                     + max(0.0, self.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / (self.STAFF_ANNUAL_WAGE_REFERENCE * self.price_index * self.wage_index)
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
-        # this institutional ceiling (see step(), section 1). It used to be
-        # added with no affordability check of its own at all - this ceiling's
-        # `scale` only ever throttled sc/ar, which are BOTH ZERO before you
-        # have built a workshop or a school, so the extra six-person headroom
-        # went through at full strength regardless of income. A tester's turn
-        # one hired 1.32 artisans and 0.38 scholars on 400 denarii and a net
-        # income of 3.5/yr, taking living cost to 699.9 and capital to -688.
-        # Folding extra into the SAME denominator this ceiling is scaled
-        # against is what makes "grow the staff toward what you can house and
-        # pay" true of the headroom hiring and not just the institutional kind.
+        # this institutional ceiling (see step(), section 1). It must be
+        # folded into the SAME denominator this ceiling is scaled against,
+        # not added with no affordability check of its own: sc/ar are BOTH
+        # ZERO before a workshop or a school is built, so an unconditional
+        # extra would let the headroom hiring go through at full strength
+        # regardless of income. Folding it in is what makes "grow the staff
+        # toward what you can house and pay" true of the headroom hiring
+        # and not just the institutional kind.
         extra = self.supervision_room()
-        # NO FLOOR. This read max(0.10, ...), so a household with no surplus at
-        # all still hired a tenth of its headroom - about 0.6 craftsmen, some
-        # 250 a year in wages, against a net income of 3.5. A break tester
-        # turned auto_hire on, did nothing else whatever, and was in debt
-        # bondage ten steps later. The whole careful affordability calculation
-        # above was undone by the floor beneath it: "grow the staff toward what
-        # you can house and pay" has to be able to mean nobody.
+        # NO FLOOR: a household with no surplus at all must be able to hire
+        # nobody. A floor such as max(0.10, ...) would still hire a tenth
+        # of the headroom regardless of affordability, undoing the whole
+        # calculation above - "grow the staff toward what you can house and
+        # pay" has to be able to mean nobody.
         scale = min(1.0, afford / max(1.0, scholars + artisans
                                       + extra * self.STAFF_EXTRA_HEADROOM_WEIGHT))
         self.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.
-        # Softened after a first pass made every small civilization fail outright.
         # A 4.5 million person society CAN eventually staff a semiconductor
-        # programme, it just has to grow into it. Making that impossible was a
-        # modelling error, not a finding.
+        # programme, it just has to grow into it: making that impossible
+        # would be a modelling error, not a finding.
         pop = (self.STAFF_POP_SCALE_FLOOR
                + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
@@ -1009,16 +970,14 @@ class CapacityMixin:
     def supervision_room(self):
         """People you can direct and pay BEYOND what your institutions train.
 
-        staff_capacity is a ceiling on what a school, a workshop and a patron
-        produce and support. It is not a ceiling on how many men you can hire
-        off the street, which is limited by money and by the market. Conflating
-        the two put a hard wall across the Norse run: it needed thirty craftsmen
-        for interchangeable parts against an institutional ceiling of 27.6, and
-        a society of a million and a half could never cross the gap however rich
-        it got. The old model cleared it by handing every founder four artisans
-        on arrival, which is the thing a tester objected to and which I removed;
-        this is the honest version of the same headroom. You hire them, you pay
-        them every year, and you can only supervise so many.
+        staff_capacity is a ceiling on what a school, a workshop and a
+        patron produce and support. It must not also be treated as a
+        ceiling on how many men you can hire off the street, which is
+        limited by money and by the market instead: conflating the two
+        would put a hard wall across a run needing more craftsmen than an
+        institutional ceiling alone supplies, one no amount of wealth
+        could ever cross. This is that honest headroom. You hire them,
+        you pay them every year, and you can only supervise so many.
         """
         room = (self.SUPERVISION_ROOM_SELF
                 + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * self.household.directors_extra
@@ -1162,15 +1121,14 @@ class CapacityMixin:
         # units 1.0 (a run that never expands sees the identical multiplier),
         # and SQRT rather than linear beyond that - because these multipliers
         # already compound with one another (a school, an academy and a
-        # freedman staff open together and their factors multiply), and a
-        # break tester's Rome run climbed school_founded to 8.85 units and
-        # academy_network to 8.75 on the back of literacy growth alone, which
-        # at a linear rate would have multiplied hired_cap by roughly 9 x 13
-        # from these two terms alone. Diminishing returns belong on what a
-        # place trains, same as they already do on what it costs to found
-        # (institution_unit_cost) - a second school teaches nearly as many
-        # more people as the first did; a ninth does not teach nine times as
-        # many as one did.
+        # freedman staff open together and their factors multiply), and at a
+        # linear rate a household that grows several such institutions to
+        # many units apiece on the back of literacy growth alone would see
+        # hired_cap multiplied to an absurd degree from these terms alone.
+        # Diminishing returns belong on what a place trains, same as they
+        # already do on what it costs to found (institution_unit_cost) - a
+        # second school teaches nearly as many more people as the first
+        # did; a ninth does not teach nine times as many as one did.
         if self.running("school_founded"):
             cap *= 1.0 + self.SCHOOL_FOUNDED_HIRING_COEFFICIENT * self.institution_units("school_founded") ** self.HIRING_MULTIPLIER_EXPONENT
         if self.running("freedman_staff"):
@@ -1235,12 +1193,11 @@ class CapacityMixin:
         """Name the remedy, not just the shortfall - and only remedies you could
         actually have heard of.
 
-        This advice told a tester to "build workshop_first" for ten years while
-        `why workshop_first` replied "you have never heard of that", from the
-        same program in the same second. They called it the single most confusing
-        thing in the game and they were right. Hiring is always sayable, because
-        the labour market is in front of you; a named institution is not, until
-        it is.
+        Advice that says "build workshop_first" while `why workshop_first`
+        replies "you have never heard of that" from the same program in the
+        same second is a contradiction, not help. Hiring is always
+        sayable, because the labour market is in front of you; a named
+        institution is not, until it is.
         """
         bits = []
         for node, why in self.STAFF_SOURCES.get(kind, []):
@@ -1286,13 +1243,11 @@ class CapacityMixin:
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.
 
-        WAGE HOURS BELONG HERE, and their absence was the worst thing two naive
-        testers found. `work` kept its own separate tally, so a founder could
-        report "your_hours_left_this_year: 0.0" after a full 2,400 hours of paid
-        labour and then complete eight projects worth 2,044 founder-hours in the
-        same year. One of them called it "a free second year inside every year"
-        and correctly identified it as the dominant strategy in the game. There
-        is one year, and one pair of hands.
+        WAGE HOURS BELONG HERE: keeping a separate tally for `work` would let
+        a founder sell an entire year of hours for wages and then still
+        spend a full year's worth of hours on projects in the same year -
+        a free second year inside every year. There is one year, and one
+        pair of hands.
         """
         return (getattr(self.household, "teaching_hours_this_year", 0.0)
                 + getattr(self.household, "wage_hours_this_year", 0.0))
@@ -1300,10 +1255,10 @@ class CapacityMixin:
     def household_room(self):
         """How many more people this household can feed, house and oversee.
 
-        One number, used by `hire` and by `buy` alike. They used different ones
-        - which is to say `buy` used none - and a weird-play tester was told to
-        their face they could take six more people and then took seven with the
-        other verb.
+        One number, used by `hire` and by `buy` alike: using different
+        ones - or, worse, none at all for one of the two - would let a
+        player be told one capacity through one verb and exceed it
+        through the other.
         """
         return (self.staff_capacity()[1] + self.supervision_room()
                 - self.headcount())

@@ -63,12 +63,12 @@ class StartingMixin:
             return False, "you have %.0f denarii" % self.household.capital
         before = self.household.scandal
         prot_before = self.household.protection
-        # DO NOT CHARGE FOR NOTHING. This took the money and then said, in the
-        # same breath, "you had no scandal to answer and are already as
-        # protected as money can make you, so this bought nothing" - a break
-        # tester lost 5,000 to a single mistyped command that way, with no cap
-        # and no confirmation. Work out whether it would move anything BEFORE
-        # taking the money, and refuse if it would not.
+        # DO NOT CHARGE FOR NOTHING: taking the money and then saying, in
+        # the same breath, "you had no scandal to answer and are already
+        # as protected as money can make you, so this bought nothing"
+        # would charge for a purchase that does nothing. Work out whether
+        # it would move anything BEFORE taking the money, and refuse if
+        # it would not.
         if before <= 0.0005:
             spent = self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd + amount
             income = max(1.0, self.revenue())
@@ -76,10 +76,11 @@ class StartingMixin:
             already = min(self.BRIBE_PROTECTION_CAP,
                           (self.household.bribes_ytd / (income * self.BRIBE_INCOME_SHARE)) * self.w["bribability"])
             if would - already < 0.005:
-                # SAY WHICH IT IS. A break tester was refused `bribe 1` at 0%
-                # protection and told they were "already as protected as money
-                # can make you", which is false and reads as a bug. One denarius
-                # buys nothing measurable; a thousand would.
+                # SAY WHICH IT IS: telling somebody they are "already as
+                # protected as money can make you" when in fact one
+                # denarius is simply too little to buy anything measurable
+                # is false, and reads as a bug. The two refusals must stay
+                # distinct.
                 _floor = 0.005 * (max(1.0, self.revenue()) * self.BRIBE_INCOME_SHARE) / max(
                     1e-9, self.w["bribability"])
                 if already < 0.29:
@@ -92,12 +93,12 @@ class StartingMixin:
                 return False, ("you have no scandal to answer and you are already "
                                "as protected as money can make you here, so this "
                                "would buy nothing. Nothing was changed.")
-        # NEVER TAKE MORE THAN IT CAN SPEND. Both things a bribe buys are
-        # bounded: scandal stops at zero and the protection it buys saturates
-        # at 0.30. A break tester typed `bribe 1000000`, got exactly the same
-        # 0% -> 32% as `bribe 100`, and was left with nothing at all - one
-        # command, no cap, no warning, and the run was over. What a man cannot
-        # be paid to do more of, he cannot be paid more for.
+        # NEVER TAKE MORE THAN IT CAN SPEND: both things a bribe buys are
+        # bounded, scandal stops at zero and the protection it buys
+        # saturates at BRIBE_PROTECTION_CAP, so taking an arbitrarily
+        # large sum for the same bounded effect would leave a player with
+        # nothing for no additional benefit. What a man cannot be paid to
+        # do more of, he cannot be paid more for.
         bribability = max(1e-9, self.w["bribability"])
         for_scandal = self.household.scandal * self.BRIBE_DENARII_PER_SCANDAL_POINT / bribability
         income = max(1.0, self.revenue())
@@ -112,12 +113,10 @@ class StartingMixin:
         self.household.bribes_ytd = self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd + amount
         self.household.scandal = max(0.0, self.household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
         self.update_protection()
-        # BOTH THINGS IT BUYS. A break tester spent 500 denarii against a
-        # scandal of zero, read "scandal 0.00 -> 0.00", and wrote it down as
-        # money silently burned. It was not: bribes_ytd feeds protection, which
-        # is what keeps an accusation from being made in the first place. A
-        # reply that names only the half that did not move is what made a real
-        # effect look like a bug.
+        # BOTH THINGS IT BUYS: a bribe against zero scandal still feeds
+        # bribes_ytd into protection, which keeps an accusation from being
+        # made in the first place. Reporting only the half that did not
+        # move would make a real effect look like money silently burned.
         msg = "scandal %.2f -> %.2f for %.0f denarii" % (before, self.household.scandal, amount)
         if refused > 0.5:
             msg += ("; %s denarii of what you offered was not taken, because "
@@ -189,11 +188,11 @@ class StartingMixin:
     def post_bounty(self, k):
         """Pay well over the odds, save 65% of your own hours, gain visibility."""
         node = self.nodes[k]
-        # BOUNTY_PRICE_MULTIPLIER x the cost THIS society would actually incur,
-        # not x an abstract base. A playtester found `why` quoting 188 denarii
-        # to build a node while `bounty` demanded 588 for the same thing,
-        # because the bounty ignored the civilization and price factors the
-        # build applies.
+        # BOUNTY_PRICE_MULTIPLIER x the cost THIS society would actually
+        # incur, not x an abstract base: applying the multiplier to a base
+        # cost that ignores the civilization and price factors the build
+        # applies would make `bounty` quote a wildly different price than
+        # `why` does for the same node.
         price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(k)
                  * self.material_cost_factor(k) * self.cost_money_factor())
         if price > self.household.capital:
@@ -253,11 +252,10 @@ class StartingMixin:
     def _record_substitution_gap(self, group):
         """Record which group failed and what would have satisfied it.
 
-        WHICH GROUP, AND WHAT WOULD SATISFY IT. "no viable option in a
-        required substitution group (fuel, vessel, etc.)" was the one
-        blocked-reason a play tester never decoded in a whole run: it
-        names no candidate and no fix, and the parenthesis is a guess
-        at what the group might be about rather than what it is.
+        WHICH GROUP, AND WHAT WOULD SATISFY IT: "no viable option in a
+        required substitution group (fuel, vessel, etc.)" names no
+        candidate and no fix, and the parenthesis is a guess at what the
+        group might be about rather than what it is.
         A GROUP KEY IS A SLUG, NOT PROSE. Surfacing it verbatim put
         "unknown_source" in front of a player, which is data, not
         English. Say it as words.
@@ -475,14 +473,15 @@ class StartingMixin:
     def _check_missing_prereqs(self, k, node, ignore_trade, _memo, _why):
         missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done]
         if missing:
-            # NAME ONLY WHAT YOU HAVE HEARD OF. A tester wrote a twenty-line
-            # crawler that did nothing but read this message, and mapped 163
-            # nodes - the entire ancestor closure of the transistor - in eight
-            # rounds, while `why` and `path` dutifully refused every one of them.
-            # Fog that one error message undoes is not fog. The formatting
-            # itself lives in missing_prereq_message (fog.py) now, shared with
-            # `bounty`, so there is exactly one fog filter for this sentence
-            # rather than one per caller.
+            # NAME ONLY WHAT YOU HAVE HEARD OF: printing every missing
+            # prerequisite by raw id regardless of visibility would let a
+            # script crawl the entire hidden ancestor closure through
+            # repeated calls to this one message, while `why` and `path`
+            # dutifully refuse every one of them. Fog that one error
+            # message undoes is not fog. The formatting itself lives in
+            # missing_prereq_message (fog.py) now, shared with `bounty`,
+            # so there is exactly one fog filter for this sentence rather
+            # than one per caller.
             #
             # THIS is the call the profiler found: missing_prereq_message
             # calls is_visible() on every missing prerequisite, which
@@ -661,13 +660,12 @@ class StartingMixin:
         return None
 
     def _check_none_left_trades(self, k, node, ignore_trade, _memo, _why):
-        # AND SOMEBODY HAS TO BE LEFT. A trade you taught still counts as
-        # existing after the last of them has died or been poached, so `why`
-        # and `available` said CAN START NOW while the project, once begun,
-        # counted down four years and was abandoned with the spend lost - the
-        # trade check asked whether the trade existed and never whether anyone
-        # could be had. A play tester lost six projects in one year to it and
-        # could only find out by starting them.
+        # AND SOMEBODY HAS TO BE LEFT: a trade you taught still counts as
+        # existing after the last of them has died or been poached, so a
+        # check that only asks whether the trade exists, never whether
+        # anyone could actually be had, would let `why` and `available`
+        # say CAN START NOW for a project that later counts down and is
+        # abandoned with the spend lost.
         # People already being TAUGHT count: they will be ready, and starting
         # work that lands the year they qualify is the right thing to do.
         _none_left = [] if ignore_trade else sorted(
@@ -701,20 +699,19 @@ class StartingMixin:
         # is_visible() on a prerequisite chain, which is another recursive
         # descent nobody needs when only the boolean was asked for.
         if state_interest_score < self.STATE_WARY_THRESHOLD and not self.running("patron_local"):
-            # NAME THE NODE, by the word you would type. "Get at least a local
-            # patron first" was the whole message, and a play tester who read
-            # it several times never connected it to `patron_local`, which was
-            # sitting startable in the list in front of them the entire time.
+            # NAME THE NODE, by the word you would type: a description like
+            # "get at least a local patron first" with no id given leaves a
+            # player unable to connect it to `patron_local`, even while it
+            # sits startable in the list in front of them.
             #
-            # BUT ONLY IF THEY HAVE HEARD OF IT. A Mexica play tester read this
-            # exact line in `available`, typed the command it gave them, and
-            # was told "you have never heard of any such thing" - by the same
-            # engine, one command later. Naming an undiscovered id here is the
-            # third instance of one filter living in one place: start_reason
-            # had it, `bounty` skipped it, `why` leaked another node's id
-            # through a kb path, and this line skipped it too. The advice is
-            # worth nothing when the command it gives is refused, and under
-            # fog it is worse than nothing, because it is a free reveal.
+            # BUT ONLY IF THEY HAVE HEARD OF IT: naming an undiscovered id
+            # here has to pass the same visibility filter every other id
+            # this engine surfaces does, or a player who types the exact
+            # command this line just gave them is told "you have never
+            # heard of any such thing" one command later. The advice is
+            # worth nothing when the command it gives is refused, and
+            # under fog it is worse than nothing, because it is a free
+            # reveal.
             return False, (("the state is wary of this (state interest %.1f); "
                            "%s"
                            % (state_interest_score, self._patron_advice("patron_local",
@@ -816,16 +813,13 @@ class StartingMixin:
         ok, why = self.start_reason(k)
         if not ok:
             return False, why
-        # YOU MAY COMMIT PAST WHAT YOU HOLD, AND NOT PAST WHAT ANYONE WILL LEND.
-        # `help economy` states exactly that contract, and nothing enforced the
-        # second half. A break tester started all 104 available projects in a
-        # fresh England game - 43,914 denarii of work in hand against 400 in
-        # cash and a displayed credit limit of 1,503 - and was at -3,672 one
-        # step later. Committing to something you cannot yet afford is
-        # realistic project accounting and stays; committing to thirty times
-        # what anyone will advance you is not a plan, it is an accounting
-        # fiction, and the limit the player read a second earlier has to mean
-        # something.
+        # YOU MAY COMMIT PAST WHAT YOU HOLD, AND NOT PAST WHAT ANYONE WILL
+        # LEND: `help economy` states exactly that contract, and it has to
+        # be enforced here. Committing to something you cannot yet afford
+        # is realistic project accounting and stays; committing to many
+        # times what anyone will advance you is not a plan, it is an
+        # accounting fiction, and the limit the player read a moment
+        # earlier has to mean something.
         price = self.project_cost(k)
         # WHAT IS LEFT TO PAY, not the whole bill. Money already sunk into this
         # node - by you stopping it, or by the creditors stopping it - comes

@@ -25,16 +25,15 @@ from constants import declare
 class ProgressMixin:
     # -- main loop ----------------------------------------------------------
 
-    # A HIRED TRADE'S HOURS ARE A TOTAL, NOT A TOLL DUE EVERY YEAR. Before this,
-    # a project wanting 1,200 smith-hours over a 4-year calendar floor demanded
-    # exactly 300 a year, every year, whatever the trade could actually supply:
-    # three smiths free or thirty, it drew the same 300 and wasted the rest. A
-    # break tester asked the obvious question about it: "why do some researches
-    # require a labor hours/year? Could you not spend half as much for twice as
-    # long? I can see labour being a CAP - you can't do a billion hours in a
-    # year - but a company being unable to spend twice as much for half as long
-    # feels wrong." Both halves were right, and lab_year_draw is the honest
-    # shape of the constraint: a TOTAL (n["lab"][t], drawn down in
+    # A HIRED TRADE'S HOURS ARE A TOTAL, NOT A TOLL DUE EVERY YEAR. A project
+    # wanting 1,200 smith-hours over a 4-year calendar floor must not demand
+    # exactly 300 a year, every year, regardless of what the trade can
+    # actually supply: three smiths free or thirty should not draw the same
+    # 300 and waste the rest. Labour is a genuine CAP - nobody can do a
+    # billion hours in a year - but a company able to field more hands must
+    # be able to spend twice as much for half as long, not be held to a
+    # fixed yearly toll. lab_year_draw is the honest shape of the
+    # constraint: a TOTAL (n["lab"][t], drawn down in
     # st["lab_left"]), a per-year CEILING somewhat above the pace the node was
     # calibrated at (a site has only so many benches, so extra hands beyond a
     # multiple of that still go to waste), and a maximum calendar SPAN past
@@ -273,13 +272,11 @@ class ProgressMixin:
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
         else:
             st.pop("short_of_trade", None)
-        # THE DEADLINE. A trade that never clears its balance used to mean the
-        # project crept forward for ever at whatever sliver of progress could
-        # be found, which is how `logarithms` sat at 5.0 founder-hours for two
-        # hundred and seventy-five years in a civilisation that could field
-        # 8,750 scribe-hours against the 10,000 it wanted: technically still
-        # moving, never actually finishing, and never SAID to have failed.
-        # People die and what they knew goes with them; nothing here pretends
+        # THE DEADLINE: without one, a trade that never clears its balance
+        # would let a project creep forward forever at whatever sliver of
+        # progress could be found - technically still moving, never
+        # actually finishing, and never SAID to have failed. People die
+        # and what they knew goes with them; nothing here pretends
         # otherwise.
         if st["yrs"] >= self.lab_max_span(k) and any(value > 0.5 for value in lab_left.values()):
             unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
@@ -468,12 +465,8 @@ class ProgressMixin:
     # ---- WHAT A RISKY NODE ACTUALLY COSTS IN CALENDAR TIME -----------------
     # `effective_risk` and `calendar_floor` answer two separate questions -
     # "how likely is the next roll to fail" and "how many years before there
-    # even IS a next roll" - and left a player to multiply them together by
-    # hand. A player who had already won the game did exactly that by force
-    # of repeated bad luck: point_contact_transistor, 45% risk and a 4-year
-    # floor, failed six times running and cost "roughly two dozen years", and
-    # they filed it as a node whose stated "4-year floor" was nothing like
-    # its real calendar cost. A 45%-per-attempt, 4-year-floor node is not a
+    # even IS a next roll" - and must not be left for a player to multiply
+    # together by hand. A 45%-per-attempt, 4-year-floor node is not a
     # 4-year project; on the bare geometric series 1/(1-p) it is 1.82
     # attempts, and even that understates it for anything past the first
     # failure, because retry learning (RETRY_RISK_FLOOR, RETRY_CALENDAR_CAP

@@ -22,21 +22,18 @@ def _cmd_start(s, nodes, cmd, ended):
     if node_id not in nodes:
         return {"ok": False, "error": "unknown node id %r. use {\"cmd\":\"available\"} "
                                       "or {\"cmd\":\"why\",\"id\":...} to find valid ids" % node_id}
-    # SAY UP FRONT WHEN THE SOCIETY CANNOT STAFF IT. A play tester started
-    # arithmetic_positional, which wants 2,500 scribe-hours a year against
-    # a national ceiling of 1,321, and watched it sit at "81% spent" from
-    # 1309 to about 1440 - a hundred and thirty years. Their point is the
-    # right one: the engine knows this at `start` time. It is still allowed
-    # (you may teach or hire your way to the hours, and the work does
-    # crawl) but it must not be a silent trap.
-    # THE NUMBER PRINTED HAS TO BE THE NUMBER TESTED. The commit that added
-    # commissioned hours to the test above ("Make the stated labour ceiling
-    # the real one") changed the comparison to hours_you_can_call_on - which
-    # is market_supply PLUS whatever you have already commissioned - and left
-    # this line printing market_supply alone. A player who had commissioned
-    # any of the trade saw `start` quote one ceiling and `stuck` quote a
-    # higher one for the identical project a moment later, which is the exact
-    # thing that commit's own message promised could not happen again.
+    # SAY UP FRONT WHEN THE SOCIETY CANNOT STAFF IT: a project wanting more
+    # of a trade's hours than this society's own ceiling can ever supply
+    # can otherwise sit crawling at some small percentage for a very long
+    # time with nothing said about why. The engine knows this at `start`
+    # time. It is still allowed (you may teach or hire your way to the
+    # hours, and the work does crawl) but it must not be a silent trap.
+    # THE NUMBER PRINTED HAS TO BE THE NUMBER TESTED: the comparison above
+    # uses hours_you_can_call_on, which is market_supply PLUS whatever you
+    # have already commissioned, so the line that prints the ceiling has
+    # to use the same figure - printing market_supply alone would let
+    # `start` and `stuck` quote two different ceilings for the identical
+    # project a moment apart.
     _impossible = []
     _impossible_trades = set()
     _n0 = nodes[node_id]
@@ -84,20 +81,17 @@ def _cmd_start(s, nodes, cmd, ended):
     if not ok:
         return {"ok": False, "error": why}
     node = nodes[node_id]
-    # SAY SO, FOR THE PLAYER'S OWN RECORD. start_project itself only logs
-    # the RESTART case (see its own self.log.append for "begun again");
-    # a fresh start was silent, so a player reading `log` back saw
-    # completions and failures appear out of nowhere with no record of
-    # having chosen to begin them.
+    # SAY SO, FOR THE PLAYER'S OWN RECORD: start_project itself only logs
+    # the RESTART case (see its own self.log.append for "begun again"), so
+    # a fresh start must be logged here too, or a player reading `log`
+    # back sees completions and failures appear out of nowhere with no
+    # record of having chosen to begin them.
     if s.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
         s.log.append((s.year, "started: %s" % node["name"]))
-    # THE PRICE YOU ACTUALLY COMMITTED TO. A normal-play tester read a cost
-    # of 106,567 off `why`, started the thing forty years later, and was
-    # billed 207,811 - because project_cost moves with prices, the coinage,
-    # material scarcity and what you have since built, and nothing told
-    # them the earlier figure was a snapshot. The bill IS fixed at the
-    # moment you start; what was missing was any statement of what it was
-    # fixed AT.
+    # THE PRICE YOU ACTUALLY COMMITTED TO: project_cost moves with prices,
+    # the coinage, material scarcity and what has been built since, so an
+    # earlier `why` figure is only a snapshot. The bill IS fixed at the
+    # moment you start; this must state plainly what it was fixed AT.
     bill = round(s.active.get(node_id, {}).get("cost_left", s.project_cost(node_id)), 1)
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
@@ -157,10 +151,9 @@ def _cmd_start(s, nodes, cmd, ended):
     # can clear the first (checked above, and by start_project itself),
     # pay the whole bill, and only discover the second - venture_hands(),
     # what 'open' actually enforces - refuses them once the work is
-    # already finished. `why` has shown this for a while (same
-    # computation, see staff_to_keep_it_open there); three playtesters
-    # missed it anyway in a long page and found out at 'open' instead.
-    # Said here too, at the one other moment it can still change
+    # already finished. `why` shows this too (same computation, see
+    # staff_to_keep_it_open there), but it is easy to miss in a long page,
+    # so it is said here too, at the one other moment it can still change
     # anything, with today's free staff - not a promise, since attrition
     # and hiring between now and completion can move either number.
     if s.is_venture(node_id):
@@ -179,30 +172,24 @@ def _cmd_start(s, nodes, cmd, ended):
                 "finishes, for better or worse; if it has not by then, "
                 "hire, teach, or close something first."
                 % (_sup_sch, _sup_art, _free_sch, _free_art))
-    # AND SAY WHEN THIS WOULD BORROW TO FINISH. `start` financed the gap
-    # between what a project costs and what the household has, silently,
-    # at up to twelve per cent - three players in a row were carried into
-    # debt they had not decided to take on. One went 750 denarii short of
-    # affordable on turn one and spent the next twenty-five years digging
-    # out while the project sat stalled and the interest compounded.
+    # AND SAY WHEN THIS WOULD BORROW TO FINISH: `start` must not silently
+    # finance the gap between what a project costs and what the household
+    # has, at up to twelve per cent, leaving a player carried into debt
+    # they did not decide to take on.
     #
-    # Not a refusal. Borrowing to build is a real and often correct move,
-    # and the game already lets you. It is the not-being-told that was
-    # wrong, so this names the gap, the rate, and how much room is left
-    # before the creditors stop being patient - and what they do then,
-    # because both players who found that out found it out by losing a
-    # school and a collegium they had built years earlier.
+    # Not a refusal: borrowing to build is a real and often correct move,
+    # and the game already lets you. What must not happen is the
+    # not-being-told, so this names the gap, the rate, and how much room
+    # is left before the creditors stop being patient - and what they do
+    # then.
     #
     # A FORECAST, NOT A RECEIPT - the keys have to say so. `start` itself
     # borrows nothing: credit only actually draws down at step resolution,
     # if and when cash genuinely goes negative paying this year's share.
-    # The first version of this block said "borrowed_now", in the past
-    # tense, on the very command that had not borrowed a denarius yet - a
-    # Norse player read "borrowed now: 123.8" here and "(none used)" on
-    # `money` in the next breath and rightly called it a ledger
-    # contradiction. Same numbers, same warning; they describe what WILL
-    # happen if the project runs to completion on today's cash, not what
-    # has.
+    # These keys must describe what WILL happen if the project runs to
+    # completion on today's cash, never what already has, or this screen
+    # would contradict `money`'s own "(none used)" reading of the same
+    # moment.
     _gap = bill - max(0.0, s.capital)
     if _gap > 0:
         _lim = s.credit_limit()
@@ -229,17 +216,16 @@ def _cmd_start(s, nodes, cmd, ended):
     # already answers "can THIS project be financed" - correctly - by
     # comparing THIS project's own bill to cash on hand. What it cannot
     # see is that other active work is drawing on the exact same cash at
-    # the exact same time: a Rome opening that started scientific_method
-    # (230) and then units_standards (444) read "you would borrow: 44"
-    # on the second start, because 444 against 400 capital IS only a
-    # 44-denarius gap taken alone - and then watched capital fall past
-    # -150 within the year, because scientific_method's own 230 still
-    # unpaid was drawing on the identical purse at the identical time.
-    # The forecast was not wrong about its own project; it was silent
-    # about everyone else already in hand. Every playtest of this
-    # opening hit some version of the same thing: two or three
-    # foundations, each priced honestly on its own screen, together
-    # asking for more than the household currently holds. This is that
+    # the exact same time: a Rome opening that starts scientific_method
+    # (230) and then units_standards (444) would read "you would borrow: 44"
+    # on the second start, because 444 against 400 capital is only a
+    # 44-denarius gap taken alone, while capital actually falls past -150
+    # within the year, because scientific_method's own 230 still unpaid is
+    # drawing on the identical purse at the identical time. A per-project
+    # forecast is not wrong about its own project; it is silent about
+    # everyone else already in hand: two or three
+    # foundations, each priced honestly on its own screen, can together
+    # ask for more than the household currently holds. This is that
     # aggregate: committed_spend() (economy.py) is the exact same sum
     # `money`'s "still_owed_on_work_in_hand" already prints, read here
     # instead of re-totalled, and funding_capacity() is the identical
@@ -281,11 +267,10 @@ def _cmd_start(s, nodes, cmd, ended):
     # that does not exist AT ALL (see "THE TRADE HAS TO EXIST" there), but
     # trade_available() goes true the moment you call `train`, two years
     # before anyone graduates - market_supply() is the stricter, honest
-    # figure step() actually checks. A tester's `start` came back ok:true
-    # for a project needing an engineer while nobody could yet DO engineer
-    # work, and years later it was HALTED with everything spent on it
-    # lost, with no warning at the point they could still have done
-    # something about it. Name it here instead.
+    # figure step() actually checks, and `start` must warn against it
+    # here, not let a project needing a trade nobody can yet do come back
+    # ok:true only to be HALTED years later with everything spent on it
+    # lost and no earlier warning to act on. Name it here instead.
     short = sorted(trade for trade in node["lab"] if s.market_supply(trade) <= 0.0)
     if short:
         out["warning"] = (
@@ -315,13 +300,12 @@ def _cmd_stop(s, nodes, cmd, ended):
 
 
 def _cmd_rush(s, nodes, cmd, ended):
-    # BULK START, FOG-SAFE. A break tester in the late game had thirty
-    # or forty things startable at once and nothing to do but type
-    # `start <id>` thirty or forty times - "the late game is pure
-    # typing" - and every one of those ids was already something
-    # `can_start` had already cleared, the same check `available` uses
-    # to decide what to list at all, so acting on all of them at once
-    # hands back nothing a player could not already see for themselves.
+    # BULK START, FOG-SAFE: a late game can have dozens of things
+    # startable at once, with nothing to do but type `start <id>`
+    # repeatedly, when every one of those ids is already something
+    # `can_start` has cleared - the same check `available` uses to decide
+    # what to list at all - so acting on all of them at once hands back
+    # nothing a player could not already see for themselves.
     if ended:
         return {"ok": False,
                 "error": "the run has ended (%s); nothing more can be "
@@ -355,15 +339,15 @@ def _cmd_rush(s, nodes, cmd, ended):
                 "nothing_changed": True,
                 "how_to_confirm": ("Use 'rush force' to begin this unbounded "
                                    "set, or 'rush limit:N' to begin at most N.")}
-    # AND STOP WHEN THE YEAR IS FULL. `rush limit:1000` on turn one started
-    # 209 things at once - a plantation, a whaling industry, a theatre, a
-    # gambling house, nitre beds and lens grinding, all in the same year -
-    # owing 90,944 founder-hours against a lifetime the game itself puts at
-    # about 72,000. The next step gave hours to exactly ONE of them and the
-    # other 208 sat inert for ever, so "RUNNING (209)" was a fiction about
-    # 208 of them. A weird-play tester called it out as the worst thing they
-    # found, and they were right: the command was doing what it was asked
-    # and what it was asked was incoherent.
+    # AND STOP WHEN THE YEAR IS FULL: an unbounded 'rush limit:1000' could
+    # start hundreds of things at once - a plantation, a whaling industry,
+    # a theatre, a gambling house, nitre beds and lens grinding, all in
+    # the same year - owing tens of thousands of founder-hours against a
+    # lifetime the game itself puts at about 72,000. The next step would
+    # give hours to only a handful of them and the rest would sit inert
+    # forever, so "RUNNING (N)" would be a fiction about most of them: the
+    # command would be doing what it was asked, and what it was asked
+    # would be incoherent.
     #
     # Committing a couple of years of everyone's attention is a decision a
     # player might reasonably make. Committing four centuries of it is not.
@@ -505,13 +489,13 @@ def _cmd_ventures(s, nodes, cmd, ended):
 
     def _vrow(k):
         node = nodes[k]
-        # AT THE FIGURE THE LEDGER USES. This printed the tree's raw
-        # revenue, and the ledger applies the economy, the output factor,
-        # this society's prices and the ramp - so a break tester measured
-        # `ventures` understating every concern by a uniform 2.234x against
-        # `money` (11,000 against 24,571). And NEEDS printed the BUILD crew
-        # while the engine charges supervision, which is a quarter of it
-        # and never the number the refusal quotes.
+        # AT THE FIGURE THE LEDGER USES: printing the tree's raw revenue
+        # would understate every concern by a uniform factor against what
+        # `money` actually credits, since the ledger applies the economy,
+        # the output factor, this society's prices and the ramp. NEEDS has
+        # to print the SUPERVISION crew, not the BUILD crew - supervision
+        # is a quarter of it, and it is the number the refusal actually
+        # quotes.
         _scale = (s.economy ** 0.75) * s.output_factor * s.price_index
         _sup_s, _sup_a = s.venture_hands(k)
         _foreman_trade, _foreman_fte = s.venture_foreman(k)
@@ -533,16 +517,14 @@ def _cmd_ventures(s, nodes, cmd, ended):
         _note = s.goods_market_note(k)
         if _note:
             row["market"] = _note
-        # A CAPABILITY, NOT ONLY A BUSINESS. Every other row here is a
+        # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it
         # adds, credit or standing it lends, or a future start it clears
-        # - none of which show up in earns/costs at all. A Rome player
-        # could not tell `identity_cover` and `workshop_first` (real
-        # capabilities) apart from an ordinary shuttered business by
-        # looking at this exact table; a Mexica player closed some of
-        # these for the capital back and lost the capability along with
-        # it, twice, having no way to see the difference here either.
+        # - none of which show up in earns/costs at all. Without marking
+        # it, identity_cover and workshop_first (real capabilities) would
+        # be indistinguishable from an ordinary shuttered business in
+        # this exact table.
         if k in s.CAPABILITY_INSTITUTIONS:
             row["capability"] = ("yes - more than income; see 'why %s'" % k)
         return row
@@ -563,13 +545,13 @@ def _cmd_ventures(s, nodes, cmd, ended):
                 for node_id in _idle_capability] or "nothing",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
-           # YOU ARE IN THAT COUNT. `ventures` said "1 scholars, 1
-           # craftsmen" on the same screen as `labour`'s "ON YOUR STAFF:
-           # nobody" and `why`'s "(you have 1, 0)" - three screens, three
-           # different counts, and a break tester listed all three side by
-           # side. One person can keep an eye on one small shop, which is
-           # how every one of these fortunes started; it just has to say
-           # that the person is you.
+           # YOU ARE IN THAT COUNT: leaving this unsaid would make
+           # `ventures`, `labour` and `why` look like they disagree on how
+           # many scholars and craftsmen you have, when they are all
+           # counting the founder consistently, just not all saying so.
+           # One person can keep an eye on one small shop, which is how
+           # every one of these fortunes started; it just has to say that
+           # the person is you.
            "one_of_each_of_those_is_you": bool(s.founder_alive),
            # WHERE THE REST OF THEM ARE. See venture_staff_who_is_watching_what.
            "and_these_concerns_are_holding_the_rest":
@@ -588,12 +570,11 @@ def _cmd_ventures(s, nodes, cmd, ended):
                                   + (s.FOUNDER_IS_WORTH if s.founder_alive
                                      else 0.0), 2)},
            # SCHOLARS AND CRAFTSMEN ARE NOT INTERCHANGEABLE, and nothing
-           # said so. A play tester spent thirty years poor because
-           # auto_train had bought them engineers - who count as scholars
-           # and cannot keep an eye on a workshop - and the turn they
-           # swapped three engineers for three artisans their net went from
-           # -155 a year to +4,164. `labour <trade>` shows the wage and not
-           # which of the two columns the trade lands in.
+           # else says so: engineers, chemists and machinists count as
+           # scholars here and cannot keep an eye on a workshop, so a
+           # household can sit unprofitable with the wrong kind of staff
+           # on hand while `labour <trade>` shows only the wage, never
+           # which of the two columns a trade lands in.
            "these_are_not_interchangeable": (
                "Most concerns want CRAFTSMEN to keep an eye on them. "
                "Engineers, chemists and machinists are scholars here, and "
@@ -614,12 +595,10 @@ def _cmd_ventures(s, nodes, cmd, ended):
                    "not judged on money the way the ordinary one is - see "
                    "each one's own 'why' before deciding whether to open "
                    "or close it."}
-    # THE PRACTICE IS NOT A VENTURE, AND IT IS WHERE YOUR MONEY COMES FROM.
-    # A break tester read "RUNNING: nothing" and "only what you are RUNNING
-    # earns anything" on the same screen as a ledger paying 233.5 a year
-    # from two named nodes, and filed it as the two screens flatly
-    # contradicting each other. They do not, but nothing said which side
-    # the practice falls on.
+    # THE PRACTICE IS NOT A VENTURE, AND IT IS WHERE YOUR MONEY COMES FROM:
+    # "RUNNING: nothing" next to a ledger paying real practice income reads
+    # as the two screens flatly contradicting each other unless this says
+    # which side the practice falls on.
     _prac_note = s.practice_note()
     if _prac_note:
         out["your_practice_is_not_a_venture"] = (
@@ -646,11 +625,11 @@ def _cmd_policy(s, nodes, cmd, ended):
                         % (key, ", ".join(sorted(s.policy)))}
             s.policy[key] = _flag(val)
             changed[key] = s.policy[key]
-    # WHICH OF THESE CAN ACTUALLY ACT TODAY. A play tester spent about eight
-    # years and 5,952 denarii working out that negative capital silently
-    # disables both hiring and opening: the switches read ON, the engine
-    # did nothing, and the only clue was one refusal string. A switch that
-    # says ON while nothing happens is worse than one that says OFF.
+    # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
+    # disables both hiring and opening even while the switches read ON,
+    # with the only clue otherwise being one refusal string somewhere
+    # else. A switch that says ON while nothing happens is worse than one
+    # that says OFF.
     _stopped = {}
     if s.capital <= 0:
         if s.policy.get("auto_hire"):
@@ -663,15 +642,11 @@ def _cmd_policy(s, nodes, cmd, ended):
         _stopped["credit"] = ("nobody will fund new work until %d"
                               % int(s.credit_frozen_until))
     _pol = {"ok": True, "policy": dict(s.policy), "changed": changed,
-            # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES. Play testers
-            # keep switching them on in the belief that the engine knows
-            # the best line and is offering to walk it for them, and then
-            # reporting the result as a bug: "policy auto_hire true
-            # destroyed my run in eight years", "auto_train quietly
-            # bankrupted me", "policy auto_hire on quietly destroyed my
-            # economy". They are none of them wrong about what happened.
-            # They are wrong about what these are, and nothing on this
-            # screen has ever told them.
+            # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES: a player who
+            # switches one on believing the engine knows the best line and
+            # is offering to walk it for them will read the result as a
+            # bug when it is not one, unless this screen says plainly what
+            # these actually are first.
             #
             # These are a rough hand on the tiller so a player who does not
             # want to manage a payroll every turn does not have to. They
@@ -691,14 +666,10 @@ def _cmd_policy(s, nodes, cmd, ended):
                 "than merely costing you a little, that is a defect worth "
                 "reporting, not the intended cost of convenience."),
             "what_each_does": {
-                # SAY WHAT MIX. "Grow the staff" was the whole
-                # description, and a play tester turned it on and watched
-                # scholars take all 22 of their household places while
-                # artisans fell to 0.03 - which shut 22 concerns, because
-                # artisans are what supervise them, and took their net from
-                # +8,010 a year to -3,027. The mix is now defended in
-                # code; a player deciding whether to switch this on should
-                # be able to read what it will do before it does it.
+                # SAY WHAT MIX: "grow the staff" alone does not say enough,
+                # since the mix genuinely matters and is defended in code
+                # - a player deciding whether to switch this on should be
+                # able to read what it will do before it does it.
                 "auto_hire": "grow the staff toward what you can house and "
                              "pay. Mostly craftsmen, because craftsmen are "
                              "what keep concerns open; some scholars; and "
@@ -727,19 +698,15 @@ def _cmd_policy(s, nodes, cmd, ended):
                                    "default in manual play; on unattended",
                 "auto_shed": "let go of WORKS that cost more than they return "
                              "(this is about buildings and practices, not people)",
-                # SAY WHAT IT WILL NOT DO - AND SAY THE EXCEPTION, which
-                # this did not, so two players on different civilisations
-                # each watched it open a loss-making concern, checked the
-                # help, and reported the automation as broken. It is not:
-                # auto_open_ventures deliberately opens a capability
+                # SAY WHAT IT WILL NOT DO - AND SAY THE EXCEPTION: an
+                # ordinary shop that earns less than it costs stays shut,
+                # but auto_open_ventures deliberately opens a capability
                 # institution at a loss, because a school takes 2,500 a
                 # year and hands back 800 and is where twelve of your
                 # scholars come from, and the margin test would otherwise
-                # shut it for ever. An ordinary shop that earns less than
-                # it costs is still left shut, which is the case the
-                # original sentence was written for - a play tester whose
-                # nitre beds and glassware stayed closed. Both halves are
-                # true and only one of them was written down.
+                # shut it for ever. Describing only one half of that reads
+                # as the automation being broken when it is doing the
+                # other half correctly.
                 "auto_open": "open concerns that plainly pay for themselves, "
                              "and the institutions that train and house "
                              "people even when those run at a loss - a "
@@ -751,12 +718,10 @@ def _cmd_policy(s, nodes, cmd, ended):
             },
             "note": "Anything switched off here you can still do by hand: hire, "
                     "train, buy, commission, mothball, restore, bribe.",
-            # A break tester read the note above as covering everything the
-            # game ever does without being asked, switched auto_shed off,
-            # and lost their whole staff anyway. The note was too broad and
-            # they were entitled to read it that way. A policy is something
-            # the game DECIDES for you; a consequence is the world answering
-            # a decision you already made, and no switch turns those off.
+            # A note that reads as covering everything the game ever does
+            # without being asked is too broad: a policy is something the
+            # game DECIDES for you; a consequence is the world answering a
+            # decision you already made, and no switch turns those off.
             "not_policies": "Some things are consequences, not automation, "
                             "and there is no switch for them: people you "
                             "cannot pay leave, mines you cannot pay for stop "

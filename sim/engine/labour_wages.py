@@ -1,8 +1,7 @@
 """What staff actually cost, every year, and what it costs to be one.
 
-Split out of labour.py (see that file's own docstring for why). These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and moved verbatim.
+These are methods of Sim; they are a mixin only so that they can live in
+a file of their own (see labour.py's own docstring for the split).
 
 work_for_wages and wage_bill are the two directions of the same trade: a
 founder selling their own hours at the going rate, and a household paying
@@ -44,9 +43,9 @@ class WagesMixin:
     def work_for_wages(self, trade, hours):
         """Do a job. For money. Like everybody else.
 
-        The reviewer asked for this and it is a fair gap: you could hire a smith,
-        a glassblower or a farmer all day long and had no way to BE one. A
-        founder with no capital and a useful pair of hands should be able to earn
+        It is a fair gap otherwise: you could hire a smith, a glassblower
+        or a farmer all day long and had no way to BE one. A founder with
+        no capital and a useful pair of hands should be able to earn
         a wage, and at the start it is one of the few things he can do.
 
         It is paid at the ordinary rate for that trade, which is the same table
@@ -64,15 +63,10 @@ class WagesMixin:
         if wage_rate is None:
             here = sorted(candidate_trade for candidate_trade in WAGES if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
-        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR.
-        # A break tester earned wages as a chemist, an electrician and an
-        # engineer in 1500 Tenochtitlan, in the same session where `hire` had
-        # just refused all three ("there are no chemists to hire in this society
-        # at any price") and `labour` listed them under do_not_exist_here. The
-        # gate existed; this one command simply never applied it, and its own
-        # "no such trade" whitelist named the full civilisation-agnostic roster,
-        # which is what told the tester those jobs were available in the first
-        # place.
+        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU
+        # FOR: this has to gate on trade_available(), the same test `hire`
+        # uses, or a founder could earn wages in a trade the society does
+        # not yet have any employer for.
         #
         # The founder really does know chemistry - that is the premise. What he
         # does not have is a customer. Wage labour is somebody else deciding
@@ -87,25 +81,19 @@ class WagesMixin:
         hours = float(hours)
         if hours <= 0:
             return 0.0, "hours must be greater than zero"
-        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages.
-        # director_hours_committed() has counted teaching as well as wage work
-        # since the "free second year inside every year" bug, and this line
-        # never used it: `train machinist 2` plus `train chemist 2` reported
-        # 200 hours left and `work smith 2000` was then accepted, for 3,800
-        # hours spent in a 2,000-hour year. A break tester found it in a
-        # session where the same counter refused them correctly in the other
-        # direction, which is what made it obvious it was one-way.
+        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages:
+        # this must check against director_hours_committed(), which counts
+        # teaching as well as wage work, or the two together can spend more
+        # hours than exist in the year.
         left = self.director_pool() - self.director_hours_committed()
         if hours > left:
             return 0.0, ("you have %.0f of your own hours left this year, not %.0f"
                          % (max(0.0, left), hours))
-        # Your own labour is worth the trade rate: the SAME rate the game charges
-        # you to employ somebody in that trade, which is the point. It used to be
-        # billed from the hourly column while hiring was billed from the annual
-        # one, and those two columns disagree by about half, so a founder could
-        # work as a scholar for 1,416 a year and hire one for 625. The docstring
-        # claimed "there is no arbitrage in either direction" while the arithmetic
-        # ran a 2.3x spread.
+        # Your own labour is worth the trade rate: the SAME rate the game
+        # charges you to employ somebody in that trade, which is the point.
+        # It has to be derived from annual_wage(), not a separate hourly
+        # column, or the two disagree and the docstring's "no arbitrage in
+        # either direction" claim becomes false.
         rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
                * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
@@ -114,27 +102,19 @@ class WagesMixin:
         self.household.capital += pay
         self.household.wage_hours_this_year = getattr(self.household, "wage_hours_this_year", 0.0) + hours
         self.household.wages_earned = getattr(self.household, "wages_earned", 0.0) + pay
-        # SAY WHEN IT IS A BAD TRADE. Selling your hours costs you the practice
-        # those same hours were running (see practice_attention), and for a
-        # physician it is usually a loss: a tester measured a full year of
-        # labour at 66 denarii against a 227 cost of living, and it switched
-        # off 259 a year of practice. That is realistic - a trained man does
-        # not dig ditches for preference - but the game charged it silently and
-        # the player had to work it out from the ledger.
-        # DO NOT BLOCK IT - WARN ABOUT IT. Selling hours is a legitimate way to
-        # dig out of debt, and this command already lets a player sell every
-        # one of them; the missing part, found the same way by both a Norse
-        # and a Han playtester, was that nothing said so. One watched a
-        # project sit at "waiting on: your hours" for turn after turn with no
-        # explanation while they kept working all 2,000 hours a year; the
-        # other worked out the fix - work (2000 - hours the project still
-        # wants) - only by noticing the stuck percentage and reasoning
-        # backward, and asked for exactly this: "have work either warn you if
-        # you are about to starve your own active project of its last hours,
-        # or show remaining-hours-needed somewhere more prominent." Computed
-        # from project_hour_pace/active_hours_still_wanted (projects.py), the
-        # same formula step() itself uses to hand out the pool, so this can
-        # never warn about a shortfall step() would not also produce.
+        # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
+        # practice those same hours were running (see practice_attention),
+        # and for a trained person it is usually a net loss. That is
+        # realistic - a trained man does not dig ditches for preference -
+        # but it has to be said explicitly, not charged silently and left
+        # for the player to work out from the ledger.
+        # DO NOT BLOCK IT - WARN ABOUT IT: selling hours is a legitimate
+        # way to dig out of debt, so this must never refuse the sale, only
+        # warn when it would starve an active project of the hours it
+        # still wants this year. Computed from project_hour_pace/
+        # active_hours_still_wanted (projects.py), the same formula step()
+        # itself uses to hand out the pool, so this can never warn about a
+        # shortfall step() would not also produce.
         _starve = None
         _wanted = self.active_hours_still_wanted()
         if _wanted:
@@ -158,9 +138,10 @@ class WagesMixin:
                        (", and %d more" % _more) if _more else ""))
         lost = before_practice - self.revenue()
         if lost > pay:
-            # THE THREE NUMBERS HAVE TO SUBTRACT. Rounding each separately gave
-            # "you earned 128 ... was worth 234 ... so this cost you 105", and
-            # a break tester did the subtraction. Round first, then subtract.
+            # THE THREE NUMBERS HAVE TO SUBTRACT: rounding each separately
+            # can give "you earned 128 ... was worth 234 ... so this cost
+            # you 105" - numbers that do not actually subtract when a
+            # reader checks by hand. Round first, then subtract.
             _paid, _lost = round(pay), round(lost)
             _msg = ("you earned %s, and the practice those hours were "
                     "running was worth %s a year - so this cost you %s. "

@@ -41,9 +41,9 @@ _RENDERERS = {
 }
 
 
-# A REPLY IS FULL OF WORKED EXAMPLES, and until now every one of them was
-# JSON: 'more: knowledge_risk -> {"cmd":"risk"}'. That is exactly right when a
-# script is reading, and exactly wrong in front of a person who has just been
+# A REPLY IS FULL OF WORKED EXAMPLES, all of them JSON: 'more:
+# knowledge_risk -> {"cmd":"risk"}'. That is exactly right when a script
+# is reading, and exactly wrong in front of a person who has just been
 # told to type words. The JSON payload itself must not change - it is the
 # protocol - so the translation happens here, on the rendered text only, and
 # only when the caller says the reader is typing.
@@ -84,8 +84,9 @@ def _typed_form(obj):
 
 # Values may be a bare word rather than a literal: several hints are written as
 # worked examples with a placeholder in them ({"cmd":"buy","what":"slaves",
-# "n":N}), which is not valid JSON and so survived the first version of this
-# untouched, in front of a person who had been told to type words.
+# "n":N}), which is not valid JSON, so the fallback below has to read the
+# pairs out textually rather than leaving them untouched in front of a
+# person who has been told to type words.
 
 
 _JSON_HINT = re.compile(r'\{"cmd"\s*:\s*"[a-z_]+"(?:\s*,\s*"[a-z_]+"\s*:\s*'
@@ -146,9 +147,9 @@ def render_pretty(op, resp):
     # LIVE, NOT A SNAPSHOT: cmd_play sets engine.protocol.TYPED_HINTS and
     # .MONEY_SHORT directly (module attributes, not a call) once per session
     # - see DISPLAY_WIDTH's own comment in engine/proto/util.py for the same
-    # pattern. Reading them back through the protocol module itself, instead
-    # of the plain names this file's own assignments below bind, is what
-    # makes that patch visible here after the split.
+    # pattern. Reading them back through the protocol module itself, rather
+    # than the plain names this file's own assignments below bind, is what
+    # makes that patch visible here.
     from .. import protocol as _protocol
     TYPED_HINTS = _protocol.TYPED_HINTS
     MONEY_SHORT = _protocol.MONEY_SHORT
@@ -157,18 +158,17 @@ def render_pretty(op, resp):
             err = render_error(resp)
             return to_typed_hints(err) if TYPED_HINTS else err
         renderer = _RENDERERS.get((op or "").strip().lower(), render_generic)
-        # REWRITE THE HINTS BEFORE WRAPPING, NOT AFTER. This ran on the
-        # finished page, so a paragraph wrapped at 76 columns around a long
-        # {"cmd":"hire","trade":"smith","n":3} and then had it replaced by
-        # `hire smith 3`, leaving a ragged half-width block wherever the game
-        # explains what to type - which is most of the places it explains
-        # anything. Wrapping the final words is the only way the line lengths
-        # can be right.
+        # REWRITE THE HINTS BEFORE WRAPPING, NOT AFTER: wrapping around a
+        # long {"cmd":"hire","trade":"smith","n":3} and only then replacing
+        # it with `hire smith 3` leaves a ragged half-width block wherever
+        # the game explains what to type - which is most of the places it
+        # explains anything. Wrapping the final words is the only way the
+        # line lengths can be right.
         out = renderer(_typed_deep(resp) if TYPED_HINTS else resp)
         if MONEY_SHORT != "den":
-            # "Money: 400 den" in a game counted in pence was the other half of
-            # the currency work, and a tester duly reported "pence vs den mixed
-            # throughout".
+            # "Money: 400 den" must not survive unchanged in a game counted
+            # in pence: every "den" in the rendered text has to be swapped
+            # for MONEY_SHORT, or the reply mixes units.
             out = _DEN_RE.sub(MONEY_SHORT, out)
         return to_typed_hints(out) if TYPED_HINTS else out
     except Exception as e:

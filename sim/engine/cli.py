@@ -1022,8 +1022,8 @@ def _civ_for_session(a):
 
     A save says what game it is. Resuming should not need the flag repeated,
     and a flag that contradicts the file should say so rather than start the
-    wrong game over the top of it - a playtester was handed
-    `play --session england_1300.json` by the game itself and refused by it.
+    wrong game over the top of it, even when the contradicting command line
+    is one the game itself printed for the player to reuse.
     """
     session = getattr(a, "session", None)
     asked = getattr(a, "civ", None)
@@ -1427,9 +1427,8 @@ def _pick_session_filename(civ_id):
     # And it counts UP FROM THE HIGHEST rather than filling the first gap, so
     # moving a save out of the directory does not turn its number into a slot
     # some later game takes.
-    # IN A DIRECTORY OF ITS OWN. Eighty-nine save files had accumulated in the
-    # repository root beside the source, and a play tester said so: "saves land
-    # in the repo root, next to eighty others". A game that writes a file after
+    # IN A DIRECTORY OF ITS OWN. Save files must not accumulate in the
+    # repository root beside the source. A game that writes a file after
     # every command has to put them somewhere a person can find and delete -
     # and, now, somewhere a player stuck with a non-persistent $HOME can move
     # away from entirely. See settings.py's module docstring.

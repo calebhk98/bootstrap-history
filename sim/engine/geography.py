@@ -87,21 +87,21 @@ class GeographyMixin:
     # Straight-line kilometres (after geography.json's route_difficulty and
     # this civilization's own travel speed, below, have been applied) banded
     # onto the same 0-6 scale reach_levels already uses. Chosen so that
-    # ROME, at its own base_reach of 2, lands close to its own OLD
-    # hand-authored reach_from_italia numbers across the whole region list
-    # (checked by hand while building this): this is a generalisation of the
-    # old table, not an unrelated replacement for it.
+    # ROME, at its own base_reach of 2, lands close to the hand-authored
+    # reach_from_italia numbers across the whole region list: this is a
+    # generalisation of that table, not an unrelated replacement for it.
     RAW_DISTANCE_BANDS = ((1200.0, 1), (2500.0, 2), (4500.0, 3), (7000.0, 4), (11000.0, 5))
 
     # How much base_reach shortens the EFFECTIVE distance, not the band.
-    # An earlier version of this subtracted base_reach straight off the
-    # band number, which looked right for Rome but broke on the Norse: with
-    # only 6 bands total, subtracting 4 (their base_reach) collapsed nearly
-    # every coastal region in the world, China included, to band 1 -- "as
-    # easy as sailing to Gaul", which overstates even Norse mobility. Dividing
-    # the DISTANCE by a speed factor instead degrades gracefully: closer
-    # places still get much easier, but a civilization does not get to treat
-    # the far side of the planet as next door no matter how good its ships.
+    # Subtracting base_reach straight off the band number looks right for
+    # Rome but breaks for a civilization with a large base_reach: with only
+    # 6 bands total, subtracting 4 (the Norse's own base_reach) would
+    # collapse nearly every coastal region in the world, China included, to
+    # band 1 -- "as easy as sailing to Gaul", which overstates even Norse
+    # mobility. Dividing the DISTANCE by a speed factor instead degrades
+    # gracefully: closer places still get much easier, but a civilization
+    # does not get to treat the far side of the planet as next door no
+    # matter how good its ships.
     REACH_SPEED_COEF = 0.22
 
     def region_reach(self, region_id: str) -> int:
@@ -207,12 +207,12 @@ class GeographyMixin:
         # your OWN supply, which should cost less per unit than retail, not
         # more. 60 is therefore generous rather than punitive, which is the
         # right way to be wrong here.
-        # Compress rather than clamp. A hard ceiling flattened the very
-        # distinction this function exists to draw: Rome's 235 and Han China's
-        # 60 both hit a cap of 60 and came out identical, so the geography fix
-        # stopped doing anything. Raising to a fractional power keeps the
-        # ORDERING intact while pulling the magnitudes back to something
-        # defensible, and the ceiling stays only as a backstop.
+        # Compress rather than clamp: a hard ceiling would flatten the very
+        # distinction this function exists to draw. If Rome's 235 and Han
+        # China's 60 both hit a cap of 60, they come out identical, and the
+        # geography fix stops doing anything. Raising to a fractional power
+        # keeps the ORDERING intact while pulling the magnitudes back to
+        # something defensible, and the ceiling stays only as a backstop.
         return civ_r, min(raw ** 0.6, 45.0)
 
     def material_cost_factor(self, k: str) -> float:
@@ -221,12 +221,11 @@ class GeographyMixin:
 
         Only applies to nodes geography.json actually names (via
         located_materials.*.unlocks, e.g. mat_gutta_percha, mat_natural_rubber):
-        everything else returns 1.0 and is untouched. This is the wiring the
-        bug report asked for: before this existed, geography.json's
-        cost_multiplier field was read by nobody, so gutta percha cost
-        exactly the same (nothing extra) whether you were playing Rome or
+        everything else returns 1.0 and is untouched. geography.json's
+        cost_multiplier field has to be read here, or gutta percha costs
+        exactly the same (nothing extra) whether you are playing Rome or
         Han China, and the entire India-and-east trade advantage a
-        China-based civilization actually has was invisible to the model.
+        China-based civilization actually has is invisible to the model.
         """
         mk = self._mat_unlock.get(k)
         if not mk:
@@ -238,12 +237,12 @@ class GeographyMixin:
         """Fraction of a mined mineral's reference output this civilization
         can draw on: geology and reach, not population.
 
-        resource_throttle() used to multiply by self.pop_scale here, i.e.
-        "how much coal can you buy" scaled by HOW MANY PEOPLE YOU HAVE. That
-        is backwards twice over: Norse Scandinavia got 2.3% of Rome's coal
-        because it has 2.3% of the people, and England in 1300 got 7%, when
-        England is precisely where the coal actually is. A coalfield does
-        not care how many people live near it.
+        Scaling this by self.pop_scale - "how much coal can you buy" tied
+        to HOW MANY PEOPLE YOU HAVE - would be backwards twice over: Norse
+        Scandinavia would get 2.3% of Rome's coal because it has 2.3% of
+        the people, while England in 1300, precisely where the coal
+        actually is, would get only 7%. A coalfield does not care how many
+        people live near it.
 
         geography.json's per-region `minerals` gives each region's rough
         share of a material's total output, normalised so ROME'S OWN home

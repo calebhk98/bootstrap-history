@@ -1,20 +1,19 @@
 """When a civilisation's hazards land, and which ones are still ahead.
 
-ONE PLACE, BECAUSE IT WAS TWO AND THEY WERE DRIFTING.
+ONE PLACE, NOT TWO. `FogMixin.knowledge_risk` and `SocietyMixin.hazard_timeline`
+each need to open `civ["hazards"]`, read the `years` list, widen a
+one-element list into a start and an end, and skip anything the player
+has already lived past - identical window arithmetic apart from the name
+of the list being filled. Duplicating it is the shape a bug hides in: a
+fix to the window arithmetic in one screen would leave the other screen
+quoting the old answer, and the two would disagree about the same hazard
+on the same turn with nothing in either file to say the other exists.
+This module is the one place that arithmetic lives.
 
-`FogMixin.knowledge_risk` and `SocietyMixin.hazard_timeline` each opened
-`civ["hazards"]`, read the `years` list, widened a one-element list into a
-start and an end, and skipped anything the player had already lived past.
-The two copies were identical apart from the name of the list they were
-filling, which is the shape a bug hides in: a fix to the window arithmetic
-in one screen leaves the other screen quoting the old answer, and the two
-disagree about the same hazard on the same turn with nothing in either file
-to say the other exists.
-
-The window arithmetic is the whole of what they shared, so that is the whole
-of what moved. Each caller still builds its own row - the fog screen wants
-sack chances and hedges, the society screen wants relief and lead times -
-and those have never been the same thing.
+The window arithmetic is the whole of what the two callers share, so that
+is the whole of what moved here. Each caller still builds its own row -
+the fog screen wants sack chances and hedges, the society screen wants
+relief and lead times - and those are not the same thing.
 """
 
 

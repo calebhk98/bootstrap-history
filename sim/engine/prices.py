@@ -132,34 +132,29 @@ cares can already recover the distinction by re-running
 `SolvedPrices.chosen_recipe_by_material`, which is exposed for exactly that
 kind of downstream question.
 
-RENT WAS MISSING FROM THIS FILE UNTIL Complaints/43's follow-up (this
-round), AND THAT IS WORTH RECORDING BECAUSE IT WAS INVISIBLE FROM HERE.
-`sim/solve_prices.py`'s own `main()` computes
+RENT MUST BE THREADED THROUGH HERE THE SAME WAY `main()` DOES IT (see
+Complaints/43). `sim/solve_prices.py`'s own `main()` computes
 `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_iugerum` once
 per run and threads the result through `compute_resolvable_materials` and
 `solve` as `rent_hours_per_kg_by_material` - that is how `python3 sim/
 solve_prices.py` prints a nonzero `iugerum_land`. `solved_prices` below
-called the same two functions WITHOUT that argument, which defaults to
-`None` in both, which is exactly the RENT_IS_ZERO behaviour Complaints/43
-first complained about. So the switch this file guards was, until now,
-going to make land free the moment it was flipped, even though the CLI
-tool sitting right next to it had already fixed that - a second, silent
-copy of the exact bug the first update to that complaint fixed once. It is
-fixed below by calling the same two rent functions here, the same way
-`main()` does.
+calls the same two functions and passes the result through the same
+argument, which is what keeps this module from silently falling into the
+RENT_IS_ZERO behaviour Complaints/43 is about, since that argument
+defaults to `None` in both functions when omitted.
 
-RENT NEEDS A CIVILIZATION, THE CACHE KEY DID NOT HAVE ONE, SO IT WAS
-ADDED. `rent_hours_per_kg_by_ore_material` is safe to leave out of the
+RENT NEEDS A CIVILIZATION, AND SO DOES THE CACHE KEY.
+`rent_hours_per_kg_by_ore_material` is safe to leave out of the
 cache key (see WHAT THIS DOES NOT HANDLE above for its Rome-anchored
 demand figure, which is not yet per-civilization either) but
 `land_rent_hours_per_iugerum` is genuinely per-civilization -
 `sim/world/land.py` prices the margin of cultivation over a
 CIVILIZATION'S OWN HELD REGIONS, and two civilizations can hold the exact
-same gate-node set while holding completely different territory. The old
-cache key (`gate_nodes_held` alone) could not distinguish them, so a
-second civilization asking this module for a price after a first one had
-already solved would have silently been handed the first civilization's
-land rent. `solved_prices` and `priced_goods_table` below therefore take
+same gate-node set while holding completely different territory. A cache
+key of `gate_nodes_held` alone cannot distinguish them, so a second
+civilization asking this module for a price after a first one had already
+solved would be silently handed the first civilization's land rent.
+`solved_prices` and `priced_goods_table` below therefore take
 an explicit `civilization_id` parameter and fold it into the cache key
 alongside `gate_nodes_held`. It defaults to `None`, which resolves to
 `solve_prices.DEFAULT_LAND_CIVILIZATION` (Rome) - the same default the CLI
@@ -433,8 +428,7 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     material this held-technology set already prices in the book, and
     provenance is the burndown THE GOAL asks to make measurable, and it has
     THREE states rather than two, because a straight solved/book split
-    measures the wrong thing and this was reported once before it was
-    noticed:
+    measures the wrong thing:
 
       "solved"     - a computed price replaced the book's.
       "gated"      - something DOES make this material, and nothing this
@@ -443,10 +437,10 @@ def priced_goods_table(held_technology_ids: Iterable[str],
       "no_recipe"  - nothing anywhere makes it. The real gap, and the only
                      one of the three that authoring can close.
 
-    The distinction matters because the first measurement of this reported
-    "85 book" for rome_100ad, which read as 85 missing recipes. Sixty-eight
-    of them had recipes and were correctly gated out by era; the real gap
-    was nine, and five of THOSE want deleting rather than filling (two are
+    The distinction matters because an undifferentiated solved/book count
+    for rome_100ad reads as 85 missing recipes, when sixty-eight of those
+    have recipes and are correctly gated out by era, leaving a real gap of
+    nine - and five of THOSE want deleting rather than filling (two are
     people rather than materials, two are dead keys nothing consumes any
     more, one is a stale duplicate). Quoting the undifferentiated number
     overstates the remaining work by roughly an order of magnitude.

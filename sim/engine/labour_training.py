@@ -1,9 +1,8 @@
 """Buying and teaching trades into existence: hiring, firing, teaching,
 commissioning, and what a technology does to an hour once bought.
 
-Split out of labour.py (see that file's own docstring for why). These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and moved verbatim.
+These are methods of Sim; they are a mixin only so that they can live in
+a file of their own (see labour.py's own docstring for the split).
 
 hire, fire, train and commission are the four verbs a player actually
 types; _cash_in_hand_refusal is the one refusal message all three money-
@@ -32,16 +31,14 @@ class TrainingMixin:
 
     # ---- a technology can make the SAME worker do more, without replacing
     # them ------------------------------------------------------------------
-    # THE SECOND QUESTION: before this, nothing in the engine let a
-    # technology raise output per worker while leaving the workforce itself
-    # untouched. Everything market_supply() and labour_pressure() model is
-    # about how many HOURS a trade can supply and what hiring more of them
-    # costs; nothing ever asked an hour, once bought, to be worth more than
-    # any other hour of the same trade. A flying shuttle does not hire a
-    # second weaver or replace the first one - the tree's own note on
+    # THE SECOND QUESTION: everything market_supply() and labour_pressure()
+    # model is about how many HOURS a trade can supply and what hiring more
+    # of them costs; neither asks an hour, once bought, to be worth more
+    # than any other hour of the same trade. A flying shuttle does not hire
+    # a second weaver or replace the first one - the tree's own note on
     # tex_flying_shuttle says so ("one weaver now handles wide looms...
-    # triples weaving speed"). That is a real technology this engine had no
-    # way to represent.
+    # triples weaving speed"). This is what represents that: a real
+    # technology effect the hiring/hours mechanism alone cannot capture.
     #
     # WIRED TO NODES THAT ARE ALREADY IN THE TREE, each cited from its own
     # note, not invented for this. Deliberately conservative and deliberately
@@ -76,9 +73,8 @@ class TrainingMixin:
     #   met_converter_furnace "speed and low labour cost per ton is the
     #                       payoff" - furnaceman.
     #   bellows_water_blown "the single highest-leverage mechanical change
-    #                       available... continuous high-volume blast" - the
-    #                       user's own example of a non-automating speed-up;
-    #                       furnaceman.
+    #                       available... continuous high-volume blast" - a
+    #                       non-automating speed-up; furnaceman.
     #   mfg_rake_clearance  "saves 30 percent power and doubles tool life" -
     #                       machinist.
     #   mfg_hss_development "cuts three times faster than Mushet steel" - the
@@ -214,25 +210,22 @@ class TrainingMixin:
     def hours_you_can_call_on(self, t):
         """Hours of this trade a project can actually draw on this year.
 
-        COMMISSIONED HOURS ARE PART OF THE CEILING, NOT ON TOP OF IT. Three
-        places told a break tester the town could field 8,750 scribe-hours a
-        year; commissioning the full 8,750 on top of the standing pool then let
-        a 10,000-hour project finish, making the real ceiling 17,500 and every
-        one of those three statements false. A commission buys a job from
-        somebody else's shop - it is the same scribes. What it really buys is
-        certainty: hours reserved for your work rather than competed for.
+        COMMISSIONED HOURS ARE PART OF THE CEILING, NOT ON TOP OF IT: a
+        commission buys a job from somebody else's shop, but it is the same
+        scribes drawing on the same local pool market_supply already
+        bounds, not a second pool stacked on top of it. What it really buys
+        is certainty: hours reserved for your work rather than competed
+        for.
         """
         # TWO CHANNELS, AND BOTH HAVE TO BE SAID. Hiring draws on the people
         # who live here, and that pool is what market_supply bounds. A
         # commission is a job placed with somebody else's shop, and a shop
         # subcontracts: it is a second channel, dearer per hour, bounded in
         # turn by what the local trade can spare (see commission()).
-        #
-        # A break tester found this stated as one ceiling of 8,750 in three
-        # places while the real one was 17,500, and then - when the two were
-        # collapsed into one - found that commissioning bought byte-identical
-        # progress and was pointless. Neither is right. Two channels, each
-        # bounded, each named wherever the number is printed.
+        # Collapsing the two into one indistinguishable pool would make
+        # commissioning pointless, since it would just be spending money to
+        # buy the same hours market_supply already counts. Two channels,
+        # each bounded, each named wherever the number is printed.
         #
         # PRODUCTIVITY MULTIPLIES THE RESULT, NOT market_supply ITSELF. This
         # is what turns "the same crew gets more done" into "the market can
@@ -251,12 +244,13 @@ class TrainingMixin:
     def market_supply_split(self, t):
         """(the town's hours, your own people's hours). Same total, said honestly.
 
-        market_supply is hours of this trade AVAILABLE TO YOU, which includes
-        your own staff - so `labour trade smith` reported "market can supply
-        22,500 hours", then 24,500 after hiring one smith, and a break tester
-        reasonably filed it as taking smiths out of the market making more
-        smith-hours available. The arithmetic was right and the label was
-        wrong: the town's share had not moved at all.
+        market_supply is hours of this trade AVAILABLE TO YOU, which
+        includes your own staff - so printing it raw after hiring a smith
+        would show the total rising (say, 22,500 to 24,500) and read as
+        hiring having pulled smiths OUT of the market and made more
+        smith-hours available elsewhere. The arithmetic is right and the
+        reading is wrong: the town's own share has not moved at all, only
+        yours has grown, so the two have to be reported apart.
         """
         mine = self.household.employees.get(t, 0.0) * self.HOURS_PER_PERSON_YEAR
         total = self.market_supply(t)
@@ -277,11 +271,11 @@ class TrainingMixin:
         an apprentice's keep, or a one-off commission fee is money that is
         simply spent the moment it changes hands, with nothing left to
         repossess, so none of the three may draw more than half the credit
-        line, where a project may draw the whole of it. An England player hit
-        this mid-crisis and called it arbitrary because the refusal never
-        said so - it only ever showed capital, never the reason or the room
-        that WAS there. One message for hire, train and commission, so the
-        three cannot drift apart from each other or from this reasoning.
+        line, where a project may draw the whole of it. The refusal has to
+        say so explicitly, not only show capital, or it reads as arbitrary
+        rather than as the reasoning it actually is. One message for hire,
+        train and commission, so the three cannot drift apart from each
+        other or from this reasoning.
         """
         room = self.spending_power("buy")
         return ("%s costs %s denarii, due now - not on credit past half your "
@@ -307,15 +301,13 @@ class TrainingMixin:
             return False, "n must be a number, not %r" % (n,)
         if n <= 0:
             return False, "n must be greater than zero. Nothing was changed."
-        # PEOPLE ARE WHOLE. A household can want a third of another artisan's
+        # PEOPLE ARE WHOLE: a household can want a third of another artisan's
         # worth of work, and it can buy that in hours (`commission`); it
-        # cannot put a third of a person on the payroll, and the engine used
-        # to let it, silently, which is how a play tester ended up reading
-        # "0.03 engineers" on their own staff roster - a household drawing
-        # wages for somebody who could not supervise anything because there
-        # was no such person. See core.py step() for the matching fix to
-        # attrition, which used to manufacture the same fractions going the
-        # other way.
+        # cannot put a third of a person on the payroll, or a roster could
+        # read "0.03 engineers" - wages drawn for somebody who could not
+        # supervise anything because there is no such person. See core.py
+        # step() for the matching constraint on attrition, going the other
+        # way.
         if abs(n - round(n)) > 1e-6:
             return False, ("you hire whole people, not %g of one. Hire %d or %d."
                            % (n, math.floor(n), math.ceil(n)))
@@ -363,11 +355,11 @@ class TrainingMixin:
         room = self.household_room()
         if n > room:
             # TRUNCATED, NOT ROUNDED, and it says what a whole number of people
-            # would be. A weird-play tester was refused `hire artisan 7` and
-            # told "you can supervise, house and teach 7.0 more people, not 7",
-            # which is a refusal that reads as a contradiction: the room was
-            # 6.96 and the %.1f rounded it up. A figure a player is meant to act
-            # on must never be rounded in the direction that overstates it.
+            # would be: rounding room UP in the message can print "you can
+            # supervise, house and teach 7.0 more people, not 7" while
+            # refusing exactly that request - a refusal that contradicts
+            # itself. A figure a player is meant to act on must never be
+            # rounded in the direction that overstates it.
             room = max(0.0, room)
             whole = int(room)
             return False, ("you can supervise, house and teach %.2f more people, "
@@ -383,12 +375,10 @@ class TrainingMixin:
         self.household.employees[trade] = self.household.employees.get(trade, 0.0) + float(n)
         self._add_labour_pressure(trade, float(n) * self.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
-        # SAY HOW MANY, AND HOW MANY YOU NOW HAVE. This returned None, so the
-        # only thing a player saw was "hired: scholar" - no number. A play
-        # tester asked for eight, and did not discover for twenty years that
-        # they had one, by which time half the tree was refusing them for want
-        # of two trained scholars. A verb that takes a quantity has to report
-        # the quantity.
+        # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
+        # the trade, with no number, gives a player no way to notice a
+        # request for eight landing as one. A verb that takes a quantity
+        # has to report the quantity.
         return True, ("%g %s%s taken on for %s denarii (a finder's fee and the "
                       "first year in advance). You now have %.1f, and %.2f "
                       "household place(s) left"
@@ -399,15 +389,12 @@ class TrainingMixin:
     def fire(self, trade, n):
         """Let staff go. Their wages stop; so does what they were doing.
 
-        AND IT CANCELS AN APPRENTICESHIP. `auto_train` nearly ended a play
-        tester's run: it started engineers, chemists AND machinists at 781 a
-        year each against 1,005 of revenue, and turning the policy off did not
-        stop what was already in flight - four more people they never asked for
-        arrived over the next two years and the wage bill reached 2,491. There
-        was no command anywhere that could stop them. Dismissing a trade you
-        are still teaching is the obvious reading of `fire`, and it is the
-        missing lever: what you paid to feed them while they learned is spent,
-        the way any abandoned work is, and they do not arrive.
+        AND IT CANCELS AN APPRENTICESHIP: turning `auto_train` off does not
+        stop training already in flight, so there has to be some command
+        that can. Dismissing a trade you are still teaching is the obvious
+        reading of `fire`, and it is the missing lever: what you paid to
+        feed them while they learned is spent, the way any abandoned work
+        is, and they do not arrive.
         """
         trade = str(trade or "").strip().lower()
         have = self.household.employees.get(trade, 0.0)
@@ -416,13 +403,12 @@ class TrainingMixin:
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
         n = float(n)
-        # THE SAME WHOLENESS hire() AND train() NOW ENFORCE. Letting a
-        # fraction of a person go is the mirror image of hiring one, and
-        # would reopen the exact hole this file's other two verbs were just
-        # closed for: a roster that can drift back to "0.03 engineers"
-        # through `fire` even though nothing can hire or teach its way there
-        # any more. Rounded rather than refused, because "let go 2.5" has an
-        # obvious meaning (two, or the two-point-something you actually
+        # THE SAME WHOLENESS hire() AND train() ENFORCE: letting a fraction of
+        # a person go is the mirror image of hiring one, and would reopen
+        # the same hole - a roster that can drift to "0.03 engineers" -
+        # through `fire` alone even though nothing can hire or teach its
+        # way there. Rounded rather than refused, because "let go 2.5" has
+        # an obvious meaning (two, or the two-point-something you actually
         # have) and refusing outright would only make a player retype it.
         if have > 0 and abs(n - round(n)) > 1e-6 and n < have:
             n = float(math.ceil(n))
@@ -526,14 +512,12 @@ class TrainingMixin:
         if hours > pool:
             return False, ("teaching %g %ss takes %.0f of your own hours and you have "
                            "%.0f uncommitted this year" % (n, trade, hours, max(0.0, pool)))
-        # THE SAME ROOM `hire` AND `buy` SHARE. household_room exists because
-        # two verbs used different numbers and a tester was told to their face
-        # they could take six more people and then took seven with the other
-        # one. `train` was the third verb and checked nothing at all, so the
-        # optimizer taught its way to a headcount of 26.9 against room for 6 -
-        # minus eighteen places - and then could not hire the artisans it
-        # needed to supervise anything. People you teach have to be fed, housed
-        # and overseen like anybody else.
+        # THE SAME ROOM `hire` AND `buy` SHARE: household_room exists so all
+        # three verbs agree on the same ceiling. `train` must check it too,
+        # or a household could teach its way past its actual capacity to
+        # feed, house and oversee people, ending up unable to hire the
+        # artisans it needs to supervise anything it just taught. People
+        # you teach have to be fed, housed and overseen like anybody else.
         room = self.household_room()
         if n > room:
             whole = int(max(0.0, room))
@@ -558,21 +542,20 @@ class TrainingMixin:
         self.household.trades_created.add(trade)
         self.household.training.append([0.0, self.year + self.TEACHING_MATURATION_YEARS, trade, float(n)])
         self._add_labour_pressure(frm, float(n) * self.HOURS_PER_PERSON_YEAR)
-        # SAY WHAT IT TOOK. A play tester's `train machinist 4` quietly ate
-        # 1,800 of their 2,000 founder-hours and, with nothing left to
-        # supervise with, closed a dozen concerns as a side effect - and the
-        # reply was six words about two years' time. Teaching is the most
-        # expensive thing you can do with a year and it never said so.
+        # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
+        # founder-hours, with nothing left afterward to supervise what it
+        # just cost elsewhere to run - the reply has to report the actual
+        # hours and money spent, not just a brief note about when training
+        # finishes. Teaching is the most expensive thing you can do with a
+        # year.
         _left = max(0.0, self.director_pool() - self.director_hours_committed())
         # WHAT HAS HAPPENED, AND WHAT IS STILL NEEDED - not just the first
-        # half. A Rome player trained 2 machinists, read "will be ready in
-        # 141", and expected them simply to be at work by then; `labour
-        # machinist` still read "you employ: 0" at year 141 because they had
-        # not yet finished (ready is the year they MATURE, not the year they
-        # start). What this never said, in either direction: they cannot do
-        # a day of the work before that year, and core.py adds them to
-        # self.household.employees itself the moment they do, automatically - no
-        # 'hire' needed to put THESE apprentices to work.
+        # half: "ready in year N" has to say plainly that they cannot do a
+        # day of the work before that year (ready is the year they MATURE,
+        # not the year they start), and that core.py adds them to
+        # self.household.employees itself the moment they do, automatically
+        # - no 'hire' needed to put THESE apprentices to work. Either half
+        # missing leaves the other easy to misread.
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
                       "- no 'hire' needed for them. "
@@ -688,10 +671,10 @@ class TrainingMixin:
     def commission(self, trade, hours):
         """Pay for a job, not for a person.
 
-        A tester's objection, and a fair one: "maybe you don't want employees,
-        you just want some copper wire, and you don't need a full time smith".
-        This buys a specific piece of work from somebody else's shop at a
-        premium over their wage, with no standing obligation either way.
+        Sometimes what is needed is some copper wire, not a full-time
+        smith on the payroll. This buys a specific piece of work from
+        somebody else's shop at a premium over their wage, with no
+        standing obligation either way.
         """
         trade = str(trade or "").strip().lower()
         if trade not in WAGES:

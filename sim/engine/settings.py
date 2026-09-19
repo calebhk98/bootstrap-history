@@ -21,31 +21,25 @@ module-level variables this module's VALUES end up in - DISPLAY_WIDTH,
 DEFAULT_AVAILABLE_LIMIT - but cli.py is what copies them there; this module
 still never imports protocol.py, nor the reverse.)
 
-THE CONFIG IS FOR THE APPLICATION, NOT FOR ANY ONE GAME. An earlier version
-of this file, and of the main-menu Options screen built on it, held
-"defaults for the next new game" here too - which civilisation, which
-starting kit, fog of war, mortality, the horizon - on the reasoning that a
-player who always starts the same way shouldn't have to retype it. That
-reasoning was sound, but CONFIG_PATH is the wrong place for it: these are
-facts about a PLAYTHROUGH, the same way fog and mortality are, and a player
-asking "why is the save location next to 'which civilisation' on the same
-settings screen" was asking the right question - the owner's own words, on
-being shown that screen, were "change where saves are, change language,
-change window size, etc? Not about each save, like fog or mortality?" So
-the Options screen now holds only what is actually about the PROGRAM: where
-saves go, how wide a line is, how many rows a table shows before paging,
-and whether the welcome/tutorial text prints for a game that has not
-started yet.
+THE CONFIG IS FOR THE APPLICATION, NOT FOR ANY ONE GAME: which
+civilisation, starting kit, fog of war, mortality and horizon a player
+favours are facts about a PLAYTHROUGH, the same way fog and mortality
+themselves are, not facts about the PROGRAM - CONFIG_PATH must not hold
+them even though a player who always starts the same way should not have
+to retype them. The Options screen holds only what is actually about the
+PROGRAM: where saves go, how wide a line is, how many rows a table shows
+before paging, and whether the welcome/tutorial text prints for a game
+that has not started yet.
 
 The "remembered default civilisation/kit/fog/mortality/horizon" capability
-is not deleted, because a player who favours one civilisation and one kit
-still should not have to retype them - it just no longer has a settings
-screen of its own. _new_game (cli.py) still prefills its five questions from
-whatever was chosen LAST TIME, and silently writes this sitting's answers
-back as the new "last time" the moment the wizard finishes, the same way a
-text editor remembers your last file dialog folder without asking you to
-configure it. DEFAULT_CIV etc., below, are that memory; nothing edits them
-directly any more.
+lives elsewhere rather than being dropped, because a player who favours
+one civilisation and one kit still should not have to retype them:
+_new_game (cli.py) prefills its five questions from whatever was chosen
+LAST TIME, and silently writes this sitting's answers back as the new
+"last time" the moment the wizard finishes, the same way a text editor
+remembers your last file dialog folder without asking you to configure
+it. DEFAULT_CIV etc., below, are that memory; nothing outside _new_game
+edits them directly.
 
 Changing the horizon mid-game, or turning mortality on mid-game, are
 reasonable things a player reaches for WHILE PLAYING, not before - that
@@ -68,14 +62,14 @@ survives in a given environment works:
      else
 
 DISPLAY WIDTH - "change window size": the renderers in protocol.py wrap text
-and size tables to a number of columns that used to be a bare constant
-(76, in most places), which is exactly the "terminal of a particular size"
-assumption that cost players truncated ids on a narrower terminal. A player
-can set an explicit width from Options; left alone (None), resolve_
-display_width below asks the terminal itself via shutil.get_terminal_size,
-and only falls back to the old hardcoded number when there is no terminal
-to ask (a pipe, a redirected file, the test suite) - so nothing a script or
-a regression check reads changes because this preference exists.
+and size tables to a number of columns, which must never be just one fixed
+constant assuming a "terminal of a particular size" - that assumption
+costs players truncated ids on a narrower terminal. A player can set an
+explicit width from Options; left alone (None), resolve_display_width
+below asks the terminal itself via shutil.get_terminal_size, and only
+falls back to a hardcoded number when there is no terminal to ask (a
+pipe, a redirected file, the test suite) - so nothing a script or a
+regression check reads changes because this preference exists.
 
 LANGUAGE - deliberately absent. The natural fourth item on a "window size,
 save location" list is "language", and it is not here: this codebase has no
@@ -408,13 +402,12 @@ def move_session_meta(old_session: Optional[str], new_session: Optional[str]) ->
 # ongoing game - it is the one file that is always the LATEST word on where
 # that game stands. A milestone (cli.py's bare 'save', mid-game) is a
 # different thing on purpose: a moment a player chose to be able to come back
-# to. Before this existed, "come back to it" meant pointing --session (or the
-# main menu's Load screen, or the in-game bare 'load') AT the milestone file,
-# which is exactly what turned it into the new autosave target - the very
-# next command overwrote it, and a player who saved 380 AD to return to found
-# it quietly became 420 AD the first time they looked. A player deep into a
-# long campaign, using checkpoints to isolate a bug, discovered this the hard
-# way: the first reload had already moved the evidence.
+# to. Resuming from it must not turn it into the new autosave target: pointing
+# --session (or the main menu's Load screen, or the in-game bare 'load') AT a
+# milestone file, and then letting the very next command overwrite it, would
+# silently move a player's fixed point forward every time they resumed from
+# it - a milestone saved at 380 AD quietly becoming 420 AD the first time it
+# is reopened.
 #
 # is_checkpoint below is what the three resume paths (cli.py's cmd_play,
 # cmd_agent, and _ingame_load) all check before deciding whether resuming a

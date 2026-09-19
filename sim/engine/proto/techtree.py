@@ -40,11 +40,10 @@ def _subject_of(n):
 def _staff_short(n):
     """"2s1a" - the standing staff a project needs, in a table cell.
 
-    A play tester picked six projects out of `available` on cost and hours,
-    started all six, and found every one of them waiting on people: the row
-    carried nine numbers and not one of them was the staff, which lived only
-    in `why`, one node at a time. Two characters a trade is enough to see it
-    while scanning.
+    Staffing has to be visible on the row itself, not only discoverable
+    one node at a time through `why`: a project that looks startable by
+    cost and hours can still be waiting on people, and two characters a
+    trade is enough to see it while scanning.
     """
     bits = ""
     if n["sch"]:
@@ -57,12 +56,12 @@ def _staff_short(n):
 def _short_of_staff(s, n):
     """True when you could NOT staff this today. Marks the row with a *.
 
-    THE SAME MEASURE start_reason USES. This compared against self.artisans
-    alone while the gate counts the founder's own hands and anything you have
-    under contract, so a break tester read "* means you do not have them yet -
-    the work waits" beside projects that started and built at full speed with
-    nobody on the payroll at all. A marker that contradicts the gate it is
-    describing is worse than no marker.
+    THE SAME MEASURE start_reason USES: comparing against self.artisans
+    alone, when the gate counts the founder's own hands and anything you
+    have under contract, would mark a project as unstaffed while it
+    starts and builds at full speed with nobody on the payroll at all. A
+    marker that contradicts the gate it is describing is worse than no
+    marker.
     """
     return bool(n["art"] > s.craft_hands_available() + 1e-9
                 or n["sch"] > s.effective_scholars() + 1e-9)
@@ -125,17 +124,12 @@ def _fog_revenue_estimate(s, k):
     """What `available` and `why` show for EARNS/YR on a thing you have
     never run, under fog of war: a range, not the true figure.
 
-    The user who asked for this put the question plainly: "should you
-    really be able to tell how much money you would make from researching
-    something? Shouldn't the payback be something you don't know until
-    after research?" A break tester's own numbers say why it matters: under
-    fog they built 540 technologies using EARNS/YR as, in their own words,
-    "the only usable heuristic", and reached 95 of the 146 nodes on the road
-    to the goal that way - not because they had worked out the tree, but
-    because the exact payback figure told them which side branches paid and
-    steered them straight past the spine. Real payback is a thing you learn
-    by running a concern for a few years, not by reading a number off a
-    prospectus before you have so much as broken ground.
+    An exact payback figure under fog would let a player choose which side
+    branches to build purely by reading a prospectus, without ever having
+    worked out the tree - steering straight past the decisions fog exists
+    to leave uncertain. Real payback is a thing you learn by running a
+    concern for a few years, not by reading a number off a prospectus
+    before you have so much as broken ground.
 
     Two things this must never be:
       - RE-ROLLED. A fresh call to self.rng here would answer differently on
@@ -261,8 +255,8 @@ def _full_entry(s, nodes, k, fog):
     # THE HONEST TOTAL, not the risk and the floor left for the player to
     # multiply by hand - and only HERE, on the full per-node entry, not on
     # _brief's own compact digest rows (cheapest_six, most_rests_on_these):
-    # those feed a summary a play tester already flagged as a reply budget
-    # to keep inside, and this number is worth a few extra bytes on the one
+    # those have their own reply-budget to keep inside, and this number is
+    # worth a few extra bytes on the one
     # row you asked to actually look at, not on every row of a six-wide
     # sampler. See expected_calendar_years' own docstring (projects.py): it
     # is >= the floor above, strictly more once risk is above zero, and it
@@ -586,14 +580,12 @@ def _digest_leverage_and_cheap(s, nodes, startable):
     """The leverage column (most rests on these) and the cheapest six,
     deduplicated against each other. Returns (leverage, cheap).
     """
-    # LEVERAGE FIRST, then price. These two lists deduplicated the wrong way
-    # round: the leverage list dropped anything that was also in the cheapest
-    # six, and the spine of this game is precisely the nodes that are BOTH -
-    # free, zero-revenue, and holding up an age. A play tester put it exactly:
-    # "zero-cost nodes gate whole ages and are invisible... twice one of them
-    # was the only thing between me and a branch". Being cheap is the reason
-    # they are easy to miss, not a reason to hide them from the column that
-    # exists to find them.
+    # LEVERAGE FIRST, then price: deduplicating the other way round - the
+    # leverage list dropping anything also in the cheapest six - would hide
+    # exactly the nodes that matter most, since the spine of this game is
+    # precisely the nodes that are BOTH: free, zero-revenue, and holding up
+    # an age. Being cheap is the reason they are easy to miss, not a reason
+    # to hide them from the column that exists to find them.
     _lev_all = sorted(startable, key=lambda k: (-downstream_count(nodes, k),
                                          s.project_cost(k)))
     # Keep the default reply below its readability budget. Five leverage rows
@@ -609,10 +601,9 @@ def _digest_stack_caution(s, leverage):
     """SAID ONCE, THE FIRST TIME THIS LIST IS EVEN LOOKED AT - not on every
     `available`, which would bury it in noise by the tenth call. "MOST
     RESTS ON THESE" is the one piece of unprompted advice this screen
-    gives a brand-new player, and five different playtests of five
-    different civilisations read it exactly as intended - as "start
-    these" - and started two or three of the leverage items together on
-    turn one. Each one was priced correctly and honestly on ITS OWN `why`
+    gives a brand-new player, and reads naturally as "start these" -
+    which invites starting two or three of the leverage items together on
+    turn one. Each one is priced correctly and honestly on ITS OWN `why`
     screen; almost none of them earn anything even once finished and
     opened (see earns_per_year on the rows above), and a poor_scholar's
     opening capital does not cover two or three of them at once. That is
@@ -653,13 +644,13 @@ def _digest_reply(s, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
     # DEFAULT: the digest.
     rows, purse = _digest_subject_rows(s, nodes, startable)
     leverage, cheap = _digest_leverage_and_cheap(s, nodes, startable)
-    # AND THE FOUR MOST RESTS ON. A normal-play tester found that the spine of
-    # the whole game is a handful of cheap, zero-revenue, tier-0 nodes -
-    # units_standards, identity_cover, patron_local, workshop_first - and that
-    # the only way to find them was to script a `why` call for every startable
-    # id, a hundred at first and four hundred and sixty by the end. The digest
-    # sorted by price, which is the one axis on which those nodes look like
-    # nothing. Leverage is a column the game already knows.
+    # AND THE FOUR MOST RESTS ON: the spine of the whole game is a handful
+    # of cheap, zero-revenue, tier-0 nodes - units_standards,
+    # identity_cover, patron_local, workshop_first - which look like
+    # nothing when the digest is sorted by price, the one axis that hides
+    # them. Without a leverage column here, finding them means scripting
+    # a `why` call for every startable id. Leverage is a column the game
+    # already knows.
     out = {"ok": True, "count": len(startable),
            "showing": "a summary by subject, because the full list is %d things"
                       % len(startable),
@@ -793,24 +784,23 @@ def _explain_identity(s, nodes, k, node):
         # fog: telling a player outright which of their own choices is
         # correct is the game answering its own question either way.
         "note": strip_self_play_advice(node["note"]),
-        # FOG-SCRUBBED. The knowledge-base citation is a section anchor into
+        # FOG-SCRUBBED: the knowledge-base citation is a section anchor into
         # a shared markdown file, and the tree's own convention names most
         # anchors after the node id they document - so "kb":
         # "...#ag2_norfolk_course" on a completely unrelated, visible node
         # names a hidden node's id in plain sight, the same class of leak
-        # `bounty` had with a raw prerequisite list. Found by the generic
-        # fog scanner in test_regressions.py (which exists to catch exactly
-        # this on the NEXT command too), not by a playtester. fog_scrub is
-        # the one filter every such free-text field goes through.
+        # `bounty` had with a raw prerequisite list. The generic fog
+        # scanner in test_regressions.py exists to catch exactly this
+        # class of leak on future commands too. fog_scrub is the one
+        # filter every such free-text field goes through.
         "kb": s.fog_scrub(node["kb"]),
         "founder_hours": node["ph"],
-        # Two different kinds of people, and a tester reasonably read the two
-        # fields as contradicting each other ("hired_labour names an engineer,
-        # staff_needed asks for artisans; the two labour fields don't agree on
-        # who is actually doing the work"). They are not the same question.
-        # hired_labour is HOURS OF A JOB, bought from whoever does that trade
-        # here, for this project only. staff_needed is PEOPLE ON YOUR OWN BOOKS
-        # who understand your methods and stay afterwards.
+        # Two different kinds of people: hired_labour is HOURS OF A JOB,
+        # bought from whoever does that trade here, for this project only.
+        # staff_needed is PEOPLE ON YOUR OWN BOOKS who understand your
+        # methods and stay afterwards. They can name different trades
+        # without contradicting each other, because they are not the same
+        # question.
         "hired_labour": node["lab"],
         "materials": node["mat"],
     }
@@ -918,12 +908,11 @@ def _explain_revenue(s, nodes, k, node):
             "indirect income; those variable effects are not included here. "
             "Compare 'money' before and after opening."
             if k in s.CAPABILITY_INSTITUTIONS else None),
-        # WHAT IT PAYS YOU, which for something in your own practice is a third
-        # of the figure above. A break tester read "REVENUE: 500 den/yr" beside
-        # a ledger crediting 166.7 for the same node and called it `why`
-        # overstating income threefold. Both are true of different things: the
-        # tree quotes the trade as an organised concern, and one person in a
-        # rented room is not one.
+        # WHAT IT PAYS YOU, which for something in your own practice is a
+        # third of the figure above: the tree quotes the trade as an
+        # organised concern, and one person in a rented room is not one,
+        # so both figures have to be shown or the plain revenue figure
+        # overstates practice income threefold.
         "but_it_pays_YOU": (
             round(node["rev"] * s.PRACTICE_SHARE * s.practice_attention(), 1)
             if k in s._practice_set() and node["rev"] else None),
@@ -984,16 +973,15 @@ def _staffing_build_crew(s, node):
                      "artisans": round(s.craft_hands_available(), 1)},
         "you_have_counts": ("counting yourself, and hours you have bought"
                             if s.founder_alive else "counting hours you have bought"),
-        # SAY WHEN THE STAFF IT WANTS IS MORE THAN THIS SOCIETY HAS. The goal
-        # itself needs twenty-five scholars against a ceiling of 6.4, and a
-        # play tester found that ceiling in a refusal message in year 463 of a
-        # 500-year game - the single thing that decided whether their run could
-        # be won, on no screen anywhere.
-        # AGAINST WHAT YOU ACTUALLY HAVE, not against the hiring ceiling alone.
-        # A school and an academy grant scholars outright, on top of anyone you
-        # could hire, so "literacy here will never supply more than 6.4"
-        # printed beside "(you have 210)" - and twice made a play tester think
-        # they were hard-blocked when they were not.
+        # SAY WHEN THE STAFF IT WANTS IS MORE THAN THIS SOCIETY HAS: a
+        # society's literacy-driven hiring ceiling can be lower than what
+        # the goal itself needs, and finding that out only in a late-game
+        # refusal is too late to plan around.
+        # AGAINST WHAT YOU ACTUALLY HAVE, not against the hiring ceiling
+        # alone: a school and an academy grant scholars outright, on top
+        # of anyone you could hire, so printing "literacy here will never
+        # supply more than 6.4" beside a much larger actual headcount
+        # would read as a hard block when it is not one.
         "more_scholars_than_this_society_can_supply": (
             "%s wanted; you have %.1f and literacy here will never let you HIRE "
             "more than %.1f. Printing, paper, schools and academies raise both."
@@ -1102,10 +1090,9 @@ def _explain_classification(s, nodes, k, node):
     return {
         "suspicion": node.get("sus", 0), "state_interest_trait_score": node.get("gov", 0),
         "bounty_eligible_by_type": bounty_by_type,
-        # NOT CHARGED UNTIL YOU OPEN IT. A tester read the upkeep off `why`,
-        # built the thing, and found nothing on the bill - correctly, because
-        # revenue and upkeep follow what you RUN. The figure is real; it just
-        # is not yours yet.
+        # NOT CHARGED UNTIL YOU OPEN IT: revenue and upkeep follow what you
+        # RUN, so the figure quoted elsewhere is real but not yours yet
+        # until you open it - this says so.
         "revenue_and_upkeep_apply_only_once_opened": (
             True if (node["rev"] > 0 or node["up"] > 0) and k not in s.granted
             and k not in s.operating else None),
@@ -1118,12 +1105,11 @@ def _explain_classification(s, nodes, k, node):
         # credit, and a patron's willingness to have his name behind
         # something the state is wary of, ALL stop the moment you close the
         # doors, exactly like its revenue and upkeep above - even though the
-        # knowledge of how to run one never leaves you. A Mexica player lost
-        # two multi-year stretches to closing these for the capital back, and
-        # a Rome player separately could not tell which of `identity_cover`,
-        # `workshop_first` and `patron_local` (all sitting identically in
-        # `ventures`) actually needed to stay open. This says which kind a
-        # node is, in the one place a player reads before deciding.
+        # knowledge of how to run one never leaves you. identity_cover,
+        # workshop_first and patron_local sit identically in `ventures`,
+        # but closing them has very different consequences, so this says
+        # which kind a node is, in the one place a player reads before
+        # deciding.
         "this_is_a_capability_you_must_keep_open": (
             "yes - it is knowledge (that part is permanent), but scholars it "
             "supports, household places it adds, credit or standing it lends "
@@ -1149,22 +1135,21 @@ def _lineage_setup(s, nodes, k):
     the four values every field in this group is built from. Returns
     (chain_all, need, unlocks, n_blocks).
     """
-    # WHAT IS LEFT OF IT, not what it always was. A play tester read identical
-    # figures in year 436 after building 227 technologies as in year 100 with
-    # nothing built, and reasonably said the number never counts down. The
-    # chain BEHIND a node is a fixed fact about the tree; what a player is
-    # deciding with is what they still have to do.
+    # WHAT IS LEFT OF IT, not what it always was: the chain BEHIND a node
+    # is a fixed fact about the tree, but what a player is deciding with
+    # is what they still have to do, so `need` must subtract `s.done` -
+    # otherwise the number never counts down no matter how much has
+    # already been built.
     _chain_all = closure(nodes, k) - {k}
     need = _chain_all - s.done
-    # req_any COUNTS AS UNLOCKING. A node can be reached two ways: as a hard
-    # prerequisite in `pre`, or as one option inside a req_any substitution
-    # group ("any of a steam engine, a water wheel or a horse will drive this").
-    # Scanning `pre` alone reported ten nodes as dead ends that are nothing of
-    # the kind, and they were not obscure ones: the Norse clinker hull and
-    # bog-iron bloomery, and the Mexica's chinampa. Three civilisations were
-    # being told their own signature technology led nowhere, which is exactly
-    # the "flagship starting techs are dead ends" complaint a play tester filed
-    # against the Norse.
+    # req_any COUNTS AS UNLOCKING: a node can be reached two ways, as a
+    # hard prerequisite in `pre`, or as one option inside a req_any
+    # substitution group ("any of a steam engine, a water wheel or a
+    # horse will drive this"). Scanning `pre` alone would report nodes
+    # like the Norse clinker hull and bog-iron bloomery, or the Mexica's
+    # chinampa, as dead ends - each civilisation's own signature
+    # technology told it leads nowhere, when it genuinely unlocks
+    # something through a substitution group.
     unlocks = [] if getattr(s, "fog", False) else _unlocked_by(k, nodes)
     # Was: {m for m in nodes if k in closure(nodes, m)} - a full ancestor
     # closure of all 2,831 nodes, per call. Same answers, computed once for the
@@ -1253,13 +1238,14 @@ def _explain_chain(s, nodes, k, need, _chain_all):
             len(_chain_all) if not getattr(s, "fog", False) else None),
         "chain_founder_hours": (sum(nodes[node_id]["ph"] for node_id in need)
                                 if not getattr(s, "fog", False) else None),
-        # AT THIS SOCIETY'S PRICES, like the COST line four rows above it. This
-        # summed the tree's BASE cost and applied none of the multipliers the
-        # same page prints - the eight prerequisites of a telescope came out at
-        # 24,175 in all five civilisations, against a real bill of 18,970 in
-        # Han and 35,108 for the Norse. A break tester checked it and called it
-        # a 31% error in the poorest civilisation; chain_size and
-        # chain_founder_hours were exact, and only the money was wrong.
+        # AT THIS SOCIETY'S PRICES, like the COST line four rows above it:
+        # summing the tree's BASE cost and applying none of the
+        # civilisation-specific multipliers the same page prints would
+        # disagree badly - the eight prerequisites of a telescope, say,
+        # summing the same in every civilisation regardless of a real bill
+        # that varies by civilisation. chain_size and chain_founder_hours
+        # are unaffected by price; only chain_cost has to go through
+        # s.project_cost().
         "chain_cost": (round(sum(s.project_cost(node_id) for node_id in sorted(need)), 1)
                        if not getattr(s, "fog", False) else None),
         "critical_path_years": (critical_path(nodes, k)[0]
@@ -1284,10 +1270,9 @@ def _explain_unlocks(s, nodes, k, unlocks, n_blocks):
         "downstream_count": (n_blocks if not getattr(s, "fog", False) else None),
         "how_much_rests_on_this": (
             None if not getattr(s, "fog", False) else _rests_band(n_blocks)),
-        # Under fog there is no goal, so a boolean saying whether this is "on the
-        # goal path" is either meaningless or a leak. A tester read it as
-        # true/false for five hundred years while `state.goal` was null and
-        # reasonably asked what path it could possibly mean.
+        # Under fog there is no visible goal, so a boolean saying whether
+        # this is "on the goal path" would be either meaningless or a
+        # leak, and must be None instead of true/false.
         "on_goal_path": (None if getattr(s, "fog", False)
                          else (k == s.goal or is_downstream(nodes, k, s.goal))),
     }
@@ -1359,10 +1344,11 @@ def _explain_labour_notes(s, node):
     what is already on staff.
     """
     out = {}
-    # Say what the two labour fields mean ONLY when this node makes it matter.
-    # A tester read them as contradicting each other, so the explanation earns
-    # its place; carrying it on every reply whether or not the node hires anyone
-    # is 400 bytes of boilerplate per call.
+    # Say what the two labour fields mean ONLY when this node makes it
+    # matter: without context the two fields can read as contradicting
+    # each other, so the explanation earns its place; carrying it on
+    # every reply whether or not the node hires anyone is 400 bytes of
+    # boilerplate per call.
     absent = sorted(trade for trade in node["lab"] if not s.trade_available(trade))
     if absent:
         out["trades_that_do_not_exist_here"] = absent

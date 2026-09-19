@@ -5,11 +5,11 @@
 # venture_hands() (projects.py) is a continuous SHARE of a scholar's or
 # craftsman's YEAR that running the concern claims, scaled by how much it
 # takes in - it is not even trying to count people, the way scholars/
-# artisans above at least approximately are. A player who had never seen
-# either explanation measured the exact case this answers: "'open' refused
-# lens_grinding, which a moment earlier 'why' had said needs 2 artisans,
-# over a SEPARATE figure - 2.13 craftsmen - that 'why' never showed at
-# all." Read by `why`, `start`, `stuck` and `ventures` - every screen that
+# artisans above at least approximately are. Without this note, 'open'
+# refusing lens_grinding over a SEPARATE figure - 2.13 craftsmen - that
+# 'why' never showed at all (which a moment earlier had said the node
+# needs 2 artisans) reads as the two commands disagreeing with each
+# other. Read by `why`, `start`, `stuck` and `ventures` - every screen that
 # shows venture_hands()'s own numbers - so the one explanation for what
 # they mean cannot disagree with itself from one screen to the next.
 _VENTURE_SUPERVISION_NOTE = (

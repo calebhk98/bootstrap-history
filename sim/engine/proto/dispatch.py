@@ -65,11 +65,11 @@ def _cmd_save(s, nodes, cmd, ended):
     path = cmd.get("file") or cmd.get("path")
     if not isinstance(path, str) or not path:
         return {"ok": False, "error": 'give a filename, e.g. {"cmd":"save","file":"mygame.json"}'}
-    # A SAVE FILE IS A SAVE FILE, not a way to write anywhere on the disk.
-    # A tester confirmed this would write into /etc/, and that a relative
-    # path scattered files through the repository root. The game is played
-    # by pointing agents and scripts at it; "name a path and I will write
-    # there" is not a thing it should offer.
+    # A SAVE FILE IS A SAVE FILE, not a way to write anywhere on the disk:
+    # an absolute path could write into /etc/, and an unguarded relative
+    # path could scatter files through the repository root. The game is
+    # played by pointing agents and scripts at it; "name a path and I will
+    # write there" is not a thing it should offer.
     bad = _unsafe_path(path)
     if bad:
         return {"ok": False, "error": bad}
@@ -85,8 +85,9 @@ def _cmd_save(s, nodes, cmd, ended):
 
 
 def _cmd_step(s, nodes, cmd, ended):
-    # It used to advance the clock silently after the run was over, which
-    # looks identical to a working game that has simply stopped progressing.
+    # Must refuse to advance the clock once the run has ended: doing so
+    # silently would look identical to a working game that has simply
+    # stopped progressing.
     if ended:
         return {"ok": False, "error": "the run has ended (%s); time cannot advance. "
                                       "Use {\"cmd\":\"state\"} to see the final position."
@@ -111,9 +112,9 @@ def _cmd_step(s, nodes, cmd, ended):
                          "Nothing was changed." % raw_years}
     if years < 1:
         return {"ok": False, "error": "years must be >= 1"}
-    # A tester sent 100000 and the run silently ended. Nothing is gained by
-    # accepting a number larger than the game can contain, and a typo that
-    # ends your run without saying so is the worst kind of accepted input.
+    # Nothing is gained by accepting a number of years larger than the
+    # game can contain: a typo that silently ends your run without saying
+    # so is the worst kind of accepted input.
     left = max(0, s.end_year - s.year)
     if years > left:
         return {"ok": False,
@@ -169,41 +170,34 @@ def _cmd_step(s, nodes, cmd, ended):
                     % (years, "{:,.0f}".format(
                            _pre_state.get("founder_hours_available") or 0.0),
                        nodes[_could_start]["name"], years, years))
-    # LOST, not only completed. A normal-play tester lost fourteen finished
-    # works inside a single `step 12` - among them corpus_written and
-    # school_founded, which they called the pivot of the entire game - and
-    # wrote that "completions get EVENT lines; losses get nothing". The
-    # engine does log the shedding, but nothing in the reply put a name
-    # against what left, while every arrival got one. A game whose only
-    # score is what you have built has to report subtraction at least as
-    # loudly as addition.
+    # LOST, not only completed: a game whose only score is what you have
+    # built has to report subtraction at least as loudly as addition, so
+    # anything that drops out of `done` during a multi-year step has to be
+    # named here, the same way an arrival is.
     # STOP WHEN SOMETHING IT WARNED ABOUT ACTUALLY HAPPENS, rather than
-    # running the rest of the years you asked for on top of it. A break
-    # tester watched a `step 12` carry "CLOSE TO THE LIMIT ... while it is
-    # still your choice" (see economy.warn_near_the_limit) straight
-    # through to CREDIT EXHAUSTED, and then spend the REMAINING years of
-    # the same call compounding arrears with nobody able to react - the
-    # choice the warning promised was still theirs had already gone by
-    # before the reply came back. A request for N years is not a promise
-    # to hide what happens in year 1 until year N has also gone by. So
-    # this breaks the loop, not only the request, the moment it fires.
-    # A normal-play tester in mortal mode hit the equivalent fault for
-    # the founder's own death: it landed inside a `step 60` and the call
-    # ran eleven more years past it - far enough to also trip the
-    # no-successor catastrophe - before the player got a turn to react.
+    # running the rest of the years asked for on top of it: a `step 12`
+    # that carries "CLOSE TO THE LIMIT ... while it is still your choice"
+    # (see economy.warn_near_the_limit) straight through to CREDIT
+    # EXHAUSTED must not spend the REMAINING years of the same call
+    # compounding arrears with nobody able to react - the choice the
+    # warning promises must still be theirs when the reply comes back. A
+    # request for N years is not a promise to hide what happens in year 1
+    # until year N has also gone by. So this breaks the loop, not only the
+    # request, the moment it fires. The same applies to a mortal founder's
+    # own death: a `step 60` that lands on it must not run on past it far
+    # enough to also trip the no-successor catastrophe before the player
+    # gets a turn to react.
     # MATCHED CASE-INSENSITIVELY BELOW, because this is prose and prose
-    # gets rewritten: the death line was recapitalised to say what the
-    # death MEANS and silently stopped matching here, which cost the step
-    # its stop and the reply its death field.
-    # CLOSE TO THE LIMIT BELONGS HERE TOO, and did not: the comment above
-    # describes exactly this warning being cut short so the choice it
-    # offers is still real, but the tuple itself never named it, so a
-    # batched step ran straight past "stop a project... while it is
-    # still your choice" and only broke four years later on the fatal
-    # CREDIT EXHAUSTED that warning exists to prevent. The one event that
-    # still leaves you options is the one this most needed to interrupt
-    # for; the fatal one needs it least, since there is nothing left to
-    # choose by the time it fires.
+    # gets rewritten: a case-sensitive match against one exact
+    # capitalisation would silently stop matching the moment that prose is
+    # edited, costing the step its stop and the reply its death field.
+    # CLOSE TO THE LIMIT BELONGS IN THE STOP-MARKER TUPLE TOO: it is the
+    # one event that still leaves a player options, so it is the one this
+    # most needs to interrupt for - the fatal events need it least, since
+    # there is nothing left to choose by the time they fire. Leaving it
+    # out would let a batched step run straight past "stop a project...
+    # while it is still your choice" and only break years later on the
+    # fatal CREDIT EXHAUSTED that warning exists to prevent.
     _STEP_STOP_MARKERS = ("CREDIT EXHAUSTED", "FOUNDER DIES",
                           "CLOSE TO THE LIMIT")
     completed, lost, events = [], [], []
@@ -242,11 +236,11 @@ def _cmd_step(s, nodes, cmd, ended):
         # engine before and after being split into modules: every number
         # matched and this list did not.
         for node_id in sorted(s.done - before_done):
-            # YOURS OR THE SOCIETY'S. Anything in `granted` is this
-            # civilisation's own work, credited free; printing it in the
-            # same "COMPLETED" line as a project the player paid for and
-            # waited three years on had a tester reading their first turn
-            # as two finished buildings they had never started.
+            # YOURS OR THE SOCIETY'S: anything in `granted` is this
+            # civilisation's own work, credited free, and has to be
+            # marked apart from a project the player paid for and waited
+            # years on, or the same "COMPLETED" line reads as the player
+            # having built something on turn one they never started.
             completed.append({"id": node_id, "name": nodes[node_id]["name"],
                               "year": s.done_year.get(node_id),
                               "granted": node_id in s.granted})
@@ -264,9 +258,9 @@ def _cmd_step(s, nodes, cmd, ended):
                 # comment on why the log alone cannot be trusted to
                 # survive a save and a resume.
                 s._founder_death_aged, s._founder_death_year = _age_n, year
-        # AND STOP THE YEAR YOU WIN. Reaching the goal is no longer an
-        # ending, so without this a `step 50` that crosses the finish line
-        # would run on for another forty-nine years and mention it in
+        # AND STOP THE YEAR YOU WIN: reaching the goal does not end the
+        # run, so without this a `step 50` that crosses the finish line
+        # would run on for the remaining years and mention it only in
         # passing. It is the one moment in a run most worth handing back.
         if ran < years and s.goal_year == s.year:
             stopped_early = ("stopped after %d of the %d years you asked "
@@ -517,12 +511,10 @@ def _agent_dispatch_inner(s, nodes, cmd):
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}
-    # A NAME RESOLVES TO AN ID, BEFORE ANYTHING ELSE READS IT. Every screen in
-    # this game prints the human NAME - "Horizontal loom" - and every command
-    # that acts on a technology took only the machine id - "tex_horizontal_
-    # loom" - until now; testers called that jarring often enough, in close
-    # to the same words, that it stopped being a style choice. This has to run
-    # before the fog guard just below: that guard reads cmd["id"] straight off
+    # A NAME RESOLVES TO AN ID, BEFORE ANYTHING ELSE READS IT: every screen in
+    # this game prints the human NAME - "Horizontal loom" - while every
+    # command that acts on a technology takes only the machine id -
+    # "tex_horizontal_loom". This has to run before the fog guard just below: that guard reads cmd["id"] straight off
     # the command, so a name that resolves to exactly one id must already BE
     # that id by the time the guard looks at it, or a perfectly good name
     # would be refused as something the player had never heard of. `id` still
@@ -571,38 +563,33 @@ def _agent_dispatch_inner(s, nodes, cmd):
         # untouched, so the ordinary unknown-id handling further down - and
         # the fog guard immediately below it - answer it exactly as they
         # already do for a mistyped id, did-you-mean included.
-    # ONE GUARD, FOR EVERY COMMAND THAT TAKES AN ID. `why` checked visibility
-    # and `bounty` did not: it checked prerequisites first, so refusing a
-    # bounty on the goal node printed the goal's seven missing prerequisites by
-    # name. A break tester crawled that error recursively and recovered 134
-    # hidden technology ids and the entire dependency graph to the transistor
-    # in six rounds, with fog on the whole time. Patching bounty alone would
-    # leave the next command that grows an id to make the same mistake, so the
-    # check lives here, once, before any handler sees the id.
+    # ONE GUARD, FOR EVERY COMMAND THAT TAKES AN ID: a command that checks
+    # prerequisites before visibility can leak hidden ids by naming them
+    # in a refusal, and crawling that error recursively can recover the
+    # entire hidden dependency graph, with fog on the whole time.
+    # Patching one command alone would leave the next command that grows
+    # an id to make the same mistake, so the check lives here, once,
+    # before any handler sees the id.
     if getattr(s, "fog", False) and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
         _node_id = cmd.get("id")
-        # THE SAME ANSWER WHETHER OR NOT IT EXISTS. Refusing an unheard-of node
-        # with "you have never heard of that" and a nonexistent one with
-        # "unknown node 'X'" makes the two distinguishable, and that difference
-        # IS the tree: a break tester classified ten real technologies and five
-        # invented ones from sixteen plain-English guesses, on a fogged save,
-        # in one pass. `help fog` promises there is no way to view the whole
-        # tree, and a question you can ask about any name at all, and get a
-        # true answer to, is a way to view the whole tree.
-        # THE ONE EXCEPTION IS `why` ON THE GOAL. The status line names the goal
-        # every single turn - "Aiming at: Point-contact transistor" - and this
-        # answered `why point_contact_transistor` with "you have never heard of
-        # any such thing", then offered fin_contract_law as what the player
-        # might have meant, for the first 187 years of a play tester's run.
-        # Being told what you are for and then told you have never heard of it
-        # is a contradiction, not fog. It is `why` alone, and not is_visible
-        # itself, because making the goal visible reopened the exact exploit
-        # this guard exists to close: `bounty` on the goal then printed its
-        # seven missing prerequisites by name, and a break tester once crawled
-        # that error recursively to recover 134 hidden ids. `why` under fog
-        # already says only "this needs 7 other things you have not heard of
-        # yet", which is the honest answer.
+        # THE SAME ANSWER WHETHER OR NOT IT EXISTS: refusing an unheard-of
+        # node with "you have never heard of that" and a nonexistent one
+        # with "unknown node 'X'" would make the two distinguishable, and
+        # that difference IS the tree - asking about any name at all and
+        # getting a true answer to whether it is real is a way to view
+        # the whole tree. `help fog` promises there is no such way.
+        # THE ONE EXCEPTION IS `why` ON THE GOAL: the status line names the
+        # goal every single turn - "Aiming at: Point-contact transistor" -
+        # so refusing `why point_contact_transistor` with "you have never
+        # heard of any such thing" would be a contradiction, not fog.
+        # It is `why` alone that gets the exception, and not is_visible
+        # itself, because making the goal fully visible would reopen the
+        # exact exploit this guard exists to close: `bounty` on the goal
+        # would then print its missing prerequisites by name, recoverable
+        # recursively into the hidden dependency graph. `why` under fog
+        # already says only "this needs N other things you have not heard
+        # of yet", which is the honest answer.
         _goal_why = (_op == "why" and _node_id == getattr(s, "goal", None))
         if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
                 _node_id not in nodes or not s.is_visible(_node_id)):
@@ -617,16 +604,13 @@ def _agent_dispatch_inner(s, nodes, cmd):
                                  "beyond what you have heard of. 'why %s' is all "
                                  "of it you can see from here." % _node_id}
             near = _did_you_mean(_node_id, nodes, s=s)
-            # SAY WHERE THE SUGGESTIONS COME FROM. The suggestions are already
-            # filtered through is_visible, so nothing hidden is ever named -
-            # but this said "you have never heard of any such thing... nothing
-            # tells you what lies beyond that" and then listed three ids, and a
-            # break tester reasonably read that as the fog leaking and filed it
-            # as their second most serious finding. It was a false alarm: the
-            # three they saw were two of Rome's own granted crafts and one
-            # thing standing startable in front of them. A refusal that
-            # manufactures false bug reports is costing real work, so the
-            # sentence now says which of the two the suggestions are.
+            # SAY WHERE THE SUGGESTIONS COME FROM: the suggestions are
+            # already filtered through is_visible, so nothing hidden is
+            # ever named - but listing ids right after saying "nothing
+            # tells you what lies beyond that" would read as a
+            # contradiction, a fog leak that is not actually one. The
+            # sentence has to say which of the two the suggestions are:
+            # things already known.
             return {"ok": False,
                     "error": "you have never heard of any such thing. You know "
                              "what you have built and what you could begin next; "
@@ -639,10 +623,11 @@ def _agent_dispatch_inner(s, nodes, cmd):
     if command in ("help", "?", "commands"):
         return {"ok": True, "help": _agent_help(s, cmd.get("topic"))}
 
-    # One central guard rather than five. A playtester sent {"id": {"a": 1}} and
-    # the process died on `k not in nodes` with an unhashable-type TypeError,
-    # losing the whole session. A malformed command must cost you the command,
-    # never the game.
+    # One central guard rather than five: an id that is not a string (a
+    # dict or list, say) would crash on `k not in nodes` with an
+    # unhashable-type TypeError wherever it first reaches that test,
+    # losing the whole session. A malformed command must cost you the
+    # command, never the game.
     if "id" in cmd and not isinstance(cmd["id"], str):
         return {"ok": False,
                 "error": "id must be a name in quotes, not %s. Nothing was changed."

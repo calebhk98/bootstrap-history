@@ -1,17 +1,15 @@
 """People: hiring them, teaching them, buying them, paying them.
 
-Split out of simulator.py, which had grown to 5,600 lines, then further
-split as it grew again. These are methods of Sim; they are a mixin only so
-that they can live in a file of their own. Behaviour is unchanged and
-verified byte-identical.
+These are methods of Sim; they are a mixin only so that they can live in
+a file of their own.
 
-This file grew to 3,214 lines and 50 methods on its own, at which point it
-became the same problem simulator.py was: one file nobody could edit
-without colliding with everyone else touching Sim's labour mechanics. It is
-now a pure composition point. The 50 methods live in five sibling modules,
-grouped by subject rather than by size, and this file's only job is to
-compose them back into the single LabourMixin that sim/engine/core.py's
-`class Sim(...)` already expects, unchanged, to inherit from:
+This file is a pure composition point: one file holding all of a
+household's labour mechanics becomes a file nobody can edit without
+colliding with everyone else touching them, so the 50 methods live in
+five sibling modules, grouped by subject rather than by size, and this
+file's only job is to compose them back into the single LabourMixin that
+sim/engine/core.py's `class Sim(...)` already expects, unchanged, to
+inherit from:
 
     labour_capacity.py    literacy, institutional (staff_capacity) and
                            supervisory (supervision_room) ceilings on how

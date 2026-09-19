@@ -3,11 +3,10 @@
 import os, re
 
 # ----------------------------------------------------------------------------
-# A rendering for a person, alongside the JSON one, not instead of it.
-#
-# Two testers asked for this in almost the same words: the JSON is precise
-# and correct and a wall to read. Everything below turns an outgoing reply
-# dict - the exact same dict that gets json.dumps()'d to stdout - into text a
+# A rendering for a person, alongside the JSON one, not instead of it: the
+# JSON is precise and correct and a wall to read. Everything below turns an
+# outgoing reply dict - the exact same dict that gets json.dumps()'d to
+# stdout - into text a
 # person can scan. It NEVER changes what goes to stdout; see cli.py's --pretty
 # handling, which prints this to stderr, alongside the unmodified JSON line,
 # only when asked. The renderer reads the reply dict only, never the live Sim,
@@ -36,9 +35,9 @@ def _fmt_num(v):
     precision than is useful. 12345.6 -> "12,346". 4.0 -> "4". 0.375 -> "0.38".
 
     Whole-feeling numbers (anything 1 and up) carry no decimal at all once
-    they are the size a player actually deals in; a tester said reading raw
-    JSON here "made me double-check arithmetic", which a rounded, comma'd
-    figure does not invite.
+    they are the size a player actually deals in: raw JSON precision here
+    invites double-checking arithmetic that a rounded, comma'd figure does
+    not.
     """
     if v is None:
         return "-"
@@ -72,12 +71,10 @@ def _fmt_range(v):
 def _pct(v):
     """A 0..1 fraction as a percentage a person reads at a glance.
 
-    NEVER ROUND A FATAL CHANCE TO ZERO. Two play testers were ended by
-    something this had just printed as 0%: "1% chance something lands this
-    year, of which 0% would end the run", and then the run ended. A number
-    that means "this can kill you" and prints as "this cannot happen" is the
-    one number in the game that must not be rounded down. Anything that can
-    happen at all prints as at least "<1%".
+    NEVER ROUND A FATAL CHANCE TO ZERO: a number that means "this can kill
+    you" and prints as "this cannot happen" is the one number in the game
+    that must not be rounded down. Anything that can happen at all prints
+    as at least "<1%".
     """
     if v is None:
         return "-"
@@ -101,10 +98,10 @@ def _wrap(text, width=None, indent=""):
     if width is None:
         # LIVE, NOT A SNAPSHOT: cli.py's _apply_display_prefs patches
         # engine.protocol.DISPLAY_WIDTH directly (a module attribute, not a
-        # call), same as it always has - see DISPLAY_WIDTH's own comment in
-        # engine/proto/util.py. Reading it back through the protocol module
-        # itself, instead of the plain name this file's own DISPLAY_WIDTH
-        # binds, is what makes that patch visible here after the split.
+        # call) - see DISPLAY_WIDTH's own comment in engine/proto/util.py.
+        # Reading it back through the protocol module itself, rather than a
+        # plain name this file would otherwise bind, is what makes that
+        # patch visible here.
         from .. import protocol as _protocol
         width = _protocol.DISPLAY_WIDTH
     if not text:
@@ -121,23 +118,22 @@ def _wrap(text, width=None, indent=""):
     return "\n".join(lines)
 
 # HOW WIDE A LINE IS, AND HOW MANY ROWS A PAGE SHOWS, BEFORE A PLAYER ASKS
-# FOR SOMETHING ELSE. Both used to be bare numbers scattered through _wrap's
-# own default, _available_row's column floor, and _agent_available's page
-# slice - which means the game was silently assuming one terminal size and
-# one page length for everyone, and a player whose actual terminal was
-# narrower lost ids off the edge of a table they meant to copy one out of.
-# These are APPLICATION preferences now (cli.py's main-menu Options screen,
+# FOR SOMETHING ELSE. A single shared value for _wrap's own default,
+# _available_row's column floor and _agent_available's page slice, so no
+# caller assumes its own terminal size and page length: a player whose
+# terminal is narrower must not lose ids off the edge of a table they
+# meant to copy one out of.
+# These are APPLICATION preferences (cli.py's main-menu Options screen,
 # "display width" and "rows per table"; see settings.py's module docstring
 # for why they are application-level and not part of any one save), set
 # once at the top of cli.py's human-facing entry points - the menu and
 # `play` - via cli.py's _apply_display_prefs. `agent` never calls it: its
 # JSON protocol (and the --pretty rendering alongside it) is a stable
-# machine interface and must render exactly as it always has regardless of
+# machine interface and must render exactly the same regardless of
 # whichever human happens to be running the script, on whatever terminal.
-# The values below are exactly what every caller already hardcoded, so a
-# process that never touches these (every `agent` invocation, and any
-# `play`/menu session before a player has ever opened Options) renders
-# byte-for-byte as it did before this existed.
+# The values below are the default every caller uses, so a process that
+# never touches these (every `agent` invocation, and any `play`/menu
+# session before a player has opened Options) always renders with them.
 DISPLAY_WIDTH = 76
 DEFAULT_AVAILABLE_LIMIT = 30
 
@@ -149,11 +145,11 @@ def _unsafe_path(path):
     """None if this is a reasonable place for a save file; a refusal if not.
 
     Deliberately conservative rather than clever: a save must be a .json or
-    .save file, must not be absolute, and must not climb out of where the game
-    was started. That covers writing into /etc, which a tester did, without
-    pretending to be a security boundary - anyone who can send commands to this
-    process can already run code as this user. It is here so the ordinary
-    accident does not happen, not because a sandbox exists.
+    .save file, must not be absolute, and must not climb out of where the
+    game was started - covering an attempt to write into /etc, for example
+    - without pretending to be a security boundary: anyone who can send
+    commands to this process can already run code as this user. It is here
+    so the ordinary accident does not happen, not because a sandbox exists.
     """
     if os.path.isabs(path):
         return ("a save file must be a relative path, not an absolute one. "
@@ -207,13 +203,13 @@ def _qty(cmd, key, default=None):
 def _num(v, default=0.0):
     """Read a number from a command without ever raising at the player.
 
-    NaN AND INFINITY ARE NOT NUMBERS FOR THIS PURPOSE. Python's json accepts
+    NaN AND INFINITY ARE NOT NUMBERS FOR THIS PURPOSE: Python's json accepts
     bare NaN and Infinity as an extension, float() accepts the strings, and
-    every comparison against NaN is False - so `NaN` walked through every "must
-    be greater than zero" guard in the game, set capital to NaN permanently,
-    made everything free, and then got written into the save file as bare NaN,
-    which is not legal JSON and cannot be read back by anything else. A tester
-    bought 999,999 hectares of woodland with 400 denarii this way.
+    every comparison against NaN is False, so an unrejected NaN would walk
+    through every "must be greater than zero" guard in the game, set
+    capital to NaN permanently, make everything free, and then get written
+    into the save file as bare NaN, which is not legal JSON and cannot be
+    read back by anything else.
     """
     try:
         number = float(v)
@@ -235,9 +231,9 @@ def _clean(v):
 def _flag(v, default=False):
     """Read a switch. "false", "no", "0" and "" are all off.
 
-    A tester set a policy to the STRING "false" and it came back true, because
-    bool("false") is true. Every other language on earth has this bug too and it
-    is still a bug.
+    bool("false") is true in Python, so a policy set to the STRING "false"
+    must not be read with bare bool(). Every other language on earth has
+    this bug too and it is still a bug.
     """
     if isinstance(v, str):
         return v.strip().lower() not in ("", "false", "no", "off", "0", "none")
@@ -251,7 +247,7 @@ def _localise_words(obj, pairs):
     """Rewrite the phrases this civilisation says differently.
 
     Same mechanism as _localise_money and the same reason: the tree is written
-    from Rome 100 AD and stays that way, and a play tester in Han China should
+    from Rome 100 AD and stays that way, and a player in Han China should
     not be told they are writing their corpus "in plain quantitative Greek and
     Latin" and seeking "Senatorial patronage". Only phrases specific enough to
     occur nowhere else; a historical note ABOUT Rome is left alone, because it

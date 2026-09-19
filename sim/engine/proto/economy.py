@@ -5,15 +5,13 @@ from ..data import ANNUAL_WAGE, WAGES, trade_family
 from .state import _agent_state
 
 # WHAT EACH TRAIT IN self.w ACTUALLY DOES, in the player's own words. Event
-# text has always named these fields directly - "corpus_dispersed changes
-# the society: w_novelty" (see society.apply_tech_effects) - with no command
-# anywhere that would tell a player what w_novelty IS, let alone what it is
-# now. Two testers asked for exactly this, in separate rounds, in close to
-# the same words. Not civ-specific and not a fog spoiler: these field names
-# and what they do are the same across every civilisation, only the starting
-# numbers differ, so naming what the mechanic does is not a leak of
-# anything the founder in the story would not already understand about their
-# own society.
+# text names these fields directly - "corpus_dispersed changes the society:
+# w_novelty" (see society.apply_tech_effects) - so a command has to exist that
+# tells a player what w_novelty IS, and what it currently is. Not civ-specific
+# and not a fog spoiler: these field names and what they do are the same
+# across every civilisation, only the starting numbers differ, so naming what
+# the mechanic does is not a leak of anything the founder in the story would
+# not already understand about their own society.
 _VALUE_MEANINGS = {
     "adaptation_rate": "how fast this society stops being alarmed by "
                        "something it has now seen for a while",
@@ -222,10 +220,10 @@ def _power_status(s, nodes):
     distinguishes the two scales for a project only once the player has
     themselves discovered BOTH cap_power_electric and, separately,
     cap_power_grid - naming "this needs the grid" before the player has ever
-    heard of a grid would hand over the existence of the next tier exactly
-    the way `bounty` once handed over power_grid's id by naming a raw
-    prerequisite; here nothing is named until it is not a prerequisite the
-    player would be seeing for the first time.
+    heard of a grid would hand over the existence of the next tier the same
+    way naming a raw prerequisite by id leaks a spoiler; here nothing is
+    named until it is not a prerequisite the player would be seeing for the
+    first time.
     """
     tiers, highest = _power_tiers(s, nodes)
     out = {
@@ -359,25 +357,18 @@ def _agent_mines(s):
     `mines`/`workings` dispatch below and _agent_capacity, which both call
     this rather than keeping two copies of the same arithmetic.
 
-    A player who had already won the game asked for exactly this: "a mines
-    command showing each mine, resource key, rated capacity, actual
-    output, operating cost, utilization, commissioning year, and whether
-    it is currently supplying anything would have prevented several
-    confusing decisions." Before economy.py's self.mines existed there was
-    no "it" to ask any of this about - mine_capacity was one float per
-    material, so a mine had no individual identity, no commissioning year,
-    and no per-working depletion; a shaft opened last year read as
-    depleted as one opened three centuries earlier because they were the
-    same number. This does not fabricate what that model never recorded:
-    a working carried over from a save written before this existed has
+    Each mine needs its own identity: mine_capacity as one float per material
+    gives a mine no commissioning year and no per-working depletion, so a
+    shaft opened last year would read as depleted as one opened three
+    centuries earlier because they were the same number. This does not
+    fabricate what a one-float-per-material model never recorded: a working
+    carried over from a save written before self.mines existed has
     "commissioned_year": None, shown as "unknown" (see load_state's own
     save/load contract), never a guessed year.
 
-    Separately, auto_mine quietly took 353,039 a year against 467,227 of
-    revenue for a play tester, and there was no command anywhere that named
-    what they owned or what it cost; two `close` calls took their net from
-    -61,884 to +291,156. The verbs to sink one and to shut one both
-    existed; nothing showed you the books.
+    This has to show what a mine costs to run against what it earns, and let
+    a player close the ones that are losing money, since neither is visible
+    from the verbs to sink one and to shut one alone.
     """
     dem = s.annual_material_demand()
     # GENERALISED (COMMODITY_DYNAMISM.md, economy.py's open_mine() is no
@@ -564,10 +555,10 @@ def _trade_demand_rows(s):
     """trade_demand_vs_supply (projects.py), with the family a player
     actually hires by attached and sorted worst-first - the aggregate
     picture a player needs BEFORE committing to one more project that
-    shares a trade already oversubscribed: "the game reported 10,000-25,000
-    founder-hours free, while a project requiring only hundreds of hours
-    advanced very slowly because of the active portfolio" was never a
-    founder-hours problem at all in the run that said it; it was this.
+    shares a trade already oversubscribed: a project advancing very
+    slowly despite thousands of founder-hours reportedly free is a sign
+    of exactly this, an oversubscribed trade throttling the active
+    portfolio, not a founder-hours problem at all.
     """
     rows = []
     for trade, detail in s.trade_demand_vs_supply().items():
@@ -874,11 +865,11 @@ def _changes_notable_events(s, cutoff):
 
 
 def _agent_changes(s, nodes, cmd=None):
-    """What materially changed over the last N years - the diff a player
-    otherwise has to work out by holding two screens in their head, which is
-    exactly what one of our own testers had to do to diagnose a bug. Reads
-    the yearly snapshots `step` records (_dashboard_snapshot) rather than
-    recomputing anything; see that function for what is actually stored.
+    """What materially changed over the last N years, as a diff, rather than
+    something a player has to work out by holding two screens in their head
+    and comparing them by eye. Reads the yearly snapshots `step` records
+    (_dashboard_snapshot) rather than recomputing anything; see that function
+    for what is actually stored.
     """
     raw = (cmd or {}).get("years", 5)
     years, error = _parse_changes_years(raw)

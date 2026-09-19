@@ -1,16 +1,15 @@
 """What a society believes, fears, and does to you for being large.
 
-Split out of simulator.py, which had grown to 5,600 lines. These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and verified byte-identical.
+These are methods of Sim; they are a mixin only so that they can live in
+a file of their own.
 
-This file grew to 3,802 lines and 61 methods on its own, at which point it
-became the same problem simulator.py was: one file nobody could edit
-without colliding with everyone else touching Sim's social mechanics. It is
-now a pure composition point. The 61 methods live in four sibling modules,
-grouped by subject rather than by size, and this file's only job is to
-compose them back into the single SocietyMixin that sim/engine/core.py's
-`class Sim(...)` already expects, unchanged, to inherit from:
+This file is a pure composition point: one file holding all of a
+household's social mechanics becomes a file nobody can edit without
+colliding with everyone else touching them, so the 61 methods live in
+four sibling modules, grouped by subject rather than by size, and this
+file's only job is to compose them back into the single SocietyMixin that
+sim/engine/core.py's `class Sim(...)` already expects, unchanged, to
+inherit from:
 
     society_state_pressure.py  alarm, protection, eminence and the state's
                                 own fiscal and military interest in a

@@ -1,6 +1,6 @@
 """Planning and diagnostic commands: `plan`, `search`, `why`.
 
-Split out of engine/cli.py. `plan` and `search` compute a strategy order
+`plan` and `search` compute a strategy order
 (critical-path method, optionally refined by `path_search.py`'s dice-free
 search) instead of walking a hand-written list; `why` explains one tree node
 in isolation. None of the three is reached from `play` or `agent` - see each

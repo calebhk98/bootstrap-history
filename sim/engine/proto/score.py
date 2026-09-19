@@ -10,13 +10,12 @@ from .util import _fmt_num, _wrap
 def final_report(s, nodes):
     """The scoreboard, once the run is over.
 
-    Two play testers finished long runs and got one sentence - "you built 1944
-    things and did not reach point-contact transistor" - then a queue of
-    identical refusals. One started a whole second game with the fog off and
-    ran `path` just to learn that the goal is 142 nodes deep and which one
-    they had stopped at. That is a question the game should answer when there
-    is nothing left to spoil: the run is finished, so showing the road is the
-    reward for finishing it, not a leak.
+    Ending with one sentence - "you built N things and did not reach the
+    goal" - leaves a player with no way to learn how deep the goal was or
+    which step they stopped at, short of starting a second game with fog
+    off just to run `path`. That is a question the game should answer when
+    there is nothing left to spoil: the run is finished, so showing the
+    road is the reward for finishing it, not a leak.
     """
     goal = getattr(s, "goal", None)
     earned = sorted(s.done - s.granted)
@@ -51,15 +50,15 @@ def final_report(s, nodes):
 
 
 # ---------------------------------------------------------------------------
-# THE SCORE. A player who had just won asked for one number, weighted across
-# seven things they named, plus a short list of achievements. Every raw
-# value below is something the engine already tracks for a DIFFERENT reason
-# (state, final_report, the risk and labour screens) - nothing here is a new
-# ledger invented to make the formula prettier. See each component's own
-# comment for exactly which field feeds it and why that is a fair reading of
-# the category the player named, and see the commit/report for which of
-# these are mechanically bounded (no tuning possible) versus anchored by
-# judgement against the one real high-water mark available, the 599 AD save.
+# THE SCORE: one number, weighted across seven things, plus a short list
+# of achievements. Every raw value below is something the engine already
+# tracks for a DIFFERENT reason (state, final_report, the risk and labour
+# screens) - nothing here is a new ledger invented to make the formula
+# prettier. See each component's own comment for exactly which field
+# feeds it and why that is a fair reading of the category it represents,
+# and see the commit/report for which of these are mechanically bounded
+# (no tuning possible) versus anchored by judgement against the one real
+# high-water mark available, the 599 AD save.
 # ---------------------------------------------------------------------------
 
 SCORE_WEIGHTS = {
@@ -326,11 +325,11 @@ def score_report(s, nodes):
     total = None
     if goal_reached and all(component["normalized"] is not None for component in components.values()):
         total = round(sum(component["weighted"] for component in components.values()), 4)
-    # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE. A player asked
-    # for exactly this: a percentage answers "how much of the possible
-    # score", a point figure answers "how did this run do against that
-    # one", and the second question is what a player comparing two
-    # civilisations or two seeds is actually asking.
+    # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE: a percentage
+    # answers "how much of the possible score", a point figure answers
+    # "how did this run do against that one", and the second question is
+    # what a player comparing two civilisations or two seeds is actually
+    # asking.
     #
     # STILL CAPPED, ON PURPOSE. `total` above can never exceed 1.0: every
     # one of the seven components clamps its own "normalized" figure to

@@ -1,7 +1,7 @@
 """What finishing a piece of work actually does.
 
-Split out of sim/engine/projects.py (see that file's own docstring for why):
-_complete() is the single largest method in the original file - what a
+_complete() is the single largest method in projects.py's original file
+(see that file's own docstring for why this lives separately) - what a
 finished (or, on the risk roll, a failed) attempt does to `done`, tech
 effects, standing, scandal, state interest, and the staff a handful of
 institutions grant on completion. The HAZARD_COUNTERS table that follows it
@@ -12,7 +12,7 @@ that blunt a hazard's effect, so it belongs beside the other consequence of
 having finished something rather than in any of this split's other files.
 
 These are methods of Sim; they are a mixin only so that they can live in a
-file of their own. Behaviour is unchanged and verified byte-identical.
+file of their own.
 """
 from constants import declare
 
@@ -105,35 +105,30 @@ class CompletionMixin:
             _yrs_before = self.household.active[k]["yrs"]
             self.household.failed_attempts[k] += 1
             self.household.active[k]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
-            # THE CALENDAR CLOCK IS NOT WIPED. It used to be set to 0.0
-            # unconditionally, restarting the same multi-year diffusion
-            # process from nothing every time - the exact complaint above.
-            # Even ONE failed attempt already did real social groundwork
-            # (workshops retooled, a workforce that has seen it once, a
-            # regulator who already sat through the pitch), so the first
-            # failure already banks a real share of the elapsed clock, not
-            # zero - it is the risk term above, not this one, that has
-            # nothing to show after only one failure. What this banks keeps
-            # growing, with diminishing returns, as failed_attempts[k] grows,
-            # and is capped well short of the whole clock (RETRY_CALENDAR_CAP)
-            # so a retried programme is only ever readier, never instantly
-            # ready.
+            # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
+            # reset the multi-year diffusion clock to zero, restarting the
+            # whole process from nothing. Even ONE failed attempt already
+            # does real social groundwork (workshops retooled, a workforce
+            # that has seen it once, a regulator who already sat through
+            # the pitch), so the first failure already banks a real share
+            # of the elapsed clock, not zero - it is the risk term above,
+            # not this one, that has nothing to show after only one
+            # failure. What this banks keeps growing, with diminishing
+            # returns, as failed_attempts[k] grows, and is capped well
+            # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
+            # programme is only ever readier, never instantly ready.
             _retain = self._retry_calendar_retain(k)
             self.household.active[k]["yrs"] = _yrs_before * _retain
             _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
             self.household.capital -= _lost
-            # SAY SO. The roll has always worked - 40 failures in 200 at a
-            # stated 20% - and it has never once announced itself: it reset the
-            # project and logged nothing, so a break tester watched about 113
-            # builds, expected nine failures, found no occurrence of "fail",
-            # "abandon" or "lost" anywhere in the output, and concluded the
-            # whole mechanic was dead. A cost you cannot see is a cost the
-            # player is not paying attention to, which is the same as not
-            # charging it.
-            # 40, NOT 60. ph_left is set to 0.4 of the FULL hours, so what is
-            # to do again is forty per cent of the work; the line said sixty
-            # and a break tester who measured the hours reported the stated
-            # penalty as never charged. It was charged. The sentence was wrong.
+            # SAY SO: a failed attempt must announce itself in the log - a
+            # cost you cannot see is a cost nobody is paying attention to,
+            # which is the same as not charging it.
+            # THE LOGGED PERCENTAGE MUST MATCH WHAT WAS ACTUALLY CHARGED:
+            # ph_left is set to FAILURE_RESET_SHARE of the FULL hours, so
+            # the message has to build its own percentage from that same
+            # constant rather than a separately hardcoded number that can
+            # drift out of sync with it.
             # AND NOW SAY WHAT WAS LEARNED, in the same breath as the loss -
             # a player who has just been told a program failed should also be
             # told, in the same sentence, that the next attempt is not a
@@ -184,36 +179,31 @@ class CompletionMixin:
         self.household.reputation = min(self.REPUTATION_CEILING, self.household.reputation + gain)
         self.household.scandal += self.alarm_of(node)
         self.household.gov += self.state_interest(node)
-        # _grant_staff, NOT a bare += on self.household.scholars/self.household.artisans. The old
-        # direct assignment was overwritten out of existence the very next
-        # time anything called _resync_pools() - which step() does
-        # unconditionally, every year - because that function has always
-        # treated self.household.scholars and self.household.artisans as computed purely from
-        # self.household.employees. A player who founded the school under --manual (the
-        # interactive protocol's only mode) read "+4 scholars" on completion
-        # and a refusal naming an unchanged shortfall one step later, for the
-        # single highest-leverage node in the game. See _grant_staff.
+        # _grant_staff, NOT a bare += on self.household.scholars/self.household.artisans:
+        # _resync_pools(), which step() calls unconditionally every year,
+        # always treats self.household.scholars and self.household.artisans
+        # as computed purely from self.household.employees, so a bare
+        # direct addition here would be overwritten out of existence the
+        # very next time it runs. See _grant_staff.
         #
-        # ONLY WITHOUT auto_hire. With it on - the optimizer's default, off
+        # ONLY WITHOUT auto_hire: with it on - the optimizer's default, off
         # for a player - staff_capacity() already counts this same
         # institution toward sc_cap/ar_cap and step()'s smoothing grows
         # self.household.scholars/self.household.artisans toward that ceiling on its own; the
         # long civilization runs are calibrated against that smoothing alone
         # (see core.py, "1. staff"). Granting it a second time here as well
-        # double-counted every one of these three institutions and pushed a
-        # 250-year optimizer run to 560 things startable where the tree is
-        # calibrated to open up much more slowly - not a message that lied,
-        # but the same bug's fix over-correcting into a different one.
+        # would double-count every one of these three institutions against
+        # a tree calibrated to open up much more slowly.
         if not self.policy.get("auto_hire", not self.manual):
             if k == "freedman_staff":     self._grant_staff(artisans=self.GRANT_STAFF_FREEDMAN_ARTISANS)
             if k == "school_founded":     self._grant_staff(scholars=self.GRANT_STAFF_SCHOOL_SCHOLARS)
             if k == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
                                                               artisans=self.GRANT_STAFF_ACADEMY_ARTISANS)
         if k == "mining_concession":  pass
-        # SAY THAT IT IS NOT YET RUNNING. Completing something that could be a
-        # going concern no longer starts it earning, and a player who is not
-        # told will reasonably conclude the money is broken rather than that
-        # they have not opened the doors.
+        # SAY THAT IT IS NOT YET RUNNING: completing something that could be
+        # a going concern does not start it earning, and a player who is
+        # not told will reasonably conclude the money is broken rather
+        # than that they have not opened the doors.
         if self.is_venture(k) and not self.policy.get("auto_open", not self.manual):
             self.household.log.append((self.year, "completed: %s. You know how; nothing "
                                         "is earning yet - 'open %s' to run it"
@@ -226,13 +216,11 @@ class CompletionMixin:
     # -- shocks -------------------------------------------------------------
     # WHAT YOU CAN DO ABOUT HISTORY.
     #
-    # A tester's question, and it is the right one to ask of a game that tells
-    # you on turn one exactly which disasters are coming: "some techs might
-    # counter that, like what if you build a mine that can mine gold for Rome,
-    # or guns for a rebellion, or medicine for disease?" Until now the answer
-    # was almost no: four hardcoded checks, none of them findable, and the
-    # hazards were weather. They are not weather. They are the thing the whole
-    # programme is for.
+    # A game that tells you on turn one exactly which disasters are coming
+    # has to let some completed technologies counter them - a mine that
+    # arms Rome against a raid, a medicine that blunts a plague - findably,
+    # not as hardcoded checks nowhere the player can see. Hazards are not
+    # weather. They are the thing the whole programme is for.
     #
     # Each entry is (node id, how much of the harm it removes, what it is).
     # They compound, and none of them takes a hazard to zero on its own: no

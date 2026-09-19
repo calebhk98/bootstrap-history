@@ -22,8 +22,8 @@ yourself versus buy); and the stock-versus-flow half - _material_stock()/
 material_stock_t()/material_trade_quote()/buy_material_stock()/
 sell_material_stock()/materials_report()/_throttle_demand_split()/
 _own_production_tags() - a running balance in tonnes, carried across
-years, separate from any one year's flow, per the playtester complaint
-quoted in the stock-vs-flow section below.
+years, separate from any one year's flow; see the stock-vs-flow section
+below for why stock and flow must be kept apart.
 
 MaterialSupplyMixin is composed into EconomyMixin (economy.py) alongside
 the other economy sub-mixins; see that file for the composition and for
@@ -738,11 +738,10 @@ class MaterialSupplyMixin:
 
     # ---- stock vs flow -----------------------------------------------------
     #
-    # A playtester who won the game put this more sharply than anything in
-    # the design notes: "If I require 20 grams of gold for a device, creating
-    # a tonne/year mining operation should obviously be ridiculous.
-    # Realistically, I would just buy 20 grams. This argues strongly for
-    # separating stock inventories from annual production capacity."
+    # Requiring 20 grams of gold for a device must not require building a
+    # tonne/year mining operation; realistically that gets bought outright.
+    # Stock inventories have to be separate from annual production capacity
+    # for exactly this reason.
     #
     # Everything above this point (MATERIAL_CHECKS, _own_material_supply,
     # _material_market_tonnes) answers in TONNES PER YEAR, a flow, and
@@ -755,8 +754,8 @@ class MaterialSupplyMixin:
     # instance across the whole run (lazily, like _material_demand_cache
     # below it: MaterialSupplyMixin does not own Sim.__init__).
     #
-    # The other half is the playtester's actual complaint: a handful of
-    # material keys in this tree are authored in GRAMS, not kilograms
+    # The other half: a handful of material keys in this tree are authored
+    # in GRAMS, not kilograms
     # (caesium_g, diamond_g, germanium_g, gold_g, indium_g,
     # phosphor_bronze_g, platinum_g - every *_g key in use, see
     # COMMODITY_DYNAMISM's audit), because whoever wrote chm_catalyst_concept

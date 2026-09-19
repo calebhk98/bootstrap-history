@@ -193,11 +193,11 @@ def _advice_line(kind, advice, indent="  "):
     help_ = advice.get("what_would_help")
     if help_:
         line += "\n%s  what would help: %s" % (indent, help_)
-    # AND WHICH OF THE THINGS IN FRONT OF YOU IS ONE OF THOSE. A playtester was
-    # told the answer to the Spanish was "walls, firearms, powerful friends",
-    # then played 154 years with 269 startable things in view and reported
-    # finding no hedge of any kind. Naming the ones they can already see costs
-    # nothing and is the difference between advice and a slogan.
+    # AND WHICH OF THE THINGS IN FRONT OF YOU IS ONE OF THOSE: naming a
+    # hedge only by category ("walls, firearms, powerful friends") is
+    # useless against a startable list hundreds of items long. Naming the
+    # ones a player can already see costs nothing and is the difference
+    # between advice and a slogan.
     steps = advice.get("you_could_begin_now_toward_it") or []
     now = [step for step in steps if step.get("can_begin_now")]
     later = [step for step in steps if not step.get("can_begin_now")]
@@ -278,10 +278,11 @@ def render_log(out):
 def render_policy(out):
     """The switches, under a plain statement of what they are.
 
-    The generic renderer printed the warning below AFTER the list of eleven
-    switches and their descriptions, unwrapped, as a single eighty-word line
-    that a player scanning for a switch name would never read. The whole point
-    of that paragraph is that it is read BEFORE somebody turns one on.
+    The warning below has to appear BEFORE the list of switches and their
+    descriptions, wrapped rather than run together as one long line: the
+    whole point of that paragraph is that it is read BEFORE somebody turns
+    a switch on, not buried after eleven descriptions where a reader
+    scanning for a switch name would never reach it.
     """
     # LIVE, NOT A SNAPSHOT: see _wrap's own comment on DISPLAY_WIDTH, in
     # engine/proto/util.py, for why this goes through the protocol module
@@ -294,16 +295,12 @@ def render_policy(out):
                        indent="  "))
         lines.append("")
     # GROUPED BY WHETHER THEY ARE ACTUALLY RUNNING, not listed alphabetically
-    # with the state as a word at the end of a name. An England play tester
-    # read "auto_open ... opens concerns that plainly pay for themselves",
-    # built a pawnshop that plainly paid for itself, watched nothing happen,
-    # and wrote it up as the policy not matching its own description. The
-    # screen was right - "off" was printed directly above that sentence - but
-    # every description here is in the present indicative, so a reader
-    # scanning descriptions reads eleven statements of what the game is doing
-    # and has to carry a separate column in their head to know that ten of
-    # them are hypothetical. Two headings cost nothing and remove the
-    # ambiguity: what is running, and what is not.
+    # with the state as a word at the end of a name: every description here
+    # is written in the present indicative, so a reader scanning
+    # descriptions reads what looks like eleven statements of what the game
+    # is doing right now, and would have to carry a separate column in
+    # their head to know which are hypothetical. Two headings cost nothing
+    # and remove the ambiguity: what is running, and what is not.
     pol = out.get("policy") or {}
     does = out.get("what_each_does") or {}
     on = [switch for switch in sorted(pol) if pol[switch]]
@@ -361,8 +358,8 @@ def render_rush(out):
 def render_path(out):
     """The route to one goal, and - the join nobody had - which of the
     nodes still standing between here and there you could actually begin
-    today. See the op handler's own comment: two players asked for exactly
-    this, and a third built their own script outside the game to get it.
+    today, rather than leaving a player to reconstruct that join by hand
+    or with a script outside the game.
     """
     lines = ["ROUTE TO %s  [%s]" % (out.get("name"), out.get("id"))]
     if out.get("done"):

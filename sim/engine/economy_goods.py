@@ -21,10 +21,9 @@ them).
 
 GoodsMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for
-the grouping evidence (CLAUDE.md's naming/heuristic-labelling
-conventions apply here exactly as they did before the split - nothing
-about the rules a number or a comment follows has changed, only which
-file it lives in).
+the grouping evidence. CLAUDE.md's naming/heuristic-labelling
+conventions apply here exactly as they do everywhere else in the
+engine, regardless of which file a method lives in.
 """
 from constants import declare
 from sim.unit_conversions import PERCENT_SCALE
@@ -35,12 +34,12 @@ class GoodsMixin:
     # ---- goods-producing concerns: a market, not a fixed number --------------
     #
     # Every OTHER concern in this file pays the tree's flat `rev` for ever,
-    # scaled only by the ramp above and this society's prices. A playtester's
-    # question was exactly the case that breaks: an automated loom should make
-    # an enormous margin the day it opens, because handlooms are everywhere and
-    # power looms are not, and that margin has to erode as the rest of the
-    # world catches up, cushioned by the fact that cheaper cloth pulls in
-    # buyers who could not afford cloth before. `commodities.py` already has a
+    # scaled only by the ramp above and this society's prices. That breaks for
+    # the case of an automated loom, which should make an enormous margin the
+    # day it opens, because handlooms are everywhere and power looms are not,
+    # and that margin has to erode as the rest of the world catches up,
+    # cushioned by the fact that cheaper cloth pulls in buyers who could not
+    # afford cloth before. `commodities.py` already has a
     # bounded, elastic price built for exactly this worked example (see
     # COMMODITIES.md section 4.2), but it is a standalone module Sim has never
     # imported - its own header says so - because it reasons in tonnes against
@@ -925,11 +924,10 @@ class GoodsMixin:
         For a SECOND one it has never been true - see goods_market_factor's
         own docstring, which already says a second concern "does not reset
         to 1.0... it is entering a market that already has supply in it" -
-        and nothing before this function let a player see that BEFORE
-        opening it and finding out the hard way, which is exactly what two
-        independent playtesters (Han, England) reported: revenue quietly
-        far below what they had been shown, with no warning at the moment
-        the decision to open was actually made.
+        so a player needs to see that BEFORE opening it, not find out the
+        hard way with revenue quietly far below what every screen had
+        shown, with no warning at the moment the decision to open was
+        actually made.
 
         None for anything not a goods category. 1.0 - the honest, unhedged
         answer - when nothing of yours operates in this category yet: a
@@ -961,15 +959,12 @@ class GoodsMixin:
         question ("do two looms compete") answered on the one screen a
         player actually reads.
 
-        WORKS BEFORE YOU OPEN IT, not only after. It used to return None for
-        anything not yet `operating`, which meant the one moment a player
-        could still choose differently - before committing capital to a
-        second concern in an already-saturated category - was the one moment
-        this said nothing at all. Two playtesters (Han, England) each
-        reported market saturation eating a large, unexplained share of
-        gross revenue; neither had anything on screen, before or after
-        opening, that named it. See goods_market_factor_if_opened's own
-        comment for the mechanism this now surfaces early.
+        WORKS BEFORE YOU OPEN IT, not only after: returning None for
+        anything not yet `operating` would leave silent the one moment a
+        player could still choose differently - before committing capital
+        to a second concern in an already-saturated category. See
+        goods_market_factor_if_opened's own comment for the mechanism this
+        surfaces early.
         """
         cat = self.nodes[k].get("cat")
         cfg = self.GOODS_CATEGORIES.get(cat)
@@ -1044,13 +1039,12 @@ class GoodsMixin:
         tree's own figure, worst first - the aggregate version of
         goods_market_note(), for `money` rather than one concern at a time.
 
-        ALSO THE TOTAL, not only the worst row. Two playtesters (Han,
-        England) each watched market saturation eat a large share of gross
-        revenue by measuring it themselves against a total they had to
-        reconstruct on their own - this screen told them which single
-        concern was worst hit and never added the pieces up, so "the market
-        is taking some of what I earn" never became a number a player could
-        actually read against their own revenue. This is not a new
+        ALSO THE TOTAL, not only the worst row. Market saturation can eat a
+        large share of gross revenue, and a screen that names only which
+        single concern is worst hit without adding the pieces up leaves "the
+        market is taking some of what I earn" as something a player has to
+        reconstruct by hand rather than a number they can read against their
+        own revenue. This is not a new
         mechanism and not a bug in the existing one: goods_market_factor()'s
         floors are exactly what GOODS_CATEGORIES documents, and several
         concerns competing in the same category is exactly the situation

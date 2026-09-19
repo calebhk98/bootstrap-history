@@ -1,8 +1,7 @@
 """Buying people, freeing them, and keeping the two staff pools honest.
 
-Split out of labour.py (see that file's own docstring for why). These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and moved verbatim.
+These are methods of Sim; they are a mixin only so that they can live in a
+file of their own (see labour.py's own docstring for the split).
 
 buy_slaves and manumit are the two sides of the model CLAUDE.md 3.1 asks
 for rather than hides: Roman labour is cheap because much of it is
@@ -36,16 +35,12 @@ class BondageMixin:
         `self.household.employees`; they have to survive `_resync_pools()` some other
         way, which is what this records.
 
-        Before this existed, `_complete()` added straight to self.household.scholars /
-        self.household.artisans, and the very next call to `_resync_pools()` - which
-        runs unconditionally every single step() - overwrote both from
-        `self.household.employees` alone and threw the grant away entirely. A player
-        who founded the school, in the one mode (`--manual`, which the
-        interactive protocol always uses) where nothing else keeps employees
-        and the aggregate in step, read the node's own description promising
-        "+4 scholars" and then watched a refusal a year later say "needs 2
-        trained scholars, you have 1.0" - the pivot node, built and paid for,
-        doing nothing at all.
+        `_resync_pools()` runs unconditionally every single step() and
+        rebuilds self.household.scholars / self.household.artisans from
+        `self.household.employees` alone, so anything `_complete()` grants
+        outright has to be recorded here rather than added straight to
+        those two fields: an addition that bypasses this record is silently
+        overwritten and discarded the next time `_resync_pools()` runs.
         """
         granted = getattr(self.household, "granted_staff", None)
         if granted is None:
@@ -86,18 +81,17 @@ class BondageMixin:
         "scholar" - and that grouping is real and stays exactly as it is for
         market_supply(), where it means "draws on the same small, literate-
         or-propertied slice of the population", which is equally true of all
-        five. It is not the same claim as "is a trained natural philosopher",
-        and an earlier version of this function used the one grouping for
-        both: hiring three scribes raised effective_scholars() from 0 to
-        4.0, so a node gated on "2 trained scholars" would start on the
-        strength of scribes who had never been asked to do a philosopher's
-        work, while STAFF_SOURCES - the advice this same household is given
-        on how to get scholars - names only `hire scholar` and never scribe,
-        chemist, engineer or merchant, which is strong evidence the five-way
-        grouping was sized for the labour MARKET and reused for the staff
-        ROSTER by mistake. train()'s own docstring already makes the
-        non-interchangeability of the taught trades explicit ("the
-        machinists you made are no use at all when you need a chemist");
+        five. It is not the same claim as "is a trained natural philosopher":
+        a node gated on "2 trained scholars" must be started on the strength
+        of people actually trained as scholars, not on scribes, chemists,
+        engineers or merchants who have never been asked to do a
+        philosopher's work. STAFF_SOURCES - the advice this same household
+        is given on how to get scholars - names only `hire scholar` and
+        never the other four, for the same reason: the five-way grouping is
+        sized for the labour MARKET, not the staff ROSTER. train()'s own
+        docstring already makes the non-interchangeability of the taught
+        trades explicit ("the machinists you made are no use at all when
+        you need a chemist");
         nothing about a chemist makes them a scholar either.
 
         PLUS WHAT AN INSTITUTION GRANTED OUTRIGHT. See _grant_staff: those
@@ -109,18 +103,14 @@ class BondageMixin:
         craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
         schol = self.household.employees.get("scholar", 0.0)
         granted = getattr(self.household, "granted_staff", None) or {}
-        # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. Two things were wrong
-        # here at once and they cancelled into a disappearance. Everyone bought
-        # counted at full worth from the day of purchase, so the training lag
-        # that buy_slaves' own docstring promises did nothing; and when a
-        # training row finally matured, step() added its capacity to
-        # self.household.artisans - which THIS function then recomputed from scratch and
-        # threw away at the next call. A play tester bought and freed people,
-        # saw them enter training as a trade named literally `None`, and
-        # watched their craftsmen fall from 35 to 3.8 when the training
-        # finished. Excluding those still learning makes the lag real and makes
-        # the maturation stick, because by then they are simply part of the
-        # count below.
+        # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
+        # recomputes self.household.artisans from scratch on every call, so
+        # anyone still in the training queue must be excluded from the count
+        # here: counting them early makes the training lag that buy_slaves'
+        # own docstring promises do nothing. Once a training row matures and
+        # step() adds its capacity to self.household.artisans directly, this
+        # function must not count that person via `learning` again - by
+        # then they are simply part of `owned` below.
         # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
         # bought, so that is the divisor that recovers the headcount still
         # learning.
@@ -209,28 +199,22 @@ class BondageMixin:
     def slave_quote(self, n_people):
         """What buying this many people actually costs, here, today.
 
-        A town's slave market has a depth; buying beyond it bids the price up.
-        Flat pricing let a playtester take 3,333 people in one instant at list
-        price, which no market of any period would absorb.
+        A town's slave market has a depth; buying beyond it bids the price
+        up, so no purchase clears at flat list price regardless of size.
         """
         if n_people <= 0:
             return 0.0
-        # The surcharge has to remember. My first version priced each CALL by
-        # its own size and kept no memory, so a playtester bought 1,000 people
-        # in a hundred calls of ten and paid 297 a head instead of 3,868, a
-        # thirteenfold discount, with no cap. A market that resets between two
-        # purchases made in the same instant is not a market.
-        #
-        # market_pressure accumulates with every purchase and decays each year
-        # as sellers restock, so buying in slices is now priced as one large
-        # purchase unless you actually wait between them.
+        # The surcharge has to remember across calls: a market that resets
+        # between two purchases made in the same instant is not a market.
+        # market_pressure accumulates with every purchase and decays each
+        # year as sellers restock, so buying in slices is priced as one
+        # large purchase unless you actually wait between them.
         depth = max(self.SLAVE_MARKET_DEPTH_FLOOR,
                     self.SLAVE_MARKET_DEPTH_SCALE * self.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
-        # Integrate the rising price ACROSS the purchase instead of applying one
-        # surcharge to the whole block. Applying the end-price to every head
-        # overcharged a single large call relative to the same number bought in
-        # slices, which is why slicing still saved about a fifth. Now the nth
-        # head costs what the nth head costs however you group them.
+        # Integrate the rising price ACROSS the purchase instead of applying
+        # one end-price surcharge to the whole block, so grouping does not
+        # change the per-head cost: the nth head costs what the nth head
+        # costs however you group the purchase into calls.
         already = getattr(self.household, "market_pressure", 0.0)
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
@@ -246,33 +230,28 @@ class BondageMixin:
         on the numbers as well as on every other ground: a freedman is paid, is
         literate, stays, and transmits what he knows.
 
-        A playtester found three separate holes here and they compounded.
+        Three invariants this function and manumit() must keep together:
 
-        First, buy_slaves added 0.55 artisans per person and manumit then added
-        ANOTHER 0.55 for the SAME PERSON, so one human being yielded 1.1 workers.
-        Manumission does not clone anybody. It makes the same person work
-        properly, which is a rise from 0.55 to 1.0, so it adds 0.45.
+        A person's capability rises exactly once. buy_slaves adds 0.55
+        artisans per person; manumission does not clone anybody, it makes
+        the same person work properly, a rise from 0.55 to 1.0 - so
+        manumit() adds 0.45, not another 0.55.
 
-        Second, the price was flat at 300 denarii however many you bought, so
-        3,333 people could be had in a single instant at list price. No market
-        of any period absorbs that. The price now rises with the size of the
-        purchase against the local market's depth.
+        Price rises with the size of the purchase against the local
+        market's depth (see slave_quote), so no purchase clears at flat
+        list price however many people it is for.
 
-        Third, it was INSTANT. Buy and free ten people and you had eleven
-        trained artisans in the same tick, for money alone, with no founder
-        hours and no calendar time. That strictly dominated freedman_staff, the
-        node that models the same thing honestly at 900 founder hours and two
-        years, so the narrated route was always the worse deal. People now
-        arrive untrained and become useful over a training lag.
+        People arrive untrained and become useful only over a training
+        lag, so buying and freeing someone is never faster or cheaper than
+        honestly training them free through freedman_staff (900 founder
+        hours, two years) would be.
         """
         if n_people <= 0:
             return 0
-        # THE SAME ROOM `hire` ENFORCES. A weird-play tester was told to their
-        # face that they could supervise, house and teach six more people, and
-        # then took seven with a different verb - "buy slaves bypasses the cap
-        # that hire enforces". The constraint is about your household's
-        # capacity to feed, house and oversee people, and a person you own
-        # needs all three exactly as much as a person you pay. More so.
+        # THE SAME ROOM `hire` ENFORCES: a person you own needs feeding,
+        # housing and oversight exactly as much as a person you pay, more
+        # so, so buy_slaves must respect the same household capacity cap as
+        # hire rather than bypassing it under a different verb.
         room = self.household_room()
         if n_people > room:
             self.household._last_buy_refusal = (
@@ -345,18 +324,15 @@ class BondageMixin:
         self.household.freedmen += n_people
         self.household.manumitted_total += n_people
         # The SAME person, working properly: 0.55 to 1.0, not another whole
-        # worker. This was the double count.
+        # worker.
         #
-        # But only for people who are actually TRAINED. A playtester noticed
-        # that freeing someone bought this morning still handed over the 0.45
-        # uplift immediately while their 0.55 sat in the training queue, so
-        # buy-and-free bought 82 per cent of a trained artisan with no calendar
-        # time at all, which is most of the way back to the exploit the training
-        # lag was added to close. Freeing an untrained person upgrades what they
-        # will be worth WHEN they mature; it does not skip the maturing.
-        # The training queue also carries taught-trade rows now (which have a
-        # trade name in them and no artisan capacity), so read column 0 by index
-        # rather than unpacking a row whose width is no longer fixed.
+        # But only for people who are actually TRAINED: freeing an untrained
+        # person upgrades what they will be worth WHEN they mature, it does
+        # not skip the maturing, so the uplift below must not be paid on a
+        # share of n_people that is still sitting in the training queue.
+        # The training queue also carries taught-trade rows (which have a
+        # trade name in them and no artisan capacity), so read column 0 by
+        # index rather than unpacking a row whose width is not fixed.
         in_training = sum(row[0] for row in self.household.training)
         untrained = min(n_people, int(in_training / self.WORKER_EQUIVALENT_UNTRAINED + 0.5))
         trained_freed = max(0, n_people - untrained)
@@ -365,9 +341,10 @@ class BondageMixin:
             share = untrained / max(1.0, in_training / self.WORKER_EQUIVALENT_UNTRAINED)
             for row in self.household.training:
                 row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
-        # Manumission was publicly admired, and admiration saturates. The first
-        # freedmen you make are a statement; the four hundredth is a payroll.
-        # Uncapped, this was a reputation pump that beat taking a patron.
+        # Manumission is publicly admired, and admiration saturates: the
+        # first freedmen you make are a statement, the four hundredth is a
+        # payroll. The gain is capped so a high-volume series of small
+        # manumissions cannot out-earn taking a patron.
         gain = (self.MANUMISSION_REPUTATION_GAIN_PER_PERSON * n_people
                 / (1.0 + self.household.manumitted_total / self.MANUMISSION_REPUTATION_SATURATION_SCALE))
         self.household.reputation += min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)

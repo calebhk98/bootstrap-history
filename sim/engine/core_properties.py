@@ -1,41 +1,21 @@
 """The outside-facing property surface for the extracted Household.
 
-Split out of sim/engine/core.py, which was the last engine file over its
-1,000-code-line target (docs/architecture/SIM_DECOMPOSITION_REVISITED.md,
-Stage 1's follow-on). These are properties of Sim; they live in a mixin
-only so this one mechanically near-identical block can sit in a file of
-its own instead of pushing every other reader of core.py past all of them
-to reach anything else. Behaviour is unchanged and verified byte-identical:
-every property below, its setter, and every comment explaining it, is
-moved VERBATIM out of core.py.
+These are properties of Sim; they live in a mixin only so this one
+mechanically near-identical block can sit in a file of its own instead
+of pushing every other reader of core.py past all of them
+to reach anything else.
 
-THE COUNT: this held 107 one-line forwards when it was split out of
-core.py. It now holds 87 (`grep -c "^    @property"` on this file). The
-missing 20 were deleted, not moved: item 11 of the stakeholder's cleanup
-list (docs/architecture/HOUSEHOLD_EXTRACTION.md) measured every property's
-call sites across the whole repository - engine-internal reads that had
-already been rewritten to `self.household.x` directly, reads through the
-`Sim` surface from proto/cli/simulator.py/tests, `SAVE_FIELDS`
-(sim/engine/proto/saveload.py), and dynamic reach by field list
-(sim/perf_fingerprint.py's `state_of`) - and found 20 of the 107 with ZERO
-call sites outside this file: nothing but the property's own body and, for
-some, one internal cache read/write already going through
-`self.household.x` directly. A property nothing outside the engine reads
-and nothing inside the engine reaches THROUGH is pure dead weight; deleting
-it changes no behaviour because nothing ever called it. The 20:
-`_cap_factor`, `_done_seq`, `_said_confiscation_band`, `_said_eminence`,
-`_said_notice_approach`, `_said_requisition`, `_spend_this_year`,
-`_staff_scale`, `contract_projects`, `last_military_demand`,
-`_demand_by_emp_key_cache`, `_demand_by_tag_cache`, `_goods_cat_state_cache`,
-`_labour_pressure`, `_last_subst_gap`, `_operating_ver`, `_practice_cache`,
-`_rev_up_candidates_cache`, `_stock_throttle_cache`, `_stock_throttle_sig`.
-`contract_projects` had no call site anywhere at all, inside the engine or
-out - set once in `Household.__init__` and never read or written again
-(confirmed against `docs/architecture/SIM_STATE_INVENTORY.md`'s own count
-for it). The other 87 all have at least one call site through the `Sim`
-surface, in `SAVE_FIELDS`, or both, and stay for a later slice that rewrites
-those call sites - see this file's own git history for the full 107-row
-count.
+THE COUNT: this file holds 87 forwarding properties
+(`grep -c "^    @property"` on this file). A property belongs here only
+if it has at least one call site through the `Sim` surface, in
+`SAVE_FIELDS`, or both - measured across the whole repository:
+engine-internal reads already going through `self.household.x` directly,
+reads through the `Sim` surface from proto/cli/simulator.py/tests,
+`SAVE_FIELDS` (sim/engine/proto/saveload.py), and dynamic reach by field
+list (sim/perf_fingerprint.py's `state_of`). A property nothing outside
+the engine reads and nothing inside the engine reaches THROUGH is pure
+dead weight and does not belong here; see this file's own git history for
+which properties were removed on that basis and why.
 
 Two properties that LOOK like they belong here stayed in core.py instead,
 on purpose: `pop_scale` and `wage_index` are not one-line forwards - each

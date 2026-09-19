@@ -1,15 +1,12 @@
 """`Household`: the founder and family as an economic actor.
 
-Extracted out of `Sim` (see `docs/architecture/HOUSEHOLD_EXTRACTION.md` for
-the design and `docs/architecture/SIM_STATE_INVENTORY.md` for the measured
-field-by-field classification this move was built from). Before this class
-existed, money, staff, knowledge, standing and every cache keyed off any of
-those lived directly on the `Sim` god object, which meant nothing else in the
-simulation - a government, a rival household, a firm - could ever own any of
-them: there was exactly one purse and one stock of knowledge in the whole
-program, and it was `self`. This class is that purse and that stock of
-knowledge, made into an object of its own, so a second one can exist someday
-without a second `Sim`.
+Money, staff, knowledge, standing and every cache keyed off any of them
+live here, not on the `Sim` god object, so something other than the
+founder's own household - a government, a rival household, a firm - can
+someday own a purse and a stock of knowledge of its own without needing a
+second `Sim`. See `docs/architecture/HOUSEHOLD_EXTRACTION.md` for the
+design and `docs/architecture/SIM_STATE_INVENTORY.md` for the measured
+field-by-field classification this class is built from.
 
 WHAT DID NOT MOVE HERE, ON PURPOSE:
 
@@ -157,9 +154,9 @@ class Household:
         # -- MONEY, AND THE TWO COUNTERS EVERYTHING ELSE'S CACHE INVALIDATION
         #    KEYS ON -------------------------------------------------------
         # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
-        # See the fuller comment this line used to carry in Sim.__init__
-        # (core.py, git blame) for why a kit is priced where you are rather
-        # than at a single global rate.
+        # See core.py's Sim.__init__, where `starting_capital` is computed,
+        # for why a kit is priced where you are rather than at a single
+        # global rate.
         self.capital: float = float(starting_capital)
         self.done: Set[str] = set()
         self._done_seq: Optional[List[str]] = None
@@ -178,12 +175,11 @@ class Household:
         self.granted: Set[str] = set()
         self.active: Dict[str, ActiveProjectState] = {}          # id -> dict(ph_left, years_elapsed, spent)
         self.failed_attempts: DefaultDict[str, int] = defaultdict(int)
-        # YOU ARRIVE ALONE. No employees, no slaves, no household: you stepped
-        # out of the future into a street in a city where nobody knows you, and
-        # the three artisans the model used to hand you on arrival were never
-        # hired by anybody. You are your own only scholar (see
-        # effective_scholars) and everyone else has to be found, paid, taught or
-        # bought, by you, on purpose.
+        # YOU ARRIVE ALONE: no employees, no slaves, no household. You stepped
+        # out of the future into a street in a city where nobody knows you,
+        # and nobody starts already hired on your behalf. You are your own
+        # only scholar (see effective_scholars) and everyone else has to be
+        # found, paid, taught or bought, by you, on purpose.
         self.scholars: float = 0.0
         self.artisans: float = 0.0
         self.directors_extra: float = 0.0
@@ -234,9 +230,9 @@ class Household:
         self.last_taught: Dict[str, int] = {}            # {trade: year} auto_train last taught it
         self.wages_prepaid: float = 0.0         # first-year wages `hire` already took
         # WHAT YOU ACTUALLY RUN, as opposed to what you know how to do. Revenue
-        # and upkeep follow this set and nothing else does. See is_venture and
-        # open_venture in projects.py: completing the research used to start
-        # paying you whether or not you ever opened the doors.
+        # and upkeep follow this set and nothing else does: completing the
+        # research must not start paying you until you actually open the
+        # doors - see is_venture and open_venture in projects.py.
         #
         # An _InvalidatingSet (economy.py), not a plain set: every .add/
         # .discard/.update/... invalidates capability_factor()'s cache
@@ -251,18 +247,17 @@ class Household:
         # -- A HANDFUL OF "LAST TIME I SAID/DID X" TRACKERS, GIVEN A REAL
         #    STARTING VALUE HERE INSTEAD OF SPRINGING INTO EXISTENCE ON FIRST
         #    USE -----------------------------------------------------------
-        # Each of these used to be read exclusively through
-        # `getattr(self.household, name, default)`, in a path that runs every
-        # single step with no assignment anywhere that could run before the
-        # first possible read - so every read paid a dict-and-default lookup
-        # to reconstruct a value this constructor can just set once. Every
-        # default below is exactly the getattr default already in use at
-        # every call site, so this cannot change behaviour... PROVIDED the
-        # attribute is not also one perf_fingerprint.py hashes, i.e. one
-        # SAVE_FIELDS treats absence as meaningful for. See core.py's own,
-        # longer version of this same comment (git blame) for the full story
-        # of the one time this was tried carelessly and broke year 0's hash
-        # on all nine reference scenarios. Every name below has been checked
+        # Given a real value here so every call site can read
+        # `self.household.name` directly, rather than paying a
+        # `getattr(self.household, name, default)` dict-and-default lookup on
+        # a path that runs every single step. TRAP FOR A FIELD ALSO IN
+        # SAVE_FIELDS: perf_fingerprint.py hashes that list at year 0, and a
+        # save MISSING one of those fields reads back as "has never happened
+        # yet" (None), a state distinct from an explicit zero or sentinel -
+        # giving such a field a real value here makes year 0's hash disagree
+        # with any baseline recorded before this field existed. See
+        # core.py's own copy of this comment for the fuller account. Every
+        # name below has been checked
         # against SAVE_FIELDS (proto/saveload.py) and is NOT a member of it;
         # the ones that ARE members (this household's `insolvent_years`,
         # `wage_hours_this_year`, `_said_deputies`, `_said_scandal`,
@@ -309,7 +304,7 @@ class Household:
         # A WORKING IS A THING: material, rated capacity, the year it was
         # commissioned, what it cost to sink, and its own depletion clock -
         # see economy.py's class comment above _workings_of(). mine_capacity
-        # is now a property computed from this list (economy.py), not a
+        # is a property computed from this list (economy.py), not a
         # second number kept in sync by hand.
         self.mines: List[MineWorking] = []             # your OWN workings - see EconomyMixin
         self.mine_pending: Dict[str, float] = {}      # sunk but not yet producing
@@ -325,16 +320,14 @@ class Household:
         # not hold a reference to. See Sim.__init__, core.py.
 
     # -- FOG OF WAR: WHICH NODES ARE VISIBLE TO THIS HOUSEHOLD -------------
-    # FOG IS A RATCHET, NOT A REWIND. Moved here verbatim from FogMixin
-    # (fog.py, git blame has the full history and the exploit this was
-    # written to close) because visibility is exactly the shape of household
-    # state the module docstring above describes: it is this household's own
-    # accumulated knowledge of the tree, not the world's. The fix is a
-    # property instead of a plain attribute, so it holds regardless of WHICH
-    # code assigns to `.revealed` - `load_state` (proto/saveload.py) is the
-    # path the exploit used, but this does not require editing it or knowing
-    # about every future caller: assigning a smaller set here only ever
-    # grows what is already known, never shrinks it.
+    # FOG IS A RATCHET, NOT A REWIND: a property, not a plain attribute, so
+    # this holds regardless of WHICH code assigns to `.revealed` -
+    # `load_state` (proto/saveload.py) is one such path, but this does not
+    # require editing it or knowing about every future caller. Assigning a
+    # smaller set here only ever grows what is already known, never
+    # shrinks it: visibility is this household's own accumulated knowledge
+    # of the tree, not the world's, and nothing may un-reveal a node it has
+    # already discovered.
     @property
     def revealed(self) -> Set[str]:
         return self.__dict__.get("_revealed", set())

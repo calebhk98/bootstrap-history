@@ -3,10 +3,10 @@ commission - everything whose job is staffing the household or selling and
 directing its own hours, as opposed to spending on capital goods or a
 project's own progress.
 
-Split out of dispatch.py (see that file's own docstring for why): dispatch.py
-stays the composition point - the command table, the dispatcher, and every
-name protocol.py's shim re-exports - and imports these handlers back from
-here. Behaviour is unchanged and moved verbatim.
+dispatch.py stays the composition point - the command table, the
+dispatcher, and every name protocol.py's shim re-exports - and imports
+these handlers back from here (see dispatch.py's own docstring for why
+these live in a separate file).
 """
 
 from ..data import ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
@@ -17,12 +17,10 @@ from .util import _num, _qty
 def _cmd_work(s, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    # WHAT THE PRACTICE WAS EARNING BEFORE YOU TOOK THE JOB. Selling your
-    # hours takes them out of your own surgery, which is where most of your
-    # income comes from at the start - so a play tester earned 80.1 for 500
-    # hours as a scribe and lost 58.3 of practice income the same instant,
-    # netting 22 for a quarter of their year. Nothing anywhere said founder
-    # hours drove revenue, and they only found it by diffing the ledger.
+    # WHAT THE PRACTICE WAS EARNING BEFORE YOU TOOK THE JOB: selling your
+    # hours takes them out of your own surgery, which is where most of
+    # your income comes from at the start, so the true cost has to be
+    # measured against revenue before and after, not just the wage paid.
     _rev_before = s.revenue()
     pay, err = s.work_for_wages(cmd.get("trade"), cmd.get("hours", 0))
     # A message WITH pay is a warning about a bad trade, not a refusal:
@@ -150,10 +148,9 @@ def _cmd_labour(s, nodes, cmd, ended):
         return {"ok": False, "error": "no such trade: %s. They are: %s"
                 % (one, ", ".join(sorted(WAGES)))}
     def row(t, long=False):
-        # THE PRICE YOU ACTUALLY PAY, not the table price. A play tester
-        # watched engineers go from 781 a year to 1,094 and budgeted wrong
-        # for decades: leaning on a trade's local supply bids it up, and
-        # the premium appeared in the bill and nowhere else.
+        # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
+        # trade's local supply bids it up, and the premium has to appear
+        # here, not only in the bill.
         _lpf = s.labour_price_factor(t)
         entry = {"trade": t,
              "a_year_of_one": round(s.annual_wage(t), 0),
@@ -177,12 +174,11 @@ def _cmd_labour(s, nodes, cmd, ended):
                 "whole people: hiring phases in, training takes years, "
                 "and attrition trims a little every year rather than "
                 "dismissing one named person at a time.")
-        # THE CEILING, ON THE SCREEN. "This society's literacy will not
-        # supply more than 6.4 scholars in total, ever" gates the goal
-        # itself - which wants twenty-five - and appeared in no screen at
-        # all: a play tester found it in a refusal message in year 463 of a
-        # 500-year game. A wall you can only discover by walking into it is
-        # not a wall, it is a trap.
+        # THE CEILING, ON THE SCREEN: a hard cap on how many of a literate
+        # trade this society can ever supply has to be visible here, not
+        # something only discoverable by walking into a refusal deep into
+        # a run. A wall you can only discover by walking into it is not a
+        # wall, it is a trap.
         if t in s.LITERATE_TRADES:
             entry["most_this_society_can_ever_supply"] = round(
                 s.literate_capacity(t), 1)
@@ -193,10 +189,9 @@ def _cmd_labour(s, nodes, cmd, ended):
                                    "read, and this ceiling rises with it")
         if _lpf > 1.005:
             entry["dearer_than_usual_by"] = "%d%%" % ((_lpf - 1.0) * 100)
-            # "HERE" IS ONE TOWN, NOT THE COUNTRY. A player who reads
-            # this as a claim about the whole of Rome or Han China
-            # concludes the game is absurd - that is the demographics
-            # complaint this line exists to head off. See the
+            # "HERE" IS ONE TOWN, NOT THE COUNTRY. Reading this as a claim
+            # about the whole of Rome or Han China makes the game read as
+            # absurd, so this line has to be clear it is not that. See the
             # population command for the country-wide figure this
             # household's own reach is being measured against.
             entry["because"] = ("you have taken on a large share of the %ss "
@@ -215,22 +210,23 @@ def _cmd_labour(s, nodes, cmd, ended):
                       # like it created smiths out of nothing.
                       "hours_the_market_can_supply": round(s.market_supply_split(t)[0], 0),
                       "hours_your_own_people_add": round(s.market_supply_split(t)[1], 0),
-                      # AND THE SECOND CHANNEL. A break tester read one
-                      # ceiling in three places and then commissioned past
-                      # it. There are two: who you can HIRE here, and what
-                      # an outside shop will take on, at a premium.
+                      # AND THE SECOND CHANNEL: there are two distinct
+                      # capacities, who you can HIRE here and what an
+                      # outside shop will take on at a premium, and both
+                      # must be shown or a reader treats one ceiling as
+                      # the only one and commissions past it.
                       "hours_you_have_commissioned": round(s.hours_reserved(t), 0),
                       "hours_you_could_still_commission": round(
                           max(0.0, s.market_supply(t) - s.hours_reserved(t)), 0),
                       "hours_available_to_you_in_all": round(
                           s.hours_you_can_call_on(t), 0),
-                      # THE NOTE IS STATIC AND THE WORLD IS NOT. A break
-                      # tester read "exists here: True" and "does not exist
-                      # yet; you must create this trade" three lines apart,
-                      # because the note is a fixed string about the
-                      # society as it started and they had since taught the
-                      # trade into existence. Teaching one is the whole
-                      # point of `train`; the reply has to notice it
+                      # THE NOTE IS STATIC AND THE WORLD IS NOT: TRADE_NOTES
+                      # is a fixed string about the society as it started,
+                      # so if the trade has since been taught into
+                      # existence, the reply must say that instead - or it
+                      # contradicts itself, claiming the trade both exists
+                      # and does not in the same reply. Teaching one is the
+                      # whole point of `train`; the reply has to notice it
                       # happened.
                       "note": (("you taught this trade into existence here; "
                                 "the only %ss in this society are yours and "
@@ -242,9 +238,8 @@ def _cmd_labour(s, nodes, cmd, ended):
             # be false one command later: hiring is what moves
             # labour_price_factor, and wage_bill charges the NEW factor
             # to every head of the trade you then have, not only the one
-            # you added. A Norse player was quoted "a year of one: 525"
-            # for a scholar, hired one, and the standing wage bill came to
-            # 847.92 - 61% more - from exactly this. See
+            # you added, so the standing wage bill after hiring can be far
+            # higher than "a year of one" quoted before the hire. See
             # labour_price_factor_after_hiring's own docstring for the
             # full account; this is that forecast, priced and put on the
             # one screen a player actually reads before committing.
@@ -267,10 +262,9 @@ def _cmd_labour(s, nodes, cmd, ended):
                 # see labour_price_factor's own note on what "roughly
                 # doubles the price at the whole of it" means) is where a
                 # single hire stops being noise and starts being the
-                # reason your wage bill actually moved - which is what
-                # the Norse scholar case (1.0 to 1.615) plainly was and a
-                # common trade like labourer or smith (~1.01) plainly
-                # is not.
+                # reason your wage bill actually moved - true of a rare,
+                # thin-market trade and false of a common one like
+                # labourer or smith.
                 if _lpf_after > 1.05:
                     _have = s.employees.get(t, 0.0)
                     entry["hiring_moves_the_price"] = True
@@ -289,12 +283,12 @@ def _cmd_labour(s, nodes, cmd, ended):
         return {"ok": True, "trade": entry}
     have = sorted(trade for trade in WAGES if s.employees.get(trade, 0.0) > 0.005)
     # NOT "TRADES YOU DO NOT YET EMPLOY", and not "trades that exist"
-    # either. Excluding the ones you have reads as "no more smiths
+    # either: excluding the ones you have would read as "no more smiths
     # available" the moment you hire your first smith, which `hire smith 1`
-    # then contradicts; including every available trade put machinist on
-    # the list while `labour machinist` said "the town can supply: 0
-    # hours", which a play tester read side by side. It is every trade
-    # there is actually somebody here to hire.
+    # then contradicts; including every available trade would put
+    # machinist on the list while `labour machinist` says "the town can
+    # supply: 0 hours" - a direct contradiction between the two screens.
+    # It is every trade there is actually somebody here to hire.
     hirable = sorted(trade for trade in WAGES
                      if s.trade_available(trade) and s.market_supply_split(trade)[0] > 0)
     taught_only = sorted(trade for trade in WAGES
@@ -306,36 +300,26 @@ def _cmd_labour(s, nodes, cmd, ended):
             "only_the_ones_you_taught": taught_only,
             "do_not_exist_here": absent,
             "you_employ_in_total": round(sum(s.employees.values()), 2),
-            # THE CAP, WHERE A PLAYER CAN SEE IT. This number decided a
-            # play tester's entire mid-game and appeared NOWHERE: not in
-            # state, not in state full, not here. The only way to learn it
-            # was to try to hire and be refused, and the only way to learn
-            # what RAISED it was to read the refusal, which changed as the
-            # tree opened. They sat on 285,000 denarii unable to take on a
-            # sixth person and had no idea why.
+            # THE CAP, WHERE A PLAYER CAN SEE IT: this number can decide an
+            # entire mid-game and must not be discoverable only by trying
+            # to hire and being refused, with no earlier screen - state
+            # included - showing it at all.
             "household_places_used": round(s.headcount(), 2),
             "household_places_in_all":
                 round(s.headcount() + max(0.0, s.household_room()), 2),
             "room_for_more_people": round(max(0.0, s.household_room()), 2),
-            # _room_advice, NOT _staff_advice. This is `labour`, and
+            # _room_advice, NOT _staff_advice: this is `labour`, and
             # `state` sends a player here with the words "'labour' says
-            # what raises it" - meaning the CEILING on people. It answered
-            # with _staff_advice, which names hiring, commissioning and
-            # buying, every one of which needs the room you have not got.
-            # Two play testers followed it in a circle; one found the real
-            # answer only by guessing the word "workshop" in a search.
-            # _room_advice exists for exactly this and was written after
-            # the same complaint about the hire refusal.
+            # what raises it" - meaning the CEILING on people. Answering
+            # with _staff_advice instead, which names hiring, commissioning
+            # and buying, every one of which needs the room you have not
+            # got, sends a player in a circle. _room_advice exists for
+            # exactly this.
             "what_raises_that_room": s._room_advice(),
-            # NOT "NEVER", AND NOT "HOWEVER RICH". This sentence is mine
-            # and it went stale the same day I wrote it. It said the
-            # ceiling could never move, which was true of the old model and
-            # is now false: the ceiling grows with the institutions that
-            # train scholars and carry their keep. The user caught it by
-            # reading the sentence literally, which is the right way to
-            # read a sentence, and noticing it implies no research you do
-            # can ever help. The `hire` refusal had already been corrected
-            # and this screen had not, so the game was saying both things.
+            # NOT "NEVER", AND NOT "HOWEVER RICH": the ceiling is not
+            # fixed. It grows with the institutions that train scholars and
+            # carry their keep, and this sentence has to say so
+            # consistently with the `hire` refusal, which already does.
             "and_how_many_of_the_lettered_trades_this_society_supplies": (
                 "%s: right now your household can hold at most %.1f of them "
                 "in total, hired and taught together. That is your reach "
@@ -357,10 +341,11 @@ def _cmd_labour(s, nodes, cmd, ended):
             # number", not silence on this screen and a footnote only
             # on the other one.
             "staff_are_fractional_because": _staff_fraction_note(s),
-            # A ROW WITH NO TRADE IS PEOPLE YOU BOUGHT, and printing that
-            # as the literal string "None" - "None x3.3", "None x0.55" -
-            # is how two separate testers concluded the game had lost track
-            # of their household. It knows exactly what they are.
+            # A ROW WITH NO TRADE IS PEOPLE YOU BOUGHT: printing that as
+            # the literal string "None" - "None x3.3", "None x0.55" -
+            # would read as the game having lost track of its own
+            # household. It knows exactly what they are, so this
+            # substitutes a description instead.
             "in_training": [
                 {"trade": (training_record[2] if len(training_record) > 2
                            else "people you bought, learning the work"),
@@ -441,16 +426,15 @@ def _cmd_train(s, nodes, cmd, ended):
     out = {"ok": True, "training": msg, "capital": round(s.capital, 1),
            "your_hours_left_this_year": round(
                max(0.0, s.director_pool() - s.director_hours_committed()), 1)}
-    # TRAIN AND HIRE ARE TWO SEPARATE STEPS, and this message was the only
-    # one a player saw at the moment they took the first of them. This
-    # trade did not exist here before, and a project's hired_labour for it
-    # draws only on people you have trained or hired INTO it - there is no
-    # open market to fall back on the way there is for a smith or a
-    # scribe. Nobody can do that work until the people above finish
-    # learning, and 'hire' is how you add more without that wait, now that
-    # the trade exists to hire into at all. A Rome player found this out
-    # only when `start` refused a project outright, having read nothing on
-    # this screen or on `why` that named the gap in advance.
+    # TRAIN AND HIRE ARE TWO SEPARATE STEPS, and this message is the one
+    # place a player sees that at the moment they take the first of them:
+    # a newly-created trade has no open market to fall back on the way a
+    # smith or a scribe does, so a project's hired_labour for it draws
+    # only on people trained or hired INTO it directly. Nobody can do that
+    # work until the people above finish learning, and 'hire' is how you
+    # add more without that wait, now that the trade exists to hire into
+    # at all. That gap has to be named here, or the first anyone learns of
+    # it is `start` refusing a project outright.
     _trade = str(cmd.get("trade") or "").strip().lower()
     if _trade in TRADES_ABSENT:
         out["means"] = (

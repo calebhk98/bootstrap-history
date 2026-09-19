@@ -22,12 +22,11 @@ from .data import (TECH_EFFECTS, TRADES_ABSENT)
 
 class AdoptionMixin:
 
-    # The FIRST answer to "I have no staff" is now the obvious one, which the
-    # model did not have until this round: hire somebody. A tester spent five
-    # hundred years with one scholar, built five separate institution nodes
-    # hoping one of them would help, and wrote "if there's a way to grow
-    # scholars, I never found it" - because there was not one, short of an
-    # institution costing thousands.
+    # The FIRST answer to "I have no staff" has to be the obvious one: hire
+    # somebody. Without it, growing staff has no path short of an
+    # institution costing thousands, leaving a player stuck with one scholar
+    # for centuries, guessing among institution nodes in the hope one of
+    # them helps.
     STAFF_SOURCES = {
         "scholars": [("HIRE", "{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":2} "
                               "hires literate men by the year; see {\"cmd\":\"labour\"}"),
@@ -387,15 +386,13 @@ class AdoptionMixin:
     # HOW FAST LITERACY CLOSES THE GAP TO ITS CEILING, per unit of
     # _schooling_flow, per year. At flow 1.0 (a single ordinary school and
     # nothing more) the general-literacy gap closes with a time constant of
-    # about 1/(0.006*1) ~= 167 years - a run has to want this for the long
-    # haul, across several generations, exactly the caution the brief asked
-    # for. At flow ~7 (several schools and academies both expanded - the
-    # "8.85 units" scale labour.py's own comments record a break tester
-    # actually reaching) the time constant falls to about 24 years, so heavy,
-    # deliberate investment can visibly transform a society within one or two
-    # long lifetimes, which is the other half of what the user asked for:
-    # yes, 90%+ is reachable, and it costs generations of sustained schooling
-    # and mechanisation, not five turns of building schools.
+    # about 1/(0.006*1) ~= 167 years, so a run has to want this for the long
+    # haul, across several generations. At flow ~7 (several schools and
+    # academies both expanded) the time constant falls to about 24 years, so
+    # heavy, deliberate investment can visibly transform a society within one
+    # or two long lifetimes: 90%+ literacy is reachable, but it costs
+    # generations of sustained schooling and mechanisation, not five turns of
+    # building schools.
     LITERACY_GROWTH_RATE_GENERAL = declare(
         "LITERACY_GROWTH_RATE_GENERAL", 0.006, kind="temporary_heuristic",
         unit="dimensionless per unit of schooling flow, per year",
@@ -502,16 +499,16 @@ class AdoptionMixin:
     # machinist, optician - that do not exist here until the founder
     # personally teaches the first one (train(), labour.py); trade_available()
     # then reads them as permanently available because self.household.trades_created
-    # never shrinks. What never followed from that is the society producing
-    # MORE of them on its own: literate_capacity() bounds how many the
-    # founder can hire or teach, and until now nothing but the founder's own
-    # director-hours and money ever moved a trade's headcount toward that
-    # bound. This is the missing mechanism - once a taught trade has been
-    # established long enough, WITH schools actually running, the society
-    # naturalises it: it starts producing its own people in that trade, on
-    # its own, the same way it always produced its own smiths, bounded by
-    # the exact same literate_capacity() wall a founder training them by hand
-    # would have been bounded by.
+    # never shrinks. What does not follow from that alone is the society
+    # producing MORE of them on its own: literate_capacity() bounds how many
+    # the founder can hire or teach, and nothing besides the founder's own
+    # director-hours and money moves a trade's headcount toward that bound
+    # without this mechanism. Once a taught trade has been established long
+    # enough, WITH schools actually running, the society naturalises it: it
+    # starts producing its own people in that trade, on its own, the same
+    # way it always produced its own smiths, bounded by the exact same
+    # literate_capacity() wall a founder training them by hand is bounded
+    # by.
     #
     # No schooling running at all means this never fires, by design: the
     # user's framing is "an EDUCATED society eventually produces its own

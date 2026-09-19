@@ -1,8 +1,7 @@
 """Money, materials, and the works that consume both.
 
-Split out of simulator.py, which had grown to 5,600 lines. These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and verified byte-identical.
+These are methods of Sim; they are a mixin only so that they can live in a
+file of their own.
 """
 import math
 from constants import declare
@@ -245,46 +244,37 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
                     MiningMixin, CreditMixin, ProductionMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
-    This file used to hold all ~6,570 lines and 121 methods of
-    EconomyMixin directly - the largest file in the repo, and one
-    several agents could not edit at once. The methods were grouped by
-    subject (ore and land in economy_mining.py, debt and affordability
-    in economy_credit.py, revenue and workshops in economy_production.py
-    - see each module's own docstring for the detailed grouping and
-    evidence) and moved verbatim into sibling modules as their own mixin
-    classes, which EconomyMixin composes back into one name so core.py's
-    `class Sim(EconomyMixin, ...)` does not have to change.
+    EconomyMixin's methods are grouped by subject across sibling modules
+    (ore and land in economy_mining.py, debt and affordability in
+    economy_credit.py, revenue and workshops in economy_production.py,
+    goods-producing concerns in economy_goods.py, raw material supply in
+    economy_materials.py, electricity as a physical quantity in
+    economy_electricity.py, freight in economy_freight.py - see each
+    module's own docstring for the detailed grouping and evidence) as
+    their own mixin classes, which EconomyMixin composes back into one
+    name so core.py's `class Sim(EconomyMixin, ...)` does not have to
+    know about any of them individually.
 
-    A first pass grouped the pricing side of that split - goods,
-    materials, electricity and freight - into one economy_market.py
-    file. At 3,171 lines and 55 methods that file was itself too large
-    for the same reason economy.py had been, so it was split again, by
-    the same subject lines its own banner comments already used:
-    goods-producing concerns (economy_goods.py, GoodsMixin), raw
-    material supply (economy_materials.py, MaterialSupplyMixin),
-    electricity as a physical quantity (economy_electricity.py,
-    ElectricityMixin) and freight (economy_freight.py, FreightMixin).
-    One deviation from that banner order, made on the call graph rather
-    than on where the code happened to sit: _cached_material_demand()
-    and _cached_demand_by_tag() were textually the last two methods
-    before the freight banner, reading at a glance like part of
-    electricity, but every real caller of either is in
-    economy_freight.py, so that is where they moved - see that file's
-    own docstring for the fuller account.
+    Methods are grouped by what actually calls them, not by where they
+    happen to sit textually: _cached_material_demand() and
+    _cached_demand_by_tag() live in economy_freight.py, not
+    economy_electricity.py, because every real caller of either is in
+    economy_freight.py - see that file's own docstring for the fuller
+    account.
 
-    CLASS-LEVEL CACHES, RENAMED DELIBERATELY. Three methods in
+    CLASS-LEVEL CACHES, NAMED DELIBERATELY. Three methods in
     economy_materials.py and one in economy_freight.py cache their
     answer on their own bare class object rather than on self, because
     what they cache (a CommodityLedger, a material-to-commodity-id map,
     prices.json's own figures, and the ox-cart-and-dirt-track physical
     inputs freight pricing reuses) does not differ between one Sim
-    instance and the next in the same process. That identifier is
-    exactly what stopped resolving, invisibly to import and to
-    `validate`, the last time these methods moved and the class-object
-    reference at each cache site was not updated to match - see each
-    file's own CLASS-LEVEL CACHE note for which methods, which cache
-    names, and why each one now points at the class actually holding
-    it.
+    instance and the next in the same process. TRAP: that class-object
+    reference at each cache site MUST match whatever class actually
+    holds the method - a stale identifier fails silently, invisible to
+    import and to `validate`, surfacing only when a command that reads a
+    material price first runs. See each file's own CLASS-LEVEL CACHE
+    note for which methods, which cache names, and why each one points
+    at the class actually holding it.
 
     What is defined directly on EconomyMixin, below, is what did not
     fit cleanly into any one of those subjects: standing/reputation
@@ -385,12 +375,11 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """What this project will actually cost in money, all factors applied.
 
         This is the number `why` quotes and the number the project must have
-        actually PAID before it can complete. It used not to exist, and that was
-        the single worst bug in the economy: step() charged what you could afford
-        each year, clamped at your balance, and then completed the project on
-        hours and calendar alone. A tester started a 4,361 denarius balloon with
-        400 denarii, finished it in four years having paid about 984, and the
-        remainder was simply forgiven. Money was decorative; only hours were real.
+        actually PAID before it can complete. A project must not complete on
+        hours and calendar alone while step() charges only what you can
+        afford each year, clamped at your balance: that would let the
+        unpaid remainder of the true cost be forgiven outright, leaving
+        money decorative and only hours real.
         """
         node = self.nodes[k]
         return (node["_total_cost"] * self.cost_money_factor() * self.opposition_factor(k)
@@ -554,11 +543,10 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     # before haulage. Doubling it for haulage, timbering and overseers gives the
     # figures below. Metal ores cost far more per tonne of METAL because of the
     # ore grade and the smelting, and the capital rises with depth and drainage.
-    # Gold is here because a tester asked the obvious question about debasement:
-    # "what if you build a mine that can mine gold?" If the money is being ruined
-    # by having less silver in it, a man who digs his own metal is not ruined with
-    # it. Roman gold (Dacia, Las Medulas) was mined at enormous cost and that is
-    # what the capex says.
+    # Gold is here so debasement has an answer: if the money is being ruined
+    # by having less silver in it, a man who digs his own metal is not ruined
+    # with it. Roman gold (Dacia, Las Medulas) was mined at enormous cost and
+    # that is what the capex says.
     MINE_CAPEX_PER_T_YR_COAL = declare(
         "MINE_CAPEX_PER_T_YR_COAL", 9.0, kind="engineering_estimate",
         unit="denarii per tonne/year of capacity sunk",
@@ -605,8 +593,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     }
 
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
-    # purchase itself cannot drift apart: a break tester spent 68% of their
-    # capital on coppice with no way to ask the price first.
+    # purchase itself cannot drift apart: a player must be able to ask the
+    # price of coppice before spending capital on it, not only after.
     FOREST_COST_PER_HA = declare(
         "FOREST_COST_PER_HA", 250.0, kind="temporary_heuristic",
         unit="denarii/hectare", source=None, confidence="D",

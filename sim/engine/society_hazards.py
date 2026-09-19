@@ -116,12 +116,8 @@ class HazardsMixin:
         prerequisite still open were started TODAY - critical_path()'s own
         floor (see data.py), minus whatever of that chain is already done.
 
-        THE NUMBER THE WARNING WAS MISSING. A Han playtester was told from
-        turn one that the hedge against being sacked was "copies of your
-        work kept somewhere else" and, having acted on that the moment it
-        was said, still lost the corpus to the Yellow Turban rebellion -
-        twice, some of it rebuilt and lost again. The advice was right and
-        the words never changed; what was missing was that the strongest
+        THE NUMBER THE WARNING WAS MISSING: knowing that a hedge exists is
+        not the same as knowing how long it takes to reach. The strongest
         hedge in HAZARD_COUNTERS["sack_chance"] (academy_network, sharing
         0.40 of the risk, the biggest single number in that list) sits at
         the end of scientific_method -> corpus_written -> corpus_dispersed
@@ -129,8 +125,9 @@ class HazardsMixin:
         carried, already shown per-node as `calendar_floor_years` by
         protocol.py, and already the basis of the `path` command's own
         "Longest serial chain" line) sum to a 30-year floor - not something
-        five years' warning is enough for, and nothing before this said the
-        chain had a length at all, only that it existed.
+        a warning with only a few years' lead time is enough for, so the
+        warning has to say the chain has a length, not only that it
+        exists.
 
         Reuses critical_path(), the SAME function `path` already calls for
         exactly this question about a goal node - not a second notion of
@@ -164,13 +161,13 @@ class HazardsMixin:
         out = {"you_currently_take": round(mult, 3), "because_of": why}
         if mult > 0.75:
             out["what_would_help"] = words.get(kind, "")
-            # AND SOMETHING YOU CAN ACT ON. A playtester was told the answer to
-            # the Spanish was "walls, firearms, powerful friends, and copies of
-            # your work kept somewhere else", played 154 years, saw 269
-            # startable things, and reported finding no hedge of any kind. The
-            # hedges were there and shallow - a sand filter needs no
-            # prerequisite at all, only one artisan you do not have yet - but
-            # advice you cannot act on reads as advice about nothing.
+            # AND SOMETHING YOU CAN ACT ON: a category-level answer like
+            # "walls, firearms, powerful friends, and copies of your work
+            # kept somewhere else" is easy to read as advice about nothing
+            # when it sits among hundreds of startable things and none of
+            # them is named as the hedge - even when a hedge is shallow
+            # and immediate, like a sand filter needing no prerequisite at
+            # all, only one artisan not yet on hand.
             #
             # This does NOT name the hedge or open the tree. It names things you
             # could begin TODAY, which you can already see, and says only that
@@ -180,16 +177,17 @@ class HazardsMixin:
             step = self.hedge_first_steps(kind)
             if step:
                 out["you_could_begin_now_toward_it"] = step
-            # AND HOW LONG BEFORE ANY OF IT HELPS. Numbers only, never a node
-            # id, so this tells nothing fog would hide: two playtesters (Han,
-            # Rome) each acted on `what_would_help` the moment they read it and
-            # were sacked anyway, because the strongest real hedge among these
-            # words is not a purchase, it is a multi-decade diffusion chain -
-            # see _calendar_floor_remaining's own comment. Given as a range
-            # because these words bundle several genuinely different hedges
-            # (a patron is bought in a few years; three dispersed academies are
-            # not), and the range is the honest shape of the answer: some of
-            # this is fast, and the slowest part is not.
+            # AND HOW LONG BEFORE ANY OF IT HELPS: numbers only, never a node
+            # id, so this tells nothing fog would hide. The strongest real
+            # hedge among these words is not always a purchase - sometimes
+            # it is a multi-decade diffusion chain (see
+            # _calendar_floor_remaining's own comment), so acting on
+            # `what_would_help` the moment it is read is not necessarily
+            # enough. Given as a range because these words bundle several
+            # genuinely different hedges (a patron is bought in a few
+            # years; three dispersed academies are not), and the range is
+            # the honest shape of the answer: some of this is fast, and
+            # the slowest part is not.
             floors = sorted(
                 floor_years for node, _share, _label in self.HAZARD_COUNTERS.get(kind, ())
                 if not node.startswith("_") and node in self.nodes
@@ -226,14 +224,12 @@ class HazardsMixin:
             for pre in self.nodes[node]["pre"]:
                 if pre in self.nodes and pre not in self.household.done:
                     want.append((1, pre))
-                    # SAY WHAT IT LEADS TO. A break tester was offered
-                    # `horse_collar` as the thing to build against the Antonine
-                    # plague, directly under prose saying the remedy is "clean
-                    # water, quarantine, and eventually inoculation". It is a
-                    # prerequisite of crop rotation, which is a real hedge
-                    # against a famine year - but nothing said so, and an
-                    # unexplained horse collar under a plague warning reads as
-                    # the game being broken.
+                    # SAY WHAT IT LEADS TO: a first-step node can look
+                    # entirely unrelated to the hazard it hedges against
+                    # (a prerequisite of the actual counter, not the
+                    # counter itself), so offering it with no explanation
+                    # reads as the game being broken unless this says what
+                    # it leads to.
                     leads_to.setdefault(pre, "a step toward %s" % label)
         memo = {}
         seen, out = set(), []
@@ -632,25 +628,24 @@ class HazardsMixin:
             for trade in list(self.household.employees):
                 self.household.employees[trade] *= (1 - loss)
             self.household.directors_extra *= (1 - loss)
-            # THE MONEY GOES TOO, and the log never said so. A weird-play
-            # tester watched the Black Death take 12,676 denarii down to
-            # 9,111 against a stated net of -195 a year, with the only
-            # message reading "staff -45%", and reasonably concluded the
-            # accounts were broken. A plague empties the market as well as
-            # the workshop; that is real, and it has to be said.
+            # THE MONEY GOES TOO, and the log has to say so: a plague that
+            # silently changes capital while the only message reads "staff
+            # -45%" reads as broken accounting. A plague empties the
+            # market as well as the workshop; that is real, and it has to
+            # be said.
             cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
-            # SAY WHAT ACTUALLY HAPPENED TO YOU. A weird-play tester with no
-            # staff and no money read "staff -45%, and 0 pence gone" three
-            # years running and reasonably concluded the event was firing
-            # against nobody. It was: they had nothing to lose. An event
+            # SAY WHAT ACTUALLY HAPPENED TO YOU: a household with no staff
+            # and no money left can genuinely take "staff -45%, and 0
+            # pence gone" repeatedly, which is not the event failing to
+            # fire, it is the event finding nothing left to take. An event
             # should report the harm it did, not the harm it would have
             # done to somebody else.
             # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
             # and your own hedges do not change that: the quarantine you
             # built protects your people, not everyone else's labour
-            # market. A playtester found a plague that hit them and
-            # nobody else, and asked why their wage bill never moved
-            # afterward the way the real Black Death moved England's.
+            # market - the wage bill has to move the way a real
+            # population-wide plague would move it, not stay flat because
+            # only the household's own cohorts were touched.
             # This uses the hazard's RAW rate, never `loss` above, which
             # is personal and already reduced by your own hedges; and
             # cutting self.population's actual cohorts (rather than
@@ -1131,12 +1126,12 @@ class HazardsMixin:
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
                 self.household.capital -= gift
-            # SAY WHAT IT COST. A play tester read "your patron dies; his heir
-            # must be courted afresh", found nothing in `state` that had
-            # changed by an amount they could point at, and asked whether the
-            # line was decorative. It was not: it takes money, standing and
-            # most of your cover, and it should say so, because the answer to
-            # it - court somebody, spend on standing - is a decision.
+            # SAY WHAT IT COST: "your patron dies; his heir must be courted
+            # afresh" with nothing in `state` changed by an amount a
+            # player can point at reads as decorative. It is not: it
+            # takes money, standing and most of your cover, and it has to
+            # say so, because the answer to it - court somebody, spend on
+            # standing - is a decision.
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "
@@ -1152,9 +1147,10 @@ class HazardsMixin:
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, self.household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS)
-            # An insula is a Roman tenement block, and a tester playing Han China
-            # counted nine fires in the insula district of Luoyang in a hundred
-            # years. Every civilization file names its own quarter.
+            # An insula is a Roman tenement block; naming it here directly
+            # instead of reading self.civ["fire_quarter"] would print
+            # "insula district" in a Han game too. Every civilization file
+            # names its own quarter.
             self.household.log.append((yr, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))

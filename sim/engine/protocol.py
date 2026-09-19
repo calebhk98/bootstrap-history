@@ -3,13 +3,10 @@
 One object per line in, one object per line out. It explains itself: there is
 no protocol document to read, on purpose.
 
-The protocol used to live entirely in this file; at 9,164 lines (5,430 code)
-it was the largest file in the repository and _agent_dispatch_inner alone was
-measured at cyclomatic complexity 395. It is now split by subject into
-engine/proto/ - see that package and sim/ARCHITECTURE.md - and this file
-is a thin re-export shim, kept so that `from engine.protocol import X` goes on
-working for every name this module ever exported. Nothing below is logic;
-read engine/proto/ for that.
+This file is a thin re-export shim over engine/proto/ - see that package
+and sim/ARCHITECTURE.md - kept so that `from engine.protocol import X`
+goes on working for every name this module ever exported. Nothing below
+is logic; read engine/proto/ for that.
 """
 
 from .proto.util import (

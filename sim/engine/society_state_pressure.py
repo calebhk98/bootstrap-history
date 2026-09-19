@@ -451,15 +451,13 @@ class StatePressureMixin:
         if (self.running("patron_local") or self.running("patron_senatorial")
                 or self.running("patron_imperial")):
             protection += self.MILITARY_USEFULNESS_PROTECTION * weights["patronage_weight"] * self.military_leverage()
-        # IT SAYS "REDUCES ALL FUTURE SUSPICION" AND IT DID NOTHING OF THE KIND.
-        # identity_cover's entire implementation was +1.0 to the reputation
-        # floor and +400 to the credit limit, and the suspicion it promised to
-        # reduce was a field that no longer exists. Its real value was that it
-        # gated a quarter of the tree - which is why every tester concluded
-        # they had to have it and assumed it was about illegal activity. It is
-        # a persona: books, a house, clothes, a secretary and a reputation for
-        # piety. What that buys is that an inexplicable effect coming out of
-        # YOUR workshop is read as learning rather than as sorcery.
+        # identity_cover's tree description ("reduces all future
+        # suspicion") does not match what it actually does: the mechanism
+        # is +1.0 to the reputation floor and +400 to the credit limit -
+        # this IDENTITY_COVER_PROTECTION term. What it actually buys is a
+        # persona: books, a house, clothes, a secretary and a reputation
+        # for piety, so an inexplicable effect coming out of YOUR workshop
+        # is read as learning rather than as sorcery.
         if self.running("identity_cover"):      protection += self.IDENTITY_COVER_PROTECTION
         if self.has("citizenship"):         protection += self.CITIZENSHIP_PROTECTION
         if self.running("collegium_licensed"):  protection += self.COLLEGIUM_LICENSED_PROTECTION
@@ -528,14 +526,14 @@ class StatePressureMixin:
     def withdraw_from_public_life(self):
         """Deliberately become a smaller man. The one lever against prominence.
 
-        Both play testers of round eight died to eminence and both said the
-        same thing about it: `help eminence` says "nothing lowers it directly,
-        which is the point", the two counters named are ten-year builds behind
-        long chains, and the steady state the game prints is above the danger
-        line - so playing well is a death sentence and no command reads as
-        "get smaller". That is a mechanic with no decision in it.
+        `help eminence` says "nothing lowers it directly, which is the
+        point"; the two counters it names are ten-year builds behind long
+        chains, and the steady state the game prints can sit above the
+        danger line, so playing well without any lever at all would be a
+        death sentence with no command that reads as "get smaller". This
+        method is that lever, so the mechanic has a decision in it.
 
-        This is the decision. It is what the men this hazard is modelled on
+        It is what the men this hazard is modelled on
         actually did, and what the game's own confiscation event already
         describes ("you withdraw from public life for a while"): stop
         appearing, stop publishing under your own name, let somebody else take
@@ -641,8 +639,8 @@ class StatePressureMixin:
                          "stand, which is the most exposed place there is")
         if self.household.capital > self.EMINENCE_WEALTH_VISIBLE_THRESHOLD:
             helps.append("visible wealth is half of what makes you a target")
-        # THE LEVER, NAMED. Two play testers read this screen, found no command
-        # in it that meant "get smaller", and died. It is `withdraw`.
+        # THE LEVER, NAMED. This screen must not leave a player with no command
+        # in it that means "get smaller". It is `withdraw`.
         _last = getattr(self.household, "last_withdrawal", None)
         if _last is not None and self.year - _last < self.WITHDRAW_EVERY:
             _lever_note = ("you stepped back in %d; again no sooner than %d"
@@ -658,12 +656,12 @@ class StatePressureMixin:
                 "dangerous_above": danger,
                 "settles_at_if_nothing_changes": round(settles, 1),
                 "chance_of_ruin_this_year": round(probability, 4),
-                # WHICH OUTCOME. A play tester survived two confiscations and
-                # was then ended by a third roll, with "7% chance of ruin this
-                # year" shown before all three, and had no way to know the rolls
-                # differed. They do: 45% a confiscation, 35% a patron lost, 20%
-                # the end. Reading "chance of ruin" as "chance of death" was the
-                # game's fault, not theirs.
+                # WHICH OUTCOME. "chance of ruin this year" covers three
+                # different rolls - 45% a confiscation, 35% a patron lost, 20%
+                # the end - and showing only that figure would let a player
+                # read "chance of ruin" as "chance of death" when two out of
+                # three rolls are survivable. Break the outcomes out so they
+                # do not have to guess which one a ruin roll means.
                 "if_it_lands_it_is": {
                     "property confiscated and a forced retirement": self.EMINENCE_OUTCOME_CONFISCATION_SHARE,
                     "your patron destroyed in someone else's quarrel": self.EMINENCE_OUTCOME_PATRON_LOST_SHARE,
@@ -790,41 +788,38 @@ class StatePressureMixin:
         # A wide, dispersed institution is harder to destroy than one great man.
         if self.running("academy_network"):
             hazard *= self.EMINENCE_ACADEMY_NETWORK_MULTIPLIER
-        # AND A CITY GETS USED TO YOU. familiarity is the model's own measure of
-        # how unsurprising you have become - it already decays the alarm your
-        # work causes - and it was the one defence prominence ignored. Two play
-        # testers read "EMINENCE is dangerous above 26 (settles near 39.2)" and
-        # correctly described it as the game announcing that a successful run is
-        # scheduled to die. A man who has been the great man of the city for
-        # ninety years is a fixture, not a novelty; he is still exposed, and he
-        # is not what he was in his first decade.
+        # AND A CITY GETS USED TO YOU: familiarity, the model's own measure
+        # of how unsurprising you have become (it already decays the alarm
+        # your work causes), must apply here too, or eminence is the one
+        # defence that ignores it and a long, successful run is
+        # mechanically doomed regardless. A man who has been the great man
+        # of the city for ninety years is a fixture, not a novelty; he is
+        # still exposed, and he is not what he was in his first decade.
         #
-        # A SIXTH OFF, NOT A THIRD. The first attempt at this took a third, and
-        # a break tester then measured three thousand run-years in which the
-        # sum of every reported chance of ruin was exactly 0.00 - a mechanic
-        # that cannot reach you is not a hazard, it is scenery, and the
-        # correction had gone as far past the line as the original sat the
-        # other side of it. At a sixth, a man who has been the city's fixture
-        # for ninety years settles just under the danger line and a man who has
-        # also got himself next to the throne settles well over it, which is
+        # A SIXTH, NOT A LARGER SHARE: familiarity relief must reduce the
+        # hazard without erasing it - a relief strong enough to drive every
+        # reported chance of ruin to exactly 0.00 makes eminence a
+        # mechanic that cannot reach you, which is scenery, not a hazard.
+        # At a sixth, a man who has been the city's fixture for ninety
+        # years settles just under the danger line, and a man who has also
+        # got himself next to the throne settles well over it, which is
         # the shape the whole mechanic is about.
         hazard *= (1.0 - self.EMINENCE_FAMILIARITY_RELIEF * self.household.familiarity)
         return hazard
 
     # ---- THE STATE NOTICES YOU ----------------------------------------------
-    # A player who had already won the game - 691 employees, 1.1 billion
-    # denarii, working firearms, a power grid, a railway - filed the sharper
-    # half of a complaint about history being on rails: technology changed how
-    # much a dated hazard hurt, never whether the state itself reacted to what
-    # had been built under it. The state never once requisitioned the
-    # household's output, demanded military supply, pressed an office on it,
-    # or threatened confiscation. Pre-industrial state predation on a large
-    # private fortune is one of the most reliable facts of the period this
-    # game is set in - the annona and the munera, the Han salt and iron
-    # monopolies, English purveyance, Mexica tribute are not colour, they are
-    # how these states paid for themselves - and scandal (the only existing
-    # political counterweight) saturates and is bribed away long before a
-    # household reaches this scale (see 6b in core.py's step()).
+    # A household that reaches real scale - hundreds of employees, working
+    # firearms, a power grid, a railway - must eventually draw a state
+    # reaction of its own, not just a technology-driven hazard: the state
+    # can requisition output, demand military supply, press an office on a
+    # household, or threaten confiscation. Pre-industrial state predation
+    # on a large private fortune is one of the most reliable facts of the
+    # period this game is set in - the annona and the munera, the Han salt
+    # and iron monopolies, English purveyance, Mexica tribute are not
+    # colour, they are how these states paid for themselves - and scandal
+    # (the only other political counterweight) saturates and is bribed
+    # away long before a household reaches this scale (see 6b in core.py's
+    # step()).
     #
     # THIS DOES NOT INVENT A SECOND POLITICAL SCALE. Every input below is a
     # number the engine already tracks for another purpose - eminence,

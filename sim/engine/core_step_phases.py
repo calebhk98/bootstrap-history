@@ -215,44 +215,31 @@ class StepPhasesMixin:
             craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in self.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and trade_family(trade_id) == "craft")
-            # SPECIALISTS MUST NOT EAT THE GENERALISTS. The generic bucket was
-            # the remainder after every taught trade had taken its share, so
-            # once the top-up kept five specialist trades at two apiece the
-            # artisans were squeezed to nothing - a play tester watched theirs
-            # go 6.0 to 0.03 while scholars filled every place, and since
-            # artisans are what supervise a concern, twenty-two concerns closed
-            # and their net went from +8,010 a year to -3,027. A household of
-            # nothing but specialists cannot keep its own doors open.
+            # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
+            # the remainder after every taught trade has taken its share,
+            # so the top-up must not let specialist trades squeeze the
+            # generic artisan count to nothing. Artisans are what supervise
+            # a concern; a household of nothing but specialists cannot keep
+            # its own doors open.
             #
-            # PEOPLE ARE WHOLE. This was the other place "0.03 engineers"
-            # actually came from: the smoothing above is a continuous
-            # approach to a continuous target, by design, and writing that
-            # target straight into `employees` handed a player a fractional
-            # person every single year forever, never quite arriving.
+            # PEOPLE ARE WHOLE: the smoothing above is a continuous approach
+            # to a continuous target, by design, so writing that target
+            # straight into `employees` would hand a fractional person
+            # every single year, forever, never quite arriving.
             # _stochastic_round spends the fractional remainder as this
             # year's chance of the next whole hire, so the long-run average
             # this formula was tuned against is unchanged and every actual
             # year's headcount is an integer (see its own docstring).
-            # THROUGH hire(), NOT AROUND IT. The user asked why this does not
-            # simply call hire() and reuse the code, and the honest answer was
-            # that there is no reason: it grew as a direct write to the pools
-            # and every rule hire() enforces had to be re-enforced here by hand,
-            # or silently was not. The literacy ceiling was the one that got
-            # noticed (a player refused at 5.9 while this reached 146), and it
-            # was fixed by duplicating the check rather than sharing the code,
-            # which left the others. Measured, for four artisans: hire() takes
-            # 1,000 denarii as a finder's fee and the first year in advance,
-            # records it so the year is not billed twice, and bids that trade's
-            # price up to 1.021. This took the same four people for nothing and
-            # left the market at 1.000. The automation was cheaper than playing
-            # by hand, which is exactly backwards from what `policy` promises.
-            #
-            # Routing through hire() makes all of that impossible by
-            # construction rather than by vigilance: the advance, the household
-            # room, the literacy wall, the price pressure and the refusals are
-            # whatever hire() says they are, for player and optimizer alike. A
-            # refusal here is not an error - it is the same wall a player hits -
-            # so it is simply not acted on.
+            # THROUGH hire(), NOT AROUND IT: a direct write to the pools
+            # here instead would mean every rule hire() enforces - the
+            # advance, the household room, the literacy wall, the price
+            # pressure, the refusals - has to be re-enforced by hand, and
+            # any one left out silently diverges from what a player hitting
+            # the same wall experiences. Routing through hire() makes that
+            # impossible by construction rather than by vigilance: it is
+            # whatever hire() says it is, for player and optimizer alike.
+            # A refusal here is not an error - it is the same wall a
+            # player hits - so it is simply not acted on.
             def _grow_to(trade, want):
                 have = self.household.employees.get(trade, 0.0)
                 delta = self._stochastic_round(want) - have
@@ -263,21 +250,18 @@ class StepPhasesMixin:
             _grow_to("artisan", max(craft * 0.25, craft - specials))
             if desired_sc > 0:
                 _grow_to("scholar", desired_sc)
-            # REPLACE THE PEOPLE YOU LOSE, trade by trade. Attrition was eating
-            # the taught trades (the engineers went from 1.9 to 0.3 over sixty
-            # years) and nothing ever replaced them, because the top-up only knew
-            # about the two generic buckets. A programme that trains the first
-            # machinists in the world and then lets them die out has not trained
-            # anybody.
-            # FROM THE TRADES YOU TAUGHT, not from the keys that happen to be
-            # left. A trade falls out of `employees` entirely once the last of
-            # them drops below 0.05, and this loop only ever looked at the
-            # keys - so the moment a taught trade went to nothing it stopped
-            # being replaced, permanently. That is the leak behind a Rome run
-            # that built 829 technologies and could not begin
-            # precision_three_plate: not that machinists were never taught, but
-            # that the last one died and the top-up had already forgotten they
-            # existed.
+            # REPLACE THE PEOPLE YOU LOSE, trade by trade: attrition can erode
+            # a taught trade toward zero, and nothing replaces it if the
+            # top-up only knows about the two generic buckets. A programme
+            # that trains the first machinists in the world and then lets
+            # them die out has not trained anybody.
+            # FROM THE TRADES YOU TAUGHT, not from the keys that happen to
+            # be left: a trade falls out of `employees` entirely once the
+            # last of them drops below 0.05, so iterating only over
+            # `employees`'s own keys would stop replacing a taught trade,
+            # permanently, the moment its last person is lost. Iterating
+            # trades_created too is what keeps a trade whose last person
+            # just died still eligible for replacement.
             for trade_id in sorted(set(self.household.employees) | set(self.household.trades_created)):
                 if trade_id in ("artisan", "scholar"):
                     continue
@@ -288,25 +272,22 @@ class StepPhasesMixin:
                     self.household.employees[trade_id] = have + short
                     self.household.capital -= short * self.annual_wage(trade_id)
             self._resync_pools()
-        # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY.
-        # Letting contracted craftsmen count toward a project's staff
-        # requirement fixed the Norse deadlock for a person at a keyboard and
-        # not at all for the optimizer, because nothing in the engine had ever
-        # called commission(). A run that can see the wall, has the money, and
-        # has no way to spend it on the wall is the same dead end wearing a
-        # different hat.
+        # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
+        # letting contracted craftsmen count toward a project's staff
+        # requirement only helps a person who thinks to type `commission`
+        # unless the optimizer can call it too. A run that can see the
+        # wall, has the money, and has no way to spend it on the wall is
+        # the same dead end wearing a different hat.
         if self.policy.get("auto_commission", not self.manual):
             self.auto_commission_for_blocked()
         self.household.directors_extra += (di_cap - self.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.household.directors_extra * ATTRITION
         self.household.artisans = max(0.0, self.household.artisans)
         self.household.scholars = max(0.0, self.household.scholars)
         self.household.directors_extra = max(0.0, self.household.directors_extra)
-        # SAY IT WHEN IT CROSSES A WHOLE PERSON. A play tester noticed "10,175
-        # founder-hours free this year (2,000 of your own, plus 4.5 deputies at
-        # 1,800 hours each)" by accident, after playing for a century on the
-        # assumption that their year was two thousand hours and would stay
-        # that way. The single largest change to the resource the whole game
-        # is built on had never announced itself.
+        # SAY IT WHEN IT CROSSES A WHOLE PERSON: the year's hour pool can
+        # grow well past the founder's own baseline as institutions add
+        # deputies, and the single largest change to the resource the
+        # whole game is built on must not go unannounced.
         _whole = int(self.household.directors_extra)
         if _whole > int(getattr(self.household, "_said_deputies", 0)):
             self.household._said_deputies = _whole
@@ -321,12 +302,12 @@ class StepPhasesMixin:
         # 2. money
         self.economy = self.economy_index()
         living_cost = self.living_cost()
-        # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN. `hire` takes a
-        # finder's fee and the first year's wages up front, and living_cost()
-        # carries the whole payroll, so a smith at 281 a year cost 566 in his
-        # first year: the advance, then the identical year again at the next
-        # step. A break tester found hire-then-fire in one turn burned the
-        # advance for no work at all.
+        # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN: `hire` takes
+        # a finder's fee and the first year's wages up front, and
+        # living_cost() carries the whole payroll, so without netting the
+        # advance off here, a smith at 281 a year would cost 566 in his
+        # first year - the advance, then the identical year again at the
+        # next step.
         prepaid = min(living_cost, self.household.wages_prepaid)
         living_cost -= prepaid
         self.household.wages_prepaid = 0.0
@@ -342,18 +323,15 @@ class StepPhasesMixin:
         if self.household.capital < 0 and self.mine_capacity and self.policy.get("auto_mothball", True):
             self.mothball_mines()
         # A CONCERN NEEDS SOMEBODY WATCHING IT EVERY YEAR, not only on the day
-        # you open it. `open` refused without supervisors and then nothing ever
-        # looked again, so a break tester hired five craftsmen, opened eleven
-        # concerns in one turn, fired all six people, and watched net income
-        # RISE - "EMPLOY: 0 people" with seventeen concerns running, and the
-        # same loom still paying 435 a year in 1800 with nobody employed,
-        # straight through the Black Death.
+        # you open it: `open` refusing without supervisors is not enough if
+        # nothing ever checks again afterward, or a concern can keep
+        # earning with nobody employed at all, straight through any
+        # attrition or hazard that empties the payroll.
         # THE OTHER HALF OF THE SAME RULE, and applied FIRST: staff hired or
         # taught this same year (the block just above) should get first claim
         # on reclaiming what attrition shut, before anything is judged still
         # short and closed again. See reopen_restaffed_ventures's own
-        # docstring for why this is not gated by auto_open - three
-        # playtesters spent most of a run on the treadmill this closes.
+        # docstring for why this is not gated by auto_open.
         self.reopen_restaffed_ventures(self.year)
         self.close_unstaffed_ventures(self.year)
         # Open what plainly pays for itself, before the books are struck: a
@@ -366,25 +344,25 @@ class StepPhasesMixin:
         self.warn_near_the_limit(self.year)
         self.enforce_credit_limit(self.year)
 
-        # INSOLVENCY. A playtester ran to minus 4.12 million denarii over eighty
-        # years and nothing whatever happened: no event, no block, no attrition.
-        # That is not a hard game made easy, it is an accounting fiction, and it
-        # quietly made every cost in the model optional.
+        # INSOLVENCY MUST HAVE A CONSEQUENCE: capital sitting deeply negative
+        # for years with no event, no block and no attrition would not be a
+        # hard game made easy, it would be an accounting fiction that
+        # quietly makes every cost in the model optional.
         #
         # The consequence is deliberately the realistic one rather than a
         # dramatic one. Nobody arrests you for debt. What happens is that people
         # you cannot pay stop turning up, and nobody will extend you credit for
         # something new while you are in arrears.
         if self.household.capital < 0:
-            # BEING IN DEBT IS NOT THE SAME AS BEING INSOLVENT. This counted a
-            # year of arrears for every year capital was below zero, whatever
-            # the household was earning - so a Rome run with revenue of 1,006
-            # against 470 of living costs, paying its debt down at 522 a year,
-            # was still "in arrears 183 years" and still refused permission to
-            # start anything, which is what kept it from ever climbing out. A
-            # household running a surplus is paying its creditors, and nobody
-            # calls that insolvency; what the counter is for is the household
-            # whose income does not cover its costs.
+            # BEING IN DEBT IS NOT THE SAME AS BEING INSOLVENT: counting a
+            # year of arrears for every year capital is below zero,
+            # regardless of what the household is earning, would keep a
+            # household running a surplus and paying its debt down
+            # classified as insolvent and refused permission to start
+            # anything - which is exactly what would keep it from ever
+            # climbing out. A household running a surplus is paying its
+            # creditors, and nobody calls that insolvency; the counter is
+            # for a household whose income does not cover its costs.
             _net = (self.revenue() - self.upkeep() - self.living_cost()
                     - self.mine_operating_cost())
             if _net > 0:
@@ -394,38 +372,36 @@ class StepPhasesMixin:
             floor = -max(self.INSOLVENCY_FLOOR_MIN, self.revenue() * self.INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
             if self.household.capital < floor and self.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
                 # wages unpaid: freedmen leave first, they are free to
-                # A FLOOR, because the first version was a doom loop. Staff bled
-                # without limit, so fewer people earned less, which deepened the
-                # arrears, which bled more people. One Norse run sat insolvent
-                # for 495 years with 2.9 artisans left, unable to recover and
-                # unable to end. Insolvency should cost you your expansion, not
-                # trap you in a state you can never leave: a household that has
-                # shed everything also stops paying for it, and can climb back.
+                # A FLOOR: staff must not bleed without limit, or fewer people
+                # earn less, which deepens the arrears, which bleeds more
+                # people - an unrecoverable doom loop. Insolvency should
+                # cost you your expansion, not trap you in a state you can
+                # never leave: a household that has shed everything also
+                # stops paying for it, and can climb back.
                 bleed = min(self.INSOLVENCY_BLEED_CAP, self.INSOLVENCY_BLEED_RATE * self.household.insolvent_years)
                 self.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.household.artisans * (1.0 - bleed))
                 self.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
                 if self.household.insolvent_years in (3, 6, 12, 25):
                     self.household.log.append((self.year, "IN ARREARS for %d years: staff are leaving "
                                          "because you cannot pay them" % self.household.insolvent_years))
-                # ABANDONMENT, and this is what makes insolvency survivable.
-                # The failed Norse run carried 3,920 denarii of upkeep against
-                # 3,134 of revenue: permanently underwater, floored at three
-                # artisans, simulating 495 years of nothing and reporting it as
-                # "ran out of horizon". An enterprise that cannot maintain its
-                # works does not pay for them for five centuries. It lets them
-                # go, and the buildings fall down. You lose what they gave you
-                # and can rebuild later, which is a real cost and a real way out.
+                # ABANDONMENT, and this is what makes insolvency survivable: a
+                # permanently underwater household must not simply sit
+                # floored, simulating centuries of nothing and reporting it
+                # as "ran out of horizon". An enterprise that cannot
+                # maintain its works does not pay for them for five
+                # centuries. It lets them go, and the buildings fall down.
+                # You lose what they gave you and can rebuild later, which
+                # is a real cost and a real way out.
                 net = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())
-                # ONLY WORKS THAT COST MORE THAN THEY RETURN, and only if you let
-                # it happen at all. Both halves were wrong and a tester called the
-                # result "an unrecoverable softlock", correctly: the loop ran
-                # until the books balanced rather than until shedding stopped
-                # helping, so once the genuine loss-makers were gone it went on
-                # to destroy eleven works earning 2,700 a year against 330 of
-                # upkeep, each one making the deficit worse, for ever. And it did
-                # it whether or not auto_shed was switched off, in a game whose
-                # own help says "every one of them is a switch you control".
+                # ONLY WORKS THAT COST MORE THAN THEY RETURN, and only if you
+                # let it happen at all: a loop that runs until the books
+                # balance, rather than until shedding stops helping, would
+                # go on destroying profitable works once the genuine
+                # loss-makers are gone, each one making the deficit worse
+                # for ever - and it must respect the auto_shed switch, in a
+                # game whose own help says "every one of them is a switch
+                # you control".
                 if net < 0 and self.policy.get("auto_shed", True):
                     burden = sorted((node_id for node_id in self.household.done
                                      if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
@@ -439,17 +415,13 @@ class StepPhasesMixin:
                         node = self.nodes[node_id]
                         net += node["up"] - node["rev"]
                         # CLOSE IT, DO NOT UNLEARN IT - and above all do not do
-                        # both. Discarding from `done` while adding to
-                        # `mothballed` produced a state no verb could clear: a
-                        # play tester lost precision_three_plate to a sack, and
-                        # `start` sent them to `restore`, `restore` said they no
-                        # longer knew how, `open` said they had not built it and
-                        # `mothball` said there was nothing to shut. That node
-                        # gates the whole precision branch, so `available` read
-                        # "0 startable now" for a hundred and eighty years while
-                        # they sat on a quarter of a billion denarii. The same
-                        # pair of lines was fixed in enforce_credit_limit and in
-                        # shed_loss_makers and survived here.
+                        # both: discarding from `done` while adding to
+                        # `mothballed` produces a state no verb can clear -
+                        # `start` sends to `restore`, `restore` says the
+                        # trade is no longer known, `open` says it was
+                        # never built and `mothball` says there is nothing
+                        # to shut. If that node gates a whole branch,
+                        # `available` reads "0 startable now" indefinitely.
                         self.household.operating.discard(node_id)
                         self.household.mothballed.add(node_id)   # you can buy it back
                         shed.append(node_id)
@@ -625,26 +597,21 @@ class StepPhasesMixin:
                 for trade_id in node["lab"]:
                     if _is_gone(trade_id):
                         want[trade_id] = want.get(trade_id, 0) + 1
-            # NOT EVERY YEAR. Teaching two of a trade costs about nine hundred
-            # of the founder's two thousand hours plus their keep, and once
-            # re-teaching a lost trade was possible at all the loop did it
-            # continuously: three Rome seeds fell from 829, 858 and 1,257
-            # technologies to 229, 56 and 188, the whole difference going into
-            # a teaching treadmill. A trade is worth restoring; it is not worth
-            # half of every year for ever.
+            # NOT EVERY YEAR: teaching two of a trade costs about nine hundred
+            # of the founder's two thousand hours plus their keep, so
+            # re-teaching a lost trade every single year it qualifies would
+            # turn into a teaching treadmill that eats most of a run's
+            # output. A trade is worth restoring; it is not worth half of
+            # every year for ever.
             _taught = self.household.last_taught
             want = {trade_id: value for trade_id, value in want.items()
                     if self.year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
-            # AND ONLY IF YOU CAN PAY THEM. train() checked hours, literacy and
-            # household room and never once looked at money - so a Rome
-            # household earning 1,232 a year taught itself two engineers at
-            # 625 each, and every year after that its whole income went on
-            # their wages. That is the poverty trap three separate testers
-            # described from three directions: "auto_train bought me chemists,
-            # engineers, machinists and opticians I had no work for", "-6,900
-            # denarii in three steps", and a run that sat at 144 technologies
-            # from 125 AD to 300. A trade you cannot pay for is not a trade you
-            # have; it is a wage bill that stops you building anything.
+            # AND ONLY IF YOU CAN PAY THEM: train() checks hours, literacy and
+            # household room but nothing here about money, so teaching a
+            # trade a household cannot actually afford to keep paid turns
+            # every year after into a wage bill that eats its whole income.
+            # A trade you cannot pay for is not a trade you have; it is a
+            # wage bill that stops you building anything.
             #
             # Two standards, because the two cases are not alike. A trade a
             # project ALREADY IN HAND is waiting on (scored 500 above) is worth
@@ -748,13 +715,13 @@ class StepPhasesMixin:
                              + self.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
                              + self.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
                              + self.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
-            # EARN A LIVING FIRST. Now that a project must actually be paid for,
-            # a founder who arrives with 400 denarii and walks the goal-ordered
-            # list starves: every human tester worked this out for themselves
-            # within a few turns and went hunting for the cheap revenue nodes,
-            # and the optimizer had no such instinct. When the surplus is thin,
-            # prefer whatever pays best for what it costs; the goal order resumes
-            # the moment there is money to pursue it with.
+            # EARN A LIVING FIRST: now that a project must actually be paid
+            # for, a founder who arrives with 400 denarii and walks the
+            # goal-ordered list starves, so when the surplus is thin, the
+            # optimizer has to prefer whatever pays best for what it costs
+            # the same way a human player hunting for cheap revenue nodes
+            # would; the goal order resumes the moment there is money to
+            # pursue it with.
             fixed0 = self.upkeep() + self.living_cost() + self.mine_operating_cost()
             candidates = self.order
             if self.revenue() - fixed0 < max(400.0, fixed0 * 0.25):
@@ -891,15 +858,14 @@ class StepPhasesMixin:
                 # mine sized for the 13 tonnes of bar, stayed throttled for
                 # centuries, and ended with its capital untouched.
                 dem = self.annual_material_demand()
-                # DERIVED FROM MATERIAL_CHECKS, not a second hand-kept copy of
-                # it. This was a literal dict, and the moment copper wire,
-                # drawn wire and gold were added to MATERIAL_CHECKS - so that
-                # 36 electrical nodes and the central bank's thousand
-                # kilograms could be throttled at all - a Rome run died with
-                # KeyError: 'gold' the first year gold was the binding
-                # material. Two lists of the same thing is one list too many,
-                # and the regression suite could not catch it because no check
-                # runs a long enough optimizer game to make gold bind.
+                # DERIVED FROM MATERIAL_CHECKS, not a second hand-kept copy
+                # of it: a separately maintained list would silently drift
+                # out of sync whenever a material is added to
+                # MATERIAL_CHECKS, raising a KeyError the first year that
+                # material happens to bind. Two lists of the same thing is
+                # one list too many, and the regression suite cannot catch
+                # it unless a check runs a long enough optimizer game to
+                # make that material bind.
                 # sorted(), because this feeds a float sum.
                 keys = tuple(sorted(material for material, (bucket, _tag)
                                     in self.MATERIAL_CHECKS.items()
@@ -935,10 +901,9 @@ class StepPhasesMixin:
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
         if thr < 0.6 and self.household.binding:
-            # SAY WHAT TO DO ABOUT IT. A play tester read "SHORT OF SALTPETRE:
-            # work at 5% of plan" for thirty years and could not find out what
-            # saltpetre was for, who wanted it, or what would fix it. A number
-            # that low with no remedy attached reads as the game being stuck.
+            # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
+            # 5% of plan" with no remedy attached reads as the game being
+            # stuck rather than as something actionable.
             self.household.log.append((self.year, "SHORT OF %s: work running at %d%% of plan. %s"
                              % (self.household.binding.upper(), thr * 100,
                                 self.shortage_remedy(self.household.binding))))
@@ -1041,11 +1006,11 @@ class StepPhasesMixin:
                 self.household.active.pop(node_id, None)
                 self.household.bountied.discard(node_id)
             else:
-                # WARN BEFORE THE MONEY GOES. Six projects were wiped in
-                # one year for a play tester who had no way to list what
-                # was at risk: the countdown ran silently for three years
-                # and then took everything spent. Say it each year, with
-                # the number of years left and what would fix it.
+                # WARN BEFORE THE MONEY GOES: a countdown to abandonment
+                # running silently, with nothing said until everything
+                # spent is taken at once, gives no chance to act. Say it
+                # each year, with the number of years left and what would
+                # fix it.
                 _left = 4 - project_state["stalled_years"]
                 self.household.log.append((self.year, "%s cannot go on: no %s here. It has "
                                      "%d year%s before it is abandoned and "
@@ -1097,14 +1062,13 @@ class StepPhasesMixin:
         # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
         # offered: `per` is allowed to exceed ph_left (the max() above
         # offers a full year's worth even to a project with an hour to
-        # run), and the subtraction clamps at zero. The refunds below
-        # were computed from `per` regardless, so a project with 10
-        # hours left could be offered 500, have its 10 taken, and be
-        # handed 200 back - ending the year with twenty times the hours
-        # it began with. A playtester found the far end of that: a
-        # progress bar reading "-67% of your hours spent", with
-        # founder_hours_left larger than founder_hours_total. You cannot
-        # be refunded work you never did.
+        # run), and the subtraction clamps at zero. A refund computed from
+        # `per` instead of from what was truly spent could hand back more
+        # than was ever taken - a project with 10 hours left offered 500
+        # would have its 10 taken and be handed 200 back, ending the year
+        # with twenty times the hours it began with, founder_hours_left
+        # larger than founder_hours_total. You cannot be refunded work you
+        # never did.
         spent_hours = min(per, project_state["ph_left"])
         project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
         self.director_hours_spent_founder += per if self.founder_alive else 0
@@ -1245,33 +1209,27 @@ class StepPhasesMixin:
         # lender who will advance you a thousand will not let you draw
         # the last two hundred of it against a half-built balloon.
         # Reserve next year's fixed costs AND most of the credit line.
-        # Drawing the line to its last denarius is how one ambitious
-        # project destroyed everything else a tester had in hand: the
-        # limit itself falls as reputation and revenue fall, so a balance
-        # exactly at the limit this year is over it next year, and over
-        # the line every project in progress is halted at once.
-        # Reserve only the SHORTFALL, not the whole running cost. This
+        # Drawing the line to its last denarius risks destroying everything
+        # else in hand: the limit itself falls as reputation and revenue
+        # fall, so a balance exactly at the limit this year is over it next
+        # year, and over the line every project in progress is halted at
+        # once.
+        # Reserve only the SHORTFALL, not the whole running cost: this
         # year's rent and wages have already been taken out of capital at
-        # the top of step(); reserving them again left a household with
-        # 6,670 in hand and 31,000 of costs covered by 31,600 of income
-        # unable to spend a single denarius on its own projects, so four
-        # of them sat unpayable and unfinished for two hundred years.
+        # the top of step(), so reserving them again would leave a
+        # household whose income comfortably covers its costs unable to
+        # spend a single denarius on its own projects.
         fixed = self.living_cost() + self.upkeep() + self.mine_operating_cost()
         reserve = max(0.0, fixed - self.revenue())
         purse = self.household.capital + self.credit_limit() * 0.6 - reserve
-        # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE. A
-        # project with cost_left already at zero asks for money=0
-        # this year, and money(0) > purse was still true whenever
-        # purse itself had gone negative - deep arrears, not this
-        # project's own bill - so a FULLY PAID project, needing not
-        # one more denarius, was refunded nearly all of per anyway
-        # (funded_frac forced to 0.0 below whenever money <= 0) and
-        # made zero hour progress purely calendar-waiting projects
-        # should still be free to make. Three playtesters on three
-        # civilisations hit this as "arrears freezes ALL
-        # founder-hour progress, even on fully-paid work" - and they
-        # were exactly right: the gate was on the household's purse,
-        # not on whether this project needed anything from it.
+        # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE: a project
+        # with cost_left already at zero asks for money=0 this year, and
+        # the money>purse test must not fire just because purse itself has
+        # gone negative from deep arrears unrelated to this project's own
+        # bill - a fully paid project, needing not one more denarius, must
+        # still be free to make purely calendar-waiting progress. The gate
+        # is on the household's purse only when this project actually
+        # needs something from it.
         if money > 0 and money > purse:
             # PROPORTIONAL, not a flat half: the refund must scale by how
             # underfunded the purse actually is (`funded_frac`), the same
@@ -1291,13 +1249,11 @@ class StepPhasesMixin:
             project_state["ph_left"] += max(0.0, give_back)
             refunded += max(0.0, give_back)
             project_state["underfunded_this_year"] = True
-            # WHY, not just that. A playtester ran deep into debt and
-            # watched every project report hours "offered" and none
-            # "effective", with nothing in help, why, money or risk
-            # explaining it. Arrears are the reason: the purse a project
-            # may draw on is what you hold plus part of your credit,
-            # less what your fixed costs need, and in arrears that is
-            # nothing at all.
+            # WHY, not just that: hours reported as "offered" with none
+            # "effective" is meaningless without a reason. Arrears are the
+            # reason: the purse a project may draw on is what you hold
+            # plus part of your credit, less what your fixed costs need,
+            # and in arrears that is nothing at all.
             project_state["why_underfunded"] = (
                 "in arrears: after fixed costs there is nothing left to "
                 "draw on, so the hours offered this year did almost "
@@ -1368,10 +1324,9 @@ class StepPhasesMixin:
                     "trade hours already booked: " + ", ".join(
                         sorted(project_state["short_of_trade"])[:2])))
         # Count it HERE, after the hired-hours scaling and the
-        # affordability clamp, not before them. Accumulating the
-        # notional figure made project_spend_last_year disagree with
-        # the actual capital movement by a factor of 89, which a tester
-        # caught by comparing three numbers in a single `state` reply.
+        # affordability clamp, not before them: accumulating the notional
+        # figure instead would make project_spend_last_year disagree with
+        # the actual capital movement.
         self.household._spend_this_year = self.household._spend_this_year + money
         # calendar_floor(k), NOT a second copy of this formula -
         # expected_calendar_years (projects.py) needs the identical
@@ -1380,14 +1335,14 @@ class StepPhasesMixin:
         floor = self.calendar_floor(node_id)
         # THE BILL HAS TO BE PAID. Hours done and years elapsed are not
         # enough; if the money never arrived, the thing was never built.
-        # HALF AN HOUR IS NOTHING LEFT TO DO. The give-back hands back a
-        # fraction of what was offered, so on a throttled project
-        # ph_left decays geometrically towards zero and never reaches
-        # it: a break tester's `logarithms` sat at 1.29e-25 founder-hours
-        # with the bill paid and thirty years elapsed, complete in every
-        # sense except the comparison. The bill already had this exact
-        # fix and this exact reason (see `money` just above, and
-        # cost_left <= 0.5 on the same line); hours never got it.
+        # HALF AN HOUR IS NOTHING LEFT TO DO: the give-back hands back a
+        # fraction of what was offered, so on a throttled project ph_left
+        # decays geometrically towards zero and never exactly reaches it -
+        # a project could otherwise sit at some vanishingly small residual,
+        # bill paid, complete in every practical sense except an exact
+        # comparison. The bill already has this exact fix and this exact
+        # reason (see `money` just above, and cost_left <= 0.5 on the same
+        # line); hours need it too.
         if project_state["ph_left"] < 0.5:
             project_state["ph_left"] = 0.0
         if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
@@ -1454,13 +1409,11 @@ class StepPhasesMixin:
         # self.household.active before we would get to it. See the hours_this_year
         # summary this feeds, below the loop.
         hours_effective_total = 0.0
-        # NAMED, NOT JUST STORED ON THE PROJECT. `why_underfunded` (set below,
-        # in the arrears branch) answered "why is this stalled" when a player
-        # thought to ask `why` or `portfolio` - but a Rome playtester lost
-        # several turns of confusion before finding it, and wrote that the
-        # consequence "isn't obvious from any single screen... reads more
-        # like flavor than a mechanical warning". Founder-hours are the one
-        # resource that never banks: a year of them lost to arrears and never
+        # NAMED, NOT JUST STORED ON THE PROJECT: `why_underfunded` (set below,
+        # in the arrears branch) answers "why is this stalled" only when a
+        # player thinks to ask `why` or `portfolio`, which is not the same
+        # as announcing it. Founder-hours are the one resource that never
+        # banks: a year of them lost to arrears and never
         # announced is the least fair thing a status screen can leave out.
         # Collected here and logged once, after the loop, so a step that
         # starves three projects at once gets one clear line, not three.
@@ -1475,12 +1428,10 @@ class StepPhasesMixin:
         # purpose. Collected here, per project, and logged once below.
         _directed_hours_unused = []
         # WHY A PROJECT IS GETTING THE SHARE IT IS GETTING, STORED HERE AND
-        # NOWHERE ELSE. A player who had already won the game asked for
-        # exactly this: "this project is receiving 420 of your 25,000
-        # available directed hours this year because 11 active projects are
-        # sharing organizational attention" - and the only honest way to
-        # print that sentence is to read the numbers this loop actually used,
-        # never to guess at them again from outside. pool_total/active_count
+        # NOWHERE ELSE: the only honest way to explain a project's share of
+        # this year's directed hours is to read the numbers this loop
+        # actually used, never to guess at them again from outside.
+        # pool_total/active_count
         # are the same for every project processed this step; rank and
         # remaining_before are this project's own position in the queue and
         # what was left of the pool when its own turn came. _agent_state and
@@ -1494,12 +1445,11 @@ class StepPhasesMixin:
                 node_id, _pool_rank, _pool_total_this_year, _pool_active_count_this_year,
                 remaining, hired_left, _arrears_hours_lost, _directed_hours_unused)
             hours_effective_total += _effective
-        # ARREARS COSTS YOU THE YEAR'S HOURS, NOT JUST THE MONEY - SAY SO. This
-        # is the Rome playtester's sharpest complaint: "the arrears mechanic
-        # silently wastes founder-hours, not just money", discovered only
-        # after several turns of a project sitting at "did almost nothing"
-        # with no explanation on the turn itself. Founder-hours are the one
-        # resource in this whole model that never banks (see step 5b and
+        # ARREARS COSTS YOU THE YEAR'S HOURS, NOT JUST THE MONEY - SAY SO:
+        # a project sitting at "did almost nothing" with no explanation on
+        # the turn itself leaves founder-hours lost to arrears
+        # undiscoverable except by several turns of confusion. Founder-hours
+        # are the one resource in this whole model that never banks (see step 5b and
         # `state`'s free_hours_going_unused): a year of them lost silently is
         # worse than a year of money lost, because money can be earned back
         # on the same footing next year and this cannot be earned back at
@@ -1629,12 +1579,10 @@ class StepPhasesMixin:
         self.household._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
         self.household.market_pressure = max(0.0, self.household.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
-        # WARN BEFORE IT KILLS YOU. A play tester built 952 technologies, was
-        # three nodes from the goal, and the run ended on a 2% roll against an
-        # eminence of 28.2 - with no escalation of any kind beforehand, and
-        # nothing in the log ever mentioning it. Their words: "no escalation on
-        # the stat that ends the run". It is the one hazard that cannot be
-        # bribed away and the one the player was never told was closing in.
+        # WARN BEFORE IT KILLS YOU: eminence can end the run outright on a
+        # roll with no escalation and nothing in the log ever mentioning
+        # it beforehand. It is the one hazard that cannot be bribed away,
+        # so the player must be told it is closing in.
         _danger = self.cfg["eminence_danger"]
         if self.household.eminence > _danger * 0.75:
             _said = self.household._said_eminence
@@ -1678,13 +1626,10 @@ class StepPhasesMixin:
         else:
             self.household.bribes_ytd *= self.BRIBES_YTD_DECAY
         self.household.scandal = max(0.0, self.household.scandal)
-        # WARN, THE WAY EMINENCE DOES. Denunciation ends the run outright and
-        # said nothing at all first: a break tester read "RUN ENDS: denounced:
-        # as a sorcerer" after eleven quiet years, with `state` showing
-        # "scandal 33.55" and no threshold, no probability and no note - on the
-        # same screen where eminence carefully explains that it is "dangerous
-        # above 26 ... 0% chance the run ENDS this year". Two hazards of the
-        # same shape, one of them legible.
+        # WARN, THE WAY EMINENCE DOES: denunciation ends the run outright,
+        # and a scandal figure with no threshold, no probability and no
+        # note is not legible the way eminence's own warning already is.
+        # Two hazards of the same shape must both be legible.
         _sd = self.cfg["suspicion_danger"]
         if self.household.scandal > _sd * 0.75:
             _band = int(self.household.scandal / max(1.0, _sd * 0.15))
@@ -1758,15 +1703,12 @@ class StepPhasesMixin:
                 self.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.life_left <= 0:
                 self.founder_alive = False
-                # SAY WHAT IT MEANS, not only that it happened. Two round-12
-                # testers independently called this the worst thing in the
-                # game: one wrote that a dead founder's run was "permanently
-                # unwinnable from that point" with the game never saying so,
-                # the other that a corpse went on being offered 69 startable
-                # projects and actually accepted one. The engine is not in
-                # fact silent about the consequence - deputies carry the work,
-                # and with none the programme dissolves over twelve years - but
-                # nothing ever told the player either half of that.
+                # SAY WHAT IT MEANS, not only that it happened: the engine is
+                # not in fact silent about the consequence of the founder's
+                # death - deputies carry the work, and with none the
+                # programme dissolves over twelve years - but that has to
+                # be said here, in the same line, not left for the player
+                # to work out on their own.
                 _dep = self.household.directors_extra
                 self.household.log.append((self.year, "THE FOUNDER DIES, aged about %d. %s"
                                  % (self.cfg["founder_arrival_age"] + self.year
@@ -1797,10 +1739,10 @@ class StepPhasesMixin:
                         self.household.operating.discard(node_id)
                         self.household.done.discard(node_id)
                         self._done_changed()
-            # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT. Twelve years of a
-            # dissolving programme passed with nothing said but the shedding
-            # itself, so a tester read the losses as unexplained and the run as
-            # merely unlucky rather than finished.
+            # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT: twelve years of a
+            # dissolving programme passing with nothing said but the
+            # shedding itself would read as merely unlucky rather than as
+            # the run actually being finished.
             if self.household.stalled in (3, 6, 9, 11):
                 self.household.log.append((self.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
                                      "since the founder died with no deputy to "

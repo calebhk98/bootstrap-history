@@ -236,12 +236,13 @@ def _play_resolve_session(a, sim, session):
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player
-        # "Saved to X. Come back with ..." and a break tester quit before
-        # typing anything, found no file, followed the printed line anyway and
-        # was dropped into a different civilisation's fresh game. A save the
-        # game has promised has to exist from the moment it is promised. The
-        # same promise holds for a checkpoint's forked session file: it has
-        # been named out loud below, so it has to be real from that moment on.
+        # "Saved to X. Come back with ..." before they have typed anything, so
+        # a save the game has promised has to exist from the moment it is
+        # promised - quitting immediately and following the printed line back
+        # must not find no file and fall through into a different
+        # civilisation's fresh game. The same promise holds for a checkpoint's
+        # forked session file: it has been named out loud below, so it has to
+        # be real from that moment on.
         save_state(sim, session)
     if checkpoint_source:
         print("Resumed the checkpoint at %s: %d AD. A checkpoint stays "
@@ -282,11 +283,10 @@ def _play_print_welcome(sim, kit):
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
-    # by design, and this list of what to type first did not mention it -
-    # so a play tester finished seven concerns worth 1,713 a year, left
-    # every one of them shut, and walked into a debt spiral in year three.
-    # The one rule a first-timer must know cannot be the one thing the
-    # first screen leaves out.
+    # by design, so a list of what to type first that omits `open` would
+    # let a player finish several concerns, leave every one shut, and walk
+    # into a debt spiral. The one rule a first-timer must know cannot be
+    # the one thing the first screen leaves out.
     print(_wrap("Type commands in plain words. The five to start with are "
                 "'state' (where you stand), 'available' (what you could "
                 "begin today), 'why <name>' (what a thing is for and what "
@@ -333,19 +333,19 @@ def _play_prompt(sim):
     prompt shown before every line the player types.
     """
     # The same figure state reports: the pool LESS hours already sold for
-    # wages. The prompt disagreeing with state about the one number on it
-    # is how a tester found the accounting wrong in the first place.
+    # wages. The prompt must not disagree with state about the one number on
+    # it, or the accounting reads as wrong even when it is not.
     free_hours = max(0.0, sim.director_pool() - sim.director_hours_committed())
     # The prompt is built here and never passes through the renderer, so it
     # was the last place still saying "den" in a game counted in pence.
     # THE SAME TWO NUMBERS `why` PRINTS, for the same reason the hours
-    # figure above matches state's: the prompt showed hired heads only
-    # (s.scholars, s.artisans) while `why` compares a project's
+    # figure above matches state's: hired heads only (s.scholars,
+    # s.artisans) must not be shown here while `why` compares a project's
     # requirement against effective_scholars() and craft_hands_available()
     # - both of which count the founder, and the second of which counts
-    # hours under contract. A play tester read "sch 0 art 0" in the prompt
-    # and "(you have 1, 0)" in `why` on the same turn and reported the
-    # game as having lost count of their staff.
+    # hours under contract. A prompt reading "sch 0 art 0" against a `why`
+    # showing "(you have 1, 0)" on the same turn would read as the game
+    # having lost count of the player's own staff.
     return ("[%d AD | %d %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
               % (sim.year, sim.capital, money_short(sim.civ), free_hours,
                  sim.effective_scholars(), sim.craft_hands_available(),
@@ -438,11 +438,10 @@ def _play_run_one_command(sim, nodes, cmd, session):
                          % (type(e).__name__, e)}
     # SAVE FIRST, THEN SPEAK. The state change is already committed by the
     # time we get here, so writing it must not be contingent on the output
-    # succeeding. A weird-play tester piped the game through `head`, which
-    # closed the pipe and killed the process on the first print - and
-    # twelve years of play went with it, twice, in a game whose own help
-    # promises "progress is written to this file after every command...
-    # close the terminal, anything".
+    # succeeding: a closed stdout pipe killing the process on the first
+    # print must not lose whatever progress was already made, in a game
+    # whose own help promises "progress is written to this file after every
+    # command... close the terminal, anything".
     if session:
         save_state(sim, session)
     try:

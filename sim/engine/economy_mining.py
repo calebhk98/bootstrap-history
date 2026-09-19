@@ -185,10 +185,10 @@ class MiningMixin:
 
     def mine_catalog_hint(self):
         """What to tell a player who typed a material name this file
-        cannot price. This used to be a hard, closed list of seven
-        hand-named metals (see COMMODITY_DYNAMISM.md); the list itself is
-        still worth naming as the well-sourced headline cases, but it is no
-        longer the whole answer."""
+        cannot price. Names the seven hand-named metals (see
+        COMMODITY_DYNAMISM.md) as well-sourced headline cases, and also
+        points at the generic fallback below: not a hard, closed list.
+        """
         named = ", ".join(sorted(self.MINE_CAPEX_PER_T_YR))
         return ("well-known workings: %s - or any other material key the "
                 "tree uses (for example aluminium_kg), priced from its own "
@@ -197,19 +197,18 @@ class MiningMixin:
 
     # ---- LAND: what is under your feet is geography, not standing --------
     #
-    # open_mine()'s ceiling used to depend only on patronage and state
+    # open_mine()'s ceiling must not depend only on patronage and state
     # capacity, the SAME number for every material: a founder with an
-    # imperial patron could sink exactly as large a tin mine as an iron one,
-    # in a home province with no tin in it at all. A tester asked the
-    # obvious question this gets wrong: "if I need a lot of coal, can I open
-    # a lot of coal mines? Are mines limited by land area?" No, and yes they
-    # should be. geography.py's mineral_scale() ALREADY answers "how much of
-    # this material's national output can THIS civilisation reach," built
-    # from geography.json's per-region mineral abundance and this
-    # civilization's own home_regions and reach (see its own comment) -- and
-    # it already governs the MARKET half of supply (_material_market_tonnes).
-    # It had simply never been asked about the OWN-MINE half. Reusing it
-    # here, rather than inventing a second geology signal, means a civ that
+    # imperial patron could otherwise sink exactly as large a tin mine as
+    # an iron one, in a home province with no tin in it at all. Mines are
+    # limited by land area and what is actually under it, the same as the
+    # market half of supply is. geography.py's mineral_scale() ALREADY
+    # answers "how much of this material's national output can THIS
+    # civilisation reach," built from geography.json's per-region mineral
+    # abundance and this civilization's own home_regions and reach (see
+    # its own comment) -- and it already governs the MARKET half of supply
+    # (_material_market_tonnes). Reusing it here, rather than inventing a
+    # second geology signal, means a civ that
     # cannot buy much tin also cannot simply out-organise its way to
     # unlimited tin by sinking shafts instead -- the same ground is short
     # either way. Measured: a Rome run's mineral_scale sits at roughly
@@ -368,23 +367,21 @@ class MiningMixin:
 
     # ---- A WORKING IS A THING, NOT AN ENTRY IN A MATERIAL-KEYED DICT -------
     #
-    # A player who had won the game asked for exactly this: which mine,
-    # rated capacity, actual output, cost, utilisation, the year it came on
-    # stream, and whether it is a real supply or merely an asset sitting on
-    # the books. None of that could be answered before, because there was no
-    # "it" - self.mine_capacity was one float per material, open_mine()
-    # added to it, and depletion (below) aged the WHOLE material at once, so
-    # a shaft opened in year 400 was exactly as worked-out as one opened
-    # three centuries earlier purely because they shared a material key.
-    # self.household.mines is the fix: a list of actual workings, each its own dict
+    # Answering which mine, rated capacity, actual output, cost,
+    # utilisation, the year it came on stream, and whether it is a real
+    # supply or merely an asset sitting on the books needs an actual "it":
+    # a single float per material, aged as a WHOLE material at once, would
+    # make a shaft opened in year 400 exactly as worked-out as one opened
+    # three centuries earlier purely because they share a material key.
+    # self.household.mines is a list of actual workings, each its own dict
     # with the material it raises, its rated capacity, the year it was
     # commissioned, what it cost to sink, and its OWN depletion clock
     # (intensity_yrs) running from that year, not from whenever the
-    # material was first touched. self.mine_capacity below is now a
-    # PROPERTY summed over this list - the "six bugs in a week from a fact
-    # living in two places" the job asked not to repeat - so it can be read
-    # everywhere it already was, but nothing can silently drift it out of
-    # step with the workings that actually make it up.
+    # material was first touched. self.mine_capacity below is a PROPERTY
+    # summed over this list, never a second number tracked separately, so
+    # it can be read everywhere it already was, with nothing able to
+    # silently drift it out of step with the workings that actually make
+    # it up.
     def _workings_of(self, mat):
         """This civilisation's own workings raising `mat`, in the order they
         were commissioned (self.household.mines is append-only in commission order,
@@ -662,11 +659,9 @@ class MiningMixin:
     def mine_quote(self, mat, t_per_yr):
         """What a mine would cost, BEFORE you commit to it.
 
-        A tester asked for one tonne of gold a year - the same order as the
-        example in the help text - and went from 38,151 denarii to zero on a
-        single command, with no price shown and no way to ask. Five years later
-        the workings were mothballed for non-payment and they were in debt
-        bondage. Every other purchase in this game quotes before it charges.
+        Every other purchase in this game quotes before it charges, and a
+        mine opened sight-unseen can sink far more than expected with no
+        price shown and no way to ask beforehand.
         """
         mat = self._normalize_material_name(mat)
         cap, opex_per_t = self._mine_capex_opex(mat)
@@ -765,9 +760,10 @@ class MiningMixin:
     def close_mine(self, mat):
         """Shut your own workings down, on purpose.
 
-        The engine mothballs mines it cannot pay for and there was no way for a
-        player to ask. A tester was billed 28.1 a year in perpetuity for a gold
-        mine producing 0.0 tonnes and could do nothing about it.
+        The engine mothballs mines it cannot pay for on its own, but a
+        player also needs an explicit way to close one voluntarily -
+        without this, a mine producing nothing can go on being billed
+        forever with no way to stop it.
         """
         mat = self._normalize_material_name(mat)
         workings = self._workings_of(mat)
@@ -794,10 +790,10 @@ class MiningMixin:
     def open_mine(self, mat, t_per_yr, partial=True):
         """Open your own workings.
 
-        The model used to treat the Empire's ATTESTED output as a hard ceiling,
-        so a founder who needed twenty thousand tonnes of coal a year simply
-        never got it and sat throttled for centuries. That is the unobtainable
-        fallacy wearing different clothes. Rome mined almost no coal because
+        The Empire's ATTESTED output is not a hard ceiling: a founder who
+        needs twenty thousand tonnes of coal a year must not be throttled by
+        it, or the game repeats the unobtainable fallacy in different
+        clothes. Rome mined almost no coal because
         almost nobody wanted coal, not because the coal was not there: Britain,
         Gaul and Spain are sitting on it, and Roman engineers already sink
         shafts, drive adits and drain them with wheels at Rio Tinto and Las
@@ -838,12 +834,13 @@ class MiningMixin:
         scale = self.mining_cost_scale(mat)
         cost = t_per_yr * cap * self.price_index * scale
         if cost > self.household.capital:
-            # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING.
-            # This quietly took every denarius a break tester had and handed
-            # back 22% of the mine they asked for. `hire` refuses and quotes
-            # the price; so should this. The automatic policy (auto_mine) still
-            # buys what it can afford, because that is the whole of its job:
-            # it is spending spare cash on a bottleneck, not answering a
+            # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING:
+            # silently spending all available capital and handing back a
+            # fraction of the mine actually asked for is not what a typed
+            # command should do. `hire` refuses and quotes the price; so
+            # should this. The automatic policy (auto_mine) still buys
+            # what it can afford, because that is the whole of its job: it
+            # is spending spare cash on a bottleneck, not answering a
             # request for a particular mine.
             if not partial:
                 return 0.0
@@ -852,12 +849,11 @@ class MiningMixin:
         if t_per_yr <= 0:
             return 0.0
         self.household.capital -= cost
-        # Each investment is its own working with its own sinking time. Pooling
-        # them and taking the LATEST ready date meant a player who invested
-        # spare cash every year, which is exactly what a poor civilization must
-        # do, pushed the finish line back annually and never got any capacity at
-        # all: a playtester funded sixty consecutive years and ended with an
-        # empty mine_capacity. It also means each tranche becomes its own
+        # Each investment is its own working with its own sinking time.
+        # Pooling them and taking the LATEST ready date would mean a
+        # player who invests spare cash every year, which is exactly what
+        # a poor civilization must do, pushes the finish line back
+        # annually and never gets any capacity at all. It also means each tranche becomes its own
         # WORKING once it commissions (see commission_mines) rather than
         # being folded into one number for the material - `cost` is carried
         # along so that working can say what it actually cost to sink, not
@@ -894,10 +890,10 @@ class MiningMixin:
             else:
                 still.append(tranche)
         self.household.mine_tranches = still
-        # ONE YEAR OF DEPLETION. core.py's step() calls commission_mines()
+        # ONE YEAR OF DEPLETION: core.py's step() calls commission_mines()
         # exactly once a year (see its own comment, "materials: buy the
-        # woodland... before the shortage bites"), so this needed no new
-        # call site of its own.
+        # woodland... before the shortage bites"), so depletion rides that
+        # call rather than needing a call site of its own.
         self._advance_mine_depletion()
 
     MOTHBALL_CUT_SHARE = declare(
@@ -936,12 +932,9 @@ class MiningMixin:
                          if working.get("material") != material] + kept
             self.household.log.append((self.year, "MOTHBALLED half the %s workings; you could "
                                         "not pay to keep them running" % material))
-        # This used to clamp capital to minus one year's revenue every time any
-        # mine was held, which forgave debt the mothballing had not actually
-        # paid off. A playtester proved it to the cent: capital landed on
-        # exactly -revenue() on two separate steps with different amounts
-        # mothballed in between, so the floor, not the arithmetic, set the
-        # number. Debt is now whatever the arithmetic says it is.
+        # DEBT IS WHATEVER THE ARITHMETIC SAYS IT IS: capital must not be
+        # clamped to minus one year's revenue after mothballing, or that
+        # would forgive debt the mothballing has not actually paid off.
 
     def mine_operating_cost(self):
         """Charged every year the workings stand, whether or not you use them.
@@ -964,20 +957,19 @@ class MiningMixin:
     # concession gates it, but fencing off and managing a woodland at scale
     # still takes an administration capable of holding the tenure.
     #
-    # THIS USED TO BE PER HOME REGION (a count of labels: len(home_regions)),
-    # not per unit of land. Complaint 46 caught the same failure here that it
-    # named for rent: a region is a filing label, not a unit of area, and
-    # the labels range 86x in size (americas_north 19.8M km2 down to
-    # britannia's 230,000 -- data/world/geography.json). Under the old
-    # formula, re-filing Rome's SAME seven regions as, say, fourteen tiles
-    # would have doubled its woodland ceiling with no forest gaining or
-    # losing a single hectare, and Han China's one enormous but singular
-    # region (9.6M km2, bigger than Rome's whole seven put together) priced
-    # out at less than a seventh of Rome's ceiling for holding MORE ground.
-    # Both are the map's filing system leaking into the economics, exactly
-    # as Complaint 46 describes for rent. Fixed by reading
-    # geography.json's own `land.land_area_km2` per home region (see
-    # home_land_area_km2() below) and keying the rate on AREA instead.
+    # KEYED ON AREA (geography.json's own `land.land_area_km2` per home
+    # region - see home_land_area_km2() below), NOT ON A COUNT OF REGION
+    # LABELS (len(home_regions)): Complaint 46 names the same failure here
+    # that it names for rent - a region is a filing label, not a unit of
+    # area, and the labels range 86x in size (americas_north 19.8M km2
+    # down to britannia's 230,000 -- data/world/geography.json). Keying
+    # this on label count would let re-filing Rome's SAME seven regions
+    # as, say, fourteen tiles double its woodland ceiling with no forest
+    # gaining or losing a single hectare, while Han China's one enormous
+    # but singular region (9.6M km2, bigger than Rome's whole seven put
+    # together) would price out at less than a seventh of Rome's ceiling
+    # for holding MORE ground - the map's filing system leaking into the
+    # economics, exactly as Complaint 46 describes for rent.
     #
     # [C], sized against the one real anchor available: resources.json's
     # empire-wide 500,000 t/yr of charcoal implies roughly 667,000 ha under

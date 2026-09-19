@@ -41,11 +41,11 @@ class DiffusionMixin:
     # economy.py, already doing exactly that job, by AGE, for four goods
     # categories) - a fraction of the original edge that is gone, that a
     # price formula can spend however it spends a competitive market. This
-    # is deliberately NOT wired into revenue() here: that function belongs to
-    # the agent making the goods market competitive at the same time this was
-    # written, and two agents independently pricing the same venture is
-    # exactly the tangle the brief asked this to avoid. See diffusion_share's
-    # own docstring for exactly how a price formula should read it.
+    # is deliberately NOT wired into revenue() here: pricing belongs to
+    # economy.py's own goods-market code, and two places independently
+    # pricing the same venture is exactly the tangle a single price formula
+    # is meant to avoid. See diffusion_share's own docstring for exactly how
+    # a price formula should read it.
     #
     # Years for HALF of a visibly-run venture's original edge to have leaked
     # to competitors who watched you run it, absent any effect of publishing
@@ -200,20 +200,18 @@ class DiffusionMixin:
         return tot / tot_w if tot_w > 0 else 0.0
 
     # ---- THE COUNTRY CHANGES TOO, NOT ONLY YOUR OWN EXPOSURE TO IT ---------
-    # A player's complaint, stated plainly after the first round of work on
-    # this only fixed what a dated hazard does TO THE FOUNDER (see
-    # _resolve_hazard_condition above): "sail to the Americas and bring back
-    # New World crops, add crop rotation, and within a few decades ALL of
-    # Rome has significantly more food and a larger population. Give the
-    # Roman government cannons and it is not being sacked by tribes. Invent
-    # the cure or the vaccine for a pandemic and the Black Death becomes a
-    # minor period of some sickness rather than a catastrophe." None of
-    # that is household risk, which `condition` already answers; it is what
-    # the founder's workshop does to the COUNTRY, which was inert before
-    # this section existed.
+    # `condition` (see _resolve_hazard_condition above) answers what a dated
+    # hazard does TO THE FOUNDER's own household risk. It says nothing about
+    # what the founder's workshop does to the COUNTRY: sail to the Americas
+    # and bring back New World crops, add crop rotation, and within a few
+    # decades ALL of Rome has significantly more food and a larger
+    # population; give the Roman government cannons and it is not being
+    # sacked by tribes; invent the cure or the vaccine for a pandemic and
+    # the Black Death becomes a minor period of some sickness rather than a
+    # catastrophe. civ_diffusion(k) is that missing number.
     #
-    # civ_diffusion(k) is the missing number, reusing diffusion_share's own
-    # shape just above (age since completion, sped up by a written/
+    # It reuses diffusion_share's own shape just above (age since
+    # completion, sped up by a written/
     # dispersed corpus and by how literate the society already is) rather
     # than inventing a second idea of what diffusion is - but gated on
     # DONE, not on operating: crop_rotation happens to carry rev>0 in this
@@ -239,8 +237,7 @@ class DiffusionMixin:
     # faster than medical and information on purpose: a better crop or a
     # working gun is something a neighbour can see working and copy without
     # reading a word, where germ theory or a press depends on somebody
-    # publishing and somebody else literate enough to read it - the user's
-    # own fourth point, given a mechanism instead of a name. 25 years (a
+    # publishing and somebody else literate enough to read it. 25 years (a
     # generation) is pitched at the low end of "a few decades", matching
     # Nunn and Qian's (2011) own description of the potato's spread across
     # Europe as a matter of generations rather than years.
@@ -490,20 +487,19 @@ class DiffusionMixin:
                              "otherwise be" % round(applied * 100)))
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
-    # _shocks' staff_loss branch (below) already tells a household-level
-    # story (`loss`, reduced by the founder's own sanitation and
-    # vaccination) and an empire-wide one (`raw`, the hazard's historical,
-    # unmitigated rate - deliberately untouched by the founder's PERSONAL
-    # hedges: your quarantine protects your people, not everyone else's
-    # labour market). What it could not yet do is the user's own example -
-    # "invent the cure or the vaccine for a pandemic and the Black Death
-    # becomes a minor period of some sickness rather than a catastrophe" -
-    # because nothing let the EMPIRE's own figure fall just because the
-    # empire, not only the founder, had absorbed germ theory, quarantine
-    # and vaccination by the time the hazard's window opened.
-    # medical_diffusion_relief is that missing number, read by _shocks
-    # directly against `raw`, never against `loss` (which stays the
-    # founder's own, private, has()-gated figure it always was).
+    # _shocks' staff_loss branch (below) tells a household-level story
+    # (`loss`, reduced by the founder's own sanitation and vaccination) and
+    # an empire-wide one (`raw`, the hazard's historical, unmitigated rate -
+    # deliberately untouched by the founder's PERSONAL hedges: your
+    # quarantine protects your people, not everyone else's labour market).
+    # Invent the cure or the vaccine for a pandemic and the Black Death
+    # should become a minor period of some sickness rather than a
+    # catastrophe, which needs the EMPIRE's own figure to fall as the
+    # empire, not only the founder, absorbs germ theory, quarantine and
+    # vaccination by the time the hazard's window opens.
+    # medical_diffusion_relief is that number, read by _shocks directly
+    # against `raw`, never against `loss` (which stays the founder's own,
+    # private, has()-gated figure).
     MEDICAL_DIFFUSION_RELIEF_CAP = declare(
         "MEDICAL_DIFFUSION_RELIEF_CAP", 0.85, kind="temporary_heuristic",
         unit="dimensionless (fraction of empire-wide epidemic harm removed)",
@@ -518,12 +514,12 @@ class DiffusionMixin:
         return min(self.MEDICAL_DIFFUSION_RELIEF_CAP, self.medical_diffusion_index())
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
-    # military_leverage() and _military_war_relief() (further below,
-    # pre-existing) already answer "does the founder's OWN workshop protect
-    # the founder" - has()-gated, private, and wired only into
-    # output_factor. The user's cannon example is a different claim: "give
-    # the ROMAN GOVERNMENT cannons and it is not being sacked by tribes" -
-    # the STATE's own armies, not the founder's private arsenal, and
+    # military_leverage() and _military_war_relief() (further below)
+    # already answer "does the founder's OWN workshop protect the
+    # founder" - has()-gated, private, and wired only into output_factor.
+    # Give the ROMAN GOVERNMENT cannons and it is a different claim that it
+    # is not being sacked by tribes: the STATE's own armies, not the
+    # founder's private arsenal, and
     # sack_chance as well as output_factor. state_military_diffusion()
     # (above) is that number - patron-gated the same way update_protection
     # already gates military leverage's own patronage bonus, because a
@@ -637,10 +633,9 @@ class DiffusionMixin:
         """(node, why) this society must have before it can begin `k` at all.
 
         cost_multipliers say a domain is DEARER here. Some things are not dear,
-        they are impossible: a break tester started horse_collar in the Valley
-        of Mexico in 1500, on the same screen as a menu describing a society
-        with "no draught animals, no iron, no wheel in practical use", and
-        `why` there still described it as a collar for a draught horse.
+        they are impossible: a society with no draught animals, no iron and
+        no wheel in practical use cannot start horse_collar at any price,
+        however low a cost_multiplier might make it look.
 
         Data, like everything else about a civilisation, and always liftable -
         every entry names the node that opens it. See _SCHEMA.md.
@@ -659,10 +654,10 @@ class DiffusionMixin:
     def civ_cost_factor(self, k):
         """What this society is unusually good or bad at building.
 
-        Until now every civilization built every node at the same real cost and
-        differed only in population, prices, values and reach. That misses the
-        most important thing about them. The Mexica are not a small Rome: there
-        is no domesticable draught animal anywhere in Mesoamerica, so every load
+        Every civilization differs in population, prices, values and reach,
+        but that alone misses the most important thing about some of them.
+        The Mexica are not a small Rome: there is no domesticable draught
+        animal anywhere in Mesoamerica, so every load
         moves on a human back, and that is a permanent fact about the continent
         rather than something the founder can teach away. The Norse build the
         best ships in Europe and cannot organise a public works programme. Han
@@ -676,12 +671,7 @@ class DiffusionMixin:
         if not mults:
             return 1.0
         # A remedy lifts a handicap once you have built the thing that answers
-        # it. This was written into every civilization file and then never wired
-        # into the code at all: a playtester built collegium_licensed, watched
-        # the public-works multiplier sit unchanged at 1.53, and went and read
-        # the source to find that `handicap_remedies` is referenced nowhere.
-        # They were right. The feature existed only as data and as a claim in a
-        # commit message.
+        # it, read from `handicap_remedies` in the civ file.
         rem = self.civ.get("handicap_remedies") or {}
         node = self.nodes[k]
 
@@ -693,14 +683,12 @@ class DiffusionMixin:
             return multiplier
 
         # THE CATEGORY IS THE CRAFT; THE TRAITS ARE WHAT IT IS FOR, and treating
-        # them as equals inverted the whole system. Every matching key used to be
-        # multiplied together, so a longship - category `ships`, which the Norse
-        # file scores 0.60, the best in Europe - also carried its `infrastructure`
-        # trait at 1.80 and `commerce` at 1.10, and came out at 1.19. Measured
-        # across the tree before this fix: all 20 ship nodes, 48 of 50 marine
-        # nodes and all 19 navigation nodes cost the Norse MORE than they cost
-        # Rome. The one thing that civilisation is famous for was its worst
-        # domain, and the file said the opposite.
+        # them as equals inverts the whole system: multiplying every matching
+        # key together lets secondary traits (infrastructure, commerce) swamp
+        # the craft category a civilisation is actually built around - a
+        # longship, category `ships`, the Norse's best domain, must not come
+        # out costing them MORE than it costs Rome just because its
+        # infrastructure and commerce traits are also present.
         #
         # What a thing takes to build is its craft. What it is used for should
         # colour that, not overwhelm it, so traits apply at a damped exponent

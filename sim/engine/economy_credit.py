@@ -112,10 +112,10 @@ class CreditMixin:
     def credit_limit(self, _rev=None, _upkeep=None):
         """How far into arrears anyone will actually let you go.
 
-        Unbounded debt is an accounting fiction, and it produced the single worst
-        outcome in the playtests: testers sat at minus 200,000 denarii for two
-        and three CENTURIES, making no progress, with the clock running. That is
-        not a hard game, it is a game that has stopped and not said so.
+        Unbounded debt is an accounting fiction: a household could sit
+        deeply negative for centuries, making no progress, with the clock
+        running. That is not a hard game, it is a game that has stopped
+        and not said so.
 
         In reality credit stops long before that, and the moment it stops you are
         merely poor. Poor is recoverable: you climbed out of it the first time
@@ -132,23 +132,19 @@ class CreditMixin:
         wage-selling zeroed out - see revenue_capacity's own docstring),
         never the same call `_rev` would have been computed with.
         """
-        # What a STRANGER can borrow is almost nothing, which is the reviewer's
-        # question and the right answer. You have walked into a town with no
-        # name, no land and no one to vouch for you. The old floor of 2,000
-        # denarii handed a newcomer roughly two years of living expenses on
-        # nothing but arrival. Credit here is what someone will advance against
-        # your income and the people who will stand behind you.
-        # WHAT YOU NORMALLY EARN, not what this particular year came to. A
-        # lender looks at your practice and your concerns; he does not cut your
-        # line because you spent this year working for somebody else. Without
-        # that, `work scholar 2000` - which sells the founder's whole year and
-        # so takes the practice's income to nothing for it - collapsed the
-        # credit line from 1,397 to 210 in the middle of a step, and the
-        # project spending already committed against the old line breached the
-        # new one. A break tester cleared their debt in full with exactly that
-        # command and was answered, the very next year, with "INSOLVENCY
-        # SETTLED ... reputation -6.6": owing 628 was safe and owing nothing
-        # was ruin.
+        # What a STRANGER can borrow is almost nothing: you have walked into
+        # a town with no name, no land and no one to vouch for you. A flat
+        # floor handing a newcomer years of living expenses on nothing but
+        # arrival would be wrong. Credit here is what someone will advance
+        # against your income and the people who will stand behind you.
+        # WHAT YOU NORMALLY EARN, not what this particular year came to: a
+        # lender looks at your practice and your concerns; he does not cut
+        # your line because you spent this year working for somebody else.
+        # Using this year's actual revenue instead would let `work scholar
+        # 2000` - which sells the founder's whole year and so takes the
+        # practice's income to nothing for it - collapse the credit line
+        # mid-step, breaching spending already committed against the old
+        # line.
         earning = self.revenue_capacity()
         base = earning * self.CREDIT_LINE_EARNING_MULTIPLE
         if self.running("identity_cover"):     base += self.CREDIT_LINE_IDENTITY_COVER
@@ -228,13 +224,11 @@ class CreditMixin:
         question is committed_spend() <= funding_capacity(), not any
         single project's own cost against this number alone.
 
-        This formula already existed, doing this exact job, for the
-        un-manual director's own start heuristic (see step(), core.py) -
-        added there because the naive "three times capital plus six years
-        of gross revenue" heuristic let the optimizer commit to more than
-        a household could ever fund, the same mistake every human
-        playtester made once at the keyboard. Factored out here so the
-        player-facing aggregate warning (protocol.py's `start` handler)
+        This formula does the same job for the un-manual director's own
+        start heuristic (see step(), core.py), where a naive "three times
+        capital plus six years of gross revenue" heuristic would let the
+        optimizer commit to more than a household could ever fund.
+        Factored out here so the player-facing aggregate warning (protocol.py's `start` handler)
         uses the identical number rather than a second formula that could
         quietly drift from it - one rule in two places is how a game like
         this accumulates its worst bugs.
@@ -322,10 +316,8 @@ class CreditMixin:
             self.household.mothballed.add(worst)
             shed.append(worst)
         if shed:
-            # NAME THEM. "stopped maintaining 1 works" told a player nothing:
-            # not which one, not how to get it back. A tester asked the fair
-            # question - how do you understand what you lost, or why an option
-            # reappeared, if you were never told its name?
+            # NAME THEM: "stopped maintaining 1 works" tells a player
+            # nothing - not which one, not how to get it back.
             self.household.log.append((yr, "in arrears, so closed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
@@ -444,13 +436,12 @@ class CreditMixin:
     def warn_near_the_limit(self, yr):
         """Say it BEFORE the creditors do, while there is still a decision left.
 
-        A play tester watched a recoverable-looking cash dip turn into "CREDIT
-        EXHAUSTED: 4 projects halted" and a forty-year dead run, and wrote:
-        "`money` shows a credit limit but nothing shows how close to insolvency
-        you are." A limit you can only discover by crossing it is not a limit,
-        it is an ambush - and everything that would have saved them (stop a
-        project, close a loss-maker, let somebody go) was still available the
-        year before.
+        A limit you can only discover by crossing it is not a limit, it is
+        an ambush: everything that could still save a household (stop a
+        project, close a loss-maker, let somebody go) has to be available
+        while there is still time to act on it, not only after the
+        recoverable-looking dip has already become "CREDIT EXHAUSTED: N
+        projects halted".
         """
         limit = self.credit_limit()
         if limit <= 0 or self.household.capital >= 0:
@@ -458,11 +449,11 @@ class CreditMixin:
             return
         used = -self.household.capital / limit
         # PAST IT IS NOT "CLOSE TO" IT, and past it the halting has already
-        # happened: a break tester read "CLOSE TO THE LIMIT ... (103%) ... every
-        # project in hand is halted" in a year when nothing was halted, because
-        # enforce_credit_limit runs immediately after this and had already dealt
-        # with it. Warn about what is still ahead of you, not about what has
-        # just been done.
+        # happened: enforce_credit_limit runs immediately after this and
+        # deals with it, so this must not still say "CLOSE TO THE LIMIT
+        # ... every project in hand is halted" in a year when nothing here
+        # actually halts anything. Warn about what is still ahead of you,
+        # not about what has just been done.
         if used >= 1.0:
             self.household._said_near_limit = True
             return
@@ -705,20 +696,17 @@ class CreditMixin:
             # a fresh line of credit the following morning.
             _frozen_before = getattr(self.household, "credit_frozen_until", 0)
             self.household.credit_frozen_until = max(_frozen_before, yr + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
-            # SAY WHAT ACTUALLY HAPPENED. "The debt is written off" while
-            # leaving the player owing a third of their credit line is a
-            # sentence that contradicts the number on the next line, and a
-            # weird-play tester watched it fire eight times and concluded it
-            # did nothing at all. Most of it goes; what is left, and what it
-            # cost your name, is the part worth reading.
+            # SAY WHAT ACTUALLY HAPPENED: "the debt is written off" while
+            # leaving the player owing a third of their credit line
+            # contradicts the number on the next line. Most of it goes;
+            # what is left, and what it cost your name, is the part worth
+            # reading.
             #
-            # AND SAY IF THE UNLOCK DATE JUST MOVED. A second settlement
-            # while the first freeze had not yet lifted pushes it from yr+5
-            # or yr+12 out to a fresh yr+12 with nothing said about it - an
-            # England playtester watched their own credit-freeze date move
-            # silently three times (1313, then 1320, then 1330) with no
-            # event naming the change. A deadline that quietly slides is
-            # worse than a longer fixed one would have been.
+            # AND SAY IF THE UNLOCK DATE JUST MOVED: a second settlement
+            # while the first freeze had not yet lifted pushes it from
+            # yr+5 or yr+12 out to a fresh yr+12, and that has to be
+            # announced - a deadline that quietly slides is worse than a
+            # longer fixed one would have been.
             # A FREEZE HAS TO HAVE BEEN ACTUALLY IN FORCE to "move" - the
             # default _frozen_before of 0 is "never frozen", not a freeze
             # that this settlement then extended, and comparing only the
@@ -763,21 +751,17 @@ class CreditMixin:
         """None if the run is going somewhere; otherwise what is wrong and what
         would actually change it.
 
-        A weird-play tester called this the most important finding of their
-        session: "a player who makes one bad purchase early can be locked out
-        of the goal for the rest of the game, with the game continuing to
-        accept commands and give the impression of an ongoing playthrough for
-        470+ more years, and the only feedback being the same static 'in
-        arrears' message every time." Their run sat at exactly -924.5 denarii
-        for fifty years, completing nothing, while INSOLVENCY SETTLED fired
-        once a decade for ever.
+        A player who makes one bad purchase early can be locked out of the
+        goal for the rest of the game, with the game continuing to accept
+        commands and give the impression of an ongoing playthrough for
+        centuries, and the only feedback being the same static "in
+        arrears" message every time INSOLVENCY SETTLED fires.
 
-        The arithmetic was not wrong and the state was not even a dead end -
-        they got out of it themselves with forty rounds of working for wages.
-        What was wrong is that nothing told them any of that. A game that has
-        effectively stopped has to say so, and say what would restart it,
-        because the alternative is a player spending an hour discovering it by
-        experiment.
+        The arithmetic is not wrong and the state is not even a dead end -
+        it can be escaped, working for wages among other things - but
+        nothing says so. A game that has effectively stopped has to say
+        so, and say what would restart it, because the alternative is a
+        player spending an hour discovering it by experiment.
         """
         if self.household.capital >= 0 or getattr(self.household, "insolvent_years", 0) < 8:
             return None
@@ -802,19 +786,14 @@ class CreditMixin:
         ways = []
         pool = self.director_pool() - getattr(self.household, "wage_hours_this_year", 0.0)
         if pool > 100:
-            # ONLY IF IT WOULD ACTUALLY GAIN. Selling your hours takes them out
-            # of your own practice, so with a practice to lose this is often
-            # the losing move - and `work` says so to your face when you take
-            # it. A break tester followed the banner's advice and was answered
-            # "you earned 125, and the practice those hours were running was
-            # worth 175 a year - so this cost you 50", which is the game
-            # recommending a mistake and then naming it as one.
-            # NAME THE TRADE, and pick the one that actually pays best here.
-            # A break tester followed "work for wages" as a labourer, the
-            # cheapest trade in the table, and `work` answered "you earned 125,
-            # and the practice those hours were running was worth 175 a year -
-            # so this cost you 50". Advice that does not say which job to take
-            # is advice that can be followed into a loss.
+            # ONLY IF IT WOULD ACTUALLY GAIN: selling your hours takes them
+            # out of your own practice, so with a practice to lose this is
+            # often the losing move, and this advice must not recommend a
+            # move that `work` itself would then report as a net loss.
+            # NAME THE TRADE, and pick the one that actually pays best
+            # here: advice that says only "work for wages" without naming
+            # which job, and takes the cheapest trade in the table by
+            # default, is advice that can be followed into a loss.
             trades = [trade for trade in WAGES if self.trade_available(trade)]
             best_t = max(trades, key=lambda trade: ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK),
                          default=None)
@@ -868,11 +847,11 @@ class CreditMixin:
                                                    "you a denarius"),
                 "what_would_change_it": ways}
 
-    # THREE ANSWERS TO "CAN I AFFORD THIS" is two too many. A break tester
-    # collected them: `quote` counted cash alone, `available afford` and `hire`
-    # counted cash plus half the credit line, and `start` counted cash plus the
-    # whole of it. Two of those are a real distinction and one was an
-    # oversight, so the distinction is named here and used everywhere.
+    # THREE ANSWERS TO "CAN I AFFORD THIS" is two too many: `quote`
+    # counting cash alone, `available afford` and `hire` counting cash
+    # plus half the credit line, and `start` counting cash plus the whole
+    # of it collapses to two real distinctions, not three, so the
+    # distinction is named here once and used everywhere.
     #
     # A lender advances against WORK - there is something half-built to point
     # at - and will not advance against a payroll or a purchase, where the
@@ -916,13 +895,13 @@ class CreditMixin:
             # it is how a household gets locked out of the very thing that
             # would dig it out.
             #
-            # Two traced runs are in the suite for this. A tester at -1,608
-            # against a 3,684 line left seven finished concerns worth 1,713 a
-            # year shut, believing they could not open them; and a Rome run
-            # built exp_trade_route_extend (net +1,700 a year) by year 117 and
-            # sat on it, unopened, for about 850 years. See the checks named
-            # "a completed concern that pays for its own door within months
-            # opens even while deep in arrears" and its slow-payback sibling,
+            # Two traced runs are in the suite for this: a household deep
+            # in arrears with several finished concerns worth real money a
+            # year, shut, must still be able to open them, and a concern
+            # that takes years to clear its own capex must not open just
+            # because arrears are otherwise ignored here. See the checks
+            # named "a completed concern that pays for its own door within
+            # months opens even while deep in arrears" and its slow-payback sibling,
             # which holds the line the other way: a concern that takes YEARS
             # to clear its own capex still does not open on this.
             return max(0.0, self.household.capital) + self.credit_limit() * share
@@ -951,14 +930,12 @@ class CreditMixin:
         this file may edit) says plain `self.living_cost()`, gets both
         arguments' None default, and computes exactly what it always did.
         """
-        # AT THIS SOCIETY'S PRICES. Every figure here was a Rome 100 AD denarius
-        # and none of them was ever multiplied by price_index, so a break tester
-        # measured "living and appearances 230.0" to the decimal in all five
-        # civilisations, against a selection screen advertising "prices 0.75x to
-        # 1.40x Rome". Project costs DID scale, and so did wages, the workshop's
-        # output and state funding - which meant an expensive society paid 1.4x
-        # for everything it built and ate at Roman prices, and a cheap one got
-        # the discount twice. Bread costs what bread costs where you are.
+        # AT THIS SOCIETY'S PRICES: project costs scale with price_index,
+        # and so do wages, the workshop's output and state funding, so
+        # living costs must too - otherwise an expensive society pays more
+        # for everything it builds while eating at Roman prices, and a
+        # cheap one gets the discount twice. Bread costs what bread costs
+        # where you are.
         price_index = self.price_index
         # CALLED ONCE, NOT THREE TIMES: revenue() and wage_bill() are each
         # pure functions of state that does not move within this call (no

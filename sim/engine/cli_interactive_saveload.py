@@ -36,12 +36,12 @@ from .cli import _pick_session_filename, _wrap
 
 
 # ----------------------------------------------------------------------------
-# SESSION COMMANDS, TYPED DIRECTLY WHILE PLAYING - no backing out to the main
-# menu and back in. A player who had just won the whole game said autosaves
-# plus the manual saves they made at moments that mattered to them were a
-# real part of how they played, and none of 'saves' (what do I have),
-# 'load' (switch to a different one) or 'menu' (go back without losing this
-# one) existed as something you could simply type. 'save <file>' and
+# SESSION COMMANDS, TYPED DIRECTLY WHILE PLAYING - no backing out to the
+# main menu and back in: autosaves and manual saves made at moments that
+# matter are a real part of how a player plays, so 'saves' (what do I
+# have), 'load' (switch to a different one) and 'menu' (go back without
+# losing this one) all have to work as something typed directly, not only
+# reachable from the main menu. 'save <file>' and
 # 'load <file>' already worked mid-game - they are the JSON protocol's own
 # sandboxed commands (see protocol.py's SAVE_SUFFIXES/_unsafe_path and help
 # topic 'save'/'load'), reachable here because cmd_play's loop hands every
@@ -211,7 +211,7 @@ def _save_listing(cfg):
     main-menu door) and `_ingame_saves`/`_ingame_load` (the same list, typed
     mid-game - see PLAYER REQUEST #3 below) print a save row from. One
     implementation, so the two screens cannot quietly drift apart the way
-    the fog-progress fraction almost did when this was still duplicated.
+    a duplicated fog-progress fraction easily could.
     """
     tree, prices, nodes, wages, goods = load()
     default_goal = tree["meta"]["goal_node"]
@@ -228,11 +228,9 @@ def _save_listing(cfg):
     civ_index = {civ_record["id"]: civ_record for civ_record in _load_civ_list()}
     save_dir = settings.resolve_save_dir(cfg)
     rows = settings.list_saves(save_dir)
-    # EACH ROW CARRIES ITS OWN GOAL AND ITS OWN CLOSURE. _need_for above was
-    # written for this and then never wired to the rows, because the save-row
-    # renderer was factored out in a different branch at the same time; a
-    # listing that measured every save against the transistor's 168 nodes would
-    # report a save playing a five-node lifetime goal as 3/168 done.
+    # EACH ROW CARRIES ITS OWN GOAL AND ITS OWN CLOSURE: a listing that
+    # measured every save against the transistor's 168 nodes would report a
+    # save playing a five-node lifetime goal as 3/168 done.
     for _row in rows:
         _gid, _gneed = _need_for(_row.get("goal"))
         _row["goal_id"] = _gid

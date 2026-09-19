@@ -45,11 +45,11 @@ class StaffingMixin:
         """
         # HYSTERESIS. Attrition is 3.5% a year and auto_hire tracks the
         # ceiling, so the supervision balance wobbles across the line
-        # constantly - and an exact comparison meant a concern closed and was
-        # reopened almost every single turn for four centuries. A play tester
-        # called it "endless re-opening busywork" and they were right: nobody
-        # shuts a shop because they are a fortieth of a man short this spring.
-        # Close only when the shortfall is a real pair of hands.
+        # constantly, and an exact comparison would close and reopen a
+        # concern almost every single turn for centuries of endless
+        # re-opening busywork: nobody shuts a shop because they are a
+        # fortieth of a man short this spring. Close only when the shortfall
+        # is a real pair of hands.
         SLACK = self.STAFFING_CLOSURE_SLACK
         closed = []
         while self.household.operating:
@@ -63,12 +63,12 @@ class StaffingMixin:
                     and art_used <= self.household.artisans + own + SLACK
                     and foremen_ok):
                 break
-            # THE LEAST WORTH KEEPING, not the largest. This picked whichever
-            # concern needed the most hands, which is very nearly the same as
-            # picking the most PROFITABLE one - a break tester watched it close
-            # a 600-a-year hopper wagon twice and keep a concern earning
-            # nothing with identical staffing. Shut the one that returns least
-            # for the people it ties up.
+            # THE LEAST WORTH KEEPING, not the largest. Picking whichever
+            # concern needs the most hands is very nearly the same as picking
+            # the most PROFITABLE one to close, since a concern earning
+            # nothing with identical staffing to a profitable one would be
+            # kept over it. Shut the one that returns least for the people it
+            # ties up.
             # sorted(): min() over a set returns whichever equal-keyed element
             # came first in iteration order, which is not fixed.
             # ONLY WHAT ACTUALLY HOLDS HANDS. The key divides by
@@ -114,15 +114,13 @@ class StaffingMixin:
 
         close_unstaffed_ventures is deliberately not a policy a player can
         switch off (see its own docstring): it is the world taking back a
-        concern nobody is left to watch. Three playtesters found that the
-        world never gave it back, even after they hired or taught their way
-        past the shortfall - reopening was `auto_open`, a SEPARATE policy
-        that defaults off for a player, and the whole of "most of the mid
-        and late game was a repetitive hire-then-reopen treadmill rather
-        than fresh decisions" is a player retyping `open` on the same
-        handful of ids every few years, for no decision at all: they had
-        already decided to run this concern once, and losing a craftsman to
-        attrition is not a moment that asks them to decide it again.
+        concern nobody is left to watch. The world must also give it back,
+        the moment the shortfall is fixed, rather than leaving reopening to
+        `auto_open`, a SEPARATE policy that defaults off - which would leave
+        a player retyping `open` on the same handful of ids every few years,
+        for no decision at all: they already decided to run this concern
+        once, and losing a craftsman to attrition is not a moment that asks
+        them to decide it again.
 
         So this runs unconditionally, like the rule it undoes, and it is
         careful to undo only THAT rule: shut_for_staff is set nowhere except

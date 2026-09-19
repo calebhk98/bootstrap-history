@@ -1,7 +1,6 @@
 """Opening and closing a venture by hand: cost, staff, and the two verbs.
 
-Split out of sim/engine/projects.py (see that file's own docstring for why):
-this is what it costs to open a completed capability's doors (venture_capex),
+This is what it costs to open a completed capability's doors (venture_capex),
 who it ties up (venture_hands/venture_foreman and the venture_staff_*
 accounting of who is watching what), and the two player-facing actions
 themselves (open_venture, close_venture) plus the shared institution-
@@ -13,8 +12,8 @@ staffing can no longer cover, reopening what can be covered again, warning
 before either happens, and opening what plainly pays for itself - are a
 separate subject and live in projects_staffing.py; see that file's own
 docstring for why the split falls there rather than here. These are methods
-of Sim; they are a mixin only so that they can live in a file of their own.
-Behaviour is unchanged and verified byte-identical.
+of Sim; they are a mixin only so that they can live in a file of their own
+(see projects.py's own docstring for why).
 """
 import collections
 
@@ -48,14 +47,13 @@ class VenturesMixin:
         return max(self.project_cost(k) * self.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
                    node["up"] * self.VENTURE_CAPEX_MIN_UPKEEP_YEARS)
 
-    # SUPERVISION, NOT OPERATION. A node's sch/art figures are what it takes to
-    # BUILD the thing, and its upkeep already pays the people who run it once
-    # built - so charging the full build crew against your own staff for ever
-    # would be billing you twice for the same hands, and it measurably was:
-    # Rome fell from half its runs reaching the goal to a quarter when the
-    # operating cost was the whole build crew. What your own trained people
-    # actually owe a going concern is supervision - somebody of yours has to
-    # keep an eye on it - and that is a fraction of what it took to build.
+    # SUPERVISION, NOT OPERATION: a node's sch/art figures are what it takes
+    # to BUILD the thing, and its upkeep already pays the people who run it
+    # once built, so charging the full build crew against your own staff
+    # forever would bill you twice for the same hands. What your own
+    # trained people actually owe a going concern is supervision -
+    # somebody of yours has to keep an eye on it - and that is a fraction
+    # of what it took to build.
     VENTURE_SUPERVISION = declare(
         "VENTURE_SUPERVISION", 0.25, kind="temporary_heuristic",
         unit="fraction of the build crew", source=None, confidence="D",
@@ -66,17 +64,16 @@ class VenturesMixin:
             "own outcomes (see this constant's own comment). Tuned to "
             "avoid double-billing, not measured from any real supervisory "
             "ratio.")
-    # AND A FLOOR FROM ITS SIZE. Charging a fraction of the BUILD crew alone
-    # meant that the 19% of concerns which take nobody to build - a bottling
-    # shed, a butter trade, a chaff cutter - took nobody to RUN either. A break
-    # tester ended a Han run with between 51 and 94 concerns going at once,
-    # among them a whaling fleet, a coal seam, an inn and a gambling house,
-    # on nought employees and nought in wages, and pointed out that this is
-    # precisely what the opening screen promises the model will not do. A
-    # going concern needs somebody of yours to keep an eye on it whether or not
-    # it was hard to build, and a bigger one needs more: one pair of hands per
-    # 1,500 a year of takings, which puts a 130-a-year bottling shed at a tenth
-    # of a person and a 12,000-a-year fleet at eight.
+    # AND A FLOOR FROM ITS SIZE: charging a fraction of the BUILD crew alone
+    # would mean concerns that take nobody to build - a bottling shed, a
+    # butter trade, a chaff cutter - would take nobody to RUN either,
+    # letting a fleet of such concerns run on nought employees and nought
+    # in wages, which is precisely what the opening screen promises the
+    # model will not do. A going concern needs somebody of yours to keep
+    # an eye on it whether or not it was hard to build, and a bigger one
+    # needs more: one pair of hands per 1,500 a year of takings, which
+    # puts a 130-a-year bottling shed at a tenth of a person and a
+    # 12,000-a-year fleet at eight.
     VENTURE_HANDS_PER_REVENUE = declare(
         "VENTURE_HANDS_PER_REVENUE", 1500.0, kind="temporary_heuristic",
         unit="denarii/year of revenue per pair of hands", source=None,
@@ -160,11 +157,10 @@ class VenturesMixin:
     def venture_staff_who_is_watching_what(self):
         """Which concerns are holding your people, and how many each holds.
 
-        A play tester spent about seventy in-game years on the endgame's
-        staffing and wrote: "mothballing all 259 running concerns freed zero
-        scholars - about 17 are held by something the game never shows". This
-        is that something, shown. Largest holder first, because that is the one
-        to close.
+        Mothballing every concern the game shows elsewhere can still free
+        no scholars at all, if some of them are held by something that
+        screen never lists. This is that something, shown. Largest holder
+        first, because that is the one to close.
         """
         rows = []
         for node_id in sorted(self.household.operating):
@@ -180,11 +176,11 @@ class VenturesMixin:
     def venture_staff_used(self):
         """People of your own tied up supervising what you already have open."""
         # SORTED, for the same reason done_in_order exists: this sums FLOATS
-        # over a set, floating point addition is not associative, and the total
-        # gates open_venture with a hard comparison. A break tester ran the
-        # same seed three times and got 587,300 / 6,664,218 / 6,652,459 in
-        # capital; PYTHONHASHSEED=0 made all three identical. Every float sum
-        # over `operating` or `done` has to fix its order.
+        # over a set, floating point addition is not associative, and the
+        # total gates open_venture with a hard comparison. Iterating an
+        # unordered set gives a different, PYTHONHASHSEED-dependent sum
+        # each run; every float sum over `operating` or `done` has to fix
+        # its order.
         sch = art = 0.0
         for node_id in sorted(self.household.operating):
             if node_id not in self.nodes:
@@ -211,13 +207,13 @@ class VenturesMixin:
         `units` only means anything for SCALABLE_INSTITUTIONS (see that set's
         comment, above CAPABILITY_INSTITUTIONS): how much capacity to found,
         where 1.0 is the ordinary, historically-calibrated size every other
-        figure in the engine assumes. Omit it and a first founding is 1.0,
-        exactly as before. Ask for LESS and you found a starter place - a
-        fraction of the cost, a fraction of the yearly bleed, a fraction of
-        what it gives back - which is the actual bridge running() needed: the
-        old rule could not be afforded at any income because there was no
-        smaller size to start at. Ask for units on something ALREADY open and
-        you are asking to expand it - see _expand_institution.
+        figure in the engine assumes. Omit it and a first founding is 1.0.
+        Ask for LESS and you found a starter place - a fraction of the
+        cost, a fraction of the yearly bleed, a fraction of what it gives
+        back - which running() needs to be affordable at low income, since
+        a fixed 1.0 size has no smaller step to start at. Ask for units on
+        something ALREADY open and you are asking to expand it - see
+        _expand_institution.
         """
         if k not in self.nodes:
             return False, "no such node"
@@ -226,12 +222,11 @@ class VenturesMixin:
                            "is nothing to open")
         if k in self.household.granted:
             if self._practisable(k):
-                # A tester put this best: "my entire un-chosen livelihood is
-                # drilling holes in Han skulls, and the game denies it's mine."
-                # `money` itemises this as their revenue and `open` called it
-                # the society's. Both are half right: the SKILL is the
-                # society's, and you are already practising it - which is why
-                # it pays, and why there is nothing here to open.
+                # The SKILL is the society's, and you are already practising
+                # it - which is why it pays, and why there is nothing here
+                # to open. `money` itemises this as your revenue, and the
+                # refusal below must not contradict that by calling it only
+                # the society's.
                 return False, ("you are already doing that - it is your practice, "
                                "and it is where most of your income comes from. "
                                "It is a skill this society has, not a concern "
@@ -268,12 +263,11 @@ class VenturesMixin:
         need_sch, need_art = need_sch * unit_count, need_art * unit_count
         foreman_trade, foreman_fte = self.venture_foreman(k)
         foreman_fte *= unit_count
-        # A HUNDREDTH OF A PERSON IS NOBODY. The comparison was exact and the
-        # message rounded to one decimal, so a break tester read "it needs 0.0
+        # A HUNDREDTH OF A PERSON IS NOBODY: comparing exact floats while
+        # rounding the message to one decimal can print "it needs 0.0
         # craftsmen to supervise, and you have 0.0" - a refusal that
-        # contradicts itself on its own line - and then found that mothballing
-        # two hundred and fifty-nine concerns freed nothing, because every one
-        # of them was holding a rounding error.
+        # contradicts itself on its own line - so the comparison needs a
+        # small tolerance rather than an exact one.
         if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
             return False, ("nobody free to keep an eye on it: it needs %.2f "
                            "scholars and %.2f craftsmen to supervise, and you "
@@ -291,27 +285,22 @@ class VenturesMixin:
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
         fee = self.venture_capex(k) * (unit_count if scalable else 1.0)
-        # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN.
-        # Staff attrition runs at 3.5% a year, so a household sitting near the
-        # supervision line loses a concern most years and pays the full stock
-        # and premises to reopen it - a play tester watched four close at once,
-        # every year, and wrote that it cost them hundreds a year and they
-        # could never get ahead of it. The premises are still standing and the
-        # stock is still on the shelves; what was missing was somebody to
-        # watch it. Reopening within a few years costs the difference, not the
-        # whole thing.
+        # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN:
+        # staff attrition runs at 3.5% a year, so a household sitting near
+        # the supervision line can lose a concern in most years. The
+        # premises are still standing and the stock is still on the
+        # shelves; what is missing is somebody to watch it. Reopening
+        # within a few years must cost the difference, not the whole thing
+        # again.
         _shut = getattr(self.household, "shut_for_staff", {})
         if k in _shut and self.year - _shut[k] <= self.STAFF_CLOSURE_GRACE:
             fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
-                # SAY WHAT WAS COUNTED. The test allows cash plus half the
-                # credit line and the refusal quoted the cash alone, so a play
-                # tester at -1,608 with a 3,684 line 44% used read "opening it
-                # costs 40 denarii and you have -1,608" and left seven finished
-                # concerns worth 1,713 a year shut, believing they could not
-                # spend forty denarii they had already been allowed to borrow
-                # sixteen hundred of.
+                # SAY WHAT WAS COUNTED: the test allows cash plus what can be
+                # borrowed, so the refusal must quote that same figure, not
+                # cash alone - quoting cash alone tells a player they cannot
+                # afford something the test itself would let them buy.
                 return False, ("opening it costs %s denarii in stock and premises, "
                                "and between %s in cash and what anyone will "
                                "advance against a purchase you can raise %s"
@@ -328,32 +317,30 @@ class VenturesMixin:
             if inst_units is None:
                 inst_units = self.household.inst_units = {}
             inst_units[k] = unit_count
-        # WHEN THE DOORS OPENED, which is when custom starts to find you. See
-        # venture_ramp: this used to read the year you worked the thing OUT, so
-        # opening late skipped the ramp entirely. Reopening something you had
-        # running does not restart it: the shop is known.
+        # WHEN THE DOORS OPENED, which is when custom starts to find you: see
+        # venture_ramp, which reads this rather than the year the capability
+        # was worked out, so opening late does not skip the ramp. Reopening
+        # something you had running does not restart it: the shop is known.
         _oy = getattr(self.household, "opened_year", None)
         if _oy is None:
             _oy = self.household.opened_year = {}
         _oy.setdefault(k, self.year)
         rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
-        # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE. A newly opened
+        # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE: a newly opened
         # concern takes revenue_ramp_years to reach the figure just quoted -
-        # custom takes time to find the shop - and the only place this was
-        # ever said was `money`'s still_ramping(), read after the fact. A
-        # player told "it earns 2,000 a year" at the moment of opening and
-        # then watching 650 land in the ledger had no way to know, right
-        # then, that both numbers were correct.
+        # custom takes time to find the shop - and that has to be said
+        # here, at the moment of opening, not only in `money`'s
+        # still_ramping(), read after the fact once the ledger already
+        # looks like it disagrees with what was promised.
         _ramp_note = (
             " It reaches that over the first %d years as custom finds it - "
             "expect less at first, not a mistake in the figure."
             % self.cfg["revenue_ramp_years"]) if rev_now > 0 else ""
-        # SUBTRACT THE TWO NUMBERS YOU JUST PRINTED. A Han playtester opened
-        # a net-loss concern four separate times - three of them after
-        # having already caught the mistake once and written it up - and
-        # said, correctly, that the earn and upkeep figures sit side by side
-        # on every screen and nothing ever does the subtraction for the
-        # reader. Capability institutions are deliberately excluded: a
+        # SUBTRACT THE TWO NUMBERS, DO NOT LEAVE THEM SIDE BY SIDE: earn and
+        # upkeep sitting next to each other on the screen does not tell a
+        # reader which is bigger, so a net-loss concern has to say so
+        # explicitly rather than relying on the reader doing the
+        # subtraction. Capability institutions are deliberately excluded: a
         # school or a workshop losing money is the normal, intended shape of
         # the trade (see CAPABILITY_INSTITUTIONS and venture_hands), not a
         # mistake to flag on the one screen a player could still back out
@@ -371,9 +358,9 @@ class VenturesMixin:
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now),
                          _ramp_note, _loss_note))
 
-    # HOW A PLAYER OPENS A SECOND SCHOOL. Send `units` to the SAME "open"
-    # command: {"cmd":"open","id":"school_founded"} founds the first, ordinary
-    # one exactly as it always did, and {"cmd":"open","id":"school_founded",
+    # HOW A PLAYER OPENS A SECOND SCHOOL: send `units` to the SAME "open"
+    # command. {"cmd":"open","id":"school_founded"} founds the first,
+    # ordinary one, and {"cmd":"open","id":"school_founded",
     # "units":2} on a school already open founds a second, taking it to 2.0
     # units of capacity. Reusing "open" rather than adding a new verb means a
     # save and an agent that has never heard of expansion still speaks a

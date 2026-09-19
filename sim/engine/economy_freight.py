@@ -2,8 +2,7 @@
 what the market actually charges once scarcity, standing and distance
 are all folded together.
 
-Split out of economy_market.py (see economy.py's own docstring for the
-whole split's history): every method here answers what a tonne of a
+Every method here answers what a tonne of a
 tracked material actually costs to land at this household, given the
 material's own scarcity (material_price_factor(), reading the demand
 grouping _cached_material_demand()/_cached_demand_by_tag() prepare) and
@@ -23,40 +22,39 @@ shortage_remedy() (what a player is told when something is binding).
 
 FreightMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for
-the grouping evidence (CLAUDE.md's naming/heuristic-labelling
-conventions apply here exactly as they did before the split - nothing
-about the rules a number or a comment follows has changed, only which
-file it lives in).
+the grouping evidence. CLAUDE.md's naming/heuristic-labelling
+conventions apply here exactly as they do everywhere else in the
+engine, regardless of which file a method lives in.
 
-_cached_material_demand()/_cached_demand_by_tag() moved here rather
-than into economy_electricity.py, despite sitting immediately after
-resource_throttle() in the original file (and so reading, at a glance,
-like part of the electricity banner that follows them there): every
-actual caller of either method - material_price_factor() via
-_demand_by_emp_key(), and material_market_summary() - lives in THIS
-file, not in economy_electricity.py, and their own docstrings say so
-explicitly (material_market_factor() calling material_price_factor()
-"several times for one project_cost() call" is exactly the freight-
-pricing hot path _cached_demand_by_tag()'s docstring describes grouping
-the demand dict for). resource_throttle() in economy_electricity.py
-only WRITES the cache these two read (self.household._material_demand_cache);
-it never calls either. Grouped here by what actually calls them, not
-by where they happened to sit in the original file - see economy.py's
-own note on this file's history for the fuller account of why that
-distinction mattered enough to check.
+_cached_material_demand()/_cached_demand_by_tag() live here, not in
+economy_electricity.py: every actual caller of either method -
+material_price_factor() via _demand_by_emp_key(), and
+material_market_summary() - lives in THIS file, and their own
+docstrings say so explicitly (material_market_factor() calling
+material_price_factor() "several times for one project_cost() call" is
+exactly the freight-pricing hot path _cached_demand_by_tag()'s
+docstring describes grouping the demand dict for). resource_throttle()
+in economy_electricity.py only WRITES the cache these two read
+(self.household._material_demand_cache); it never calls either. These
+two methods are grouped by what actually calls them, not by where they
+might look like they belong at a glance.
 
 THE CLASS-LEVEL CACHE. _land_freight_physical_inputs() caches its
 answer on the bare class object FreightMixin itself
 (`getattr(FreightMixin, "...", None)` / `FreightMixin._foo = ...`),
 not on self, because the ox/cart/dirt-track physical inputs it computes
 never differ between one Sim instance and the next in the same
-process - the same reasoning and the same past failure mode
-economy_materials.py's own CLASS-LEVEL CACHE note describes for its
-three caches: this read `EconomyMixin` before the methods first moved
-into economy_market.py, then `MarketMixin` after, and each move broke
-it silently until the first protocol command that needed a material
-price. Renamed to `FreightMixin` here because that is the class this
-method now actually lives on.
+process - the same reasoning economy_materials.py's own CLASS-LEVEL
+CACHE note gives for its three caches.
+
+TRAP: the literal class name in that getattr/setattr MUST match
+whatever class actually holds this method. If it is ever moved to a
+different class or file, the cache key has to move with it - a
+mismatch breaks the cache silently, invisible to import, to `validate`
+and to compilation, surfacing only when a command that needs a
+material price first runs and finds a cache that was never populated.
+See economy_materials.py's own CLASS-LEVEL CACHE note for the fuller
+account of this hazard.
 """
 import math
 
@@ -80,9 +78,9 @@ class FreightMixin:
         """_demand_by_supply_tag() of the current cached demand, computed
         once and reused for the rest of this tick.
 
-        material_market_factor() now weighs EVERY material key a project
-        buys (see its own comment on why it must, now that this is general
-        rather than 13 hand-named keys), which means material_price_factor()
+        material_market_factor() weighs EVERY material key a project
+        buys, general rather than 13 hand-named keys (see its own comment
+        on why it must), which means material_price_factor()
         can be called several times for one project_cost() call, and
         project_cost() itself is already called once per candidate node
         `available` considers, every year (see project_cost's own comment
@@ -99,16 +97,13 @@ class FreightMixin:
         unique among objects that are still alive: annual_material_demand()
         returns a brand-new Counter every call, the OLD one is dropped as
         soon as resource_throttle() overwrites self.household._material_demand_cache
-        with the next year's, and CPython hands a freed small object's
-        address to the very next same-sized allocation often enough that a
-        later tick's Counter regularly landed at the exact address an
-        earlier tick's had. `cached[0] == id(demand)` then read as true for
-        two DIFFERENT ticks' demand, and this cache quietly replayed a
-        stale grouping under a fresh year - the fourth `done_in_order()`-
-        class bug (see that method's own docstring for the first three),
-        found by bisecting `sim/repro_nondeterminism.py` back from a
-        project's ph_left through project_cost() and material_market_factor()
-        to material_price_factor() reading exactly this. Comparing `is
+        with the next year's, and CPython can hand a freed small object's
+        address to the very next same-sized allocation, so a later tick's
+        Counter can land at the exact address an earlier tick's had.
+        `cached[0] == id(demand)` would then read as true for two
+        DIFFERENT ticks' demand, quietly replaying a stale grouping under
+        a fresh year - the same shape of bug `done_in_order()`'s own
+        docstring documents other instances of. Comparing `is
         demand` against a STRONG REFERENCE kept alongside the cached
         result, instead of comparing two bare integers, keeps that old
         Counter alive for as long as this cache entry might still be
@@ -391,16 +386,14 @@ class FreightMixin:
         electrical age on copper by looking at copper_kg's share in
         isolation from copper_wire_kg's.
 
-        GENERALISED: this used to return exactly 1.0, immediately, for any
-        commodity id not already sitting in the hand-written MARKET_SHARE
-        dict above - the actual mechanism by which COMMODITY_DYNAMISM.md's
-        149 inert material keys (146 of 159 today, the tree having since
-        dropped three) never moved at all ("the function's own
-        code explains why... it returns 1.0 immediately"). That early
-        return is gone: `market` now falls back through
-        _material_market_tonnes' own generic default, so an arbitrary
-        commodity id (curated or not) reaches the same saturating curve
-        the 9 originally-tracked ones always used.
+        GENERALISED: must fall back through _material_market_tonnes' own
+        generic default for any commodity id not already sitting in the
+        hand-written MARKET_SHARE dict above, rather than returning exactly
+        1.0 immediately - an early return there is the actual mechanism by
+        which most material keys would never move at all
+        (COMMODITY_DYNAMISM.md measures 146 of 159 today). `market` falling
+        back this way lets an arbitrary commodity id (curated or not) reach
+        the same saturating curve the 9 curated ones use.
         """
         market = self._material_market_tonnes(emp_key)
         worst = 1.0
@@ -495,14 +488,11 @@ class FreightMixin:
         the generalised, aggregate version of material_price_factor(), the
         way goods_market_summary() already is for goods_market_factor().
 
-        A PLAYER MUST SEE IT. Before this pass a material's price response
-        was invisible even for the 9 tracked commodities (nothing
-        aggregated it for `money`) and non-existent for the other 146; now
-        that every material key responds (see material_price_factor's own
-        comment), a player whose project costs rose because they are
-        buying a lot of one thing, or fell because they sank their own
-        mine in it, needs a place that says so in aggregate, not just a
-        per-project `why`.
+        A PLAYER MUST SEE IT. Every material key's price responds to demand
+        (see material_price_factor's own comment), so a player whose
+        project costs rose because they are buying a lot of one thing, or
+        fell because they sank their own mine in it, needs a place that
+        says so in aggregate, not just a per-project `why`.
         """
         demand = self._cached_material_demand()
         if not demand:
@@ -614,10 +604,11 @@ class FreightMixin:
     def shortage_remedy(self, binding):
         """One sentence on what would end this shortage, in things you can type.
 
-        The throttle message used to name the material and the percentage and
-        stop, which tells a player they are stuck without telling them it is
-        fixable. Every binding constraint in the model has exactly one answer;
-        this is that answer, said out loud.
+        Must say what fixes it, not only the material and the percentage:
+        naming a shortage without a remedy tells a player they are stuck
+        without telling them it is fixable. Every binding constraint in
+        the model has exactly one answer; this is that answer, said out
+        loud.
         """
         if not binding:
             return ""

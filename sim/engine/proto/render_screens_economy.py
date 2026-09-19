@@ -10,9 +10,9 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 from .util import _factor, _fmt_num, _pct, _wrap
 
 # render_capacity is split into one function per screen section - resources,
-# power, mines, project portfolio, spare capacity - moved verbatim, in the
-# same order they always ran in, concatenated by render_capacity itself,
-# which decides nothing the pieces did not already decide. Each section
+# power, mines, project portfolio, spare capacity - concatenated by
+# render_capacity itself in that fixed order, which decides nothing the
+# pieces did not already decide. Each section
 # returns its own LINES rather than a dict: the ordering between and within
 # sections IS the output a player reads, and merging dicts the way
 # _agent_state's own screens do would lose exactly that (see render_state,
@@ -506,12 +506,11 @@ def _labour_staff_block(out):
                         _fmt_num(row["a_year_of_one"]),
                         "   (%s dearer than usual)" % row["dearer_than_usual_by"]
                         if row.get("dearer_than_usual_by") else ""))
-    # PEOPLE YOU OWN OR HAVE FREED ARE YOUR HOUSEHOLD TOO. They are not
-    # `employees` and so were never on this list: a weird-play tester bought
-    # ten people and read "ON YOUR STAFF: nobody" and "EMPLOY: 0 people" while
-    # the prompt said art 7, and concluded - reasonably - that the game had
-    # lost track of their household. It had not; it was only showing one third
-    # of it.
+    # PEOPLE YOU OWN OR HAVE FREED ARE YOUR HOUSEHOLD TOO: they are not
+    # `employees`, so leaving them off this list would print "ON YOUR
+    # STAFF: nobody" and "EMPLOY: 0 people" while the artisan count
+    # elsewhere is nonzero, reading as the game having lost track of the
+    # household rather than only showing one third of it.
     if out.get("slaves"):
         shown = True
         lines.append("  %-16s %8s   held, not paid a wage"
@@ -536,9 +535,10 @@ def _labour_household_block(out):
         if out.get("what_raises_that_room"):
             lines.append(_wrap("  to make room: " + str(out["what_raises_that_room"]),
                            indent="  "))
-        # THE OTHER CEILING, which is not room and cannot be built past. A
-        # tester met it only inside a `hire` refusal in year 463 of a 500-year
-        # game, and called it the single thing that decided the run.
+        # THE OTHER CEILING, which is not room and cannot be built past: it
+        # must be shown here directly, not left discoverable only inside a
+        # `hire` refusal deep into a run, since it can be the single thing
+        # that decides the run.
         if out.get("and_how_many_of_the_lettered_trades_this_society_supplies"):
             lines.append(_wrap("  the lettered trades: "
                            + out["and_how_many_of_the_lettered_trades_this_society_supplies"],
@@ -742,10 +742,9 @@ def _ventures_practice_block(out):
 
 
 def render_ventures(out):
-    """What you run and what you could. This fell through to the generic
-    key/value dump, which prints a list of dicts as raw Python - a tester
-    reported "ventures dumps raw Python dicts" and they were reading exactly
-    that."""
+    """What you run and what you could. A list of dicts falls through the
+    generic key/value dump as raw Python if nothing renders it explicitly,
+    so this exists to give it a proper screen."""
     lines = ["CONCERNS"]
     lines += _ventures_summary(out)
     lines += _ventures_held_by_block(out)

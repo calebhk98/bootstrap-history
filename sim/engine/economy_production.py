@@ -1,7 +1,6 @@
 """Revenue, practices, workshops and the institutions that run them.
 
-Split out of economy.py (see that file's own docstring for why): every
-method here answers "what does the household actually take in this
+Every method here answers "what does the household actually take in this
 year, and what does it cost to keep that running", as opposed to
 economy_goods.py's question of what a unit of output sells for once
 made. Covers: state_funding() (an imperial patron's direct funding) and
@@ -18,7 +17,7 @@ open this year).
 
 ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
-grouping evidence.
+grouping evidence, and for why this lives in a separate file.
 """
 from .data import ANNUAL_WAGE, trade_family
 from constants import declare
@@ -66,13 +65,11 @@ class ProductionMixin:
     def venture_ramp(self, k):
         """How much of its full takings a concern is making, 0..1.
 
-        FROM THE YEAR YOU OPENED IT, not the year you worked out how. This read
-        done_year, so a concern built in 100 and opened in 130 was at full
-        takings the day its doors opened - which made delaying `open` strictly
-        better than opening promptly, and made the ledger's own sentence ("a
-        concern you open reaches its full figure over 3 years") false in the
-        one case a break tester checked. Custom takes time to find whoever owns
-        the shop.
+        FROM THE YEAR YOU OPENED IT, not the year you worked out how: a
+        concern built in one year and opened years later must still ramp
+        up from its opening, not appear at full takings the instant its
+        doors open, or delaying `open` would be strictly better than
+        opening promptly. Custom takes time to find whoever owns the shop.
         """
         started = (getattr(self.household, "opened_year", None) or {}).get(k)
         if started is None:
@@ -84,11 +81,10 @@ class ProductionMixin:
         """How much of your practice you are actually there to run.
 
         The income from practising medicine is your own two hands: it is the
-        cover identity the guide tells you to adopt, and a weird-play tester
-        found you could sell every one of your 2,400 hours as a labourer and
-        still collect the full fee from a surgery you were demonstrably not in.
-        That is the same hours sold twice, which is an accounting error rather
-        than a balance choice.
+        cover identity the guide tells you to adopt, and selling those same
+        hours as a labourer while still collecting the full fee from a
+        surgery you are not attending would count the same hours twice.
+        That is an accounting error, not a balance choice.
 
         Only hours sold for WAGES count against it. Hours that go into your own
         projects do not: a physician who spends his evenings grinding lenses is
@@ -96,10 +92,9 @@ class ProductionMixin:
         while your practice runs. Whether THAT should compete too is a real
         question and a much larger one; this is the half that is simply wrong.
         """
-        # A DEAD PHYSICIAN HAS NO PRACTICE. This is your own two hands, and a
-        # break tester watched the surgery go on taking fees for eleven years
-        # after the founder was buried. What you built outlives you; what you
-        # personally did does not.
+        # A DEAD PHYSICIAN HAS NO PRACTICE: this is your own two hands, so it
+        # must go to zero the moment the founder is gone. What you built
+        # outlives you; what you personally did does not.
         if not self.founder_alive:
             return 0.0
         pool = self.director_pool()
@@ -166,19 +161,13 @@ class ProductionMixin:
                     total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
                           * self.goods_market_factor(node_id))
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
-        # pays back inside two years, so its income buys the next one, and a run
-        # ended holding three billion denarii against an empire whose entire
-        # annual product was perhaps five billion. Testers saw the near end of
-        # it and said so plainly: "I have far more capital than I have good
-        # places to put it". You cannot sell more inns than the town wants, and
-        # a saturating curve says that without ever making a venture worthless.
-        # WHAT YOUR OWN WORKSHOP SELLS. Charging wages explicitly without
-        # crediting the work was half an accounting change: in the old model a
-        # trained staff was free and its output was folded invisibly into node
-        # revenue, so adding a payroll of 12,000 a year and no corresponding
-        # output made every civilization except Rome unable to finish. Thirty
-        # craftsmen in a workshop do not sit there costing money. They make
-        # things, and the things are sold.
+        # pays back quickly, so its income buys the next one, and nothing
+        # stops a run's capital from growing far past what a real market this
+        # size could absorb - it cannot sell more inns than the town wants.
+        # A saturating curve caps that without ever making a venture worthless.
+        # WHAT YOUR OWN WORKSHOP SELLS: a payroll without credited output is
+        # pure cost. Thirty craftsmen in a workshop do not sit there costing
+        # money. They make things, and the things are sold.
         #
         # It is deliberately less than a 2x markup on wages and it needs somewhere
         # to work: a staff with no workshop is an expense, which is exactly why
@@ -364,11 +353,10 @@ class ProductionMixin:
     def revenue_sources(self):
         """Where the money actually comes from, itemised.
 
-        Testers asked this three separate times and could not answer it: "there
-        is no visible in-fiction source for it", "a player who never issues a
-        single start still gets richer every year". Both were looking at the
-        income from practising medicine, which is the cover identity the game
-        tells you to adopt, and neither had any way to find that out.
+        A player who never issues a single start can still get richer
+        every year, from practising medicine - the cover identity the game
+        tells you to adopt - which is otherwise invisible anywhere else in
+        the interface.
         """
         rows = {}
         for node_id in self.done_in_order():
@@ -395,12 +383,12 @@ class ProductionMixin:
                 amt *= self.goods_market_factor(node_id)
             if amt > 0.5:
                 rows[node_id] = round(amt, 1)
-        # ALL OF IT, OR SAY WHAT IS MISSING. This returned the fifteen largest
-        # rows and nothing else, so a break tester summed what the ledger
-        # listed, got 7,101.9 against a stated revenue of 6,738, and correctly
-        # reported that the accounts do not add up - two running earners were
-        # simply not shown, and the workshop's own output and the saturation
-        # that caps the whole figure were never rows at all.
+        # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the
+        # fifteen largest rows and nothing else does not add up to the
+        # revenue it states. Every running earner has to be represented -
+        # the rest as one summed row, the workshop's own output, state
+        # funding, and whatever the market saturation absorbs - or the
+        # accounts are visibly wrong.
         ranked = sorted(rows.items(), key=lambda entry: -entry[1])
         out = dict(ranked[:15])
         rest = sum(value for _node_id, value in ranked[15:])
@@ -417,15 +405,14 @@ class ProductionMixin:
         if abs(gap) > 1.0:
             out["_what_the_market_will_not_absorb"] = gap
         else:
-            # ROUNDING IS NOT A ROW. Every entry is rounded to a tenth so it
-            # can be read, and a ledger that says "these add up to the revenue
-            # above" has to survive being added up: a break tester summed two
-            # rows, got 166.7 + 66.7 = 233.4 under a stated 233.5, and filed
-            # the claim as false in one line. Push the residue into the largest
-            # row, which is the one place a tenth cannot be noticed.
-            # AT ONE DECIMAL, like every other row. Pushing the raw residue in
-            # wrote 166.8394 onto a line the player reads; the rows and the
-            # total both live at a tenth, so the correction has to as well.
+            # ROUNDING IS NOT A ROW: every entry is rounded to a tenth so it
+            # can be read, and a ledger that says "these add up to the
+            # revenue above" has to actually survive being added up by hand
+            # at that precision. Push the residue into the largest row,
+            # which is the one place a tenth cannot be noticed.
+            # AT ONE DECIMAL, like every other row: the residue itself has
+            # to be rounded to a tenth before being added in, or it
+            # reintroduces the exact mismatch this is fixing.
             resid = round(round(self.revenue(), 1) - sum(out.values()), 1)
             if out and abs(resid) > 0.049:
                 # sorted(): a tie in max() over a dict falls back to insertion
@@ -434,16 +421,16 @@ class ProductionMixin:
                 out[big] = round(out[big] + resid, 1)
         return out
 
-    # Of the auto-granted nodes that carry revenue, seven are medicine and two
-    # are shipping, and the difference decides who gets paid. Cataract couching
-    # is a skill a single trained person practises with their own hands, and
-    # practising it is exactly the cover the guide tells you to adopt. A fleet
-    # of large merchant ships is owned by other people and you are not entitled
-    # to its freight. Removing the revenue from BOTH, which is what I did first,
-    # was too blunt: it left every civilization with no way to earn a living at
-    # all, and the Norse, who are poorer and pay a 1.4 price index, could then
-    # never accumulate the 1,580 denarii for identity_cover. They failed 100% of
-    # runs, blocked on the first node in the game.
+    # Of the auto-granted nodes that carry revenue, seven are medicine and
+    # two are shipping, and the difference decides who gets paid. Cataract
+    # couching is a skill a single trained person practises with their own
+    # hands, and practising it is exactly the cover the guide tells you to
+    # adopt: PRACTISABLE_CATS credits it. A fleet of large merchant ships is
+    # owned by other people and you are not entitled to its freight, so
+    # shipping stays excluded. Removing the revenue from both is too blunt:
+    # without practice income, a poorer civilisation paying a higher price
+    # index has no way to accumulate enough for identity_cover, the first
+    # node in the game.
     PRACTISABLE_CATS = {"surgery", "obstetrics", "pharmacology", "medicine",
                         "diagnosis", "dentistry"}
 
@@ -454,13 +441,11 @@ class ProductionMixin:
     def still_ramping(self):
         """Earners that are not yet paying their full figure, and how far along.
 
-        Every earner ramps over revenue_ramp_years, so on the day you open one
-        it pays a third of what the tree quotes for it. A break tester read
-        `why` at 500 a year, opened it, saw 166.7 in the ledger, and had
-        nothing anywhere to tell them whether the ledger was wrong, the quote
-        was wrong, or they were being charged for something. It is none of
-        those: it is year one of three. Kept OUT of revenue_sources, whose
-        every value is a number that has to sum to the revenue above it.
+        Every earner ramps over revenue_ramp_years, so on the day you open
+        one it pays only a fraction of what the tree quotes for it. Nothing
+        else explains that gap between the quoted figure and the ledger, so
+        this surfaces it directly. Kept OUT of revenue_sources, whose every
+        value is a number that has to sum to the revenue above it.
         """
         young = []
         for node_id in sorted(self.household.operating):
@@ -519,22 +504,18 @@ class ProductionMixin:
         """Every node in `done` that revenue() or upkeep() could possibly
         charge or pay for - i.e. that is operating, or in your practice
         set - in done_in_order()'s own tree order. Neither function can do
-        anything with a node that is neither, so both used to scan the
-        WHOLE of `done` (every technology ever finished, which is most of
-        the tree by the late game) just to throw almost all of it away
-        again on that same test; this is the small subset that survives it,
-        computed once and handed to both.
+        anything with a node that is neither: scanning the WHOLE of `done`
+        (every technology ever finished, which is most of the tree by the
+        late game) to throw almost all of it away again on that same test
+        is wasted work whenever `operating` and the practice set together
+        are a handful of concerns against a `done` list that only grows.
+        This is the small subset that survives the test, computed once and
+        handed to both.
 
-        A 150-year rome_100ad profile of 150 optimizer steps found revenue()
-        alone at 9,037 calls and 1.428s cumulative, and upkeep() at 4,293
-        calls (upkeep's own summing genexpr showing up separately at
-        120,922 calls) - both walking done_in_order() start to finish on
-        every one of those, when `operating` and the practice set together
-        are typically a handful of concerns against a `done` list that only
-        grows. This is exactly the O(active) vs O(done) gap done_in_order()
+        This closes the same O(active) vs O(done) gap done_in_order()
         itself was already added to close for a DIFFERENT quadratic blowup
-        (see its own docstring); the list is short but the SCAN was still
-        long.
+        (see its own docstring): the candidate list is short, but scanning
+        the whole of `done` to build it on every call is not.
 
         CACHED, on the same three signals _goods_category_state's own cache
         (above) already trusts for this reason:
@@ -567,27 +548,22 @@ class ProductionMixin:
         seq = self.done_in_order()
         practice_set = self._practice_set()
         # STRONG REFERENCES AND `is`, NOT BARE id() INTEGERS, for the reason
-        # _cached_demand_by_tag() below now spells out at length: a freed
+        # _cached_demand_by_tag() below spells out at length: a freed
         # object's address is handed straight to the next same-sized
         # allocation, so two different objects compare equal by id() often
         # enough to matter, and the cache replays a stale answer under a fresh
         # one. That is what made this simulation non-deterministic, in the
         # sibling cache rather than this one.
         #
-        # This one had not been shown to be firing. It had been PROBED and
-        # come back clean - 0 stale answers in 64,157 calls - and that probe
-        # was worthless, because it allocated a comparison list on every call
-        # and allocation is precisely what decides whether an address gets
-        # recycled. It suppressed the effect it was measuring. The same false
-        # negative cleared the cache that turned out to be guilty.
-        #
-        # So this is not a fix for an observed bug. It is the removal of a
-        # hazard that cannot be cheaply observed, in the one shape known to
-        # have already cost this project a day, by the defence
-        # sim/engine/proto/nodes.py chose for the identical reason. Holding
-        # seq and practice_set alive for as long as the entry may be compared
-        # against them makes the collision structurally impossible rather than
-        # merely unmeasured.
+        # This is not a fix for an observed bug in THIS cache: probing it
+        # for stale answers is unreliable, because the probe's own
+        # allocations are exactly what decide whether an address gets
+        # recycled, so a clean probe result proves nothing. It is the
+        # removal of a hazard that cannot be cheaply observed, by the same
+        # defence sim/engine/proto/nodes.py uses for the identical reason.
+        # Holding seq and practice_set alive for as long as the entry may be
+        # compared against them makes the collision structurally impossible
+        # rather than merely unmeasured.
         operating_version = getattr(self.household, "_operating_ver", 0)
         cached = getattr(self.household, "_rev_up_candidates_cache", None)
         if (cached is not None and cached[0] is seq
@@ -632,12 +608,12 @@ class ProductionMixin:
         a school with forty does. Endowed schools historically scaled with
         enrolment and so should this.
 
-        This is the bridge the capability change needed. Making capability follow
-        running() was right: a founder used to collect a school's twelve
-        scholars and an imperial patron's sixty thousand of credit without ever
-        opening either, and without paying a denarius toward them. But it priced
-        every institution as though the place were full on the day you founded
-        it, and that killed the first rung of the ladder.
+        Capability follows running(), so nothing is credited for a school
+        or an imperial patron's line of credit that was never actually
+        opened and paid for. That makes it essential this does not price
+        every institution as though the place were full on the day you
+        founded it: a flat full-upkeep charge on day one would kill the
+        first rung of the ladder.
         """
         node = self.nodes[k]
         # A THIRD SCHOOL COSTS THREE SCHOOLS' UPKEEP, at three schools' worth
@@ -646,13 +622,14 @@ class ProductionMixin:
         # exactly the arithmetic it always did. See
         # ProjectsMixin.institution_units.
         #
-        # NOT YET OPEN MEANS "WHAT WOULD A FIRST FOUNDING COST", not zero.
+        # NOT YET OPEN MEANS "WHAT WOULD A FIRST FOUNDING COST", not zero:
         # auto_open_ventures (projects.py) calls this on things it has not
-        # opened yet to decide whether to; institution_units answers 0 for
-        # anything not currently operating, and multiplying by that turned
-        # every unopened institution's prospective upkeep into a small
-        # negative number (upkeep 0 against real revenue), which read as free
-        # and let the affordability gate through on nothing.
+        # opened yet to decide whether to. institution_units answers 0 for
+        # anything not currently operating, so multiplying by that here
+        # would turn every unopened institution's prospective upkeep into
+        # zero - free, in effect - and let the affordability gate through
+        # on nothing. _units must fall back to 1.0 for anything not yet
+        # operating.
         _units = (self.institution_units(k) if k in self.household.operating else 1.0) \
             if k in self.SCALABLE_INSTITUTIONS else 1.0
         upkeep_amount = node["up"] * _units

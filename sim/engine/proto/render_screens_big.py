@@ -32,16 +32,17 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 # stuck block, the concerns block, the employ block, the standing block, the
 # at-risk block, the goal block, the completed/events head (which prepends
 # rather than appends, so it takes the lines built so far and returns the
-# merged list), and the trailing "more" block - moved verbatim, in the same
-# order they always ran in, with render_state itself left as the assembler
-# that decides nothing the pieces did not already decide.
+# merged list), and the trailing "more" block - in that fixed order, with
+# render_state itself left as the assembler that decides nothing the pieces
+# did not already decide.
 
 def _state_header(out):
     lines = []
     year = out.get("year")
     lines.append("=" * 60)
-    # WITH THE CLOCK ON IT. The horizon was in one help topic and in no reply
-    # anyone reads every turn, so a tester met it only by overshooting it.
+    # WITH THE CLOCK ON IT: the horizon must not sit only in a help topic
+    # and never in a reply read every turn, or a player discovers it only
+    # by overshooting it.
     left = out.get("years_left")
     lines.append(("YEAR %s%s" % (year, ("   (%s years to the horizon at %s)"
                                     % (_fmt_num(left), out.get("horizon_year")))
@@ -61,17 +62,15 @@ def _state_money(out):
     net_plain = out.get("net_per_year")
     spend = out.get("project_spend_this_year")
     lines.append("Money: %s den" % _fmt_num(out.get("capital")))
-    # BOTH NUMBERS, ALWAYS - NOT ONE HIDING THE OTHER. This used to print
-    # net_after_project_spend alone whenever it was present, which is every
-    # turn: it is capital in less what you owe, less whatever went into
-    # projects THIS YEAR, so starting one expensive thing made the household
-    # look about to go broke on the very turn it was investing soundly. A
-    # play tester read that plunge on every build and could not tell "the
-    # household is failing" from "the household just paid for a workshop"
-    # without a second command (`money`) the tutorial never points at. The
-    # recurring figure - what standing income clears with nothing new
-    # started - is the honest one to watch, and it now prints on the same
-    # line `state` is read from every turn instead of one command away.
+    # BOTH NUMBERS, ALWAYS - NOT ONE HIDING THE OTHER: net_after_project_spend
+    # alone is capital in less what you owe, less whatever went into
+    # projects THIS YEAR, so starting one expensive thing makes the
+    # household look about to go broke on the very turn it is investing
+    # soundly, indistinguishable from actually failing without a second
+    # command (`money`) the tutorial never points at. The recurring figure
+    # - what standing income clears with nothing new started - is the
+    # honest one to watch, and it prints on the same line `state` is read
+    # from every turn, not one command away.
     if net_plain is not None and net_after is not None:
         lines.append("  net %s%s den/yr, recurring - this is the one to watch"
                  % ("+" if net_plain >= 0 else "", _fmt_num(net_plain)))
@@ -101,9 +100,10 @@ def _state_founder(out):
     # of them ends with everything you have not made permanent dying with you.
     _src = out.get("where_your_hours_come_from") or {}
     _dep = _src.get("deputies_who_direct_work_for_you") or 0
-    # THE AGE, ON THE LINE THAT ALREADY SAYS DEAD OR ALIVE, not only inside a
-    # log sentence from however many years ago: a normal-play tester in
-    # mortal mode never saw an age anywhere but that one line in `events`.
+    # THE AGE, ON THE LINE THAT ALREADY SAYS DEAD OR ALIVE, not only inside
+    # a log sentence from however many years ago: leaving it only in
+    # `events` means it can scroll out of view long before a player thinks
+    # to look for it.
     lines.append("You: %s%s, %s founder-hours free this year%s"
              % ("alive" if out.get("founder_alive") else
                 ("DEAD (aged about %s at death, in %s)"
@@ -118,13 +118,12 @@ def _state_founder(out):
                 if _dep else ""))
     for _warning in (out.get("supervision_close_to_the_edge") or []):
         # EACH ENTRY IS A DICT (id/name/within/of/headline/...), not a bare
-        # string - staffing_closure_warnings() returns structured rows so a
-        # JSON caller gets the trade, the room and the fix command apart from
-        # the prose. This human-text renderer wants only the sentence; a
-        # bare `_w` here crashed `state` outright the moment any warning
-        # actually fired ("can only concatenate str (not 'dict') to str"),
-        # which nothing caught because the regression suite only ever called
-        # staffing_closure_warnings() directly, never through render_state.
+        # string: staffing_closure_warnings() returns structured rows so a
+        # JSON caller gets the trade, the room and the fix command apart
+        # from the prose. This human-text renderer wants only the
+        # sentence, so it must read `.get("headline")` rather than
+        # concatenating the dict directly, which would crash `state`
+        # outright the moment any warning fires.
         lines.append(_wrap("  " + (_warning.get("headline") if isinstance(_warning, dict) else _warning)))
     if out.get("worth_knowing_early"):
         lines.append(_wrap("  " + out["worth_knowing_early"]))
@@ -142,16 +141,15 @@ def _state_running(out):
         total = progress.get("founder_hours_total") or 0
         left = progress.get("founder_hours_left") or 0
         pct = 100.0 * (total - left) / total if total else 100.0
-        # Clamped. Refunded hours could once exceed hours spent, and a
-        # playtester read the result off this very line: "-67% of your hours
-        # spent". The arithmetic is fixed in core.py; the display refuses to
-        # print an impossible figure either way.
+        # Clamped, as a defence independent of core.py's own arithmetic: a
+        # negative or over-100% figure here would print an impossible
+        # "your hours spent" percentage, so the display refuses to show
+        # one either way.
         pct = max(0.0, min(100.0, pct))
-        # THE ID, because that is what `stop` and `why` take. This printed the
-        # display NAME, so a play tester with a project they wanted to abandon
-        # had no way to name it: "no way to map a running project's display
-        # name back to an id so you can stop it". The name goes on the line
-        # after, where it costs nothing.
+        # THE ID, because that is what `stop` and `why` take: printing the
+        # display NAME here instead would leave no way to map it back to
+        # an id to act on. The name goes on the line after, where it costs
+        # nothing.
         lines.append("  %-34s %3.0f%% of your hours spent, %s still owed - waiting on %s"
                  % (node_id, pct, _fmt_num(progress.get("still_to_pay")),
                     progress.get("waiting_on") or "-"))
@@ -225,27 +223,22 @@ def _state_employ(out):
 def _state_standing(out):
     lines = []
     lines.append("")
-    # PROTECTION BELONGS HERE. It is what bribes, patrons and standing actually
-    # buy, and what decides whether a strange result out of your workshop is
-    # read as learning or as sorcery - and it appeared on no screen at all. A
-    # weird-play tester found it only by noticing that bribing with no scandal
-    # to answer still moved SOMETHING, and reported it as a hidden stat being
-    # sold to them.
+    # PROTECTION BELONGS HERE: it is what bribes, patrons and standing
+    # actually buy, and what decides whether a strange result out of your
+    # workshop is read as learning or as sorcery. Leaving it off this
+    # screen entirely would make it a hidden stat nothing visibly moves.
     lines.append("STANDING: reputation %s   protection %s   scandal %s   eminence %s"
              % (_fmt_num(out.get("reputation")), _pct(out.get("protection")),
                 _fmt_num(out.get("scandal")), _fmt_num(out.get("eminence"))))
     prom = out.get("prominence") or {}
     if prom:
-        # SAY WHICH NUMBER IT IS ABOUT. This line sat directly under the row
-        # showing reputation, suspicion, scandal and eminence, and refers to the
-        # LAST of those - so a break tester with suspicion pinned at 30 read
-        # "dangerous above 26 ... 0% chance of ruin this year" as a flat
-        # contradiction, and wrote the whole mechanic off as inert. It was
-        # answering a question they had not asked.
-        # "CHANCE OF RUIN" MEANT "CHANCE SOMETHING HAPPENS", and only a fifth
-        # of those somethings end the run. A play tester survived two
-        # confiscations, was ended by the third roll, and had this same line in
-        # front of them before all three. Print both figures.
+        # SAY WHICH NUMBER IT IS ABOUT: this sits directly under the row
+        # showing reputation, protection, scandal and eminence, and refers
+        # to eminence specifically - ambiguous placement here would read
+        # as a contradiction against a different figure on the same row.
+        # "CHANCE OF RUIN" MEANS "CHANCE SOMETHING HAPPENS", and only a
+        # fifth of those somethings end the run - a single merged figure
+        # would conflate two different risks. Print both figures.
         if out.get("scandal_danger") is not None:
             lines.append("  SCANDAL is dangerous above %s (%s chance of being "
                      "denounced this year, which ends the run; 'bribe' buys it "
@@ -424,11 +417,10 @@ _RESTS_SHORT = {"almost everything": "ALL", "a great deal": "much",
 def _cost_marker(e, purse):
     """A row you cannot pay for today gets its cost marked.
 
-    "MOST RESTS ON THESE" heads its list with items at 230 to 1,580 denarii
-    against an opening purse of 400, and a break tester followed it into
-    CREDIT EXHAUSTED by year 106. The advice is right - those really are the
-    nodes everything rests on - and the reader needs to know which of them
-    they can act on this year.
+    "MOST RESTS ON THESE" can head its list with items well beyond an
+    opening purse. The advice is right - those really are the nodes
+    everything rests on - and the reader still needs to know which of
+    them they can act on this year.
     """
     cost = e.get("cost")
     if purse is None or not isinstance(cost, (int, float)):
@@ -455,12 +447,10 @@ def _available_row(e, w=None, purse=None):
     downstream_count = e.get("downstream_count")
     rests = (_fmt_num(downstream_count) if downstream_count is not None
              else _RESTS_SHORT.get(e.get("how_much_rests_on_this"), "?"))
-    # THE ID IS NOT DECORATION, IT IS THE NEXT THING YOU TYPE. Truncating it to
-    # thirty characters meant the longest ids could not be copied out of the
-    # table at all, and both a play tester and a break tester lost time to
-    # `start` refusing an id the table had just printed - with the refusal
-    # helpfully suggesting they use `available` to find valid ids. Names get
-    # cut instead; nobody has to retype a name.
+    # THE ID IS NOT DECORATION, IT IS THE NEXT THING YOU TYPE: truncating
+    # it would mean the longest ids could not be copied out of the table
+    # at all, and `start` would refuse an id the table had just printed
+    # incomplete. Names get cut instead; nobody has to retype a name.
     staff = e.get("needs_staff") or "-"
     if e.get("short_of_staff"):
         staff += "*"
@@ -480,8 +470,8 @@ def _available_row(e, w=None, purse=None):
 
 def _available_top(out):
     """The count/showing/sorted-by lines, the purse, and the column header
-    string every branch below needs - computed once, the same way it was
-    computed once at the top of the original function.
+    string every branch below needs - computed once, here, rather than by
+    each branch separately.
     """
     lines = ["AVAILABLE: %s startable now" % _fmt_num(out.get("count"))]
     if out.get("showing"):
@@ -528,9 +518,9 @@ def _available_subjects_block(out, header, _width, _purse):
 
 def _available_empty_block(out):
     lines = []
-    # No column headings over no rows. A play tester read "1-0 matching
-    # 'furnace'" above an empty table and could not tell whether the
-    # search had failed or the game had.
+    # No column headings over no rows: a table with headers but no rows
+    # underneath reads as ambiguous, unclear whether the search failed or
+    # something is broken.
     lines.append(out.get("nothing_matched")
              or "Nothing you could begin today matches that.")
     return lines
@@ -640,13 +630,12 @@ def _why_cost(out):
     lines = []
     lines.append("")
     cost = out.get("cost") or {}
-    # EVERY FACTOR THAT IS MULTIPLIED IN. opposition_factor - bribes, delay, a
-    # provincial site, a front man, up to 1.3x for work this society dislikes -
-    # was in the JSON and not on this line, so a break tester multiplied the
-    # printed terms out for three nodes, got 240 against 258, 200 against 230
-    # and 10,075 against 10,831, and reported an undisclosed overhead. Third
-    # time this exact lesson has been learned on this exact line: a breakdown
-    # that omits a term invites the check and then fails it.
+    # EVERY FACTOR THAT IS MULTIPLIED IN: opposition_factor - bribes, delay,
+    # a provincial site, a front man, up to 1.3x for work this society
+    # dislikes - must appear on this line, not only in the JSON, or a
+    # player who multiplies the printed terms out finds a total that does
+    # not match and reads it as an undisclosed overhead: a breakdown that
+    # omits a term invites the check and then fails it.
     lines.append("COST: %s den total  (%s labour + %s materials + %s capital, then "
              "x%s your civ, x%s distance, x%s scarcity, x%s opposition, "
              "x%s prices)"
@@ -701,9 +690,9 @@ def _why_staff_needed(out):
 
 def _why_staff_keep_open(out):
     lines = []
-    # A SECOND, SEPARATE STAFF FIGURE. Not shown at all until `open` refused
-    # somebody on it, which is the exact complaint three play testers filed.
-    # See staff_to_keep_it_open_means for why this is not the line above.
+    # A SECOND, SEPARATE STAFF FIGURE: it must not sit hidden until `open`
+    # refuses somebody on it. See staff_to_keep_it_open_means for why
+    # this is not the line above.
     open_staff = out.get("staff_to_keep_it_open")
     if open_staff is not None:
         lines.append("STAFF TO KEEP IT OPEN: %s scholars, %s artisans   "
@@ -772,9 +761,9 @@ def _why_status(out):
     if out.get("start_blocked_reason"):
         # start_blocked_reason is already the full, human-authored sentence -
         # when it is naming missing prerequisites (the common case) it says
-        # so itself, and a second "MISSING PREREQUISITES: ..." line straight
-        # after it was the same list twice, once wrapped in a sentence and
-        # once bare. Show the sentence; it is the more complete of the two.
+        # so itself, so a second "MISSING PREREQUISITES: ..." line here would
+        # show the same list twice, once wrapped in a sentence and once
+        # bare. Show the sentence; it is the more complete of the two.
         lines.append(_wrap(out["start_blocked_reason"], indent="  "))
     else:
         missing = out.get("missing_prerequisites")
@@ -793,14 +782,13 @@ def _why_status(out):
         else:
             lines.append("PREREQUISITES: none, you can start this on arrival")
     # DONE, NOT MERELY OPEN - SAID ONCE, WHICHEVER BRANCH ABOVE ACTUALLY
-    # FIRED. A tester wrote "nothing states whether a prerequisite must be
-    # DONE or open"; it has always meant done, but the one sentence that used
-    # to say so lived only in the `elif missing:` branch just above, which
-    # start_blocked_reason (the common case - see its own comment) pre-empts
-    # on every refusal that actually has missing prerequisites, so a player
-    # who hit this refusal in the ordinary way never saw it at all. Printed
-    # here instead, off the same `missing` list, it is reachable whichever of
-    # the two branches actually wrote the list out.
+    # FIRED: it has always meant done, but start_blocked_reason (the
+    # common case - see its own comment) pre-empts the `elif missing:`
+    # branch above on every refusal that actually has missing
+    # prerequisites, so a sentence saying so living only in that branch
+    # would never reach a player who hit this refusal the ordinary way.
+    # Printed here instead, off the same `missing` list, it is reachable
+    # whichever of the two branches actually wrote the list out.
     if out.get("missing_prerequisites"):
         lines.append("  (a prerequisite has to be FINISHED, not merely started, "
                  "and it stays finished: you need not keep it running.)")

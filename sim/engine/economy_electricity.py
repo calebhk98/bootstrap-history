@@ -1,8 +1,7 @@
 """Electricity as a physical quantity, not a capability flag - plus the
 worst-binding-constraint material throttle that folds it in.
 
-Split out of economy_market.py (see economy.py's own docstring for the
-whole split's history): every method here answers how many kilowatts a
+Every method here answers how many kilowatts a
 household can actually generate and actually needs, and, together with
 the material stock/flow accounting economy_materials.py owns, how much
 of a year's planned work that combination of watts and tonnes actually
@@ -14,11 +13,11 @@ single worst-binding-constraint fraction - electricity or any one
 material - that a year's or one project's work actually clears).
 
 ElectricityMixin is composed into EconomyMixin (economy.py) alongside
-the other economy sub-mixins; see that file for the composition and
-for the grouping evidence (CLAUDE.md's naming/heuristic-labelling
-conventions apply here exactly as they did before the split - nothing
-about the rules a number or a comment follows has changed, only which
-file it lives in).
+the other economy sub-mixins; see that file for the composition, the
+grouping evidence, and for why this lives in a separate file. CLAUDE.md's
+naming/heuristic-labelling conventions apply here the same as everywhere
+else in the engine, regardless of which file a number or a comment lives
+in.
 """
 from .data import hard_pre
 from constants import declare
@@ -32,16 +31,16 @@ class ElectricityMixin:
     # THE GAP THIS CLOSES. cap_power_electric, cap_power_grid, cap_power_steam
     # and cap_power_water are capability nodes whose own NAMES narrate a scale
     # ("kW scale", "MW scale", "portable, hundreds of kW", "tens of kW on one
-    # shaft" - see tech_tree.json) and nothing anywhere ever turned that prose
-    # into a tracked watt. Two consequences, both real: a player who wanted a
-    # generation/demand/reserve-margin display could not be given one (the
-    # `capacity` command's power section said so outright), and - worse -
-    # electrolytic aluminium, the electric arc furnace, zone refining and a
-    # zinc smelter's own ancillary load all list `power_grid` in their `pre`
-    # and are charged nothing whatsoever for the electricity that prerequisite
-    # implies they need. The aluminium/rubber/etc. MATERIAL gating audit
-    # (MATERIAL_GATING.md) closed exactly this shape of hole for MATERIALS
-    # two days before this was written; this closes it for the one input
+    # shaft" - see tech_tree.json), and nothing turns that prose into a
+    # tracked watt without this. Two consequences follow if it is not
+    # tracked: a generation/demand/reserve-margin display cannot be given
+    # (the `capacity` command's power section has nothing to show), and -
+    # worse - electrolytic aluminium, the electric arc furnace, zone
+    # refining and a zinc smelter's own ancillary load all list `power_grid`
+    # in their `pre` and would be charged nothing whatsoever for the
+    # electricity that prerequisite implies they need. The aluminium/
+    # rubber/etc. MATERIAL gating audit (MATERIAL_GATING.md) closes exactly
+    # this shape of hole for MATERIALS; this closes it for the one input
     # that check does not see, because a material key has always been
     # something `mat` can name and a watt never was.
     #
