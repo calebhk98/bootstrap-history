@@ -715,13 +715,12 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
         world_dir = os.path.join(_REPO_ROOT, "sim", "world")
         offenders = []
         for path in sorted(glob.glob(os.path.join(world_dir, "*.py"))):
-            # STRICT EVERYWHERE, as of the commit that widened this. It was
-            # demand.py only when written, because agriculture.py and
-            # transport.py each carried one pre-existing algebra block the
-            # rename task had no mandate to touch. Both were rewritten in
-            # words immediately afterwards, so the exemption had nothing
-            # left to exempt - and an exemption nobody needs is how a check
-            # quietly stops covering the thing it was built for.
+            # STRICT EVERYWHERE, WITH NO PER-FILE EXEMPTION: agriculture.py
+            # and transport.py each once carried one pre-existing algebra
+            # block a rename task had no mandate to touch, but both are now
+            # rewritten in words, so an exemption for them would have
+            # nothing left to exempt - and an exemption nobody needs is how
+            # a check quietly stops covering the thing it was built for.
             strict = True
             for line_number, text in _comments_and_docstrings(path):
                 for category, snippet in _find_lone_letter_maths_notation(

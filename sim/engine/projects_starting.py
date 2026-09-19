@@ -153,14 +153,12 @@ class StartingMixin:
         cannot post a bounty for zone refining; nobody would know what to aim at.
         """
         node = self.nodes[k]
-        # THE ALLOW-LIST IS ROME'S CRAFTS, and it was applied to everybody. A
-        # Norse tester was refused a bounty on `sea_skeleton_first` -
-        # shipbuilding - by a civilisation whose own profile marks ships as the
-        # thing it is best at in the world, and told "a Roman artisan could not
-        # recognise success at this". So the list is now a floor, not the whole
-        # rule: anything this society is measurably GOOD at (its own cost
-        # multipliers say so) can be recognised by its own craftsmen, whatever
-        # Rome's craft categories happen to be.
+        # THE ALLOW-LIST IS ROME'S CRAFTS, BUT NOT THE WHOLE RULE: anything
+        # this society is measurably GOOD at (its own cost multipliers say
+        # so) can be recognised by its own craftsmen, whatever Rome's craft
+        # categories happen to be - a civilisation whose own profile marks
+        # shipbuilding as what it is best at in the world should not be
+        # refused a bounty on it for want of a Roman artisan's judgement.
         if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
             return all(prereq_id in self.household.done for prereq_id in node["pre"])
@@ -206,8 +204,7 @@ class StartingMixin:
         self.household.active[k] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
         self.household.bountied.add(k)
         # A public prize makes you conspicuous - and that is what `scandal`
-        # and `eminence` now measure. This used to also add to a `suspicion`
-        # scalar that nothing ever read; see core.py's note on scandal.
+        # and `eminence` measure; see core.py's note on scandal.
         self.household.log.append((self.year, "posted a public bounty for %s (%s den)"
                          % (node["name"], f"{price:,.0f}")))
         return True
@@ -347,7 +344,7 @@ class StartingMixin:
 
     def start_reason(self, k, ignore_trade=False, _memo=None, _why=True):
         """Same legality test as `can_start`, but explains a refusal instead of
-        just returning False. `can_start` is a thin wrapper around this now;
+        just returning False. `can_start` is a thin wrapper around this;
         the wrapper exists because the optimizer's inner loop calls it a huge
         number of times and does not want to build a string it will discard.
         The reason text is what a PLAYER needs (human or agent): not just "no",
@@ -422,10 +419,11 @@ class StartingMixin:
     def _check_already_done(self, k, node, ignore_trade, _memo, _why):
         if k in self.household.done:
             # A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already
-            # done" either: you know how, and the plant is gone. `restore` puts
-            # it back at a fraction of the cost, and this branch used to sit
-            # BELOW the flat "already done" that swallowed it - reachable only
-            # in the one state where its advice was wrong.
+            # done" either: you know how, and the plant is gone. `restore`
+            # puts it back at a fraction of the cost, so this branch must be
+            # checked BEFORE the flat "already done" case below, or a
+            # mothballed work gets swallowed by the wrong, less useful
+            # advice.
             if k in getattr(self.household, "mothballed", set()):
                 # project_cost() is pure (no rng, no log, no mutation - see
                 # its own docstring and the factor functions it calls) but
@@ -456,13 +454,11 @@ class StartingMixin:
         return None
 
     def _check_unobtainable(self, k, node, ignore_trade, _memo, _why):
-        # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY, and it falls
-        # through to the ordinary checks below. Refusing here and sending the
-        # player to `restore` - which answers "you no longer know how" - was a
-        # deadlock no verb could clear: a play tester lost
-        # precision_three_plate to a sack and watched `available` read "0
-        # startable now" for a hundred and eighty years, because that node
-        # gates the whole precision branch.
+        # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY: it must
+        # fall through to the ordinary checks below, not be refused here and
+        # sent to `restore`, which answers "you no longer know how" and
+        # cannot actually rebuild the node - a deadlock no verb could clear
+        # for a node that gates a whole branch of the tree.
         if node["cat"] == "unobtainable":
             return False, ("retired category: unobtainable in this tree"
                            if _why else None)
@@ -523,25 +519,21 @@ class StartingMixin:
                               "of yet"))
         return None
 
-    # A playtester hit a scholar wall that stopped ALL progress and reported
-    # that nothing in the protocol told them how to get more scholars. The
-    # refusal named the shortfall and not the remedy, which is the least
-    # useful half. Staff is not a technical prerequisite so it never appears
-    # in `path`, and the player had no way to discover the answer except by
-    # reading prose they had no reason to think was relevant.
+    # A refusal must name the remedy, not only the shortfall: staff is not
+    # a technical prerequisite, so it never appears in `path`, and a
+    # refusal that only names the shortage leaves a player with no way to
+    # discover what would fix it.
     # Arrears blocks NEW commitments, with two escape hatches, because
-    # without them this is a trap rather than a setback. A playtester went
-    # bankrupt, had a prerequisite abandoned out from under them, and then
-    # could not rebuild it: they sat softlocked for 470 years until the
-    # horizon. First hatch: creditors care about PERSISTENT insolvency, not
-    # one bad year. Second: anything you can fund from this year's income
-    # needs nobody's permission.
+    # without them a household that goes bankrupt and has a prerequisite
+    # abandoned out from under it could never rebuild it - an unrecoverable
+    # softlock, not a setback. First hatch: creditors care about PERSISTENT
+    # insolvency, not one bad year. Second: anything you can fund from this
+    # year's income needs nobody's permission.
     # "Cheap enough to need nobody's permission" means payable out of what
-    # is actually LEFT, not out of turnover. Measured against gross revenue
-    # it let a bankrupt household with 11,637 of income and 6,020 of upkeep
-    # start 11,000-denarius projects every year for two centuries, each one
-    # halted by the creditors a year later: 18 technologies in 200 years and
-    # a log that was nothing but CREDIT EXHAUSTED.
+    # is actually LEFT, not out of turnover: measuring against gross
+    # revenue would let a bankrupt household with 11,637 of income and
+    # 6,020 of upkeep start 11,000-denarius projects every year, each one
+    # halted by the creditors a year later with nothing to show for it.
     # COMPUTED ONLY WHEN IT CAN MATTER. revenue() walks every technology you
     # have, and start_reason is called for every node in the tree, several
     # times over, by can_start and by is_visible under fog. A 45-year
@@ -549,20 +541,18 @@ class StartingMixin:
     # 38 of its 100 seconds inside them - to compute a surplus that is only
     # read when the household has been insolvent three years or more, which
     # in most runs is never.
-    # A CREDIT FREEZE HAS TO APPLY TO THE PLAYER TOO. It was set when the
-    # creditors halted your work and then only ever checked in the
-    # optimizer's own start loop, so a person at a keyboard could default,
-    # be frozen out on paper, and carry on borrowing and starting things
-    # regardless. A weird-play tester found the consequence: creditors
-    # seize CONCERNS, so a player who opens none can default over and over
-    # for nothing but reputation, which regenerates - and building raises
-    # reputation, which raises the credit limit. They financed 22
-    # technologies with money that did not exist and kept all of it.
+    # A CREDIT FREEZE HAS TO APPLY TO THE PLAYER TOO: creditors seize
+    # CONCERNS, so a player who opens none can default over and over for
+    # nothing but reputation, which regenerates - and building raises
+    # reputation, which raises the credit limit. Checking the freeze only
+    # in the optimizer's own start loop would let a person at the keyboard
+    # be frozen out on paper while carrying on borrowing and starting
+    # things regardless.
     def _check_credit_frozen(self, k, node, ignore_trade, _memo, _why):
         if self.year < getattr(self.household, "credit_frozen_until", 0):
-            # SAY IF IT WILL NEVER LIFT IN TIME. A break tester was told credit
-            # would return in 609 in a game whose horizon is 600, which is not
-            # a date, it is the end of the run wearing a date's clothes.
+            # SAY IF IT WILL NEVER LIFT IN TIME: a freeze date past the
+            # run's own horizon is not a date, it is the end of the run
+            # wearing a date's clothes.
             _end = getattr(self, "end_year", None) or (
                 self.cfg["start_year"] + self.cfg["horizon_years"])
             return False, (("nobody here will fund new work: your creditors were "

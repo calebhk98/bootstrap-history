@@ -409,29 +409,16 @@ class StaffingMixin:
         for a player, like every other automation in this game."""
         opened = []
         cands = self._auto_open_ordinary_candidates()
-        # A DEAD `_room = self.spending_power("open")` STOOD HERE, AND ITS OWN
-        # COMMENT SAID WHY: "a regression test reads this function's own
-        # source for exactly this call". That was the line's entire purpose.
-        # It was assigned and never read - not here, not in any of the three
-        # helpers below, each of which computes its own budget (_surplus,
-        # _bleed_room, _line) or calls open_venture(), which runs the real
-        # spending_power("open") gate on its own account.
-        #
-        # So the guard in sim/tests/test_affordability_and_credit.py was
-        # passing on a line that did nothing, which is the exact failure a
-        # substring search over source cannot detect: it sees an assignment
-        # and a use as the same thing. The guard is now behavioural - it
-        # wraps spending_power on a real Sim, forces the answer to zero and
-        # requires each site's refusal to actually follow from it - so a dead
-        # call no longer satisfies it, and this line no longer has a reason
-        # to exist.
-        #
-        # The claim the old line was a witness to is still true and still
-        # matters: auto-opening asks "open", not "buy", because a door on a
-        # concern that is already built and already earning pays for its own
-        # fee, while a wage buys nothing back. See
-        # _auto_open_check_deep_arrears' own comment. That claim is now
-        # carried by open_venture(), where the gate actually runs.
+        # AUTO-OPENING ASKS "open", NOT "buy": a door on a concern that is
+        # already built and already earning pays for its own fee, while a
+        # wage buys nothing back. Each of the three helpers below computes
+        # its own budget (_surplus, _bleed_room, _line) or calls
+        # open_venture(), which runs the real spending_power("open") gate on
+        # its own account - see _auto_open_check_deep_arrears' own comment.
+        # sim/tests/test_affordability_and_credit.py's own guard on this is
+        # behavioural: it wraps spending_power on a real Sim, forces the
+        # answer to zero and requires each site's refusal to actually
+        # follow from it.
         _deep_arrears = self._auto_open_check_deep_arrears()
         caps = self._auto_open_institution_candidates(_deep_arrears)
         _surplus, _bleed_room = self._auto_open_institution_budget()
@@ -468,52 +455,45 @@ class StaffingMixin:
         below for why this is measured against arrears at all, and why
         an ordinary concern (cands) is answered on its own payback
         instead, further down in _auto_open_ordinary_ventures."""
-        # DEEP IN ARREARS IS NOT "IN ARREARS". Removing the old `capital <= 0`
-        # gate broke the catch-22 that trapped England - a household in the red
-        # could never open the shop that would dig it out - but with no gate at
-        # all the optimizer borrowed to the hilt opening concerns that each
-        # return a third in their first year, and Rome logged "ABANDONED 1
-        # works you could no longer maintain" two hundred and six times in five
-        # hundred years. Half the credit line is the line: below it you can
-        # still open your way out, above it you are digging - for an
-        # INSTITUTION, which is a standing bleed against money you do not yet
-        # have coming in (see the caps/scalable-growth guards right below,
+        # DEEP IN ARREARS IS NOT "IN ARREARS": a household in the red must
+        # still be able to open the shop that would dig it out, so the gate
+        # cannot be `capital <= 0`. But with no gate at all, opening a new
+        # institution - a standing bleed against money not yet coming in -
+        # becomes unconstrained borrowing. Half the credit line is the
+        # line: below it you can still open your way out, above it you are
+        # digging (see the caps/scalable-growth guards right below,
         # unchanged by what follows).
         #
         # A completed, ordinary, net-positive concern (`cands`, below) is a
-        # different thing, and measuring it as a household-debt question was
-        # the wrong quantity. A traced Rome run built `exp_trade_route_extend`
-        # - cost 4,800, net +1,700/year, capex to OPEN it a further 1,800 -
-        # by year 117, and this blanket return refused to so much as look at
-        # it for the next ~850 years because the household owed more than
-        # half its credit line, even though opening it would have cost 1,800
-        # against a line of several thousand and paid for itself within a
-        # year. Sunk capex earning nothing, forever, is worse for the
-        # household AND its creditors than letting it open. So: gate the
-        # INSTITUTIONS below on the household's arrears, same as always, but
-        # let an ordinary concern answer for itself - its own payback period,
-        # not the size of the hole it would be dug from - in the `cands` loop
-        # near the end of this function, which already refuses (via
-        # `open_venture`) anything whose capex it cannot actually raise or
-        # whose supervision it cannot actually staff.
-        # "open", NOT "buy", AND THE DIFFERENCE IS LOAD-BEARING. This asks
-        # what could be raised for a door fee on something that pays for
-        # itself in weeks, IGNORING how deep the household already is.
-        # "buy" counts the debt you carry,
-        # because that is the honest answer for a wage or a commission that
-        # buys you nothing back. Opening an already-built, already-earning
-        # concern is the one case where it must not, and the reason is
-        # recorded in the test named "a completed concern that pays for its
-        # own door within months opens even while deep in arrears": gating
-        # this on arrears made auto_open blanket-refuse everything once a
-        # household owed half its line, and a traced Rome run left
-        # exp_trade_route_extend - built, net +1,700 a year - shut for about
-        # 850 years. Sunk capex earning nothing, for ever.
+        # different thing, and gating it on household-wide arrears is the
+        # wrong test: an ordinary concern's own payback period, not the
+        # size of the hole the household is in, is what should decide it.
+        # Blanket-refusing anything while the household owes more than half
+        # its credit line would leave an already-built, already-earning
+        # concern with cheap capex and a fast payback sitting shut - sunk
+        # capex earning nothing is worse for the household AND its
+        # creditors than letting it open. So: gate the INSTITUTIONS below on
+        # the household's arrears, but let an ordinary concern answer for
+        # itself - its own payback period, not the size of the hole it
+        # would be dug from - in the `cands` loop near the end of this
+        # function, which already refuses (via `open_venture`) anything
+        # whose capex it cannot actually raise or whose supervision it
+        # cannot actually staff.
+        # "open", NOT "buy", AND THE DIFFERENCE IS LOAD-BEARING: opening an
+        # already-built, already-earning concern must IGNORE how deep the
+        # household already is, and ask only what could be raised for a
+        # door fee on something that pays for itself in weeks. "buy" must
+        # count the debt carried, because that is the honest answer for a
+        # wage or a commission that buys nothing back - opening an
+        # already-earning concern is the one case where debt must not
+        # count, since refusing it only leaves its capex sunk and earning
+        # nothing for as long as the arrears last.
         #
-        # A consolidation pass routed this through spending_power() on the
-        # reasonable-looking grounds that it was the same arithmetic written
-        # twice. It is not. It is the same arithmetic answering a different
-        # question, and the regression suite caught it.
+        # spending_power() must not be reused here even though it looks
+        # like the same arithmetic written twice: it answers a different
+        # question (whether the household can spend at all, not whether
+        # THIS concern's own payback justifies opening it while in
+        # arrears).
         _deep_arrears = (self.household.capital < 0
                          and -self.household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
         return _deep_arrears
@@ -530,9 +510,8 @@ class StaffingMixin:
         # household can actually carry. Cheapest to keep first, so a poor
         # founder gets the workshop and the local patron before the academy.
         # STILL NOTHING WHILE DEEP IN ARREARS: an institution is a standing
-        # bleed against revenue the household does not have, which is exactly
-        # the case the ABANDONED-206 history above warns about, and nothing in
-        # this paragraph is the bug this change is for.
+        # bleed against revenue the household does not have, exactly the
+        # unconstrained-borrowing case the comment above warns about.
         caps = [] if _deep_arrears else sorted(
                       (node_id for node_id in sorted(self.household.done)
                        if node_id in self.CAPABILITY_INSTITUTIONS
@@ -550,24 +529,19 @@ class StaffingMixin:
         # WHAT IS LEFT AFTER EVERYTHING YOU ARE ALREADY COMMITTED TO. Opening
         # an institution you cannot feed is how a household ends up abandoning
         # the works it already had.
-        # AN INSTITUTION IS AN INVESTMENT, AND A LENDER KNOWS IT. Requiring a
-        # CURRENT surplus is what killed the first rung of the ladder. A traced
-        # Rome run built workshop_first by 150 AD and never opened it once in
-        # the following four and a half centuries: the workshop bleeds 900 a
-        # year, the gate wanted 1,800 a year of clear surplus, and the run's
-        # surplus was negative precisely BECAUSE it had no workshop, no
-        # household places and no staff. Scholars sat between 0.03 and 0.37
-        # against the two that atomic_theory wants, for five hundred years, and
-        # Rome fell from 38% of runs reaching the goal to none.
+        # AN INSTITUTION IS AN INVESTMENT, AND A LENDER KNOWS IT: requiring a
+        # CURRENT surplus creates a catch-22, where an institution that would
+        # itself supply the household's places, staff and workshop capacity
+        # can never open, because surplus stays negative precisely for lack
+        # of the institution.
         #
         # `start` has always been allowed to borrow, and a half-dug foundation
         # is worse collateral than a working shop. So an institution may be
         # opened against what you could RAISE and not only out of what you are
-        # clearing - with two guards, because the last time this gate was
-        # loosened the optimizer borrowed to the hilt and logged "ABANDONED 1
-        # works you could no longer maintain" two hundred and six times in five
-        # hundred years: nothing opens while you are deep in arrears, and the
-        # standing bleed you take on may not outgrow a tenth of your line.
+        # clearing - with two guards, since opening one this way is otherwise
+        # unconstrained borrowing: nothing opens while you are deep in
+        # arrears, and the standing bleed you take on may not outgrow a
+        # tenth of your line.
         _surplus = (self.revenue() - self.upkeep() - self.living_cost())
         _line = self.credit_limit()
         _deep = self.household.capital < 0 and -self.household.capital > _line * self.AUTO_OPEN_INSTITUTION_ARREARS_SHARE
@@ -611,18 +585,16 @@ class StaffingMixin:
         return opened, _surplus, _bleed_room
 
     def _auto_expand_institutions(self, _surplus, _deep_arrears):
-        # AND CLIMB THE LADDER ONCE IT IS OPEN - BUT ONLY ON REAL MONEY AND
-        # REAL DEMAND, NOT ON THE STARTER FOUNDING'S CREDIT ALLOWANCE. A break
-        # tester traced Rome under captured_han_386.json straight into the
-        # thing this was supposed to cure: workshop_first opened, and this
-        # loop then expanded it to 4.0 units purely because `_bleed_room`
-        # (which includes a TENTH OF THE CREDIT LINE, the borrowing allowance
-        # the starter founding above genuinely needs to break the original
-        # deadlock) looked positive most years - without ever checking
-        # whether the household could actually CARRY 3,600 a year of upkeep
-        # against 1,300 of revenue. Every further unit is discretionary
-        # growth, not survival, and discretionary growth has no business
-        # spending a bootstrap allowance meant for the one step that has none.
+        # CLIMB THE LADDER ONCE IT IS OPEN - BUT ONLY ON REAL MONEY AND REAL
+        # DEMAND, NOT ON THE STARTER FOUNDING'S CREDIT ALLOWANCE: `_bleed_room`
+        # includes a TENTH OF THE CREDIT LINE, the borrowing allowance the
+        # starter founding above genuinely needs to break the initial
+        # deadlock. Reusing it here to grow an already-open institution would
+        # look affordable most years without ever checking whether the
+        # household could actually CARRY the resulting upkeep against its
+        # actual revenue. Every further unit is discretionary growth, not
+        # survival, and discretionary growth has no business spending a
+        # bootstrap allowance meant for the one step that has none.
         # So: real cash flow only (no credit line here), and only when the
         # place is actually full enough to want more room - a household with
         # 14 people is not short of a 12-place workshop, whatever it can
@@ -656,17 +628,17 @@ class StaffingMixin:
         return opened, _surplus
 
     def _auto_open_ordinary_ventures(self, cands, _deep_arrears):
-        # A CONCERN THAT PAYS FOR ITS OWN DOOR WITHIN A SEASON OR TWO IS NOT
-        # WHAT THE ABANDONED-206 HISTORY IS ABOUT. That history is ventures
-        # whose capex is large against their annual net - borrow to the hilt,
-        # and the debt outruns what they pay back before they even finish
-        # ramping up. A venture whose capex clears inside PAYBACK_LIMIT_YEARS
-        # is the opposite case: refusing it while deep in arrears leaves its
-        # capex sunk for nothing, which helps neither the household nor
-        # whoever it owes. `open_venture` still refuses, on its own numbers,
-        # anything whose capex cannot actually be raised or whose supervision
-        # cannot actually be staffed - this only widens what is even offered
-        # to it while the household is deep in arrears.
+        # A CONCERN THAT PAYS FOR ITS OWN DOOR WITHIN A SEASON OR TWO IS A
+        # DIFFERENT CASE FROM UNCONSTRAINED BORROWING: that failure mode is
+        # ventures whose capex is large against their annual net - borrow to
+        # the hilt, and the debt outruns what they pay back before they even
+        # finish ramping up. A venture whose capex clears inside
+        # PAYBACK_LIMIT_YEARS is the opposite case: refusing it while deep in
+        # arrears leaves its capex sunk for nothing, which helps neither the
+        # household nor whoever it owes. `open_venture` still refuses, on its
+        # own numbers, anything whose capex cannot actually be raised or
+        # whose supervision cannot actually be staffed - this only widens
+        # what is even offered to it while the household is deep in arrears.
         opened = []
         PAYBACK_LIMIT_YEARS = self.AUTO_OPEN_PAYBACK_LIMIT_YEARS
         blocked = None
@@ -705,11 +677,11 @@ class StaffingMixin:
         """Say why the best candidate stayed shut, if nothing at all
         opened this year - see the comment below for why silence here
         is indistinguishable from a broken policy."""
-        # SAY WHY THE BEST ONE STAYED SHUT. A break tester watched a concern
-        # earning 150 a year against 15 of upkeep sit closed for six years with
-        # the policy switched on, because auto_open threw away every refusal
-        # open_venture handed it. A policy that silently declines is
-        # indistinguishable from a policy that is broken.
+        # SAY WHY THE BEST ONE STAYED SHUT: throwing away every refusal
+        # open_venture hands back would let a concern earning far more than
+        # its upkeep sit closed indefinitely with the policy switched on. A
+        # policy that silently declines is indistinguishable from a policy
+        # that is broken.
         if blocked and not opened:
             node_id, why = blocked
             said = getattr(self.household, "_said_autoopen", {})
@@ -726,13 +698,12 @@ class StaffingMixin:
     def mothball_work(self, k):
         """Shut a completed work down to stop paying its upkeep.
 
-        Three testers hit the same wall and described it the same way: deep in
-        debt, the only lever the game offered was to start MORE things, because
-        `stop` cancels work in progress and there was nothing at all that shut
-        down a finished institution. One wrote "once you've over-built, the
-        recurring cost is permanent"; another "your agency basically
-        disappears". This is the missing lever. It is not free: you lose what
-        the work gave you, and restoring it costs a fraction of building it.
+        The lever for a finished, running institution that is a drag on
+        upkeep, distinct from `stop` (which only cancels work still in
+        progress) - without it, the only way to change what a household is
+        paying for is to start MORE things. It is not free: you lose what
+        the work gave you, and restoring it costs a fraction of building
+        it.
         """
         if k not in self.nodes:
             return False, "no such node"
@@ -741,53 +712,49 @@ class StaffingMixin:
         if k in self.household.granted:
             return False, ("that is something the society has, not something you "
                            "maintain; there is no upkeep of yours to stop")
-        # MONEY IS NOT THE ONLY THING THIS TOOL CAN FREE. This used to refuse
-        # outright whenever upkeep was zero, on the theory that nothing was
-        # being saved - true of the money, and false of the staff: a concern
-        # with no money upkeep at all can still tie up a fraction of a
-        # scholar or craftsman in venture_hands (a going concern's "your
-        # people already spoken for" table), and a Mexica playtester ran into
-        # exactly that: a fully-built concern short 0.01 of a craftsman it
-        # needed to open, with the only 0.01 to be had sitting inside a
-        # zero-upkeep practice `mothball` would not touch, on the grounds
-        # there was "nothing to save" - true of the money, false of the
-        # craftsman-time the player was actually short of. Ask what THIS
-        # tool actually releases (money upkeep, and, if it is running,
-        # supervision time) rather than asking about money alone.
+        # MONEY IS NOT THE ONLY THING THIS TOOL CAN FREE: refusing whenever
+        # upkeep is zero, on the theory that nothing would be saved, is true
+        # of the money and false of the staff - a concern with no money
+        # upkeep at all can still tie up a fraction of a scholar or
+        # craftsman in venture_hands (a going concern's "your people already
+        # spoken for" table), which is exactly the fraction a player can be
+        # short of even when there is "nothing to save" in money terms. Ask
+        # what THIS tool actually releases (money upkeep, and, if it is
+        # running, supervision time) rather than asking about money alone.
         sch_held, art_held = self.venture_hands(k) if k in self.household.operating else (0.0, 0.0)
         if self.nodes[k]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
             return False, ("that has no money upkeep of yours to stop paying, and "
                            "nobody of yours is tied up supervising it either; "
                            "there is nothing to save")
-        # A DELIBERATE SHUTDOWN IS NOT AN ABANDONMENT. never_abandon exists to
-        # stop the ENGINE quietly deleting a step you need and then refusing to
-        # fund rebuilding it. A player choosing to close something down is the
-        # opposite: they chose it, restore brings it back, and refusing them was
-        # the exact trap a tester hit - the upkeep bankrupting them was the one
-        # thing they were not allowed to stop paying for, which is how a bad
-        # year became "an unrecoverable softlock". Knowledge still cannot be
-        # unlearned; a building can always be shut.
+        # A DELIBERATE SHUTDOWN IS NOT AN ABANDONMENT: never_abandon exists
+        # to stop the ENGINE quietly deleting a step a player needs and then
+        # refusing to fund rebuilding it. A player choosing to close
+        # something down is the opposite - they chose it, and restore
+        # brings it back. Blocking this here would leave upkeep that is
+        # bankrupting a player as the one thing they are not allowed to
+        # stop paying for, turning a bad year into an unrecoverable
+        # softlock. Knowledge still cannot be unlearned; a building can
+        # always be shut.
         if self.never_abandon(k) and self.nodes[k]["cat"] in self.NEVER_ABANDON:
             return False, ("that is knowledge, or it is who you are here. "
                            "You cannot un-know a thing to save its upkeep")
-        # SHUTTING A SHOP DOWN IS NOT FORGETTING HOW IT WORKED. This used to
-        # discard the node from `done`, so closing a loss-maker cost you your
-        # place in the tree and the warning had to say "you will have to
-        # restore or rebuild it before you can go on". That was a real trap and
-        # it only existed because there was nowhere else to put "built but not
-        # running". There is now: what you know is `done`, what you run is
-        # `operating`, and this touches only the second.
+        # SHUTTING A SHOP DOWN IS NOT FORGETTING HOW IT WORKED: this touches
+        # only `operating` (what you run), never `done` (what you know).
+        # Conflating them would cost a closed loss-maker its place in the
+        # tree, forcing "you will have to restore or rebuild it before you
+        # can go on" for a concern that was only ever switched off, not
+        # forgotten.
         was_running = k in self.household.operating
         self.household.operating.discard(k)
         self.household.mothballed.add(k)
         if not was_running:
             return True, ("%s was not running, so there was nothing to stop "
                           "paying for. You still know how to do it." % k)
-        # SAY WHAT WAS ACTUALLY FREED, not only the money. A concern held
-        # together by staff time alone (up<=0, sch_held/art_held>0, the exact
-        # case above) used to be unreachable by this method at all; now that
-        # it can be shut, the confirmation has to say so, or freeing 0.75
-        # craftsmen would read as a no-op that happened to succeed.
+        # SAY WHAT WAS ACTUALLY FREED, not only the money: a concern held
+        # together by staff time alone (up<=0, sch_held/art_held>0, the
+        # exact case above) is reachable by this method, so the confirmation
+        # has to say so, or freeing 0.75 craftsmen would read as a no-op
+        # that happened to succeed.
         _freed = []
         if self.nodes[k]["up"] > 0 or self.nodes[k]["rev"] > 0:
             _freed.append("you stop paying %s a year for it and stop earning "
@@ -827,35 +794,32 @@ class StaffingMixin:
                            'nothing to reopen: build it again with '
                            '{"cmd":"start","id":"%s"}' % k)
         node = self.nodes[k]
-        # A FLOOR FROM THE UPKEEP, not only a share of the build cost. Thirty
-        # per cent of nothing is nothing, and a node that costs nothing to build
-        # while costing 20 a year to keep could be shut down and brought back
-        # around the annual tick for free, which made its upkeep optional. A
-        # tester did exactly that and the reply read "back in service for 0
-        # denarii". The engine already gets this right for mines - `quote mine`
-        # says in as many words that mothballing is not free to reverse,
-        # because the shaft floods and the crew disperses - so the asymmetry
-        # was an oversight rather than a decision. Two years of the upkeep you
-        # avoided is what it costs to find the people and the plant again.
+        # A FLOOR FROM THE UPKEEP, not only a share of the build cost: thirty
+        # per cent of nothing is nothing, so a node that costs nothing to
+        # build while costing 20 a year to keep could otherwise be shut down
+        # and brought back around the annual tick for free, making its
+        # upkeep optional. The engine already gets this right for mines -
+        # `quote mine` says in as many words that mothballing is not free to
+        # reverse, because the shaft floods and the crew disperses. Two
+        # years of the upkeep avoided is what it costs to find the people
+        # and the plant again.
         fee = max(self.project_cost(k) * self.RESTORE_COST_SHARE_OF_BUILD,
                   node["up"] * self.RESTORE_COST_MIN_UPKEEP_YEARS)
-        # THE SAME GRACE `open` GIVES. A concern the staffing rule shut is a
-        # shop whose keeper you lost, not a work you abandoned: open_venture
-        # charges a tenth to reopen one within a few years and says so in the
-        # closing message, and `restore` - the verb a player actually reaches
-        # for - charged the full price, which is itself double open's. A break
-        # tester paid twice what the event had promised.
+        # THE SAME GRACE `open` GIVES: a concern the staffing rule shut is a
+        # shop whose keeper was lost, not a work that was abandoned.
+        # open_venture charges a tenth to reopen one within a few years and
+        # says so in the closing message; `restore` - the verb a player
+        # actually reaches for - must honour that same discount, or a
+        # player pays double what the closing message promised.
         _shut = getattr(self.household, "shut_for_staff", {})
         _in_grace = k in _shut and self.year - _shut[k] <= self.STAFF_CLOSURE_GRACE
-        # SAY WHICH CASE THIS IS, not just a number. The closing message
-        # promises "reopening soon costs a tenth of what opening did"; a
-        # player who comes back to `restore` years later, after the grace
-        # window has lapsed, was billed the full price with nothing on this
-        # line connecting it to that promise or saying the window was gone.
-        # A third player read this as `restore` simply not honouring its own
-        # stated discount, which is the same complaint in different words as
-        # the earlier double-charge: a number with no account of itself reads
-        # as broken whether it is wrong or merely unexplained.
+        # SAY WHICH CASE THIS IS, not just a number: the closing message
+        # promises "reopening soon costs a tenth of what opening did", so a
+        # player who comes back to `restore` after the grace window has
+        # lapsed and is billed the full price needs a line connecting that
+        # to the promise and saying the window is gone - a number with no
+        # account of itself reads as broken whether it is wrong or merely
+        # unexplained.
         _grace_note = None
         if k in _shut:
             if _in_grace:

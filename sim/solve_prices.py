@@ -110,27 +110,26 @@ WHAT THIS DOES NOT REACH. Quarried stone, salt, gold's placer-and-
 amalgamation step, and every metal `sim/world/deposits.py` has no named-
 deposit list for still price at exactly zero rent, unconditionally - a
 mine's grade-based margin is not a fact this file has for them yet. Zero
-rent there is still not "no answer" - it is the same honest lower bound
-this section used to claim for everything: whatever the true price is, it
-is at least the labour it takes. Tag: HEURISTIC, not a physical fact,
-tracked against Milestone 1's provenance ledger. Forest timber and every
-other GROWN or land-limited material used to belong on this list too -
-see RENT ON GROWN AND LAND-LIMITED MATERIALS immediately below for why it
-no longer does.
+rent there is still not "no answer" - it is an honest lower bound:
+whatever the true price is, it is at least the labour it takes. Tag:
+HEURISTIC, not a physical fact, tracked against Milestone 1's provenance
+ledger. Forest timber and every other GROWN or land-limited material get a
+real rent instead of this zero-rent treatment - see RENT ON GROWN AND
+LAND-LIMITED MATERIALS immediately below.
 
 RENT ON GROWN AND LAND-LIMITED MATERIALS (Complaints/49 - "land rent
 reaches no crop"). `sim/world/land.py` computes a real, per-civilization
 Ricardian rent on arable land - both margins of it, extensive (better
 land against worse) and intensive (diminishing returns to more labour on
 the same ground) - and `land_rent_hours_per_iugerum` above turns that into
-`iugerum_land`'s own solved price. Before this round, nothing else in
-`data/production/` ever looked that price up: `wheat_kg` had `inputs={}`,
-so its price was mathematically guaranteed to be labour cost alone,
-whatever an iugerum was worth, and the same was true of wool, timber,
-olives, wine and every other material a recipe's own prose said came
-"from arable land", "from pasture" or "from forest" without a single
-recipe actually consuming any. Two rounds of rent calculation reached no
-price anybody paid. This is the fix.
+`iugerum_land`'s own solved price. Without this section, nothing else in
+`data/production/` looks that price up: `wheat_kg` has `inputs={}`, so its
+price is mathematically guaranteed to be labour cost alone, whatever an
+iugerum is worth, and the same is true of wool, timber, olives, wine and
+every other material a recipe's own prose says comes "from arable land",
+"from pasture" or "from forest" without a single recipe actually consuming
+any - a real rent computed on the land side that reaches no price anybody
+pays on the crop side. This section is the fix.
 
 A FIELD IS NOT A MINE (see sim/world/land.py's own module docstring), so
 this needed its own route into a recipe's cost rather than reusing
@@ -200,10 +199,10 @@ provenance ledger as the ore-rent approximations above; fixing it needs
 sim/world/land.py to carry a separate margin for pasture and forest,
 which is out of this round's scope.
 
-ENERGY IS NOW PRICED, AS THREE MARKETS - THERMAL, MECHANICAL AND ELECTRICAL -
+ENERGY IS PRICED AS THREE MARKETS - THERMAL, MECHANICAL AND ELECTRICAL -
 CONNECTED BY CONVERSION RECIPES, NOT TWO MARKETS WITH ELECTRICITY GLUED TO
-ONE OF THEM (Complaints/32's third gap, then a real defect the stakeholder
-found in how that gap was closed - see THE ALUMINIUM DEFECT below). Every
+ONE OF THEM (Complaints/32's third gap; see WHY ELECTRICITY HAS ITS OWN
+CARRIER below for why electricity needs the third market). Every
 entry that needs process heat or shaft work beyond what a fuel already
 listed in its `inputs` supplies draws on one of `thermal_mj`, `mechanical_mj`
 or `electrical_mj`, and all three are real inputs this script prices through
@@ -259,14 +258,15 @@ instructions from CLAUDE.md name as the point of the exercise.
                     assumption. Whether water also beats mechanical_mj_motor
                     depends entirely on how electrical_mj itself resolves,
                     which is a separate question this docstring's
-                    ELECTRICAL_MJ entry and THE ALUMINIUM DEFECT below
-                    answer honestly rather than assume: with this round's
+                    ELECTRICAL_MJ entry and WHY ELECTRICITY HAS ITS OWN
+                    CARRIER below answer honestly rather than assume: with
                     `electrical_mj_photovoltaic` included, the motor route
                     currently wins, for reasons that entry explains and
                     flags as resting on an admittedly incomplete cost.
 
     electrical_mj   electricity - the one carrier with no shaft and no flame
-                    required to reach it at all (see THE ALUMINIUM DEFECT).
+                    required to reach it at all (see WHY ELECTRICITY HAS
+                    ITS OWN CARRIER).
                     Priced via electrical_mj_dynamo (mechanical energy
                     through a dynamo) or electrical_mj_photovoltaic (photons,
                     directly, through a solar panel's fixed capital and
@@ -277,22 +277,20 @@ instructions from CLAUDE.md name as the point of the exercise.
                     and silicon_kg this round; see WHICH ENTRIES USE
                     ELECTRICAL_mj DIRECTLY below).
 
-THE ALUMINIUM DEFECT (found by the stakeholder, fixed this round). The
-previous version of this file carried aluminium's 46,000 MJ/tonne of
-Hall-Heroult electrolysis current as `mechanical_mj`, on the reasoning
-"electricity is a carrier, not a source, so it must bottom out in whatever
-turns the dynamo." That reasoning is right for a waterwheel-and-dynamo
+WHY ELECTRICITY HAS ITS OWN CARRIER RATHER THAN BOTTOMING OUT IN
+`mechanical_mj`. "Electricity is a carrier, not a source, so it must bottom
+out in whatever turns the dynamo" is right for a waterwheel-and-dynamo
 civilisation and wrong in general: a photovoltaic cell makes electricity
 from photons with no shaft anywhere in the chain, and so does a
 thermoelectric couple, a battery or a fuel cell. Forcing every use of
-electricity through `mechanical_mj` made a civilisation with arbitrarily
-cheap solar panels structurally unable to ever make cheap aluminium, which
-is not a fact about aluminium - it is a fact about a schema that had only
-two carriers and picked the wrong one to call "electricity." Fixed by giving
-electricity its own carrier (`electrical_mj`) and letting `aluminium_kg`
-draw on THAT, with `mechanical_mj` reaching it only through the
-`electrical_mj_dynamo` conversion below, exactly like every other route
-would.
+electricity through `mechanical_mj` would make a civilisation with
+arbitrarily cheap solar panels structurally unable to ever make cheap
+aluminium, which is not a fact about aluminium - it would be a fact about a
+schema with only two carriers that picked the wrong one to call
+"electricity." Electricity therefore has its own carrier (`electrical_mj`),
+and `aluminium_kg` draws on THAT, with `mechanical_mj` reaching it only
+through the `electrical_mj_dynamo` conversion below, exactly like every
+other route does.
 
 THE CHECK, RUN HONESTLY RATHER THAN ASSUMED TO PASS. The expectation going
 in was that nothing should change except by a dynamo's own conversion loss,
@@ -303,9 +301,10 @@ re-solving confirms exactly that: `electrical_mj` prices at 0.00388 h/MJ via
 `electrical_mj_dynamo` (against `mechanical_mj`'s own 0.00258 - a ~50%
 premium for the dynamo's conversion loss, its own labour and its own
 amortised build, all individually modest and all pointing the same
-direction), and aluminium_kg prices at roughly 15-16% more than before the
-fix (0.442 h/kg against the old 0.382), squarely "roughly what it is now
-plus a dynamo's losses." So the mechanism is right.
+direction), and aluminium_kg prices at roughly 15-16% more than the
+labour-only mechanical route gives (0.442 h/kg against 0.382 h/kg),
+squarely "roughly the mechanical-route figure plus a dynamo's losses." So
+the mechanism is right.
 
 But that is NOT what the DEFAULT solve above reports, and saying so is the
 point of this paragraph rather than something to quietly fix. With
@@ -318,8 +317,9 @@ for `electrical_mj`, and that cheap electricity then cascades: the solved
 both ultimately rooted in the same panel. Aluminium's price actually FALLS
 relative to the old book-mechanical figure (0.319 h/kg, not up by a dynamo's
 loss), because the cheapest path skips the dynamo's conversion loss
-entirely - exactly the case THE ALUMINIUM DEFECT above says the old schema
-could never represent. This is the mechanism doing its job, not a defect,
+entirely - exactly the case WHY ELECTRICITY HAS ITS OWN CARRIER above says
+a mechanical-only schema could never represent. This is the mechanism doing
+its job, not a defect,
 but the specific NUMBER behind it should not be over-read: `silicon_kg`'s
 own yield_basis is explicit that its cost omits crystal growth, wafer
 sawing, cell processing and module lamination - real, individually
@@ -413,38 +413,34 @@ and chosen by the same cheapest-technique rule as everything else:
                                 margin this file cannot yet quantify. Tag:
                                 GAP, not a heuristic, per CLAUDE.md 3.4.
 
-TEMPERATURE, AND WHY A SINGLE SHARED FLOOR WAS ITSELF A BUG (Complaints/44,
-then a second defect found by the stakeholder reasoning about the first
-fix rather than by running anything - see Complaints/44's own text for the
-friction incident this paragraph continues from). A megajoule of heat is
-not fungible across temperature: one MJ at 200 C cannot do what one MJ at
-1600 C can, which is the whole reason a bloomery cannot melt iron however
-much charcoal is fed into it. The first round's fix gave every
-thermal_mj-supplying technique a `temperature_reached_c` and computed ONE
-shared floor for the whole pool - the LARGER of the pool's own default
-(`THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) and whatever the single
-HOTTEST active consumer stated it needed - and excluded any technique
-that fell short of that one number. That correctly kept a warm bearing
-out of England's forges, and it was ALSO wrong in a way nothing had yet
-exercised: a single global floor means the hottest consumer in the WHOLE
-ECONOMY sets the bar for every other use of the carrier, however cool.
-Concretely, on the data as it stood, the three `mechanical_mj_heat_
-engine_*` entries' own stated 1000 C requirement already raised the
-SHARED floor to 1000 C for every thermal_mj consumer in the file, plaster
-and rosin (150-160 C, per their own `yield_basis`) included - harmless
-today only because charcoal and coal both happen to clear 1100 C anyway,
-not because the mechanism was right. Invent a technique that reaches
-2500 C anywhere in the economy (a genuinely hot process, nothing to do
-with brick-firing) and the SAME shared-floor logic would raise the pool's
-floor to 2500 C and lock charcoal and coal - both 1100 C, comfortably hot
-enough to fire a brick, glaze a pot or melt glass - out of every thermal_
-mj use in the file, brick-firing included. That is the stakeholder's own
-example (a fission-hot process should not disqualify existing coal
-burning from melting iron) and the mirror image of it (a cheap, merely-
-warm source should not stop being usable for the modest jobs it was
-already doing, the moment something hotter is invented elsewhere) - both
-follow from the same defect: a shared floor conflates "what the hottest
-job needs" with "what every job may use."
+TEMPERATURE, AND WHY A SINGLE SHARED FLOOR IS ITSELF A BUG (Complaints/44).
+A megajoule of heat is not fungible across temperature: one MJ at 200 C
+cannot do what one MJ at 1600 C can, which is the whole reason a bloomery
+cannot melt iron however much charcoal is fed into it. Every
+thermal_mj-supplying technique states its own `temperature_reached_c`, and
+a technique that falls short of what a use needs is excluded from it - but
+computing ONE shared floor for the whole pool - the LARGER of the pool's
+own default (`THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`) and whatever the
+single HOTTEST active consumer states it needs - is wrong, even though it
+correctly keeps a warm bearing out of England's forges: a single global
+floor means the hottest consumer in the WHOLE ECONOMY sets the bar for
+every other use of the carrier, however cool. Concretely, on the data as it
+stands, the three `mechanical_mj_heat_engine_*` entries' own stated 1000 C
+requirement would raise a SHARED floor to 1000 C for every thermal_mj
+consumer in the file, plaster and rosin (150-160 C, per their own
+`yield_basis`) included - harmless today only because charcoal and coal
+both happen to clear 1100 C anyway, not because the mechanism is right.
+Invent a technique that reaches 2500 C anywhere in the economy (a genuinely
+hot process, nothing to do with brick-firing) and the SAME shared-floor
+logic would raise the pool's floor to 2500 C and lock charcoal and coal -
+both 1100 C, comfortably hot enough to fire a brick, glaze a pot or melt
+glass - out of every thermal_mj use in the file, brick-firing included.
+That is the stakeholder's own example (a fission-hot process should not
+disqualify existing coal burning from melting iron) and the mirror image of
+it (a cheap, merely-warm source should not stop being usable for the modest
+jobs it is already doing, the moment something hotter is invented
+elsewhere) - both follow from the same defect: a shared floor conflates
+"what the hottest job needs" with "what every job may use."
 
 THE FIX IS PER-CONSUMER GRADING, not a second global number and not
 several separate carrier materials. `thermal_mj` stays ONE named carrier
@@ -456,8 +452,8 @@ needs no edit - but the PRICE a given consuming recipe pays for it is no
 longer one shared number. `capability_required_grades` collects the set
 of distinct requirements THIS era's own entries actually state (the
 carrier's own universal default, `THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C`,
-plus each ACTIVE consumer's own `temperature_needed_c`, exactly as
-before); `capability_price_for_requirement` then solves, separately, for
+plus each ACTIVE consumer's own `temperature_needed_c`);
+`capability_price_for_requirement` then solves, separately, for
 the cheapest technique that clears EACH one of those requirements, at
 this round's own prices - so a 2500 C requirement gets its own answer
 (today: `thermal_mj_electrical_resistance`, the only technique in this
@@ -467,13 +463,13 @@ engines get (charcoal or coal, whichever is cheaper - unchanged) or the
 unchanged). A recipe that states no requirement at all still just pays
 `thermal_mj`'s own ordinary solved price - the cheapest technique
 clearing the universal default floor, which is ALL `capability_floor_
-by_carrier` computes now (see its own docstring: it no longer looks at
-what any consumer needs, because a consumer's own need is graded
-separately). `thermal_mj_friction` is excluded from every one of these
-grades it cannot reach (its own 100 C never clears even the 700 C
-default), the same physical fact as before - the ONLY behaviour change
-this round is that a hot grade existing, or ceasing to exist, no longer
-touches a cooler grade's own answer.
+by_carrier` computes (see its own docstring: it looks only at the
+carrier's own universal default, not at what any consumer needs, because a
+consumer's own need is graded separately). `thermal_mj_friction` is
+excluded from every one of these grades it cannot reach (its own 100 C
+never clears even the 700 C default) - grades are independent of each
+other, so a hot grade existing, or ceasing to exist, never touches a
+cooler grade's own answer.
 
 This is a real fix, not the bloomery-melts-iron mistake restated: it does
 not claim charcoal and coal can do what only an arc furnace can (see
@@ -542,8 +538,9 @@ lets the CHOICE OF TECHNIQUE mechanism pick whichever route to that
 carrier - water wheel and a dynamo, or a solar panel, or (once one exists)
 something else - without the entry itself ever deciding. Found but left
 alone this round, flagged per CLAUDE.md 3.4 rather than silently fixed: several
-OTHER entries still carry a genuinely electrical need under the old
-`mechanical_mj` name for the same reason aluminium used to - zinc's
+OTHER entries still carry a genuinely electrical need under the
+`mechanical_mj` name, the same misclassification WHY ELECTRICITY HAS ITS
+OWN CARRIER above describes for aluminium: zinc's
 electrolysis (`zinc_electrolytic_kg`), tungsten's induction/resistance
 sintering (`tungsten_kg`) and calcium carbide's electric-arc furnace
 (`calcium_carbide_kg`, whose own yield_basis already says outright "the arc
@@ -666,33 +663,32 @@ or a cycle that consumes more of a good than it yields - and
 `compute_resolvable_materials` below is the separate graph pass that finds
 those before any numeric work starts.
 
-That pass used to add a recipe's outputs only once every input was already
-resolvable, which is a topological ordering and refuses every genuine cycle
-- the axe-and-iron example above included, and a material listing itself
-among its inputs (seed corn) worst of all, since that took everything
-downstream with it too. It now runs that same ordering pass first (it
-correctly handles the whole acyclic part of the graph, which is most of it),
-then finds the strongly connected components of whatever is left, and tests
-each one for PRODUCTIVENESS rather than refusing it outright: a component is
-resolvable when every dependency from OUTSIDE it already has a price AND the
-damped iteration, run on the component alone, actually contracts to a fixed
-point instead of growing without bound (Hawkins-Simon: the input-output
-matrix restricted to the component has spectral radius under 1). A component
-that grows instead of contracting - consuming more of a good than the cycle
-yields - is reported by name, the same way a missing recipe already was; see
-`_component_is_productive` and Complaints/31 for the two reproductions this
-was built against (the docstring's own axe/iron example, and self-referencing
-seed corn) and `sim/tests/test_price_solver_cycles.py` for the pinned tests,
-inverted now that the pass accepts what it should.
+`compute_resolvable_materials` runs a topological-ordering pass first,
+adding a recipe's outputs only once every input is already resolvable -
+which correctly handles the whole acyclic part of the graph, which is most
+of it, but by itself would refuse every genuine cycle (the axe-and-iron
+example above included, and a material listing itself among its inputs
+(seed corn) worst of all, since that would take everything downstream with
+it too). It then finds the strongly connected components of whatever is
+left, and tests each one for PRODUCTIVENESS rather than refusing it
+outright: a component is resolvable when every dependency from OUTSIDE it
+already has a price AND the damped iteration, run on the component alone,
+actually contracts to a fixed point instead of growing without bound
+(Hawkins-Simon: the input-output matrix restricted to the component has
+spectral radius under 1). A component that grows instead of contracting -
+consuming more of a good than the cycle yields - is reported by name, the
+same way a missing recipe already is; see `_component_is_productive` and
+Complaints/31 for the two cases this was built against (the docstring's own
+axe/iron example, and self-referencing seed corn) and
+`sim/tests/test_price_solver_cycles.py` for the pinned tests.
 
-THE SOLVER NOW HAS A NOTION OF WHEN, AND DID NOT BEFORE. This is the defect
-Complaints/39 records, and it was found by reading a run rather than by
-reasoning about the code: a 100 AD Roman scenario came back pricing every
-one of its three energy carriers off `electrical_mj_photovoltaic`. The data
-was right - a panel really is the cheapest source of electricity at solved
-prices - and the answer was still nonsense, because nobody in 100 AD has a
-panel. Every technique in `data/production/` competed on cost alone, in
-every scenario, and cost alone has no date on it.
+THE SOLVER NEEDS A NOTION OF WHEN, NOT ONLY OF COST. This is the defect
+Complaints/39 records: pricing every technique in `data/production/` on
+cost alone, in every scenario, gives cost no date - a 100 AD Roman scenario
+prices every one of its three energy carriers off
+`electrical_mj_photovoltaic`, and the DATA is right (a panel really is the
+cheapest source of electricity at solved prices), but the answer is
+nonsense, because nobody in 100 AD has a panel.
 
 The fix is a gate, not a deletion. Each entry may carry `requires_node`: the
 tech-tree node that has to be reached before anyone can run that technique
@@ -771,11 +767,9 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, REPO_ROOT)
 from validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 
-# THE SPLIT. This file used to hold everything below in one 2,761-line file:
-# the price algebra AND the reporting front end that prints it. It now holds
-# neither - it is a pure composition point, exactly the shape
-# sim/engine/society.py and sim/engine/economy.py already use for the same
-# reason (see either one's own module docstring): every name below is
+# THIS FILE IS A PURE COMPOSITION POINT over two sibling modules - the same
+# shape sim/engine/society.py and sim/engine/economy.py already use for the
+# same reason (see either one's own module docstring): every name below is
 # defined in one of the two sibling modules, not here, so that
 # `python3 sim/solve_prices.py ...`, `from sim import solve_prices`, and
 # every existing `solve_prices.<name>` call site keep working unmodified.
@@ -788,11 +782,10 @@ from validate_production import load_production, materials_the_tree_consumes  # 
 #                                   the default price table, the `--compare`
 #                                   report, and the CLI's own `main`
 #
-# This docstring above - THE mechanism essay - did not move with either
-# half: every "see the module docstring" comment in both sibling files
-# means THIS docstring, and moving it apart by topic would have broken
-# every one of those cross references for no benefit. Behaviour is
-# unchanged and verified byte identical - see this split's own task report.
+# This docstring above - THE mechanism essay - lives here rather than with
+# either sibling: every "see the module docstring" comment in both sibling
+# files means THIS docstring, and splitting it apart by topic would break
+# every one of those cross references for no benefit.
 from solve_prices_core import (                  # noqa: E402  (see sys.path above)
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,

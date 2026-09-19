@@ -30,8 +30,8 @@ Captured locals work the same way one level up: `co_cellvars`/`co_freevars`
 hold the names, `LOAD_DEREF 1` holds the slot.
 
 THE CATCH, FOUND OVER THREE NAMING ROUNDS (docs/architecture/NAMING_PLAN.md
-A.5): comparing raw `co_code` bytes - what this file used to do - proves too
-little, because CPython addresses locals by SLOT INDEX, and several perfectly
+A.5): comparing raw `co_code` bytes proves too little, because CPython
+addresses locals by SLOT INDEX, and several perfectly
 safe renames change the SET or ORDER of slots without changing what the
 program does:
 

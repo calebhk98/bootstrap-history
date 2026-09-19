@@ -192,8 +192,8 @@ def pick_side_branches(nodes, need, s, limit):
     ROI, longer-chain ventures (locomotives, boilers, dynamite) civ-pricing
     promotes it to instead, whatever their nominal return on capital. Left
     as is; the real fix for what actually blocks the goal is
-    `closure()` seeing the single-option req_any groups it used to
-    walk straight past, not this.
+    `closure()` seeing the single-option req_any groups it currently
+    walks straight past, not this.
 
     REACHABILITY WAS TRIED HERE, MEASURED, AND REVERTED - recorded because
     the next agent tempted by the same obvious-looking fix should not have

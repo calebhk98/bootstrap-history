@@ -2,23 +2,19 @@
 capital and energy cost terms, choice of technique, and the damped
 fixed-point `solve` loop itself.
 
-Split out of sim/solve_prices.py, which had grown past 2,700 lines holding
-both this solver and its reporting front end together. sim/solve_prices.py
-is now the thin composition point that every import and every
-`python3 sim/solve_prices.py` invocation still names, and ITS module
+sim/solve_prices.py is the thin composition point that every import and
+every `python3 sim/solve_prices.py` invocation names, and ITS module
 docstring - not this file's - is what every "see the module docstring"
 comment below, and every one in sim/solve_prices_report.py, actually means:
 that essay is the design reasoning for the whole tool (rent, energy,
 capital, land, cycles, era gates, choice of technique), and splitting it
-apart by function would have broken every one of those cross references for
-no benefit while adding none. This file holds everything that computes a
-price: the resolvability pass (`compute_resolvable_materials` and its
-helpers), the ore and land rent mechanisms, `recipe_cost_and_allocation`,
-and `solve` itself. sim/solve_prices_report.py holds everything that only
-formats and prints a price once this file has computed it (`print_why`, the
+apart by function would break every one of those cross references for no
+benefit. This file holds everything that computes a price: the
+resolvability pass (`compute_resolvable_materials` and its helpers), the
+ore and land rent mechanisms, `recipe_cost_and_allocation`, and `solve`
+itself. sim/solve_prices_report.py holds everything that only formats and
+prints a price once this file has computed it (`print_why`, the
 `--compare` report, the default price table) plus the CLI's own `main`.
-Behaviour is unchanged and verified byte identical - see this split's own
-task report for the verification.
 """
 import collections
 import json
@@ -39,14 +35,14 @@ sys.path.insert(0, REPO_ROOT)
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
-# GUESS_HOURS and GROWTH_BOUND_HOURS moved to sim/algorithm_parameters.py
-# (this task's own item 3) and are imported back here, at their own former
-# names, so every existing `solve_prices_core.NAME` reference - including
-# sim/solve_prices.py's and sim/solve_prices_report.py's own `from
-# solve_prices_core import (..., DAMPING_FACTOR, CONVERGENCE_TOLERANCE,
-# ...)` - keeps resolving unchanged. See that module's own docstring for
-# the full reasoning, including the OUTCOME-SENSITIVE / safety-ceiling-only
-# distinction each one is given there.
+# GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
+# are imported back here under their original names, so every existing
+# `solve_prices_core.NAME` reference - including sim/solve_prices.py's and
+# sim/solve_prices_report.py's own `from solve_prices_core import (...,
+# DAMPING_FACTOR, CONVERGENCE_TOLERANCE, ...)` - keeps resolving unchanged.
+# See that module's own docstring for the full reasoning, including the
+# OUTCOME-SENSITIVE / safety-ceiling-only distinction each one is given
+# there.
 from sim.algorithm_parameters import (           # noqa: E402  (see sys.path above)
     DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE,
     INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
@@ -56,9 +52,9 @@ NUMERAIRE_TRADE = "labourer"
 
 # The three energy carriers (see ENERGY in this module's docstring). Named
 # once here rather than spelled out at each of the three call sites that
-# used to hand-write the pair, so that adding `electrical_mj` this round
-# could not silently miss one of them - a real risk a bare tuple repeated
-# three times invites.
+# would otherwise hand-write the tuple, so that adding a carrier cannot
+# silently miss one of them - a real risk a bare tuple repeated three times
+# invites.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 # PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
@@ -83,18 +79,16 @@ THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C = 700.0
 # ceiling of some physical dimension it can reach (`temperature_reached_c`
 # today); a recipe that CONSUMES that carrier may state, on itself, the
 # floor it needs on the same dimension (`temperature_needed_c`). Both
-# fields are optional - an entry that states neither is unconstrained,
-# exactly as it was before this mechanism existed (see this file's own
-# `solve`, `capability_floor_by_carrier` and `capability_price_for_
-# requirement` below, and TEMPERATURE in the module docstring for why
-# grading is now PER CONSUMER rather than one shared floor). Keyed by
-# carrier rather than hand-written at each call site for the same reason
-# ENERGY_CARRIER_FIELDS above is: so a second physical dimension - torque,
-# pressure, whatever a future stakeholder names next - slots in as one
-# more entry here, read by the same functions, rather than a second,
+# fields are optional - an entry that states neither is unconstrained (see
+# this file's own `solve`, `capability_floor_by_carrier` and
+# `capability_price_for_requirement` below, and TEMPERATURE in the module
+# docstring for why grading is PER CONSUMER rather than one shared floor).
+# Keyed by carrier rather than hand-written at each call site for the same
+# reason ENERGY_CARRIER_FIELDS above is: so a second physical dimension -
+# torque, pressure, whatever a future stakeholder names next - slots in as
+# one more entry here, read by the same functions, rather than a second,
 # parallel, hand-rolled comparison. See the module docstring's TEMPERATURE
-# section for the worked example (a torque cap on mechanical_mj) and this
-# task's own report for the argument in full.
+# section for the worked example (a torque cap on mechanical_mj).
 CAPABILITY_CAP_FIELDS = {
     "thermal_mj": ("temperature_reached_c", "temperature_needed_c",
                    THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C),
@@ -105,25 +99,25 @@ def capability_floor_by_carrier(production_entries):
     """{carrier_material: the carrier's own UNIVERSAL default floor} - one
     entry per carrier named in CAPABILITY_CAP_FIELDS.
 
-    THIS IS DELIBERATELY NOT "the largest requirement any consumer states"
-    any more (see TEMPERATURE in the module docstring for why that WAS
-    this function's behaviour, and why it was itself a bug: a single
-    shared floor lets the hottest consumer anywhere in the economy lock
-    every cooler consumer out of the cheap technique it could already
-    use, and lets a newly cheap cold source push a hot consumer's own
-    requirement down to nothing it never asked for). A specific
-    consumer's own stated requirement is now graded separately by
-    `capability_price_for_requirement` below, so this function only has
-    to return the one number every technique claiming to supply the
-    carrier is checked against regardless of what any consumer needs -
-    the free, universal minimum (THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's
-    own citation) - which decides `thermal_mj`'s own ordinary pool price,
-    the one every consumer with no stated requirement of its own pays.
+    THIS FUNCTION RETURNS THE CARRIER'S OWN UNIVERSAL FLOOR, NOT "the
+    largest requirement any consumer states" (see TEMPERATURE in the module
+    docstring for why a single shared floor is a bug: it lets the hottest
+    consumer anywhere in the economy lock every cooler consumer out of the
+    cheap technique it could already use, and lets a newly cheap cold
+    source push a hot consumer's own requirement down to nothing it never
+    asked for). A specific consumer's own stated requirement is graded
+    separately by `capability_price_for_requirement` below, so this
+    function only has to return the one number every technique claiming to
+    supply the carrier is checked against regardless of what any consumer
+    needs - the free, universal minimum
+    (THERMAL_MJ_MINIMUM_USABLE_TEMPERATURE_C's own citation) - which
+    decides `thermal_mj`'s own ordinary pool price, the one every consumer
+    with no stated requirement of its own pays.
 
-    `production_entries` is kept as a parameter, and unused, so every
+    `production_entries` is kept as a parameter, though unused, so every
     existing call site (and `_meets_capability_floor` below, which takes
-    this function's own return value) is unaffected by this round's
-    change in what the function computes.
+    this function's own return value) can keep calling this function the
+    same way regardless of what it computes internally.
     """
     return {carrier: default_floor
             for carrier, (_reached_field, _needed_field, default_floor)
@@ -139,10 +133,9 @@ def capability_required_grades(production_entries):
     that draws a nonzero amount of the carrier (`entry.get(carrier)` is
     truthy) AND states a requirement on it (`entry.get(needed_field) is
     not None`) - "no stated requirement" still means exactly that, not
-    zero, exactly as `capability_floor_by_carrier` used to describe for
-    its own single shared number.
+    zero.
 
-    This is the PER-CONSUMER GRADING this round's fix is built on (see
+    This is the PER-CONSUMER GRADING mechanism (see
     TEMPERATURE in the module docstring): every distinct value here gets
     its OWN price from `capability_price_for_requirement`, computed
     independently, so a 2500 C requirement existing somewhere in the
@@ -293,15 +286,13 @@ def _meets_capability_floor(material, entry, floor_by_carrier):
 # reassignment.
 #
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
-# GUESS_HOURS and GROWTH_BOUND_HOURS - the five constants that used to sit
-# here, each with its own paragraph (0.5 not tuned against an outcome, the
-# textbook midpoint; the iteration ceiling; the convergence definition; the
-# seed guess; the divergence detector) - moved to sim/algorithm_parameters.py
-# and are imported back above, at these same names, so this section and
-# every function below it read unchanged. See that module's own docstring
-# for the full, unshortened paragraphs and for why they moved (this task's
-# own item 3: "algorithmic and computational parameters get their own
-# file").
+# GUESS_HOURS and GROWTH_BOUND_HOURS - five algorithmic parameters (0.5 not
+# tuned against an outcome, the textbook midpoint; the iteration ceiling;
+# the convergence definition; the seed guess; the divergence detector) -
+# live in sim/algorithm_parameters.py and are imported back above, at these
+# same names, so this section and every function below it read unchanged.
+# See that module's own docstring for the full, unshortened paragraphs and
+# for why algorithmic and computational parameters get their own file.
 
 
 def wage_ratios_by_trade(prices_json):
@@ -398,13 +389,12 @@ def build_producers_index(production_entries):
 
 def _dependency_materials(entry):
     """Every material one recipe's price computation needs a price FOR:
-    its ordinary process `inputs`, plus, now that capital is wired in (see
-    the module docstring's CAPITAL section), every capital good's own
-    `build_materials`, plus, now that energy is wired in (see ENERGY),
+    its ordinary process `inputs`, plus every capital good's own
+    `build_materials` (see the module docstring's CAPITAL section), plus
     `thermal_mj` and/or `mechanical_mj` themselves whenever the entry needs
-    a nonzero amount of either, plus, now that land is wired in (see RENT ON
-    GROWN AND LAND-LIMITED MATERIALS), `iugerum_land` itself whenever the
-    entry states a nonzero `land_iugera_years`. Resolvability has to see all
+    a nonzero amount of either (see ENERGY), plus `iugerum_land` itself
+    whenever the entry states a nonzero `land_iugera_years` (see RENT ON
+    GROWN AND LAND-LIMITED MATERIALS). Resolvability has to see all
     four, or a capital-only cycle - `iron_bar_kg` priced partly in
     `iron_bar_kg`, via its own finery hammer's iron fittings - or an energy
     or land dependency that happened not to resolve, would never appear in
@@ -770,8 +760,7 @@ def _labour_cost_hours(labour_hours, wage_by_trade):
     """Sum of `hours_per_batch * wage_by_trade[trade]` over one recipe's
     `labour_hours`. Every trade a recipe names is assumed to already be in
     `wage_by_trade` (a missing one is a data bug, not a "no price yet"
-    case, so this raises KeyError exactly like the code it was extracted
-    from did, rather than returning None for it).
+    case, so this raises KeyError rather than returning None for it).
     """
     labour_cost_hours = 0.0
     for trade, hours_per_batch in labour_hours.items():
@@ -783,8 +772,9 @@ def _extraction_rent_cost_hours(outputs, rent_by_kg):
     # RENT (see RENT ON EXTRACTED MATERIALS in the module docstring). A
     # material not named in `rent_hours_per_kg_by_material` - which is
     # everything except the six ores sim/world/deposits.py covers - still
-    # prices at exactly 0.0 rent, the old RENT_IS_ZERO answer. Summed over
-    # every output rather than assumed single-output, so a hypothetical
+    # prices at exactly 0.0 rent (see WHAT THIS DOES NOT REACH in the
+    # module docstring). Summed over every output rather than assumed
+    # single-output, so a hypothetical
     # future joint-output ore entry would be charged correctly on each of
     # its outputs rather than silently on only one.
     return sum(output_quantity * rent_by_kg.get(output_material, 0.0)
@@ -888,7 +878,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     or None if some input has no price yet (should not happen for a
     resolvable recipe fed resolvable inputs, but the caller does not assume
     that - see the module docstring on why most extracted materials still
-    price at zero rent, why six ores no longer do, why `thermal_mj`/
+    price at zero rent, why six ores do not, why `thermal_mj`/
     `mechanical_mj` are priced through the energy market in
     data/production/70_energy.json, and why `energy_mj` still is not).
 
@@ -1024,10 +1014,9 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
     (`ore_per_metal`, kg of ore per kg of metal) is what turns a kilogram of
     metal into a kilogram of ore in `data/production/`'s own accounting.
     The ore's own recipe carries no inputs, so its RENT-FREE price
-    (`ore_base_price`, labour only, exactly what this file used to compute)
-    is fixed and does not depend on the solve's iteration at all - this
-    function is therefore called once, before the iteration starts, not
-    once per round.
+    (`ore_base_price`, labour only) is fixed and does not depend on the
+    solve's iteration at all - this function is therefore called once,
+    before the iteration starts, not once per round.
 
     Setting `existing_extraction_proxy = ore_base_price * ore_per_metal`
     (what the dominant recipe already implies a kilogram of metal's

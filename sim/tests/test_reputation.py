@@ -167,13 +167,13 @@ check("the contact alloys are real prerequisites now, not just bare material cos
       "mat_gold" in NODES["gp_whisker_forming"]["pre"]
       and "phosphor_bronze_alloy" in NODES["gp_whisker_forming"]["pre"],
       NODES["gp_whisker_forming"]["pre"])
-# THE CLAIM, NOT A TOTAL. This asserted the closure was exactly 157, which
-# was true on the day it was written and stopped being true the moment the
-# goal moved from the 1947 point-contact device to the 1951 junction
-# transistor. A hard total is a check on where the goal happens to sit; the
-# thing the audit actually claimed is that these four additions were cheap,
-# and that is what is worth pinning. Marginal cost is the closure of the
-# addition MINUS what the goal already needed, which is the number a previous
+# THE CLAIM, NOT A TOTAL: a hard total (157, pinned in an earlier version of
+# this check) is a check on where the goal happens to sit, and breaks the
+# moment the goal moves - as it did, from the 1947 point-contact device to
+# the 1951 junction transistor. The thing the audit actually claimed is that
+# these four additions were cheap, and that is what is worth pinning.
+# Marginal cost is the closure of the addition MINUS what the goal already
+# needed, which is the number a previous
 # audit got wrong by quoting 101 when the truth was 1.
 _clo_now = S.closure(NODES, GOAL)
 _added = ("microscope_compound", "el2_electropolishing_etching_surface_finish",

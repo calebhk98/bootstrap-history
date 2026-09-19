@@ -644,15 +644,15 @@ _BODY_FIELDS = ("body", "orelse", "finalbody")
 # stayed quiet on trivial code while still catching the real case.
 DUPLICATE_WINDOW_STATEMENTS = 5
 
-# Windows are taken NON-OVERLAPPING (stride == window) rather than sliding by
-# one statement at a time. A sliding-by-one window over an ordinary function
-# produces mostly-overlapping neighbours (window N and window N+1 share 4 of
-# 5 statements), which is not a second instance of duplicated code, it is
-# the same statements counted repeatedly - and on this codebase it was the
-# actual performance problem: candidate count and near-duplicate bucket
-# sizes came down by roughly 4x moving to non-overlapping windows (13,961 ->
-# 3,558 candidates, measured on this checkout), with no change in whether
-# the known hazard-window case (which starts at the FIRST statement of its
+# Windows are taken NON-OVERLAPPING (stride == window) rather than sliding
+# by one statement at a time, because a sliding-by-one window over an
+# ordinary function produces mostly-overlapping neighbours (window N and
+# window N+1 share 4 of 5 statements) - not a second instance of duplicated
+# code, but the same statements counted repeatedly, which is also the real
+# performance cost: non-overlapping windows cut candidate count and
+# near-duplicate bucket sizes by roughly 4x (13,961 -> 3,558 candidates,
+# measured on this checkout), with no change in whether the known
+# hazard-window case (which starts at the FIRST statement of its
 # for-loop body, so a stride-5 window lands on it directly) is still found.
 # The trade is real: a duplicate that straddles two non-overlapping windows
 # (starts at statement 3 of a 10-statement body, say) can be missed. That is
@@ -1234,12 +1234,10 @@ def lazy_getattr_report(files):
     """`getattr(self, "name", default)` - a lazy-field read where a name's
     absence on `self` is meaningful (typically: the attribute is only ever
     set by some code paths, e.g. a save loaded from before the field
-    existed, or a feature only initialised under a flag). Flagged here as
-    "genuinely a problem" per the task brief's own live complaint, not
-    invented - see the task report for how many real sites this found and
-    the names that cluster (e.g. "fog", read this way from dozens of call
-    sites), which is itself evidence of an attribute whose presence isn't
-    guaranteed anywhere central.
+    existed, or a feature only initialised under a flag). Flagged here as a
+    genuine problem, not invented: names like "fog" cluster across dozens
+    of call sites read this way, which is itself evidence of an attribute
+    whose presence isn't guaranteed anywhere central.
     """
     receiver_names = ("self", "s", "sim")
 

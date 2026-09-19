@@ -321,12 +321,12 @@ class CivilizationTerritoryTests(unittest.TestCase):
             "hypothetical", civilizations={"hypothetical": expanded})
         shrunk_lands = land.cultivable_land_for_civilization(
             "hypothetical", civilizations={"hypothetical": shrunk})
-        # UPDATE (stakeholder maintainability item 6): one parcel per
-        # TILE now, not per region, so "2" and "1" (one per NAMED region)
-        # are no longer the right numbers - italia and north_africa
-        # between them resolve to many tiles. The property this test
-        # actually cares about (more/better territory means more parcels
-        # and more arable land) still holds and is asserted directly.
+        # ONE PARCEL PER TILE, NOT PER REGION: italia and north_africa
+        # between them resolve to many tiles, so asserting exact counts of
+        # "2" and "1" (one per NAMED region) would not hold. The property
+        # this test actually cares about (more/better territory means more
+        # parcels and more arable land) still holds and is asserted
+        # directly.
         self.assertGreater(len(expanded_lands), len(shrunk_lands))
         total_arable = sum(rl.arable_iugera for rl in expanded_lands)
         shrunk_arable = sum(rl.arable_iugera for rl in shrunk_lands)
@@ -337,11 +337,11 @@ class CivilizationTerritoryTests(unittest.TestCase):
             land.cultivable_land_for_civilization("atlantis_9999ad")
 
     def test_a_region_missing_a_land_block_is_skipped_not_fatal(self):
-        # UPDATE (stakeholder maintainability item 6): "italia" now
-        # resolves to every tile `land_tiles["region_to_tiles"]["italia"]`
-        # names, not to one parcel called "italia" - "nowhere_at_all" is
-        # still skipped (absent from region_to_tiles too), which is the
-        # actual property this test is for.
+        # "italia" resolves to every tile
+        # `land_tiles["region_to_tiles"]["italia"]` names, not to one parcel
+        # called "italia" - "nowhere_at_all" is skipped (absent from
+        # region_to_tiles too), which is the actual property this test is
+        # for.
         geography = _real_geography()
         expected_tiles = set(geography["land_tiles"]["region_to_tiles"]["italia"])
         civilization = {"home_regions": ["italia", "nowhere_at_all"]}
@@ -363,33 +363,26 @@ class CivilizationTerritoryTests(unittest.TestCase):
             norse.price_kg_grain_equivalent_per_iugerum)
 
     def test_a_single_home_region_civilization_no_longer_prices_at_zero(self):
-        # UPDATE (Complaints/46): this used to assert exactly the opposite
-        # - Han China and the Norse both hold exactly one home region, and
-        # the OLD, extensive-margin-only mechanism priced both at exactly
-        # zero because neither had a worse region of its own to compare
-        # against. That was the defect Complaints/46 named: a civilization
-        # holding one uniform region has nothing WORSE to earn a
-        # differential rent over, regardless of how many people are
-        # drawing on it. The INTENSIVE margin (see land.py's own LABOUR
-        # INTENSITY section) fixes this without touching the extensive
-        # mechanism at all - both civilizations now price above zero
+        # Complaints/46: a civilization holding one uniform region has
+        # nothing WORSE to earn a differential rent over, regardless of how
+        # many people are drawing on it, so an extensive-margin-only
+        # mechanism prices it at exactly zero - Han China and the Norse both
+        # hold exactly one home region. The INTENSIVE margin (see land.py's
+        # own LABOUR INTENSITY section) fixes this without touching the
+        # extensive mechanism at all - both civilizations price above zero
         # purely from their own population pressing on their own land.
-        # UPDATE (stakeholder maintainability item 6): "the EXTENSIVE
-        # component alone is still exactly zero for a single region" is no
-        # longer true, and is no longer the point. `cultivable_land_for_
-        # civilization` now resolves ONE home region to MANY tiles (69 for
-        # han_china_100ad, 14 for norse_900ad), which very likely have
-        # DIFFERENT fertilities from each other - china's own tiles span
-        # Gobi desert (near-zero fertility) to Yangtze-basin farmland
-        # (above 1.0), for instance. A single-region civilization can
-        # therefore now show a real, nonzero EXTENSIVE margin purely from
-        # this - which is a BETTER answer than the intensive-only fix this
-        # test used to pin (a genuinely varied territory earning genuine
-        # differential rent, not just a crowding effect), not a regression
-        # of it. What survives from the original claim is the headline:
-        # a single-home-region civilization still prices its land above
-        # zero, for a reason that no longer depends on there being a
-        # second, worse region anywhere else in the file.
+        #
+        # `cultivable_land_for_civilization` resolves ONE home region to
+        # MANY tiles (69 for han_china_100ad, 14 for norse_900ad), which can
+        # have DIFFERENT fertilities from each other - china's own tiles
+        # span Gobi desert (near-zero fertility) to Yangtze-basin farmland
+        # (above 1.0), for instance - so a single-region civilization can
+        # also show a real, nonzero EXTENSIVE margin purely from that, a
+        # genuinely varied territory earning genuine differential rent
+        # rather than only a crowding effect. What this test actually pins
+        # is the headline: a single-home-region civilization prices its
+        # land above zero, for a reason that does not depend on there being
+        # a second, worse region anywhere else in the file.
         for civilization_id in ("han_china_100ad", "norse_900ad"):
             outcome = land.margin_outcome_for_civilization(civilization_id)
             self.assertGreater(
@@ -406,14 +399,12 @@ class CivilizationTerritoryTests(unittest.TestCase):
 # needs a different scenario varies the CIVILIZATION (population,
 # home_regions) against this same fixed geography instead of the geography
 # itself.
-# UPDATE (stakeholder maintainability item 6): this fixture now needs a
-# `land_tiles` block too, not just `regions` - `cultivable_land_for_
-# civilization` reads land_tiles, not regions, since sim/world/land.py's
-# own migration (see that module's docstring). One tile, covering exactly
-# "solo_test_region"'s own former numbers, keeps every test below that
-# uses this fixture numerically IDENTICAL to before the migration - this
-# is the SAME scenario the fixture always described, expressed the way
-# the post-migration code actually reads it, not a new scenario.
+# This fixture carries a `land_tiles` block, not just `regions`:
+# `cultivable_land_for_civilization` reads land_tiles, not regions (see
+# sim/world/land.py's own docstring). One tile, covering exactly
+# "solo_test_region"'s own numbers, keeps every test below that uses this
+# fixture describing the SAME scenario, expressed the way the code
+# actually reads it.
 _SOLO_GEOGRAPHY = {
     "regions": {
         "solo_test_region": {
@@ -575,9 +566,9 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
             dense.price_kg_grain_equivalent_per_iugerum,
             sparse.price_kg_grain_equivalent_per_iugerum)
         # And both are strictly positive once ANY population presses on
-        # the land - this is the exact defect Complaints/46 named: a
-        # single, uniform region used to price at zero no matter how many
-        # people depended on it.
+        # the land: an extensive-margin-only mechanism prices a single,
+        # uniform region at zero no matter how many people depend on it -
+        # the exact defect Complaints/46 named.
         self.assertGreater(sparse.price_kg_grain_equivalent_per_iugerum, 0.0)
 
     def test_a_civilization_with_no_population_prices_at_zero(self):

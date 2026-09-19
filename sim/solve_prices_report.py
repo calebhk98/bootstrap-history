@@ -2,18 +2,15 @@
 default price-table report, the `--compare` report, and the CLI's own
 `main`.
 
-Split out of sim/solve_prices.py, which had grown past 2,700 lines holding
-both this reporting code and the solver it reports on together. See
-sim/solve_prices_core.py's own module docstring for the split's full
-reasoning and for why "the module docstring" in every comment and docstring
-below means sim/solve_prices.py's own module docstring, not either sibling
-file's - that essay is the design reasoning for the whole tool and was left
-where it was rather than divided by function. This file only formats and
-prints a price sim/solve_prices_core.py has already computed: every
+See sim/solve_prices.py's own module docstring for why "the module
+docstring" in every comment and docstring below means sim/solve_prices.py's
+own module docstring, not either sibling file's - that essay is the design
+reasoning for the whole tool and lives there rather than divided by
+function; and see sim/solve_prices_core.py's own module docstring for the
+composition-point structure the three files form. This file only formats
+and prints a price sim/solve_prices_core.py has already computed: every
 `_print_*` helper below, `print_why`, `_run_compare_report`, and `main`
-(the argparse CLI `python3 sim/solve_prices.py` runs). Behaviour is
-unchanged and verified byte identical - see this split's own task report
-for the verification.
+(the argparse CLI `python3 sim/solve_prices.py` runs).
 """
 import argparse
 import os
@@ -737,13 +734,13 @@ def _run_default_report(arguments, rent_hours_per_kg_by_material, converged, ite
 
 
 def main(argv=None):
-    # `description` used to be `__doc__.splitlines()[0]` - the mechanism
-    # essay's own first line - back when `main` and that docstring lived in
-    # the same file. `main` moved here in the split (see this file's own
-    # module docstring); the essay did not, so its first line is copied
-    # here as a literal string instead, to keep `--help`'s output byte
-    # identical. If sim/solve_prices.py's own docstring's first line ever
-    # changes, this string has to change with it.
+    # `description` is a literal copy of sim/solve_prices.py's own module
+    # docstring's first line, not `__doc__.splitlines()[0]`: `main` lives
+    # in this file while the mechanism essay lives in sim/solve_prices.py
+    # (see this file's own module docstring), so keeping `--help`'s output
+    # byte identical needs the string here to track that docstring's first
+    # line by hand. If sim/solve_prices.py's own docstring's first line
+    # ever changes, this string has to change with it.
     parser = argparse.ArgumentParser(
         description="Solve for the price of every material from physical structure, not a book.")
     parser.add_argument("--why", metavar="MATERIAL",

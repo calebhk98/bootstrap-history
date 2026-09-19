@@ -4,12 +4,12 @@ Complaints/46 names land RENT as the place a region-count-as-area proxy
 leaks into the economics (a region is a filing label, not a unit of area,
 and the labels range 86x in size - data/world/geography.json). The
 stakeholder's own follow-up observation pointed at a SECOND place the same
-failure was hiding: `Sim.forest_land_ceiling()` in sim/engine/economy.py
-used to scale standing woodland by `len(home_regions)`, the COUNT of labels
-a civilization's territory happens to be filed under, not by how much
-ground any of those labels actually cover. Re-filing the same territory
-under a different number of labels used to change how much forest you could
-hold, with not one hectare of ground changing hands.
+failure could hide: `Sim.forest_land_ceiling()` in sim/engine/economy.py
+scaling standing woodland by `len(home_regions)`, the COUNT of labels a
+civilization's territory happens to be filed under, rather than by how much
+ground any of those labels actually cover. That would let re-filing the
+same territory under a different number of labels change how much forest
+could be held, with not one hectare of ground changing hands.
 
 Not registered in sim/tests/__main__.py's TOPICS list yet - the agent that
 wrote this file owns only sim/engine/economy.py and test files (see its own

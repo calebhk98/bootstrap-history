@@ -1,23 +1,21 @@
 """Hazards, their timelines, and the losses they cause.
 
-Split out of sim/engine/society.py, which had grown to 3,802 lines holding
-one SocietyMixin with 61 methods. This piece is everything about a dated
-hazard once it is a live threat rather than a source of state pressure:
-what built defences take off it (hazard_relief, _military_war_relief), how
-long a hedge has left to be built (_calendar_floor_remaining, hazard_advice,
-hedge_first_steps), when it lands (_yr_words, hazard_timeline), what a loss
-does to the household (lose_capital, _resolve_hazard_condition, _shocks,
-_random_events, _loss_words), and the one path out of a run
-(_catastrophe). `_shocks` was a single 395-line, cyclomatic-complexity-68
-method called every year from Sim.step() - the worst remaining function in
-the engine once the parser, availability query and node report had been
-split - and has since been decomposed into a thin dispatcher plus one
-method per hazard kind (_shock_staff_loss, _shock_sack_chance,
-_shock_output_factor, _shock_real_erosion, _shock_values), each moved
-verbatim out of the original body so self.rng draws stay in the exact
-order _shocks always made them in (see each one's own docstring). These
-are methods of Sim; they are a mixin only so that they can live in a file
-of their own. Behaviour is unchanged and verified byte-identical.
+Everything about a dated hazard once it is a live threat rather than a
+source of state pressure: what built defences take off it (hazard_relief,
+_military_war_relief), how long a hedge has left to be built
+(_calendar_floor_remaining, hazard_advice, hedge_first_steps), when it
+lands (_yr_words, hazard_timeline), what a loss does to the household
+(lose_capital, _resolve_hazard_condition, _shocks, _random_events,
+_loss_words), and the one path out of a run (_catastrophe).
+
+`_shocks` is a thin dispatcher over one method per hazard kind
+(_shock_staff_loss, _shock_sack_chance, _shock_output_factor,
+_shock_real_erosion, _shock_values). Each of those methods' self.rng draws
+must stay in the exact order they would run in if `_shocks` tested every
+hazard kind in one body, in sequence - see each one's own docstring -
+because save/load and the fingerprint tests only reproduce a run
+byte-for-byte if draw order is preserved. These are methods of Sim; they
+are a mixin only so that they can live in a file of their own.
 """
 from constants import declare
 from .data import (closure, critical_path)
@@ -449,22 +447,18 @@ class HazardsMixin:
     def lose_capital(self, fraction):
         """Destroy a fraction of what you HAVE. Never a fraction of what you owe.
 
-        Every capital loss in this file used to be written `self.household.capital *= x`,
-        which is sign-blind: at minus a thousand denarii a sacking multiplied
-        the DEBT by 0.4 and handed the player six hundred denarii. A sweep of
-        the playtest notes caught it live twice - a Mexica sack took -251 to
-        -100.5, an England thatch fire took -629.2 to -569.4 - which made the
-        deepest hole in the game the safest place to stand, and made every
+        Multiplying `self.household.capital` by a fraction directly is
+        sign-blind: at minus a thousand denarii, multiplying by 0.4 would
+        turn a debt into six hundred denarii handed to the player, making
+        the deepest hole in the game the safest place to stand and every
         catastrophe a reason to stay in arrears.
 
         A fire destroys goods. If you own nothing, the fire takes nothing; it
         does not pay off your creditors.
         """
-        # ALWAYS floored, never optionally. This took a floor_at_zero=True
-        # parameter that nothing read and no caller ever passed - the floor
-        # below is unconditional - so the signature advertised a choice that
-        # did not exist: floor_at_zero=False would have been accepted and
-        # silently ignored, which is worse than not offering it.
+        # ALWAYS floored, never optionally: a parameter to make flooring
+        # skippable would advertise a choice that should not exist here -
+        # this function must always destroy at most what is actually held.
         if self.household.capital <= 0:
             return 0.0
         lost = self.household.capital * max(0.0, min(1.0, fraction))
@@ -475,16 +469,15 @@ class HazardsMixin:
         """History on rails, but the household is allowed to have changed
         the ground it runs on.
 
-        A dated hazard's `years` window used to be the whole story: the
-        Third-Century Crisis or the African grain fleet failing in 439 fired
-        on schedule no matter what the player had built, which is the exact
-        complaint a player who had spent three centuries industrialising
-        made - technology changed how much a hazard hurt, never whether it
-        happened. This is the fix, and it is deliberately narrow: only a
-        hazard whose CIVILIZATION FILE gives it a `condition` is touched at
-        all, so a hazard with none - which is most of them - fires exactly
-        as before. See the civilization files themselves for which hazards
-        got one and why: in every case the note names a MATERIAL cause (a
+        Technology can change how much a dated hazard hurts, never whether
+        it happens on schedule - the Third-Century Crisis or the African
+        grain fleet failing in 439 fires when its `years` window says so
+        regardless of what the player has built. This mechanism is
+        deliberately narrow: only a hazard whose CIVILIZATION FILE gives it
+        a `condition` is touched at all, so a hazard with none - which is
+        most of them - fires exactly on schedule. See the civilization
+        files themselves for which hazards carry one and why: in every case
+        the note names a MATERIAL cause (a
         supply line, a building material, a drainage engine) that a rich
         household's own building can plausibly remove, never a succession, a
         religious policy or an administrative reform - one household in 300
@@ -554,18 +547,11 @@ class HazardsMixin:
             "market as well as the workshop (see comment above). Tuned to "
             "make the cash loss proportionate to the staff loss, not "
             "measured against any attested plague-year revenue collapse.")
-    # PLAGUE_RECOVERY_YEARS_REFERENCE / PLAGUE_RECOVERY_REFERENCE_SEVERITY
-    # used to live here: a fixed 150-year recovery horizon, itself flagged
-    # as a CLAUDE.md SS3.1/3.2 risk (a real attested demographic OUTCOME -
-    # how long England specifically took to recover from one specific
-    # plague - used directly as the model's recovery-speed parameter,
-    # rather than a rate derived from fertility, mortality decline and the
-    # land-labour ratio). WIRING MILESTONE 4 (docs/architecture/
-    # WIRING_MILESTONE_4.md) removes both: recovery is now whatever
-    # self.population's own vital rates produce on the surviving cohort
-    # structure (core.py's _apply_population_mortality_shock/pop_scale/
-    # wage_index), not a number this hazard hands out at the moment it
-    # fires - the exact CLAUDE.md SS3.1 fix their own "why" asked for.
+    # Recovery from a staff-loss hazard is driven entirely by
+    # self.population's own vital rates on the surviving cohort structure
+    # (core.py's _apply_population_mortality_shock/pop_scale/wage_index),
+    # not a fixed recovery-horizon parameter handed out here at the moment
+    # a hazard fires - see docs/architecture/WIRING_MILESTONE_4.md.
     SACK_CAPITAL_LOSS = declare(
         "SACK_CAPITAL_LOSS", 0.60, kind="temporary_heuristic",
         unit="dimensionless (fraction of capital)", source=None,
@@ -613,11 +599,10 @@ class HazardsMixin:
 
         One method per hazard kind (staff_loss, sack_chance, output_factor,
         real_erosion, values), called here in this same order for every hazard
-        whose window is open this year - the same order the single function used
-        to test these five `if` blocks in, one after another, on the same hazard.
-        Each was moved out verbatim, so the number and order of self.rng draws
-        this method (and everything it calls) makes is exactly what it was before
-        the split: nothing was hoisted out of a branch, reordered, or made eager.
+        whose window is open this year. This order is load-bearing: it fixes
+        the number and sequence of self.rng draws this method (and
+        everything it calls) makes, and save/load and the fingerprint tests
+        depend on that sequence reproducing byte-for-byte.
         """
         for hazard in self.civ.get("hazards", []):
             hazard_start, hazard_end = hazard.get("years", [0, 0])
@@ -633,10 +618,9 @@ class HazardsMixin:
     def _shock_staff_loss(self, hazard, yr):
         """The staff_loss branch of _shocks: disease and famine years.
 
-        Split out of _shocks for complexity. Moved verbatim from the body of
-        the single _shocks function, including every comment below, so nothing
-        needed rewriting and the self.rng draws stay in the exact order
-        _shocks always made them in - see _shocks's own docstring.
+        The self.rng draws here must stay in the exact order _shocks calls
+        this in relative to the other hazard-kind methods - see _shocks's
+        own docstring.
         """
         rng = self.rng
         if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
@@ -678,18 +662,15 @@ class HazardsMixin:
             # which is what actually moves self.population; pop_scale
             # and wage_index (also core.py) read it back out on demand.
             #
-            # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S - the
-            # one thing `raw` never used to answer to. med_relief is
-            # medical_diffusion_relief() (above): how much of germ
+            # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S: med_relief
+            # is medical_diffusion_relief() (above), how much of germ
             # theory, quarantine and vaccination has actually spread
             # through the society by the year this hazard's window
             # opens, as opposed to `relief` just above, which is the
             # founder's own private, has()-gated hedge. A founder who
-            # invented the vaccine for a pandemic CENTURIES early and
-            # let it diffuse is the user's own example - "the Black
-            # Death becomes a minor period of some sickness" - answered
-            # here, against the empire-wide figure, never against
-            # `loss`.
+            # invents a vaccine for a pandemic CENTURIES early and lets
+            # it diffuse must see that reflected here, against the
+            # empire-wide figure, not only against `loss`.
             historical = hazard["staff_loss"]
             med_relief = self.medical_diffusion_relief()
             raw = historical * (1.0 - med_relief)
@@ -769,13 +750,11 @@ class HazardsMixin:
     def _shock_sack_chance(self, hazard, yr):
         """The sack_chance branch of _shocks: a site sacked.
 
-        Split out of _shocks for complexity. Moved verbatim from the body of
-        the single _shocks function, including every comment below, so nothing
-        needed rewriting and the self.rng draws stay in the exact order
-        _shocks always made them in - see _shocks's own docstring. The actual
-        sacking (_sack_site) and the knowledge it can take (_sack_corpus_loss)
-        are split further below for the same reason: each rng draw stays
-        exactly where it already was, just inside a smaller function.
+        The self.rng draws here must stay in the exact order _shocks calls
+        this in relative to the other hazard-kind methods - see _shocks's
+        own docstring. The actual sacking (_sack_site) and the knowledge it
+        can take (_sack_corpus_loss) are their own methods for the same
+        reason: each rng draw has an exact place in that sequence.
         """
         rng = self.rng
         if "sack_chance" in hazard:
@@ -791,34 +770,27 @@ class HazardsMixin:
         """What a sack itself takes: capital, staff, projects reset - then,
         maybe, the corpus.
 
-        Split out of _shock_sack_chance for complexity. Moved verbatim,
-        including every comment below; the self.rng draw at the bottom stays
-        exactly where _shocks always made it.
+        The self.rng draw at the bottom has an exact place in the sequence
+        _shocks makes its draws in - see _shocks's own docstring.
         """
         rng = self.rng
-        # SAY WHAT IT TOOK FROM YOU. This printed "a site is
-        # sacked" and nothing else while removing 62% of a
-        # weird-play tester's money, restarting every project they
-        # had and cutting their people nearly in half - and they
-        # owned no sites at all. The plague family was taught to
-        # report the harm it actually did; this one was not, and a
-        # bare event line against an unexplained fall in capital is
-        # how a player stops trusting the ledger.
+        # SAY WHAT IT TOOK FROM YOU: a bare "a site is sacked" line against
+        # an unexplained fall in capital, with no mention of people or
+        # projects, is how a player stops trusting the ledger. The plague
+        # family already reports the harm it actually does; this one must
+        # too.
         _cap0 = max(0.0, self.household.capital)
-        # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS.
-        # A player watched the event announce "92.7 of your
-        # people gone" and then read `state`'s employees_total -
-        # the headcount screen actually shows - sitting exactly
-        # where it was. This branch reduced artisans, scholars
-        # and directors_extra and left self.household.employees (hired
-        # smiths, scribes, masons - for a developed household,
-        # most of its people) completely untouched, while the
-        # plague family right above DOES reduce employees (see
-        # its own `for t in self.household.employees` loop). A sack is not
-        # gentler to hired staff than a plague; the two hazards
-        # had simply drifted apart. _people0/_people_after now
-        # count the same population the announcement claims to
-        # describe and `state` actually renders.
+        # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS: reducing
+        # only artisans, scholars and directors_extra while leaving
+        # self.household.employees (hired smiths, scribes, masons - for a
+        # developed household, most of its people) untouched would let the
+        # event announce "92.7 of your people gone" while `state`'s
+        # employees_total headcount screen sits exactly where it was. The
+        # plague family right above already reduces employees (see its own
+        # `for t in self.household.employees` loop); a sack must not be
+        # gentler to hired staff than a plague. _people0/_people_after
+        # count the same population the announcement claims to describe and
+        # `state` actually renders.
         _people0 = (self.household.artisans + self.household.scholars
                     + sum(self.household.employees.values()))
         _act0 = len(self.household.active)
@@ -848,9 +820,8 @@ class HazardsMixin:
                             or "you had nothing it could take")))
         # Sim.corpus_hedge (core.py) is the one place this is
         # decided, and `risk` calls the same method - see its
-        # own comment for why this used to quote `running()`
-        # and tell a player, in `risk`, that they had a hedge
-        # `running()` said had already lapsed.
+        # own comment for why two independent copies of this
+        # table could disagree with each other.
         corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
         if rng.random() < corpus_loss_probability:
             self._sack_corpus_loss(yr, frac, _hedge_before)
@@ -859,10 +830,10 @@ class HazardsMixin:
         """The corpus lost to a sack: which technologies, and what it does to
         the goal road.
 
-        Split out of _sack_site for complexity. Moved verbatim, including
-        every comment below; the self.rng.sample() draw stays exactly where
-        _shocks always made it, right after the corpus_loss_probability roll
-        in _sack_site.
+        Called from _sack_site, right after the corpus_loss_probability
+        roll: the self.rng.sample() draw below must stay exactly there in
+        the draw sequence, or save/load and the fingerprint tests stop
+        reproducing a run byte-for-byte.
         """
         rng = self.rng
         # sorted() matters: self.household.done is a SET and iterates in an
@@ -901,28 +872,24 @@ class HazardsMixin:
         """Name what a sack's corpus loss took, and what it does to the goal
         road.
 
-        Split out of _sack_corpus_loss for complexity. Moved verbatim,
-        including every comment below. Makes no self.rng draws: `drop` is
-        already decided by the time this runs.
+        Makes no self.rng draws: `drop` is already decided by the time this
+        runs.
         """
-        # NAME THEM. A play tester discovered a loss decades
-        # later, when `start X` said "missing prerequisites:
-        # <thing you built two hundred years ago>", and then
-        # rebuilt the chain one refusal at a time. A bare
-        # count is not a report of what happened to you.
+        # NAME THEM: a bare count leaves a player to discover a loss only
+        # decades later, when `start X` says "missing prerequisites:
+        # <thing you built two hundred years ago>", and rebuild the chain
+        # one refusal at a time. A bare count is not a report of what
+        # happened to you.
         _named = sorted(drop)
         _corpus = [tech_id for tech_id in ("corpus_written",
                                "corpus_dispersed")
                    if tech_id in drop]
-        # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON.
-        # Naming the lost ids was the first fix; a Rome
-        # player with a real goal set still found out the
-        # road had gotten longer only by re-running `path`
-        # afterwards and comparing it by hand to what they
-        # remembered - a sack that silently undid a third
-        # of their critical-path progress in one turn.
-        # Said here, once, in the same breath as the loss
-        # itself, using the same goal-closure `never_
+        # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON: naming the lost
+        # ids alone still leaves a player with a real goal set to find out
+        # the road got longer only by re-running `path` afterwards and
+        # comparing it by hand - a sack that silently undoes a third of
+        # critical-path progress in one turn needs to say so in the same
+        # breath as the loss itself, using the same goal-closure `never_
         # abandon` already computes and caches.
         _on_road = 0
         _goal = getattr(self, "goal", None)
@@ -968,9 +935,7 @@ class HazardsMixin:
         """The output_factor branch of _shocks: wars and the administrative
         aftermath of one.
 
-        Split out of _shocks for complexity. Moved verbatim from the body of
-        the single _shocks function, including every comment below. Makes no
-        self.rng draws.
+        Makes no self.rng draws.
         """
         if "output_factor" in hazard:
             relief, why = self.hazard_relief("output_factor")
@@ -981,24 +946,21 @@ class HazardsMixin:
             before = self.output_factor
             self.output_factor = min(self.output_factor, floor)
             # ONCE, AND THEN A REMINDER, not every year of a hundred-year
-            # war. output_factor recovers a little each step, so this line
-            # re-fired the moment the war pulled it back down - which is
-            # every single year. A weird-play tester read the same sentence
-            # about the Hundred Years War roughly eighty times and stopped
-            # reading the log, which is the real cost: a message repeated
-            # until it is noise has stopped being a message.
+            # war: output_factor recovers a little each step, so firing this
+            # line every time the war pulls it back down again would mean
+            # firing it every single year for the war's whole length. A
+            # message repeated until it is noise has stopped being a
+            # message.
             said = getattr(self, "_said_output", {})
             key = hazard.get("name", "crisis")
             if before > self.output_factor and yr - said.get(key, -99) >= 20:
                 said[key] = yr
                 self._said_output = said
-                # SAY WHAT HELD. A founder who armed the state before the
-                # war arrived measured protection 0.019 to 0.019 against
-                # one who never touched the military branch, and every
-                # other hazard message in this file already names its
-                # hedges - staff_loss says "would have been"; sack_chance
-                # says "comes to nothing (%s)". This one said nothing,
-                # which is indistinguishable from doing nothing.
+                # SAY WHAT HELD: every other hazard message in this file
+                # names its hedges - staff_loss says "would have been";
+                # sack_chance says "comes to nothing (%s)". Saying nothing
+                # here would be indistinguishable from a military branch
+                # that did nothing.
                 self.household.log.append((yr, "%s: trade and output fall to %d%% of "
                                      "normal%s"
                                  % (key, self.output_factor * 100,
@@ -1008,9 +970,7 @@ class HazardsMixin:
     def _shock_real_erosion(self, hazard, yr):
         """The real_erosion branch of _shocks: currency debasement.
 
-        Split out of _shocks for complexity. Moved verbatim from the body of
-        the single _shocks function, including every comment below. Makes no
-        self.rng draws.
+        Makes no self.rng draws.
         """
         if "real_erosion" in hazard:
             relief, why = self.hazard_relief("real_erosion")
@@ -1021,15 +981,13 @@ class HazardsMixin:
             lost = had - max(0.0, self.household.capital)
             if not getattr(self, "_said_debasement", 0) or yr - self._said_debasement >= 15:
                 self._said_debasement = yr
-                # SAY WHAT IT DID TO YOU, and say what it did NOT do. A
-                # break tester read "the coin is worth 99% less", checked
-                # `why horse_collar` in 107, 207 and 307 AD, found the
-                # quote identical to the denarius, and filed it as the
-                # debasement doing nothing. It is doing something: every
-                # price in this game is what a thing really costs in
-                # labour and materials, which debasement does not change.
-                # What it destroys is the money you are HOLDING. Quoting
-                # the bite in coin makes that the visible half.
+                # SAY WHAT IT DID TO YOU, and say what it did NOT do: every
+                # price in this game is what a thing really costs in labour
+                # and materials, which debasement does not change, so a
+                # `why` quote that looks unchanged after a debasement is
+                # correct, not evidence the debasement did nothing. What it
+                # destroys is the money you are HOLDING. Quoting the bite in
+                # coin makes that the visible half.
                 self.household.log.append((yr, "%s: the coin is worth %d%% less than it "
                                      "was%s. Quoted costs are what a thing "
                                      "really takes to make, so they do not "
@@ -1048,14 +1006,12 @@ class HazardsMixin:
         """The values branch of _shocks: gradual shifts in what the society
         believes, spread evenly across the hazard's own window.
 
-        Split out of _shocks for complexity. Moved verbatim from the body of
-        the single _shocks function, including every comment below. Makes no
-        self.rng draws.
+        Makes no self.rng draws.
         """
         if "values" in hazard:
-            # A hazard can kill your people, burn a site, or make you
-            # poorer, and that used to be the whole vocabulary. Norse
-            # Christianisation is none of those: its real effect is on
+            # A hazard is not limited to killing people, burning a site, or
+            # making a household poorer. Norse Christianisation is none of
+            # those: its real effect is on
             # what the society BELIEVES, which is exactly what
             # alarm_of() and update_protection() read out of self.w. This
             # is apply_tech_effects' mechanism (see there), aimed at a
@@ -1211,10 +1167,9 @@ class HazardsMixin:
     def _loss_words(self, had_before):
         """"1,240 denarii" or "nothing, you were holding none".
 
-        Every one of these lines used to name the event and stop. A break
-        tester's standing complaint across two rounds was that the game
-        announces catastrophes and leaves you to diff your own `state` to find
-        out whether anything happened.
+        Every catastrophe line must say what it actually cost, not only
+        name the event: a player should not have to diff their own `state`
+        to find out whether anything happened.
         """
         lost = had_before - max(0.0, self.household.capital)
         if lost <= 0.5:
