@@ -402,6 +402,7 @@ class VenturesMixin:
         if inst_units is None:
             inst_units = self.household.inst_units = {}
         inst_units[node_id] = have + add_units
+        self.household._inst_units_ver = getattr(self.household, "_inst_units_ver", 0) + 1
         rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
         return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
                       "now earns about %s a year and costs about %s to run"

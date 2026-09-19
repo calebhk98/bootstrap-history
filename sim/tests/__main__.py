@@ -90,6 +90,7 @@ TOPICS = [
     "industrial_dashboard",
     "scanners_and_scheduling",
     "perf_optimizations",
+    "economic_caching",
     "affordability_warning",
     "arrears_visibility",
     "allocate",

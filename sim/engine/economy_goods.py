@@ -681,17 +681,29 @@ class GoodsMixin:
         could drift from this one, per this file's own convention elsewhere
         (see goods_market_factor's docstring on why goods_category_price_
         ratio() reads this same function instead of reimplementing it)."""
+        # Cached value: (price_ratio, qty_ratio, n_active) or None per (cat, extra)
+        # Dependencies: self.year, pop_scale, economy, household._operating_ver, household._done_ver
+        # Invalidated by: _operating_changed(), _done_changed(), step() year/pop_scale/economy updates
+        # Not serialized because: pure transient derived state recomputed on load
+        shared_key = (
+            self.year,
+            getattr(self, "pop_scale", 1.0),
+            getattr(self, "economy", 1.0),
+            getattr(self.household, "_operating_ver", 0),
+            getattr(self.household, "_done_ver", 0),
+        )
+        cache = getattr(self.household, "_goods_category_ratios_cache", None)
+        if cache is None or cache[0] != shared_key:
+            cache = (shared_key, {})
+            self.household._goods_category_ratios_cache = cache
+        bucket = cache[1]
+        pair_key = (cat, extra)
+        if pair_key in bucket:
+            return bucket[pair_key]
+
         category_state = self._goods_category_state(cat)
         if category_state is None:
-            if extra <= 0:
-                return None
-            # NOTHING OF YOURS IS RUNNING YET, so there is no world_age to
-            # inherit - the honest answer for "day one of the first concern
-            # in a category" is the tree's own figure, exactly what
-            # goods_market_factor() already returns for that case. Do not
-            # invent a supply/age pair out of nothing to answer `extra` here;
-            # let the caller's own bare 1.0 fallback (goods_market_factor_
-            # if_opened) handle it, the same way goods_market_factor() does.
+            bucket[pair_key] = None
             return None
         n_active, world_age, cfg = category_state
         n_active += extra
@@ -703,7 +715,9 @@ class GoodsMixin:
         eta = cfg["eta"]
         price_ratio = max(cfg["floor"], min(1.0, total_supply ** (-1.0 / eta)))
         qty_ratio = min(total_supply, price_ratio ** (-eta))
-        return price_ratio, qty_ratio, n_active
+        result = (price_ratio, qty_ratio, n_active)
+        bucket[pair_key] = result
+        return result
 
     def goods_category_price_ratio(self, cat):
         """The price this category's market currently pays, as a fraction
@@ -845,9 +859,27 @@ class GoodsMixin:
         today's single essential category (processing, floor 0.55) the
         clamp never actually binds (1.0 + 1.0*(1-0.55) = 1.45).
         """
+        # Cached value: float multiplier on discretionary revenue
+        # Dependencies: year, pop_scale, economy, household _operating_ver, _done_ver, farm_hectares
+        # Invalidated by: any change to essential category supply or household farm_hectares
+        # Not serialized because: pure transient derived state recomputed on load
+        shared_key = (
+            self.year,
+            getattr(self, "pop_scale", 1.0),
+            getattr(self, "economy", 1.0),
+            getattr(self.household, "_operating_ver", 0),
+            getattr(self.household, "_done_ver", 0),
+            getattr(self.household, "farm_hectares", 0.0),
+        )
+        cache = getattr(self.household, "_income_factor_cache", None)
+        if cache is not None and cache[0] == shared_key:
+            return cache[1]
+
         ratio = self.essential_price_ratio()
-        return max(self.INCOME_FACTOR_FLOOR, min(self.INCOME_FACTOR_CEILING,
-                   1.0 + self.INCOME_ELASTICITY * (1.0 - ratio)))
+        factor = max(self.INCOME_FACTOR_FLOOR, min(self.INCOME_FACTOR_CEILING,
+                     1.0 + self.INCOME_ELASTICITY * (1.0 - ratio)))
+        self.household._income_factor_cache = (shared_key, factor)
+        return factor
 
     INCOME_FACTOR_FLOOR = declare(
         "INCOME_FACTOR_FLOOR", 0.7, kind="temporary_heuristic",
@@ -901,16 +933,41 @@ class GoodsMixin:
         combined capacity finds buyers for, not what any one concern
         alone would.
         """
-        cat = self.nodes[node_id].get("cat")
         if node_id not in self.household.operating:
             return 1.0
+        cat = self.nodes[node_id].get("cat")
+        if not cat or cat not in self.GOODS_CATEGORIES:
+            return 1.0
+
+        # Cached value: category-level operating revenue factor
+        # Dependencies: shared_key and household farm_hectares
+        # Invalidated by: changes to operating, done, year, pop_scale, economy, farm_hectares
+        # Not serialized because: transient derived state recomputed on demand
+        shared_key = (
+            self.year,
+            getattr(self, "pop_scale", 1.0),
+            getattr(self, "economy", 1.0),
+            getattr(self.household, "_operating_ver", 0),
+            getattr(self.household, "_done_ver", 0),
+            getattr(self.household, "farm_hectares", 0.0),
+        )
+        cache = getattr(self.household, "_goods_mkt_op_factor_cache", None)
+        if cache is None or cache[0] != shared_key:
+            cache = (shared_key, {})
+            self.household._goods_mkt_op_factor_cache = cache
+        bucket = cache[1]
+        if cat in bucket:
+            return bucket[cat]
+
         ratios = self._goods_category_ratios(cat)
         if ratios is None:
+            bucket[cat] = 1.0
             return 1.0
         price_ratio, qty_ratio, n_active = ratios
         factor = price_ratio * qty_ratio / n_active
         if cat not in self.ESSENTIAL_CATEGORIES:
             factor *= self.income_factor()
+        bucket[cat] = factor
         return factor
 
     def goods_market_factor_if_opened(self, node_id):

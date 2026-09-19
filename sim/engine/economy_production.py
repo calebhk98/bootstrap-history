@@ -115,6 +115,53 @@ class ProductionMixin:
             self.household.wage_hours_this_year = _sold
 
     def revenue(self):
+        """Total annual revenue across all active concerns, workshops, and state funding.
+
+        Cached value: self.revenue()
+        Dependencies:
+          - self.year: changes annually in sim.step()
+          - self.household._operating_ver: changes whenever self.household.operating is mutated
+          - self.household._done_ver: changes whenever self.household.done or granted is mutated
+          - self.household._workforce_ver: changes whenever self.household.employees is mutated
+          - self.household.freedmen, self.household.slaves: workforce headcount
+          - self.household.wage_hours_this_year: practice attention (e.g. temporary 0.0 in revenue_capacity)
+          - self.household.farm_hectares: household farmland staples affecting food price ratio
+          - self.household.gov: governance quality affecting state funding
+          - self.household._inst_units_ver: scalable institution units
+          - self.output_factor: hazard/war output scaling
+          - self.reputation: standing affecting state funding
+          - self.founder_alive: boolean for physician practice attention
+        Invalidated by:
+          Any change to any element in the composite version key tuple.
+        Not serialized because:
+          Purely derived runtime aggregate cache; easily recomputed on demand.
+        """
+        key = (
+            self.year,
+            self.pop_scale,
+            getattr(self, "economy", 1.0),
+            getattr(self.household, "_operating_ver", 0),
+            getattr(self.household, "_done_ver", 0),
+            getattr(self.household, "_workforce_ver", 0),
+            getattr(self.household, "_inst_units_ver", 0),
+            getattr(self.household, "wage_hours_this_year", 0.0),
+            getattr(self.household, "farm_hectares", 0.0),
+            getattr(self.household, "freedmen", 0.0),
+            getattr(self.household, "slaves", 0.0),
+            getattr(self.household, "gov", 0.0),
+            self.output_factor,
+            self.reputation,
+            self.founder_alive,
+        )
+        if getattr(self.household, "_revenue_cache_key", None) == key:
+            return self.household._revenue_cache_val
+
+        value = self._compute_revenue_uncached()
+        self.household._revenue_cache_key = key
+        self.household._revenue_cache_val = value
+        return value
+
+    def _compute_revenue_uncached(self):
         total_revenue = 0.0
         attention = self.practice_attention()
         practice_set = self._practice_set()

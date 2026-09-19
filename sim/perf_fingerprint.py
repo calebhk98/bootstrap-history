@@ -214,7 +214,7 @@ def check(path, scenarios=None, jobs=None):
             print("      run length changed: %d -> %d" % (len(want_cmp), len(got)))
 
         # Rerun ONLY the failing scenario with keep_states=True for diagnostic state
-        _, _, _, states = run(scenario, keep_states=True)
+        _, _, states = run(scenario, keep_states=True)
         if diverged_at < len(states):
             print("      re-run this scenario under a debugger; changed state "
                   "is in %s year %d" % (name, diverged_at))

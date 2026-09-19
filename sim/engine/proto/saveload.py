@@ -520,6 +520,8 @@ def load_state(sim, path):
     # on playing in, not a fresh one, and every open/close/mothball after
     # this point mutates .operating directly. Re-wrap it, once, here.
     sim._reset_operating()
+    sim._reset_active()
+    sim._reset_workforce()
     # The game this save IS, not whatever the command line happened to say.
     sim.fog = bool(blob["_fog"])
     sim.cfg["immortal"] = bool(blob["_immortal"])

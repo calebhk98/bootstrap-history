@@ -125,6 +125,61 @@ class _InvalidatingSet(set):
         return result
 
 
+class _InvalidatingDict(dict):
+    """A dictionary that calls `on_change` after every mutation.
+
+    Follows the exact pattern of _InvalidatingSet above. Used for
+    `self.household.active` and `self.household.employees` so that
+    derived-state caches keyed on active project membership or workforce
+    changes are reliably invalidated whenever keys or values mutate,
+    without requiring scattered callers across the engine to remember
+    manual cache resets.
+    """
+
+    def __init__(self, *args, on_change=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._on_change = on_change
+
+    def _fire(self):
+        if self._on_change is not None:
+            self._on_change()
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._fire()
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._fire()
+
+    def pop(self, *args, **kwargs):
+        result = super().pop(*args, **kwargs)
+        self._fire()
+        return result
+
+    def popitem(self):
+        result = super().popitem()
+        self._fire()
+        return result
+
+    def clear(self):
+        if self:
+            super().clear()
+            self._fire()
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self._fire()
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            result = super().setdefault(key, default)
+            self._fire()
+            return result
+        return super().setdefault(key, default)
+
+
+
 # ---- REPUTATION/STANDING: a scoreboard, not yet a social mechanism --------
 #
 # None of the numbers below are measured facts about anything; they are a
@@ -399,6 +454,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """
         self.household._done_seq = None
         self.household._cap_factor = None
+        self.household._done_ver = getattr(self.household, "_done_ver", 0) + 1
 
     def _operating_changed(self):
         """Call after anything adds to or removes from self.household.operating.
@@ -474,6 +530,24 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         afterward in the same process."""
         self.household.operating = _InvalidatingSet(self.household.operating, on_change=self._operating_changed)
         self._operating_changed()
+
+    def _active_changed(self):
+        """Call after anything adds to, removes from, or updates self.household.active."""
+        self.household._active_ver = getattr(self.household, "_active_ver", 0) + 1
+
+    def _reset_active(self):
+        """Re-wrap self.household.active in a fresh `_InvalidatingDict` and invalidate once."""
+        self.household.active = _InvalidatingDict(self.household.active, on_change=self._active_changed)
+        self._active_changed()
+
+    def _workforce_changed(self):
+        """Call after anything mutates self.household.employees or workforce counts."""
+        self.household._workforce_ver = getattr(self.household, "_workforce_ver", 0) + 1
+
+    def _reset_workforce(self):
+        """Re-wrap self.household.employees in a fresh `_InvalidatingDict` and invalidate once."""
+        self.household.employees = _InvalidatingDict(self.household.employees, on_change=self._workforce_changed)
+        self._workforce_changed()
 
     def done_in_order(self):
         """Everything you have finished, in a FIXED order.

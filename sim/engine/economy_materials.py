@@ -480,6 +480,18 @@ class MaterialSupplyMixin:
 
     def annual_material_demand(self):
         """Tonnes per year of the materials that actually bind, from work in hand."""
+        # Cached value: collections.Counter of annual material requirements
+        # Dependencies: household active projects (_active_ver), completed projects (_done_ver)
+        # Invalidated by: _active_changed(), _done_changed()
+        # Not serialized because: pure transient derived state recomputed on load
+        cache_key = (
+            getattr(self.household, "_active_ver", 0),
+            getattr(self.household, "_done_ver", 0),
+        )
+        cache = getattr(self.household, "_annual_mat_demand_cache", None)
+        if cache is not None and cache[0] == cache_key:
+            return cache[1].copy()
+
         demand = collections.Counter()
         for node_id in sorted(self.household.active):
             node = self.nodes[node_id]
@@ -505,7 +517,8 @@ class MaterialSupplyMixin:
                                            * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE)
                     continue
                 demand[material] += self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / KILOGRAMS_PER_TONNE
-        return demand
+        self.household._annual_mat_demand_cache = (cache_key, demand)
+        return demand.copy()
 
     STANDING_MATERIAL_DRAW_SHARE = declare(
         "STANDING_MATERIAL_DRAW_SHARE", 0.5, kind="temporary_heuristic",

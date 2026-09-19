@@ -491,7 +491,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # household reaching back up for it.
         self.household = Household(
             starting_capital=float(config["start_capital"]) * self.price_index,
-            operating_changed=self._operating_changed)
+            operating_changed=self._operating_changed,
+            active_changed=self._active_changed,
+            workforce_changed=self._workforce_changed)
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or

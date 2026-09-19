@@ -55,7 +55,7 @@ from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
                      Optional, Set, Tuple, TypedDict)
 
-from ..economy import _InvalidatingSet
+from ..economy import _InvalidatingSet, _InvalidatingDict
 
 
 class MineWorking(TypedDict):
@@ -129,7 +129,9 @@ class Household:
     """
 
     def __init__(self, starting_capital: float,
-                 operating_changed: Callable[[], None]) -> None:
+                 operating_changed: Callable[[], None],
+                 active_changed: Optional[Callable[[], None]] = None,
+                 workforce_changed: Optional[Callable[[], None]] = None) -> None:
         """`starting_capital`: this household's opening purse, in the
         civilisation's own currency and price level - computed by the
         caller (today, `Sim.__init__`, from `cfg["start_capital"]` and
@@ -158,6 +160,11 @@ class Household:
         # for why a kit is priced where you are rather than at a single
         # global rate.
         self.capital: float = float(starting_capital)
+        self._done_ver: int = 0
+        self._operating_ver: int = 0
+        self._active_ver: int = 0
+        self._workforce_ver: int = 0
+        self._inst_units_ver: int = 0
         self.done: Set[str] = set()
         self._done_seq: Optional[List[str]] = None
         self._cap_factor: Optional[float] = None   # capability_factor()'s cache; see economy.py
@@ -173,7 +180,7 @@ class Household:
         # inventory flags for whenever a second actor exists to force the
         # question of whether it should be shared rather than duplicated.
         self.granted: Set[str] = set()
-        self.active: Dict[str, ActiveProjectState] = {}          # id -> dict(ph_left, years_elapsed, spent)
+        self.active: _InvalidatingDict = _InvalidatingDict(on_change=active_changed)
         self.failed_attempts: DefaultDict[str, int] = defaultdict(int)
         # YOU ARRIVE ALONE: no employees, no slaves, no household. You stepped
         # out of the future into a street in a city where nobody knows you,
@@ -184,7 +191,7 @@ class Household:
         self.artisans: float = 0.0
         self.directors_extra: float = 0.0
         # Standing staff BY TRADE, which is what makes a smith not a scribe.
-        self.employees: Dict[str, float] = {}
+        self.employees: _InvalidatingDict = _InvalidatingDict(on_change=workforce_changed)
         # Trades this society does not have and you have taught into existence.
         self.trades_created: Set[str] = set()
         # WHEN a taught trade was first taught, and which taught trades this
