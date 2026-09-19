@@ -27,7 +27,8 @@ check("the arrival screen says outright that the five starter verbs are not "
       "far more commands than this" in _arr_flat, _arr.stdout[:2000])
 check("...and actually NAMES the help topics there, rather than leaving "
       "'help' as a single word to take on faith",
-      all(t in _arr.stdout for t in _protocol.HELP_TOPICS), _arr.stdout[:2000])
+      all(topic in _arr.stdout for topic in _protocol.HELP_TOPICS),
+      _arr.stdout[:2000])
 check("...and the old, easy-to-undersell phrasing is gone from that "
       "paragraph",
       "'help' explains the rest" not in _arr.stdout, _arr.stdout[:2000])
@@ -38,7 +39,7 @@ check("...and the old, easy-to-undersell phrasing is gone from that "
 check("HORIZON_MODES actually has the four named presets the player asked "
       "for, with Challenge/Standard/Relaxed as specific year counts and "
       "Endless as no fixed number at all",
-      [m[0] for m in _CLI.HORIZON_MODES] == ["challenge", "standard",
+      [mode[0] for mode in _CLI.HORIZON_MODES] == ["challenge", "standard",
                                              "relaxed", "endless"]
       and _CLI.HORIZON_MODES[0][2] == 400 and _CLI.HORIZON_MODES[1][2] == 500
       and _CLI.HORIZON_MODES[3][2] is None,
@@ -48,7 +49,7 @@ check("...and Endless is a large, ordinary, finite number of years, never "
       "that reads a horizon expects a plain number",
       isinstance(_CLI.ENDLESS_HORIZON_YEARS, int)
       and _CLI.ENDLESS_HORIZON_YEARS > max(
-          m[2] for m in _CLI.HORIZON_MODES if m[2]),
+          mode[2] for mode in _CLI.HORIZON_MODES if mode[2]),
       _CLI.ENDLESS_HORIZON_YEARS)
 _hmode_dir = tempfile.mkdtemp()
 _hmode_cfg = os.path.join(_hmode_dir, "cfg.json")
@@ -72,8 +73,8 @@ _hmode1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
 # unwrapped text and passed only because their phrases happened not to
 # straddle a break; asserting on the squeezed text is the honest way to ask
 # "does the screen say this".
-def _squeezed(t):
-    return " ".join((t or "").split())
+def _squeezed(text):
+    return " ".join((text or "").split())
 _hm1 = _squeezed(_hmode1.stdout)
 check("the difficulty menu states the floor of the goal the player just "
       "chose, so the calendar they pick is chosen against the road they "
@@ -101,8 +102,9 @@ check("choosing Endless lets a `step` cross where a 500-year Standard "
       "THE RUN HAS ENDED" not in _endless_wiz.stdout
       and "ran out of horizon" not in _endless_wiz.stdout,
       _endless_wiz.stdout[-1500:])
-_endless_written = [f for f in os.listdir(_endless_saves)
-                    if f.endswith(".json") and not f.endswith(".meta.json")]
+_endless_written = [filename for filename in os.listdir(_endless_saves)
+                    if filename.endswith(".json")
+                    and not filename.endswith(".meta.json")]
 check("...and the meta sidecar for that save carries forward exactly "
       "ENDLESS_HORIZON_YEARS, not an arbitrary large number invented here "
       "in the test",
@@ -127,12 +129,12 @@ check("...and the in-game 'options' screen reads 'none - Endless' for that "
 # reach the goal) and said nothing reliable about the default at all.
 _horizon_seen = {}
 def _capture_horizon(which):
-    def _fn(a):
-        _horizon_seen[which] = getattr(a, "horizon", None)
+    def _fn(args):
+        _horizon_seen[which] = getattr(args, "horizon", None)
         return 0
     return _fn
 _orig_argv = sys.argv
-_orig_cmd_fns = {n: getattr(_CLI, n) for n in
+_orig_cmd_fns = {name: getattr(_CLI, name) for name in
                 ("cmd_run", "cmd_compare", "cmd_play", "cmd_agent")}
 try:
     for _n in _orig_cmd_fns:
@@ -185,9 +187,9 @@ check("bare 'save' (no filename) writes a new milestone file distinct from "
 # "checkpoint" marker - see settings.is_checkpoint) and would otherwise also
 # match "_saved_...json": the same exclusion settings.list_saves itself
 # already applies when it walks this same directory.
-_sess_milestones = [f for f in os.listdir(_sess_saves)
-                    if "_saved_" in f and f.endswith(".json")
-                    and not f.endswith(".meta.json")]
+_sess_milestones = [filename for filename in os.listdir(_sess_saves)
+                    if "_saved_" in filename and filename.endswith(".json")
+                    and not filename.endswith(".meta.json")]
 check("...and that file actually exists, separate from the session file",
       len(_sess_milestones) == 1
       and os.path.exists(os.path.join(_sess_saves, _sess_milestones[0]))
@@ -294,8 +296,9 @@ check("...accepting starts a genuinely new game through the same wizard, "
       "leaving the original session file untouched on disk",
       "WHERE, AND WHEN" in _sess7.stdout
       and os.path.exists(_sess7_session)
-      and len([f for f in os.listdir(_sess7_saves) if f.endswith(".json")
-              and not f.endswith(".meta.json")]) == 2,
+      and len([filename for filename in os.listdir(_sess7_saves)
+              if filename.endswith(".json")
+              and not filename.endswith(".meta.json")]) == 2,
       os.listdir(_sess7_saves))
 
 # --- THE SAME FREEZE PROPERTY, AGAIN, AGAINST A REAL CAMPAIGN SAVE - not a

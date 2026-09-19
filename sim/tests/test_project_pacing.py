@@ -151,7 +151,8 @@ check("...while a project with nothing sunk into it gets no discount "
 # year, and asked for a warning, not a block - this is a legitimate way to
 # raise cash.
 _s_wk = sim(capital=500000.0)
-_wk_id = next(k for k in NODES if NODES[k]["ph"] > 300 and NODES[k]["yrs"] >= 1)
+_wk_id = next(node_id for node_id in NODES
+              if NODES[node_id]["ph"] > 300 and NODES[node_id]["yrs"] >= 1)
 _wk_n = NODES[_wk_id]
 _s_wk.active[_wk_id] = dict(ph_left=float(_wk_n["ph"]), yrs=0.0, spent=0.0,
                             cost_left=100.0)
@@ -185,7 +186,7 @@ check("...and selling only a few idle hours does not warn either",
 # _waiting_on (protocol.py): with founder-hours exhausted and nothing owed,
 # it must name the calendar, not the founder's hours.
 _s_cal = sim()
-_cal_id = next(k for k in NODES if NODES[k]["yrs"] >= 2)
+_cal_id = next(node_id for node_id in NODES if NODES[node_id]["yrs"] >= 2)
 _cal_st = dict(ph_left=0.0, yrs=0.5, spent=100.0, cost_left=0.0)
 _s_cal.active[_cal_id] = _cal_st
 _cal_wo = _WO(_s_cal, NODES, _cal_id, _cal_st, 0.0)
@@ -218,8 +219,8 @@ _s_eng.step()
 check("a project that has already drawn everything it needed from a trade "
       "is not killed just because that trade later vanishes from the market",
       _eng_id in _s_eng.active
-      and not any(_eng_id in m and "cannot go on" in m
-                  for _, m in _s_eng.log[_eng_log_before:]),
+      and not any(_eng_id in message and "cannot go on" in message
+                  for _, message in _s_eng.log[_eng_log_before:]),
       _s_eng.log[_eng_log_before:])
 # The other half: a project that genuinely still owes a trade something is
 # still correctly caught and warned before it is abandoned.
@@ -230,8 +231,9 @@ _eng2_log_before = len(_s_eng2.log)
 _s_eng2.step()
 check("...while a project that genuinely still owes a trade something is "
       "still caught the first year it has nobody to do that work",
-      any(_eng_id in m and "cannot go on" in m and "no engineer" in m
-          for _, m in _s_eng2.log[_eng2_log_before:]),
+      any(_eng_id in message and "cannot go on" in message
+          and "no engineer" in message
+          for _, message in _s_eng2.log[_eng2_log_before:]),
       _s_eng2.log[_eng2_log_before:])
 
 # And `why`/`state` were already telling the truth about the genuine case
@@ -252,8 +254,8 @@ check("...and `why`/`state` already named the real, still-owed shortfall "
 # the second entirely, so a player deciding whether to fire someone could
 # not see everything that decision would still leave broken.
 _s_multi = sim(capital=500000.0)
-_multi_id = next(k for k in NODES
-                 if len(NODES[k].get("lab") or {}) >= 2 and NODES[k]["yrs"] >= 1)
+_multi_id = next(node_id for node_id in NODES
+                 if len(NODES[node_id].get("lab") or {}) >= 2 and NODES[node_id]["yrs"] >= 1)
 _multi_trades = sorted((NODES[_multi_id]["lab"] or {}).keys())
 _t_absent, _t_booked = _multi_trades[0], _multi_trades[1]
 _multi_st = dict(ph_left=10.0, yrs=0.0, spent=0.0, cost_left=100.0,
@@ -264,8 +266,8 @@ _s_multi.active[_multi_id] = _multi_st
 # first, so one trade is a real absolute shortage and the other only a
 # booking conflict.
 _orig_market_supply = _s_multi.market_supply
-def _fake_supply(t, _orig=_orig_market_supply, _absent=_t_absent):
-    return 0.0 if t == _absent else _orig(t)
+def _fake_supply(trade, _orig=_orig_market_supply, _absent=_t_absent):
+    return 0.0 if trade == _absent else _orig(trade)
 _s_multi.market_supply = _fake_supply
 # Model a real portfolio-wide booking conflict.  _waiting_on deliberately uses
 # this same aggregate as `portfolio`, rather than a stale consumed-hours tally.

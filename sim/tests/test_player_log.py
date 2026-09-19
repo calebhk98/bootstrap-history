@@ -18,12 +18,15 @@ r, _, _ = proto([{"cmd": "start", "id": "units_standards"},
 _entries = r[-1].get("entries") or []
 check("log records what the player did - starting, hiring, letting go - not "
       "just what the engine did on its own",
-      any("started" in e["what"] for e in _entries)
-      and any("smith" in e["what"] and "taken on" in e["what"] for e in _entries)
-      and any("smith" in e["what"] and "go" in e["what"] for e in _entries),
+      any("started" in entry["what"] for entry in _entries)
+      and any("smith" in entry["what"] and "taken on" in entry["what"]
+              for entry in _entries)
+      and any("smith" in entry["what"] and "go" in entry["what"]
+              for entry in _entries),
       _entries)
 check("log defaults to most-recent-first",
-      _entries[0]["year"] >= _entries[-1]["year"], [e["year"] for e in _entries])
+      _entries[0]["year"] >= _entries[-1]["year"],
+      [entry["year"] for entry in _entries])
 
 # --- never dumped in one go, however large a limit is asked for or however
 # long the history actually is.
@@ -107,10 +110,10 @@ check("...and a player reads that before the list of switches, not after it",
       _pl_txt.index("rule of thumb") < _pl_txt.index("auto_bribe"),
       _pl_txt[:200])
 check("...and every switch the game offers says what it does",
-      not [k for k in _pl[0]["policy"]
-           if not (_pl[0].get("what_each_does") or {}).get(k)],
-      [k for k in _pl[0]["policy"]
-       if not (_pl[0].get("what_each_does") or {}).get(k)])
+      not [switch_name for switch_name in _pl[0]["policy"]
+           if not (_pl[0].get("what_each_does") or {}).get(switch_name)],
+      [switch_name for switch_name in _pl[0]["policy"]
+       if not (_pl[0].get("what_each_does") or {}).get(switch_name)])
 check("...and no line of that screen runs past the width everything else wraps to",
       max(len(line) for line in _pl_txt.splitlines()) <= 78,
       max(_pl_txt.splitlines(), key=len))
@@ -170,7 +173,8 @@ check("a player reading `ventures` or `money` is told WHY a concern earns "
       bool(_note) and "tree quotes" in _note and "actually earns" in _note,
       _note)
 _vrow_nt = S._agent_dispatch(s_nt, NODES, {"cmd": "ventures"})
-_row_nt = next(r for r in _vrow_nt["running"] if r["id"] == "tex_horizontal_loom")
+_row_nt = next(row for row in _vrow_nt["running"]
+               if row["id"] == "tex_horizontal_loom")
 check("...and `ventures` itself carries the same explanation on the row",
       "market" in _row_nt and bool(_row_nt["market"]), _row_nt)
 _money_nt = S._agent_dispatch(s_nt, NODES, {"cmd": "money"})
@@ -182,9 +186,9 @@ check("...and `money` says the same thing in aggregate",
 # a node outside GOODS_CATEGORIES gets a factor of exactly 1.0 no matter
 # how old the concern is.
 s_sv = sim(civ="rome_100ad", capital=500000.0)
-_nongood = next(k for k in sorted(NODES)
-               if NODES[k].get("cat") not in s_sv.GOODS_CATEGORIES
-               and s_sv.is_venture(k) and not NODES[k]["pre"])
+_nongood = next(node_id for node_id in sorted(NODES)
+               if NODES[node_id].get("cat") not in s_sv.GOODS_CATEGORIES
+               and s_sv.is_venture(node_id) and not NODES[node_id]["pre"])
 s_sv.done.add(_nongood)
 s_sv.done_year[_nongood] = 100
 s_sv._done_changed()

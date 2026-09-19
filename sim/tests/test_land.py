@@ -134,7 +134,8 @@ class MarginOfCultivationTests(unittest.TestCase):
         demand = self._capacity(self.best) + self._capacity(self.middle) * 0.5
         outcome = land.find_margin_of_cultivation(self.regions, demand)
         self.assertEqual(outcome.marginal_region, "middle")
-        by_region = {a.region_land.region: a for a in outcome.allocations}
+        by_region = {allocation.region_land.region: allocation
+                    for allocation in outcome.allocations}
         self.assertEqual(by_region["middle"].rent_kg_grain_equivalent_per_iugerum, 0.0)
         self.assertGreater(by_region["best"].rent_kg_grain_equivalent_per_iugerum, 0.0)
         self.assertEqual(by_region["worst"].arable_iugera_supplied, 0.0)
@@ -147,7 +148,8 @@ class MarginOfCultivationTests(unittest.TestCase):
                  + self._capacity(self.worst) * 0.5)
         outcome = land.find_margin_of_cultivation(self.regions, demand)
         self.assertEqual(outcome.marginal_region, "worst")
-        by_region = {a.region_land.region: a for a in outcome.allocations}
+        by_region = {allocation.region_land.region: allocation
+                    for allocation in outcome.allocations}
         self.assertGreater(
             by_region["best"].rent_kg_grain_equivalent_per_iugerum,
             by_region["middle"].rent_kg_grain_equivalent_per_iugerum)
@@ -167,7 +169,8 @@ class MarginOfCultivationTests(unittest.TestCase):
             self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
 
     def test_demand_beyond_every_regions_combined_capacity_is_reported_unmet(self):
-        total_capacity = sum(self._capacity(r) for r in self.regions)
+        total_capacity = sum(
+            self._capacity(region_land) for region_land in self.regions)
         outcome = land.find_margin_of_cultivation(
             self.regions, total_capacity * 2.0)
         self.assertGreater(outcome.unmet_demand_kg, 0.0)
@@ -196,8 +199,8 @@ class MarginOfCultivationTests(unittest.TestCase):
         first = land.find_margin_of_cultivation([tied_a, tied_b], 10.0)
         second = land.find_margin_of_cultivation([tied_b, tied_a], 10.0)
         self.assertEqual(
-            [a.region_land.region for a in first.allocations],
-            [a.region_land.region for a in second.allocations])
+            [allocation.region_land.region for allocation in first.allocations],
+            [allocation.region_land.region for allocation in second.allocations])
 
 
 class RegionDataLoadsCleanlyTests(unittest.TestCase):
@@ -284,7 +287,7 @@ class CivilizationTerritoryTests(unittest.TestCase):
         for region in rome_regions:
             expected_tiles.update(region_to_tiles[region])
         rome_lands = land.cultivable_land_for_civilization("rome_100ad")
-        rome_tiles = {rl.region for rl in rome_lands}
+        rome_tiles = {region_land.region for region_land in rome_lands}
         self.assertEqual(rome_tiles, expected_tiles)
 
     def test_a_civilization_with_more_and_better_territory_scores_higher(self):
@@ -328,8 +331,10 @@ class CivilizationTerritoryTests(unittest.TestCase):
         # parcels and more arable land) still holds and is asserted
         # directly.
         self.assertGreater(len(expanded_lands), len(shrunk_lands))
-        total_arable = sum(rl.arable_iugera for rl in expanded_lands)
-        shrunk_arable = sum(rl.arable_iugera for rl in shrunk_lands)
+        total_arable = sum(
+            region_land.arable_iugera for region_land in expanded_lands)
+        shrunk_arable = sum(
+            region_land.arable_iugera for region_land in shrunk_lands)
         self.assertGreater(total_arable, shrunk_arable)
 
     def test_unknown_civilization_raises_with_the_real_list(self):
@@ -347,7 +352,8 @@ class CivilizationTerritoryTests(unittest.TestCase):
         civilization = {"home_regions": ["italia", "nowhere_at_all"]}
         lands = land.cultivable_land_for_civilization(
             "hypothetical", civilizations={"hypothetical": civilization})
-        self.assertEqual({rl.region for rl in lands}, expected_tiles)
+        self.assertEqual(
+            {region_land.region for region_land in lands}, expected_tiles)
 
     def test_rome_outprices_the_norse(self):
         # The task's own headline check, run against the real solved
@@ -600,8 +606,8 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
             geography["land_tiles"]["region_to_tiles"]["north_africa"])
         outcome = land.margin_outcome_for_civilization("rome_100ad")
         best_north_africa_tile = max(
-            (a for a in outcome.allocations
-             if a.region_land.region in north_africa_tile_ids),
+            (allocation for allocation in outcome.allocations
+             if allocation.region_land.region in north_africa_tile_ids),
             key=lambda a: a.fertility_quality_multiplier)
         self.assertGreater(
             best_north_africa_tile.extensive_rent_kg_grain_equivalent_per_iugerum,

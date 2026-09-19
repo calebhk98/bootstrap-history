@@ -15,25 +15,25 @@ def _mk_loom_sim(n_looms, age_years):
     """n_looms real, distinct textiles-category venture nodes, all opened
     the same year, aged the same number of years. Uses real tree nodes
     (not synthetic ones), the same way the rest of this file does."""
-    cand = sorted(k for k, n in NODES.items()
-                  if n.get("cat") == "textiles" and n.get("rev"))
+    cand = sorted(node_id for node_id, node in NODES.items()
+                  if node.get("cat") == "textiles" and node.get("rev"))
     assert len(cand) >= n_looms, "not enough textiles venture nodes in the tree"
     chosen = cand[:n_looms]
-    s = sim(civ="rome_100ad", capital=5_000_000.0)
-    s.artisans = s.scholars = 100.0 * n_looms
-    for k in chosen:
-        for trade in NODES[k].get("lab", {}):
-            s.employees[trade] = max(s.employees.get(trade, 0.0), 10.0)
-    s.year = 100
-    for k in chosen:
-        s.done.add(k)
-        s.done_year[k] = 100
-    s._done_changed()
-    for k in chosen:
-        ok, msg = s.open_venture(k)
-        assert ok, (k, msg)
-    s.year = 100 + age_years
-    return s, chosen
+    venture_sim = sim(civ="rome_100ad", capital=5_000_000.0)
+    venture_sim.artisans = venture_sim.scholars = 100.0 * n_looms
+    for node_id in chosen:
+        for trade in NODES[node_id].get("lab", {}):
+            venture_sim.employees[trade] = max(venture_sim.employees.get(trade, 0.0), 10.0)
+    venture_sim.year = 100
+    for node_id in chosen:
+        venture_sim.done.add(node_id)
+        venture_sim.done_year[node_id] = 100
+    venture_sim._done_changed()
+    for node_id in chosen:
+        opened, msg = venture_sim.open_venture(node_id)
+        assert opened, (node_id, msg)
+    venture_sim.year = 100 + age_years
+    return venture_sim, chosen
 
 s_one, _one = _mk_loom_sim(1, 20)
 f_one = s_one.goods_market_factor(_one[0])
@@ -87,8 +87,8 @@ check("...and the aggregate `money` summary says so too",
 # as the tree gets).
 # =============================================================================
 
-_proc_cand = sorted(k for k, n in NODES.items()
-                    if n.get("cat") == "processing" and n.get("rev"))
+_proc_cand = sorted(node_id for node_id, node in NODES.items()
+                    if node.get("cat") == "processing" and node.get("rev"))
 assert _proc_cand, "need at least one processing venture node"
 _PROC_NODE = _proc_cand[0]
 _ENT_NODE = "fin_gambling_house"
@@ -98,24 +98,24 @@ check("fin_gambling_house is a real, revenue-bearing tree node - not a "
       and NODES[_ENT_NODE].get("cat") == "luxury", NODES[_ENT_NODE])
 
 def _mk_income_sim(with_cheap_food):
-    s = sim(civ="han_china_100ad", capital=5_000_000.0)
-    s.artisans = s.scholars = 200.0
+    income_sim = sim(civ="han_china_100ad", capital=5_000_000.0)
+    income_sim.artisans = income_sim.scholars = 200.0
     if with_cheap_food:
-        s.done.add(_PROC_NODE)
-        s.done_year[_PROC_NODE] = 50
-        s._done_changed()
-        s.year = 50
-        ok, msg = s.open_venture(_PROC_NODE)
-        assert ok, msg
-        s.year = 200      # long saturated: essential_price_ratio at its floor
+        income_sim.done.add(_PROC_NODE)
+        income_sim.done_year[_PROC_NODE] = 50
+        income_sim._done_changed()
+        income_sim.year = 50
+        opened, msg = income_sim.open_venture(_PROC_NODE)
+        assert opened, msg
+        income_sim.year = 200      # long saturated: essential_price_ratio at its floor
     else:
-        s.year = 200
-    s.done.add(_ENT_NODE)
-    s.done_year[_ENT_NODE] = s.year
-    s._done_changed()
-    ok, msg = s.open_venture(_ENT_NODE)
-    assert ok, msg
-    return s
+        income_sim.year = 200
+    income_sim.done.add(_ENT_NODE)
+    income_sim.done_year[_ENT_NODE] = income_sim.year
+    income_sim._done_changed()
+    opened, msg = income_sim.open_venture(_ENT_NODE)
+    assert opened, msg
+    return income_sim
 
 s_no_food = _mk_income_sim(False)
 s_cheap_food = _mk_income_sim(True)
@@ -157,7 +157,7 @@ check("the ledger's parts still add up to the revenue it states, with the "
 # set of strings, so it has to iterate sorted() - proven the same way the
 # rest of this file proves it, by running twice under different hash seeds.
 def _goods_snapshot(seed_env):
-    p = subprocess.run(
+    result = subprocess.run(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0,'.'); import random, simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
@@ -172,7 +172,7 @@ def _goods_snapshot(seed_env):
          "print(repr(round(s.goods_market_factor(cand[0]), 12)))"],
         capture_output=True, text=True, timeout=60, cwd=HERE,
         env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return p.stdout.strip()
+    return result.stdout.strip()
 _gsnap_a, _gsnap_b = _par_map(_goods_snapshot, ("0", "54321"))
 check("shared goods-category pricing is identical under a different "
       "PYTHONHASHSEED",

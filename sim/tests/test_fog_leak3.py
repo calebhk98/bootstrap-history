@@ -19,15 +19,15 @@ _bl.fog = True
 _bl.revealed = set()
 _bl_cats = ("glass_optics", "metallurgy", "precision", "power", "agriculture",
            "information", "instruments")
-_bl_candidates = [k for k, n in NODES.items()
-                  if n["cat"] in _bl_cats and n["pre"]
-                  and any(p not in _bl.done for p in n["pre"])]
+_bl_candidates = [node_id for node_id, node in NODES.items()
+                  if node["cat"] in _bl_cats and node["pre"]
+                  and any(prereq_id not in _bl.done for prereq_id in node["pre"])]
 _bl_target = None
 _bl_hidden = []
 for _k in _bl_candidates:
     _n = NODES[_k]
-    _missing = [p for p in _n["pre"] if p not in _bl.done]
-    _hidden = [p for p in _missing if not _bl.is_visible(p)]
+    _missing = [prereq_id for prereq_id in _n["pre"] if prereq_id not in _bl.done]
+    _hidden = [prereq_id for prereq_id in _missing if not _bl.is_visible(prereq_id)]
     if _hidden:
         _bl_target, _bl_hidden = _k, _hidden
         break
@@ -44,7 +44,8 @@ if _bl_target:
     check("`bounty` does not print the raw id of a prerequisite the player "
           "has not heard of",
           _bl_out.get("ok") is False
-          and not any(h in (_bl_out.get("error") or "") for h in _bl_hidden),
+          and not any(hidden_prereq_id in (_bl_out.get("error") or "")
+                  for hidden_prereq_id in _bl_hidden),
           (_bl_out.get("error"), _bl_hidden))
     check("...and says the same 'N things you have not heard of' shape `why` "
           "gives for the identical node, not a different, leakier sentence",
@@ -53,10 +54,12 @@ if _bl_target:
     check("...matching exactly what start_reason/`why` computes for the same "
           "missing list - one fog filter, not two that could drift apart",
           _bl_out.get("error") == _bl.missing_prereq_message(
-              [p for p in NODES[_bl_target]["pre"] if p not in _bl.done]),
+              [prereq_id for prereq_id in NODES[_bl_target]["pre"]
+               if prereq_id not in _bl.done]),
           (_bl_out.get("error"),
            _bl.missing_prereq_message(
-               [p for p in NODES[_bl_target]["pre"] if p not in _bl.done])))
+               [prereq_id for prereq_id in NODES[_bl_target]["pre"]
+                if prereq_id not in _bl.done])))
 
 # --- the second half of the same finding: the game told a player "X is
 # already active; stop it first if you want to switch to a bounty instead",
@@ -66,8 +69,9 @@ if _bl_target:
 # Find a real node that is tier>2 (never bounty-eligible) and has no missing
 # prerequisites, so it can actually be made `active`.
 _bls = sim(capital=1_000_000.0)
-_bls_target = next((k for k in _bls.order
-                    if not _bls.bounty_eligible(k) and _bls.can_start(k)), None)
+_bls_target = next((node_id for node_id in _bls.order
+                    if not _bls.bounty_eligible(node_id)
+                    and _bls.can_start(node_id)), None)
 check("a real, startable, never-bounty-eligible node exists to "
       "test the ordering against",
       _bls_target is not None, _bls_target)

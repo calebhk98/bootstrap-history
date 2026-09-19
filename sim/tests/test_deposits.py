@@ -102,7 +102,7 @@ class AlluvialVersusVeinGoldTests(unittest.TestCase):
     """
 
     def setUp(self):
-        gold = {d.name: d for d in deposits.load_deposits("gold")}
+        gold = {deposit.name: deposit for deposit in deposits.load_deposits("gold")}
         self.las_medulas = gold["las_medulas_alluvial"]
         self.dacia = gold["dacia_vein_gold"]
 
@@ -129,9 +129,9 @@ class SupplyCurveTests(unittest.TestCase):
             _make_deposit("d2", ore_grade_kg_per_tonne=10.0),
         ]
         points = deposits.supply_curve(raw)
-        costs = [p.own_cost_labour_hours_per_kg for p in points]
+        costs = [point.own_cost_labour_hours_per_kg for point in points]
         self.assertEqual(costs, sorted(costs))
-        self.assertEqual([p.deposit.name for p in points], ["d1", "d2", "d3"])
+        self.assertEqual([point.deposit.name for point in points], ["d1", "d2", "d3"])
 
     def test_cumulative_quantity_accumulates_in_sorted_order(self):
         raw = [
@@ -184,13 +184,13 @@ class MarginalDepositRentTests(unittest.TestCase):
         # Ricardian pricing: ONE price for the whole metal, set at the
         # margin - not each deposit selling at its own cost.
         outcome = deposits.find_marginal_deposit(self.deposits, 15.0)
-        by_name = {a.deposit.name: a for a in outcome.allocations}
+        by_name = {allocation.deposit.name: allocation for allocation in outcome.allocations}
         self.assertEqual(by_name["cheap"].own_cost_labour_hours_per_kg, 1.0)
         self.assertEqual(outcome.price_at_margin_labour_hours_per_kg, 2.0)
 
     def test_rent_is_marginal_cost_minus_own_cost_times_quantity(self):
         outcome = deposits.find_marginal_deposit(self.deposits, 15.0)
-        by_name = {a.deposit.name: a for a in outcome.allocations}
+        by_name = {allocation.deposit.name: allocation for allocation in outcome.allocations}
         cheap = by_name["cheap"]
         self.assertEqual(cheap.quantity_supplied_tonnes_per_year, 10.0)
         self.assertAlmostEqual(cheap.rent_labour_hours_per_kg, 2.0 - 1.0)
@@ -200,19 +200,19 @@ class MarginalDepositRentTests(unittest.TestCase):
 
     def test_marginal_deposit_itself_earns_zero_rent(self):
         outcome = deposits.find_marginal_deposit(self.deposits, 15.0)
-        by_name = {a.deposit.name: a for a in outcome.allocations}
+        by_name = {allocation.deposit.name: allocation for allocation in outcome.allocations}
         self.assertEqual(by_name["middle"].rent_labour_hours_per_kg, 0.0)
 
     def test_deposit_not_reached_supplies_and_earns_nothing(self):
         outcome = deposits.find_marginal_deposit(self.deposits, 15.0)
-        by_name = {a.deposit.name: a for a in outcome.allocations}
+        by_name = {allocation.deposit.name: allocation for allocation in outcome.allocations}
         self.assertEqual(by_name["dear"].quantity_supplied_tonnes_per_year, 0.0)
         self.assertEqual(by_name["dear"].rent_labour_hours_per_kg, 0.0)
 
     def test_quantity_conservation(self):
         outcome = deposits.find_marginal_deposit(self.deposits, 15.0)
         total_supplied = sum(
-            a.quantity_supplied_tonnes_per_year for a in outcome.allocations)
+            allocation.quantity_supplied_tonnes_per_year for allocation in outcome.allocations)
         self.assertAlmostEqual(total_supplied, 15.0)
         self.assertAlmostEqual(outcome.quantity_supplied_tonnes_per_year, 15.0)
         self.assertEqual(outcome.unmet_demand_tonnes_per_year, 0.0)
@@ -274,8 +274,8 @@ class DepletionMechanismTests(unittest.TestCase):
         outcomes = deposits.simulate_depletion(
             [self.cheap, self.dear], quantity_demanded_tonnes_per_year=10.0,
             years=6, working_life_years=3.0)
-        early_prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes[:3]]
-        late_prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes[3:]]
+        early_prices = [outcome.price_at_margin_labour_hours_per_kg for outcome in outcomes[:3]]
+        late_prices = [outcome.price_at_margin_labour_hours_per_kg for outcome in outcomes[3:]]
         # Each block rises on its own (the intensive margin, live within
         # both `cheap`'s and then `dear`'s own working life)...
         self.assertEqual(early_prices, sorted(early_prices))
@@ -301,7 +301,7 @@ class DepletionMechanismTests(unittest.TestCase):
         outcomes = deposits.simulate_depletion(
             [self.cheap, self.dear], quantity_demanded_tonnes_per_year=10.0,
             years=6, working_life_years=3.0)
-        prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes]
+        prices = [outcome.price_at_margin_labour_hours_per_kg for outcome in outcomes]
         self.assertEqual(prices, sorted(prices))
         self.assertGreater(prices[-1], prices[0])
 
@@ -313,21 +313,21 @@ class DepletionMechanismTests(unittest.TestCase):
         # credited each state with a DIFFERENT deposit's extraction. Three
         # deposits whose cost order differs from construction order is
         # exactly the case that stayed silent under position-matching.
-        a = _make_deposit("a_expensive", ore_grade_kg_per_tonne=1.0,
+        deposit_a = _make_deposit("a_expensive", ore_grade_kg_per_tonne=1.0,
                            quantity_tonnes_per_year=5.0)
-        b = _make_deposit("b_cheap", ore_grade_kg_per_tonne=100.0,
+        deposit_b = _make_deposit("b_cheap", ore_grade_kg_per_tonne=100.0,
                            quantity_tonnes_per_year=5.0)
-        c = _make_deposit("c_middle", ore_grade_kg_per_tonne=10.0,
+        deposit_c = _make_deposit("c_middle", ore_grade_kg_per_tonne=10.0,
                            quantity_tonnes_per_year=5.0)
-        states = deposits.init_deposit_states([a, b, c], working_life_years=2.0)
+        states = deposits.init_deposit_states([deposit_a, deposit_b, deposit_c], working_life_years=2.0)
         outcomes = deposits.simulate_depletion(
-            [a, b, c], quantity_demanded_tonnes_per_year=5.0, years=1,
+            [deposit_a, deposit_b, deposit_c], quantity_demanded_tonnes_per_year=5.0, years=1,
             working_life_years=2.0)
         # Only the cheapest (b_cheap) should have been touched at all: 5
         # tonnes demanded, b_cheap alone supplies its full 5.
         self.assertEqual(outcomes[0].marginal_deposit_name, "b_cheap")
-        by_name = {s.deposit.name: s for s in
-                   deposits.init_deposit_states([a, b, c], working_life_years=2.0)}
+        by_name = {state.deposit.name: state for state in
+                   deposits.init_deposit_states([deposit_a, deposit_b, deposit_c], working_life_years=2.0)}
         # Replay the same single year by hand and check remaining reserves
         # land on the deposit that was ACTUALLY supplied, not on whichever
         # one the sort happened to put in that list position.
@@ -446,8 +446,8 @@ class IntensiveMarginTests(unittest.TestCase):
             deposits.current_ore_grade_kg_per_tonne(self.deposit, 1.0), 0.0)
 
     def test_grade_falls_monotonically_with_fraction_extracted(self):
-        grades = [deposits.current_ore_grade_kg_per_tonne(self.deposit, f)
-                  for f in (0.0, 0.25, 0.5, 0.75, 1.0)]
+        grades = [deposits.current_ore_grade_kg_per_tonne(self.deposit, fraction)
+                  for fraction in (0.0, 0.25, 0.5, 0.75, 1.0)]
         self.assertEqual(grades, sorted(grades, reverse=True))
         self.assertGreater(grades[0], grades[-1])
 
@@ -514,11 +514,11 @@ class IntensiveMarginTests(unittest.TestCase):
         outcomes = deposits.simulate_depletion(
             [deposit], quantity_demanded_tonnes_per_year=10.0,
             years=5, working_life_years=100.0)
-        prices = [o.price_at_margin_labour_hours_per_kg for o in outcomes]
+        prices = [outcome.price_at_margin_labour_hours_per_kg for outcome in outcomes]
         self.assertEqual(prices, sorted(prices))
         self.assertLess(prices[0], prices[-1])
         self.assertEqual(
-            [o.exhausted_this_year for o in outcomes], [[]] * 5,
+            [outcome.exhausted_this_year for outcome in outcomes], [[]] * 5,
             "this deposit should not be anywhere near exhaustion yet")
 
 
@@ -584,7 +584,7 @@ class PolymetallicByproductTests(unittest.TestCase):
         # britannia_lead entry and the module docstring's POLYMETALLIC
         # DEPOSITS section for why this one and not a new load_deposits
         # ('silver') entry.
-        lead_deposits = {d.name: d for d in deposits.load_deposits("lead")}
+        lead_deposits = {deposit.name: deposit for deposit in deposits.load_deposits("lead")}
         britannia_lead = lead_deposits["britannia_lead"]
         self.assertEqual(len(britannia_lead.byproducts), 1)
         byproduct = britannia_lead.byproducts[0]
@@ -630,7 +630,7 @@ class PolymetallicByproductTests(unittest.TestCase):
         # here - see the module docstring's STANDALONE section). Checked
         # structurally rather than by importing that module, which is
         # being edited concurrently by another agent.
-        lead_deposits = {d.name: d for d in deposits.load_deposits("lead")}
+        lead_deposits = {deposit.name: deposit for deposit in deposits.load_deposits("lead")}
         britannia_lead = lead_deposits["britannia_lead"]
         joint = deposits.joint_output_quantities_kg(britannia_lead)
         self.assertIn("lead_kg", joint)
@@ -685,8 +685,8 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # carry (they sum to 1.0-1.02, not exactly 1.0).
         resources = deposits._load_json(deposits.RESOURCES_FILE)
         for metal in ("iron", "copper", "tin", "lead", "silver"):
-            total = sum(d.quantity_tonnes_per_year
-                        for d in deposits.load_deposits(metal))
+            total = sum(deposit.quantity_tonnes_per_year
+                        for deposit in deposits.load_deposits(metal))
             expected = resources["empire_output_100ad"][metal]["t_per_yr"]
             self.assertAlmostEqual(total / expected, 1.0, delta=0.05,
                                     msg=metal)
@@ -697,8 +697,8 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # data/world/deposits.json's gold and mercury entries.
         resources = deposits._load_json(deposits.RESOURCES_FILE)
         for metal in ("gold", "mercury"):
-            total = sum(d.quantity_tonnes_per_year
-                        for d in deposits.load_deposits(metal))
+            total = sum(deposit.quantity_tonnes_per_year
+                        for deposit in deposits.load_deposits(metal))
             expected = resources["empire_output_100ad"][metal]["t_per_yr"]
             self.assertAlmostEqual(total, expected, places=6, msg=metal)
 
@@ -709,9 +709,9 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # load_deposits must not pull either in, since data/world/
         # deposits.json names no china or southeast_asia deposit at all
         # and resources.json's empire_output_100ad is Rome's own figure.
-        names = {d.region for d in deposits.load_deposits("iron")}
+        names = {deposit.region for deposit in deposits.load_deposits("iron")}
         self.assertNotIn("china", names)
-        names = {d.region for d in deposits.load_deposits("tin")}
+        names = {deposit.region for deposit in deposits.load_deposits("tin")}
         self.assertNotIn("southeast_asia", names)
 
 

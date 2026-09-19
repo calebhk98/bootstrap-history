@@ -15,7 +15,8 @@ from .harness import *  # noqa: F401,F403
 # household stayed in arrears, however long that ran.
 # =============================================================================
 s_af = sim(capital=1000.0)
-_af_k = next(kk for kk in NODES if NODES[kk]["yrs"] >= 3 and NODES[kk]["ph"] > 500)
+_af_k = next(node_id for node_id in NODES
+             if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
 _af_n = NODES[_af_k]
 # Injected directly into `active`, bypassing prerequisite legality, to
 # isolate step()'s hour-allocation arithmetic from whether this particular
@@ -53,53 +54,54 @@ check("...and it is not marked underfunded, because nothing was actually "
 # (test_labour_productivity.py's own reopen_restaffed_ventures check). This
 # check does not care which venture node it is, only that it is one an
 # artisan can staff; reproduced verbatim rather than silently fixed.
-_k = "cementation_steel"
+_node_id = "cementation_steel"
 
 # --- and a concern a player shut ON PURPOSE must never reappear on its own -
 # reopen_restaffed_ventures only undoes close_unstaffed_ventures, never `mothball`
 s = sim(capital=50000.0)
-s.done.add(_k)
+s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
 s._resync_pools()
-s.open_venture(_k)
-s.mothball_work(_k)
+s.open_venture(_node_id)
+s.mothball_work(_node_id)
 reopened = s.reopen_restaffed_ventures(s.year)
 check("a concern closed on purpose with 'mothball' is never auto-reopened, "
       "however much staff is free - that is still the player's call",
-      reopened == [] and _k in s.mothballed and _k not in s.operating, reopened)
+      reopened == [] and _node_id in s.mothballed and _node_id not in s.operating,
+      reopened)
 
 # --- the treadmill itself, measured: build a realistic spread of concerns,
 # starve them of any staff replacement (auto_hire off, the player default),
 # and count closures against automatic reopenings over 40 years
 def _portfolio_run(auto_hire, years=40):
-    s = sim(civ="norse_900ad", capital=60000.0)
-    s.policy["auto_hire"] = auto_hire
-    cands = sorted((k for k in NODES if s.is_venture(k) and NODES[k]["rev"] > 0),
-                   key=lambda k: -(NODES[k]["rev"] / max(1.0, sum(s.venture_hands(k)))))
+    sim_state = sim(civ="norse_900ad", capital=60000.0)
+    sim_state.policy["auto_hire"] = auto_hire
+    cands = sorted((node_id for node_id in NODES if sim_state.is_venture(node_id) and NODES[node_id]["rev"] > 0),
+                   key=lambda k: -(NODES[k]["rev"] / max(1.0, sum(sim_state.venture_hands(k)))))
     chosen, need_sch, need_art = [], 0.0, 0.0
-    for k in cands:
-        s.done.add(k)
-        a, b = s.venture_hands(k)
-        if (need_sch + a > 8.0 and need_sch > 0) or (need_art + b > 35.0 and need_art > 0):
-            s.done.discard(k)
+    for node_id in cands:
+        sim_state.done.add(node_id)
+        scholar_hands, artisan_hands = sim_state.venture_hands(node_id)
+        if (need_sch + scholar_hands > 8.0 and need_sch > 0) or (need_art + artisan_hands > 35.0 and need_art > 0):
+            sim_state.done.discard(node_id)
             continue
-        need_sch += a
-        need_art += b
-        chosen.append(k)
+        need_sch += scholar_hands
+        need_art += artisan_hands
+        chosen.append(node_id)
         if len(chosen) >= 25:
             break
-    s._done_changed()
-    s.employees["scholar"] = round(need_sch) + 1
-    s.employees["artisan"] = round(need_art) + 2
-    s._resync_pools()
-    opened = [k for k in chosen if s.open_venture(k)[0]]
+    sim_state._done_changed()
+    sim_state.employees["scholar"] = round(need_sch) + 1
+    sim_state.employees["artisan"] = round(need_art) + 2
+    sim_state._resync_pools()
+    opened = [node_id for node_id in chosen if sim_state.open_venture(node_id)[0]]
     reopenings = 0
     for _ in range(years):
-        before = set(s.operating)
-        s.step()
-        reopenings += len((set(s.operating) - before) & set(opened))
-    return opened, sum(1 for k in opened if k in s.operating), reopenings
+        before = set(sim_state.operating)
+        sim_state.step()
+        reopenings += len((set(sim_state.operating) - before) & set(opened))
+    return opened, sum(1 for node_id in opened if node_id in sim_state.operating), reopenings
 
 _opened, _open_end, _reopenings = _portfolio_run(auto_hire=True)
 check("with auto_hire replacing attrition losses, the portfolio it built "

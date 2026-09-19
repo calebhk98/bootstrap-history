@@ -368,8 +368,8 @@ check("`state` reports how much of what you run has diffused to competitors",
 # example already noted elsewhere in this tree) - a visited set is not
 # optional here, it is the difference between this check finishing and an
 # OOM kill.
-def _full_ancestors(k, _nodes=NODES):
-    seen, stack = set(), [k]
+def _full_ancestors(node_id, _nodes=NODES):
+    seen, stack = set(), [node_id]
     while stack:
         cur = stack.pop()
         if cur in seen:
@@ -385,7 +385,7 @@ def _full_ancestors(k, _nodes=NODES):
             for opt in (req_group.get("options") or {}):
                 if opt in _nodes and opt not in seen:
                     stack.append(opt)
-    seen.discard(k)
+    seen.discard(node_id)
     return seen
 
 
@@ -494,25 +494,25 @@ check("a pure-knowledge node (no revenue, no upkeep) carries no "
 # `open`, for ever. "Most of the mid and late game was a repetitive
 # hire-then-reopen treadmill rather than fresh decisions."
 s = sim(capital=50000.0)
-_k = "cementation_steel"
-s.done.add(_k)
+_node_id = "cementation_steel"
+s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
 s._resync_pools()
-ok, _ = s.open_venture(_k)
+ok, _ = s.open_venture(_node_id)
 check("set-up: cementation_steel opens with six craftsmen on staff", ok)
 s.employees["artisan"] = 0.0
 s._resync_pools()
 closed = s.close_unstaffed_ventures(s.year)
 check("losing every craftsman shuts a concern that needs them to supervise",
-      closed == [_k] and _k in s.mothballed and _k in getattr(s, "shut_for_staff", {}),
+      closed == [_node_id] and _node_id in s.mothballed and _node_id in getattr(s, "shut_for_staff", {}),
       closed)
 s.employees["artisan"] = 6.0
 s._resync_pools()
 reopened = s.reopen_restaffed_ventures(s.year)
 check("...and it comes back on its own once restaffed, with no 'open' typed",
-      reopened == [_k] and _k in s.operating and _k not in s.mothballed
-      and _k not in getattr(s, "shut_for_staff", {}), reopened)
+      reopened == [_node_id] and _node_id in s.operating and _node_id not in s.mothballed
+      and _node_id not in getattr(s, "shut_for_staff", {}), reopened)
 
 # --- BREAK: the closing message promises "reopening soon costs a tenth of
 # what opening did" - a player who instead reaches for `restore` (the verb
