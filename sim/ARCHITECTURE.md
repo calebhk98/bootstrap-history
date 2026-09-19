@@ -66,7 +66,8 @@ decoupling it. That is worth knowing before you plan any refactor.
                         One shared function now, used by both callers.
     engine/fog.py       what the player is allowed to see.
     engine/geography.py where things are, per civilisation.
-    engine/protocol.py  an 81-line shim, unchanged by this split. The JSON
+    engine/protocol.py  an 81-line shim, not touched by the mixin split
+                        above. The JSON
                         command layer itself is engine/proto/, twelve
                         modules; `agent` mode. Everything importable from
                         engine.protocol still is.
@@ -284,12 +285,18 @@ Whoever splits another mixin next must add its new sub-mixin files to this
 list, or this script will make exactly the same silent-undercount mistake
 the old one just did.
 
-The paragraph below is left as written, because its argument is still the
-argument - the coupling is the domain, and the extraction did not remove it,
-it gave one coherent group of fields an owner.
+This is a distributed god object. It is also, honestly, a defensible shape for
+this problem: money genuinely does affect labour, which affects what can be
+built, which affects reputation, which affects money. Those couplings are the
+domain, not an accident. Moving the state into a `State` object passed to free
+functions would relocate the coupling, not remove it.
 
-`Sim` had **157 distinct instance attributes** and **314 methods** across six
-mixins. Calls between mixin files, counted by `self.<method>()`:
+The clearest illustration is a coupling count taken when `Sim` had 157
+distinct instance attributes and 314 methods across six mixins, both since
+superseded by the 44/46 and 538 given above; nobody has re-run the coupling
+count itself against the current fourteen files, so treat the numbers below
+as illustrating the shape of the coupling, not as current. Calls between
+mixin files, counted by `self.<method>()`:
 
     core      -> economy    62        society  -> projects   30
     economy   -> projects   43        labour   -> projects   30
@@ -297,21 +304,16 @@ mixins. Calls between mixin files, counted by `self.<method>()`:
     projects  -> economy    33        core     -> society    15
 
 Distinct `self.*` names touched per file: core 205, economy 195, society 152,
-projects 120, labour 94. **Thirty-five attributes are touched by four or more
-different files.** No mixin can be constructed, tested or reasoned about on
-its own.
-
-This is a distributed god object. It is also, honestly, a defensible shape for
-this problem: money genuinely does affect labour, which affects what can be
-built, which affects reputation, which affects money. Those couplings are the
-domain, not an accident. Moving the state into a `State` object passed to free
-functions would relocate the coupling, not remove it.
+projects 120, labour 94. Thirty-five attributes were touched by four or more
+different files. No mixin could be constructed, tested or reasoned about on
+its own - and the mixin split did not change that; it moved code into more
+files without decoupling it (see "The one-paragraph version" above).
 
 **A full decomposition has been considered and rejected**, with reasons, so
 that the next person does not silently restart it:
-  * it means giving 157 shared fields explicit owners and converting ~200
-    implicit `self.x` couplings into arguments - a rewrite of most of 30,000
-    lines;
+  * it means giving every shared field an explicit owner and converting the
+    couplings mixins currently reach through `self` into arguments - a
+    rewrite of most of 30,000 lines;
   * the safety net does not exist for it. `perf_fingerprint.py` covers the
     simulation loop well and covers `protocol.py` not at all, and protocol is
     where a third of the code lives;
@@ -322,12 +324,11 @@ unchanged, because that is the part nothing currently guards.
 ## What IS worth restructuring
 
 Code lines, counted as **lines that are neither blank nor comment-only**
-(docstrings count as code under this rule). Re-measured 2026-09-18, after
-this split. The economy.py/society.py/cli.py this document used to list are
-now thin composition points (598, 45 and 1,608 lines respectively - see
-Layout above); the table below instead lists the **eight largest files in
-`engine/` by total line count as of this split**, which is the direct
-successor of the old list and keeps the same "eight files" frame comparable:
+(docstrings count as code under this rule). `economy.py`, `society.py` and
+the top-level `cli.py` are thin composition points now (598, 45 and 1,608
+lines respectively - see Layout above), so they are not the largest files
+any more; the table below lists the **eight largest files in `engine/` by
+total line count**:
 
     core.py                2,812 code   (4,929 total, 43% comment)
     projects.py            2,294 code   (3,468 total, 34% comment)
@@ -350,22 +351,17 @@ successor of the old list and keeps the same "eight files" frame comparable:
             print(p, code, len(lines))
     EOF
 
-THE RULE IS SPELLED OUT AND THE COMMAND IS GIVEN because an earlier version
-of this table recorded neither, and the numbers could not be reproduced. Two
-plausible readings of "excluding comments and blank lines" - with and
-without docstrings counted as code - disagree with each other, so nobody can
-tell what was measured or extend the table consistently unless both the rule
-and the paths are pinned down. Per CLAUDE.md SS8, a count in a prose document
-has to be something the next person can re-run, not a number they have to
-trust.
-
-What this table is no longer useful for: comparing against the pre-split
-sizes of economy.py/society.py/cli.py, because those files no longer hold
-the code being measured. `economy_market.py` (3,171 lines) is the closest
-present-day equivalent of the old economy.py's bulk, but it is one of four
-files that used to be one, and the constants-migration history below is
-about that now-split file, not about the 598-line composition point that
-carries the name today.
+The rule and the command travel with the table because "excluding comments
+and blank lines" has two plausible readings - with and without docstrings
+counted as code - that disagree with each other, so nobody can tell what was
+measured or extend the table consistently unless both the rule and the paths
+are pinned down. Per CLAUDE.md SS8, a count in a prose document has to be
+something the next person can re-run, not a number they have to trust. This
+table is not comparable to a line count of the pre-split `economy.py`/
+`society.py`/`cli.py`, since those files no longer hold the code being
+measured; `economy_market.py` (3,171 lines) is the closest present-day
+equivalent of the old `economy.py`'s bulk, but it is one of four files that
+now hold what one file used to.
 
 The smaller composition points are worth a separate note: `economy.py`
 (598 lines) and `society.py` (45 lines) are themselves majority comment under
@@ -374,15 +370,10 @@ that is left in them, once the methods moved out, is the class statement and
 the prose explaining why it is shaped that way. A tiny file can be "mostly
 comment" for a completely different reason than a huge one.
 
-"One of eight engine files is majority comment" - this document's own
-previous claim, quoting core.py at 54% - has to be re-derived rather than
-assumed, because every one of the eight files it was about has since either
-grown (core.py), shrunk to a shim (economy.py, society.py), or been
-subsumed by new files that did not exist when it was written (cli.py). The
-answer depends entirely on whether a docstring counts as documentation or as
-code, which is precisely why a bare percentage is not enough - the rule has
-to travel with the number. BOTH rules are scripted here, so neither has to
-be taken on trust:
+Whether a docstring counts as documentation or as code changes the answer to
+"how much of this file is comment", which is precisely why a bare percentage
+is not enough - the rule has to travel with the number. Both rules, scripted
+against the eight largest current engine files:
 
     python3 - <<'EOCOUNT'
     import ast
@@ -412,9 +403,6 @@ be taken on trust:
                  100.0 * (blank_or_comment + len(docstring_lines)) / len(lines)))
     EOCOUNT
 
-Measured 2026-09-18 against HEAD, on the eight largest current engine files
-(the successor list explained above, not the pre-split eight):
-
     file                  total   doc-as-code   doc-as-doc
     core.py                4,929          43%          55%
     projects.py            3,468          34%          46%
@@ -425,21 +413,16 @@ Measured 2026-09-18 against HEAD, on the eight largest current engine files
     cli.py                 1,608          29%          42%
     cli_interactive.py     1,542          24%          34%
 
-**One of eight** counting docstrings as documentation - still `core.py`, now
-55% rather than 54% (it grew from 4,577 to 4,929 lines, all of that in the
-`step()` extraction's comments explaining what moved and why) - and **zero
-of eight** counting them as code, same as before. The claim survives the
-split essentially unchanged, on this successor list; it does NOT survive
-unexamined, because the answer would be entirely different on a list that
-still included the now-tiny `economy.py`/`society.py` (52% and 98% "comment"
-respectively, for the reason given above - there is almost nothing left in
-them BUT the explanation). Note the direction on the files that did stay
-large: they got denser, not better documented, same as before this split.
-
-THE CLAIM THAT MATTERS IS UNAFFECTED. The comments are how agents hand each
-other the reason a thing is the way it is, they are load-bearing, and they
-must not be stripped to "clean up". That was never really an argument about
-percentages.
+**One of eight** is majority comment counting docstrings as documentation -
+`core.py`, at 55%. **Zero of eight** is, counting them as code. That answer
+would be different on a list that still included the now-tiny `economy.py`/
+`society.py` (52% and 98% "comment" respectively, for the reason given
+above - there is almost nothing left in them BUT the explanation), which is
+why the file list has to travel with the number as much as the rule does.
+The files that stayed large are denser, not better documented, than the
+ones that shrank to composition points. The comments are how agents hand
+each other the reason a thing is the way it is; they are load-bearing, and
+must not be stripped to "clean up".
 
 `core.py` is 4,929 lines total and 2,205 of them are code under the
 docstrings-as-documentation rule above - the script's own exact
@@ -449,29 +432,20 @@ would shuffle prose between files and buy nothing; the part of `core.py`
 that WAS worth splitting out - `step()` - was split for cyclomatic reasons,
 not line-count ones. See "`Sim.step()`" below.
 
-The two genuine outliers WERE `test_regressions.py` and `protocol.py`, and
-both have since been split - see the layout above. What made them worth
-splitting was not their line count:
+`test_regressions.py` and `protocol.py` were split for cyclomatic reasons,
+not line-count ones - see the layout above for their current shape:
 
   * `protocol.py`'s `_agent_dispatch_inner` was a single if/elif chain with a
     cyclomatic complexity of **395**, about eight times the point at which a
     function stops being readable. It is now forty handlers behind a dict,
     complexity 34, with an import-time assertion tying that dict to
-    KNOWN_COMMANDS so the two cannot drift. Pulling it apart immediately
-    exposed a handler referencing a variable that only existed in the old
-    enclosing scope - dead from the moment it was extracted, and unfindable
-    while it was buried.
+    KNOWN_COMMANDS so the two cannot drift.
   * `test_regressions.py` was a flat script, so checks ran at import in file
     order and nothing could be run selectively. `--only mines,demographics`
     runs 43 checks in 1 second where the whole suite runs **2,080** checks
-    in 66-68s (measured 2026-09-18 against a clean working tree at HEAD, 12
-    slow checks skipped, 3 slow topics not run). This supersedes the 2,316
-    this section previously quoted - the difference is real, from the same
-    round of test-file reorganisation described under "What changed" in
-    CLAUDE.md, not a measurement wobble. Measure this against HEAD rather
-    than a working tree with other agents' edits in it: a single uncommitted
-    test file shifts the count, which is how an earlier pass reported 2,317
-    instead of 2,316.
+    in 66-68s (12 slow checks skipped, 3 slow topics not run). Measure this
+    against a clean checkout of HEAD rather than a working tree with other
+    agents' edits in it: a single uncommitted test file shifts the count.
 
         python3 sim/test_regressions.py --only mines,demographics 2>&1 | tail -1
         python3 sim/test_regressions.py 2>&1 | tail -1
@@ -552,9 +526,9 @@ save-file semantics, because several of those names are in `SAVE_FIELDS` where
 a *missing* attribute is meaningful. `perf_fingerprint.py` caught it and the
 suite did not. Run it:
 
-    python3 rome/sim/perf_fingerprint.py record before.json
+    python3 sim/perf_fingerprint.py record before.json
     ...make your change...
-    python3 rome/sim/perf_fingerprint.py check before.json
+    python3 sim/perf_fingerprint.py check before.json
 
 It hashes every field of state after every year of nine runs across five
 civilisations, fog on and off, and names the first year that differs. It does
@@ -562,36 +536,22 @@ NOT cover `topo_order`, `protocol.py`, or anything outside the simulation
 loop - those need their own proof.
 
 **An import-time check cannot catch a bare module-global reference that
-moved.** During this split, `economy_market.py` used the class object
-`EconomyMixin` itself as a process-wide cache slot - a bare name, read and
-written at call time, not through `self` and not through an import alias.
-After the split, `EconomyMixin` no longer lived in `economy_market.py`; it
-lived in `economy.py` and composed `economy_market.py`'s `MarketMixin` in
-from outside. `import simulator` still succeeded, `sim/simulator.py
-validate` still passed, every module still compiled, because none of those
-checks execute the line that reads the name - and the first PROTOCOL command
-that actually ran that code path failed with `NameError: name 'EconomyMixin'
-is not defined`. A split is not verified until something runs the code, not
+moved.** A class object used as a process-wide cache slot - a bare name,
+read and written at call time, not through `self` and not through an import
+alias - breaks silently if that class moves to another file: `import
+simulator` still succeeds, `sim/simulator.py validate` still passes, every
+module still compiles, because none of those checks execute the line that
+reads the name. Only a command that actually runs that code path raises the
+`NameError`. A split is not verified until something runs the code, not
 just imports it. The cheapest thing that does:
 
     echo '{"cmd": "state"}' | python3 sim/simulator.py agent --civ rome_100ad
 
-Confirmed still passing against this HEAD, 2026-09-18.
-
-**Ten tests were expected to read source text with `inspect.getsource`;
-`grep -rln "getsource" sim/tests/ --include="*.py"` finds nine, not ten, as
-of this HEAD** - carry the number you measure, not the number you were told,
-which is the whole discipline this document exists to enforce. The nine:
-`test_affordability_and_credit.py`, `test_affordability_warning.py`,
-`test_agriculture.py`, `test_compact_mode.py`, `test_constants_burndown.py`,
-`test_demography.py`, `test_labour_productivity.py`,
-`test_military_logistics.py`, `test_parallelism_note.py`. Each asserts on
-the literal text of a function body, so moving code between methods can
-break one of these while the property it guards still holds - it is testing
-prose shape, not behaviour. `test_affordability_warning.py` already lives
-this: it used to read `getsource(Sim.step)` alone and looked for a phrase in
-it; once `step()` became a 42-line dispatcher, that phrase moved into one of
-the `_step_*` phase methods, so the test was WIDENED to read `step()` plus
-every `_step_*` method on `Sim`, not weakened to stop checking. Whoever next
-moves code between methods should grep this list first, not discover it from
-a failure.
+**Tests that read source text with `inspect.getsource` test prose shape, not
+behaviour.** `grep -rln "getsource" sim/tests/ --include="*.py"` names them -
+nine as of this HEAD. Each asserts on the literal text of a function body,
+so moving code between methods can break one of these while the property it
+guards still holds. `test_affordability_warning.py` reads `step()` plus
+every `_step_*` method on `Sim`, not `step()` alone, precisely because the
+phrase it looks for can live in either. Whoever next moves code between
+methods should run that grep first, not discover the list from a failure.

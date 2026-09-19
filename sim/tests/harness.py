@@ -1,28 +1,22 @@
 """Shared fixtures, imports and check-recording machinery for the split
 test suite (see sim/tests/__main__.py for the runner).
 
-This is test_regressions.py's own former preamble (import block, TREE/NODES/
-ORDER/GOAL, check()/slow_check()/proto()sim()/run_it()/_par_map(), the
-subprocess-timing patch and the --jobs parsing), moved here VERBATIM so every
-topic module in this package can do `from .harness import *` and see exactly
-what the old flat script saw at the top of the file. Every topic module is
-still just top-level code that calls check()/slow_check() at import time,
-in file order - splitting into files changes nothing about how a check runs,
-only how the source is organised on disk.
+Every topic module does `from .harness import *` to see everything defined
+here: the import block, TREE/NODES/ORDER/GOAL, check()/slow_check()/proto()/
+sim()/run_it()/_par_map(), the subprocess-timing patch and the --jobs
+parsing. Every topic module is just top-level code that calls
+check()/slow_check() at import time, in file order - splitting into files
+changes nothing about how a check runs, only how the source is organised on
+disk.
 
 A few names below (_mk_loom_sim, _hazard, _rel/_LOADTEST_DIR, and the whole
-family of `from engine.protocol import X as _Y` mid-file imports) are not
-part of the ORIGINAL top-of-file preamble - they are helpers the original
-flat file defined once, inline, at their first point of use, and then called
-again many hundreds (sometimes thousands) of lines later, in what is now a
-DIFFERENT topic module. Since Python executed the whole file as one module,
-that just worked; split into separate modules it would not, so those few
+family of `from engine.protocol import X as _Y` mid-file imports) are
 reusable, side-effect-free pieces (pure functions, pure imports, or a plain
-string constant + an idempotent os.makedirs) are ALSO defined here once and
-re-exported, while the topic module that originally introduced them keeps
-its own verbatim copy too (harmless - it simply shadows the harness-provided
-name with an identical one within that module's own namespace, exactly
-reproducing the original file's behaviour there).
+string constant + an idempotent os.makedirs) that some topic modules ALSO
+define for themselves, verbatim, inside their own namespace, rather than
+relying on the harness-provided copy. That is harmless: a module-local
+definition simply shadows the harness-provided name with an identical one,
+so both spellings behave the same way.
 """
 import atexit, collections, copy, glob, json, os, random, re, shutil, subprocess, sys, time
 import concurrent.futures as _concurrent_futures

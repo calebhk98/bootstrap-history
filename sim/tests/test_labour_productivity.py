@@ -646,12 +646,12 @@ check("`money`'s net_per_year is insulated from the same one-year swing, "
 # net the ledger prints", has to actually be computed the same way now
 # that the ledger's own figure changed.
 #
-# BEHAVIOURAL, NOT A SOURCE SCAN. This used to grep
+# BEHAVIOURAL, NOT A SOURCE SCAN: a grep of
 # inspect.getsource(S.Sim.stall_diagnosis) for the literal text
-# "revenue_capacity()". That would have passed on a comment mentioning the
-# call (test_parallelism_note.py records this exact failure mode actually
-# happening to a sibling check) and would not have noticed a call whose
-# return value stall_diagnosis went on to ignore. The claim is the one
+# "revenue_capacity()" would pass on a comment mentioning the call
+# (test_parallelism_note.py records this exact failure mode actually
+# happening to a sibling check) and would not notice a call whose return
+# value stall_diagnosis went on to ignore. The claim is the one
 # this whole section is already demonstrating for net_per_year, above:
 # selling the founder's hours for wages this year must not swing the
 # figure. Reproduce that same swing test directly against stall_diagnosis,

@@ -9,9 +9,9 @@ both styles identically.
 THESE TESTS ARE ABOUT THE DETECTORS, NOT ABOUT THE CURRENT STATE OF THIS
 CODEBASE. A check asserting "there are 1,337 short-name occurrences today"
 would turn every legitimate rename, every new file, and every other agent's
-unrelated edit into a test failure - and this repository is, at the time of
-writing, being edited by several agents in the same checkout at once, so a
-number like that can change between one run of this file and the next for
+unrelated edit into a test failure - and this repository is worked on by
+several agents in the same checkout at once, so a number like that can
+change between one run of this file and the next for
 reasons that have nothing to do with code_health.py being right or wrong.
 Every test below builds a small fixture with a KNOWN answer - a source
 string, or a couple of files on disk - and asserts the detector finds

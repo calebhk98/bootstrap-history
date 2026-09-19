@@ -62,29 +62,27 @@ if _fh_target:
     # here, which would advance the year and recompute ph_left out from
     # under the fixture this check depends on.
     import inspect as _insp
-    # _agent_state() PLUS ITS OWN SECTION HELPERS, NOT _agent_state() ALONE.
-    # This read only _agent_state's source while that function was one 499-line
-    # dict literal. It is now a short assembler over `_agent_state_*` helpers,
-    # one per section of the reply, and the assignment this check is about
-    # lives in _agent_state_training_and_hours.
+    # _agent_state() PLUS ITS OWN SECTION HELPERS, NOT _agent_state() ALONE:
+    # _agent_state() is a short assembler over `_agent_state_*` helpers, one
+    # per section of the reply, and the assignment this check is about lives
+    # in _agent_state_training_and_hours.
     #
-    # Reading only the assembler would have this check pass on a COMMENT that
-    # happens to name the field, which is what briefly happened: the split left
-    # a comment above the update() call mentioning free_hours_going_unused, and
-    # a substring search cannot tell that from an assignment. A check that
-    # passes on prose is worse than no check, because it still reads as
-    # evidence. Gathering the helpers by prefix puts the real assignment back in
-    # scope, and keeps it there across any future re-split.
+    # Reading only the assembler's own source would let this check pass on a
+    # COMMENT that happens to name the field - a substring search cannot tell
+    # that from a real assignment, and a check that passes on prose is worse
+    # than no check, because it still reads as evidence. Gathering the
+    # helpers by prefix puts the real assignment back in scope, and keeps it
+    # there across any future re-split.
     #
-    # The property being asserted has not changed: whichever part of
-    # _agent_state's own call graph produces this field, it must be that call
-    # graph, so that `step`'s reply - built from the same _agent_state() call -
-    # gets the field without anyone maintaining a second copy.
-    # READ THE DEFINING MODULE, NOT THE SHIM. engine/protocol.py re-exports a
+    # The property being asserted: whichever part of _agent_state's own call
+    # graph produces this field, it must be that call graph, so that `step`'s
+    # reply - built from the same _agent_state() call - gets the field
+    # without anyone maintaining a second copy.
+    # READ THE DEFINING MODULE, NOT THE SHIM: engine/protocol.py re-exports a
     # fixed list of public protocol names and the section helpers are not on
-    # it, so gathering them off the shim finds nothing and this check would
-    # once again be passing on the comment alone. engine.proto.state is where
-    # they are defined.
+    # it, so gathering them off the shim finds nothing, and this check would
+    # then pass on prose alone rather than the real assignment.
+    # engine.proto.state is where they are defined.
     from engine.proto import state as _state_module
     _state_source = "".join(
         [_insp.getsource(_state_module._agent_state)]

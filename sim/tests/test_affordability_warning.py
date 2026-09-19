@@ -29,16 +29,16 @@ check("money also states the real financing ceiling, the same number "
 # reading committed_spend()/funding_capacity(), not a private copy of the
 # same arithmetic that could quietly disagree with it.
 #
-# BEHAVIOURAL, NOT A SOURCE SCAN. This used to concatenate getsource(Sim.step)
-# with every _step_* phase method and grep the text for the two literal call
-# strings "self.funding_capacity()" and "self.committed_spend()". That found
-# the right thing while step() and its phases were laid out exactly as
-# written on the day the check was added, but a substring match cannot tell
-# a real call from the same words sitting in a comment (test_parallelism_
-# note.py records this failure mode actually happening once, to a sibling
-# check in this same style: a split left a comment naming the field above
-# the real assignment, and the check passed on the comment alone). The
-# actual claim - that the year's project-start budget is funding_capacity()
+# BEHAVIOURAL, NOT A SOURCE SCAN: a grep of getsource(Sim.step) concatenated
+# with every _step_* phase method, for the two literal call strings
+# "self.funding_capacity()" and "self.committed_spend()", depends on step()
+# and its phases staying laid out exactly as written the day such a check is
+# added - a substring match cannot tell a real call from the same words
+# sitting in a comment (test_parallelism_note.py records this failure mode
+# actually happening once, to a sibling check in this same style: a split
+# left a comment naming the field above the real assignment, and the check
+# passed on the comment alone). The actual claim - that the year's
+# project-start budget is funding_capacity()
 # minus committed_spend(), not a second formula - is directly observable:
 # normalise every candidate's project_cost() to one known number, then show
 # that a household whose (funding_capacity() - committed_spend()) clears

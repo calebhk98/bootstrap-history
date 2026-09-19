@@ -3,8 +3,9 @@
 WHAT THIS IS FOR. Complaints/43 measured `iugerum_land` solving to exactly
 0.0 in `sim/solve_prices.py`: land has no cost of production (its own
 `data/production/40_organics.json` entry says so directly - "essentially no
-labour... a rent set by the worst iugerum still worth taking"), and rent on
-every extracted material used to be fixed at zero, so land came out free.
+labour... a rent set by the worst iugerum still worth taking"), and nothing
+in the solver computed a rent on land, so it defaulted to zero and land came
+out free.
 `sim/world/deposits.py` fixed this for six ORES this same round, but a mine
 and a field are not the same physical object and do not want the same
 mechanism: a mine's marginal unit is set by GRADE, which falls as a deposit
@@ -17,15 +18,16 @@ use, and the margin that sets land's price is the worst LAND actually
 needed to feed however many people are drawing on it, not the worst DEPOSIT
 actually needed to meet a metal quota. This module is that mechanism.
 
-UPDATE (Complaints/46): THAT WAS ONLY HALF OF RICARDO, AND THIS ROUND ADDS
-THE OTHER HALF. Everything above is the EXTENSIVE margin - better land
-against worse. Complaints/46 measured what that leaves out: Han China holds
-one region, Rome holds seven, and a civilization holding a single uniform
-region has nothing WORSE of its own to earn a differential rent over, so it
-priced land at exactly zero regardless of population - Han China
-(58,000,000 people) and the Norse (1,500,000) came out identically priced,
-which was a finding about the MAP's own filing system (how many labels a
-region happened to be split into), not about either civilization's land.
+BOTH MARGINS OF RICARDO'S RENT ARE MODELLED, NOT ONLY THE EXTENSIVE ONE.
+Everything above is the EXTENSIVE margin - better land against worse.
+Complaints/46 records what an extensive-only model leaves out: Han China
+holds one region, Rome holds seven, and a civilization holding a single
+uniform region has nothing WORSE of its own to earn a differential rent
+over, so an extensive-only calculation prices land at exactly zero
+regardless of population - Han China (58,000,000 people) and the Norse
+(1,500,000) come out identically priced by that measure alone, which is a
+finding about the MAP's own filing system (how many labels a region happens
+to be split into), not about either civilization's land.
 The INTENSIVE margin - diminishing returns to more labour on the SAME
 ground, the second and third ploughing of one field yielding less than the
 first - is the other source of rent, and it does not need a worse region to
@@ -37,8 +39,8 @@ margin_outcome_for_civilization's own docstring for where the two margins
 actually combine.
 
 THE STAKEHOLDER'S FRAMING, which this module is built to fit rather than
-adapt afterwards: land belongs under geography (not floating free the way
-`iugerum_land` used to), it must be PER-CIVILISATION and CHANGEABLE (China
+adapt afterwards: land belongs under geography, not floating free as a
+single tree-wide price; it must be PER-CIVILISATION and CHANGEABLE (China
 has more of it than Europe, Rome's is better growing ground than the
 Norse's, and a civilisation that wins a war holds more of it), and mines
 should ride on the same territory (you can hold a lot of land and still
@@ -93,15 +95,15 @@ THE MECHANISM, IN ORDER.
      seven, Han China and the Norse each hold exactly one) and returns that
      civilization's own list of TILE-parcels: `land_tiles["region_to_
      tiles"]` resolves each held region to the physical tiles inside it
-     (dozens to over a hundred per civilization - see the UPDATE section
+     (dozens to over a hundred per civilization - see THE TWO MAP SYSTEMS
      below), and every tile carries its own name, arable iugera, and
      fertility. THIS IS WHERE "PER-CIVILISATION AND CHANGEABLE" LIVES. Two
      civilizations that hold the same `home_regions` list resolve to the
      same set of tiles and get the same land; a civilization that holds
      more, or better, regions gets more or better land, with no other code
-     path involved - and, per the UPDATE section below, this no longer
-     depends on how many region LABELS that land happens to be filed
-     under, only on which physical tiles it resolves to.
+     path involved, and (see THE TWO MAP SYSTEMS below) it does not depend
+     on how many region LABELS that land happens to be filed under, only on
+     which physical tiles it resolves to.
 
   2. QUANTITY DEMANDED. Exactly like `sim/world/deposits.py`'s own metal
      quantity, this project has no closed food-demand system yet, so this
@@ -162,22 +164,20 @@ demanded - the SAME `quantity_supplied` bookkeeping
 `sim/world/deposits.py`'s own `Allocation` already keeps, so a parcel
 priced in but not reached contributes zero weight, not zero price to a
 nonzero weight). A CIVILIZATION HOLDING ONLY ONE REGION THEREFORE PRICES
-LAND AT EXACTLY ZERO FROM THIS FUNCTION ALONE, AND THAT WAS THE WHOLE
-FINDING THIS SECTION USED TO STOP AT - see Han China and the Norse in this
-module's own `--why`-style report for what a purely extensive, differential
-model says about why a civilization wants varied territory, not merely more
-of it.
+LAND AT EXACTLY ZERO FROM THIS FUNCTION ALONE - see Han China and the Norse
+in this module's own `--why`-style report for what a purely extensive,
+differential model says about why a civilization wants varied territory,
+not merely more of it.
 
-UPDATE (Complaints/46): THIS IS STILL TRUE OF `find_margin_of_cultivation`
-ITSELF, AND THAT IS NOW DELIBERATE, NOT THE WHOLE ANSWER. This function
-computes the EXTENSIVE margin only, on purpose, so its own tests keep
-checking exactly one mechanism at a time - see the LABOUR INTENSITY section
-below for the INTENSIVE margin this was missing, and
+THIS IS DELIBERATE: `find_margin_of_cultivation` COMPUTES THE EXTENSIVE
+MARGIN ONLY, so its own tests keep checking exactly one mechanism at a time
+- see the LABOUR INTENSITY section below for the INTENSIVE margin, and
 `margin_outcome_for_civilization`'s own docstring for where the two are
 added together. A civilization holding one region still gets a zero
-EXTENSIVE rent from this function; it no longer gets a zero PRICE from
-`margin_outcome_for_civilization`, because crowding that one region is a
-real, separate source of rent this function was never built to see.
+EXTENSIVE rent from this function; `margin_outcome_for_civilization` does
+not price that civilization's land at zero, because crowding that one
+region is a real, separate source of rent this function was never built to
+see.
 
 DEMAND IS A PARAMETER, EXACTLY LIKE sim/world/deposits.py'S OWN, BUT A
 DIFFERENT ONE. `quantity_demanded_kg_grain_equivalent` needs three
@@ -258,99 +258,83 @@ list at runtime - out of this module's ownership and this round's scope,
 and exactly the boundary CLAUDE.md's own "own ONLY" instruction for this
 task draws.
 
-UPDATE (stakeholder maintainability item 6, two map systems):
-THE EXTENSIVE MARGIN NOW READS `land_tiles`, NOT `regions`. Everything
-above this paragraph describes the mechanism as it stood when the margin's
-own atomic parcel was one of the 21 hand-drawn `regions` records. That was
-the SAME defect Complaints/46 found in `forest_land_ceiling`
-(`sim/engine/economy_mining.py`) and Complaints/50 found in weather
-pooling (`sim/engine/core.py`, since fixed - see that file's
-`_compute_farm_weather_cells`): a hand-drawn region is a LABEL, sized and
-named by whoever drew the map, not a unit of physical quantity, and using
-it as one made a civilization's own numbers depend on how many boxes its
-territory happened to be filed under rather than on how much land, of
-what quality, it actually holds. `north_africa` (5,750,000 km2, one
-`fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the
-strength of the Nile" per Complaints/46) is the concrete case: one region
-record cannot show a margin between its own good land and its own bad
-land, because it has only one fertility figure to its name.
+THE TWO MAP SYSTEMS: THE EXTENSIVE MARGIN READS `land_tiles`, NOT
+`regions`, BECAUSE A REGION IS A LABEL, NOT A UNIT OF PHYSICAL QUANTITY. A
+hand-drawn region is sized and named by whoever drew the map, so using one
+as the atomic parcel would make a civilization's own numbers depend on how
+many boxes its territory happens to be filed under, rather than on how much
+land, of what quality, it actually holds - the same defect Complaints/46
+found in `forest_land_ceiling` (`sim/engine/economy_mining.py`) and
+Complaints/50 found in weather pooling (`sim/engine/core.py` - see that
+file's `_compute_farm_weather_cells`). `north_africa` (5,750,000 km2, one
+`fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the strength
+of the Nile" per Complaints/46) is the concrete case: one region record
+cannot show a margin between its own good land and its own bad land,
+because it has only one fertility figure to its name.
 
 `data/world/geography.json`'s `land_tiles` block (1,139 equal-area
-150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/46's
-own recommended fix, `region_to_tiles` mapping each of the 21 regions to
-the tiles that fall inside it) already carries the SAME `land` fields a
-region record does - `land_area_km2`, `arable_fraction`,
-`fertility_quality_multiplier` - but per tile instead of per region, at
-roughly a hundredth of a hand-drawn region's typical size. `load_tile_
-lands` reads them the same way `load_region_lands` reads a region's own
-`land` block; `cultivable_land_for_civilization` now resolves a
+150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/46's own
+recommended fix, `region_to_tiles` mapping each of the 21 regions to the
+tiles that fall inside it) carries the SAME `land` fields a region record
+does - `land_area_km2`, `arable_fraction`, `fertility_quality_multiplier` -
+but per tile, at roughly a hundredth of a region's typical size.
+`load_tile_lands` reads them the same way `load_region_lands` reads a
+region's own `land` block; `cultivable_land_for_civilization` resolves a
 civilization's `home_regions` to the UNION of tiles those regions map to
 (via `region_to_tiles`, deduplicated and sorted for determinism regardless
-of `home_regions` order) and hands `find_margin_of_cultivation` THAT list
-of parcels - dozens to over a hundred per civilization instead of one to
-seven. `find_margin_of_cultivation` itself is completely unchanged: it
-already took "a list of parcels" as its input and never assumed anything
-about how many there are or what a parcel is called, which is exactly why
-this migration touches no other function in the LABOUR INTENSITY or
-MARGIN OF CULTIVATION sections below.
+of `home_regions` order) and hands `find_margin_of_cultivation` that list of
+parcels - dozens to over a hundred per civilization, rather than the one to
+seven regions Rome, Han China and the Norse hold.
+`find_margin_of_cultivation` takes a plain list of parcels and never
+assumes anything about how many there are or what a parcel is called,
+which is why it needs no change to work against either representation.
 
-WHY THIS IS INVARIANT TO RE-PARTITIONING, WHICH THE OLD MECHANISM WAS NOT.
-The old mechanism's answer for a civilization's territory depended on how
-that territory happened to be split into region records: the SAME ground,
-filed as one big region, gave a flat, blended fertility with no internal
-margin; filed as several smaller, differently-fertile regions, the same
-ground would show a real extensive margin between its own better and
-worse parts. Nothing about the physical land changed between those two
-filings - only the label count did. Reading `land_tiles` instead removes
-this dependency at the source: a civilization's own land figures are now
-the union of PHYSICAL TILES its `home_regions` resolve to, and that union
-does not care how many region labels were used to name it or what those
-labels are called - two civilizations (or the same civilization under a
-hypothetical redrawing of `regions` that split or merged some of its
-territory's labels without moving a single tile from one civilization to
-another) holding the same set of tiles get the same territory, the same
-margin, and the same price. `sim/world/land_tile_partition_invariance_
-test.py` (this task's own new test, alongside this module because
-`sim/tests/` is owned by other agents in the shared checkout - see that
-file's own docstring) asserts exactly this property, and fails against
-the pre-migration `cultivable_land_for_civilization` for exactly the
-reason described above.
+REGION-KEYED PARCELS WOULD MAKE THE MARGIN DEPEND ON HOW THE MAP HAPPENS TO
+BE PARTITIONED, WHICH `land_tiles` AVOIDS. The SAME ground, filed as one
+big region, gives a flat, blended fertility with no internal margin; filed
+as several smaller, differently-fertile regions, the same ground shows a
+real extensive margin between its own better and worse parts, with nothing
+about the physical land itself having changed - only the label count.
+Reading `land_tiles` removes this dependency at the source: a
+civilization's own land figures are the union of PHYSICAL TILES its
+`home_regions` resolve to, and that union does not care how many region
+labels name it or what those labels are called - two civilizations (or the
+same civilization under a hypothetical redrawing of `regions` that splits
+or merges some of its territory's labels without moving a single tile from
+one civilization to another) holding the same set of tiles get the same
+territory, the same margin, and the same price.
+`sim/world/land_tile_partition_invariance_test.py` (alongside this module
+because `sim/tests/` is owned by other agents in the shared checkout - see
+that file's own docstring) asserts exactly this property.
 
-WHAT DID NOT MOVE: `load_region_lands` (region-keyed, one parcel per
-region, straight off `geography["regions"]`) is UNCHANGED and still
-present - not because anything in THIS module still calls it (nothing
-does, after this update), but because `sim/tests/test_land.py`'s own
-`RegionDataLoadsCleanlyTests` and part of `CivilizationTerritoryTests`
-call it directly to exercise the region data on its own terms, and
-because `regions` is explicitly kept working for whatever else in the
-engine still reads it (`sim/world/deposits.py`'s deposit locations,
-`sim/engine/geography.py`'s centroid/name lookups, `sim/engine/
-economy_freight.py`'s freight distances, `sim/engine/economy_mining.py`'s
-`forest_land_ceiling` - the last of these already fixed for the
-COUNT-of-labels defect by Complaints/46's own per-km2 rewrite, still on
-`regions` for the land AREA itself). None of those are this task's
-ownership or in its scope; see this task's own final report for the
-measured list of what still reads `regions` after this change.
+`load_region_lands` (region-keyed, one parcel per region, straight off
+`geography["regions"]`) STAYS, even though nothing in this module calls it
+any more: `sim/tests/test_land.py`'s own `RegionDataLoadsCleanlyTests` and
+part of `CivilizationTerritoryTests` call it directly to exercise the
+region data on its own terms, and `regions` is still read by
+`sim/world/deposits.py`'s deposit locations, `sim/engine/geography.py`'s
+centroid/name lookups, `sim/engine/economy_freight.py`'s freight distances,
+and `sim/engine/economy_mining.py`'s `forest_land_ceiling` (already fixed
+for the COUNT-of-labels defect by Complaints/46's own per-km2 rewrite, but
+still keyed on `regions` for the land AREA itself).
 
-WHAT STILL DOES NOT MOVE, EVEN NOW: a `land_tiles` tile is still one
-parcel at one fertility, the same simplification a `regions` record used
-to make, just at a grain roughly a hundredth the size - `tools/
-generate_geography_tiles.py`'s own generation rule already documents that
-a tile's own `arable_fraction`/`fertility_quality_multiplier` are not
-independently surveyed either, but read off that tile's own Koppen-class
-sample mix. A future finer grid (Complaints/46 and this module's earlier
-sections both call out the stakeholder's stated 10,000-tile goal) would
-sharpen this further with no further change here, for the same reason a
-conquest mechanism needs no change here (see above): this module reads
+A `land_tiles` TILE IS STILL ONE PARCEL AT ONE FERTILITY - the same
+simplification a `regions` record makes, just at a grain roughly a
+hundredth the size. `tools/generate_geography_tiles.py`'s own generation
+rule documents that a tile's own `arable_fraction`/
+`fertility_quality_multiplier` are not independently surveyed either, but
+read off that tile's own Koppen-class sample mix. A future finer grid
+(Complaints/46 names the stakeholder's stated 10,000-tile goal) would
+sharpen this further with no change needed here: this module reads
 whatever `land_tiles` the geography file hands it, at whatever grain that
 file happens to be generated at.
 
 WHAT THIS MODULE DELIBERATELY DOES NOT DO.
 
   - No intra-tile heterogeneity. Each of the 1,139 `land_tiles` tiles is
-    still ONE parcel at ONE fertility - finer than the 21 `regions` this
-    module used to read (roughly a hundredth the area at the median), but
-    still a single number standing in for whatever real variation exists
+    still ONE parcel at ONE fertility - finer than the 21 hand-drawn
+    `regions` (roughly a hundredth the area at the median), but still a
+    single number standing in for whatever real variation exists
     inside a 150,000 km2 cell. `sim/world/deposits.py` lists several NAMED
     deposits per metal at different grades; nothing here has that
     resolution within one tile. This is exactly why a civilization whose
@@ -371,14 +355,14 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
     outright - but real land quality is not actually fixed forever either;
     treating `fertility_quality_multiplier` as a constant per region is a
     simplification, not a claim that fertility cannot be raised (or
-    ruined) by what is done to it. UPDATE (Complaints/46): the INTENSIVE
-    MARGIN (diminishing returns to labour on fixed land) IS now done - see
-    the LABOUR INTENSITY section - and is a different thing from either of
-    these: it never claims land runs out or that fertility itself changes,
-    only that the SAME land yields less per additional hour of labour
-    applied to it, which is what lets a civilization's own population
-    density raise its own rent with no depletion and no capital
-    improvement anywhere in the story.
+    ruined) by what is done to it. This bullet is DIFFERENT FROM the
+    INTENSIVE MARGIN (diminishing returns to labour on fixed land -
+    Complaints/46, see the LABOUR INTENSITY section): that mechanism never
+    claims land runs out or that fertility itself changes, only that the
+    SAME land yields less per additional hour of labour applied to it,
+    which is what lets a civilization's own population density raise its
+    own rent with no depletion and no capital improvement anywhere in the
+    story.
   - The amount of land `find_margin_of_cultivation` decides is actually
     needed to meet quantity demanded is still computed at the FLAT
     reference yield, not the intensity-adjusted one the LABOUR INTENSITY
@@ -407,15 +391,14 @@ from sim.world.shared_constants import (
     WHEAT_ENERGY_KCAL_PER_KG,
 )
 # THE FIVE NAMES ABOVE IMPORTED UNDER A LEADING-UNDERSCORE ALIAS keep this
-# module's own historical public names (LAND_HUMAN_CALORIC_NEED_KCAL_PER_
+# module's own public names (LAND_HUMAN_CALORIC_NEED_KCAL_PER_
 # DAY, LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, LAND_LABOUR_OUTPUT_
 # ELASTICITY, LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER) or a derived one
 # (FALLOW_HOLDING_MULTIPLIER) rather than the shared module's own names -
-# see each assignment below, at the exact spot each used to be its own
-# independent `declare()` call, for why. This module's own STANDALONE
+# see each assignment below for why. This module's own STANDALONE
 # property is unaffected by importing a shared value: sim/world/
 # shared_constants.py imports nothing but sim.constants.declare, exactly
-# like this file already did - see that module's own docstring.
+# like this file already does - see that module's own docstring.
 # WHEAT_ENERGY_KCAL_PER_KG keeps the exact same name it always had; see its
 # own assignment below for why it is imported directly rather than aliased.
 
@@ -492,47 +475,44 @@ def reference_yield_kg_per_iugerum(
 # to any civilization's outcome.
 # ============================================================================
 
-# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY used to be its own `declare()` call
-# here. It is now this module's own historical public name for
+# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY is this module's own public name for
 # sim/world/shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_
-# ADULT_DAY (see this file's top-of-file import) - sim/world/agriculture.py
-# needs the identical figure (formerly under its own HUMAN_ENERGY_
-# REQUIREMENT_KCAL_PER_ADULT_DAY name) and now imports the same shared
+# ADULT_DAY (see this file's top-of-file import). sim/world/agriculture.py
+# needs the identical figure, under its own HUMAN_ENERGY_
+# REQUIREMENT_KCAL_PER_ADULT_DAY name, and imports the same shared
 # declaration. sim/world/demand.py's HUMAN_SUBSISTENCE_CALORIES_PER_
 # CAPITA_DAY and sim/world/demography.py's SUBSISTENCE_CALORIES_PER_ADULT_
-# EQUIVALENT_DAY still declare it independently, out of this change's
-# ownership - see sim/world/shared_constants.py's own WHAT DOES NOT BELONG
-# HERE section and sim/tests/test_shared_constants.py for how a future
-# drift there is still caught.
+# EQUIVALENT_DAY each still declare it independently - see
+# sim/world/shared_constants.py's own WHAT DOES NOT BELONG HERE section for
+# why those stay separate - and sim/tests/test_shared_constants.py is what
+# catches a future drift between them.
 LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY = (
     _SHARED_SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY)
 # Sets how much grain-equivalent a population needs before this module can
 # say how much land that requires - see WHEAT_ENERGY_KCAL_PER_KG for the
 # other half of that conversion.
 
-# WHEAT_ENERGY_KCAL_PER_KG used to be its own `declare()` call here too; it
-# is now imported directly under this same name from sim.world.
-# shared_constants (see the top-of-file import) - already safe to share the
-# exact name for, since (per this module's history) the value genuinely is
-# the same physical fact (wheat's own calorie density), not three modules
-# independently landing on a coincidentally-equal number. Turns a caloric
-# requirement into a mass of grain, the unit this module's regional yields
-# are already stated in.
+# WHEAT_ENERGY_KCAL_PER_KG is imported directly under this same name from
+# sim.world.shared_constants (see the top-of-file import): the value is the
+# same physical fact (wheat's own calorie density) this module,
+# agriculture.py and demand.py all need, not three modules independently
+# landing on a coincidentally-equal number. Turns a caloric requirement into
+# a mass of grain, the unit this module's regional yields are already
+# stated in.
 
-# FALLOW_HOLDING_MULTIPLIER used to be its own, independently-set
-# `declare()` call here (2.0, holding hectares per cropped hectare). It is
-# now DERIVED arithmetic from sim.world.shared_constants's
+# FALLOW_HOLDING_MULTIPLIER is DERIVED arithmetic (2.0, holding hectares
+# per cropped hectare) from sim.world.shared_constants's
 # FALLOW_SHARE_OF_HOLDING (0.5, the fraction of a holding idle in any one
-# year) instead - see that module's own LAND USE section for why this pair
-# is the HARD duplication case (the same physical fact under a different
-# name AND a different unit, not merely a different name) and
-# sim/world/agriculture.py's own comment at its FALLOW_SHARE_OF_HOLDING
-# import for the other side of it. Not a `declare()` of its own: it is
-# arithmetic on one already-declared number, the same convention this
-# module already uses for LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA below.
+# year), not a `declare()` of its own - see that module's own LAND USE
+# section for why this pair is the HARD duplication case (the same physical
+# fact under a different name AND a different unit, not merely a different
+# name) and sim/world/agriculture.py's own comment at its
+# FALLOW_SHARE_OF_HOLDING import for the other side of it. It is arithmetic
+# on one already-declared number, the same convention this module already
+# uses for LAND_ANNUAL_FARM_LABOUR_HOURS_PER_CAPITA below.
 FALLOW_HOLDING_MULTIPLIER = 1.0 / (1.0 - _SHARED_FALLOW_SHARE_OF_HOLDING)
-# 2.0, exactly reproducing this module's own historical value: a two-field
-# rotation with an even 50/50 split makes a holding twice its cropped area.
+# 2.0: a two-field rotation with an even 50/50 split makes a holding twice
+# its cropped area.
 # quantity_demanded_kg_grain_equivalent asks how much LAND a population's
 # grain need requires, and REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is a
 # CROPPED-hectare figure; without this multiplier the demand side would
@@ -655,16 +635,14 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 # seam is and what closing it would require.
 
 # LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE, LAND_LABOUR_OUTPUT_ELASTICITY
-# and LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER used to each be their own,
-# independently-set `declare()` call here, duplicating sim/world/
-# agriculture.py's REFERENCE_LABOUR_HOURS_PER_HECTARE, LABOUR_OUTPUT_
-# ELASTICITY and ANNUAL_LABOUR_HOURS_PER_FARM_WORKER under LAND_-prefixed
-# names - THE EXACT PAIR OF DUPLICATIONS THAT PROMPTED sim/world/
+# and LAND_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER are this module's own public
+# names for a single shared declaration (see this file's top-of-file
+# import) that also backs sim/world/agriculture.py's REFERENCE_LABOUR_
+# HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and ANNUAL_LABOUR_HOURS_PER_
+# FARM_WORKER - THE EXACT PAIR OF DUPLICATIONS THAT PROMPTED sim/world/
 # shared_constants.py TO EXIST (see that module's own docstring and
-# Complaints/46). All three are now this module's own historical public
-# names for that single shared declaration (see this file's top-of-file
-# import), so there is exactly one number behind each and no second copy
-# that can silently disagree with it.
+# Complaints/46). There is exactly one number behind each name and no
+# second copy that can silently disagree with it.
 LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE = (
     _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE)
 # The labour intensity REFERENCE_WHEAT_YIELD_KG_PER_HECTARE is quoted at -
@@ -967,11 +945,11 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
 def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
     """{tile_id: RegionLand}, one entry per `data/world/geography.json`
     `land_tiles` tile - the TILE-GRAIN sibling of `load_region_lands`
-    above, and what `cultivable_land_for_civilization` now reads instead
-    of it. See the module docstring's UPDATE (stakeholder maintainability
-    item 6...) section for why: a tile is a physical 150,000 km2 cell, not
-    a hand-drawn label, so a civilization's own land figures stop
-    depending on how many region records its territory was filed under.
+    above, and what `cultivable_land_for_civilization` reads. See the
+    module docstring's THE TWO MAP SYSTEMS section for why: a tile is a
+    physical 150,000 km2 cell, not a hand-drawn label, so a civilization's
+    own land figures do not depend on how many region records its
+    territory is filed under.
 
     RegionLand's own `region` field holds the TILE's id here (e.g.
     `"north_africa_03"`), not a `regions` key - `find_margin_of_
@@ -1006,10 +984,10 @@ def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, Reg
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
         # No land_tiles block at all - real data/world/geography.json
-        # always has one (see the module docstring's UPDATE section), so
-        # this only happens for a hand-built `geography` dict a caller
-        # passed directly (a test fixture, most likely) that predates this
-        # migration. Raising rather than silently returning {} makes that
+        # always has one (see the module docstring's THE TWO MAP SYSTEMS
+        # section), so this only happens for a hand-built `geography` dict
+        # a caller passed directly (a test fixture, most likely) without
+        # one. Raising rather than silently returning {} makes that
         # caller's own missing fixture data visible as a clear error
         # instead of a mysteriously-always-zero land figure downstream.
         raise KeyError(
@@ -1080,8 +1058,8 @@ def cultivable_land_for_civilization(
         civilization_id: str, geography: Optional[Dict[str, Any]] = None,
         civilizations: Optional[Dict[str, Any]] = None) -> List[RegionLand]:
     """This civilization's own list of RegionLand parcels - TILE-grain,
-    not region-grain (see the module docstring's UPDATE (stakeholder
-    maintainability item 6...) section) - resolved from the regions named
+    not region-grain (see the module docstring's THE TWO MAP SYSTEMS
+    section) - resolved from the regions named
     in its `home_regions` via `land_tiles["region_to_tiles"]`, read fresh
     every call. See the module docstring's WHAT A LATER CONQUEST MECHANISM
     WOULD HAVE TO TOUCH section: this function does no caching keyed on
@@ -1263,18 +1241,17 @@ def margin_outcome_for_civilization(
 
     THE COMBINATION, IN ORDER:
 
-      1. Run `find_margin_of_cultivation` exactly as before - which parcel
-         is marginal, and each worked parcel's EXTENSIVE rent (its own
+      1. Run `find_margin_of_cultivation` unmodified - which parcel is
+         marginal, and each worked parcel's EXTENSIVE rent (its own
          fertility surplus over the margin's), is computed by that
          function alone and is not touched by anything below.
       2. `labour_hours_applied_per_iugerum` turns this civilization's own
          population and its own TOTAL held arable endowment (every
          iugerum named in `home_regions`, not only the iugera step 1
          decided were actually needed) into a single, civilization-wide
-         labour intensity. A civilization holding one region - the exact
-         case that used to price at zero, because step 1 alone still
-         returns exactly zero there - is where this number does all the
-         work.
+         labour intensity. A civilization holding one region - the case
+         where step 1 alone still returns exactly zero - is where this
+         number does all the work.
       3. Every parcel step 1 actually allocated some iugera to (an unused,
          worse-than-margin parcel stays at exactly zero from BOTH margins
          - a parcel nobody needs earns nothing, matching

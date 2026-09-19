@@ -57,13 +57,13 @@ _hmode_env = dict(os.environ, ROME_SIM_CONFIG=_hmode_cfg, ROME_SAVE_DIR=_hmode_s
 _hmode1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                          input="1\n2\ny\n\nn\n\n\nquit\n", capture_output=True,
                          text=True, timeout=60, env=_hmode_env)
-# THE FLOOR IS THE CHOSEN GOAL'S, NOT THE DEFAULT GOAL'S. This used to assert a
-# per-civilisation figure for the transistor ("1,017 years" for Rome), read from
-# a hardcoded table. That was right while there was one goal and wrong the moment
-# there were seventeen: a lifetime goal with a five-year floor and the transistor
-# with a 142-year one cannot share a sentence, and the table would have had to be
-# maintained per civilisation per goal. It is computed with critical_path for
-# whatever the player just picked, so there is nothing to keep in step - and it
+# THE FLOOR IS THE CHOSEN GOAL'S, NOT THE DEFAULT GOAL'S: it is computed with
+# critical_path for whatever the player just picked, not read from a
+# hardcoded per-civilisation table. A table keyed on civilisation alone
+# cannot hold this once there is more than one goal - a lifetime goal with a
+# five-year floor and the transistor with a 142-year one cannot share a
+# sentence, and a table would have to be maintained per civilisation per
+# goal. Computing it means there is nothing to keep in step - and it
 # is stated as a floor rather than a forecast, because every real run takes
 # substantially longer than one.
 # WHITESPACE-NORMALISED, because the wizard wraps its prose to the display

@@ -26,9 +26,9 @@ importing proves anything about it. Reading the file does. That is what this
 topic does, and it is why it is worth a dependency the rest of the suite does
 not have.
 
-Two further splits were in flight when this was written, and more will follow
-while the engine files are still being broken up. This check is cheap and it
-guards exactly the shape those splits keep producing.
+Splitting a module into a composition point over several sub-mixins keeps
+producing exactly this shape of bug. This check is cheap and it guards
+against it directly.
 
 IF RUFF IS NOT INSTALLED this topic skips rather than fails, and says so.
 Requiring a tool nobody has would make a clean checkout look broken, which is

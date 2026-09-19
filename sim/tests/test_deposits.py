@@ -250,9 +250,9 @@ class MarginalDepositRentTests(unittest.TestCase):
 class DepletionMechanismTests(unittest.TestCase):
     """DepositState and simulate_depletion: a deposit that runs out forces
     the margin to a costlier one, with no change in demand at all - the
-    EXTENSIVE margin. Since the intensive margin (declining grade within a
-    deposit) was added, price no longer sits flat between exhaustion
-    events either - see IntensiveMarginTests for that mechanism checked in
+    EXTENSIVE margin. Price does not sit flat between exhaustion events
+    either, because the intensive margin (declining grade within a deposit)
+    also moves it - see IntensiveMarginTests for that mechanism checked in
     isolation, and this class's own test_price_rises_once_... for the two
     effects told apart within a single simulation.
     """

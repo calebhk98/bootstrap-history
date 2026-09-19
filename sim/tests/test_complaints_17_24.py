@@ -3,10 +3,11 @@ from .harness import *  # noqa: F401,F403
 
 
 # A mortality shock changes the screens and hiring multiplier immediately.
-# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md): pop_deficit
-# no longer exists - a hazard now cuts self.population's own cohorts (see
-# core.py's _apply_population_mortality_shock), and pop_scale/wage_index
-# are computed properties that read the gap this opens, so this test drives
+# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md): a hazard
+# cuts self.population's own cohorts directly (see core.py's
+# _apply_population_mortality_shock), and pop_scale/wage_index are computed
+# properties that read the gap this opens - there is no separate deficit
+# scalar to poke, so this test drives
 # the same shock through the real mechanism instead of poking a scalar.
 _plague = sim(civ="rome_100ad")
 _plague._apply_population_mortality_shock(0.28)

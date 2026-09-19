@@ -56,15 +56,16 @@ class RentIsWiredInTests(unittest.TestCase):
 
     def test_iugerum_land_is_no_longer_zero_for_rome(self):
         # UPDATE (stakeholder maintainability item 6, the two map
-        # systems): this used to be 55.779 hours/iugerum, the number
-        # Complaints/43's last update measured from the standalone CLI
-        # (`python3 sim/solve_prices.py --civ rome_100ad`) back when
-        # sim/world/land.py's extensive margin read Rome's SEVEN hand-drawn
-        # `regions` records. It now reads `land_tiles` instead (see that
-        # module's own docstring, UPDATE (stakeholder maintainability item
-        # 6...) section) - 88 tiles instead of 7 regions for Rome - and
-        # the number moved for two measured, physically sensible reasons,
-        # not because anything here broke:
+        # systems): this number is measured from Rome's 88 real
+        # `land_tiles` (data/world/geography.json), which is what
+        # sim/world/land.py's extensive margin reads (see that module's own
+        # docstring, UPDATE (stakeholder maintainability item 6...)
+        # section), not the seven hand-drawn `regions` records. The
+        # tile-grain figure is lower than the old region-grain one (55.779
+        # hours/iugerum, Complaints/43's own CLI
+        # measurement from `python3 sim/solve_prices.py --civ rome_100ad`)
+        # for two measured, physically sensible reasons, not because
+        # anything here broke:
         #   1. north_africa's own single blended fertility_quality_
         #      multiplier (1.35 - Complaints/46's own "96% Sahara, rated on
         #      the strength of the Nile") does not survive contact with

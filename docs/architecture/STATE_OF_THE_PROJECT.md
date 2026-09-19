@@ -161,8 +161,7 @@ solved 103 (57.2%)   gated 68 (37.8%)   no_recipe 9 (5.0%)   total 180
 ```
 
 Which `sim/world/` modules the engine actually imports - by `grep`, not
-prose. Eight domain modules exist today (the original plan's "six" is stale;
-`demand.py` and `land.py` were added since):
+prose. Eight domain modules exist today:
 
 ```
 agriculture.py         imported by sim/engine/core.py
@@ -186,25 +185,18 @@ wired into nothing at all.
 | | milestone | state, re-measured 2026-09-18 |
 |---|---|---|
 | 0 | the production side | **done.** 98.1% of materials individually, 99.7% weighted by consumption site (`sim/validate_production.py`). Remaining 3 (germanium_g, coal_tar_kg, indium_g) are the deliberate joint-byproduct gaps, unchanged and correctly unfillable from the cost side (Complaints/28, 29). |
-| 1 | provenance and a burndown | **working, and growing.** 877 numbers declared (up from 859), 697 temporary heuristics (79.5%), **11** hardcoded outcomes named individually - up from the 9 known when Complaints/37 was written, because the audit mechanism keeps catching more as `core.py`/`labour.py`/`society.py` get declared, not because the project is regressing. |
-| 2 | the synthetic world | **still not started, and the "probably unnecessary" reasoning holds up better than when it was written.** Agriculture, demography, land, deposits, transport, military_logistics and demand were all built standalone and (mostly) wired in afterwards, exactly the isolation the toy world existed to provide - with no second world to maintain. Nothing that has happened since this note was written argues for building it. |
-| 3 | the household extraction | **done.** `sim/engine/actors/household.py` (294 lines); unchanged this round. |
-| 4 | food and people | **wired, further than the stale table said.** Agriculture and demography are connected through `Sim._demographic_recovery` with a real harvest, a persistent granary (`farm_stock_kg`), per-region weather pooling (`_pooled_farm_weather_multiplier`, confirmed called), and (as of an uncommitted in-flight change) a disease-burden axis distinct from nutrition. Measured directly this session: an unshocked `rome_100ad` century now GROWS to ~107.6% of its starting population (was -78% before any of Milestone 4 landed, -24% after the granary alone). What Milestone 4 does not yet do: reallocate labour between trades in response to a famine - `sim/world/labour_market.py` exists and is unwired (see Part 3). |
+| 1 | provenance and a burndown | **working, and growing.** 877 numbers declared, 697 temporary heuristics (79.5%), **11** hardcoded outcomes named individually. The count is expected to keep growing as `core.py`/`labour.py`/`society.py` finish being audited - a rising count here means the audit is finding more, not that the project is regressing. |
+| 2 | the synthetic world | **still not started, and not needed.** Agriculture, demography, land, deposits, transport, military_logistics and demand were all built standalone and (mostly) wired in afterwards, exactly the isolation the toy world existed to provide - with no second world to maintain. |
+| 3 | the household extraction | **done.** `sim/engine/actors/household.py` (294 lines). |
+| 4 | food and people | **wired.** Agriculture and demography are connected through `Sim._demographic_recovery` with a real harvest, a persistent granary (`farm_stock_kg`), per-region weather pooling (`_pooled_farm_weather_multiplier`, confirmed called), and (as of an uncommitted in-flight change) a disease-burden axis distinct from nutrition. Measured directly this session: an unshocked `rome_100ad` century now GROWS to ~107.6% of its starting population. What this milestone does not yet do: reallocate labour between trades in response to a famine - `sim/world/labour_market.py` exists and is unwired (see Part 3). |
 | 5 | the wage, and the price solve | **both halves now have real mechanisms; neither is fully wired to the engine's live price table.** Material side: all materials priced in labour-hours (`sim/solve_prices.py`), capital and energy both wired, rent landed for 6 ore metals and (both margins) for land. Wage side: `sim/engine/labour.py`'s `wage_cost_factors()` now builds the wage the ENGINE actually charges from food/housing/tool-input scarcity - this is real and live in every game, independent of the solver. What is still off: `sim/engine/data.py`'s `use_solved_prices` switch, confirmed `False` by default; the provenance split for `rome_100ad` is 57.2% solved / 37.8% gated / 5.0% no-recipe. |
 | 5b | when a technique exists (era gate) | **built and exercised on every provenance call.** `requires_node` coverage: 205 of 215 production entries (95.3%), 91 needing no technology. Three energy-carrier mislabellings (Complaints/39) fixed; England-vs-Rome's process-heat divergence (Complaints/44) now respects a technique's reachable temperature. |
-| 6+ | transport, settlements, state finance, war | **transport wired in this round** (`sim/engine/economy.py` imports `sim/world/transport.py` for freight cost - this was standalone when the table was last written). `military_logistics.py` remains standalone. `deposits.py` reaches the engine only through the (currently off) solved-price path. Settlements, state finance and war have no dedicated module yet. |
+| 6+ | transport, settlements, state finance, war | **transport wired**: `sim/engine/economy.py` imports `sim/world/transport.py` for freight cost. `military_logistics.py` remains standalone. `deposits.py` reaches the engine only through the (currently off) solved-price path. Settlements, state finance and war have no dedicated module yet. |
 
-**What changed since the table was last written, in one paragraph.** The
-document's own prior snapshot said demography was wired and agriculture was
-not, wages were blocked on demography, and the pattern was "five standalone
-modules, one wired." All three of those are now out of date: agriculture IS
-wired (with a real granary and per-region weather), the engine's own wage is
-already endogenous independent of the price solver, and transport joined
-demography as a second wired module. The pattern has moved from 1-of-6 wired
-to 5-of-8 wired directly, with a sixth (deposits) reachable through a tool
-the engine can call but currently does not by default. The paragraph in
-`ENDOGENOUS_COSTS_AND_DOMAINS.md` below has been rewritten to say this rather
-than the older, now-false version.
+Five of eight `sim/world/` modules are wired directly into the engine, a
+sixth (`deposits.py`) reachable through a tool the engine can call but does
+not by default, two (`demand.py`, `labour_market.py`) wired into nothing.
+`ENDOGENOUS_COSTS_AND_DOMAINS.md` reflects this state, not an older one.
 
 ---
 
@@ -261,12 +253,12 @@ via one global boolean, starting with the roughly 40 pure-manufacturing
 materials that resolve through a real recipe with no extracted, zero-rent
 good anywhere upstream of them.
 
-**The 11 hardcoded outcomes - not zero, and that is expected, but they have
-moved (grown, correctly) since Complaints/37.** `DEBT_BASE_RATE` and
-`LIVING_COST_TAX_RATE` (the original two), plus `GENERIC_MINE_CAPEX_MULTIPLE`
-and its five capex siblings (found auditing further), plus two newly caught
-this round: `SLAVE_BASE_PRICE_DENARII` and `WAGE_SCARCITY_ELASTICITY`. The
-mine-capex family has a named fix already on record (Complaints/37): derive
+**The 11 hardcoded outcomes, named individually - not zero, and that is
+expected; see Part 2 for why a growing count here is the audit working, not
+the project regressing.** `DEBT_BASE_RATE`, `LIVING_COST_TAX_RATE`,
+`GENERIC_MINE_CAPEX_MULTIPLE` and its five capex siblings,
+`SLAVE_BASE_PRICE_DENARII` and `WAGE_SCARCITY_ELASTICITY`. The mine-capex
+family has a named fix already on record (Complaints/37): derive
 mine capital cost from `sim/world/deposits.py`'s own sinking-cost model
 (shaft-sinking hours, aqueduct-construction hours - both already declared
 physical quantities) instead of a multiple of book price. Nobody has done

@@ -573,17 +573,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.economy = 1.0        # size of the imperial economy relative to 100 AD
         self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
-        # Until this existed the model assumed that if a material existed
-        # anywhere you had unlimited quantities of it. That was the largest
-        # remaining falsehood in the simulation.
+        # How much of each material physically exists: a material's
+        # existence somewhere does not mean an unlimited quantity of it is
+        # available.
         self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY -----
-        # geography.json used to give every region one Rome-centric `reach`
-        # and nothing in this file ever read it. See load_geography() and
-        # region_reach()/material_reach() below for the fix: real coordinates,
-        # a reach computed from THIS civ's own home ground, and a material
-        # cost that follows from it. All of the below depends only on the
-        # civ file and the (static) geography file, so it is computed once.
+        # See load_geography() and region_reach()/material_reach() below:
+        # real coordinates, a reach computed from THIS civ's own home
+        # ground, and a material cost that follows from it. All of the
+        # below depends only on the civ file and the (static) geography
+        # file, so it is computed once.
         self.geo = load_geography()
         self._regions = {region_id: value for region_id, value in (self.geo.get("regions") or {}).items()
                           if not region_id.startswith("_")}
@@ -1178,9 +1177,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         draw_weather_multiplier` would, and take the arable-land-share-
         weighted average - answering Complaints/50's own question ("over
         what distance does growing-season weather stop agreeing with
-        itself?") with an actual number instead of the two hardcoded
-        answers ("one region = perfectly correlated with itself, zero
-        correlation with every other region") the old mechanism assumed.
+        itself?") with an actual number, rather than assuming one of two
+        hardcoded extremes ("one region = perfectly correlated with
+        itself, zero correlation with every other region").
 
         STEP BY STEP.
         1. `independent_draws[i] = Random(_farm_year_weather_seed(yr,
@@ -1509,12 +1508,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # step's docstring section on carrying stock across years for why:
         # `stock_after_kg` has already had NEXT year's seed reservation
         # (`seed_retained_kg`) removed from it, so persisting `stock_after_
-        # kg` alone throws that reserved seed away and then charges an
-        # identical amount again as next year's `seed_sown_kg` - a genuine
-        # bug this task's own fingerprint probe caught empirically (a
-        # near-total-extinction result on ordinary weather, no fingerprint
-        # divergence a hazard or land loss would explain) the first time
-        # persistence was tried without this correction. Adding
+        # kg` alone would throw that reserved seed away and then charge an
+        # identical amount again as next year's `seed_sown_kg`. Adding
         # `seed_retained_kg` back in is what makes the two calls agree:
         # what THIS call earmarked for sowing is exactly what NEXT call's
         # own `seed_sown_kg` computation will draw down, once and only
@@ -1524,13 +1519,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # (this year ate into seed corn it did not have; see Storage.
         # step's own docstring on why that is allowed to happen rather
         # than being silently floored at zero) passes through unclipped
-        # and genuinely carries into next year's sowing, which is
-        # Storage's own documented "one bad harvest becomes two" mechanism
-        # actually operating across years for the first time - a real
-        # behavioural change from before this fix, and a correct one: it
-        # was always the model's own intended design (Storage.step's class
-        # docstring), just inert while every year discarded the previous
-        # year's ending stock outright.
+        # and genuinely carries into next year's sowing: Storage's own
+        # documented "one bad harvest becomes two" mechanism, operating
+        # across years exactly as its class docstring intends.
         capacity_kg = agriculture.granary_capacity_kg(farm_year.food_demand_kg)
         self.farm_stock_kg = min(
             agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
@@ -1569,18 +1560,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
             disease_burden = 1.0 - unlocked_weight / total_weight
 
-        LIVE, NOT QUEUED: read fresh every call from `self.has(...)`
-        rather than accumulated into `_pop_tech_pending` the way these same
-        eight entries' `population` field used to be (see `apply_tech_
-        effects`, society.py) - a technology's disease effect is a
-        standing fact about this civilisation ("it now boils its water"),
-        not a one-off pulse that ramps in over POP_TECH_RAMP_YEARS and is
-        done. `apply_tech_effects` no longer feeds these eight into
-        `_pop_tech_pending` at all (see its own comment) specifically so
-        the same tree-author weight is not doing two jobs at once, one of
-        which (`_pop_tech_pending` draining into `_pop_scale_base`, which
-        WIRING_MILESTONE_4.md SS1.3 established is read by nothing) was
-        already known-inert. The five FOOD entries that also carry a
+        LIVE, NOT QUEUED: read fresh every call from `self.has(...)`, never
+        accumulated into `_pop_tech_pending` - a technology's disease
+        effect is a standing fact about this civilisation ("it now boils
+        its water"), not a one-off pulse that ramps in over
+        POP_TECH_RAMP_YEARS and is done. `apply_tech_effects` does not feed
+        these eight into `_pop_tech_pending` at all (see its own comment):
+        the same tree-author weight must not do two jobs at once, and
+        `_pop_tech_pending` draining into `_pop_scale_base` is read by
+        nothing (WIRING_MILESTONE_4.md SS1.3). The five FOOD entries that also carry a
         `population` field (crop_rotation, fud_three_field_rotation,
         fud_seed_drill, mat_newworld_crops, ag2_canning) are calorie
         effects, not disease ones, and are deliberately excluded by
@@ -1644,19 +1632,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         return k in self.household.done
 
     # THE ONE PLACE that answers "what is my corpus worth against a
-    # sacking" - the sack in SocietyMixin._shocks and the `risk` reply in
-    # FogMixin.knowledge_risk used to each carry their own copy of this
-    # table, and they drifted: `risk` was fixed to read `has()` (a corpus
-    # that is written and dispersed does not stop existing because the
-    # scriptorium that produced it closed - copies already in other
-    # people's hands are still in other people's hands), and the sack was
-    # never brought along, so it kept reading `running()` and applied
-    # corpus_written's weaker 0.45/0.22 to a household `risk` was telling,
-    # in the same breath, it had corpus_dispersed's 0.12/0.08. A player
-    # who trusted the screen lost nearly three times what they were told
-    # to expect. Call this, from both places, rather than re-deriving it -
-    # that is the only way to make the two screens unable to disagree
-    # again.
+    # sacking" - called from both SocietyMixin._shocks (the sack itself)
+    # and FogMixin.knowledge_risk (the player-facing `risk` reply), never
+    # re-derived in either place. A corpus that is written and dispersed
+    # does not stop existing because the scriptorium that produced it
+    # closed - copies already in other people's hands are still in other
+    # people's hands - so this table's hedge-state logic (`has()` vs
+    # `running()`, and which of the loss-chance/fraction-lost pairs below
+    # applies) is genuinely easy to get subtly different between two
+    # independent copies. Calling this from both places is the only way to
+    # make the two screens unable to disagree with each other.
     CORPUS_HEDGE_LOSS_CHANCE_DISPERSED = declare(
         "CORPUS_HEDGE_LOSS_CHANCE_DISPERSED", 0.12, kind="temporary_heuristic",
         unit="dimensionless (probability a sack takes any corpus at all)",
@@ -1716,15 +1701,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
-    # geography.json used to hard-code one `reach` per region, measured from
-    # Italy, and nothing in this file ever read it as a cost: `civs` printed
-    # `base_reach` and that was the entire effect either number had. Play Han
-    # China and the model still treated Chinese silk as three reach-steps
-    # away and Malaya, which Chinese and Malay traders already sail to
-    # routinely, as an exotic frontier, while Italy -- a place that
-    # civilization has never seen -- was reach 0. That is backwards for
-    # every civilization except Rome. Everything below computes reach from
-    # the ACTUAL civilization's own home ground instead.
+    # Reach must be computed from the ACTUAL civilization's own home
+    # ground, never hard-coded from one fixed point such as Italy: a
+    # single Italy-measured `reach` per region gets every civilization
+    # except Rome backwards - Han China would treat Chinese silk as three
+    # reach-steps away and Malaya, which Chinese and Malay traders already
+    # sail to routinely, as an exotic frontier, while Italy, a place that
+    # civilization has never seen, would be reach 0. Everything below
+    # computes reach from the ACTUAL civilization's own home ground.
 
     STAFF_ATTRITION_RATE = declare(
         "STAFF_ATTRITION_RATE", 0.035, kind="temporary_heuristic",
@@ -2160,13 +2144,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
     def step(self):
         # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED. `state` prints the
-        # chance of being denounced from the CURRENT scandal, and scandal moves
-        # DURING the step - so a break tester read "scandal 21.9 ... 0% chance
-        # of being denounced this year", pressed step once, and the same batch
-        # printed the first warning and "RUN ENDS: denounced: as a sorcerer".
-        # The figure was never wrong; it was answering about a year that had
-        # already gone. A player needs the direction as well as the level, and
-        # this is the only place that knows both.
+        # chance of being denounced from the CURRENT scandal, and scandal
+        # moves DURING the step: without this snapshot, a player could read
+        # "0% chance of being denounced this year", press step once, and see
+        # "RUN ENDS: denounced: as a sorcerer" in the same batch - not
+        # because the earlier figure was wrong, but because it would be
+        # answering about a year that had already gone. A player needs the
+        # direction as well as the level, and this is the only place that
+        # knows both.
         self.household.scandal_last_year = self.household.scandal
 
         # step() is a readable sequence of phase calls, in the same order the
@@ -2250,7 +2235,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         Walks `self._win_condition_keys` (built once, in __init__, from the
         static node data - see the comment there), not `sorted(self.nodes)`:
-        this used to re-sort every one of the ~2,849 node ids in the whole
+        that avoids re-sorting every one of the ~2,849 node ids in the whole
         tree, every single year, to reach the handful that actually carry a
         win_condition at all - pure self time (`sorted` and dict-get, both
         C-level, nothing further to profile under it).

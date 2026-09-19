@@ -17,9 +17,8 @@ s = sim()
 # charcoal market opens the game with 5.0 t/yr of real demand against it and
 # material_price_factor("charcoal") is 1.0000183, not 1.0. A society that
 # already smelts iron SHOULD price charcoal a hair above nothing, and the
-# smith's wage should carry that hair. The "exactly 1.0" the docstring on
-# wage_cost_factors used to claim was the overstatement; it now says what
-# actually happens.
+# smith's wage should carry that hair; wage_cost_factors's own docstring
+# states that, rather than claiming charcoal sits at exactly 1.0.
 #
 # 1e-4 relative keeps this check doing its job - every other check in this
 # file looks for moves of 15% or more, and this one still catches any drift

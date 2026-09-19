@@ -77,16 +77,12 @@ class BurndownActuallyCountsTests(unittest.TestCase):
         self.assertIn("sim.world.demography", stdout)
 
     def test_a_clean_registry_matches_the_tools_count(self):
-        # WHAT THIS REPLACES, AND WHY. The first version of this check
-        # compared an IN-PROCESS registry against the tool's. That was wrong
-        # and it failed as soon as two new declaring modules appeared: inside
-        # a full suite run the in-process registry has accumulated every
-        # module that any earlier topic happened to import, so it counts more
-        # than the tool's explicit list does. The check was measuring test
-        # execution order, not the bug it was written for.
-        #
-        # The bug it IS written for is the dual-registry one - this file
-        # loaded twice, as __main__ and as sim.constants, with the
+        # AGAINST TWO CLEAN SUBPROCESSES, NOT THE IN-PROCESS REGISTRY: inside
+        # a full suite run, the in-process registry has accumulated every
+        # module that any earlier topic happened to import, so comparing
+        # against it would measure test execution order rather than the bug
+        # this check is written for - the dual-registry one, where this file
+        # loads twice, as __main__ and as sim.constants, with the
         # declarations landing in one copy and the report reading the other.
         # Two clean subprocesses catch that without either being polluted:
         # one imports the modules by their dotted names and reads the
@@ -124,15 +120,14 @@ class BurndownActuallyCountsTests(unittest.TestCase):
         # both were written by agents who were correctly told not to edit
         # sim/constants.py, so neither could add itself. A rule that depends
         # on the person who cannot follow it is not a rule.
-        # BEHAVIOURAL, NOT A SOURCE SCAN, for the second half of this check.
-        # This used to call inspect.getsource(constants._import_declaring_
-        # modules) and test whether each declaring module's dotted name
-        # appeared as a substring of that text. A substring match cannot
-        # tell a real entry in the tuple from the identical text sitting in
-        # a comment - commenting a module out of the tuple while leaving its
-        # name in a nearby comment would still have passed - and it says
-        # nothing about whether the import actually succeeds or the module's
-        # declare() calls actually run. The claim this check exists for -
+        # BEHAVIOURAL, NOT A SOURCE SCAN, for the second half of this check:
+        # a substring match against inspect.getsource(constants._import_
+        # declaring_modules) cannot tell a real entry in the tuple from the
+        # identical text sitting in a comment - commenting a module out of
+        # the tuple while leaving its name in a nearby comment would still
+        # pass - and it says nothing about whether the import actually
+        # succeeds or the module's declare() calls actually run. The claim
+        # this check exists for -
         # "this module's declared numbers make it into the registry the
         # burndown reads" - is directly observable: run
         # _import_declaring_modules() for real, in a clean subprocess (a

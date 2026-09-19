@@ -54,11 +54,10 @@ non-specialist can actually act on.
 
 ## The three layers, and why the tree is built this way
 
-The first version of this tree had 128 nodes and treated materials as priced
-commodities and capabilities as things you either had or did not. That was the
-central flaw: "grind a lens" did not require "hold one micron", and "smelt zinc"
-did not require "reach 1000 C", so a reader could not see WHY anything was hard.
-The rebuild has three layers.
+The tree is built in three layers so that a reader can see WHY something is
+hard, not just that it is: "grind a lens" requires "hold one micron", and
+"smelt zinc" requires "reach 1000 C", as explicit prerequisites rather than
+implicit difficulty.
 
 **1. CAPABILITY RUNGS (34 nodes, `cap_*`).** Graded, explicit, and cited as
 prerequisites by the technologies that need them. These are the answer to
@@ -75,24 +74,22 @@ prerequisites by the technologies that need them. These are the answer to
 
 **2. MATERIALS (74 nodes, `mat_*`).** Each is a node with its own prerequisites,
 not a line item with a price. Rome's starting materials are granted explicitly
-by its civilization profile. **There is no longer an "unobtainable" bucket** - that category
-existed in an earlier version of the tree and it was wrong: rubber is not
-unobtainable, it is in West Africa; saltpetre effloresces on the Gangetic plain,
-on a route Rome already sails. `mat_natural_rubber`, `mat_gutta_percha`,
+by its civilization profile. **There is no "unobtainable" bucket**: rubber is
+not unobtainable, it is in West Africa; saltpetre effloresces on the Gangetic
+plain, on a route Rome already sails. `mat_natural_rubber`, `mat_gutta_percha`,
 `mat_quinine`, `mat_chile_nitrate`, `mat_newworld_crops`, `mat_cryolite` and
 `mat_platinum_bulk` are each gated behind an `exp_*`
 expedition node that prices what going to get it actually costs, exactly like
 every other distant material (see `knowledge/95_expeditions.md`).
 
 **3. TECHNOLOGIES (everything that is not a capability rung or a material).**
-What were fifteen domains at the tree's last major rebuild have since
-fragmented into many more categories as branch authors added their own -
-textiles, food and agriculture, household goods, media and printing, land
+Textiles, food and agriculture, household goods, media and printing, land
 transport, ships, aviation, energy, chemicals, metallurgy and mining,
 precision and machine tools, medicine, civil engineering, optics and
-instruments, communications and computing remain the broad shape, on top of
-the original core spine. The exact split between layers moves as branches are
-added; count it yourself rather than trust a number here:
+instruments, communications and computing, on top of the core spine - branch
+authors add categories as they add branches, so this list is not exhaustive.
+The exact split between layers moves as branches are added; count it yourself
+rather than trust a number here:
 
 ```bash
 python3 -c "import json,collections

@@ -153,23 +153,18 @@ check("the ledger says how much of the credit line is used",
 # way, not a payroll or a one-off fee), so the fix is the message, not the
 # arithmetic: it must say WHICH rule this is and WHY, not just decline.
 #
-# RECALIBRATED for the spending_power consolidation: this block used to set
-# capital to "just past hire's half-line room" using hire's OWN inline
-# capital+credit_limit()*0.5 - the very arithmetic that turned out to be one
-# of seven copies of this rule, and the one that (unlike economy.py's
-# canonical spending_power) never floored capital at zero. Under that inline
-# copy, room kept shrinking as debt deepened, with nothing stopping it going
-# negative; under the canonical rule a household already in the hole is
-# floored at zero before the credit-line share is added, so the room hire,
-# train and commission actually allow is a FIXED half a credit line
-# regardless of how deep the debt already is - deeper debt no longer makes
-# hiring, training or commissioning any harder than shallower debt does. So
-# "just past half-line room" is no longer a function of capital at all: pick
-# a fee between spending_power("buy") (what hire/train/commission may draw)
-# and spending_power("start") (what only a project may draw) and it is
+# RECALIBRATED for the spending_power consolidation: under the canonical
+# rule, a household already in the hole is floored at zero before the
+# credit-line share is added, so the room hire, train and commission allow
+# is a FIXED half a credit line regardless of how deep the debt already is -
+# deeper debt does not make hiring, training or commissioning any harder
+# than shallower debt does. So "just past half-line room" is not a function
+# of capital at all: pick a fee between spending_power("buy") (what
+# hire/train/commission may draw) and spending_power("start") (what only a
+# project may draw) and it is
 # refused, however deep in debt the household already is.
 s_asym = sim(capital=0.0)
-s_asym.capital = -50000.0   # deep in debt - the fix is that this no longer matters
+s_asym.capital = -50000.0   # deep in debt - room does not depend on how deep
 _ok_h, _msg_h = s_asym.hire("smith", 3)   # 3 smiths: between half and whole the line
 check("a cash-short hire is still refused (the asymmetry itself is kept, "
       "not loosened)", _ok_h is False, (_ok_h, _msg_h))
@@ -216,17 +211,17 @@ check("commission's cash-short refusal uses the same reasoning too",
 # drift again), and that this actually flips what a household in debt is
 # allowed to do.
 #
-# BEHAVIOURAL, NOT A SOURCE SCAN. This used to call inspect.getsource() on
-# each of the seven functions and grep the text for
-# 'spending_power("buy")'/'spending_power("open")'. That had three separate
-# holes: it matched a double-quoted literal only (spending_power('buy'),
-# same meaning, would have failed it); it could not tell a call whose RESULT
-# is actually used from one that is computed and dropped (auto_open_ventures
-# turns out to be exactly that case - see the check below and the finding
-# reported for projects_staffing.py); and its negative half matched only one
-# exact spelling of the arithmetic it forbade, so a rewritten copy of the
-# same sum would have passed it. A monkeypatched spy on a real Sim closes
-# all three: it proves the call happens, proves which kind is asked, and -
+# BEHAVIOURAL, NOT A SOURCE SCAN: a grep of inspect.getsource() for each of
+# the seven functions against the literal text
+# 'spending_power("buy")'/'spending_power("open")' has three separate holes:
+# it matches a double-quoted literal only (spending_power('buy'), same
+# meaning, would fail it); it cannot tell a call whose RESULT is actually
+# used from one that is computed and dropped (auto_open_ventures turns out
+# to be exactly that case - see the check below and the finding reported
+# for projects_staffing.py); and matching only one exact spelling of the
+# arithmetic it forbids would let a rewritten copy of the same sum pass. A
+# monkeypatched spy on a real Sim closes all three: it proves the call
+# happens, proves which kind is asked, and -
 # by forcing the number back and watching the site's own pass/fail move with
 # it - proves the number is read, not merely assigned.
 def _spending_power_spy(s, forced=None):

@@ -117,16 +117,15 @@ class VariesWithWeatherTests(unittest.TestCase):
         # thousandths the forty-year window left.
         self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
-        # THE 1.0 CEILING IS GONE ON PURPOSE. This used to assert
-        # max(ratios) <= 1.0, because Storage.step capped consumption at
-        # food_demand_kg however full the granary was - so a population
-        # could never eat WELL, only adequately or badly. Combined with a
-        # mortality and fertility response that floors at 1.0, that made
-        # every good year worth nothing and every bad year cost lives,
-        # which is the ratchet Complaints/45 is about. Consumption may now
-        # exceed subsistence, bounded by what a person can physically eat
-        # (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE) and drawn only from
-        # grain already beyond the reserve.
+        # THE 1.0 CEILING IS GONE ON PURPOSE: asserting max(ratios) <= 1.0
+        # here would reintroduce the ratchet Complaints/45 describes. Capping
+        # consumption at food_demand_kg however full the granary was means a
+        # population can never eat WELL, only adequately or badly; combined
+        # with a mortality and fertility response that floors at 1.0, every
+        # good year is worth nothing and every bad year costs lives.
+        # Consumption may exceed subsistence, bounded by what a person can
+        # physically eat (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE) and drawn
+        # only from grain already beyond the reserve.
         #
         # The upper bound asserted here is that physiological ceiling, not
         # 1.0 - a ratio above it would mean people eating more than a human
@@ -191,16 +190,14 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # and not a demand that the no-carryover simplification's own cost
         # be zero.
         self.assertGreater(mean_ratio, 0.7, ratios)
-        # THE UPPER BOUND USED TO BE 1.0. It was wrong in principle and
-        # only passed by accident. A population that grows must on average
-        # be fed at or above subsistence - that is what growth is - so
-        # capping the mean at subsistence forbids the outcome the
-        # demographic milestone exists to produce. It passed because one
-        # weather draw covered the whole empire, which made a surviving
-        # surplus rare enough to round away. Weather is now drawn per home
-        # region and pooled by land share (Complaints/47), so ordinary good
-        # years reach the mean: measured 1.0042 over this century. The
-        # ceiling that actually binds eating is physical, not this number -
+        # THE UPPER BOUND IS NOT 1.0: capping the mean at subsistence would be
+        # wrong in principle. A population that grows must on average be fed
+        # at or above subsistence - that is what growth is - so a ceiling of
+        # 1.0 forbids the outcome the demographic milestone exists to
+        # produce. Weather is drawn per home region and pooled by land share
+        # (Complaints/47), so ordinary good years reach the mean: measured
+        # 1.0042 over this century. The ceiling that actually binds eating is
+        # physical, not this number -
         # MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, 1.75.
         self.assertLess(mean_ratio, 1.1, ratios)
 

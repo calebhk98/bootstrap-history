@@ -1,0 +1,88 @@
+# .pylintrc - the naming-sweep worklist for CLAUDE.md section 7 ("spell
+# names out"; the only exemptions are `i` as a loop index and `x`/`y` as
+# coordinates).
+#
+# WHAT THIS IS FOR. `python3 sim/code_health.py --names` (a hand-written
+# scanner, kept - see docs/architecture/CODE_ANALYSIS_TOOLING.md) answers
+# "how much of the problem is left" as a handful of aggregate counts, for
+# tracking a burndown over time. It does not hand anyone a place to start.
+# This file is the other half: run pylint with it and every short name in
+# the tree comes back as a `file:line` a person or an agent can walk
+# through and fix one at a time.
+#
+#     python3 -m pylint sim/
+#
+# ONLY invalid-name (C0103) IS ENABLED. Every other pylint check pylint
+# ships with is off, on purpose - a naming sweep that also reports style
+# opinions about docstrings, return counts or import order buries the one
+# thing this file exists to find. Anyone wanting pylint's other checks
+# should run it with a different config, not this one.
+#
+# THE REGEX ONLY ENFORCES A MINIMUM LENGTH OF THREE, NOT A NAMING
+# CONVENTION. `[a-zA-Z_][a-zA-Z0-9_]{2,}$` accepts any casing and any
+# length above two characters - it does not require snake_case, and
+# CRUCIALLY has NO upper bound, because this codebase's own test method
+# names run past 80 characters on purpose (readable failure messages
+# without a docstring) and a max-length pattern would drown the real
+# findings under hundreds of "too long" false positives for a codebase
+# that has the opposite problem. The same pattern is applied to
+# method/function/class/module names too, specifically so pylint's
+# built-in casing conventions (snake_case functions, PascalCase classes,
+# UPPER_CASE module constants) are NOT separately enforced here - this
+# repo is not being asked to change its casing style, only to stop naming
+# things "s", "yr" or "_k". Verified: with the built-in casing
+# conventions still active, `ast.NodeVisitor`'s own required CamelCase
+# method names (`visit_FunctionDef` and 16 more in sim/code_health.py
+# alone) were flagged as "doesn't conform to snake_case naming style" -
+# 197 pure-noise findings on names nobody can rename, gone once
+# method-rgx/function-rgx/class-rgx were loosened to length-only. See
+# CODE_ANALYSIS_TOOLING.md for the before/after counts.
+#
+# `good-names` is exactly CLAUDE.md section 7's two stated exemptions,
+# `i` and the `x`/`y` pair - plus `_`, which pylint already exempts by
+# convention as "the value is intentionally discarded" and which CLAUDE.md
+# excludes from the short-name count for the same reason. Unlike
+# `sim/code_health.py`'s own scanner, this exemption is NOT role-aware: a
+# `good-names` entry is exempt everywhere, not only when `i` is a loop
+# index or `x`/`y` are bound together as a coordinate pair. That is a real
+# gap against CLAUDE.md's exact rule, recorded in
+# docs/architecture/CODE_ANALYSIS_TOOLING.md rather than silently
+# accepted - `sim/code_health.py --names` remains the source of truth for
+# the exemption's precise semantics; this file trades that precision for
+# being a tool someone can actually run over the whole tree today.
+[MESSAGES CONTROL]
+disable=all
+enable=invalid-name
+
+[BASIC]
+good-names=i,x,y,_
+
+# Tier, per CLAUDE.md section 7 / NAMING_PLAN.md A.4: a function-local
+# variable or an inline (for/with/except) binding is Tier 1, mechanically
+# safe to rename and provable by sim/prove_rename_safe.py. A function
+# ARGUMENT is Tier 2 - a caller passing it by keyword is a gap
+# prove_rename_safe.py documents it cannot cover, which is exactly what
+# pylint separating "Argument" from "Variable" as different message
+# categories buys here: filter pylint's own output by category to work
+# Tier 1 and Tier 2 as separate passes.
+variable-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+inlinevar-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+argument-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+
+# Not Tier 1/2 in CLAUDE.md's own scheme (module- and class-level names,
+# and object attributes) but still short identifiers worth fixing, so
+# still checked - just length-only, same reasoning as above.
+attr-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+class-attribute-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+const-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+class-const-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+method-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+function-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+class-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+module-rgx=[a-zA-Z_][a-zA-Z0-9_]{2,}$
+
+[REPORTS]
+# The 0-10 "code has been rated at" score is meaningless for a
+# single-check, naming-only run and invites reading it as a general
+# quality grade. Suppressed so the output is just the findings.
+score=no

@@ -1,36 +1,21 @@
 """The year's phases: what step() calls, in the order it calls them.
 
-Split out of sim/engine/core.py, which was the last engine file over its
-1,000-code-line target (docs/architecture/SIM_DECOMPOSITION_REVISITED.md,
-Stage 1's follow-on). These are methods of Sim; they live in a mixin only
-so that this block - the fourteen named phases step() was already cut into
-earlier, together most of a simulated year's work, about 1,782 lines - can
-sit in a file of its own instead of being the single largest thing a reader
-of core.py has to scroll past. Behaviour is unchanged and verified
-byte-identical: every method below, and every comment explaining it, is
-moved VERBATIM out of core.py.
+These are methods of Sim, living in a mixin (StepPhasesMixin) rather than
+directly in core.py's `class Sim(...)`. `Sim.step()` itself stays in
+core.py: it is the orchestrator, not one of the phases, and it is short
+(42 lines) because it only calls `self._step_apprenticeships()` and the
+other named phases this file holds - method resolution walks the whole
+MRO, so it does not matter to `step()` that these live on StepPhasesMixin
+rather than directly on Sim.
 
-`Sim.step()` itself STAYS in core.py, unmoved: it is the orchestrator, not
-one of the phases, and it is short (42 lines) precisely because the phases
-already moved out of it once today, into the methods this file now holds.
-`step()` calls `self._step_apprenticeships()` and so on exactly as it did
-before this split - method resolution walks the whole MRO, so it does not
-matter to `step()` that these now live on StepPhasesMixin rather than
-directly on Sim.
-
-This is Stage 1 of SIM_DECOMPOSITION_REVISITED.md's staged proposal, one
-step further than the document itself went: it recommends cutting
-`step()` into named methods "in place" (no file moves) and leaves file-level
-separation to a later, per-phase Stage 2 once each phase's self.* footprint
-has been measured against the six mixins. This file does not attempt that
-measurement or that assignment - it is not "the labour phase moves to
-labour.py, the money phase moves to economy.py"; every phase below still
-reads and writes exactly the self.* state it always did, unassigned to any
-one mixin's territory, because that assignment is Stage 2's job and Stage 2
-has not been done. What this file buys on its own is exactly what Stage 1
-promises: fourteen phases in one file with a name and a role, out of the
-single largest block in core.py, instead of a further split this document's
-own section 6 warns against forcing before the footprint is measured.
+Each phase method below still reads and writes exactly the self.* state it
+needs, UNASSIGNED to any one domain mixin's territory: this file groups
+the phases by "step() calls them in this order", not by "the labour phase
+belongs to labour.py, the money phase belongs to economy.py". Assigning
+each phase's state to a specific domain mixin is a distinct, harder job
+(see docs/architecture/SIM_DECOMPOSITION_REVISITED.md's staged proposal)
+that this file does not attempt - do not assume a phase here can be moved
+into a domain file without first working out its self.* footprint.
 """
 import math
 
@@ -40,18 +25,16 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
 
 class StepPhasesMixin:
     """Composition point only: every method below is one of the fourteen
-    named phases Sim.step() calls, in order, moved verbatim out of core.py's
-    `class Sim(...)`, which still inherits this mixin so step() keeps
-    calling self._step_whatever() unmodified.
+    named phases Sim.step() calls, in order. Sim inherits this mixin, so
+    step() calls self._step_whatever() exactly as if these methods were
+    defined directly on Sim.
     """
 
     def _step_apprenticeships(self):
-        # 0. PEOPLE WHOSE APPRENTICESHIP ENDED. This block used to sit at the
-        #    very BOTTOM of step(), after the year's work had already been
-        #    handed out - so machinists promised "ready in 102" were not usable
-        #    on anything until 103, and a break tester timed both the message
-        #    and the ready_year and found each a year late. A man who finishes
-        #    his training at the turn of the year works that year.
+        # 0. PEOPLE WHOSE APPRENTICESHIP ENDED, FIRST, BEFORE THE YEAR'S WORK
+        #    IS HANDED OUT: a man who finishes his training at the turn of the
+        #    year works that year, so a machinist promised "ready in 102" must
+        #    be usable in 102, not only from 103.
         # People bought this year are not artisans this year.
         if self.household.training:
             still = []
@@ -85,31 +68,28 @@ class StepPhasesMixin:
 
     def _step_staff(self):
         # 1. staff. ATTRITION IS UNCONDITIONAL: people die, are poached and grow
-        #    old whatever your policy is. GROWTH IS NOT. It used to be, and that
-        #    was the same fault as buying people without being asked: a player
-        #    who never issued a single command watched the staff climb on its own.
+        #    old whatever your policy is. GROWTH IS NOT: growing the staff
+        #    automatically, with no command issued, would be the same fault
+        #    as buying people without being asked, so it is gated behind
+        #    auto_hire.
         #
         #    With auto_hire on (the default for the optimizer, off for a player)
-        #    the old smoothing toward capacity runs as before, which is what the
-        #    long civilization runs are calibrated against. With it off, the only
-        #    things that change the staff are hire, fire, train, buy and manumit.
+        #    staff smooths toward capacity, which is what the long civilization
+        #    runs are calibrated against. With it off, the only things that
+        #    change the staff are hire, fire, train, buy and manumit.
         sc_cap, ar_cap, di_cap = self.staff_capacity()
         ATTRITION = self.STAFF_ATTRITION_RATE
-        # PEOPLE ARE WHOLE. This used to multiply every trade's headcount by
-        # (1 - ATTRITION) and carry on, so ten smiths lost exactly 0.35 of a
-        # smith and the engine went on holding the fraction: a household
-        # could read "1.32 artisans" or "0.03 engineers" on its own roster,
-        # the latter drawing 0.03 of a wage while supervising nothing. The
-        # user's objection was exact: a death is a discrete thing that either
-        # happens to a particular person this year or does not, so each of
-        # the whole people actually on the books now gets their own yearly
-        # roll against self.rng - sorted by trade name so the draws happen in
-        # the same order whatever PYTHONHASHSEED the process started with,
-        # which is what every other rng loop over this dict already does
-        # (see the "cannot pay" shedding loop below). Summed over many
-        # people this reproduces the same 3.5%-a-year average the smooth
-        # version was tuned against; no single person is ever a third of a
-        # casualty.
+        # PEOPLE ARE WHOLE: attrition rolls each actual person on the books
+        # individually against self.rng, sorted by trade name so the draws
+        # happen in the same order whatever PYTHONHASHSEED the process
+        # started with, the same convention every other rng loop over this
+        # dict uses (see the "cannot pay" shedding loop below). A death is a
+        # discrete thing that either happens to a particular person this
+        # year or does not, so no trade's headcount is ever a fraction of a
+        # person - never "1.32 artisans" or "0.03 engineers" drawing a
+        # fractional wage while supervising nothing. Summed over many people
+        # this reproduces the same 3.5%-a-year average ATTRITION targets; no
+        # single person is ever a third of a casualty.
         _lost = {}
         for trade_id in sorted(self.household.employees):
             head = int(round(self.household.employees[trade_id]))
@@ -120,14 +100,10 @@ class StepPhasesMixin:
                 self.household.employees[trade_id] = float(survivors)
             else:
                 self.household.employees.pop(trade_id)
-        # AND SAY SO. Now that a death is a whole person rather than three
-        # hundredths of one, it is a thing that HAPPENED, and it was happening
-        # in complete silence. A break tester hired five scholars, stepped five
-        # years, watched the payroll go five, four, three, three, two, and found
-        # nothing in the log or the events to say why - so they reported it as
-        # staff vanishing, which is exactly what it looks like from the chair.
-        # The rate is right (measured at 0.825 survival over five years against
-        # 0.837 expected, across forty seeds); the reporting was missing.
+        # AND SAY SO: a death is a discrete event that HAPPENED, and a player
+        # watching the payroll shrink with nothing in the log or the events
+        # to say why cannot tell attrition from a bug - it looks exactly
+        # like staff vanishing.
         if _lost:
             self.household.log.append((self.year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
@@ -135,29 +111,24 @@ class StepPhasesMixin:
         self._resync_pools()
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
-        # it": the thing that kept a ruined run frozen for two centuries was a
-        # payroll it could not carry and never reduced. A run that fired its
-        # staff, lived cheaply and started again earned 300 technologies; the
-        # same run holding on to eleven people it could not pay earned 18.
-        # TWO THINGS WERE WRONG WITH HOW THIS USED TO DECIDE, and a break tester
-        # found both at once: they hired six smiths with two thirds of their
-        # credit line still unused, stepped one year, and every one of the six
-        # was gone, with nothing whatever in the log to say so.
+        # it": a payroll a household cannot carry and never reduces keeps a
+        # ruined run frozen indefinitely, worse than shedding staff, living
+        # cheaply and starting again.
         #
-        # 1. The trigger was `capital < 0`, which is being overdrawn, not being
-        #    unable to pay. A household with credit left borrows and makes
-        #    payroll; that is what credit is for, and enforce_credit_limit
-        #    already models the point where it runs out. Letting your staff go
-        #    the first year you dip a denarius below zero, with the lender still
-        #    willing, is not what an enterprise does.
-        # 2. The gap it tried to close was measured with living_cost(), which
-        #    INCLUDES the wage bill, so the deficit being closed was the payroll
-        #    PLUS the founder's own food, rent and appearances. Firing people
-        #    cannot buy your own dinner. Whenever base living exceeded revenue -
-        #    which it does in every early game - the loop ran off the end of the
-        #    staff list and emptied it. And the log line sat inside `if net >=
-        #    0`, so the one case that always happened was the one case that said
-        #    nothing at all.
+        # THE TRIGGER MUST BE "CANNOT PAY AFTER CREDIT", NOT `capital < 0`:
+        # being overdrawn is not being unable to pay. A household with credit
+        # left borrows and makes payroll; that is what credit is for, and
+        # enforce_credit_limit already models the point where it runs out.
+        # Letting staff go the first year capital dips a denarius below zero,
+        # with the lender still willing, is not what an enterprise does.
+        #
+        # THE GAP BEING CLOSED MUST EXCLUDE living_cost()'S OWN WAGE BILL:
+        # living_cost() INCLUDES the wage bill, so measuring the deficit
+        # directly against it would close the payroll PLUS the founder's own
+        # food, rent and appearances - firing people cannot buy your own
+        # dinner. Whenever base living exceeds revenue, which it does in
+        # every early game, that would run the shedding loop off the end of
+        # the staff list and empty it.
         #
         # The honest rule is that your people are paid out of what is left after
         # everything else, INCLUDING what somebody will still lend you, and you
@@ -175,8 +146,7 @@ class StepPhasesMixin:
         # People leaving a household that has no money and no credit to pay them
         # is not a decision the game is making on your behalf, it is the world
         # answering one you already made, the same as the arrears bleed below.
-        # The `policy` reply says so in as many words now, because the tester
-        # read its promise as covering this and was entitled to.
+        # The `policy` reply says so in as many words.
         if payroll > can_pay and self.household.employees:
             short = payroll - can_pay
             gone = 0.0
@@ -188,10 +158,10 @@ class StepPhasesMixin:
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
-                # wages, not a quantity of people, and cutting that fraction
-                # straight used to leave "0.3 smiths" still on the books,
-                # still drawing 0.3 of a wage nobody had just said could be
-                # paid. Rounding up sheds one whole person too many at worst,
+                # wages, not a quantity of people: cutting that fraction
+                # straight would leave "0.3 smiths" still on the books, still
+                # drawing 0.3 of a wage that was just found unaffordable.
+                # Rounding up sheds one whole person too many at worst,
                 # which is the safe direction for a household that genuinely
                 # cannot make payroll.
                 cut = min(self.household.employees[trade_id], math.ceil(short / wage - 1e-9))
@@ -208,19 +178,15 @@ class StepPhasesMixin:
             if gone > 0.005:
                 self.household.log.append((self.year, "you cannot pay everyone: %.1f of your staff "
                                      "leave for work that pays" % gone))
-        # NOT `capital > 0`. This is the same catch-22 auto_open_ventures was
-        # already caught by and had fixed: a household in arrears could never
-        # take on the people whose work is the only way out of arrears. And a
-        # run that keeps a project going keeps a balance in the red almost
-        # permanently, so the gate was not "you are ruined", it was "you are
-        # building something". A Rome run traced for this comment sat at about
-        # -5,000 against a credit line of 8,000 for five hundred years with a
-        # clear surplus of 650 a year and hired NOBODY: zero scholars and zero
-        # craftsmen in 600 AD, 387 technologies, no goal. Deep in arrears is
-        # deep in arrears; the affordability arithmetic below - which already
-        # subtracts living cost, upkeep and the wages you are carrying - is
-        # what decides how many, and it correctly says nobody when there is
-        # nothing spare.
+        # NOT `capital > 0`: gating hiring on a strictly positive balance
+        # creates a catch-22, where a household in arrears could never take
+        # on the people whose work is the only way out of arrears. A run
+        # that keeps a project going can carry a balance in the red almost
+        # permanently and legitimately - the gate is not "you are ruined",
+        # it is "you are building something". The affordability arithmetic
+        # below - which already subtracts living cost, upkeep and the wages
+        # you are carrying - is what decides how many to hire, and correctly
+        # says nobody when there is nothing spare.
         _hire_room = (self.household.capital >= 0
                       or -self.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         if (self.policy.get("auto_hire", not self.manual) and _hire_room):
@@ -229,20 +195,17 @@ class StepPhasesMixin:
             # headroom is not a free six people, it is six people you still
             # have to pay for.
             extra = self.supervision_room() * self.household._staff_scale
-            # THE SAME WALL hire() AND train() ENFORCE. This used to smooth
-            # self.household.scholars toward sc_cap directly, mutating the pool itself
-            # with no call anywhere near literate_capacity() - the wall a
-            # player typing `hire scholar 12` was refused at 5.9, "ever, at
-            # any price". A break tester turned auto_hire on, came back forty
-            # years later to the same civilisation, and found 146.4 scholars:
-            # one rulebook at the keyboard and a twenty-five-times-larger one
-            # for the automation, for the identical number. See
-            # literate_capacity()'s own docstring for the other half of this
-            # fix - widening the wall enough that clamping to it here does not
-            # simply strand every long civilisation run short of what the
-            # tree actually asks for (the goal wants 25; building the
-            # institutions staff_capacity() already credits widens this same
-            # wall past that well before the goal is in reach).
+            # THE SAME WALL hire() AND train() ENFORCE: `target_sc` is capped
+            # at `literate_capacity("scholar")`, the wall a player typing
+            # `hire scholar N` is refused at, so auto_hire cannot grow the
+            # scholar pool past a ceiling a manual hire command could not
+            # cross either. See literate_capacity()'s own docstring for the
+            # other half of this: widening the wall enough that clamping to
+            # it here does not simply strand every long civilisation run
+            # short of what the tree actually asks for (the goal wants 25;
+            # building the institutions staff_capacity() already credits
+            # widens this same wall past that well before the goal is in
+            # reach).
             target_sc = min(sc_cap + extra * self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.literate_capacity("scholar"))
             desired_sc = self.household.scholars + (target_sc - self.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
             target_ar = ar_cap + extra
@@ -500,15 +463,12 @@ class StepPhasesMixin:
                                              % (len(shed), ", ".join(shed))))
         else:
             self.household.insolvent_years = 0
-        # A standing workforce policy, and ONLY when the optimizer is playing.
-        #
-        # This used to run in manual mode too, so a player who never issued a
-        # buy command watched `slaves` climb on its own with no prompt and no log
-        # line. A tester caught it and put the objection better than I can: the
-        # game's own justification for modelling slavery at all is that "a model
-        # that hides it lies about the cost of everything", and then it was
-        # hiding the acquisition. Buying people on someone's behalf without
-        # telling them is the worst version of that.
+        # A standing workforce policy, and ONLY when the optimizer is playing:
+        # buying people automatically in manual mode, with no command issued
+        # and no log line, would be lying about the acquisition - the game's
+        # own justification for modelling slavery at all is that "a model
+        # that hides it lies about the cost of everything", and hiding the
+        # acquisition from a player is the worst version of that.
         if self.policy.get("auto_buy_people", False):
             if self.household.capital > 6000 and self.household.artisans < 12 and self.running("workshop_first"):
                 got = self.buy_slaves(min(6, int(self.household.capital // 1500)))
@@ -522,13 +482,11 @@ class StepPhasesMixin:
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
         if self.output_factor < 1.0:
-            # A STATE THAT CAN DEFEND ITSELF REBUILDS FASTER. This used to be
-            # a flat rate no matter what the founder had done about the war -
-            # a civilization that built the whole military branch and one
-            # that ignored it recovered from the SAME war at the SAME speed,
-            # which is the finding that started this change: measured against
-            # a founder with none of the tree's 111+ military nodes, nothing
-            # about the state's fortunes moved at all. military_leverage() is
+            # A STATE THAT CAN DEFEND ITSELF REBUILDS FASTER: the recovery
+            # rate must scale with military_leverage(), or a civilization
+            # that built the whole military branch and one that ignored it
+            # would recover from the SAME war at the SAME speed regardless of
+            # either one's investment. military_leverage() is
             # the same count update_protection() and
             # hazard_relief("output_factor") (society.py) already read off
             # self.household.done; at full leverage the recovery rate doubles, so an
@@ -635,22 +593,18 @@ class StepPhasesMixin:
             # across this whole block as they are, and is safe to cache the
             # same way.
             #
-            # That matters because this used to be a plain function called
-            # through `any(_gone(t) for t in n["lab"])`, and the per-trade
-            # RESULT (not just its two cheap sub-memos) was never cached -
-            # so recomputing it, for the same handful of distinct trade
-            # names, cost one Python function call for EVERY ONE of the
-            # ~2,800 nodes in `order` that names them, even after the first
-            # node had already worked out the answer. Profiling 150 years
-            # found the `any()` generator alone at 895,244 calls / 0.83s
-            # cumulative. _is_gone below answers the identical question,
-            # through the identical `any()` (so a node whose FIRST lab
-            # trade is already known gone, or one that fails
+            # Caching matters here: `order` has ~2,800 nodes, many naming the
+            # same handful of distinct trades, so recomputing `_gone(t)` from
+            # scratch for every node that names a trade costs one Python
+            # function call per node even after the first node already
+            # worked out the answer. `_is_gone` below answers the identical
+            # question, through the identical `any()` (so a node whose FIRST
+            # lab trade is already known gone, or one that fails
             # start_reason() right after, costs exactly what it always
             # did - no extra work done on the strength of a guess that it
             # would be needed), but every trade's verdict is computed once
-            # and reused for every later node that names it, instead of
-            # recomputing the same two calls from scratch each time.
+            # and reused for every later node that names it, rather than
+            # recomputed from scratch each time.
             _gone_memo = {}
             def _is_gone(t):
                 value = _gone_memo.get(t)
@@ -857,28 +811,22 @@ class StepPhasesMixin:
                 # located material (mat_gutta_percha and the like) costs more
                 # or less to reach depending on how far THIS civ actually is
                 # from it, not on Rome's distance to it.
-                # Do not begin what you cannot pay for. This used to allow three
-                # times your capital plus six years of GROSS revenue, which was
-                # harmless while the money was notional and the bill was quietly
-                # forgiven at completion. Now that the bill has to be paid, the
-                # same heuristic commits the household to more than it can ever
-                # fund, the creditors halt everything, and the spend is lost.
-                # INTEREST IS A FIXED COST, and leaving it out is how a
-                # household in arrears decides it has a surplus. A Rome run
-                # paying 552 a year of interest computed its five years of
-                # headroom as though that money did not exist, committed
-                # against it, and went from -369 to -7,827 in twenty-five
-                # years - then bled for four centuries. Every other net in this
-                # program was taught to count arrears; this one was missed
-                # because it is not a net, it is a budget.
+                # Do not begin what you cannot pay for: `room` must reflect
+                # what the household can actually fund, net of committed
+                # spend, because a project started on unaffordable capacity
+                # gets its bill left unpaid - creditors halt everything, and
+                # the spend already made is lost.
+                #
+                # INTEREST IS A FIXED COST here too: leaving it out is how a
+                # household already in arrears would compute a surplus that
+                # is not really there, commit spend against it, and deepen
+                # the arrears it was already in.
                 #
                 # funding_capacity()/committed_spend() (economy.py), NOT A
-                # SECOND COPY OF THIS FORMULA. This heuristic is where the
-                # formula was first worked out; it has since been factored
-                # out so the player-facing aggregate warning in `start`
-                # (protocol.py) answers the identical question with the
-                # identical number, rather than risking the two quietly
-                # drifting apart.
+                # SECOND COPY OF THIS FORMULA: the player-facing aggregate
+                # warning in `start` (protocol.py) answers the identical
+                # question by calling the same two functions, so the two
+                # cannot drift apart.
                 room = self.funding_capacity() - self.committed_spend()
                 if self.project_cost(node_id) > room:
                     continue
@@ -969,27 +917,20 @@ class StepPhasesMixin:
                     self.buy_forest(min(200.0, self.household.capital / 1800.0))
             elif (self.household.binding == "saltpetre"
                     and self.policy.get("auto_mine", not self.manual)):
-                # GATED, like every other automatic purchase. This branch sat
-                # outside the policy check and took five per cent of a manual
-                # player's capital every year they were short of nitre,
-                # without a line in the log and without anything they typed.
-                # A FLAT CEILING, AND IT IS NOT AN OVERSIGHT. Sizing this to
-                # the measured shortfall the way the mine branch above does
-                # is the obvious symmetry, it was tried, and it measured
-                # WORSE on every count: Rome's saltpetre shortage went from
-                # 277 run-years to 678, its reputation from 99 to 31, and its
-                # first blocked node regressed from point_contact_transistor -
-                # the last step of the whole programme - back to
-                # atomic_theory, which it had cleared in its third century.
-                # Spending a quarter of capital a year against a shortfall
-                # that beds cannot close at any affordable scale starves
-                # everything else, and in a household that falls into arrears
-                # the interest then pins it there. Two thousand denarii a year
-                # is what leaves the rest of the programme funded.
+                # GATED, like every other automatic purchase: ungated, this
+                # branch would take five per cent of a manual player's
+                # capital every year they were short of nitre, without a
+                # line in the log and without anything they typed.
+                # A FLAT CEILING, AND IT IS NOT AN OVERSIGHT: sizing this to
+                # the measured shortfall, the way the mine branch above does,
+                # spends a quarter of capital a year against a shortfall
+                # nitre beds cannot close at any affordable scale, which
+                # starves everything else and, once the household falls into
+                # arrears, pins it there with interest. Two thousand denarii
+                # a year is what leaves the rest of the programme funded.
                 #
                 # The shortage is real and unresolved; more money is not the
-                # answer to it, and this comment is here so the next person to
-                # notice the asymmetry does not spend the afternoon I did.
+                # answer to it.
                 spend = min(self.household.capital * 0.05, 2000)
                 self.household.capital -= spend
                 self.household.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
@@ -1079,19 +1020,15 @@ class StepPhasesMixin:
         # the slot. Four of those deadlocked a run at 98 technologies for
         # two hundred and fifty years.
         #
-        # ONLY A TRADE THIS PROJECT STILL OWES SOMETHING TO. This used to
-        # test n["lab"]'s ORIGINAL total (`want > 0`), which never goes
-        # back to zero no matter how much of that trade's hours the
-        # project has already drawn - lab_year_draw and trade_draw_plan
-        # both correctly stop asking a trade for more once lab_left hits
-        # zero, but this check kept vetoing the project on it forever. A
-        # Han playtester fired a specialist whose hired-labour line
-        # already read "0% owed" - the trade had nothing left to give
-        # this project - and the very next step killed it anyway with
-        # "no engineer here", a reason `why` had never shown because
-        # `_waiting_on` (protocol.py) already knew, correctly, that
-        # lab_left made this trade a non-issue. Two places answering
-        # "does this project still need this trade" differently; this
+        # ONLY A TRADE THIS PROJECT STILL OWES SOMETHING TO: checked against
+        # `_lab_left` (how much of each trade's hours remain to be drawn),
+        # NOT n["lab"]'s ORIGINAL total (`want > 0`), which never goes back
+        # to zero no matter how much of that trade's hours the project has
+        # already drawn. lab_year_draw and trade_draw_plan both correctly
+        # stop asking a trade for more once lab_left hits zero; checking the
+        # original total here would keep vetoing the project on a trade it
+        # no longer needs anything from - the same question `_waiting_on`
+        # (protocol.py) already answers correctly off lab_left, so this
         # makes the stall check agree with the one that draws the hours.
         _lab_left = project_state.get("lab_left")
         if _lab_left is None:
@@ -1179,11 +1116,11 @@ class StepPhasesMixin:
         # Hours OFFERED this year vs hours that actually did anything.
         # `refunded` tracks the difference: hours credited back to
         # ph_left below because a trade or the money to pay for it
-        # fell short. Four projects each showed EXACTLY HALF their
-        # founder hours left after one year and a tester called it
-        # "confusing and feels artificial" - it was: nothing told them
-        # `per` had been offered in full and half of it handed straight
-        # back. See hours_this_year in `state`.
+        # fell short. This must stay visible to the player: showing only
+        # the net hours left, with nothing recording what was offered
+        # versus refunded, reads as confusing and artificial when half a
+        # year's hours come back with no explanation of why. See
+        # hours_this_year in `state`.
         project_state["hours_offered_this_year"] = round(per, 1)
         # WHAT THE PLAYER ACTUALLY ASKED FOR, READ BACK AT THE END OF
         # THE YEAR - `portfolio` and `why` print this field verbatim,
@@ -1255,46 +1192,44 @@ class StepPhasesMixin:
             self.household.bountied.discard(node_id)
             return None
         if worst < 1.0:
-            # NEVER ALL OF IT. The refund says "hours offered but not
-            # usable, because the trade was booked" - and with no floor
-            # under it, it could hand back every hour that had actually
-            # gone in. A break tester watched a project's founder-hours
-            # sit unchanged for ever because its scarcest trade was
-            # short, the bill fully paid, the calendar long past, making
-            # no progress at all while holding an entire trade's pool
-            # and freezing other projects behind it.
+            # NEVER ALL OF IT: the refund says "hours offered but not
+            # usable, because the trade was booked", and with no floor
+            # under it could hand back every hour that had actually gone
+            # in - leaving a project's founder-hours sit unchanged forever
+            # whenever its scarcest trade stays short, the bill fully paid,
+            # making no progress at all while holding an entire trade's
+            # pool and freezing other projects behind it.
             #
             # If a fraction `worst` of the work could be done, then a
             # fraction `worst` of it WAS done, and that much can never
-            # be given back. Progress is now strictly positive whenever
+            # be given back. Progress is strictly positive whenever
             # anybody at all can be found.
             give_back = min(spent_hours - refunded,
                             per * 0.4 * (1.0 - worst),
                             spent_hours * (1.0 - worst))
             project_state["ph_left"] += max(0.0, give_back)
             refunded += max(0.0, give_back)
-            # Remember it. A tester sat on 696,350 denarii watching three
-            # projects report waiting_on "money" with 2.3, 84 and 158
-            # denarii left to pay, and reasonably concluded the spend cap
-            # was broken. It was not: the trades those projects needed
-            # were fully booked, so almost nothing could be paid FOR. The
-            # mechanic was right and the label was a lie. (short_of_trade
-            # itself is now set inside lab_year_draw, against the same
-            # pace this comment describes.)
+            # Remember it: `waiting_on` reporting "money" for a project
+            # whose real block is a fully booked trade, not an actual spend
+            # cap, is a misleading label even though the underlying
+            # mechanic is correct - a player watching a large balance sit
+            # unspent against "money" owed can reasonably conclude the
+            # spend cap itself is broken. (short_of_trade itself is set
+            # inside lab_year_draw, against the same pace this comment
+            # describes.)
         if hired_hours > hired_left:
             frac *= hired_left / max(hired_hours, 1e-9)
             hired_hours = hired_left
         # THE INSTALMENT IS WHAT A CONSTRAINED YEAR CAN DO; THE BILL IS
-        # WHAT IS LEFT. This used to work the payment out first and then
-        # multiply it by each shortage in turn, so once the remaining
-        # balance was smaller than a year's instalment you paid a
-        # FRACTION OF WHAT WAS LEFT every year, for ever: a geometric
-        # decay that approaches zero and never reaches it, while
-        # completion needs the bill down to half a denarius. A
-        # playtester watched one project sit at "71% done" for
-        # twenty-five years with cash in hand and no idea why. Working
-        # it out from the already-scaled `frac` means a shortage sets
-        # how FAST you can pay and never stops the last payment landing.
+        # WHAT IS LEFT: working from the already-scaled `frac`, applied
+        # directly to `cost_left`, means a shortage sets how FAST a
+        # project can be paid off and never stops the last payment
+        # landing. Working the payment out first and then multiplying it
+        # by each shortage in turn would instead pay a FRACTION OF WHAT
+        # WAS LEFT every year, forever, once the remaining balance is
+        # smaller than a year's instalment - a geometric decay that
+        # approaches zero and never reaches it, while completion needs the
+        # bill down to half a denarius.
         money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
         hired_left -= hired_hours
         return hired_left, money, refunded
@@ -1343,18 +1278,14 @@ class StepPhasesMixin:
         # were exactly right: the gate was on the household's purse,
         # not on whether this project needed anything from it.
         if money > 0 and money > purse:
-            # PROPORTIONAL, not a flat half. This used to refund
-            # exactly per*0.5 whenever the purse fell short AT ALL,
-            # whether by one denarius or by the whole bill, which is
-            # what produced the "exactly half" a tester flagged as
-            # arbitrary-looking: four unrelated projects each showing
-            # precisely half their founder hours left after one year
-            # is not a coincidence, it is this constant. A project
-            # funded to 95% of what it needed lost the same fixed
-            # half of its hour's progress as one funded to 5%; the
-            # trade-shortage case two blocks up already scales its
-            # refund by how much of the need went unmet (worst), and
-            # this should too.
+            # PROPORTIONAL, not a flat half: the refund must scale by how
+            # underfunded the purse actually is (`funded_frac`), the same
+            # way the trade-shortage case two blocks up already scales its
+            # refund by how much of the need went unmet (worst). A flat
+            # per*0.5 refund whenever the purse falls short AT ALL, whether
+            # by one denarius or by the whole bill, would give a project
+            # funded to 95% of what it needed the same fixed half-progress
+            # loss as one funded to 5%.
             funded_frac = 0.0 if money <= 0 else max(0.0, min(1.0, purse / money))
             money = max(0.0, purse)
             # Capped at what was actually taken off, and at what has not
@@ -1476,16 +1407,14 @@ class StepPhasesMixin:
         #    one we are trying to model here.
         #
         # ONLY THE HANDFUL OF KEYS active_sorted ACTUALLY NEEDS, NOT EVERY
-        # NODE IN THE TREE. This used to be a bare
-        # `{k: i for i, k in enumerate(self.order)}` - a fresh 2,849-entry
-        # dict built from scratch every single year to answer `rank.get(k,
-        # 9999)` for the at most a few dozen keys in self.household.active. Nothing
-        # below reads `rank` for any node NOT in self.household.active (checked: its
-        # only other use is the `_pool_rank` loop variable a few lines
-        # further down, an unrelated name), so recording a position for
-        # every other one of the ~2,849 nodes was pure waste - 0.64ms/year
-        # of pure self time with nothing under it, since dict-comprehension
-        # and enumerate are both C-level with no further calls to profile.
+        # NODE IN THE TREE: a bare `{k: i for i, k in enumerate(self.order)}`
+        # would build a fresh 2,849-entry dict from scratch every single
+        # year to answer `rank.get(k, 9999)` for the at most a few dozen
+        # keys in self.household.active. Nothing below reads `rank` for any
+        # node NOT in self.household.active (checked: its only other use is
+        # the `_pool_rank` loop variable a few lines further down, an
+        # unrelated name), so recording a position for every other one of
+        # the ~2,849 nodes would be pure waste.
         # This still walks self.order and cannot skip any of it in the
         # worst case (an active key can be anywhere in `order`), so it is
         # not a complexity win - but it stops paying for ~2,849 dict
@@ -1496,7 +1425,7 @@ class StepPhasesMixin:
         # skew early there in practice, though the automated 4b loop above
         # does not reorder `order` and gives no such guarantee - the early
         # exit is a bonus, not a requirement of correctness). Recomputed
-        # fresh every call, exactly as before: no cache, no staleness risk.
+        # fresh every call: no cache, no staleness risk.
         _active_left = set(self.household.active)
         rank = {}
         if _active_left:
@@ -1637,12 +1566,12 @@ class StepPhasesMixin:
             # and lost Rome a sixth of its runs. A man with a practice does not
             # go and copy documents for less than the practice earns; that is
             # the whole reason `work` is the thing you do BEFORE you have one.
-            # NOT `pool`. That name already held the year's project budget,
-            # computed at 4b, and reusing it here overwrote it - so
-            # hours_this_year then reported "offered_to_projects" against the
-            # WHOLE year instead of against the project budget. The year's
-            # hours added up to 2,900 out of 2,000, which is exactly the sort
-            # of arithmetic a player cannot argue with and cannot trust.
+            # NOT `pool`: that name already holds the year's project budget,
+            # computed at 4b. Reusing it here would overwrite it, so
+            # hours_this_year would then report "offered_to_projects"
+            # against the WHOLE year instead of against the project budget,
+            # letting a year's hours add up to more than what was actually
+            # available.
             year_hours = max(1.0, self.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
@@ -1680,13 +1609,11 @@ class StepPhasesMixin:
             1.0 - math.exp(-self.w["adaptation_rate"]
                            * (self.FAMILIARITY_PUBLICATION_WEIGHT * pub
                               + self.FAMILIARITY_TENURE_WEIGHT * (self.year - 100))))
-        # WHERE THE YEAR'S HOURS WENT. Four projects each showed exactly half
-        # their founder hours left after one year, with 2,400 available and
-        # only about 200 apparently spent, and a tester had no way to see why:
-        # nothing in `state` accounted for a year's hours at all. Captured
-        # here, before the tallies below reset for the next year, the same way
-        # spend_last_year already captures the year's spending. See it as
-        # `hours_this_year` in `state`.
+        # WHERE THE YEAR'S HOURS WENT: captured here, before the tallies
+        # below reset for the next year, the same way spend_last_year
+        # already captures the year's spending, so a player can see the
+        # breakdown as `hours_this_year` in `state` rather than only a
+        # final hours-left figure with no way to tell where the rest went.
         self.hours_this_year = {
             "available": round(self.director_pool(), 1),
             "wage_work": round(getattr(self.household, "wage_hours_this_year", 0.0), 1),

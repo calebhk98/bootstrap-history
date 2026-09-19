@@ -355,14 +355,14 @@ class HeadlineCalibrationTests(unittest.TestCase):
             places=9)
         self.assertGreater(holding, cropped)
 
-        # BEHAVIOURAL, NOT A SOURCE SCAN. This used to grep
+        # BEHAVIOURAL, NOT A SOURCE SCAN: a grep of
         # fraction_of_population_that_must_farm's own source for the literal
-        # string "FALLOW". That would have passed just as happily on a
-        # rewrite that double-counted the idle-land share through a
-        # differently-named field or a derived value with no "FALLOW" in its
-        # spelling, and it would have FAILED a harmless comment that merely
-        # mentions fallow, neither of which is the property this check
-        # actually cares about. The claim is directly observable instead:
+        # string "FALLOW" would pass just as happily on a rewrite that
+        # double-counted the idle-land share through a differently-named
+        # field or a derived value with no "FALLOW" in its spelling, and it
+        # would FAIL a harmless comment that merely mentions fallow, neither
+        # of which is the property this check actually cares about. The
+        # claim is directly observable instead:
         # fraction_of_population_that_must_farm() takes `rotation` as an
         # argument, so build one whose fallow share differs sharply from the
         # default while its OTHER field (the nitrogen/yield multiplier,
