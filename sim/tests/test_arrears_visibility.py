@@ -1,7 +1,4 @@
-"""arrears_visibility: split verbatim from the old test_regressions.py (original lines 13174-13304).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""arrears_visibility: regression checks, run individually with `--only arrears_visibility`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

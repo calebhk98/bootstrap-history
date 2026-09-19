@@ -2,15 +2,15 @@
 a famine actually happen because of it?
 
 WIRING MILESTONE 4's SPECIFIC HOLE (docs/architecture/WIRING_MILESTONE_4.md,
-this task's own brief). `Sim._demographic_recovery` (sim/engine/core.py)
-used to hand `self.population.step` exactly enough calories to sit at
-nutrition_ratio == 1.0 every single year, computed from the cohort counts
-themselves - "is there enough food" was ASSUMED, never simulated, so a
-famine could not happen for a physical reason at all, only through the
-civilisation files' own scripted plague/war hazards (society.py's
-_shocks). It now runs one year of sim/world/agriculture.py's land+labour+
-weather harvest model (Sim.farm_land, agriculture.Storage) and feeds ITS
-food_available_kcal_per_day to demography instead. This module is the
+this task's own brief). `Sim._demographic_recovery` (sim/engine/core.py) runs
+one year of sim/world/agriculture.py's land+labour+weather harvest model
+(Sim.farm_land, agriculture.Storage) and feeds ITS food_available_kcal_per_day
+to demography, rather than handing `self.population.step` exactly enough
+calories to sit at nutrition_ratio == 1.0 every single year, computed from the
+cohort counts themselves. That assumption ("is there enough food" ASSUMED,
+never simulated) is the hole this guards against: without it, a famine cannot
+happen for a physical reason at all, only through the civilisation files' own
+scripted plague/war hazards (society.py's _shocks). This module is the
 regression test that hole's fix needed and did not have: sim/tests/
 test_agriculture.py and sim/tests/test_demography.py each prove their own
 module correct in isolation (both still standalone, still green,

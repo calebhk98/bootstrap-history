@@ -1,7 +1,4 @@
-"""labour_productivity: split verbatim from the old test_regressions.py (original lines 9210-9850).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""labour_productivity: regression checks, run individually with `--only labour_productivity`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

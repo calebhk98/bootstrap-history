@@ -1,7 +1,4 @@
-"""market_saturation: split verbatim from the old test_regressions.py (original lines 10015-10076).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""market_saturation: regression checks, run individually with `--only market_saturation`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

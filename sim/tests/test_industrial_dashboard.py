@@ -1,7 +1,4 @@
-"""industrial_dashboard: split verbatim from the old test_regressions.py (original lines 10883-11085).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""industrial_dashboard: regression checks, run individually with `--only industrial_dashboard`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

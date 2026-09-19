@@ -1,7 +1,4 @@
-"""parallelism_note: split verbatim from the old test_regressions.py (original lines 8787-8854).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""parallelism_note: regression checks, run individually with `--only parallelism_note`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

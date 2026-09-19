@@ -1,7 +1,4 @@
-"""reputation: split verbatim from the old test_regressions.py (original lines 7583-7781).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""reputation: regression checks, run individually with `--only reputation`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

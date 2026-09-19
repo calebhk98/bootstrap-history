@@ -1,7 +1,4 @@
-"""demographics: split verbatim from the old test_regressions.py (original lines 13962-14114).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""demographics: regression checks, run individually with `--only demographics`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

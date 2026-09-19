@@ -1,7 +1,4 @@
-"""round8g_display: split verbatim from the old test_regressions.py (original lines 10077-10531).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""round8g_display: regression checks, run individually with `--only round8g_display`."""
 from .harness import *  # noqa: F401,F403
 
 # ======================================================================

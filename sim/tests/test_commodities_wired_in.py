@@ -1,7 +1,4 @@
-"""commodities_wired_in: split verbatim from the old test_regressions.py (original lines 3535-3635).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""commodities_wired_in: regression checks, run individually with `--only commodities_wired_in`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

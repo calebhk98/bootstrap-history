@@ -104,7 +104,8 @@ normal play. `SAVE_FIELDS` still matters. Its *history* does not.
 
 ## 4. Architecture direction
 
-`docs/architecture/` holds four documents; read its README first. The live
+`docs/architecture/` holds this project's design documents; read its README
+first, since it says which apply and in what order. The live
 plan is `ENDOGENOUS_COSTS_AND_DOMAINS.md`: how a price gets calculated rather
 than looked up, which domains produce prices and which only consume them, and
 the milestones. `PM_ASSESSMENT.md` is the reasoning behind it. The two
@@ -119,8 +120,8 @@ which - not the existence of `prices.json` - is why every cost bottomed out in
 a book value: there was no physical structure to compute one from.
 
 `data/production/` covers **99.7% of consumption sites** (156 of 159
-materials; re-measured after three `conf: D` entries were deleted rather
-than kept). Read `data/production/_SCHEMA.md` before adding to it. The rule
+materials - `python3 sim/validate_production.py` for current coverage). Read
+`data/production/_SCHEMA.md` before adding to it. The rule
 that governs every number there: a yield is a physical fact - ore grade times
 recovery, reaction stoichiometry, latent heat - and is NEVER derived from what
 the material sells for, nor tuned so a computed price matches `prices.json`.
@@ -196,58 +197,21 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 - **The tree tools write to the repository.** `treetool.py merge|judge|repair|
   apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
   meant to look.
-- **`Sim` is one god object.** This line used to quote **165** instance
-  attributes CARRIED (a scan of `__init__` missing 8 reached only as `s.X`
-  from `proto/` and 3 hidden behind `self.__dict__[...]`). SUPERSEDED, and
-  deliberately not replaced with a corrected number:
-  `sim/ARCHITECTURE.md`'s "runtime graph is one god object" section states,
-  in its own voice, that the demography wiring deleted `pop_deficit` and
-  `_pop_recovery_years` and turned `pop_scale` and `wage_index` into
-  computed properties, which makes 165 stale, and that the counting method
-  behind 165 was only ever described in
-  `docs/architecture/SIM_STATE_INVENTORY.md`, never scripted, so nobody can
-  re-derive today's true figure from it. Treat 165 as unverifiable; do not
-  quote it as current, and do not invent a replacement by arithmetic on it.
-  What IS current and scripted: `Sim.__init__` still assigns **44** instance
-  attributes - unchanged by the 2026-09-18 split below, which touched
-  `step()`, not `__init__` - and `Sim` and its mixins now have **538**
-  methods between them, all talking through `self`.
-  `sim/ARCHITECTURE.md`'s same section gives the script for both numbers,
-  right next to where it quotes them. The 538 supersedes the 524 this line
-  carried until 2026-09-18: `economy.py` (6,570 lines) split into a 598-line
-  `EconomyMixin` composition point over `MarketMixin`, `CreditMixin`,
-  `MiningMixin` and `ProductionMixin` in their own files, and `society.py`
-  (3,802 lines) split the same way into a 45-line `SocietyMixin` over
-  `HazardsMixin`, `StatePressureMixin`, `AdoptionMixin` and `DiffusionMixin`.
-  `Sim`'s own base list in `core.py` did not change - see
-  "the composition-point pattern" in `sim/ARCHITECTURE.md` for why that was
-  the point. Breakdown: `Sim` 246, `EconomyMixin`-and-its-four 121,
-  `SocietyMixin`-and-its-four 61, `LabourMixin` 50, `ProjectsMixin` 46,
-  `FogMixin` 8, `GeographyMixin` 6 (same script, updated to walk into the
-  sub-mixins - the old script, unmodified, now silently undercounts at 366,
-  because it cannot see methods a composition point inherits rather than
-  defines). The whole +14 over 524 is `Sim`'s own: `step()` was a
-  1,760-line method and is now a 42-line dispatcher over 14 `_step_*` phase
-  methods. A full decomposition of the god object itself has been
-  considered and rejected with reasons in `sim/ARCHITECTURE.md`. Do not
-  silently restart it.
+- **`Sim` is one god object.** `Sim.__init__` assigns **44** instance
+  attributes, unchanged by the mixin split described in `sim/ARCHITECTURE.md`
+  (that split touched `step()`, not `__init__`). `Sim` and its mixins have
+  **538** methods between them, all talking through `self`.
+  `sim/ARCHITECTURE.md`'s "runtime graph is one god object" section gives the
+  script for both numbers and the per-mixin breakdown. A full decomposition
+  of the god object has been considered and rejected, with reasons, in the
+  same file - do not silently restart it.
 - **Much of the engine is majority comment, and the comments are
   load-bearing.** They are how agents hand each other the reason a thing is
-  the way it is. Do not strip them to "clean up". (The old "five of eight"
-  figure was stale and, worse, unreproducible - it never recorded whether a
-  docstring counted as comment or code. Re-measured 2026-09-18 with BOTH
-  rules scripted: it is **one of eight** counting docstrings as
-  documentation - core.py, now 55% (was 54% before the split; core.py grew
-  from 4,577 to 4,929 lines, the growth mostly comments explaining what the
-  `step()` split moved and why) - and **zero of eight** counting them as
-  code. The "eight" is no longer the same eight files: `economy.py` and
-  `society.py` shrank to composition-point shims and dropped out, replaced
-  in the comparison by the largest files that now exist, `economy_market.py`
-  and `cli_interactive.py` among them - see `sim/ARCHITECTURE.md` for the
-  full successor list and why it is the fair comparison. That supersedes
-  the four-and-one this line carried, and the direction matters: the files
-  that stayed large got denser, not better documented.
-  `sim/ARCHITECTURE.md` states both rules and gives the script for each.)
+  the way it is. Do not strip them to "clean up". Measured on the eight
+  largest engine files: **one of eight** (`core.py`, 55%) is majority
+  comment counting docstrings as documentation; **zero of eight** is,
+  counting docstrings as code. `sim/ARCHITECTURE.md` states both counting
+  rules and gives the script and the current file list for each.
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 
@@ -256,33 +220,18 @@ anything that depends on the checkout being called `rome`, it is a bug; see
 ## 7. Naming
 
 Identifiers two characters or shorter, measured three ways because the number
-you quote depends on what you count. **There is now a command, and this
-paragraph no longer quotes a figure of its own:**
+you quote depends on what you count:
 
     python3 sim/code_health.py --names
 
-This paragraph used to assert 4,972 occurrences, 3,813 binding sites, 3,759
-name-per-scope, 176 to 332 distinct names, 72 of 83 files, `k` at 568 across
-53 files, and a 72.4% Tier-1 share, and to say in the same breath that none
-of them carried a command, because `docs/architecture/NAMING_PLAN.md`'s
-scanner "is not part of this repo; it is a throwaway analysis script, not a
-shipped tool." That condition has been met: the scanner is committed as
-`sim/code_health.py`, with its detectors tested against fixtures in
-`sim/tests/test_code_health.py`.
-
-**Not one of the seven reproduces.** Run the command and it says so, per
-figure, in its own output. What it does NOT say, and what you should not
-conclude, is that the old numbers were wrong: `sim/` has grown from 83 files
-to 194 since that scan, the worst offenders it named have been decomposed,
-and NAMING_PLAN.md's own account says the original scan's exact grammar is
-lost rather than merely uncommitted. So the two are not measuring the same
-tree by the same rule, and the gap cannot be attributed. The scanner reports
-binding sites as unreproducible for exactly this reason, rather than
-inventing a definition and pretending to check it.
-
-What replaces them is the command, run today, whenever you need a number.
-Say which of the three methods you mean when you quote one, because the
-first two attempts at this disagreed and both were right.
+Say which of the three methods you mean when you quote a figure - the first
+two attempts at this disagreed and both were right. `docs/architecture/
+NAMING_PLAN.md` carries figures of its own that this command will not
+reproduce, because `sim/` has grown from 83 files to 194 since that scan and
+NAMING_PLAN.md's own account says the original scan's exact grammar is lost,
+not merely uncommitted; treat NAMING_PLAN.md's numbers as historical and this
+command's output as current. The scanner's detectors are tested against
+fixtures in `sim/tests/test_code_health.py`.
 
 This is the single biggest obstacle to anyone reading this code, and it gets
 worse every time someone adds to it.
@@ -324,11 +273,10 @@ say so.
 
 A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
 the per-name meanings and the tooling. `python3 sim/code_health.py --names`
-prints today's Tier-1 share alongside the 72.4% NAMING_PLAN.md recorded, and
-says whether it reproduces; it does not, for the reasons above, so do not
-quote either figure without running it. Tier 1 is a purely local variable,
-provably safe to rename; a function PARAMETER is Tier 2, because
-`prove_rename_safe.py` cannot cover a caller passing by keyword.
+prints today's Tier-1 share; quote that, not NAMING_PLAN.md's, for current
+state. Tier 1 is a purely local variable, provably safe to rename; a
+function PARAMETER is Tier 2, because `prove_rename_safe.py` cannot cover a
+caller passing by keyword.
 
 Only five names (`v`, `i`, `_k`, `_y`, `l`) mean one thing everywhere; most
 vary by site (`q` is a function, a quantity, a quality score and a price

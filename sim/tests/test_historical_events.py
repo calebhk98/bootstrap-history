@@ -1,7 +1,4 @@
-"""historical_events: split verbatim from the old test_regressions.py (original lines 6644-6721).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""historical_events: regression checks, run individually with `--only historical_events`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

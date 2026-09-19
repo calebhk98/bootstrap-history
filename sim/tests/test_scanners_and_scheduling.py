@@ -1,7 +1,4 @@
-"""scanners_and_scheduling: split verbatim from the old test_regressions.py (original lines 11086-12865).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""scanners_and_scheduling: regression checks, run individually with `--only scanners_and_scheduling`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

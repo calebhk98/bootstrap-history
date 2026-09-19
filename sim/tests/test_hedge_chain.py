@@ -1,7 +1,4 @@
-"""hedge_chain: split verbatim from the old test_regressions.py (original lines 9950-10014).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""hedge_chain: regression checks, run individually with `--only hedge_chain`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

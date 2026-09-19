@@ -1,7 +1,4 @@
-"""sort_nearest: split verbatim from the old test_regressions.py (original lines 8855-9209).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""sort_nearest: regression checks, run individually with `--only sort_nearest`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

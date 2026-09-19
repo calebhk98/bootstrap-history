@@ -1,7 +1,4 @@
-"""interface_honesty: split verbatim from the old test_regressions.py (original lines 8421-8670).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""interface_honesty: regression checks, run individually with `--only interface_honesty`."""
 from .harness import *  # noqa: F401,F403
 
 # ============================================================================

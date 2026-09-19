@@ -1,7 +1,4 @@
-"""fog_leak3: split verbatim from the old test_regressions.py (original lines 8671-8786).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""fog_leak3: regression checks, run individually with `--only fog_leak3`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

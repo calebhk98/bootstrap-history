@@ -10,16 +10,16 @@ the shape of the code, re-measure and correct it.
 
 `Sim` is a single large object that holds the entire state of one game. Its
 base list in `core.py` names six mixins - `EconomyMixin`, `FogMixin`,
-`GeographyMixin`, `LabourMixin`, `ProjectsMixin`, `SocietyMixin` - unchanged
-since before the 2026-09-18 split described below. What changed is that two
-of those six, `EconomyMixin` and `SocietyMixin`, no longer hold their own
-methods: each is now an empty composition point that inherits from four
-further sub-mixins living in their own files (`MarketMixin`, `CreditMixin`,
+`GeographyMixin`, `LabourMixin`, `ProjectsMixin`, `SocietyMixin`. Two of
+those six, `EconomyMixin` and `SocietyMixin`, hold no methods of their own:
+each is an empty composition point that inherits from four further
+sub-mixins living in their own files (`MarketMixin`, `CreditMixin`,
 `MiningMixin`, `ProductionMixin` under `EconomyMixin`; `HazardsMixin`,
 `StatePressureMixin`, `AdoptionMixin`, `DiffusionMixin` under `SocietyMixin`).
-`class Sim(...)` in `core.py` is untouched, so the split cost nobody a merge
-conflict there - see "The composition-point pattern" below for why that
-matters. The **import** graph across all fourteen mixin files (six top-level
+`class Sim(...)` in `core.py` names only the six top-level mixins, never a
+sub-mixin directly - see "The composition-point pattern" below for why a
+future split of a large mixin should keep that shape. The **import** graph
+across all fourteen mixin files (six top-level
 plus eight sub-mixins) is clean and acyclic; the **runtime** coupling between
 them is total, because they all talk to each other through `self`. Moving
 code into more, smaller files moved it into separate files without
@@ -123,33 +123,28 @@ pattern" below.
 
 ## The runtime graph is one god object
 
-**RE-MEASURED 2026-09-18, after the mixin split described above.** `Sim`
-still assigns **44** instance attributes on `self` in `__init__` - the split
-touched `step()`, not `__init__`, so this number is unchanged from before it
-- and still carries **109 forwarding properties** (`grep -c "@property"`) to
-a `Household` object holding **68** of its own (`sim/engine/actors/
-household.py`, same script, same count).
+`Sim` assigns **44** instance attributes on `self` in `__init__`, and
+carries **109 forwarding properties** (`grep -c "@property"`) to a
+`Household` object holding **68** of its own (`sim/engine/actors/
+household.py`, same script).
 
 A freshly built `Sim` (`sim.tests.harness.sim()`, before the test harness
 pokes its own `goal` attribute onto it afterwards) has exactly those 44
 attributes and nothing else - checked by diffing the static AST set against
-`vars()` on a live instance. That retires the older claim that "a live `Sim`
-carries 42 instance attributes": whatever produced 42 is not reproducible
-against this build, and 44/44 with no discrepancy is a cleaner result than a
-number that needs re-deriving.
+`vars()` on a live instance.
 
-**44 AND CLAUDE.md'S 165 ARE BOTH RIGHT, AND THEY COUNT DIFFERENT THINGS** -
-read this before "correcting" either. 44 is what `Sim.__init__` ASSIGNS, by
-the script below. CLAUDE.md SS6's 165 is what `Sim` CARRIES: it adds the
-attributes assigned outside `__init__`, the 8 reached only as `s.X` from
-`proto/`, and the 3 written through `self.__dict__[...]`, none of which a
-scan of `__init__` can see. The assignment rule gives 44 in `__init__` and
-**46** anywhere in the class body (self.X assignments in any method, not
-only `__init__` - re-measured 2026-09-18; the split added none of the
-difference, all 46 are pre-existing methods on `Sim` itself). Quote whichever
-you mean and say which, the way CLAUDE.md SS7 already demands for the naming
-counts - the two previous attempts at that number disagreed and both were
-right, for exactly this reason.
+**44 counts a narrower thing than "everything `Sim` carries."** It is what
+`Sim.__init__` ASSIGNS, by the script below. A broader count - everything
+`Sim` CARRIES - would add the attributes assigned outside `__init__`, the
+ones reached only as `s.X` from `proto/`, and the ones written through
+`self.__dict__[...]`, none of which a scan of `__init__` can see. That
+broader counting method is described in
+`docs/architecture/SIM_STATE_INVENTORY.md` but is not scripted anywhere, so
+do not invent a figure for it. The assignment rule gives 44 in `__init__`
+and **46** anywhere in the class body (self.X assignments in any method, not
+only `__init__`). Quote whichever you mean and say which, the way CLAUDE.md
+SS7 already demands for the naming counts - the two previous attempts at
+that number disagreed and both were right, for exactly this reason.
 
     grep -c "@property" sim/engine/core.py            # properties: 109
     python3 - <<'EOCOUNT'                             # attributes: 44
@@ -177,41 +172,20 @@ eight fields biographical to one mortal person (`founder_alive`, `life_left`,
 `dead_reason` and kin) which have no meaning for a government or a firm and
 so are waiting for a second actor to say what they should become.
 
-The figure this file used to give was 157 attributes, and that was itself an
-undercount: a later measurement found **165**, because eight attributes are
-never touched through `self` anywhere in the mixins (they are only ever
-reached as `s.X` from `engine/proto/`) and three more hide behind
-`self.__dict__[...]`. See `docs/architecture/SIM_STATE_INVENTORY.md` for the
-full table and the counting method.
+`docs/architecture/SIM_STATE_INVENTORY.md` has the full table and counting
+method for the broader "everything `Sim` carries" question, including the
+attributes reached only as `s.X` from `engine/proto/` and the ones hidden
+behind `self.__dict__[...]`; it is not scripted, so treat any total it gives
+as unverifiable against today's build rather than re-deriving one by
+arithmetic on it.
 
-THAT 165 IS NOW STALE, AND IS DELIBERATELY NOT REPLACED HERE. Wiring
-`sim/world/demography.py` into the engine deleted `pop_deficit` and
-`_pop_recovery_years`, turned `pop_scale` and `wage_index` from stored
-attributes into computed properties, and added one new attribute
-(`self.population`) and three forwarding properties for its cohorts. So the
-true figure moved by roughly four, downward - but quoting `165 - 4` would be
-arithmetic on a number rather than a measurement, and this file's whole
-point is that the counts are measured.
-
-The obstacle is that the counting method behind 165 is described in
-`docs/architecture/SIM_STATE_INVENTORY.md` but is not scripted anywhere.
-It also used to disagree with what a runtime `vars(sim_instance)` returns -
-this file previously quoted a live `Sim` at 42 instance attributes against
-109 or 110 properties (itself two different numbers depending on whether you
-grep decorators or introspect `dir(type(sim))`, since a `@x.setter` is a
-second `FunctionDef` for a property `grep "@property"` counts once). The
-attribute side of that gap is now closed: re-measured 2026-09-18, a freshly
-built `Sim` has exactly 44 live attributes, matching `__init__` exactly (see
-above) - not 42. Whatever produced 42 was either a different build or a
-different counting rule; it is not reproducible now, so it is retired rather
-than repeated. The property side is unchanged and still worth recording
-precisely: `grep -c "@property"` on `core.py` gives 109 (getters only);
+Two different questions give two different right answers for the property
+count, too: `grep -c "@property"` on `core.py` gives **109** (getters only);
 `[n for n in dir(type(sim)) if isinstance(getattr(type(sim), n), property)]`
-on a live instance gives 110, because that walks the MRO and one property is
-inherited from a mixin rather than defined with its own `@property` line in
-`core.py`'s grep-able text. Two different questions, two different right
-answers - exactly the trap CLAUDE.md section 7 describes for the naming
-counts.
+on a live instance gives **110**, because that walks the MRO and one
+property is inherited from a mixin rather than defined with its own
+`@property` line in `core.py`'s grep-able text. Exactly the trap CLAUDE.md
+section 7 describes for the naming counts.
 
 ## The composition-point pattern
 
@@ -243,12 +217,10 @@ touch the "runtime coupling is total" problem, and was never meant to.
 
 ## The method count
 
-The method count is now **538** across `Sim` and its mixins, up from the
-**524** this section quoted before this split. Counted with the same rule as
-before - every `FunctionDef` directly in a class's own body, which is why a
-`@property` getter and its `@x.setter` each count as one method, exactly as
-they did in the 109/107 properties/setters folded into `Sim`'s own total
-below:
+`Sim` and its mixins have **538** methods between them. Counted as every
+`FunctionDef` directly in a class's own body, which is why a `@property`
+getter and its `@x.setter` each count as one method, matching the 109/107
+properties/setters folded into `Sim`'s own total below:
 
     Sim                    246   (independently: 109 @property + 107 @x.setter
                                    + 30 plain methods = 246)
@@ -256,28 +228,26 @@ below:
       MarketMixin           55
       CreditMixin           11
       MiningMixin           29
-      ProductionMixin       16     (economy total: 121, unchanged from before
-                                     the split - splitting a class does not
-                                     create or destroy methods)
+      ProductionMixin       16     (economy total: 121)
     SocietyMixin              0   composed of:
       HazardsMixin           13
       StatePressureMixin     17
       AdoptionMixin          11
-      DiffusionMixin         20     (society total: 61, likewise unchanged)
+      DiffusionMixin         20     (society total: 61)
     LabourMixin              50
     ProjectsMixin             46
     FogMixin                   8
     GeographyMixin             6
     TOTAL                    538
 
-The whole of the +14 came from `Sim` itself (232 -> 246): `step()` used to be
-one 1,760-line method and is now `step()` plus 14 `_step_*` phase methods -
-see "`Sim.step()`" below. Nothing else changed shape. Running the OLD
-script - the one that counts only `EconomyMixin`'s and `SocietyMixin`'s OWN
-class bodies, not their sub-mixins - now silently reports 366, because it
-cannot see the 121 + 61 = 182 methods those two composition points now
-inherit rather than define. THAT is the sub-mixin trap in numeric form: an
-import-clean split can make a perfectly good script quietly start
+`Sim` itself accounts for 246 of the 538: `step()` is now `step()` plus 14
+`_step_*` phase methods - see "`Sim.step()`" below for why. **A
+method-counting script must walk into a composition point's sub-mixins, or
+it will silently undercount.** A script that counts only `EconomyMixin`'s
+and `SocietyMixin`'s own class bodies, not their sub-mixins, reports 366,
+because it cannot see the 121 + 61 = 182 methods those two composition
+points inherit rather than define. That is the sub-mixin trap in numeric
+form: an import-clean split can make a perfectly good script quietly start
 undercounting. The corrected script:
 
     python3 - <<'EOCOUNT'

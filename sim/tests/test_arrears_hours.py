@@ -1,7 +1,4 @@
-"""arrears_hours: split verbatim from the old test_regressions.py (original lines 9851-9949).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""arrears_hours: regression checks, run individually with `--only arrears_hours`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

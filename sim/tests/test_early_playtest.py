@@ -1,7 +1,4 @@
-"""early_playtest: split verbatim from the old test_regressions.py (original lines 202-919).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""early_playtest: regression checks, run individually with `--only early_playtest`."""
 from .harness import *  # noqa: F401,F403
 
 # --- Rome BREAK: negative quantity minted money while reporting failure

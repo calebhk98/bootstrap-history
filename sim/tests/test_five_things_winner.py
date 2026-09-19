@@ -1,7 +1,4 @@
-"""five_things_winner: split verbatim from the old test_regressions.py (original lines 10532-10882).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""five_things_winner: regression checks, run individually with `--only five_things_winner`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

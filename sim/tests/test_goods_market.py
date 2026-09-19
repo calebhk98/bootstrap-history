@@ -1,7 +1,4 @@
-"""goods_market: split verbatim from the old test_regressions.py (original lines 7097-7270).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""goods_market: regression checks, run individually with `--only goods_market`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

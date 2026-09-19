@@ -1,7 +1,4 @@
-"""allocate: split verbatim from the old test_regressions.py (original lines 13305-13497).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""allocate: regression checks, run individually with `--only allocate`."""
 from .harness import *  # noqa: F401,F403
 
 # ===========================================================================

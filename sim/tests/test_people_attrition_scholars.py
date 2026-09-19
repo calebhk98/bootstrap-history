@@ -1,7 +1,4 @@
-"""people_attrition_scholars: split verbatim from the old test_regressions.py (original lines 7782-8420).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""people_attrition_scholars: regression checks, run individually with `--only people_attrition_scholars`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

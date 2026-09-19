@@ -1,7 +1,4 @@
-"""affordability_warning: split verbatim from the old test_regressions.py (original lines 13076-13173).
-
-Moving contiguous blocks verbatim: no check below was reformatted, reworded or otherwise touched in the split.
-"""
+"""affordability_warning: regression checks, run individually with `--only affordability_warning`."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================

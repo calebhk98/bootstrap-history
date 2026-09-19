@@ -13,15 +13,15 @@ instead of an assumption baked into `data/prices.json`.
 
 STANDALONE ON PURPOSE. Nothing here imports from `sim/engine/`, and nothing
 in `sim/engine/` imports this. See `sim/world/__init__.py` for why the
-package as a whole is built this way while other agents edit `sim/engine/`,
-`data/branches/`, `data/production/` and `data/tech_tree.json` concurrently:
-a module with no dependency on those paths cannot be broken by their edits,
-and cannot break their tests either. `sim/world/demography.py` (built in
-parallel, not touched by this file) is the intended CONSUMER on the
-population side: it takes a plain `food_available_calories_per_day` number
-and treats it as exogenous. `Storage.step` below hands back exactly that
-number (`food_available_kcal_per_day` in `YearFlows`) for the day someone
-wires the two together - this file does not do that wiring itself.
+package as a whole is built this way: a module with no dependency on
+`sim/engine/`, `data/branches/`, `data/production/` or `data/tech_tree.json`
+cannot be broken by edits to those paths, and cannot break their tests
+either. `sim/world/demography.py`, not touched by this file, is the intended
+CONSUMER on the population side: it takes a plain
+`food_available_calories_per_day` number and treats it as exogenous.
+`Storage.step` below hands back exactly that number
+(`food_available_kcal_per_day` in `YearFlows`); the actual wiring between the
+two happens in `sim/engine/core.py`, not in this file.
 
 THE TWO CONSUMERS THIS IS SHAPED FOR. (1) The demography model: birth and
 death rates there respond to calories per person, so this module's job is to
@@ -32,38 +32,29 @@ the marginal product of the last hour of farm labour applied - the number a
 labour market would need to decide whether one more hour on the farm is
 worth more than that hour spent elsewhere.
 
-ONE CROP BY DEFAULT, NOT ONE CROP BY CONSTRUCTION. The module started with
-wheat as the only representable crop, following the instruction to not model
-a dozen crops and `data/production/40_organics.json`, which already carries
-the tree's own wheat numbers. That was too rigid: the stakeholder's own
-objection is that fertiliser, rotation, a better crop, better land, better
-draught power and better storage all have to be able to change the answer,
-and a module with every parameter hardcoded to one crop-soil-technique
-combination cannot represent any of them (CLAUDE.md SS3.1). So the numbers
-below are now organised as small tables - `Crop`, `Soil`, `Rotation`,
-`Toolkit`, `StorageTechnique` - each one a named bundle of declared numbers
-for one instance of that axis (wheat vs potatoes vs rice; ordinary
-Mediterranean loam vs Ukrainian chernozem vs arctic tundra; two-field vs
-three-field vs Nile flood-recession farming; ard-and-ox vs horse-collar-and-
-mouldboard vs a mechanical reaper; a pit silo vs a refrigerated store).
-Every function below takes these as optional arguments and defaults to the
-ORIGINAL wheat/ordinary-soil/two-field/ard-and-sickle/pit-silo combination,
-so the headline number this module has always reported is unchanged -
+ONE CROP BY DEFAULT, NOT ONE CROP BY CONSTRUCTION. The numbers below are
+organised as small tables - `Crop`, `Soil`, `Rotation`, `Toolkit`,
+`StorageTechnique` - each one a named bundle of declared numbers for one
+instance of that axis (wheat vs potatoes vs rice; ordinary Mediterranean loam
+vs Ukrainian chernozem vs arctic tundra; two-field vs three-field vs Nile
+flood-recession farming; ard-and-ox vs horse-collar-and-mouldboard vs a
+mechanical reaper; a pit silo vs a refrigerated store), because fertiliser,
+rotation, a better crop, better land, better draught power and better storage
+all have to be able to change the answer, and a module with every parameter
+hardcoded to one crop-soil-technique combination cannot represent any of them
+(CLAUDE.md SS3.1). Every function below takes these as optional arguments and
+defaults to the wheat/ordinary-soil/two-field/ard-and-sickle/pit-silo
+combination, so the headline number this module reports is stable -
 `sim/tests/test_agriculture.py` pins that. Diminishing returns to labour on
-fixed land is still the one property that has to hold at every combination,
-and it does, because every table just rescales the same Cobb-Douglas curve;
-see `gross_harvest_kg`.
+fixed land is the one property that has to hold at every combination, and it
+does, because every table just rescales the same Cobb-Douglas curve; see
+`gross_harvest_kg`.
 
-ARITHMETIC CORRECTION TO data/production/40_organics.json, MADE THERE RATHER
-THAN WORKED AROUND HERE. That file's `wheat_kg` entry used to set its yield
-at 800 kg/ha and call it net of seed, while deriving it in the same paragraph
-as "4-5 fold [return] on the seed sown... at a seeding rate around 150-180
-kg/ha". Fold-return is measured against the seed sown, so that arithmetic
-produces a GROSS harvest and the seed is inside it; 800 was a defensible
-gross figure and an indefensible net one, and the two readings differ by 28%.
-The entry now states 577.5 kg/ha (4.5 fold on 165 kg/ha, less the 165 kg/ha
-of seed corn), which is what this module computes, so the file and this
-module now agree by construction rather than by coincidence -
+NET YIELD MUST MATCH data/production/40_organics.json's `wheat_kg` ENTRY, BY
+CONSTRUCTION. Fold-return is measured against the seed sown, so a fold-return
+figure produces a GROSS harvest with the seed inside it; net of seed, wheat's
+4.5-fold return on 165 kg/ha of seed corn gives 577.5 kg/ha, which is what
+this module computes and what the data file states -
 `sim/tests/test_agriculture.py`'s DataConsistencyTests reads the file and
 checks it, so the two cannot drift apart unnoticed.
 
@@ -82,10 +73,9 @@ much one worker can reap inside it - one full-time farm worker produces
 enough NET food to feed roughly five people, so about 21% of a population
 has to farm. The pre-industrial figure every society actually shows is
 80-90% (CLAUDE.md SS3.2's own calibration target). Nothing here is tuned to
-close that gap, and the gap is now four-fold rather than the seventeen-fold
-this module first computed. What closed the larger part of it was one
-mechanism, added after the fact and worth stating plainly because it is not
-where the first reading looked:
+close that gap, and the gap is a factor of about four. One mechanism
+accounts for most of what closes it, worth stating plainly because it is not
+where a first reading would look:
 
   THE BINDING CONSTRAINT IS THE HARVEST WINDOW, NOT THE FARMING YEAR. Grain
   ripens and is then lost to shattering and lodging within two or three
@@ -145,14 +135,14 @@ likely hiding, in the order this module would bet on:
       to any cost computed from those hours, which is what
       data/production/40_organics.json feeds.
 
-THE HARVEST WINDOW NOW ALSO BINDS gross_harvest_kg, NOT ONLY THE HEADLINE
-CALIBRATION. HARVEST_WINDOW_DAYS and HECTARES_REAPED_PER_WORKER_DAY used to be
-read only by `hectares_per_worker_harvest_window_ceiling`, which feeds the
-headline calibration function - `gross_harvest_kg`, the function `Storage.
-step` actually calls every year, never saw them, so it would gladly turn an
+THE HARVEST WINDOW BINDS gross_harvest_kg DIRECTLY, NOT ONLY THE HEADLINE
+CALIBRATION. HARVEST_WINDOW_DAYS and HECTARES_REAPED_PER_WORKER_DAY are read
+by `gross_harvest_kg` itself, the function `Storage.step` calls every year -
+not only by `hectares_per_worker_harvest_window_ceiling`, which feeds the
+headline calibration function. Without that, `gross_harvest_kg` would turn an
 arbitrarily large pool of labour_hours applied to an arbitrarily large `Land`
 into a harvest no crew could physically have reaped inside a real harvest
-season. `gross_harvest_kg` now converts its `labour_hours` pool into
+season. Instead it converts its `labour_hours` pool into
 worker-year-equivalents (dividing by ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, the
 same conversion `hectares_cropped_per_farm_worker` already uses) and caps the
 LAND that actually contributes to the harvest at what that many workers could
@@ -224,14 +214,10 @@ SHAPE.
                   `Storage.step` for the identity `sim/tests/test_
                   agriculture.py`'s conservation check verifies every year.
 
-THIS FILE AND ITS SIBLINGS, AND WHY THIS SPLIT LOOKS DIFFERENT. This module
-was 2,238 total / 1,696 code lines, over the project's roughly-1,000-code-
-line target for a file, and the single file every agent touching farming had
-to collide in. Split on 2026-09-18 into subject files, the same way
-`sim/engine/society.py` was split into `society_hazards.py`,
-`society_state_pressure.py`, `society_adoption.py` and `society_diffusion.py`
-- see that file for the pattern this one copies. Three siblings hold the
-functions and classes:
+THIS FILE IS A COMPOSITION POINT over three sibling files, grouped by
+subject rather than gathered into one large file, so an agent working on one
+part of farming is not forced to collide with one working on another part.
+The three siblings hold the functions and classes:
 
     agriculture_yield.py     the production function itself: `Land`, one
                               year's weather draw, the harvest-window
@@ -247,44 +233,31 @@ functions and classes:
                               of_population_that_must_farm`, `farm_workers_
                               fte_for_population`, `farmland_for_population`.
 
-EVERYTHING THIS FILE DECLARES STAYED HERE, UNLIKE `society.py`'s SPLIT,
-WHICH MOVED EVERYTHING OUT. `society.py` is 45 lines because every method it
-held moved to a sibling; this file could not do the same with its constants,
-for a reason specific to how this project's numbers are tracked rather than
-to this split's own judgement. `sim/constants.py`'s `_import_declaring_
-modules()` keeps an explicit list of every module that calls `declare()`,
-by dotted name, and `sim/tests/test_constants_burndown.py`'s
+WHY THIS FILE STILL HOLDS EVERY `declare()` CALL. `sim/constants.py`'s
+`_import_declaring_modules()` keeps an explicit list of every module that
+calls `declare()`, by dotted name, and `sim/tests/test_constants_burndown.py`'s
 `test_every_declaring_module_under_sim_world_is_in_the_list` fails if any
 `sim/world/*.py` file contains the literal text `declare(` without its own
 dotted name in that list - a number declared in an unlisted file goes
 missing from the burndown silently, which is the exact bug that test exists
-to catch (see its own docstring). The brief this split was done under owns
-only this file and new files under `sim/world/`, and forbids editing
-anything else, `sim/constants.py` included. So every `declare()` call this
-module makes - which is effectively everything from SEED AND YIELD BIOLOGY
-below through CALIBRATION TARGETS, the bulk of what is left of this file -
-had to stay in the one file already on that list: this one. The `Crop`/
-`Soil`/`Rotation`/`Toolkit`/`StorageTechnique` namedtuple types and the named
-table instances built from them (`WHEAT`, `POTATOES`, `RICE`, the soils, the
-rotations, the toolkits, the storage techniques) stayed here for the same
-reason they are grouped with the constants at all: they are the SAME
-subject, declared numbers gathered into named bundles, and moving the
-instance-construction lines to a sibling on their own would have grouped by
-size rather than by subject, which the brief this split was done under says
-explicitly not to do. The result is that this file, not any sibling, is the
-one still over the target line count - see this task's own report for the
-measured total - and that is the honest shape of this particular split, not
-an oversight: every subject that COULD move without touching a file outside
-this split's ownership did.
+to catch (see its own docstring). So every `declare()` call this module
+makes - effectively everything from SEED AND YIELD BIOLOGY below through
+CALIBRATION TARGETS - stays in this file, the one already on that list,
+rather than moving to a sibling. The `Crop`/`Soil`/`Rotation`/`Toolkit`/
+`StorageTechnique` namedtuple types and the named table instances built from
+them (`WHEAT`, `POTATOES`, `RICE`, the soils, the rotations, the toolkits,
+the storage techniques) stay here for the same reason: they are the SAME
+subject as the rest of what this file declares, so moving only the
+instance-construction lines to a sibling would group by file size rather
+than by subject.
 
-THE IMPORT SURFACE IS UNCHANGED. Every name this module exported before the
-split - every declared constant, `Crop`/`Soil`/`Rotation`/`Toolkit`/
-`StorageTechnique` and their table instances, `Land`, `Storage`, `YearFlows`,
-and every function - is still reachable as `agriculture.<name>` afterward.
-The relative imports just above the `if __name__ == "__main__":` block below
-pull the three siblings' names back into this module's own namespace for
-exactly that reason; nothing anywhere else in the repository needed to
-change an import or an attribute access for this split to be invisible to it.
+THE IMPORT SURFACE MATCHES A SINGLE agriculture.py. Every declared constant,
+`Crop`/`Soil`/`Rotation`/`Toolkit`/`StorageTechnique` and their table
+instances, `Land`, `Storage`, `YearFlows`, and every function this module
+exports is reachable as `agriculture.<name>`. The relative imports just
+above the `if __name__ == "__main__":` block below pull the three siblings'
+names into this module's own namespace for exactly that reason: nothing
+elsewhere in the repository needs to know these three files exist.
 """
 import collections
 import random
@@ -299,25 +272,20 @@ from sim.world.shared_constants import (
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
     WHEAT_ENERGY_KCAL_PER_KG,
 )
-# THE SIX NAMES ABOVE ARE NOT RE-DECLARED BELOW (one of them,
+# THE SIX NAMES ABOVE ARE IMPORTED, NOT DECLARED, HERE (one of them,
 # SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY, is given this file's
-# own historical public name, HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
-# by a plain assignment where it used to be declared - see that spot
-# below). Each used to be its own
-# `declare()` call in this file, independently, with a value that happened
-# to match sim/world/land.py's own independent copy of the same physical
-# fact under a DIFFERENT name (LABOUR_OUTPUT_ELASTICITY /
-# LAND_LABOUR_OUTPUT_ELASTICITY, and three more pairs like it - see
-# sim/world/shared_constants.py's own module docstring for the incident and
-# the full inventory). Importing them from one shared declaration means
-# there is exactly one number to change and no second copy that can
-# silently disagree with it - the STANDALONE property this file and
-# land.py both keep (see this file's own docstring) is unaffected, because
-# sim/world/shared_constants.py imports nothing but sim.constants.declare,
-# the same as this file already does. This file's own historical public
-# names for these five values (assigned just below, where each used to be
-# declared) are kept unchanged, so every existing caller and test that
-# reads e.g. `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
+# own public name, HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY, by a plain
+# assignment below). sim/world/shared_constants.py is the single declaration
+# for each, so there is exactly one number to change and no second copy that
+# can silently disagree with it, of the kind recorded as an incident in
+# sim/world/shared_constants.py's own module docstring (three more pairs
+# like it are listed there too). Importing them does not break the
+# STANDALONE property this file and sim/world/land.py both keep (see this
+# file's own docstring), because sim/world/shared_constants.py imports
+# nothing but sim.constants.declare, the same as this file already does.
+# This file's own public names for these five values (assigned just below)
+# are kept unchanged, so every existing caller and test that reads e.g.
+# `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
 
 # ============================================================================
 # SEED AND YIELD BIOLOGY
@@ -329,8 +297,8 @@ from sim.world.shared_constants import (
 # the same range the task that produced this module names independently:
 # "Roman wheat returned something like four to five times the seed sown on
 # decent land, around a tonne per hectare gross." See the module docstring's
-# ARITHMETIC CORRECTION section for the gross-versus-net question these
-# two numbers used to disagree on, and where it was settled.
+# NET YIELD MUST MATCH section for the gross-versus-net distinction that
+# governs how these two numbers are used.
 
 SEED_SOWING_RATE_KG_PER_HA = declare(
     "SEED_SOWING_RATE_KG_PER_HA", 165.0,
@@ -373,27 +341,22 @@ GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA = (
 # ============================================================================
 
 # REFERENCE_LABOUR_HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and
-# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER used to each be declared here. All
-# three are now imported from sim.world.shared_constants (see this file's
-# top-of-file import comment) because sim/world/land.py's own LABOUR
-# INTENSITY section needs the identical Cobb-Douglas physics and used to
-# duplicate all three under LAND_-prefixed names rather than import this
-# file (land.py is STANDALONE and may not). One declaration, imported by
-# both, replaces two that had to be kept equal by hand. The names below are
-# unchanged from this module's history - REFERENCE_LABOUR_HOURS_PER_HECTARE
-# is still the labour intensity GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA
-# is quoted at and the anchor the Cobb-Douglas yield curve below is
-# calibrated against (see the module docstring's headline-number section
-# for why it is this module's leading suspect for the computed
-# farm-population share coming out far below the historical 80-90%);
-# LABOUR_OUTPUT_ELASTICITY is still the curve shape that makes doubling
-# labour on fixed land yield less than double the output;
-# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER is still how many hours one adult can
-# give to field work across a year, used only to turn a per-hectare labour
-# requirement into a hectares-per-worker figure for the headline
-# calibration check. See sim/world/shared_constants.py for the full
-# provenance and why paragraphs, which are not duplicated here for the same
-# reason the numbers themselves no longer are.
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER are imported from
+# sim.world.shared_constants (see this file's top-of-file import comment),
+# because sim/world/land.py needs the identical Cobb-Douglas physics and is
+# STANDALONE, so it cannot import this file - one shared declaration,
+# imported by both, replaces two copies that would otherwise have to be kept
+# equal by hand. REFERENCE_LABOUR_HOURS_PER_HECTARE is the labour intensity
+# GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA is quoted at and the anchor the
+# Cobb-Douglas yield curve below is calibrated against (see the module
+# docstring's headline-number section for why it is this module's leading
+# suspect for the computed farm-population share coming out far below the
+# historical 80-90%); LABOUR_OUTPUT_ELASTICITY is the curve shape that makes
+# doubling labour on fixed land yield less than double the output;
+# ANNUAL_LABOUR_HOURS_PER_FARM_WORKER is how many hours one adult can give to
+# field work across a year, used only to turn a per-hectare labour
+# requirement into a hectares-per-worker figure for the headline calibration
+# check. See sim/world/shared_constants.py for the full provenance.
 
 # ============================================================================
 # SEASONALITY: THE HARVEST WINDOW
@@ -514,21 +477,17 @@ HECTARES_REAPED_PER_WORKER_DAY = declare(
 # fraction_of_population_that_must_farm(), and wiring it in there would be
 # double-counting a constraint that is not yet binding.
 
-# FALLOW_SHARE_OF_HOLDING used to be declared here. It is now imported from
-# sim.world.shared_constants (see this file's top-of-file import comment):
-# sim/world/land.py needs this exact fraction too, and used to declare its
-# own reciprocal transform of it (FALLOW_HOLDING_MULTIPLIER = 1 / (1 -
-# fallow_share)) as an independently-set number rather than a derived one -
-# the HARD case of the same quantity duplicated under a different name AND
-# a different unit, not merely a different name. See
+# FALLOW_SHARE_OF_HOLDING is imported from sim.world.shared_constants (see
+# this file's top-of-file import comment): sim/world/land.py needs this
+# exact fraction too, as FALLOW_HOLDING_MULTIPLIER = 1 / (1 - fallow_share),
+# so land.py computes that ratio from this declaration rather than declaring
+# an independent number that could drift from it - see
 # sim/world/shared_constants.py's own LAND USE section for the full
-# provenance and why land.py's copy is now arithmetic on this declaration
-# instead of a second `declare()` call. This name and its role are
-# otherwise unchanged: it still converts cropped area into the land a farm
-# must actually hold, and the later three-field rotation's own, DIFFERENT
-# idle share is still THREE_FIELD_FALLOW_SHARE_OF_HOLDING below, declared
-# separately because it names a different technique, not a duplicate of
-# this one.
+# provenance. This name and its role are unchanged: it converts cropped area
+# into the land a farm must actually hold, and the three-field rotation's
+# own, DIFFERENT idle share is THREE_FIELD_FALLOW_SHARE_OF_HOLDING below,
+# declared separately because it names a different technique, not a
+# duplicate of this one.
 
 # ============================================================================
 # WEATHER
@@ -677,23 +636,21 @@ DAYS_PER_YEAR = declare(
         "food_available_calories_per_day.")
 
 # HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY keeps this module's own
-# historical public name, but the VALUE now comes from sim.world.
-# shared_constants's SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY (see
-# this file's top-of-file import) rather than a second `declare()` call.
-# sim/world/land.py needs the identical figure (formerly under its own
-# LAND_HUMAN_CALORIC_NEED_KCAL_PER_DAY name) and now imports the same
-# shared declaration; sim/world/demand.py, sim/world/demography.py and
-# sim/world/military_logistics.py still declare it independently under
-# their own names (out of this change's ownership - see
-# sim/world/shared_constants.py's own WHAT DOES NOT BELONG HERE section and
-# sim/tests/test_shared_constants.py for how a future drift there is still
-# caught).
+# public name, but its VALUE comes from sim.world.shared_constants's
+# SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY (see this file's
+# top-of-file import), so this file and sim/world/land.py cannot silently
+# disagree on it. sim/world/demand.py, sim/world/demography.py and
+# sim/world/military_logistics.py each still declare the same figure
+# independently under their own names - see sim/world/shared_constants.py's
+# own WHAT DOES NOT BELONG HERE section for why those stay separate - and
+# sim/tests/test_shared_constants.py is what catches a future drift between
+# them.
 HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY = (
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY)
 
-# WHEAT_ENERGY_KCAL_PER_KG used to be declared here too; it is now imported
-# directly under this same name from sim.world.shared_constants (see the
-# top-of-file import), for the identical reason.
+# WHEAT_ENERGY_KCAL_PER_KG is imported under this same name from
+# sim.world.shared_constants (see the top-of-file import), for the identical
+# reason: one declaration, no second copy to drift.
 
 # ============================================================================
 # CROP, SOIL, ROTATION, TOOLKIT AND STORAGE-TECHNIQUE TABLES
@@ -1416,16 +1373,15 @@ HISTORICAL_FARM_POPULATION_SHARE_HIGH = declare(
     why="The high end of the same range.")
 
 # ============================================================================
-# COMPOSITION POINT - everything below used to be defined here, in this
-# file. It now lives in three sibling modules, grouped by subject rather
-# than by size (see this file's own docstring, "THIS FILE AND ITS SIBLINGS,
-# AND WHY THIS SPLIT LOOKS DIFFERENT", for what each one holds and why the
-# constants and tables above did not move with them). These imports pull
-# every one of those names back into THIS module's namespace, so that
-# `agriculture.gross_harvest_kg`, `agriculture.Storage`,
+# COMPOSITION POINT - the functions and classes below live in three sibling
+# modules, grouped by subject (see this file's own docstring, "THIS FILE IS
+# A COMPOSITION POINT", for what each one holds and why the constants and
+# tables above stay in this file instead). These imports pull every one of
+# those names into THIS module's namespace, so that `agriculture.
+# gross_harvest_kg`, `agriculture.Storage`,
 # `agriculture.fraction_of_population_that_must_farm` and every other name
-# this module exported before the split keep resolving exactly as they did,
-# with no edit needed anywhere else in the repository.
+# this module exports keep resolving as `agriculture.<name>`, with no edit
+# needed anywhere else in the repository.
 #
 # ORDER MATTERS HERE, AND IS NOT ALPHABETICAL. Each sibling's own top-level
 # imports reach back into THIS module (`sim.world.agriculture` / bare
