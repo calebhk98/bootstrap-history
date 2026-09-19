@@ -48,12 +48,11 @@ check("...and it is not marked underfunded, because nothing was actually "
       not s_af.active.get(_af_k, {}).get("underfunded_this_year"),
       s_af.active.get(_af_k, {}).get("why_underfunded"))
 
-# SPLIT-SUITE NOTE (not a content change, see this split's own report): the
-# original monolithic file left `_k` bound to "cementation_steel" from the
-# labour_productivity section, ~150 lines and one topic module earlier
-# (test_labour_productivity.py's own reopen_restaffed_ventures check). This
-# check does not care which venture node it is, only that it is one an
-# artisan can staff; reproduced verbatim rather than silently fixed.
+# ANY VENTURE AN ARTISAN CAN STAFF WILL DO. The checks below are about
+# reopen_restaffed_ventures and mothball, not about this node: cementation
+# steel is named because it is staffable, not because anything here depends
+# on it. Swap it for another artisan-staffable venture and the checks still
+# mean what they say.
 _node_id = "cementation_steel"
 
 # --- and a concern a player shut ON PURPOSE must never reappear on its own -
