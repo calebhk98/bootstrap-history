@@ -12,6 +12,16 @@
 #
 #     python3 -m pylint sim/
 #
+# AND IT DOES NOT SEE EVERYTHING. A clean run here is not a tree without
+# short names. pylint's invalid-name check keys off how pylint CLASSIFIES a
+# binding, and three classifications have no name check at all: a
+# module-level name bound to a CALL (`KB = os.path.join(...)` is invisible
+# while `QQ = 5` one line below is reported), a module-level loop target,
+# and a lambda parameter. `python3 sim/pylint_blind_spots.py` counts those,
+# and its total is larger than what this config found, because the test
+# suite is module-level script code and that is exactly where pylint is
+# quietest. Read the two together.
+#
 # ONLY invalid-name (C0103) IS ENABLED. Every other pylint check pylint
 # ships with is off, on purpose - a naming sweep that also reports style
 # opinions about docstrings, return counts or import order buries the one

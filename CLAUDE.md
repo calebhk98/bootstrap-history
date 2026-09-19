@@ -243,11 +243,35 @@ you quote depends on what you count:
 Say which of the three methods you mean when you quote a figure - the first
 two attempts at this disagreed and both were right. `docs/architecture/
 NAMING_PLAN.md` carries figures of its own that this command will not
-reproduce, because `sim/` has grown from 83 files to 194 since that scan and
+reproduce, because `sim/` has grown from the 83 files that scan covered to
+197 today (`find sim -name "*.py" | wc -l`) and
 NAMING_PLAN.md's own account says the original scan's exact grammar is lost,
 not merely uncommitted; treat NAMING_PLAN.md's numbers as historical and this
 command's output as current. The scanner's detectors are tested against
 fixtures in `sim/tests/test_code_health.py`.
+
+**Three commands, and you need all three.** `code_health.py --names` gives
+the burndown total. `.pylintrc` turns pylint into the worklist - every short
+name it can see comes back as a `file:line` somebody can fix:
+
+    python3 -m pylint sim/ | grep -c C0103
+
+That reads 0 today, from 246 when the sweep started, **and a clean pylint is
+not a tree without short names.** Pylint's `invalid-name` check is driven by
+how pylint CLASSIFIES a binding, and three classifications carry no name
+check at all: a module-level name bound to a CALL (`KB = os.path.join(...)`
+is invisible while `QQ = 5` one line below is reported), a module-level loop
+target, and a lambda parameter. Measured:
+
+    python3 sim/pylint_blind_spots.py
+    461   (module-level assignments 254, lambda parameters 117,
+           module-level loop targets 90)
+
+which is nearly twice what pylint found in the first place, because this
+codebase keeps most of its short names exactly where pylint is quietest -
+the test suite is written as module-level script code rather than as
+functions. Use pylint for the worklist and that script for what the worklist
+cannot see. Neither number is the whole problem on its own.
 
 This is the single biggest obstacle to anyone reading this code, and it gets
 worse every time someone adds to it.

@@ -321,6 +321,12 @@ TOPICS = [
     # DETECTORS against small fixtures with a known answer, not the current
     # state of this codebase - see that file's own docstring.
     "code_health",
+    # The claim CLAUDE.md section 7 and .pylintrc both rest on: pylint's
+    # invalid-name reports nothing for three kinds of binding, so a clean
+    # pylint run is not a tree without short names. That claim rots
+    # silently if pylint ever gains a checker, so this topic runs the real
+    # pylint over a fixture holding one of each.
+    "pylint_blind_spots",
     # treetool.py's four subcommands each rewrite a committed data file, and
     # `judge` reads like a question while doing it. Two agents wrote
     # data/judgement.json by accident before the default became report-only,
