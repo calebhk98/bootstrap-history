@@ -434,7 +434,13 @@ def _mirror_with_overrides(src_dir, dst_dir, overrides):
         touches = any(rel == override or rel.startswith(override + os.sep) or override.startswith(rel + os.sep)
                      for override in overrides)
         if not touches:
-            os.symlink(src, dst)
+            try:
+                os.symlink(src, dst)
+            except (OSError, AttributeError):
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(*_SKIP_MIRROR_NAMES))
+                else:
+                    shutil.copy2(src, dst)
         elif os.path.isdir(src):
             _mirror_with_overrides(src, dst, overrides)
         else:

@@ -209,7 +209,7 @@ if os.path.exists(_pipe_sess):
 _pp = subprocess.Popen(
     [sys.executable, os.path.join(HERE, "simulator.py"), "agent",
      "--civ", "rome_100ad", "--seed", "1", "--session", _pipe_sess],
-    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
     text=True, cwd=ROOT)
 # Close OUR end of stdout before the child ever writes a single byte to it -
 # the same thing `| head -c0`, or a closed terminal, does to a running
@@ -221,10 +221,6 @@ try:
 except BrokenPipeError:
     pass
 _pp.wait(timeout=60)
-try:
-    _pp.stderr.close()
-except Exception:
-    pass
 _pipe_saved = json.load(open(_pipe_sess))
 check("a command's progress is saved even when the reply that describes it "
       "cannot be delivered because the reading end of the pipe is gone",

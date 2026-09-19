@@ -177,7 +177,10 @@ try:
     _alias = os.path.join(_alias_parent, "definitely_not_called_rome")
     os.makedirs(_alias)
     for _sub in ("sim", "data", "knowledge", "playtest"):
-        os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
+        try:
+            os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
+        except (OSError, AttributeError):
+            shutil.copytree(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
 
     _run = subprocess.run(
         [sys.executable, os.path.join(_alias, "sim", "test_regressions.py"),
