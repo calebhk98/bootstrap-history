@@ -65,7 +65,29 @@ _RUFF = _ruff_is_available()
 # that reason rather than because their contents matter less. The engine and
 # the world modules carry no star import (the last twenty were removed), so
 # F821 over them is exact.
-_CHECKED_PATHS = ["sim/engine", "sim/world", "tools"]
+#
+# THE TOP-LEVEL `sim/*.py` TOOLS WERE MISSING FROM THIS LIST, and the gap was
+# found the hard way. `rope`, the refactoring library the naming sweep uses,
+# silently mis-renames a comprehension whose loop variable also appears in the
+# yielded expression ahead of the `for`: given
+#
+#     sorted(name for name in dirnames if name not in excluded)
+#
+# it rewrites the `for` target and the later uses and leaves the FIRST
+# occurrence alone, producing a NameError that `py_compile` and `pylint`
+# both pass. Four instances were made during one pass over these files, two
+# of them in `sim/code_health.py` and `sim/validate_production.py`, and this
+# check could not have caught any of them, because it was not looking here.
+# They were found by running pyflakes by hand.
+#
+# These files carry no star import except `simulator.py`, whose wildcard is a
+# deliberate re-export (see ruff.toml's per-file-ignores), so F821 over them
+# is as exact as it is over the engine. Listed individually rather than as
+# the `sim` directory, which would pull in `sim/tests` and defeat the
+# exclusion reasoned about above.
+_CHECKED_PATHS = ["sim/engine", "sim/world", "tools"] + sorted(
+    os.path.join("sim", entry) for entry in os.listdir(os.path.join(ROOT, "sim"))
+    if entry.endswith(".py"))
 
 if _RUFF is None:
     SKIPPED.append("static checks: ruff is not installed "
@@ -86,8 +108,10 @@ else:
           "exit %s, stderr: %s" % (_finished.returncode, _finished.stderr[-400:]))
 
     _undefined = [line for line in _finished.stdout.splitlines() if "F821" in line]
-    check("no undefined name anywhere in sim/engine, sim/world or tools - "
-          "this is the check that `import` and `validate` cannot make, and "
-          "the one a mixin split breaks by moving a module-global reference",
+    check("no undefined name anywhere in sim/engine, sim/world, tools or the "
+          "top-level sim/ tools - this is the check that `import` and "
+          "`validate` cannot make, the one a mixin split breaks by moving a "
+          "module-global reference, and the one that catches a refactoring "
+          "tool silently half-renaming a comprehension",
           _ran_properly and not _undefined,
           "\n".join(_undefined[:20]) or "clean")
