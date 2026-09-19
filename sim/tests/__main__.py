@@ -321,6 +321,14 @@ TOPICS = [
     # DETECTORS against small fixtures with a known answer, not the current
     # state of this codebase - see that file's own docstring.
     "code_health",
+    # treetool.py's four subcommands each rewrite a committed data file, and
+    # `judge` reads like a question while doing it. Two agents wrote
+    # data/judgement.json by accident before the default became report-only,
+    # both times with the instruction to pass --dry-run already written down
+    # in front of them. This pins the safe default, pins --write as the way
+    # past it, and pins --dry-run as still-accepted so existing careful
+    # callers keep working.
+    "treetool_writes_only_when_asked",
     # The suite has to be able to run before anything above it can:
     # this topic checks that it does so from a checkout of any name,
     # in any directory. It is last because it re-runs one cheap topic

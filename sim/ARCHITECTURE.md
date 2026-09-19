@@ -923,10 +923,10 @@ is `StepPhasesMixin`'s 19 methods in "The method count" above.
 ## Four things that will bite you
 
 **The tree tools write to the repository.** `treetool.py merge|judge|repair|
-apply-caps` each rewrite a committed data file. `judge` reads like a report
-command and rewrites `data/judgement.json`
-(`ls -la data/judgement.json`). Every subcommand takes `--dry-run`; use it
-if you only mean to look.
+apply-caps` each rewrite a committed data file, and `judge` in particular
+reads like a report command while doing so. Every subcommand now reports by
+default and writes nothing; `--write` is what commits the result
+(`ls -la data/judgement.json` to see whether it did).
 
 **Green tests do not mean unchanged behaviour.** The suite asserts on
 outputs and messages. It does not assert that the simulation is the same

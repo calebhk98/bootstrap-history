@@ -158,7 +158,7 @@ python3 sim/test_regressions.py --list     # topic names
 python3 sim/test_regressions.py --only mines,demographics
 python3 sim/perf_fingerprint.py record before.json   # proves behaviour unchanged
 python3 sim/perf_fingerprint.py check before.json
-python3 sim/treetool.py judge --dry-run    # judge nodes in isolation
+python3 sim/treetool.py judge             # judge nodes (reports; --write to commit)
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
 python3 sim/repro_nondeterminism.py        # the determinism bug; now passes, kept as a probe
@@ -194,9 +194,19 @@ anything that depends on the checkout being called `rome`, it is a bug; see
   call; its own allocations were exactly what stopped addresses being
   recycled, so it suppressed the effect it was measuring and reported the
   absence as evidence.
-- **The tree tools write to the repository.** `treetool.py merge|judge|repair|
-  apply-caps` each rewrite a committed data file. Pass `--dry-run` if you only
-  meant to look.
+- **The tree tools write to the repository, and now only when asked.**
+  `treetool.py merge|judge|repair|apply-caps` each rewrite a committed data
+  file, and each now reports by default and writes nothing. `--write` is what
+  commits the result.
+
+  This bullet used to say "pass `--dry-run` if you only meant to look", and
+  that was a rule protecting people who had already read it. Two agents wrote
+  `data/judgement.json` by accident anyway, the second of them while running a
+  read-only-sounding `judge` to compare output during an unrelated task. A
+  flag you have to know about does not protect the person who does not know,
+  so the default moved instead. `--dry-run` is still accepted and is now a
+  no-op, because it is written into scripts and into these instructions and
+  every caller using it was asking for what already happens.
 - **`Sim` is one god object.** Every mixin method talks through `self`, so
   the coupling is real however the files are arranged. A full decomposition
   has been considered and rejected, with reasons, in `sim/ARCHITECTURE.md` -

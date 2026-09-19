@@ -755,7 +755,7 @@ def _judge_write_judgement(results, args):
     _write_json({node_id: {"score": score, "grade": grade(score), "defects": [code for code, _ in node_defects]}
                  for node_id, (score, node_defects) in results.items()},
                 os.path.join(DATA, "judgement.json"), args)
-    if not getattr(args, "dry_run", False):
+    if getattr(args, "write", False):
         print("\nwrote data/judgement.json")
 
 
@@ -993,13 +993,27 @@ def cmd_apply_caps(args):
 # verb mutates the repository is a trap, and it caught the first person to
 # walk past it.
 #
-# --dry-run says what would be written and writes nothing. The default is
-# unchanged - these commands still write, because that is what they are for
-# and existing callers depend on it - so this only adds a way to be careful.
+# WRITING IS OPT-IN. Every subcommand here reports by default and writes
+# nothing; `--write` is what commits the result to the repository.
+#
+# The safe default is the whole point. `judge` reads as a question, `repair`
+# and `apply-caps` read as things you would want to see before accepting, and
+# none of the four announces in its name that it rewrites a committed data
+# file. Making the dangerous thing the thing you have to ask for means the
+# cost of not knowing is a wasted run rather than a modified repository, and
+# a person who does not know cannot be protected by a flag they have not
+# heard of.
+#
+# `--dry-run` is still accepted and is now a no-op, deliberately. It appears
+# in CLAUDE.md, in this repository's own instructions to its agents, and in
+# scripts, and every one of those callers is asking for exactly what now
+# happens anyway. Breaking them would punish the people who were being
+# careful.
 def _write_json(obj, path, args, indent=1):
-    """json.dump, unless --dry-run was asked for."""
-    if getattr(args, "dry_run", False):
-        print("would write %s (--dry-run: not written)" % os.path.basename(path))
+    """json.dump, but only when `--write` was asked for."""
+    if not getattr(args, "write", False):
+        print("would write %s (reporting only; pass --write to commit it)"
+              % os.path.basename(path))
         return
     json.dump(obj, open(path, "w"), indent=indent)
 
@@ -1031,8 +1045,19 @@ def main():
     # write a committed data file, and which ones those are is exactly the
     # thing a person running this for the first time does not know.
     for command_parser in subparsers.choices.values():
+        command_parser.add_argument(
+            "--write", action="store_true",
+            help="actually write the result to the repository. Without this "
+                 "every subcommand reports what it would write and changes "
+                 "nothing.")
+        # ACCEPTED, AND A NO-OP. Reporting is the default now, so --dry-run
+        # asks for what already happens. It stays because it is written into
+        # CLAUDE.md, into this project's standing instructions to its agents,
+        # and into scripts; making those invocations fail would break exactly
+        # the callers who were being careful. SUPPRESS keeps it out of --help
+        # so nobody learns it as the way to be safe.
         command_parser.add_argument("--dry-run", action="store_true",
-                         help="say what would be written, write nothing")
+                                    help=argparse.SUPPRESS)
     args = parser.parse_args()
     return {"merge": cmd_merge, "judge": cmd_judge, "repair": cmd_repair,
             "apply-caps": cmd_apply_caps}[args.cmd](args)

@@ -124,11 +124,23 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         with open(self.tree_path) as f:
             return json.load(f)
 
-    def _merge(self, dry_run=False, accept_data_loss=False):
+    def _merge(self, write=True, accept_data_loss=False):
+        """Run a merge against this test's own fixture tree.
+
+        `write=True` by default, which is the opposite of treetool's own CLI
+        default and is deliberate: every test below is about what the merge
+        WRITES, so each one has to ask for the write explicitly now that
+        reporting is the default. The one check that is genuinely about the
+        report rather than the result passes `write=False` and says so.
+
+        The fixture tree is a temporary file (see setUp's mock.patch of
+        treetool.TREE), so a write here cannot reach the repository's own
+        data/tech_tree.json.
+        """
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = treetool.cmd_merge(types.SimpleNamespace(
-                dry_run=dry_run, accept_data_loss=accept_data_loss))
+                write=write, accept_data_loss=accept_data_loss))
         return rc, buf.getvalue()
 
     # ---- acceptance test 1: no branch edits -> byte-identical tree --------
@@ -414,7 +426,13 @@ class RealBranchCorpusHasNoUnresolvedCollisions(unittest.TestCase):
         # an id claimed by two different branch files in the same run.
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = treetool.cmd_merge(types.SimpleNamespace(dry_run=True, accept_data_loss=True))
+            # write=False: this check reads the REAL data/branches/ corpus
+            # rather than a fixture, so it must not write, and it only cares
+            # about what the merge REPORTS. That is treetool's own default
+            # now, stated here anyway because a reader of this line should
+            # not have to know the default to see that it is safe.
+            rc = treetool.cmd_merge(types.SimpleNamespace(
+                write=False, accept_data_loss=True))
         self.assertEqual(rc, 0, "the real branch corpus has an id defined in "
                                 "more than one file:\n" + buf.getvalue())
         self.assertNotIn("COLLISION", buf.getvalue())

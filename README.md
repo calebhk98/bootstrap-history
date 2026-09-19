@@ -115,13 +115,13 @@ The right test is not "what year does the simulation reach a transistor". It is
 actually build it?"** That is what `treetool.py judge` asks, node by node.
 
 ```bash
-# judge, judge --full and judge --grade all write data/judgement.json; add
-# --dry-run to any of them if you only want to look. judge --id does not
-# write anything - it reports on one node and stops.
-python3 sim/treetool.py judge --dry-run              # score every node, summary
-python3 sim/treetool.py judge --dry-run --full       # every defect, node by node
+# judge, judge --full and judge --grade can write data/judgement.json, but
+# only with --write; without it they report and change nothing. judge --id
+# never writes - it reports on one node and stops.
+python3 sim/treetool.py judge                        # score every node, summary
+python3 sim/treetool.py judge --full                 # every defect, node by node
 python3 sim/treetool.py judge --id zinc_metal        # one report card
-python3 sim/treetool.py judge --dry-run --grade C    # everything at C or worse
+python3 sim/treetool.py judge --grade C              # everything at C or worse
 ```
 
 Defect classes it names: `CAP-NONE` and `CAP-HEAT`/`CAP-TOL`/`CAP-VAC`/
@@ -135,10 +135,10 @@ in the tree is marked that way any more), `COST-HIGH` / `HOURS-HIGH` /
 calls in `sim/treetool.py`'s `judge_node`; treat the list above as a reading
 aid, not the authority.
 
-**Read the score with suspicion.** As of this writing `judge --dry-run`
+**Read the score with suspicion.** As of this writing `judge`
 reports a mean of 96.0/100 across all nodes (2,294 A, 473 B, 93 C, 4 D, 0 F -
 rerun the command above for the current figures). `treetool.py repair`
-(`--dry-run` first) does not guess at capability prerequisites: it leaves
+does not guess at capability prerequisites: it leaves
 gaps visible for a human to review rather than inferring them, because an
 earlier version of this same pass inferred capability floors and an
 independent reviewer who checked a sample of its output by hand found every
