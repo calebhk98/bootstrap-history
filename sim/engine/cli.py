@@ -905,11 +905,9 @@ def _summarise(results, label):
     _summarise_misc_stats(results)
 
 
-def cmd_run(a):
-    tree, prices, nodes, wages, goods = load()
-    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
-    label, order, bounties = load_strategy(a.strategy, nodes, goal)
-    deterministic = getattr(a, "deterministic", False)
+def _run_trials(nodes, order, bounties, goal, a, deterministic):
+    """Run a.mc trials of Sim under the strategy already loaded by the
+    caller, and return their results in trial order."""
     res = []
     for i in range(a.mc):
         rng = DetRNG(a.seed + i) if deterministic else random.Random(a.seed + i)
@@ -919,62 +917,79 @@ def cmd_run(a):
                 civ=load_civ(a.civ),
                 bounty_set=(set() if a.no_bounties else bounties)).run(goal, a.horizon)
         res.append(run_result)
+    return res
+
+
+# KEEP THE PATH OF A RUN THAT WORKED. When a trial reaches the goal it
+# proves an order of work that gets there in this civilisation, and the
+# engine threw that away and went back to walking the same fixed list from
+# recommended.json on the next invocation. A whole day of balance work in
+# this project was spent measuring a strategy that loses while runs that won
+# were being discarded unread.
+#
+# The order is done_year, not done_in_order(): what matters for a strategy
+# is the sequence the work was FINISHED in, which is the sequence a player
+# would have to start it in. Granted technologies are dropped because they
+# are not choices anybody made, and ties within a year are broken by id so
+# the file is reproducible.
+def _save_winning_order(res, nodes, goal, a):
+    won = [run_result for run_result in res if run_result.goal_year]
+    if not won:
+        sys.stderr.write("no trial reached the goal, so there is no winning "
+                         "order to save\n")
+        return
+    best = min(won, key=lambda s: s.goal_year)
+    # ONLY WHAT THE GOAL NEEDS. The first version of this saved every
+    # node the winning trial finished - 2,676 of them - and feeding that
+    # back scored 0% against the 25% of the strategy it was captured
+    # from, because the optimizer then ground through hundreds of side
+    # branches the trial had built for revenue before it reached the
+    # work that mattered. A finish order over everything is not a plan.
+    # The 149 nodes of the goal's closure, in the order a run that won
+    # actually completed them, is.
+    _need = closure(nodes, goal)
+    seq = sorted((node_id for node_id in best.done
+                  if node_id in _need and node_id not in best.granted),
+                 key=lambda k: (best.done_year.get(k, 0), k))
+    out = {"label": "CAPTURED: the order a run that reached the goal in "
+                    "%d AD actually finished its work in" % best.goal_year,
+           "rationale": [
+               "Not designed. Observed: trial seed %d of a --mc %d run on "
+               "%s reached %s in %d AD, and this is the sequence it "
+               "finished things in."
+               % (a.seed + res.index(best), a.mc, a.civ, goal,
+                  best.goal_year),
+               "A captured order is a floor on what is achievable, not a "
+               "recommendation: it carries whatever luck that trial had, "
+               "and it includes side branches that trial happened to "
+               "build and may not have needed."],
+           "order": seq}
+    with open(a.save_winner, "w") as save_file:
+        json.dump(out, save_file, indent=1)
+    sys.stderr.write("saved the winning order (%d nodes, goal in %d AD) "
+                     "to %s\n" % (len(seq), best.goal_year, a.save_winner))
+
+
+def _print_run_trace(res):
+    run_result = res[0]
+    print("\n--- trace of run 0 ---")
+    for year, message in run_result.log:
+        print("  %4d  %s" % (year, message))
+
+
+def cmd_run(a):
+    tree, prices, nodes, wages, goods = load()
+    goal = resolve_goal(tree, nodes, getattr(a, "goal", None))
+    label, order, bounties = load_strategy(a.strategy, nodes, goal)
+    deterministic = getattr(a, "deterministic", False)
+    res = _run_trials(nodes, order, bounties, goal, a, deterministic)
     _summarise(res, "%s%s%s" % (label,
                                 "  [events disabled]" if a.no_events else "",
                                 "  [deterministic]" if deterministic else ""))
-    # KEEP THE PATH OF A RUN THAT WORKED. When a trial reaches the goal it
-    # proves an order of work that gets there in this civilisation, and the
-    # engine threw that away and went back to walking the same fixed list from
-    # recommended.json on the next invocation. A whole day of balance work in
-    # this project was spent measuring a strategy that loses while runs that won
-    # were being discarded unread.
-    #
-    # The order is done_year, not done_in_order(): what matters for a strategy
-    # is the sequence the work was FINISHED in, which is the sequence a player
-    # would have to start it in. Granted technologies are dropped because they
-    # are not choices anybody made, and ties within a year are broken by id so
-    # the file is reproducible.
     if getattr(a, "save_winner", None):
-        won = [run_result for run_result in res if run_result.goal_year]
-        if not won:
-            sys.stderr.write("no trial reached the goal, so there is no winning "
-                             "order to save\n")
-        else:
-            best = min(won, key=lambda s: s.goal_year)
-            # ONLY WHAT THE GOAL NEEDS. The first version of this saved every
-            # node the winning trial finished - 2,676 of them - and feeding that
-            # back scored 0% against the 25% of the strategy it was captured
-            # from, because the optimizer then ground through hundreds of side
-            # branches the trial had built for revenue before it reached the
-            # work that mattered. A finish order over everything is not a plan.
-            # The 149 nodes of the goal's closure, in the order a run that won
-            # actually completed them, is.
-            _need = closure(nodes, goal)
-            seq = sorted((node_id for node_id in best.done
-                          if node_id in _need and node_id not in best.granted),
-                         key=lambda k: (best.done_year.get(k, 0), k))
-            out = {"label": "CAPTURED: the order a run that reached the goal in "
-                            "%d AD actually finished its work in" % best.goal_year,
-                   "rationale": [
-                       "Not designed. Observed: trial seed %d of a --mc %d run on "
-                       "%s reached %s in %d AD, and this is the sequence it "
-                       "finished things in."
-                       % (a.seed + res.index(best), a.mc, a.civ, goal,
-                          best.goal_year),
-                       "A captured order is a floor on what is achievable, not a "
-                       "recommendation: it carries whatever luck that trial had, "
-                       "and it includes side branches that trial happened to "
-                       "build and may not have needed."],
-                   "order": seq}
-            with open(a.save_winner, "w") as save_file:
-                json.dump(out, save_file, indent=1)
-            sys.stderr.write("saved the winning order (%d nodes, goal in %d AD) "
-                             "to %s\n" % (len(seq), best.goal_year, a.save_winner))
+        _save_winning_order(res, nodes, goal, a)
     if a.trace:
-        run_result = res[0]
-        print("\n--- trace of run 0 ---")
-        for year, message in run_result.log:
-            print("  %4d  %s" % (year, message))
+        _print_run_trace(res)
 
 
 def cmd_compare(a):
@@ -1133,6 +1148,15 @@ def cmd_sensitivity(a):
              "freedman_staff", "collegium_licensed", "patron_senatorial", "patron_imperial",
              "semaphore_telegraph", "citizenship", "mirror_amalgam", "lens_grinding",
              "crop_rotation", "world_map", "sanitation_antisepsis", "telegraph_electric"]
+    rows = _run_ablation_trials(cands, nodes, need, trial, base_rate)
+    scored = _score_ablations(rows, base_med)
+    _print_ablation_table(scored)
+
+
+def _run_ablation_trials(cands, nodes, need, trial, base_rate):
+    """Run the ablation trial for each candidate node, printing an
+    immediate row for anything that cannot be ablated because it is a hard
+    prerequisite of the goal, and collecting the rest for scoring."""
     rows = []
     for node_id in cands:
         if node_id not in nodes:
@@ -1142,18 +1166,30 @@ def cmd_sensitivity(a):
             continue
         success_rate, median_year, succ, ntot = trial(node_id)
         rows.append((base_rate - success_rate, node_id, success_rate, median_year, succ, ntot))
+    return rows
+
+
+def _score_ablations(rows, base_med):
     scored = []
     for rate_drop, node_id, success_rate, median_year, succ, ntot in rows:
         delay = (median_year - base_med) if (median_year and base_med) else 999
         # one point of success rate is worth roughly two years of delay
         score = rate_drop + delay / 2.0
         scored.append((score, node_id, success_rate, median_year, rate_drop, delay, succ, ntot))
+    return scored
+
+
+def _ablation_verdict(score):
+    return ("CRITICAL, do not skip" if score > 20 else
+            "clearly worth it" if score > 8 else
+            "worth it" if score > 3 else
+            "marginal in this model" if score > -3 else
+            "the model says this costs more than it returns")
+
+
+def _print_ablation_table(scored):
     for score, node_id, success_rate, median_year, rate_drop, delay, succ, ntot in sorted(scored, reverse=True):
-        verdict = ("CRITICAL, do not skip" if score > 20 else
-                   "clearly worth it" if score > 8 else
-                   "worth it" if score > 3 else
-                   "marginal in this model" if score > -3 else
-                   "the model says this costs more than it returns")
+        verdict = _ablation_verdict(score)
         lower, upper = _wilson_interval(succ, ntot)
         confidence_interval = "[%.0f%%,%.0f%%]" % (100.0 * lower, 100.0 * upper)
         print("%-24s %7.0f%% %16s %8s %+8s   %s" %
@@ -1199,42 +1235,73 @@ def cmd_sweep(a):
     any_thin = False
     any_success = False
     for value in values:
-        cfg, life = {}, None
-        if key == "founder_life_mean":
-            cfg = {"immortal": False, "founder_life_mean": value,
-                   "founder_life_sd": DEFAULTS["founder_life_sd"]}
-        elif key == "founder_life":
-            life = value
-        else:
-            cfg[key] = value
-        res = []
-        for i in range(a.mc):
-            # COMMON RANDOM NUMBERS across the points of this sweep, same
-            # reasoning as cmd_compare: trial i sees the same shocks at every
-            # value of v, so a change down this column is the swept variable
-            # acting, not a different draw of luck. Do not reseed per v.
-            sim = Sim(nodes, order, random.Random(a.seed + i), events=True, cfg=cfg,
-                      bounty_set=bounties)
-            if life is not None:
-                sim.life_left = float(life)
-            res.append(sim.run(goal, a.horizon))
-        succ = sum(1 for run in res if run.goal_year)
-        successful_years = sorted(run.goal_year for run in res if run.goal_year)
-        failure_causes = defaultdict(int)
-        for run in res:
-            if not run.goal_year:
-                failure_causes[(run.dead_reason or "ran out of horizon").split(":")[0]] += 1
-        worst = max(failure_causes.items(), key=lambda x: x[1]) if failure_causes else ("none", 0)
-        lower, upper = _wilson_interval(succ, len(res))
-        thin = 0 < succ < _MIN_SUCCESSES_FOR_QUANTILES
+        cfg, life = _sweep_point_cfg(key, value)
+        res = _run_sweep_point(nodes, order, bounties, goal, a, cfg, life)
+        thin, succeeded = _print_sweep_row(value, res)
         any_thin = any_thin or thin
-        any_success = any_success or succ > 0
-        print("%-12s %7.0f%% %16s %8s %8s   %s" %
-              (f"{value:,}", 100.0 * succ / len(res),
-               "[%.0f%%,%.0f%%]" % (100.0 * lower, 100.0 * upper),
-               (str(successful_years[len(successful_years) // 2]) + "*" if thin else successful_years[len(successful_years) // 2]) if successful_years else "never",
-               successful_years[len(successful_years) // 4] if successful_years else "-",
-               "%s (%d)" % (worst[0][:44], worst[1]) if worst[1] else "-"))
+        any_success = any_success or succeeded
+    _print_sweep_footer(any_thin, any_success, a.axis, a.strategy)
+
+
+def _sweep_point_cfg(key, value):
+    """Build the (cfg, life) pair one sweep point runs Sim under: cfg goes
+    straight into Sim's config, and life (when not None) is set directly on
+    the Sim afterward because life_left is not a cfg key."""
+    cfg, life = {}, None
+    if key == "founder_life_mean":
+        cfg = {"immortal": False, "founder_life_mean": value,
+               "founder_life_sd": DEFAULTS["founder_life_sd"]}
+    elif key == "founder_life":
+        life = value
+    else:
+        cfg[key] = value
+    return cfg, life
+
+
+def _run_sweep_point(nodes, order, bounties, goal, a, cfg, life):
+    """Run a.mc trials at one sweep point and return their results."""
+    res = []
+    for i in range(a.mc):
+        # COMMON RANDOM NUMBERS across the points of this sweep, same
+        # reasoning as cmd_compare: trial i sees the same shocks at every
+        # value of v, so a change down this column is the swept variable
+        # acting, not a different draw of luck. Do not reseed per v.
+        sim = Sim(nodes, order, random.Random(a.seed + i), events=True, cfg=cfg,
+                  bounty_set=bounties)
+        if life is not None:
+            sim.life_left = float(life)
+        res.append(sim.run(goal, a.horizon))
+    return res
+
+
+def _sweep_point_failure_causes(res):
+    failure_causes = defaultdict(int)
+    for run in res:
+        if not run.goal_year:
+            failure_causes[(run.dead_reason or "ran out of horizon").split(":")[0]] += 1
+    return failure_causes
+
+
+def _print_sweep_row(value, res):
+    """Print one row of the sweep table. Returns (thin, succeeded) so the
+    caller can decide whether the footer notes about thin medians and
+    all-zero sweeps are needed."""
+    succ = sum(1 for run in res if run.goal_year)
+    successful_years = sorted(run.goal_year for run in res if run.goal_year)
+    failure_causes = _sweep_point_failure_causes(res)
+    worst = max(failure_causes.items(), key=lambda x: x[1]) if failure_causes else ("none", 0)
+    lower, upper = _wilson_interval(succ, len(res))
+    thin = 0 < succ < _MIN_SUCCESSES_FOR_QUANTILES
+    print("%-12s %7.0f%% %16s %8s %8s   %s" %
+          (f"{value:,}", 100.0 * succ / len(res),
+           "[%.0f%%,%.0f%%]" % (100.0 * lower, 100.0 * upper),
+           (str(successful_years[len(successful_years) // 2]) + "*" if thin else successful_years[len(successful_years) // 2]) if successful_years else "never",
+           successful_years[len(successful_years) // 4] if successful_years else "-",
+           "%s (%d)" % (worst[0][:44], worst[1]) if worst[1] else "-"))
+    return thin, succ > 0
+
+
+def _print_sweep_footer(any_thin, any_success, axis, strategy):
     print("\nWatch the failure column, not the success column. When it changes, the")
     print("binding constraint has changed and so should your strategy.")
     if any_thin:
@@ -1251,11 +1318,11 @@ def cmd_sweep(a):
         # civilisation) - 'plan' or 'search' compute a different order
         # instead of sweeping this one across more starting conditions.
         print("\n*** EVERY point on this sweep scored 0%% - '%s' never reached the goal"
-              % a.strategy)
-        print("    at any %s tried, not only at one unlucky value. Before reading" % a.axis)
+              % strategy)
+        print("    at any %s tried, not only at one unlucky value. Before reading" % axis)
         print("    anything above as 'this starting condition is impossible': this looks")
         print("    like a known-losing ORDER at this horizon, not a fact about %s. Run"
-              % a.axis)
+              % axis)
         print("    'plan' (critical-path method) or 'search' (dice-free, relaxed against")
         print("    the binding constraint) to compute a different order, then sweep that.")
 
