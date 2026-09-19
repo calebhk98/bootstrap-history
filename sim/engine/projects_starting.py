@@ -838,13 +838,12 @@ class StartingMixin:
         owed = sum(project_state.get("cost_left") or 0.0
                    for project_state in (self.household.active[node_id] for node_id in sorted(self.household.active)))
         ceiling = max(0.0, self.household.capital) + self.credit_limit()
-        # `self.household.active and` used to guard this, which exempted the FIRST
-        # project from the only affordability test there is. A break tester
-        # took tx2_watch_case at 17,415 denarii on 400 in cash and 1,367 of
-        # credit because it was their opening move, then found the identical
-        # command refused - quoting the shortfall exactly - after they had
-        # started a five-denarius project first. Two insolvencies, 1,306 in
-        # interest and reputation from 5 to 0.2 later, nothing was built.
+        # THE AFFORDABILITY TEST MUST APPLY TO THE FIRST PROJECT TOO: a
+        # guard that only checked once something was already active would
+        # let an opening move be started far beyond what cash and credit
+        # could cover, only to see the identical command refused - quoting
+        # the shortfall exactly - the moment a second, much cheaper project
+        # was started right after.
         if owed + price > ceiling:
             return False, ("you already owe %s denarii on work in hand; this "
                            "would take it to %s, and between cash and credit "
@@ -897,14 +896,13 @@ class StartingMixin:
     def stop_project(self, k):
         """Stop a project you started. Your HOURS are gone; the money stands.
 
-        This used to burn both, "same as a real abandoned enterprise", and a
-        break tester pointed out what that does to the decision: when the
-        creditors are about to take everything, stopping something yourself
-        costs exactly as much as letting them, so no branch saves you and
-        `stop` is never the right move. The site does not un-dig itself either
-        way. What you paid stands against the node - the same credit
-        enforce_credit_limit keeps - and comes off the bill if you begin again.
-        The hours really are gone: that is your year, and you spent it.
+        Money already spent must stand against the node - the same credit
+        enforce_credit_limit keeps - and come off the bill if you begin
+        again, rather than being burned along with the hours: burning both
+        would make stopping something yourself cost exactly as much as
+        letting the creditors take it, so no branch would ever make `stop`
+        the right move. The site does not un-dig itself either way. The
+        hours really are gone: that is your year, and you spent it.
         """
         if k not in self.household.active:
             return False, "not active"

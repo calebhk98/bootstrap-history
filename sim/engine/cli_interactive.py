@@ -65,25 +65,15 @@ from .cli_interactive_saveload import (_ingame_load, _ingame_save_milestone,
 def cmd_play(a):
     """The game, typed, for a person at a keyboard.
 
-    This used to be its own little REPL with six commands of its own - next
-    year, available, status, start, stop, quit - and its own copy of what each
-    one meant. Everything built since (money, hire, fire, train, work,
-    commission, labour, policy, quote, close, mothball, restore, bribe, risk,
-    save, load) went into the JSON protocol and none of it into here, so the
-    human front door showed a fraction of the game and the menu's answer was to
-    put a person in front of a JSON prompt.
+    Parses a typed line into the SAME command the JSON protocol takes
+    (protocol.parse_typed) and hands it to the SAME dispatcher
+    (_agent_dispatch), printing the readable rendering the --pretty path
+    already uses. There is no second implementation to fall behind: a
+    command added to the protocol is typeable here the day it is added.
 
-    It now parses a typed line into the SAME command the JSON protocol takes
-    (protocol.parse_typed) and hands it to the SAME dispatcher (_agent_dispatch),
-    printing the readable rendering the --pretty path already uses. There is no
-    second implementation to fall behind: a command added to the protocol is
-    typeable here the day it is added.
-
-    It is also always manual. The old default mode let the optimizer keep
-    starting things regardless of what you typed, and its own docstring called
-    that "advisory, not a real choice". A front door should not be the mode
-    where your choices do not count; `run --trace` is still the way to watch
-    the optimizer work.
+    Always manual: a front door where the optimizer keeps starting things
+    regardless of what a player typed would make the player's choices not
+    count. `run --trace` is still the way to watch the optimizer work.
     """
     result = _play_init(a)
     if result == 1:
@@ -209,11 +199,11 @@ def _play_resolve_session(a, sim, session):
     sitting cannot start at all; the message has already been printed in
     that case.
     """
-    # A --session THAT DOES NOT EXIST IS A TYPO, NOT AN INVITATION. Naming a
-    # save file that is not there used to start a brand new default game -
-    # Rome 100 AD, whatever you were playing - and then write it over that
-    # filename on the first command. A tester nearly lost a forty-year England
-    # run to a mistyped path. Starting a new game is what you do by naming a
+    # A --session THAT DOES NOT EXIST IS A TYPO, NOT AN INVITATION: silently
+    # starting a brand new default game (Rome 100 AD, whatever civilisation
+    # was last played) and then writing it over that filename on the first
+    # command risks destroying a real, long-running save to a simple typo
+    # in the path. Starting a new game is what you do by naming a
     # civilisation, so require that to be explicit.
     if session and not os.path.exists(session) and not getattr(a, "civ", None):
         print("there is no save at %r, and no --civ given, so I do not know "
@@ -319,15 +309,11 @@ def _play_print_welcome(sim, kit):
                 "one topic at a time: %s. Reach for it the moment you "
                 "type a word the game does not know, not only once you "
                 "are stuck." % ", ".join(_protocol.HELP_TOPICS)))
-    # THE WALKTHROUGH, NOT BURIED. `path <goal>` lays out everything
-    # still standing between here and one thing AND which of it you
-    # could start today, and it used to be findable only inside `help
-    # commands`. An England player spent about forty minutes guessing
-    # before finding it and said it reorganized the rest of play once
-    # they had; two other players separately asked for exactly the join
-    # it does. It has no business being harder to find than the five
-    # above, once a player has a goal in mind - which, on arrival, they
-    # already do.
+    # THE WALKTHROUGH, NOT BURIED: `path <goal>` lays out everything still
+    # standing between here and one thing AND which of it you could start
+    # today. It has no business being harder to find than the five above,
+    # once a player has a goal in mind - which, on arrival, they already
+    # do.
     if not sim.fog:
         print()
         print(_wrap("Once you have a goal in mind: 'path <name>' lays "
@@ -494,12 +480,11 @@ def _play_report_end_if_new(sim, nodes, a):
     has ended (horizon reached, goal won, or founder dead). Fires at most
     once per sitting; a._said_end marks that it already has.
     """
-    # NOT A BREAK. This used to end the process the moment the horizon was
-    # reached, so a weird-play tester who ran out of years could type
-    # exactly one more command and was then dropped back to the shell,
-    # unable to read their own final position. The dispatcher already
-    # refuses anything that would move the game on once it has ended; what
-    # is left is looking at it, which is the whole point of finishing.
+    # NOT A BREAK: ending the process the moment the horizon is reached
+    # would drop a player back to the shell unable to read their own final
+    # position. The dispatcher already refuses anything that would move
+    # the game on once it has ended; what is left is looking at it, which
+    # is the whole point of finishing.
     end = _agent_end_reason(sim)
     if end and not getattr(a, "_said_end", False):
         a._said_end = True
@@ -743,11 +728,9 @@ CIVS_EMINENCE_DANGER_DEFAULT = declare(
 def cmd_civs(a):
     """List the civilizations you can play, and what makes each one different.
 
-    home_regions and base_reach used to be printed here and read NOWHERE
-    ELSE: that was the entire bug this session fixed. They now actually
-    drive Sim.region_reach() and Sim.material_reach() (see simulator.py),
-    which is a much better reason to show them, so this now also names the
-    home ground itself rather than just the region ids.
+    home_regions and base_reach are shown here because they actually drive
+    Sim.region_reach() and Sim.material_reach() (see simulator.py), so this
+    names the home ground itself, not just the region ids.
     """
     geo = load_geography()
     region_names = {rid: region_record.get("name", rid)
@@ -841,12 +824,12 @@ def _new_game(civs, cfg):
     if horizon is None:
         return None
 
-    # REMEMBERED FOR NEXT TIME, SILENTLY - not a settings screen's job. A
+    # REMEMBERED FOR NEXT TIME, SILENTLY - not a settings screen's job: a
     # player who favours one civilisation and kit should not have to retype
-    # them every game, and used to be able to set that from the main-menu
-    # Options screen; that screen is for the APPLICATION now (see
-    # settings.py's module docstring), so the wizard remembers its own
-    # answers instead, the way a file dialog remembers its last folder. This
+    # them every game. The Options screen is for the APPLICATION's own
+    # preferences (see settings.py's module docstring), so the wizard
+    # remembers its own answers instead, the way a file dialog remembers
+    # its last folder. This
     # writes back exactly the six fields CONFIG_DEFAULTS calls "default_*",
     # and nothing else cfg might hold (display width, rows per page, the
     # welcome toggle) - those are the player's, set from Options, and this
@@ -859,22 +842,14 @@ def _new_game(civs, cfg):
     cfg["default_horizon"] = horizon
     settings.save_config(cfg)
 
-    # THIS USED TO STOP HERE: print the command for the JSON protocol and ASK
-    # whether to play. A tester put it plainly - "it should be the save
-    # starting. It should have you pick, then you immediately jump in" - and
-    # they were right: everything above this point is a choice about WHAT
-    # game to start, not whether to start one, and a menu that ends by
-    # handing you a command line to go run yourself is not a front door, it
-    # is a man page. So: pick where the save goes, say so once, and go.
-    #
-    # AND IT USED TO GO INTO `agent`, which speaks JSON. The reason given at
-    # the time was that only `agent` had a session file, and that `play`
-    # without --manual was not a real choice. Both were true and neither was
-    # a good enough reason to sit a person down in front of
-    # {"cmd":"available"}: the answer was to fix `play`, which now takes a
-    # --session of its own and is always manual, and speaks typed words over
-    # the same dispatcher the JSON protocol uses. `agent` is still there, and
-    # is still the right thing for a script.
+    # PICK, THEN JUMP IN: everything above this point is a choice about WHAT
+    # game to start, not whether to start one, so a menu that ends by
+    # handing a player a command line to go run themselves is not a front
+    # door, it is a man page. Pick where the save goes, say so once, and go,
+    # straight into `play` (which takes a --session of its own and is
+    # always manual, and speaks typed words over the same dispatcher the
+    # JSON protocol uses) rather than into `agent`, which speaks JSON and
+    # is the right thing for a script, not a person at a keyboard.
     session = _pick_session_filename(civ["id"])
     # THE HORIZON HAS TO SURVIVE A RESUME TOO, and it is not part of what
     # save_state writes (see settings.py's module docstring) - so it gets
@@ -1108,11 +1083,10 @@ def _new_game_print_horizon_intro(nodes, goal):
     # and data/review/PATH_SEARCH.md for the method. Said to the player
     # NOW, about the civilisation they just picked, rather than left for them
     # to discover by overshooting a horizon that was never going to be enough.
-    # THE FLOOR OF THE GOAL YOU JUST PICKED, not of the default one. This said
-    # "reaching the transistor takes about N years" from a table of per-civ
-    # figures, which was right while there was one goal and is wrong now that
-    # there are seventeen - a lifetime goal with a 5-year floor and the
-    # transistor with a 142-year one cannot share a sentence. critical_path is
+    # THE FLOOR OF THE GOAL YOU JUST PICKED, not of a default one: a static
+    # table of per-civ figures cannot describe seventeen different goals at
+    # once - a lifetime goal with a 5-year floor and the transistor with a
+    # 142-year one cannot share a sentence. critical_path is
     # the same measurement, computed for the actual choice, so there is nothing
     # to keep in step. It is a floor and not a forecast: it assumes every roll
     # goes your way and no year is ever spent short of money, people or
@@ -1168,10 +1142,9 @@ def _new_game_ask_custom_years(default_h):
     which, like every other back-out in this wizard, exits the whole
     wizard rather than only this sub-prompt. Returns ("continue", None) if
     what they typed was not usable, in which case _new_game_ask_horizon
-    re-asks "Which?", not this sub-prompt - matching the original shape of
-    this question, where an unusable custom answer falls back to the outer
-    menu rather than repeating itself. Returns ("break", horizon) once a
-    usable number of years has been chosen.
+    re-asks "Which?", not this sub-prompt: an unusable custom answer must
+    fall back to the outer menu rather than repeat itself. Returns
+    ("break", horizon) once a usable number of years has been chosen.
     """
     try:
         rawh2 = input("   How many years? [default %d, or b to go "
@@ -1473,9 +1446,9 @@ def cmd_menu(a):
 
     Three doors: start a new game, resume one from a list rather than a
     remembered filename, or change a few things that should not need a flag
-    every time (chiefly where saves go - see settings.py). Five playtesters
-    reached for --help before this existed; the point of this function is
-    that none of them should have had to know that flag existed at all.
+    every time (chiefly where saves go - see settings.py). The point of
+    this function is that a person should never have to know --help, or
+    any other flag, exists at all.
     """
     civs = _load_civ_list()
     # THE APPLICATION'S OWN PREFERENCES, BEFORE THE FIRST LINE IS PRINTED, so
