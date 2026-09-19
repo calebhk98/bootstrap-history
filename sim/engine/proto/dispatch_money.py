@@ -264,7 +264,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     # the living cost it charges, so this screen has to do the same or it
     # double-bills the same year - a discrepancy that only shows up in the
     # first year, which is what makes it easy to miss.
-    _prepaid = min(sim.living_cost(), getattr(sim, "wages_prepaid", 0.0))
+    _prepaid = min(sim.living_cost(), sim.wages_prepaid)
     fixed = (sim.upkeep() + sim.living_cost() - _prepaid
              + sim.mine_operating_cost())
     _standing_revenue = sim.revenue_capacity()
@@ -272,7 +272,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     _standing_living = sim.living_cost(
         _rev=_standing_revenue, _upkeep=_standing_upkeep)
     _standing_prepaid = min(
-        _standing_living, getattr(sim, "wages_prepaid", 0.0))
+        _standing_living, sim.wages_prepaid)
     _standing_fixed = (_standing_upkeep + _standing_living
                        - _standing_prepaid + sim.mine_operating_cost())
     _ramp, _prac = sim.still_ramping(), sim.practice_note()

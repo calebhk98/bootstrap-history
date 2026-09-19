@@ -43,7 +43,7 @@ def _cmd_why(sim, nodes, cmd, ended):
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.
     if (isinstance(node_id, str) and node_id in nodes and not sim.is_visible(node_id)
-            and node_id != getattr(sim, "goal", None)):
+            and node_id != sim.goal):
         return {"ok": False,
                 "error": "you have never heard of that. You know what you have "
                          "built and what you could begin now; use 'available'."}
@@ -62,7 +62,7 @@ def _cmd_why(sim, nodes, cmd, ended):
                 % (node_id, ", ".join(_did_you_mean(node_id, nodes, sim=sim))
                    or ("no idea, and under fog of war I can only suggest "
                        "things you have heard of"
-                       if getattr(sim, "fog", False)
+                       if sim.fog
                        else "no idea - nothing in the tree is spelled much "
                             "like that"))}
     return dict(ok=True, **_node_explain(sim, nodes, node_id))
@@ -70,7 +70,7 @@ def _cmd_why(sim, nodes, cmd, ended):
 
 
 def _cmd_path(sim, nodes, cmd, ended):
-    if getattr(sim, "fog", False):
+    if sim.fog:
         # THE REASON HAS TO BE THE REAL ONE: the command is switched off
         # wholesale under fog, regardless of whether this particular node
         # is already done, and the error must say that rather than implying
@@ -221,7 +221,7 @@ def _stuck_road_to_goal(sim, nodes, _fog):
     # Returns (reason_or_None, goal_routing_off_under_fog) - the caller needs
     # the flag even on the years this has no reason to report, to explain at
     # the end why nothing here spoke about the goal at all.
-    _goal = getattr(sim, "goal", None)
+    _goal = sim.goal
     _goal_routing_off_under_fog = False
     if _goal in nodes and not _fog:
         _road = closure(nodes, _goal) - sim.done
@@ -389,7 +389,7 @@ def _stuck_arrears(sim):
 
 
 def _stuck_credit_freeze(sim):
-    if sim.year < getattr(sim, "credit_frozen_until", 0):
+    if sim.year < sim.credit_frozen_until:
         return {"what": "a credit freeze",
                 "why": "nobody will fund new work until %d"
                        % int(sim.credit_frozen_until)}
@@ -414,7 +414,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
     # speaks once insolvency has already set in. This command gathers
     # every check into one place instead of making a player find each
     # cause by guessing at `why`.
-    _fog = getattr(sim, "fog", False)
+    _fog = sim.fog
     _startable, _afford = _stuck_startable_and_afford(sim, nodes, _fog)
     _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(sim, nodes, _fog)
     # Every check below is independent, and GATHERS into `reasons`: each one

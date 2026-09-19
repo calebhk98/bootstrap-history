@@ -638,7 +638,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
         if sim.policy.get("auto_open"):
             _stopped["auto_open"] = ("nothing to open with: opening a "
                                      "concern costs stock and premises")
-    if sim.year < getattr(sim, "credit_frozen_until", 0):
+    if sim.year < sim.credit_frozen_until:
         _stopped["credit"] = ("nobody will fund new work until %d"
                               % int(sim.credit_frozen_until))
     _pol = {"ok": True, "policy": dict(sim.policy), "changed": changed,

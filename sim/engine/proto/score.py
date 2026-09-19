@@ -17,7 +17,7 @@ def final_report(sim, nodes):
     there is nothing left to spoil: the run is finished, so showing the
     road is the reward for finishing it, not a leak.
     """
-    goal = getattr(sim, "goal", None)
+    goal = sim.goal
     earned = sorted(sim.done - sim.granted)
     out = {"ended_in": sim.year, "why": _agent_end_reason(sim),
            "you_built": len(earned),
@@ -25,8 +25,8 @@ def final_report(sim, nodes):
            "money": round(sim.capital, 1),
            "people": round(sim.headcount(), 1),
            "reputation": round(sim.reputation, 1),
-           "concerns_you_were_running": len(getattr(sim, "operating", ())),
-           "failed_attempts": sum(getattr(sim, "failed_attempts", {}).values())}
+           "concerns_you_were_running": len(sim.operating),
+           "failed_attempts": sum(sim.failed_attempts.values())}
     if goal and goal in nodes:
         need = closure(nodes, goal)
         left = [node_id for node_id in topo_order(nodes, need) if node_id not in sim.done]
@@ -83,7 +83,7 @@ def _score_goal_floor_years(sim, nodes):
     cached = getattr(sim, "_goal_critical_floor", None)
     if cached is not None:
         return cached
-    goal = getattr(sim, "goal", None)
+    goal = sim.goal
     if not goal or goal not in nodes:
         return None
     try:
@@ -187,8 +187,8 @@ def _score_components(sim, nodes, reveal_tree_total):
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
     reference_wage = max(1e-6, ANNUAL_WAGE.get("artisan", 250.0)
-                          * max(1e-6, float(getattr(sim, "price_index", 1.0)))
-                          * max(1e-6, float(getattr(sim, "wage_index", 1.0))))
+                          * max(1e-6, float(sim.price_index))
+                          * max(1e-6, float(sim.wage_index)))
     worker_years = max(0.0, sim.capital) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
@@ -242,7 +242,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # Each is already a fraction of a real total, so none of these five
     # needs a chosen anchor the way workforce/economy do.
     run_years = max(1.0, sim.year - sim.cfg.get("start_year", sim.year))
-    forgotten_n = len(getattr(sim, "forgotten", None) or {})
+    forgotten_n = len(sim.forgotten or {})
     ever_completed = len(sim.done) + forgotten_n
     corpus_preserved = (1.0 - forgotten_n / ever_completed) if ever_completed else 1.0
     solvent_share = 1.0 - min(1.0, getattr(sim, "insolvent_years", 0) / run_years)
@@ -285,13 +285,13 @@ def _score_achievements(sim, nodes):
     "flawless" for any run that was ever closed and reopened, which is not
     an achievement, it is a bug in what gets remembered. See the report.
     """
-    goal = getattr(sim, "goal", None)
+    goal = sim.goal
     won = bool(goal and sim.goal_year)
     out = {}
     if not won:
         return out
     out["corpus_intact"] = {
-        "won": len(getattr(sim, "forgotten", None) or {}) == 0,
+        "won": len(sim.forgotten or {}) == 0,
         "what": "the corpus was never diminished by a sacking"}
     out["never_understaffed"] = {
         "won": len(getattr(sim, "shut_for_staff", None) or {}) == 0,
@@ -301,7 +301,7 @@ def _score_achievements(sim, nodes):
                 and getattr(sim, "interest_paid", 0.0) <= 0.0),
         "what": "never spent a year insolvent or paid a denarius of interest"}
     out["free_hands_only"] = {
-        "won": (sim.slaves == 0 and getattr(sim, "manumitted_total", 0) == 0),
+        "won": (sim.slaves == 0 and sim.manumitted_total == 0),
         "what": "built it without ever owning a slave"}
     floor = _score_goal_floor_years(sim, nodes)
     out["outpaced_the_fastest_plan"] = {
@@ -318,9 +318,9 @@ def score_report(sim, nodes):
     the ending screen (final_report, below).
     """
     end_reason = _agent_end_reason(sim)
-    reveal_tree_total = (not getattr(sim, "fog", False)) or (end_reason is not None)
+    reveal_tree_total = (not sim.fog) or (end_reason is not None)
     components = _score_components(sim, nodes, reveal_tree_total)
-    goal = getattr(sim, "goal", None)
+    goal = sim.goal
     goal_reached = bool(goal and sim.goal_year)
     total = None
     if goal_reached and all(component["normalized"] is not None for component in components.values()):
@@ -353,7 +353,7 @@ def score_report(sim, nodes):
     # weights honestly has - inventing a bigger scale would imply the
     # model can discriminate finer than it does.
     points = round(total * 1000) if total is not None else None
-    out = {"goal_in_words": (sim.nodes[goal]["name"] if goal in getattr(sim, "nodes", {})
+    out = {"goal_in_words": (sim.nodes[goal]["name"] if goal in sim.nodes
                              else None),
            "goal_reached": goal_reached, "goal_year": sim.goal_year,
            "end_reason": end_reason,

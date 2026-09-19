@@ -184,7 +184,7 @@ def _did_you_mean(node_id, nodes, limit=8, sim=None):
     # loose enough query (a two-letter prefix, say) could otherwise
     # reconstruct the entire tree one suggestion at a time. A suggestion is
     # still a statement about what exists.
-    if sim is not None and getattr(sim, "fog", False):
+    if sim is not None and sim.fog:
         memo = {}
         near = [result_id for result_id in near if sim.is_visible(result_id, _memo=memo)]
     return near[:limit]

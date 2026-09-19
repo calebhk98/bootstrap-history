@@ -133,7 +133,7 @@ class FogMixin:
 
     def reveal_from(self, node_id: str) -> None:
         """Completing something teaches you what it leads towards, vaguely."""
-        if not getattr(self, "fog", False):
+        if not self.fog:
             return
         self.household.revealed = set(getattr(self.household, "revealed", set()))
         self.household.revealed.add(node_id)
@@ -163,7 +163,7 @@ class FogMixin:
         node built or revealed between one call and the next is seen correctly
         next time.
         """
-        if not getattr(self, "fog", False):
+        if not self.fog:
             return True
         if node_id in self.household.done or node_id in self.household.active:
             return True
@@ -205,7 +205,7 @@ class FogMixin:
             return None
         known = [prereq_id for prereq_id in missing if self.is_visible(prereq_id, _memo=_memo)]
         hidden = len(missing) - len(known)
-        if not getattr(self, "fog", False) or not hidden:
+        if not self.fog or not hidden:
             msg = "missing prerequisites: " + ", ".join(missing)
             return msg + self._free_prereq_hint(missing)
         bits = []
@@ -270,7 +270,7 @@ class FogMixin:
 
     def fog_scrub(self, text: Optional[str]) -> Optional[str]:
         """Strip node ids the player has not discovered out of a message."""
-        if not text or not getattr(self, "fog", False):
+        if not text or not self.fog:
             return text
         scrubbed = text
         for node_id in self.nodes:
@@ -426,11 +426,11 @@ class FogMixin:
             # the hedge named here has to pass the same visibility test
             # `why` uses, or the two commands would contradict each other
             # about whether the player has heard of it.
-            "hedged_by": hedge if (not getattr(self, "fog", False)
+            "hedged_by": hedge if (not self.fog
                                    or self.is_visible(hedge or "")) else "nothing yet",
             "better_hedge_available": (
                 None if hedge == "corpus_dispersed" else
-                ("corpus_dispersed" if not getattr(self, "fog", False)
+                ("corpus_dispersed" if not self.fog
                  else "there is said to be a way to guard against this; "
                       "you have not found it yet")),
             "known_hazards_ahead": upcoming,

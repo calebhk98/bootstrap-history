@@ -173,11 +173,11 @@ def save_state(sim, path):
     # a choice the menu asked about when this game began, not a flag that
     # should silently reset to the transistor because a resume happened to
     # omit --goal. See load_state.
-    blob["_goal"] = getattr(sim, "goal", None)
+    blob["_goal"] = sim.goal
     blob["_civ_live"] = {attr: sim.civ.get(attr) for attr in
                          ("literacy_general", "literacy_elite", "state_capacity")}
     blob["_weights"] = dict(sim.value_weights)
-    blob["_fog"] = getattr(sim, "fog", False)
+    blob["_fog"] = sim.fog
     # WHETHER THE FOUNDER AGES, saved for the same reason fog is: they are
     # choices the menu asks you to make about what game this is, and resuming
     # into the other one is resuming into a different game. _fog was already
@@ -479,7 +479,7 @@ def load_state(sim, path):
     # in a game whose own help says there is no way to view the whole tree.
     # A save may resume the fog it was played with; it may not switch the
     # fog off underneath you.
-    if getattr(sim, "fog", False) and blob.get("_fog") is False:
+    if sim.fog and blob.get("_fog") is False:
         raise ValueError("that save was played without fog of war and this "
                          "game is being played with it. A save cannot turn the "
                          "fog off; start a new game without it if that is what "
@@ -508,8 +508,8 @@ def load_state(sim, path):
     # promotion, done here rather than lazily because these two are written
     # to directly rather than through an accessor.
     sim.failed_attempts = collections.defaultdict(
-        int, {node_id: int(value) for node_id, value in (getattr(sim, "failed_attempts", None) or {}).items()})
-    sim.shortages = collections.Counter(getattr(sim, "shortages", None) or {})
+        int, {node_id: int(value) for node_id, value in (sim.failed_attempts or {}).items()})
+    sim.shortages = collections.Counter(sim.shortages or {})
     # `operating` JUST WENT BACK TO BEING A PLAIN SET. The generic setattr
     # above has no idea self.operating is normally an _InvalidatingSet (see
     # economy.py) and replaced it with whatever plain `set(...)` came out of

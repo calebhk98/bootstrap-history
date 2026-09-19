@@ -524,14 +524,14 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             and cmd["cmd"].strip().lower() in _NAME_COMMANDS
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
-        if getattr(sim, "fog", False):
+        if sim.fog:
             # ONLY WHAT THE PLAYER HAS ACTUALLY HEARD OF. Two nodes can share
             # a name where one is built and the other is still beyond the
             # fog; handing back the hidden one as a candidate to disambiguate
             # between is exactly the leak the fog guard below exists to close,
             # so the filter runs before a player ever sees the list, not after.
             _name_memo = {}
-            _goal = getattr(sim, "goal", None)
+            _goal = sim.goal
             # THE GOAL'S NAME GETS THE SAME NARROW EXCEPTION ITS ID ALREADY
             # HAS, on `why` alone - see the fog guard's own comment on
             # _goal_why just below. Without this, a player who only ever
@@ -570,7 +570,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # Patching one command alone would leave the next command that grows
     # an id to make the same mistake, so the check lives here, once,
     # before any handler sees the id.
-    if getattr(sim, "fog", False) and isinstance(cmd.get("cmd"), str):
+    if sim.fog and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
         _node_id = cmd.get("id")
         # THE SAME ANSWER WHETHER OR NOT IT EXISTS: refusing an unheard-of
@@ -590,10 +590,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # recursively into the hidden dependency graph. `why` under fog
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
-        _goal_why = (_op == "why" and _node_id == getattr(sim, "goal", None))
+        _goal_why = (_op == "why" and _node_id == sim.goal)
         if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
                 _node_id not in nodes or not sim.is_visible(_node_id)):
-            if _node_id == getattr(sim, "goal", None):
+            if _node_id == sim.goal:
                 # You know its name; you were handed it on arrival. Telling you
                 # that you have never heard of the thing you are aiming at, and
                 # then guessing you meant fin_contract_law, is absurd on its

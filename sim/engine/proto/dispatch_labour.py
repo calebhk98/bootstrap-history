@@ -352,7 +352,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                  "people": (training_record[3] if len(training_record) > 3
                             else round(training_record[0] / 0.55, 2)),
                  "ready_year": training_record[1]}
-                for training_record in getattr(sim, "training", [])],
+                for training_record in sim.training],
             "one_trade_in_full": '{"cmd":"labour","trade":"smith"}',
             "how_to_grow_staff": {"scholars": sim._staff_advice("scholars"),
                                   "artisans": sim._staff_advice("artisans")},

@@ -25,7 +25,7 @@ def _agent_help(sim, topic=None):
     # rather than the plain imported name.
     from .. import protocol as _protocol
     TYPED_HINTS = _protocol.TYPED_HINTS
-    fog = getattr(sim, "fog", False)
+    fog = sim.fog
     topic = (topic or "").strip().lower()
 
     if not topic:

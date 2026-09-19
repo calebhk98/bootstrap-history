@@ -237,7 +237,7 @@ class HazardsMixin:
             if node_id in seen:
                 continue
             seen.add(node_id)
-            if getattr(self, "fog", False) and not self.is_visible(node_id, _memo=memo):
+            if self.fog and not self.is_visible(node_id, _memo=memo):
                 continue
             can_start, why = self.start_reason(node_id)
             entry = {"id": node_id, "name": self.nodes[node_id]["name"],
@@ -887,7 +887,7 @@ class HazardsMixin:
         # breath as the loss itself, using the same goal-closure `never_
         # abandon` already computes and caches.
         _on_road = 0
-        _goal = getattr(self, "goal", None)
+        _goal = self.goal
         if _goal and _goal in self.nodes:
             try:
                 _gc = getattr(self, "_goal_closure", None)

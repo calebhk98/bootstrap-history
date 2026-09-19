@@ -297,6 +297,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
         self.civ = civ or load_civ()
+        # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
+        # afterwards by whoever builds the game - cli_interactive, cli_agent,
+        # perf_fingerprint - and both round-trip through saveload's `_fog`
+        # and `_goal` keys rather than through SAVE_FIELDS. Without these two
+        # lines neither attribute exists until somebody assigns it, so all 44
+        # readers had to supply a fallback of their own.
+        #
+        # A fallback written out at 44 call sites is 44 chances to write a
+        # different one, and nothing compares them. Worse, a fallback turns a
+        # misspelt or renamed attribute into a plausible answer where a
+        # direct read would raise AttributeError on the first call. That is
+        # not hypothetical here: a three-argument read of `w` survived the
+        # rename of that attribute to `value_weights` and went on handing the
+        # `values` command an empty dict for eight commits, with the whole
+        # suite green.
+        self.fog = False
+        self.goal = None
         # MANUAL MODE: the optimizer in step() 4b never starts anything on its
         # own. The only projects that ever become active are ones something
         # called start_project() on, i.e. a human or an agent choosing them.

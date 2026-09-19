@@ -104,7 +104,7 @@ def run(scenario, keep_states=False):
     start_time = time.process_time()
     per_year, states = [], []
     for _ in range(scenario["years"]):
-        if getattr(sim, "dead_reason", None):
+        if sim.dead_reason:
             break
         sim.step()
         state = state_of(sim)

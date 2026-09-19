@@ -24,7 +24,7 @@ def _agent_end_reason(sim):
         # Under fog there IS no stated goal, so saying the player failed to
         # reach one is incoherent: a goal they were never shown and had no
         # way to set.
-        if getattr(sim, "fog", False):
+        if sim.fog:
             # AND IT MUST CHECK s.goal_year, the same as the non-fog branch
             # two lines below: telling a player at the end that they were
             # never aiming at anything is a lie when `help` already names
@@ -220,7 +220,7 @@ def _goal_progress_count(sim, nodes):
     is used in _agent_state for why the total itself has to stay withheld
     until the run ends.
     """
-    goal = getattr(sim, "goal", None)
+    goal = sim.goal
     if not goal or goal not in nodes:
         return None
     need = getattr(sim, "_goal_closure", None)
@@ -410,7 +410,7 @@ def _agent_state_operations(sim, nodes):
         # this year", and every action it recommended was then refused with
         # "the run has ended". Advice you cannot take is not advice.
         "stuck": (None if _agent_end_reason(sim) else sim.stall_diagnosis()),
-        "concerns_you_run": len(getattr(sim, "operating", ())),
+        "concerns_you_run": len(sim.operating),
         "you_know_how_to_run_but_have_not_opened": sum(
             1 for node_id in sim.done if sim.is_venture(node_id) and node_id not in sim.operating),
         # WHAT THAT IS COSTING YOU, in money, on the main screen: a
@@ -461,10 +461,10 @@ def _agent_state_spend_and_net(sim):
         # the same, or it double-bills the first year by the whole wage
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
-            getattr(sim, "wages_prepaid", 0.0), 1) or None,
+            sim.wages_prepaid, 1) or None,
         "net_after_project_spend": round(sim.revenue() - sim.upkeep() - sim.living_cost()
                                          + min(sim.living_cost(),
-                                               getattr(sim, "wages_prepaid", 0.0))
+                                               sim.wages_prepaid)
                                          - sim.mine_operating_cost()
                                          - max(0.0, -sim.capital) * sim.debt_interest_rate()
                                          - getattr(sim, "spend_last_year", 0.0), 1),
@@ -480,7 +480,7 @@ def _agent_state_spend_and_net(sim):
         "net_per_year": round(_standing_revenue - _standing_upkeep
                               - _standing_living
                               + min(_standing_living,
-                                    getattr(sim, "wages_prepaid", 0.0))
+                                    sim.wages_prepaid)
                               - sim.mine_operating_cost()
                               - max(0.0, -sim.capital) * sim.debt_interest_rate(), 1),
     }
@@ -500,7 +500,7 @@ def _agent_state_training_and_hours(sim, active, full):
             {"artisan_capacity": round(row[0], 2), "ready_year": row[1],
              "trade": (row[2] if len(row) > 2 else None),
              "people": (row[3] if len(row) > 3 else None)}
-            for row in getattr(sim, "training", [])],
+            for row in sim.training],
         # LESS WHAT YOU HAVE ALREADY SOLD: the pool is the pool, but what is
         # FREE is the pool less the hours already spent on wage work, or
         # this would report free hours that `work` then refuses to honour.
@@ -581,7 +581,7 @@ def _agent_state_training_and_hours(sim, active, full):
             "hours_each_deputy_adds": sim.cfg["director_hours_per_year"],
         },
         "founder_hours_spent_teaching_this_year": round(
-            getattr(sim, "teaching_hours_this_year", 0.0), 1),
+            sim.teaching_hours_this_year, 1),
         # LAST YEAR'S HOURS, ACCOUNTED FOR. Set in step(); see the comment
         # there. available is this year's fresh figure, not last year's -
         # read it alongside, not in place of, hours_this_year.
@@ -711,8 +711,8 @@ def _agent_state_progress(sim, active):
         "trades_society_now_has_on_its_own": sorted(sim.trades_endemic),
         "mothballed": sorted(getattr(sim, "mothballed", set())),
         "policy": dict(sim.policy),
-        "in_bondage_for_debt": round(getattr(sim, "bondage_years_left", 0.0), 1),
-        "debt_still_to_work_off": round(getattr(sim, "bondage_debt", 0.0), 1),
+        "in_bondage_for_debt": round(sim.bondage_years_left, 1),
+        "debt_still_to_work_off": round(sim.bondage_debt, 1),
     }
 
 
@@ -783,11 +783,11 @@ def _agent_state_goal(sim, nodes, end_reason):
     """
     return {
         "founder_ages": not sim.cfg.get("immortal", True),
-        "goal": None if getattr(sim, "fog", False) else sim.goal,
+        "goal": None if sim.fog else sim.goal,
         # The NAME, not the id, so it survives fog without handing back the
         # prerequisite crawl the visibility guard exists to stop.
         "goal_in_words": (sim.nodes[sim.goal]["name"]
-                          if getattr(sim, "goal", None) in sim.nodes else None),
+                          if sim.goal in sim.nodes else None),
         "goal_reached": sim.goal_year is not None, "goal_year": sim.goal_year,
         # THE FOG-SAFE VERSION OF final_report's "146 nodes in all; you had
         # 122": the TOTAL is withheld until the run ends on purpose,
@@ -799,8 +799,8 @@ def _agent_state_goal(sim, nodes, end_reason):
         # all and never which ones remain - you get a sense of progress
         # without being handed a map.
         "on_the_road_to_the_goal_so_far": (
-            _goal_progress_count(sim, nodes) if getattr(sim, "fog", False) else None),
-        "fog_of_war": getattr(sim, "fog", False),
+            _goal_progress_count(sim, nodes) if sim.fog else None),
+        "fog_of_war": sim.fog,
         "manual": sim.manual, "ended": end_reason is not None, "end_reason": end_reason,
     }
 
@@ -914,7 +914,7 @@ def _log_scrub(sim, text):
     so this also strips NAMES of anything not currently visible.
     """
     text = sim.fog_scrub(text)
-    if not getattr(sim, "fog", False) or not text:
+    if not sim.fog or not text:
         return text
     memo = {}
     for node_id, node in sim.nodes.items():
@@ -922,7 +922,7 @@ def _log_scrub(sim, text):
         if node_name and node_name in text and not sim.is_visible(node_id, _memo=memo):
             text = text.replace(
                 node_name, "something you have since forgotten"
-                    if node_id in (getattr(sim, "forgotten", None) or {}) else
+                    if node_id in (sim.forgotten or {}) else
                     "something you have not heard of")
     return text
 
@@ -1000,7 +1000,7 @@ def _agent_log_search_rows(sim, rows, find, order):
         # something called X exists, which is the same leak the visibility
         # guard on `why` exists to close, reached from a different command.
         rows = [row for row in rows if find in row[1][1].lower()]
-        if getattr(sim, "fog", False):
+        if sim.fog:
             # THE RECHECK IS THE EXPENSIVE HALF, one node sweep per candidate
             # line, so a common word over a run's whole history could be
             # thousands of sweeps. Capped to the most recent slice, which is
@@ -1070,7 +1070,7 @@ def _agent_log(sim, cmd=None):
     suggested, and there is no `all:true` here the way `available` has one.
     """
     cmd = cmd or {}
-    log = list(getattr(sim, "log", None) or [])
+    log = list(sim.log or [])
     only_fail, find, since, before = _agent_log_parse_filters(cmd)
     order, limit, offset = _agent_log_parse_paging(cmd)
     rows = _agent_log_filter_rows(log, since, before, only_fail)

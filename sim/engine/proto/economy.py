@@ -392,7 +392,7 @@ def _agent_mines(sim):
     # deterministic across hash seeds - only the final row order does,
     # hence the explicit sort key below.
     by_mat = {}
-    for working in getattr(sim, "mines", ()):
+    for working in sim.mines:
         by_mat.setdefault(working["material"], []).append(working)
     rows = []
     for material in sorted(by_mat):

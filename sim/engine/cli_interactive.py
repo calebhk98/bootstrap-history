@@ -569,7 +569,7 @@ def _ingame_options(sim, session):
         print("   civilisation : %s, %d AD                (fixed for this game)"
               % (sim.civ.get("name", sim.civ.get("id", "?")), sim.cfg["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
-              % ("on" if getattr(sim, "fog", False) else "off"))
+              % ("on" if sim.fog else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))

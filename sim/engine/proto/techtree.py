@@ -158,7 +158,7 @@ def _fog_revenue_estimate(sim, node_id):
     if real <= 0:
         return None          # nothing to estimate; a non-earner is a non-earner under fog too
     key = "%s|%s|%.1f|%s" % (sim.civ.get("id") or sim.civ.get("name") or "civ",
-                             getattr(sim, "goal", "") or "",
+                             sim.goal or "",
                              sim.cfg.get("start_capital", 0.0), node_id)
     digest = hashlib.sha256(key.encode("utf-8")).digest()
     half = {"A": 0.30, "B": 0.55}.get(node.get("conf"), 0.85)
@@ -700,7 +700,7 @@ def _agent_available(sim, nodes, cmd=None):
     # makes that patch visible here.
     from .. import protocol as _protocol
     DEFAULT_AVAILABLE_LIMIT = _protocol.DEFAULT_AVAILABLE_LIMIT
-    fog = getattr(sim, "fog", False)
+    fog = sim.fog
     # ONE memo for the whole sweep, not one per node. Under fog, checking
     # whether a deep node can start asks whether each of its missing
     # prerequisites is even visible, which asks the same question about
@@ -865,18 +865,18 @@ def _explain_cost(sim, nodes, node_id, node):
                  # actually charge.
                  **({"already_paid_towards_this": round(
                         min(sim.project_cost(node_id),
-                            max(0.0, getattr(sim, "paid_towards", {}).get(node_id, 0.0))), 1),
+                            max(0.0, sim.paid_towards.get(node_id, 0.0))), 1),
                      "what_start_would_actually_charge": round(
                         max(0.0, sim.project_cost(node_id)
                             - min(sim.project_cost(node_id),
-                                  max(0.0, getattr(sim, "paid_towards", {}).get(node_id, 0.0)))), 1),
+                                  max(0.0, sim.paid_towards.get(node_id, 0.0)))), 1),
                      "why_less_than_the_total_above":
                         "this much was already paid in before the work "
                         "stopped, halted by a creditor or by your own "
                         "'stop'; it stands to your credit and comes off "
                         "the bill the moment you start this again"}
                     if node_id not in sim.done and node_id not in sim.active
-                    and max(0.0, (getattr(sim, "paid_towards", {}) or {}).get(node_id, 0.0)) > 0.5
+                    and max(0.0, (sim.paid_towards or {}).get(node_id, 0.0)) > 0.5
                     else {})}
 
 
@@ -899,7 +899,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
         "upkeep": node["up"],
-        "revenue": (node["rev"] if (not getattr(sim, "fog", False)
+        "revenue": (node["rev"] if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "revenue_forecast_scope": (
@@ -946,7 +946,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
             sim.expected_calendar_years(node_id), 2),
         # WHAT THE FAILURES SO FAR HAVE BOUGHT, said out loud, because a
         # number that quietly improves is a number a player cannot plan with.
-        "attempts_already_failed": int(getattr(sim, "failed_attempts", {}).get(node_id, 0)),
+        "attempts_already_failed": int(sim.failed_attempts.get(node_id, 0)),
         "risk_before_any_attempt": node["risk"],
         # THE SUM, NOT ONLY THE RATE. See _node_explain's own note: a failure
         # takes a flat 40% of the money and puts 40% of the hours back on the
@@ -1150,7 +1150,7 @@ def _lineage_setup(sim, nodes, node_id):
     # chinampa, as dead ends - each civilisation's own signature
     # technology told it leads nowhere, when it genuinely unlocks
     # something through a substitution group.
-    unlocks = [] if getattr(sim, "fog", False) else _unlocked_by(node_id, nodes)
+    unlocks = [] if sim.fog else _unlocked_by(node_id, nodes)
     # Was: {m for m in nodes if k in closure(nodes, m)} - a full ancestor
     # closure of all 2,831 nodes, per call. Same answers, computed once for the
     # whole tree and cached. See data.descendants.
@@ -1176,7 +1176,7 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # hidden prerequisites by name in the JSON, which is the fog exploit
         # this file has already closed twice.
         "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.is_visible(prereq_id)]
-                                 if getattr(sim, "fog", False) else node["pre"]),
+                                 if sim.fog else node["pre"]),
         # A GRANTED NODE IS HELD, WHATEVER ROUTE THE TREE DRAWS TO IT. `why
         # cap_heat_1300` on Han reported done:true, missing_prerequisites:
         # ["cap_heat_1100"] and can_start_now:false in one object - three
@@ -1192,11 +1192,11 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # is missing something.
         "missing_prerequisites": ([] if node_id in sim.granted
                                   else [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.done
-                                        and (not getattr(sim, "fog", False)
+                                        and (not sim.fog
                                              or sim.is_visible(prereq_id))]),
         "prerequisites_you_have_not_heard_of": (
             sum(1 for prereq_id in node["pre"] if not sim.is_visible(prereq_id))
-            if getattr(sim, "fog", False) else 0) or None,
+            if sim.fog else 0) or None,
     }
 
 
@@ -1233,11 +1233,11 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # measurement of a tree you cannot see. You do know how many of its own
         # prerequisites you are still missing, because those have names you have
         # either heard or not.
-        "chain_size": (len(need) if not getattr(sim, "fog", False) else None),
+        "chain_size": (len(need) if not sim.fog else None),
         "chain_size_counting_what_you_have_built": (
-            len(_chain_all) if not getattr(sim, "fog", False) else None),
+            len(_chain_all) if not sim.fog else None),
         "chain_founder_hours": (sum(nodes[node_id]["ph"] for node_id in need)
-                                if not getattr(sim, "fog", False) else None),
+                                if not sim.fog else None),
         # AT THIS SOCIETY'S PRICES, like the COST line four rows above it:
         # summing the tree's BASE cost and applying none of the
         # civilisation-specific multipliers the same page prints would
@@ -1247,9 +1247,9 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # are unaffected by price; only chain_cost has to go through
         # sim.project_cost().
         "chain_cost": (round(sum(sim.project_cost(node_id) for node_id in sorted(need)), 1)
-                       if not getattr(sim, "fog", False) else None),
+                       if not sim.fog else None),
         "critical_path_years": (critical_path(nodes, node_id)[0]
-                                if not getattr(sim, "fog", False) else None),
+                                if not sim.fog else None),
     }
 
 
@@ -1267,13 +1267,13 @@ def _explain_unlocks(sim, nodes, node_id, unlocks, n_blocks):
         # judge: whether this is a foundation others will build on, or an end in
         # itself. You can tell that much by looking at it.
         "unlocks": unlocks,
-        "downstream_count": (n_blocks if not getattr(sim, "fog", False) else None),
+        "downstream_count": (n_blocks if not sim.fog else None),
         "how_much_rests_on_this": (
-            None if not getattr(sim, "fog", False) else _rests_band(n_blocks)),
+            None if not sim.fog else _rests_band(n_blocks)),
         # Under fog there is no visible goal, so a boolean saying whether
         # this is "on the goal path" would be either meaningless or a
         # leak, and must be None instead of true/false.
-        "on_goal_path": (None if getattr(sim, "fog", False)
+        "on_goal_path": (None if sim.fog
                          else (node_id == sim.goal or is_downstream(nodes, node_id, sim.goal))),
     }
 
