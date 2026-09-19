@@ -367,11 +367,12 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
             "attested bribery or delay costs, so this conversion rate is "
             "tuned to feel like a real friction, not measured from one.")
 
-    def opposition_factor(self, k):
+    def opposition_factor(self, node_id):
         """Opposed work costs more: bribes, delay, a provincial site, a front man."""
-        return 1.0 + self.OPPOSITION_COST_PER_UNIT * max(0.0, -self.state_interest(self.nodes[k]))
+        return 1.0 + self.OPPOSITION_COST_PER_UNIT * max(
+            0.0, -self.state_interest(self.nodes[node_id]))
 
-    def project_cost(self, k):
+    def project_cost(self, node_id):
         """What this project will actually cost in money, all factors applied.
 
         This is the number `why` quotes and the number the project must have
@@ -381,10 +382,11 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         unpaid remainder of the true cost be forgiven outright, leaving
         money decorative and only hours real.
         """
-        node = self.nodes[k]
-        return (node["_total_cost"] * self.cost_money_factor() * self.opposition_factor(k)
-                * self.civ_cost_factor(k) * self.material_cost_factor(k)
-                * self.material_market_factor(k))
+        node = self.nodes[node_id]
+        return (node["_total_cost"] * self.cost_money_factor()
+                * self.opposition_factor(node_id)
+                * self.civ_cost_factor(node_id) * self.material_cost_factor(node_id)
+                * self.material_market_factor(node_id))
 
     def _done_changed(self):
         """Call after anything adds to or removes from self.household.done.
