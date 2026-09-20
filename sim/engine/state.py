@@ -60,6 +60,7 @@ class ActiveProjectState(_InvalidatingDict):
 		spent: float = 0.0,
 		cost_left: float = 0.0,
 		lab_left: Optional[Dict[str, float]] = None,
+		status: str = "ACTIVE",
 		hours_offered_this_year: Optional[float] = None,
 		hours_directed_this_year: Optional[float] = None,
 		hours_effective_this_year: Optional[float] = None,
@@ -84,6 +85,7 @@ class ActiveProjectState(_InvalidatingDict):
 		super().__setitem__("yrs", yrs)
 		super().__setitem__("spent", spent)
 		super().__setitem__("cost_left", cost_left)
+		super().__setitem__("status", status)
 		if lab_left is not None:
 			super().__setitem__("lab_left", self._wrap_value(lab_left))
 		if hours_offered_this_year is not None:
@@ -305,6 +307,7 @@ class EconomyState:
 	economy: float = 1.0
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
+	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
 	_dashboard_history: Optional[List[Any]] = None

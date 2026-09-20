@@ -45,7 +45,9 @@ from .labour import LabourMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .core_properties import ForwardingPropertiesMixin
-from .core_step_phases import StepPhasesMixin
+from .core_step_phases import StepContext, StepPhasesMixin
+from .data import trade_family, WAGES
+from .invariants import check_simulation_invariants
 from .actors import Household
 
 
@@ -250,7 +252,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     )
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
-                 bounty_set=None, civ=None, manual=False):
+                 bounty_set=None, civ=None, manual=False, debug=None):
         self.nodes = nodes
         # PRECOMPUTED ONCE: which node ids carry a `win_condition` at all,
         # sorted for the same reproducibility reason _check_win_conditions
@@ -269,6 +271,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             node_id for node_id, node in nodes.items() if node.get("win_condition"))
         self.order = list(order)
         self.rng = rng
+        self._agriculture = agriculture
+        self._demography = demography
+        self._tech_effects = TECH_EFFECTS
+        self.step_context = StepContext(
+            trade_family=trade_family, wages=dict(WAGES),
+            invariant_checker=check_simulation_invariants)
+        self.debug = __debug__ if debug is None else bool(debug)
         self.events = events
         self.cfg = dict(DEFAULTS, **(cfg or {}))
         self.verbose = verbose
@@ -344,7 +353,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
             / self.DEFAULT_POPULATION_100AD)
         # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
-        # SS6), built and proven standalone in sim/world/demography.py, and
+        # SS6), built and proven standalone in sim/world/self._demography.py, and
         # read and mutated by pop_scale/wage_index (below) and by _shocks()
         # (society.py). `Population.stationary()` finds the model's OWN
         # stable age structure for a population of this civilisation's
@@ -352,7 +361,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # that method's own docstring for why.
         #
         # SEEDED, DELIBERATELY NOT FROM self.rng: Population owns its own
-        # generator (for the `jitter=True` path only - see demography.py's
+        # generator (for the `jitter=True` path only - see self._demography.py's
         # NUTRITION_YEAR_TO_YEAR_NOISE_STD), and nothing in this engine ever
         # passes jitter=True (see _advance_population below), so this seed
         # never actually gets drawn from. It is derived from the
@@ -361,13 +370,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # processes), purely so two civilisations do not happen to share one.
         _population_seed = sum((index + 1) * ord(character) for index, character
                                in enumerate(str(self.civ.get("id", "civ")))) % (2 ** 32)
-        self.population = demography.Population.stationary(
+        self.population = self._demography.Population.stationary(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
         # WIRING MILESTONE 4'S OTHER HALF (docs/architecture/
         # WIRING_MILESTONE_4.md SS6, "Agriculture wiring is a parallel
         # track"): how much arable land this civilisation starts with.
-        # `agriculture.farmland_for_population` sizes a `Land` so that, at
+        # `self._agriculture.farmland_for_population` sizes a `Land` so that, at
         # DEFAULT crop/soil/rotation/toolkit and an AVERAGE weather year,
         # the farm workforce that fraction implies can feed exactly this
         # starting population - i.e. the civilisation starts neither
@@ -386,11 +395,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # do: grow as the population does. A civilisation whose population
         # outgrows this fixed endowment gets LESS food per head over time
         # from ordinary diminishing returns to labour on fixed land (see
-        # agriculture.py's `gross_harvest_kg`), not from any mechanism
+        # self._agriculture.py's `gross_harvest_kg`), not from any mechanism
         # added here - the extensive margin (bringing more land under the
-        # plough) is real future work agriculture.py's own docstring names
+        # plough) is real future work self._agriculture.py's own docstring names
         # as missing mechanism (b), not something invented in this file.
-        self.farm_land = agriculture.farmland_for_population(
+        self.farm_land = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population))
         # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
@@ -422,13 +431,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # much surplus this civilisation has banked at the moment the
         # simulation begins observing it" is "none recorded" rather than a
         # figure picked to soften the first few years - see
-        # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (agriculture.py)
+        # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (self._agriculture.py)
         # for where a sourced, physically-grounded number DOES enter this
         # mechanism (the CEILING on how large a buffer can grow, not the
         # starting point). What actually answers Complaints/45 is that
         # `_demographic_recovery` below carries whatever THIS ATTRIBUTE holds
         # forward from year to year: it must not rebuild an
-        # `agriculture.Storage` at stock_kg=0.0 every single year regardless
+        # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
         # of what the previous year harvested, or the starting value would
         # not matter.
         # SAVE_FIELDS ("farm_stock_kg", sim/engine/proto/saveload.py) is
@@ -451,7 +460,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # later, not the day a latrine opens. DRAINED INTO `_pop_scale_base`
         # rather than into `self.population` directly, because giving a
         # technology an actual per-instance effect on this civilisation's
-        # mortality/fertility needs a mechanism sim/world/demography.py does
+        # mortality/fertility needs a mechanism sim/world/self._demography.py does
         # not have yet (its rates are module-level constants) - open design
         # question in docs/architecture/WIRING_MILESTONE_4.md SS1.3/SS6.
         self._pop_tech_pending = []
@@ -733,7 +742,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         why="How much scarcer labour raises its own price - see pop_scale/"
             "wage_index below: at this elasticity, a Black-Death-sized "
             "shortfall reproduces roughly the cited real-wage doubling over "
-            "the timescale sim/world/demography.py's own vital rates take "
+            "the timescale sim/world/self._demography.py's own vital rates take "
             "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
             "specifically to land in the range that reproduces a known "
             "historical wage-index outcome (Phelps Brown and Hopkins), "
@@ -755,7 +764,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     #
     # `pop_scale` must be derived from `self.population`'s age-cohort model,
     # not from a hand-set scalar decaying on a fixed clock: sim/world/
-    # demography.py's own test suite shows two populations that lose an
+    # self._demography.py's own test suite shows two populations that lose an
     # identical 30% in one year, one sparing working-age adults and one not,
     # diverge sharply afterwards - a result a scalar deficit decaying on a
     # clock that knows nothing about WHO was lost can never produce.
@@ -816,12 +825,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _shocks() (society.py).
 
         AGE-DIFFERENTIATED BY THE SAME STARVATION_VULNERABILITY_* RATIOS
-        sim/world/demography.py already declares for its own nutrition-
+        sim/world/self._demography.py already declares for its own nutrition-
         driven excess mortality (children hit 1.6x as hard as working-age
         adults, the elderly 1.4x - see that module for the sourcing), scaled
         so the POPULATION-WEIGHTED AVERAGE loss equals `raw` exactly. This
         is what makes two equal-headcount losses diverge afterward depending
-        on who survived - the property sim/tests/test_demography.py's own
+        on who survived - the property sim/tests/test_self._demography.py's own
         falsification test demands, and a scalar deficit decaying on a fixed
         clock could never produce (see the comment above pop_scale).
 
@@ -841,22 +850,22 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         calories rather than in a bare staff_loss fraction.
         """
         population = self.population
-        weighted = (population.children * demography.STARVATION_VULNERABILITY_CHILD
-                   + population.working_age * demography.STARVATION_VULNERABILITY_WORKING_AGE
-                   + population.elderly * demography.STARVATION_VULNERABILITY_ELDERLY)
+        weighted = (population.children * self._demography.STARVATION_VULNERABILITY_CHILD
+                   + population.working_age * self._demography.STARVATION_VULNERABILITY_WORKING_AGE
+                   + population.elderly * self._demography.STARVATION_VULNERABILITY_ELDERLY)
         if weighted <= 0.0 or raw <= 0.0:
             return
         scale = raw * population.total / weighted
         population.children -= population.children * min(
-            1.0, scale * demography.STARVATION_VULNERABILITY_CHILD)
+            1.0, scale * self._demography.STARVATION_VULNERABILITY_CHILD)
         population.working_age -= population.working_age * min(
-            1.0, scale * demography.STARVATION_VULNERABILITY_WORKING_AGE)
+            1.0, scale * self._demography.STARVATION_VULNERABILITY_WORKING_AGE)
         population.elderly -= population.elderly * min(
-            1.0, scale * demography.STARVATION_VULNERABILITY_ELDERLY)
+            1.0, scale * self._demography.STARVATION_VULNERABILITY_ELDERLY)
 
     def _adult_equivalent_population(self, population):
         """`population`'s food need in ADULT-EQUIVALENT units - the same
-        weighting demography.py's own `Population.nutrition_ratio` (and,
+        weighting self._demography.py's own `Population.nutrition_ratio` (and,
         via `_subsistence_food`, `Population.stationary`) already use
         internally: a child counts as `CHILD_CALORIE_EQUIVALENT` of an
         adult, an elderly person as `ELDERLY_CALORIE_EQUIVALENT`, exactly
@@ -864,13 +873,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         is worth in calories.
 
         WIRING_MILESTONE_4.md SS4.3's UNIT MISMATCH, AND HOW THIS RESOLVES
-        IT. `agriculture.Storage.step` takes a plain `population` argument
+        IT. `self._agriculture.Storage.step` takes a plain `population` argument
         and uses it exactly once: `food_demand_kg = population *
-        annual_food_demand_kg_per_person(crop)`. Nothing in agriculture.py
+        annual_food_demand_kg_per_person(crop)`. Nothing in self._agriculture.py
         assumes that number is a flat headcount beyond that one line - it
         is "however many ration-equivalents need feeding" - so the fix
-        needs no change to agriculture.py's signature at all: this engine
-        computes the SAME adult-equivalent number demography.py already
+        needs no change to self._agriculture.py's signature at all: this engine
+        computes the SAME adult-equivalent number self._demography.py already
         relies on and hands THAT to `Storage.step`'s `population` argument
         instead of `self.population.total`. Checked against SS4.3's own
         worked example: if the harvest fed in is exactly enough to meet
@@ -888,9 +897,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         every year in `_demographic_recovery`, so all three uses of
         "how big is this population" at the agriculture boundary agree.
         """
-        return (population.children * demography.CHILD_CALORIE_EQUIVALENT
+        return (population.children * self._demography.CHILD_CALORIE_EQUIVALENT
                 + population.working_age
-                + population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
+                + population.elderly * self._demography.ELDERLY_CALORIE_EQUIVALENT)
 
     def _farm_year_weather_seed(self, year, region=None):
         """A deterministic seed for one year's harvest weather draw, a pure
@@ -1251,7 +1260,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         THE MECHANISM, IN ONE SENTENCE: draw one independent standard-
         normal number per cell, CORRELATE them by distance using
         `self._farm_weather_correlation_cholesky`, turn each correlated
-        number into a clipped yield multiplier the same way `agriculture.
+        number into a clipped yield multiplier the same way `self._agriculture.
         draw_weather_multiplier` would, and take the arable-land-share-
         weighted average - answering Complaints/50's own question ("over
         what distance does growing-season weather stop agreeing with
@@ -1279,7 +1288,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
            correlation matches how far apart the cells actually are.
         3. Each cell's own multiplier is `clip(1.0 + stdev *
            correlated[i], WEATHER_FLOOR_MULTIPLIER, WEATHER_CEILING_
-           MULTIPLIER)` - the same shape `agriculture.draw_weather_
+           MULTIPLIER)` - the same shape `self._agriculture.draw_weather_
            multiplier` uses (mean-1.0 Gaussian, same two clip constants,
            read directly off that module rather than re-declared here),
            just fed a correlated `z` instead of calling `rng.gauss` itself
@@ -1325,13 +1334,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         mechanism is not meant to touch runs with a single civilisation-wide
         weather draw.
         """
-        soil = agriculture.DEFAULT_SOIL
+        soil = self._agriculture.DEFAULT_SOIL
         stdev = (soil.weather_stdev_fraction if weather_stdev_fraction is None
                  else weather_stdev_fraction)
         cells = self._farm_weather_cells
         if not cells:
             # No usable cells - fall back to a single civilisation-wide draw.
-            return agriculture.draw_weather_multiplier(
+            return self._agriculture.draw_weather_multiplier(
                 random.Random(self._farm_year_weather_seed(year)), stdev)
         independent_draws = [
             random.Random(self._farm_year_weather_seed(year, region=cell.cell_id))
@@ -1343,8 +1352,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             correlated_z = sum(cholesky_lower[row][col] * independent_draws[col]
                                 for col in range(row + 1))
             draw = 1.0 + stdev * correlated_z
-            clipped = max(agriculture.WEATHER_FLOOR_MULTIPLIER,
-                          min(agriculture.WEATHER_CEILING_MULTIPLIER, draw))
+            clipped = max(self._agriculture.WEATHER_FLOOR_MULTIPLIER,
+                          min(self._agriculture.WEATHER_CEILING_MULTIPLIER, draw))
             pooled_multiplier += cell.weight * clipped
         return pooled_multiplier
 
@@ -1352,10 +1361,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         """Advance `self.population` by one year, from a REAL harvest, and
         let population-raising technologies build their queued gain into
         `_pop_scale_base`: the age-cohort model handles the population
-        half, `agriculture.py` the food half.
+        half, `self._agriculture.py` the food half.
 
         Food availability comes from an actual harvest: one year of
-        `agriculture.Storage.step` (land, labour and an independent weather
+        `self._agriculture.Storage.step` (land, labour and an independent weather
         draw), whose `food_available_kcal_per_day` feeds `Population.step`
         directly - never an assumed nutrition_ratio == 1.0 computed
         straight from cohort counts, which would make "is there enough
@@ -1364,23 +1373,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         leave `food_demand_kg` short, which lowers `nutrition_ratio` below
         1.0, which raises mortality and lowers fertility through
         `Population.step`'s own, already-existing machinery - no separate
-        "famine" code path, exactly as demography.py's own module
+        "famine" code path, exactly as self._demography.py's own module
         docstring requires (CLAUDE.md SS3.1).
 
         THE GRANARY CARRIES OVER BETWEEN YEARS (Complaints/45-no-granary-
         so-the-baseline-collapses.md). This matters more than it looks:
         mortality and fertility both floor at nutrition_ratio == 1.0
-        (demography.py's own `NUTRITION_YEAR_TO_YEAR_NOISE_STD` declaration
+        (self._demography.py's own `NUTRITION_YEAR_TO_YEAR_NOISE_STD` declaration
         names the failure mode - Jensen's inequality on a one-sided
         response curve), so a good year's excess calories buy nothing while
         a bad year's shortfall costs real people in full. Averaging weather
         that is symmetric around 1.0 over a population that responds
         asymmetrically to it manufactures a ONE-DIRECTIONAL decline with no
         scripted cause, unless a granary lets a population bank a good
-        year's surplus against a future bad one (see `agriculture.Storage`'s
+        year's surplus against a future bad one (see `self._agriculture.Storage`'s
         own class docstring). This engine's own per-year weather draw
         (`_farm_year_weather_seed`) produces exactly this year-to-year swing
-        independently of demography.py's `jitter` flag (which this engine
+        independently of self._demography.py's `jitter` flag (which this engine
         never sets), so the granary is not optional insurance against a
         feature this engine has turned off: real agrarian societies damp
         exactly this with grain storage, and this wiring has it.
@@ -1389,15 +1398,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         is the persisted state: each year's `Storage` is constructed at
         THAT stock, not zero, and whatever it holds after this year's
         sowing/harvest/consumption/spoilage/reseeding is written back to it
-        - capped at `agriculture.granary_capacity_kg` (see that function
+        - capped at `self._agriculture.granary_capacity_kg` (see that function
         and GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration in
-        agriculture.py for the physical basis of the cap: a granary is a
+        self._agriculture.py for the physical basis of the cap: a granary is a
         built structure with a finite floor area, not an unlimited ledger,
         and the cap is sized off documented historical grain-reserve
         targets, not off whatever makes the population curve look right -
         CLAUDE.md SS3.1). The cap is applied HERE, at the engine boundary,
         never inside `Storage.step` itself, so that class's own one-year
-        conservation identity (sim/tests/test_agriculture.py's own check)
+        conservation identity (sim/tests/test_self._agriculture.py's own check)
         is untouched: what changes is how much of one year's `stock_after_
         kg` the civilisation's actual storage infrastructure lets survive
         into next year's opening stock, not anything about how one year's
@@ -1405,12 +1414,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         WHAT THIS DOES NOT CLAIM TO FIX (Complaints/45's follow-up: "with 0
         large events, you shouldn't have a population decline over a
-        century"). demography.py's `_fertility_multiplier` DOES ramp
+        century"). self._demography.py's `_fertility_multiplier` DOES ramp
         fertility up above nutrition_ratio == 1.0 (a bounded,
         Hutterite-anchored ceiling - see its own docstring and
         FERTILITY_SURPLUS_CEILING_MULTIPLIER's declaration; checked against
         the stakeholder's own biological growth-rate ceiling in
-        sim/tests/test_demography.py's `GrowthCeilingTests`, which measures
+        sim/tests/test_self._demography.py's `GrowthCeilingTests`, which measures
         ~2.1%/year under literally unlimited food against a ~9.06%/year
         ceiling). `_excess_mortality_multiplier` remains floored at 1.0 -
         no sourced biological limit on how far mortality can fall below an
@@ -1437,7 +1446,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
         LABOUR AND LAND UNIT DECISIONS (WIRING_MILESTONE_4.md SS4.1/4.2),
         MADE HERE RATHER THAN LEFT IMPLICIT. The farm workforce is sized
-        every year as `agriculture.farm_workers_fte_for_population` of
+        every year as `self._agriculture.farm_workers_fte_for_population` of
         THIS YEAR'S adult-equivalent population (see
         `_adult_equivalent_population` - resolves SS4.1: no separate
         dependency-ratio correction is needed at this boundary because
@@ -1446,14 +1455,14 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         headcount, is what goes in).
 
         THE TWO LABOUR CONVENTIONS AGRICULTURE.PY USES MUST NOT BE MIXED.
-        `agriculture.py`'s own `gross_harvest_kg` reads `labour_hours` TWICE,
+        `self._agriculture.py`'s own `gross_harvest_kg` reads `labour_hours` TWICE,
         for two DIFFERENT purposes that do not share a convention:
         `_max_hectares_harvestable_by_labour` divides it by `ANNUAL_LABOUR_
         HOURS_PER_FARM_WORKER` (1,400) to recover a worker count for the
         harvest-window cap, while the Cobb-Douglas labour term is calibrated
         against `REFERENCE_LABOUR_HOURS_PER_HECTARE` (150) - HOURS ACTUALLY
         WORKED PER HECTARE, not hours per worker-year - the reference-
-        labour-intensity convention sim/tests/test_agriculture.py's own
+        labour-intensity convention sim/tests/test_self._agriculture.py's own
         HarvestWindowBindsGrossHarvestTests uses. Those two per-worker
         figures (1,400 and, at this module's own binding harvest-window
         ceiling, 150 x 2.1 = 315) disagree by ~4.4x (the module's own
@@ -1477,13 +1486,13 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         exactly, reproducing `fraction_of_population_that_must_farm`'s own
         reference yield bit for bit (before weather is applied) - the
         "right-different" identity the module's own calibration function
-        implies. `agriculture.py`'s `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER`
+        implies. `self._agriculture.py`'s `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER`
         (1,400) still governs `hectares_cropped_per_farm_worker` internally
         (and so still decides whether the harvest window or the annual-
         hours ceiling binds); NEITHER it nor economy.py's own
         `HOURS_PER_PERSON_YEAR` (2,000) is used to build the `labour_hours`
         crossing this boundary - only a worker COUNT crosses it, and
-        agriculture.py's own functions decide, on their own terms, how many
+        self._agriculture.py's own functions decide, on their own terms, how many
         hours that implies for each of the two different things it is used
         for. `farm_land` itself is NOT resized here - see its own
         construction comment in `__init__` for why fixed land, not fixed
@@ -1504,12 +1513,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self._pop_tech_pending = still
 
         adult_equivalent_population = self._adult_equivalent_population(self.population)
-        farm_workers_fte = agriculture.farm_workers_fte_for_population(
+        farm_workers_fte = self._agriculture.farm_workers_fte_for_population(
             adult_equivalent_population)
         hectares_worked = min(
             self.farm_land.hectares,
-            farm_workers_fte * agriculture.hectares_cropped_per_farm_worker())
-        farm_labour_hours = hectares_worked * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+            farm_workers_fte * self._agriculture.hectares_cropped_per_farm_worker())
+        farm_labour_hours = hectares_worked * self._agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
         # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
         # AREA. `Storage.step` charges seed (and next year's seed reservation)
         # against `land.hectares` directly, with no cap of its own - it is
@@ -1524,7 +1533,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # actually-cropped area) avoids that: unworked land beyond that is
         # fallow-by-absence-of-hands, not sown, not seed-costed, not
         # harvested.
-        worked_land = agriculture.Land(hectares_worked, quality=self.farm_land.quality)
+        worked_land = self._agriculture.Land(hectares_worked, quality=self.farm_land.quality)
         # THE GRANARY: opens the year at whatever `self.farm_stock_kg`
         # carried in from last year's close, not at zero - see this
         # method's own docstring section on Complaints/45 for why that
@@ -1541,7 +1550,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # passing `weather_multiplier` - the same "belt and braces" spirit
         # as the civ-wide fallback inside `_pooled_farm_weather_multiplier`
         # itself.
-        farm_storage = agriculture.Storage(
+        farm_storage = self._agriculture.Storage(
             stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(year))
         # `reserve_target_kg` is the SAME figure the carry-forward is capped
         # at below, and passing it is what lets a population eat above bare
@@ -1554,8 +1563,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # this becoming a feast that empties the granary: only grain already
         # beyond the reserve is eaten, which is grain that would otherwise
         # have sat there and spoiled.
-        reserve_target_kg = agriculture.granary_capacity_kg(
-            adult_equivalent_population * agriculture.annual_food_demand_kg_per_person())
+        reserve_target_kg = self._agriculture.granary_capacity_kg(
+            adult_equivalent_population * self._agriculture.annual_food_demand_kg_per_person())
         # THE PER-REGION WEATHER DRAW (Complaints/closed/47-one-weather-
         # draw-for-a-continent.md). `_pooled_farm_weather_multiplier`
         # draws one independent weather multiplier per home region this
@@ -1565,7 +1574,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # reads from (never modifies). Passed in explicitly rather than
         # left for `Storage.step` to draw internally, which is what turns
         # "one weather draw for a continent" into "N independent draws,
-        # pooled" without agriculture.py needing to know anything about
+        # pooled" without self._agriculture.py needing to know anything about
         # civilisations, home regions or land shares at all - it just
         # receives a number, exactly as it always has.
         farm_year = farm_storage.step(
@@ -1576,12 +1585,12 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # CLOSE THE YEAR: write what this year's Storage call actually
         # leaves on hand back as next year's opening stock, capped at what
         # this civilisation's storage infrastructure can physically hold
-        # (agriculture.granary_capacity_kg - see GRANARY_CAPACITY_YEARS_OF_
-        # DEMAND's own declaration in agriculture.py for the physical basis
+        # (self._agriculture.granary_capacity_kg - see GRANARY_CAPACITY_YEARS_OF_
+        # DEMAND's own declaration in self._agriculture.py for the physical basis
         # of the cap, and this method's docstring for why the cap is
         # applied HERE rather than inside Storage.step).
         #
-        # `agriculture.stock_to_carry_forward_kg`, NOT `farm_year.stock_
+        # `self._agriculture.stock_to_carry_forward_kg`, NOT `farm_year.stock_
         # after_kg` ALONE - see that function's own docstring and Storage.
         # step's docstring section on carrying stock across years for why:
         # `stock_after_kg` has already had NEXT year's seed reservation
@@ -1600,9 +1609,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # and genuinely carries into next year's sowing: Storage's own
         # documented "one bad harvest becomes two" mechanism, operating
         # across years exactly as its class docstring intends.
-        capacity_kg = agriculture.granary_capacity_kg(farm_year.food_demand_kg)
+        capacity_kg = self._agriculture.granary_capacity_kg(farm_year.food_demand_kg)
         self.farm_stock_kg = min(
-            agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
+            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that
@@ -1625,9 +1634,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         """WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-
         young.md): this civilisation's CURRENT disease burden, 1.0 being
         the full pre-industrial infectious environment sim/world/
-        demography.py already assumes by default, 0.0 being clean water,
+        self._demography.py already assumes by default, 0.0 being clean water,
         sanitation, germ-theory hygiene and vaccination all present -
-        `demography.py`'s own module docstring names the derivation this
+        `self._demography.py`'s own module docstring names the derivation this
         reuses rather than inventing: sum the `population` weights of
         whichever of `DISEASE_BURDEN_TECH_IDS` (above) this civilisation
         currently holds (`self.has`, which `starting_techs` and completed
@@ -1656,17 +1665,17 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         Clamped to [0, 1] defensively (a total of exactly 0.15 measured
         directly against `_TECH_EFFECTS.json` today makes this unreachable
         in practice, but a future edit to that file changing the eight
-        weights' sum should not be able to hand `demography.Population.
+        weights' sum should not be able to hand `self._demography.Population.
         step` a burden outside the range it declares valid).
         """
         unlocked_weight = sum(
-            TECH_EFFECTS[tech_id].get("population", 0.0)
+            self._tech_effects[tech_id].get("population", 0.0)
             for tech_id in self.DISEASE_BURDEN_TECH_IDS if self.has(tech_id))
         total_weight = sum(
-            TECH_EFFECTS[tech_id].get("population", 0.0)
+            self._tech_effects[tech_id].get("population", 0.0)
             for tech_id in self.DISEASE_BURDEN_TECH_IDS)
         if total_weight <= 0.0:
-            return demography.PRE_INDUSTRIAL_DISEASE_BURDEN
+            return self._demography.PRE_INDUSTRIAL_DISEASE_BURDEN
         return max(0.0, min(1.0, 1.0 - unlocked_weight / total_weight))
 
     def _refresh_demographic_indexes(self, year):
@@ -2243,6 +2252,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._step_staff()                     # 1.  staff, attrition
         self._step_money()                     # 2.  money (and 2c. threshold goals)
         if self._step_dated_shocks():          # 3.  dated shocks
+            if self.debug:
+                self.verify_step_invariants()
             return
         self._step_teach_trades()              # 4a. teach the trades this society does not have
         self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
@@ -2263,6 +2274,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self._random_events(self.state.scenario.year)
 
         self.state.scenario.year += 1
+        if self.debug:
+            self.verify_step_invariants()
 
     # ---- THE YEAR'S PHASES ------------------------------------------------
     # _step_apprenticeships through _step_founder_mortality - the fourteen
