@@ -108,7 +108,7 @@ def _check_save_shape(blob):
 
 def _check_save_version(blob):
     """None if `blob`'s version stamp is a whole number matching the one this
-    build writes or migrates; otherwise the refusal message.
+    build writes; otherwise the refusal message.
     """
     if not isinstance(blob.get("_version"), int):
         return "this save is corrupt: '_version' should be a whole number"
@@ -202,50 +202,8 @@ def _check_save_trade_name_sets(blob):
     return None
 
 
-def _migrate_v2_to_v3(blob):
-	"""Migrate legacy flat v2 save format to nested v3 state schema.
-
-	The legacy v2 save format stored all persistent fields at the root of a single
-	JSON dictionary. The v3 schema organizes these fields into 7 subsystem state
-	sections (household, projects, economy, governance, founder, scenario, population)
-	along with top-level metadata fields.
-	"""
-	if not isinstance(blob, dict) or blob.get("_version") != 2 or "household" in blob:
-		return blob
-
-	import dataclasses
-	from sim.engine import state as state_module
-
-	new_blob = {}
-	for meta_field in REQUIRED_METADATA_FIELDS:
-		if meta_field in blob:
-			new_blob[meta_field] = blob[meta_field]
-	new_blob["_version"] = SAVE_VERSION
-
-	subsystem_mappings = (
-		("household", state_module.HouseholdState),
-		("projects", state_module.ProjectsState),
-		("economy", state_module.EconomyState),
-		("governance", state_module.GovernanceState),
-		("founder", state_module.FounderState),
-		("scenario", state_module.ScenarioState),
-		("population", state_module.PopulationState),
-	)
-
-	for section_name, state_cls in subsystem_mappings:
-		section_dict = {}
-		for f in dataclasses.fields(state_cls):
-			if f.name in blob:
-				section_dict[f.name] = blob[f.name]
-		new_blob[section_name] = section_dict
-
-	return new_blob
-
-
 def _validate_save(blob, sim):
 	"""Validate save file format and contents before mutating simulation."""
-	if isinstance(blob, dict) and blob.get("_version") == 2:
-		blob = _migrate_v2_to_v3(blob)
 	message = _check_save_shape(blob)
 	if message:
 		return message
@@ -301,8 +259,6 @@ def load_state(sim, path):
 	"""
 	with open(path) as f:
 		blob = json.load(f)
-	if isinstance(blob, dict) and blob.get("_version") == 2:
-		blob = _migrate_v2_to_v3(blob)
 	bad = _validate_save(blob, sim)
 	if bad:
 		raise ValueError(bad)

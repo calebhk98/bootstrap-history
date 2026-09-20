@@ -1034,14 +1034,14 @@ The running simulation owns a live `SimulationState` instance (`sim.state`) whic
 - Full backward-compatible dictionary mapping interface (`proj["ph_left"]`, `proj.get(...)`, `.items()`, `|=`, `.pop()`, etc.)
 - Automatic cache invalidation: any mutation to an active project's fields or nested dicts automatically bubbles up and increments `sim.household._active_ver`, invalidating memoized revenue and material demand caches.
 
-### Automatic Serialization and Migration
+### Automatic Serialization (No Legacy Migration)
 
 Save/load is derived directly from authoritative state definitions:
 
 - `SAVE_FIELDS`: Generated dynamically from dataclass fields (`get_save_fields()`), guaranteeing zero field drift without maintaining handwritten field lists.
 - `serialize_state`: Recursively serializes dataclasses, typed sets (`{"__set__": [...]}`), Counter/defaultdict, and `ActiveProjectState`.
 - `deserialize_state`: Reconstructs typed dataclasses and runtime invalidating wrappers (`_InvalidatingSet`, `_InvalidatingDict`).
-- `_migrate_v2_to_v3`: Transparently partitions flat legacy v2 save files into the 7 modular state sections, ensuring complete backward compatibility for historical saves.
+- No save migration: Saves from older format versions are refused with a clear error per project policy (CLAUDE.md §3.5), avoiding migration shims and format drift.
 
 ### 3. Compatibility Façade & Invalidation
 

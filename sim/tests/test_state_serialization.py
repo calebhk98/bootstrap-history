@@ -344,3 +344,161 @@ def _test_v3_save_shape_validation():
 _ok, _detail = _test_v3_save_shape_validation()
 check("v3 save shape validation and rejection", _ok, _detail)
 
+
+def _test_no_v2_migration():
+	"""Verify _migrate_v2_to_v3 does not exist in proto.saveload per CLAUDE.md §3.5."""
+	from sim.engine.proto import saveload as S
+	if hasattr(S, "_migrate_v2_to_v3"):
+		return False, "_migrate_v2_to_v3 still exists in sim.engine.proto.saveload"
+	return True, "No _migrate_v2_to_v3 function verified"
+
+
+_ok, _detail = _test_no_v2_migration()
+check("No _migrate_v2_to_v3 migration helper", _ok, _detail)
+
+
+def _test_flat_legacy_v2_save_rejected_by_validate():
+	"""Verify a legacy flat v2 save is rejected by _validate_save without migration."""
+	from sim.engine.proto.saveload import _validate_save
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	flat_v2_blob = {
+		"_version": 2,
+		"_civ": "rome_100ad",
+		"_goal": "printing_press",
+		"_civ_live": {},
+		"_weights": {},
+		"_rng": [3, [0] * 624, 0],
+		"capital": 500.0,
+		"active": {},
+		"done": {"__set__": []},
+	}
+	err = _validate_save(flat_v2_blob, sim)
+	if not err:
+		return False, "Flat v2 save was unexpectedly accepted by _validate_save"
+	return True, "Flat legacy v2 save rejected by _validate_save"
+
+
+_ok, _detail = _test_flat_legacy_v2_save_rejected_by_validate()
+check("Flat legacy v2 save rejected by _validate_save", _ok, _detail)
+
+
+def _test_flat_legacy_v2_save_rejected_by_load_state():
+	"""Verify load_state raises ValueError on legacy v2 save and leaves sim untouched."""
+	import json
+	from sim.engine.proto.saveload import load_state
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	initial_capital = sim.household.capital
+	flat_v2_blob = {
+		"_version": 2,
+		"_civ": "rome_100ad",
+		"_goal": "printing_press",
+		"_civ_live": {},
+		"_weights": {},
+		"_rng": [3, [0] * 624, 0],
+		"capital": 999999.0,
+		"active": {},
+		"done": {"__set__": []},
+	}
+	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+		save_path = f.name
+	try:
+		with open(save_path, "w") as handle:
+			json.dump(flat_v2_blob, handle)
+		raised_err = None
+		try:
+			load_state(sim, save_path)
+		except ValueError as err:
+			raised_err = str(err)
+		if raised_err is None:
+			return False, "load_state unexpectedly succeeded on flat v2 save file"
+		# Verify sim state was left completely untouched
+		if sim.household.capital != initial_capital:
+			return False, f"sim capital was mutated despite load failure: {sim.household.capital} != {initial_capital}"
+	finally:
+		if os.path.exists(save_path):
+			os.remove(save_path)
+	return True, "load_state rejects flat legacy v2 save and preserves sim state"
+
+
+_ok, _detail = _test_flat_legacy_v2_save_rejected_by_load_state()
+check("load_state rejects flat legacy v2 save and preserves state", _ok, _detail)
+
+
+def _test_v2_stamped_v3_structure_rejected():
+	"""Verify a v3-structured save with _version == 2 is rejected with the non-migrated message."""
+	import json
+	from sim.engine.proto.saveload import _validate_save, save_state
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+		save_path = f.name
+	try:
+		save_state(sim, save_path)
+		with open(save_path) as handle:
+			blob = json.load(handle)
+		blob["_version"] = 2
+		err = _validate_save(blob, sim)
+		if not err or "not migrated" not in err:
+			return False, f"Expected 'not migrated' in refusal error, got: {err}"
+	finally:
+		if os.path.exists(save_path):
+			os.remove(save_path)
+	return True, "v2-stamped v3 save rejected with non-migrated message"
+
+
+_ok, _detail = _test_v2_stamped_v3_structure_rejected()
+check("v2-stamped v3 save rejected with non-migrated message", _ok, _detail)
+
+
+def _test_older_version_v1_rejected():
+	"""Verify a save with _version == 1 is rejected rather than migrated."""
+	import json
+	from sim.engine.proto.saveload import _validate_save, save_state
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+		save_path = f.name
+	try:
+		save_state(sim, save_path)
+		with open(save_path) as handle:
+			blob = json.load(handle)
+		blob["_version"] = 1
+		err = _validate_save(blob, sim)
+		if not err or "Saved runs are not migrated" not in err:
+			return False, f"Expected 'Saved runs are not migrated' in error, got: {err}"
+	finally:
+		if os.path.exists(save_path):
+			os.remove(save_path)
+	return True, "Older format version 1 rejected properly"
+
+
+_ok, _detail = _test_older_version_v1_rejected()
+check("Older format version 1 rejected properly", _ok, _detail)
+
+
+def _test_non_integer_version_rejected():
+	"""Verify saves with non-integer versions (string, float) are rejected as corrupt."""
+	import json
+	from sim.engine.proto.saveload import _validate_save, save_state
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+		save_path = f.name
+	try:
+		save_state(sim, save_path)
+		with open(save_path) as handle:
+			valid_blob = json.load(handle)
+		for bad_ver in ("2", 2.0):
+			blob = dict(valid_blob)
+			blob["_version"] = bad_ver
+			err = _validate_save(blob, sim)
+			if not err or "whole number" not in err:
+				return False, f"Non-integer _version={bad_ver!r} was not rejected with 'whole number': {err}"
+	finally:
+		if os.path.exists(save_path):
+			os.remove(save_path)
+	return True, "Non-integer version values rejected as corrupt"
+
+
+_ok, _detail = _test_non_integer_version_rejected()
+check("Non-integer version values rejected as corrupt", _ok, _detail)
+
+
+
