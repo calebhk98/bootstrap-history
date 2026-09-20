@@ -39,10 +39,10 @@ class StepPhasesMixin:
         if self.state.household.training:
             still = []
             for row in self.state.household.training:
-                cap, ready = row[0], row[1]
+                cap, completion_year = row[0], row[1]
                 trade = row[2] if len(row) > 2 else None
                 count = row[3] if len(row) > 3 else 0.0
-                if self.state.scenario.year >= ready:
+                if self.state.scenario.year >= completion_year:
                     if trade:
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
@@ -526,7 +526,7 @@ class StepPhasesMixin:
                 return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
-            for node_id in self.state.projects.active:
+            for node_id in self.state.projects.active_keys_sorted():
                 for trade_id in self.nodes[node_id]["lab"]:
                     if _market_supply(trade_id) <= 0.0:
                         want[trade_id] = want.get(trade_id, 0) + 500
@@ -810,7 +810,7 @@ class StepPhasesMixin:
                 # time it runs - see the comment there.
                 self.state.projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
                                       cost_left=self.project_cost(node_id),
-                                      lab_left=dict(node["lab"]))
+                                      lab_left=dict(node["lab"]), status="ACTIVE")
                 _non_bountied_active += 1
                 _room = self.funding_capacity() - self.committed_spend()
         return pool, hired_left

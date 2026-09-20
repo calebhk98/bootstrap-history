@@ -255,7 +255,7 @@ class MaterialSupplyMixin:
         cached = getattr(MaterialSupplyMixin, "_material_commod_map_cache", None)
         if cached is None:
             cached = {}
-            for commodity_id, commodity in self._commodity_ledger().commodities.items():
+            for commodity_id, commodity in sorted(self._commodity_ledger().commodities.items()):
                 for material_key in commodity.get("material_keys", []):
                     cached[material_key] = commodity_id
             MaterialSupplyMixin._material_commod_map_cache = cached
@@ -471,7 +471,7 @@ class MaterialSupplyMixin:
                 continue
             best, pick = 0.0, None
             projects = self.state.projects
-            for opt, qual in (group.get("options") or {}).items():
+            for opt, qual in sorted((group.get("options") or {}).items()):
                 have = opt in projects.done or opt not in self.nodes
                 if have and float(qual) > best:
                     best, pick = float(qual), opt
@@ -496,11 +496,11 @@ class MaterialSupplyMixin:
             return cache[1].copy()
 
         demand = collections.Counter()
-        for node_id in sorted(projects.active):
+        for node_id in projects.active_keys_sorted():
             node = self.nodes[node_id]
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             coke = self.chosen_fuel(node_id) == "coke"
-            for material, quantity in node["mat"].items():
+            for material, quantity in sorted(node["mat"].items()):
                 if coke and material in ("charcoal_kg", "firewood_kg"):
                     demand["coal_kg"] += float(quantity) * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE
                     continue
@@ -514,7 +514,7 @@ class MaterialSupplyMixin:
                 continue
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             coke = self.chosen_fuel(node_id) == "coke"
-            for material, quantity in node["mat"].items():
+            for material, quantity in sorted(node["mat"].items()):
                 if coke and material in ("charcoal_kg", "firewood_kg"):
                     demand["coal_kg"] += (self.STANDING_MATERIAL_DRAW_SHARE * float(quantity)
                                            * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE)
@@ -962,4 +962,3 @@ class MaterialSupplyMixin:
         if economy.nitre_bed_m2 > 0:
             out.add(("saltpetre", "nitre"))
         return out
-

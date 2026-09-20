@@ -249,7 +249,7 @@
    "scribe": 100
   },
   "mat": {
-   "paper": 50
+   "paper_kg": 50
   },
   "build_yrs": 0.2,
   "adopt_yrs": 15,
@@ -934,7 +934,7 @@
    "scribe": 80
   },
   "mat": {
-   "paper": 200
+   "paper_kg": 200
   },
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -987,7 +987,7 @@
    "scribe": 100
   },
   "mat": {
-   "paper": 80
+   "paper_kg": 80
   },
   "build_yrs": 0.3,
   "adopt_yrs": 2,
@@ -1480,7 +1480,7 @@
    "engineer": 200
   },
   "mat": {
-   "paper": 10
+   "paper_kg": 10
   },
   "build_yrs": 0.2,
   "adopt_yrs": 5,
@@ -2186,7 +2186,7 @@
   "kb": "89_remaining_arts.md#sc2_physics_quantum_photon",
   "ph": 110,
   "lab": {
-   "physicist": 210,
+   "scholar": 210,
    "optician": 100
   },
   "mat": {
@@ -2487,7 +2487,7 @@
    "administrator": 200
   },
   "mat": {
-   "mat_paper": 100
+   "paper_kg": 100
   },
   "build_yrs": 0.3,
   "adopt_yrs": 5,
@@ -2513,7 +2513,7 @@
    "scribe": 150
   },
   "mat": {
-   "mat_paper": 500
+   "paper_kg": 500
   },
   "build_yrs": 0.3,
   "adopt_yrs": 6,
@@ -2589,7 +2589,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 500
+   "paper_kg": 500
   },
   "build_yrs": 1,
   "adopt_yrs": 8,
@@ -2639,7 +2639,7 @@
    "educator": 160
   },
   "mat": {
-   "mat_paper": 100
+   "paper_kg": 100
   },
   "build_yrs": 0.2,
   "adopt_yrs": 8,

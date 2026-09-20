@@ -80,7 +80,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 8,
+   "iron_bar_kg": 8,
    "wood_kg": 20
   },
   "cap": 0,
@@ -208,7 +208,7 @@
   },
   "mat": {
    "wood_kg": 12,
-   "mat_wrought_iron": 6
+   "iron_bar_kg": 6
   },
   "cap": 0,
   "build_yrs": 0.25,
@@ -257,7 +257,7 @@
    "carpenter": 40
   },
   "mat": {
-   "mat_wrought_iron": 6,
+   "iron_bar_kg": 6,
    "wood_kg": 8
   },
   "cap": "cap_tol_1mm",
@@ -280,7 +280,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 8,
+   "iron_bar_kg": 8,
    "wood_kg": 12
   },
   "cap": "cap_tol_1mm",
@@ -305,7 +305,7 @@
   },
   "mat": {
    "wood_kg": 30,
-   "mat_wrought_iron": 15
+   "iron_bar_kg": 15
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.4,
@@ -331,8 +331,8 @@
    "smith": 120
   },
   "mat": {
-   "mat_wrought_iron": 60,
-   "mat_cast_iron": 80,
+   "iron_bar_kg": 60,
+   "cast_iron_kg": 80,
    "wood_kg": 50
   },
   "cap": "cap_tol_100um",
@@ -358,8 +358,8 @@
    "smith": 160
   },
   "mat": {
-   "mat_cast_iron": 120,
-   "mat_wrought_iron": 80,
+   "cast_iron_kg": 120,
+   "iron_bar_kg": 80,
    "wood_kg": 80
   },
   "cap": "cap_tol_100um",
@@ -385,8 +385,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 60
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -408,7 +408,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 30,
+   "iron_bar_kg": 30,
    "wood_kg": 25
   },
   "cap": "cap_tol_1mm",
@@ -485,7 +485,7 @@
    "artisan": 50
   },
   "mat": {
-   "mat_wrought_iron": 2
+   "iron_bar_kg": 2
   },
   "cap": 0,
   "build_yrs": 0.1,
@@ -533,8 +533,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_cast_iron": 60,
-   "mat_wrought_iron": 40,
+   "cast_iron_kg": 60,
+   "iron_bar_kg": 40,
    "wood_kg": 30
   },
   "cap": "cap_tol_100um",
@@ -562,8 +562,8 @@
    "smith": 140
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 80,
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 80,
    "wood_kg": 40
   },
   "cap": "cap_tol_100um",
@@ -588,7 +588,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_paper": 50
+   "paper_kg": 50
   },
   "cap": 0,
   "build_yrs": 0.2,
@@ -612,7 +612,7 @@
   },
   "mat": {
    "wood_kg": 8,
-   "mat_wrought_iron": 3
+   "iron_bar_kg": 3
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.15,
@@ -638,8 +638,8 @@
    "smith": 80
   },
   "mat": {
-   "mat_cast_iron": 40,
-   "mat_wrought_iron": 30
+   "cast_iron_kg": 40,
+   "iron_bar_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -661,8 +661,8 @@
    "engineer": 60
   },
   "mat": {
-   "mat_cast_iron": 20,
-   "mat_wrought_iron": 15
+   "cast_iron_kg": 20,
+   "iron_bar_kg": 15
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -684,8 +684,8 @@
    "engineer": 60
   },
   "mat": {
-   "mat_cast_iron": 20,
-   "mat_wrought_iron": 15
+   "cast_iron_kg": 20,
+   "iron_bar_kg": 15
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -707,7 +707,7 @@
    "smith": 40
   },
   "mat": {
-   "mat_wrought_iron": 4
+   "iron_bar_kg": 4
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.2,
@@ -750,7 +750,7 @@
   },
   "mat": {
    "wood_kg": 20,
-   "mat_wrought_iron": 8
+   "iron_bar_kg": 8
   },
   "cap": 0,
   "build_yrs": 0.25,
@@ -815,8 +815,8 @@
    "smith": 140
   },
   "mat": {
-   "mat_cast_iron": 150,
-   "mat_wrought_iron": 100
+   "cast_iron_kg": 150,
+   "iron_bar_kg": 100
   },
   "cap": "cap_tol_100um",
   "build_yrs": 1,
@@ -840,8 +840,8 @@
    "engineer": 120
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_wrought_iron": 60
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -866,8 +866,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_wrought_iron": 60,
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 60,
    "wood_kg": 40
   },
   "cap": "cap_tol_100um",
@@ -894,8 +894,8 @@
    "smith": 80
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 60
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -921,8 +921,8 @@
    "smith": 90
   },
   "mat": {
-   "mat_cast_iron": 120,
-   "mat_wrought_iron": 70
+   "cast_iron_kg": 120,
+   "iron_bar_kg": 70
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -946,7 +946,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_wrought_iron": 8
+   "iron_bar_kg": 8
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.2,
@@ -1033,8 +1033,8 @@
    "smith": 60
   },
   "mat": {
-   "mat_cast_iron": 30,
-   "mat_wrought_iron": 20
+   "cast_iron_kg": 30,
+   "iron_bar_kg": 20
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -1059,8 +1059,8 @@
    "smith": 70
   },
   "mat": {
-   "mat_cast_iron": 40,
-   "mat_wrought_iron": 25
+   "cast_iron_kg": 40,
+   "iron_bar_kg": 25
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -1084,8 +1084,8 @@
    "engineer": 70
   },
   "mat": {
-   "mat_cast_iron": 30,
-   "mat_wrought_iron": 20
+   "cast_iron_kg": 30,
+   "iron_bar_kg": 20
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.3,
@@ -1110,8 +1110,8 @@
    "smith": 60
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_wrought_iron": 40
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 40
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -1223,7 +1223,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_chlorine": 8
+   "bleach_kg": 8
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1380,8 +1380,8 @@
    "engraver": 100
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 40
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 40
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -1407,7 +1407,7 @@
    "artisan": 140
   },
   "mat": {
-   "mat_paper": 20,
+   "paper_kg": 20,
    "mat_silk": 10
   },
   "cap": "cap_tol_100um",
@@ -1833,7 +1833,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_copper": 20,
+   "copper_kg": 20,
    "mat_ammonia": 40
   },
   "cap": "cap_heat_1100",
@@ -2039,7 +2039,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 3
+   "iron_bar_kg": 3
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.15,
@@ -2133,8 +2133,8 @@
    "smith": 80
   },
   "mat": {
-   "mat_cast_iron": 40,
-   "mat_wrought_iron": 30
+   "cast_iron_kg": 40,
+   "iron_bar_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -2180,8 +2180,8 @@
    "smith": 80
   },
   "mat": {
-   "mat_cast_iron": 50,
-   "mat_wrought_iron": 30
+   "cast_iron_kg": 50,
+   "iron_bar_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -2204,7 +2204,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_paper": 30
+   "paper_kg": 30
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -2249,7 +2249,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_paper": 20
+   "paper_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -2272,7 +2272,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_brass": 60
+   "brass_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -2297,7 +2297,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_brass": 15
+   "brass_kg": 15
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -2319,7 +2319,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 8
+   "iron_bar_kg": 8
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.2,
@@ -2345,7 +2345,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_natural_rubber": 30
+   "rubber_kg": 30
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.4,
@@ -2446,8 +2446,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_cast_iron": 60,
-   "mat_wrought_iron": 40,
+   "cast_iron_kg": 60,
+   "iron_bar_kg": 40,
    "wood_kg": 20
   },
   "cap": "cap_tol_100um",
@@ -2474,8 +2474,8 @@
    "smith": 120
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 60
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -2519,8 +2519,8 @@
    "smith": 80
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_wrought_iron": 50
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 50
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -2542,7 +2542,7 @@
    "artisan": 70
   },
   "mat": {
-   "mat_paper": 30
+   "paper_kg": 30
   },
   "cap": 0,
   "build_yrs": 0.2,
@@ -2602,7 +2602,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_alum": 40
+   "alum_kg": 40
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.4,
@@ -2667,7 +2667,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_cast_iron": 40
+   "cast_iron_kg": 40
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -2692,8 +2692,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_wrought_iron": 60
+   "cast_iron_kg": 100,
+   "iron_bar_kg": 60
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -2742,7 +2742,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_natural_rubber": 40
+   "rubber_kg": 40
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.5,
@@ -2814,8 +2814,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_wrought_iron": 15,
-   "mat_brass": 20
+   "iron_bar_kg": 15,
+   "brass_kg": 20
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -3037,7 +3037,7 @@
    "engineer": 70
   },
   "mat": {
-   "mat_celluloid": 5
+   "celluloid_kg": 5
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.2,
@@ -3057,7 +3057,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 1
+   "iron_bar_kg": 1
   },
   "cap": 0,
   "build_yrs": 0.1,
@@ -3077,7 +3077,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_wrought_iron": 1
+   "iron_bar_kg": 1
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.1,
@@ -3100,7 +3100,7 @@
   },
   "mat": {
    "horn_kg": 2,
-   "mat_brass": 3
+   "brass_kg": 3
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.2,
@@ -3123,7 +3123,7 @@
    "engraver": 60
   },
   "mat": {
-   "mat_brass": 15,
+   "brass_kg": 15,
    "mat_gold": 5
   },
   "cap": "cap_tol_100um",
@@ -3147,7 +3147,7 @@
    "smith": 80
   },
   "mat": {
-   "mat_brass": 20,
+   "brass_kg": 20,
    "mat_rubber": 10
   },
   "cap": "cap_tol_100um",
@@ -3222,7 +3222,7 @@
    "engineer": 70
   },
   "mat": {
-   "mat_natural_rubber": 30
+   "rubber_kg": 30
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.3,
@@ -3246,7 +3246,7 @@
    "smith": 70
   },
   "mat": {
-   "mat_wrought_iron": 3
+   "iron_bar_kg": 3
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.2,
@@ -3270,8 +3270,8 @@
    "engineer": 100
   },
   "mat": {
-   "mat_cast_iron": 40,
-   "mat_brass": 20
+   "cast_iron_kg": 40,
+   "brass_kg": 20
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -3294,7 +3294,7 @@
    "smith": 70
   },
   "mat": {
-   "mat_brass": 3
+   "brass_kg": 3
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.2,
@@ -3316,7 +3316,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_paper": 50
+   "paper_kg": 50
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -3362,7 +3362,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_paper": 20
+   "paper_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -3412,7 +3412,7 @@
    "artisan": 150
   },
   "mat": {
-   "mat_paper": 50,
+   "paper_kg": 50,
    "wood_kg": 20
   },
   "cap": 0,
@@ -3435,7 +3435,7 @@
    "artisan": 140
   },
   "mat": {
-   "mat_paper": 40,
+   "paper_kg": 40,
    "wood_kg": 15
   },
   "cap": "cap_tol_1mm",
@@ -3506,7 +3506,7 @@
    "engineer": 110
   },
   "mat": {
-   "mat_brass": 30,
+   "brass_kg": 30,
    "mat_tin_plate": 40
   },
   "cap": "cap_tol_100um",
@@ -3560,7 +3560,7 @@
    "engineer": 130
   },
   "mat": {
-   "mat_brass": 40,
+   "brass_kg": 40,
    "mat_glass_soda": 30
   },
   "cap": "cap_tol_100um",
@@ -3587,7 +3587,7 @@
    "engineer": 140
   },
   "mat": {
-   "mat_brass": 50,
+   "brass_kg": 50,
    "mat_tin_plate": 80
   },
   "cap": "cap_tol_100um",
@@ -3614,7 +3614,7 @@
    "electrician": 100
   },
   "mat": {
-   "mat_brass": 60,
+   "brass_kg": 60,
    "mat_wood": 40
   },
   "cap": "cap_tol_100um",
@@ -3680,7 +3680,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_paper": 80
+   "paper_kg": 80
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -3702,7 +3702,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_paper": 150
+   "paper_kg": 150
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -3727,7 +3727,7 @@
    "engineer": 100
   },
   "mat": {
-   "mat_paper": 180
+   "paper_kg": 180
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -3786,7 +3786,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_brass": 30
+   "brass_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.3,
@@ -3811,7 +3811,7 @@
    "engineer": 100
   },
   "mat": {
-   "mat_lead": 50
+   "lead_kg": 50
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,

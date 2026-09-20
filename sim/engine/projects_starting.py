@@ -205,7 +205,8 @@ class StartingMixin:
             return False
         household.costCapital(price)
         household.bounties_paid += 1
-        projects.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
+        projects.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE,
+                                        yrs=0.0, spent=price, status="ACTIVE")
         projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
@@ -879,7 +880,7 @@ class StartingMixin:
         # runs, is what fixed it.
         projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0,
                               spent=_already, cost_left=price,
-                              lab_left=dict(node["lab"]))
+                              lab_left=dict(node["lab"]), status="ACTIVE")
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the
@@ -927,4 +928,3 @@ class StartingMixin:
                       "credit and comes off the bill if you begin again; the "
                       "hours are gone" % "{:,.0f}".format(kept)
                       if kept > 0.5 else "stopped; nothing had been paid yet")
-

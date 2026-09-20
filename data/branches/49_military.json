@@ -109,7 +109,7 @@
    "mason": 80
   },
   "mat": {
-   "mat_wrought_iron": 200,
+   "iron_bar_kg": 200,
    "mat_wood": 400,
    "mat_stone": 1000
   },
@@ -143,10 +143,10 @@
    "mason": 100
   },
   "mat": {
-   "mat_wrought_iron": 250,
+   "iron_bar_kg": 250,
    "mat_wood": 500,
    "mat_stone": 1200,
-   "mat_copper": 50
+   "copper_kg": 50
   },
   "cap": 1500,
   "up": 300,
@@ -282,7 +282,7 @@
    "machinist": 40
   },
   "mat": {
-   "mat_wrought_iron": 40,
+   "iron_bar_kg": 40,
    "mat_spring_steel": 10
   },
   "cap": 0,
@@ -319,7 +319,7 @@
   "mat": {
    "mat_steel": 120,
    "mat_spring_steel": 30,
-   "mat_wrought_iron": 60
+   "iron_bar_kg": 60
   },
   "cap": 0,
   "up": 0,
@@ -354,7 +354,7 @@
   },
   "mat": {
    "mat_mercury": 2,
-   "mat_copper": 5,
+   "copper_kg": 5,
    "fulminate_kg": 0.5
   },
   "cap": 0,
@@ -387,7 +387,7 @@
    "artisan": 50
   },
   "mat": {
-   "mat_paper": 1,
+   "paper_kg": 1,
    "saltpetre_kg": 0.3,
    "lead_ball_kg": 0.05
   },
@@ -423,7 +423,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_brass": 10,
+   "brass_kg": 10,
    "lead_kg": 5,
    "saltpetre_kg": 0.5
   },
@@ -458,8 +458,8 @@
    "chemist": 60
   },
   "mat": {
-   "mat_brass": 1,
-   "mat_copper": 1,
+   "brass_kg": 1,
+   "copper_kg": 1,
    "fulminate_kg": 0.1
   },
   "cap": 0,
@@ -494,7 +494,7 @@
   },
   "mat": {
    "mat_steel": 200,
-   "mat_wrought_iron": 100
+   "iron_bar_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -562,7 +562,7 @@
   },
   "mat": {
    "mat_steel": 300,
-   "mat_wrought_iron": 150,
+   "iron_bar_kg": 150,
    "mat_spring_steel": 40
   },
   "cap": 0,
@@ -598,7 +598,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_bulk_steel": 350,
+   "steel_plate_kg": 350,
    "mat_spring_steel": 60
   },
   "cap": 0,
@@ -668,7 +668,7 @@
   },
   "mat": {
    "mat_steel": 320,
-   "mat_wrought_iron": 140,
+   "iron_bar_kg": 140,
    "mat_spring_steel": 35
   },
   "cap": 0,
@@ -704,7 +704,7 @@
    "smith": 90
   },
   "mat": {
-   "mat_bulk_steel": 400,
+   "steel_plate_kg": 400,
    "mat_spring_steel": 80
   },
   "cap": 0,
@@ -741,7 +741,7 @@
    "smith": 120
   },
   "mat": {
-   "mat_bulk_steel": 450,
+   "steel_plate_kg": 450,
    "mat_spring_steel": 100
   },
   "cap": 0,
@@ -776,7 +776,7 @@
    "engineer": 120
   },
   "mat": {
-   "mat_bulk_steel": 1200,
+   "steel_plate_kg": 1200,
    "mat_spring_steel": 200
   },
   "cap": 0,
@@ -811,7 +811,7 @@
    "engineer": 110
   },
   "mat": {
-   "mat_bulk_steel": 1100,
+   "steel_plate_kg": 1100,
    "mat_spring_steel": 180
   },
   "cap": 0,
@@ -844,8 +844,8 @@
    "machinist": 80
   },
   "mat": {
-   "mat_bulk_steel": 150,
-   "mat_copper": 80
+   "steel_plate_kg": 150,
+   "copper_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -878,7 +878,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_bulk_steel": 80,
+   "steel_plate_kg": 80,
    "mat_spring_steel": 40
   },
   "cap": 0,
@@ -1049,7 +1049,7 @@
   },
   "mat": {
    "mat_wood": 800,
-   "mat_wrought_iron": 300
+   "iron_bar_kg": 300
   },
   "cap": 0,
   "up": 0,
@@ -1081,7 +1081,7 @@
    "smith": 80
   },
   "mat": {
-   "mat_bulk_steel": 400,
+   "steel_plate_kg": 400,
    "mat_spring_steel": 100
   },
   "cap": 0,
@@ -1116,7 +1116,7 @@
    "engineer": 60
   },
   "mat": {
-   "mat_bulk_steel": 200
+   "steel_plate_kg": 200
   },
   "cap": 0,
   "up": 0,
@@ -1148,7 +1148,7 @@
    "smith": 50
   },
   "mat": {
-   "mat_cast_iron": 50
+   "cast_iron_kg": 50
   },
   "cap": 0,
   "up": 0,
@@ -1182,7 +1182,7 @@
    "engineer": 50
   },
   "mat": {
-   "mat_cast_iron": 60,
+   "cast_iron_kg": 60,
    "lead_kg": 30,
    "mat_sulfur": 2
   },
@@ -1217,7 +1217,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_cast_iron": 60,
+   "cast_iron_kg": 60,
    "mat_nitroglycerin": 20
   },
   "cap": 0,
@@ -1315,7 +1315,7 @@
    "machinist": 80
   },
   "mat": {
-   "mat_bulk_steel": 1000
+   "steel_plate_kg": 1000
   },
   "cap": 0,
   "up": 0,
@@ -1406,7 +1406,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_paper": 5
+   "paper_kg": 5
   },
   "cap": 0,
   "up": 0,
@@ -1438,8 +1438,8 @@
   },
   "mat": {
    "mat_glass_lead": 20,
-   "mat_brass": 80,
-   "mat_bulk_steel": 100
+   "brass_kg": 80,
+   "steel_plate_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -1473,8 +1473,8 @@
    "engineer": 130
   },
   "mat": {
-   "mat_bulk_steel": 400,
-   "mat_brass": 150
+   "steel_plate_kg": 400,
+   "brass_kg": 150
   },
   "cap": 0,
   "up": 0,
@@ -1508,8 +1508,8 @@
    "engineer": 120
   },
   "mat": {
-   "mat_brass": 100,
-   "mat_bulk_steel": 150
+   "brass_kg": 100,
+   "steel_plate_kg": 150
   },
   "cap": 0,
   "up": 0,
@@ -1543,7 +1543,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_bulk_steel": 800
+   "steel_plate_kg": 800
   },
   "cap": 0,
   "up": 0,
@@ -1734,7 +1734,7 @@
   },
   "mat": {
    "mat_stone": 4000,
-   "mat_pozzolana": 800
+   "lime_kg": 800
   },
   "cap": 0,
   "up": 0,
@@ -1766,8 +1766,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_bulk_steel": 800,
-   "mat_concrete_reinforced": 2000
+   "steel_plate_kg": 2800
   },
   "cap": 0,
   "up": 0,
@@ -1860,7 +1859,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_bulk_steel": 20
+   "steel_plate_kg": 20
   },
   "cap": 0,
   "up": 0,
@@ -1891,7 +1890,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_concrete_reinforced": 500
+   "steel_plate_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -1923,7 +1922,7 @@
    "mason": 95
   },
   "mat": {
-   "mat_concrete_reinforced": 800
+   "steel_plate_kg": 800
   },
   "cap": 0,
   "up": 0,
@@ -1980,7 +1979,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_bulk_steel": 80
+   "steel_plate_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -2012,8 +2011,8 @@
    "smith": 100
   },
   "mat": {
-   "mat_bulk_steel": 5000,
-   "mat_wrought_iron": 2000
+   "steel_plate_kg": 5000,
+   "iron_bar_kg": 2000
   },
   "cap": 20000,
   "up": 1000,
@@ -2045,7 +2044,7 @@
    "smith": 110
   },
   "mat": {
-   "mat_bulk_steel": 6000
+   "steel_plate_kg": 6000
   },
   "cap": 25000,
   "up": 1200,
@@ -2077,7 +2076,7 @@
    "machinist": 140
   },
   "mat": {
-   "mat_bulk_steel": 8000,
+   "steel_plate_kg": 8000,
    "face_hardened_armour": 2000
   },
   "cap": 30000,
@@ -2109,7 +2108,7 @@
    "machinist": 130
   },
   "mat": {
-   "mat_bulk_steel": 7000
+   "steel_plate_kg": 7000
   },
   "cap": 28000,
   "up": 1400,
@@ -2141,7 +2140,7 @@
    "master": 80
   },
   "mat": {
-   "mat_bulk_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -2211,7 +2210,7 @@
    "furnaceman": 100
   },
   "mat": {
-   "mat_bulk_steel": 1000
+   "steel_plate_kg": 1000
   },
   "cap": 5000,
   "up": 0.0,
@@ -2242,7 +2241,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_bulk_steel": 2000
+   "steel_plate_kg": 2000
   },
   "cap": 8000,
   "up": 0.0,
@@ -2274,7 +2273,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_bulk_steel": 2500
+   "steel_plate_kg": 2500
   },
   "cap": 10000,
   "up": 600,
@@ -2306,7 +2305,7 @@
   },
   "mat": {
    "mat_glass_lead": 30,
-   "mat_brass": 60
+   "brass_kg": 60
   },
   "cap": 0,
   "up": 0,
@@ -2336,7 +2335,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_bulk_steel": 300
+   "steel_plate_kg": 300
   },
   "cap": 0,
   "up": 0,
@@ -2366,7 +2365,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_cast_iron": 80,
+   "cast_iron_kg": 80,
    "mat_nitroglycerin": 50
   },
   "cap": 0,
@@ -2400,7 +2399,7 @@
   "mat": {
    "vacuum_tube": 4,
    "mat_quartz": 20,
-   "mat_brass": 100
+   "brass_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -2432,7 +2431,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_cast_iron": 50,
+   "cast_iron_kg": 50,
    "mat_gunpowder": 5
   },
   "cap": 0,
@@ -2463,7 +2462,7 @@
    "electrician": 100
   },
   "mat": {
-   "mat_bulk_steel": 1500
+   "steel_plate_kg": 1500
   },
   "cap": 8000,
   "up": 0.0,
@@ -2495,7 +2494,7 @@
    "smith": 120
   },
   "mat": {
-   "mat_bulk_steel": 3000
+   "steel_plate_kg": 3000
   },
   "cap": 15000,
   "up": 0.0,
@@ -2527,7 +2526,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_bulk_steel": 800
+   "steel_plate_kg": 800
   },
   "cap": 0,
   "up": 0,
@@ -2557,7 +2556,7 @@
    "smith": 90
   },
   "mat": {
-   "mat_bulk_steel": 400
+   "steel_plate_kg": 400
   },
   "cap": 0,
   "up": 0,
@@ -2587,7 +2586,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_bulk_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -2617,7 +2616,7 @@
    "engineer": 110
   },
   "mat": {
-   "mat_bulk_steel": 200
+   "steel_plate_kg": 200
   },
   "cap": 0,
   "up": 0,
@@ -2647,7 +2646,7 @@
    "smith": 90
   },
   "mat": {
-   "mat_bulk_steel": 600
+   "steel_plate_kg": 600
   },
   "cap": 0,
   "up": 0,
@@ -2678,7 +2677,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_bulk_steel": 1200
+   "steel_plate_kg": 1200
   },
   "cap": 8000,
   "up": 0.0,
@@ -2709,7 +2708,7 @@
    "machinist": 140
   },
   "mat": {
-   "mat_bulk_steel": 1500
+   "steel_plate_kg": 1500
   },
   "cap": 10000,
   "up": 700,
@@ -2741,7 +2740,7 @@
    "furnaceman": 100
   },
   "mat": {
-   "mat_bulk_steel": 2500
+   "steel_plate_kg": 2500
   },
   "cap": 12000,
   "up": 0.0,
@@ -2833,7 +2832,7 @@
   },
   "mat": {
    "mat_glass_lead": 40,
-   "mat_brass": 60
+   "brass_kg": 60
   },
   "cap": 0,
   "up": 0,
@@ -2863,7 +2862,7 @@
    "smith": 70
   },
   "mat": {
-   "mat_cast_iron": 80
+   "cast_iron_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -2896,7 +2895,7 @@
   },
   "mat": {
    "mat_glass_lead": 50,
-   "mat_brass": 120,
+   "brass_kg": 120,
    "mat_steel": 80
   },
   "cap": 0,
@@ -3080,7 +3079,7 @@
    "machinist": 140
   },
   "mat": {
-   "mat_bulk_steel": 10000
+   "steel_plate_kg": 10000
   },
   "cap": 35000,
   "up": 0.0,
@@ -3211,7 +3210,7 @@
   },
   "mat": {
    "vacuum_tube": 60,
-   "mat_brass": 1000,
+   "brass_kg": 1000,
    "mat_steel": 2000
   },
   "cap": 0,
@@ -3245,7 +3244,7 @@
   },
   "mat": {
    "vacuum_tube": 6,
-   "mat_brass": 80
+   "brass_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -3278,9 +3277,9 @@
    "electrician": 130
   },
   "mat": {
-   "mat_cast_iron": 100,
+   "cast_iron_kg": 100,
    "vacuum_tube": 4,
-   "mat_brass": 80
+   "brass_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -3313,7 +3312,7 @@
    "furnaceman": 130
   },
   "mat": {
-   "mat_bulk_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -3376,7 +3375,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_chlorine": 10
+   "bleach_kg": 10
   },
   "cap": 0,
   "up": 0,
@@ -3409,7 +3408,7 @@
    "furnaceman": 70
   },
   "mat": {
-   "mat_chlorine": 8,
+   "bleach_kg": 8,
    "mat_carbon": 3
   },
   "cap": 0,
@@ -3545,7 +3544,7 @@
    "chemist": 60
   },
   "mat": {
-   "mat_cast_iron": 50,
+   "cast_iron_kg": 50,
    "mat_petroleum_refined": 20
   },
   "cap": 0,
@@ -3612,7 +3611,7 @@
   "ph": 200,
   "lab": {
    "engineer": 200,
-   "physicist": 200,
+   "scholar": 200,
    "chemist": 160
   },
   "mat": {
@@ -3677,7 +3676,7 @@
    "engineer": 90
   },
   "mat": {
-   "mat_paper": 20
+   "paper_kg": 20
   },
   "cap": 0,
   "up": 0,
@@ -3766,7 +3765,7 @@
   },
   "mat": {
    "copper_wire_kg": 50,
-   "mat_brass": 60,
+   "brass_kg": 60,
    "mat_wood": 100
   },
   "cap": 0,
@@ -3800,7 +3799,7 @@
   },
   "mat": {
    "vacuum_tube": 8,
-   "mat_brass": 100,
+   "brass_kg": 100,
    "mat_wood": 50
   },
   "cap": 0,
@@ -3949,7 +3948,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_bulk_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 10000,
   "up": 2000,

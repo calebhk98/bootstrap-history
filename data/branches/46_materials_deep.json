@@ -622,7 +622,7 @@
   },
   "mat": {
    "mat_zinc": 80,
-   "mat_lead": 1000
+   "lead_kg": 1000
   },
   "build_yrs": 1,
   "dev_years": 20,
@@ -742,7 +742,7 @@
   ],
   "ph": 110,
   "lab": {
-   "laborer": 300
+   "labourer": 300
   },
   "mat": {
    "mat_lime": 50
@@ -767,7 +767,7 @@
   "ph": 200,
   "lab": {
    "chemist": 500,
-   "laborer": 400
+   "labourer": 400
   },
   "mat": {
    "mat_sulfur": 100
@@ -1024,7 +1024,7 @@
    "smith": 250
   },
   "mat": {
-   "mat_salt": 100,
+   "salt_kg": 100,
    "mat_water": 1000
   },
   "build_yrs": 0.5,
@@ -1646,8 +1646,8 @@
    "smith": 300
   },
   "mat": {
-   "mat_copper": 900,
-   "mat_tin": 100,
+   "copper_kg": 900,
+   "tin_kg": 100,
    "mat_zinc": 50
   },
   "build_yrs": 0.8,
@@ -1674,8 +1674,8 @@
    "master": 400
   },
   "mat": {
-   "mat_copper": 800,
-   "mat_tin": 200
+   "copper_kg": 800,
+   "tin_kg": 200
   },
   "build_yrs": 1,
   "dev_years": 15,
@@ -1705,8 +1705,8 @@
    "master": 300
   },
   "mat": {
-   "mat_copper": 650,
-   "mat_tin": 350
+   "copper_kg": 650,
+   "tin_kg": 350
   },
   "build_yrs": 1.5,
   "dev_years": 20,
@@ -1733,9 +1733,9 @@
    "smith": 300
   },
   "mat": {
-   "mat_tin": 850,
-   "mat_lead": 100,
-   "mat_copper": 50
+   "tin_kg": 850,
+   "lead_kg": 100,
+   "copper_kg": 50
   },
   "build_yrs": 0.8,
   "dev_years": 12,
@@ -1764,8 +1764,8 @@
    "smith": 250
   },
   "mat": {
-   "mat_lead": 500,
-   "mat_tin": 500
+   "lead_kg": 500,
+   "tin_kg": 500
   },
   "build_yrs": 0.5,
   "dev_years": 10,
@@ -1792,9 +1792,9 @@
    "furnaceman": 350
   },
   "mat": {
-   "mat_tin": 700,
+   "tin_kg": 700,
    "mat_antimony": 100,
-   "mat_copper": 200
+   "copper_kg": 200
   },
   "build_yrs": 0.8,
   "dev_years": 18,
@@ -1825,8 +1825,8 @@
    "furnaceman": 300
   },
   "mat": {
-   "mat_lead": 850,
-   "mat_tin": 50,
+   "lead_kg": 850,
+   "tin_kg": 50,
    "mat_antimony": 100
   },
   "build_yrs": 0.8,
@@ -1856,8 +1856,8 @@
    "smith": 300
   },
   "mat": {
-   "mat_tin": 900,
-   "mat_copper": 50,
+   "tin_kg": 900,
+   "copper_kg": 50,
    "mat_antimony": 50
   },
   "build_yrs": 0.8,
@@ -1888,7 +1888,7 @@
    "smith": 350
   },
   "mat": {
-   "mat_copper": 650,
+   "copper_kg": 650,
    "mat_nickel": 150,
    "mat_zinc": 200
   },
@@ -1917,7 +1917,7 @@
   },
   "mat": {
    "mat_nickel": 500,
-   "mat_copper": 500
+   "copper_kg": 500
   },
   "build_yrs": 1.5,
   "dev_years": 25,
@@ -1947,7 +1947,7 @@
   },
   "mat": {
    "mat_nickel": 350,
-   "mat_wrought_iron": 650
+   "iron_bar_kg": 650
   },
   "build_yrs": 1.5,
   "dev_years": 30,
@@ -1975,7 +1975,7 @@
   },
   "mat": {
    "mat_nickel": 300,
-   "mat_wrought_iron": 650,
+   "iron_bar_kg": 650,
    "mat_tungsten": 50
   },
   "build_yrs": 2,
@@ -2038,7 +2038,7 @@
    "chemist": 400
   },
   "mat": {
-   "mat_copper": 600,
+   "copper_kg": 600,
    "mat_nickel": 400
   },
   "build_yrs": 1,
@@ -2066,7 +2066,7 @@
    "chemist": 450
   },
   "mat": {
-   "mat_copper": 850,
+   "copper_kg": 850,
    "mat_manganese": 100,
    "mat_nickel": 50
   },
@@ -2160,7 +2160,7 @@
   },
   "mat": {
    "mat_chromium": 200,
-   "mat_wrought_iron": 800
+   "iron_bar_kg": 800
   },
   "build_yrs": 1.5,
   "dev_years": 25,
@@ -2190,7 +2190,7 @@
   "mat": {
    "mat_chromium": 200,
    "mat_nickel": 150,
-   "mat_wrought_iron": 650
+   "iron_bar_kg": 650
   },
   "build_yrs": 2,
   "dev_years": 30,
@@ -2217,7 +2217,7 @@
   },
   "mat": {
    "mat_chromium": 200,
-   "mat_wrought_iron": 750
+   "iron_bar_kg": 750
   },
   "build_yrs": 1.5,
   "dev_years": 28,
@@ -2243,7 +2243,7 @@
    "furnaceman": 550
   },
   "mat": {
-   "mat_bulk_steel": 950,
+   "steel_plate_kg": 950,
    "mat_silicon": 50
   },
   "build_yrs": 1.5,
@@ -2271,7 +2271,7 @@
   },
   "mat": {
    "mat_manganese": 200,
-   "mat_wrought_iron": 800
+   "iron_bar_kg": 800
   },
   "build_yrs": 1.5,
   "dev_years": 28,
@@ -2298,7 +2298,7 @@
    "smith": 400
   },
   "mat": {
-   "mat_wrought_iron": 900,
+   "iron_bar_kg": 900,
    "mat_charcoal": 80
   },
   "build_yrs": 1.2,
@@ -2325,7 +2325,7 @@
    "furnaceman": 300
   },
   "mat": {
-   "mat_cast_iron": 1000
+   "cast_iron_kg": 1000
   },
   "build_yrs": 0.8,
   "dev_years": 12,
@@ -2351,7 +2351,7 @@
    "furnaceman": 320
   },
   "mat": {
-   "mat_cast_iron": 1000
+   "cast_iron_kg": 1000
   },
   "build_yrs": 0.8,
   "dev_years": 14,
@@ -2376,7 +2376,7 @@
    "furnaceman": 400
   },
   "mat": {
-   "mat_cast_iron": 1000
+   "cast_iron_kg": 1000
   },
   "build_yrs": 1.5,
   "dev_years": 22,
@@ -2402,7 +2402,7 @@
    "furnaceman": 500
   },
   "mat": {
-   "mat_cast_iron": 1000,
+   "cast_iron_kg": 1000,
    "mat_magnesium": 20
   },
   "build_yrs": 1.5,
@@ -2430,7 +2430,7 @@
   },
   "mat": {
    "mat_aluminium": 950,
-   "mat_copper": 50
+   "copper_kg": 50
   },
   "build_yrs": 2,
   "dev_years": 35,
@@ -2886,7 +2886,7 @@
    "glassblower": 450
   },
   "mat": {
-   "mat_celluloid": 100
+   "celluloid_kg": 100
   },
   "build_yrs": 1.5,
   "dev_years": 25,
@@ -3141,7 +3141,7 @@
   ],
   "ph": 120,
   "lab": {
-   "laborer": 300
+   "labourer": 300
   },
   "mat": {},
   "build_yrs": 1.2,
@@ -3189,7 +3189,7 @@
   ],
   "ph": 130,
   "lab": {
-   "laborer": 350
+   "labourer": 350
   },
   "mat": {},
   "build_yrs": 1.5,
