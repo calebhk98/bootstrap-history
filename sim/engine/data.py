@@ -25,6 +25,7 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+from .mods import find_mod_civilization, get_ordered_mods, load_mod_tree
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (tech_tree.json, prices.json,
@@ -98,6 +99,7 @@ ROOT = os.path.dirname(SIMDIR)                             # rome
 TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
+MODDIR = os.path.join(ROOT, "mods")
 
 # ----------------------------------------------------------------------------
 # Loading and derived economics
@@ -215,11 +217,25 @@ TRADES_ABSENT: FrozenSet[str] = frozenset(trade for trade, note in TRADE_NOTES.i
 # for. A skilled blacksmith and a skilled writer are not interchangeable, so
 # scholar, labour and craft pools stay separate rather than being pooled as one
 # undifferentiated "artisan" figure.
-TRADE_FAMILY: Dict[str, str] = {
-    "scholar": "scholar", "chemist": "scholar", "engineer": "scholar",
-    "scribe": "scholar", "merchant": "scholar",
-    "labourer": "labour", "miner": "labour", "sailor": "labour",
-}   # everything else is a craft: smith, carpenter, mason, glassblower, ...
+def _load_trade_families() -> Dict[str, str]:
+    with open(os.path.join(ROOT, "data", "world", "trade_families.json")) as source:
+        families = json.load(source)["trade_families"]
+    for manifest in get_ordered_mods(MODDIR):
+        path = os.path.join(manifest.directory, "data", "world", "trade_families.json")
+        if not os.path.isfile(path):
+            continue
+        with open(path) as source:
+            additions = json.load(source).get("trade_families", {})
+        for trade, family in additions.items():
+            if trade in families:
+                raise ValueError("trade family %s is already defined before %s" % (trade, path))
+            if not trade.startswith(manifest.id + "_"):
+                raise ValueError("%s introduces un-prefixed trade id %r" % (path, trade))
+            families[trade] = family
+    return families
+
+
+TRADE_FAMILY: Dict[str, str] = _load_trade_families()
 
 
 def trade_family(trade: str) -> str:
@@ -273,6 +289,8 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     different simulator. See data/civilizations/_SCHEMA.md."""
     path = os.path.join(CIVDIR, name + ".json")
     if not os.path.exists(path):
+        path = find_mod_civilization(name, get_ordered_mods(MODDIR)) or path
+    if not os.path.exists(path):
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
@@ -280,6 +298,11 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         # _TECH_EFFECTS, england_1300, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
+        for manifest in get_ordered_mods(MODDIR):
+            mod_civs = os.path.join(manifest.directory, "data", "civilizations")
+            if os.path.isdir(mod_civs):
+                have.extend(filename[:-5] for filename in os.listdir(mod_civs)
+                            if filename.endswith(".json") and not filename.startswith("_"))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
     civ = json.load(open(path))
     # Opening ownership is scenario data, not an optional convenience with an
@@ -304,6 +327,18 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
                  ("adaptation_rate",0.10)):
         civ["values"].setdefault(field, default)
     return civ
+
+
+def civilization_ids() -> List[str]:
+    """Playable base and mod civilization ids in deterministic order."""
+    identifiers = {filename[:-5] for filename in os.listdir(CIVDIR)
+                   if filename.endswith(".json") and not filename.startswith("_")}
+    for manifest in get_ordered_mods(MODDIR):
+        directory = os.path.join(manifest.directory, "data", "civilizations")
+        if os.path.isdir(directory):
+            identifiers.update(filename[:-5] for filename in os.listdir(directory)
+                               if filename.endswith(".json") and not filename.startswith("_"))
+    return sorted(identifiers)
 
 
 def load(use_solved_prices: bool = False,
@@ -349,7 +384,7 @@ def load(use_solved_prices: bool = False,
     pass its id here explicitly, or its land is silently priced as Rome's.
     """
     with open(TREE) as source:
-        tree = json.load(source)
+        tree = load_mod_tree(json.load(source), get_ordered_mods(MODDIR))
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
@@ -721,6 +756,8 @@ def win_condition_describe(node_record: JSONDict) -> str:
     missing piece of display data must degrade, not crash, a player's
     session."""
     win_condition: JSONDict = node_record.get("win_condition") or {}
+    if win_condition.get("description"):
+        return str(win_condition["description"])
     metric, comparison_op, val = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
     pct = "%d%%" % round((val or 0.0) * 100)
     # metric is read straight from data (win_condition["metric"]), so its

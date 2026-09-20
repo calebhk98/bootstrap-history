@@ -2297,11 +2297,25 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     WIN_CONDITION_METRICS = frozenset(
         ("literacy_general", "literacy_elite", "epidemic_relief"))
 
-    def _win_condition_value(self, metric):
+    def _win_condition_value(self, condition):
         """The live number a win_condition's `metric` names, 0..1. Raises for
         a metric this engine does not know how to read - at load time, via
         `validate`, not mid-game - rather than silently reading 0 forever for
         a typo no playtest would otherwise catch."""
+        metric = condition.get("metric")
+        if condition.get("source") == "attribute":
+            path = condition.get("path")
+            if not isinstance(path, str) or path.startswith("_") or "." in path:
+                raise ValueError("invalid win_condition attribute path %r" % path)
+            value = getattr(self, path, None)
+            if not isinstance(value, (int, float)):
+                raise ValueError("win_condition attribute %r is not numeric" % path)
+            return float(value)
+        if condition.get("source") == "generation_share":
+            breakdown = self.generation_breakdown_kw()
+            total = breakdown["total_kw"]
+            return (breakdown["sources_kw"].get(condition.get("key"), 0.0) / total
+                    if total else 0.0)
         if metric in ("literacy_general", "literacy_elite"):
             return float(self.civ.get(metric, 0.0))
         if metric == "epidemic_relief":
@@ -2337,7 +2351,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             win_condition = self.nodes[node_id]["win_condition"]
             if not win_condition:
                 continue
-            val = self._win_condition_value(win_condition["metric"])
+            val = self._win_condition_value(win_condition)
             comparison_op, target = win_condition["op"], win_condition["value"]
             met = (val >= target) if comparison_op == ">=" else (val <= target) if comparison_op == "<=" else False
             if not met:

@@ -1,0 +1,10 @@
+{
+  "goals": [
+    {
+      "node": "slaveholding_goal_ownership",
+      "name": "Own one thousand enslaved people",
+      "blurb": "Accumulate a household workforce of one thousand enslaved people.",
+      "scale": "lifetime"
+    }
+  ]
+}

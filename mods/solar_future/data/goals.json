@@ -1,0 +1,10 @@
+{
+  "goals": [
+    {
+      "node": "solar_future_all_solar_goal",
+      "name": "Generate all electricity from solar panels",
+      "blurb": "Build photovoltaic arrays until solar supplies the whole available electricity system.",
+      "scale": "civilisation"
+    }
+  ]
+}

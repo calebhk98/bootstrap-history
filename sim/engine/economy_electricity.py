@@ -237,12 +237,23 @@ class ElectricityMixin:
         for fam, (chain, tier) in sorted(self.MECHANICAL_PRIME_MOVER_CHAINS.items()):
             mechanical_kw[fam] = (self.POWER_ANCHOR_KW[tier]
                                   if any(nid in done for nid in chain) else 0.0)
+        sources_kw = {}
+        for node_id in sorted(done):
+            generator = self.nodes.get(node_id, {}).get("electricity_generation") or {}
+            if generator:
+                source = generator.get("source")
+                capacity_kw = float(generator.get("capacity_kw", 0.0))
+                if not source or capacity_kw < 0:
+                    raise ValueError("%s has invalid electricity_generation data" % node_id)
+                sources_kw[source] = sources_kw.get(source, 0.0) + capacity_kw
+        mod_generation_kw = sum(sources_kw.values())
         return {
             "local_kw": local_kw,
             "grid_kw": grid_kw,
             "transmission_kw": transmission_kw,
             "mechanical_kw": mechanical_kw,
-            "total_kw": local_kw + grid_kw,
+            "sources_kw": sources_kw,
+            "total_kw": local_kw + grid_kw + mod_generation_kw,
         }
 
     def generation_capacity_kw(self):
@@ -593,4 +604,3 @@ class ElectricityMixin:
             if self._material_tag(effective_mat)[0] == binding:
                 return factor
         return 1.0
-

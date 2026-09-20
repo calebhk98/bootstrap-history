@@ -27,7 +27,7 @@ tested reason `cmd_sweep` cannot move into cli_analysis.py alongside
 import collections, json, math, os, random
 from collections import defaultdict
 
-from .data import (CIVDIR, closure, critical_path, DEFAULTS, goal_catalog,
+from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
                    hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
@@ -521,8 +521,7 @@ def _validate_reachability(args, errs, nodes, goal_rows):
             sys.path.insert(0, _repodir)
         from sim import planner as _planner
         from sim.path_search import deterministic_sim
-        civ_ids = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
-                         if filename.endswith(".json") and not filename.startswith("_"))
+        civ_ids = civilization_ids()
         for goal, node, need, yrs, chain in goal_rows:
             probe_horizon = min(VALIDATE_DEEP_PROBE_HORIZON_MAX_YEARS,
                                 max(VALIDATE_DEEP_PROBE_HORIZON_MIN_YEARS,
