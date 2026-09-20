@@ -27,6 +27,7 @@ class ActiveProjectState(_InvalidatingDict):
 	spent: float = 0.0
 	cost_left: float = 0.0
 	lab_left: Optional[Dict[str, float]] = None
+	status: str = "ACTIVE"
 
 	# Per-step allocation and progress accounting
 	hours_offered_this_year: Optional[float] = None
@@ -268,6 +269,22 @@ class ProjectsState:
 	revealed: Set[str] = field(default_factory=set)
 	stalled: int = 0
 	shut_for_staff: Optional[Dict[str, int]] = None
+
+	def active_keys_sorted(self) -> List[str]:
+		"""Return active project ids in the canonical resolution order.
+
+		Callers that aggregate or mutate project state must not inherit dict
+		insertion order from a save file or command history.
+		"""
+		return sorted(self.active)
+
+	def operating_keys_sorted(self) -> List[str]:
+		"""Return operating project ids independently of set/hash order."""
+		return sorted(self.operating)
+
+	def done_keys_sorted(self) -> List[str]:
+		"""Return completed project ids independently of set/hash order."""
+		return sorted(self.done)
 
 
 @dataclass

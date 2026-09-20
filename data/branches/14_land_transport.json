@@ -539,7 +539,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_blister_steel": 10
+   "steel_noric_kg": 10
   },
   "cap": 400,
   "up": 30,
@@ -748,7 +748,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_cast_iron": 15
+   "cast_iron_kg": 15
   },
   "cap": 600,
   "up": 30,
@@ -778,7 +778,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_cast_iron": 40,
+   "cast_iron_kg": 40,
    "timber_m3": 2
   },
   "cap": 1200,
@@ -914,7 +914,7 @@
    "artisan": 250
   },
   "mat": {
-   "mat_bulk_steel": 100,
+   "steel_plate_kg": 100,
    "iron_bar_kg": 200,
    "copper_kg": 50
   },
@@ -952,7 +952,7 @@
   "mat": {
    "timber_m3": 6,
    "iron_bar_kg": 80,
-   "mat_cast_iron": 30
+   "cast_iron_kg": 30
   },
   "cap": 2000,
   "up": 0.0,
@@ -987,7 +987,7 @@
    "artisan": 150
   },
   "mat": {
-   "mat_bulk_steel": 40,
+   "steel_plate_kg": 40,
    "copper_kg": 30
   },
   "cap": 3000,
@@ -1018,7 +1018,7 @@
    "artisan": 200
   },
   "mat": {
-   "mat_bulk_steel": 50,
+   "steel_plate_kg": 50,
    "iron_bar_kg": 100,
    "copper_kg": 20
   },
@@ -1090,7 +1090,7 @@
   "mat": {
    "timber_m3": 1.5,
    "iron_bar_kg": 15,
-   "mat_cast_iron": 8
+   "cast_iron_kg": 8
   },
   "cap": 400,
   "up": 30,
@@ -1124,9 +1124,9 @@
    "artisan": 100
   },
   "mat": {
-   "mat_wrought_iron": 20,
+   "iron_bar_kg": 20,
    "timber_m3": 1,
-   "mat_cast_iron": 5
+   "cast_iron_kg": 5
   },
   "cap": 600,
   "up": 40,
@@ -1156,9 +1156,9 @@
    "artisan": 100
   },
   "mat": {
-   "mat_wrought_iron": 15,
+   "iron_bar_kg": 15,
    "timber_m3": 1,
-   "mat_cast_iron": 8,
+   "cast_iron_kg": 8,
    "rubber_kg": 2
   },
   "cap": 800,
@@ -1189,7 +1189,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_wrought_iron": 8,
+   "iron_bar_kg": 8,
    "timber_m3": 0.5
   },
   "cap": 500,
@@ -1223,7 +1223,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_bulk_steel": 5
+   "steel_plate_kg": 5
   },
   "cap": 600,
   "up": 30,
@@ -1252,7 +1252,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_natural_rubber": 3,
+   "rubber_kg": 3,
    "cotton_fabric_kg": 2
   },
   "cap": 1000,
@@ -1284,7 +1284,7 @@
    "artisan": 150
   },
   "mat": {
-   "mat_bulk_steel": 60,
+   "steel_plate_kg": 60,
    "iron_bar_kg": 100,
    "copper_kg": 20
   },
@@ -1401,7 +1401,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_bulk_steel": 10,
+   "steel_plate_kg": 10,
    "brass_kg": 8,
    "copper_kg": 5
   },
@@ -1467,7 +1467,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_bulk_steel": 15,
+   "steel_plate_kg": 15,
    "copper_wire_kg": 10,
    "mat_ceramic": 2
   },
@@ -1564,7 +1564,7 @@
    "artisan": 300
   },
   "mat": {
-   "mat_bulk_steel": 150,
+   "steel_plate_kg": 150,
    "iron_bar_kg": 200,
    "brass_kg": 30,
    "copper_kg": 50
@@ -1601,7 +1601,7 @@
    "artisan": 150
   },
   "mat": {
-   "mat_bulk_steel": 60,
+   "steel_plate_kg": 60,
    "iron_bar_kg": 100,
    "brass_kg": 15
   },
@@ -1637,7 +1637,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_bulk_steel": 40,
+   "steel_plate_kg": 40,
    "iron_bar_kg": 80,
    "brass_kg": 10
   },
@@ -1668,7 +1668,7 @@
    "master": 150
   },
   "mat": {
-   "mat_bulk_steel": 20
+   "steel_plate_kg": 20
   },
   "cap": 1500,
   "up": 0.0,
@@ -1736,7 +1736,7 @@
    "carpenter": 250
   },
   "mat": {
-   "mat_bulk_steel": 200,
+   "steel_plate_kg": 200,
    "iron_bar_kg": 300,
    "brass_kg": 30
   },
@@ -1772,7 +1772,7 @@
    "carpenter": 300
   },
   "mat": {
-   "mat_bulk_steel": 150,
+   "steel_plate_kg": 150,
    "iron_bar_kg": 200,
    "brass_kg": 25
   },
@@ -1804,7 +1804,7 @@
    "artisan": 200
   },
   "mat": {
-   "mat_bulk_steel": 180,
+   "steel_plate_kg": 180,
    "iron_bar_kg": 250,
    "rubber_kg": 50
   },
@@ -1836,7 +1836,7 @@
    "artisan": 150
   },
   "mat": {
-   "mat_bulk_steel": 100,
+   "steel_plate_kg": 100,
    "iron_bar_kg": 150,
    "rubber_kg": 30
   },

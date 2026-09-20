@@ -425,7 +425,7 @@
   },
   "mat": {
    "mat_glass_soda": 1,
-   "mat_brass": 0.3
+   "brass_kg": 0.3
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -485,7 +485,7 @@
   },
   "mat": {
    "mat_glass_soda": 5,
-   "mat_brass": 2
+   "brass_kg": 2
   },
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -513,7 +513,7 @@
   },
   "mat": {
    "mat_glass_soda": 4,
-   "mat_brass": 1.5
+   "brass_kg": 1.5
   },
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -648,7 +648,7 @@
    "machinist": 200
   },
   "mat": {
-   "mat_copper": 10,
+   "copper_kg": 10,
    "mat_galena": 2
   },
   "build_yrs": 2.5,
@@ -678,8 +678,8 @@
    "machinist": 250
   },
   "mat": {
-   "mat_copper": 20,
-   "mat_silver": 5
+   "copper_kg": 20,
+   "silver_kg": 5
   },
   "build_yrs": 3,
   "adopt_yrs": 4,
@@ -707,7 +707,7 @@
    "master": 60
   },
   "mat": {
-   "mat_brass": 2,
+   "brass_kg": 2,
    "mat_glass_soda": 5
   },
   "build_yrs": 1.5,
@@ -737,7 +737,7 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_brass": 1
+   "brass_kg": 1
   },
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -936,8 +936,8 @@
    "machinist": 100
   },
   "mat": {
-   "mat_cast_iron": 20,
-   "mat_bulk_steel": 10
+   "cast_iron_kg": 20,
+   "steel_plate_kg": 10
   },
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -1124,7 +1124,7 @@
    "machinist": 60
   },
   "mat": {
-   "mat_wrought_iron": 0.3
+   "iron_bar_kg": 0.3
   },
   "build_yrs": 0.5,
   "adopt_yrs": 0.5,
@@ -1153,7 +1153,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_wrought_iron": 1
+   "iron_bar_kg": 1
   },
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -1181,8 +1181,8 @@
    "machinist": 150
   },
   "mat": {
-   "mat_copper": 5,
-   "mat_bulk_steel": 3
+   "copper_kg": 5,
+   "steel_plate_kg": 3
   },
   "build_yrs": 2.5,
   "adopt_yrs": 2,
@@ -1290,7 +1290,7 @@
   },
   "mat": {
    "mat_glass_soda": 20,
-   "mat_bulk_steel": 50
+   "steel_plate_kg": 50
   },
   "build_yrs": 2.5,
   "adopt_yrs": 3,
@@ -1339,7 +1339,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_salt": 1
+   "salt_kg": 1
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1367,8 +1367,8 @@
    "machinist": 300
   },
   "mat": {
-   "mat_copper": 20,
-   "mat_bulk_steel": 30
+   "copper_kg": 20,
+   "steel_plate_kg": 30
   },
   "build_yrs": 3,
   "adopt_yrs": 3,
@@ -1567,7 +1567,7 @@
    "smith": 150
   },
   "mat": {
-   "mat_wrought_iron": 3
+   "iron_bar_kg": 3
   },
   "build_yrs": 2,
   "adopt_yrs": 2,
@@ -1622,7 +1622,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_wrought_iron": 2
+   "iron_bar_kg": 2
   },
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -2527,7 +2527,7 @@
    "mason": 300
   },
   "mat": {
-   "mat_cast_iron": 100,
+   "cast_iron_kg": 100,
    "mat_ceramic_pipe": 200
   },
   "build_yrs": 3,
@@ -2555,7 +2555,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_bulk_steel": 50
+   "steel_plate_kg": 50
   },
   "build_yrs": 3.5,
   "adopt_yrs": 2,
@@ -2705,7 +2705,7 @@
   },
   "mat": {
    "mat_brick": 1000,
-   "mat_wrought_iron": 50
+   "iron_bar_kg": 50
   },
   "build_yrs": 2.5,
   "adopt_yrs": 1,
@@ -2877,7 +2877,7 @@
    "scribe": 100
   },
   "mat": {
-   "mat_paper": 5
+   "paper_kg": 5
   },
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -3301,7 +3301,7 @@
    "machinist": 140
   },
   "mat": {
-   "mat_brass": 2
+   "brass_kg": 2
   },
   "build_yrs": 1,
   "adopt_yrs": 1,
@@ -3329,7 +3329,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_copper": 3
+   "copper_kg": 3
   },
   "build_yrs": 1.2,
   "adopt_yrs": 1,

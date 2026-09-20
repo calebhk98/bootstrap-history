@@ -1891,7 +1891,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_tool_steel_hss": 3
+   "tool_steel_kg": 3
   },
   "cap": 200,
   "up": 0.0,

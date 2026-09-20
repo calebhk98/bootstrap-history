@@ -312,7 +312,7 @@
    "merchant": 100
   },
   "mat": {
-   "paper": 100
+   "paper_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -342,7 +342,7 @@
    "scribe": 200
   },
   "mat": {
-   "paper": 80
+   "paper_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -372,7 +372,7 @@
    "scribe": 100
   },
   "mat": {
-   "paper": 30
+   "paper_kg": 30
   },
   "cap": 0,
   "up": 0,
@@ -556,7 +556,7 @@
   },
   "mat": {
    "parchment": 200,
-   "mat_lead": 50
+   "lead_kg": 50
   },
   "cap": 2000,
   "up": 200,
@@ -828,7 +828,7 @@
   },
   "mat": {
    "mat_gold": 1000,
-   "mat_silver": 2000
+   "silver_kg": 2000
   },
   "cap": 10000,
   "up": 800,
@@ -859,7 +859,7 @@
    "engraver": 100
   },
   "mat": {
-   "mat_paper": 500,
+   "paper_kg": 500,
    "mat_ink": 50
   },
   "cap": 5000,
@@ -1042,7 +1042,7 @@
    "scribe": 200
   },
   "mat": {
-   "paper": 300
+   "paper_kg": 300
   },
   "cap": 2000,
   "up": 0.0,
@@ -1860,7 +1860,7 @@
    "engraver": 100
   },
   "mat": {
-   "mat_paper": 2000,
+   "paper_kg": 2000,
    "mat_ink": 200
   },
   "cap": 5000,
@@ -1894,7 +1894,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 500
+   "paper_kg": 500
   },
   "cap": 2000,
   "up": 200,
@@ -1926,7 +1926,7 @@
    "scribe": 150
   },
   "mat": {
-   "mat_paper": 100
+   "paper_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -1959,7 +1959,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 500
+   "paper_kg": 500
   },
   "cap": 1000,
   "up": 50,
@@ -1992,7 +1992,7 @@
    "merchant": 100
   },
   "mat": {
-   "mat_paper": 800
+   "paper_kg": 800
   },
   "cap": 2000,
   "up": 100,
@@ -2089,7 +2089,7 @@
    "scribe": 100
   },
   "mat": {
-   "mat_paper": 200
+   "paper_kg": 200
   },
   "cap": 2000,
   "up": 100,
@@ -2123,7 +2123,7 @@
    "electrician": 200
   },
   "mat": {
-   "mat_copper": 200,
+   "copper_kg": 200,
    "mat_wood": 500
   },
   "cap": 5000,
@@ -2157,7 +2157,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 300
+   "paper_kg": 300
   },
   "cap": 3000,
   "up": 200,
@@ -2288,7 +2288,7 @@
    "merchant": 100
   },
   "mat": {
-   "mat_paper": 200,
+   "paper_kg": 200,
    "mat_ink": 50
   },
   "cap": 1000,
@@ -2412,8 +2412,8 @@
    "machinist": 300
   },
   "mat": {
-   "mat_bulk_steel": 500,
-   "mat_copper": 200
+   "steel_plate_kg": 500,
+   "copper_kg": 200
   },
   "cap": 3000,
   "up": 200,
@@ -2605,7 +2605,7 @@
    "engineer": 400
   },
   "mat": {
-   "mat_bulk_steel": 5000,
+   "steel_plate_kg": 5000,
    "timber_m3": 2000
   },
   "cap": 50000,
@@ -2639,7 +2639,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_bulk_steel": 2000,
+   "steel_plate_kg": 2000,
    "timber_m3": 500
   },
   "cap": 10000,
@@ -2826,7 +2826,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 1000,
+   "paper_kg": 1000,
    "mat_ink": 100
   },
   "cap": 5000,
@@ -3126,7 +3126,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_lead": 100
+   "lead_kg": 100
   },
   "cap": 8000,
   "up": 600,
@@ -3158,7 +3158,7 @@
    "scribe": 150
   },
   "mat": {
-   "mat_paper": 800,
+   "paper_kg": 800,
    "mat_ink": 100
   },
   "cap": 3000,
@@ -3254,7 +3254,7 @@
    "scribe": 200
   },
   "mat": {
-   "mat_paper": 500
+   "paper_kg": 500
   },
   "cap": 3000,
   "up": 200,
@@ -3339,7 +3339,7 @@
    "scribe": 250
   },
   "mat": {
-   "mat_paper": 800
+   "paper_kg": 800
   },
   "cap": 5000,
   "up": 300,

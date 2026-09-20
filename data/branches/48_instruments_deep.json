@@ -300,7 +300,7 @@
    "artisan": 200
   },
   "mat": {
-   "mat_wrought_iron": 20,
+   "iron_bar_kg": 20,
    "mat_mercury": 2,
    "tin": 1.5
   },
@@ -1075,7 +1075,7 @@
   },
   "mat": {
    "mat_steel": 2.5,
-   "mat_cast_iron": 10
+   "cast_iron_kg": 10
   },
   "cap": 1200,
   "up": 100,
@@ -1110,9 +1110,9 @@
    "electrician": 600
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_copper": 20,
-   "mat_wrought_iron": 50
+   "cast_iron_kg": 100,
+   "copper_kg": 20,
+   "iron_bar_kg": 50
   },
   "cap": 10000,
   "up": 1000,
@@ -1215,7 +1215,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_silver": 0.5
+   "silver_kg": 0.5
   },
   "cap": 3000,
   "up": 250,
@@ -1246,7 +1246,7 @@
    "machinist": 500
   },
   "mat": {
-   "mat_wrought_iron": 20,
+   "iron_bar_kg": 20,
    "mat_glass_soda": 5,
    "diamond": 0.001
   },
@@ -1355,7 +1355,7 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_silver": 2
+   "silver_kg": 2
   },
   "cap": 3000,
   "up": 250,
@@ -1388,9 +1388,9 @@
    "electrician": 400
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_copper": 15,
-   "mat_wrought_iron": 30
+   "cast_iron_kg": 80,
+   "copper_kg": 15,
+   "iron_bar_kg": 30
   },
   "cap": 6000,
   "up": 400,
@@ -1423,9 +1423,9 @@
    "electrician": 500
   },
   "mat": {
-   "mat_cast_iron": 5000,
-   "mat_copper": 100,
-   "mat_wrought_iron": 200
+   "cast_iron_kg": 5000,
+   "copper_kg": 100,
+   "iron_bar_kg": 200
   },
   "cap": 50000,
   "up": 3000,
@@ -1458,8 +1458,8 @@
    "electrician": 400
   },
   "mat": {
-   "mat_cast_iron": 200,
-   "mat_copper": 50,
+   "cast_iron_kg": 200,
+   "copper_kg": 50,
    "mat_leather": 20
   },
   "cap": 8000,
@@ -1495,8 +1495,8 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_wrought_iron": 20,
-   "mat_lead": 10
+   "iron_bar_kg": 20,
+   "lead_kg": 10
   },
   "cap": 3000,
   "up": 200,
@@ -1562,7 +1562,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_wrought_iron": 15
+   "iron_bar_kg": 15
   },
   "cap": 3500,
   "up": 250,
@@ -1596,7 +1596,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_wrought_iron": 20
+   "iron_bar_kg": 20
   },
   "cap": 4000,
   "up": 300,
@@ -1631,7 +1631,7 @@
    "machinist": 400
   },
   "mat": {
-   "mat_wrought_iron": 50,
+   "iron_bar_kg": 50,
    "mat_steel": 30
   },
   "cap": 8000,
@@ -1667,7 +1667,7 @@
   "mat": {
    "mat_glass_soda": 1,
    "mat_glass_lead": 1,
-   "mat_copper": 3
+   "copper_kg": 3
   },
   "cap": 2500,
   "up": 200,
@@ -1702,7 +1702,7 @@
   },
   "mat": {
    "mat_glass_soda": 8,
-   "mat_copper": 15,
+   "copper_kg": 15,
    "phosphor": 1
   },
   "cap": 5000,
@@ -1769,7 +1769,7 @@
    "engineer": 250
   },
   "mat": {
-   "mat_copper": 5,
+   "copper_kg": 5,
    "vacuum_tube": 2
   },
   "cap": 2500,
@@ -1803,8 +1803,8 @@
    "machinist": 350
   },
   "mat": {
-   "mat_cast_iron": 200,
-   "mat_wrought_iron": 100
+   "cast_iron_kg": 200,
+   "iron_bar_kg": 100
   },
   "cap": 8000,
   "up": 600,
@@ -1835,7 +1835,7 @@
    "engineer": 600
   },
   "mat": {
-   "mat_wrought_iron": 100,
+   "iron_bar_kg": 100,
    "mat_steel": 50
   },
   "cap": 6000,
@@ -1867,8 +1867,8 @@
    "engineer": 450
   },
   "mat": {
-   "mat_concrete_reinforced": 500,
-   "mat_wrought_iron": 200
+   "steel_plate_kg": 500,
+   "iron_bar_kg": 200
   },
   "cap": 12000,
   "up": 800,
@@ -1900,9 +1900,9 @@
    "engineer": 350
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_copper": 20,
-   "mat_wrought_iron": 50
+   "cast_iron_kg": 100,
+   "copper_kg": 20,
+   "iron_bar_kg": 50
   },
   "cap": 4000,
   "up": 300,
@@ -1933,8 +1933,8 @@
    "engineer": 300
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_wrought_iron": 40
+   "cast_iron_kg": 80,
+   "iron_bar_kg": 40
   },
   "cap": 3000,
   "up": 250,
@@ -1966,7 +1966,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_wrought_iron": 30,
+   "iron_bar_kg": 30,
    "mat_refractories": 100
   },
   "cap": 3500,
@@ -1999,7 +1999,7 @@
    "machinist": 450
   },
   "mat": {
-   "mat_tool_steel_hss": 20
+   "tool_steel_kg": 20
   },
   "cap": 5000,
   "up": 400,
@@ -2063,7 +2063,7 @@
    "mechanic": 250
   },
   "mat": {
-   "mat_wrought_iron": 10,
+   "iron_bar_kg": 10,
    "mat_steel": 5
   },
   "cap": 1500,
@@ -2095,8 +2095,8 @@
    "engineer": 400
   },
   "mat": {
-   "mat_wrought_iron": 50,
-   "mat_copper": 20
+   "iron_bar_kg": 50,
+   "copper_kg": 20
   },
   "cap": 4500,
   "up": 300,
@@ -2127,8 +2127,8 @@
    "engineer": 420
   },
   "mat": {
-   "mat_wrought_iron": 60,
-   "mat_copper": 25
+   "iron_bar_kg": 60,
+   "copper_kg": 25
   },
   "cap": 5000,
   "up": 350,
@@ -2160,7 +2160,7 @@
    "engineer": 500
   },
   "mat": {
-   "mat_wrought_iron": 50,
+   "iron_bar_kg": 50,
    "electromagnet": 1
   },
   "cap": 8000,
@@ -2190,7 +2190,7 @@
    "smith": 100
   },
   "mat": {
-   "mat_wrought_iron": 10
+   "iron_bar_kg": 10
   },
   "cap": 200,
   "up": 20,
@@ -2250,7 +2250,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_brass": 3
+   "brass_kg": 3
   },
   "cap": 400,
   "up": 30,
@@ -2325,7 +2325,7 @@
    "master_screw": 30
   },
   "mat": {
-   "mat_brass": 12,
+   "brass_kg": 12,
    "mat_glass_soda": 4
   },
   "cap": 2000,
@@ -2391,7 +2391,7 @@
    "optician": 150
   },
   "mat": {
-   "mat_brass": 5,
+   "brass_kg": 5,
    "mat_glass_soda": 1
   },
   "cap": 600,
@@ -2422,7 +2422,7 @@
   },
   "mat": {
    "mat_wood": 20,
-   "mat_brass": 2
+   "brass_kg": 2
   },
   "cap": 400,
   "up": 30,
@@ -2488,7 +2488,7 @@
    "optician": 300
   },
   "mat": {
-   "mat_brass": 20,
+   "brass_kg": 20,
    "mat_glass_soda": 8
   },
   "cap": 5000,
@@ -2523,7 +2523,7 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_brass": 10,
+   "brass_kg": 10,
    "mat_wood": 15
   },
   "cap": 2000,
@@ -2557,7 +2557,7 @@
   },
   "mat": {
    "mat_spring_steel": 5,
-   "mat_wrought_iron": 10
+   "iron_bar_kg": 10
   },
   "cap": 2000,
   "up": 150,
@@ -2625,7 +2625,7 @@
    "master_screw": 40
   },
   "mat": {
-   "mat_brass": 20,
+   "brass_kg": 20,
    "mat_glass_soda": 4,
    "mat_mercury": 1
   },
@@ -2726,8 +2726,8 @@
    "surveyor": 200
   },
   "mat": {
-   "mat_paper": 0.5,
-   "mat_brass": 1
+   "paper_kg": 0.5,
+   "brass_kg": 1
   },
   "cap": 500,
   "up": 30,
@@ -2758,7 +2758,7 @@
    "sailor": 100
   },
   "mat": {
-   "mat_lead": 30,
+   "lead_kg": 30,
    "mat_rope": 100
   },
   "cap": 200,
@@ -2791,7 +2791,7 @@
    "electrician": 400
   },
   "mat": {
-   "mat_wrought_iron": 30,
+   "iron_bar_kg": 30,
    "vacuum_tube": 2
   },
   "cap": 4000,
@@ -2824,8 +2824,8 @@
    "electrician": 350
   },
   "mat": {
-   "mat_cast_iron": 200,
-   "mat_copper": 40
+   "cast_iron_kg": 200,
+   "copper_kg": 40
   },
   "cap": 6000,
   "up": 400,
@@ -2856,8 +2856,8 @@
    "engineer": 400
   },
   "mat": {
-   "mat_cast_iron": 100,
-   "mat_copper": 20
+   "cast_iron_kg": 100,
+   "copper_kg": 20
   },
   "cap": 4000,
   "up": 300,
@@ -2889,7 +2889,7 @@
    "electrician": 350
   },
   "mat": {
-   "mat_copper": 10,
+   "copper_kg": 10,
    "mat_wood": 20
   },
   "cap": 2000,
@@ -2922,8 +2922,8 @@
    "engineer": 420
   },
   "mat": {
-   "mat_cast_iron": 80,
-   "mat_copper": 25,
+   "cast_iron_kg": 80,
+   "copper_kg": 25,
    "mat_aluminum": 15
   },
   "cap": 5000,
@@ -2956,7 +2956,7 @@
   },
   "mat": {
    "mat_glass_soda": 4,
-   "mat_brass": 15
+   "brass_kg": 15
   },
   "cap": 3000,
   "up": 200,
@@ -2986,7 +2986,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_brass": 3
+   "brass_kg": 3
   },
   "cap": 600,
   "up": 40,
@@ -3018,7 +3018,7 @@
   },
   "mat": {
    "mat_platinum": 0.2,
-   "mat_paper": 1
+   "paper_kg": 1
   },
   "cap": 1500,
   "up": 100,
@@ -3181,7 +3181,7 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_brass": 5
+   "brass_kg": 5
   },
   "cap": 1000,
   "up": 80,
@@ -3214,7 +3214,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_brass": 8
+   "brass_kg": 8
   },
   "cap": 1500,
   "up": 120,
@@ -3280,7 +3280,7 @@
   },
   "mat": {
    "mat_glass_soda": 2,
-   "mat_wrought_iron": 20
+   "iron_bar_kg": 20
   },
   "cap": 1800,
   "up": 120,
@@ -3311,7 +3311,7 @@
   },
   "mat": {
    "mat_glass_soda": 3,
-   "mat_wrought_iron": 30
+   "iron_bar_kg": 30
   },
   "cap": 2000,
   "up": 150,
@@ -3340,8 +3340,8 @@
    "mechanician": 160
   },
   "mat": {
-   "mat_wrought_iron": 10,
-   "mat_brass": 5
+   "iron_bar_kg": 10,
+   "brass_kg": 5
   },
   "cap": 600,
   "up": 50,
@@ -3435,8 +3435,8 @@
    "electrician": 140
   },
   "mat": {
-   "mat_wrought_iron": 1,
-   "mat_copper": 1,
+   "iron_bar_kg": 1,
+   "copper_kg": 1,
    "mat_constantan": 1
   },
   "cap": 400,
@@ -3562,7 +3562,7 @@
    "machinist": 240
   },
   "mat": {
-   "mat_brass": 10,
+   "brass_kg": 10,
    "mat_steel": 5
   },
   "cap": 1000,
@@ -3592,7 +3592,7 @@
    "machinist": 250
   },
   "mat": {
-   "mat_brass": 15,
+   "brass_kg": 15,
    "mat_steel": 8
   },
   "cap": 1200,
@@ -3686,8 +3686,8 @@
    "mechanician": 160
   },
   "mat": {
-   "mat_brass": 5,
-   "mat_wrought_iron": 10
+   "brass_kg": 5,
+   "iron_bar_kg": 10
   },
   "cap": 800,
   "up": 50,
@@ -3719,7 +3719,7 @@
   },
   "mat": {
    "mat_bronze": 20,
-   "mat_brass": 10
+   "brass_kg": 10
   },
   "cap": 1500,
   "up": 100,
@@ -3748,7 +3748,7 @@
    "craftsman": 120
   },
   "mat": {
-   "mat_brass": 3
+   "brass_kg": 3
   },
   "cap": 400,
   "up": 30,

@@ -21,6 +21,18 @@ from .data import ANNUAL_WAGE, WAGES
 from sim.constants import declare
 
 
+def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0):
+    """Pure canonical calculation for the nominal borrowing ceiling."""
+    return max(min(raw_credit, serviceable), running_cost_floor) * price_index
+
+
+def calculate_affordability(capital, credit_ceiling, credit_share, preserve_debt=False):
+    """Pure calculation used by every quote and state-changing spend check."""
+    if preserve_debt:
+        return max(0.0, capital) + credit_ceiling * credit_share
+    return max(0.0, capital + credit_ceiling * credit_share)
+
+
 class CreditMixin:
 
     CREDIT_LINE_EARNING_MULTIPLE = declare(
@@ -193,7 +205,7 @@ class CreditMixin:
         # and nothing else could always just reach a respectable cover
         # identity, and that is the first real decision in the game.
         serviceable = floor + max(0.0, earning) * self.CREDIT_SURPLUS_YEARS_MULTIPLE
-        return max(min(base, serviceable), floor) * self.price_index
+        return calculate_credit_ceiling(base, floor, serviceable, self.price_index)
 
     def committed_spend(self):
         """What is still owed, in total, across every project in hand at once.
@@ -210,7 +222,9 @@ class CreditMixin:
         correctly priced on its own screen, stacked into a debt spiral
         that nothing added up until the interest was already compounding.
         """
-        return sum(state.get("cost_left") or 0.0 for state in self.state.projects.active.values())
+        projects = self.state.projects
+        return sum(projects.active[node_id].get("cost_left") or 0.0
+                   for node_id in projects.active_keys_sorted())
 
     def funding_capacity(self):
         """What you can actually expect to have to spend on projects.
@@ -915,8 +929,11 @@ class CreditMixin:
             # months opens even while deep in arrears" and its slow-payback sibling,
             # which holds the line the other way: a concern that takes YEARS
             # to clear its own capex still does not open on this.
-            return max(0.0, self.state.household.capital) + self.credit_limit() * share
-        return max(0.0, self.state.household.capital + self.credit_limit() * share)
+            return calculate_affordability(
+                self.state.household.capital, self.credit_limit(), share,
+                preserve_debt=True)
+        return calculate_affordability(
+            self.state.household.capital, self.credit_limit(), share)
 
     def living_cost(self, _rev=None, _upkeep=None):
         """You have to eat, sleep somewhere, pay tax, and look the part.

@@ -760,7 +760,7 @@
    "artisan": 60
   },
   "mat": {
-   "rag_paper_kg": 1,
+   "paper_kg": 1,
    "ink_kg": 0.2
   },
   "cap": 40,
@@ -1168,7 +1168,7 @@
    "artisan": 100
   },
   "mat": {
-   "alcohol_distilled_kg": 5,
+   "ethanol_kg": 5,
    "essential_oil_kg": 1
   },
   "cap": 120,
@@ -1201,7 +1201,7 @@
    "artisan": 100
   },
   "mat": {
-   "rag_paper_kg": 50,
+   "paper_kg": 50,
    "ink_kg": 2,
    "leather_kg": 1
   },
@@ -1513,7 +1513,7 @@
   },
   "mat": {
    "rose_petals_kg": 100,
-   "alcohol_distilled_kg": 2
+   "ethanol_kg": 2
   },
   "cap": 100,
   "up": 10,
@@ -1545,7 +1545,7 @@
    "artisan": 80
   },
   "mat": {
-   "soap_hard_kg": 10,
+   "soap_kg": 10,
    "essential_oil_kg": 0.5,
    "water_kg": 5
   },
@@ -2158,7 +2158,7 @@
    "artisan": 80
   },
   "mat": {
-   "soap_hard_kg": 5,
+   "soap_kg": 5,
    "chalk_kg": 10,
    "essential_oil_kg": 0.2
   },

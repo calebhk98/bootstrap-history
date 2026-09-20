@@ -95,11 +95,14 @@ def normalise_v2(node):
 
 # ---------------------------------------------------------------- MERGE
 def load_aliases():
-    path = os.path.join(BR, "ALIASES.json")
-    if not os.path.exists(path):
-        return {}, set()
-    aliases = json.load(open(path))
-    return aliases.get("alias", {}), set(aliases.get("drop", []))
+    """No runtime aliases: source data is canonicalised before merge.
+
+    ``scripts/migrate_data_aliases.py`` retains the historical table solely
+    as repeatable migration input.  Returning empty collections here makes a
+    stale source identifier a validation error instead of silently translating
+    it on every tree rebuild.
+    """
+    return {}, set()
 
 
 def load_prices():

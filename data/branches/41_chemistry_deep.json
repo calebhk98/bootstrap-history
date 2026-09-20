@@ -299,7 +299,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_paper": 1
+   "paper_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 3,
@@ -373,7 +373,7 @@
   },
   "mat": {
    "mat_glass_labware": 4,
-   "mat_bulk_steel": 1
+   "steel_plate_kg": 1
   },
   "build_yrs": 0.5,
   "dev_years": 8,
@@ -459,7 +459,7 @@
    "machinist": 150
   },
   "mat": {
-   "mat_cast_iron": 3,
+   "cast_iron_kg": 3,
    "mat_glass_labware": 1
   },
   "build_yrs": 0.4,
@@ -716,7 +716,7 @@
   },
   "mat": {
    "mat_glass_labware": 5,
-   "mat_copper": 2
+   "copper_kg": 2
   },
   "build_yrs": 0.4,
   "dev_years": 6,
@@ -851,7 +851,7 @@
   },
   "mat": {
    "mat_glass_boro": 2,
-   "mat_silver": 0.5
+   "silver_kg": 0.5
   },
   "build_yrs": 0.4,
   "dev_years": 7,
@@ -965,7 +965,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_bulk_steel": 50
+   "steel_plate_kg": 50
   },
   "cap": 500,
   "build_yrs": 2,
@@ -1002,7 +1002,7 @@
    "engineer": 180
   },
   "mat": {
-   "mat_bulk_steel": 30
+   "steel_plate_kg": 30
   },
   "cap": 300,
   "build_yrs": 1.5,
@@ -1030,7 +1030,7 @@
    "engineer": 250
   },
   "mat": {
-   "mat_bulk_steel": 80,
+   "steel_plate_kg": 80,
    "mat_mercury": 5
   },
   "cap": 600,
@@ -1067,7 +1067,7 @@
    "engineer": 220
   },
   "mat": {
-   "mat_bulk_steel": 60
+   "steel_plate_kg": 60
   },
   "cap": 400,
   "build_yrs": 2,
@@ -1102,7 +1102,7 @@
    "engineer": 350
   },
   "mat": {
-   "mat_bulk_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 800,
   "build_yrs": 3,
@@ -1138,7 +1138,7 @@
    "engineer": 180
   },
   "mat": {
-   "mat_bulk_steel": 40,
+   "steel_plate_kg": 40,
    "mat_platinum_bulk": 0.5
   },
   "cap": 400,
@@ -1166,7 +1166,7 @@
    "engineer": 220
   },
   "mat": {
-   "mat_bulk_steel": 60
+   "steel_plate_kg": 60
   },
   "cap": 300,
   "build_yrs": 1.5,
@@ -1194,7 +1194,7 @@
    "engineer": 150
   },
   "mat": {
-   "mat_bulk_steel": 35
+   "steel_plate_kg": 35
   },
   "cap": 250,
   "build_yrs": 1,
@@ -1230,7 +1230,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_bulk_steel": 80
+   "steel_plate_kg": 80
   },
   "cap": 500,
   "build_yrs": 2,
@@ -1266,7 +1266,7 @@
    "engineer": 250
   },
   "mat": {
-   "mat_bulk_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 600,
   "build_yrs": 2.5,
@@ -1340,7 +1340,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_bulk_steel": 70
+   "steel_plate_kg": 70
   },
   "cap": 450,
   "build_yrs": 1.8,
@@ -1375,7 +1375,7 @@
    "engineer": 190
   },
   "mat": {
-   "mat_bulk_steel": 70
+   "steel_plate_kg": 70
   },
   "cap": 400,
   "build_yrs": 1.5,
@@ -1447,7 +1447,7 @@
    "engineer": 170
   },
   "mat": {
-   "mat_bulk_steel": 50
+   "steel_plate_kg": 50
   },
   "cap": 250,
   "build_yrs": 1,
@@ -1484,7 +1484,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_bulk_steel": 80
+   "steel_plate_kg": 80
   },
   "cap": 350,
   "build_yrs": 2,
@@ -1521,7 +1521,7 @@
    "engineer": 190
   },
   "mat": {
-   "mat_bulk_steel": 60
+   "steel_plate_kg": 60
   },
   "cap": 300,
   "build_yrs": 1.8,
@@ -2949,7 +2949,7 @@
    "chemist": 290
   },
   "mat": {
-   "mat_bulk_steel": 50
+   "steel_plate_kg": 50
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -3457,7 +3457,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_bulk_steel": 20
+   "steel_plate_kg": 20
   },
   "build_yrs": 0.2,
   "dev_years": 5,

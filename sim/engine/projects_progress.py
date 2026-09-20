@@ -82,7 +82,7 @@ class ProgressMixin:
         """
         out = {}
         projects = self.state.projects
-        for node_id in sorted(projects.active):
+        for node_id in projects.active_keys_sorted():
             if node_id not in self.nodes:
                 continue
             pace = self.project_hour_pace(node_id)
@@ -173,7 +173,8 @@ class ProgressMixin:
         """
         node = self.nodes[node_id]
         out = {}
-        for trade_id, want in node["lab"].items():
+        for trade_id in sorted(node["lab"]):
+            want = node["lab"][trade_id]
             left = want if lab_left is None else lab_left.get(trade_id, 0.0)
             if left <= 0 or want <= 0:
                 continue
@@ -201,10 +202,10 @@ class ProgressMixin:
         # sorted(): this feeds float sums, and projects.active is a dict whose
         # key order depends on PYTHONHASHSEED.
         projects = self.state.projects
-        for node_id in sorted(projects.active):
+        for node_id in projects.active_keys_sorted():
             project_state = projects.active[node_id]
-            for trade_id, plan in self.trade_draw_plan(
-                    node_id, self._effective_lab_left(node_id, project_state)).items():
+            for trade_id, plan in sorted(self.trade_draw_plan(
+                    node_id, self._effective_lab_left(node_id, project_state)).items()):
                 demand[trade_id] += plan["desired"]
                 by_trade[trade_id].append(node_id)
         out = {}
@@ -245,7 +246,7 @@ class ProgressMixin:
         hired_hours = 0.0
         worst = 1.0
         plan = self.trade_draw_plan(node_id, lab_left)
-        for trade_id, plan_entry in plan.items():
+        for trade_id, plan_entry in sorted(plan.items()):
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
                        - projects.trade_hours_used.get(trade_id, 0.0))
@@ -267,6 +268,7 @@ class ProgressMixin:
             if target > 0:
                 worst = min(worst, drawn / target)
         if worst < 1.0:
+            project_state["status"] = "BLOCKED_INPUTS"
             frac *= worst
             project_state["short_of_trade"] = sorted(
                 trade_id for trade_id, left in lab_left.items()
@@ -274,6 +276,7 @@ class ProgressMixin:
                                   - projects.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
         else:
+            project_state["status"] = "ACTIVE"
             project_state.pop("short_of_trade", None)
         # THE DEADLINE: without one, a trade that never clears its balance
         # would let a project creep forward forever at whatever sliver of
@@ -604,4 +607,3 @@ class ProgressMixin:
             else:
                 projects.failed_attempts.pop(node_id, None)
         return total
-

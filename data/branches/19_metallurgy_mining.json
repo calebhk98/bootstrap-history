@@ -682,9 +682,9 @@
    "labourer": 80
   },
   "mat": {
-   "steel_bar_kg": 50,
+   "steel_plate_kg": 50,
    "coal_kg": 80,
-   "soap_hard_kg": 2
+   "soap_kg": 2
   },
   "cap": 800,
   "up": 150,
@@ -970,8 +970,7 @@
   },
   "mat": {
    "sand_quartz_kg": 300,
-   "clay_kg": 100,
-   "refractory_fireclay_kg": 50,
+   "clay_kg": 150,
    "timber_m3": 3
   },
   "cap": 700,
@@ -1532,7 +1531,7 @@
   },
   "mat": {
    "emery_kg": 10,
-   "alcohol_kg": 5,
+   "ethanol_kg": 5,
    "sulfuric_acid_kg": 3
   },
   "cap": 800,
@@ -1607,7 +1606,7 @@
   },
   "mat": {
    "diamond_g": 1,
-   "steel_ball_kg": 5
+   "steel_plate_kg": 5
   },
   "cap": 1200,
   "up": 0.0,
@@ -1672,7 +1671,7 @@
   },
   "mat": {
    "copper_kg": 1,
-   "prism_glass_kg": 0.5
+   "glass_raw_kg": 0.5
   },
   "cap": 1400,
   "up": 0.0,
@@ -1702,7 +1701,7 @@
   },
   "mat": {
    "iron_bar_kg": 40,
-   "gauze_kg": 2,
+   "linen_kg": 2,
    "timber_m3": 4,
    "coal_kg": 50
   },
@@ -1947,7 +1946,7 @@
    "acetylene_kg": 5,
    "oxygen_m3": 50,
    "flux_kg": 2,
-   "rod_kg": 10
+   "iron_bar_kg": 10
   },
   "cap": 1200,
   "up": 200,
@@ -1976,7 +1975,7 @@
    "electrician": 100
   },
   "mat": {
-   "electrode_kg": 10,
+   "carbon_kg": 10,
    "flux_kg": 2,
    "copper_kg": 5
   },
@@ -2007,7 +2006,7 @@
    "machinist": 120
   },
   "mat": {
-   "copper_electrode_kg": 5,
+   "copper_kg": 5,
    "coal_kg": 100
   },
   "cap": 1800,

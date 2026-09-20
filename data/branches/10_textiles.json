@@ -1134,7 +1134,7 @@
    "labourer": 300
   },
   "mat": {
-   "water_access": 1
+   "water_kg": 1
   },
   "cap": 200,
   "up": 30,
@@ -1207,7 +1207,7 @@
    "artisan": 100
   },
   "mat": {
-   "paper": 100,
+   "paper_kg": 100,
    "charcoal_kg": 5
   },
   "cap": 200,
@@ -1402,7 +1402,7 @@
    "timber_m3": 4,
    "iron_bar_kg": 70,
    "iron_sheet_kg": 35,
-   "paper": 1000
+   "paper_kg": 1000
   },
   "cap": 2800,
   "up": 220,
@@ -1584,8 +1584,8 @@
   },
   "mat": {
    "nitrocellulose_kg": 100,
-   "alcohol_kg": 200,
-   "copper_sulfate_kg": 50
+   "ethanol_kg": 200,
+   "blue_vitriol_kg": 50
   },
   "cap": 3000,
   "up": 500,
@@ -1624,7 +1624,7 @@
    "wood_pulp_kg": 200,
    "natron_kg": 300,
    "sulfur_kg": 150,
-   "acids": 100
+   "sulfuric_acid_kg": 100
   },
   "cap": 4500,
   "up": 800,

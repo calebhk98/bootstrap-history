@@ -917,7 +917,7 @@
   "ph": 120,
   "lab": {
    "artisan": 200,
-   "laborer": 100
+   "labourer": 100
   },
   "mat": {
    "lead_kg": 5
@@ -950,7 +950,7 @@
   "ph": 300,
   "lab": {
    "carpenter": 800,
-   "laborer": 1000,
+   "labourer": 1000,
    "mason": 200
   },
   "mat": {
@@ -1143,7 +1143,7 @@
   "lab": {
    "smith": 600,
    "carpenter": 400,
-   "laborer": 500
+   "labourer": 500
   },
   "mat": {
    "iron_bar_kg": 600.0,
@@ -1548,7 +1548,7 @@
   "ph": 60,
   "lab": {
    "carpenter": 150,
-   "laborer": 100
+   "labourer": 100
   },
   "mat": {
    "timber_m3": 0.5,
@@ -1582,7 +1582,7 @@
   "ph": 250,
   "lab": {
    "carpenter": 800,
-   "laborer": 1000,
+   "labourer": 1000,
    "mason": 300
   },
   "mat": {
@@ -1613,7 +1613,7 @@
   "ph": 200,
   "lab": {
    "carpenter": 400,
-   "laborer": 600
+   "labourer": 600
   },
   "mat": {
    "timber_m3": 20,

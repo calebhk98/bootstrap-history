@@ -258,7 +258,7 @@
   "ph": 60,
   "lab": {
    "artisan": 120,
-   "metalsmith": 80
+   "smith": 80
   },
   "mat": {
    "brass_kg": 0.15,
@@ -452,7 +452,7 @@
   "lab": {
    "artisan": 250,
    "master": 100,
-   "metalsmith": 150
+   "smith": 150
   },
   "mat": {
    "timber_m3": 1.0,
@@ -521,7 +521,7 @@
   "ph": 180,
   "lab": {
    "carpenter": 200,
-   "metalsmith": 150,
+   "smith": 150,
    "artisan": 100
   },
   "mat": {
@@ -559,7 +559,7 @@
   "lab": {
    "master": 120,
    "artisan": 150,
-   "metalsmith": 100
+   "smith": 100
   },
   "mat": {
    "iron_bar_kg": 4.0,
@@ -596,7 +596,7 @@
   "lab": {
    "master": 120,
    "artisan": 180,
-   "metalsmith": 120
+   "smith": 120
   },
   "mat": {
    "brass_kg": 3.0,
@@ -705,7 +705,7 @@
   "lab": {
    "master": 300,
    "artisan": 250,
-   "metalsmith": 200
+   "smith": 200
   },
   "mat": {
    "iron_bar_kg": 20.0,
@@ -964,7 +964,7 @@
   "lab": {
    "master": 180,
    "artisan": 150,
-   "metalsmith": 100
+   "smith": 100
   },
   "mat": {
    "brass_kg": 2.5,
@@ -1235,7 +1235,7 @@
   "lab": {
    "master": 300,
    "artisan": 250,
-   "metalsmith": 200
+   "smith": 200
   },
   "mat": {
    "iron_bar_kg": 20.0,
@@ -1317,7 +1317,7 @@
   "ph": 60,
   "lab": {
    "artisan": 100,
-   "metalsmith": 60
+   "smith": 60
   },
   "mat": {
    "mercury_kg": 1.0,
@@ -1351,7 +1351,7 @@
   "lab": {
    "master": 160,
    "artisan": 150,
-   "metalsmith": 120
+   "smith": 120
   },
   "mat": {
    "brass_kg": 4.0,
@@ -1382,7 +1382,7 @@
   "ph": 80,
   "lab": {
    "artisan": 120,
-   "metalsmith": 80
+   "smith": 80
   },
   "mat": {
    "brass_kg": 1.5,
@@ -1413,7 +1413,7 @@
   "ph": 100,
   "lab": {
    "artisan": 140,
-   "metalsmith": 80
+   "smith": 80
   },
   "mat": {
    "timber_m3": 0.3,
@@ -1443,7 +1443,7 @@
   "kb": "",
   "ph": 140,
   "lab": {
-   "metalsmith": 180,
+   "smith": 180,
    "artisan": 120
   },
   "mat": {
@@ -1474,7 +1474,7 @@
   "ph": 70,
   "lab": {
    "artisan": 100,
-   "metalsmith": 60
+   "smith": 60
   },
   "mat": {
    "timber_m3": 0.1,
@@ -1504,7 +1504,7 @@
   "ph": 60,
   "lab": {
    "artisan": 100,
-   "metalsmith": 60,
+   "smith": 60,
    "carpenter": 40
   },
   "mat": {
@@ -1630,7 +1630,7 @@
   "kb": "",
   "ph": 80,
   "lab": {
-   "metalsmith": 120,
+   "smith": 120,
    "artisan": 80
   },
   "mat": {
@@ -1664,7 +1664,7 @@
   "kb": "",
   "ph": 150,
   "lab": {
-   "metalsmith": 150,
+   "smith": 150,
    "scholar": 100
   },
   "mat": {
@@ -1878,7 +1878,7 @@
   "lab": {
    "master": 180,
    "artisan": 150,
-   "metalsmith": 100
+   "smith": 100
   },
   "mat": {
    "brass_kg": 3.0,
@@ -2080,7 +2080,7 @@
   "lab": {
    "master": 250,
    "artisan": 200,
-   "metalsmith": 150
+   "smith": 150
   },
   "mat": {
    "glass_raw_kg": 3.0,
@@ -2181,7 +2181,7 @@
   "lab": {
    "master": 200,
    "artisan": 180,
-   "metalsmith": 120
+   "smith": 120
   },
   "mat": {
    "brass_kg": 3.0,

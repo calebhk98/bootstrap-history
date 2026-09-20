@@ -480,7 +480,7 @@
    "scholar": 100
   },
   "mat": {
-   "soap_hard": 5
+   "soap_kg": 5
   },
   "cap": 300,
   "up": 0.0,
@@ -600,7 +600,7 @@
    "artisan": 100
   },
   "mat": {
-   "sodium_citrate": 0.1
+   "sodium_citrate_kg": 0.1
   },
   "cap": 800,
   "up": 150,
@@ -631,7 +631,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_salt": 0.5
+   "salt_kg": 0.5
   },
   "cap": 200,
   "up": 30,
@@ -720,7 +720,7 @@
    "machinist": 150
   },
   "mat": {
-   "rubber_tubing": 2,
+   "rubber_tubing_kg": 2,
    "glass_raw_kg": 1,
    "mercury_kg": 0.5
   },
@@ -898,7 +898,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_dyes_synthetic": 0.5
+   "dye_kg": 0.5
   },
   "cap": 600,
   "up": 150,
@@ -1166,7 +1166,7 @@
    "scholar": 150
   },
   "mat": {
-   "mat_salt": 1
+   "salt_kg": 1
   },
   "cap": 600,
   "up": 150,
@@ -1197,7 +1197,7 @@
   },
   "mat": {
    "ethanol": 5,
-   "acid": 1
+   "sulfuric_acid_kg": 1
   },
   "cap": 2000,
   "up": 500,
@@ -1269,7 +1269,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_dyes_synthetic": 1
+   "dye_kg": 1
   },
   "cap": 1000,
   "up": 200,
@@ -1332,7 +1332,7 @@
    "artisan": 150
   },
   "mat": {
-   "soap_hard": 1,
+   "soap_kg": 1,
    "glass_raw_kg": 5,
    "timber_m3": 1
   },
