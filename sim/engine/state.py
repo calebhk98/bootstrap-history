@@ -171,6 +171,7 @@ class HouseholdState:
 	interest_paid: Optional[float] = None
 	reputation: float = 5.0
 	scandal: float = 0.0
+	scandal_last_year: Optional[float] = None
 	eminence: float = 0.0
 	familiarity: float = 0.0
 	protection: float = 0.0
@@ -211,6 +212,42 @@ class HouseholdState:
 	_said_deputies: Optional[int] = None
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
+	_said_eminence: int = -999
+	_said_requisition: int = -999
+	_said_notice_approach: int = 0
+	last_military_demand: int = -999
+	_said_confiscation_band: int = -1
+	_said_scandal: int = 0
+
+	def cost_capital(self, amount: float) -> None:
+		"""Deduct an amount of capital for household expenditure and track total spend."""
+		cost = float(amount)
+		self.capital -= cost
+		self.total_spend += cost
+
+	def costCapital(self, amount: float) -> None:
+		"""Alias for cost_capital following camelCase convention."""
+		self.cost_capital(amount)
+
+	def add_capital(self, amount: float) -> None:
+		"""Credit capital into household purse."""
+		self.capital += float(amount)
+
+	def add_reputation(self, delta: float) -> None:
+		"""Increase household reputation standing."""
+		self.reputation += float(delta)
+
+	def deduct_reputation(self, delta: float) -> None:
+		"""Decrease household reputation standing."""
+		self.reputation -= float(delta)
+
+	def add_scandal(self, delta: float) -> None:
+		"""Increase accumulated scandal."""
+		self.scandal += float(delta)
+
+	def record_spend(self, amount: float) -> None:
+		"""Record spend without altering capital balance directly."""
+		self.total_spend += float(amount)
 
 
 @dataclass

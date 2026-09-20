@@ -181,3 +181,183 @@ def _test_economy_and_founder_and_scenario_state():
 
 _ok, _detail = _test_economy_and_founder_and_scenario_state()
 check("subsystem state synchronization", _ok, _detail)
+
+
+def _test_household_mutation_methods():
+	"""Verify HouseholdState provides encapsulated getter/setter and mutation methods.
+	
+	Ensures cost_capital, costCapital, add_capital, add_reputation,
+	deduct_reputation, and add_scandal safely update state.
+	"""
+	s = sim(civ="rome_100ad", capital=1000.0)
+	household = s.state.household
+
+	# 1. cost_capital decreases capital and increments total_spend
+	household.cost_capital(250.0)
+	if household.capital != 750.0:
+		return False, f"cost_capital failed: expected 750.0, got {household.capital}"
+	if household.total_spend != 250.0:
+		return False, f"cost_capital did not update total_spend: {household.total_spend}"
+
+	# 2. costCapital alias
+	household.costCapital(150.0)
+	if household.capital != 600.0:
+		return False, f"costCapital alias failed: expected 600.0, got {household.capital}"
+	if household.total_spend != 400.0:
+		return False, f"costCapital did not update total_spend: {household.total_spend}"
+
+	# 3. add_capital increases capital
+	household.add_capital(500.0)
+	if household.capital != 1100.0:
+		return False, f"add_capital failed: expected 1100.0, got {household.capital}"
+
+	# 4. Reputation methods
+	init_rep = household.reputation
+	household.add_reputation(2.5)
+	if household.reputation != init_rep + 2.5:
+		return False, f"add_reputation failed: expected {init_rep + 2.5}, got {household.reputation}"
+	household.deduct_reputation(1.0)
+	if household.reputation != init_rep + 1.5:
+		return False, f"deduct_reputation failed: expected {init_rep + 1.5}, got {household.reputation}"
+
+	# 5. Scandal methods
+	init_scandal = household.scandal
+	household.add_scandal(3.0)
+	if household.scandal != init_scandal + 3.0:
+		return False, f"add_scandal failed: expected {init_scandal + 3.0}, got {household.scandal}"
+
+	# Edge cases (~5 tests):
+	# Edge case 1: zero cost
+	household.cost_capital(0.0)
+	if household.capital != 1100.0 or household.total_spend != 400.0:
+		return False, "cost_capital(0.0) modified capital or total_spend"
+
+	# Edge case 2: zero add
+	household.add_capital(0.0)
+	if household.capital != 1100.0:
+		return False, "add_capital(0.0) modified capital"
+
+	# Edge case 3: negative capital cost (e.g. refund/reversal)
+	household.cost_capital(-50.0)
+	if household.capital != 1150.0 or household.total_spend != 350.0:
+		return False, "negative cost_capital refund failed"
+
+	# Edge case 4: reputation flooring / negative delta handling
+	household.deduct_reputation(-2.0)
+	if household.reputation != init_rep + 3.5:
+		return False, f"deduct_reputation with negative delta failed: got {household.reputation}"
+
+	# Edge case 5: synchronisation via compatibility property
+	if s.capital != 1150.0:
+		return False, f"s.capital compatibility property failed to reflect method mutation: {s.capital}"
+
+	return True, "household mutation methods and edge cases operate correctly"
+
+
+_ok, _detail = _test_household_mutation_methods()
+check("household mutation methods encapsulation", _ok, _detail)
+
+
+def _test_governance_and_population_bidirectional_sync():
+	"""Verify governance and population subsystems sync bidirectionally."""
+	s = sim(civ="rome_100ad", capital=1000.0)
+
+	# 1. Governance inst_units synchronization
+	s.inst_units = {"senate": 3.0}
+	if s.state.governance.inst_units.get("senate") != 3.0:
+		return False, f"inst_units via sim failed to sync to state: {s.state.governance.inst_units}"
+	if s.household.inst_units.get("senate") != 3.0:
+		return False, f"inst_units via sim failed to sync to household proxy: {s.household.inst_units}"
+
+	s.state.governance.inst_units["guild"] = 5.0
+	if s.inst_units.get("guild") != 5.0:
+		return False, f"inst_units via state failed to sync to sim: {s.inst_units}"
+
+	# 2. Population synchronization across Sim, Population proxy, and PopulationState
+	s.pop_children = 12000.0
+	if s.population.children != 12000.0 or s.state.population.pop_children != 12000.0:
+		return False, f"pop_children failed to sync: sim.pop={s.population.children}, state={s.state.population.pop_children}"
+
+	s.pop_working_age = 25000.0
+	if s.population.working_age != 25000.0 or s.state.population.pop_working_age != 25000.0:
+		return False, f"pop_working_age failed to sync: sim.pop={s.population.working_age}, state={s.state.population.pop_working_age}"
+
+	s.pop_elderly = 4000.0
+	if s.population.elderly != 4000.0 or s.state.population.pop_elderly != 4000.0:
+		return False, f"pop_elderly failed to sync: sim.pop={s.population.elderly}, state={s.state.population.pop_elderly}"
+
+	# 3. _food_pop_bonus_applied flag
+	s._food_pop_bonus_applied = True
+	if s.state.population._food_pop_bonus_applied is not True:
+		return False, "s._food_pop_bonus_applied failed to sync to state.population"
+
+	return True, "governance and population subsystems synchronize bidirectionally"
+
+
+_ok, _detail = _test_governance_and_population_bidirectional_sync()
+check("governance and population bidirectional sync", _ok, _detail)
+
+
+def _test_all_subsystems_full_coverage_sync():
+	"""Verify deep bidirectional sync across projects, economy, founder, and scenario."""
+	s = sim(civ="rome_100ad", capital=1000.0)
+
+	# 1. ProjectsState additional collections
+	s.revealed.add("concrete_vaulting")
+	if "concrete_vaulting" not in s.state.projects.revealed:
+		return False, "revealed project failed to sync to state.projects"
+
+	s.state.projects.mothballed.add("watermill")
+	if "watermill" not in s.mothballed:
+		return False, "mothballed project failed to sync from state.projects to sim"
+
+	s.state.projects.paid_towards["aqueduct"] = 150.0
+	if s.paid_towards.get("aqueduct") != 150.0:
+		return False, "paid_towards failed to sync from state.projects to sim"
+
+	# 2. EconomyState land and resources
+	s.farm_hectares = 45.0
+	if s.state.economy.farm_hectares != 45.0:
+		return False, "farm_hectares failed to sync to state.economy"
+
+	s.forest_ha = 12.5
+	if s.state.economy.forest_ha != 12.5:
+		return False, "forest_ha failed to sync to state.economy"
+
+	s.money_real = 0.85
+	if s.state.economy.money_real != 0.85:
+		return False, "money_real failed to sync to state.economy"
+
+	s.output_factor = 1.15
+	if s.state.economy.output_factor != 1.15:
+		return False, "output_factor failed to sync to state.economy"
+
+	# 3. FounderState policy and lifespan
+	s.policy["test_option"] = True
+	if s.state.founder.policy.get("test_option") is not True:
+		return False, "policy mutation failed to sync to state.founder.policy"
+
+	s.life_left = 22.5
+	if s.state.founder.life_left != 22.5:
+		return False, "life_left failed to sync to state.founder.life_left"
+
+	# 4. ScenarioState and state root
+	s.goal_year = 300
+	if s.state.scenario.goal_year != 300:
+		return False, "goal_year failed to sync to state.scenario"
+
+	s.fog = False
+	if s.state._fog is not False:
+		return False, "fog failed to sync to state._fog"
+
+	s.goal = "test_goal"
+	if s.state._goal != "test_goal":
+		return False, "goal failed to sync to state._goal"
+
+	return True, "deep bidirectional sync verified across all remaining subsystem fields"
+
+
+_ok, _detail = _test_all_subsystems_full_coverage_sync()
+check("all subsystems full coverage sync", _ok, _detail)
+
+

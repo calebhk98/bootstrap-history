@@ -57,9 +57,9 @@ class ProductionMixin:
     def state_funding(self):
         if not self.running("patron_imperial"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.economy * self.state_capacity
+        return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
-                * (1.0 + max(0.0, self.household.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
+                * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
 
     def venture_ramp(self, node_id):
@@ -71,10 +71,12 @@ class ProductionMixin:
         doors open, or delaying `open` would be strictly better than
         opening promptly. Custom takes time to find whoever owns the shop.
         """
-        started = (getattr(self.household, "opened_year", None) or {}).get(node_id)
+        projects = self.state.projects
+        scenario = self.state.scenario
+        started = (getattr(projects, "opened_year", None) or {}).get(node_id)
         if started is None:
-            started = self.household.done_year.get(node_id, self.year)
-        age = self.year - started
+            started = projects.done_year.get(node_id, scenario.year)
+        age = scenario.year - started
         return min(1.0, (age + 1) / self.cfg["revenue_ramp_years"])
 
     def practice_attention(self):
@@ -95,24 +97,25 @@ class ProductionMixin:
         # A DEAD PHYSICIAN HAS NO PRACTICE: this is your own two hands, so it
         # must go to zero the moment the founder is gone. What you built
         # outlives you; what you personally did does not.
-        if not self.founder_alive:
+        if not self.state.founder.founder_alive:
             return 0.0
         pool = self.director_pool()
         if pool <= 0:
             return 1.0
-        sold = min(pool, getattr(self.household, "wage_hours_this_year", 0.0))
+        sold = min(pool, getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0)
         return max(0.0, 1.0 - sold / pool)
 
     def revenue_capacity(self):
         """What you would earn in an ordinary year, with your own hands on your
         own work. Used where a swing in ONE year should not count - a lender
         does not cut your line because you took a job this year."""
-        _sold = getattr(self.household, "wage_hours_this_year", 0.0)
-        self.household.wage_hours_this_year = 0.0
+        household = self.state.household
+        _sold = getattr(household, "wage_hours_this_year", 0.0) or 0.0
+        household.wage_hours_this_year = 0.0
         try:
             return self.revenue()
         finally:
-            self.household.wage_hours_this_year = _sold
+            household.wage_hours_this_year = _sold
 
     def revenue(self):
         """Total annual revenue across all active concerns, workshops, and state funding.
@@ -137,22 +140,28 @@ class ProductionMixin:
         Nested mutation concerns: household.employees wrapped in _InvalidatingDict (flat dict); workforce counts tracked in key.
         Serialized: no
         """
+        scenario = self.state.scenario
+        economy = self.state.economy
+        projects = self.state.projects
+        household = self.state.household
+        governance = self.state.governance
+        founder = self.state.founder
         key = (
-            self.year,
+            scenario.year,
             self.pop_scale,
-            getattr(self, "economy", 1.0),
-            getattr(self.household, "_operating_ver", 0),
-            getattr(self.household, "_done_ver", 0),
-            getattr(self.household, "_workforce_ver", 0),
-            getattr(self.household, "_inst_units_ver", 0),
-            getattr(self.household, "wage_hours_this_year", 0.0),
-            getattr(self.household, "farm_hectares", 0.0),
-            getattr(self.household, "freedmen", 0.0),
-            getattr(self.household, "slaves", 0.0),
-            getattr(self.household, "gov", 0.0),
-            self.output_factor,
-            self.reputation,
-            self.founder_alive,
+            getattr(economy, "economy", 1.0),
+            getattr(projects, "_operating_ver", 0),
+            getattr(projects, "_done_ver", 0),
+            getattr(household, "_workforce_ver", 0),
+            getattr(governance, "_inst_units_ver", 0),
+            getattr(household, "wage_hours_this_year", 0.0) or 0.0,
+            getattr(economy, "farm_hectares", 0.0) or 0.0,
+            getattr(household, "freedmen", 0.0) or 0.0,
+            getattr(household, "slaves", 0.0) or 0.0,
+            getattr(governance, "gov", 0.0) or 0.0,
+            economy.output_factor,
+            household.reputation,
+            founder.founder_alive,
         )
         if getattr(self.household, "_revenue_cache_key", None) == key:
             return self.household._revenue_cache_val
@@ -166,8 +175,9 @@ class ProductionMixin:
         total_revenue = 0.0
         attention = self.practice_attention()
         practice_set = self._practice_set()
-        granted = self.household.granted
-        operating = self.household.operating
+        projects = self.state.projects
+        granted = projects.granted
+        operating = projects.operating
         # SCAN ONLY WHAT COULD POSSIBLY PAY. Every node this loop's own body
         # goes on to skip - not operating and not practised - was already
         # true of the whole rest of `done`, which only grows; see
@@ -221,11 +231,12 @@ class ProductionMixin:
         # to work: a staff with no workshop is an expense, which is exactly why
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
-        gross = total_revenue * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+        economy = self.state.economy
+        gross = total_revenue * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
-            * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.price_index
+            * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
-        return (gross + self.state_funding()) * self.output_factor
+        return (gross + self.state_funding()) * economy.output_factor
 
     ECONOMY_OUTPUT_SCALING_EXPONENT = declare(
         "ECONOMY_OUTPUT_SCALING_EXPONENT", 0.75, kind="temporary_heuristic",
@@ -302,13 +313,14 @@ class ProductionMixin:
         """What your standing staff produces and sells, over and above projects."""
         if not (self.running("workshop_first") or self.running("school_founded")):
             return 0.0
-        craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
-        craft += self.household.freedmen + self.household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
+        household = self.state.household
+        craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
+        craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
         wage = 0.0
-        for trade, count in self.household.employees.items():
+        for trade, count in household.employees.items():
             if trade_family(trade) == "craft":
                 wage += count * ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK)
-        wage += ((self.household.freedmen + self.household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
+        wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
                  * ANNUAL_WAGE.get("artisan", self.DEFAULT_ARTISAN_WAGE_FALLBACK))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         if self.running("interchangeable_parts"):  mark += self.WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS
@@ -364,8 +376,9 @@ class ProductionMixin:
         if cached is not None:
             return cached
         weight = 0.0
+        projects = self.state.projects
         for node_id in self.done_in_order():
-            if node_id in self.household.granted or node_id in self.household.operating:
+            if node_id in projects.granted or node_id in projects.operating:
                 continue
             node = self.nodes[node_id]
             if node["rev"] <= 0:
@@ -407,11 +420,13 @@ class ProductionMixin:
         the interface.
         """
         rows = {}
+        projects = self.state.projects
+        economy = self.state.economy
         for node_id in self.done_in_order():
-            practice = node_id in self.household.granted and self._practisable(node_id)
-            if node_id in self.household.granted and not practice:
+            practice = node_id in projects.granted and self._practisable(node_id)
+            if node_id in projects.granted and not practice:
                 continue
-            if not practice and node_id not in self.household.operating:
+            if not practice and node_id not in projects.operating:
                 continue
             node = self.nodes[node_id]
             if not node["rev"]:
@@ -420,7 +435,7 @@ class ProductionMixin:
                 ramp = self.PRACTICE_SHARE
             else:
                 ramp = self.venture_ramp(node_id)
-            amt = (node["rev"] * ramp * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor
+            amt = (node["rev"] * ramp * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor
                    * self.price_index)
             if practice:
                 amt *= self.practice_attention()
@@ -442,11 +457,11 @@ class ProductionMixin:
         rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
             out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
-        workshop_total = self.workshop_output() * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor
+        workshop_total = self.workshop_output() * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
         if self.state_funding() > 0.5:
-            out["_state_funding"] = round(self.state_funding() * self.output_factor, 1)
+            out["_state_funding"] = round(self.state_funding() * economy.output_factor, 1)
         # And the difference between the parts and the whole, which is the
         # market saturating: you cannot sell more inns than the town wants.
         gap = round(self.revenue() - sum(out.values()), 1)
@@ -496,9 +511,10 @@ class ProductionMixin:
         value is a number that has to sum to the revenue above it.
         """
         young = []
-        for node_id in sorted(self.household.operating):
+        projects = self.state.projects
+        for node_id in sorted(projects.operating):
             node = self.nodes.get(node_id)
-            if not node or not node["rev"] or node_id in self.household.granted:
+            if not node or not node["rev"] or node_id in projects.granted:
                 continue
             ramp = self.venture_ramp(node_id)
             if ramp < 0.999:
@@ -517,8 +533,9 @@ class ProductionMixin:
         """Why the practice pays less than the tree quotes, said once, plainly."""
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
+        economy = self.state.economy
         scale = (self.PRACTICE_SHARE * self.practice_attention()
-                 * (self.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.output_factor)
+                 * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor)
         prac = sorted(node_id for node_id in self._practice_set()
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
@@ -541,10 +558,11 @@ class ProductionMixin:
         The answer never changes unless the granted set does, which happens at
         setup and never again.
         """
+        projects = self.state.projects
         cache = getattr(self.household, "_practice_cache", None)
-        if cache is None or cache[0] != len(self.household.granted):
-            cache = (len(self.household.granted),
-                     frozenset(node_id for node_id in self.household.granted if self._practisable(node_id)))
+        if cache is None or cache[0] != len(projects.granted):
+            cache = (len(projects.granted),
+                     frozenset(node_id for node_id in projects.granted if self._practisable(node_id)))
             self.household._practice_cache = cache
         return cache[1]
 
@@ -612,12 +630,13 @@ class ProductionMixin:
         # Holding seq and practice_set alive for as long as the entry may be
         # compared against them makes the collision structurally impossible
         # rather than merely unmeasured.
-        operating_version = getattr(self.household, "_operating_ver", 0)
+        projects = self.state.projects
+        operating_version = getattr(projects, "_operating_ver", 0)
         cached = getattr(self.household, "_rev_up_candidates_cache", None)
         if (cached is not None and cached[0] is seq
                 and cached[1] is practice_set and cached[2] == operating_version):
             return cached[3]
-        operating = self.household.operating
+        operating = projects.operating
         cands = [node_id for node_id in seq if node_id in operating or node_id in practice_set]
         self.household._rev_up_candidates_cache = (seq, practice_set, operating_version, cands)
         return cands
@@ -630,9 +649,10 @@ class ProductionMixin:
         # does stop the bleeding, and knowing how to do something costs nothing
         # to know.
         practice_set = self._practice_set()
+        operating = self.state.projects.operating
         return sum(self.institution_upkeep(node_id)
                    for node_id in self._revenue_upkeep_candidates()
-                   if node_id in self.household.operating or node_id in practice_set)
+                   if node_id in operating or node_id in practice_set)
 
     INSTITUTION_FLOOR = declare(
         "INSTITUTION_FLOOR", 0.20, kind="temporary_heuristic",
@@ -678,7 +698,7 @@ class ProductionMixin:
         # zero - free, in effect - and let the affordability gate through
         # on nothing. _units must fall back to 1.0 for anything not yet
         # operating.
-        _units = (self.institution_units(node_id) if node_id in self.household.operating else 1.0) \
+        _units = (self.institution_units(node_id) if node_id in self.state.projects.operating else 1.0) \
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         upkeep_amount = node["up"] * _units
         if node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0:

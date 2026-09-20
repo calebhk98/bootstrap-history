@@ -595,7 +595,9 @@ class GoodsMixin:
         #   there this cache is not stale, only (like the code before this
         #   change) reading done_year's default of self.year for a node that
         #   was never truly opened.
-        key = (self.year, getattr(self.household, "_operating_ver", 0))
+        scenario = self.state.scenario
+        projects = self.state.projects
+        key = (scenario.year, getattr(projects, "_operating_ver", 0))
         cache = getattr(self.household, "_goods_cat_state_cache", None)
         if cache is None or cache[0] != key:
             cache = (key, {})
@@ -619,12 +621,12 @@ class GoodsMixin:
         # order-independent, so dropping the sort changes no result. See
         # PERFORMANCE.md.
         for node_id in self._nodes_in_cat(cat):
-            if node_id not in self.household.operating:
+            if node_id not in projects.operating:
                 continue
-            started = (getattr(self.household, "opened_year", None) or {}).get(node_id)
+            started = (getattr(projects, "opened_year", None) or {}).get(node_id)
             if started is None:
-                started = self.household.done_year.get(node_id, self.year)
-            ages.append(max(0.0, self.year - started))
+                started = projects.done_year.get(node_id, scenario.year)
+            ages.append(max(0.0, scenario.year - started))
         if not ages:
             bucket[cat] = None
             return None
@@ -685,12 +687,15 @@ class GoodsMixin:
         # Dependencies: self.year, pop_scale, economy, household._operating_ver, household._done_ver
         # Invalidated by: _operating_changed(), _done_changed(), step() year/pop_scale/economy updates
         # Not serialized because: pure transient derived state recomputed on load
+        scenario = self.state.scenario
+        projects = self.state.projects
+        economy = self.state.economy
         shared_key = (
-            self.year,
+            scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(self, "economy", 1.0),
-            getattr(self.household, "_operating_ver", 0),
-            getattr(self.household, "_done_ver", 0),
+            getattr(economy, "economy", 1.0),
+            getattr(projects, "_operating_ver", 0),
+            getattr(projects, "_done_ver", 0),
         )
         cache = getattr(self.household, "_goods_category_ratios_cache", None)
         if cache is None or cache[0] != shared_key:
@@ -709,7 +714,7 @@ class GoodsMixin:
         n_active += extra
         reach = self.goods_reach_factor()
         tau = max(1.0, cfg["tau"] * (self.pop_scale ** self.GOODS_TAU_POP_SCALE_EXPONENT)
-                  * (self.economy ** self.GOODS_TAU_ECONOMY_EXPONENT) / reach)
+                  * (economy.economy ** self.GOODS_TAU_ECONOMY_EXPONENT) / reach)
         world_supply = 1.0 + world_age / tau
         total_supply = world_supply * n_active
         eta = cfg["eta"]
@@ -804,20 +809,23 @@ class GoodsMixin:
         """Buy productive farmland that lowers the household staple price."""
         hectares = float(hectares)
         cost = hectares * self.FARM_COST_PER_HA * self.price_index
-        if hectares <= 0 or cost > self.household.capital:
+        household = self.state.household
+        if hectares <= 0 or cost > household.capital:
             return 0.0
-        self.household.capital -= cost
-        self.household.farm_hectares = getattr(self.household, "farm_hectares", 0.0) + hectares
+        household.capital -= cost
+        economy = self.state.economy
+        economy.farm_hectares = (getattr(economy, "farm_hectares", 0.0) or 0.0) + hectares
         return hectares
 
     def build_worker_housing(self, places):
         """Add durable worker housing and relieve household crowding."""
         places = float(places)
         cost = places * self.HOUSING_COST_PER_PLACE * self.price_index
-        if places <= 0 or cost > self.household.capital:
+        household = self.state.household
+        if places <= 0 or cost > household.capital:
             return 0.0
-        self.household.capital -= cost
-        self.household.worker_housing_places = getattr(self.household, "worker_housing_places", 0.0) + places
+        household.capital -= cost
+        household.worker_housing_places = (getattr(household, "worker_housing_places", 0.0) or 0.0) + places
         return places
 
     INCOME_ELASTICITY = declare(
@@ -863,13 +871,16 @@ class GoodsMixin:
         # Dependencies: year, pop_scale, economy, household _operating_ver, _done_ver, farm_hectares
         # Invalidated by: any change to essential category supply or household farm_hectares
         # Not serialized because: pure transient derived state recomputed on load
+        scenario = self.state.scenario
+        economy = self.state.economy
+        projects = self.state.projects
         shared_key = (
-            self.year,
+            scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(self, "economy", 1.0),
-            getattr(self.household, "_operating_ver", 0),
-            getattr(self.household, "_done_ver", 0),
-            getattr(self.household, "farm_hectares", 0.0),
+            getattr(economy, "economy", 1.0),
+            getattr(projects, "_operating_ver", 0),
+            getattr(projects, "_done_ver", 0),
+            getattr(economy, "farm_hectares", 0.0) or 0.0,
         )
         cache = getattr(self.household, "_income_factor_cache", None)
         if cache is not None and cache[0] == shared_key:
@@ -933,23 +944,26 @@ class GoodsMixin:
         combined capacity finds buyers for, not what any one concern
         alone would.
         """
-        if node_id not in self.household.operating:
+        projects = self.state.projects
+        if node_id not in projects.operating:
             return 1.0
         cat = self.nodes[node_id].get("cat")
         if not cat or cat not in self.GOODS_CATEGORIES:
             return 1.0
+        scenario = self.state.scenario
+        economy = self.state.economy
 
         # Cached value: category-level operating revenue factor
         # Dependencies: shared_key and household farm_hectares
         # Invalidated by: changes to operating, done, year, pop_scale, economy, farm_hectares
         # Not serialized because: transient derived state recomputed on demand
         shared_key = (
-            self.year,
+            scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(self, "economy", 1.0),
-            getattr(self.household, "_operating_ver", 0),
-            getattr(self.household, "_done_ver", 0),
-            getattr(self.household, "farm_hectares", 0.0),
+            getattr(economy, "economy", 1.0),
+            getattr(projects, "_operating_ver", 0),
+            getattr(projects, "_done_ver", 0),
+            getattr(economy, "farm_hectares", 0.0) or 0.0,
         )
         cache = getattr(self.household, "_goods_mkt_op_factor_cache", None)
         if cache is None or cache[0] != shared_key:
@@ -995,7 +1009,7 @@ class GoodsMixin:
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        if node_id in self.household.operating:
+        if node_id in self.state.projects.operating:
             return self.goods_market_factor(node_id)
         ratios = self._goods_category_ratios(cat, extra=1)
         if ratios is None:
@@ -1027,7 +1041,7 @@ class GoodsMixin:
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        opened = node_id in self.household.operating
+        opened = node_id in self.state.projects.operating
         factor = (self.goods_market_factor(node_id) if opened
                   else self.goods_market_factor_if_opened(node_id))
         if factor is None or abs(factor - 1.0) < 0.01:
@@ -1111,7 +1125,7 @@ class GoodsMixin:
         """
         rows = []
         quoted_total = actual_total = 0.0
-        for node_id in sorted(self.household.operating):
+        for node_id in sorted(self.state.projects.operating):
             cfg = self.GOODS_CATEGORIES.get(self.nodes[node_id].get("cat"))
             if not cfg:
                 continue

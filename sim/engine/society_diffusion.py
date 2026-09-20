@@ -154,16 +154,19 @@ class DiffusionMixin:
         number honestly should reduce what THIS venture earns by up to this
         share while economy_index() (or its successor) is credited with the
         matching gain to the wider economy - `diffused` there already grows
-        with self.household.done regardless of this function, so the two are additive,
+        with projects.done regardless of this function, so the two are additive,
         not double-counting the same escape.
         """
-        if node_id not in self.household.operating:
+        projects = self.state.projects
+        scenario = self.state.scenario
+        if node_id not in projects.operating:
             return 0.0
         node = self.nodes.get(node_id)
         if not node or node.get("rev", 0) <= 0:
             return 0.0
-        started = self.household.opened_year.get(node_id, self.household.done_year.get(node_id, self.year))
-        age = max(0.0, self.year - started)
+        done_year_map = projects.done_year or {}
+        started = projects.opened_year.get(node_id, done_year_map.get(node_id, scenario.year))
+        age = max(0.0, scenario.year - started)
         pace = 1.0
         if self.running("corpus_dispersed"):
             pace = self.CORPUS_DIFFUSION_PACE_DISPERSED
@@ -188,7 +191,8 @@ class DiffusionMixin:
         exactly the same reasoning revenue() itself already weights by each
         node's own `rev` figure.
         """
-        ops = sorted(node_id for node_id in self.household.operating
+        projects = self.state.projects
+        ops = sorted(node_id for node_id in projects.operating
                      if self.nodes.get(node_id, {}).get("rev", 0) > 0)
         if not ops:
             return 0.0
@@ -376,7 +380,9 @@ class DiffusionMixin:
         (_state_has_a_patron): the government cannot be using cannon the
         founder never showed to anyone with soldiers.
         """
-        if node_id not in self.household.done:
+        projects = self.state.projects
+        scenario = self.state.scenario
+        if node_id not in projects.done:
             return 0.0
         node = self.nodes.get(node_id)
         if not node:
@@ -386,7 +392,8 @@ class DiffusionMixin:
             return 0.0
         if cat == "military" and not self._state_has_a_patron():
             return 0.0
-        age = max(0.0, self.year - self.household.done_year.get(node_id, self.year))
+        done_year_map = projects.done_year or {}
+        age = max(0.0, scenario.year - done_year_map.get(node_id, scenario.year))
         half_life = (self.DIFFUSION_HALF_LIFE_YEARS[cat]
                      / max(0.4, self._diffusion_pace(cat)))
         return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
@@ -404,8 +411,9 @@ class DiffusionMixin:
         # a founder innovation waiting to diffuse from the household.  Counting
         # newly explicit inherited grants here both diluted later projects and
         # treated those grants as if the founder had introduced them.
+        projects = self.state.projects
         ids = [node_id for node_id in self._diffusible_ids(cat)
-               if node_id in self.household.done and node_id not in self.household.granted]
+               if node_id in projects.done and node_id not in projects.granted]
         if not ids:
             return 0.0
         return sum(self.civ_diffusion(node_id) for node_id in sorted(ids)) / len(ids)
@@ -465,21 +473,22 @@ class DiffusionMixin:
 
     def _advance_food_diffusion_population(self, year):
         target = self.FOOD_DIFFUSION_POP_BONUS_MAX * self.food_diffusion_index()
-        applied = getattr(self, "_food_pop_bonus_applied", 0.0)
+        pop_state = self.state.population
+        applied = getattr(pop_state, "_food_pop_bonus_applied", 0.0) or 0.0
         gap = target - applied
         if gap <= 1e-6:
             return
         add = self.FOOD_DIFFUSION_POP_APPROACH_RATE * gap
         self._pop_scale_base += add
         applied += add
-        self._food_pop_bonus_applied = applied
+        pop_state._food_pop_bonus_applied = applied
         # ONCE A GENERATION, same throttle as _advance_literacy's own - a
         # gain this small, reported every year of a centuries-long run, is
         # the same noise that throttle was written to stop.
         last = self._food_diffusion_said
         if applied > 0.005 and year - last >= 25:
             self._food_diffusion_said = year
-            self.household.log.append((year, "what you grew is no longer only on your "
+            self.state.household.log.append((year, "what you grew is no longer only on your "
                              "own land: the crops and rotations you "
                              "introduced have spread far enough into the "
                              "country's own fields that the population is "
@@ -646,7 +655,7 @@ class DiffusionMixin:
                 continue
             if node_id in (ent.get("ids") or ()):
                 node = ent.get("node")
-                if node and node not in self.household.done:
+                if node and node not in self.state.projects.done:
                     return node, (ent.get("because") or
                                   "this society has no %s" % key)
         return None, None
@@ -678,7 +687,7 @@ class DiffusionMixin:
         def mult(key):
             multiplier = float(mults[key])
             remedy = rem.get(key)
-            if isinstance(remedy, dict) and remedy.get("node") in self.household.done:
+            if isinstance(remedy, dict) and remedy.get("node") in self.state.projects.done:
                 multiplier = float(remedy.get("residual", 1.0))
             return multiplier
 

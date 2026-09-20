@@ -1056,3 +1056,26 @@ To preserve existing callers and compatibility while enforcing a single authorit
 
 - **Save**: `save_state(sim, path)` directly serializes `sim.state` to structured nested v3 JSON format.
 - **Load**: `load_state(sim, path)` validates v3 structural schema, deserializes into `sim.state` using generic type introspection (`dataclasses.fields`, `typing.get_origin`, `typing.get_args`), and calls `sim._reconnect_state_hooks()` to reattach transient invalidation listeners and version counters.
+
+## Direct Subsystem Live State Ownership & Internal Access Rules
+
+### 1. Internal Engine State Access Architecture
+
+All internal simulation code across all engine mixins (`sim/engine/geography.py`, `fog.py`, `economy_*.py`, `labour_*.py`, `projects_*.py`, `society_*.py`, `core_step_phases.py`, and `core.py`) accesses persistent live simulation state exclusively through its authoritative subsystem owner:
+
+- `sim.state.household` (`HouseholdState`): Capital, workforce, wages, financial ledgers, debt, standing, and household capacity.
+- `sim.state.projects` (`ProjectsState`): Active, done, revealed, operating, mothballed, and shut projects, attempts, and work trackers.
+- `sim.state.economy` (`EconomyState`): Extraction workings (`mines`), material stocks, shortages, market pressure, output factor, farmland, and energy.
+- `sim.state.governance` (`GovernanceState`): Scaled civic institution units (`inst_units`) and state interest/quality (`gov`).
+- `sim.state.founder` (`FounderState`): Founder biological lifespan (`life_left`), health/survival (`founder_alive`), living costs, and operating policies.
+- `sim.state.scenario` (`ScenarioState`): Simulation progression (`year`), win criteria (`goal_year`), milestone warnings, and debasement tracking.
+- `sim.state.population` (`PopulationState`): Civilisation demographic cohorts (`pop_children`, `pop_working_age`, `pop_elderly`) and agricultural bonuses.
+
+### 2. Internal Access Rules & Invariants
+
+1. **No Cross-Subsystem Delegation Through Household**: Internal engine modules do not access projects, economy, governance, founder, scenario, or population state through `self.household.<prop>` or `household.<prop>`. Such access routes were historical storage tunnels and are mechanically prohibited by AST analysis.
+2. **Authoritative Subsystem Access**: Domain mixins receive their required subsystem state directly or unpack it from `self.state.<subsystem>`. Mixin helper signatures explicitly take the subsystem state dataclass (e.g., `projects: ProjectsState`, `economy: EconomyState`, `household: HouseholdState`), preserving modular decoupling and testability.
+3. **Compatibility Façade Boundary**: `ForwardingPropertiesMixin` on `Sim` (`sim/engine/core_properties.py`) defines exactly 85 outward-facing compatibility properties for external consumers and integration tests. Internal engine files do not access pruned forwarding properties on `self` or `sim`.
+4. **Mechanical AST Enforcement**: `sim/tests/test_state_ownership_enforcement.py` statically inspects all engine code using Python's `ast` parser on every test run. Any internal code attempting to access non-household state via `.household` or accessing pruned properties fails the build.
+5. **Bidirectional Synchronisation**: `sim/tests/test_live_state_ownership.py` continuously validates that modifications via direct state mutation, method encapsulation (`cost_capital`, `add_capital`, `add_reputation`, `add_scandal`), or external compatibility properties maintain identical underlying state across all 7 subsystem models.
+

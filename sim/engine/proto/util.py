@@ -151,7 +151,7 @@ def _unsafe_path(path):
     commands to this process can already run code as this user. It is here
     so the ordinary accident does not happen, not because a sandbox exists.
     """
-    if os.path.isabs(path):
+    if os.path.isabs(path) or path.startswith(("/", "\\")):
         return ("a save file must be a relative path, not an absolute one. "
                 "Try {\"cmd\":\"save\",\"file\":\"mygame.json\"}")
     norm = os.path.normpath(path)

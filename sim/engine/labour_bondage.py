@@ -42,13 +42,14 @@ class BondageMixin:
         those two fields: an addition that bypasses this record is silently
         overwritten and discarded the next time `_resync_pools()` runs.
         """
-        granted = getattr(self.household, "granted_staff", None)
+        household = self.state.household
+        granted = getattr(household, "granted_staff", None)
         if granted is None:
-            granted = self.household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
+            granted = household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
         granted["scholars"] = granted.get("scholars", 0.0) + scholars
         granted["artisans"] = granted.get("artisans", 0.0) + artisans
-        self.household.scholars += scholars
-        self.household.artisans += artisans
+        household.scholars += scholars
+        household.artisans += artisans
 
     FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
         "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",
@@ -100,9 +101,10 @@ class BondageMixin:
         self.household.artisans what they are, so it is the one place that has to add
         the grant back rather than let it be overwritten out of existence.
         """
-        craft = sum(count for trade, count in self.household.employees.items() if trade_family(trade) == "craft")
-        schol = self.household.employees.get("scholar", 0.0)
-        granted = getattr(self.household, "granted_staff", None) or {}
+        household = self.state.household
+        craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
+        schol = household.employees.get("scholar", 0.0)
+        granted = getattr(household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
         # recomputes self.household.artisans from scratch on every call, so
         # anyone still in the training queue must be excluded from the count
@@ -114,19 +116,19 @@ class BondageMixin:
         # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
         # bought, so that is the divisor that recovers the headcount still
         # learning.
-        learning = sum(row[0] for row in getattr(self.household, "training", ())
+        learning = sum(row[0] for row in getattr(household, "training", ())
                        if len(row) <= 2) / self.WORKER_EQUIVALENT_UNTRAINED
-        owned = max(0.0, self.household.freedmen + self.household.slaves - learning)
+        owned = max(0.0, household.freedmen + household.slaves - learning)
         # Split what is left in the same proportion as what is held.
-        held = self.household.freedmen + self.household.slaves
+        held = household.freedmen + household.slaves
         if held > 0:
-            free_share = self.household.freedmen / held
+            free_share = household.freedmen / held
         else:
             free_share = 0.0
-        self.household.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
+        household.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
                          + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY
                          + granted.get("artisans", 0.0))
-        self.household.scholars = schol + granted.get("scholars", 0.0)
+        household.scholars = schol + granted.get("scholars", 0.0)
 
     TRAINING_YEARS = declare(
         "TRAINING_YEARS", 3.0, kind="temporary_heuristic",
@@ -262,13 +264,15 @@ class BondageMixin:
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
-        if price > self.household.capital:
+        household = self.state.household
+        economy = self.state.economy
+        if price > household.capital:
             return 0
-        self.household.capital -= price
-        self.household.slaves += n_people
-        self.household.market_pressure = getattr(self.household, "market_pressure", 0.0) + n_people
-        # Untrained on arrival. They become productive through self.household.training.
-        self.household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self.year + self.TRAINING_YEARS])
+        household.capital -= price
+        household.slaves += n_people
+        economy.market_pressure = economy.market_pressure + n_people
+        # Untrained on arrival. They become productive through household.training.
+        household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self.state.scenario.year + self.TRAINING_YEARS])
         return n_people
 
     WORKER_EQUIVALENT_UNTRAINED = declare(
@@ -317,12 +321,13 @@ class BondageMixin:
             "measured.")
 
     def manumit(self, n_people):
-        n_people = min(n_people, self.household.slaves)
+        household = self.state.household
+        n_people = min(n_people, household.slaves)
         if not n_people:
             return 0
-        self.household.slaves -= n_people
-        self.household.freedmen += n_people
-        self.household.manumitted_total += n_people
+        household.slaves -= n_people
+        household.freedmen += n_people
+        household.manumitted_total += n_people
         # The SAME person, working properly: 0.55 to 1.0, not another whole
         # worker.
         #
@@ -333,19 +338,19 @@ class BondageMixin:
         # The training queue also carries taught-trade rows (which have a
         # trade name in them and no artisan capacity), so read column 0 by
         # index rather than unpacking a row whose width is not fixed.
-        in_training = sum(row[0] for row in self.household.training)
+        in_training = sum(row[0] for row in household.training)
         untrained = min(n_people, int(in_training / self.WORKER_EQUIVALENT_UNTRAINED + 0.5))
         trained_freed = max(0, n_people - untrained)
-        self.household.artisans += trained_freed * self.MANUMISSION_ARTISAN_UPLIFT
+        household.artisans += trained_freed * self.MANUMISSION_ARTISAN_UPLIFT
         if untrained:
             share = untrained / max(1.0, in_training / self.WORKER_EQUIVALENT_UNTRAINED)
-            for row in self.household.training:
+            for row in household.training:
                 row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
         # Manumission is publicly admired, and admiration saturates: the
         # first freedmen you make are a statement, the four hundredth is a
         # payroll. The gain is capped so a high-volume series of small
         # manumissions cannot out-earn taking a patron.
         gain = (self.MANUMISSION_REPUTATION_GAIN_PER_PERSON * n_people
-                / (1.0 + self.household.manumitted_total / self.MANUMISSION_REPUTATION_SATURATION_SCALE))
-        self.household.reputation += min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)
+                / (1.0 + household.manumitted_total / self.MANUMISSION_REPUTATION_SATURATION_SCALE))
+        household.reputation += min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)
         return n_people

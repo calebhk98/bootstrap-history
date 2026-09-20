@@ -23,7 +23,7 @@ class CapabilityMixin:
         """Is this something you could run as a going concern, as opposed to a
         piece of knowledge that simply changes what you can do?"""
         node = self.nodes.get(node_id)
-        if node is None or node_id in self.household.granted:
+        if node is None or node_id in self.state.projects.granted:
             return False
         return node["rev"] > 0 or node["up"] > 0
 
@@ -130,9 +130,12 @@ class CapabilityMixin:
         """
         if node_id not in self.SCALABLE_INSTITUTIONS:
             return 1.0 if self.running(node_id) else 0.0
-        if node_id not in self.household.operating:
+        if node_id not in self.state.projects.operating:
             return 0.0
-        return max(0.0, getattr(self.household, "inst_units", {}).get(node_id, 1.0))
+        inst_units = getattr(self.state.governance, "inst_units", None)
+        if inst_units is None:
+            return 1.0
+        return max(0.0, inst_units.get(node_id, 1.0))
 
     LITERACY_GENERAL_FLOOR = declare(
         "LITERACY_GENERAL_FLOOR", 0.02, kind="temporary_heuristic",
@@ -258,9 +261,10 @@ class CapabilityMixin:
         does not close), for this society's own crafts, and for a concern you
         actually have open.
         """
-        if node_id not in self.household.done:
+        projects = self.state.projects
+        if node_id not in projects.done:
             return False
-        if node_id in self.household.granted or not self.is_venture(node_id):
+        if node_id in projects.granted or not self.is_venture(node_id):
             return True
         # UNPARKED. This returned True unconditionally for a long time, with a
         # comment recording why: requiring the doors to be open sent Rome from
@@ -288,5 +292,5 @@ class CapabilityMixin:
         # reached and median technologies built held, where requiring the
         # doors open with institutions still booleans had cost Rome the run
         # outright.
-        return node_id in self.household.operating
+        return node_id in projects.operating
 

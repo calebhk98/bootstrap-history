@@ -275,5 +275,22 @@ def load_state(sim, path):
 		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
 	sim.state = state
 	sim._reconnect_state_hooks()
+	if state._fog is not None:
+		sim.fog = bool(state._fog)
+	if state._immortal is not None:
+		sim.cfg["immortal"] = bool(state._immortal)
+	if state._goal is not None:
+		sim.goal = state._goal
+	if state._rng is not None:
+		rng_version, _keys, rng_gaussian = state._rng
+		sim.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))
+	if state._civ_live:
+		for attr, value in state._civ_live.items():
+			if value is not None:
+				sim.civ[attr] = value
+	if state._weights:
+		sim.value_weights.update(state._weights)
+	if state._civ_live and "state_capacity" in state._civ_live:
+		sim.state_capacity = float(state._civ_live["state_capacity"])
 	return sim
 

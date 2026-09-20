@@ -189,7 +189,7 @@ def cmd_agent(args):
             save_state(sim, session)
         try:
             emit(resp, cmd.get("cmd") if isinstance(cmd, dict) else None)
-        except BrokenPipeError:
+        except (BrokenPipeError, OSError):
             # Somebody closed the pipe. The game is saved; leave quietly, the
             # same way `play` does for the same reason.
             try:

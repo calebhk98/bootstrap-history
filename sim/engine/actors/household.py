@@ -61,6 +61,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"interest_paid": "household",
 	"reputation": "household",
 	"scandal": "household",
+	"scandal_last_year": "household",
 	"eminence": "household",
 	"familiarity": "household",
 	"protection": "household",
@@ -99,6 +100,12 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_deputies": "household",
 	"_said_near_limit": "household",
 	"_said_autoopen": "household",
+	"_said_eminence": "household",
+	"_said_requisition": "household",
+	"_said_notice_approach": "household",
+	"last_military_demand": "household",
+	"_said_confiscation_band": "household",
+	"_said_scandal": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -273,11 +280,6 @@ class Household:
 		self._cap_factor: Optional[float] = None
 		self._staff_scale: float = 1.0
 		self._spend_this_year: float = 0.0
-		self._said_eminence: int = -999
-		self._said_requisition: int = -999
-		self._said_notice_approach: int = 0
-		self.last_military_demand: int = -999
-		self._said_confiscation_band: int = -1
 		self._revenue_cache_key: Any = None
 		self._revenue_cache_val: Any = None
 		self._annual_mat_demand_cache: Any = None
@@ -447,11 +449,6 @@ class Household:
 				or name.startswith("_cap_factor")
 				or name.startswith("_staff_scale")
 				or name.startswith("_spend_this_year")
-				or name.startswith("_said_eminence")
-				or name.startswith("_said_requisition")
-				or name.startswith("_said_notice_approach")
-				or name == "last_military_demand"
-				or name == "_said_confiscation_band"
 				or name.endswith("_cache")
 				or name.startswith("_revenue_cache")
 				or name.startswith("_stock_throttle")

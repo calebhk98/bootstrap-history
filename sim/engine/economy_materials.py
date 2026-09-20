@@ -335,7 +335,7 @@ class MaterialSupplyMixin:
         above."""
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
-            return ledger.country_output(tag, built=self.household.done)
+            return ledger.country_output(tag, built=self.state.projects.done)
         price = self._book_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
@@ -470,8 +470,9 @@ class MaterialSupplyMixin:
             if "fuel" not in str(group.get("group", "")).lower():
                 continue
             best, pick = 0.0, None
+            projects = self.state.projects
             for opt, qual in (group.get("options") or {}).items():
-                have = opt in self.household.done or opt not in self.nodes
+                have = opt in projects.done or opt not in self.nodes
                 if have and float(qual) > best:
                     best, pick = float(qual), opt
             if pick and ("coke" in pick or "coal" in pick):
@@ -485,16 +486,17 @@ class MaterialSupplyMixin:
         # Invalidated by: _active_changed(), _done_changed()
         # Nested mutation concerns: tracked via recursive _InvalidatingDict wrapping on household.active
         # Serialized: no
+        projects = self.state.projects
         cache_key = (
-            getattr(self.household, "_active_ver", 0),
-            getattr(self.household, "_done_ver", 0),
+            getattr(projects, "_active_ver", 0),
+            getattr(projects, "_done_ver", 0),
         )
         cache = getattr(self.household, "_annual_mat_demand_cache", None)
         if cache is not None and cache[0] == cache_key:
             return cache[1].copy()
 
         demand = collections.Counter()
-        for node_id in sorted(self.household.active):
+        for node_id in sorted(projects.active):
             node = self.nodes[node_id]
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             coke = self.chosen_fuel(node_id) == "coke"
@@ -599,12 +601,13 @@ class MaterialSupplyMixin:
         """Tonnes a year of a tracked commodity you supply yourself, not
         bought from anyone: mines you sank, woodland you bought, nitre beds
         you built. See MATERIAL_CHECKS for which tag means what."""
+        economy = self.state.economy
         if tag == "forest1":
-            return self.household.forest_ha * self.CHARCOAL_PER_HA
+            return economy.forest_ha * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return self.household.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+            return economy.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
         if tag == "nitre":
-            return self.household.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            return economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION AND TECHNOLOGY, not the nominal tonnage you sank
@@ -811,9 +814,10 @@ class MaterialSupplyMixin:
         documents for why commodities.py stays a library Sim calls into for
         specific answers (wire_chain_report's propagate_demand) rather than
         a second source of truth Sim's own state has to agree with."""
-        stock = getattr(self.household, "_material_stock_ledger", None)
+        economy = self.state.economy
+        stock = getattr(economy, "_material_stock_ledger", None)
         if stock is None:
-            stock = self.household._material_stock_ledger = collections.Counter()
+            stock = economy._material_stock_ledger = collections.Counter()
         elif not isinstance(stock, collections.Counter):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
@@ -821,7 +825,7 @@ class MaterialSupplyMixin:
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            stock = self.household._material_stock_ledger = collections.Counter(stock)
+            stock = economy._material_stock_ledger = collections.Counter(stock)
         return stock
 
     def material_stock_t(self, emp_key):
@@ -860,11 +864,12 @@ class MaterialSupplyMixin:
         # The market figure is an annual flow ceiling, not an infinite shop.
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
         cost = tonnes * quote["buy_per_tonne"]
-        if tonnes <= 0 or cost > self.household.capital:
+        household = self.state.household
+        if tonnes <= 0 or cost > household.capital:
             return 0.0
-        self.household.capital -= cost
+        household.capital -= cost
         self._material_stock()[quote["material"]] += tonnes
-        self.household._stock_throttle_sig = None
+        household._stock_throttle_sig = None
         return tonnes
 
     def sell_material_stock(self, material, tonnes):
@@ -876,8 +881,8 @@ class MaterialSupplyMixin:
         if sold <= 0:
             return 0.0
         self._material_stock()[quote["material"]] -= sold
-        self.household.capital += sold * quote["sell_per_tonne"]
-        self.household._stock_throttle_sig = None
+        self.state.household.add_capital(sold * quote["sell_per_tonne"])
+        self.state.household._stock_throttle_sig = None
         return sold
 
     def materials_report(self):
@@ -950,10 +955,11 @@ class MaterialSupplyMixin:
         _own_material_supply already knows how to read, curated commodity
         or not."""
         out = {(material, "mine:" + material) for material, capacity in self.mine_capacity.items() if capacity > 0}
-        if self.household.forest_ha > 0:
+        economy = self.state.economy
+        if economy.forest_ha > 0:
             out.add(("charcoal", "forest1"))
             out.add(("charcoal", "forest4"))
-        if self.household.nitre_bed_m2 > 0:
+        if economy.nitre_bed_m2 > 0:
             out.add(("saltpetre", "nitre"))
         return out
 

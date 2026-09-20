@@ -202,8 +202,9 @@ class TrainingMixin:
         why each figure is what it is.
         """
         bonus = 0.0
+        projects = self.state.projects
         for node, row_trade, add in self.LABOUR_PRODUCTIVITY_SOURCES:
-            if row_trade == trade and node in self.household.done:
+            if row_trade == trade and node in projects.done:
                 bonus += add
         return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
 
@@ -234,12 +235,12 @@ class TrainingMixin:
         # out of the hours it can call on, which is this number, not how
         # many people the town could in principle hire (market_supply, still
         # unchanged, still governs hiring capacity and labour_price_factor).
-        return ((self.market_supply(trade) + self.household.contract_hours.get(trade, 0.0))
+        return ((self.market_supply(trade) + self.state.household.contract_hours.get(trade, 0.0))
                 * self.labour_productivity(trade))
 
     def hours_reserved(self, trade):
         """Hours of this trade you have already bought from an outside shop."""
-        return self.household.contract_hours.get(trade, 0.0)
+        return self.state.household.contract_hours.get(trade, 0.0)
 
     def market_supply_split(self, trade):
         """(the town's hours, your own people's hours). Same total, said honestly.
@@ -252,7 +253,7 @@ class TrainingMixin:
         reading is wrong: the town's own share has not moved at all, only
         yours has grown, so the two have to be reported apart.
         """
-        mine = self.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
+        mine = self.state.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
         total = self.market_supply(trade)
         if trade in TRADES_ABSENT:
             # There is no market in these at all; every hour is somebody you
@@ -285,7 +286,7 @@ class TrainingMixin:
                 "can point to; a wage, an apprentice's keep or a commission "
                 "fee is money simply spent, and nothing stands behind that "
                 "the way a half-built project does). You are %s short."
-                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.household.capital),
+                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.state.household.capital),
                    "{:,.0f}".format(max(0.0, room)),
                    "{:,.0f}".format(max(0.0, fee - room))))
 
@@ -368,11 +369,12 @@ class TrainingMixin:
                               " - %d is the most whole people you can take" % whole
                               if whole else " - you have no room for even one",
                               self._room_advice()))
-        self.household.capital -= fee
+        household = self.state.household
+        household.capital -= fee
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
-        self.household.wages_prepaid = getattr(self.household, "wages_prepaid", 0.0) + fee
-        self.household.employees[trade] = self.household.employees.get(trade, 0.0) + float(count)
+        household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
+        household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
         self._add_labour_pressure(trade, float(count) * self.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
@@ -383,7 +385,7 @@ class TrainingMixin:
                       "first year in advance). You now have %.1f, and %.2f "
                       "household place(s) left"
                       % (count, trade, "" if count == 1 else "s",
-                         "{:,.0f}".format(fee), self.household.employees[trade],
+                         "{:,.0f}".format(fee), household.employees[trade],
                          max(0.0, self.household_room())))
 
     def fire(self, trade, count):
@@ -397,8 +399,9 @@ class TrainingMixin:
         is, and they do not arrive.
         """
         trade = str(trade or "").strip().lower()
-        have = self.household.employees.get(trade, 0.0)
-        pending = sum(record[3] for record in self.household.training
+        household = self.state.household
+        have = household.employees.get(trade, 0.0)
+        pending = sum(record[3] for record in household.training
                       if len(record) > 3 and record[2] == trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
@@ -415,14 +418,14 @@ class TrainingMixin:
         note = None
         if have > 0:
             gone = min(count, have)
-            self.household.employees[trade] = have - gone
-            if self.household.employees[trade] <= 1e-9:
-                self.household.employees.pop(trade)
+            household.employees[trade] = have - gone
+            if household.employees[trade] <= 1e-9:
+                household.employees.pop(trade)
             count -= gone
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if count > 0 and pending > 0:
             stopped, still = 0.0, []
-            for record in self.household.training:
+            for record in household.training:
                 if len(record) > 3 and record[2] == trade and count > 0:
                     take = min(count, record[3])
                     record[3] -= take
@@ -430,7 +433,7 @@ class TrainingMixin:
                     stopped += take
                 if len(record) <= 3 or record[3] > 1e-9:
                     still.append(record)
-            self.household.training = still
+            household.training = still
             if stopped > 0:
                 note = ((note + "; " if note else "")
                         + "stopped teaching %g more (what you paid to keep them "
@@ -493,7 +496,7 @@ class TrainingMixin:
                        else "glassblower" if trade == "optician"
                        else "scribe" if trade == "chemist"
                        else "smith")).strip().lower()
-        if frm in TRADES_ABSENT and frm not in self.household.trades_created:
+        if frm in TRADES_ABSENT and frm not in self.state.household.trades_created:
             return False, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
@@ -537,10 +540,12 @@ class TrainingMixin:
             return False, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
-        self.household.capital -= fee
-        self.household.teaching_hours_this_year = getattr(self.household, "teaching_hours_this_year", 0.0) + hours
-        self.household.trades_created.add(trade)
-        self.household.training.append([0.0, self.year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
+        household = self.state.household
+        current_year = self.state.scenario.year
+        household.capital -= fee
+        household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
+        household.trades_created.add(trade)
+        household.training.append([0.0, current_year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
         self._add_labour_pressure(frm, float(count) * self.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
@@ -562,7 +567,7 @@ class TrainingMixin:
                       "Until then they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "denarii to keep them while they learn"
-                      % (count, trade, "s" if count != 1 else "", self.year + self.TEACHING_MATURATION_YEARS,
+                      % (count, trade, "s" if count != 1 else "", current_year + self.TEACHING_MATURATION_YEARS,
                          "{:,.0f}".format(hours), "{:,.0f}".format(_left),
                          "{:,.0f}".format(fee)))
 
@@ -595,13 +600,15 @@ class TrainingMixin:
             except Exception:
                 need = self._goal_closure = set()
         seen = 0
+        projects = self.state.projects
+        household = self.state.household
         for node_id in self.order:
             if seen >= look:
                 break
-            if node_id in self.household.done or node_id in self.household.active or node_id not in need:
+            if node_id in projects.done or node_id in projects.active or node_id not in need:
                 continue
             node = self.nodes[node_id]
-            if any(prereq_id not in self.household.done for prereq_id in node["pre"]):
+            if any(prereq_id not in projects.done for prereq_id in node["pre"]):
                 continue
             seen += 1
             short = node["art"] - self.craft_hands_available()
@@ -614,7 +621,7 @@ class TrainingMixin:
             for trade in sorted(WAGES):
                 if trade_family(trade) != "craft" or not self.trade_available(trade):
                     continue
-                spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
+                spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
                 if spare < hours:
                     continue
                 if best is None or WAGES[trade] < WAGES[best]:
@@ -634,7 +641,8 @@ class TrainingMixin:
         year of a carpenter's time IS a carpenter, for the purposes of whether
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
-        contracted = sum(hours for trade, hours in getattr(self.household, "contract_hours", {}).items()
+        household = self.state.household
+        contracted = sum(hours for trade, hours in getattr(household, "contract_hours", {}).items()
                          if trade_family(trade) == "craft")
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
@@ -644,8 +652,8 @@ class TrainingMixin:
         # and a Norse run that could field one could never build the place
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
-        own = 1.0 if self.founder_alive else 0.0
-        return self.household.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
+        own = 1.0 if self.state.founder.founder_alive else 0.0
+        return household.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
 
     COMMISSION_PREMIUM_MULTIPLIER = declare(
         "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",
@@ -684,7 +692,8 @@ class TrainingMixin:
         if not self.trade_available(trade):
             return False, ("no %s will take the work; the trade does not exist here: %s"
                            % (trade, TRADE_NOTES.get(trade, "")))
-        spare = self.market_supply(trade) - self.household.contract_hours.get(trade, 0.0)
+        household = self.state.household
+        spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
         if hours > spare:
             return False, ("the %ss here can spare %.0f more hours this year, not %.0f"
                            % (trade, max(0.0, spare), hours))
@@ -697,8 +706,8 @@ class TrainingMixin:
         if fee > self.spending_power("buy"):
             return False, self._cash_in_hand_refusal(
                 "%.0f hours of a %s" % (hours, trade), fee)
-        self.household.capital -= fee
-        self.household.contract_hours[trade] = self.household.contract_hours.get(trade, 0.0) + hours
-        self.household.commissioned[trade] = self.household.commissioned.get(trade, 0.0) + hours
+        household.capital -= fee
+        household.contract_hours[trade] = household.contract_hours.get(trade, 0.0) + hours
+        household.commissioned[trade] = household.commissioned.get(trade, 0.0) + hours
         self._add_labour_pressure(trade, hours)
         return True, ("%.0f hours of a %s bought for %.0f denarii" % (hours, trade, fee))

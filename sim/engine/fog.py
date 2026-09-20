@@ -119,6 +119,7 @@ class FogMixin:
     # MRO. See geography.py's identical pattern (and its own comment) for
     # the non-callable half of this.
     household: Household
+    state: Any
     nodes: Nodes
     civ: JSONDict
     year: int
@@ -133,16 +134,16 @@ class FogMixin:
 
     def reveal_from(self, node_id: str) -> None:
         """Completing something teaches you what it leads towards, vaguely."""
-        if not self.fog:
+        if not self.state._fog:
             return
-        self.household.revealed = set(getattr(self.household, "revealed", set()))
-        self.household.revealed.add(node_id)
+        projects = self.state.projects
+        projects.revealed.add(node_id)
         for other, node in self.nodes.items():
             if node_id in node.get("pre", []):
-                self.household.revealed.add(other)
+                projects.revealed.add(other)
             for group in node.get("req_any", []):
                 if node_id in (group.get("options") or {}):
-                    self.household.revealed.add(other)
+                    projects.revealed.add(other)
 
     def is_visible(self, node_id: str, _memo: Optional[Dict[str, bool]] = None) -> bool:
         """Can the player see this node at all?
@@ -163,11 +164,12 @@ class FogMixin:
         node built or revealed between one call and the next is seen correctly
         next time.
         """
-        if not self.fog:
+        if not self.state._fog:
             return True
-        if node_id in self.household.done or node_id in self.household.active:
+        projects = self.state.projects
+        if node_id in projects.done or node_id in projects.active:
             return True
-        if node_id in getattr(self.household, "revealed", set()):
+        if node_id in getattr(projects, "revealed", set()):
             return True
         memo = {} if _memo is None else _memo
         if node_id in memo:
@@ -205,7 +207,7 @@ class FogMixin:
             return None
         known = [prereq_id for prereq_id in missing if self.is_visible(prereq_id, _memo=_memo)]
         hidden = len(missing) - len(known)
-        if not self.fog or not hidden:
+        if not self.state._fog or not hidden:
             msg = "missing prerequisites: " + ", ".join(missing)
             return msg + self._free_prereq_hint(missing)
         bits = []
@@ -256,7 +258,7 @@ class FogMixin:
             # ONLY IF THEY CAN ACT ON IT NOW. Naming a free node that is
             # itself blocked is not help, it is a second refusal wearing the
             # first one's clothes.
-            if all(prereq_id in self.household.done for prereq_id in node["pre"]):
+            if all(prereq_id in self.state.projects.done for prereq_id in node["pre"]):
                 ready.append(node_id)
         if not ready:
             return ""
@@ -270,7 +272,7 @@ class FogMixin:
 
     def fog_scrub(self, text: Optional[str]) -> Optional[str]:
         """Strip node ids the player has not discovered out of a message."""
-        if not text or not self.fog:
+        if not text or not self.state._fog:
             return text
         scrubbed = text
         for node_id in self.nodes:
@@ -318,18 +320,20 @@ class FogMixin:
         # method, so this screen cannot quote a hedge the sack does not
         # honour.
         chance, frac, hedge = self.corpus_hedge()
-        at_risk = len(self.household.done - self.household.granted)
+        projects = self.state.projects
+        scenario = self.state.scenario
+        at_risk = len(projects.done - projects.granted)
         # WHAT YOU HAVE ALREADY LOST, and have to build again: without this,
         # the only record of a sacking is a log line a century back, and
         # the only way to discover a loss is one cryptic refusal at a time
         # - "missing prerequisites: <thing you built two hundred years
         # ago>".
-        _gone = sorted((node_id for node_id, _year in (getattr(self.household, "forgotten", None) or {}).items()
-                        if node_id not in self.household.done),
-                       key=lambda k: -(self.household.forgotten[k]))
+        _gone = sorted((node_id for node_id, _year in (getattr(projects, "forgotten", None) or {}).items()
+                        if node_id not in projects.done),
+                       key=lambda k: -(projects.forgotten[k]))
         upcoming = []
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
-                self.civ, self.year):
+                self.civ, scenario.year):
             row = {"name": hazard.get("name", "hazard"),
                    "years": [year_start, year_end],
                    "in_progress": in_progress,
@@ -353,7 +357,7 @@ class FogMixin:
             if "staff_loss" in hazard:
                 row["staff_loss_after_what_you_have_built"] = round(
                     hazard["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
-                remaining = max(year_start, self.year)
+                remaining = max(year_start, scenario.year)
                 waves = max(1, year_end - remaining + 1)
                 per_wave = row["staff_loss_after_what_you_have_built"]
                 row["remaining_annual_wave_checks"] = waves
@@ -369,7 +373,7 @@ class FogMixin:
         # producing. A player deciding what to do this decade does not need
         # four hundred words on enclosure in 1700.
         _soon = [row for row in upcoming
-                 if row.get("in_progress") or (row["years"][0] - self.year) <= 120]
+                 if row.get("in_progress") or (row["years"][0] - scenario.year) <= 120]
         _later = [row for row in upcoming if row not in _soon]
         # Full hazard records are large (advice plus historical prose). Keep
         # only the four nearest actionable records and reduce every later one
@@ -421,16 +425,16 @@ class FogMixin:
             "critical_capabilities_not_operating": self.capability_gaps() or None,
             **({"you_have_already_lost": len(_gone),
                 "and_have_to_build_again": _gone[:10],
-                "the_most_recent_went_in": self.household.forgotten[_gone[0]]} if _gone else {}),
+                "the_most_recent_went_in": projects.forgotten[_gone[0]]} if _gone else {}),
             # Under fog, do not name a node the player has not discovered:
             # the hedge named here has to pass the same visibility test
             # `why` uses, or the two commands would contradict each other
             # about whether the player has heard of it.
-            "hedged_by": hedge if (not self.fog
+            "hedged_by": hedge if (not self.state._fog
                                    or self.is_visible(hedge or "")) else "nothing yet",
             "better_hedge_available": (
                 None if hedge == "corpus_dispersed" else
-                ("corpus_dispersed" if not self.fog
+                ("corpus_dispersed" if not self.state._fog
                  else "there is said to be a way to guard against this; "
                       "you have not found it yet")),
             "known_hazards_ahead": upcoming,
@@ -488,7 +492,7 @@ class FogMixin:
             return True
         if not hasattr(self, "_goal_closure"):
             try:
-                self._goal_closure = closure(self.nodes, self.goal)
+                self._goal_closure = closure(self.nodes, self.state._goal)
             except Exception:
                 self._goal_closure = set()
         return node_id in self._goal_closure

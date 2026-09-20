@@ -312,7 +312,7 @@ class NamePerScopeTests(unittest.TestCase):
 
     def test_a_comprehensions_implicit_dot_zero_is_an_artifact(self):
         source = """
-            total = [k for k in range(3)]
+            total = (k for k in range(3))
         """
         with _TempRoot({"sim/fixture.py": source}):
             report = ch.scan_name_per_scope(["sim/fixture.py"])

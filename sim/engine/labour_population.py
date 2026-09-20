@@ -62,14 +62,14 @@ class PopulationMixin:
         if not rec:
             return 0.0
         hours, year = rec
-        age = max(0.0, self.year - year)
+        age = max(0.0, self.state.scenario.year - year)
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def _add_labour_pressure(self, trade, hours):
         pressures = getattr(self.household, "_labour_pressure", None)
         if pressures is None:
             pressures = self.household._labour_pressure = {}
-        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.year)
+        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.state.scenario.year)
 
     LABOUR_PRESSURE_SHARE_CAP = declare(
         "LABOUR_PRESSURE_SHARE_CAP", 1.5, kind="temporary_heuristic",
@@ -142,21 +142,22 @@ class PopulationMixin:
         if hire_count <= 0:
             return self.labour_price_factor(trade)
         add_hours = hire_count * self.HOURS_PER_PERSON_YEAR
-        before = self.household.employees.get(trade, 0.0)
-        self.household.employees[trade] = before + hire_count
+        household = self.state.household
+        before = household.employees.get(trade, 0.0)
+        household.employees[trade] = before + hire_count
         try:
             supply_after = self.market_supply(trade)
         finally:
             if before:
-                self.household.employees[trade] = before
+                household.employees[trade] = before
             else:
-                self.household.employees.pop(trade, None)
+                household.employees.pop(trade, None)
         pressure_after = self.labour_pressure(trade) + add_hours
         return self._labour_price_factor_from(pressure_after, supply_after)
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return self.household.scholars + (1.0 if self.founder_alive else 0.0)
+        return self.state.household.scholars + (1.0 if self.state.founder.founder_alive else 0.0)
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: the ones on
@@ -197,8 +198,9 @@ class PopulationMixin:
         """
         if trade not in TRADES_ABSENT:
             return True
-        return (trade in self.household.trades_created
-                or getattr(self.household, "trade_schools", {}).get(trade, 0.0) > 0)
+        household = self.state.household
+        return (trade in household.trades_created
+                or (household.trade_schools or {}).get(trade, 0.0) > 0)
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
@@ -207,14 +209,15 @@ class PopulationMixin:
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
         cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
-        if seats <= 0 or cost > self.household.capital:
+        household = self.state.household
+        if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
-        self.household.capital -= cost
-        schools = getattr(self.household, "trade_schools", None)
+        household.capital -= cost
+        schools = getattr(household, "trade_schools", None)
         if schools is None:
-            schools = self.household.trade_schools = {}
+            schools = household.trade_schools = {}
         schools[trade] = schools.get(trade, 0.0) + seats
-        self.household.trades_created.add(trade)
+        household.trades_created.add(trade)
         return True, None
 
     def _trade_market_class(self, trade):
@@ -436,11 +439,12 @@ class PopulationMixin:
             return 0.0
         base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
                                                      + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
-        school_hours = (getattr(self.household, "trade_schools", {}).get(trade, 0.0)
+        household = self.state.household
+        school_hours = ((household.trade_schools or {}).get(trade, 0.0)
                         * self.HOURS_PER_PERSON_YEAR)
         if trade in TRADES_ABSENT:
             # Only the people you taught, plus the ones they have taught since.
-            return (self.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
+            return (household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
                     * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                     + school_hours)
         cls = self._trade_market_class(trade)
@@ -472,7 +476,7 @@ class PopulationMixin:
         # train().
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
-        return (cap + self.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
+        return (cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
                 + school_hours)
 
     def reachable_trade_population(self, trade):
@@ -535,7 +539,7 @@ class PopulationMixin:
             # into existence by you alone (trade_available already checked
             # this is now true), so "the country's" population of the trade
             # IS what you have taught - there is no wider pool to estimate.
-            return self.household.employees.get(trade, 0.0)
+            return self.state.household.employees.get(trade, 0.0)
         return urban * self.TRADE_DENSITY.get(self._trade_market_class(trade), 0.0)
 
     def home_town_population_estimate(self):
@@ -580,7 +584,7 @@ class PopulationMixin:
         for trade in sorted(WAGES):
             national = self.national_trade_population(trade)
             reach = self.reachable_trade_population(trade) if self.trade_available(trade) else 0.0
-            have = self.household.employees.get(trade, 0.0)
+            have = self.state.household.employees.get(trade, 0.0)
             trades.append({
                 "trade": trade,
                 "exists_here": self.trade_available(trade),

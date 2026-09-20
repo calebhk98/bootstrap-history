@@ -585,10 +585,11 @@ class FreightMixin:
         if square_metres <= 0:
             return 0.0
         cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
-        if cost > self.household.capital:
+        household = self.state.household
+        if cost > household.capital:
             return 0.0
-        self.household.capital -= cost
-        self.household.nitre_bed_m2 += square_metres
+        household.capital -= cost
+        self.state.economy.nitre_bed_m2 += square_metres
         return square_metres
 
     NITRE_SHORTAGE_SAFETY_BUFFER = declare(
@@ -614,7 +615,7 @@ class FreightMixin:
             return ""
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / KILOGRAMS_PER_TONNE - self.household.forest_ha * self.CHARCOAL_PER_HA)
+                       / KILOGRAMS_PER_TONNE - self.state.economy.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
             return ("Charcoal is grown, not bought: about %s more hectare%s of "
                     "coppice would cover it ('buy forest %d', roughly %s "
@@ -624,7 +625,7 @@ class FreightMixin:
                        hectares_needed))
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            available = (self.household.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            available = (self.state.economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
             deficit = max(0.0, demand - available)

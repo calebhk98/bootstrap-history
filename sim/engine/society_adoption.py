@@ -166,7 +166,7 @@ class AdoptionMixin:
                         (delta / self.POP_TECH_RAMP_YEARS, self.POP_TECH_RAMP_YEARS))
                 changed.append(field)
         if changed:
-            self.household.log.append((self.year, "%s changes the society: %s"
+            self.state.household.log.append((self.state.scenario.year, "%s changes the society: %s"
                              % (self.nodes[node_id]["name"], ", ".join(sorted(changed)))))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
@@ -273,7 +273,7 @@ class AdoptionMixin:
         if ids is None:
             ids = self._agri_mechanisation_ids = tuple(
                 sorted(node_id for node_id in self.nodes if self._is_agri_mechanisation(node_id)))
-        mechanised_count = sum(1 for node_id in ids if node_id in self.household.done)
+        mechanised_count = sum(1 for node_id in ids if node_id in self.state.projects.done)
         if mechanised_count <= 0:
             return 0.0
         return min(1.0, math.sqrt(mechanised_count / self.AGRI_MECHANISATION_SATURATES_AT))
@@ -492,7 +492,7 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            self.household.log.append((year, "a generation of schooling shows in the "
+            self.state.household.log.append((year, "a generation of schooling shows in the "
                              "census: %s" % "; ".join(bits)))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
@@ -552,19 +552,19 @@ class AdoptionMixin:
     # mechanism to run at.
     TRADE_DIFFUSION_APPROACH_RATE = declare(
         "TRADE_DIFFUSION_APPROACH_RATE", 0.05, kind="temporary_heuristic",
-        unit="dimensionless (fraction of remaining gap closed per year)",
-        source=None, confidence="D",
-        why="Once endemic, how fast a trade's headcount approaches "
-            "literate_capacity()'s own ceiling - a 20-year time constant "
-            "on top of the years it already took to become endemic, so "
+        unit="fraction of the gap per year", source=None, confidence="D",
+        why="Yearly approach rate of an endemic trade's workforce toward "
+            "its literate_capacity() ceiling: 5% a year means a half-life "
+            "of about 14 years, so from a standing start of one workshop "
             "the whole span is century-scale. Tuned to that target pace, "
             "not measured.")
 
     def _advance_trade_absorption(self, year):
+        household = self.state.household
         for trade in sorted(TRADES_ABSENT):
-            if trade not in self.household.trades_created:
+            if trade not in household.trades_created:
                 continue          # never taught here; nothing to naturalise
-            intro = self.household.trade_introduced_year.get(trade)
+            intro = household.trade_introduced_year.get(trade)
             if intro is None:
                 # First year this function has ever seen the trade in
                 # trades_created. Recorded now rather than back-dated,
@@ -573,22 +573,22 @@ class AdoptionMixin:
                 # at worst one step later than the true year, which cannot
                 # matter against a minimum absorption time measured in
                 # decades.
-                self.household.trade_introduced_year[trade] = year
+                household.trade_introduced_year[trade] = year
                 continue
-            if trade in self.household.trades_endemic:
+            if trade in household.trades_endemic:
                 self._grow_endemic_trade(trade)
                 continue
             flow = self._schooling_flow()
             if flow <= 0.0:
                 continue
             if year - intro >= self._trade_absorption_years(flow):
-                self.household.trades_endemic.add(trade)
+                household.trades_endemic.add(trade)
                 # IN-WORLD, NOT A CHANGE-LOG. This narrates a census fact -
                 # the trade is no longer one household's secret - the same
                 # way every other log line in this file narrates an event
                 # the founder would actually observe, never a note about the
                 # code that produced it.
-                self.household.log.append((year, "%s is no longer only your trade: "
+                household.log.append((year, "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
                                  "%ss now, the way it always had smiths"
@@ -610,11 +610,12 @@ class AdoptionMixin:
         ceiling = self.literate_capacity(trade)
         if not (ceiling < float("inf")):
             return
-        have = self.household.employees.get(trade, 0.0)
+        household = self.state.household
+        have = household.employees.get(trade, 0.0)
         room = ceiling - have
         if room <= 1e-6:
             return
-        self.household.employees[trade] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
+        household.employees[trade] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
         self._resync_pools()
 
     def advance_society(self, year):

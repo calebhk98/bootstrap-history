@@ -222,13 +222,12 @@ except BrokenPipeError:
     pass
 _pp.wait(timeout=60)
 _pipe_saved = json.load(open(_pipe_sess))
+_pipe_year = _pipe_saved.get("scenario", {}).get("year") if "scenario" in _pipe_saved else _pipe_saved.get("year")
 check("a command's progress is saved even when the reply that describes it "
       "cannot be delivered because the reading end of the pipe is gone",
-      _pipe_saved.get("year") == 103, _pipe_saved.get("year"))
+      _pipe_year == 103, _pipe_year)
 
-# --- JOB 1: THE PLANNER. "Why is the sim a monte carlo sim? We know the end
-# state, right? Or is it too complex to just calculate backwards?" It is not
-# too complex: planner.py works backward from the goal by critical-path
+# planner.py works backward from the goal by critical-path
 # method (CPM) over its prerequisite closure, instead of walking a
 # hand-written list. These checks pin the structural properties the measured
 # comparison (playtest or the session report) depends on actually

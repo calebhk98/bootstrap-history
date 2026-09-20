@@ -223,19 +223,20 @@ class ElectricityMixin:
         electrical generation directly). `total_kw` - local plus grid - is
         what resource_throttle() checks electrical demand against.
         """
+        done = self.state.projects.done
         local_kw = sum(self.POWER_ANCHOR_KW[tier]
                        for nid, tier in sorted(self.GENERATION_LOCAL_NODES.items())
-                       if nid in self.household.done)
+                       if nid in done)
         grid_kw = sum(self.POWER_ANCHOR_KW[tier]
-                     for nid, tier in sorted(self.GENERATION_GRID_NODES.items())
-                     if nid in self.household.done)
+                      for nid, tier in sorted(self.GENERATION_GRID_NODES.items())
+                      if nid in done)
         transmission_kw = sum(self.POWER_ANCHOR_KW[tier]
                               for nid, tier in sorted(self.TRANSMISSION_NODES.items())
-                              if nid in self.household.done)
+                              if nid in done)
         mechanical_kw = {}
         for fam, (chain, tier) in sorted(self.MECHANICAL_PRIME_MOVER_CHAINS.items()):
             mechanical_kw[fam] = (self.POWER_ANCHOR_KW[tier]
-                                  if any(nid in self.household.done for nid in chain) else 0.0)
+                                  if any(nid in done for nid in chain) else 0.0)
         return {
             "local_kw": local_kw,
             "grid_kw": grid_kw,
@@ -402,9 +403,10 @@ class ElectricityMixin:
         if quantity <= 0:
             return 0.0
         span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
-        if node_id in self.household.active:
+        projects = self.state.projects
+        if node_id in projects.active:
             return quantity / span / KILOGRAMS_PER_TONNE
-        if node_id in self.household.done and float(node.get("up") or 0) > 0:
+        if node_id in projects.done and float(node.get("up") or 0) > 0:
             return self.STANDING_MATERIAL_DRAW_SHARE * quantity / span / KILOGRAMS_PER_TONNE
         return 0.0
 
@@ -425,10 +427,11 @@ class ElectricityMixin:
             node = self.nodes.get(node_id)
             if node is None:
                 continue
-            if node_id in self.household.active:
+            projects = self.state.projects
+            if node_id in projects.active:
                 total += self.GENERIC_ELECTRIC_LOAD_KW
-            elif (node_id in self.household.done and float(node.get("up") or 0) > 0
-                  and node_id in getattr(self.household, "operating", ())):
+            elif (node_id in projects.done and float(node.get("up") or 0) > 0
+                  and node_id in getattr(projects, "operating", ())):
                 # STANDING draw, where upkeep IS the right question: a thing
                 # that costs nothing to keep is not an installation humming
                 # away in the background, and one that is built but shut draws
@@ -495,13 +498,15 @@ class ElectricityMixin:
         # otherwise silently replay a now-stale (worst, who) for.
         elec_need = self._electricity_demand_kw()
         elec_have = self.generation_capacity_kw()
-        sig = (self.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
-               tuple(sorted(self.mine_capacity.items())), self.household.forest_ha,
-               self.household.nitre_bed_m2, tuple(sorted(stock.items())),
+        economy = self.state.economy
+        scenario = self.state.scenario
+        sig = (scenario.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
+               tuple(sorted(self.mine_capacity.items())), economy.forest_ha,
+               economy.nitre_bed_m2, tuple(sorted(stock.items())),
                elec_need, elec_have)
         if sig == getattr(self.household, "_stock_throttle_sig", None):
-            self.household.throttle, self.household.binding = self.household._stock_throttle_cache
-            return self.household.throttle
+            economy.throttle, economy.binding = self.household._stock_throttle_cache
+            return economy.throttle
         worst, who = 1.0, None
         # RESOURCE_THROTTLE_FLOOR (declared below): work never fully stops
         # for a shortage - a shortfall slows a project instead of halting
@@ -548,7 +553,7 @@ class ElectricityMixin:
             # (DOCS_VS_ENGINE.md #3). Capped at own_and_stock, never at the
             # larger `have`, for exactly the reason in the comment above.
             stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
-        self.household.throttle, self.household.binding = worst, who
+        economy.throttle, economy.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,
         # now-settled stock) matches and replays rather than spending again.
@@ -557,7 +562,7 @@ class ElectricityMixin:
                                      sig[7], sig[8])
         self.household._stock_throttle_cache = (worst, who)
         if who:
-            self.household.shortages[who] += 1
+            economy.shortages[who] += 1
         return worst
 
     def project_resource_throttle(self, node_id):
@@ -571,7 +576,7 @@ class ElectricityMixin:
         projects with no matching input retain their full labour pace.
         """
         factor = self.resource_throttle()
-        binding = self.household.binding
+        binding = self.state.economy.binding
         if factor >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":

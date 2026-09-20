@@ -132,15 +132,16 @@ class HazardsMixin:
         Reuses critical_path(), the SAME function `path` already calls for
         exactly this question about a goal node - not a second notion of
         "how long something takes" invented for hazards - and only sums the
-        portion of the winning chain not already in self.household.done, so a player
+        portion of the winning chain not already in self.state.projects.done, so a player
         partway through the chain sees what is actually left, not the whole
         chain's floor from scratch every time.
         """
         if goal not in self.nodes:
             return None
         _total, chain = critical_path(self.nodes, goal)
+        done = self.state.projects.done
         remaining = sum(max(self.nodes[node_id]["yrs"], self.nodes[node_id]["ph"] / 2000.0)
-                        for node_id in chain if node_id not in self.household.done)
+                        for node_id in chain if node_id not in done)
         return round(remaining, 1)
 
     def hazard_advice(self, kind):
@@ -215,14 +216,15 @@ class HazardsMixin:
         want = []
         leads_to = {}
         counters = set()
+        done = self.state.projects.done
         for node, _share, label in self.HAZARD_COUNTERS.get(kind, ()):
-            if node not in self.nodes or node in self.household.done:
+            if node not in self.nodes or node in done:
                 continue
             want.append((0, node))
             counters.add(node)
             leads_to.setdefault(node, label)
             for pre in self.nodes[node]["pre"]:
-                if pre in self.nodes and pre not in self.household.done:
+                if pre in self.nodes and pre not in done:
                     want.append((1, pre))
                     # SAY WHAT IT LEADS TO: a first-step node can look
                     # entirely unrelated to the hazard it hedges against
@@ -443,7 +445,7 @@ class HazardsMixin:
     def lose_capital(self, fraction):
         """Destroy a fraction of what you HAVE. Never a fraction of what you owe.
 
-        Multiplying `self.household.capital` by a fraction directly is
+        Multiplying `self.state.household.capital` by a fraction directly is
         sign-blind: at minus a thousand denarii, multiplying by 0.4 would
         turn a debt into six hundred denarii handed to the player, making
         the deepest hole in the game the safest place to stand and every
@@ -455,10 +457,11 @@ class HazardsMixin:
         # ALWAYS floored, never optionally: a parameter to make flooring
         # skippable would advertise a choice that should not exist here -
         # this function must always destroy at most what is actually held.
-        if self.household.capital <= 0:
+        household = self.state.household
+        if household.capital <= 0:
             return 0.0
-        lost = self.household.capital * max(0.0, min(1.0, fraction))
-        self.household.capital -= lost
+        lost = household.capital * max(0.0, min(1.0, fraction))
+        household.capital -= lost
         return lost
 
     def _resolve_hazard_condition(self, hazard, year, hazard_start):
@@ -509,7 +512,7 @@ class HazardsMixin:
                 said.add(key)
                 msg = cond.get("met_message" if met else "unmet_message")
                 if msg:
-                    self.household.log.append((year, msg))
+                    self.state.household.log.append((year, msg))
         if not met or field not in hazard:
             return hazard
         adjusted = dict(hazard)
@@ -622,12 +625,13 @@ class HazardsMixin:
         if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
             relief, why = self.hazard_relief("staff_loss")
             loss = hazard["staff_loss"] * relief
-            _people_before = (self.household.scholars + self.household.artisans
-                              + sum(self.household.employees.values()))
-            self.household.scholars *= (1 - loss); self.household.artisans *= (1 - loss)
-            for trade in list(self.household.employees):
-                self.household.employees[trade] *= (1 - loss)
-            self.household.directors_extra *= (1 - loss)
+            household = self.state.household
+            _people_before = (household.scholars + household.artisans
+                              + sum(household.employees.values()))
+            household.scholars *= (1 - loss); household.artisans *= (1 - loss)
+            for trade in list(household.employees):
+                household.employees[trade] *= (1 - loss)
+            household.directors_extra *= (1 - loss)
             # THE MONEY GOES TOO, and the log has to say so: a plague that
             # silently changes capital while the only message reads "staff
             # -45%" reads as broken accounting. A plague empties the
@@ -740,7 +744,7 @@ class HazardsMixin:
                         "this, historically a %d%% loss, barely "
                         "registers"
                         % round(historical * 100))
-            self.household.log.append((year, msg))
+            self.state.household.log.append((year, msg))
 
     def _shock_sack_chance(self, hazard, year):
         """The sack_chance branch of _shocks: a site sacked.
@@ -756,7 +760,7 @@ class HazardsMixin:
             relief, why = self.hazard_relief("sack_chance")
             probability = hazard["sack_chance"] * relief
             if why and rng.random() < hazard["sack_chance"] - probability:
-                self.household.log.append((year, "%s: an attack comes to nothing (%s)"
+                self.state.household.log.append((year, "%s: an attack comes to nothing (%s)"
                                  % (hazard.get("name", "crisis"), "; ".join(why[:3]))))
             if rng.random() < probability:
                 self._sack_site(hazard, year)
@@ -774,42 +778,44 @@ class HazardsMixin:
         # projects, is how a player stops trusting the ledger. The plague
         # family already reports the harm it actually does; this one must
         # too.
-        _cap0 = max(0.0, self.household.capital)
+        household = self.state.household
+        projects = self.state.projects
+        _cap0 = max(0.0, household.capital)
         # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS: reducing
         # only artisans, scholars and directors_extra while leaving
-        # self.household.employees (hired smiths, scribes, masons - for a
+        # household.employees (hired smiths, scribes, masons - for a
         # developed household, most of its people) untouched would let the
         # event announce "92.7 of your people gone" while `state`'s
         # employees_total headcount screen sits exactly where it was. The
         # plague family right above already reduces employees (see its own
-        # `for t in self.household.employees` loop); a sack must not be
+        # `for trade in list(household.employees)` loop); a sack must not be
         # gentler to hired staff than a plague. _people0/_people_after
         # count the same population the announcement claims to describe and
         # `state` actually renders.
-        _people0 = (self.household.artisans + self.household.scholars
-                    + sum(self.household.employees.values()))
-        _act0 = len(self.household.active)
+        _people0 = (household.artisans + household.scholars
+                    + sum(household.employees.values()))
+        _act0 = len(projects.active)
         self.lose_capital(self.SACK_CAPITAL_LOSS)
-        self.household.artisans *= self.SACK_STAFF_RETENTION; self.household.scholars *= self.SACK_STAFF_RETENTION
-        for trade in list(self.household.employees):
-            self.household.employees[trade] *= self.SACK_STAFF_RETENTION
-        self.household.directors_extra *= self.SACK_DIRECTORS_RETENTION
-        for node_id in sorted(self.household.active):
-            self.household.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
-            self.household.active[node_id]["yrs"] = 0.0
-        _people_after = (self.household.artisans + self.household.scholars
-                         + sum(self.household.employees.values()))
+        household.artisans *= self.SACK_STAFF_RETENTION; household.scholars *= self.SACK_STAFF_RETENTION
+        for trade in list(household.employees):
+            household.employees[trade] *= self.SACK_STAFF_RETENTION
+        household.directors_extra *= self.SACK_DIRECTORS_RETENTION
+        for node_id in sorted(projects.active):
+            projects.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
+            projects.active[node_id]["yrs"] = 0.0
+        _people_after = (household.artisans + household.scholars
+                         + sum(household.employees.values()))
         _took = []
-        if _cap0 - max(0.0, self.household.capital) > 0.5:
+        if _cap0 - max(0.0, household.capital) > 0.5:
             _took.append("%s taken"
-                         % "{:,.0f}".format(_cap0 - max(0.0, self.household.capital)))
+                         % "{:,.0f}".format(_cap0 - max(0.0, household.capital)))
         if _people0 - _people_after > 0.05:
             _took.append("%.1f of your people gone"
                          % (_people0 - _people_after))
         if _act0:
             _took.append("%d project%s back to the beginning"
                          % (_act0, "" if _act0 == 1 else "s"))
-        self.household.log.append((year, "%s: a site is sacked - %s"
+        household.log.append((year, "%s: a site is sacked - %s"
                          % (hazard.get("name", "crisis"),
                             ", ".join(_took)
                             or "you had nothing it could take")))
@@ -831,7 +837,7 @@ class HazardsMixin:
         reproducing a run byte-for-byte.
         """
         rng = self.rng
-        # sorted() matters: self.household.done is a SET and iterates in an
+        # sorted() matters: self.state.projects.done is a SET and iterates in an
         # order that depends on PYTHONHASHSEED, so feeding it
         # unsorted to rng.sample made the same --seed give a
         # different answer every invocation.
@@ -846,16 +852,17 @@ class HazardsMixin:
         # about a SACK specifically - mothballing or
         # abandoning the corpus yourself is a different
         # mechanism and still applies.
-        losable = sorted(node_id for node_id in self.household.done
-                         if node_id not in self.household.granted
+        projects = self.state.projects
+        losable = sorted(node_id for node_id in projects.done
+                         if node_id not in projects.granted
                          and node_id != "corpus_dispersed")
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
-            _lost = self.household.forgotten
+            _lost = projects.forgotten
             for node_id in drop:
-                self.household.operating.discard(node_id)
-                self.household.done.discard(node_id)
-                self.household.mothballed.discard(node_id)
+                projects.operating.discard(node_id)
+                projects.done.discard(node_id)
+                projects.mothballed.discard(node_id)
                 # KEPT, so `risk` can list what you have to
                 # build again. Otherwise the only record is a
                 # log line a century back.
@@ -897,15 +904,15 @@ class HazardsMixin:
                 _on_road = sum(1 for tech_id in drop if tech_id in _gc)
             except Exception:
                 _on_road = 0
-        self.household.log.append((year, "KNOWLEDGE LOST: %d technolog%s "
+        self.state.household.log.append((year, "KNOWLEDGE LOST: %d technolog%s "
                              "forgotten - %s%s%s%s"
             % (len(drop), "y" if len(drop) == 1 else "ies",
                ", ".join(_named[:8])
                + (" and %d more" % (len(_named) - 8)
                   if len(_named) > 8 else ""),
                # BEFORE the loss, not after: `drop` has
-               # already come out of `self.household.done` by this
-               # point, so re-asking `self.household.done` here
+               # already come out of `self.state.projects.done` by this
+               # point, so re-asking `self.state.projects.done` here
                # could tell a player the corpus was
                # "never printed and dispersed" in the
                # same sentence that says the corpus
@@ -938,27 +945,29 @@ class HazardsMixin:
             # damage: self-sufficiency means less of your income was ever
             # coming through the thing the war cut.
             floor = 1.0 - (1.0 - hazard["output_factor"]) * relief
-            before = self.output_factor
-            self.output_factor = min(self.output_factor, floor)
+            economy = self.state.economy
+            scenario = self.state.scenario
+            before = economy.output_factor
+            economy.output_factor = min(economy.output_factor, floor)
             # ONCE, AND THEN A REMINDER, not every year of a hundred-year
             # war: output_factor recovers a little each step, so firing this
             # line every time the war pulls it back down again would mean
             # firing it every single year for the war's whole length. A
             # message repeated until it is noise has stopped being a
             # message.
-            said = getattr(self, "_said_output", {})
+            said = scenario._said_output or {}
             key = hazard.get("name", "crisis")
-            if before > self.output_factor and year - said.get(key, -99) >= 20:
+            if before > economy.output_factor and year - said.get(key, -99) >= 20:
                 said[key] = year
-                self._said_output = said
+                scenario._said_output = said
                 # SAY WHAT HELD: every other hazard message in this file
                 # names its hedges - staff_loss says "would have been";
                 # sack_chance says "comes to nothing (%s)". Saying nothing
                 # here would be indistinguishable from a military branch
                 # that did nothing.
-                self.household.log.append((year, "%s: trade and output fall to %d%% of "
+                self.state.household.log.append((year, "%s: trade and output fall to %d%% of "
                                      "normal%s"
-                                 % (key, self.output_factor * 100,
+                                 % (key, economy.output_factor * 100,
                                     " (your own strength holds off worse: %s)"
                                     % "; ".join(why[:3]) if why else "")))
 
@@ -969,13 +978,16 @@ class HazardsMixin:
         """
         if "real_erosion" in hazard:
             relief, why = self.hazard_relief("real_erosion")
-            self.money_real *= (1 - hazard["real_erosion"])
+            economy = self.state.economy
+            scenario = self.state.scenario
+            household = self.state.household
+            economy.money_real *= (1 - hazard["real_erosion"])
             bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
-            had = max(0.0, self.household.capital)
+            had = max(0.0, household.capital)
             self.lose_capital(bite)
-            lost = had - max(0.0, self.household.capital)
-            if not getattr(self, "_said_debasement", 0) or year - self._said_debasement >= 15:
-                self._said_debasement = year
+            lost = had - max(0.0, household.capital)
+            if not scenario._said_debasement or year - scenario._said_debasement >= 15:
+                scenario._said_debasement = year
                 # SAY WHAT IT DID TO YOU, and say what it did NOT do: every
                 # price in this game is what a thing really costs in labour
                 # and materials, which debasement does not change, so a
@@ -983,13 +995,13 @@ class HazardsMixin:
                 # correct, not evidence the debasement did nothing. What it
                 # destroys is the money you are HOLDING. Quoting the bite in
                 # coin makes that the visible half.
-                self.household.log.append((year, "%s: the coin is worth %d%% less than it "
+                household.log.append((year, "%s: the coin is worth %d%% less than it "
                                      "was%s. Quoted costs are what a thing "
                                      "really takes to make, so they do not "
                                      "move; what debases is the money in "
                                      "your chest, and this year it took %s%s"
                                  % (hazard.get("name", "debasement"),
-                                    (1 - self.money_real) * 100,
+                                    (1 - economy.money_real) * 100,
                                     "; you feel less of it (%s)" % "; ".join(why)
                                     if why else "",
                                     "{:,.0f}".format(lost)
@@ -1041,7 +1053,7 @@ class HazardsMixin:
             # in between -- the same spirit as the debasement throttle
             # just above, which exists for the same reason.
             if changed and (year == hazard_start or year == hazard_end or (year - hazard_start) % 10 == 0):
-                self.household.log.append((year, "%s: the society's values are shifting (%s)"
+                self.state.household.log.append((year, "%s: the society's values are shifting (%s)"
                                  % (hazard.get("name", "hazard"),
                                     ", ".join("%s now %.2f" % (field, value)
                                               for field, value in sorted(changed.items())))))
@@ -1119,16 +1131,19 @@ class HazardsMixin:
         # this comment describes never applied to anything: the roll came up
         # five per cent a year for ever, which is precisely the behaviour the
         # fix was written to stop. (The save list carried the unread name too.)
+        founder = self.state.founder
+        household = self.state.household
+        last_patron_death = founder.last_patron_death
         if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running("patron_local")
-                and year - getattr(self, "last_patron_death", -99) > self.PATRON_DEATH_COOLDOWN_YEARS):
-            self.last_patron_death = year
-            self.household.scandal += self.PATRON_DEATH_SCANDAL
-            was = self.household.protection
-            self.household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
+                and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
+            founder.last_patron_death = year
+            household.scandal += self.PATRON_DEATH_SCANDAL
+            was = household.protection
+            household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
             gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
-                self.household.capital -= gift
+                household.capital -= gift
             # SAY WHAT IT COST: "your patron dies; his heir must be courted
             # afresh" with nothing in `state` changed by an amount a
             # player can point at reads as decorative. It is not: it
@@ -1140,27 +1155,27 @@ class HazardsMixin:
                        "afresh for %s denarii. Protection falls from %d%% to "
                        "%d%% and scandal rises by %d"
                        % ("{:,.0f}".format(gift), was * 100,
-                          self.household.protection * 100, self.PATRON_DEATH_SCANDAL))
+                          household.protection * 100, self.PATRON_DEATH_SCANDAL))
             else:
                 msg = ("your patron dies. No money was spent because "
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
-                       % (was * 100, self.household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            self.household.log.append((year, msg))
+                       % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
+            household.log.append((year, msg))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
-            had = max(0.0, self.household.capital)
+            had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS)
             # An insula is a Roman tenement block; naming it here directly
             # instead of reading self.civ["fire_quarter"] would print
             # "insula district" in a Han game too. Every civilization file
             # names its own quarter.
-            self.household.log.append((year, "fire in the %s: it destroyed %s"
+            household.log.append((year, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
-            had = max(0.0, self.household.capital)
+            had = max(0.0, household.capital)
             self.lose_capital(self.BANDITRY_CAPITAL_LOSS)
-            self.household.log.append((year, "banditry or a frontier war disrupts supply: "
+            household.log.append((year, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 
     def _loss_words(self, had_before):
@@ -1170,11 +1185,11 @@ class HazardsMixin:
         name the event: a player should not have to diff their own `state`
         to find out whether anything happened.
         """
-        lost = had_before - max(0.0, self.household.capital)
+        lost = had_before - max(0.0, self.state.household.capital)
         if lost <= 0.5:
             return "nothing, because you were holding none"
         return "{:,.0f} denarii".format(lost)
 
     def _catastrophe(self, why):
-        self.dead_reason = why
-        self.household.log.append((self.year, "RUN ENDS: " + why))
+        self.state.founder.dead_reason = why
+        self.state.household.log.append((self.state.scenario.year, "RUN ENDS: " + why))

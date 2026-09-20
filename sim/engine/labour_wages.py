@@ -55,7 +55,7 @@ class WagesMixin:
         usually a bad one once you have anything better to do. That is the
         honest shape of wage labour.
         """
-        if not self.founder_alive:
+        if not self.state.founder.founder_alive:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
@@ -94,14 +94,15 @@ class WagesMixin:
         # It has to be derived from annual_wage(), not a separate hourly
         # column, or the two disagree and the docstring's "no arbitrage in
         # either direction" claim becomes false.
+        household = self.state.household
         rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
                * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
-                            self.household.reputation / self.WAGE_REPUTATION_SCALE)))
+                            household.reputation / self.WAGE_REPUTATION_SCALE)))
         before_practice = self.revenue()
-        self.household.capital += pay
-        self.household.wage_hours_this_year = getattr(self.household, "wage_hours_this_year", 0.0) + hours
-        self.household.wages_earned = getattr(self.household, "wages_earned", 0.0) + pay
+        household.add_capital(pay)
+        household.wage_hours_this_year = (household.wage_hours_this_year or 0.0) + hours
+        household.wages_earned = (household.wages_earned or 0.0) + pay
         # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
         # practice those same hours were running (see practice_attention),
         # and for a trained person it is usually a net loss. That is
@@ -168,7 +169,7 @@ class WagesMixin:
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for trade, count in self.household.employees.items():
+        for trade, count in self.state.household.employees.items():
             total += count * self.annual_wage(trade)
         return total
 

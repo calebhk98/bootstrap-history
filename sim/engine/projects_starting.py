@@ -56,13 +56,14 @@ class StartingMixin:
 
     def bribe(self, amount):
         """Pay your way out of trouble, deliberately, for a stated sum."""
+        household = self.state.household
         amount = float(amount)
         if amount <= 0:
             return False, "amount must be greater than zero. Nothing was changed."
-        if amount > self.household.capital:
-            return False, "you have %.0f denarii" % self.household.capital
-        before = self.household.scandal
-        prot_before = self.household.protection
+        if amount > household.capital:
+            return False, "you have %.0f denarii" % household.capital
+        before = household.scandal
+        prot_before = household.protection
         # DO NOT CHARGE FOR NOTHING: taking the money and then saying, in
         # the same breath, "you had no scandal to answer and are already
         # as protected as money can make you, so this bought nothing"
@@ -70,13 +71,13 @@ class StartingMixin:
         # it would move anything BEFORE taking the money, and refuse if
         # it would not.
         if before <= 0.0005:
-            spent = self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd + amount
+            spent = self.BRIBE_MEMORY_DECAY * household.bribes_ytd + amount
             income = max(1.0, self.revenue())
             would = min(self.BRIBE_PROTECTION_CAP,
                         (spent / (income * self.BRIBE_INCOME_SHARE))
                         * self.value_weights["bribability"])
             already = min(self.BRIBE_PROTECTION_CAP,
-                          (self.household.bribes_ytd / (income * self.BRIBE_INCOME_SHARE))
+                          (household.bribes_ytd / (income * self.BRIBE_INCOME_SHARE))
                           * self.value_weights["bribability"])
             if would - already < 0.005:
                 # SAY WHICH IT IS: telling somebody they are "already as
@@ -103,31 +104,31 @@ class StartingMixin:
         # nothing for no additional benefit. What a man cannot be paid to
         # do more of, he cannot be paid more for.
         bribability = max(1e-9, self.value_weights["bribability"])
-        for_scandal = self.household.scandal * self.BRIBE_DENARII_PER_SCANDAL_POINT / bribability
+        for_scandal = household.scandal * self.BRIBE_DENARII_PER_SCANDAL_POINT / bribability
         income = max(1.0, self.revenue())
         # spent/(income*BRIBE_INCOME_SHARE) * bribability = BRIBE_PROTECTION_CAP, solved for the carried total
         for_protection = max(0.0, (self.BRIBE_PROTECTION_CAP * income * self.BRIBE_INCOME_SHARE) / bribability
-                             - self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd)
+                             - self.BRIBE_MEMORY_DECAY * household.bribes_ytd)
         useful = max(for_scandal, for_protection)
         refused = 0.0
         if amount > useful + 0.5:
             refused, amount = amount - useful, useful
-        self.household.capital -= amount
-        self.household.bribes_ytd = self.BRIBE_MEMORY_DECAY * self.household.bribes_ytd + amount
-        self.household.scandal = max(0.0, self.household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
+        household.capital -= amount
+        household.bribes_ytd = self.BRIBE_MEMORY_DECAY * household.bribes_ytd + amount
+        household.scandal = max(0.0, household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
         self.update_protection()
         # BOTH THINGS IT BUYS: a bribe against zero scandal still feeds
         # bribes_ytd into protection, which keeps an accusation from being
         # made in the first place. Reporting only the half that did not
         # move would make a real effect look like money silently burned.
-        msg = "scandal %.2f -> %.2f for %.0f denarii" % (before, self.household.scandal, amount)
+        msg = "scandal %.2f -> %.2f for %.0f denarii" % (before, household.scandal, amount)
         if refused > 0.5:
             msg += ("; %s denarii of what you offered was not taken, because "
                     "this is as far as money goes here - you kept it"
                     % "{:,.0f}".format(refused))
-        if self.household.protection > prot_before + 0.0005:
+        if household.protection > prot_before + 0.0005:
             msg += ("; advocacy and piety bought as well: protection %.2f -> %.2f"
-                    % (prot_before, self.household.protection))
+                    % (prot_before, household.protection))
         elif before <= 0.0005:
             msg += ("; you had no scandal to answer and are already as protected "
                     "as money can make you, so this bought nothing")
@@ -163,9 +164,9 @@ class StartingMixin:
         # refused a bounty on it for want of a Roman artisan's judgement.
         if node["cat"] in ("glass_optics", "metallurgy", "precision", "power",
                         "agriculture", "information", "instruments"):
-            return all(prereq_id in self.household.done for prereq_id in node["pre"])
+            return all(prereq_id in self.state.projects.done for prereq_id in node["pre"])
         if self.civ_cost_factor(node_id) < self.BOUNTY_ELIGIBLE_COST_ADVANTAGE:
-            return all(prereq_id in self.household.done for prereq_id in node["pre"])
+            return all(prereq_id in self.state.projects.done for prereq_id in node["pre"])
         return False
 
     BOUNTY_PRICE_MULTIPLIER = declare(
@@ -198,16 +199,17 @@ class StartingMixin:
         # `why` does for the same node.
         price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(node_id)
                  * self.material_cost_factor(node_id) * self.cost_money_factor())
-        if price > self.household.capital:
+        household = self.state.household
+        projects = self.state.projects
+        if price > household.capital:
             return False
-        self.household.capital -= price
-        self.household.total_spend += price
-        self.household.bounties_paid += 1
-        self.household.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
-        self.household.bountied.add(node_id)
+        household.costCapital(price)
+        household.bounties_paid += 1
+        projects.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE, yrs=0.0, spent=price)
+        projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
-        self.household.log.append((self.year, "posted a public bounty for %s (%s den)"
+        household.log.append((self.state.scenario.year, "posted a public bounty for %s (%s den)"
                          % (node["name"], f"{price:,.0f}")))
         return True
 
@@ -246,7 +248,7 @@ class StartingMixin:
         """The best quality any option in one `req_any` group actually offers."""
         best = 0.0
         for opt, qual in (group.get("options") or {}).items():
-            if opt in self.household.done or opt in self.nodes.get(node_id, {}).get("mat", {}):
+            if opt in self.state.projects.done or opt in self.nodes.get(node_id, {}).get("mat", {}):
                 best = max(best, float(qual))
             elif opt not in self.nodes:
                 best = max(best, float(qual) * self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)   # a purchasable commodity
@@ -418,14 +420,15 @@ class StartingMixin:
         return None
 
     def _check_already_done(self, node_id, node, ignore_trade, _memo, _why):
-        if node_id in self.household.done:
+        projects = self.state.projects
+        if node_id in projects.done:
             # A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already
             # done" either: you know how, and the plant is gone. `restore`
             # puts it back at a fraction of the cost, so this branch must be
             # checked BEFORE the flat "already done" case below, or a
             # mothballed work gets swallowed by the wrong, less useful
             # advice.
-            if node_id in getattr(self.household, "mothballed", set()):
+            if node_id in projects.mothballed:
                 # project_cost() is pure (no rng, no log, no mutation - see
                 # its own docstring and the factor functions it calls) but
                 # it is real arithmetic over several factor tables, and
@@ -439,7 +442,7 @@ class StartingMixin:
         return None
 
     def _check_already_active(self, node_id, node, ignore_trade, _memo, _why):
-        if node_id in self.household.active:
+        if node_id in self.state.projects.active:
             return False, ("already active" if _why else None)
         return None
 
@@ -474,7 +477,7 @@ class StartingMixin:
         return None
 
     def _check_missing_prereqs(self, node_id, node, ignore_trade, _memo, _why):
-        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done]
+        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.state.projects.done]
         if missing:
             # NAME ONLY WHAT YOU HAVE HEARD OF: printing every missing
             # prerequisite by raw id regardless of visibility would let a
@@ -551,7 +554,10 @@ class StartingMixin:
     # be frozen out on paper while carrying on borrowing and starting
     # things regardless.
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
-        if self.year < getattr(self.household, "credit_frozen_until", 0):
+        scenario_year = self.state.scenario.year
+        household = self.state.household
+        credit_frozen = household.credit_frozen_until or 0
+        if scenario_year < credit_frozen:
             # SAY IF IT WILL NEVER LIFT IN TIME: a freeze date past the
             # run's own horizon is not a date, it is the end of the run
             # wearing a date's clothes.
@@ -562,30 +568,32 @@ class StartingMixin:
                            "you again in %d%s, and until then you may finish what "
                            "is running, and pay for something out of money you "
                            "actually hold."
-                           % (int(self.household.credit_frozen_until),
+                           % (int(credit_frozen),
                               " - which is past the horizon at %d, so not within "
                               "this run" % int(_end)
-                              if self.household.credit_frozen_until > _end else ""))
+                              if credit_frozen > _end else ""))
                            if _why else None)
         return None
 
     def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
-        if getattr(self.household, "insolvent_years", 0) >= self.ARREARS_GRACE_YEARS:
+        household = self.state.household
+        insolvent_years = household.insolvent_years or 0
+        if insolvent_years >= self.ARREARS_GRACE_YEARS:
             surplus = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())
             cheap_enough = (self.project_cost(node_id) <= max(self.ARREARS_CHEAP_PROJECT_FLOOR,
                                                           surplus * self.ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE))
         else:
             cheap_enough = True
-        if (getattr(self.household, "insolvent_years", 0) >= self.ARREARS_GRACE_YEARS
+        if (insolvent_years >= self.ARREARS_GRACE_YEARS
                 and not cheap_enough
-                and self.household.capital < -max(self.ARREARS_HARD_STOP_FLOOR,
+                and household.capital < -max(self.ARREARS_HARD_STOP_FLOOR,
                                                    self.revenue() * self.ARREARS_HARD_STOP_REVENUE_MULTIPLE)):
             return False, (("you have been in arrears %d years and are %.0f denarii down; "
                            "nobody will fund a new undertaking of this size. Something "
                            "you can pay for out of this year's income is still allowed, "
                            "so is finishing or stopping what is running."
-                           % (getattr(self.household, "insolvent_years", 0), -self.household.capital))
+                           % (insolvent_years, -household.capital))
                            if _why else None)
         return None
 
@@ -723,7 +731,7 @@ class StartingMixin:
                            if _why else None)
         if state_interest_score < self.STATE_OPPOSED_THRESHOLD and not (
                 self.running("patron_senatorial")
-                or self.household.protection > self.STATE_OPPOSITION_PROTECTION_OVERRIDE):
+                or self.state.household.protection > self.STATE_OPPOSITION_PROTECTION_OVERRIDE):
             return False, (("the state actively opposes this (state interest "
                            "%.1f); %s, or protection above %.2f (you have "
                            "%.2f)"
@@ -731,7 +739,7 @@ class StartingMixin:
                                                       "patronage at the very "
                                                       "top"),
                               self.STATE_OPPOSITION_PROTECTION_OVERRIDE,
-                              self.household.protection))
+                              self.state.household.protection))
                            if _why else None)
         return None
 
@@ -771,7 +779,7 @@ class StartingMixin:
         """
         if not self.is_visible(node_id):
             return "you will need %s before anyone here will let you begin" % in_world
-        if node_id in self.household.done:
+        if node_id in self.state.projects.done:
             return ("get %s: you have built it already, so 'open %s' to put "
                     "it behind you" % (in_world, node_id))
         # AND IT HAS TO BE STARTABLE, or this is still a refusal recommending
@@ -783,7 +791,7 @@ class StartingMixin:
         # is a recursion this line does not need: the missing-prereq case is
         # the one that actually bit, and the fog filter for naming them
         # already exists.
-        missing = [prereq_id for prereq_id in self.nodes[node_id]["pre"] if prereq_id not in self.household.done]
+        missing = [prereq_id for prereq_id in self.nodes[node_id]["pre"] if prereq_id not in self.state.projects.done]
         if missing:
             seen = [prereq_id for prereq_id in missing if self.is_visible(prereq_id)]
             return ("get %s first, which itself wants %s"
@@ -809,7 +817,7 @@ class StartingMixin:
         priority queue you did not otherwise control. This method is the real
         thing: it applies the same legality check as the optimizer
         (`start_reason`), and if it passes, THIS is the only place besides the
-        optimizer's own loop that ever adds to `self.household.active`. In `--manual`
+        optimizer's own loop that ever adds to `projects.active`. In `--manual`
         mode the optimizer's loop is switched off entirely (see step(), 4b),
         so this becomes the only way anything ever starts.
         """
@@ -828,13 +836,16 @@ class StartingMixin:
         # node - by you stopping it, or by the creditors stopping it - comes
         # off, and testing against the gross would refuse a project that is
         # nearly paid for. See stop_project.
-        _paid_now = min(price, max(0.0, (getattr(self.household, "paid_towards", None)
-                                         or {}).get(node_id, 0.0)))
+        projects = self.state.projects
+        household = self.state.household
+        scenario_year = self.state.scenario.year
+        _paid_towards = projects.paid_towards or {}
+        _paid_now = min(price, max(0.0, _paid_towards.get(node_id, 0.0)))
         price -= _paid_now
         # sorted(): summing floats over a dict whose keys came from a set.
         owed = sum(project_state.get("cost_left") or 0.0
-                   for project_state in (self.household.active[node_id] for node_id in sorted(self.household.active)))
-        ceiling = max(0.0, self.household.capital) + self.credit_limit()
+                   for project_state in (projects.active[nid] for nid in sorted(projects.active)))
+        ceiling = max(0.0, household.capital) + self.credit_limit()
         # THE AFFORDABILITY TEST MUST APPLY TO THE FIRST PROJECT TOO: a
         # guard that only checked once something was already active would
         # let an opening move be started far beyond what cash and credit
@@ -851,14 +862,14 @@ class StartingMixin:
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the
         # creditors stop a project the money already sunk into it is kept
         # against the node, and this is where it comes back off the bill.
-        _paid = getattr(self.household, "paid_towards", None) or {}
-        _paid.pop(node_id, None)          # spent once; the figure is _paid_now above
+        if projects.paid_towards:
+            projects.paid_towards.pop(node_id, None)          # spent once; the figure is _paid_now above
         _already = _paid_now
         # A THING YOU ARE REBUILDING IS NOT A THING SITTING IDLE. If the
         # knowledge was destroyed and only the mothball entry survived, that
         # entry is stale the moment you begin again - and while it stands,
         # `available` hides the node and `restore` claims it can reopen it.
-        self.household.mothballed.discard(node_id)
+        projects.mothballed.discard(node_id)
         # lab_left STARTS FULL, SET HERE - not lazily the first time
         # lab_year_draw runs. step() reduces ph_left for THIS year before it
         # ever reaches the labour section, so a lazy init reading ph_left at
@@ -866,7 +877,7 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.household.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0,
+        projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0,
                               spent=_already, cost_left=price,
                               lab_left=dict(node["lab"]))
         # A genuinely instantaneous capability should not need an otherwise
@@ -879,7 +890,7 @@ class StartingMixin:
             self._complete(node_id)
             return True, None
         if _already > 0.5:
-            self.household.log.append((self.year, "%s begun again; the %s denarii already "
+            household.log.append((scenario_year, "%s begun again; the %s denarii already "
                                         "paid on it before comes off the bill"
                              % (node_id, "{:,.0f}".format(_already))))
         # Director hours in step() 5 are handed out by priority in `order`.
@@ -901,13 +912,14 @@ class StartingMixin:
         the right move. The site does not un-dig itself either way. The
         hours really are gone: that is your year, and you spent it.
         """
-        if node_id not in self.household.active:
+        projects = self.state.projects
+        if node_id not in projects.active:
             return False, "not active"
-        project_state = self.household.active.pop(node_id)
-        self.household.bountied.discard(node_id)
-        _paid = getattr(self.household, "paid_towards", None)
-        if _paid is None:
-            _paid = self.household.paid_towards = {}
+        project_state = projects.active.pop(node_id)
+        projects.bountied.discard(node_id)
+        if projects.paid_towards is None:
+            projects.paid_towards = {}
+        _paid = projects.paid_towards
         kept = max(0.0, project_state.get("spent", 0.0))
         if kept > 0.5:
             _paid[node_id] = _paid.get(node_id, 0.0) + kept

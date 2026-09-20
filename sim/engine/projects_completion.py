@@ -100,11 +100,15 @@ class CompletionMixin:
 
     def _complete(self, node_id):
         node = self.nodes[node_id]
+        projects = self.state.projects
+        household = self.state.household
+        scenario = self.state.scenario
+        governance = self.state.governance
         _risk_this_attempt = self.effective_risk(node_id)
         if self.rng.random() < _risk_this_attempt:
-            _yrs_before = self.household.active[node_id]["yrs"]
-            self.household.failed_attempts[node_id] += 1
-            self.household.active[node_id]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
+            _yrs_before = projects.active[node_id]["yrs"]
+            projects.failed_attempts[node_id] += 1
+            projects.active[node_id]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
             # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
             # reset the multi-year diffusion clock to zero, restarting the
             # whole process from nothing. Even ONE failed attempt already
@@ -118,9 +122,9 @@ class CompletionMixin:
             # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
             # programme is only ever readier, never instantly ready.
             _retain = self._retry_calendar_retain(node_id)
-            self.household.active[node_id]["yrs"] = _yrs_before * _retain
+            projects.active[node_id]["yrs"] = _yrs_before * _retain
             _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
-            self.household.capital -= _lost
+            household.capital -= _lost
             # SAY SO: a failed attempt must announce itself in the log - a
             # cost you cannot see is a cost nobody is paying attention to,
             # which is the same as not charging it.
@@ -137,8 +141,8 @@ class CompletionMixin:
             # groundwork survives (years already banked toward the next
             # attempt's own floor).
             _next_risk = self.effective_risk(node_id)
-            _banked = self.household.active[node_id]["yrs"]
-            self.household.log.append((self.year,
+            _banked = projects.active[node_id]["yrs"]
+            household.log.append((scenario.year,
                              "FAILED at %s: it did not work. %d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
                              "Attempt %d. What went wrong is now understood well "
@@ -149,23 +153,25 @@ class CompletionMixin:
                              % (node["name"], round(self.FAILURE_RESET_SHARE * 100),
                                 "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
                                 "{:,.0f}".format(max(0.0, _lost)),
-                                self.household.failed_attempts[node_id] + 1,
+                                projects.failed_attempts[node_id] + 1,
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
                                 _banked, _yrs_before)))
             return
-        del self.household.active[node_id]
-        self.household.bountied.discard(node_id)
+        del projects.active[node_id]
+        projects.bountied.discard(node_id)
         # A FINISHED PROJECT CANNOT BE GIVEN MORE HOURS. Unlike stopping or
         # halting one - both of which carry what was already paid forward
         # if the player starts the same id again, see start_project's own
         # `_paid_now` - there is no "again" once it is done, so a standing
         # order aimed at this id would otherwise sit in `allocate`'s list
         # for ever, pointed at nothing.
-        self.household.hour_allocations.pop(node_id, None)
-        self.household.done.add(node_id)
+        household.hour_allocations.pop(node_id, None)
+        projects.done.add(node_id)
         self._done_changed()
-        self.household.done_year[node_id] = self.year
+        if projects.done_year is None:
+            projects.done_year = {}
+        projects.done_year[node_id] = scenario.year
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
         self.apply_tech_effects(node_id)
@@ -176,20 +182,20 @@ class CompletionMixin:
         gain = (self.REPUTATION_GAIN_BASE
                 + self.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.state_interest(node))
                 + (self.REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
-        self.household.reputation = min(self.REPUTATION_CEILING, self.household.reputation + gain)
-        self.household.scandal += self.alarm_of(node)
-        self.household.gov += self.state_interest(node)
-        # _grant_staff, NOT a bare += on self.household.scholars/self.household.artisans:
+        household.reputation = min(self.REPUTATION_CEILING, household.reputation + gain)
+        household.scandal += self.alarm_of(node)
+        governance.gov += self.state_interest(node)
+        # _grant_staff, NOT a bare += on household.scholars/household.artisans:
         # _resync_pools(), which step() calls unconditionally every year,
-        # always treats self.household.scholars and self.household.artisans
-        # as computed purely from self.household.employees, so a bare
+        # always treats household.scholars and household.artisans
+        # as computed purely from household.employees, so a bare
         # direct addition here would be overwritten out of existence the
         # very next time it runs. See _grant_staff.
         #
         # ONLY WITHOUT auto_hire: with it on - the optimizer's default, off
         # for a player - staff_capacity() already counts this same
         # institution toward sc_cap/ar_cap and step()'s smoothing grows
-        # self.household.scholars/self.household.artisans toward that ceiling on its own; the
+        # household.scholars/household.artisans toward that ceiling on its own; the
         # long civilization runs are calibrated against that smoothing alone
         # (see core.py, "1. staff"). Granting it a second time here as well
         # would double-count every one of these three institutions against
@@ -205,13 +211,13 @@ class CompletionMixin:
         # not told will reasonably conclude the money is broken rather
         # than that they have not opened the doors.
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
-            self.household.log.append((self.year, "completed: %s. You know how; nothing "
+            household.log.append((scenario.year, "completed: %s. You know how; nothing "
                                         "is earning yet - 'open %s' to run it"
                                         % (node["name"], node_id)))
         else:
-            self.household.log.append((self.year, "completed: " + node["name"]))
-        if node_id == self.goal and self.household.goal_year is None:
-            self.household.goal_year = self.year
+            household.log.append((scenario.year, "completed: " + node["name"]))
+        if node_id == self.goal and scenario.goal_year is None:
+            scenario.goal_year = scenario.year
 
     # -- shocks -------------------------------------------------------------
     # WHAT YOU CAN DO ABOUT HISTORY.

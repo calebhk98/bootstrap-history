@@ -141,7 +141,7 @@ class VenturesMixin:
     def venture_foremen_used(self, excluding=None):
         """Skilled-foreman FTE held by operating concerns, by trade."""
         used = collections.defaultdict(float)
-        for node_id in sorted(self.household.operating):
+        for node_id in sorted(self.state.projects.operating):
             if node_id == excluding or node_id not in self.nodes:
                 continue
             trade, fte = self.venture_foreman(node_id)
@@ -151,7 +151,7 @@ class VenturesMixin:
 
     def venture_foreman_free(self, trade, excluding=None):
         """Employed specialists still free to supervise another concern."""
-        return max(0.0, self.household.employees.get(trade, 0.0)
+        return max(0.0, self.state.household.employees.get(trade, 0.0)
                    - self.venture_foremen_used(excluding).get(trade, 0.0))
 
     def venture_staff_who_is_watching_what(self):
@@ -163,7 +163,7 @@ class VenturesMixin:
         first, because that is the one to close.
         """
         rows = []
-        for node_id in sorted(self.household.operating):
+        for node_id in sorted(self.state.projects.operating):
             if node_id not in self.nodes:
                 continue
             scholars, craftsmen = self.venture_hands(node_id)
@@ -182,7 +182,7 @@ class VenturesMixin:
         # each run; every float sum over `operating` or `done` has to fix
         # its order.
         sch = art = 0.0
-        for node_id in sorted(self.household.operating):
+        for node_id in sorted(self.state.projects.operating):
             if node_id not in self.nodes:
                 continue
             scholars, craftsmen = self.venture_hands(node_id)
@@ -196,9 +196,9 @@ class VenturesMixin:
         businesses with three people, and this is the whole of why choosing
         WHICH to run is a decision rather than an accounting formality."""
         sch_used, art_used = self.venture_staff_used()
-        own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
+        own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
         return (max(0.0, self.effective_scholars() - sch_used),
-                max(0.0, self.household.artisans + own - art_used))
+                max(0.0, self.state.household.artisans + own - art_used))
 
 
     def open_venture(self, node_id, pay=True, units=None):
@@ -217,10 +217,11 @@ class VenturesMixin:
         """
         if node_id not in self.nodes:
             return False, "no such node"
-        if node_id not in self.household.done:
+        projects = self.state.projects
+        if node_id not in projects.done:
             return False, ("you have not worked out how to do that yet, so there "
                            "is nothing to open")
-        if node_id in self.household.granted:
+        if node_id in projects.granted:
             if self._practisable(node_id):
                 # The SKILL is the society's, and you are already practising
                 # it - which is why it pays, and why there is nothing here
@@ -238,7 +239,7 @@ class VenturesMixin:
             return False, ("that is knowledge, not a going concern: there is "
                            "nothing to open and nothing it would earn. It has "
                            "already changed what you can build")
-        if node_id in self.household.operating:
+        if node_id in projects.operating:
             if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
@@ -291,9 +292,12 @@ class VenturesMixin:
         # premises are still standing and the stock is still on the
         # shelves; what is missing is somebody to watch it. Reopening
         # within a few years must cost the difference, not the whole thing
-        # again.
-        _shut = getattr(self.household, "shut_for_staff", {})
-        if node_id in _shut and self.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE:
+        projects = self.state.projects
+        household = self.state.household
+        scenario = self.state.scenario
+        governance = self.state.governance
+        _shut = getattr(projects, "shut_for_staff", {}) or {}
+        if node_id in _shut and scenario.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE:
             fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
@@ -305,26 +309,26 @@ class VenturesMixin:
                                "and between %s in cash and what anyone will "
                                "advance against a purchase you can raise %s"
                                % ("{:,.0f}".format(fee),
-                                  "{:,.0f}".format(self.household.capital),
+                                  "{:,.0f}".format(household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            self.household.capital -= fee
-        self.household.operating.add(node_id)
-        self.household.mothballed.discard(node_id)
+            household.capital -= fee
+        projects.operating.add(node_id)
+        projects.mothballed.discard(node_id)
         _shut.pop(node_id, None)
-        self.household.shut_for_staff = _shut
+        projects.shut_for_staff = _shut
         if scalable:
-            inst_units = getattr(self.household, "inst_units", None)
+            inst_units = getattr(governance, "inst_units", None)
             if inst_units is None:
-                inst_units = self.household.inst_units = {}
+                inst_units = governance.inst_units = {}
             inst_units[node_id] = unit_count
         # WHEN THE DOORS OPENED, which is when custom starts to find you: see
         # venture_ramp, which reads this rather than the year the capability
         # was worked out, so opening late does not skip the ramp. Reopening
         # something you had running does not restart it: the shop is known.
-        _oy = getattr(self.household, "opened_year", None)
+        _oy = getattr(projects, "opened_year", None)
         if _oy is None:
-            _oy = self.household.opened_year = {}
-        _oy.setdefault(node_id, self.year)
+            _oy = projects.opened_year = {}
+        _oy.setdefault(node_id, scenario.year)
         rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
         # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE: a newly opened
         # concern takes revenue_ramp_years to reach the figure just quoted -
@@ -395,14 +399,15 @@ class VenturesMixin:
                                "between %s in cash and what anyone will advance "
                                "against a purchase you can raise %s"
                                % (node_id, add_units, "{:,.0f}".format(fee),
-                                  "{:,.0f}".format(self.household.capital),
+                                  "{:,.0f}".format(self.state.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            self.household.capital -= fee
-        inst_units = getattr(self.household, "inst_units", None)
+            self.state.household.capital -= fee
+        governance = self.state.governance
+        inst_units = getattr(governance, "inst_units", None)
         if inst_units is None:
-            inst_units = self.household.inst_units = {}
+            inst_units = governance.inst_units = {}
         inst_units[node_id] = have + add_units
-        self.household._inst_units_ver = getattr(self.household, "_inst_units_ver", 0) + 1
+        governance._inst_units_ver = getattr(governance, "_inst_units_ver", 0) + 1
         rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
         return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
                       "now earns about %s a year and costs about %s to run"
@@ -412,10 +417,11 @@ class VenturesMixin:
     def close_venture(self, node_id):
         """Stop running it. You keep the knowledge; you stop paying for it and
         stop being paid by it."""
-        if node_id not in self.household.operating:
+        projects = self.state.projects
+        if node_id not in projects.operating:
             return False, "you are not running that"
-        self.household.operating.discard(node_id)
-        self.household.mothballed.add(node_id)
+        projects.operating.discard(node_id)
+        projects.mothballed.add(node_id)
         node = self.nodes[node_id]
         return True, ("%s closed: you stop paying %s a year and stop earning %s"
                       % (node_id, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))

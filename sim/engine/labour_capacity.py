@@ -74,15 +74,15 @@ class CapacityMixin:
 
     def director_pool(self):
         total_hours = 0.0
-        if self.founder_alive:
+        if self.state.founder.founder_alive:
             own = self.cfg["founder_hours_per_year"]
             # In bondage most of your hours are owed to somebody else. Not all
             # of them: nobody worked every waking hour, and the evenings are
             # where the work gets done. This is the cost, and it is temporary.
-            if self.household.bondage_years_left > 0:
+            if self.state.household.bondage_years_left > 0:
                 own *= self.BONDAGE_HOURS_SHARE
             total_hours += own
-        total_hours += self.household.directors_extra * self.cfg["director_hours_per_year"]
+        total_hours += self.state.household.directors_extra * self.cfg["director_hours_per_year"]
         return total_hours
 
     # ---- literacy bounds who you can hire ----------------------------------
@@ -339,9 +339,10 @@ class CapacityMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        pending = sum(row[3] for row in self.household.training
+        household = self.state.household
+        pending = sum(row[3] for row in household.training
                       if len(row) > 2 and row[2] == trade)
-        return self.household.employees.get(trade, 0.0) + pending
+        return household.employees.get(trade, 0.0) + pending
 
     # What each of these adds to the CEILING on people, taken from
     # staff_capacity below so the advice and the arithmetic cannot drift apart.
@@ -481,19 +482,20 @@ class CapacityMixin:
         # a player who hit the ceiling it had been holding up to build
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
+        projects = self.state.projects
         reopen = [(node_id, add) for node_id, add in self.ROOM_SOURCES
-                  if node_id in self.household.done and node_id in self.nodes and node_id not in self.household.operating
+                  if node_id in projects.done and node_id in self.nodes and node_id not in projects.operating
                   and self.is_venture(node_id)]
         reopen.sort(key=lambda kv: -kv[1])
         want = [(node_id, add) for node_id, add in self.ROOM_SOURCES
-                if node_id not in self.household.done and node_id in self.nodes
+                if node_id not in projects.done and node_id in self.nodes
                 and self.is_visible(node_id)]
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
         def _distance(node_id):
-            return len(closure(self.nodes, node_id) - self.household.done)
+            return len(closure(self.nodes, node_id) - projects.done)
         want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
@@ -896,7 +898,7 @@ class CapacityMixin:
         # hire more people with.
         spare = max(0.0, (self.revenue() - self.upkeep() - self.living_cost())
                     * self.rep_factor()
-                    + max(0.0, self.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
+                    + max(0.0, self.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / (self.STAFF_ANNUAL_WAGE_REFERENCE * self.price_index * self.wage_index)
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
@@ -979,9 +981,10 @@ class CapacityMixin:
         could ever cross. This is that honest headroom. You hire them,
         you pay them every year, and you can only supervise so many.
         """
+        household = self.state.household
         room = (self.SUPERVISION_ROOM_SELF
-                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * self.household.directors_extra
-                + max(0.0, getattr(self.household, "worker_housing_places", 0.0)))
+                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra
+                + max(0.0, household.worker_housing_places or 0.0))
         if self.running("workshop_first"):
             room += self.SUPERVISION_ROOM_WORKSHOP_FIRST * self.institution_units("workshop_first")
         if self.running("school_founded"):
@@ -1045,9 +1048,10 @@ class CapacityMixin:
         """
         rows = [{"source": "yourself", "people": self.SUPERVISION_ROOM_SELF,
                  "what_it_is": "what one person can keep an eye on"}]
-        if self.household.directors_extra > 0.005:
+        household = self.state.household
+        if household.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
-                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * self.household.directors_extra, 2),
+                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
         for key, per, words in (
                 ("workshop_first", self.SUPERVISION_ROOM_WORKSHOP_FIRST, "a place of your own to work in"),
@@ -1210,10 +1214,10 @@ class CapacityMixin:
             # `node not in self.household.done`, fell silent about it rather than
             # naming the actual remedy. Reopening costs a supervisor, not a
             # second institution; say that first.
-            elif node in self.household.done and node not in self.household.operating and self.is_venture(node):
+            elif node in self.state.projects.done and node not in self.state.projects.operating and self.is_venture(node):
                 bits.append("reopen %s ('open %s') - you already built this; "
                             "it is only shut" % (node, node))
-            elif node not in self.household.done and self.is_visible(node):
+            elif node not in self.state.projects.done and self.is_visible(node):
                 # NOT A CIRCLE. `why workshop_first` says it is blocked for want
                 # of artisans, and the advice on how to get artisans said "build
                 # workshop_first (you need somewhere for them to work)" - a play
@@ -1225,7 +1229,7 @@ class CapacityMixin:
                 # start_reason - which calls this function, so the obvious
                 # version of this test recurses until the stack gives out.
                 _node = self.nodes[node]
-                _short = (_node["art"] > self.household.artisans + 1e-9 if kind == "artisans"
+                _short = (_node["art"] > self.state.household.artisans + 1e-9 if kind == "artisans"
                           else _node["sch"] > self.effective_scholars() + 1e-9)
                 if _short:
                     bits.append("build %s eventually (%s) - but it is itself "
@@ -1238,7 +1242,8 @@ class CapacityMixin:
         return "To get more %s: %s." % (kind, "; ".join(bits[:3]))
 
     def headcount(self):
-        return sum(self.household.employees.values()) + self.household.slaves + self.household.freedmen
+        household = self.state.household
+        return sum(household.employees.values()) + household.slaves + household.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.

@@ -50,17 +50,19 @@ class StaffingMixin:
         # re-opening busywork: nobody shuts a shop because they are a
         # fortieth of a man short this spring. Close only when the shortfall
         # is a real pair of hands.
+        projects = self.state.projects
+        household = self.state.household
         SLACK = self.STAFFING_CLOSURE_SLACK
         closed = []
-        while self.household.operating:
+        while projects.operating:
             sch_used, art_used = self.venture_staff_used()
             foremen_used = self.venture_foremen_used()
-            own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
+            own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
             foremen_ok = all(
-                used <= self.household.employees.get(trade, 0.0) + 0.01
+                used <= household.employees.get(trade, 0.0) + 0.01
                 for trade, used in foremen_used.items())
             if (sch_used <= self.effective_scholars() + SLACK
-                    and art_used <= self.household.artisans + own + SLACK
+                    and art_used <= household.artisans + own + SLACK
                     and foremen_ok):
                 break
             # THE LEAST WORTH KEEPING, not the largest. Picking whichever
@@ -80,7 +82,7 @@ class StaffingMixin:
             # and an imperial patron on the same turn had all three shut by
             # the staffing rule on the next one. You cannot answer a shortage
             # of craftsmen by closing something no craftsman was watching.
-            _holders = [node_id for node_id in sorted(self.household.operating)
+            _holders = [node_id for node_id in sorted(projects.operating)
                         if self.venture_hands(node_id)[1] > 0.005
                         or self.venture_hands(node_id)[0] > 0.005
                         or self.venture_foreman(node_id)[1] > 0.005]
@@ -91,14 +93,16 @@ class StaffingMixin:
                                        / max(0.01, self.venture_hands(k)[1]
                                              + self.venture_foreman(k)[1]),
                                        -self.venture_hands(k)[1]))
-            self.household.operating.discard(worst)
-            self.household.mothballed.add(worst)
-            _sfs = getattr(self.household, "shut_for_staff", {})
+            projects.operating.discard(worst)
+            projects.mothballed.add(worst)
+            _sfs = projects.shut_for_staff
+            if _sfs is None:
+                _sfs = {}
+                projects.shut_for_staff = _sfs
             _sfs[worst] = year
-            self.household.shut_for_staff = _sfs
             closed.append(worst)
         if closed:
-            self.household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
+            household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
                                  "%s closed. You still know how; reopen with "
                                  "'open' once you have the people. The premises "
                                  "and the stock stand for a few years yet, so "
@@ -127,9 +131,11 @@ class StaffingMixin:
         close_unstaffed_ventures, so a concern a player shut on purpose with
         `mothball` never reappears on its own - that is still their call.
         """
-        _shut = getattr(self.household, "shut_for_staff", {})
+        projects = self.state.projects
+        household = self.state.household
+        _shut = projects.shut_for_staff or {}
         cands = [node_id for node_id in sorted(_shut)
-                 if node_id in self.household.mothballed and node_id in self.household.done and node_id in self.nodes]
+                 if node_id in projects.mothballed and node_id in projects.done and node_id in self.nodes]
         if not cands:
             return []
         # BEST-EARNING FIRST, same idea as auto_open_ventures: when only some
@@ -148,7 +154,7 @@ class StaffingMixin:
             if did_open:
                 reopened.append(node_id)
         if reopened:
-            self.household.log.append((year, "you have the people again: %s reopen%s on "
+            household.log.append((year, "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s"
                              % (", ".join(sorted(reopened)[:4])
@@ -224,16 +230,18 @@ class StaffingMixin:
         a concern that only ever drew on scholars is not put on notice by a
         shortage of craftsmen, and the other way round.
         """
-        if not self.household.operating:
+        projects = self.state.projects
+        household = self.state.household
+        if not projects.operating:
             return []
         sch_used, art_used = self.venture_staff_used()
-        own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
+        own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
         SLACK = self.STAFFING_CLOSURE_SLACK   # close_unstaffed_ventures' own hysteresis band
         sch_room = self.effective_scholars() + SLACK - sch_used
-        art_room = self.household.artisans + own + SLACK - art_used
+        art_room = household.artisans + own + SLACK - art_used
         if sch_room > self.STAFFING_WARNING_BAND and art_room > self.STAFFING_WARNING_BAND:
             return []
-        _holders = [node_id for node_id in sorted(self.household.operating)
+        _holders = [node_id for node_id in sorted(projects.operating)
                     if self.venture_hands(node_id)[1] > 0.005
                     or self.venture_hands(node_id)[0] > 0.005]
         if not _holders:
@@ -439,9 +447,10 @@ class StaffingMixin:
         # this matters - a 400-a-year shop that opens for 60 is worth more than
         # a 3,200-a-year works you cannot afford at all.
         # sorted() is stable, so ties keep the order of the input - and the
-        # input was a generator over a set. sorted(self.household.done) first.
-        cands = sorted((node_id for node_id in sorted(self.household.done)
-                        if self.is_venture(node_id) and node_id not in self.household.operating
+        # input was a generator over a set. sorted(projects.done) first.
+        projects = self.state.projects
+        cands = sorted((node_id for node_id in sorted(projects.done)
+                        if self.is_venture(node_id) and node_id not in projects.operating
                         and self.nodes[node_id]["rev"] > self.nodes[node_id]["up"]),
                        key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
                                        / max(1.0, self.venture_capex(k))))
@@ -492,8 +501,9 @@ class StaffingMixin:
         # question (whether the household can spend at all, not whether
         # THIS concern's own payback justifies opening it while in
         # arrears).
-        _deep_arrears = (self.household.capital < 0
-                         and -self.household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
+        household = self.state.household
+        _deep_arrears = (household.capital < 0
+                         and -household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
         return _deep_arrears
 
     def _auto_open_institution_candidates(self, _deep_arrears):
@@ -510,10 +520,11 @@ class StaffingMixin:
         # STILL NOTHING WHILE DEEP IN ARREARS: an institution is a standing
         # bleed against revenue the household does not have, exactly the
         # unconstrained-borrowing case the comment above warns about.
+        projects = self.state.projects
         caps = [] if _deep_arrears else sorted(
-                      (node_id for node_id in sorted(self.household.done)
+                      (node_id for node_id in sorted(projects.done)
                        if node_id in self.CAPABILITY_INSTITUTIONS
-                       and node_id not in self.household.operating and self.is_venture(node_id)
+                       and node_id not in projects.operating and self.is_venture(node_id)
                        and self.nodes[node_id]["rev"] <= self.nodes[node_id]["up"]),
                       key=lambda k: (self.nodes[k]["up"] - self.nodes[k]["rev"],
                                      self.venture_capex(k), k))
@@ -540,9 +551,10 @@ class StaffingMixin:
         # unconstrained borrowing: nothing opens while you are deep in
         # arrears, and the standing bleed you take on may not outgrow a
         # tenth of your line.
+        household = self.state.household
         _surplus = (self.revenue() - self.upkeep() - self.living_cost())
         _line = self.credit_limit()
-        _deep = self.household.capital < 0 and -self.household.capital > _line * self.AUTO_OPEN_INSTITUTION_ARREARS_SHARE
+        _deep = household.capital < 0 and -household.capital > _line * self.AUTO_OPEN_INSTITUTION_ARREARS_SHARE
         _bleed_room = (max(0.0, _surplus) * self.AUTO_OPEN_SURPLUS_SHARE_FOR_BLEED
                        + (0.0 if _deep else _line * self.AUTO_OPEN_CREDIT_LINE_BLEED_SHARE))
         return _surplus, _bleed_room
@@ -598,9 +610,10 @@ class StaffingMixin:
         # 14 people is not short of a 12-place workshop, whatever it can
         # technically still borrow.
         opened = []
+        projects = self.state.projects
         if _surplus > 0.01 and not _deep_arrears:
             for node_id in sorted(self.SCALABLE_INSTITUTIONS):
-                if node_id not in self.household.operating or _surplus <= 0.01:
+                if node_id not in projects.operating or _surplus <= 0.01:
                     continue
                 have = self.institution_units(node_id)
                 ceiling = self.institution_unit_ceiling(node_id)
@@ -682,11 +695,13 @@ class StaffingMixin:
         # that is broken.
         if blocked and not opened:
             node_id, why = blocked
-            said = getattr(self.household, "_said_autoopen", {})
-            if self.year - said.get(node_id, -99) >= 10:
-                said[node_id] = self.year
-                self.household._said_autoopen = said
-                self.household.log.append((self.year,
+            household = self.state.household
+            scenario_year = self.state.scenario.year
+            said = household._said_autoopen or {}
+            if scenario_year - said.get(node_id, -99) >= 10:
+                said[node_id] = scenario_year
+                household._said_autoopen = said
+                household.log.append((scenario_year,
                                  "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
                                  % (node_id, "{:,.0f}".format(self.nodes[node_id]["rev"]),
@@ -703,11 +718,12 @@ class StaffingMixin:
         the work gave you, and restoring it costs a fraction of building
         it.
         """
+        projects = self.state.projects
         if node_id not in self.nodes:
             return False, "no such node"
-        if node_id not in self.household.done:
+        if node_id not in projects.done:
             return False, "you have not built that"
-        if node_id in self.household.granted:
+        if node_id in projects.granted:
             return False, ("that is something the society has, not something you "
                            "maintain; there is no upkeep of yours to stop")
         # MONEY IS NOT THE ONLY THING THIS TOOL CAN FREE: refusing whenever
@@ -719,7 +735,7 @@ class StaffingMixin:
         # short of even when there is "nothing to save" in money terms. Ask
         # what THIS tool actually releases (money upkeep, and, if it is
         # running, supervision time) rather than asking about money alone.
-        sch_held, art_held = self.venture_hands(node_id) if node_id in self.household.operating else (0.0, 0.0)
+        sch_held, art_held = self.venture_hands(node_id) if node_id in projects.operating else (0.0, 0.0)
         if self.nodes[node_id]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
             return False, ("that has no money upkeep of yours to stop paying, and "
                            "nobody of yours is tied up supervising it either; "
@@ -742,9 +758,9 @@ class StaffingMixin:
         # tree, forcing "you will have to restore or rebuild it before you
         # can go on" for a concern that was only ever switched off, not
         # forgotten.
-        was_running = node_id in self.household.operating
-        self.household.operating.discard(node_id)
-        self.household.mothballed.add(node_id)
+        was_running = node_id in projects.operating
+        projects.operating.discard(node_id)
+        projects.mothballed.add(node_id)
         if not was_running:
             return True, ("%s was not running, so there was nothing to stop "
                           "paying for. You still know how to do it." % node_id)
@@ -785,9 +801,12 @@ class StaffingMixin:
         and it starts the concern trading. `open` alone assumes the plant is
         still there.
         """
-        if node_id not in getattr(self.household, "mothballed", set()):
+        projects = self.state.projects
+        household = self.state.household
+        scenario_year = self.state.scenario.year
+        if node_id not in projects.mothballed:
             return False, "you have not shut that down"
-        if node_id not in self.household.done:
+        if node_id not in projects.done:
             return False, ('you no longer know how to do that, so there is '
                            'nothing to reopen: build it again with '
                            '{"cmd":"start","id":"%s"}' % node_id)
@@ -809,8 +828,8 @@ class StaffingMixin:
         # says so in the closing message; `restore` - the verb a player
         # actually reaches for - must honour that same discount, or a
         # player pays double what the closing message promised.
-        _shut = getattr(self.household, "shut_for_staff", {})
-        _in_grace = node_id in _shut and self.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE
+        _shut = projects.shut_for_staff or {}
+        _in_grace = node_id in _shut and scenario_year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE
         # SAY WHICH CASE THIS IS, not just a number: the closing message
         # promises "reopening soon costs a tenth of what opening did", so a
         # player who comes back to `restore` after the grace window has
@@ -825,34 +844,34 @@ class StaffingMixin:
                 _grace_note = ("the staffing window is still open (shut %d "
                                "years ago, of %d allowed), so this is the "
                                "discounted tenth, not the full price"
-                               % (self.year - _shut[node_id], self.STAFF_CLOSURE_GRACE))
+                               % (scenario_year - _shut[node_id], self.STAFF_CLOSURE_GRACE))
             else:
                 _grace_note = ("the staffing discount only lasts %d years "
                                "after a closure, and it has been %d - too "
                                "long for the tenth, so this is the full "
                                "price, the same as rebuilding the plant "
                                "from nothing"
-                               % (self.STAFF_CLOSURE_GRACE, self.year - _shut[node_id]))
+                               % (self.STAFF_CLOSURE_GRACE, scenario_year - _shut[node_id]))
         if fee > self.spending_power("buy"):
             return False, ("bringing it back costs %s denarii%s, and between "
                            "%s in cash and what anyone will advance against a "
                            "purchase you can raise %s"
                            % ("{:,.0f}".format(fee),
                               ("; " + _grace_note) if _grace_note else "",
-                              "{:,.0f}".format(self.household.capital),
+                              "{:,.0f}".format(household.capital),
                               "{:,.0f}".format(self.spending_power("buy"))))
-        if any(prereq_id not in self.household.done for prereq_id in node["pre"]):
+        if any(prereq_id not in projects.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
-                           + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in self.household.done))
-        self.household.capital -= fee
-        self.household.done.add(node_id)
+                           + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
+        household.capital -= fee
+        projects.done.add(node_id)
         self._done_changed()
-        self.household.mothballed.discard(node_id)
+        projects.mothballed.discard(node_id)
         # Back in service means back in OPERATION: restore is what a player
         # types to reopen something they shut, so it must put it back on the
         # books rather than leaving it known-but-closed.
         if self.is_venture(node_id):
-            self.household.operating.add(node_id)
+            projects.operating.add(node_id)
         return True, ("%s back in service for %s denarii%s"
                       % (node_id, "{:,.0f}".format(fee),
                          (" (%s)" % _grace_note) if _grace_note else ""))

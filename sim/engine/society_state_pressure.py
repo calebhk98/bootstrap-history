@@ -139,8 +139,8 @@ class StatePressureMixin:
             elif trait == "weapon_democratising":alarm += ALARM_WEIGHT_WEAPON_DEMOCRATISING
             elif trait == "labour_saving":       alarm += ALARM_WEIGHT_LABOUR_SAVING  * max(0.0, -weights["w_labour_saving"])
         alarm *= (1.0 + max(0.0, -weights["w_novelty"]))
-        alarm *= max(ALARM_FAMILIARITY_FLOOR, 1.0 - self.household.familiarity)      # people habituate, fast
-        alarm *= max(ALARM_PROTECTION_FLOOR, 1.0 - self.household.protection)       # patrons, office, money
+        alarm *= max(ALARM_FAMILIARITY_FLOOR, 1.0 - self.state.household.familiarity)      # people habituate, fast
+        alarm *= max(ALARM_PROTECTION_FLOOR, 1.0 - self.state.household.protection)       # patrons, office, money
         # A recognised scholar doing something strange is a scholar; a stranger
         # doing the same thing is a sorcerer. This is the persona working, and
         # it is what the node has always said it does.
@@ -174,7 +174,7 @@ class StatePressureMixin:
         branch a strategy unto itself, which the other ~2,700 nodes on the
         way to a transistor should not have to compete with.
         """
-        military_node_count = sum(1 for node_id in self.household.done - self.household.granted
+        military_node_count = sum(1 for node_id in self.state.projects.done - self.state.projects.granted
                 if "military" in self.nodes[node_id].get("traits", ()))
         if military_node_count <= 0:
             return 0.0
@@ -475,13 +475,13 @@ class StatePressureMixin:
         if self.state_notice() > self.STATE_NOTICE_THRESHOLD:
             protection += self.PRESSED_OFFICE_PROTECTION
         protection += min(self.REPUTATION_PROTECTION_CAP,
-                           self.household.reputation / self.REPUTATION_PROTECTION_SCALE)
+                           self.state.household.reputation / self.REPUTATION_PROTECTION_SCALE)
         # BRIBERY, ADVOCACY AND PIETY: an explicit, spendable defence.
         income = max(1.0, self.revenue())
         protection += min(self.BRIBERY_PROTECTION_CAP,
-                           (self.household.bribes_ytd / (income * self.BRIBERY_PROTECTION_INCOME_SHARE))
+                           (self.state.household.bribes_ytd / (income * self.BRIBERY_PROTECTION_INCOME_SHARE))
                            * weights["bribability"])
-        self.household.protection = min(self.PROTECTION_CEILING, protection)
+        self.state.household.protection = min(self.PROTECTION_CEILING, protection)
 
     WITHDRAW_EVERY = declare(
         "WITHDRAW_EVERY", 12, kind="temporary_heuristic", unit="years",
@@ -545,10 +545,10 @@ class StatePressureMixin:
         What you BUILT you keep: the floor under reputation is exactly the work
         that stands, so this takes away the novelty and leaves the corpus.
         """
-        if not self.founder_alive:
+        if not self.state.founder.founder_alive:
             return False, "there is nobody left to withdraw"
-        last = getattr(self.household, "last_withdrawal", -999)
-        if self.year - last < self.WITHDRAW_EVERY:
+        last = self.state.household.last_withdrawal
+        if last is not None and self.state.scenario.year - last < self.WITHDRAW_EVERY:
             return False, ("you stepped back in %d; doing it again so soon is "
                            "not retirement, it is a performance, and nobody "
                            "would believe it. You could again in %d"
@@ -559,29 +559,29 @@ class StatePressureMixin:
         # nobody has noticed, retiring is not modesty, it is throwing away the
         # standing that gets your work funded and staffed.
         danger = self.cfg["eminence_danger"]
-        if self.household.eminence < danger * self.WITHDRAW_MIN_EMINENCE_FRACTION:
+        if self.state.household.eminence < danger * self.WITHDRAW_MIN_EMINENCE_FRACTION:
             return False, ("nobody is watching you closely enough for this to "
                            "buy anything: prominence is %.1f against a danger "
                            "line of %.0f. Withdrawing now would only cost you "
                            "the standing that gets your work funded. Nothing "
-                           "was changed." % (self.household.eminence, danger))
-        if self.household.reputation <= floor + 0.5:
+                           "was changed." % (self.state.household.eminence, danger))
+        if self.state.household.reputation <= floor + 0.5:
             return False, ("you are already as obscure as a man who has built "
                            "what you have built can be. What is left of your "
                            "standing is the work itself, and that does not go "
                            "away. Nothing was changed.")
-        self.household.last_withdrawal = self.year
-        rep_before, em_before = self.household.reputation, self.household.eminence
+        self.state.household.last_withdrawal = self.state.scenario.year
+        rep_before, em_before = self.state.household.reputation, self.state.household.eminence
         # Halfway to the floor, not to zero: the work stands.
-        self.household.reputation = floor + (self.household.reputation - floor) * self.WITHDRAW_REPUTATION_RETENTION
-        self.household.eminence *= self.WITHDRAW_EMINENCE_RETENTION
+        self.state.household.reputation = floor + (self.state.household.reputation - floor) * self.WITHDRAW_REPUTATION_RETENTION
+        self.state.household.eminence *= self.WITHDRAW_EMINENCE_RETENTION
         self.update_protection()
         msg = ("you withdraw from public life: reputation %.1f -> %.1f, "
                "eminence %.1f -> %.1f. What you built still stands, and that "
                "is the floor under your standing (%.1f). It costs you credit, "
                "protection and cheap labour until it grows back."
-               % (rep_before, self.household.reputation, em_before, self.household.eminence, floor))
-        self.household.log.append((self.year, msg))
+               % (rep_before, self.state.household.reputation, em_before, self.state.household.eminence, floor))
+        self.state.household.log.append((self.state.scenario.year, msg))
         return True, msg
 
     EMINENCE_HAZARD_SCALE = declare(
@@ -629,7 +629,7 @@ class StatePressureMixin:
         # step()) and gains `yearly`, so this is where it settles if
         # nothing changes.
         settles = yearly / (1.0 - self.EMINENCE_DECAY_RATE)
-        probability = max(0.0, (self.household.eminence - danger) / self.EMINENCE_HAZARD_SCALE)
+        probability = max(0.0, (self.state.household.eminence - danger) / self.EMINENCE_HAZARD_SCALE)
         helps = []
         if not self.running("academy_network"):
             helps.append("a wide, dispersed institution is harder to destroy than "
@@ -637,12 +637,12 @@ class StatePressureMixin:
         if self.running("patron_imperial"):
             helps.append("you are as close to the throne as it is possible to "
                          "stand, which is the most exposed place there is")
-        if self.household.capital > self.EMINENCE_WEALTH_VISIBLE_THRESHOLD:
+        if self.state.household.capital > self.EMINENCE_WEALTH_VISIBLE_THRESHOLD:
             helps.append("visible wealth is half of what makes you a target")
         # THE LEVER, NAMED. This screen must not leave a player with no command
         # in it that means "get smaller". It is `withdraw`.
-        _last = getattr(self.household, "last_withdrawal", None)
-        if _last is not None and self.year - _last < self.WITHDRAW_EVERY:
+        _last = getattr(self.state.household, "last_withdrawal", None)
+        if _last is not None and self.state.scenario.year - _last < self.WITHDRAW_EVERY:
             _lever_note = ("you stepped back in %d; again no sooner than %d"
                   % (_last, _last + self.WITHDRAW_EVERY))
         else:
@@ -652,7 +652,7 @@ class StatePressureMixin:
                   "your wages and the pace of your projects - and it is the only "
                   "thing that lowers prominence the year you do it."
                   % self.standing_floor())
-        return {"now": round(self.household.eminence, 2),
+        return {"now": round(self.state.household.eminence, 2),
                 "dangerous_above": danger,
                 "settles_at_if_nothing_changes": round(settles, 1),
                 "chance_of_ruin_this_year": round(probability, 4),
@@ -777,8 +777,8 @@ class StatePressureMixin:
         outcome is a bad year, a confiscation or a lost patron, not a death.
         """
         weights = self.value_weights
-        rep = max(0.0, self.household.reputation) / self.EMINENCE_REPUTATION_SCALE
-        wealth = min(1.0, max(0.0, self.household.capital) / self.EMINENCE_WEALTH_VISIBLE_THRESHOLD)
+        rep = max(0.0, self.state.household.reputation) / self.EMINENCE_REPUTATION_SCALE
+        wealth = min(1.0, max(0.0, self.state.household.capital) / self.EMINENCE_WEALTH_VISIBLE_THRESHOLD)
         hazard = (self.EMINENCE_HAZARD_BASE_SCALE
                   * weights.get("w_eminence_danger", self.EMINENCE_DANGER_WEIGHT_DEFAULT)
                   * (self.EMINENCE_HAZARD_REPUTATION_SHARE * rep * rep
@@ -804,7 +804,7 @@ class StatePressureMixin:
         # years settles just under the danger line, and a man who has also
         # got himself next to the throne settles well over it, which is
         # the shape the whole mechanic is about.
-        hazard *= (1.0 - self.EMINENCE_FAMILIARITY_RELIEF * self.household.familiarity)
+        hazard *= (1.0 - self.EMINENCE_FAMILIARITY_RELIEF * self.state.household.familiarity)
         return hazard
 
     # ---- THE STATE NOTICES YOU ----------------------------------------------
@@ -901,10 +901,10 @@ class StatePressureMixin:
         head = self.headcount()
         head_s = min(1.0, math.sqrt(max(0.0, head)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
-        wealth_s = min(1.0, max(0.0, self.household.capital)
+        wealth_s = min(1.0, max(0.0, self.state.household.capital)
                        / self.HOUSEHOLD_WEALTH_SATURATES_AT)
         danger = self.cfg["eminence_danger"]
-        emin_s = min(1.0, max(0.0, self.household.eminence) / danger)
+        emin_s = min(1.0, max(0.0, self.state.household.eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s
                 + self.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_s
                 + self.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * emin_s)
@@ -1068,10 +1068,10 @@ class StatePressureMixin:
                                              self.REQUISITION_BASE_SHARE_DEFAULT))
         share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
         why = []
-        if self.household.protection > 0:
-            share *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * self.household.protection)
+        if self.state.household.protection > 0:
+            share *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * self.state.household.protection)
             why.append("bargained down by standing and patronage (protection "
-                       "%d%%)" % round(self.household.protection * 100))
+                       "%d%%)" % round(self.state.household.protection * 100))
         return max(0.0, share), why
 
     REQUISITION_BASE_SHARE_DEFAULT = declare(
@@ -1162,8 +1162,8 @@ class StatePressureMixin:
             return 0.0, []
         probability = self.CONFISCATION_MAX_RATE * over
         mitig, why = 1.0, []
-        if self.household.protection > 0:
-            mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.household.protection)
+        if self.state.household.protection > 0:
+            mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.state.household.protection)
             why.append("a patron and standing high enough to matter")
         dispersal = 0.0
         if self.has("academy_network"):
@@ -1318,10 +1318,10 @@ class StatePressureMixin:
         off_share, off_name = self.office_report()
         took = (req_share + off_share) * rev
         if took > 0.5:
-            self.household.capital -= took
-            last = self.household._said_requisition
+            self.state.household.capital -= took
+            last = self.state.household._said_requisition
             if year - last >= 15:
-                self.household._said_requisition = year
+                self.state.household._said_requisition = year
                 bits = ["%s takes %s this year" % (
                     state_pressure_cfg.get("requisition_name", "the state"),
                     "{:,.0f}".format(req_share * rev))]
@@ -1331,7 +1331,7 @@ class StatePressureMixin:
                     bits.append("%s costs %s more, and is not something you "
                                 "get to decline cheaply"
                                 % (off_name, "{:,.0f}".format(off_share * rev)))
-                self.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
+                self.state.household.log.append((year, "THE STATE HAS NOTICED YOU: " + "; ".join(bits)))
         elif notice > self.STATE_NOTICE_THRESHOLD * 0.7:
             # APPROACHING, NOT YET BITING. The same fairness standard as
             # eminence's own "YOU ARE BECOMING CONSPICUOUS" warning in
@@ -1339,9 +1339,9 @@ class StatePressureMixin:
             # first denarius is actually taken, not discover it in the
             # ledger after the fact.
             band = int(notice / max(0.01, self.STATE_NOTICE_THRESHOLD * 0.1))
-            if band > self.household._said_notice_approach:
-                self.household._said_notice_approach = band
-                self.household.log.append((year, "this household is becoming large enough "
+            if band > self.state.household._said_notice_approach:
+                self.state.household._said_notice_approach = band
+                self.state.household.log.append((year, "this household is becoming large enough "
                                      "for the state to take an interest: "
                                      "notice %.2f against a line of %.2f. A "
                                      "patron or standing, and holdings that "
@@ -1350,18 +1350,18 @@ class StatePressureMixin:
                                      % (notice, self.STATE_NOTICE_THRESHOLD)))
 
         if self.events and self.military_demand_eligible():
-            last = self.household.last_military_demand
+            last = self.state.household.last_military_demand
             if (year - last >= self.MILITARY_DEMAND_COOLDOWN_YEARS
                     and self.rng.random() < self.MILITARY_DEMAND_ANNUAL_CHANCE):
-                self.household.last_military_demand = year
+                self.state.household.last_military_demand = year
                 lev = self.military_leverage()
                 take = (rev * (self.MILITARY_DEMAND_BASE_SHARE
                                + self.MILITARY_DEMAND_LEVERAGE_SHARE * lev)
-                        * (1.0 - self.MILITARY_DEMAND_PROTECTION_DISCOUNT * self.household.protection))
+                        * (1.0 - self.MILITARY_DEMAND_PROTECTION_DISCOUNT * self.state.household.protection))
                 take = max(0.0, take)
-                self.household.capital -= take
+                self.state.household.capital -= take
                 name = state_pressure_cfg.get("military_name", "the arsenal")
-                self.household.log.append((year, "%s asks for your output: %s handed over "
+                self.state.household.log.append((year, "%s asks for your output: %s handed over "
                                      "in powder, iron or finished pieces. "
                                      "Refusing a state that can still fight "
                                      "is not free, and this was the cheaper "
@@ -1371,10 +1371,10 @@ class StatePressureMixin:
         probability, conf_why = self.confiscation_risk()
         if probability > 0.0:
             band = int(probability / 0.05)
-            last_band = self.household._said_confiscation_band
+            last_band = self.state.household._said_confiscation_band
             if band > last_band:
-                self.household._said_confiscation_band = band
-                self.household.log.append((year, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
+                self.state.household._said_confiscation_band = band
+                self.state.household.log.append((year, "THE TREASURY IS LOOKING AT YOUR FORTUNE: "
                                      "a %d%% chance this year of outright "
                                      "confiscation, against a scale that "
                                      "only keeps climbing while this "
@@ -1385,16 +1385,16 @@ class StatePressureMixin:
                                     "Nothing you have built is holding it "
                                     "off yet")))
             if self.events and self.rng.random() < probability:
-                had = max(0.0, self.household.capital)
+                had = max(0.0, self.state.household.capital)
                 self.lose_capital(self.CONFISCATION_CAPITAL_LOSS)
-                lost = had - max(0.0, self.household.capital)
-                self.household.reputation = max(0.0, self.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
+                lost = had - max(0.0, self.state.household.capital)
+                self.state.household.reputation = max(0.0, self.state.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
-                self.household.log.append((year, "%s: the state takes what it judges a "
+                self.state.household.log.append((year, "%s: the state takes what it judges a "
                                      "fortune too large to go on merely "
                                      "taxing - %s gone"
                                  % (name, "{:,.0f}".format(lost)
                                     if lost > 0.5 else "nothing, because you "
                                     "were holding none")))
         else:
-            self.household._said_confiscation_band = -1
+            self.state.household._said_confiscation_band = -1

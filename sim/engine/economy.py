@@ -385,7 +385,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         Novelty fades. A corpus in three libraries, a school with students and a
         senator who will receive you do not.
         """
-        earned = len(self.household.done) - len(self.household.granted)
+        projects = self.state.projects
+        earned = len(projects.done) - len(projects.granted)
         standing = STANDING_BASE_FLOOR + STANDING_PER_SQRT_EARNED * math.sqrt(max(0, earned))
         if self.running("corpus_written"):     standing += STANDING_CORPUS_WRITTEN
         if self.running("corpus_dispersed"):   standing += STANDING_CORPUS_DISPERSED
@@ -403,11 +404,11 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         if self.running("identity_cover"):     standing += STANDING_IDENTITY_COVER
         # Scandal is the one thing that eats into standing rather than sitting
         # alongside it: being notorious is not the same as being unknown.
-        return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.household.scandal)
+        return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.state.household.scandal)
 
     def rep_factor(self):
         """How much easier reputation makes everything. 1.0 at zero reputation."""
-        return 1.0 + self.household.reputation / REPUTATION_EASE_SCALE
+        return 1.0 + self.state.household.reputation / REPUTATION_EASE_SCALE
 
     def economy_index(self):
         """Diffused technology enriches the whole Empire, not only your workshop.
@@ -418,7 +419,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         industrial revolution is unaffordable, which is false, and the reason it
         is false is that the revolution funds itself.
         """
-        diffused = len(self.household.done - self.household.granted)
+        projects = self.state.projects
+        diffused = len(projects.done - projects.granted)
         index = 1.0 + ECONOMY_INDEX_PER_DIFFUSED_NODE * diffused
         if not self.running("corpus_dispersed"):
             index = 1.0 + ECONOMY_INDEX_PER_LOCKED_NODE * diffused      # knowledge locked in one workshop spreads slowly
@@ -563,7 +565,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         # and the contents different.
         seq = getattr(self.household, "_done_seq", None)
         if seq is None:
-            seq = self.household._done_seq = [node_id for node_id in self.order if node_id in self.household.done]
+            seq = self.household._done_seq = [node_id for node_id in self.order if node_id in self.state.projects.done]
         return seq
 
     # WHAT ONE PERSON'S PRACTICE IS WORTH, against what the tree quotes for the

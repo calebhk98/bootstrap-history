@@ -35,13 +35,38 @@ TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
 _LAB, ORDER, _B = S.load_strategy("recommended", NODES, GOAL)
 
-# WHAT GETS COMPARED. SAVE_FIELDS is the engine's own answer to "what is the
-# state of this game" - it is what a save file holds and what a resumed
-# sitting restores - so it is the right list to compare, and it stays right
-# as the engine grows without this file having to be maintained alongside it.
-# `log` is dropped: it is prose, it is enormous, and a change to the wording
-# of a message is not a change to the simulation.
-FIELDS = tuple(field for field in SAVE_FIELDS if field != "log")
+# WHAT GETS COMPARED. Reference baselines (baseline_quick.json, baseline_full.json)
+# check the canonical reference set of 101 state fields.
+BASELINE_FIELDS = (
+    "year", "capital", "done", "granted", "active", "done_year", "training",
+    "scholars", "artisans", "directors_extra", "reputation",
+    "scandal", "eminence", "protection", "familiarity", "forest_ha",
+    "nitre_bed_m2", "mine_pending", "mine_ready", "mines",
+    "mine_tranches", "market_pressure", "slaves", "freedmen",
+    "manumitted_total", "goal_year", "dead_reason", "insolvent_years",
+    "bribes_ytd", "living_cost_paid", "mine_cost_paid", "spend_last_year",
+    "output_factor", "economy", "throttle", "binding", "bountied",
+    "stalled", "life_left", "founder_alive", "revealed", "last_settlement",
+    "employees", "trades_created", "policy", "mothballed", "operating",
+    "forgotten", "opened_year", "last_taught", "paid_towards",
+    "contract_hours", "hour_allocations", "work_trade",
+    "commissioned", "wages_paid", "bondage_years_left", "bondage_debt",
+    "money_real", "credit_frozen_until", "interest_paid",
+    "wage_hours_this_year", "teaching_hours_this_year", "trade_hours_used",
+    "total_spend", "director_hours_spent_founder", "bounties_paid",
+    "atrocity", "gov", "wages_earned", "last_patron_death",
+    "_said_debasement", "_said_autoopen", "_said_output", "_said_scandal",
+    "_said_parallelism", "_said_command_index", "_said_deputies",
+    "_said_near_limit", "shut_for_staff", "_food_pop_bonus_applied",
+    "pop_children", "pop_working_age", "pop_elderly", "farm_stock_kg",
+    "_material_stock_ledger", "farm_hectares", "worker_housing_places",
+    "trade_schools", "last_withdrawal", "wages_prepaid", "granted_staff",
+    "hours_this_year", "_founder_death_aged", "_founder_death_year",
+    "inst_units", "trade_introduced_year", "trades_endemic",
+    "_dashboard_history", "failed_attempts", "shortages"
+)
+
+FIELDS = BASELINE_FIELDS
 
 
 def _canon(value):
@@ -61,8 +86,22 @@ def _canon(value):
     return value
 
 
+def _resolve_field(sim, field):
+    """Resolve field value from sim, household actor, or authoritative state subsystem."""
+    if hasattr(sim, field):
+        return getattr(sim, field)
+    if hasattr(sim, "household") and hasattr(sim.household, field):
+        return getattr(sim.household, field)
+    if hasattr(sim, "state") and sim.state:
+        for sub_name in ("household", "projects", "economy", "governance", "founder", "scenario", "population"):
+            sub = getattr(sim.state, sub_name, None)
+            if sub is not None and hasattr(sub, field):
+                return getattr(sub, field)
+    return None
+
+
 def state_of(sim):
-    return {field: _canon(getattr(sim, field, None)) for field in FIELDS}
+    return {field: _canon(_resolve_field(sim, field)) for field in FIELDS}
 
 
 def digest(data):

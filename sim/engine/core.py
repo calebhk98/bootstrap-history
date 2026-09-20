@@ -571,15 +571,16 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # design against, what death, personal hours or a patron mean for a
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
-        self.founder_alive = True
-        self.dead_reason = None
-        self.director_hours_spent_founder = 0.0
+        self.state.founder.founder_alive = True
+        self.state.founder.dead_reason = None
+        self.state.founder.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
-        self.life_left = (1e9 if self.cfg["immortal"]
+        self.state.founder.life_left = (1e9 if self.cfg["immortal"]
                           else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
                                     rng.gauss(self.cfg["founder_life_mean"],
                                               self.cfg["founder_life_sd"])))
-        self.living_cost_paid = 0.0
+        self.state.founder.living_cost_paid = 0.0
+        self._spend_this_year = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,
         # not about this household. money_real is currency debasement;
         # economy/output_factor are the size and health of the whole imperial
@@ -644,9 +645,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             raise ValueError("civilization %r lists unknown starting technologies: %s"
                              % (self.civ.get("id", "?"), ", ".join(missing)))
         for tech_id in starting_techs:
-            self.household.done.add(tech_id)
+            self.state.projects.done.add(tech_id)
             self._done_changed()
-            self.household.granted.add(tech_id)
+            self.state.projects.granted.add(tech_id)
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
@@ -1687,7 +1688,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self._said_wage_cascade >= 15:
             self._said_wage_cascade = year
-            self.household.log.append((year, "population still %d%% below trend: wages "
+            self.state.household.log.append((year, "population still %d%% below trend: wages "
                                  "(and anything billed in them) are running "
                                  "%d%% above normal for here, and will ease "
                                  "as the population does"
@@ -1706,7 +1707,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "measured.")
 
     def has(self, node_id):
-        return node_id in self.household.done
+        return node_id in self.state.projects.done
 
     # THE ONE PLACE that answers "what is my corpus worth against a
     # sacking" - called from both SocietyMixin._shocks (the sack itself)
@@ -2229,7 +2230,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # answering about a year that had already gone. A player needs the
         # direction as well as the level, and this is the only place that
         # knows both.
-        self.household.scandal_last_year = self.household.scandal
+        self.state.household.scandal_last_year = self.state.household.scandal
 
         # step() is a readable sequence of phase calls, in the same order the
         # phases always ran in; the phases themselves are below, and each still
@@ -2258,10 +2259,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._step_founder_mortality()          # 7. founder mortality
 
         # 8. random events
-        if self.events and not self.dead_reason:
-            self._random_events(self.year)
+        if self.events and not self.state.founder.dead_reason:
+            self._random_events(self.state.scenario.year)
 
-        self.year += 1
+        self.state.scenario.year += 1
 
     # ---- THE YEAR'S PHASES ------------------------------------------------
     # _step_apprenticeships through _step_founder_mortality - the fourteen
@@ -2318,7 +2319,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         C-level, nothing further to profile under it).
         """
         for node_id in self._win_condition_keys:
-            if node_id in self.household.done:
+            if node_id in self.state.projects.done:
                 continue
             win_condition = self.nodes[node_id]["win_condition"]
             if not win_condition:
@@ -2328,19 +2329,19 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             met = (val >= target) if comparison_op == ">=" else (val <= target) if comparison_op == "<=" else False
             if not met:
                 continue
-            self.household.done.add(node_id)
+            self.state.projects.done.add(node_id)
             self._done_changed()
-            self.household.done_year[node_id] = year
-            self.household.log.append((year, "achieved: " + self.nodes[node_id]["name"]))
-            if node_id == self.goal and self.household.goal_year is None:
-                self.household.goal_year = year
+            self.state.projects.done_year[node_id] = year
+            self.state.household.log.append((year, "achieved: " + self.nodes[node_id]["name"]))
+            if node_id == self.goal and self.state.scenario.goal_year is None:
+                self.state.scenario.goal_year = year
 
     def run(self, goal, horizon=None):
         self.goal = goal
-        self.household.done_year = {}
+        self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.year < end and not self.dead_reason and self.household.goal_year is None:
+        while self.state.scenario.year < end and not self.state.founder.dead_reason and self.state.scenario.goal_year is None:
             self.step()
         return self
 

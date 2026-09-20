@@ -36,26 +36,26 @@ class StepPhasesMixin:
         #    year works that year, so a machinist promised "ready in 102" must
         #    be usable in 102, not only from 103.
         # People bought this year are not artisans this year.
-        if self.household.training:
+        if self.state.household.training:
             still = []
-            for row in self.household.training:
+            for row in self.state.household.training:
                 cap, ready = row[0], row[1]
                 trade = row[2] if len(row) > 2 else None
                 count = row[3] if len(row) > 3 else 0.0
-                if self.year >= ready:
+                if self.state.scenario.year >= ready:
                     if trade:
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
-                        self.household.employees[trade] = self.household.employees.get(trade, 0.0) + count
-                        self.household.log.append((self.year, "%g %s%s finish their training"
+                        self.state.household.employees[trade] = self.state.household.employees.get(trade, 0.0) + count
+                        self.state.household.log.append((self.state.scenario.year, "%g %s%s finish their training"
                                          % (count, trade, "s" if count != 1 else "")))
                         self._resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
                         # from the people you actually hold - see the note
-                        # there about why adding to self.household.artisans directly was
+                        # there about why adding to self.state.household.artisans directly was
                         # thrown away at the next call.
-                        self.household.log.append((self.year,
+                        self.state.household.log.append((self.state.scenario.year,
                                          "%g of the people you bought finish "
                                          "learning the work" % round(cap / 0.55, 1)))
                 else:
@@ -63,7 +63,7 @@ class StepPhasesMixin:
             # BEFORE the resync, not after: _resync_pools counts who is still
             # learning off this very list, so recomputing while the matured row
             # was still on it cost a whole extra year of everybody's time.
-            self.household.training = still
+            self.state.household.training = still
             self._resync_pools()
 
     def _step_staff(self):
@@ -91,21 +91,21 @@ class StepPhasesMixin:
         # this reproduces the same 3.5%-a-year average ATTRITION targets; no
         # single person is ever a third of a casualty.
         _lost = {}
-        for trade_id in sorted(self.household.employees):
-            head = int(round(self.household.employees[trade_id]))
+        for trade_id in sorted(self.state.household.employees):
+            head = int(round(self.state.household.employees[trade_id]))
             survivors = sum(1 for _ in range(head) if self.rng.random() >= attrition_rate)
             if head - survivors > 0:
                 _lost[trade_id] = head - survivors
             if survivors > 0:
-                self.household.employees[trade_id] = float(survivors)
+                self.state.household.employees[trade_id] = float(survivors)
             else:
-                self.household.employees.pop(trade_id)
+                self.state.household.employees.pop(trade_id)
         # AND SAY SO: a death is a discrete event that HAPPENED, and a player
         # watching the payroll shrink with nothing in the log or the events
         # to say why cannot tell attrition from a bug - it looks exactly
         # like staff vanishing.
         if _lost:
-            self.household.log.append((self.year, "you lose %s to death and to better offers"
+            self.state.household.log.append((self.state.scenario.year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                          for trade_id, count in sorted(_lost.items()))))
         self._resync_pools()
@@ -138,7 +138,7 @@ class StepPhasesMixin:
                  + self.mine_operating_cost())
         # capital is negative in arrears; credit_limit() is how far into arrears
         # anyone will let you go, so this is what you can actually still spend.
-        headroom = max(0.0, self.household.capital + self.credit_limit())
+        headroom = max(0.0, self.state.household.capital + self.credit_limit())
         can_pay = self.revenue() - other + headroom
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
@@ -147,11 +147,11 @@ class StepPhasesMixin:
         # is not a decision the game is making on your behalf, it is the world
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words.
-        if payroll > can_pay and self.household.employees:
+        if payroll > can_pay and self.state.household.employees:
             short = payroll - can_pay
             gone = 0.0
             # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.household.employees, key=lambda t: -self.annual_wage(t)):
+            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
                     break
                 wage = self.annual_wage(trade_id)
@@ -164,19 +164,19 @@ class StepPhasesMixin:
                 # Rounding up sheds one whole person too many at worst,
                 # which is the safe direction for a household that genuinely
                 # cannot make payroll.
-                cut = min(self.household.employees[trade_id], math.ceil(short / wage - 1e-9))
-                self.household.employees[trade_id] -= cut
+                cut = min(self.state.household.employees[trade_id], math.ceil(short / wage - 1e-9))
+                self.state.household.employees[trade_id] -= cut
                 short -= cut * wage
                 gone += cut
-                if self.household.employees[trade_id] < 0.5:
-                    self.household.employees.pop(trade_id)
+                if self.state.household.employees[trade_id] < 0.5:
+                    self.state.household.employees.pop(trade_id)
             self._resync_pools()
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
             # is more consequential than any of the flavour events that do get
             # logged, and a player who is not told has to notice their own wage
             # bill hit zero to find out.
             if gone > 0.005:
-                self.household.log.append((self.year, "you cannot pay everyone: %.1f of your staff "
+                self.state.household.log.append((self.state.scenario.year, "you cannot pay everyone: %.1f of your staff "
                                      "leave for work that pays" % gone))
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
@@ -187,9 +187,9 @@ class StepPhasesMixin:
         # below - which already subtracts living cost, upkeep and the wages
         # you are carrying - is what decides how many to hire, and correctly
         # says nobody when there is nothing spare.
-        _hire_room = (self.household.capital >= 0
-                      or -self.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
-        if (self.policy.get("auto_hire", not self.manual) and _hire_room):
+        _hire_room = (self.state.household.capital >= 0
+                      or -self.state.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
+        if (self.state.founder.policy.get("auto_hire", not self.manual) and _hire_room):
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
@@ -207,13 +207,13 @@ class StepPhasesMixin:
             # widens this same wall past that well before the goal is in
             # reach).
             target_sc = min(sc_cap + extra * self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.literate_capacity("scholar"))
-            desired_sc = self.household.scholars + (target_sc - self.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
+            desired_sc = self.state.household.scholars + (target_sc - self.state.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
             target_ar = ar_cap + extra
-            desired_ar = self.household.artisans + (target_ar - self.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
+            desired_ar = self.state.household.artisans + (target_ar - self.state.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = max(0.0, desired_ar - self.household.freedmen - self.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
-            specials = sum(value for trade_id, value in self.household.employees.items()
+            craft = max(0.0, desired_ar - self.state.household.freedmen - self.state.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
+            specials = sum(value for trade_id, value in self.state.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
             # the remainder after every taught trade has taken its share,
@@ -241,7 +241,7 @@ class StepPhasesMixin:
             # A refusal here is not an error - it is the same wall a
             # player hits - so it is simply not acted on.
             def _grow_to(trade, want):
-                have = self.household.employees.get(trade, 0.0)
+                have = self.state.household.employees.get(trade, 0.0)
                 delta = self._stochastic_round(want) - have
                 if delta >= 1.0:
                     self.hire(trade, int(delta))
@@ -262,15 +262,15 @@ class StepPhasesMixin:
             # permanently, the moment its last person is lost. Iterating
             # trades_created too is what keeps a trade whose last person
             # just died still eligible for replacement.
-            for trade_id in sorted(set(self.household.employees) | set(self.household.trades_created)):
+            for trade_id in sorted(set(self.state.household.employees) | set(self.state.household.trades_created)):
                 if trade_id in ("artisan", "scholar"):
                     continue
-                have = self.household.employees.get(trade_id, 0.0)
-                want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.household.trades_created else 0.0)
+                have = self.state.household.employees.get(trade_id, 0.0)
+                want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
-                    self.household.employees[trade_id] = have + short
-                    self.household.capital -= short * self.annual_wage(trade_id)
+                if short > 0.02 and self.state.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                    self.state.household.employees[trade_id] = have + short
+                    self.state.household.capital -= short * self.annual_wage(trade_id)
             self._resync_pools()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
         # letting contracted craftsmen count toward a project's staff
@@ -278,20 +278,20 @@ class StepPhasesMixin:
         # unless the optimizer can call it too. A run that can see the
         # wall, has the money, and has no way to spend it on the wall is
         # the same dead end wearing a different hat.
-        if self.policy.get("auto_commission", not self.manual):
+        if self.state.founder.policy.get("auto_commission", not self.manual):
             self.auto_commission_for_blocked()
-        self.household.directors_extra += (di_cap - self.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.household.directors_extra * attrition_rate
-        self.household.artisans = max(0.0, self.household.artisans)
-        self.household.scholars = max(0.0, self.household.scholars)
-        self.household.directors_extra = max(0.0, self.household.directors_extra)
+        self.state.household.directors_extra += (di_cap - self.state.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.state.household.directors_extra * attrition_rate
+        self.state.household.artisans = max(0.0, self.state.household.artisans)
+        self.state.household.scholars = max(0.0, self.state.household.scholars)
+        self.state.household.directors_extra = max(0.0, self.state.household.directors_extra)
         # SAY IT WHEN IT CROSSES A WHOLE PERSON: the year's hour pool can
         # grow well past the founder's own baseline as institutions add
         # deputies, and the single largest change to the resource the
         # whole game is built on must not go unannounced.
-        _whole = int(self.household.directors_extra)
-        if _whole > int(getattr(self.household, "_said_deputies", 0)):
-            self.household._said_deputies = _whole
-            self.household.log.append((self.year, "you now have %d deput%s directing work in "
+        _whole = int(self.state.household.directors_extra)
+        if _whole > int(getattr(self.state.household, "_said_deputies", 0) or 0):
+            self.state.household._said_deputies = _whole
+            self.state.household.log.append((self.state.scenario.year, "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
@@ -308,19 +308,19 @@ class StepPhasesMixin:
         # advance off here, a smith at 281 a year would cost 566 in his
         # first year - the advance, then the identical year again at the
         # next step.
-        prepaid = min(living_cost, self.household.wages_prepaid)
+        prepaid = min(living_cost, self.state.household.wages_prepaid)
         living_cost -= prepaid
-        self.household.wages_prepaid = 0.0
-        self.living_cost_paid += living_cost
+        self.state.household.wages_prepaid = 0.0
+        self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
-        self.household.mine_cost_paid += mine_cost
-        self.household.capital += self.revenue() - self.upkeep() - living_cost - mine_cost
+        self.state.economy.mine_cost_paid += mine_cost
+        self.state.household.capital += self.revenue() - self.upkeep() - living_cost - mine_cost
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
         # minus four million denarii, unable to afford anything at all, which
         # the log reported as being "blocked" on a treadle lathe.
-        if self.household.capital < 0 and self.mine_capacity and self.policy.get("auto_mothball", True):
+        if self.state.household.capital < 0 and self.mine_capacity and self.state.founder.policy.get("auto_mothball", True):
             self.mothball_mines()
         # A CONCERN NEEDS SOMEBODY WATCHING IT EVERY YEAR, not only on the day
         # you open it: `open` refusing without supervisors is not enough if
@@ -332,17 +332,17 @@ class StepPhasesMixin:
         # on reclaiming what attrition shut, before anything is judged still
         # short and closed again. See reopen_restaffed_ventures's own
         # docstring for why this is not gated by auto_open.
-        self.reopen_restaffed_ventures(self.year)
-        self.close_unstaffed_ventures(self.year)
+        self.reopen_restaffed_ventures(self.state.scenario.year)
+        self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
-        if self.policy.get("auto_open", not self.manual):
+        if self.state.founder.policy.get("auto_open", not self.manual):
             self.auto_open_ventures()
-        self.charge_interest(self.year)
-        if self.policy.get("auto_shed", True):
-            self.shed_loss_makers(self.year)
-        self.warn_near_the_limit(self.year)
-        self.enforce_credit_limit(self.year)
+        self.charge_interest(self.state.scenario.year)
+        if self.state.founder.policy.get("auto_shed", True):
+            self.shed_loss_makers(self.state.scenario.year)
+        self.warn_near_the_limit(self.state.scenario.year)
+        self.enforce_credit_limit(self.state.scenario.year)
 
         # INSOLVENCY MUST HAVE A CONSEQUENCE: capital sitting deeply negative
         # for years with no event, no block and no attrition would not be a
@@ -353,7 +353,7 @@ class StepPhasesMixin:
         # dramatic one. Nobody arrests you for debt. What happens is that people
         # you cannot pay stop turning up, and nobody will extend you credit for
         # something new while you are in arrears.
-        if self.household.capital < 0:
+        if self.state.household.capital < 0:
             # BEING IN DEBT IS NOT THE SAME AS BEING INSOLVENT: counting a
             # year of arrears for every year capital is below zero,
             # regardless of what the household is earning, would keep a
@@ -366,11 +366,11 @@ class StepPhasesMixin:
             _net = (self.revenue() - self.upkeep() - self.living_cost()
                     - self.mine_operating_cost())
             if _net > 0:
-                self.household.insolvent_years = 0
+                self.state.household.insolvent_years = 0
             else:
-                self.household.insolvent_years = getattr(self.household, "insolvent_years", 0) + 1
+                self.state.household.insolvent_years = (getattr(self.state.household, "insolvent_years", 0) or 0) + 1
             floor = -max(self.INSOLVENCY_FLOOR_MIN, self.revenue() * self.INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
-            if self.household.capital < floor and self.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
+            if self.state.household.capital < floor and self.state.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
                 # wages unpaid: freedmen leave first, they are free to
                 # A FLOOR: staff must not bleed without limit, or fewer people
                 # earn less, which deepens the arrears, which bleeds more
@@ -378,12 +378,12 @@ class StepPhasesMixin:
                 # cost you your expansion, not trap you in a state you can
                 # never leave: a household that has shed everything also
                 # stops paying for it, and can climb back.
-                bleed = min(self.INSOLVENCY_BLEED_CAP, self.INSOLVENCY_BLEED_RATE * self.household.insolvent_years)
-                self.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.household.artisans * (1.0 - bleed))
-                self.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
-                if self.household.insolvent_years in (3, 6, 12, 25):
-                    self.household.log.append((self.year, "IN ARREARS for %d years: staff are leaving "
-                                         "because you cannot pay them" % self.household.insolvent_years))
+                bleed = min(self.INSOLVENCY_BLEED_CAP, self.INSOLVENCY_BLEED_RATE * self.state.household.insolvent_years)
+                self.state.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.state.household.artisans * (1.0 - bleed))
+                self.state.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.state.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
+                if self.state.household.insolvent_years in (3, 6, 12, 25):
+                    self.state.household.log.append((self.state.scenario.year, "IN ARREARS for %d years: staff are leaving "
+                                         "because you cannot pay them" % self.state.household.insolvent_years))
                 # ABANDONMENT, and this is what makes insolvency survivable: a
                 # permanently underwater household must not simply sit
                 # floored, simulating centuries of nothing and reporting it
@@ -402,10 +402,10 @@ class StepPhasesMixin:
                 # for ever - and it must respect the auto_shed switch, in a
                 # game whose own help says "every one of them is a switch
                 # you control".
-                if net < 0 and self.policy.get("auto_shed", True):
-                    burden = sorted((node_id for node_id in self.household.done
+                if net < 0 and self.state.founder.policy.get("auto_shed", True):
+                    burden = sorted((node_id for node_id in self.state.projects.done
                                      if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
-                                     and node_id not in self.household.granted
+                                     and node_id not in self.state.projects.granted
                                      and not self.never_abandon(node_id)),
                                     key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
                     shed = []
@@ -422,38 +422,38 @@ class StepPhasesMixin:
                         # never built and `mothball` says there is nothing
                         # to shut. If that node gates a whole branch,
                         # `available` reads "0 startable now" indefinitely.
-                        self.household.operating.discard(node_id)
-                        self.household.mothballed.add(node_id)   # you can buy it back
+                        self.state.projects.operating.discard(node_id)
+                        self.state.projects.mothballed.add(node_id)   # you can buy it back
                         shed.append(node_id)
                     if shed:
                         # NAME THEM, for the same reason as shed_loss_makers and
                         # the creditors' seizure below: a bare count does not
                         # tell a player what they lost or why it later
                         # reappeared mothballed rather than gone for good.
-                        self.household.log.append((self.year, "ABANDONED %d works you could no longer "
+                        self.state.household.log.append((self.state.scenario.year, "ABANDONED %d works you could no longer "
                                              "maintain; they have fallen into disrepair: %s"
                                              % (len(shed), ", ".join(shed))))
         else:
-            self.household.insolvent_years = 0
+            self.state.household.insolvent_years = 0
         # A standing workforce policy, and ONLY when the optimizer is playing:
         # buying people automatically in manual mode, with no command issued
         # and no log line, would be lying about the acquisition - the game's
         # own justification for modelling slavery at all is that "a model
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
-        if self.policy.get("auto_buy_people", False):
-            if self.household.capital > 6000 and self.household.artisans < 12 and self.running("workshop_first"):
-                got = self.buy_slaves(min(6, int(self.household.capital // 1500)))
+        if self.state.founder.policy.get("auto_buy_people", False):
+            if self.state.household.capital > 6000 and self.state.household.artisans < 12 and self.running("workshop_first"):
+                got = self.buy_slaves(min(6, int(self.state.household.capital // 1500)))
                 if got:
-                    self.household.log.append((self.year, "bought %d people for the workshop" % got))
-        if self.policy.get("auto_manumit", not self.manual) and self.household.slaves:
+                    self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
+        if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
-                freed = self.manumit(max(1, self.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
+                freed = self.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
-                    self.household.log.append((self.year, "freed %d people" % freed))
+                    self.state.household.log.append((self.state.scenario.year, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
-        if self.output_factor < 1.0:
+        if self.state.economy.output_factor < 1.0:
             # A STATE THAT CAN DEFEND ITSELF REBUILDS FASTER: the recovery
             # rate must scale with military_leverage(), or a civilization
             # that built the whole military branch and one that ignored it
@@ -461,23 +461,23 @@ class StepPhasesMixin:
             # either one's investment. military_leverage() is
             # the same count update_protection() and
             # hazard_relief("output_factor") (society.py) already read off
-            # self.household.done; at full leverage the recovery rate doubles, so an
+            # self.state.projects.done; at full leverage the recovery rate doubles, so an
             # armed empire is back to normal trade in roughly half the years
             # an unarmed one takes, not instantly - the war still happened
             # and the years it cost are not given back.
-            self.output_factor = min(1.0, self.output_factor
+            self.state.economy.output_factor = min(1.0, self.state.economy.output_factor
                                      + self.OUTPUT_RECOVERY_RATE * (1.0 + self.military_leverage()))
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
         # to add a fresh deficit - see _demographic_recovery for why.
-        self._demographic_recovery(self.year)
+        self._demographic_recovery(self.state.scenario.year)
         # Literacy and taught-trade naturalisation move on the same kind of
         # slow, generational clock as population above - see
         # SocietyMixin.advance_society (society.py) for the mechanism. Run
         # here, before 4a2's auto_train reads literate_capacity() below, so
         # a year's schooling gain is visible to this same year's teaching
         # decisions rather than lagging a full step behind them.
-        self.advance_society(self.year)
+        self.advance_society(self.state.scenario.year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
         # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
         # using one) is never built - start_reason refuses it outright -
@@ -486,13 +486,13 @@ class StepPhasesMixin:
         # same measurement usually depends on has moved for the year, so a
         # threshold crossed this year is seen this year rather than lagging
         # a full step behind it.
-        self._check_win_conditions(self.year)
+        self._check_win_conditions(self.state.scenario.year)
 
     def _step_dated_shocks(self):
         # 3. dated shocks
         if self.events:
-            self._shocks(self.year)
-            if self.dead_reason:
+            self._shocks(self.state.scenario.year)
+            if self.state.founder.dead_reason:
                 return True
         return False
 
@@ -500,7 +500,7 @@ class StepPhasesMixin:
         # 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to
         #      do this for itself or half the tree is unreachable; a player does
         #      it with `train`, or turns this on.
-        if self.policy.get("auto_train", not self.manual):
+        if self.state.founder.policy.get("auto_train", not self.manual):
             want = {}
             # LOCAL, PER-YEAR MEMO for market_supply()/trade_available().
             # Both are pure functions of staff and trades_created, which this
@@ -526,7 +526,7 @@ class StepPhasesMixin:
                 return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
-            for node_id in self.household.active:
+            for node_id in self.state.projects.active:
                 for trade_id in self.nodes[node_id]["lab"]:
                     if _market_supply(trade_id) <= 0.0:
                         want[trade_id] = want.get(trade_id, 0) + 500
@@ -557,7 +557,7 @@ class StepPhasesMixin:
             # reason _market_supply/_trade_avail already are: it reads only
             # _trade_avail(trade), _market_supply(trade) and
             # self._trade_headcount_pending(trade), and the last of those
-            # (labour.py) reads only self.household.training and self.household.employees -
+            # (labour.py) reads only self.state.household.training and self.state.household.employees -
             # neither mutated anywhere in this block; train(), at the very
             # end of it, is the only thing that changes either, exactly as
             # the comment above already established for the other two. So
@@ -587,7 +587,7 @@ class StepPhasesMixin:
                             and self._trade_headcount_pending(trade) <= 0.0))
                 return value
             for node_id in self.order:
-                if node_id in self.household.done or node_id in self.household.active:
+                if node_id in self.state.projects.done or node_id in self.state.projects.active:
                     continue
                 node = self.nodes[node_id]
                 if not any(_is_gone(trade_id) for trade_id in node["lab"]):
@@ -603,9 +603,9 @@ class StepPhasesMixin:
             # turn into a teaching treadmill that eats most of a run's
             # output. A trade is worth restoring; it is not worth half of
             # every year for ever.
-            _taught = self.household.last_taught
+            _taught = self.state.household.last_taught
             want = {trade_id: value for trade_id, value in want.items()
-                    if self.year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
+                    if self.state.scenario.year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
             # AND ONLY IF YOU CAN PAY THEM: train() checks hours, literacy and
             # household room but nothing here about money, so teaching a
             # trade a household cannot actually afford to keep paid turns
@@ -623,11 +623,11 @@ class StepPhasesMixin:
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
                 _wages = 2.0 * self.annual_wage(trade_id)
-                _budget = (max(0.0, _spare_tr) + max(0.0, self.household.capital) * 0.10
+                _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
                     continue
-                _first = trade_id not in self.household.trades_created
+                _first = trade_id not in self.state.household.trades_created
                 taught, _msg = self.train(trade_id, 2)
                 # THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
                 # attempt meant a refusal - no room in the household, no hours
@@ -635,8 +635,8 @@ class StepPhasesMixin:
                 # twenty-five years, so the run went on needing machinists and
                 # never asked again.
                 if taught:
-                    _taught[trade_id] = self.year
-                    self.household.log.append((self.year, "you begin teaching the first %ss this "
+                    _taught[trade_id] = self.state.scenario.year
+                    self.state.household.log.append((self.state.scenario.year, "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
                                      "more" % trade_id))
@@ -655,16 +655,16 @@ class StepPhasesMixin:
         # earlier this same turn has already sold some of the hours this
         # directive wants; this only sells the remainder, never the whole
         # directive again on top of what was already sold.
-        _wd = self.household.hour_allocations.get("work")
-        if _wd and _wd > 0 and self.household.work_trade:
-            _already = getattr(self.household, "wage_hours_this_year", 0.0)
+        _wd = self.state.household.hour_allocations.get("work")
+        if _wd and _wd > 0 and self.state.household.work_trade:
+            _already = getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0
             _want = max(0.0, _wd - _already)
             if _want > 0.5:
                 _room = max(0.0, self.director_pool() - self.director_hours_committed())
                 _take = min(_want, _room)
                 _got = 0.0
                 if _take > 0.5:
-                    _pay, _werr = self.work_for_wages(self.household.work_trade, _take)
+                    _pay, _werr = self.work_for_wages(self.state.household.work_trade, _take)
                     # pay > 0 with an error is a WARNING (a bad trade, or
                     # starving an active project of its last hours), not a
                     # refusal - see work_for_wages's own docstring. The sale
@@ -678,11 +678,11 @@ class StepPhasesMixin:
                 # either went unsold or went somewhere the player never
                 # chose.
                 if _wd - (_already + _got) > 1.0:
-                    self.household.log.append((self.year, "DIRECTED HOURS UNUSED: your standing "
+                    self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
                                          "'allocate' changes or clears it"
-                                     % ("{:,.0f}".format(_wd), self.household.work_trade,
+                                     % ("{:,.0f}".format(_wd), self.state.household.work_trade,
                                         "{:,.0f}".format(_already + _got),
                                         "no more of your own hours were left "
                                         "to sell once your projects and "
@@ -701,12 +701,12 @@ class StepPhasesMixin:
         # let you type a node id, but that only did `order.remove/insert(0)`
         # a few lines above this loop's own input; the loop then ran anyway
         # and started other things you never asked for. `self.manual` cuts
-        # that off at the root: nothing is ever added to `self.household.active` here,
+        # that off at the root: nothing is ever added to `self.state.projects.active` here,
         # so the only way anything starts is start_project(), called by a
         # human or a script. Everything below this block (materials, staff,
         # money, hazards, the calendar) is untouched by `manual` and keeps
         # running exactly as before.
-        if not self.manual and self.year >= self.household.credit_frozen_until:
+        if not self.manual and self.state.scenario.year >= self.state.household.credit_frozen_until:
             # More directors means more things in hand at once, and a big trained staff
             # lets routine work proceed without the founder watching it.
             # How many things can be in hand at once: doubling this would let
@@ -715,8 +715,8 @@ class StepPhasesMixin:
             # a fixed budget across more work is not more work.
             max_active = int(self.MAX_ACTIVE_PROJECTS_BASE
                              + self.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
-                             + self.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
-                             + self.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
+                             + self.state.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
+                             + self.state.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
             # EARN A LIVING FIRST: now that a project must actually be paid
             # for, a founder who arrives with 400 denarii and walks the
             # goal-ordered list starves, so when the surplus is thin, the
@@ -746,28 +746,28 @@ class StepPhasesMixin:
                 _earner_set = set(earners)
                 candidates = earners + [node_id for node_id in self.order if node_id not in _earner_set]
             # INCREMENTAL COUNT, NOT A SET REBUILT PER ITERATION. Written as
-            # `len(self.household.active) - len(self.household.bountied & set(self.household.active))`
-            # inside the loop below, this rebuilt `set(self.household.active)` from
+            # `len(self.state.projects.active) - len(self.state.projects.bountied & set(self.state.projects.active))`
+            # inside the loop below, this rebuilt `set(self.state.projects.active)` from
             # scratch on every one of the 2,849 iterations of `candidates` -
             # the identical mistake `_earner_set` (above) had already been
             # fixed for, 30 lines earlier in this same function. Unlike
-            # `earners`, `self.household.active` IS mutated inside this loop (a normal
+            # `earners`, `self.state.projects.active` IS mutated inside this loop (a normal
             # start at the bottom, or post_bounty() below, which adds to both
-            # `self.household.active` and `self.household.bountied` at once), so the fix cannot
+            # `self.state.projects.active` and `self.state.projects.bountied` at once), so the fix cannot
             # be "hoist one set outside the loop" - it has to track the two
             # mutations as they happen instead:
-            #   - post_bounty(node_id) succeeding adds node_id to self.household.active AND to
-            #     self.household.bountied together, so a bountied project never counts
+            #   - post_bounty(node_id) succeeding adds node_id to self.state.projects.active AND to
+            #     self.state.projects.bountied together, so a bountied project never counts
             #     against max_active: _non_bountied_active is left unchanged.
-            #   - a normal start only adds node_id to self.household.active, so
+            #   - a normal start only adds node_id to self.state.projects.active, so
             #     _non_bountied_active goes up by one.
             # Nothing else in this loop's body (can_start, project_cost,
             # funding_capacity, committed_spend, bounty_eligible) touches
-            # self.household.active or self.household.bountied - checked in projects.py and
+            # self.state.projects.active or self.state.projects.bountied - checked in projects.py and
             # economy.py - so these two increments are the only places the
             # tracked count can move, and it is computed once up front
             # (O(active), not O(order)) rather than every iteration.
-            _non_bountied_active = len(self.household.active) - len(self.household.bountied & set(self.household.active))
+            _non_bountied_active = len(self.state.projects.active) - len(self.state.projects.bountied & set(self.state.projects.active))
             _room = self.funding_capacity() - self.committed_spend()
             for node_id in candidates:
                 if _non_bountied_active >= max_active:
@@ -799,8 +799,8 @@ class StepPhasesMixin:
                 if self.project_cost(node_id) > _room:
                     continue
                 if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
-                    # post_bounty() just added node_id to both self.household.active and
-                    # self.household.bountied - the count of NON-bountied active
+                    # post_bounty() just added node_id to both self.state.projects.active and
+                    # self.state.projects.bountied - the count of NON-bountied active
                     # projects is unchanged.
                     _room = self.funding_capacity() - self.committed_spend()
                     continue
@@ -808,7 +808,7 @@ class StepPhasesMixin:
                 # start_project (projects.py) sets it at creation rather than
                 # leaving lab_year_draw to guess it from ph_left the first
                 # time it runs - see the comment there.
-                self.household.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
+                self.state.projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
                                       cost_left=self.project_cost(node_id),
                                       lab_left=dict(node["lab"]))
                 _non_bountied_active += 1
@@ -836,27 +836,27 @@ class StepPhasesMixin:
         # because buy_forest refuses what you cannot pay for.
         _can_raise = self.spending_power("buy")
         if (thr < 0.9 and _can_raise > self.FOREST_COST_PER_HA * self.price_index
-                and (self.policy.get("auto_mine", not self.manual)
-                     or self.policy.get("auto_forest", not self.manual))):
+                and (self.state.founder.policy.get("auto_mine", not self.manual)
+                     or self.state.founder.policy.get("auto_forest", not self.manual))):
             # Charcoal is GROWN, so the answer is woodland. Everything else in
             # this list is DUG, so the answer is a mine, and the old model had
             # no answer at all for coal: the binding constraint fell through
             # both branches and the run simply sat throttled. That is why coal
             # showed 1,669 shortage-years in a 395 year run.
-            if self.household.binding == "charcoal":
-                if self.policy.get("auto_forest", not self.manual):
+            if self.state.economy.binding == "charcoal":
+                if self.state.founder.policy.get("auto_forest", not self.manual):
                     # SIZED FROM THE SHORTFALL, like the mine branch below,
                     # rather than from a flat share of cash. A tenth of a
                     # denarius of capital bought a ten-thousandth of a hectare
                     # while the demand was measured in hundreds of tonnes.
                     _need_t = (self.annual_material_demand().get("charcoal_kg", 0.0)
-                               / KILOGRAMS_PER_TONNE) - self.household.forest_ha * self.CHARCOAL_PER_HA
+                               / KILOGRAMS_PER_TONNE) - self.state.economy.forest_ha * self.CHARCOAL_PER_HA
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-            elif (self.household.binding in self.MINE_CAPEX_PER_T_YR
-                    and self.policy.get("auto_mine", not self.manual)):
+            elif (self.state.economy.binding in self.MINE_CAPEX_PER_T_YR
+                    and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
                 # iron bar against "iron"; the investment response looked only
@@ -875,17 +875,17 @@ class StepPhasesMixin:
                 # sorted(), because this feeds a float sum.
                 keys = tuple(sorted(material for material, (bucket, _tag)
                                     in self.MATERIAL_CHECKS.items()
-                                    if bucket == self.household.binding))
+                                    if bucket == self.state.economy.binding))
                 short = sum(dem.get(material, 0.0) for material in keys)
-                want = max(0.0, short - self.mine_capacity.get(self.household.binding, 0.0))
-                self.open_mine(self.household.binding, min(want, self.household.capital * 0.25
-                                                 / max(1.0, self.MINE_CAPEX_PER_T_YR[self.household.binding])))
+                want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0))
+                self.open_mine(self.state.economy.binding, min(want, self.state.household.capital * 0.25
+                                                 / max(1.0, self.MINE_CAPEX_PER_T_YR[self.state.economy.binding])))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
-                if self.household.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.household.capital / 1800.0))
-            elif (self.household.binding == "saltpetre"
-                    and self.policy.get("auto_mine", not self.manual)):
+                if self.state.economy.binding in ("iron", "copper", "lead"):
+                    self.buy_forest(min(200.0, self.state.household.capital / 1800.0))
+            elif (self.state.economy.binding == "saltpetre"
+                    and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
                 # branch would take five per cent of a manual player's
                 # capital every year they were short of nitre, without a
@@ -900,19 +900,19 @@ class StepPhasesMixin:
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.household.capital * 0.05, 2000)
-                self.household.capital -= spend
-                self.household.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
-                self.household.log.append((self.year, "laid down %d square metres of nitre bed "
+                spend = min(self.state.household.capital * 0.05, 2000)
+                self.state.household.capital -= spend
+                self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
+                self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
-        if thr < 0.6 and self.household.binding:
+        if thr < 0.6 and self.state.economy.binding:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
-            self.household.log.append((self.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                             % (self.household.binding.upper(), thr * 100,
-                                self.shortage_remedy(self.household.binding))))
+            self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
+                             % (self.state.economy.binding.upper(), thr * 100,
+                                self.shortage_remedy(self.state.economy.binding))))
 
     def _step_progress_project(self, node_id, pool_rank, pool_total_this_year,
                               pool_active_count_this_year, remaining, hired_left,
@@ -933,7 +933,7 @@ class StepPhasesMixin:
         _pool_active_count_this_year = pool_active_count_this_year
         _arrears_hours_lost = arrears_hours_lost
         _directed_hours_unused = directed_hours_unused
-        project_state = self.household.active[node_id]
+        project_state = self.state.projects.active[node_id]
         node = self.nodes[node_id]
         project_state["pool_total_this_year"] = _pool_total_this_year
         project_state["pool_active_count_this_year"] = _pool_active_count_this_year
@@ -1008,11 +1008,11 @@ class StepPhasesMixin:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
             if project_state["stalled_years"] >= 4:
-                self.household.log.append((self.year, "HALTED %s: there is nobody here who can "
+                self.state.household.log.append((self.state.scenario.year, "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
                                  % (node_id, ", ".join(blocked[:2]))))
-                self.household.active.pop(node_id, None)
-                self.household.bountied.discard(node_id)
+                self.state.projects.active.pop(node_id, None)
+                self.state.projects.bountied.discard(node_id)
             else:
                 # WARN BEFORE THE MONEY GOES: a countdown to abandonment
                 # running silently, with nothing said until everything
@@ -1020,7 +1020,7 @@ class StepPhasesMixin:
                 # each year, with the number of years left and what would
                 # fix it.
                 _left = 4 - project_state["stalled_years"]
-                self.household.log.append((self.year, "%s cannot go on: no %s here. It has "
+                self.state.household.log.append((self.state.scenario.year, "%s cannot go on: no %s here. It has "
                                      "%d year%s before it is abandoned and "
                                      "what you spent on it is lost. Teach "
                                      "the trade, or 'stop %s' now and keep "
@@ -1059,7 +1059,7 @@ class StepPhasesMixin:
         # (active_sorted, above) and that an undirected project
         # never crowds this one out of the share the player asked
         # for it to have.
-        _dir_hours = self.household.hour_allocations.get(node_id)
+        _dir_hours = self.state.household.hour_allocations.get(node_id)
         _pace_cap = self.project_hour_pace(node_id)
         _project_throttle = self.project_resource_throttle(node_id)
         if _dir_hours and _dir_hours > 0:
@@ -1079,7 +1079,7 @@ class StepPhasesMixin:
         # never did.
         spent_hours = min(per, project_state["ph_left"])
         project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-        self.director_hours_spent_founder += per if self.founder_alive else 0
+        self.state.founder.director_hours_spent_founder += per if self.state.founder.founder_alive else 0
         # Hours OFFERED this year vs hours that actually did anything.
         # `refunded` tracks the difference: hours credited back to
         # ph_left below because a trade or the money to pay for it
@@ -1106,13 +1106,13 @@ class StepPhasesMixin:
         # that many hours even with the whole pool behind it. Either
         # is a real, nameable reason; "it disappeared" is not.
         if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-            if (_project_throttle < 0.98 and self.household.binding
+            if (_project_throttle < 0.98 and self.state.economy.binding
                     and _pace_cap >= _dir_hours - 0.5):
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "a shortage of %s has every project (this one "
                     "included) running at %d%% of the pace its "
                     "hours alone would allow"
-                    % (self.household.binding, round(_project_throttle * 100))))
+                    % (self.state.economy.binding, round(_project_throttle * 100))))
             elif _pace_cap * _project_throttle < _dir_hours - 0.5:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "its own pace this year - at most %s hours, set "
@@ -1154,9 +1154,9 @@ class StepPhasesMixin:
         # call site only has to act on what it returns.
         hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
         if _abandon:
-            self.household.log.append((self.year, "ABANDONED %s: %s" % (node_id, _abandon)))
-            self.household.active.pop(node_id, None)
-            self.household.bountied.discard(node_id)
+            self.state.household.log.append((self.state.scenario.year, "ABANDONED %s: %s" % (node_id, _abandon)))
+            self.state.projects.active.pop(node_id, None)
+            self.state.projects.bountied.discard(node_id)
             return None
         if worst < 1.0:
             # NEVER ALL OF IT: the refund says "hours offered but not
@@ -1243,7 +1243,7 @@ class StepPhasesMixin:
         )
         reserve = max(0.0, fixed - revenue)
         purse = (
-            self.household.capital
+            self.state.household.capital
             + self.credit_limit(_rev=revenue, _upkeep=upkeep) * 0.6
             - reserve
         )
@@ -1282,7 +1282,7 @@ class StepPhasesMixin:
             project_state["why_underfunded"] = (
                 "in arrears: after fixed costs there is nothing left to "
                 "draw on, so the hours offered this year did almost "
-                "nothing" if self.household.capital < 0 else
+                "nothing" if self.state.household.capital < 0 else
                 "this year's instalment is more than the purse will bear")
             # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
             # the project and answers the question if a player thinks
@@ -1291,7 +1291,7 @@ class StepPhasesMixin:
             # nothing prompted them to look. Recorded here (only the
             # arrears case, only if it actually cost real hours) and
             # logged once below, after the loop.
-            if self.household.capital < 0 and give_back > 1.0:
+            if self.state.household.capital < 0 and give_back > 1.0:
                 _arrears_hours_lost.append((node_id, round(give_back, 0)))
         else:
             project_state.pop("underfunded_this_year", None)
@@ -1305,8 +1305,8 @@ class StepPhasesMixin:
         # second place a standing allocation can go unhonoured, and the
         # completion check. Nothing to return - project_state carries every
         # result the caller (and the rest of the game) reads back.
-        self.household.capital -= money
-        self.household.total_spend += money
+        self.state.household.capital -= money
+        self.state.household.total_spend += money
         project_state["spent"] += money
         project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
         # spent_hours, NOT per. `per` is what was OFFERED, and it is
@@ -1342,7 +1342,7 @@ class StepPhasesMixin:
             # purse-can-only-absorb-so-much-a-year pace, which is
             # real money trouble without capital actually being
             # negative).
-            if _inner_gap > 1.0 and project_state.get("why_underfunded") and self.household.capital >= 0:
+            if _inner_gap > 1.0 and project_state.get("why_underfunded") and self.state.household.capital >= 0:
                 _directed_hours_unused.append(
                     (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
             elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
@@ -1353,7 +1353,7 @@ class StepPhasesMixin:
         # affordability clamp, not before them: accumulating the notional
         # figure instead would make project_spend_last_year disagree with
         # the actual capital movement.
-        self.household._spend_this_year = self.household._spend_this_year + money
+        self._spend_this_year = getattr(self, "_spend_this_year", 0.0) + money
         # calendar_floor(node_id), NOT a second copy of this formula -
         # expected_calendar_years (projects.py) needs the identical
         # figure to project retries honestly, and a rule living in
@@ -1389,8 +1389,8 @@ class StepPhasesMixin:
         # NODE IN THE TREE: a bare `{k: i for i, k in enumerate(self.order)}`
         # would build a fresh 2,849-entry dict from scratch every single
         # year to answer `rank.get(k, 9999)` for the at most a few dozen
-        # keys in self.household.active. Nothing below reads `rank` for any
-        # node NOT in self.household.active (checked: its only other use is
+        # keys in self.state.projects.active. Nothing below reads `rank` for any
+        # node NOT in self.state.projects.active (checked: its only other use is
         # the `_pool_rank` loop variable a few lines further down, an
         # unrelated name), so recording a position for every other one of
         # the ~2,849 nodes would be pure waste.
@@ -1405,7 +1405,7 @@ class StepPhasesMixin:
         # does not reorder `order` and gives no such guarantee - the early
         # exit is a bonus, not a requirement of correctness). Recomputed
         # fresh every call: no cache, no staleness risk.
-        _active_left = set(self.household.active)
+        _active_left = set(self.state.projects.active)
         rank = {}
         if _active_left:
             for i, node_id in enumerate(self.order):
@@ -1428,14 +1428,14 @@ class StepPhasesMixin:
         # every project sorts into the same single undirected bucket it
         # always did, and this line changes nothing for them.
         active_sorted = sorted(
-            self.household.active,
-            key=lambda k: (0 if self.household.hour_allocations.get(k, 0.0) > 0 else 1,
+            self.state.projects.active,
+            key=lambda k: (0 if self.state.household.hour_allocations.get(k, 0.0) > 0 else 1,
                            rank.get(k, 9999)))
         remaining = pool
-        self.household.trade_hours_used = {}
-        # Summed as the loop runs, not re-read from self.household.active afterwards,
+        self.state.projects.trade_hours_used = {}
+        # Summed as the loop runs, not re-read from self.state.projects.active afterwards,
         # because a project that completes THIS year is popped from
-        # self.household.active before we would get to it. See the hours_this_year
+        # self.state.projects.active before we would get to it. See the hours_this_year
         # summary this feeds, below the loop.
         hours_effective_total = 0.0
         # NAMED, NOT JUST STORED ON THE PROJECT: `why_underfunded` (set below,
@@ -1494,7 +1494,7 @@ class StepPhasesMixin:
             _total_lost = sum(hours for _, hours in _arrears_hours_lost)
             _names = ", ".join("%s (%s hr)" % (node_id, "{:,.0f}".format(hours))
                                 for node_id, hours in _arrears_hours_lost)
-            self.household.log.append((self.year, "IN ARREARS: %s founder-hours meant for %s did "
+            self.state.household.log.append((self.state.scenario.year, "IN ARREARS: %s founder-hours meant for %s did "
                                  "almost nothing this year, on top of the money "
                                  "- that time does not come back, arrears or not. "
                                  "'work' sells idle hours for wages instead of "
@@ -1512,7 +1512,7 @@ class StepPhasesMixin:
         # several projects can be cut short in the same year.
         if _directed_hours_unused:
             for _node_id, _hr, _why in sorted(_directed_hours_unused):
-                self.household.log.append((self.year, "DIRECTED HOURS UNUSED: you allocated hours "
+                self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: you allocated hours "
                                      "to %s this year that it could not use - "
                                      "%s of them went begging because %s. "
                                      "'portfolio' shows the rest; 'allocate' "
@@ -1535,8 +1535,8 @@ class StepPhasesMixin:
         #     run: one Rome seed earned four technologies in five hundred years
         #     because a fire in 103 took a fifth of everything it had.
         if (not self.manual and remaining > self.WAGE_FALLBACK_MIN_HOURS
-                and (self.household.capital < self.living_cost() * self.WAGE_FALLBACK_LIVING_COST_YEARS
-                     or not self.household.active)):
+                and (self.state.household.capital < self.living_cost() * self.WAGE_FALLBACK_LIVING_COST_YEARS
+                     or not self.state.projects.active)):
             trade = ("scholar" if self.effective_scholars() >= 1 else "scribe")
             hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
             # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
@@ -1557,7 +1557,7 @@ class StepPhasesMixin:
                 1.0 if self.practice_attention() > 0 else 0.0)
             rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
-                                 self.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
+                                 self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
                 _, err = self.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
@@ -1574,16 +1574,16 @@ class StepPhasesMixin:
         # does not become a man nobody has heard of because thirty quiet
         # years passed. What fades is novelty; what remains is the work.
         floor = self.standing_floor()
-        self.household.reputation = floor + (self.household.reputation - floor) * self.REPUTATION_DECAY_TOWARD_FLOOR
+        self.state.household.reputation = floor + (self.state.household.reputation - floor) * self.REPUTATION_DECAY_TOWARD_FLOOR
         # ADAPTATION. Every year the world has known you, and every visible thing
         # you have already done, makes the next one less astonishing.
-        pub = sum(1 for node_id in self.household.done
+        pub = sum(1 for node_id in self.state.projects.done
                   if set(self.nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
-        self.household.familiarity = min(
+        self.state.household.familiarity = min(
             self.FAMILIARITY_CEILING,
             1.0 - math.exp(-self.value_weights["adaptation_rate"]
                            * (self.FAMILIARITY_PUBLICATION_WEIGHT * pub
-                              + self.FAMILIARITY_TENURE_WEIGHT * (self.year - 100))))
+                              + self.FAMILIARITY_TENURE_WEIGHT * (self.state.scenario.year - 100))))
         # WHERE THE YEAR'S HOURS WENT: captured here, before the tallies
         # below reset for the next year, the same way spend_last_year
         # already captures the year's spending, so a player can see the
@@ -1591,8 +1591,8 @@ class StepPhasesMixin:
         # final hours-left figure with no way to tell where the rest went.
         self.hours_this_year = {
             "available": round(self.director_pool(), 1),
-            "wage_work": round(getattr(self.household, "wage_hours_this_year", 0.0), 1),
-            "teaching": round(self.household.teaching_hours_this_year, 1),
+            "wage_work": round(getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0, 1),
+            "teaching": round(self.state.household.teaching_hours_this_year, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
             # actually reduced their founder_hours_left. The gap between the
@@ -1605,32 +1605,32 @@ class StepPhasesMixin:
         }
         # Reset AFTER the progress pass above, which is where the hours you sold
         # are subtracted from the hours you have left to direct.
-        self.household.wage_hours_this_year = 0.0
+        self.state.household.wage_hours_this_year = 0.0
         # Contracted work is bought for a year and expires with it: hours you
         # paid a shop for in 142 are not still sitting there in 143.
-        self.household.contract_hours = {}
-        self.household.teaching_hours_this_year = 0.0
-        self.household.spend_last_year = self.household._spend_this_year
-        self.household._spend_this_year = 0.0
+        self.state.household.contract_hours = {}
+        self.state.household.teaching_hours_this_year = 0.0
+        self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
+        self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
-        self.household.market_pressure = max(0.0, self.household.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
+        self.state.economy.market_pressure = max(0.0, self.state.economy.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
         # WARN BEFORE IT KILLS YOU: eminence can end the run outright on a
         # roll with no escalation and nothing in the log ever mentioning
         # it beforehand. It is the one hazard that cannot be bribed away,
         # so the player must be told it is closing in.
         _danger = self.cfg["eminence_danger"]
-        if self.household.eminence > _danger * 0.75:
-            _said = self.household._said_eminence
-            _band = int(self.household.eminence / max(1.0, _danger * 0.15))
+        if self.state.household.eminence > _danger * 0.75:
+            _said = self.state.household._said_eminence
+            _band = int(self.state.household.eminence / max(1.0, _danger * 0.15))
             if _band > _said:
-                self.household._said_eminence = _band
-                self.household.log.append((self.year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                self.state.household._said_eminence = _band
+                self.state.household.log.append((self.state.scenario.year, "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                      "against a danger line of %.0f. This is the "
                                      "one thing no patron and no bribe protects "
                                      "you from, and it grows with reputation and "
                                      "visible wealth. A wide, dispersed "
                                      "institution is what survives you"
-                                 % (self.household.eminence, _danger)))
+                                 % (self.state.household.eminence, _danger)))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -1642,47 +1642,47 @@ class StepPhasesMixin:
         # causes and the eminence-driven one further down are never
         # resolved in the same breath as two unrelated draws on the same
         # stale numbers.
-        self._state_pressure(self.year)
-        self.household.scandal *= self.SCANDAL_DECAY_RATE
+        self._state_pressure(self.state.scenario.year)
+        self.state.household.scandal *= self.SCANDAL_DECAY_RATE
         # Eminence accumulates in a SEPARATE pool, because bribery does not
         # touch it. You can buy a magistrate, an accuser and a jury. You cannot
         # buy an emperor's judgement that you have grown too large, and the
         # attempt is itself evidence against you.
-        self.household.eminence = self.household.eminence * self.EMINENCE_DECAY_RATE + self.prominence_hazard()
+        self.state.household.eminence = self.state.household.eminence * self.EMINENCE_DECAY_RATE + self.prominence_hazard()
         # you can buy your way out of trouble, and a sane player does
-        if (self.household.scandal > self.AUTO_BRIBE_SCANDAL_THRESHOLD
-                and self.household.capital > self.AUTO_BRIBE_CAPITAL_THRESHOLD
-                and self.policy.get("auto_bribe", not self.manual)):
-            spend = min(self.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
-                        self.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
-            self.household.capital -= spend
-            self.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.household.bribes_ytd + spend
-            self.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
+        if (self.state.household.scandal > self.AUTO_BRIBE_SCANDAL_THRESHOLD
+                and self.state.household.capital > self.AUTO_BRIBE_CAPITAL_THRESHOLD
+                and self.state.founder.policy.get("auto_bribe", not self.manual)):
+            spend = min(self.state.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
+                        self.state.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
+            self.state.household.capital -= spend
+            self.state.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.state.household.bribes_ytd + spend
+            self.state.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
                                        * self.value_weights["bribability"])
         else:
-            self.household.bribes_ytd *= self.BRIBES_YTD_DECAY
-        self.household.scandal = max(0.0, self.household.scandal)
+            self.state.household.bribes_ytd *= self.BRIBES_YTD_DECAY
+        self.state.household.scandal = max(0.0, self.state.household.scandal)
         # WARN, THE WAY EMINENCE DOES: denunciation ends the run outright,
         # and a scandal figure with no threshold, no probability and no
         # note is not legible the way eminence's own warning already is.
         # Two hazards of the same shape must both be legible.
         _sd = self.cfg["suspicion_danger"]
-        if self.household.scandal > _sd * 0.75:
-            _band = int(self.household.scandal / max(1.0, _sd * 0.15))
-            if _band > int(getattr(self.household, "_said_scandal", 0)):
-                self.household._said_scandal = _band
-                self.household.log.append((self.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+        if self.state.household.scandal > _sd * 0.75:
+            _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
+            if _band > int(getattr(self.state.household, "_said_scandal", 0) or 0):
+                self.state.household._said_scandal = _band
+                self.state.household.log.append((self.state.scenario.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
-                                 % (self.household.scandal, _sd,
-                                    PERCENT_SCALE * max(0.0, (self.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
-        elif self.household.scandal < _sd * 0.5:
-            self.household._said_scandal = 0
-        if self.events and self.household.scandal > self.cfg["suspicion_danger"]:
-            probability = (self.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
+                                 % (self.state.household.scandal, _sd,
+                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
+        elif self.state.household.scandal < _sd * 0.5:
+            self.state.household._said_scandal = 0
+        if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
+            probability = (self.state.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:
                 self._catastrophe("denounced: %s" % ("as a sorcerer"
                                   if self.value_weights["w_magic_fear"] > 0.5
@@ -1690,27 +1690,27 @@ class StepPhasesMixin:
         # The eminence hazard is separate and unbribable. Its usual outcome is a
         # bad year rather than a death: a confiscation, a patron destroyed in
         # someone else's quarrel, a forced withdrawal from public life.
-        if self.events and self.household.eminence > self.cfg["eminence_danger"]:
-            probability = (self.household.eminence - self.cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
+        if self.events and self.state.household.eminence > self.cfg["eminence_danger"]:
+            probability = (self.state.household.eminence - self.cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
             if self.rng.random() < probability:
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
-                    take = self.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
-                    self.household.capital -= take
-                    self.household.reputation = max(0.0, self.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
-                    self.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
-                    self.household.log.append((self.year, "PROMINENCE: property confiscated, %d den lost, "
+                    take = self.state.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
+                    self.state.household.capital -= take
+                    self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
+                    self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
+                    self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in ("patron_imperial", "patron_senatorial"):
-                        if pat in self.household.done:
-                            self.household.done.discard(pat)
+                        if pat in self.state.projects.done:
+                            self.state.projects.done.discard(pat)
                             self._done_changed()
-                            self.household.log.append((self.year, "PROMINENCE: your patron is destroyed in "
+                            self.state.household.log.append((self.state.scenario.year, "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
-                    self.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
-                    self.household.reputation = max(0.0, self.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
+                    self.state.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
+                    self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
                 else:
                     self._catastrophe("too eminent: brought down not for what you built "
                                       "but for how large you had become")
@@ -1719,36 +1719,36 @@ class StepPhasesMixin:
         # 6b. serving out a debt. The hours you owe go to the creditor and the
         #     debt falls; when it is done you are free, and you keep everything
         #     you know.
-        if self.household.bondage_years_left > 0:
-            self.household.bondage_years_left -= 1
+        if self.state.household.bondage_years_left > 0:
+            self.state.household.bondage_years_left -= 1
             paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
                 (WAGES.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
-            self.household.bondage_debt = max(0.0, self.household.bondage_debt - paid)
-            if self.household.bondage_debt <= 0 and self.household.bondage_years_left > 0:
-                self.household.bondage_years_left = 0     # paid early
-            if self.household.bondage_years_left <= 0:
-                self.household.bondage_years_left = 0.0
-                self.household.bondage_debt = 0.0
-                self.household.log.append((self.year, "your term is served and the debt is discharged; "
+            self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
+            if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
+                self.state.household.bondage_years_left = 0     # paid early
+            if self.state.household.bondage_years_left <= 0:
+                self.state.household.bondage_years_left = 0.0
+                self.state.household.bondage_debt = 0.0
+                self.state.household.log.append((self.state.scenario.year, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
     def _step_founder_mortality(self):
         # 7. founder mortality
-        if self.founder_alive:
-            self.life_left -= 1
+        if self.state.founder.founder_alive:
+            self.state.founder.life_left -= 1
             if self.running("sanitation_antisepsis"):
-                self.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
-            if self.life_left <= 0:
-                self.founder_alive = False
+                self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
+            if self.state.founder.life_left <= 0:
+                self.state.founder.founder_alive = False
                 # SAY WHAT IT MEANS, not only that it happened: the engine is
                 # not in fact silent about the consequence of the founder's
                 # death - deputies carry the work, and with none the
                 # programme dissolves over twelve years - but that has to
                 # be said here, in the same line, not left for the player
                 # to work out on their own.
-                _dep = self.household.directors_extra
-                self.household.log.append((self.year, "THE FOUNDER DIES, aged about %d. %s"
-                                 % (self.cfg["founder_arrival_age"] + self.year
+                _dep = self.state.household.directors_extra
+                self.state.household.log.append((self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
+                                 % (self.cfg["founder_arrival_age"] + self.state.scenario.year
                                     - self.cfg["start_year"],
                                     ("Your %.1f deputies direct the work in your "
                                      "name and the programme goes on without you: "
@@ -1762,32 +1762,32 @@ class StepPhasesMixin:
                                     "effectively over; 'state' shows how far you "
                                     "got.")))
         # a programme with no director is not paused, it is dissolving
-        if not self.founder_alive and self.household.directors_extra < 0.5:
-            self.household.stalled += 1
-            if self.household.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
-                losable = sorted(node_id for node_id in self.household.done if node_id not in self.household.granted)
-                # sorted() matters: self.household.done is a SET, and a set iterates in an
+        if not self.state.founder.founder_alive and self.state.household.directors_extra < 0.5:
+            self.state.projects.stalled += 1
+            if self.state.projects.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
+                losable = sorted(node_id for node_id in self.state.projects.done if node_id not in self.state.projects.granted)
+                # sorted() matters: self.state.projects.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every
                 # invocation. Every figure this project has reported was, strictly,
                 # unreproducible.
                 if losable:
                     for node_id in self.rng.sample(losable, max(1, len(losable) // self.DISSOLUTION_FORGET_FRACTION_DIVISOR)):
-                        self.household.operating.discard(node_id)
-                        self.household.done.discard(node_id)
+                        self.state.projects.operating.discard(node_id)
+                        self.state.projects.done.discard(node_id)
                         self._done_changed()
             # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT: twelve years of a
             # dissolving programme passing with nothing said but the
             # shedding itself would read as merely unlucky rather than as
             # the run actually being finished.
-            if self.household.stalled in (3, 6, 9, 11):
-                self.household.log.append((self.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
+            if self.state.projects.stalled in (3, 6, 9, 11):
+                self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
                                      "since the founder died with no deputy to "
                                      "take over. What you built is being "
                                      "forgotten. The run ends at twelve."
-                                 % self.household.stalled))
-            if self.household.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
+                                 % self.state.projects.stalled))
+            if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   "the school dispersed and the work was forgotten")
         else:
-            self.household.stalled = 0
+            self.state.projects.stalled = 0

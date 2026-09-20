@@ -345,6 +345,7 @@ TOPICS = [
     "state_schema",
     "state_serialization",
     "live_state_ownership",
+    "state_ownership_enforcement",
     "schema_evolution",
     "static_checks",
     "suite_portability",

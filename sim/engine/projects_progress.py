@@ -58,7 +58,7 @@ class ProgressMixin:
         the allocation runs (the 'work' warning below) cannot silently
         disagree with what step() actually offers.
         """
-        project_state, node = self.household.active[node_id], self.nodes[node_id]
+        project_state, node = self.state.projects.active[node_id], self.nodes[node_id]
         # THE THROTTLE IS NOT APPLIED HERE, and must not be. step() spends
         # `min(remaining, this) * throttle`, and folding the throttle in
         # changes that to `min(remaining, this * throttle)`, which is a
@@ -78,10 +78,11 @@ class ProgressMixin:
         pace gives it - not what it will actually get (that depends on how
         many other projects are ahead of it in the pool this year), just what
         it is still asking for. Sorted iteration: this feeds a caller that
-        may sum or rank it, and self.household.active's own order is not fixed.
+        may sum or rank it, and projects.active's own order is not fixed.
         """
         out = {}
-        for node_id in sorted(self.household.active):
+        projects = self.state.projects
+        for node_id in sorted(projects.active):
             if node_id not in self.nodes:
                 continue
             pace = self.project_hour_pace(node_id)
@@ -197,10 +198,11 @@ class ProgressMixin:
         """
         demand = collections.defaultdict(float)
         by_trade = collections.defaultdict(list)
-        # sorted(): this feeds float sums, and self.household.active is a dict whose
+        # sorted(): this feeds float sums, and projects.active is a dict whose
         # key order depends on PYTHONHASHSEED.
-        for node_id in sorted(self.household.active):
-            project_state = self.household.active[node_id]
+        projects = self.state.projects
+        for node_id in sorted(projects.active):
+            project_state = projects.active[node_id]
             for trade_id, plan in self.trade_draw_plan(
                     node_id, self._effective_lab_left(node_id, project_state)).items():
                 demand[trade_id] += plan["desired"]
@@ -227,7 +229,7 @@ class ProgressMixin:
         and `abandon` is None or a reason the project should be dropped
         because it ran out of calendar (see lab_max_span above).
 
-        Mutates project_state["lab_left"] and self.household.trade_hours_used as a side effect,
+        Mutates project_state["lab_left"] and projects.trade_hours_used as a side effect,
         exactly where the code this replaced did. The DEMAND side of the
         numbers below (nominal, ceiling, left) comes from trade_draw_plan,
         the same read-only formula anything reporting on the portfolio before
@@ -236,6 +238,7 @@ class ProgressMixin:
         a year, inside step().
         """
         node = self.nodes[node_id]
+        projects = self.state.projects
         if project_state.get("lab_left") is None:
             project_state["lab_left"] = self._effective_lab_left(node_id, project_state)
         lab_left = project_state["lab_left"]
@@ -245,14 +248,14 @@ class ProgressMixin:
         for trade_id, plan_entry in plan.items():
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
-                       - self.household.trade_hours_used.get(trade_id, 0.0))
+                       - projects.trade_hours_used.get(trade_id, 0.0))
             # THE CEILING IS A CREW, NOT A CALENDAR, so take whatever of this
             # is both USEFUL (no more than is left to do) and AVAILABLE (no
             # more than the trade can actually supply this year), up to the
             # site's own headroom above its calibrated pace.
             drawn = min(left, plan_entry["ceiling"], have)
             lab_left[trade_id] = max(0.0, left - drawn)
-            self.household.trade_hours_used[trade_id] = self.household.trade_hours_used.get(trade_id, 0.0) + drawn
+            projects.trade_hours_used[trade_id] = projects.trade_hours_used.get(trade_id, 0.0) + drawn
             hired_hours += drawn
             # THE WARNING IS STILL DRAWN AT THE OLD PACE. Extra capacity above
             # the historical figure is a bonus with no penalty either way; a
@@ -268,7 +271,7 @@ class ProgressMixin:
             project_state["short_of_trade"] = sorted(
                 trade_id for trade_id, left in lab_left.items()
                 if left > 0 and (self.hours_you_can_call_on(trade_id)
-                                  - self.household.trade_hours_used.get(trade_id, 0.0))
+                                  - projects.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
         else:
             project_state.pop("short_of_trade", None)
@@ -343,7 +346,7 @@ class ProgressMixin:
             "rate, not fitted to any real learning-curve data.")
 
     def _retry_risk_multiplier(self, node_id):
-        attempt_count = self.household.failed_attempts.get(node_id, 0)
+        attempt_count = self.state.projects.failed_attempts.get(node_id, 0)
         if attempt_count <= 0:
             return 1.0
         return (self.RETRY_RISK_FLOOR
@@ -354,7 +357,7 @@ class ProgressMixin:
     # diminishing, capped shape as the risk term above and for the same
     # reason - RETRY_CALENDAR_CAP is comfortably short of 1.0 so a retried
     # programme is never instantly ready, only readier than the last one.
-    # Read off self.household.active[node_id]["yrs"] AT THE MOMENT OF FAILURE, not off a
+    # Read off self.state.projects.active[node_id]["yrs"] AT THE MOMENT OF FAILURE, not off a
     # recomputed floor: core.py's own completion gate (the reputation-
     # shrinking floor for diffusion-limited nodes) already decided how many
     # years this attempt actually took before calling here, and banking a
@@ -385,7 +388,7 @@ class ProgressMixin:
         # contract: the real failure count still drives every actual retry;
         # `attempt_index` only lets a projection ask about a hypothetical one.
         if attempt_index is None:
-            attempt_index = self.household.failed_attempts.get(node_id, 0)
+            attempt_index = self.state.projects.failed_attempts.get(node_id, 0)
         if attempt_index <= 0:
             return 0.0
         return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** attempt_index)
@@ -444,7 +447,7 @@ class ProgressMixin:
     def _control_relief_multiplier(self, node_id):
         if self.nodes[node_id].get("failure_kind") != "process_control":
             return 1.0
-        if self.CONTROL_RELIEF_CAPABILITY not in self.household.done:
+        if self.CONTROL_RELIEF_CAPABILITY not in self.state.projects.done:
             return 1.0
         return self.CONTROL_RELIEF_FACTOR
 
@@ -505,7 +508,7 @@ class ProgressMixin:
         """Calendar years THIS attempt needs to elapse before a completion
         roll can fire at all - the SAME formula step() uses to gate
         `_complete` (see core.py, where a project's own
-        `self.household.active[node_id]["yrs"]` is compared against this), not a
+        `projects.active[node_id]["yrs"]` is compared against this), not a
         second copy of it. Diffusion-limited
         nodes (yrs >= 5) shrink as reputation grows: a civilisation that
         already does a hundred complicated things does not start the social
@@ -515,7 +518,7 @@ class ProgressMixin:
         floor = node["yrs"]
         if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
             floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
-                        node["yrs"] / (1.0 + self.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
+                        node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
         return floor
 
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
@@ -564,9 +567,10 @@ class ProgressMixin:
            wrinkle, and the player's own choice, not the dice's.
         """
         floor = self.calendar_floor(node_id)
-        initial_failed_attempts = self.household.failed_attempts.get(node_id, 0)
-        _had_key = node_id in self.household.failed_attempts
-        _active = self.household.active.get(node_id) if node_id in self.household.active else None
+        projects = self.state.projects
+        initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
+        _had_key = node_id in projects.failed_attempts
+        _active = projects.active.get(node_id) if node_id in projects.active else None
         total = 0.0
         survive = 1.0
         attempt_index = initial_failed_attempts
@@ -589,15 +593,15 @@ class ProgressMixin:
                 # STAND IN FOR "i FAILURES SO FAR", ask effective_risk, then
                 # move on - the real count is restored in `finally` below,
                 # not here, so an exception mid-loop can never leave it wrong.
-                self.household.failed_attempts[node_id] = attempt_index
+                projects.failed_attempts[node_id] = attempt_index
                 survive *= self.effective_risk(node_id)
                 attempt_index += 1
                 if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
             if _had_key:
-                self.household.failed_attempts[node_id] = initial_failed_attempts
+                projects.failed_attempts[node_id] = initial_failed_attempts
             else:
-                self.household.failed_attempts.pop(node_id, None)
+                projects.failed_attempts.pop(node_id, None)
         return total
 
