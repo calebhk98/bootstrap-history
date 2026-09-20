@@ -33,7 +33,7 @@ save/load module import back from this one.
 """
 import json, os, random, sys, time
 
-from .data import (CIVDIR, closure, critical_path, DEFAULTS, goal_catalog,
+from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
                    load, load_civ, load_geography, money_short, money_word,
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
@@ -735,13 +735,12 @@ def cmd_civs(args):
     region_names = {rid: region_record.get("name", rid)
                     for rid, region_record in (geo.get("regions") or {}).items()
                     if not rid.startswith("_")}
-    for civ_filename in sorted(os.listdir(CIVDIR)):
+    for civilization_id in civilization_ids():
         # Files starting with "_" are schema/reference data, not a playable
         # civilization (e.g. _TECH_EFFECTS.json), same convention this file
         # already uses everywhere else for "_"-prefixed keys and entries.
-        if not civ_filename.endswith(".json") or civ_filename.startswith("_"):
-            continue
-        civ_data = json.load(open(os.path.join(CIVDIR, civ_filename)))
+        civ_filename = civilization_id + ".json"
+        civ_data = load_civ(civilization_id)
         value = civ_data["values"]
         print("%-16s %s, %s" % (civ_data["id"], civ_data["name"], civ_data["year"]))
         print("   %s" % civ_data.get("blurb", ""))

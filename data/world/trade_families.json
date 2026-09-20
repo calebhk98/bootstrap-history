@@ -1,0 +1,12 @@
+{
+  "trade_families": {
+    "scholar": "scholar",
+    "chemist": "scholar",
+    "engineer": "scholar",
+    "scribe": "scholar",
+    "merchant": "scholar",
+    "labourer": "labour",
+    "miner": "labour",
+    "sailor": "labour"
+  }
+}

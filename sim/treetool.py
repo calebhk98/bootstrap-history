@@ -312,6 +312,9 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trade
     """Validate, normalise and fold ONE branch node into `nodes`. Returns "added",
     "updated" or None (nothing ingested - a missing field, a retired id, or a
     same-run collision, each already recorded in errs/warns/collisions)."""
+    override = node.get("override") is True or "replaces" in node
+    if "replaces" in node:
+        node.setdefault("id", node["replaces"])
     missing = [field for field in REQUIRED if field not in node]
     if missing:
         errs.append("%s: %s missing fields %s" % (filename, node.get("id", "?"), missing))
@@ -320,7 +323,11 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trade
         warns.append("%s: %s was merged into %s, skipping"
                      % (filename, node["id"], retired[node["id"]]))
         return None
-    if node["id"] in branch_origin:
+    if override and node["id"] not in nodes:
+        errs.append("%s: %s claims an override but the target does not exist"
+                    % (filename, node["id"]))
+        return None
+    if node["id"] in branch_origin and not override:
         # Two branch definitions claim the same id this run - either
         # the same file lists it twice, or two DIFFERENT files do.
         # Unlike the tree-vs-branch case below, there is no
@@ -339,10 +346,12 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trade
                           if first == filename else
                           ("%s is defined in both %s and %s" % (node["id"], first, filename)))
         return None
-    existed_in_tree = node["id"] in nodes and node["id"] not in branch_origin
+    existed_in_tree = node["id"] in nodes
     # Tier 9 meant UNOBTAINABLE and that concept was abolished: nothing
     # is unobtainable, only elsewhere. A new branch reintroduced it on
     normalise_v2(node)
+    node.pop("override", None)
+    node.pop("replaces", None)
     node["lab"] = _merge_resolve_labour(node, alias, valid_trades, filename, losses)
     node["mat"] = _merge_resolve_materials(node, alias, dropset, goods, filename, losses)
     _merge_relocate_kb_prose(node)

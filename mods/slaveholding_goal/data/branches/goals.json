@@ -1,0 +1,27 @@
+[
+  {
+    "id": "slaveholding_goal_ownership",
+    "name": "Own one thousand enslaved people",
+    "cat": "milestone",
+    "pre": [],
+    "note": "A scenario goal measured from the household ledger; it does not endorse the institution it measures.",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "risk": 0,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "kb": "",
+    "win_condition": {
+      "source": "attribute",
+      "path": "slaves",
+      "op": ">=",
+      "value": 1000,
+      "description": "your household owns 1,000 enslaved people"
+    }
+  }
+]

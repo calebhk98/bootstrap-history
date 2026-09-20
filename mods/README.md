@@ -1,19 +1,37 @@
-# mods/
+# Mods
 
-Empty on purpose. This directory is where a third-party mod would go, and
-nothing loads it yet.
+Every immediate subdirectory containing `mod.json` is active. Remove or move a
+folder to disable that mod; no registry or Python edit is required. The loader
+orders mods by dependencies and then by id, rejects missing dependencies,
+dependency cycles, declared conflicts, and ambiguous duplicate ids.
 
-`TASKS.md` beside this file lists what would have to be true before dropping a
-folder in here worked the way dropping a jar into Minecraft's mod folder does.
+A manifest has this shape:
 
-The short version: **the data side is most of the way there already, and
-nobody planned it that way.** The tech tree is merged from 41 files in
-`data/branches/`, civilisations are pure data in `data/civilizations/`,
-production recipes merge by key from `data/production/`, and the engine
-contains no `if Rome:` branches - a civilisation is a JSON file and always has
-been. A prehistoric tree, a sci-fi tree or a new civilisation are, in
-structure, already just more of those files.
+```json
+{
+  "id": "example_mod",
+  "name": "Example Mod",
+  "version": "1.0.0",
+  "dependencies": [],
+  "conflicts": []
+}
+```
 
-What is missing is not the loading. It is namespacing, load order, and a merge
-that says something when two mods disagree instead of silently keeping the
-first one it read.
+A mod may provide:
+
+* `data/branches/*.json`: a list of technology nodes (or an object with a
+  `nodes` list).
+* `data/goals.json`: `{ "goals": [...] }`, using the base goal catalog shape.
+* `data/civilizations/*.json`: civilization files using the base schema.
+* `data/production/*.json`: production recipe files using the base schema.
+* `data/world/trade_families.json`: additive `trade_families` entries.
+
+New technology, recipe, civilization, and trade ids must start with
+`<mod_id>_`. A technology or recipe may instead deliberately patch an existing
+id with `"override": true`; overrides are deep merges and fail if their target
+does not exist. Technology nodes may also use `"replaces": "existing_id"`.
+Unmarked collisions are errors which name both sources.
+
+The three installed sample mods use only this public data contract. They add a
+slave-ownership goal, Ptolemaic Egypt in 100 BC, and a photovoltaic technology
+line with an all-solar goal. The engine contains no checks for their ids.

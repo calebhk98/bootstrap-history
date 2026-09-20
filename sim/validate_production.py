@@ -93,6 +93,9 @@ def load_production():
                 continue
             merged[name] = entry
             defined_in[name] = filename
+    if not duplicates:
+        from sim.engine.mods import get_ordered_mods, load_mod_production
+        merged = load_mod_production(merged, get_ordered_mods(os.path.join(ROOT, "mods")))
     return merged, duplicates
 
 

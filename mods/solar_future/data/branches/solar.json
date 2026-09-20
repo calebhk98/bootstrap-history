@@ -1,0 +1,95 @@
+[
+  {
+    "id": "solar_future_silicon_cell",
+    "name": "Silicon photovoltaic cell",
+    "cat": "power_station",
+    "pre": [
+      "pwr_selenium_cell"
+    ],
+    "note": "Refine semiconductor junctions into durable silicon photovoltaic cells.",
+    "ph": 400,
+    "lab": {
+      "engineer": 200,
+      "electrician": 300
+    },
+    "mat": {
+      "copper_kg": 20,
+      "glass_raw_kg": 100
+    },
+    "cap": 5000,
+    "up": 100,
+    "risk": 0.1,
+    "rev": 1000,
+    "sch": 2,
+    "art": 2,
+    "conf": "C",
+    "kb": "",
+    "traits": [
+      "infrastructure"
+    ]
+  },
+  {
+    "id": "solar_future_panel_array",
+    "name": "Modular solar panel array",
+    "cat": "power_station",
+    "pre": [
+      "solar_future_silicon_cell",
+      "power_grid"
+    ],
+    "note": "Wire photovoltaic cells into maintainable grid-connected arrays.",
+    "ph": 400,
+    "lab": {
+      "engineer": 200,
+      "electrician": 300
+    },
+    "mat": {
+      "copper_kg": 20,
+      "glass_raw_kg": 100
+    },
+    "cap": 5000,
+    "up": 100,
+    "risk": 0.1,
+    "rev": 1000,
+    "sch": 2,
+    "art": 2,
+    "conf": "C",
+    "kb": "",
+    "traits": [
+      "infrastructure"
+    ],
+    "electricity_generation": {
+      "source": "solar",
+      "capacity_kw": 1000000000000
+    }
+  },
+  {
+    "id": "solar_future_all_solar_goal",
+    "name": "An all-solar electricity supply",
+    "cat": "power_station",
+    "pre": [
+      "solar_future_panel_array"
+    ],
+    "note": "A measured goal reached when essentially all available electrical generation is solar.",
+    "ph": 0,
+    "lab": {},
+    "mat": {},
+    "cap": 0,
+    "up": 0,
+    "risk": 0.1,
+    "rev": 0,
+    "sch": 0,
+    "art": 0,
+    "conf": "C",
+    "kb": "",
+    "traits": [
+      "infrastructure"
+    ],
+    "win_condition": {
+      "source": "generation_share",
+      "key": "solar",
+      "op": ">=",
+      "value": 0.999999,
+      "description": "solar panels supply 100% of available electricity"
+    }
+  }
+]
