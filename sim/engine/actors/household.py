@@ -8,330 +8,482 @@ second `Sim`. See `docs/architecture/HOUSEHOLD_EXTRACTION.md` for the
 design and `docs/architecture/SIM_STATE_INVENTORY.md` for the measured
 field-by-field classification this class is built from.
 
-WHAT DID NOT MOVE HERE, ON PURPOSE:
-
-  - WORLD state (the calendar year, population, wage/price indices) stays on
-    `Sim`, because it belongs to the world whoever is playing, not to any one
-    actor in it.
-  - SCENARIO state (the loaded tree, the civilisation record, `goal`, `fog`,
-    `policy`, ...) stays on `Sim` too - it is how this session is configured,
-    not what this household owns. `policy` in particular reads as household
-    state (it is this household's own automation switches) but one of its
-    keys, `auto_court_heir`, is written for succession after a mortal owner's
-    death, so the whole dict stays with the other founder-biographical fields
-    below rather than being split for one key. `goal` reads the same way
-    (SIM_STATE_INVENTORY.md flags it as a real fork - a win condition is
-    naturally a property of whoever is playing, not of the world - but that
-    is a design question for when a second actor exists to make it concrete,
-    not something this extraction should guess at) and stays put along with
-    its cache, `_goal_closure`/`_goal_critical_floor`, which is keyed on
-    `self.goal` and `self.nodes`, not on anything a household owns.
-  - Eight fields the inventory calls out by name as biographical to one
-    mortal person, with no meaning for a firm or a government as written:
-    `founder_alive`, `life_left`, `dead_reason`, `director_hours_spent_founder`,
-    `hours_this_year`, `living_cost_paid`, `policy` (see above), and
-    `last_patron_death`. Moving these would mean designing what death,
-    personal hours or "a patron" mean for a non-person owner, which is
-    guessing at a design this codebase has not made yet. They, and the three
-    INTERNAL caches that exist only to remember when/how old the founder was
-    when they died (`_founder_death_aged`, `_founder_death_year`,
-    `_founder_death_cache`), stay on `Sim`.
-
-WHAT DID, INCLUDING THREE FIELDS THE INVENTORY FLAGGED AS ONLY ARGUABLY
-BELONGING HERE (`granted`, the `trades_*` trio, `shortages`,
-`_material_stock_ledger`): the inventory classifies all four as HOUSEHOLD (or,
-for `_material_stock_ledger`, as an INTERNAL cache keyed off household state)
-today, and flags a *future* fork - `granted` mirrors a civilisation-wide fact
-per `Sim` rather than truly varying per actor; a trade taught into existence
-might reasonably become available to every actor once the society has it;
-`shortages` is a diagnostic nobody's decisions read. None of those forks
-exist yet, so the obvious move - not a redesign - is to move them with
-everything else classified the same way and let whoever builds the second
-actor resolve the fork then, with a second example to design against instead
-of a guess.
+In the live state architecture, `Household` is a façade backed by the
+authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
+`ProjectsState`, `EconomyState`, `GovernanceState`, `FounderState`,
+`ScenarioState`, `PopulationState`). There is NO duplicate storage: every
+persistent read and write delegates directly to the underlying typed state.
 """
 import collections
 from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
-                     Optional, Set, Tuple, TypedDict)
+					 Optional, Set, Tuple, TypedDict)
 
 from ..economy import _InvalidatingSet, _InvalidatingDict
+from sim.engine.state import (
+	ActiveProjectState,
+	SimulationState,
+	HouseholdState,
+	ProjectsState,
+	EconomyState,
+	GovernanceState,
+	FounderState,
+	ScenarioState,
+	PopulationState,
+)
 
 
 class MineWorking(TypedDict):
-    """One entry of `self.mines`, below - a single owned mining operation.
-    Fixed at exactly these five fields: the only place any of these dicts is
-    built is `commission_mines()` (economy_mining.py), which always writes
-    all five, and every read site across economy_mining.py reads only
-    `material`, `capacity` and `intensity_yrs` (`opened_year` and
-    `capex_paid` exist for save/display, not for the mining arithmetic
-    itself) - none of them, in that file or anywhere else, adds a sixth
-    key. Contrast `ActiveProjectState` below, which stays a plain mapping
-    because ITS dicts genuinely do grow new keys at runtime."""
-    material: str
-    capacity: float
-    opened_year: int
-    capex_paid: float
-    intensity_yrs: float
+	"""One entry of `self.mines`, below - a single owned mining operation.
+	Fixed at exactly these five fields: the only place any of these dicts is
+	built is `commission_mines()` (economy_mining.py), which always writes
+	all five, and every read site across economy_mining.py reads only
+	`material`, `capacity` and `intensity_yrs` (`opened_year` and
+	`capex_paid` exist for save/display, not for the mining arithmetic
+	itself) - none of them, in that file or anywhere else, adds a sixth
+	key. Contrast `ActiveProjectState` below, which stays a plain mapping
+	because ITS dicts genuinely do grow new keys at runtime."""
+	material: str
+	capacity: float
+	opened_year: int
+	capex_paid: float
+	intensity_yrs: float
 
 
-# `self.active[node_id]`'s value type. NOT a TypedDict, on purpose, unlike
-# `MineWorking` just above: `core_step_phases.py` alone (not owned by this
-from sim.engine.state import ActiveProjectState
+_SUBSYSTEM_MAP: Dict[str, str] = {
+	# HouseholdState
+	"capital": "household",
+	"total_spend": "household",
+	"bounties_paid": "household",
+	"wages_paid": "household",
+	"wages_prepaid": "household",
+	"wages_earned": "household",
+	"interest_paid": "household",
+	"reputation": "household",
+	"scandal": "household",
+	"eminence": "household",
+	"familiarity": "household",
+	"protection": "household",
+	"bribes_ytd": "household",
+	"slaves": "household",
+	"freedmen": "household",
+	"manumitted_total": "household",
+	"atrocity": "household",
+	"bondage_years_left": "household",
+	"bondage_debt": "household",
+	"credit_frozen_until": "household",
+	"insolvent_years": "household",
+	"last_withdrawal": "household",
+	"last_settlement": "household",
+	"spend_last_year": "household",
+	"scholars": "household",
+	"artisans": "household",
+	"directors_extra": "household",
+	"employees": "household",
+	"trades_created": "household",
+	"trades_endemic": "household",
+	"trade_introduced_year": "household",
+	"contract_hours": "household",
+	"commissioned": "household",
+	"teaching_hours_this_year": "household",
+	"hour_allocations": "household",
+	"work_trade": "household",
+	"last_taught": "household",
+	"training": "household",
+	"wage_hours_this_year": "household",
+	"log": "household",
+	"granted_staff": "household",
+	"hours_this_year": "household",
+	"trade_schools": "household",
+	"worker_housing_places": "household",
+	"_said_deputies": "household",
+	"_said_near_limit": "household",
+	"_said_autoopen": "household",
+
+	# ProjectsState
+	"active": "projects",
+	"done": "projects",
+	"done_year": "projects",
+	"operating": "projects",
+	"failed_attempts": "projects",
+	"mothballed": "projects",
+	"bountied": "projects",
+	"granted": "projects",
+	"opened_year": "projects",
+	"paid_towards": "projects",
+	"forgotten": "projects",
+	"trade_hours_used": "projects",
+	"revealed": "projects",
+	"stalled": "projects",
+	"shut_for_staff": "projects",
+
+	# EconomyState
+	"mines": "economy",
+	"mine_pending": "economy",
+	"mine_ready": "economy",
+	"mine_cost_paid": "economy",
+	"mine_tranches": "economy",
+	"shortages": "economy",
+	"throttle": "economy",
+	"binding": "economy",
+	"forest_ha": "economy",
+	"nitre_bed_m2": "economy",
+	"market_pressure": "economy",
+	"output_factor": "economy",
+	"economy": "economy",
+	"money_real": "economy",
+	"_material_stock_ledger": "economy",
+	"farm_hectares": "economy",
+	"farm_stock_kg": "economy",
+	"_dashboard_history": "economy",
+
+	# GovernanceState
+	"inst_units": "governance",
+	"gov": "governance",
+
+	# FounderState
+	"founder_alive": "founder",
+	"life_left": "founder",
+	"dead_reason": "founder",
+	"director_hours_spent_founder": "founder",
+	"living_cost_paid": "founder",
+	"policy": "founder",
+	"last_patron_death": "founder",
+	"_founder_death_aged": "founder",
+	"_founder_death_year": "founder",
+
+	# ScenarioState
+	"year": "scenario",
+	"goal_year": "scenario",
+	"_said_debasement": "scenario",
+	"_said_output": "scenario",
+	"_said_scandal": "scenario",
+	"_said_parallelism": "scenario",
+	"_said_command_index": "scenario",
+
+	# PopulationState
+	"pop_children": "population",
+	"pop_working_age": "population",
+	"pop_elderly": "population",
+	"_food_pop_bonus_applied": "population",
+}
+
+_VERSION_MAP: Dict[str, str] = {
+	"_operating_ver": "projects",
+	"_done_ver": "projects",
+	"_active_ver": "projects",
+	"_workforce_ver": "household",
+	"_inst_units_ver": "governance",
+}
+
+_LAZY_FIELDS: Set[str] = {
+	"wages_earned",
+	"interest_paid",
+	"insolvent_years",
+	"last_withdrawal",
+	"spend_last_year",
+	"granted_staff",
+	"hours_this_year",
+	"trade_schools",
+	"worker_housing_places",
+	"_said_deputies",
+	"_said_near_limit",
+	"_said_autoopen",
+	"done_year",
+	"shut_for_staff",
+	"mine_tranches",
+	"_material_stock_ledger",
+	"farm_hectares",
+	"_dashboard_history",
+	"inst_units",
+	"wage_hours_this_year",
+	"_said_scandal",
+	"_said_parallelism",
+}
 
 
 class Household:
-    """The founder's household: money, staff, knowledge, plant and standing.
+	"""The founder's household: money, staff, knowledge, plant and standing.
 
-    Every field below was, until this class existed, a plain attribute of
-    `Sim` itself - see core.py's own history (git blame) for the original
-    site of each one, and SIM_STATE_INVENTORY.md for why each one is here and
-    not on `Sim`. The grouping and the comments are carried over unchanged;
-    only `self.` now means "this household" rather than "this whole game".
+	In the live state architecture, Household delegates all persistent state
+	reads and writes to the live SimulationState subsystem objects. There is
+	only one authoritative copy of persistent state in memory.
+	"""
 
-    THE PARAGRAPH BELOW DEFENDS THE CURRENT ENCODING; Complaints/57 ARGUES
-    AGAINST IT. Read both. The complaint accepts that "this has never
-    happened yet" is real information worth keeping and objects to the
-    channel it travels through, which is whether an attribute exists at all:
-    invisible at the definition site, indistinguishable from a field somebody
-    forgot, reconstructed through `getattr(obj, name, default)` at every read
-    site, and enforced by the comment you are reading plus one tool nobody
-    runs by accident. It also notes that the usual reason to keep an
-    absence-means-something encoding, that old saves are already written that
-    way, is explicitly not a reason in this project (CLAUDE.md SS3.5). Left
-    as is for now by decision, not by oversight.
+	def __init__(
+		self,
+		starting_capital: float = 0.0,
+		operating_changed: Optional[Callable[[], None]] = None,
+		active_changed: Optional[Callable[[], None]] = None,
+		workforce_changed: Optional[Callable[[], None]] = None,
+		state: Optional[SimulationState] = None,
+		sim: Optional[Any] = None,
+	) -> None:
+		self._sim = sim
+		if state is not None:
+			self._state = state
+			self._state.household.capital = float(starting_capital)
+		elif sim is not None and hasattr(sim, "state") and sim.state is not None:
+			self._state = sim.state
+			self._state.household.capital = float(starting_capital)
+		else:
+			self._state = SimulationState(
+				household=HouseholdState(capital=float(starting_capital)),
+				projects=ProjectsState(),
+				economy=EconomyState(),
+				governance=GovernanceState(),
+				founder=FounderState(),
+				scenario=ScenarioState(),
+				population=PopulationState(),
+			)
 
-    A NOTE ON WHAT IS *ABSENT* HERE, NOT JUST WHAT IS SET: several fields
-    below are deliberately never assigned in `__init__` at all, and are
-    created lazily, the first time some method does
-    `getattr(self.household, "name", default)`. That is not an oversight -
-    see the long comment inside `Sim.__init__` (core.py) that this class's
-    own `__init__` continues, and `sim/ARCHITECTURE.md`'s account of the one
-    time promoting one of these to a real `__init__` attribute passed the
-    whole test suite while silently breaking save-file semantics. A save
-    file missing one of these fields means "this has never happened yet", not
-    "zero", and `SAVE_FIELDS` (sim/engine/proto/saveload.py) is the
-    authoritative list of which ones. The `Sim` properties that expose these
-    fields to the world outside the engine (protocol, save/load, the CLI,
-    the tests) are written to preserve that: `self.household.name` raises
-    `AttributeError` exactly when the field has never been touched, and never
-    supplies a default of its own, so `getattr(sim, name, default)` still
-    sees the field's true, possibly-absent, state.
-    """
+		# Wrap mutation-aware collections with callbacks if provided
+		if operating_changed is not None:
+			self._state.projects.operating = _InvalidatingSet(
+				self._state.projects.operating or set(),
+				on_change=operating_changed
+			)
+		if active_changed is not None:
+			self._state.projects.active = _InvalidatingDict(
+				{k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=active_changed)
+				 for k, v in (self._state.projects.active or {}).items()},
+				on_change=active_changed
+			)
+		if workforce_changed is not None:
+			self._state.household.employees = _InvalidatingDict(
+				self._state.household.employees or {},
+				on_change=workforce_changed
+			)
 
-    def __init__(self, starting_capital: float,
-                 operating_changed: Callable[[], None],
-                 active_changed: Optional[Callable[[], None]] = None,
-                 workforce_changed: Optional[Callable[[], None]] = None) -> None:
-        """`starting_capital`: this household's opening purse, in the
-        civilisation's own currency and price level - computed by the
-        caller (today, `Sim.__init__`, from `cfg["start_capital"]` and
-        `price_index`) rather than here, so this class does not need to know
-        the shape of a run's configuration dict to be constructed. A firm or
-        a government will fund itself differently; nothing about `Household`
-        should have to change for that.
+		# Version counters attached to owning subsystems
+		if getattr(self._state.projects, "_operating_ver", None) is None:
+			self._state.projects._operating_ver = 0  # type: ignore[attr-defined]
+		if getattr(self._state.projects, "_done_ver", None) is None:
+			self._state.projects._done_ver = 0  # type: ignore[attr-defined]
+		if getattr(self._state.projects, "_active_ver", None) is None:
+			self._state.projects._active_ver = 0  # type: ignore[attr-defined]
+		if getattr(self._state.household, "_workforce_ver", None) is None:
+			self._state.household._workforce_ver = 0  # type: ignore[attr-defined]
+		if self._state.governance is not None and getattr(self._state.governance, "_inst_units_ver", None) is None:
+			self._state.governance._inst_units_ver = 0  # type: ignore[attr-defined]
 
-        `operating_changed`: a callable invoked after every mutation of
-        `self.operating` (see the `_InvalidatingSet` class, economy.py, for
-        the full reasoning). It is passed in rather than looked up on `self`
-        because the cache it invalidates (`_cap_factor`, `_operating_ver`)
-        lives on THIS object, but the method that owns the invalidation
-        logic (`Sim._operating_changed`, in `EconomyMixin`) stayed on `Sim`
-        along with every other piece of the engine's actual behaviour - this
-        extraction moved the DATA a household owns, not the RULES the engine
-        applies to it. See HOUSEHOLD_EXTRACTION.md section 2 for why call sites are
-        rewritten explicitly (`self.household.x`) rather than forwarded
-        through `__getattr__`, and why that same reasoning keeps the engine's
-        methods where they are.
-        """
-        # -- MONEY, AND THE TWO COUNTERS EVERYTHING ELSE'S CACHE INVALIDATION
-        #    KEYS ON -------------------------------------------------------
-        # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
-        # See core.py's Sim.__init__, where `starting_capital` is computed,
-        # for why a kit is priced where you are rather than at a single
-        # global rate.
-        self.capital: float = float(starting_capital)
-        self._done_ver: int = 0
-        self._operating_ver: int = 0
-        self._active_ver: int = 0
-        self._workforce_ver: int = 0
-        self._inst_units_ver: int = 0
-        self.done: Set[str] = set()
-        self._done_seq: Optional[List[str]] = None
-        self._cap_factor: Optional[float] = None   # capability_factor()'s cache; see economy.py
-        # [[artisan_capacity, year_it_matures], ...] usually, but
-        # `labour_training.py` (not owned by this task) also appends a
-        # 4-element [progress, year, trade, count] row for taught-trade
-        # training, so a row's own length and field meanings vary by who
-        # wrote it - genuinely heterogeneous, not a fixed record this pass
-        # can name honestly.
-        self.training: List[List[Any]] = []
-        # Held because the SOCIETY has it, not because this household built
-        # it. See the module docstring above for the `granted` fork this
-        # inventory flags for whenever a second actor exists to force the
-        # question of whether it should be shared rather than duplicated.
-        self.granted: Set[str] = set()
-        self.active: _InvalidatingDict = _InvalidatingDict(on_change=active_changed)
-        self.failed_attempts: DefaultDict[str, int] = defaultdict(int)
-        # YOU ARRIVE ALONE: no employees, no slaves, no household. You stepped
-        # out of the future into a street in a city where nobody knows you,
-        # and nobody starts already hired on your behalf. You are your own
-        # only scholar (see effective_scholars) and everyone else has to be
-        # found, paid, taught or bought, by you, on purpose.
-        self.scholars: float = 0.0
-        self.artisans: float = 0.0
-        self.directors_extra: float = 0.0
-        # Standing staff BY TRADE, which is what makes a smith not a scribe.
-        self.employees: _InvalidatingDict = _InvalidatingDict(on_change=workforce_changed)
-        # Trades this society does not have and you have taught into existence.
-        self.trades_created: Set[str] = set()
-        # WHEN a taught trade was first taught, and which taught trades this
-        # society has since gone on to naturalise on its own - see
-        # SocietyMixin.advance_society (society.py) for what moves these and
-        # why. Separate from trades_created because that set answers "can
-        # this be hired at all", which stays true for ever once taught, while
-        # these two answer "since when" and "does the society now supply its
-        # own", which trades_created alone cannot say.
-        self.trade_introduced_year: Dict[str, int] = {}
-        self.trades_endemic: Set[str] = set()
-        self.contract_projects: Set[str] = set()   # projects staffed by the job, not by employees
-        self.wages_paid: float = 0.0
-        self.contract_hours: Dict[str, float] = {}         # trade -> hours bought this year, by the job
-        self.commissioned: Dict[str, float] = {}           # trade -> hours bought this year, cumulative log
-        self.teaching_hours_this_year: float = 0.0
-        # A STANDING INSTRUCTION, NOT A ONE-TURN COMMAND. {project id: hours
-        # a year} for every project the player has told step() to give a
-        # fixed share of their own hours to, every year, without having to
-        # retype it - this game is played over hundreds of turns. The
-        # reserved key "work" is the same standing instruction for selling
-        # hours as wages (see `work_trade` just below): "work" is never a
-        # node id, so it can never collide with one. Read ONLY by step()'s
-        # own allocator (core.py, "5. progress") and reported back verbatim
-        # by `portfolio` (protocol.py) - see that loop's own comment on why
-        # an explicit allocation has to flow through the exact code that
-        # already decides and reports the ordinary, undirected split, not a
-        # second path that could disagree with it. Hours nobody has
-        # directed are untouched by this and keep being shared out by
-        # priority exactly as before - a player who never calls `allocate`
-        # sees no change at all.
-        self.hour_allocations: Dict[str, float] = {}
-        # WHICH TRADE "work" IN hour_allocations SELLS HOURS AS. A STANDING
-        # hour-allocation for wages has to name one, the same way the `work`
-        # command itself takes a trade argument every time it is typed; this
-        # is that argument, remembered.
-        self.work_trade: Optional[str] = None
-        self.trade_hours_used: Dict[str, float] = {}       # trade -> hours consumed by projects this year
-        self.mothballed: Set[str] = set()          # completed works you shut down on purpose
-        self.forgotten: Dict[str, int] = {}              # {node: year} destroyed by a sacking
-        self.opened_year: Dict[str, int] = {}            # {node: year} the doors first opened
-        self.paid_towards: Dict[str, float] = {}         # {node: denarii} sunk before it stopped
-        self.last_taught: Dict[str, int] = {}            # {trade: year} auto_train last taught it
-        self.wages_prepaid: float = 0.0         # first-year wages `hire` already took
-        # WHAT YOU ACTUALLY RUN, as opposed to what you know how to do. Revenue
-        # and upkeep follow this set and nothing else does: completing the
-        # research must not start paying you until you actually open the
-        # doors - see is_venture and open_venture in projects.py.
-        #
-        # An _InvalidatingSet (economy.py), not a plain set: every .add/
-        # .discard/.update/... invalidates capability_factor()'s cache
-        # through the object itself. See _operating_changed()'s comment in
-        # economy.py for why this is a set subclass and not a property, and
-        # this class's own __init__ docstring, above, for why the callback
-        # is a constructor argument rather than a lookup on `self`.
-        self.operating: _InvalidatingSet = _InvalidatingSet(on_change=operating_changed)
-        self.bondage_years_left: float = 0.0    # years of service still owed for a debt
-        self.bondage_debt: float = 0.0
-        self.credit_frozen_until: int = 0     # year until which nobody will fund new work
-        # -- A HANDFUL OF "LAST TIME I SAID/DID X" TRACKERS, GIVEN A REAL
-        #    STARTING VALUE HERE INSTEAD OF SPRINGING INTO EXISTENCE ON FIRST
-        #    USE -----------------------------------------------------------
-        # Given a real value here so every call site can read
-        # `self.household.name` directly, rather than paying a
-        # `getattr(self.household, name, default)` dict-and-default lookup on
-        # a path that runs every single step. TRAP FOR A FIELD ALSO IN
-        # SAVE_FIELDS: perf_fingerprint.py hashes that list at year 0, and a
-        # save MISSING one of those fields reads back as "has never happened
-        # yet" (None), a state distinct from an explicit zero or sentinel -
-        # giving such a field a real value here makes year 0's hash disagree
-        # with any baseline recorded before this field existed. See
-        # core.py's own copy of this comment for the fuller account. Every
-        # name below has been checked
-        # against SAVE_FIELDS (proto/saveload.py) and is NOT a member of it;
-        # the ones that ARE members (this household's `insolvent_years`,
-        # `wage_hours_this_year`, `_said_deputies`, `_said_scandal`,
-        # `last_withdrawal`, `_said_near_limit`, `_said_autoopen`,
-        # `_said_parallelism`) are deliberately left OUT of this constructor
-        # and still read through `getattr(self.household, name, default)` at
-        # every call site, unchanged.
-        self._staff_scale: float = 1.0            # labour.py's staff_capacity() sets the real value every step before core.py reads it; this is only the pre-first-step default
-        self._spend_this_year: float = 0.0        # denarii spent this year; reset to 0.0 at the end of every step() (spend_last_year, the field that IS saved, always gets a real value from this every step)
-        self._said_eminence: int = -999         # last eminence "band" warned about; -999 guarantees the first qualifying band always warns
-        self._said_requisition: int = -999      # last year a state-requisition note was printed
-        self._said_notice_approach: int = 0     # last state-notice "band" warned about
-        self.last_military_demand: int = -999   # last year this household was subject to a military levy
-        self._said_confiscation_band: int = -1  # last confiscation-risk "band" warned about
-        self.gov: float = 0.0
-        self.log: List[Tuple[Any, str]] = []
-        self.goal_year: Optional[int] = None
-        self.stalled: int = 0
-        self.last_settlement: int = -999
-        self.bounties_paid: int = 0
-        self.bountied: Set[str] = set()
-        self.total_spend: float = 0.0
-        # REPUTATION: your ability to be believed and followed. Distinct from money
-        # and from political protection. A man with a great reputation gets his
-        # ideas adopted; a man without one gets them ignored however right he is.
-        self.reputation: float = 5.0
-        # SCANDAL replaces the old scalar "suspicion". Doing something a society
-        # cannot explain is alarming; doing a lot of ordinary things over decades
-        # is not. The old model conflated speed with sorcery, which is wrong: the
-        # iPhone was astonishing in 2007 and boring by 2012.
-        self.scandal: float = 0.0
-        self.eminence: float = 0.0
-        self.familiarity: float = 0.0      # how used to you the world has become
-        self.protection: float = 0.0       # patrons, office, citizenship, priesthood
-        self.bribes_ytd: float = 0.0
-        self.slaves: int = 0
-        self.freedmen: int = 0
-        self.manumitted_total: int = 0
-        self.atrocity: int = 0           # counted, never scored as a benefit
-        # -- RAW MATERIAL QUANTITIES AND PLANT THIS HOUSEHOLD OWNS ---------
-        self.forest_ha: float = 0.0        # coppice you own, in hectares
-        self.nitre_bed_m2: float = 0.0
-        self.market_pressure: float = 0.0  # how hard you have recently leaned on the slave market
-        # A WORKING IS A THING: material, rated capacity, the year it was
-        # commissioned, what it cost to sink, and its own depletion clock -
-        # see economy.py's class comment above _workings_of(). mine_capacity
-        # is a property computed from this list (economy.py), not a
-        # second number kept in sync by hand.
-        self.mines: List[MineWorking] = []             # your OWN workings - see EconomyMixin
-        self.mine_pending: Dict[str, float] = {}      # sunk but not yet producing
-        self.mine_ready: Dict[str, int] = {}        # material -> year it comes on stream
-        self.mine_cost_paid: float = 0.0
-        self.shortages: "collections.Counter[str]" = collections.Counter()
-        self.throttle: float = 1.0
-        self.binding: Optional[str] = None
-        # NOTE: `done`/`granted` are populated from `civ["starting_techs"]`
-        # by the CALLER (Sim.__init__), not here - the loop that does it also
-        # has to raise ValueError on an unknown starting technology, which
-        # needs the loaded tree and civ record this class deliberately does
-        # not hold a reference to. See Sim.__init__, core.py.
+		# Transient caches and runtime-only trackers
+		self.contract_projects: Set[str] = set()
+		self._done_seq: Optional[List[str]] = None
+		self._cap_factor: Optional[float] = None
+		self._staff_scale: float = 1.0
+		self._spend_this_year: float = 0.0
+		self._said_eminence: int = -999
+		self._said_requisition: int = -999
+		self._said_notice_approach: int = 0
+		self.last_military_demand: int = -999
+		self._said_confiscation_band: int = -1
+		self._revenue_cache_key: Any = None
+		self._revenue_cache_val: Any = None
+		self._annual_mat_demand_cache: Any = None
+		self._rev_up_candidates_cache: Any = None
+		self._practice_cache: Any = None
+		self._goods_cat_state_cache: Any = None
+		self._goods_category_ratios_cache: Any = None
+		self._income_factor_cache: Any = None
+		self._goods_mkt_op_factor_cache: Any = None
+		self._material_demand_cache: Any = None
+		self._demand_by_tag_cache: Any = None
+		self._freight_distance_km_cache: Any = None
+		self._demand_by_emp_key_cache: Any = None
+		self._stock_throttle_sig: Any = None
+		self._last_buy_refusal: Any = None
+		self._said_stack_caution: Any = None
 
-    # -- FOG OF WAR: WHICH NODES ARE VISIBLE TO THIS HOUSEHOLD -------------
-    # FOG IS A RATCHET, NOT A REWIND: a property, not a plain attribute, so
-    # this holds regardless of WHICH code assigns to `.revealed` -
-    # `load_state` (proto/saveload.py) is one such path, but this does not
-    # require editing it or knowing about every future caller. Assigning a
-    # smaller set here only ever grows what is already known, never
-    # shrinks it: visibility is this household's own accumulated knowledge
-    # of the tree, not the world's, and nothing may un-reveal a node it has
-    # already discovered.
-    @property
-    def revealed(self) -> Set[str]:
-        return self.__dict__.get("_revealed", set())
+	@property
+	def capital(self) -> float:
+		return self._state.household.capital
 
-    @revealed.setter
-    def revealed(self, value: Iterable[str]) -> None:
-        cur = self.__dict__.get("_revealed")
-        self.__dict__["_revealed"] = (set(value) if cur is None
-                                      else set(cur) | set(value))
+	@capital.setter
+	def capital(self, value: float) -> None:
+		self._state.household.capital = float(value)
+
+	@property
+	def active(self) -> Any:
+		return self._state.projects.active
+
+	@active.setter
+	def active(self, value: Any) -> None:
+		self._state.projects.active = value
+
+	@property
+	def done(self) -> Any:
+		return self._state.projects.done
+
+	@done.setter
+	def done(self, value: Any) -> None:
+		self._state.projects.done = value
+
+	@property
+	def operating(self) -> Any:
+		return self._state.projects.operating
+
+	@operating.setter
+	def operating(self, value: Any) -> None:
+		self._state.projects.operating = value
+
+	@property
+	def employees(self) -> Any:
+		return self._state.household.employees
+
+	@employees.setter
+	def employees(self, value: Any) -> None:
+		self._state.household.employees = value
+
+	@property
+	def mines(self) -> Any:
+		if self._state.economy is None:
+			return []
+		return self._state.economy.mines
+
+	@mines.setter
+	def mines(self, value: Any) -> None:
+		if self._state.economy is not None:
+			self._state.economy.mines = value
+
+	@property
+	def shortages(self) -> Any:
+		if self._state.economy is None:
+			return collections.Counter()
+		return self._state.economy.shortages
+
+	@shortages.setter
+	def shortages(self, value: Any) -> None:
+		if self._state.economy is not None:
+			self._state.economy.shortages = value
+
+	@property
+	def failed_attempts(self) -> Any:
+		return self._state.projects.failed_attempts
+
+	@failed_attempts.setter
+	def failed_attempts(self, value: Any) -> None:
+		self._state.projects.failed_attempts = value
+
+	@property
+	def revealed(self) -> Set[str]:
+		return self._state.projects.revealed
+
+	@revealed.setter
+	def revealed(self, value: Iterable[str]) -> None:
+		cur = self._state.projects.revealed
+		self._state.projects.revealed = (set(value) if cur is None
+										 else set(cur) | set(value))
+
+	@property
+	def _operating_ver(self) -> int:
+		return int(getattr(self._state.projects, "_operating_ver", 0))
+
+	@_operating_ver.setter
+	def _operating_ver(self, value: int) -> None:
+		setattr(self._state.projects, "_operating_ver", int(value))
+
+	@property
+	def _done_ver(self) -> int:
+		return int(getattr(self._state.projects, "_done_ver", 0))
+
+	@_done_ver.setter
+	def _done_ver(self, value: int) -> None:
+		setattr(self._state.projects, "_done_ver", int(value))
+
+	@property
+	def _active_ver(self) -> int:
+		return int(getattr(self._state.projects, "_active_ver", 0))
+
+	@_active_ver.setter
+	def _active_ver(self, value: int) -> None:
+		setattr(self._state.projects, "_active_ver", int(value))
+
+	@property
+	def _workforce_ver(self) -> int:
+		return int(getattr(self._state.household, "_workforce_ver", 0))
+
+	@_workforce_ver.setter
+	def _workforce_ver(self, value: int) -> None:
+		setattr(self._state.household, "_workforce_ver", int(value))
+
+	@property
+	def _inst_units_ver(self) -> int:
+		if self._state.governance is None:
+			return 0
+		return int(getattr(self._state.governance, "_inst_units_ver", 0))
+
+	@_inst_units_ver.setter
+	def _inst_units_ver(self, value: int) -> None:
+		if self._state.governance is not None:
+			setattr(self._state.governance, "_inst_units_ver", int(value))
+
+	def __getattr__(self, name: str) -> Any:
+		if name.startswith("_state"):
+			raise AttributeError(name)
+		state = self.__dict__.get("_state")
+		if state is None:
+			raise AttributeError(name)
+		# Check version counters
+		ver_owner = _VERSION_MAP.get(name)
+		if ver_owner is not None:
+			owner_obj = getattr(state, ver_owner, None)
+			if owner_obj is not None:
+				return getattr(owner_obj, name, 0)
+			return 0
+		# Check subsystem state
+		subsystem_name = _SUBSYSTEM_MAP.get(name)
+		if subsystem_name is not None:
+			subsystem = getattr(state, subsystem_name, None)
+			if subsystem is not None and hasattr(subsystem, name):
+				val = getattr(subsystem, name)
+				if val is None and name in _LAZY_FIELDS:
+					raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+				return val
+		raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+	def __setattr__(self, name: str, value: Any) -> None:
+		if (name in ("_state", "_sim", "contract_projects")
+				or name.startswith("_cap_factor")
+				or name.startswith("_staff_scale")
+				or name.startswith("_spend_this_year")
+				or name.startswith("_said_eminence")
+				or name.startswith("_said_requisition")
+				or name.startswith("_said_notice_approach")
+				or name == "last_military_demand"
+				or name == "_said_confiscation_band"
+				or name.endswith("_cache")
+				or name.startswith("_revenue_cache")
+				or name.startswith("_stock_throttle")
+				or name == "_last_buy_refusal"
+				or name == "_said_stack_caution"
+				or name == "_done_seq"):
+			super().__setattr__(name, value)
+			return
+
+		state = self.__dict__.get("_state")
+		if state is not None:
+			ver_owner = _VERSION_MAP.get(name)
+			if ver_owner is not None:
+				owner_obj = getattr(state, ver_owner, None)
+				if owner_obj is not None:
+					setattr(owner_obj, name, value)
+					return
+			subsystem_name = _SUBSYSTEM_MAP.get(name)
+			if subsystem_name is not None:
+				subsystem = getattr(state, subsystem_name, None)
+				if subsystem is not None:
+					setattr(subsystem, name, value)
+					return
+		super().__setattr__(name, value)
+
+	def __delattr__(self, name: str) -> None:
+		state = self.__dict__.get("_state")
+		if state is not None:
+			subsystem_name = _SUBSYSTEM_MAP.get(name)
+			if subsystem_name is not None:
+				subsystem = getattr(state, subsystem_name, None)
+				if subsystem is not None and hasattr(subsystem, name):
+					setattr(subsystem, name, None)
+					return
+		super().__delattr__(name)

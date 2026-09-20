@@ -4,9 +4,13 @@ Every persistent mutable field in the simulation belongs to one authoritative
 state owner defined in this module. Transient caches, version counters, derived
 values, and invalidation plumbing remain non-persistent implementation details.
 """
+import collections
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+from typing import (
+	Any, Callable, Counter, DefaultDict, Dict, Iterable, List,
+	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
+)
 
 from sim.engine.economy import _InvalidatingDict
 
@@ -204,8 +208,9 @@ class HouseholdState:
 	hours_this_year: Optional[Dict[str, float]] = None
 	trade_schools: Optional[int] = None
 	worker_housing_places: Optional[int] = None
-	_said_deputies: Optional[bool] = None
+	_said_deputies: Optional[int] = None
 	_said_near_limit: Optional[bool] = None
+	_said_autoopen: Optional[Dict[str, int]] = None
 
 
 @dataclass
@@ -215,7 +220,7 @@ class ProjectsState:
 	done: Set[str] = field(default_factory=set)
 	done_year: Optional[Dict[str, int]] = None
 	operating: Set[str] = field(default_factory=set)
-	failed_attempts: Dict[str, int] = field(default_factory=dict)
+	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
@@ -236,14 +241,14 @@ class EconomyState:
 	mine_ready: Dict[str, int] = field(default_factory=dict)
 	mine_cost_paid: float = 0.0
 	mine_tranches: Optional[List[Any]] = None
-	shortages: Dict[str, int] = field(default_factory=dict)
+	shortages: collections.Counter = field(default_factory=collections.Counter)
 	throttle: float = 1.0
 	binding: Optional[str] = None
 	forest_ha: float = 0.0
 	nitre_bed_m2: float = 0.0
 	market_pressure: float = 0.0
 	output_factor: float = 1.0
-	economy: str = "custom"
+	economy: float = 1.0
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	farm_hectares: Optional[float] = None
@@ -277,10 +282,9 @@ class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
 	goal_year: Optional[int] = None
-	_said_debasement: Optional[bool] = None
-	_said_autoopen: Optional[bool] = None
-	_said_output: Optional[bool] = None
-	_said_scandal: Optional[bool] = None
+	_said_debasement: Optional[int] = None
+	_said_output: Optional[Dict[str, int]] = None
+	_said_scandal: Optional[int] = None
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 
@@ -307,7 +311,7 @@ class SimulationState:
 	_civ: Optional[str] = None
 	_goal: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
-	_weights: Dict[str, float] = field(default_factory=dict)
+	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
@@ -370,77 +374,162 @@ def serialize_state(obj: Any) -> Any:
 
 
 
+def _deserialize_typed(val: Any, target_type: Any) -> Any:
+	"""Recursively reconstruct typed values from JSON-compatible data according to target_type."""
+	if val is None or target_type is Any:
+		return val
+
+	origin = get_origin(target_type)
+	args = get_args(target_type)
+
+	# Handle Union / Optional (Union[T, None])
+	if origin is Union:
+		non_none = [a for a in args if a is not type(None)]
+		if not non_none:
+			return val
+		return _deserialize_typed(val, non_none[0])
+
+	# Handle Set[T]
+	if origin in (set, Set) or target_type in (set, Set):
+		items = val.get("__set__") if isinstance(val, dict) else val
+		if not isinstance(items, (list, set, tuple)):
+			return set()
+		elem_t = args[0] if args else None
+		if elem_t and elem_t is not Any:
+			return set(_deserialize_typed(x, elem_t) for x in items)
+		return set(items)
+
+	# Handle collections.Counter
+	if target_type is collections.Counter or origin is collections.Counter:
+		if isinstance(val, dict):
+			return collections.Counter({k: int(v) for k, v in val.items()})
+		return collections.Counter(val)
+
+	# Handle collections.defaultdict / DefaultDict[K, V]
+	if target_type is collections.defaultdict or origin in (collections.defaultdict, DefaultDict):
+		val_t = args[1] if (args and len(args) > 1) else int
+		default_factory = int
+		if val_t in (float, "float"):
+			default_factory = float
+		elif val_t in (list, "list", List):
+			default_factory = list
+		elif val_t in (dict, "dict", Dict):
+			default_factory = dict
+		if isinstance(val, dict):
+			return collections.defaultdict(default_factory, {
+				k: _deserialize_typed(v, val_t) for k, v in val.items()
+			})
+		return collections.defaultdict(default_factory, val)
+
+	# Handle ActiveProjectState
+	if target_type is ActiveProjectState or (isinstance(target_type, type) and issubclass(target_type, ActiveProjectState)):
+		if isinstance(val, dict):
+			hints = {}
+			try:
+				hints = get_type_hints(ActiveProjectState)
+			except Exception:
+				hints = {}
+			reconstructed = {}
+			for f in dataclasses.fields(ActiveProjectState):
+				if f.name in val:
+					f_type = hints.get(f.name, f.type)
+					reconstructed[f.name] = _deserialize_typed(val[f.name], f_type)
+			for k, v in val.items():
+				if k not in reconstructed and not str(k).startswith("_on_change"):
+					reconstructed[k] = v
+			return ActiveProjectState.from_dict(reconstructed)
+		return val
+
+	# Handle Dataclasses
+	if dataclasses.is_dataclass(target_type) and isinstance(target_type, type):
+		if not isinstance(val, dict):
+			return val
+		hints = {}
+		try:
+			hints = get_type_hints(target_type)
+		except Exception:
+			hints = {}
+		field_kwargs = {}
+		for f in dataclasses.fields(target_type):
+			if f.name.startswith("_on_change"):
+				continue
+			if f.name in val:
+				f_type = hints.get(f.name, f.type)
+				field_kwargs[f.name] = _deserialize_typed(val[f.name], f_type)
+		return target_type(**field_kwargs)
+
+	# Handle List[T]
+	if origin in (list, List) or target_type in (list, List):
+		if not isinstance(val, (list, tuple)):
+			return list(val) if val is not None else []
+		elem_t = args[0] if args else None
+		if elem_t and elem_t is not Any:
+			return [_deserialize_typed(x, elem_t) for x in val]
+		return list(val)
+
+	# Handle Tuple[...]
+	if origin in (tuple, Tuple) or target_type in (tuple, Tuple):
+		if not isinstance(val, (list, tuple)):
+			return tuple(val) if val is not None else ()
+		if args:
+			if len(args) == 2 and args[1] is Ellipsis:
+				return tuple(_deserialize_typed(x, args[0]) for x in val)
+			return tuple(_deserialize_typed(x, arg_t) for x, arg_t in zip(val, args))
+		return tuple(val)
+
+	# Handle Dict[K, V]
+	if origin in (dict, Dict) or target_type in (dict, Dict):
+		if not isinstance(val, dict):
+			return val
+		key_t = args[0] if args else None
+		val_t = args[1] if (args and len(args) > 1) else None
+		if (val_t and val_t is not Any) or (key_t and key_t is not Any):
+			return {
+				(_deserialize_typed(k, key_t) if key_t else k):
+				(_deserialize_typed(v, val_t) if val_t else v)
+				for k, v in val.items()
+			}
+		return dict(val)
+
+	# Primitive scalars
+	if target_type is int and isinstance(val, (int, float, str)) and not isinstance(val, bool):
+		try:
+			return int(val)
+		except (ValueError, TypeError):
+			return val
+	if target_type is float and isinstance(val, (int, float, str)) and not isinstance(val, bool):
+		try:
+			return float(val)
+		except (ValueError, TypeError):
+			return val
+	if target_type is str and not isinstance(val, str):
+		return str(val)
+	if target_type is bool:
+		if isinstance(val, bool):
+			return val
+		if isinstance(val, str):
+			return val.lower() in ("true", "1")
+		if isinstance(val, (int, float)):
+			return bool(val)
+		return val
+
+	return val
+
+
 def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 	"""Reconstruct typed authoritative state objects from JSON-compatible data."""
-	import collections
 	if blob is None:
 		return None
-	if target_type is ActiveProjectState:
-		return ActiveProjectState.from_dict(blob)
-	if not isinstance(blob, dict):
-		return blob
+	if target_type is None:
+		if isinstance(blob, dict) and ("_version" in blob or "household" in blob):
+			target_type = SimulationState
+		elif isinstance(blob, dict) and "ph_left" in blob:
+			target_type = ActiveProjectState
+		else:
+			return blob
 
-	if "_version" in blob or "household" in blob:
-		hh_data = dict(blob.get("household") or {})
-		proj_data = dict(blob.get("projects") or {})
-		econ_data = dict(blob.get("economy") or {})
-		gov_data = dict(blob.get("governance") or {})
-		fnd_data = dict(blob.get("founder") or {})
-		scen_data = dict(blob.get("scenario") or {})
-		pop_data = dict(blob.get("population") or {})
+	return _deserialize_typed(blob, target_type)
 
-		# Convert sets
-		for set_field in ("trades_created", "trades_endemic"):
-			if set_field in hh_data and hh_data[set_field] is not None:
-				val = hh_data[set_field]
-				hh_data[set_field] = set(val.get("__set__", val) if isinstance(val, dict) else val)
-		for set_field in ("done", "operating", "mothballed", "bountied", "granted", "revealed"):
-			if set_field in proj_data and proj_data[set_field] is not None:
-				val = proj_data[set_field]
-				proj_data[set_field] = set(val.get("__set__", val) if isinstance(val, dict) else val)
-
-		# Convert ActiveProjectState instances
-		if "active" in proj_data and isinstance(proj_data["active"], dict):
-			proj_data["active"] = {
-				k: ActiveProjectState.from_dict(v if isinstance(v, dict) else dict(v))
-				for k, v in proj_data["active"].items()
-			}
-
-		# Convert failed_attempts to defaultdict
-		if "failed_attempts" in proj_data:
-			proj_data["failed_attempts"] = collections.defaultdict(int, proj_data["failed_attempts"] or {})
-
-		# Convert shortages to Counter
-		if "shortages" in econ_data:
-			econ_data["shortages"] = collections.Counter(econ_data["shortages"] or {})
-
-		hh = HouseholdState(**hh_data) if hh_data else None
-		projects = ProjectsState(**proj_data) if proj_data else None
-		economy = EconomyState(**econ_data) if econ_data else None
-		governance = GovernanceState(**gov_data) if gov_data else None
-		founder = FounderState(**fnd_data) if fnd_data else None
-		scenario = ScenarioState(**scen_data) if scen_data else None
-		population = PopulationState(**pop_data) if pop_data else None
-
-		return SimulationState(
-			household=hh,
-			projects=projects,
-			economy=economy,
-			governance=governance,
-			founder=founder,
-			scenario=scenario,
-			population=population,
-			_civ=blob.get("_civ"),
-			_goal=blob.get("_goal"),
-			_civ_live=blob.get("_civ_live", {}),
-			_weights=blob.get("_weights", {}),
-			_fog=blob.get("_fog", False),
-			_immortal=blob.get("_immortal", True),
-			_rng=blob.get("_rng"),
-			_version=blob.get("_version", 3),
-		)
-
-	return blob
 
 
 def _safe_get(sim: Any, k: str) -> Any:

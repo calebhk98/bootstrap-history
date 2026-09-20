@@ -18,19 +18,13 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
-# REPO_ROOT has to be on sys.path for `from sim.world import land` below -
-# `sim` is a namespace package rooted at the repository (see
-# sim/solve_prices.py's own sys.path setup, which this mirrors, so this
-# file resolves the same imports whether it is reached through
-# sim/solve_prices.py or, as sim/tests/ does, through `from sim import
-# solve_prices` directly).
-sys.path.insert(0, REPO_ROOT)
-import simulator                                # noqa: E402  (see sys.path above)
-from validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+from sim import simulator                                # noqa: E402
+from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
 
-from solve_prices_core import (                 # noqa: E402  (see sys.path above)
+from sim.solve_prices_core import (                 # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,

@@ -758,14 +758,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
-# REPO_ROOT, not just HERE, has to be on sys.path for `from sim.world import
-# deposits` below: `sim` is a namespace package rooted at the repository, the
-# same one sim/tests/__main__.py's own docstring explains, and this file is
-# normally launched as a bare script (`python3 sim/solve_prices.py`), which
-# only puts HERE (sim/ itself) on sys.path automatically.
-sys.path.insert(0, REPO_ROOT)
-from validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 
 # THIS FILE IS A PURE COMPOSITION POINT over two sibling modules - the same
 # shape sim/engine/society.py and sim/engine/economy.py already use for the
@@ -786,7 +781,7 @@ from validate_production import load_production, materials_the_tree_consumes  # 
 # either sibling: every "see the module docstring" comment in both sibling
 # files means THIS docstring, and splitting it apart by topic would break
 # every one of those cross references for no benefit.
-from solve_prices_core import (                  # noqa: E402  (see sys.path above)
+from sim.solve_prices_core import (                  # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,
@@ -822,7 +817,7 @@ from solve_prices_core import (                  # noqa: E402  (see sys.path abo
     techniques_available_to,
     wage_ratios_by_trade,
 )
-from solve_prices_report import (                # noqa: E402  (see sys.path above)
+from sim.solve_prices_report import (                # noqa: E402
     _apply_era_gate,
     _default_capability_band_price_by_carrier,
     _next_recursion_targets,

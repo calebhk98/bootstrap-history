@@ -20,11 +20,11 @@ import random
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))         # sim
-ROOT = os.path.dirname(HERE)                               # rome
-sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(HERE, "engine"))
-import commodities as C
-import simulator as S
+ROOT = os.path.dirname(HERE)                               # repo root
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from sim.engine import commodities as C
+from sim import simulator as S
 
 
 def load_nodes():

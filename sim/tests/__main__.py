@@ -344,6 +344,8 @@ TOPICS = [
     "package_identity",
     "state_schema",
     "state_serialization",
+    "live_state_ownership",
+    "schema_evolution",
     "static_checks",
     "suite_portability",
 ]

@@ -24,14 +24,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
-# REPO_ROOT has to be on sys.path for `from sim.world import deposits` and
-# `from sim.world import land` below - `sim` is a namespace package rooted
-# at the repository (see sim/solve_prices.py's own sys.path setup, which
-# this mirrors, so this file resolves those same imports whether it is
-# reached through sim/solve_prices.py or, as sim/tests/ does, through
-# `from sim import solve_prices` directly).
-sys.path.insert(0, REPO_ROOT)
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_

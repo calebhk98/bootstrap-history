@@ -203,7 +203,8 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
         reached = solve_prices.load_starting_technologies(civilization_id)
         available, _unreached, _unclassified = solve_prices.techniques_available_to(
             production_entries, reached)
-        _tree, prices_json, _nodes, _wages, _goods = __import__("simulator").load()
+        from sim import simulator
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         producers_of = solve_prices.build_producers_index(available)
         rent = solve_prices.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
@@ -312,7 +313,8 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
             recipe_id: {key: value for key, value in entry.items()
                        if key != "land_iugera_years"}
             for recipe_id, entry in production_entries.items()}
-        _tree, prices_json, _nodes, _wages, _goods = __import__("simulator").load()
+        from sim import simulator
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
 
         producers_of = solve_prices.build_producers_index(production_entries)

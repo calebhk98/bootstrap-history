@@ -111,3 +111,103 @@ def _test_no_sys_path_leak_of_sim_directory():
 
 _ok, _detail = _test_no_sys_path_leak_of_sim_directory()
 check("sim/ directory is not on sys.path", _ok, _detail)
+
+
+def _test_generic_duplicate_module_detection():
+	"""Inspect sys.modules and detect duplicate source-file/module identities generically."""
+	repo_root_norm = os.path.realpath(os.path.normcase(ROOT))
+	file_to_mods = {}
+	for mod_name, mod in list(sys.modules.items()):
+		if mod is None or not hasattr(mod, "__file__") or not mod.__file__:
+			continue
+		if mod_name == "__main__":
+			continue
+		real_path = os.path.realpath(os.path.normcase(mod.__file__))
+		if real_path.startswith(repo_root_norm):
+			file_to_mods.setdefault(real_path, []).append(mod_name)
+
+	duplicates = {p: names for p, names in file_to_mods.items() if len(names) > 1}
+	if duplicates:
+		return False, f"Duplicate module identities detected for source files: {duplicates}"
+
+	return True, f"generic duplicate module detection found 0 duplicates across {len(file_to_mods)} modules"
+
+
+_ok, _detail = _test_generic_duplicate_module_detection()
+check("generic duplicate module detection across sys.modules", _ok, _detail)
+
+
+def _test_supported_entry_points_package_identity():
+	"""Exercise representative entry points and assert clean package identity and no duplicates."""
+	checker_script = (
+		"import sys, os\n"
+		"entry = sys.argv[1]\n"
+		"repo_root = sys.argv[2]\n"
+		"__import__(entry)\n"
+		"repo_root_norm = os.path.realpath(os.path.normcase(repo_root))\n"
+		"file_to_mods = {}\n"
+		"for k, m in list(sys.modules.items()):\n"
+		"    if m and getattr(m, '__file__', None) and k != '__main__':\n"
+		"        real_p = os.path.realpath(os.path.normcase(m.__file__))\n"
+		"        if real_p.startswith(repo_root_norm):\n"
+		"            file_to_mods.setdefault(real_p, []).append(k)\n"
+		"dupes = {p: n for p, n in file_to_mods.items() if len(n) > 1}\n"
+		"bare = [m for m in ('constants', 'engine', 'world', 'simulator', 'data') if m in sys.modules]\n"
+		"if dupes:\n"
+		"    print(f'DUPLICATE_MODULES: {dupes}', file=sys.stderr)\n"
+		"    sys.exit(2)\n"
+		"if bare:\n"
+		"    print(f'BARE_MODULES: {bare}', file=sys.stderr)\n"
+		"    sys.exit(3)\n"
+		"sys.exit(0)\n"
+	)
+
+	entry_points = [
+		"sim.simulator",
+		"sim.audit_costs",
+		"sim.validate_production",
+		"sim.solve_prices",
+		"sim.perf_fingerprint",
+		"sim.demo_commodities",
+	]
+
+	for ep in entry_points:
+		proc = subprocess.run(
+			[sys.executable, "-c", checker_script, ep, ROOT],
+			capture_output=True,
+			text=True,
+			cwd=ROOT,
+		)
+		if proc.returncode != 0:
+			err_msg = proc.stderr.strip() or proc.stdout.strip()
+			return False, f"Entry point {ep} failed package identity check (rc={proc.returncode}): {err_msg}"
+
+	return True, f"All {len(entry_points)} supported entry points have clean canonical package identity"
+
+
+_ok, _detail = _test_supported_entry_points_package_identity()
+check("supported entry points maintain canonical package identity", _ok, _detail)
+
+
+def _test_core_singletons_and_classes_identity():
+	"""Verify key classes and singletons retain exactly one identity across imports."""
+	import sim.simulator as S
+	import sim.engine.core as core
+	import sim.engine.state as state
+	import sim.constants as constants
+
+	if S.Sim is not core.Sim:
+		return False, f"Sim class identity mismatch: {S.Sim} is not {core.Sim}"
+	if not hasattr(constants, "REGISTRY") or not isinstance(constants.REGISTRY, dict):
+		return False, "REGISTRY singleton missing or invalid in sim.constants"
+	if getattr(core, "SimulationState", None) is not state.SimulationState:
+		return False, "SimulationState class identity mismatch between core and state"
+	if getattr(core, "ActiveProjectState", None) is not state.ActiveProjectState:
+		return False, "ActiveProjectState class identity mismatch between core and state"
+
+	return True, "Core singletons and classes retain single authoritative identity"
+
+
+_ok, _detail = _test_core_singletons_and_classes_identity()
+check("core singletons and classes single identity", _ok, _detail)
+

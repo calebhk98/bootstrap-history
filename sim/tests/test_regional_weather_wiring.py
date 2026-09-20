@@ -181,7 +181,7 @@ class DeterminismAcrossSaveAndReloadTests(unittest.TestCase):
         self.assertEqual(first.farm_stock_kg, second.farm_stock_kg)
 
     def test_a_mid_run_save_and_reload_reproduces_the_reference_trajectory(self):
-        import simulator as S
+        from sim import simulator as S
 
         reference = _rome_sim()
         for _year in range(60):

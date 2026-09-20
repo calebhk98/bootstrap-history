@@ -216,7 +216,7 @@ class DeterminismTests(unittest.TestCase):
         self.assertEqual(first.farm_stock_kg, second.farm_stock_kg)
 
     def test_a_mid_run_save_and_reload_reproduces_the_reference_trajectory(self):
-        import simulator as S
+        from sim import simulator as S
 
         reference = _rome_sim()
         for _year in range(60):
@@ -244,7 +244,7 @@ class DeterminismTests(unittest.TestCase):
         # post-construction and reloading: the reload must NOT carry the
         # mutated value forward, because a fresh Sim.__init__ rebuilds it
         # from self.civ/geography.json every time, before load_state runs.
-        import simulator as S
+        from sim import simulator as S
 
         test_sim = _rome_sim()
         test_sim._farm_weather_correlation_cholesky = "not a real matrix"

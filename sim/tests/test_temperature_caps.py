@@ -316,7 +316,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
         reached = solve_prices.load_starting_technologies(civilization_id)
         available, _unreached, _unclassified = solve_prices.techniques_available_to(
             production_entries, reached)
-        import simulator
+        from sim import simulator
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         producers_of = solve_prices.build_producers_index(available)
@@ -366,7 +366,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
         reached = solve_prices.load_starting_technologies(civilization_id)
         available, _unreached, _unclassified = solve_prices.techniques_available_to(
             production_entries, reached)
-        import simulator
+        from sim import simulator
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         producers_of = solve_prices.build_producers_index(available)

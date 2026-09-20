@@ -46,13 +46,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-sys.path.insert(0, HERE)
-import simulator as S
-# Guarded, idempotent - see sim/engine/commodities.py's own comment at the
-# identical snippet for why this needs adding explicitly rather than
-# trusting a caller to have put the repository root on sys.path already.
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+from sim import simulator as S
 from sim.presentation import (
     AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
     AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
@@ -90,7 +86,7 @@ def recipes_by_output_material():
     Not a guess. An entry's `outputs` says what it makes, which is exactly
     the question, and this is the same index `sim/solve_prices.py` builds.
     """
-    from validate_production import load_production
+    from sim.validate_production import load_production
     entries, _duplicates = load_production()
     index = collections.defaultdict(list)
     for recipe_id, entry in entries.items():

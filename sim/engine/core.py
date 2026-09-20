@@ -2,6 +2,7 @@
 import collections, math, os, random, sys
 
 from sim.constants import declare
+from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, load_civ, load_geography, load_resources,
                    TECH_EFFECTS)
 
@@ -273,6 +274,23 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
         self.civ = civ or load_civ()
+        # Authoritative live SimulationState hierarchy
+        from sim.engine.state import (
+            SimulationState, HouseholdState, ProjectsState,
+            EconomyState, GovernanceState, FounderState,
+            ScenarioState, PopulationState
+        )
+        self.state = SimulationState(
+            household=HouseholdState(capital=0.0),
+            projects=ProjectsState(),
+            economy=EconomyState(),
+            governance=GovernanceState(),
+            founder=FounderState(),
+            scenario=ScenarioState(),
+            population=PopulationState(),
+            _civ=self.civ.get("id"),
+            _version=3,
+        )
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # perf_fingerprint - and both round-trip through saveload's `_fog`
@@ -469,7 +487,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             starting_capital=float(config["start_capital"]) * self.price_index,
             operating_changed=self._operating_changed,
             active_changed=self._active_changed,
-            workforce_changed=self._workforce_changed)
+            workforce_changed=self._workforce_changed,
+            state=self.state,
+            sim=self)
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -632,6 +652,67 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer Roman materials or institutions for another
         # civilization from those fields.
+        self._reconnect_state_hooks()
+
+    def _reconnect_state_hooks(self):
+        """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
+        from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
+        from sim.engine.state import ActiveProjectState
+        # Reconnect invalidation wrappers
+        self.state.projects.operating = _InvalidatingSet(
+            self.state.projects.operating or set(),
+            on_change=self._operating_changed
+        )
+        self.state.projects.active = _InvalidatingDict(
+            {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
+             for k, v in (self.state.projects.active or {}).items()},
+            on_change=self._active_changed
+        )
+        self.state.household.employees = _InvalidatingDict(
+            self.state.household.employees or {},
+            on_change=self._workforce_changed
+        )
+        # Ensure version counters exist on state owners
+        if getattr(self.state.projects, "_operating_ver", None) is None:
+            self.state.projects._operating_ver = 0
+        if getattr(self.state.projects, "_done_ver", None) is None:
+            self.state.projects._done_ver = 0
+        if getattr(self.state.projects, "_active_ver", None) is None:
+            self.state.projects._active_ver = 0
+        if getattr(self.state.household, "_workforce_ver", None) is None:
+            self.state.household._workforce_ver = 0
+        if self.state.governance is not None and getattr(self.state.governance, "_inst_units_ver", None) is None:
+            self.state.governance._inst_units_ver = 0
+
+        # Synchronize demographic cohort floats
+        if self.state.population is not None and hasattr(self, "population"):
+            if self.state.population.pop_children or self.state.population.pop_working_age or self.state.population.pop_elderly:
+                self.population.children = float(self.state.population.pop_children)
+                self.population.working_age = float(self.state.population.pop_working_age)
+                self.population.elderly = float(self.state.population.pop_elderly)
+            else:
+                self.state.population.pop_children = float(self.population.children)
+                self.state.population.pop_working_age = float(self.population.working_age)
+                self.state.population.pop_elderly = float(self.population.elderly)
+
+        # Synchronize household façade state pointer
+        if hasattr(self, "household"):
+            self.household._state = self.state
+
+        # Sync civ live state and metadata
+        if self.state._civ_live:
+            for attr, value in self.state._civ_live.items():
+                if value is not None:
+                    self.civ[attr] = value
+        if self.state._weights:
+            self.value_weights.update(self.state._weights)
+        if self.state._rng is not None:
+            rng_version, _keys, rng_gaussian = self.state._rng
+            self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))
+        self.state_capacity = float(self.civ.get("state_capacity", self.state_capacity))
+
+        # Reset transient caches
+        self._reset_economic_caches()
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
     # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:

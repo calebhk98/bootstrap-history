@@ -279,3 +279,68 @@ def _test_save_load_continuation_parity():
 
 _ok, _detail = _test_save_load_continuation_parity()
 check("Save/load continuation parity", _ok, _detail)
+
+
+def _test_v3_save_shape_validation():
+	"""Verify _validate_save accepts valid v3 saves and rejects structurally incomplete ones for exact reasons."""
+	from sim.engine.proto.saveload import _validate_save, save_state, load_state
+	import json
+
+	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
+	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+		save_path = f.name
+	try:
+		save_state(sim, save_path)
+		with open(save_path) as handle:
+			valid_blob = json.load(handle)
+
+		# 1. Valid save passes validation
+		err = _validate_save(valid_blob, sim)
+		if err is not None:
+			return False, f"Valid v3 save was rejected: {err}"
+
+		# 2. Missing top-level section (e.g. projects)
+		bad_missing_section = dict(valid_blob)
+		del bad_missing_section["projects"]
+		err = _validate_save(bad_missing_section, sim)
+		if not err or "projects" not in err:
+			return False, f"Missing section was not rejected properly: {err}"
+
+		# 3. Missing metadata field (e.g. _civ)
+		bad_missing_meta = dict(valid_blob)
+		del bad_missing_meta["_civ"]
+		err = _validate_save(bad_missing_meta, sim)
+		if not err or "_civ" not in err:
+			return False, f"Missing _civ was not rejected properly: {err}"
+
+		# 4. Corrupt section shape (section is not an object)
+		bad_section_type = dict(valid_blob)
+		bad_section_type["household"] = "corrupt_string"
+		err = _validate_save(bad_section_type, sim)
+		if not err or "household" not in err or "object" not in err:
+			return False, f"Corrupt section type was not rejected properly: {err}"
+
+		# 5. Missing _version
+		bad_no_version = dict(valid_blob)
+		del bad_no_version["_version"]
+		err = _validate_save(bad_no_version, sim)
+		if not err or "_version" not in err:
+			return False, f"Missing _version was not rejected properly: {err}"
+
+		# 6. Wrong _version
+		bad_version = dict(valid_blob)
+		bad_version["_version"] = 999
+		err = _validate_save(bad_version, sim)
+		if not err or "version 999" not in err:
+			return False, f"Wrong _version was not rejected properly: {err}"
+
+	finally:
+		if os.path.exists(save_path):
+			os.remove(save_path)
+
+	return True, "v3 save shape validation and rejection verified"
+
+
+_ok, _detail = _test_v3_save_shape_validation()
+check("v3 save shape validation and rejection", _ok, _detail)
+

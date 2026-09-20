@@ -58,7 +58,7 @@ check("_project_progress_afford_gate returns (money, refunded)", _test_afford_ga
 
 def _test_perf_fingerprint_quick_scenarios():
     """Verify perf_fingerprint module exports QUICK_SCENARIOS matching requirement rules."""
-    import perf_fingerprint as F
+    from sim import perf_fingerprint as F
     
     scenarios = F.QUICK_SCENARIOS
     has_rome = any(s["civ"] == "rome_100ad" for s in scenarios)
@@ -75,7 +75,7 @@ check("perf_fingerprint QUICK_SCENARIOS validity", _test_perf_fingerprint_quick_
 
 def _test_perf_fingerprint_state_retention_toggle():
     """Verify run(scenario, keep_states=False) does not retain full states."""
-    import perf_fingerprint as F
+    from sim import perf_fingerprint as F
     
     sc = F.QUICK_SCENARIOS[0]
     digests_no_states, cpu_no_states, states_no_states = F.run(sc, keep_states=False)

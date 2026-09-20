@@ -188,7 +188,10 @@ class SaveLoadRoundTripTests(unittest.TestCase):
             S.save_state(test_sim, path)
             with open(path) as handle:
                 blob = json.load(handle)
-            del blob["farm_stock_kg"]
+            if "farm_stock_kg" in blob:
+                del blob["farm_stock_kg"]
+            else:
+                del blob["economy"]
             with open(path, "w") as handle:
                 json.dump(blob, handle)
             fresh = _rome_sim(events=False)

@@ -145,18 +145,17 @@ while _SIM_ROOT in sys.path:
 # declarations land in one and the report reads another, and --burndown prints
 # a number that is quietly too low.
 #
-# Stashing the dict in sys.modules under a name nothing else can claim makes
-# every copy of this module share one object, whatever it is imported as. This
-# is not a compatibility shim of the kind CLAUDE.md 3.5 forbids - it is not
-# about old data, it is about one dict having one home.
-_REGISTRY_HOME_KEY = "_bootstrap_history_constants_registry"
-if _REGISTRY_HOME_KEY in sys.modules:
-    REGISTRY = sys.modules[_REGISTRY_HOME_KEY].REGISTRY
+# Stashing the dict in sim.constants ensures every canonical import shares
+# a single authoritative registry object without manipulating sys.modules
+# with synthetic module names.
+if __name__ == "__main__":
+    try:
+        import sim.constants as _canonical_constants
+        REGISTRY = _canonical_constants.REGISTRY
+    except (ImportError, AttributeError):
+        REGISTRY = collections.OrderedDict()
 else:
-    _registry_home = types.ModuleType(_REGISTRY_HOME_KEY)
-    _registry_home.REGISTRY = collections.OrderedDict()
-    sys.modules[_REGISTRY_HOME_KEY] = _registry_home
-    REGISTRY = _registry_home.REGISTRY
+    REGISTRY = collections.OrderedDict()
 
 KINDS = (
     "physical_constant",

@@ -204,18 +204,12 @@ Provenance = Dict[str, str]
 
 HERE = os.path.dirname(os.path.abspath(__file__))              # sim/engine
 SIMDIR = os.path.dirname(HERE)                                  # sim
-if SIMDIR not in sys.path:
-    # solve_prices.py and validate_production.py are siblings of this
-    # package, not inside it - they are standalone tools this file is
-    # reusing rather than duplicating (see the module docstring). This
-    # mutates global interpreter state, which is exactly why it happens here
-    # rather than at import time of sim/engine/data.py: it only runs the
-    # moment something actually asks this module for a price, so a caller
-    # that never opts into solved prices never pays for it or risks it.
-    sys.path.insert(0, SIMDIR)
+REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
-import solve_prices                                             # noqa: E402
-from validate_production import load_production                 # noqa: E402
+from sim import solve_prices                                    # noqa: E402
+from sim.validate_production import load_production             # noqa: E402
 
 
 class SolvedPrices(object):

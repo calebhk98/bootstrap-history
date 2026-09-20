@@ -23,6 +23,7 @@ import unittest
 from unittest import mock
 
 from sim import solve_prices
+from sim import simulator
 from sim.world import deposits
 
 
@@ -157,8 +158,7 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
         # structural properties this mechanism promises.
         production_entries, duplicates = solve_prices.load_production()
         self.assertEqual(duplicates, [])
-        _tree, prices_json, _nodes, _wages, _goods = __import__(
-            "simulator").load()
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         rent = solve_prices.rent_hours_per_kg_by_ore_material(
             production_entries, wage_by_trade)
@@ -220,7 +220,7 @@ class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):
         reached = solve_prices.load_starting_technologies("rome_100ad")
         available, _unreached, _unclassified = solve_prices.techniques_available_to(
             production_entries, reached)
-        _tree, prices_json, _nodes, _wages, _goods = __import__("simulator").load()
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         rent = solve_prices.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
         self.assertIn("iron_ore_kg", rent)
@@ -244,7 +244,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # with the rent table this file now builds, once with it forced
         # empty - and compares every resolvable material's price.
         production_entries, _duplicates = solve_prices.load_production()
-        _tree, prices_json, _nodes, _wages, _goods = __import__("simulator").load()
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
         wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
         producers_of = solve_prices.build_producers_index(production_entries)
         rent = solve_prices.rent_hours_per_kg_by_ore_material(

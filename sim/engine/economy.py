@@ -485,99 +485,37 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """
         self.household._done_seq = None
         self.household._cap_factor = None
-        self.household._done_ver = getattr(self.household, "_done_ver", 0) + 1
+        self.state.projects._done_ver = getattr(self.state.projects, "_done_ver", 0) + 1
 
     def _operating_changed(self):
-        """Call after anything adds to or removes from self.household.operating.
-
-        The `_InvalidatingSet` self.household.operating is built from (see that
-        class's comment, just above EconomyMixin) calls this on every
-        mutation automatically - every `.add`/`.discard`/`.update`/... from
-        any of the nine-odd call sites across core.py/projects.py/
-        economy.py/society.py, and any future one, with nothing for any of
-        them to remember. See capability_factor(), its only reader so far.
-
-        A property (`self.household.operating` intercepting every READ, the way
-        `revealed` in engine/fog.py intercepts every WRITE) was tried first
-        and measured worse, not better: self.household.operating is read in the
-        hottest loop in the engine - `_goods_category_state` and
-        `goods_market_factor` alone read it roughly sixteen million times
-        in the 300-year profile this fix was measured against - so a
-        property's per-access overhead, paid on every one of those reads to
-        protect a few thousand writes, cost far more than capability_factor
-        saved; a 300-year profiled run got SLOWER (22.1s -> 27.5s). An
-        `_InvalidatingSet` intercepts only mutation, which is what actually
-        needs intercepting, at none of that cost: plain attribute reads
-        (`in`, `for`, `sorted(...)`, truthiness) are exactly as fast as a
-        plain set, unmeasurably so, because they are a plain set's own
-        C-level methods, inherited unchanged.
-
-        The gap a property would have closed is whole-object replacement -
-        `s.operating = X`, which only two places in this codebase do: a
-        fresh Sim's own __init__ (core.py), where there is nothing yet to
-        invalidate, and load_state's generic `setattr` loop (protocol.py),
-        which is NOT always acting on a freshly-constructed Sim - `load`
-        issued mid-session through the agent/play JSON protocol loads into
-        the SAME long-lived object a player goes on playing in, and every
-        open/close/mothball after that load mutates .operating directly.
-        Left alone, that setattr would silently downgrade self.household.operating to
-        a plain, non-invalidating set for the rest of that process's life.
-        load_state calls _reset_operating() (below) once, right after its
-        generic loop, to close that one specific gap explicitly instead of
-        taxing sixteen million reads to close a gap with exactly one door.
-
-        ALSO bumps `_operating_ver`, a plain monotonic counter with the same
-        reach as this hook (every one of the same nine-odd call sites, and
-        no others - it is set here and nowhere else). `_goods_category_state`
-        and `_revenue_upkeep_candidates` below both key a cache on this
-        counter instead of re-deriving their own answer from `operating`'s
-        contents on every call, for the same reason `_cap_factor` already
-        does: those two are read from the hottest loops in the engine (see
-        _goods_category_state's own comment - 75,748 calls in a 150-year
-        profile, more than any other function in this file) and their
-        actual inputs (self.year plus this set) change far less often than
-        they are read. It carries the exact same one known gap this
-        docstring already describes for `_cap_factor` - a caller that
-        replaces `self.household.operating` with a plain `set()` rather than going
-        through `_reset_operating()` (test_regressions.py's ROUND 8 close-
-        order test does this once, deliberately, to build a fixture) stops
-        this counter advancing for the rest of that object's life, same as
-        it already stops `_cap_factor` invalidating. Not a new risk this
-        change introduces: the existing cache already lives with it, on the
-        same object, for the same reason, and no reference run in
-        perf_fingerprint.py's suite ever does this to a live Sim - only that
-        one hand-built test fixture does, and it never asks for a goods
-        price, an income factor, or a revenue/upkeep total afterward.
-        """
+        """Call after anything adds to or removes from self.household.operating."""
         self.household._cap_factor = None
-        self.household._operating_ver = getattr(self.household, "_operating_ver", 0) + 1
+        self.state.projects._operating_ver = getattr(self.state.projects, "_operating_ver", 0) + 1
 
     def _reset_operating(self):
-        """Re-wrap self.household.operating in a fresh `_InvalidatingSet` and
-        invalidate once. See the long comment on _operating_changed() for
-        why this exists and why it is not a property instead: this is the
-        one call site (load_state, protocol.py) that replaces
-        self.household.operating wholesale on a Sim that may go on being mutated
-        afterward in the same process."""
-        self.household.operating = _InvalidatingSet(self.household.operating, on_change=self._operating_changed)
+        """Re-wrap operating in a fresh `_InvalidatingSet` and invalidate once."""
+        self.state.projects.operating = _InvalidatingSet(self.state.projects.operating or set(), on_change=self._operating_changed)
         self._operating_changed()
 
     def _active_changed(self):
-        """Call after anything adds to, removes from, or updates self.household.active."""
-        self.household._active_ver = getattr(self.household, "_active_ver", 0) + 1
+        """Call after anything adds to, removes from, or updates self.state.projects.active."""
+        self.state.projects._active_ver = getattr(self.state.projects, "_active_ver", 0) + 1
 
     def _reset_active(self):
-        """Re-wrap self.household.active in a fresh `_InvalidatingDict` and invalidate once."""
-        self.household.active = _InvalidatingDict(self.household.active, on_change=self._active_changed)
+        """Re-wrap active in a fresh `_InvalidatingDict` and invalidate once."""
+        self.state.projects.active = _InvalidatingDict(
+            self.state.projects.active or {},
+            on_change=self._active_changed
+        )
         self._active_changed()
 
     def _workforce_changed(self):
-        """Call after anything mutates self.household.employees or workforce counts."""
-        self.household._workforce_ver = getattr(self.household, "_workforce_ver", 0) + 1
+        """Call after anything mutates workforce state."""
+        self.state.household._workforce_ver = getattr(self.state.household, "_workforce_ver", 0) + 1
 
     def _reset_workforce(self):
-        """Re-wrap self.household.employees in a fresh `_InvalidatingDict` and invalidate once."""
-        self.household.employees = _InvalidatingDict(self.household.employees, on_change=self._workforce_changed)
+        """Re-wrap employees in a fresh `_InvalidatingDict` and invalidate once."""
+        self.state.household.employees = _InvalidatingDict(self.state.household.employees or {}, on_change=self._workforce_changed)
         self._workforce_changed()
 
     def _reset_economic_caches(self):

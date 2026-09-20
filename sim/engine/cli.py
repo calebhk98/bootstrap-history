@@ -516,11 +516,11 @@ def _validate_reachability(args, errs, nodes, goal_rows):
         print()
         print("REACHABILITY (dice-free, immortal, one CPM-ordered trial per "
               "civilisation, capped horizon - a lower bound, see above)")
-        _simdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if _simdir not in sys.path:
-            sys.path.insert(0, _simdir)
-        import planner as _planner
-        from path_search import deterministic_sim
+        _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if _repodir not in sys.path:
+            sys.path.insert(0, _repodir)
+        from sim import planner as _planner
+        from sim.path_search import deterministic_sim
         civ_ids = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                          if filename.endswith(".json") and not filename.startswith("_"))
         for goal, node, need, yrs, chain in goal_rows:

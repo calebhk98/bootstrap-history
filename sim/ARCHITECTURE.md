@@ -299,24 +299,24 @@ PEP 420 namespace package, not a real one. Two different things put two
 different directories on `sys.path`, for two different reasons, and most
 processes end up with both on it at once:
 
-  * **`sim/` itself.** `simulator.py` inserts its own directory
-    (`sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))`) so
-    that `engine`, `world` and `data` resolve as bare top-level packages -
-    `import engine.core`, not `import sim.engine.core`. `sim/tests/
-    harness.py` does the same (`HERE`). This is why every bare `from .data
-    import X` inside `sim/engine/*.py` works: those files load as
-    top-level `engine.data`, not `sim.engine.data`.
-  * **The repository root**, one level up from `sim/`. `sim/
-    test_regressions.py` adds it (`_ROOT`) so `from sim.tests.__main__
-    import main` resolves - `sim.tests` is a real package (has
-    `__init__.py`), reached through the namespace package `sim`. `sim/
-    engine/core.py` adds it too, defensively, with its own guarded
-    `if _REPO_ROOT not in sys.path` check, because `sim/world/
-    demography.py` and `sim/world/agriculture.py` import `sim.constants`
-    and `sim.world.shared_constants` fully qualified, and a leading `from
-    ..world import demography` inside `engine.core` (loaded bare, as
-    established above) has nowhere to go - `engine` has no parent package
-    under that scheme, so relative import can't reach `sim.world` from it.
+- **`sim/` itself.** `simulator.py` inserts its own directory
+  (`sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))`) so
+  that `engine`, `world` and `data` resolve as bare top-level packages -
+  `import engine.core`, not `import sim.engine.core`. `sim/tests/
+harness.py` does the same (`HERE`). This is why every bare `from .data
+import X` inside `sim/engine/*.py` works: those files load as
+  top-level `engine.data`, not `sim.engine.data`.
+- **The repository root**, one level up from `sim/`. `sim/
+test_regressions.py` adds it (`_ROOT`) so `from sim.tests.__main__
+import main` resolves - `sim.tests` is a real package (has
+  `__init__.py`), reached through the namespace package `sim`. `sim/
+engine/core.py` adds it too, defensively, with its own guarded
+  `if _REPO_ROOT not in sys.path` check, because `sim/world/
+demography.py` and `sim/world/agriculture.py` import `sim.constants`
+  and `sim.world.shared_constants` fully qualified, and a leading `from
+..world import demography` inside `engine.core` (loaded bare, as
+  established above) has nowhere to go - `engine` has no parent package
+  under that scheme, so relative import can't reach `sim.world` from it.
 
 **What breaks:** the same file, imported once through each root, loads
 twice, as two separate entries in `sys.modules` (`world.agriculture` and
@@ -683,20 +683,21 @@ without decoupling it (see "The one-paragraph version" above).
 
 **A full decomposition has been considered and rejected**, with reasons,
 so that the next person does not silently restart it:
-  * it means giving every shared field an explicit owner and converting the
-    couplings mixins currently reach through `self` into arguments, a
-    rewrite of most of the engine;
-  * the safety net does not fully exist for it. `perf_fingerprint.py`
-    covers the simulation loop well and covers `protocol.py` not at all,
-    and roughly a quarter of the engine's code lives under `engine/proto/`
-    (11,246 of 41,746 lines, 27% -
-    `find sim/engine/proto -name "*.py" | xargs wc -l | tail -1` against
-    `find sim/engine -name "*.py" -not -path "*/__pycache__/*" | xargs wc -l | tail -1`);
-  * the payoff is small, for the reason above - the couplings are the
-    domain.
-If you disagree, the bar is: propose it with a plan for proving
-`protocol.py` unchanged, because that is the part nothing currently
-guards.
+
+- it means giving every shared field an explicit owner and converting the
+  couplings mixins currently reach through `self` into arguments, a
+  rewrite of most of the engine;
+- the safety net does not fully exist for it. `perf_fingerprint.py`
+  covers the simulation loop well and covers `protocol.py` not at all,
+  and roughly a quarter of the engine's code lives under `engine/proto/`
+  (11,246 of 41,746 lines, 27% -
+  `find sim/engine/proto -name "*.py" | xargs wc -l | tail -1` against
+  `find sim/engine -name "*.py" -not -path "*/__pycache__/*" | xargs wc -l | tail -1`);
+- the payoff is small, for the reason above - the couplings are the
+  domain.
+  If you disagree, the bar is: propose it with a plan for proving
+  `protocol.py` unchanged, because that is the part nothing currently
+  guards.
 
 ## What IS worth restructuring
 
@@ -941,7 +942,7 @@ outputs and messages. It does not assert that the simulation is the same
 simulation. An "obviously safe" cleanup - promoting `getattr(self, x,
 default)` calls to real `__init__` attributes - once passed the entire
 suite while silently breaking save-file semantics, because several of
-those names are in `SAVE_FIELDS` where a *missing* attribute is
+those names are in `SAVE_FIELDS` where a _missing_ attribute is
 meaningful; `Household.__init__`'s own docstring (`sim/engine/actors/
 household.py`) still calls this out by name for exactly the fields it
 deliberately leaves unassigned. `perf_fingerprint.py` catches this
@@ -988,27 +989,70 @@ Historically, `Sim` was a massive object whose state was mixed into a shared nam
 
 The canonical architecture partitions persistent simulation state into authoritative typed dataclasses in `sim/engine/state.py`, with clear subsystem ownership boundaries:
 
-| State Class | Subsystem Domain | Authoritative Owner | Key State Responsibilities |
-|---|---|---|---|
-| `HouseholdState` | Founder finances & household | `sim.household` (`Household`) | Capital, wages, debt/bondage, reputation, standing, workforce (`employees`), training |
-| `ProjectsState` | Technology research & ventures | `ProjectsMixin` / `sim.household` | Active projects (`active`), completed tech (`done`), `operating`, `mothballed`, `opened_year` |
-| `EconomyState` | Physical plants & flows | `EconomyMixin` | Extraction workings (`mines`), material stock, shortages, market pressure, output factor |
-| `GovernanceState` | Civic institutions & administration | `Sim` / `GovernanceMixin` | Scaled civic units (`inst_units`), administrative capacity (`gov`) |
-| `FounderState` | Biological founder status | `Sim` | Biological lifespan (`life_left`), founder survival (`founder_alive`), living costs |
-| `ScenarioState` | Timeline & scenario context | `Sim` | Simulation year (`year`), goal completion (`goal_year`), milestone warnings (`_said_*`) |
-| `PopulationState` | World demography & agriculture | `sim.population` / `LabourMixin` | Population brackets (`pop_children`, `pop_working_age`, `pop_elderly`), food bonus |
-| `SimulationState` | Root state coordinator | `Sim` | Aggregates all subsystem states, civ identity (`_civ`), goal, fog of war, RNG state |
+| State Class       | Subsystem Domain                    | Authoritative Owner               | Key State Responsibilities                                                                    |
+| ----------------- | ----------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------- |
+| `HouseholdState`  | Founder finances & household        | `sim.household` (`Household`)     | Capital, wages, debt/bondage, reputation, standing, workforce (`employees`), training         |
+| `ProjectsState`   | Technology research & ventures      | `ProjectsMixin` / `sim.household` | Active projects (`active`), completed tech (`done`), `operating`, `mothballed`, `opened_year` |
+| `EconomyState`    | Physical plants & flows             | `EconomyMixin`                    | Extraction workings (`mines`), material stock, shortages, market pressure, output factor      |
+| `GovernanceState` | Civic institutions & administration | `Sim` / `GovernanceMixin`         | Scaled civic units (`inst_units`), administrative capacity (`gov`)                            |
+| `FounderState`    | Biological founder status           | `Sim`                             | Biological lifespan (`life_left`), founder survival (`founder_alive`), living costs           |
+| `ScenarioState`   | Timeline & scenario context         | `Sim`                             | Simulation year (`year`), goal completion (`goal_year`), milestone warnings (`_said_*`)       |
+| `PopulationState` | World demography & agriculture      | `sim.population` / `LabourMixin`  | Population brackets (`pop_children`, `pop_working_age`, `pop_elderly`), food bonus            |
+| `SimulationState` | Root state coordinator              | `Sim`                             | Aggregates all subsystem states, civ identity (`_civ`), goal, fog of war, RNG state           |
+
+## Authoritative Simulation State & Live Subsystem Ownership
+
+The simulation architecture clearly separates **behavior and coordination**, **persistent authoritative state**, **transient derived state**, and **serialization**.
+
+### 1. Architectural Roles
+
+- **Behavior / Coordination (`Sim`)**: `Sim` is the coordinator and behavior engine. It orchestrates year advancement (`step()`), phase dispatch, player and automated policies, and high-level interaction between domains. `Sim` does not maintain a second copy of persistent state.
+- **Persistent Authoritative State (`SimulationState`)**: `sim.state` is the single live authoritative repository of mutable simulation data. Persistent data is owned by typed dataclasses grouped by domain. There is exactly one storage location for each persistent field.
+- **Transient Derived State**: Version counters (`_operating_ver`, `_done_ver`, `_active_ver`, `_workforce_ver`, `_inst_units_ver`), memoization caches (such as `_revenue_cache`, `_goods_mkt_op_factor_cache`, `_annual_mat_demand_cache`), and container invalidation listeners (`_InvalidatingSet`, `_InvalidatingDict`) are transient. They are excluded from serialization and cleanly reconstructed on load via `sim._reconnect_state_hooks()`.
+- **Serialization & Deserialization**: Save/load operates directly on the live `SimulationState` without duplicate snapshot extraction or copying. Serialization is generic and type-driven: declared Python dataclass field types determine how fields are serialized and reconstructed, so adding a standard persistent field requires editing only the dataclass definition.
+
+### 2. Domain & Runtime Ownership Hierarchy
+
+The running simulation owns a live `SimulationState` instance (`sim.state`) which holds the authoritative subsystem state objects:
+
+| Domain                  | Runtime owner                              | Description & Authoritative Fields                                                                  |
+| ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| household finances      | `HouseholdState` (`sim.state.household`)   | Capital, wages, debt, bondage, reputation, standing, workforce (`employees`), training              |
+| projects                | `ProjectsState` (`sim.state.projects`)     | Active projects (`active`), completed tech (`done`), `operating`, `mothballed`, `opened_year`       |
+| economy / resources     | `EconomyState` (`sim.state.economy`)       | Extraction workings (`mines`), material stocks, shortages, market pressure, output factor, farmland |
+| governance              | `GovernanceState` (`sim.state.governance`) | Scaled civic units (`inst_units`), administrative capacity (`gov`)                                  |
+| founder                 | `FounderState` (`sim.state.founder`)       | Biological lifespan (`life_left`), founder survival (`founder_alive`), living costs                 |
+| timeline / scenario     | `ScenarioState` (`sim.state.scenario`)     | Simulation year (`year`), goal completion (`goal_year`), milestone warnings (`_said_*`)             |
+| population              | `PopulationState` (`sim.state.population`) | Demography cohorts (`pop_children`, `pop_working_age`, `pop_elderly`), food bonus                   |
+| coordination / behavior | `Sim`                                      | Step execution, dispatch phases, automation policies, runtime mixins                                |
 
 ### ActiveProjectState
+
 `ActiveProjectState` replaces loose `Dict[str, Any]` entries in `household.active`. It inherits from `_InvalidatingDict` and provides:
+
 - Explicit typed attributes (`ph_left`, `cost_left`, `lab_left`, `spent`, `directed_ph_this_year`, `arrears_hours_lost`, `hired_ph_used`, `yrs`)
 - Full backward-compatible dictionary mapping interface (`proj["ph_left"]`, `proj.get(...)`, `.items()`, `|=`, `.pop()`, etc.)
 - Automatic cache invalidation: any mutation to an active project's fields or nested dicts automatically bubbles up and increments `sim.household._active_ver`, invalidating memoized revenue and material demand caches.
 
 ### Automatic Serialization and Migration
+
 Save/load is derived directly from authoritative state definitions:
+
 - `SAVE_FIELDS`: Generated dynamically from dataclass fields (`get_save_fields()`), guaranteeing zero field drift without maintaining handwritten field lists.
 - `serialize_state`: Recursively serializes dataclasses, typed sets (`{"__set__": [...]}`), Counter/defaultdict, and `ActiveProjectState`.
 - `deserialize_state`: Reconstructs typed dataclasses and runtime invalidating wrappers (`_InvalidatingSet`, `_InvalidatingDict`).
 - `_migrate_v2_to_v3`: Transparently partitions flat legacy v2 save files into the 7 modular state sections, ensuring complete backward compatibility for historical saves.
 
+### 3. Compatibility Façade & Invalidation
+
+To preserve existing callers and compatibility while enforcing a single authoritative source of truth:
+
+- `ForwardingPropertiesMixin` (`sim/engine/core_properties.py`) provides 106 forwarding properties on `Sim` that delegate directly to `self.state.<subsystem>.<field>`.
+- `Household` (`sim/engine/actors/household.py`) serves as a live façade delegating property and attribute access directly to `self._state.<subsystem>`.
+- `ActiveProjectState` provides typed attributes, dictionary compatibility, and deep change notification bubbling to `self.state.projects._active_ver`.
+- Invalidation hooks and version counters attach directly to the respective subsystem state owners (`ProjectsState`, `HouseholdState`, `GovernanceState`).
+
+### 4. Automatic Type-Driven Serialization
+
+- **Save**: `save_state(sim, path)` directly serializes `sim.state` to structured nested v3 JSON format.
+- **Load**: `load_state(sim, path)` validates v3 structural schema, deserializes into `sim.state` using generic type introspection (`dataclasses.fields`, `typing.get_origin`, `typing.get_args`), and calls `sim._reconnect_state_hooks()` to reattach transient invalidation listeners and version counters.

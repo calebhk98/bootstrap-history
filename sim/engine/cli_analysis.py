@@ -46,10 +46,10 @@ def cmd_plan(args):
     already has access to (it is a file in the repository, the same as
     recommended.json), not a live look into a fogged session's own state.
     """
-    _simdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if _simdir not in sys.path:
-        sys.path.insert(0, _simdir)
-    import planner as _planner
+    _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if _repodir not in sys.path:
+        sys.path.insert(0, _repodir)
+    from sim import planner as _planner
     tree, _prices, nodes, _wages, _goods = load()
     goal = resolve_goal(tree, nodes, args.goal)
     if not args.search_rounds:
@@ -76,7 +76,7 @@ def cmd_plan(args):
     # would silently re-run `pick_side_branches`/`interleave` and put every
     # side branch the search pulled to the end right back into the middle of
     # the spine, undoing the one relaxation move that does that.
-    import path_search as _search
+    from sim import path_search as _search
     _search.ensure_fixed_hash_seed()
     seed_order = _planner.load_seed(args.seed_strategy, nodes)
     order, extras, history = _search.search(
@@ -161,10 +161,10 @@ def cmd_search(args):
     writes is public information already sitting in the repository, not a
     live look into a fogged session's own state.
     """
-    _simdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if _simdir not in sys.path:
-        sys.path.insert(0, _simdir)
-    import path_search as _search
+    _repodir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if _repodir not in sys.path:
+        sys.path.insert(0, _repodir)
+    from sim import path_search as _search
     order, rationale = _search.plan_and_write(
         args.civ, args.goal, args.out, args.side_branches, args.side_branch_every, args.rounds,
         args.horizon, args.backlog_ratio, args.seed_strategy, args.no_grow_supply)

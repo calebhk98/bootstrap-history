@@ -21,7 +21,7 @@ fails here rather than silently approving a real change to the simulation.
 """
 from .harness import *
 
-import prove_rename_safe as PROVER
+from sim import prove_rename_safe as PROVER
 
 
 _BEFORE = '''

@@ -122,7 +122,7 @@ for _path in _engine_files:
 # module docstring. Worth having anyway: it is the only check here that would
 # notice a completely different cause producing the same symptom.
 def _repeated_runs_agree():
-    import perf_fingerprint as fingerprint
+    from sim import perf_fingerprint as fingerprint
     scenario = fingerprint.SCENARIOS[0]
     digests = [fingerprint.digest(fingerprint.run(scenario)[0]) for _ in range(10)]
     return len(set(digests)) == 1, sorted(set(digests))

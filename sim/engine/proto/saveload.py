@@ -16,44 +16,54 @@ SAVE_VERSION = 3
 
 
 def save_state(sim, path):
-    """Write the whole game to a file using automatic state serialization."""
-    state = extract_simulation_state(sim)
-    blob = serialize_state(state)
-    tmp = path + ".tmp"
-    parent = os.path.dirname(os.path.abspath(path))
-    if parent and not os.path.isdir(parent):
-        os.makedirs(parent, exist_ok=True)
-    with open(tmp, "w") as handle:
-        json.dump(blob, handle, indent=1, sort_keys=True, default=str)
-    os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
-    return path
+	"""Write the whole game to a file using automatic state serialization from live sim.state."""
+	sim.state._civ = sim.civ.get("id")
+	sim.state._goal = sim.goal
+	sim.state._civ_live = {attr: sim.civ.get(attr) for attr in ("literacy_general", "literacy_elite", "state_capacity")}
+	sim.state._weights = dict(sim.value_weights)
+	sim.state._fog = sim.fog
+	sim.state._immortal = bool(sim.cfg.get("immortal", True))
+	try:
+		rng_state = sim.rng.getstate()
+		sim.state._rng = [rng_state[0], list(rng_state[1]), rng_state[2]]
+	except Exception:
+		sim.state._rng = None
+	if hasattr(sim, "population") and getattr(sim, "state", None) is not None and sim.state.population is not None:
+		sim.state.population.pop_children = float(sim.population.children)
+		sim.state.population.pop_working_age = float(sim.population.working_age)
+		sim.state.population.pop_elderly = float(sim.population.elderly)
+	sim.state._version = 3
+
+	blob = serialize_state(sim.state)
+	tmp = path + ".tmp"
+	parent = os.path.dirname(os.path.abspath(path))
+	if parent and not os.path.isdir(parent):
+		os.makedirs(parent, exist_ok=True)
+	with open(tmp, "w") as handle:
+		json.dump(blob, handle, indent=1, sort_keys=True, default=str)
+	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
+	return path
 
 
-REQUIRED_SAVE_FIELDS = SAVE_FIELDS + (
+REQUIRED_V3_SECTIONS = (
+    "household", "projects", "economy", "governance", "founder", "scenario",
+    "population",
+)
+
+REQUIRED_METADATA_FIELDS = (
     "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
     "_version",
 )
+
+REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
 
 # Fields that hold a SET of node ids (see save_state's {"__set__": [...]}
 # encoding). Anything named here is checked against the currently loaded
 # tree, because the tree is data and does get edited: a node can be renamed
 # or removed between when a save was written and when it is read back.
-# NOT trades_created: that holds TRADE names - "optician", "chemist" -
-# not node ids, so checking it against the tree here would refuse a
-# perfectly valid save the moment `train optician 1` wrote a taught
-# trade into it, for referring to a technology called optician that the
-# tree does not have and never did. The five trades that have to be
-# taught are the ones gating chemistry, precision and electricity, so
-# the one action that opens the second half of the game must never be
-# the one action that destroys the save.
 _SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
-                           "bountied",
-                           "revealed")
+                           "bountied", "revealed")
 # Checked against the wage table instead, which is what they actually are.
-# trades_endemic holds trade names for the same reason trades_created does
-# (see the comment just above) and needs exactly the same protection: it is
-# a set of TRADE names, not node ids, so it belongs here and not in
-# _SET_FIELDS_OF_NODE_IDS.
 _SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
 
 
@@ -70,33 +80,29 @@ def _get_field(blob, field_name):
     return None
 
 
+
 def _check_save_shape(blob):
-    """None if `blob` is a JSON object carrying every field this build
-    requires; otherwise the refusal message.
+    """None if `blob` is a JSON object carrying every required v3 section and
+    metadata field this build requires; otherwise the refusal message.
     """
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
                 "got %s" % type(blob).__name__)
     if "_version" not in blob:
         return "this is not a save from this game: missing '_version'"
-    required = (
-        "household", "projects", "economy", "governance", "founder", "scenario",
-        "population", "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal",
-        "_rng", "_version",
-    )
+
+    required = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
     missing = [f for f in required if f not in blob]
-        if missing:
-            shown = ", ".join(missing[:8])
-            if len(missing) > 8:
-                shown += ", and %d more required fields" % (len(missing) - 8)
-            return "this is not a save from this game: missing %s" % shown
-    else:
-        missing = [field_name for field_name in REQUIRED_SAVE_FIELDS if field_name not in blob]
     if missing:
         shown = ", ".join(missing[:8])
         if len(missing) > 8:
             shown += ", and %d more required fields" % (len(missing) - 8)
         return "this is not a save from this game: missing %s" % shown
+
+    for section in REQUIRED_V3_SECTIONS:
+        if not isinstance(blob.get(section), dict):
+            return "this save is corrupt: section '%s' should be an object" % section
+
     return None
 
 
@@ -196,37 +202,79 @@ def _check_save_trade_name_sets(blob):
     return None
 
 
+def _migrate_v2_to_v3(blob):
+	"""Migrate legacy flat v2 save format to nested v3 state schema.
+
+	The legacy v2 save format stored all persistent fields at the root of a single
+	JSON dictionary. The v3 schema organizes these fields into 7 subsystem state
+	sections (household, projects, economy, governance, founder, scenario, population)
+	along with top-level metadata fields.
+	"""
+	if not isinstance(blob, dict) or blob.get("_version") != 2 or "household" in blob:
+		return blob
+
+	import dataclasses
+	from sim.engine import state as state_module
+
+	new_blob = {}
+	for meta_field in REQUIRED_METADATA_FIELDS:
+		if meta_field in blob:
+			new_blob[meta_field] = blob[meta_field]
+	new_blob["_version"] = SAVE_VERSION
+
+	subsystem_mappings = (
+		("household", state_module.HouseholdState),
+		("projects", state_module.ProjectsState),
+		("economy", state_module.EconomyState),
+		("governance", state_module.GovernanceState),
+		("founder", state_module.FounderState),
+		("scenario", state_module.ScenarioState),
+		("population", state_module.PopulationState),
+	)
+
+	for section_name, state_cls in subsystem_mappings:
+		section_dict = {}
+		for f in dataclasses.fields(state_cls):
+			if f.name in blob:
+				section_dict[f.name] = blob[f.name]
+		new_blob[section_name] = section_dict
+
+	return new_blob
+
+
 def _validate_save(blob, sim):
-    """Validate save file format and contents before mutating simulation."""
-    message = _check_save_shape(blob)
-    if message:
-        return message
-    message = _check_save_version(blob)
-    if message:
-        return message
-    message = _check_save_scalars(blob, sim)
-    if message:
-        return message
-    message = _check_save_active(blob)
-    if message:
-        return message
-    message = _check_save_done(blob)
-    if message:
-        return message
-    message, unknown = _check_save_node_id_references(blob, sim)
-    if message:
-        return message
-    message = _check_save_trade_name_sets(blob)
-    if message:
-        return message
-    if unknown:
-        sample = ", ".join(sorted(unknown)[:6])
-        more = "" if len(unknown) <= 6 else " and %d more" % (len(unknown) - 6)
-        return ("this save refers to node(s) the current tech tree does not "
-                "have: %s%s. The tree has changed since this was saved; it "
-                "cannot be loaded against this version of the game."
-                % (sample, more))
-    return None
+	"""Validate save file format and contents before mutating simulation."""
+	if isinstance(blob, dict) and blob.get("_version") == 2:
+		blob = _migrate_v2_to_v3(blob)
+	message = _check_save_shape(blob)
+	if message:
+		return message
+	message = _check_save_version(blob)
+	if message:
+		return message
+	message = _check_save_scalars(blob, sim)
+	if message:
+		return message
+	message = _check_save_active(blob)
+	if message:
+		return message
+	message = _check_save_done(blob)
+	if message:
+		return message
+	message, unknown = _check_save_node_id_references(blob, sim)
+	if message:
+		return message
+	message = _check_save_trade_name_sets(blob)
+	if message:
+		return message
+	if unknown:
+		sample = ", ".join(sorted(unknown)[:6])
+		more = "" if len(unknown) <= 6 else " and %d more" % (len(unknown) - 6)
+		return ("this save refers to node(s) the current tech tree does not "
+				"have: %s%s. The tree has changed since this was saved; it "
+				"cannot be loaded against this version of the game."
+				% (sample, more))
+	return None
 
 
 def civ_of_save(path):
@@ -248,22 +296,28 @@ def goal_of_save(path):
 
 
 def load_state(sim, path):
-    """Read a save from `path` and apply it to `sim`, or raise ValueError with
-    a clear reason and leave `sim` completely untouched.
-    """
-    with open(path) as f:
-        blob = json.load(f)
-    bad = _validate_save(blob, sim)
-    if bad:
-        raise ValueError(bad)
+	"""Read a save from `path` and apply it to `sim`, or raise ValueError with
+	a clear reason and leave `sim` completely untouched.
+	"""
+	with open(path) as f:
+		blob = json.load(f)
+	if isinstance(blob, dict) and blob.get("_version") == 2:
+		blob = _migrate_v2_to_v3(blob)
+	bad = _validate_save(blob, sim)
+	if bad:
+		raise ValueError(bad)
 
-    if sim.fog and blob.get("_fog") is False:
-        raise ValueError("that save was played without fog of war and this "
-                         "game is being played with it. A save cannot turn the "
-                         "fog off; start a new game without it if that is what "
-                         "you want.")
+	if sim.fog and blob.get("_fog") is False:
+		raise ValueError("that save was played without fog of war and this "
+						 "game is being played with it. A save cannot turn the "
+						 "fog off; start a new game without it if that is what "
+						 "you want.")
 
-    state = deserialize_state(blob)
-    apply_simulation_state(state, sim)
-    return sim
+	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
+	state = deserialize_state(blob)
+	if old_revealed and getattr(state, "projects", None):
+		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
+	sim.state = state
+	sim._reconnect_state_hooks()
+	return sim
 

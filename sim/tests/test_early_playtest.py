@@ -602,7 +602,7 @@ def _det_fingerprint():
     src = """
 import sys, random
 sys.path.insert(0, %r)
-import simulator as S
+from sim import simulator as S
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
 _L, ORDER, _B = S.load_strategy("recommended", NODES, GOAL)
@@ -616,7 +616,7 @@ for seed in (42, 43):
     out.append("%%d|%%.9f|%%.9f|%%.6f" %% (len(s.done), s.capital, s.revenue(),
                                          s.eminence))
 print(";".join(out))
-""" % HERE
+""" % ROOT
     seen = set()
     for hashseed in ("0", "12345"):
         env = dict(os.environ, PYTHONHASHSEED=hashseed)
