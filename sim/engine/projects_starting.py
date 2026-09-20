@@ -19,6 +19,24 @@ from sim.constants import declare
 
 
 class StartingMixin:
+    def initialize_project(self, node_id, *, ph_left=None, spent=0.0,
+                           cost_left=None, include_labor=True):
+        """Create and register one consistently-shaped active project."""
+        if node_id not in self.nodes:
+            raise ValueError("unknown project %s" % node_id)
+        if node_id in self.state.projects.active:
+            raise ValueError("project %s is already active" % node_id)
+        node = self.nodes[node_id]
+        record = dict(
+            ph_left=float(node["ph"] if ph_left is None else ph_left),
+            yrs=0.0, spent=float(spent),
+            cost_left=float(self.project_cost(node_id) if cost_left is None else cost_left),
+            status="ACTIVE")
+        if include_labor:
+            record["lab_left"] = dict(node["lab"])
+        self.state.projects.active[node_id] = record
+        return record
+
     BRIBE_MEMORY_DECAY = declare(
         "BRIBE_MEMORY_DECAY", 0.7, kind="temporary_heuristic",
         unit="fraction of bribes_ytd carried into the running total",
@@ -205,8 +223,9 @@ class StartingMixin:
             return False
         household.costCapital(price)
         household.bounties_paid += 1
-        projects.active[node_id] = dict(ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE,
-                                        yrs=0.0, spent=price, status="ACTIVE")
+        self.initialize_project(
+            node_id, ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE,
+            spent=price, cost_left=0.0, include_labor=False)
         projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
@@ -878,9 +897,7 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0,
-                              spent=_already, cost_left=price,
-                              lab_left=dict(node["lab"]), status="ACTIVE")
+        self.initialize_project(node_id, spent=_already, cost_left=price)
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the

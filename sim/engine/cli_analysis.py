@@ -25,8 +25,22 @@ from .core import Sim
 from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 from sim.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
+from sim.world.agriculture import (
+    DEFAULT_STORAGE_TECHNIQUE, annual_food_demand_kg_per_person,
+    calculate_granary_runway, granary_capacity_kg,
+)
 
 from .cli import _founder_lifetime_hours
+
+
+def granary_projection(sim):
+    """Player-facing forecast backed by the same calculation as the turn."""
+    demand = (sim._adult_equivalent_population(sim.population)
+              * annual_food_demand_kg_per_person())
+    return calculate_granary_runway(
+        sim.farm_stock_kg, demand,
+        DEFAULT_STORAGE_TECHNIQUE.spoilage_rate_per_year,
+        granary_capacity_kg(demand))
 
 
 def cmd_plan(args):

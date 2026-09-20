@@ -1411,6 +1411,7 @@ from .agriculture_storage import (
     Storage,
     YearFlows,
     annual_food_demand_kg_per_person,
+    calculate_granary_runway,
     granary_capacity_kg,
     stock_to_carry_forward_kg,
 )

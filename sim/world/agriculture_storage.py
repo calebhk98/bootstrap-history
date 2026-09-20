@@ -41,6 +41,7 @@ below, keeps monkeypatching `agriculture.draw_weather_multiplier` working.
 """
 import collections
 import random
+from dataclasses import dataclass
 from typing import Optional
 
 from . import agriculture
@@ -109,6 +110,34 @@ def granary_capacity_kg(
     if capacity_years is None:
         capacity_years = GRANARY_CAPACITY_YEARS_OF_DEMAND
     return food_demand_kg * capacity_years
+
+
+@dataclass(frozen=True)
+class GranaryRunway:
+    consumption_kg: float
+    spoilage_kg: float
+    net_depletion_kg: float
+    reserve_years: float
+    food_shortfall_kg: float
+
+
+def calculate_granary_runway(stock_kg, food_demand_kg, spoilage_rate_per_year,
+                              reserve_target_kg=None):
+    """Project depletion using the exact eat-then-spoil turn ordering."""
+    stock = max(0.0, float(stock_kg))
+    demand = max(0.0, float(food_demand_kg))
+    subsistence = min(demand, stock)
+    extra = 0.0
+    if reserve_target_kg is not None:
+        beyond_reserve = max(0.0, stock - subsistence - reserve_target_kg)
+        extra = min(beyond_reserve,
+                    demand * (MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE - 1.0))
+    consumption = subsistence + extra
+    spoilage = max(0.0, stock - consumption) * spoilage_rate_per_year
+    burn = consumption + spoilage
+    return GranaryRunway(consumption, spoilage, burn,
+                         stock / burn if burn > 0.0 else float("inf"),
+                         max(0.0, demand - subsistence))
 
 
 YearFlows = collections.namedtuple(
@@ -299,23 +328,17 @@ class Storage(object):
         # and then no extra is eaten at all and this reduces to exactly the
         # old line. A caller that persists stock across years should pass
         # the same figure it caps the granary at.
-        subsistence_consumption_kg = max(0.0, min(food_demand_kg, self.stock_kg))
-        extra_consumption_kg = 0.0
-        if reserve_target_kg is not None:
-            stock_beyond_reserve_kg = max(
-                0.0, self.stock_kg - subsistence_consumption_kg - reserve_target_kg)
-            most_a_person_can_eat_kg = food_demand_kg * (
-                MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE - 1.0)
-            extra_consumption_kg = min(stock_beyond_reserve_kg,
-                                       most_a_person_can_eat_kg)
-        consumption_kg = subsistence_consumption_kg + extra_consumption_kg
+        runway = calculate_granary_runway(
+            self.stock_kg, food_demand_kg,
+            storage_technique.spoilage_rate_per_year, reserve_target_kg)
+        consumption_kg = runway.consumption_kg
         # Shortfall is measured against SUBSISTENCE demand, never against the
         # larger amount a well-fed year allows - eating well is not a way to
         # run a deficit.
-        food_shortfall_kg = max(0.0, food_demand_kg - subsistence_consumption_kg)
+        food_shortfall_kg = runway.food_shortfall_kg
         self.stock_kg -= consumption_kg
 
-        spoilage_kg = max(0.0, self.stock_kg) * storage_technique.spoilage_rate_per_year
+        spoilage_kg = runway.spoilage_kg
         self.stock_kg -= spoilage_kg
 
         seed_retained_kg = crop.planting_material_kg_per_ha * hectares_next_year

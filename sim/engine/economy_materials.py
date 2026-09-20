@@ -792,6 +792,9 @@ class MaterialSupplyMixin:
     # flow check as before, just against a supply that now includes
     # whatever is banked in stock, not only this year's flow.
     LAB_SCALE_SUFFIX = "_g"
+    NON_PHYSICAL_CAPACITY_KEYS = frozenset((
+        "scholar_hours", "machinist_hours", "patronage",
+    ))
 
     def _material_stock(self):
         """Tonnes of each tracked commodity (by emp_key) carried over from
@@ -826,7 +829,14 @@ class MaterialSupplyMixin:
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
             stock = economy._material_stock_ledger = collections.Counter(stock)
+        for key in list(stock):
+            if key in self.NON_PHYSICAL_CAPACITY_KEYS or key.endswith("_hours"):
+                economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
         return stock
+
+    def capacity_reserves(self):
+        """Operational hours and abstract capacities, never tradable stock."""
+        return self.state.economy.capacity_pool
 
     def material_stock_t(self, emp_key):
         """Tonnes of `emp_key` currently banked - the STOCK half of stock vs

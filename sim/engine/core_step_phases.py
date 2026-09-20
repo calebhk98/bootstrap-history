@@ -18,9 +18,17 @@ that this file does not attempt - do not assume a phase here can be moved
 into a domain file without first working out its self.* footprint.
 """
 import math
+from dataclasses import dataclass
 
-from .data import trade_family, WAGES
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
+
+
+@dataclass(frozen=True)
+class StepContext:
+    """Immutable dependencies used by the turn phases."""
+    trade_family: object
+    wages: dict
+    invariant_checker: object
 
 
 class StepPhasesMixin:
@@ -29,6 +37,10 @@ class StepPhasesMixin:
     step() calls self._step_whatever() exactly as if these methods were
     defined directly on Sim.
     """
+
+    def verify_step_invariants(self):
+        """Validate this turn without reading configuration from globals."""
+        return self.step_context.invariant_checker(self.state)
 
     def _step_apprenticeships(self):
         # 0. PEOPLE WHOSE APPRENTICESHIP ENDED, FIRST, BEFORE THE YEAR'S WORK
@@ -214,7 +226,7 @@ class StepPhasesMixin:
             # for you are generic craftsmen and scribes, and that is all they are.
             craft = max(0.0, desired_ar - self.state.household.freedmen - self.state.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in self.state.household.employees.items()
-                           if trade_id not in ("artisan", "scholar") and trade_family(trade_id) == "craft")
+                           if trade_id not in ("artisan", "scholar") and self.step_context.trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
             # the remainder after every taught trade has taken its share,
             # so the top-up must not let specialist trades squeeze the
@@ -774,7 +786,6 @@ class StepPhasesMixin:
                     break
                 if not self.can_start(node_id):
                     continue
-                node = self.nodes[node_id]
                 # do not start something we cannot plausibly fund this decade.
                 # material_cost_factor is geography.json's contribution: a
                 # located material (mat_gutta_percha and the like) costs more
@@ -808,9 +819,7 @@ class StepPhasesMixin:
                 # start_project (projects.py) sets it at creation rather than
                 # leaving lab_year_draw to guess it from ph_left the first
                 # time it runs - see the comment there.
-                self.state.projects.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
-                                      cost_left=self.project_cost(node_id),
-                                      lab_left=dict(node["lab"]), status="ACTIVE")
+                self.initialize_project(node_id)
                 _non_bountied_active += 1
                 _room = self.funding_capacity() - self.committed_spend()
         return pool, hired_left
@@ -1722,7 +1731,7 @@ class StepPhasesMixin:
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
             paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
-                (WAGES.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
+                (self.step_context.wages.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early
