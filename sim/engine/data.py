@@ -199,51 +199,28 @@ def _load_annual_wages() -> Dict[str, float]:
 ANNUAL_WAGE: Dict[str, float] = _load_annual_wages()
 
 
+_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR)
+
+# Trade identity, availability, and explanatory text belong to the trade
+# registry, not to the legacy table that temporarily supplies their wages.
+# Keeping them here made deleting prices.json impossible even after wages move
+# to the labour market, and inferred availability from English prose.
 def _load_trade_notes() -> Dict[str, str]:
-    with open(PRICES) as source:
-        prices_data = json.load(source)
-    return {key: (value.get("note") or "") for key, value in prices_data["wage_rates_denarii_per_hour"].items()
-            if isinstance(value, dict)}
+    """Compatibility loader backed by the canonical trade registry."""
+    return {trade_id: trade.note for trade_id, trade in _TRADE_REGISTRY.items()}
 
 
 TRADE_NOTES: Dict[str, str] = _load_trade_notes()
+TRADES_ABSENT: FrozenSet[str] = frozenset(
+    trade_id for trade_id, trade in _TRADE_REGISTRY.items()
+    if trade.initially_absent)
 
-# Trades that DO NOT EXIST in a pre-industrial society. The wage table already
-# says so, in its own notes, for every one of them ("does not exist yet; you
-# must create this trade"), so read it rather than keeping a second list that
-# can drift out of step with the first.
-TRADES_ABSENT: FrozenSet[str] = frozenset(trade for trade, note in TRADE_NOTES.items()
-                          if "does not exist" in note.lower())
-
-# What kind of person a trade is, for the two aggregate pools the tech tree asks
-# for. A skilled blacksmith and a skilled writer are not interchangeable, so
-# scholar, labour and craft pools stay separate rather than being pooled as one
-# undifferentiated "artisan" figure.
-def _load_trade_families() -> Dict[str, str]:
-    with open(os.path.join(ROOT, "data", "world", "trade_families.json")) as source:
-        families = json.load(source)["trade_families"]
-    for manifest in get_ordered_mods(MODDIR):
-        path = os.path.join(manifest.directory, "data", "world", "trade_families.json")
-        if not os.path.isfile(path):
-            continue
-        with open(path) as source:
-            additions = json.load(source).get("trade_families", {})
-        for trade, family in additions.items():
-            if trade in families:
-                raise ValueError("trade family %s is already defined before %s" % (trade, path))
-            if not trade.startswith(manifest.id + "_"):
-                raise ValueError("%s introduces un-prefixed trade id %r" % (path, trade))
-            families[trade] = family
-    return families
-
-
-_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR)
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
                                 for trade_id, trade in _TRADE_REGISTRY.items()}
 
 # Transitional provider: identity comes from the registry, while monetary
-# wages still use historical calibration. A new trade inherits its family's
-# median rate until the dynamic labour market supplies one.
+# wages still use legacy inputs scheduled for deletion. A new trade inherits
+# its family's median rate until the dynamic labour market supplies one.
 WAGES = transitional_wage_rates(_TRADE_REGISTRY, WAGES)
 for _trade_id in _TRADE_REGISTRY:
     if _trade_id not in ANNUAL_WAGE:

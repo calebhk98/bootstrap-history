@@ -17,6 +17,8 @@ class Trade:
     id: str
     family: str = "craft"
     training: Optional[str] = None
+    note: str = ""
+    initially_absent: bool = False
     source: str = ""
 
 
@@ -114,8 +116,13 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
                 raise ModError("trade %s is already defined before %s" % (trade_id, path))
             if isinstance(metadata, str):
                 metadata = {"family": metadata}
-            registry[trade_id] = Trade(trade_id, metadata.get("family", "craft"),
-                                       metadata.get("training"), path)
+            registry[trade_id] = Trade(
+                trade_id,
+                family=metadata.get("family", "craft"),
+                training=metadata.get("training"),
+                note=metadata.get("note", ""),
+                initially_absent=bool(metadata.get("initially_absent", False)),
+                source=path)
 
     world = os.path.join(root, "data", "world")
     add_file(os.path.join(world, "trades.json"), None)
@@ -134,13 +141,14 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
 
 
 def transitional_wage_rates(registry: Mapping[str, Trade],
-                            calibrated: Mapping[str, float]) -> Dict[str, float]:
-    """Inject wages for registered trades while equilibrium wages evolve.
+                            legacy_rates: Mapping[str, float]) -> Dict[str, float]:
+    """Inject temporary wages for registered trades while equilibrium wages evolve.
 
-    Calibrated rates are economic state, not identity.  Uncalibrated trades
-    receive their family's median solely as a documented compatibility bridge.
+    Legacy rates are economic inputs, not identity or calibration targets.
+    A trade absent from the legacy table receives its family's median solely as
+    a compatibility bridge until the labour market replaces this provider.
     """
-    rates = dict(calibrated)
+    rates = dict(legacy_rates)
     for trade_id, trade in registry.items():
         if trade_id in rates:
             continue

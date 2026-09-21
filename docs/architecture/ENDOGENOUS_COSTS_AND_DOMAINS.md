@@ -533,10 +533,12 @@ this milestone.
 The labour market closes the system. At this point costs are calculated.
 
 Acceptance: `data/prices.json` supplies **no material price and no wage** to
-the runtime. It is retained, as validation data. The burndown script from
-Milestone 1 reports 0% of material prices sourced from a book value, and the
-computed Roman wage and grain price are compared against the historical record
-as a check on the model rather than as an input to it.
+the runtime, every reader has been removed, and the file is deleted. Any
+historical observations worth keeping must first move to purpose-specific
+validation fixtures; `prices.json` itself is not retained or renamed. The
+burndown script from Milestone 1 reports 0% of material prices sourced from a
+book value, and computed wages and prices are checked against those independent
+observations rather than against the file being deleted.
 
 This is the milestone that satisfies the stakeholder's first request. Given
 §1.2, it converts about 74% of the cost base directly, and the remaining 26%

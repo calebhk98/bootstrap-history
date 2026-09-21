@@ -834,25 +834,21 @@
   "chemist": {
    "conf": "C",
    "day_hs": 10.0,
-   "note": "does not exist yet; you must create this trade",
    "rate": 0.4
   },
   "electrician": {
    "conf": "C",
    "day_hs": 10.0,
-   "note": "DOES NOT EXIST. Cannot exist until Module 50 does.",
    "rate": 0.4
   },
   "engineer": {
    "conf": "C",
    "day_hs": 12.5,
-   "note": "DOES NOT EXIST as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention.",
    "rate": 0.5
   },
   "engraver": {
    "conf": "C",
    "day_hs": 7.5,
-   "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters.",
    "rate": 0.3
   },
   "furnaceman": {
@@ -873,13 +869,11 @@
   "machinist": {
    "conf": "C",
    "day_hs": 11.0,
-   "note": "does not exist yet; you must create this trade",
    "rate": 0.45
   },
   "mason": {
    "conf": "C",
    "day_hs": 4.0,
-   "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood.",
    "rate": 0.16
   },
   "master": {
@@ -890,13 +884,11 @@
   "merchant": {
    "conf": "C",
    "day_hs": 6.3,
-   "note": "Agent and factor, paid on commission in practice.",
    "rate": 0.25
   },
   "millwright": {
    "conf": "C",
    "day_hs": 6.3,
-   "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire.",
    "rate": 0.25
   },
   "miner": {
@@ -907,13 +899,11 @@
   "optician": {
    "conf": "C",
    "day_hs": 8.8,
-   "note": "DOES NOT EXIST YET. You must create this trade from glassworkers.",
    "rate": 0.35
   },
   "plumber": {
    "conf": "C",
    "day_hs": 4.5,
-   "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere.",
    "rate": 0.18
   },
   "potter": {
@@ -924,7 +914,6 @@
   "sailor": {
    "conf": "C",
    "day_hs": 2.5,
-   "note": "Cheap and abundant.",
    "rate": 0.1
   },
   "scholar": {

@@ -36,15 +36,14 @@ from sim.presentation import (                                   # noqa: E402
     JUDGE_WORST_NODES_SHOWN, JUDGE_NODE_ID_COLUMN_WIDTH_CHARS,
     JUDGE_DEFECT_CODES_SHOWN, APPLY_CAPS_SAMPLE_SHOWN,
     APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS, APPLY_CAPS_REASON_TRUNCATE_CHARS)
+from sim.engine.catalog import load_trade_registry               # noqa: E402
 DATA = os.path.join(ROOT, "data")
 BR   = os.path.join(DATA, "branches")
 TREE = os.path.join(DATA, "tech_tree.json")
 
 def load_trades():
-    """Read the trade list from prices.json rather than hardcoding it, so adding
-    a trade to the price file is enough to make it usable."""
-    prices = json.load(open(os.path.join(DATA, "prices.json")))
-    return set(trade for trade in prices["wage_rates_denarii_per_hour"] if not trade.startswith("_"))
+    """Read trade identity from the canonical, mod-aware trade registry."""
+    return set(load_trade_registry(ROOT))
 
 # Schema v2. `yrs`, `sus` and `gov` are v1 and are backfilled, not demanded.
 # Only these are genuinely required. Everything else has a sane default, because

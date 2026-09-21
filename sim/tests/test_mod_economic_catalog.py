@@ -33,7 +33,10 @@ class ModEconomicCatalogTests(unittest.TestCase):
         (mod / "data/civilizations/acme_republic.json").write_text(json.dumps({
             "id": "acme_republic", "starting_techs": [], "start_year": 1}))
         (mod / "data/world/trades.json").write_text(json.dumps({
-            "trades": {"acme_clockmaker": {"family": "craft", "training": "apprenticeship"}}}))
+            "trades": {"acme_clockmaker": {
+                "family": "craft", "training": "apprenticeship",
+                "initially_absent": True,
+                "note": "Must be established before clockmakers can be hired."}}}))
         self.production = {
             "acme_ore": {"outputs": {"acme_ore": 1}, "inputs": {},
                          "labour_hours": {"labourer": 2}, "extracted_from": "deposit",
@@ -88,9 +91,23 @@ class ModEconomicCatalogTests(unittest.TestCase):
     def test_new_trade_identity_does_not_require_static_wage(self):
         registry = load_trade_registry(str(self.root), mods_dir=str(self.root / "mods"))
         self.assertIn("acme_clockmaker", registry)
+        self.assertTrue(registry["acme_clockmaker"].initially_absent)
+        self.assertIn("established", registry["acme_clockmaker"].note)
         self.assertNotIn("acme_clockmaker", {"labourer": 1.0})
         rates = transitional_wage_rates(registry, {"labourer": 1.0})
         self.assertGreater(rates["acme_clockmaker"], 0)
+
+    def test_base_trade_registry_owns_identity_and_availability(self):
+        repo = Path(__file__).resolve().parents[2]
+        registry = load_trade_registry(str(repo), mods_dir=str(repo / "mods"))
+        price_book = json.loads((repo / "data/prices.json").read_text())
+        calibrated = {trade for trade in price_book["wage_rates_denarii_per_hour"]
+                      if not trade.startswith("_")}
+        self.assertEqual(calibrated, set(registry))
+        self.assertEqual(
+            {"chemist", "electrician", "engineer", "machinist", "optician"},
+            {trade.id for trade in registry.values() if trade.initially_absent})
+        self.assertIn("private one is your invention", registry["engineer"].note)
 
     def test_bundled_mods_load_generically(self):
         repo = Path(__file__).resolve().parents[2]
