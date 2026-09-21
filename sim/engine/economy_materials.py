@@ -31,26 +31,21 @@ the grouping evidence. CLAUDE.md's naming/heuristic-labelling conventions
 apply here exactly as they do everywhere else in the engine, regardless
 of which file a method lives in.
 
-THE CLASS-LEVEL CACHE. _commodity_ledger(), _material_commodity_map()
-and _material_prices() each cache their answer on the bare class object
-MaterialSupplyMixin itself (`getattr(MaterialSupplyMixin, "...", None)`
-/ `MaterialSupplyMixin._foo = ...`), not on self, because none of a
-CommodityLedger, the mat-key-to-commodity-id map, or prices.json's own
-figures differ between one Sim instance and the next in the same
-process - they are read from disk once and shared, deliberately, the
-same lazy-on-the-class pattern _land_freight_physical_inputs() in
-economy_freight.py uses for the same reason.
+THE CACHES. _commodity_ledger() and _material_commodity_map() cache their
+immutable catalogues on MaterialSupplyMixin. _material_prices() is different:
+it caches calculator output on each Sim, keyed by completed technologies,
+because completing a production gate can change the computed price vector.
 
 TRAP: the literal class name in that getattr/setattr MUST match whatever
-class actually holds these three methods. If they are ever moved to a
-different class or file, the cache key has to move with them - a
+class actually holds the two shared catalogue methods. If they are ever moved
+to a different class or file, the cache key has to move with them - a
 mismatch breaks the cache silently, invisible to import, to `validate`
-and to compilation, surfacing only when a command that reads a material
-price first runs and finds a cache that was never populated. See
+and to compilation, surfacing only when a command first needs the catalogue.
+See
 economy.py's own CRITICAL note on this file's history for the fuller
 account.
 """
-import collections, json, os
+import collections
 
 from . import commodities as _commod
 from sim.constants import declare
@@ -262,22 +257,27 @@ class MaterialSupplyMixin:
         return cached
 
     def _material_prices(self):
-        """The flat per-kg book price for every material key in
-        prices.json, read directly rather than threaded through Sim's
-        constructor - the same pattern commodities.py's own
-        load_commodities() already uses for its own file. Cached on the
-        class: prices.json does not change mid-run."""
-        cached = getattr(MaterialSupplyMixin, "_material_prices_cache", None)
-        if cached is None:
-            raw = json.load(open(os.path.join(_commod.ROOT, "data", "prices.json")))
-            cached = {material_key: value["p"] for material_key, value in raw["purchase_prices_denarii"].items()
-                     if isinstance(value, dict) and "p" in value}
-            MaterialSupplyMixin._material_prices_cache = cached
-        return cached
+        """Calculator-backed prices for the technologies currently held.
+
+        The cache belongs to this simulation and is keyed by completed
+        technologies because completing a production gate can make another
+        recipe solvable.  ``data.calculated_goods_prices`` still has a
+        documented legacy fallback for materials the calculator cannot yet
+        resolve; importantly, this subsystem no longer opens or interprets
+        that legacy file independently.
+        """
+        held = frozenset(self.state.projects.done)
+        cached = getattr(self, "_material_prices_cache", None)
+        if cached is None or cached[0] != held:
+            from .data import calculated_goods_prices
+            prices = calculated_goods_prices(
+                held, civilization_id=self.civ.get("id"))
+            cached = self._material_prices_cache = (held, prices)
+        return cached[1]
 
     def _book_price_per_kg(self, tag):
-        """Denarii/kg for a raw material key (aluminium_kg, straight out of
-        prices.json) or a curated commodity id (cloth, straight out of
+        """Denarii/kg for a raw material key (for example aluminium_kg) from
+        the calculator-backed table, or a curated commodity id from
         commodities.json's own base_price - the two files agree by
         construction, see commodities.json's own `_doc.reused_from`). None
         if this file cannot price it at all, which should not happen for

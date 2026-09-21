@@ -289,6 +289,23 @@ class RealDataIntegrationTests(unittest.TestCase):
                            "test stopped exercising the fallback path")
         self.assertEqual(solved_count + book_count, len(provenance))
 
+    def test_runtime_price_provider_uses_the_calculator_result(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__)))), "data", "civilizations",
+                "rome_100ad.json")) as source:
+            starting_techs = json.load(source)["starting_techs"]
+
+        calculated = data.calculated_goods_prices(
+            starting_techs, civilization_id="rome_100ad")
+        _tree, prices_json, _nodes, _wages, _book_goods = data.load()
+        provenance = data.goods_provenance(
+            starting_techs, civilization_id="rome_100ad")
+        solved_material = next(material for material, source in provenance.items()
+                               if source == "solved")
+        book_price = prices_json["purchase_prices_denarii"][solved_material]["p"]
+
+        self.assertNotEqual(calculated[solved_material], book_price)
+
     def test_the_gate_set_is_a_small_fraction_of_the_tree(self):
         # Pins the design premise CACHE KEY relies on: gates are rare. Not
         # pinned to an exact count (that number moves as data/production/

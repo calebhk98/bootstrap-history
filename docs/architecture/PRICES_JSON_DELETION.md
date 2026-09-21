@@ -55,11 +55,17 @@ a recipe is necessary but is not proof that its price is economically complete.
 
 ### 4. Remove the independent material-supply read
 
-`sim/engine/economy_materials.py` opens the file separately and reverse-engineers
-national output and market share from book price for uncurated materials. That
-must be replaced with physical production capacity and resource/trade access.
-Threading the same old prices through `Sim` would hide the direct read without
-removing the dependency and therefore does not count.
+`sim/engine/economy_materials.py` no longer opens the file separately. It now
+asks the shared price calculator for an era- and civilization-specific table,
+so materials the solver can resolve use computed prices in supply, freight,
+trade quotes, and generic mine costs. This is only the first half of this
+blocker: the calculator provider still falls back to book values for gated or
+incomplete production chains, and the generic output and market-share curves
+still infer physical supply from price. Those fallbacks must be replaced with
+physical production capacity and resource/trade access before the file can be
+deleted. Merely moving the remaining old values behind the shared provider is
+not completion; it prevents another private reader while that replacement is
+built.
 
 ### 5. Separate namespaces from prices in every tool
 

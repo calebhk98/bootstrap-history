@@ -432,6 +432,33 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     return provenance
 
 
+def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
+                            civilization_id: Optional[str] = None
+                            ) -> Dict[str, float]:
+    """Return the calculator-backed material-price table for an era.
+
+    This is the migration boundary for runtime systems that used to open
+    ``data/prices.json`` independently.  The old table is still supplied to
+    :func:`sim.engine.prices.priced_goods_table` because unsolved and gated
+    materials do not yet have an endogenous value, but every material the
+    calculator *can* resolve is replaced here.  Keeping that remaining
+    fallback in one provider makes it visible and lets consumers migrate now,
+    rather than each retaining a private reader until the final deletion.
+    """
+    with open(PRICES) as source:
+        prices = json.load(source)
+    book_goods = {
+        key: value["p"]
+        for key, value in prices["purchase_prices_denarii"].items()
+        if not key.startswith("_")
+    }
+    from . import prices as price_solver
+    goods, _provenance = price_solver.priced_goods_table(
+        held_technology_ids, book_goods, prices,
+        civilization_id=civilization_id)
+    return goods
+
+
 # How many things rest on each node, for the whole tree at once.
 #
 # "what depends on this" answered per node asked about, as
