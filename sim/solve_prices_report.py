@@ -20,7 +20,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim import simulator                                # noqa: E402
 from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
 
@@ -728,6 +727,7 @@ def _run_default_report(arguments, rent_hours_per_kg_by_material, converged, ite
 
 
 def main(argv=None):
+    from sim import simulator
     # `description` is a literal copy of sim/solve_prices.py's own module
     # docstring's first line, not `__doc__.splitlines()[0]`: `main` lives
     # in this file while the mechanism essay lives in sim/solve_prices.py

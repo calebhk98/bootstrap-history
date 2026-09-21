@@ -158,34 +158,14 @@ PRODUCTION_DIR = os.path.join(_ROOT, "data", "production")
 
 
 def _load_production_data() -> Dict[str, Any]:
-    """Every material entry across data/production/*.json, merged by
-    material key - the same merge-by-directory shape data/production/
-    _SCHEMA.md describes for that directory itself. `_note` keys are
-    metadata, not materials, and are dropped.
-    """
-    materials = {}
-    for filename in sorted(os.listdir(PRODUCTION_DIR)):
-        if not filename.endswith(".json"):
-            continue
-        with open(os.path.join(PRODUCTION_DIR, filename)) as handle:
-            data = json.load(handle)
-        materials.update(data.get("materials", {}))
-    return materials
-
-
-_PRODUCTION_CACHE = None
+    """Return the canonical base-and-enabled-mod production graph."""
+    from sim.engine.catalog import load_production_catalog
+    return load_production_catalog(_ROOT)
 
 
 def production_data() -> Dict[str, Any]:
-    """Cached, read-only view of data/production/*.json's materials. A
-    caller that already has this in hand (a test iterating many functions
-    over the same data) can pass it straight to any function below via its
-    `production` argument instead of paying the parse cost again.
-    """
-    global _PRODUCTION_CACHE
-    if _PRODUCTION_CACHE is None:
-        _PRODUCTION_CACHE = _load_production_data()
-    return _PRODUCTION_CACHE
+    """The shared canonical production graph used by every subsystem."""
+    return _load_production_data()
 
 
 # ============================================================================

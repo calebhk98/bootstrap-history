@@ -26,6 +26,8 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .mods import find_mod_civilization, get_ordered_mods, load_mod_tree
+from .catalog import (load_production_catalog, load_trade_registry,
+                      transitional_wage_rates, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (tech_tree.json, prices.json,
@@ -235,7 +237,17 @@ def _load_trade_families() -> Dict[str, str]:
     return families
 
 
-TRADE_FAMILY: Dict[str, str] = _load_trade_families()
+_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR)
+TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
+                                for trade_id, trade in _TRADE_REGISTRY.items()}
+
+# Transitional provider: identity comes from the registry, while monetary
+# wages still use historical calibration. A new trade inherits its family's
+# median rate until the dynamic labour market supplies one.
+WAGES = transitional_wage_rates(_TRADE_REGISTRY, WAGES)
+for _trade_id in _TRADE_REGISTRY:
+    if _trade_id not in ANNUAL_WAGE:
+        ANNUAL_WAGE[_trade_id] = WAGES[_trade_id] * 2500.0
 
 
 def trade_family(trade: str) -> str:
@@ -347,15 +359,11 @@ def load(use_solved_prices: bool = False,
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
     """Load the tree and `prices.json`, and derive each node's cost.
 
-    `use_solved_prices` is OFF BY DEFAULT and every existing call site calls
-    `load()` with no arguments, so this defaults to exactly the code path
-    this function has always run: `goods` built straight from
-    `prices.json`'s own `purchase_prices_denarii`, nothing imported, nothing
-    solved. That is deliberate - see `sim/engine/prices.py`'s module
-    docstring for the whole mechanism this is opting into and why it stays
-    off until something asks for it - and it is why the import of
-    `sim.engine.prices` below is INSIDE the `if`: a caller that never opts
-    in never even imports the solver, let alone runs it.
+    `use_solved_prices` remains off by default for legacy content. If a loaded
+    technology names a material absent from the old goods table, however, the
+    solver runs automatically: this is what lets a self-contained mod add a
+    material without patching `prices.json`. The import stays lazy so an
+    unchanged base-only load retains its historical path and startup cost.
 
     Passing `use_solved_prices=True` asks `sim.engine.prices` to solve a
     price for every material it can under `held_technology_ids` (an
@@ -383,20 +391,36 @@ def load(use_solved_prices: bool = False,
     uses - so a caller pricing a NON-ROME civilization's goods table must
     pass its id here explicitly, or its land is silently priced as Rome's.
     """
+    manifests = get_ordered_mods(MODDIR)
     with open(TREE) as source:
-        tree = load_mod_tree(json.load(source), get_ordered_mods(MODDIR))
+        tree = load_mod_tree(json.load(source), manifests)
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
-    wages = {key: value["rate"] for key, value in prices["wage_rates_denarii_per_hour"].items()
-             if not key.startswith("_")}
+    wages = dict(WAGES)
     goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
              if not key.startswith("_")}
-    if use_solved_prices:
+    required_materials = {material for node in nodes.values()
+                          for material in (node.get("mat") or {})}
+    if use_solved_prices or not required_materials.issubset(goods):
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
             held_technology_ids, goods, prices,
             civilization_id=civilization_id)
+    production = load_production_catalog(ROOT, MODDIR)
+    validate_mod_material_paths(nodes.values(), production, manifests)
+    producers = set(production)
+    for entry in production.values():
+        producers.update((entry.get("outputs") or {}).keys())
+    mod_prefixes = tuple(manifest.id + "_" for manifest in manifests)
+    for node in nodes.values():
+        if not node["id"].startswith(mod_prefixes):
+            continue
+        for material in (node.get("mat") or {}):
+            if material not in goods:
+                raise ValueError("mod technology %s requires material %s; it has a "
+                                 "production path but is unavailable with the selected "
+                                 "technologies" % (node["id"], material))
     for node in nodes.values():
         node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
         node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())

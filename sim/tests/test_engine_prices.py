@@ -203,7 +203,7 @@ class PricedGoodsTableTests(unittest.TestCase):
         self.assertEqual(provenance["widget_kg"], "gated")
         self.assertEqual(goods["widget_kg"], 42.0)
 
-    def test_the_solver_never_invents_a_material_the_book_never_had(self):
+    def test_solver_adds_a_producible_material_the_book_never_had(self):
         prices_json = _prices_json()
         entries = {
             "straw": _entry({"straw_kg": 1.0}, requires_node=None,
@@ -211,8 +211,8 @@ class PricedGoodsTableTests(unittest.TestCase):
         }
         goods, provenance = engine_prices.priced_goods_table(
             set(), {}, prices_json, production_entries=entries)
-        self.assertEqual(goods, {})
-        self.assertEqual(provenance, {})
+        self.assertEqual(goods, {"straw_kg": 2.0})
+        self.assertEqual(provenance, {"straw_kg": "solved"})
 
 
 class EngineDefaultBehaviourUnchangedTests(unittest.TestCase):
