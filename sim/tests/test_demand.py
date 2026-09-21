@@ -399,8 +399,8 @@ class StandaloneImportTests(unittest.TestCase):
 
         for name in imported:
             self.assertFalse(
-                name.startswith("sim.engine"),
-                "sim/world/demand.py imports %r" % name)
+                name.startswith("sim.engine") and name != "sim.engine.catalog",
+                "sim/world/demand.py imports %r (only the canonical catalog is allowed)" % name)
             self.assertFalse(
                 name.startswith("sim.world.") and name != "sim.world.demand",
                 "sim/world/demand.py imports another sim/world/ module: %r" % name)

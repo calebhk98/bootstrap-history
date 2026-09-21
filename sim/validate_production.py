@@ -67,36 +67,12 @@ ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-from sim import simulator
 
 
 def load_production():
-    """Merge every file in data/production/ by material key.
-
-    One file per material family so that several authors can work at once
-    without colliding, exactly like data/branches/. A key defined in two files
-    is an ERROR rather than a silent overwrite - that is the failure mode the
-    branch merge has, where treetool keeps the first and the second author's
-    work disappears without a word.
-    """
-    merged, defined_in, duplicates = {}, {}, []
-    for filename in sorted(os.listdir(PRODUCTION_DIR)):
-        if not filename.endswith(".json"):
-            continue
-        path = os.path.join(PRODUCTION_DIR, filename)
-        with open(path) as handle:
-            batch = json.load(handle)
-        for name, entry in (batch.get("materials") or {}).items():
-            if name in merged:
-                duplicates.append("%s is defined in both %s and %s"
-                                  % (name, defined_in[name], filename))
-                continue
-            merged[name] = entry
-            defined_in[name] = filename
-    if not duplicates:
-        from sim.engine.mods import get_ordered_mods, load_mod_production
-        merged = load_mod_production(merged, get_ordered_mods(os.path.join(ROOT, "mods")))
-    return merged, duplicates
+    """Load the one canonical base-and-enabled-mod production graph."""
+    from sim.engine.catalog import load_production_catalog
+    return load_production_catalog(ROOT), []
 
 
 def materials_the_tree_consumes(nodes):
@@ -157,11 +133,11 @@ def check_has_source(where, entry):
 
 
 def check_labour_hours(where, entry, known_trades):
-    """Every labour trade is in the wage table, with a sane, non-negative hours figure."""
+    """Every labour trade has registered identity and sane non-negative hours."""
     problems = []
     for trade, hours in (entry.get("labour_hours") or {}).items():
         if trade not in known_trades:
-            problems.append("%s: trade '%s' is not in the wage table"
+            problems.append("%s: trade '%s' is not in the trade registry"
                             % (where, trade))
         if not isinstance(hours, (int, float)) or hours < 0:
             problems.append("%s: trade '%s' has %r hours"
@@ -526,6 +502,7 @@ def run_default_mode(entries, duplicates, known_materials, known_trades, nodes, 
 
 
 def main(argv=None):
+    from sim import simulator
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--todo", action="store_true",
                         help="list materials with no entry yet, worst first")
@@ -538,7 +515,8 @@ def main(argv=None):
 
     entries, duplicates = load_production()
     consumed = materials_the_tree_consumes(nodes)
-    known_trades = set(prices.get("wage_rates_denarii_per_hour") or {})
+    from sim.engine.catalog import load_trade_registry, material_namespace
+    known_trades = set(load_trade_registry(ROOT, entries))
     # A material is known if the tree consumes it, if some entry's own key
     # names it (true for most single-technique materials), OR if some
     # entry's `outputs` produces it - the case a recipe-id-vs-material-key
@@ -551,9 +529,7 @@ def main(argv=None):
     # electrical_mj_dynamo/_photovoltaic, consumed only by OTHER production
     # entries rather than by the tree, so they need the `outputs` half of
     # this union to be seen as known at all.
-    known_materials = (set(consumed) | set(entries)
-                      | {output for entry in entries.values()
-                         for output in (entry.get("outputs") or {})})
+    known_materials = material_namespace(entries, nodes.values())
 
     for duplicate in duplicates:
         print("  DUPLICATE %s" % duplicate)

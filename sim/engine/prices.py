@@ -379,6 +379,13 @@ def solved_prices(held_technology_ids: Iterable[str],
         solve_prices.techniques_available_to(production_entries, gate_nodes_held)
     producers_of = solve_prices.build_producers_index(available_entries)
     wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
+    # Trade identity is independent of the legacy wage calibration.  Supply a
+    # family-relative transitional rate for newly registered mod trades.
+    from .catalog import load_trade_registry, transitional_wage_rates
+    registry = load_trade_registry(os.path.dirname(os.path.dirname(HERE)),
+                                   production_entries)
+    base_hourly = {trade: ratio for trade, ratio in wage_by_trade.items()}
+    wage_by_trade = transitional_wage_rates(registry, base_hourly)
 
     # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
     # `main()` in sim/solve_prices.py computes exactly these two dicts and
@@ -447,9 +454,9 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     author guessed. That is a decision about trade and availability, not
     about this table.
 
-    See the module docstring for what this deliberately does not do (add
-    new materials the book never had, or treat a minor joint byproduct any
-    differently). `civilization_id` is passed straight through to
+    Resolvable materials absent from the book are deliberately added here;
+    minor joint byproducts retain the solver's existing treatment.
+    `civilization_id` is passed straight through to
     `solved_prices` - see RENT NEEDS A CIVILIZATION in the module docstring
     for why land rent needs it and what happens if it is left out.
     """
@@ -471,8 +478,6 @@ def priced_goods_table(held_technology_ids: Iterable[str],
         provenance[material] = ("gated" if material in makeable_by_someone
                                 else "no_recipe")
     for material in solved.resolvable_materials:
-        if material not in book_goods_denarii:
-            continue
         goods_denarii[material] = hours_to_denarii(
             solved.prices_in_labour_hours[material], prices_json)
         provenance[material] = "solved"

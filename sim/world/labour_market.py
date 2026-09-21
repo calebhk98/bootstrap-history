@@ -338,33 +338,14 @@ PRODUCTION_DIRECTORY = os.path.join(_REPOSITORY_ROOT, "data", "production")
 
 
 def _load_production_data() -> Dict[str, Any]:
-    """Every material entry across data/production/*.json, merged by
-    material key - the identical merge `sim.world.demand._load_production_
-    data` performs, kept as a second copy rather than an import (see the
-    module docstring's STANDALONE section)."""
-    materials = {}
-    for filename in sorted(os.listdir(PRODUCTION_DIRECTORY)):
-        if not filename.endswith(".json"):
-            continue
-        with open(os.path.join(PRODUCTION_DIRECTORY, filename)) as handle:
-            data = json.load(handle)
-        materials.update(data.get("materials", {}))
-    return materials
-
-
-_PRODUCTION_CACHE = None
+    """Return the canonical base-and-enabled-mod production graph."""
+    from sim.engine.catalog import load_production_catalog
+    return load_production_catalog(_REPOSITORY_ROOT)
 
 
 def production_data() -> Dict[str, Any]:
-    """Cached, read-only view of data/production/*.json's materials. A
-    caller that already has this in hand can pass it straight to any
-    function below via its `production` argument instead of paying the
-    parse cost again - see `sim.world.demand.production_data` for the same
-    convention."""
-    global _PRODUCTION_CACHE
-    if _PRODUCTION_CACHE is None:
-        _PRODUCTION_CACHE = _load_production_data()
-    return _PRODUCTION_CACHE
+    """The shared canonical production graph used by every subsystem."""
+    return _load_production_data()
 
 
 # ============================================================================
