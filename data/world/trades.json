@@ -1,0 +1,62 @@
+{
+  "_doc": "Canonical trade identity and availability metadata. Temporary wage compatibility values still come from data/prices.json, which is scheduled for deletion; adding or describing a trade must never require editing it.",
+  "trades": {
+    "artisan": {"family": "craft"},
+    "carpenter": {"family": "craft"},
+    "chemist": {
+      "family": "scholar",
+      "initially_absent": true,
+      "note": "Does not exist yet; you must create this trade."
+    },
+    "electrician": {
+      "family": "craft",
+      "initially_absent": true,
+      "note": "Does not exist. Cannot exist until Module 50 does."
+    },
+    "engineer": {
+      "family": "scholar",
+      "initially_absent": true,
+      "note": "Does not exist as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention."
+    },
+    "engraver": {
+      "family": "craft",
+      "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters."
+    },
+    "furnaceman": {"family": "craft"},
+    "glassblower": {"family": "craft"},
+    "labourer": {"family": "labour"},
+    "machinist": {
+      "family": "craft",
+      "initially_absent": true,
+      "note": "Does not exist yet; you must create this trade."
+    },
+    "mason": {
+      "family": "craft",
+      "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood."
+    },
+    "master": {"family": "craft"},
+    "merchant": {
+      "family": "scholar",
+      "note": "Agent and factor, paid on commission in practice."
+    },
+    "millwright": {
+      "family": "craft",
+      "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire."
+    },
+    "miner": {"family": "labour"},
+    "optician": {
+      "family": "craft",
+      "initially_absent": true,
+      "note": "Does not exist yet. You must create this trade from glassworkers."
+    },
+    "plumber": {
+      "family": "craft",
+      "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere."
+    },
+    "potter": {"family": "craft"},
+    "sailor": {"family": "labour", "note": "Cheap and abundant."},
+    "scholar": {"family": "scholar"},
+    "scribe": {"family": "scholar"},
+    "smith": {"family": "craft"}
+  }
+}

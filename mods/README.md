@@ -27,7 +27,8 @@ A mod may provide:
 * `data/world/trade_families.json`: additive `trade_families` entries (the
   backwards-compatible shorthand trade registry).
 * `data/world/trades.json`: additive `trades` entries with a `family` and
-  optional `training` string. A wage is deliberately not part of trade
+  optional `training`, `note`, and `initially_absent` fields. Availability and
+  descriptive metadata belong here; a wage is deliberately not part of trade
   identity.
 
 New technology, recipe, civilization, and trade ids must start with
@@ -50,15 +51,16 @@ technology is reported as unavailable rather than assigned an invented price.
 
 New professions belong in `data/world/trades.json` (or the family shorthand)
 and production recipes may use them immediately. Wages are not yet a complete
-general-equilibrium solve: existing trades retain historical calibration and
-an uncalibrated new trade temporarily receives the median rate of its family
-through the wage-provider seam. Labour allocation itself remains dynamic.
+general-equilibrium solve: existing trades still receive temporary legacy
+rates and a new trade receives the median rate of its family through the
+wage-provider seam. These are compatibility inputs scheduled for replacement,
+not calibration targets. Labour allocation itself remains dynamic.
 
 World geography/resources, hazards, UI, and arbitrary new mechanics are not
-mod extension points yet. `data/prices.json` also remains for currency
-conversion, historical wage calibration, and legacy goods which still lack a
-complete production recipe; it is no longer the material namespace and is not
-a mod authoring interface.
+mod extension points yet. `data/prices.json` is scheduled for deletion but is
+still read for the temporary labour-hour/denarius conversion, legacy wage
+inputs, and goods whose production economics are incomplete. It is no longer
+the material namespace or a mod authoring interface.
 
 The three installed sample mods use only this public data contract. They add a
 slave-ownership goal, Ptolemaic Egypt in 100 BC, and a photovoltaic technology
