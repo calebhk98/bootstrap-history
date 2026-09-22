@@ -26,6 +26,16 @@ def _stationary(total=1_000_000.0, seed=1):
     return demography.Population.stationary(total, seed=seed)
 
 
+def _assert_famine_age_pattern(test_case, population, fed_flows, famine_flows):
+    test_case.assertGreater(famine_flows.deaths, fed_flows.deaths)
+    test_case.assertLess(famine_flows.births, fed_flows.births)
+    child_rate = famine_flows.deaths_children / population.children
+    working_age_rate = famine_flows.deaths_working_age / population.working_age
+    elderly_rate = famine_flows.deaths_elderly / population.elderly
+    test_case.assertGreater(child_rate, working_age_rate)
+    test_case.assertGreater(elderly_rate, working_age_rate)
+
+
 class AccountingClosureTests(unittest.TestCase):
     """start + births + immigration - deaths - emigration == end, exactly,
     every single step - this is pure bookkeeping (see Population.step's own
@@ -541,17 +551,7 @@ class GrowthCeilingTests(unittest.TestCase):
         famine_flows = population.copy().step(
             population._subsistence_food() * 0.5)
 
-        self.assertGreater(famine_flows.deaths, fed_flows.deaths)
-        self.assertLess(famine_flows.births, fed_flows.births)
-
-        child_mortality_rate = (
-            famine_flows.deaths_children / population.children)
-        working_age_mortality_rate = (
-            famine_flows.deaths_working_age / population.working_age)
-        elderly_mortality_rate = (
-            famine_flows.deaths_elderly / population.elderly)
-        self.assertGreater(child_mortality_rate, working_age_mortality_rate)
-        self.assertGreater(elderly_mortality_rate, working_age_mortality_rate)
+        _assert_famine_age_pattern(self, population, fed_flows, famine_flows)
 
 
 class FoodShockAndRecoveryTests(unittest.TestCase):
@@ -956,14 +956,7 @@ class DiseaseAndSanitationTests(unittest.TestCase):
             population._subsistence_food() * 0.5,
             disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
 
-        self.assertGreater(famine_flows.deaths, fed_flows.deaths)
-        self.assertLess(famine_flows.births, fed_flows.births)
-
-        child_mortality_rate = famine_flows.deaths_children / population.children
-        working_age_mortality_rate = famine_flows.deaths_working_age / population.working_age
-        elderly_mortality_rate = famine_flows.deaths_elderly / population.elderly
-        self.assertGreater(child_mortality_rate, working_age_mortality_rate)
-        self.assertGreater(elderly_mortality_rate, working_age_mortality_rate)
+        _assert_famine_age_pattern(self, population, fed_flows, famine_flows)
 
     def test_exact_subsistence_pre_industrial_disease_stays_at_or_above_replacement(self):
         # Do not undo the earlier fix: zero variance, exactly at

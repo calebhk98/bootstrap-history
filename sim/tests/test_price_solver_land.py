@@ -22,6 +22,7 @@ files.
 import unittest
 
 from sim import solve_prices
+from sim.tests.price_solver_helpers import solver_context
 
 
 class LandCostIsZeroByDefaultTests(unittest.TestCase):
@@ -199,15 +200,8 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
     )
 
     def _solved_wheat_price(self, civilization_id):
-        production_entries, _duplicates = solve_prices.load_production()
-        reached = solve_prices.load_starting_technologies(civilization_id)
-        available, _unreached, _unclassified = solve_prices.techniques_available_to(
-            production_entries, reached)
-        from sim import simulator
-        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
-        wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-        producers_of = solve_prices.build_producers_index(available)
-        rent = solve_prices.rent_hours_per_kg_by_ore_material(available, wage_by_trade)
+        available, wage_by_trade, producers_of, rent = solver_context(
+            civilization_id)
         rent.update(solve_prices.land_rent_hours_per_iugerum(
             available, wage_by_trade, civilization_id=civilization_id))
         resolvable = solve_prices.compute_resolvable_materials(

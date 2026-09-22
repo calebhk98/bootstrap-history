@@ -9,14 +9,11 @@ check()/slow_check() at import time, in file order - splitting into files
 changes nothing about how a check runs, only how the source is organised on
 disk.
 
-A few names below (_mk_loom_sim, _hazard, _rel/_LOADTEST_DIR, and the whole
+A few names below (_hazard, _rel/_LOADTEST_DIR, and the whole
 family of `from engine.protocol import X as _Y` mid-file imports) are
 reusable, side-effect-free pieces (pure functions, pure imports, or a plain
-string constant + an idempotent os.makedirs) that some topic modules ALSO
-define for themselves, verbatim, inside their own namespace, rather than
-relying on the harness-provided copy. That is harmless: a module-local
-definition simply shadows the harness-provided name with an identical one,
-so both spellings behave the same way.
+string constant + an idempotent os.makedirs) that topic modules import
+through the harness rather than defining local copies.
 """
 import atexit, collections, copy, glob, json, os, random, re, shutil, subprocess, sys, time
 import concurrent.futures as _concurrent_futures
@@ -376,6 +373,15 @@ def _remove_scratch_dirs_if_green():
 def _hazard(civname, hazard_name):
     civ_data = S.load_civ(civname)
     return next(hazard for hazard in civ_data["hazards"] if hazard["name"] == hazard_name)
+
+
+def nutrition_ratios_over_years(test_sim, years):
+    """Run demographic recovery and return each year's nutrition ratio."""
+    ratios = []
+    for year in years:
+        test_sim._demographic_recovery(year)
+        ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+    return ratios
 
 
 # --- from the old "TWO LOOMS COMPETE" goods-market section: n_looms real,

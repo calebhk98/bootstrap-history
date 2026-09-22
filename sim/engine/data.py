@@ -406,6 +406,18 @@ def load(use_solved_prices: bool = False,
     return tree, prices, nodes, wages, goods
 
 
+def _book_prices() -> Tuple[Dict[str, Any], Dict[str, float]]:
+    """Load the legacy price document and its public material-price table."""
+    with open(PRICES) as source:
+        prices = json.load(source)
+    goods = {
+        key: value["p"]
+        for key, value in prices["purchase_prices_denarii"].items()
+        if not key.startswith("_")
+    }
+    return prices, goods
+
+
 def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization_id: Optional[str] = None) -> Dict[str, str]:
     """{material: "solved" | "gated" | "no_recipe"} for every material
@@ -422,10 +434,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     `held_technology_ids` alone. Left at `None` it prices land as Rome's,
     which is silently wrong for any other civilization's report.
     """
-    with open(PRICES) as source:
-        prices = json.load(source)
-    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
-             if not key.startswith("_")}
+    prices, goods = _book_prices()
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, goods, prices, civilization_id=civilization_id)
@@ -445,13 +454,7 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     fallback in one provider makes it visible and lets consumers migrate now,
     rather than each retaining a private reader until the final deletion.
     """
-    with open(PRICES) as source:
-        prices = json.load(source)
-    book_goods = {
-        key: value["p"]
-        for key, value in prices["purchase_prices_denarii"].items()
-        if not key.startswith("_")
-    }
+    prices, book_goods = _book_prices()
     from . import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
         held_technology_ids, book_goods, prices,
