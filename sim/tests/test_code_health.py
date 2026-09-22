@@ -383,7 +383,7 @@ class ReproductionCheckTests(unittest.TestCase):
 # bail again once the current position is past the end. Deliberately using
 # the same variable names in both fixture files, as the real fog.py and
 # society.py both used "yrs"/"year_start"/"year_end" - the normaliser
-# discards names anyway, so this is not what makes the match work, but it
+# alpha-renames names anyway, so this is not what makes the match work, but it
 # keeps the fixture honest about what the real bug looked like. Held as a
 # plain list of UNINDENTED lines and indented programmatically at each call
 # site (see _hazard_fixture below) rather than as a pre-indented text block,
@@ -494,6 +494,47 @@ class DuplicationDetectorTests(unittest.TestCase):
         with _TempRoot({"sim/a.py": file_a, "sim/b.py": file_b}):
             report = ch.duplication_report(["sim/a.py", "sim/b.py"])
         self.assertEqual(report["candidates_scanned"], 0)
+        self.assertEqual(report["cluster_count"], 0)
+
+    def test_declarative_type_fields_are_not_reported_as_logic(self):
+        source = """
+            class First:
+                alpha: int
+                bravo: str
+                charlie: float
+                delta: bool
+                echo: object
+
+            class Second:
+                one: str
+                two: int
+                three: object
+                four: float
+                five: bool
+        """
+        with _TempRoot({"sim/schema.py": source}):
+            report = ch.duplication_report(["sim/schema.py"])
+        self.assertEqual(report["candidates_scanned"], 0)
+        self.assertEqual(report["cluster_count"], 0)
+
+    def test_literals_and_name_relationships_distinguish_unrelated_blocks(self):
+        source = """
+            def first(source):
+                alpha = source.get("alpha", 1)
+                bravo = source.get("bravo", 2)
+                charlie = alpha + alpha
+                delta = bravo * 3
+                return charlie + delta
+
+            def second(source):
+                alpha = source.get("different", 10)
+                bravo = source.get("values", 20)
+                charlie = alpha + bravo
+                delta = bravo * 30
+                return charlie - delta
+        """
+        with _TempRoot({"sim/unrelated.py": source}):
+            report = ch.duplication_report(["sim/unrelated.py"])
         self.assertEqual(report["cluster_count"], 0)
 
     def test_below_the_size_threshold_is_not_a_candidate_at_all(self):

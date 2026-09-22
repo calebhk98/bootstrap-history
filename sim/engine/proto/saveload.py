@@ -1,15 +1,12 @@
 """Reading and writing a save file, and validating one before it is trusted."""
 
-import collections, json, os, random
+import json, os, random
 
 from ..data import WAGES
 from sim.engine.state import (
-    SAVE_FIELDS,
-    get_save_fields,
+    SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
     serialize_state,
     deserialize_state,
-    extract_simulation_state,
-    apply_simulation_state,
 )
 
 SAVE_VERSION = 3
@@ -293,4 +290,3 @@ def load_state(sim, path):
 	if state._civ_live and "state_capacity" in state._civ_live:
 		sim.state_capacity = float(state._civ_live["state_capacity"])
 	return sim
-

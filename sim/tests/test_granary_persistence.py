@@ -261,10 +261,7 @@ class CenturyMeasurementTests(unittest.TestCase):
         # asks for > 0.7) - the granary's whole point is to bring this
         # closer to subsistence than the unbuffered wiring could.
         test_sim = _rome_sim(events=False)
-        ratios = []
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-            ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+        ratios = nutrition_ratios_over_years(test_sim, range(101, 201))
         mean_ratio = statistics.fmean(ratios)
         self.assertGreater(mean_ratio, 0.9, ratios)
         # THE UPPER BOUND IS NOT 1.0: capping the mean at subsistence would

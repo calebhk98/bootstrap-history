@@ -20,6 +20,11 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import agriculture
 from sim.engine import data
+from sim.tests.weather_test_helpers import (
+    assert_matching_century,
+    assert_save_reload_trajectory,
+    assert_single_draw_fallback,
+)
 
 
 def _rome_sim(events=False):
@@ -105,13 +110,8 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
         self.assertGreater(pooled_stdev, 0.03)  # not literally zero variance
 
     def test_falls_back_to_the_old_single_draw_when_there_are_no_region_weights(self):
-        test_sim = _rome_sim()
-        test_sim._farm_weather_cells = []
-        year = 137
-        expected = agriculture.draw_weather_multiplier(
-            random.Random(test_sim._farm_year_weather_seed(year)),
-            agriculture.DEFAULT_SOIL.weather_stdev_fraction)
-        self.assertEqual(test_sim._pooled_farm_weather_multiplier(year), expected)
+        assert_single_draw_fallback(self, _rome_sim(), agriculture)
+
 
     def test_each_region_actually_draws_independently_not_the_same_number_repeated(self):
         test_sim = _rome_sim()
@@ -171,37 +171,13 @@ class DeterminismAcrossSaveAndReloadTests(unittest.TestCase):
     """
 
     def test_two_independently_constructed_sims_match_over_a_century(self):
-        first, second = _rome_sim(), _rome_sim()
-        for _year in range(100):
-            first.step()
-            second.step()
-        self.assertEqual(first.population.children, second.population.children)
-        self.assertEqual(first.population.working_age, second.population.working_age)
-        self.assertEqual(first.population.elderly, second.population.elderly)
-        self.assertEqual(first.farm_stock_kg, second.farm_stock_kg)
+        assert_matching_century(self, _rome_sim)
 
     def test_a_mid_run_save_and_reload_reproduces_the_reference_trajectory(self):
-        from sim import simulator as S
-
-        reference = _rome_sim()
-        for _year in range(60):
-            reference.step()
-
-        replayed = _rome_sim()
-        for _year in range(30):
-            replayed.step()
         path = os.path.join(ROOT, _rel("regional_weather_wiring_mid_run.json"))
-        S.save_state(replayed, path)
+        assert_save_reload_trajectory(self, _rome_sim, path)
 
-        resumed = _rome_sim()
-        S.load_state(resumed, path)
-        for _year in range(30):
-            resumed.step()
 
-        self.assertEqual(reference.population.children, resumed.population.children)
-        self.assertEqual(reference.population.working_age, resumed.population.working_age)
-        self.assertEqual(reference.population.elderly, resumed.population.elderly)
-        self.assertEqual(reference.farm_stock_kg, resumed.farm_stock_kg)
 
 
 class UnshockedCenturyAcceptanceTests(unittest.TestCase):

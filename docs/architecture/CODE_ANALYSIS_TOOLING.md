@@ -125,7 +125,10 @@ names do not match:
 `sim/code_health.py`'s detector, on the same fixture, finds it as an exact
 structural match (`distinct_versions=1, mean_cross_version_similarity=1.0`)
 because it normalises the AST before comparing - `_normalize()` erases a
-`Name`'s own spelling on purpose (see that function's docstring). This is
+`Name`'s own spelling on purpose while retaining which occurrences refer to
+the same name (see that function's docstring). Literal values are retained;
+otherwise unrelated declarations made from the same syntax swamp the real
+matches. This is
 not a corner case for this project: CLAUDE.md section 7 exists because this
 codebase is thick with exactly this kind of renamed-but-structurally-
 identical code, and a detector that a rename defeats is not useful here.
@@ -137,9 +140,9 @@ evaluated further once `pylint`'s two structural gaps were confirmed** -
 one, so it would be expected to share the renamed-variable gap; nobody
 should treat that expectation as measured, since it was not run here.
 
-Today's numbers on the real tree, for reference (`python3 sim/code_health.py
---duplication`): 3,522 candidate blocks, 137 clusters (25 exact clones, 112
-showing divergence into more than one version).
+Run `python3 sim/code_health.py --duplication` for the current candidate and
+cluster counts; they are intentionally not copied into prose where they can
+go stale.
 
 ### 1.3 Complexity and size: already a library, unchanged
 

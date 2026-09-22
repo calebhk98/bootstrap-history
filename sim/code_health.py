@@ -670,7 +670,11 @@ DUPLICATE_MIN_NODE_SIZE = 15
 # Two candidates in the same coarse "shape bucket" (see _shape_signature)
 # whose normalised token-sequence similarity is at least this are reported
 # as a diverging pair, even though their exact structure no longer matches.
-NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.6
+# Below this point the report was dominated by unrelated five-statement
+# blocks which merely shared Python syntax (five assignments, five calls,
+# or five guard clauses).  Keep the near-match pass for small edits to a
+# copied block, but require almost all of the normalised structure to agree.
+NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.98
 
 # A shape bucket larger than this is skipped for the O(n^2) near-duplicate
 # pass (exact-hash clustering still applies to it) - generic short shapes
@@ -689,31 +693,36 @@ _NEAR_DUPLICATE_PAIR_BUDGET = 40000
 
 
 def _normalize(node):
-    """A node (or a list of nodes), reduced to shape: node TYPE and field
-    structure preserved, but a Name's/arg's own spelling and every literal
-    VALUE erased - discarding names and literals is the brief, and it is
-    also what lets two blocks that differ only by a renamed variable or a
-    changed constant still cluster as the same duplicate. Attribute/method
-    names (`.get`, `.civ`) are KEPT: those denote which operation is being
-    repeated, which is the actual signal for "this is the same logic",
-    not incidental spelling the way a local variable's name is.
+    """Return an alpha-normalised AST without erasing program semantics.
+
+    Names and arguments are numbered by first appearance, so consistently
+    renaming locals cannot hide a clone.  Their equality relationships are
+    retained, however: ``left + left`` no longer matches ``left + right``.
+    Literal values are retained too, because five unrelated declarations
+    are not duplicate logic merely because all five contain strings and
+    floats.  Attribute and method names continue to be preserved.
     """
-    if isinstance(node, ast.AST):
-        if isinstance(node, ast.Name):
-            return ("NAME",)
-        if isinstance(node, ast.arg):
-            return ("ARG",)
-        if isinstance(node, ast.Constant):
-            return ("CONST", type(node.value).__name__)
-        fields = []
-        for field, value in ast.iter_fields(node):
-            if field in _POSITION_FIELDS:
-                continue
-            fields.append((field, _normalize(value)))
-        return (type(node).__name__, tuple(fields))
-    if isinstance(node, list):
-        return tuple(_normalize(item) for item in node)
-    return node
+    names = {}
+    arguments = {}
+
+    def normalize(value):
+        if isinstance(value, ast.Name):
+            return ("NAME", names.setdefault(value.id, len(names)))
+        if isinstance(value, ast.arg):
+            return ("ARG", arguments.setdefault(value.arg, len(arguments)))
+        if isinstance(value, ast.Constant):
+            return ("CONST", type(value.value).__name__, repr(value.value))
+        if isinstance(value, ast.AST):
+            fields = []
+            for field, child in ast.iter_fields(value):
+                if field not in _POSITION_FIELDS:
+                    fields.append((field, normalize(child)))
+            return (type(value).__name__, tuple(fields))
+        if isinstance(value, list):
+            return tuple(normalize(item) for item in value)
+        return value
+
+    return normalize(node)
 
 
 def _node_size(normalized):
@@ -780,6 +789,22 @@ def _is_boilerplate_window(stmts):
     without this filter, the highest-ranked clusters on this checkout were
     entirely import preambles: filtering them out is what makes the report
     about the codebase's actual logic rather than its import style."""
+    # Consecutive annotations are a schema, not executable copies.  The
+    # field names and types are the information; replacing them with a loop
+    # or factory would make dataclasses and TypedDicts harder to inspect.
+    if all(isinstance(statement, ast.AnnAssign) for statement in stmts):
+        return True
+    # Comments are not AST statements, so the first executable test setup
+    # can otherwise be grouped with the module docstring and import as one
+    # enormous-looking "clone".  A window containing the module preamble is
+    # not five copied statements of logic; the next non-preamble window will
+    # still examine that setup normally.
+    first = stmts[0]
+    if (isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant)
+            and isinstance(first.value.value, str)
+            and any(isinstance(statement, (ast.Import, ast.ImportFrom))
+                    for statement in stmts[1:])):
+        return True
     for statement in stmts:
         if isinstance(statement, (ast.Import, ast.ImportFrom)):
             continue

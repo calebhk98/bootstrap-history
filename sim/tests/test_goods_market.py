@@ -11,29 +11,6 @@ from .harness import *  # noqa: F401,F403
 # measurably cut into the first one's earnings.
 # =============================================================================
 
-def _mk_loom_sim(n_looms, age_years):
-    """n_looms real, distinct textiles-category venture nodes, all opened
-    the same year, aged the same number of years. Uses real tree nodes
-    (not synthetic ones), the same way the rest of this file does."""
-    cand = sorted(node_id for node_id, node in NODES.items()
-                  if node.get("cat") == "textiles" and node.get("rev"))
-    assert len(cand) >= n_looms, "not enough textiles venture nodes in the tree"
-    chosen = cand[:n_looms]
-    venture_sim = sim(civ="rome_100ad", capital=5_000_000.0)
-    venture_sim.artisans = venture_sim.scholars = 100.0 * n_looms
-    for node_id in chosen:
-        for trade in NODES[node_id].get("lab", {}):
-            venture_sim.employees[trade] = max(venture_sim.employees.get(trade, 0.0), 10.0)
-    venture_sim.year = 100
-    for node_id in chosen:
-        venture_sim.done.add(node_id)
-        venture_sim.done_year[node_id] = 100
-    venture_sim._done_changed()
-    for node_id in chosen:
-        opened, msg = venture_sim.open_venture(node_id)
-        assert opened, (node_id, msg)
-    venture_sim.year = 100 + age_years
-    return venture_sim, chosen
 
 s_one, _one = _mk_loom_sim(1, 20)
 f_one = s_one.goods_market_factor(_one[0])

@@ -89,10 +89,7 @@ class VariesWithWeatherTests(unittest.TestCase):
         # each already been re-tuned once, which is the signal that the
         # sample was wrong rather than the numbers.
         test_sim = _rome_sim(events=False)
-        ratios = []
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-            ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+        ratios = nutrition_ratios_over_years(test_sim, range(101, 201))
         # NOT a flat distinct-value count: nutrition_ratio is structurally
         # capped at 1.0 (Storage.step never lets consumption exceed demand -
         # a good year's excess is wasted, not banked, given this wiring's

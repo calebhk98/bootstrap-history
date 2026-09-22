@@ -7,8 +7,6 @@ Pure presentation, same as every module in this split: nothing here touches
 the live Sim - see render.py and ARCHITECTURE.md.
 """
 
-from ..data import downstream_count, trade_family
-
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
@@ -383,6 +381,13 @@ def _state_also(out):
     return lines
 
 
+def _render_sections(out, renderers):
+    lines = []
+    for renderer in renderers:
+        lines += renderer(out)
+    return lines
+
+
 def render_state(out):
     """A position, not a dict: year, money, what is running and what each
     thing is waiting on, who you employ, what is about to happen to you.
@@ -390,17 +395,12 @@ def render_state(out):
     Works on both the short state() and state(full=true), and on step()'s
     reply, which is this same shape with completed/events stitched on front.
     """
-    lines = []
-    lines += _state_header(out)
-    lines += _state_money(out)
-    lines += _state_founder(out)
-    lines += _state_running(out)
-    lines += _state_stuck(out)
-    lines += _state_concerns(out)
-    lines += _state_employ(out)
-    lines += _state_standing(out)
-    lines += _state_at_risk(out)
-    lines += _state_goal(out)
+    renderers = (
+        _state_header, _state_money, _state_founder, _state_running,
+        _state_stuck, _state_concerns, _state_employ, _state_standing,
+        _state_at_risk, _state_goal,
+    )
+    lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
     lines += _state_also(out)
     return "\n".join(lines)
@@ -845,19 +845,11 @@ def render_why(out):
     """A page about one thing: what it needs, what it costs, what depends
     on it, and whether you could start it today.
     """
-    lines = []
-    lines += _why_header(out)
-    lines += _why_cost(out)
-    lines += _why_hours_risk(out)
-    lines += _why_staff_needed(out)
-    lines += _why_staff_keep_open(out)
-    lines += _why_labour_materials(out)
-    lines += _why_upkeep_revenue(out)
-    lines += _why_status(out)
-    lines += _why_chain(out)
-    lines += _why_unlocks_downstream(out)
-    lines += _why_trailing(out)
-    return "\n".join(lines)
+    return "\n".join(_render_sections(out, (
+        _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
+        _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
+        _why_status, _why_chain, _why_unlocks_downstream, _why_trailing,
+    )))
 
 
 def render_step(out):
