@@ -1,8 +1,11 @@
 # CLAUDE.md - working agreement for AI agents on this repo
 
-This is a simulation project built by AI agents, for AI agents. Read this file
-before touching anything. It is short on purpose; the long documents it points
-at are the real reference.
+This file holds what changes slowly: what the project is, the rules, the
+coding patterns, and where to look. Anything that changes from week to week
+(status, coverage, counts, which module is wired to which, exact file paths
+inside a package) belongs in the documents it points at, not here. If you are
+about to add a sentence that will be false after the next few merges, put it
+in a status document instead.
 
 ---
 
@@ -15,265 +18,186 @@ When spawning subagents with the `Agent` tool:
   them, do not "just this once" them, do not route around this by asking
   another agent to spawn one.
 - **Budgeting:** one Sonnet agent costs about the same as three Haiku agents.
-  If a job splits cleanly into three independent Haiku-sized pieces, prefer
-  three Haiku over one Sonnet - same cost, more parallelism.
+  A normal batch is roughly five Sonnet-equivalents running at once, mixed
+  however suits the work.
 - **Choosing:** Haiku for mechanical work with a clear spec (grep sweeps, file
   inventories, applying a stated edit pattern, running a test topic and
   reporting failures). Sonnet for work that needs judgement (reading code to
-  explain why something behaves as it does, designing a small mechanism,
-  reviewing a diff for realism defects).
-- Only the orchestrating session may run on a large model. That session should be
-  reading, deciding and writing the hard parts, not fanning out Opus workers.
+  explain behaviour, designing a small mechanism, reviewing a diff).
+- **Parallel agents that edit code** run in separate worktrees and should be
+  given tasks that touch different files. Say in each prompt which files the
+  other agents own.
+- Only the orchestrating session may run on a large model. It reads, decides,
+  writes the hard parts and merges.
 
 ---
 
 ## 2. What this project is
 
-A simulator of technological bootstrapping. The current scenario: a
-knowledgeable, effectively immortal founder arrives in a historical
-civilisation with a technical database and some starting capital; the question
-is how fast a modern capability frontier can be reached, and why.
+A simulator of technological bootstrapping. The scenario: a knowledgeable,
+effectively immortal founder arrives in a historical civilisation with a
+technical database and some starting capital; the question is how fast a
+modern capability frontier can be reached, and why. The game is becoming
+multiplayer, and eventually other countries will be players too, so every
+mechanism the founder uses must be usable by any actor.
 
 Three artefacts share one dataset:
 
-- `data/` - the tech tree (`python3 sim/simulator.py validate`),
-  prices, civilisations, geography.
-- `knowledge/` - how to physically do each thing the tree names.
-- `sim/` - the engine, the CLI/JSON protocol, and the test suite.
-
-Read `README.md` for the layout and `sim/ARCHITECTURE.md` for how the engine is
-actually shaped (it is measured, not remembered - keep it that way).
+- **Data** (`data/`): the tech tree (authored per domain in `data/branches/`,
+  merged by `sim/treetool.py`), production recipes (`data/production/`),
+  civilisations, world geography, trades.
+- **Knowledge** (under `docs/`): how to physically do each thing the tree
+  names. Tree nodes link to it through their `kb` field (`file.md#anchor`).
+- **Simulator** (`sim/`): the engine, the CLI/JSON protocol, tools, tests.
 
 ---
 
-## 3. The design constraints that govern every change
+## 3. Where things live
+
+Check with `ls` before trusting this; directories move.
+
+| Looking for | Look in |
+|---|---|
+| Engine (the `Sim` object and its mixins) | `sim/engine/` |
+| Standalone domain models (agriculture, demography, land, deposits, transport, demand, labour market, ...) | `sim/world/` |
+| Actors other than the world (households, later firms/states/players) | `sim/engine/actors/` |
+| Price solver | `sim/solve_prices*.py`, `sim/engine/prices.py` |
+| CLI and agent/JSON protocol | `sim/simulator.py`, `sim/engine/cli*.py`, `sim/engine/proto/`, `sim/PROTOCOL.md` |
+| Tests | `sim/tests/`, run through `sim/test_regressions.py` |
+| Engine shape, measured | `sim/ARCHITECTURE.md` |
+| Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
+| Open problems, playtest reports, bug reports | `Complaints/` (numbered files are open, `Complaints/closed/` are done) |
+| Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
+| Playtest setup for agent players | `playtest/` |
+| Schema for production data | `data/production/_SCHEMA.md` |
+
+**What to work on next:** the status document in `docs/architecture/`
+(its README says which) keeps the ordered to-do list; `Complaints/` holds the
+issue backlog. Re-measure a claim there before acting on it, since status
+documents lag the code.
+
+---
+
+## 4. Design constraints that govern every change
 
 These come from the project's requirements, not from taste. When a change
 conflicts with one of these, the change is wrong.
 
-**3.1 No hardcoded outcomes.** Do not encode a historical result that the
-simulation should be able to produce from lower-level state. A Roman soldier
-must not cost 100 denarii because history says so; his cost must fall out of
-food, labour scarcity, equipment, transport, recruitment institutions and risk.
-The same applies to city sizes, army sizes, state revenue, wages, adoption
-timing and industrial output.
+**4.1 No hardcoded outcomes.** Do not encode a historical result that the
+simulation should produce from lower-level state. A Roman soldier must not
+cost 100 denarii because history says so; his cost must fall out of food,
+labour scarcity, equipment, transport, recruitment institutions and risk.
+Same for city sizes, army sizes, state revenue, wages, adoption timing and
+industrial output. Allowed inputs: physical constants, material properties,
+biological limits, geography, and initial conditions (population at the start
+date, which mines are open, what is already known).
 
-What is allowed as an input: physical constants, material properties,
-biological limits, geography, and initial conditions (the population in 100 AD,
-which mines are open, what is already known). See
-`docs/architecture/HISTORICAL_SIM_ARCHITECTURE.md` §2.2 and §10.
+**4.2 The historical record is a plausible outcome, not the only one.** With
+no intervention, the real trajectory should be a plausible draw from an
+ensemble of baseline runs, validated against distributions and relationships
+(population ranges, urbanisation share, wage-to-grain ratios, technology
+windows), never against dated events. A baseline that reliably reproduces a
+specific dated plague is evidence of cheating. The baseline may get worse
+while the mechanisms that will make it good are built.
 
-**3.2 The historical record must be a plausible outcome, not the only one.**
-Settled with the stakeholder. With no intervention, the real trajectory should
-be a plausible draw from an ensemble of baseline runs - validated against
-distributions and relationships (population ranges, urbanisation share,
-wage-to-grain ratios, technology appearance windows), never against dated
-events. If the baseline reliably reproduces the Antonine plague in 165 AD,
-that is evidence we cheated, not evidence it works.
-
-The baseline is explicitly allowed to get worse while the mechanisms that will
-make it good are being built. Every step toward endogeneity costs historical
-match in the short run, and there is no path that avoids it.
-
-**3.3 Interventions propagate through normal rules.** A gold deposit is a
+**4.3 Interventions propagate through normal rules.** A gold deposit is a
 resource stock at a location. Rifles are objects with ammunition and
-maintenance requirements. Dragons are agents with calorie needs. None of them
-get a bespoke outcome branch.
+maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 
-**3.4 Label every heuristic you cannot yet derive.** Transitional shortcuts are
-allowed while the deeper mechanism does not exist. Unlabelled ones are not.
-Tag them so the migration queue is measurable.
+**4.4 Label every heuristic you cannot yet derive.** Transitional shortcuts
+are allowed while the deeper mechanism does not exist; unlabelled ones are
+not. Tag them so the migration queue is measurable.
 
-**3.5 There is no save-format migration, ever. Stop designing for one.**
-A decision, not an oversight. A game is about half an hour, nobody is forced
-to update, and anyone running one stays on the version they started on. A save
-written by an old build does not have to load in a new one.
+**4.5 Prices are calculated, not looked up.** `data/prices.json` is the old
+way and is being deleted; do not add new readers of it. A production yield is
+a physical fact (ore grade times recovery, stoichiometry, latent heat), never
+derived from a sale price or tuned so a computed price matches the book.
 
-So: rename a persisted field, drop one, change its units, restructure the
-whole save. No shim, no version stamp, no upgrade path, no `if "old_key" in
-data`. Every agent that has looked at this has independently invented a
-migration plan for a problem this project does not have; do not be the next
-one.
+**4.6 No save-format migration, ever.** A game is about half an hour and
+players stay on the build they started with. Rename, drop or restructure
+persisted fields freely: no shim, no version stamp, no `if "old_key" in
+data`. Save/load must still round-trip within a build (with `--session`,
+every command is a save then a load).
 
-What this does NOT excuse: save/load still has to work within a build. The
-suite exercises it hard, and with `--session` every single command is a save
-followed by a load, so a field that fails to round-trip breaks the game in
-normal play. `SAVE_FIELDS` still matters. Its history does not.
-
-**3.6 DO not save hard numbers to any md file or comments.**
-The file changes a lot, and the hard numbers have constantly had to be replace.
-
-**3.7 Keep comments short and concise about the current code.**
-Comments keep refrencing the past code, previous changes, quoting people, etc. Comments should describe what the code does now, not why it was changed or what code came before it. Comments should also use inline comments more, right now most comments are header style, which means a lot of comments are 10+ lines long. The code base is currenly massively commented focused, making it about 2x as big as it needs to be.
+**4.7 The engine never special-cases content ids.** No `if civ == "rome"`,
+no `if node == "steam_engine"`. Content is data so that mods and new
+scenarios work without engine edits.
 
 ---
 
-## 4. Architecture direction
+## 5. Coding patterns
 
-`docs/architecture/` holds this project's design documents; read its README
-first, since it says which apply and in what order. The live
-plan is `ENDOGENOUS_COSTS_AND_DOMAINS.md`: how a price gets calculated rather
-than looked up, which domains produce prices and which only consume them, and
-the milestones. `PM_ASSESSMENT.md` is the reasoning behind it. The two
-external design documents are saved verbatim as inputs to both, and are
-direction rather than approved plans.
-
-Two things from the plan worth knowing before you touch anything:
-
-**`data/production/` is the production side.** The tree
-records what every process consumes and nothing about what anything produces,
-which is why every cost bottomed out in a book value: there was no physical structure to compute one from.
-`prices.json` is the old way, and needs to be deleted asap.
-
-`data/production/` covers **most of the consumption sites** `python3 sim/validate_production.py` for current coverage).
-Read `data/production/_SCHEMA.md` before adding to it. The rule
-that governs every number there: a yield is a physical fact - ore grade times
-recovery, reaction stoichiometry, latent heat - and is NEVER derived from what
-the material sells for, nor tuned so a computed price matches `prices.json`.
-Those prices are mostly estimates and this data exists to
-replace them.
-
-    python3 sim/validate_production.py          errors and coverage
-    python3 sim/validate_production.py --todo   what is still missing
-    python3 sim/audit_costs.py                  where the cost base is
-
-**Nothing reads this data yet.** The price solver described in
-`ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 2 is the next piece, and until it
-exists the engine still uses `prices.json`. Coverage is not the same as
-being wired in. This needs to be changed.
-
-Make the founder's mechanisms general enough that other actors can use
-them, rather than making the founder less detailed.
-This needs to be changed, as the game is becoming multiplayer.
-Eventually, we want to treat even th other countries as their own players.
-
----
-
-## 5. Commands you will need
-
-```bash
-python3 sim/simulator.py validate          # after EVERY edit to data/
-python3 sim/test_regressions.py            # full suite (~68s)
-python3 sim/test_regressions.py --list     # topic names
-python3 sim/test_regressions.py --only mines,demographics
-python3 sim/perf_fingerprint.py record before.json   # proves behaviour unchanged
-python3 sim/perf_fingerprint.py check before.json
-python3 sim/treetool.py judge             # judge nodes (reports; --write to commit)
-python3 sim/audit_costs.py                 # how much of the cost base is calculated
-python3 sim/audit_costs.py --materials     # every material, and whether anything makes it
-python3 sim/repro_nondeterminism.py        # the determinism bug; now passes, kept as a probe
-python3 sim/prove_rename_safe.py HEAD      # prove a rename changed nothing but names
-```
-
-The suite runs from a checkout of any name, in any directory. If you find
-anything that depends on the checkout being called `rome`, it is a bug; see
-`sim/tests/test_suite_portability.py`.
-
----
-
-## 6. Traps that have already bitten someone
-
-- **Green tests do not mean unchanged behaviour.** The suite asserts on
-  outputs and messages, not on the simulation being the same simulation.
-  `perf_fingerprint.py` covers that, and it works again as of this branch -
-  a record and a check against the same checkout come back byte-identical on
-  all nine scenarios. It still does not cover `protocol.py`, where a third of
-  the code lives.
-- **The tree tools write to the repository only when asked.**
-  `treetool.py merge|judge|repair|apply-caps` each rewrite a committed data
-  file, and each reports by default and writes nothing. `--write` is what
-  commits the result.
-
-- **`Sim` is one god object.** Every mixin method talks through `self`, so
-  the coupling is real however the files are arranged. A full decomposition
-  has been considered and currently trying to be changed, in `sim/ARCHITECTURE.md`.
-
-- **Much of the engine is majority comment, and the comments are excessive.**
-  They are how agents hand each other the reason a thing is the way it is. If you come across a comment that is more than 10 lines long, it is likely excessive. If the comment doesn't help, and is just excessive, delete it.
-
+- **Short files.** Many agents edit this repo at once, and a large file is a
+  merge conflict waiting to happen. Split a growing module by topic using the
+  existing pattern (`labour.py`, `labour_wages.py`, `labour_training.py`, ...).
+  Prefer a new small module over growing a large one.
+- **Dynamic over enumerated.** If adding a feature means updating a list in
+  several places, the design is wrong. The save file is the model: fields are
+  detected automatically and only exclusions are listed.
+- **General actors.** Write mechanisms against an actor, not against the
+  founder, so a firm, a state or another player can use them.
+- **`Sim` is a god object.** Mixin methods talk through `self`, so coupling
+  is real however the files are split. Decomposition direction is in
+  `sim/ARCHITECTURE.md` and `docs/architecture/`.
+- **Comments** describe what the code does now, briefly, preferably inline.
+  No history, no "previously", no quotes from people, no multi-paragraph
+  headers. A comment longer than about ten lines is probably excessive;
+  delete what does not help.
+- **No hard numbers in comments or markdown.** Numbers go stale. Give the
+  idea and the command that measures it. Where no command exists, say so in
+  the same sentence.
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
+- **Portability.** The suite must run from a checkout of any name in any
+  directory.
 
----
+### Naming
 
-## 7. Naming
-
-Identifiers two characters or shorter: `python3 sim/code_health.py --names`
-
-**Three commands.** `code_health.py --names` gives
-the burndown total. `.pylintrc` turns pylint into the worklist - every short
-name it can see comes back as a `file:line` somebody can fix:
-
-    python3 -m pylint sim/ | grep -c C0103
-
-Pylint's `invalid-name` check is driven by
-how pylint CLASSIFIES a binding, and three classifications carry no name
-check at all: a module-level name bound to a CALL (`KB = os.path.join(...)`
-is invisible while `QQ = 5` one line below is reported), a module-level loop
-target, and a lambda parameter. Measured: `python3 sim/pylint_blind_spots.py`
-
-This codebase keeps most of its short names exactly where pylint is quietest -
-the test suite is written as module-level script code rather than as
-functions. Use pylint for the worklist and that script for what the worklist
-cannot see.
-
-**The rule for new and edited code:** spell names out. The only acceptable
-short names are `i` as a loop index, and `x`/`y` as coordinates, and only
-inside a scope short enough to see whole. Everything else gets a word:
-`node`, `node_id`, `sim`, `trade`, `material`, `rate`, `key`, `total`.
-
-**This applies to prose, docstrings and design documents, and it is the rule
-most often broken.** `p = A'p + w.l + rents` is four letters standing for
-four things nobody can recover without the textbook. So is
-
-    q_i = gamma_i + (beta_i / p_i) * (Y - sum_j p_j * gamma_j)
-
-A reader with no economics has no way to tell that from a radiation equation.
-Write it out:
+Spell names out. The only acceptable short names are `i` as a loop index and
+`x`/`y` as coordinates, in a scope short enough to see whole. Everything else
+gets a word: `node`, `node_id`, `material`, `rate`, `total`. This applies to
+prose, docstrings and formulas in design documents too:
 
     quantity_of_good = subsistence_floor_of_good + marginal_budget_share_of_good / price_of_good * (income - cost_of_all_subsistence_floors)
 
-**Fix bad names you pass through, where it is cheap.** If you are editing a
-function and it has a one-letter local whose meaning you have just had to
-work out, rename it while you are there - you have already paid the
-expensive part, which is understanding it.
+not `q_i = gamma_i + (beta_i / p_i) * (Y - sum_j p_j * gamma_j)`.
 
-A sweep is planned; see `docs/architecture/NAMING_PLAN.md` for the tiering,
-the per-name meanings and the tooling. `python3 sim/code_health.py --names`
-prints today's Tier-1 share; quote that, not NAMING_PLAN.md's, for current
-state. Tier 1 is a purely local variable, provably safe to rename; a
-function PARAMETER is Tier 2, because `prove_rename_safe.py` cannot cover a
-caller passing by keyword.
-
-`python3 sim/prove_rename_safe.py <ref>` proves a rename changed nothing but
-names, by comparing compiled bytecode: a local's name is not in `co_code`, so
-a pure local rename leaves the executed bytes identical, while an attribute or
-global moves `co_names` and a literal moves `co_consts`. That is a proof over
-every possible run rather than a sample of nine, and it does not depend on
-`perf_fingerprint` working.
+Rename a bad local you pass through once you have worked out what it means.
+Tooling: `python3 sim/code_health.py --names` (burndown),
+`python3 -m pylint sim/ | grep C0103` (worklist), `python3 sim/pylint_blind_spots.py`
+(what pylint cannot see), `python3 sim/prove_rename_safe.py <ref>` (proves a
+rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.md`.
 
 ---
 
-## 8. Working habits this repo expects
+## 6. Working habits
 
-- Every discovered bug becomes a regression test with the smallest scenario
-  that reproduces it. See `Complaints/` and `sim/tests/`.
-- Every number asserted in a prose document must have been computed by the
-  simulator. Prose quotes the data; it never asserts it.
-- Claims about the codebase should be measured, not remembered. If you change
-  the shape of the code, re-measure the counts in `sim/ARCHITECTURE.md`.
-- **Standing rule, added after the stakeholder flagged documentation going
-  stale silently: a number in prose should instead carry the idea, and the command or script that
-  produced it, remove the number, it should not go in.** This file
-  has already shipped wrong node counts and wrong file counts that nobody
-  caught because nothing next to the number said how to check it. Where a
-  command genuinely does not exist yet (a throwaway scan that was never
-  committed, for instance), say so explicitly in the same sentence instead
-  of leaving the number to look authoritative. A number with neither a
-  command nor an "unverifiable" label next to it is a bug in this file.
+- **TDD.** For a bug, feature or refactor: write a regression test that shows
+  the current behaviour first, then change the code. If you cannot see what it
+  does in a test, you cannot fix it; ask for more information rather than
+  guessing.
+- **Every bug becomes a regression test** with the smallest reproducing
+  scenario. Resolved complaints move to `Complaints/closed/`.
+- **Measure, don't remember.** Claims about the codebase are measured. Every
+  number in prose was computed by the simulator, and carries the command that
+  produced it.
+- **Green tests do not mean unchanged behaviour.** The suite asserts on
+  outputs and messages. `sim/perf_fingerprint.py` checks the simulation
+  itself (it does not cover the protocol layer).
+- **Tree tools write only when asked.** `treetool.py merge|judge|repair|apply-caps`
+  report by default; `--write` commits the result to data files.
 
-    Do TDD where possible. If asked to fix a bug, add a feature, or refactor something:
-    add a regression test first, then make the test pass. If you can't see what it is currently doing in a test, then you can't fix it.
-    Ask for more information to understand the current behavior to actually add a test. Otherwise, if you try to fix it with your best guess, you will likely make it worse.
+---
 
-    Make things abstracted and dynamic where we can. An example that we had to redo is the save file. It was previously hard coded every variable that needed to be saved, and had to be constantly updated. Instead, it now detects fields automatically, and only excludes fields that are not needed. This allows for much easier expansion of the game without having to update the save file format. Same should apply to most of the game. If you have to manually update a bunch of files every time you add a new feature, you are doing it wrong.
+## 7. Commands
+
+Most scripts take `--help`. The ones used most:
+
+```bash
+python3 sim/simulator.py validate          # after EVERY edit to data/
+python3 sim/validate_production.py         # production data errors and coverage (--todo for gaps)
+python3 sim/test_regressions.py            # full suite (--list for topics, --only a,b for some)
+python3 sim/perf_fingerprint.py record before.json   # then `check before.json` to prove behaviour unchanged
+python3 sim/audit_costs.py                 # how much of the cost base is calculated
+python3 sim/treetool.py judge              # judge tree nodes (--write to commit)
+```
