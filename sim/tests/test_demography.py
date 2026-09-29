@@ -15,6 +15,8 @@ to less food, and - the one the old scalar `pop_deficit` mechanism in
 sim/engine/core.py could never have passed - that recovery from a mortality
 shock depends on WHICH cohorts survived it, not merely on how many people
 did.
+
+sim/world/demography.py standalone: age-cohort population dynamics (unittest-style).
 """
 import math
 import unittest

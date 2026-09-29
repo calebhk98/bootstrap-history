@@ -40,6 +40,8 @@ because `judge`/`repair`/`apply-caps` write fields no branch has ever carried
 and because branch authors have been silently ignored for years. A fixture
 proves the MECHANISM is exact; it does not launder that backlog into a
 by-the-way side effect of a test run.
+
+Branch edits to existing tree nodes overlay field by field; an id defined in two branch files is an error.
 """
 import contextlib
 import io

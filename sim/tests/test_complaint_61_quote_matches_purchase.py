@@ -2,6 +2,8 @@
 
 For each buy kind with a quote, the quoted affordable amount is bought on an
 unchanged Sim and must succeed in full.
+
+Every quoted affordable amount is purchasable as quoted.
 """
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.dispatch_money import _cmd_quote

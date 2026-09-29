@@ -16,6 +16,8 @@ country-scale approximations, but the DIRECTIONS (better land earns more
 rent than worse land; more or better territory raises a civilization's
 price; a single homogeneous region earns none) are not in doubt regardless
 of any one figure's exact size.
+
+sim/world/land.py: Ricardian rent at the margin of cultivation.
 """
 import json
 import os

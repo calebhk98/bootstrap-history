@@ -42,6 +42,8 @@ rather than a module:
     generator, specifically so nothing about this wiring depends on how
     many times a --session game was saved and reloaded before reaching a
     given year (see Sim._farm_year_weather_seed's own docstring).
+
+The seam where Sim demographic recovery feeds the real harvest to Population.step, so famine falls out of land, labour and weather. Needs sim/engine (unittest-style).
 """
 import statistics
 import unittest

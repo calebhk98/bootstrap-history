@@ -15,6 +15,8 @@ classes instead pin the CURRENT computed values and compare them to the
 calibration ranges declared at the bottom of military_logistics.py, honestly
 and without retuning anything to make them agree - see that module's own
 CALIBRATION TARGETS section and pack_animal_max_one_way_days()'s docstring.
+
+sim/world/military_logistics.py standalone: rations, fodder, baggage range and ammunition as consumption arithmetic (unittest-style).
 """
 import unittest
 

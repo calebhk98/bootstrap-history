@@ -38,6 +38,8 @@ because nothing else differs between them. The mirror is built with
 symlinks precisely so this test never writes into the shared checkout: the
 only bytes it ever creates are the (up to) three reverted files, in a
 tempfile.mkdtemp() outside the repository entirely.
+
+The compact agent output mode keeps reason-carrying prose; the mode-off path is byte-identical.
 """
 import json
 import os

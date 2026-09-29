@@ -28,6 +28,8 @@ SCOPE. First level only: a held node's immediate `pre`. It does not check
 closure over the full transitive chain, and it says nothing about whether a
 civilisation SHOULD hold something it does not - that is Complaints/41's
 question and needs a historian, not a graph walk.
+
+Civilisations holding nodes whose prerequisites they lack are pinned by name, failing in both directions.
 """
 import json
 import glob

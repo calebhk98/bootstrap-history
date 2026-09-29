@@ -37,6 +37,8 @@ five-statement window-arithmetic preamble and then doing something different
 afterwards - structurally identical to what fog.py and society.py actually
 had. Finding it here is the detector proving it would have caught the real
 case, without depending on that case continuing to exist in git history.
+
+Tests the code_health.py detectors against fixtures with known answers, not the current codebase.
 """
 import os
 import shutil

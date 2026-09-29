@@ -25,22 +25,6 @@ the two descriptions is on file. Nothing here should be sensitive to how
 many labels a civilization's `home_regions` happens to name, or what
 those labels are called - only to the physical land itself.
 
-WHY THIS MODULE (NOT sim/tests/) OWNS THIS TEST. Per this task's own
-working agreement, `sim/tests/` is owned by other agents concurrently
-editing this checkout; `sim/world/land.py` and any new `sim/world/land_*`
-file are this task's own territory. This file's name starts with `land_`
-for exactly that reason. It is NOT wired into `sim/tests/__main__.py`'s
-own `TOPICS` list (that file is under `sim/tests/` too) - see this task's
-own final report for the one-line addition that would register it there
-(`"land_tile_partition_invariance"` alongside `"land"`) if whoever owns
-that file wants to take it. Runnable directly:
-
-    python3 -m unittest sim.world.land_tile_partition_invariance_test -v
-
-or as a plain script:
-
-    python3 sim/world/land_tile_partition_invariance_test.py
-
 THE FIXTURE. Four synthetic tiles (never real geography.json data, so
 this test's own numbers do not drift when that file's real tiles are
 regenerated at a finer grid - see `docs/architecture/MAP_AND_WEATHER.md`
@@ -74,6 +58,8 @@ region record, so "whole" (one blended fertility, zero internal margin)
 and "north"+"south" (two distinct fertilities, a real internal margin
 between them) are NOT the same answer to it, even though they describe
 the same ground.
+
+Re-partitioning a territory into different region counts must not change any land figure; the fixture is synthetic tiles.
 """
 import unittest
 

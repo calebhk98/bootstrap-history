@@ -11,7 +11,12 @@ this checks that core.py actually builds land-share weights from Rome's
 seven home_regions, draws one independent multiplier per region, and pools
 them - and that the century-level acceptance target this wiring exists for
 is actually met.
+
+Weather is drawn per home region and pooled by cultivable-land share; the seed is a pure function of (civ, region, year).
 """
+
+# Skipped by a default run; --slow or --only runs it.
+SLOW_TOPIC = True
 import random
 import statistics
 import unittest

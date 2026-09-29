@@ -13,6 +13,8 @@ fix to scholars, so the identical bug survived for them until a player hit
 it and reported it.
 
 unittest.TestCase style, like the other focused complaint suites.
+
+Commissioned scholar hours are gated on hands actually available, not the standing headcount.
 """
 import os
 import random

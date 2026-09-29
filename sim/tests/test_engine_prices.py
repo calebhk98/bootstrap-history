@@ -20,6 +20,8 @@ Written as unittest.TestCase against synthetic production entries, like
 test_price_solver_cycles.py and test_price_solver_era_gate.py, so this does
 not depend on the real, changing contents of data/production/ for anything
 but one light integration check at the end.
+
+sim/engine/prices.py: solver prices cached on held gate nodes, book fallback, per-material solved/book provenance.
 """
 import json
 import os

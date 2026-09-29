@@ -38,10 +38,7 @@ than sim/tests/harness.py - see demand.py's own STANDALONE section for why
 a module with no dependency on sim/engine/ should not be tested through a
 harness built for the engine.
 
-NOT YET REGISTERED IN sim/tests/__main__.py's TOPICS list, so `python3
-sim/test_regressions.py` does not run this file yet - see
-DEMAND_AT_SCALE.md's own closing section for why that file was left
-untouched here and what line adds it.
+Pins the subsistence cliff and Engel-curve floor as current behaviour; invert, do not delete.
 """
 import unittest
 

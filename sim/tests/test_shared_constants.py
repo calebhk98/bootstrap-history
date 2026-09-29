@@ -57,6 +57,8 @@ import time, project-wide, with no test needed) - what remains, and what
 this file's equivalence groups exist for, is the hard half: the SAME
 quantity under a DIFFERENT name, which is exactly what land.py and
 agriculture.py had.
+
+sim/world/shared_constants.py holds each shared physical fact once; catches re-duplication.
 """
 import ast
 import os

@@ -18,6 +18,8 @@ convergent, and that the five civilizations' differing rents actually
 separate their crop prices); the rest build tiny synthetic entries so the
 mechanism itself is pinned independent of any future edit to those data
 files.
+
+Land-limited materials state land_iugera_years and the solver charges rent for it.
 """
 import unittest
 

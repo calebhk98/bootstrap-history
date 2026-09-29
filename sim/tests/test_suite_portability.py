@@ -150,17 +150,28 @@ check("no topic module calls sys.exit at import time - a topic that exits "
       "a clean summary on its way out",
       not _exiters, _exiters)
 
-check("every topic registered in TOPICS exists on disk, and every topic "
-      "module on disk is registered - an unregistered one runs never, and a "
-      "registered missing one crashes the run",
-      sorted(TOPICS) == sorted(
-          filename[len("test_"):-len(".py")]
-          for filename in os.listdir(os.path.join(ROOT, "sim", "tests"))
-          if filename.startswith("test_") and filename.endswith(".py")),
-      sorted(set(TOPICS) ^ {filename[5:-3] for filename in
-                            os.listdir(os.path.join(ROOT, "sim", "tests"))
-                            if filename.startswith("test_")
-                            and filename.endswith(".py")}))
+_tests_dir = os.path.join(ROOT, "sim", "tests")
+_unparsable = []
+for _slug in TOPICS:
+    _topic_path = os.path.join(_tests_dir, "test_%s.py" % _slug)
+    try:
+        with open(_topic_path, encoding="utf-8") as _handle:
+            compile(_handle.read(), _topic_path, "exec")
+    except SyntaxError as _err:
+        _unparsable.append("%s: %s" % (_slug, _err))
+check("every discovered topic compiles - a broken file would crash the run "
+      "rather than be reported",
+      not _unparsable, _unparsable)
+
+# A file that looks like a test but does not match test_*.py is never run.
+_near_misses = sorted(
+    filename for filename in os.listdir(_tests_dir)
+    if filename.lower().startswith("test")
+    and not (filename.startswith("test_") and filename.endswith(".py"))
+    and not filename.endswith((".pyc", ".pyo")) and filename != "__pycache__")
+check("no file in sim/tests looks like a test but escapes the test_*.py "
+      "discovery pattern, and nothing is registered by hand",
+      not _near_misses and TOPICS == sorted(TOPICS), _near_misses)
 
 
 # --- The end-to-end proof. Everything above is a claim about the source; this

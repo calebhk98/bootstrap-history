@@ -14,6 +14,8 @@ sim/world/agriculture.py's and sim/world/deposits.py's own precedent for
 the same discipline). It reports the disagreement; it never asserts a
 tolerance tight enough to tempt anyone into retuning a marginal budget
 share or the Gini coefficient to close it.
+
+sim/world/demand.py standalone: household budgets, Stone-Geary demand and derived producer demand (unittest-style).
 """
 import ast
 import glob
