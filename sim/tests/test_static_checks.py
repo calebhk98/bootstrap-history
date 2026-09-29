@@ -1,4 +1,6 @@
 """static_checks: the undefined-name check that a split cannot survive.
+Also checks that player-facing text (tech node notes) does not contain
+developer references.
 
 WHY THIS TOPIC EXISTS, and it is one specific failure rather than a wish for
 tidier code.
@@ -36,7 +38,9 @@ a worse failure than the one being guarded against.
 
     python3 -m pip install ruff
 """
+import json
 import os
+import re
 import subprocess
 import sys
 
@@ -115,3 +119,27 @@ else:
           "tool silently half-renaming a comprehension",
           _ran_properly and not _undefined,
           "\n".join(_undefined[:20]) or "clean")
+
+
+# CHECK: Player-facing tech node notes contain no Complaints/ or file paths.
+_tech_tree_path = os.path.join(ROOT, "data", "tech_tree.json")
+with open(_tech_tree_path, 'r') as _f:
+    _tech_data = json.load(_f)
+
+_bad_nodes = []
+for _node in _tech_data.get("nodes", []):
+    _node_id = _node.get("id")
+    _note = _node.get("note", "")
+
+    if not _note:
+        continue
+
+    if "Complaints/" in _note:
+        _bad_nodes.append((_node_id, "contains 'Complaints/' reference"))
+    elif re.search(r"data/[a-zA-Z_/.-]+\.json", _note):
+        _bad_nodes.append((_node_id, "contains file path (.json)"))
+
+check("no tech node notes contain Complaints/ or file paths",
+      not _bad_nodes,
+      "\n".join(f"{node_id}: {issue}" for node_id, issue in _bad_nodes[:10])
+      if _bad_nodes else "clean")
