@@ -77,13 +77,13 @@ internationalisation to switch on. _localise_words/_localise_money in
 protocol.py swap the NAME of the currency per civilisation (denarii,
 hacksilver, beans, pence) - flavour, not translation - and the many
 thousands of words of node notes (data/tech_tree.json) and the
-knowledge/ corpus exist in English only. A menu entry offering
+docs/knowledge/ corpus exist in English only. A menu entry offering
 "language" with nothing behind it would be worse than no entry: a setting
 that silently does nothing. Real language support would mean translating
 every node note and every rendered sentence in protocol.py/cli.py (not a
 small rewrite - protocol.py alone is thousands of lines of prose, generated
 sentence by sentence from game state) and deciding what happens to
-knowledge/, which is English prose no translation layer touches
+docs/knowledge/, which is English prose no translation layer touches
 automatically. That is a project of its own, not a field in this file.
 """
 import json
