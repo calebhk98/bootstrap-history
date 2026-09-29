@@ -83,8 +83,9 @@ def _material_capacity_rows(sim):
     demand = sim.annual_material_demand()
     by_tag = sim._demand_by_supply_tag(demand)
     rows = {}
-    for (emp_key, tag), need in by_tag.items():
-        own = sim._own_material_supply(tag)
+    # One row per material: firewood and charcoal draw on the same forest,
+    # so their demands are combined rather than one overwriting the other.
+    for emp_key, (need, own) in sim.demand_and_own_supply_by_material(by_tag).items():
         market = sim._material_market_tonnes(emp_key)
         rows[emp_key] = {
             "material": emp_key,
@@ -349,7 +350,7 @@ def _mine_pending_rows(dem, pending):
             "costs_you_a_year": 0.0,
             "utilization": "sinking",
             "actually_supplying_demand": False,
-            "ready_in": ready,
+            "commissions_during_year": ready,
             "tonnes_a_year_when_it_is_ready": round(amt, 2),
             "shut_it_with": "close %s" % material})
     return rows

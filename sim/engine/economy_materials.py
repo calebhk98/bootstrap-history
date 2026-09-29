@@ -754,6 +754,23 @@ class MaterialSupplyMixin:
                 by_tag[self._material_tag(mat)] += amt
         return by_tag
 
+    def demand_and_own_supply_by_material(self, by_tag):
+        """{emp_key: (demand, own_supply)} with tags that share one land
+        base (firewood and charcoal off the same forest) expressed in the
+        units of the tag whose yield is the reference, so the demands add."""
+        # The forest4 (firewood) yield is the reference yield times this
+        # ratio, so a tonne of firewood uses 1/ratio of the forest.
+        demand_scale = {"forest4": 1.0 / self.FIREWOOD_PER_CHARCOAL_MASS_RATIO}
+        totals = {}
+        for (emp_key, tag), need in sorted(by_tag.items()):
+            scale = demand_scale.get(tag, 1.0)
+            demand, own = totals.get(emp_key, (0.0, 0.0))
+            # Tags sharing a land base see the same land, so own supply is
+            # the largest of them in reference units, not their sum.
+            own = max(own, self._own_material_supply(tag) * scale)
+            totals[emp_key] = (demand + need * scale, own)
+        return totals
+
     # ---- stock vs flow -----------------------------------------------------
     #
     # Requiring 20 grams of gold for a device must not require building a

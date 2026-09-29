@@ -841,7 +841,8 @@ class MiningMixin:
         # blasting or a railway -- see that method's own comment.
         scale = self.mining_cost_scale(mat)
         cost = t_per_yr * cap * self.price_index * scale
-        if not purchase_rule.can_pay(self, cost):
+        # A shaft that costs nothing needs no budget check.
+        if cost > 0 and not purchase_rule.can_pay(self, cost):
             # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING:
             # silently spending all available capital and handing back a
             # fraction of the mine actually asked for is not what a typed
@@ -1079,7 +1080,8 @@ class MiningMixin:
         if hectares <= 0:
             return 0.0
         cost = hectares * self.FOREST_COST_PER_HA * self.price_index
-        if not purchase_rule.can_pay(self, cost):
+        # A shaft that costs nothing needs no budget check.
+        if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         economy.forest_ha += hectares

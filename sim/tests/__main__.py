@@ -314,6 +314,8 @@ TOPICS = [
     "price_solver_land",
     # Joint-process cost is split by demand-derived value, not by mass.
     "joint_allocation",
+    # Complaints 65, 66, 67 and the zero-cost mine guard.
+    "mine_auto_and_capacity",
     "complaint_46_forest_area_not_region_count",
     "complaint_64_literacy_ceiling",
     "complaint_98_schooling_message",
