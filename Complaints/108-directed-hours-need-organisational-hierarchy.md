@@ -1,6 +1,6 @@
 # Directed hours need organisational hierarchy at scale
 
-**Status:** open
+**Status:** open - on hold; intended as a mod
 
 **Source:** playtest findings document, LATE-002. **Type:** Major
 roadmap-sized feature recommendation.

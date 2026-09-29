@@ -1,6 +1,6 @@
 # Add a stronger international economy
 
-**Status:** open
+**Status:** open - roadmap: after 109
 
 **Source:** playtest findings document, LATE-007. **Type:** Feature
 recommendation, roadmap-sized, partially named in the architecture plan.

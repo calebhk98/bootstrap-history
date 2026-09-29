@@ -1,6 +1,6 @@
 # The live economy lacks a closed population/income/demand loop
 
-**Status:** open
+**Status:** open - roadmap: approved, next after automatic demand
 
 **Source:** playtest findings document, ECON-004. **Type:** Architecture
 finding with substantial existing groundwork; do not read this as "build a

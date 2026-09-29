@@ -1,6 +1,6 @@
 # Add a real state fiscal/budget model
 
-**Status:** open
+**Status:** open - roadmap: after 107
 
 **Source:** playtest findings document, LATE-003. **Type:** Major
 roadmap-sized feature recommendation, with an existing code-level admission

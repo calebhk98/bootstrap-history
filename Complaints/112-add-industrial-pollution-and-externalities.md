@@ -1,6 +1,6 @@
 # Add industrial pollution and externalities
 
-**Status:** open
+**Status:** open - intended as a mod
 
 **Source:** playtest findings document, LATE-006. **Type:** Feature
 recommendation, medium size, not currently named in the architecture

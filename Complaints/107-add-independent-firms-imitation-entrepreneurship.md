@@ -1,6 +1,6 @@
 # Add independent firms, imitation and entrepreneurship
 
-**Status:** open
+**Status:** open - roadmap: approved, first slice in progress
 
 **Source:** playtest findings document, LATE-001. **Type:** Major
 roadmap-sized feature recommendation, not a fix.

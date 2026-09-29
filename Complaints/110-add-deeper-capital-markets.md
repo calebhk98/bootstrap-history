@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** open
+**Status:** open - roadmap: after 107
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in

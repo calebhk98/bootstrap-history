@@ -1,6 +1,6 @@
 # Add political interest groups created by industrialisation
 
-**Status:** open
+**Status:** open - roadmap: after 107
 
 **Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned

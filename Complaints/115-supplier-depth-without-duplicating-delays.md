@@ -1,6 +1,6 @@
 # Add supplier depth / tacit industrial competence, without duplicating existing delays
 
-**Status:** open
+**Status:** open - on hold
 
 **Source:** playtest findings document, LATE-009. **Type:** Realism
 refinement, medium size. Carries its own explicit warning against
