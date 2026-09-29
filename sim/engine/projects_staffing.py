@@ -23,6 +23,8 @@ class StaffingMixin:
     # Why a work is shut; the only two writers are close_work and clear_closure.
     CLOSED_FOR_STAFF = "staff"
     CLOSED_BY_CHOICE = "manual"
+    CLOSED_LOSS_MAKING = "loss_making"
+    CLOSED_CREDITOR_SEIZURE = "creditor_seizure"
 
     def close_work(self, node_id, reason, year=None):
         """Shut a work and record why and since when, in one place."""

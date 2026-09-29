@@ -323,14 +323,7 @@ class CreditMixin:
             # shutting the doors, and what that saves is its running cost.
             # The knowledge stays in `done` - you cannot forget how a thing
             # works because you could not pay for it this year.
-            projects.operating.discard(worst)
-            # MOTHBALLED, not merely discarded: this is the plant falling into
-            # disrepair, exactly like a deliberate `mothball`, and it must show
-            # up the same way - in `state.mothballed`, and NOT back in
-            # `available` looking like research you have never done, nor
-            # indistinguishable from something you had never built, with
-            # `restore` (a fraction of the cost) never offered for it.
-            projects.mothballed.add(worst)
+            self.close_work(worst, self.CLOSED_LOSS_MAKING, year)
             shed.append(worst)
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
@@ -633,13 +626,8 @@ class CreditMixin:
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
-                projects.operating.discard(node_id)
                 household.capital += self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE
-                # MOTHBALLED, not merely discarded - see the identical comment
-                # in shed_loss_makers. Without this a work creditors took stood
-                # indistinguishable from research never begun, and `restore`
-                # (a fraction of the cost) was never offered for it.
-                projects.mothballed.add(node_id)
+                self.close_work(node_id, self.CLOSED_CREDITOR_SEIZURE, year)
                 taken.append(node_id)
             # Only say it if it happened: firing this every year regardless
             # of whether anything was actually taken would log creditors
