@@ -308,6 +308,8 @@ TOPICS = [
     # it. Pins the property that matters: wheat priced identically in all
     # five civilisations before, and must now rank with each one's own rent.
     "price_solver_land",
+    # Joint-process cost is split by demand-derived value, not by mass.
+    "joint_allocation",
     "complaint_46_forest_area_not_region_count",
     "complaint_64_literacy_ceiling",
     "complaint_98_schooling_message",
