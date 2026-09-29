@@ -1418,6 +1418,7 @@ def _node_explain(sim, nodes, node_id):
     apply sometimes) - this function assembles their pieces in that same
     order, and decides nothing itself.
     """
+    nodes = sim.nodes   # the tree in this civilisation's coin
     node = nodes[node_id]
     out = {}
     out.update(_explain_identity(sim, nodes, node_id, node))
