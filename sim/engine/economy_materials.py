@@ -272,7 +272,8 @@ class MaterialSupplyMixin:
         if cached is None or cached[0] != held:
             from .data import calculated_goods_prices
             prices = calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"))
+                held, civilization_id=self.civ.get("id"),
+                money_per_labour_hour=self.money_per_labour_hour())
             cached = self._material_prices_cache = (held, prices)
         return cached[1]
 
@@ -290,8 +291,14 @@ class MaterialSupplyMixin:
         commodity = self._commodity_ledger().commodities.get(tag)
         if commodity:
             price = float(commodity.get("base_price_denarii_per_kg", 0.0) or 0.0)
-            return price or None
+            return self.book_money(price) or None
         return None
+
+    def _book_denarii_price_per_kg(self, tag):
+        """The price in book denarii, the unit the output and market-share
+        curves below were fitted in."""
+        price = self._book_price_per_kg(tag)
+        return None if price is None else price / self.book_money(1.0)
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
@@ -337,7 +344,7 @@ class MaterialSupplyMixin:
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._book_price_per_kg(tag)
+        price = self._book_denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
         out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
@@ -360,7 +367,7 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._book_price_per_kg(tag)
+        price = self._book_denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
         return max(self.GENERIC_MARKET_SHARE_FLOOR,

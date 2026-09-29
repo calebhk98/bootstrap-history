@@ -51,7 +51,7 @@ check("a furnace you actually run still carries real upkeep",
 # is what makes it a going concern in the first place - so blast_furnace,
 # which both sells cast iron and costs money to run, is untouched.
 check("a venture that already sells something keeps its upkeep untouched",
-      NODES["blast_furnace"]["up"] == 7000.0 and NODES["blast_furnace"]["rev"] > 0,
+      abs(NODES["blast_furnace"]["up"] - book_money(7000.0)) < 1e-6 and NODES["blast_furnace"]["rev"] > 0,
       (NODES["blast_furnace"]["up"], NODES["blast_furnace"]["rev"]))
 
 # --- JOB 2: rubber should be made, not bought. A play tester asked whether

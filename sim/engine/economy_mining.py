@@ -33,48 +33,48 @@ from . import purchase_rule
 class MiningMixin:
     MINE_OPEX_PER_T_COAL = declare(
         "MINE_OPEX_PER_T_COAL", 1.5, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_IRON = declare(
         "MINE_OPEX_PER_T_IRON", 12.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_COPPER = declare(
         "MINE_OPEX_PER_T_COPPER", 55.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_LEAD = declare(
         "MINE_OPEX_PER_T_LEAD", 18.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_TIN = declare(
         "MINE_OPEX_PER_T_TIN", 95.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_SILVER = declare(
         "MINE_OPEX_PER_T_SILVER", 2200.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_GOLD = declare(
         "MINE_OPEX_PER_T_GOLD", 42000.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted", source=None, confidence="D",
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
         why="Curated recurring cost per tonne extracted from a working of this "
             "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T = {
-        'coal': MINE_OPEX_PER_T_COAL,
-        'iron': MINE_OPEX_PER_T_IRON,
-        'copper': MINE_OPEX_PER_T_COPPER,
-        'lead': MINE_OPEX_PER_T_LEAD,
-        'tin': MINE_OPEX_PER_T_TIN,
-        'silver': MINE_OPEX_PER_T_SILVER,
-        'gold': MINE_OPEX_PER_T_GOLD,
-    }
+
+    MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
+
+    @property
+    def MINE_OPEX_PER_T(self):
+        """Curated running cost per tonne, by material, in this civilisation's coin."""
+        return {material: getattr(self, "MINE_OPEX_PER_T_" + material.upper())
+                for material in self.MINE_OPEX_MATERIALS}
+
     MINE_LEAD_YEARS = declare(
         "MINE_LEAD_YEARS", 3.0, kind="engineering_estimate",
         unit="years", source="Sinking a shaft, arranging drainage, "
@@ -175,7 +175,7 @@ class MiningMixin:
         COMMODITY_DYNAMISM.md) as well-sourced headline cases, and also
         points at the generic fallback below: not a hard, closed list.
         """
-        named = ", ".join(sorted(self.MINE_OPEX_PER_T))
+        named = ", ".join(sorted(self.MINE_OPEX_MATERIALS))
         return ("well-known workings: %s - or any other material key the "
                 "tree uses (for example aluminium_kg), priced from its own "
                 "book price if nothing more specific is known about it"
@@ -291,7 +291,7 @@ class MiningMixin:
             "capacity.")
     REVENUE_SCALE_DENARII = declare(
         "REVENUE_SCALE_DENARII", 60000.0, kind="temporary_heuristic",
-        unit="denarii/year of revenue for +100% ceiling", source=None,
+        book_money=True, unit="denarii/year of revenue for +100% ceiling", source=None,
         confidence="D",
         why="How much annual revenue it takes to double a standing "
             "ceiling via REVENUE_SCALE_CAP_MULTIPLE, reused identically in "

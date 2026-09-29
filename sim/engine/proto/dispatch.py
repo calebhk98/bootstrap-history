@@ -465,6 +465,7 @@ def _agent_dispatch(sim, nodes, cmd):
 
 
 def _agent_dispatch_inner(sim, nodes, cmd):
+    nodes = sim.nodes   # the tree in this civilisation's coin
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}

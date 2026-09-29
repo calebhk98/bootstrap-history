@@ -692,6 +692,7 @@ def _agent_available(sim, nodes, cmd=None):
     make sense of, let alone a person. Ask for the part you want.
     """
     cmd = cmd or {}
+    nodes = sim.nodes   # the tree in this civilisation's coin
     # LIVE, NOT A SNAPSHOT: cli.py's _apply_display_prefs patches
     # engine.protocol.DEFAULT_AVAILABLE_LIMIT directly (a module attribute,
     # not a call) - see that name's own comment in engine/proto/util.py.
@@ -1417,6 +1418,7 @@ def _node_explain(sim, nodes, node_id):
     apply sometimes) - this function assembles their pieces in that same
     order, and decides nothing itself.
     """
+    nodes = sim.nodes   # the tree in this civilisation's coin
     node = nodes[node_id]
     out = {}
     out.update(_explain_identity(sim, nodes, node_id, node))

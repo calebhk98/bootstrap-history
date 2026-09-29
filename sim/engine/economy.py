@@ -599,7 +599,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     # price of coppice before spending capital on it, not only after.
     FOREST_COST_PER_HA = declare(
         "FOREST_COST_PER_HA", 250.0, kind="temporary_heuristic",
-        unit="denarii/hectare", source=None, confidence="D",
+        book_money=True, unit="denarii/hectare", source=None, confidence="D",
         why="Purchase price of a hectare of coppice woodland. No attested "
             "Roman land-price figure backs this; it exists mainly so "
             "`quote forest` and the purchase itself agree on a real price "

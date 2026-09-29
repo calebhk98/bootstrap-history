@@ -1549,7 +1549,7 @@ s3 = sim(capital=1000000.0)
 # BIG ENOUGH THAT ONE PERSON CANNOT RUN IT. The founder counts as a pair of
 # hands now, so a small shop is exactly what they CAN open alone; the staffing
 # rule is about scale, and this check has to test scale.
-_heavy = [node_id for node_id in NODES if NODES[node_id]["rev"] >= 6000][:1]
+_heavy = [node_id for node_id in NODES if NODES[node_id]["rev"] >= book_money(6000.0)][:1]
 if _heavy:
     s3.done.add(_heavy[0]); s3._done_changed()
     s3.artisans = 0.0
@@ -1916,9 +1916,9 @@ check("a hazard that took nothing from you says so",
 #    opened eleven concerns in one turn, fired all six people and watched net
 #    income RISE - seventeen concerns running against "EMPLOY: 0 people", and
 #    the same loom still paying 435 a year in 1800 through the Black Death.
-s = sim(civ="england_1300", capital=500000.0)
+s = sim(civ="england_1300", capital=book_money(500000.0, "england_1300"))
 s.hire("artisan", 6)
-_big = [node_id for node_id in NODES if 2000 <= NODES[node_id]["rev"] <= 9000][:4]
+_big = [node_id for node_id in NODES if book_money(2000.0) <= NODES[node_id]["rev"] <= book_money(9000.0)][:4]
 for _k in _big:
     s.done.add(_k)
 s._done_changed()
@@ -2148,7 +2148,7 @@ check("you can ask the price of a forest before you buy one",
 check("...and of people",
       _qf[1].get("ok") is True and _qf[1].get("to_buy_them", 0) > 0,
       _qf[1].get("error") or _qf[1].get("to_buy_them"))
-s = sim(capital=100000.0)
+s = sim(capital=book_money(100000.0))
 _before_f = s.capital
 _quoted = _qf[0]["to_buy_it"]
 s.buy_forest(100)

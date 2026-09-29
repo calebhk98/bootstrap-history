@@ -47,24 +47,24 @@ class CreditMixin:
             "have.")
     CREDIT_LINE_IDENTITY_COVER = declare(
         "CREDIT_LINE_IDENTITY_COVER", 400.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Extra credit a respectable cover identity is worth. Tuned so "
             "the opening decision (reach a cover identity or not) is a real "
             "one; not sourced to any attested figure.")
     CREDIT_LINE_PATRON_LOCAL = declare(
         "CREDIT_LINE_PATRON_LOCAL", 3000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Extra credit a local patron's name is worth. Game-balance "
             "figure, not a sourced credit line.")
     CREDIT_LINE_PATRON_SENATORIAL = declare(
         "CREDIT_LINE_PATRON_SENATORIAL", 15000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Extra credit a senatorial patron's name is worth. Scaled up "
             "from the local-patron figure by feel, not by any attested "
             "ratio of patron wealth or standing.")
     CREDIT_LINE_PATRON_IMPERIAL = declare(
         "CREDIT_LINE_PATRON_IMPERIAL", 60000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Extra credit an imperial patron's name is worth. As with the "
             "other patron tiers, a tuned step up rather than a sourced "
             "figure - see the CREDIT_LINE_SERVICEABLE bound below for the "
@@ -72,7 +72,7 @@ class CreditMixin:
             "trap.")
     CREDIT_LINE_PER_COLLEGIUM_UNIT = declare(
         "CREDIT_LINE_PER_COLLEGIUM_UNIT", 4000.0, kind="temporary_heuristic",
-        unit="denarii per licensed collegium unit", source=None,
+        book_money=True, unit="denarii per licensed collegium unit", source=None,
         confidence="D",
         why="Credit value of one licensed collegium, linear rather than "
             "sqrt because this is collateral (a real, seizable asset) "
@@ -80,13 +80,13 @@ class CreditMixin:
             "reasoning. The rate itself is tuned, not appraised.")
     CREDIT_LINE_ENDOWMENT_LAND = declare(
         "CREDIT_LINE_ENDOWMENT_LAND", 30000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Credit value of an endowment of land, treated as real "
             "collateral. No land valuation model backs this figure; it is "
             "a flat, tuned amount.")
     CREDIT_LINE_PER_REPUTATION_POINT = declare(
         "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
-        unit="denarii of credit per reputation point", source=None,
+        book_money=True, unit="denarii of credit per reputation point", source=None,
         confidence="D",
         why="How much a point of reputation (itself a heuristic score, see "
             "STANDING_* above) is worth in raw borrowing power. Doubly "
@@ -94,7 +94,7 @@ class CreditMixin:
             "conversion rate is invented on top of it.")
     CREDIT_LINE_PER_FOREST_HA = declare(
         "CREDIT_LINE_PER_FOREST_HA", 120.0, kind="temporary_heuristic",
-        unit="denarii of credit per hectare of owned forest", source=None,
+        book_money=True, unit="denarii of credit per hectare of owned forest", source=None,
         confidence="D",
         why="Forest is real collateral, so it counts toward credit the way "
             "FOREST_COST_PER_HA says it cost to buy; the per-hectare figure "
@@ -891,7 +891,7 @@ class CreditMixin:
 
     LIVING_COST_BASE_SUBSISTENCE = declare(
         "LIVING_COST_BASE_SUBSISTENCE", 120.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=1", source=None, confidence="D",
+        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
         why="Bare subsistence cost for one person (food, the plainest "
             "shelter, nothing else) at this society's reference prices. No "
             "attested Roman subsistence-basket figure backs this exact "
@@ -900,7 +900,7 @@ class CreditMixin:
             "a real crop and price), not a flat denarii figure.")
     LIVING_COST_HOUSEHOLD_BASE = declare(
         "LIVING_COST_HOUSEHOLD_BASE", 90.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=1, one dependant-equivalent",
+        book_money=True, unit="denarii/year at price_index=1, one dependant-equivalent",
         source=None, confidence="D",
         why="Cost of keeping one household dependant beyond bare personal "
             "subsistence - rent, ordinary household goods, the plain cost "
@@ -922,18 +922,18 @@ class CreditMixin:
             "standard of upkeep. Tuned, not measured.")
     LIVING_COST_STATUS_CITIZENSHIP = declare(
         "LIVING_COST_STATUS_CITIZENSHIP", 200.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=1", source=None, confidence="D",
+        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
         why="Standing upkeep of maintaining the appearance citizenship "
             "expects - clothes, hospitality, being seen. Tuned game "
             "balance, not an attested figure.")
     LIVING_COST_STATUS_PATRON_SENATORIAL = declare(
         "LIVING_COST_STATUS_PATRON_SENATORIAL", 900.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=1", source=None, confidence="D",
+        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
         why="As LIVING_COST_STATUS_CITIZENSHIP, for a senatorial patron's "
             "expectations of you. Tuned, not attested.")
     LIVING_COST_STATUS_PATRON_IMPERIAL = declare(
         "LIVING_COST_STATUS_PATRON_IMPERIAL", 2500.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=1", source=None, confidence="D",
+        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
         why="As LIVING_COST_STATUS_PATRON_SENATORIAL, for the imperial "
             "tier. Tuned, not attested.")
     LIVING_COST_STATUS_PER_CAPITAL = declare(

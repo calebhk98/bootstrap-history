@@ -193,10 +193,12 @@ _chain_results = _par_map(
     lambda cid: proto([{"cmd": "why", "id": "telescope"}], civ=cid)[0][0].get("chain_cost"),
     _chain_cids)
 _chains = dict(zip(_chain_cids, _chain_results))
+_chain_years = {cid: cost / S.starting_schedule(cid).annual_wage("labourer")
+                for cid, cost in _chains.items()}
 check("the full-chain bill is quoted at this society's prices",
       len(set(_chains.values())) == 3, _chains)
 check("...and the dearest society's chain really is the dearest",
-      max(_chains, key=lambda c: _chains[c]) == "norse_900ad", _chains)
+      max(_chain_years, key=lambda c: _chain_years[c]) == "norse_900ad", _chain_years)
 # The parts have to add up to the whole, at whatever prices.
 _s_ch = sim(civ="norse_900ad")
 from sim.engine.data import closure as _closure

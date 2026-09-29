@@ -887,7 +887,7 @@ class HazardsMixin:
             "Tuned, not measured.")
     PATRON_DEATH_COURTING_GIFT = declare(
         "PATRON_DEATH_COURTING_GIFT", 800.0, kind="temporary_heuristic",
-        unit="denarii at price_index=1.0", source=None, confidence="D",
+        book_money=True, unit="denarii at price_index=1.0", source=None, confidence="D",
         why="Cost of courting a dead patron's heir afresh, at this "
             "society's own price level. Invented figure, not sourced to "
             "any attested gift-giving custom.")

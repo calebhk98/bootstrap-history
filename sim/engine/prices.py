@@ -197,7 +197,7 @@ if REPO_ROOT not in sys.path:
 from sim import joint_allocation, solve_prices              # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
 from sim.world import wages                                     # noqa: E402
-from sim.engine import wage_provider                            # noqa: E402
+from sim.engine import money_units, wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
 
 
@@ -494,7 +494,8 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     for entry in all_entries.values():
         makeable_by_someone.update((entry.get("outputs") or {}))
 
-    goods_denarii = dict(book_goods_denarii)
+    goods_denarii = money_units.convert_book_table(
+        book_goods_denarii, prices_json["money_per_labour_hour"])
     provenance = {}
     for material in book_goods_denarii:
         provenance[material] = ("gated" if material in makeable_by_someone

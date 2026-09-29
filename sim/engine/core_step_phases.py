@@ -454,8 +454,8 @@ class StepPhasesMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > 6000 and self.state.household.artisans < 12 and self.running("workshop_first"):
-                got = self.buy_slaves(min(6, int(self.state.household.capital // 1500)))
+            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running("workshop_first"):
+                got = self.buy_slaves(min(6, int(self.state.household.capital // self.book_money(1500.0))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
@@ -896,7 +896,7 @@ class StepPhasesMixin:
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.state.household.capital / 1800.0))
+                    self.buy_forest(min(200.0, self.state.household.capital / self.book_money(1800.0)))
             elif (self.state.economy.binding == "saltpetre"
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
@@ -913,7 +913,7 @@ class StepPhasesMixin:
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.state.household.capital * 0.05, 2000)
+                spend = min(self.state.household.capital * 0.05, self.book_money(2000.0))
                 self.state.household.capital -= spend
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "

@@ -418,7 +418,7 @@ check("...and `money` agrees that no credit is actually in use the moment "
       _cr_money.get("of_that_limit_you_have_used") == "none",
       _cr_money.get("of_that_limit_you_have_used"))
 _cr2 = sim(civ="england_1300")
-_cr2.capital = 50_000.0
+_cr2.capital = 20 * _cr2.project_cost("identity_cover")
 _cr2_out = S._agent_dispatch(_cr2, NODES, {"cmd": "start", "id": "identity_cover"})
 check("a project you can pay for outright says nothing about credit",
       _cr2_out.get("ok") and "on_credit" not in _cr2_out,

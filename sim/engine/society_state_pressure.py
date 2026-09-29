@@ -722,7 +722,7 @@ class StatePressureMixin:
             "a heuristic.")
     EMINENCE_WEALTH_VISIBLE_THRESHOLD = declare(
         "EMINENCE_WEALTH_VISIBLE_THRESHOLD", 250000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Capital treated as '1.0 visibly rich' for the prominence "
             "hazard, and reused verbatim by eminence_report's own "
             "what_would_change_it note and by household_scale's "

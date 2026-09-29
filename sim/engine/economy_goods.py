@@ -567,20 +567,20 @@ class GoodsMixin:
 
     FARM_COST_PER_HA = declare(
         "FARM_COST_PER_HA", 75.0, kind="temporary_heuristic",
-        unit="denarii/hectare", source=None, confidence="D",
+        book_money=True, unit="denarii/hectare", source=None, confidence="D",
         why="Purchase price of one hectare of productive farmland for the "
             "household's own staple supply. Not tied to FOREST_COST_PER_HA "
             "or to any attested land price; an independent, invented "
             "figure for a different land use.")
     HOUSING_COST_PER_PLACE = declare(
         "HOUSING_COST_PER_PLACE", 600.0, kind="temporary_heuristic",
-        unit="denarii/place", source=None, confidence="D",
+        book_money=True, unit="denarii/place", source=None, confidence="D",
         why="Cost to build one place of durable worker housing. Not "
             "sourced to any attested construction cost; an invented figure "
             "sized to make the lever meaningful without being free.")
     TRADE_SCHOOL_COST_PER_SEAT = declare(
         "TRADE_SCHOOL_COST_PER_SEAT", 1200.0, kind="temporary_heuristic",
-        unit="denarii/seat", source=None, confidence="D",
+        book_money=True, unit="denarii/seat", source=None, confidence="D",
         why="Cost to found one seat of a named trade school (see "
             "labour.py's consumer of this figure, outside this file's "
             "scope). Not sourced to any attested cost of pre-industrial "

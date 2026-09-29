@@ -1,10 +1,12 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, math, os, random, sys
 
-from sim.constants import declare
+from sim.constants import book_money_names, declare
+from .money_units import book_money_factor
+from .wage_provider import build_schedule
 from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
-                   TECH_EFFECTS)
+                   nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
 
 from sim.world import demography
 from sim.world import agriculture
@@ -248,6 +250,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         "med_vaccination_progression",
     )
 
+    def _localise_book_money_constants(self):
+        """Give this Sim its own copy of every money constant authored in book
+        denarii, in its civilisation's coin."""
+        factor = book_money_factor(build_schedule(
+            TRADE_REGISTRY, self.civ).money_per_labour_hour)
+        for name in book_money_names():
+            if hasattr(type(self), name):
+                setattr(self, name, getattr(type(self), name) * factor)
+
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None):
         self.nodes = nodes
@@ -280,6 +291,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
         self.civ = civ or load_civ()
+        self.nodes = nodes_in_civ_money(nodes, self.civ)
+        self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState, ActorsState,
@@ -1806,7 +1819,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
     INSOLVENCY_FLOOR_MIN = declare(
         "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Floor on how deep into arrears a household can sit before "
             "insolvency's staff bleed can begin, for a household with "
             "very low revenue - so a household earning almost nothing is "
@@ -1937,7 +1950,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "yet worth buying down. Tuned, not measured.")
     AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
         "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Minimum capital before the optimizer's bribery policy will "
             "spend at all, so a poor household is not bled dry bribing "
             "away scandal it might survive anyway. Round number, not "
@@ -1951,7 +1964,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "the household. Tuned, not measured.")
     AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
         "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
-        unit="denarii per scandal point", source=None, confidence="D",
+        book_money=True, unit="denarii per scandal point", source=None, confidence="D",
         why="What buying down one point of scandal costs, capping total "
             "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
             "not sourced to any attested bribe schedule.")
@@ -1966,7 +1979,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "Tuned, not measured.")
     BRIBE_SCANDAL_REDUCTION_SCALE = declare(
         "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
-        unit="denarii per scandal point removed (before bribability)",
+        book_money=True, unit="denarii per scandal point removed (before bribability)",
         source=None, confidence="D",
         why="How much bribery spend it takes to remove one point of "
             "scandal, scaled further by this society's own bribability "

@@ -555,7 +555,7 @@ class FreightMixin:
     # already short.
     NITRE_COST_PER_M2 = declare(
         "NITRE_COST_PER_M2", 2.0, kind="temporary_heuristic",
-        unit="denarii/square metre", source=
+        book_money=True, unit="denarii/square metre", source=
         "The figure step() used before this was given a proper `quote` "
         "path (spend / 2.0), carried forward unchanged so buying a bed the "
         "new way costs exactly what the old automatic policy always paid.",
